@@ -194,6 +194,147 @@ AC_SUBST(IMESH_CONFIG_OPTIONS)
 AM_CONDITIONAL( HAVE_IMESH, [test "x$IMESH_MISSING" = "xno"] )
 
 ################################################################################
+#                           CAMAL
+################################################################################
+AC_ARG_WITH(camal, 
+[AC_HELP_STRING([--with-camal=DIR], [Specify location of CAMAL library.])],
+[CAMAL_VAL=$withval
+ DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-camal=\"${withval}\""
+ ], [CAMAL_VAL=])
+ 
+CAMAL_VERSION=
+CAMAL_CPPFLAGS=
+CAMAL_LDFLAGS=
+CAMAL_LIBS=
+
+# Hard-code versions because CAMAL lib names are broken
+# (lib names should not include a version number unless 
+# a change in that number will break all code using the
+# library, which certainly shouldn't be the case for the
+# minor version number or the patch level, and for the
+# major version, the standard library versioning scheme
+# should be used.)  Further, there is no way to determine 
+# the version from the header files, only by linking with
+# the library and calling API functions, which requires
+# knowing the version.
+# NOTE: This is a space-separated list.  Other supported 
+#       versions may be appended.
+CAMAL_VERSIONS="330"
+
+if test "xno" = "x$CAMAL_VAL"; then
+  HAVE_CAMAL=no
+  HAVE_CAMAL_PAVER=no
+  HAVE_CAMAL_TRIADV=no
+  HAVE_CAMAL_SWEEP=no
+  HAVE_CAMAL_TET=no
+else
+  
+  CAMAL_DIR="$CAMAL_VAL"
+  # if user didn't specify anything, assume 'yes' for now
+  # such that we enable it if we find camal in the default
+  # search path (or user specifed CPPFLAGS and LDFLAGS)
+  if test "x" = "x$CAMAL_VAL"; then
+    CAMAL_DIR=yes
+  fi
+  
+  # if user specified a path, add subdirs to search path
+  if test "xyes" != "x$CAMAL_DIR"; then
+    if ! test -d "$CAMAL_DIR"; then
+      AC_MSG_ERROR([$CAMAL_DIR: not a directory])
+    fi
+    
+    if test -d "$CAMAL_DIR/include"; then
+      CAMAL_CPPFLAGS="-I$CAMAL_DIR/include"
+    else
+      AC_MSG_WARN([$CAMAL_DIR/include: no such directory])
+      CAMAL_CPPFLAGS="-I$CAMAL_DIR"
+    fi
+    
+    if test -d "$CAMAL_DIR/lib"; then
+      # CAMAL puts libs in subdirs by a rather imprecise mishmash 
+      # of OS and arch.  Just add them all to LDFLAGS.  The linker
+      # will ignore libraries for other platforms.
+      for file in "$CAMAL_DIR"/lib/*; do
+          # Skip anything that isn't a directory or that
+          # begins with a '.'.
+        case $file in
+          .*)
+            ;;
+          *)
+            if test -d $file; then
+              CAMAL_LDFLAGS="$CAMAL_LDFLAGS -L$file"
+            fi
+            ;;
+        esac
+      done
+    else
+      AC_MSG_WARN([$CAMAL_DIR/lib: no such directory])
+      CAMAL_LDFLAGS="-L$CAMAL_DIR"
+    fi
+  fi
+  
+  # Check for CAMAL headers and libraries
+  old_LIBS="$LIBS"
+  old_LDFLAGS="$LDFLAGS"
+  old_CPPFLAGS="$CPPFLAGS"
+  LDFLAGS="$LDFLAGS $CAMAL_LDFLAGS"
+  CPPFLAGS="$CPPFLAGS $CAMAL_CPPFLAGS"
+  AC_LANG_PUSH([C++])
+  
+  AC_CHECK_HEADER( [CMLTriMesher.hpp],[HAVE_CAMAL_TRIADV=yes], [HAVE_CAMAL_TRIADV=no] )
+  AC_CHECK_HEADER( [CMLPaver.hpp],    [HAVE_CAMAL_PAVER=yes],  [HAVE_CAMAL_PAVER=no] )
+  AC_CHECK_HEADER( [CMLSweeper.hpp],  [HAVE_CAMAL_SWEEP=yes],  [HAVE_CAMAL_SWEEP=no] )
+  AC_CHECK_HEADER( [CMLTetMesher.hpp],[HAVE_CAMAL_TET=yes],    [HAVE_CAMAL_TET=no] )
+  AC_CHECK_HEADER( [CMLGeomEval.hpp], [HAVE_CAMAL=yes],        [HAVE_CAMAL=no] )
+  
+  for ver in $CAMAL_VERSIONS; do
+    AC_CHECK_LIB( [CMLShr$ver], [main], [CAMAL_VERSION=$ver; break;] )
+  done
+  if test "x$CAMAL_VERSION" = "x"; then
+    HAVE_CAMAL=no
+    HAVE_CAMAL_TRIADV=no
+    HAVE_CAMAL_PAVER=no
+    HAVE_CAMAL_SWEEP=no
+    HAVE_CAMAL_TET=no
+  else
+    CAMAL_LIBS="-lCMLShr$CAMAL_VERSION"
+    AC_CHECK_LIB( [CMLUtl$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLUtl$CAMAL_VERSION   $CAMAL_LIBS"], [],                     [$CAMAL_LIBS] )
+    AC_CHECK_LIB( [CMLPave$CAMAL_VERSION],  [main], [CAMAL_LIBS="-lCMLPave$CAMAL_VERSION  $CAMAL_LIBS"], [HAVE_CAMAL_PAVER=no],  [$CAMAL_LIBS] )
+    AC_CHECK_LIB( [CMLTri$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTri$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TRIADV=no], [$CAMAL_LIBS] )
+    AC_CHECK_LIB( [CMLSweep$CAMAL_VERSION], [main], [CAMAL_LIBS="-lCMLSweep$CAMAL_VERSION $CAMAL_LIBS"], [HAVE_CAMAL_SWEEP=no],  [$CAMAL_LIBS] )
+    AC_CHECK_LIB( [CMLTet$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTet$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TET=no],    [$CAMAL_LIBS] )
+  fi
+  
+  AC_LANG_POP([C++])
+  LIBS="$old_LIBS"
+  LDFLAGS="$old_LDFLAGS"
+  CPPFLAGS="$old_CPPFLAGS"
+fi
+
+if test $HAVE_CAMAL = yes; then
+  AC_MSG_RESULT([Camal version: $CAMAL_VERSION])
+elif test "x$CAMAL_VAL" != "x"; then
+  AC_MSG_ERROR([Camal not found or not usable.])
+fi
+
+AC_SUBST([CAMAL_VERSION])
+AC_SUBST([CAMAL_CPPFLAGS])
+AC_SUBST([CAMAL_LDFLAGS])
+AC_SUBST([CAMAL_LIBS])
+
+AC_SUBST([HAVE_CAMAL])
+AC_SUBST([HAVE_CAMAL_TRIADV])
+AC_SUBST([HAVE_CAMAL_PAVER])
+AC_SUBST([HAVE_CAMAL_SWEEP])
+AC_SUBST([HAVE_CAMAL_TET])
+
+AM_CONDITIONAL( HAVE_CAMAL,        [test $HAVE_CAMAL        = yes] )
+AM_CONDITIONAL( HAVE_CAMAL_TRIADV, [test $HAVE_CAMAL_TRIADV = yes] )
+AM_CONDITIONAL( HAVE_CAMAL_PAVER,  [test $HAVE_CAMAL_PAVER  = yes] )
+AM_CONDITIONAL( HAVE_CAMAL_SWEEP,  [test $HAVE_CAMAL_SWEEP  = yes] )
+AM_CONDITIONAL( HAVE_CAMAL_TET,    [test $HAVE_CAMAL_TET    = yes] )
+
+################################################################################
 #                           Output Files
 ################################################################################
 AC_SUBST([INCLUDES])
