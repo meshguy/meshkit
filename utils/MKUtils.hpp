@@ -10,7 +10,7 @@ public:
   
   ~MKUtils() {};
 
-  int assign_global_ids(iBase_EntityHandle this_set,
+  int assign_global_ids(iBase_EntitySetHandle this_set,
                         const int dimension, 
                         const int start_id,
                         const bool largest_dim_only,

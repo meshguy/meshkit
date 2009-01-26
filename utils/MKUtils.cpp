@@ -8,7 +8,7 @@
 
 //! assign a global id space, for largest-dimension or all entities (and
 //! in either case for vertices too)
-int MKUtils::assign_global_ids(iBase_EntityHandle this_set,
+int MKUtils::assign_global_ids(iBase_EntitySetHandle this_set,
                                const int dimension, 
                                const int start_id,
                                const bool largest_dim_only,
