@@ -143,9 +143,9 @@ case "x$itaps_dir" in
     fi
     HAVE_$2=yes
     AC_CHECK_FILE([$itaps_dir/lib/${itaps_pfx}-Defs.inc],
-     [$2_CONFIG_OPTIONS="$itaps_dir/lib/${itaps_pfx}-Defs.inc"],
+     [$2_CONFIG_OPTIONS="include $itaps_dir/lib/${itaps_pfx}-Defs.inc"],
      [AC_CHECK_FILE([$itaps_dir/${itaps_pfx}-Defs.inc],
-       [$2_CONFIG_OPTIONS="$itaps_dir/lib/${itaps_pfx}-Defs.inc"],
+       [$2_CONFIG_OPTIONS="include $itaps_dir/${itaps_pfx}-Defs.inc"],
        [HAVE_$2=no])])
     ;;
 esac
@@ -252,7 +252,6 @@ if test "xno" = "x$CAMAL_VAL"; then
   HAVE_CAMAL_TET=no
 else
     
-  
   CAMAL_DIR="$CAMAL_VAL"
   # if user didn't specify anything, assume 'yes' for now
   # such that we enable it if we find camal in the default
@@ -321,12 +320,14 @@ else
     HAVE_CAMAL_SWEEP=no
     HAVE_CAMAL_TET=no
   else
-    CAMAL_LIBS="-lCMLShr$CAMAL_VERSION"
-    AC_CHECK_LIB( [CMLUtl$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLUtl$CAMAL_VERSION   $CAMAL_LIBS"], [],                     [$CAMAL_LIBS] )
+    CAMAL_LIBS="-lCMLShr$CAMAL_VERSION -lCMLUtl$CAMAL_VERSION -lCMLShr$CAMAL_VERSION"
     AC_CHECK_LIB( [CMLPave$CAMAL_VERSION],  [main], [CAMAL_LIBS="-lCMLPave$CAMAL_VERSION  $CAMAL_LIBS"], [HAVE_CAMAL_PAVER=no],  [$CAMAL_LIBS] )
     AC_CHECK_LIB( [CMLTri$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTri$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TRIADV=no], [$CAMAL_LIBS] )
     AC_CHECK_LIB( [CMLSweep$CAMAL_VERSION], [main], [CAMAL_LIBS="-lCMLSweep$CAMAL_VERSION $CAMAL_LIBS"], [HAVE_CAMAL_SWEEP=no],  [$CAMAL_LIBS] )
     AC_CHECK_LIB( [CMLTet$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTet$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TET=no],    [$CAMAL_LIBS] )
+      # CMLTet requires libg2c of built with g77: check if it exists on this system
+    AC_CHECK_LIB( [g2c], [s_cmp], [CAMAL_LIBS="$CAMAL_LIBS -lg2c"] )
+    
   fi
   
   AC_LANG_POP([C++])
