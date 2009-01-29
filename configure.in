@@ -3,6 +3,7 @@
 ################################################################################
 AC_INIT(MESHKIT, 3.99)
 AC_CANONICAL_SYSTEM
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
 MK_CHECK_COMPILERS
@@ -85,6 +86,85 @@ if test "x$WITH_MPI" != "xno"; then
 fi
 AM_CONDITIONAL(USE_MPI, [test "xno" != "x$WITH_MPI"])
 
+################################################################################
+#                           ITAPS interfaces
+################################################################################
+
+
+SF="$DISTCHECK_CONFIGURE_FLAGS"
+
+AC_ARG_WITH(itaps,
+[AC_HELP_STRING([--with-itaps=DIR], 
+                [specify same dir for --with-imesh, --with-igeom, --with-irel])],
+[ITAPS_DIR="$withval"; SF="$SF --with-itaps=$withval"],[ITAPS_DIR=])
+
+AC_ARG_WITH(igeom,
+[AC_HELP_STRING([--with-igeom=DIR],[Directory containing iGeom implementation])],
+[IGEOM_DIR=$withval; SF="$SF --with-igeom=$withval"],
+[IGEOM_DIR="$ITAPS_DIR"; IGEOM_OKAY_IF_MISSING=yes])
+
+AC_ARG_WITH(imesh,
+[AC_HELP_STRING([--with-imesh=DIR],[Directory containing iMesh implementation])],
+[IMESH_DIR=$withval; SF="$SF --with-imesh=$withval"],
+[IMESH_DIR="$ITAPS_DIR"; IMESH_OKAY_IF_MISSING=yes])
+
+AC_ARG_WITH(irel,
+[AC_HELP_STRING([--with-irel=DIR],[Directory containing iRel implementation])],
+[IREL_DIR=$withval; SF="$SF --with-irel=$withval"],
+[IREL_DIR="$ITAPS_DIR"; IREL_OKAY_IF_MISSING=yes])
+
+DISTCHECK_CONFIGURE_FLAGS="$SF"
+
+#                         Define Macro to check for i*-Defs.inc
+# Arguments:
+#   file prefix (iGeom, iMesh, etc.)
+#   var prefix (IGEOM, IMESH, etc.)
+#   path
+#   warn if not found (warn if 'yes', error otherwise)
+#   warning message
+# Does the following
+#   appends -DHAVE_Ixxxx = yes/no to AM_CPPFLAGS
+#   defines HAVE_Ixxxx automake conditional flag
+#   sets Ixxxx_CONFIG_OPTIONS to full path to makefile stub
+AC_DEFUN([CHECK_ITAPS_DEFS],[
+itaps_pfx="$1"
+itaps_dir="$3"
+warn="$4"
+case "x$itaps_dir" in
+  xno|x)
+    HAVE_$2=no
+    ;;
+  xyes)
+    AC_MSG_ERROR([Expected agrument for --with-$itaps_pfx])
+    ;;
+  *)
+    if ! test -d "$itaps_dir"; then
+      AC_MSG_ERROR([$itaps_dir : not a directory])
+    fi
+    HAVE_$2=yes
+    AC_CHECK_FILE([$itaps_dir/lib/${itaps_pfx}-Defs.inc],
+     [$2_CONFIG_OPTIONS="$itaps_dir/lib/${itaps_pfx}-Defs.inc"],
+     [AC_CHECK_FILE([$itaps_dir/${itaps_pfx}-Defs.inc],
+       [$2_CONFIG_OPTIONS="$itaps_dir/lib/${itaps_pfx}-Defs.inc"],
+       [HAVE_$2=no])])
+    ;;
+esac
+
+AC_SUBST([$2_CONFIG_OPTIONS])
+if test "xyes" = "x$HAVE_$2"; then 
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2"
+elif test "xyes" = "x$warn"; then
+  AC_MSG_WARN([$itaps_pfx not found: $5])
+else
+  AC_MSG_ERROR([$itaps_pfx not found])
+fi
+AM_CONDITIONAL( HAVE_$2, [test "xyes" == "x$HAVE_$2"] )
+])
+
+CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may fail] )
+CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
+CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabled] )
+
 ###############################################################################
 #                           Optional Tools
 ###############################################################################
@@ -120,78 +200,6 @@ MK_OPTIONAL_TOOL([algs],    [yes])
 MK_OPTIONAL_TOOL([xforms],    [yes])
 MK_OPTIONAL_TOOL([utils],    [yes])
 
-################################################################################
-#                           iGeom
-################################################################################
-AC_ARG_WITH(igeom, 
-[AC_HELP_STRING([--with-igeom=DIR], [Specify directory containing iGeom])],
-[IGEOM_DIR=$withval
- DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-igeom=\"${withval}\""
- ], [IGEOM_DIR=])
-case "x$IGEOM_DIR" in
-  xno|x)
-    IGEOM_MISSING=yes
-    ;;
-  xyes)
-    AC_MSG_ERROR([--with-igeom requires an argument])
-    ;;
-  *)
-    if ! test -d "$IGEOM_DIR"; then
-      AC_MSG_WARN([$IGEOM_DIR : not a directory.])
-    fi
-    IGEOM_MISSING=no
-    AC_CHECK_FILE([${IGEOM_DIR}/lib/iGeom-Defs.inc],
-                  [IGEOM_CONFIG_OPTIONS="include ${IGEOM_DIR}/lib/iGeom-Defs.inc";
-                   DEFINES="$DEFINES -DIGEOM"],
-                  [AC_CHECK_FILE([${IGEOM_DIR}/iGeom-Defs.inc],
-                                 [IGEOM_CONFIG_OPTIONS="include ${IGEOM_DIR}/iGeom-Defs.inc";
-                   DEFINES="$DEFINES -DIGEOM"],
-                                 [AC_MSG_WARN([$IGEOM_DIR : not a configured iGeom]); 
-                                  IGEOM_MISSING=yes])
-                  ])
-    ;;
-esac
-AC_SUBST(IGEOM_DIR)
-AC_SUBST(IGEOM_CONFIG_OPTIONS)
-AM_CONDITIONAL( HAVE_IGEOM, [test "x$IGEOM_MISSING" = "xno"] )
-
-################################################################################
-#                           iMesh
-################################################################################
-AC_ARG_WITH(imesh, 
-[AC_HELP_STRING([--with-imesh=DIR], [Specify directory containing iMesh])],
-[IMESH_DIR=$withval
- DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-imesh=\"${withval}\""
- ], [IMESH_DIR=])
-case "x$IMESH_DIR" in
-  xno|x)
-    IMESH_MISSING=yes
-    ;;
-  xyes)
-    AC_MSG_ERROR([--with-imesh requires an argument])
-    ;;
-  *)
-    if ! test -d "$IMESH_DIR"; then
-      AC_MSG_WARN([$IMESH_DIR : not a directory.])
-    fi
-    IMESH_MISSING=no
-    AC_CHECK_FILE([${IMESH_DIR}/lib/iMesh-Defs.inc],
-                  [IMESH_CONFIG_OPTIONS="include ${IMESH_DIR}/lib/iMesh-Defs.inc";
-                   DEFINES="$DEFINES -DIMESH"],
-                  [AC_CHECK_FILE([${IMESH_DIR}/iMesh-Defs.inc],
-                                 [IMESH_CONFIG_OPTIONS="include ${IMESH_DIR}/iMesh-Defs.inc";
-                   DEFINES="$DEFINES -DIMESH"],
-                                 [AC_MSG_WARN([$IMESH_DIR : not a configured iMesh]); 
-                                  IMESH_MISSING=yes])
-                  ])
-    AC_CHECK_FILE([${IMESH_DIR}/include/MBInterface.hpp],
-                  [DEFINES="$DEFINES -DMOAB"],
-                 )
-    ;;
-esac
-AC_SUBST(IMESH_DIR)
-AC_SUBST(IMESH_CONFIG_OPTIONS)
-AM_CONDITIONAL( HAVE_IMESH, [test "x$IMESH_MISSING" = "xno"] )
 
 ################################################################################
 #                           CAMAL
@@ -221,6 +229,21 @@ CAMAL_LIBS=
 #       versions may be appended.
 CAMAL_VERSIONS="330"
 
+
+if test "xyes" != "x$HAVE_IREL"; then
+  case "x$CAMAL_VAL" in
+    xno)
+      ;;
+    x|xyes)
+      AC_MSG_WARN([Camal support disabled because iRel not found])
+      CAMAL_VAL=no
+      ;;
+    *)
+      AC_MSG_ERROR([Camal cannot be enabled w/out iRel])
+      ;;
+  esac
+fi
+
 if test "xno" = "x$CAMAL_VAL"; then
   HAVE_CAMAL=no
   HAVE_CAMAL_PAVER=no
@@ -228,6 +251,7 @@ if test "xno" = "x$CAMAL_VAL"; then
   HAVE_CAMAL_SWEEP=no
   HAVE_CAMAL_TET=no
 else
+    
   
   CAMAL_DIR="$CAMAL_VAL"
   # if user didn't specify anything, assume 'yes' for now
@@ -353,6 +377,7 @@ AC_CONFIG_FILES([Makefile
 		 algs/Makefile
 		 xforms/Makefile
 		 utils/Makefile
+                 camal/Makefile
                  ])
 
 AC_OUTPUT
