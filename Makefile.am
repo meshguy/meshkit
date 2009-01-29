@@ -7,23 +7,23 @@ ACLOCAL_AMFLAGS = -I m4
 @IMESH_CONFIG_OPTIONS@
 
 # Subdirectories to build
-SUBDIRS = 
+SUBDIRS = utils .
 if ENABLE_algs
   SUBDIRS += algs
-  INCLUDES += -I$(top_builddir)/algs
+  INCLUDES += -I$(top_srcdir)/algs
 endif
 if ENABLE_xforms
   SUBDIRS += xforms
-  INCLUDES += -I$(top_builddir)/xforms
+  INCLUDES += -I$(top_srcdir)/xforms
 endif
-if ENABLE_utils
-  SUBDIRS += utils
-  INCLUDES += -I$(top_builddir)/utils
+if HAVE_CAMAL
+  SUBDIRS += camal
+  INCLUDES += -I$(top_srcdir)/camal
 endif
 
 # Some variables
 DEFS = $(DEFINES) 
-INCLUDES += -I$(top_builddir) 
+INCLUDES += -I$(top_builddir) -I$(top_srcdir)
 
 check_PROGRAMS = pin217 sixth
 TESTS = $(check_PROGRAMS)
