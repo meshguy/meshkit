@@ -142,13 +142,11 @@ int CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
   iBase_EntityHandle *verts = NULL;
   int verts_alloc = 0, verts_size;
   int *offset = NULL, offset_alloc = 0, offset_size;
-  int *in_set = NULL, in_set_alloc = 0, in_set_size;
-  iMesh_getAdjEntities(imeshImpl, copy_set, 
-                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, iBase_VERTEX,
-                       &verts, &verts_alloc, &verts_size,
-                       &offset, &offset_alloc, &offset_size,
-                       &in_set, &in_set_alloc, &in_set_size,
-                       &err);
+  iMesh_getEntArrAdj(imeshImpl, ent_handles, num_ents,
+                     iBase_VERTEX,
+                     &verts, &verts_alloc, &verts_size,
+                     &offset, &offset_alloc, &offset_size,
+                     &err );
   ERRORR("Failed to get adj entities in copy set", err);
   iMesh_addEntArrToSet(imeshImpl, verts, verts_size,
                        copy_set, &err);
@@ -179,7 +177,6 @@ int CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
     
   free(verts);
   free(offset);
-  free(in_set);
 
     // destroy local tag, removing it from all entities
   iMesh_destroyTag(imeshImpl, local_tag, true, &err);
@@ -404,30 +401,17 @@ int CopyMesh::copy_move_verts(iBase_EntitySetHandle copy_set,
     // get position of vertices, transform with move vector
   double *coords = NULL;
   int coords_alloc = 0, coords_size;
-  int order = iBase_UNDETERMINED;
   iMesh_getVtxArrCoords(imeshImpl, verts, verts_size,
-                        &order, &coords, &coords_alloc, &coords_size, &err);
+                        iBase_INTERLEAVED, &coords, &coords_alloc, &coords_size, &err);
   ERRORR("Failed to get vtx coords.", iBase_FAILURE);
   if (NULL != dx) {
-    if (iBase_INTERLEAVED == order) {
-      for (int i = 0; i < 3*verts_size; i+=3)
-        coords[i] += dx[0], coords[i+1] += dx[1], coords[i+2] += dx[2];
-    }
-    else if (iBase_BLOCKED == order) {
-      double *coordsy = coords + verts_size;
-      double *coordsz = coordsy + verts_size;
-      for (int i = 0; i < verts_size; i++)
-        coords[i] += dx[0], coordsy[i] += dx[1], coordsz[i] += dx[2];
-    }
-    else {
-      err = iBase_FAILURE;
-      ERRORR("Couldn't determine ordering for vertex coordinates.", err);
-    }
+    for (int i = 0; i < 3*verts_size; i+=3)
+      coords[i] += dx[0], coords[i+1] += dx[1], coords[i+2] += dx[2];
   }
   
     // copy vertices
   int tmp_size, tmp_alloc = verts_size;
-  iMesh_createVtxArr(imeshImpl, verts_size, order, coords, coords_size,
+  iMesh_createVtxArr(imeshImpl, verts_size, iBase_INTERLEAVED, coords, coords_size,
                      &new_verts_ptr, &tmp_alloc, &tmp_size, &err);
   ERRORR("Couldn't create new vertices.", iBase_FAILURE);
   assert(tmp_size == verts_size);

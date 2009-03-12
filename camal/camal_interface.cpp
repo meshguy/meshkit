@@ -104,9 +104,8 @@ bool CAMAL_bdy_loops_coords(CMEL *cmel,
   coords.resize(3*bdy_verts.size());
   double *coords_ptr = &coords[0];
   int coords_size = 3*bdy_verts.size(), coords_alloc = coords_size;
-  int this_order = iBase_INTERLEAVED;
   iMesh_getVtxArrCoords(cmel->meshIface, &bdy_verts[0], bdy_verts.size(), 
-                        &this_order, &coords_ptr, &coords_alloc, &coords_size,
+                        iBase_INTERLEAVED, &coords_ptr, &coords_alloc, &coords_size,
                         &result);
   if (iBase_SUCCESS != result) 
     return false;
@@ -166,9 +165,8 @@ bool CAMAL_bdy_connect_coords(CMEL *cmel,
   bdy_coords.resize(3*bdy_verts.size());
   double *coords_ptr = &bdy_coords[0];
   int coords_size = 3*bdy_verts.size(), coords_alloc = coords_size;
-  int this_order = iBase_INTERLEAVED;
   iMesh_getVtxArrCoords(cmel->meshIface, &bdy_verts[0], bdy_verts.size(), 
-                        &this_order, &coords_ptr, &coords_alloc, &coords_size,
+                        iBase_INTERLEAVED, &coords_ptr, &coords_alloc, &coords_size,
                         &result);
   if (iBase_SUCCESS != result) 
     return false;

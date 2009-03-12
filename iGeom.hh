@@ -1134,8 +1134,8 @@ iGeom::getVtxArrCoords( const EntityHandle* vertices,
                         StorageOrder order,
                         double* coords )
 {
-  int err, alloc = vertices_size, size = 0, order_int = order;
-  iGeom_getVtxArrCoords( mInstance, vertices, vertices_size, &order_int,
+  int err, alloc = vertices_size, size = 0;
+  iGeom_getVtxArrCoords( mInstance, vertices, vertices_size, order,
                          &coords, &alloc, &size, &err );
   return (Error)err;
 }
@@ -1164,10 +1164,9 @@ iGeom::getPntRayIntsct( double x, double y, double z,
   double      *   points_ptr = &  points_out[0];
   double      *   params_ptr = &  params_out[0];
   
-  int order_int = order;
   iGeom_getPntRayIntsct( mInstance, x, y, z, i, j, k, 
                    &entities_ptr, &entities_alloc, &entities_size,
-                   &order_int,
+                   order,
                    &points_ptr, &points_alloc, &points_size,
                    &params_ptr, &params_alloc, &params_size,
                    &err );
@@ -1367,8 +1366,8 @@ iGeom::getArrUtoXYZ( const EntityHandle* edges,
                      StorageOrder order,
                      double* xyz )
 {
-  int err, alloc = std::max(3*u_size,3*edges_size), size = 0, order_int = order;
-  iGeom_getArrUtoXYZ( mInstance, edges, edges_size, u, u_size, &order_int, 
+  int err, alloc = std::max(3*u_size,3*edges_size), size = 0;
+  iGeom_getArrUtoXYZ( mInstance, edges, edges_size, u, u_size, order, 
                       &xyz, &alloc, &size, &err );
   return (Error)err;
 }
@@ -1718,8 +1717,8 @@ iGeom::getArrUVRange( const EntityHandle* faces,
                       double* uv_min,
                       double* uv_max )
 {
-  int err, alloc = faces_size, size = 0, order_int = order;
-  iGeom_getArrUVRange( mInstance, faces, faces_size, &order_int,
+  int err, alloc = faces_size, size = 0;
+  iGeom_getArrUVRange( mInstance, faces, faces_size, order,
                  &uv_min, &alloc, &size,
                  &uv_max, &alloc, &size, &err );
   return (Error)err;
@@ -1776,12 +1775,12 @@ iGeom::getArrUtoUV( const EntityHandle* edges, int edges_size,
                     double* face_uv )
 {
   int err, alloc = std::max(edge_u_size, std::max(edges_size, faces_size));
-  int size = 0, order_int = order;
+  int size = 0;
   iGeom_getArrUtoUV( mInstance, 
                edges, edges_size,
                faces, faces_size,
                edge_u, edge_u_size,
-               &order_int, 
+               order, 
                &face_uv, &alloc, &size,
                &err );
   return (Error)err;
@@ -1793,11 +1792,11 @@ iGeom::getVtxArrToUV( const EntityHandle* vertices, int vertices_size,
                       StorageOrder order,
                       double* face_uv )
 {
-  int err, alloc = std::max(vertices_size, faces_size), size = 0, order_int = order;
+  int err, alloc = std::max(vertices_size, faces_size), size = 0;
   iGeom_getVtxArrToUV( mInstance, 
                        vertices, vertices_size,
                        faces, faces_size, 
-                       &order_int,
+                       order,
                        &face_uv, &alloc, &size,
                        &err );
   return (Error)err;

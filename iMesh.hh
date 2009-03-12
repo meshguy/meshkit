@@ -52,7 +52,7 @@ class iMesh : public iMeshBase {
                               std::vector<EntityHandle>& entities_out );
     
     inline Error getVtxCoord( EntityHandle vertex, double& x, double& y, double& z );
-    inline Error setVtxCoords( EntityHandle vertex, double x, double y, double z );
+    inline Error setVtxCoord( EntityHandle vertex, double x, double y, double z );
     
     
     inline Error getVtxArrCoords( const EntityHandle* vertex_handles,
@@ -358,10 +358,10 @@ iMesh::getVtxCoord( EntityHandle vertex, double& x, double& y, double& z )
 }
 
 inline iMesh::Error
-iMesh::setVtxCoords( EntityHandle vertex, double x, double y, double z )
+iMesh::setVtxCoord( EntityHandle vertex, double x, double y, double z )
 {
   int err;
-  iMesh_setVtxCoords( mInstance, vertex, x, y, z, &err );
+  iMesh_setVtxCoord( mInstance, vertex, x, y, z, &err );
   return (Error)err;
 }
 
@@ -374,7 +374,7 @@ iMesh::getVtxArrCoords( const EntityHandle* vertex_handles,
 {
   int err, alloc = 3*vertex_handles_size, junk, order = storage_order;
   iMesh_getVtxArrCoords( mInstance, vertex_handles, vertex_handles_size,
-                         &order, &coords_out, &alloc, &junk, &err );
+                         order, &coords_out, &alloc, &junk, &err );
   return (Error)err;
 }
 
