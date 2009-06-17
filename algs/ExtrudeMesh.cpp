@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 
-ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh) : impl_(mesh), copy_(mesh)
+ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh) : impl_(mesh)
 {}
 
 ExtrudeMesh::~ExtrudeMesh()
@@ -21,6 +21,33 @@ double * cross(double *res,double *a,double *b)
 double dot(double *a,double *b)
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+// TODO: move this to a separate file and use for CopyMesh too
+void copy_move(iMesh_Instance mesh,iBase_EntityHandle *src,int src_size,
+               double *dv,iBase_EntityHandle **dest,int *dest_alloc,
+               int *dest_size)
+{
+    int err;
+
+    double *coords=0;
+    int coords_alloc=0,coords_size=0;
+    iMesh_getVtxArrCoords(mesh,src,src_size,iBase_INTERLEAVED,
+                          &coords,&coords_alloc,&coords_size,&err);
+    assert(!err);
+
+    for(int i=0; i<coords_size; i+=3)
+    {
+        coords[i]   += dv[0];
+        coords[i+1] += dv[1];
+        coords[i+2] += dv[2];
+    }
+
+    iMesh_createVtxArr(mesh,src_size,iBase_INTERLEAVED,coords,coords_size,
+                       dest,dest_alloc,dest_size,&err);
+    assert(!err);
+
+    free(coords);
 }
 
 int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dv,
@@ -45,7 +72,26 @@ int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dv,
 int ExtrudeMesh::translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,
                            int size,int steps)
 {
-    return 0;
+    int err;
+    iBase_EntitySetHandle src_set,dest_set;
+    iMesh_createEntSet(impl_,false,&src_set,&err);
+    assert(!err);
+    iMesh_createEntSet(impl_,false,&dest_set,&err);
+    assert(!err);
+    
+    iMesh_addEntArrToSet(impl_,src,size,src_set,&err);
+    assert(!err);
+    iMesh_addEntArrToSet(impl_,dest,size,dest_set,&err);
+    assert(!err);
+
+    int ret = translate(src_set,dest_set,steps);
+
+    iMesh_destroyEntSet(impl_,src_set,&err);
+    assert(!err);
+    iMesh_destroyEntSet(impl_,dest_set,&err);
+    assert(!err);
+
+    return ret;
 }
 
 int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
@@ -72,34 +118,26 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
     iMesh_getNumOfType(impl_,0,iBase_VERTEX,&total_count,&err);
     assert(!err);
 
-    // TODO: implement my own copy since CopyMesh is overkill
-    for(int i=1; i<=steps; i++)
-    {
-        double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
-        copy_.copy_move_entities(adj,adj_size,v);
-    }
-
-    iBase_EntityHandle *all=0;
-    int all_alloc=0,all_size=0;
-    iMesh_getEntities(impl_,0,iBase_VERTEX,iMesh_POINT,
-                      &all,&all_alloc,&all_size,&err);
-    assert(err==0);
-
-    iBase_EntityHandle *kids = all+total_count;
+    int copies_alloc = adj_size*steps;
+    iBase_EntityHandle *copies = new iBase_EntityHandle[copies_alloc];
+    copy_rows(adj,adj_size,dv,steps,copies,copies_alloc);
 
     // Make the first row of volumes
     connect_the_dots(normals,indices,offsets,adj,
-                     normals,indices,offsets,kids,ent_size);
+                     normals,indices,offsets,copies,ent_size);
 
     // Make the subsequent rows of volumes
+    iBase_EntityHandle *curr = copies;
     for(int i=1; i<steps; i++)
     {
-        connect_the_dots(normals,indices,offsets,kids,
-                         normals,indices,offsets,kids+adj_size,ent_size);
-        kids += adj_size;
+        connect_the_dots(normals,indices,offsets,curr,
+                         normals,indices,offsets,curr+adj_size,ent_size);
+        curr += adj_size;
     }
 
-    free(all);
+    // One of these things is not like the others
+    // One of these things just doesn't belong
+    delete[] copies;
     free(normals);
     free(ents);
     free(adj);
@@ -140,7 +178,19 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                            &err);
     assert(!err);
 
-    double dv[] = {0,0,0};
+    // Note: we assume that src and dest are the same shape, etc.
+    double dv[3];
+    {
+        double a[3],b[3];
+        iMesh_getVtxCoord(impl_,adj [0],a+0,a+1,a+2,&err);
+        assert(!err);
+        iMesh_getVtxCoord(impl_,adj2[0],b+0,b+1,b+2,&err);
+        assert(!err);
+
+        for(int i=0; i<3; i++)
+            dv[i] = b[i]-a[i];
+    }
+
     int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
     int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dv);
 
@@ -151,42 +201,28 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
     }
     else
     {
-        int total_count;
-        iMesh_getNumOfType(impl_,0,iBase_VERTEX,&total_count,&err);
-        assert(!err);
-
-        // TODO: implement my own copy since CopyMesh is overkill
-        for(int i=1; i<steps; i++)
-        {
-            double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
-            copy_.copy_move_entities(adj,adj_size,v);
-        }
-
-        iBase_EntityHandle *all=0;
-        int all_alloc=0,all_size=0;
-        iMesh_getEntities(impl_,0,iBase_VERTEX,iMesh_POINT,
-                          &all,&all_alloc,&all_size,&err);
-        assert(err==0);
-
-        iBase_EntityHandle *kids = all+total_count;
+        int copies_alloc = adj_size*steps;
+        iBase_EntityHandle *copies = new iBase_EntityHandle[copies_alloc];
+        copy_rows(adj,adj_size,dv,steps-1,copies,copies_alloc);
 
         // Make the first row of volumes
         connect_the_dots(normals,indices,offsets,adj,
-                         normals,indices,offsets,kids,ent_size);
+                         normals,indices,offsets,copies,ent_size);
 
         // Make the inner rows of volumes
+        iBase_EntityHandle *curr = copies;
         for(int i=1; i<steps-1; i++)
         {
-            connect_the_dots(normals,indices,offsets,kids,
-                             normals,indices,offsets,kids+adj_size,ent_size);
-            kids += adj_size;
+            connect_the_dots(normals,indices,offsets,curr,
+                             normals,indices,offsets,curr+adj_size,ent_size);
+            curr += adj_size;
         }
 
         // Make the final row of volumes
-        connect_the_dots(normals, indices, offsets, kids,
+        connect_the_dots(normals, indices, offsets, curr,
                          normals2,indices2,offsets2,adj2,ent_size);
 
-        free(all);
+        delete[] copies;
     }
 
     free(normals); free(normals2);
@@ -221,7 +257,7 @@ int * ExtrudeMesh::get_normals(iBase_EntityHandle *verts,int *indices,
             b[j] = coords[2*3 + j] - coords[1*3 + j];
         }
 
-        normals[i] = (dot( cross(res,a,b),dv ) > 0) ? 1 : -1;
+        normals[i] = (dot( cross(res,a,b),dv ) > 0) ? 1:-1;
     }
 
     return normals;
@@ -234,6 +270,7 @@ void ExtrudeMesh::connect_the_dots(int *pre_norms, int *pre_inds,
                                    int size)
 {
     int err;
+    using namespace std;
 
     for(int i=0; i<size; i++)
     {
@@ -242,20 +279,21 @@ void ExtrudeMesh::connect_the_dots(int *pre_norms, int *pre_inds,
         // If the normal is facing in the wrong direction (away from the
         // translation) we add the vertices in reverse order. Otherwise, we
         // go in the usual order.
-        int pre_first  = (pre_norms [i] == 1) ? pre_offs [i] : pre_offs [i+1];
-        int post_first = (post_norms[i] == 1) ? post_offs[i] : post_offs[i+1];
-        int pre_d  = pre_norms [i];
-        int post_d = post_norms[i];
-
-        int status;
-        iBase_EntityHandle out;
+        
+        int x  = (pre_norms [i] == 1) ? pre_offs [i] : pre_offs [i+1]-1;
+        int y  = (post_norms[i] == 1) ? post_offs[i] : post_offs[i+1]-1;
+        int dx = pre_norms [i];
+        int dy = post_norms[i];
 
         iBase_EntityHandle *nodes = new iBase_EntityHandle[count*2];
         for(int j=0; j<count; j++)
         {
-            nodes[j]       = pre [ pre_inds [pre_first  + pre_d *j] ];
-            nodes[j+count] = post[ post_inds[post_first + post_d*j] ];
+            nodes[j]       = pre [ pre_inds [x + dx*j] ];
+            nodes[j+count] = post[ post_inds[y + dy*j] ];
         }
+
+        int status;
+        iBase_EntityHandle out;
 
         if(count == 4)      // quad
             iMesh_createEnt(impl_,iMesh_HEXAHEDRON,nodes,8,&out,&status,&err);
@@ -269,7 +307,23 @@ void ExtrudeMesh::connect_the_dots(int *pre_norms, int *pre_inds,
     }
 }
 
-int main()
+void ExtrudeMesh::copy_rows(iBase_EntityHandle *src,int src_size,double *dv,
+                            int steps,iBase_EntityHandle *dest,int dest_alloc)
+{
+    for(int i=1; i<=steps; i++)
+    {
+        int dest_size;
+        double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
+
+        copy_move(impl_,src,src_size,v,&dest,&dest_alloc,&dest_size);
+        assert(dest_size == src_size); // Sanity check
+
+        dest += dest_size;
+        dest_alloc -= dest_size;
+    }
+}
+
+void test1()
 {
     int err;
     iMesh_Instance mesh;
@@ -290,7 +344,8 @@ int main()
     iBase_EntityHandle *ents=0;
     int size=0,alloc=0;
 
-    iMesh_createVtxArr(mesh,6,iBase_BLOCKED,verts,3*6,&ents,&size,&alloc,&err);
+    iMesh_createVtxArr(mesh,6,iBase_INTERLEAVED,verts,3*6,&ents,&size,&alloc,
+                       &err);
     assert(err == 0);
 
     iBase_EntityHandle quad;
@@ -318,10 +373,147 @@ int main()
     iMesh_getNumOfType(mesh,0,iBase_REGION,&count,&err);
     assert(err == 0 && count == steps*2);
 
-    const char *file = "fun.h5m";
+    const char *file = "fun.vtk";
     iMesh_save(mesh,root_set,file,"",&err,strlen(file),0);
     assert(err == 0);
 
     delete ext;
     iMesh_dtor(mesh,&err);
+}
+
+void test2()
+{
+    int err;
+    iMesh_Instance mesh;
+    iMesh_newMesh("",&mesh,&err,0);
+    iBase_EntitySetHandle root_set;
+    iMesh_getRootSet(mesh,&root_set,&err);
+
+    ExtrudeMesh *ext = new ExtrudeMesh(mesh);
+
+    double verts[] = {
+        0, 0, 0,
+        1, 0, 0,
+        1, 1, 0,
+        0, 1, 0,
+        2, 1, 0,
+        9, 9, 9,
+
+        0, 0, 1,
+        1, 0, 1,
+        1, 1, 1,
+        0, 1, 1,
+        2, 1, 1,
+    };
+    iBase_EntityHandle *ents=0;
+    int size=0,alloc=0;
+
+    iMesh_createVtxArr(mesh,11,iBase_INTERLEAVED,verts,3*11,&ents,&size,&alloc,
+                       &err);
+    assert(err == 0);
+
+    iBase_EntityHandle quad[2];
+    int status;
+    iMesh_createEnt(mesh,iMesh_QUADRILATERAL,ents+0,4,quad+0,&status,&err);
+    assert(err == 0);
+    iMesh_createEnt(mesh,iMesh_QUADRILATERAL,ents+6,4,quad+1,&status,&err);
+    assert(err == 0);
+
+    iBase_EntityHandle tri[2];
+    iBase_EntityHandle tri_ents[] = { ents[1], ents[2], ents[4],
+                                      ents[7], ents[8], ents[10] };
+    iMesh_createEnt(mesh,iMesh_TRIANGLE,tri_ents+0,3,tri+0,&status,&err);
+    assert(err == 0);
+    iMesh_createEnt(mesh,iMesh_TRIANGLE,tri_ents+3,3,tri+1,&status,&err);
+    assert(err == 0);
+
+    iBase_EntityHandle pre[]  = {quad[0], tri[0]};
+    iBase_EntityHandle post[] = {quad[1], tri[1]};
+    double v[] = {0,0,1};
+    int steps = 5;
+    ext->translate(pre,post,2,steps);
+
+    int count;
+    iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);
+    assert(err == 0 && count == 5*(steps+1)+1);
+
+    iMesh_getNumOfType(mesh,0,iBase_FACE,&count,&err);
+    assert(err == 0 && count == 4);
+
+    iMesh_getNumOfType(mesh,0,iBase_REGION,&count,&err);
+    assert(err == 0 && count == steps*2);
+
+    const char *file = "fun2.vtk";
+    iMesh_save(mesh,root_set,file,"",&err,strlen(file),0);
+    assert(err == 0);
+
+    delete ext;
+    iMesh_dtor(mesh,&err);
+}
+
+void test3()
+{
+    int err;
+    iMesh_Instance mesh;
+    iMesh_newMesh("",&mesh,&err,0);
+    iBase_EntitySetHandle root_set;
+    iMesh_getRootSet(mesh,&root_set,&err);
+
+    ExtrudeMesh *ext = new ExtrudeMesh(mesh);
+
+    double verts[] = {
+        0, 0, 0,
+        1, 0, 0,
+        1, 1, 0,
+        0, 1, 0,
+    };
+    iBase_EntityHandle *ents=0;
+    int size=0,alloc=0;
+
+    iMesh_createVtxArr(mesh,4,iBase_INTERLEAVED,verts,3*4,&ents,&size,&alloc,
+                       &err);
+    assert(err == 0);
+
+    iBase_EntityHandle quad;
+    int status;
+    iMesh_createEnt(mesh,iMesh_QUADRILATERAL,ents,4,&quad,&status,&err);
+    assert(err == 0);
+
+    iBase_EntityHandle faces[] = {quad};
+    double v[] = {0,0,1};
+    int steps = 5;
+    ext->translate(faces,1,v,steps);
+
+    int count;
+    iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);
+    assert(err == 0 && count == 4*(steps+1));
+
+    iMesh_getNumOfType(mesh,0,iBase_FACE,&count,&err);
+    assert(err == 0 && count == 1);
+
+    iMesh_getNumOfType(mesh,0,iBase_REGION,&count,&err);
+    assert(err == 0 && count == steps);
+
+    const char *file = "easy.vtk";
+    iMesh_save(mesh,root_set,file,"",&err,strlen(file),0);
+    assert(err == 0);
+
+    delete ext;
+    iMesh_dtor(mesh,&err);
+}
+
+int main()
+{
+    using namespace std;
+    cout << "Test 1...";
+    test1();
+    cout << " Passed!" << endl;
+
+    cout << "Test 2...";
+    test2();
+    cout << " Passed!" << endl;
+
+    cout << "Test 3...";
+    test3();
+    cout << " Passed!" << endl;
 }
