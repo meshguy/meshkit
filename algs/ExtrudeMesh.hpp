@@ -27,15 +27,12 @@ public:
 private:
     int * get_normals(iBase_EntityHandle *verts,int *indices,int *offsets,
                       int size,double *dv);
-    void copy_rows(iBase_EntityHandle *src,int src_size,double *dv,int steps,
-                   iBase_EntityHandle *dest,int dest_alloc);
     void connect_the_dots(int *pre_normals, int *pre_indices, int *pre_offsets,
                           iBase_EntityHandle *pre,
                           int *post_normals,int *post_indices,int *post_offsets,
                           iBase_EntityHandle *post,
                           int size);
 
-    // technically not necessary since CopyMesh holds an iMesh instance
     iMesh_Instance impl_;
 };
 

@@ -46,6 +46,7 @@ void copy_move(iMesh_Instance mesh,iBase_EntityHandle *src,int src_size,
     iMesh_createVtxArr(mesh,src_size,iBase_INTERLEAVED,coords,coords_size,
                        dest,dest_alloc,dest_size,&err);
     assert(!err);
+    assert(*dest_size == src_size); // Sanity check
 
     free(coords);
 }
@@ -114,30 +115,31 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
 
     int *normals = get_normals(adj,indices,offsets,ent_size,dv);
 
-    int total_count;
-    iMesh_getNumOfType(impl_,0,iBase_VERTEX,&total_count,&err);
-    assert(!err);
-
-    int copies_alloc = adj_size*steps;
-    iBase_EntityHandle *copies = new iBase_EntityHandle[copies_alloc];
-    copy_rows(adj,adj_size,dv,steps,copies,copies_alloc);
+    int row_alloc = adj_size,row_size;
+    iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
+    iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
+    copy_move(impl_,adj,adj_size,dv,&next,&row_alloc,&row_size);
 
     // Make the first row of volumes
     connect_the_dots(normals,indices,offsets,adj,
-                     normals,indices,offsets,copies,ent_size);
+                     normals,indices,offsets,next,ent_size);
 
-    // Make the subsequent rows of volumes
-    iBase_EntityHandle *curr = copies;
-    for(int i=1; i<steps; i++)
+    // Make the inner rows of volumes
+    for(int i=2; i<=steps; i++)
     {
+        std::swap(curr,next);
+        //double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
+        //copy_move(impl_,adj,adj_size,v,&next,&row_alloc,&row_size);
+        copy_move(impl_,curr,adj_size,dv,&next,&row_alloc,&row_size);
         connect_the_dots(normals,indices,offsets,curr,
-                         normals,indices,offsets,curr+adj_size,ent_size);
-        curr += adj_size;
+                         normals,indices,offsets,next,ent_size);
     }
 
-    // One of these things is not like the others
-    // One of these things just doesn't belong
-    delete[] copies;
+
+    // Two of these things are not like the others
+    // Two of these things just do not belong
+    delete[] curr;
+    delete[] next;
     free(normals);
     free(ents);
     free(adj);
@@ -178,6 +180,7 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                            &err);
     assert(!err);
 
+    // Deduce the per-step displacement vector "dv"
     // Note: we assume that src and dest are the same shape, etc.
     double dv[3];
     {
@@ -188,7 +191,7 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
         assert(!err);
 
         for(int i=0; i<3; i++)
-            dv[i] = b[i]-a[i];
+            dv[i] = (b[i]-a[i])/steps;
     }
 
     int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
@@ -201,28 +204,32 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
     }
     else
     {
-        int copies_alloc = adj_size*steps;
-        iBase_EntityHandle *copies = new iBase_EntityHandle[copies_alloc];
-        copy_rows(adj,adj_size,dv,steps-1,copies,copies_alloc);
+        int row_alloc = adj_size,row_size;
+        iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
+        iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
+        copy_move(impl_,adj,adj_size,dv,&next,&row_alloc,&row_size);
 
         // Make the first row of volumes
         connect_the_dots(normals,indices,offsets,adj,
-                         normals,indices,offsets,copies,ent_size);
+                         normals,indices,offsets,next,ent_size);
 
         // Make the inner rows of volumes
-        iBase_EntityHandle *curr = copies;
-        for(int i=1; i<steps-1; i++)
+        for(int i=2; i<steps; i++)
         {
+            std::swap(curr,next);
+            //double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
+            //copy_move(impl_,adj,adj_size,v,&next,&row_alloc,&row_size);
+            copy_move(impl_,curr,adj_size,dv,&next,&row_alloc,&row_size);
             connect_the_dots(normals,indices,offsets,curr,
-                             normals,indices,offsets,curr+adj_size,ent_size);
-            curr += adj_size;
+                             normals,indices,offsets,next,ent_size);
         }
 
         // Make the final row of volumes
-        connect_the_dots(normals, indices, offsets, curr,
+        connect_the_dots(normals, indices, offsets, next,
                          normals2,indices2,offsets2,adj2,ent_size);
 
-        delete[] copies;
+        delete[] curr;
+        delete[] next;
     }
 
     free(normals); free(normals2);
@@ -304,22 +311,6 @@ void ExtrudeMesh::connect_the_dots(int *pre_norms, int *pre_inds,
 
         assert(status==0 && err==0);
         delete[] nodes;
-    }
-}
-
-void ExtrudeMesh::copy_rows(iBase_EntityHandle *src,int src_size,double *dv,
-                            int steps,iBase_EntityHandle *dest,int dest_alloc)
-{
-    for(int i=1; i<=steps; i++)
-    {
-        int dest_size;
-        double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
-
-        copy_move(impl_,src,src_size,v,&dest,&dest_alloc,&dest_size);
-        assert(dest_size == src_size); // Sanity check
-
-        dest += dest_size;
-        dest_alloc -= dest_size;
     }
 }
 
