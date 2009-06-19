@@ -26,10 +26,9 @@ public:
     int translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                   int steps);
 private:
-    int transform(iBase_EntitySetHandle src,int steps,double *dv,
-                  const CopyVerts &trans);
+    int transform(iBase_EntitySetHandle src,int steps,const CopyVerts &trans);
     int transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
-                  int steps,double *dv,const CopyVerts &trans);
+                  int steps,const CopyVerts &trans);
 
     int * get_normals(iBase_EntityHandle *verts,int *indices,int *offsets,
                       int size,double *dv);

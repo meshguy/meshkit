@@ -10,7 +10,7 @@ ExtrudeMesh::~ExtrudeMesh()
 {}
 
 // This is not very C++-y! But it's simple, so I'm ok with it!
-double * cross(double *res,double *a,double *b)
+static double * cross(double *res,double *a,double *b)
 {
     res[0] = a[1]*b[2] - a[2]*b[1];
     res[1] = a[2]*b[0] - a[0]*b[2];
@@ -18,9 +18,25 @@ double * cross(double *res,double *a,double *b)
     return res;
 }
 
-double dot(double *a,double *b)
+static double dot(double *a,double *b)
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+static double * vtx_diff(double *res,iMesh_Instance mesh,iBase_EntityHandle a,
+                         iBase_EntityHandle b)
+{
+    int err;
+    double xa[3],xb[3];
+
+    iMesh_getVtxCoord(mesh,a,xa+0,xa+1,xa+2,&err);
+    assert(!err);
+    iMesh_getVtxCoord(mesh,b,xb+0,xb+1,xb+2,&err);
+    assert(!err);
+
+    for(int i=0; i<3; i++)
+        res[i] = xa[i]-xb[i];
+    return res;
 }
 
 int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dv,
@@ -69,10 +85,10 @@ int ExtrudeMesh::translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,
 
 int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
 {
-    return transform(src,steps,dv,CopyMoveVerts(impl_,dv));
+    return transform(src,steps,CopyMoveVerts(impl_,dv));
 }
 
-int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,double *dv,
+int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,
                            const CopyVerts &trans)
 {
     int err;
@@ -91,12 +107,15 @@ int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,double *dv,
                            &err);
     assert(!err);
 
-    int *normals = get_normals(adj,indices,offsets,ent_size,dv);
-
     int row_alloc = adj_size,row_size;
     iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
     iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
     trans(1,adj,adj_size,&next,&row_alloc,&row_size);
+
+    double dv[3];
+    vtx_diff(dv,impl_,next[0],adj[0]);
+
+    int *normals = get_normals(adj,indices,offsets,ent_size,dv);
 
     // Make the first row of volumes
     connect_the_dots(normals,indices,offsets,adj,
@@ -166,11 +185,11 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
     for(int i=0; i<3; i++)
         dv[i] = (coords[1][i]-coords[0][i])/steps;
 
-    return transform(src,dest,steps,dv,CopyMoveVerts(impl_,dv));
+    return transform(src,dest,steps,CopyMoveVerts(impl_,dv));
 }
 
 int ExtrudeMesh::transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
-                           int steps,double *dv,const CopyVerts &trans)
+                           int steps,const CopyVerts &trans)
 {
     int err;
 
@@ -202,13 +221,19 @@ int ExtrudeMesh::transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                            &err);
     assert(!err);
 
-    int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
-    int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dv);
-
     if(steps == 1)
     {
+        double dv[3];
+        vtx_diff(dv,impl_,adj2[indices2[ offsets2[0] ]],
+                          adj [indices [ offsets [0] ]]);
+
+        int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
+        int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dv);
+
         connect_the_dots(normals, indices, offsets, adj,
                          normals2,indices2,offsets2,adj2,ent_size);
+
+        free(normals); free(normals2);
     }
     else
     {
@@ -216,6 +241,10 @@ int ExtrudeMesh::transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
         iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
         iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
         trans(1,adj,adj_size,&next,&row_alloc,&row_size);
+
+        double dv[3];
+        vtx_diff(dv,impl_,next[0],adj[0]);
+        int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
 
         // Make the first row of volumes
         connect_the_dots(normals,indices,offsets,adj,
@@ -230,15 +259,19 @@ int ExtrudeMesh::transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                              normals,indices,offsets,next,ent_size);
         }
 
+        vtx_diff(dv,impl_,adj2[indices2[ offsets2[0] ]],
+                          next[indices [ offsets [0] ]]);
+        int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dv);
+
         // Make the final row of volumes
         connect_the_dots(normals, indices, offsets, next,
                          normals2,indices2,offsets2,adj2,ent_size);
 
         delete[] curr;
         delete[] next;
+        free(normals); free(normals2);
     }
 
-    free(normals); free(normals2);
     free(ents);    free(ents2);
     free(adj);     free(adj2);
     free(indices); free(indices2);
