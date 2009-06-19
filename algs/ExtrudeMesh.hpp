@@ -2,6 +2,7 @@
 #define EXTRUDEMESH_HPP
 
 #include "iMesh_extensions.h"
+#include "CopyVerts.hpp"
 
 class ExtrudeMesh
 {
@@ -25,6 +26,11 @@ public:
     int translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                   int steps);
 private:
+    int transform(iBase_EntitySetHandle src,int steps,double *dv,
+                  const CopyVerts &trans);
+    int transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
+                  int steps,double *dv,const CopyVerts &trans);
+
     int * get_normals(iBase_EntityHandle *verts,int *indices,int *offsets,
                       int size,double *dv);
     void connect_the_dots(int *pre_normals, int *pre_indices, int *pre_offsets,

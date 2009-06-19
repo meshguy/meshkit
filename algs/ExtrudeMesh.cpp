@@ -23,34 +23,6 @@ double dot(double *a,double *b)
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
-// TODO: move this to a separate file and use for CopyMesh too
-void copy_move(iMesh_Instance mesh,iBase_EntityHandle *src,int src_size,
-               double *dv,iBase_EntityHandle **dest,int *dest_alloc,
-               int *dest_size)
-{
-    int err;
-
-    double *coords=0;
-    int coords_alloc=0,coords_size=0;
-    iMesh_getVtxArrCoords(mesh,src,src_size,iBase_INTERLEAVED,
-                          &coords,&coords_alloc,&coords_size,&err);
-    assert(!err);
-
-    for(int i=0; i<coords_size; i+=3)
-    {
-        coords[i]   += dv[0];
-        coords[i+1] += dv[1];
-        coords[i+2] += dv[2];
-    }
-
-    iMesh_createVtxArr(mesh,src_size,iBase_INTERLEAVED,coords,coords_size,
-                       dest,dest_alloc,dest_size,&err);
-    assert(!err);
-    assert(*dest_size == src_size); // Sanity check
-
-    free(coords);
-}
-
 int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dv,
                            int steps)
 {
@@ -97,6 +69,12 @@ int ExtrudeMesh::translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,
 
 int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
 {
+    return transform(src,steps,dv,CopyMoveVerts(impl_,dv));
+}
+
+int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,double *dv,
+                           const CopyVerts &trans)
+{
     int err;
 
     iBase_EntityHandle *ents=0; int ent_alloc=0, ent_size=0;
@@ -118,7 +96,7 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
     int row_alloc = adj_size,row_size;
     iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
     iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
-    copy_move(impl_,adj,adj_size,dv,&next,&row_alloc,&row_size);
+    trans(1,adj,adj_size,&next,&row_alloc,&row_size);
 
     // Make the first row of volumes
     connect_the_dots(normals,indices,offsets,adj,
@@ -128,9 +106,7 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
     for(int i=2; i<=steps; i++)
     {
         std::swap(curr,next);
-        //double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
-        //copy_move(impl_,adj,adj_size,v,&next,&row_alloc,&row_size);
-        copy_move(impl_,curr,adj_size,dv,&next,&row_alloc,&row_size);
+        trans(i,adj,adj_size,&next,&row_alloc,&row_size);
         connect_the_dots(normals,indices,offsets,curr,
                          normals,indices,offsets,next,ent_size);
     }
@@ -149,6 +125,52 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
 
 int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                            int steps)
+{
+    int err;
+
+    // Deduce the per-step displacement vector "dv"
+    // Note: we assume that src and dest are the same shape, etc.
+    double dv[3];
+    double coords[2][3];
+
+    iBase_EntitySetHandle ends[] = {src,dest};
+    for(int i=0; i<2; i++)
+    {
+        iMesh_EntityIterator iter;
+        iMesh_initEntIter(impl_,ends[i],iBase_FACE,iMesh_ALL_TOPOLOGIES,&iter,
+                          &err);
+        assert(!err);
+
+        iBase_EntityHandle face;
+        int has_data;
+        iMesh_getNextEntIter(impl_,iter,&face,&has_data,&err);
+        assert(!err);
+        assert(has_data);
+
+        iMesh_endEntIter(impl_,iter,&err);
+        assert(!err);
+
+        iBase_EntityHandle *verts=0;
+        int verts_alloc=0,verts_size=0;
+        iMesh_getEntAdj(impl_,face,iBase_VERTEX,&verts,&verts_alloc,
+                        &verts_size,&err);
+        assert(!err);
+
+        iMesh_getVtxCoord(impl_,verts[0],coords[i]+0,coords[i]+1,coords[i]+2,
+                          &err);
+        assert(!err);
+
+        free(verts);
+    }
+
+    for(int i=0; i<3; i++)
+        dv[i] = (coords[1][i]-coords[0][i])/steps;
+
+    return transform(src,dest,steps,dv,CopyMoveVerts(impl_,dv));
+}
+
+int ExtrudeMesh::transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
+                           int steps,double *dv,const CopyVerts &trans)
 {
     int err;
 
@@ -180,20 +202,6 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                            &err);
     assert(!err);
 
-    // Deduce the per-step displacement vector "dv"
-    // Note: we assume that src and dest are the same shape, etc.
-    double dv[3];
-    {
-        double a[3],b[3];
-        iMesh_getVtxCoord(impl_,adj [0],a+0,a+1,a+2,&err);
-        assert(!err);
-        iMesh_getVtxCoord(impl_,adj2[0],b+0,b+1,b+2,&err);
-        assert(!err);
-
-        for(int i=0; i<3; i++)
-            dv[i] = (b[i]-a[i])/steps;
-    }
-
     int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
     int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dv);
 
@@ -207,7 +215,7 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
         int row_alloc = adj_size,row_size;
         iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
         iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
-        copy_move(impl_,adj,adj_size,dv,&next,&row_alloc,&row_size);
+        trans(1,adj,adj_size,&next,&row_alloc,&row_size);
 
         // Make the first row of volumes
         connect_the_dots(normals,indices,offsets,adj,
@@ -217,9 +225,7 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
         for(int i=2; i<steps; i++)
         {
             std::swap(curr,next);
-            //double v[] = {dv[0]*i, dv[1]*i, dv[2]*i};
-            //copy_move(impl_,adj,adj_size,v,&next,&row_alloc,&row_size);
-            copy_move(impl_,curr,adj_size,dv,&next,&row_alloc,&row_size);
+            trans(i,adj,adj_size,&next,&row_alloc,&row_size);
             connect_the_dots(normals,indices,offsets,curr,
                              normals,indices,offsets,next,ent_size);
         }
