@@ -1,6 +1,7 @@
 #include "CopyVerts.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 
@@ -40,4 +41,44 @@ void CopyMoveVerts::transform(int n,int i,double *coords) const
     coords[0] += dv_[0]*n;
     coords[1] += dv_[1]*n;
     coords[2] += dv_[2]*n;
+}
+
+CopyRotateVerts::CopyRotateVerts(iMesh_Instance impl,double *origin,
+                                 double *angles)
+    : CopyVerts(impl)
+{
+    memcpy(origin_,origin,sizeof(origin_));
+    memcpy(angles_,angles,sizeof(angles_));
+}
+
+void CopyRotateVerts::transform(int n,int i,double *coords) const
+{
+    double s[3],c[3];
+    for(int i=0; i<3; i++)
+    {
+        s[i] = sin(angles_[i]*n);
+        c[i] = cos(angles_[i]*n);
+    }
+
+    double tmp[3] = { coords[0]-origin_[0],
+                      coords[1]-origin_[1],
+                      coords[2]-origin_[2] };
+
+    coords[0] =
+        ( c[2]*c[0] - c[1]*s[0]*s[2]) * tmp[0] +
+        ( c[2]*s[0] + c[1]*c[0]*s[2]) * tmp[1] +
+        ( s[2]*s[1])                  * tmp[2] +
+        origin_[0];
+
+    coords[1] =
+        (-s[2]*c[0] - c[1]*s[0]*c[2]) * tmp[0] +
+        (-s[2]*s[0] + c[1]*c[0]*c[2]) * tmp[1] +
+        ( c[2]*s[1])                  * tmp[2] +
+        origin_[1];
+
+    coords[2] = 
+        ( s[1]*s[0]) * tmp[0] +
+        (-s[1]*c[0]) * tmp[1] +
+        ( c[1])      * tmp[2] +
+        origin_[2];
 }

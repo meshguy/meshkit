@@ -21,10 +21,14 @@ public:
     int translate(iBase_EntityHandle *src,int size,double *dv,int steps);
     int translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,int size,
                   int steps);
-
     int translate(iBase_EntitySetHandle src,double *dv,int steps);
     int translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                   int steps);
+
+    int rotate(iBase_EntityHandle *src,int size,double *origin,double *angles,
+               int steps);
+    int rotate(iBase_EntitySetHandle src,double *origin,double *angles,
+               int steps);
 private:
     int transform(iBase_EntitySetHandle src,int steps,const CopyVerts &trans);
     int transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,

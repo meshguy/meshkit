@@ -28,4 +28,14 @@ private:
     double dv_[3];
 };
 
+class CopyRotateVerts : public CopyVerts
+{
+public:
+    CopyRotateVerts(iMesh_Instance impl,double *origin,double *angles);
+protected:
+    virtual void transform(int n,int i,double *coords) const;
+private:
+    double origin_[3],angles_[3];
+};
+
 #endif

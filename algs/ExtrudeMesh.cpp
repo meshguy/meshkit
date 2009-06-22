@@ -88,6 +88,77 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
     return transform(src,steps,CopyMoveVerts(impl_,dv));
 }
 
+int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
+                           int steps)
+{
+    int err;
+
+    // Deduce the per-step displacement vector "dv"
+    // Note: we assume that src and dest are the same shape, etc.
+    double dv[3];
+    double coords[2][3];
+
+    iBase_EntitySetHandle ends[] = {src,dest};
+    for(int i=0; i<2; i++)
+    {
+        iMesh_EntityIterator iter;
+        iMesh_initEntIter(impl_,ends[i],iBase_FACE,iMesh_ALL_TOPOLOGIES,&iter,
+                          &err);
+        assert(!err);
+
+        iBase_EntityHandle face;
+        int has_data;
+        iMesh_getNextEntIter(impl_,iter,&face,&has_data,&err);
+        assert(!err);
+        assert(has_data);
+
+        iMesh_endEntIter(impl_,iter,&err);
+        assert(!err);
+
+        iBase_EntityHandle *verts=0;
+        int verts_alloc=0,verts_size=0;
+        iMesh_getEntAdj(impl_,face,iBase_VERTEX,&verts,&verts_alloc,
+                        &verts_size,&err);
+        assert(!err);
+
+        iMesh_getVtxCoord(impl_,verts[0],coords[i]+0,coords[i]+1,coords[i]+2,
+                          &err);
+        assert(!err);
+
+        free(verts);
+    }
+
+    for(int i=0; i<3; i++)
+        dv[i] = (coords[1][i]-coords[0][i])/steps;
+
+    return transform(src,dest,steps,CopyMoveVerts(impl_,dv));
+}
+
+int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
+                        double *angles,int steps)
+{
+    int err;
+    iBase_EntitySetHandle set;
+    iMesh_createEntSet(impl_,false,&set,&err);
+    assert(!err);
+    
+    iMesh_addEntArrToSet(impl_,src,size,set,&err);
+    assert(!err);
+
+    int ret = rotate(set,origin,angles,steps);
+
+    iMesh_destroyEntSet(impl_,set,&err);
+    assert(!err);
+
+    return ret;
+}
+
+int ExtrudeMesh::rotate(iBase_EntitySetHandle src,double *origin,double *angles,
+                        int steps)
+{
+    return transform(src,steps,CopyRotateVerts(impl_,origin,angles));
+}
+
 int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,
                            const CopyVerts &trans)
 {
@@ -140,52 +211,6 @@ int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,
     free(adj);
     free(indices);
     free(offsets);
-}
-
-int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
-                           int steps)
-{
-    int err;
-
-    // Deduce the per-step displacement vector "dv"
-    // Note: we assume that src and dest are the same shape, etc.
-    double dv[3];
-    double coords[2][3];
-
-    iBase_EntitySetHandle ends[] = {src,dest};
-    for(int i=0; i<2; i++)
-    {
-        iMesh_EntityIterator iter;
-        iMesh_initEntIter(impl_,ends[i],iBase_FACE,iMesh_ALL_TOPOLOGIES,&iter,
-                          &err);
-        assert(!err);
-
-        iBase_EntityHandle face;
-        int has_data;
-        iMesh_getNextEntIter(impl_,iter,&face,&has_data,&err);
-        assert(!err);
-        assert(has_data);
-
-        iMesh_endEntIter(impl_,iter,&err);
-        assert(!err);
-
-        iBase_EntityHandle *verts=0;
-        int verts_alloc=0,verts_size=0;
-        iMesh_getEntAdj(impl_,face,iBase_VERTEX,&verts,&verts_alloc,
-                        &verts_size,&err);
-        assert(!err);
-
-        iMesh_getVtxCoord(impl_,verts[0],coords[i]+0,coords[i]+1,coords[i]+2,
-                          &err);
-        assert(!err);
-
-        free(verts);
-    }
-
-    for(int i=0; i<3; i++)
-        dv[i] = (coords[1][i]-coords[0][i])/steps;
-
-    return transform(src,dest,steps,CopyMoveVerts(impl_,dv));
 }
 
 int ExtrudeMesh::transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
@@ -532,6 +557,69 @@ void test3()
     iMesh_dtor(mesh,&err);
 }
 
+void test4()
+{
+    int err;
+    iMesh_Instance mesh;
+    iMesh_newMesh("",&mesh,&err,0);
+    iBase_EntitySetHandle root_set;
+    iMesh_getRootSet(mesh,&root_set,&err);
+
+    ExtrudeMesh *ext = new ExtrudeMesh(mesh);
+
+    double verts[] = {
+        0, 0, 0,
+        0, 1, 0,
+        0, 1, 1,
+        0, 0, 1,
+    };
+    iBase_EntityHandle *ents=0;
+    int size=0,alloc=0;
+
+    iMesh_createVtxArr(mesh,4,iBase_INTERLEAVED,verts,3*4,&ents,&size,&alloc,
+                       &err);
+    assert(err == 0);
+
+    iBase_EntityHandle quad;
+    int status;
+    iMesh_createEnt(mesh,iMesh_QUADRILATERAL,ents,4,&quad,&status,&err);
+    assert(err == 0);
+
+    iBase_EntityHandle faces[] = {quad};
+
+    iBase_EntitySetHandle set;
+    iMesh_createEntSet(mesh,false,&set,&err);
+    assert(!err);
+    
+    iMesh_addEntArrToSet(mesh,faces,1,set,&err);
+    assert(!err);
+
+    int steps = 200;
+    double origin[] = {0,-1,0};
+    double angles[] = {2*3.14159/steps,2*3.14159/steps,0};
+    ext->rotate(set,origin,angles,steps);
+
+    int count;
+    iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);
+    assert(err == 0 && count == 4*(steps+1));
+
+    iMesh_getNumOfType(mesh,0,iBase_FACE,&count,&err);
+    assert(err == 0 && count == 1);
+
+    iMesh_getNumOfType(mesh,0,iBase_REGION,&count,&err);
+    assert(err == 0 && count == steps);
+
+    iMesh_destroyEntSet(mesh,set,&err);
+    assert(!err);
+
+    const char *file = "rotate.vtk";
+    iMesh_save(mesh,root_set,file,"",&err,strlen(file),0);
+    assert(err == 0);
+
+    delete ext;
+    iMesh_dtor(mesh,&err);
+}
+
 int main()
 {
     using namespace std;
@@ -545,5 +633,9 @@ int main()
 
     cout << "Test 3...";
     test3();
+    cout << " Passed!" << endl;
+
+    cout << "Test 4...";
+    test4();
     cout << " Passed!" << endl;
 }
