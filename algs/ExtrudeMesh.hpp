@@ -25,9 +25,9 @@ public:
     int translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                   int steps);
 
-    int rotate(iBase_EntityHandle *src,int size,double *origin,double *angles,
-               int steps);
-    int rotate(iBase_EntitySetHandle src,double *origin,double *angles,
+    int rotate(iBase_EntityHandle *src,int size,double *origin,double *z,
+               double angle,int steps);
+    int rotate(iBase_EntitySetHandle src,double *origin,double *z,double angle,
                int steps);
 private:
     int transform(iBase_EntitySetHandle src,int steps,const CopyVerts &trans);

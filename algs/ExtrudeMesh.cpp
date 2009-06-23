@@ -135,7 +135,7 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
 }
 
 int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
-                        double *angles,int steps)
+                        double *z,double angle,int steps)
 {
     int err;
     iBase_EntitySetHandle set;
@@ -145,7 +145,7 @@ int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
     iMesh_addEntArrToSet(impl_,src,size,set,&err);
     assert(!err);
 
-    int ret = rotate(set,origin,angles,steps);
+    int ret = rotate(set,origin,z,angle,steps);
 
     iMesh_destroyEntSet(impl_,set,&err);
     assert(!err);
@@ -153,10 +153,10 @@ int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
     return ret;
 }
 
-int ExtrudeMesh::rotate(iBase_EntitySetHandle src,double *origin,double *angles,
-                        int steps)
+int ExtrudeMesh::rotate(iBase_EntitySetHandle src,double *origin,double *z,
+                        double angle,int steps)
 {
-    return transform(src,steps,CopyRotateVerts(impl_,origin,angles));
+    return transform(src,steps,CopyRotateVerts(impl_,origin,z,angle));
 }
 
 int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,
@@ -370,6 +370,9 @@ void ExtrudeMesh::connect_the_dots(int *pre_norms, int *pre_inds,
             iMesh_createEnt(impl_,iMesh_HEXAHEDRON,nodes,8,&out,&status,&err);
         else if(count == 3) // tri
             iMesh_createEnt(impl_,iMesh_PRISM,nodes,6,&out,&status,&err);
+        else if(count == 2) // line
+            iMesh_createEnt(impl_,iMesh_QUADRILATERAL,nodes,4,&out,&status,
+                            &err);
         else
             assert(false);
 
@@ -557,6 +560,7 @@ void test3()
     iMesh_dtor(mesh,&err);
 }
 
+#include <cmath>
 void test4()
 {
     int err;
@@ -595,9 +599,10 @@ void test4()
     assert(!err);
 
     int steps = 200;
-    double origin[] = {0,-1,0};
-    double angles[] = {2*3.14159/steps,2*3.14159/steps,0};
-    ext->rotate(set,origin,angles,steps);
+    double origin[] = {0,-3,0};
+    double z[] = {1,1,1};
+    double angle = 2*3.14159/steps;
+    ext->rotate(set,origin,z,angle,steps);
 
     int count;
     iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);

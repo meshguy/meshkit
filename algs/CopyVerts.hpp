@@ -31,11 +31,12 @@ private:
 class CopyRotateVerts : public CopyVerts
 {
 public:
-    CopyRotateVerts(iMesh_Instance impl,double *origin,double *angles);
+    CopyRotateVerts(iMesh_Instance impl,double *origin,double *z,double theta);
 protected:
     virtual void transform(int n,int i,double *coords) const;
 private:
-    double origin_[3],angles_[3];
+    double origin_[3],z_[3];
+    double theta_;
 };
 
 #endif

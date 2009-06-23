@@ -36,49 +36,62 @@ CopyMoveVerts::CopyMoveVerts(iMesh_Instance impl,double *dv) : CopyVerts(impl)
     memcpy(dv_,dv,sizeof(dv_));
 }
 
-void CopyMoveVerts::transform(int n,int i,double *coords) const
+void CopyMoveVerts::transform(int n,int,double *coords) const
 {
     coords[0] += dv_[0]*n;
     coords[1] += dv_[1]*n;
     coords[2] += dv_[2]*n;
 }
 
-CopyRotateVerts::CopyRotateVerts(iMesh_Instance impl,double *origin,
-                                 double *angles)
-    : CopyVerts(impl)
+// TODO: these should be in their own file maybe?
+static double * cross(double *res,const double *a,const double *b)
 {
-    memcpy(origin_,origin,sizeof(origin_));
-    memcpy(angles_,angles,sizeof(angles_));
+    res[0] = a[1]*b[2] - a[2]*b[1];
+    res[1] = a[2]*b[0] - a[0]*b[2];
+    res[2] = a[0]*b[1] - a[1]*b[0];
+    return res;
 }
 
-void CopyRotateVerts::transform(int n,int i,double *coords) const
+static double dot(const double *a,const double *b)
 {
-    double s[3],c[3];
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+static double dist(const double *a)
+{
+    return sqrt(dot(a,a));
+}
+
+static double * normalize(double *res,const double *a)
+{
+    double d = dist(a);
     for(int i=0; i<3; i++)
-    {
-        s[i] = sin(angles_[i]*n);
-        c[i] = cos(angles_[i]*n);
-    }
+        res[i] = a[i]/d;
+}
 
-    double tmp[3] = { coords[0]-origin_[0],
-                      coords[1]-origin_[1],
-                      coords[2]-origin_[2] };
+CopyRotateVerts::CopyRotateVerts(iMesh_Instance impl,double *origin,double *z,
+                                 double theta)
+    : CopyVerts(impl),theta_(theta)
+{
+    memcpy(origin_,origin,sizeof(origin_));
+    normalize(z_,z);
+}
 
-    coords[0] =
-        ( c[2]*c[0] - c[1]*s[0]*s[2]) * tmp[0] +
-        ( c[2]*s[0] + c[1]*c[0]*s[2]) * tmp[1] +
-        ( s[2]*s[1])                  * tmp[2] +
-        origin_[0];
 
-    coords[1] =
-        (-s[2]*c[0] - c[1]*s[0]*c[2]) * tmp[0] +
-        (-s[2]*s[0] + c[1]*c[0]*c[2]) * tmp[1] +
-        ( c[2]*s[1])                  * tmp[2] +
-        origin_[1];
+void CopyRotateVerts::transform(int n,int,double *coords) const
+{
+    // uses Rodrigues' rotation formula
+    double tmp[3];
+    for(int i=0; i<3; i++)
+        tmp[i] = coords[i]-origin_[i];
 
-    coords[2] = 
-        ( s[1]*s[0]) * tmp[0] +
-        (-s[1]*c[0]) * tmp[1] +
-        ( c[1])      * tmp[2] +
-        origin_[2];
+    double x[3];
+    cross(x,z_,tmp);
+
+    double a = cos(theta_*n);
+    double b = sin(theta_*n);
+    double c = dot(tmp,z_)*(1-cos(theta_*n));
+
+    for(int i=0; i<3; i++)
+        coords[i] = a*tmp[i] + b*x[i] + c*z_[i] + origin_[i];
 }
