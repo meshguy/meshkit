@@ -2,6 +2,7 @@
 #define COPYMESH_HPP
 
 #include "iMesh_extensions.h"
+#include "CopyVerts.hpp"
 
 #include <string>
 #include <vector>
@@ -95,14 +96,14 @@ public:
   
     /* \brief Copy and move all the entities
      */
-  int copy_move_entities(iBase_EntityHandle *ent_handles,
+/*  int copy_move_entities(iBase_EntityHandle *ent_handles,
                          int num_ents,
                          const double dx,
                          const double dy,
                          const double dz,
                          iBase_EntityHandle **new_ents = NULL,
                          int *new_ents_allocated = 0,
-                         int *new_ents_size = 0);
+                         int *new_ents_size = 0);*/
   
     /* \brief Copy/move all entities in a set
      */
@@ -122,6 +123,21 @@ public:
                          int *new_ents_allocated = 0,
                          int *new_ents_size = 0,
                          bool do_merge = true);
+
+  int copy_transform_entities(iBase_EntitySetHandle set_handle,
+                              const CopyVerts &trans,
+                              iBase_EntityHandle **new_ents = NULL,
+                              int *new_ents_allocated = 0,
+                              int *new_ents_size = 0,
+                              bool do_merge = true);
+
+  int copy_transform_entities(iBase_EntityHandle *ent_handles,
+                              int num_ents,
+                              const CopyVerts &trans,
+                              iBase_EntityHandle **new_ents = NULL,
+                              int *new_ents_allocated = 0,
+                              int *new_ents_size = 0,
+                              bool do_merge = true);
 
   int update_ce_lists();
   
@@ -149,9 +165,9 @@ private:
                      iBase_TagHandle local_tag);
   
     //- copy/move vertices, putting results in new_ents
-  int copy_move_verts(iBase_EntitySetHandle copy_set,
-                      const double *dx,
-                      iBase_TagHandle local_tag);
+  int copy_transform_verts(iBase_EntitySetHandle copy_set,
+                           const CopyVerts &copier,
+                           iBase_TagHandle local_tag);
 
     //- get the copy/expand sets based on copy/expand tags
   int get_copy_expand_sets(iBase_EntitySetHandle *&copy_sets,

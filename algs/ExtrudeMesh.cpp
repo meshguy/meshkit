@@ -41,23 +41,10 @@ static double * vtx_diff(double *res,iMesh_Instance mesh,iBase_EntityHandle a,
     return res;
 }
 
-int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dx,
-                           int steps,bool copy_faces)
+int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,int steps,
+                           const double *dx,bool copy_faces)
 {
-    int err;
-    iBase_EntitySetHandle set;
-    iMesh_createEntSet(impl_,false,&set,&err);
-    assert(!err);
-    
-    iMesh_addEntArrToSet(impl_,src,size,set,&err);
-    assert(!err);
-
-    int ret = translate(set,dx,steps,copy_faces);
-
-    iMesh_destroyEntSet(impl_,set,&err);
-    assert(!err);
-
-    return ret;
+    return extrude(src,size,steps,CopyMoveVerts(impl_,dx,steps),copy_faces);
 }
 
 int ExtrudeMesh::translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,
@@ -85,38 +72,10 @@ int ExtrudeMesh::translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,
     return ret;
 }
 
-int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dx,int steps,
+int ExtrudeMesh::translate(iBase_EntitySetHandle src,int steps,const double *dx,
                            bool copy_faces)
 {
-    if(copy_faces)
-    {
-        int err;
-        CopyMesh copy(impl_);
-        double x[] = { dx[0]*steps, dx[1]*steps, dx[2]*steps };
-
-        iBase_EntitySetHandle parent;
-        iMesh_createEntSet(impl_,false,&parent,&err);
-        assert(!err);
-        iMesh_addEntSet(impl_,src,parent,&err);
-        assert(!err);
-        
-        copy.add_copy_expand_list(&src,1,CopyMesh::COPY);
-        copy.add_copy_expand_list(&parent,1,CopyMesh::EXPAND);
-        copy.copy_move_entities(src,x,0,0,0);
-
-        iMesh_rmvEntSet(impl_,src,parent,&err);
-        assert(!err);
-
-        iBase_EntitySetHandle dest;
-        iBase_EntitySetHandle *tmp = &dest;
-        int tmp_alloc=1,tmp_size=0;
-        iMesh_getEntSets(impl_,parent,0,&tmp,&tmp_alloc,&tmp_size,&err);
-        assert(!err);
-
-        return extrude(src,dest,true,steps-1,CopyMoveVerts(impl_,dx));
-    }
-    else
-        return extrude(src,0,false,steps,CopyMoveVerts(impl_,dx));
+    return extrude(src,steps,CopyMoveVerts(impl_,dx,steps),copy_faces);
 }
 
 int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
@@ -162,11 +121,23 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
     for(int i=0; i<3; i++)
         dx[i] = (coords[1][i]-coords[0][i])/steps;
 
-    return extrude(src,dest,true,steps-1,CopyMoveVerts(impl_,dx));
+    return extrude(src,dest,steps,CopyMoveVerts(impl_,dx));
 }
 
-int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
-                        double *z,double angle,int steps)
+int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,int steps,
+                        const double *origin,const double *z,double angle)
+{
+    return extrude(src,size,steps,CopyRotateVerts(impl_,origin,z,angle,steps));
+}
+
+int ExtrudeMesh::rotate(iBase_EntitySetHandle src,int steps,
+                        const double *origin,const double *z,double angle)
+{
+    return extrude(src,steps,CopyRotateVerts(impl_,origin,z,angle));
+}
+
+int ExtrudeMesh::extrude(iBase_EntityHandle *src,int size,int steps,
+                         const CopyVerts &trans,bool copy_faces)
 {
     int err;
     iBase_EntitySetHandle set;
@@ -176,7 +147,7 @@ int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
     iMesh_addEntArrToSet(impl_,src,size,set,&err);
     assert(!err);
 
-    int ret = rotate(set,origin,z,angle,steps);
+    int ret = extrude(set,steps,trans,copy_faces);
 
     iMesh_destroyEntSet(impl_,set,&err);
     assert(!err);
@@ -184,16 +155,82 @@ int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
     return ret;
 }
 
-int ExtrudeMesh::rotate(iBase_EntitySetHandle src,double *origin,double *z,
-                        double angle,int steps)
+int ExtrudeMesh::extrude(iBase_EntityHandle *src,iBase_EntityHandle *dest,
+                         int size,int steps,const CopyVerts &trans)
 {
-    return extrude(src,0,false,steps,CopyRotateVerts(impl_,origin,z,angle));
+    int err;
+    iBase_EntitySetHandle src_set,dest_set;
+    iMesh_createEntSet(impl_,false,&src_set,&err);
+    assert(!err);
+    iMesh_createEntSet(impl_,false,&dest_set,&err);
+    assert(!err);
+    
+    iMesh_addEntArrToSet(impl_,src,size,src_set,&err);
+    assert(!err);
+    iMesh_addEntArrToSet(impl_,dest,size,dest_set,&err);
+    assert(!err);
+
+    int ret = extrude(src_set,dest_set,steps,trans);
+
+    iMesh_destroyEntSet(impl_,src_set,&err);
+    assert(!err);
+    iMesh_destroyEntSet(impl_,dest_set,&err);
+    assert(!err);
+
+    return ret;
+}
+
+int ExtrudeMesh::extrude(iBase_EntitySetHandle src,int steps,
+                         const CopyVerts &trans,bool copy_faces)
+{
+    if(copy_faces)
+    {
+        int err;
+        CopyMesh copy(impl_);
+
+        iBase_EntitySetHandle parent;
+        iMesh_createEntSet(impl_,false,&parent,&err);
+        assert(!err);
+        iMesh_addEntSet(impl_,src,parent,&err);
+        assert(!err);
+        
+        copy.add_copy_expand_list(&src,   1,CopyMesh::COPY);
+        copy.add_copy_expand_list(&parent,1,CopyMesh::EXPAND);
+        copy.copy_transform_entities(src,trans,0,0,0);
+
+        iMesh_rmvEntSet(impl_,src,parent,&err);
+        assert(!err);
+
+        iBase_EntitySetHandle dest;
+        iBase_EntitySetHandle *tmp = &dest;
+        int tmp_alloc=1,tmp_size=0;
+        iMesh_getEntSets(impl_,parent,0,&tmp,&tmp_alloc,&tmp_size,&err);
+        assert(!err);
+
+        int ret = do_extrusion(src,dest,true,steps-1,trans);
+
+        iMesh_destroyEntSet(impl_,parent,&err);
+        assert(!err);
+        iMesh_destroyEntSet(impl_,dest,&err);
+        assert(!err);
+
+        return ret;
+    }
+    else
+        return do_extrusion(src,0,false,steps,trans);
 }
 
 int ExtrudeMesh::extrude(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
-                         bool use_dest,int inner_rows,const CopyVerts &trans)
+                         int new_rows,const CopyVerts &trans)
 {
-    assert(inner_rows > 0 || use_dest);
+    return do_extrusion(src,dest,true,new_rows-1,trans);
+}
+
+int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
+                              iBase_EntitySetHandle dest,bool use_dest,
+                              int new_rows,const CopyVerts &trans)
+{
+    assert(new_rows > 0 || use_dest);
 
     int err;
 
@@ -216,7 +253,7 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
     iBase_EntityHandle *next = adj;
     int *normals = 0;
 
-    if(inner_rows > 0)
+    if(new_rows > 0)
     {
         int row_alloc = adj_size,row_size;
         curr = new iBase_EntityHandle[row_alloc];
@@ -231,7 +268,7 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                          normals,indices,offsets,next,ent_size);
 
         // Make the inner volumes
-        for(int i=2; i<=inner_rows; i++)
+        for(int i=2; i<=new_rows; i++)
         {
             std::swap(curr,next);
             trans(i,adj,adj_size,&next,&row_alloc,&row_size);
@@ -272,7 +309,7 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
         free(offsets2);
     }
 
-    if(inner_rows > 0)
+    if(new_rows > 0)
     {
         delete curr;
         delete next;
@@ -403,7 +440,7 @@ void test1()
     iBase_EntityHandle faces[] = {quad, tri};
     double v[] = {0,0,1};
     int steps = 5;
-    ext->translate(faces,2,v,steps,true);
+    ext->translate(faces,2,steps,v,true);
 
     int count;
     iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);
@@ -524,7 +561,7 @@ void test3()
     iBase_EntityHandle faces[] = {quad};
     double v[] = {0,0,1};
     int steps = 5;
-    ext->translate(faces,1,v,steps);
+    ext->translate(faces,1,steps,v);
 
     int count;
     iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);
@@ -586,7 +623,7 @@ void test4()
     double origin[] = {0,-3,0};
     double z[] = {1,1,1};
     double angle = 2*3.14159/steps;
-    ext->rotate(set,origin,z,angle,steps);
+    ext->rotate(set,steps,origin,z,angle);
 
     int count;
     iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);

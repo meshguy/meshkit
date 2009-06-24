@@ -5,7 +5,8 @@
 #include <cstdlib>
 #include <cstring>
 
-CopyVerts::CopyVerts(iMesh_Instance impl) : impl_(impl)
+CopyVerts::CopyVerts(iMesh_Instance impl,int max)
+    : impl_(impl),max_(max)
 {}
 
 void CopyVerts::operator ()(int n,iBase_EntityHandle *src,int src_size,
@@ -31,8 +32,8 @@ void CopyVerts::operator ()(int n,iBase_EntityHandle *src,int src_size,
     free(coords);
 }
 
-CopyMoveVerts::CopyMoveVerts(iMesh_Instance impl,const double *dv)
-    : CopyVerts(impl)
+CopyMoveVerts::CopyMoveVerts(iMesh_Instance impl,const double *dv,int max)
+    : CopyVerts(impl,max)
 {
     memcpy(dv_,dv,sizeof(dv_));
 }
@@ -71,8 +72,8 @@ static double * normalize(double *res,const double *a)
 }
 
 CopyRotateVerts::CopyRotateVerts(iMesh_Instance impl,const double *origin,
-                                 const double *z,double theta)
-    : CopyVerts(impl),theta_(theta)
+                                 const double *z,double theta,int max)
+    : CopyVerts(impl,max),theta_(theta)
 {
     memcpy(origin_,origin,sizeof(origin_));
     normalize(z_,z);
