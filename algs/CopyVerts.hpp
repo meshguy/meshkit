@@ -21,7 +21,7 @@ private:
 class CopyMoveVerts : public CopyVerts
 {
 public:
-    CopyMoveVerts(iMesh_Instance impl,double *dv);
+    CopyMoveVerts(iMesh_Instance impl,const double *dv);
 protected:
     virtual void transform(int n,int i,double *coords) const;
 private:
@@ -31,7 +31,8 @@ private:
 class CopyRotateVerts : public CopyVerts
 {
 public:
-    CopyRotateVerts(iMesh_Instance impl,double *origin,double *z,double theta);
+    CopyRotateVerts(iMesh_Instance impl,const double *origin,const double *z,
+                    double theta);
 protected:
     virtual void transform(int n,int i,double *coords) const;
 private:

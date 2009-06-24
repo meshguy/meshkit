@@ -1,5 +1,7 @@
 #include "ExtrudeMesh.hpp"
 
+#include "CopyMesh.hpp"
+
 #include <cassert>
 #include <iostream>
 
@@ -39,8 +41,8 @@ static double * vtx_diff(double *res,iMesh_Instance mesh,iBase_EntityHandle a,
     return res;
 }
 
-int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dv,
-                           int steps)
+int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dx,
+                           int steps,bool copy_faces)
 {
     int err;
     iBase_EntitySetHandle set;
@@ -50,7 +52,7 @@ int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,double *dv,
     iMesh_addEntArrToSet(impl_,src,size,set,&err);
     assert(!err);
 
-    int ret = translate(set,dv,steps);
+    int ret = translate(set,dx,steps,copy_faces);
 
     iMesh_destroyEntSet(impl_,set,&err);
     assert(!err);
@@ -83,9 +85,38 @@ int ExtrudeMesh::translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,
     return ret;
 }
 
-int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dv,int steps)
+int ExtrudeMesh::translate(iBase_EntitySetHandle src,double *dx,int steps,
+                           bool copy_faces)
 {
-    return transform(src,steps,CopyMoveVerts(impl_,dv));
+    if(copy_faces)
+    {
+        int err;
+        CopyMesh copy(impl_);
+        double x[] = { dx[0]*steps, dx[1]*steps, dx[2]*steps };
+
+        iBase_EntitySetHandle parent;
+        iMesh_createEntSet(impl_,false,&parent,&err);
+        assert(!err);
+        iMesh_addEntSet(impl_,src,parent,&err);
+        assert(!err);
+        
+        copy.add_copy_expand_list(&src,1,CopyMesh::COPY);
+        copy.add_copy_expand_list(&parent,1,CopyMesh::EXPAND);
+        copy.copy_move_entities(src,x,0,0,0);
+
+        iMesh_rmvEntSet(impl_,src,parent,&err);
+        assert(!err);
+
+        iBase_EntitySetHandle dest;
+        iBase_EntitySetHandle *tmp = &dest;
+        int tmp_alloc=1,tmp_size=0;
+        iMesh_getEntSets(impl_,parent,0,&tmp,&tmp_alloc,&tmp_size,&err);
+        assert(!err);
+
+        return extrude(src,dest,true,steps-1,CopyMoveVerts(impl_,dx));
+    }
+    else
+        return extrude(src,0,false,steps,CopyMoveVerts(impl_,dx));
 }
 
 int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
@@ -93,9 +124,9 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
 {
     int err;
 
-    // Deduce the per-step displacement vector "dv"
+    // Deduce the per-step displacement vector "dx"
     // Note: we assume that src and dest are the same shape, etc.
-    double dv[3];
+    double dx[3];
     double coords[2][3];
 
     iBase_EntitySetHandle ends[] = {src,dest};
@@ -129,9 +160,9 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
     }
 
     for(int i=0; i<3; i++)
-        dv[i] = (coords[1][i]-coords[0][i])/steps;
+        dx[i] = (coords[1][i]-coords[0][i])/steps;
 
-    return transform(src,dest,steps,CopyMoveVerts(impl_,dv));
+    return extrude(src,dest,true,steps-1,CopyMoveVerts(impl_,dx));
 }
 
 int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
@@ -156,12 +187,14 @@ int ExtrudeMesh::rotate(iBase_EntityHandle *src,int size,double *origin,
 int ExtrudeMesh::rotate(iBase_EntitySetHandle src,double *origin,double *z,
                         double angle,int steps)
 {
-    return transform(src,steps,CopyRotateVerts(impl_,origin,z,angle));
+    return extrude(src,0,false,steps,CopyRotateVerts(impl_,origin,z,angle));
 }
 
-int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,
-                           const CopyVerts &trans)
+int ExtrudeMesh::extrude(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
+                         bool use_dest,int inner_rows,const CopyVerts &trans)
 {
+    assert(inner_rows > 0 || use_dest);
+
     int err;
 
     iBase_EntityHandle *ents=0; int ent_alloc=0, ent_size=0;
@@ -178,129 +211,80 @@ int ExtrudeMesh::transform(iBase_EntitySetHandle src,int steps,
                            &err);
     assert(!err);
 
-    int row_alloc = adj_size,row_size;
-    iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
-    iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
-    trans(1,adj,adj_size,&next,&row_alloc,&row_size);
+    double dx[3];
+    iBase_EntityHandle *curr;
+    iBase_EntityHandle *next = adj;
+    int *normals = 0;
 
-    double dv[3];
-    vtx_diff(dv,impl_,next[0],adj[0]);
-
-    int *normals = get_normals(adj,indices,offsets,ent_size,dv);
-
-    // Make the first row of volumes
-    connect_the_dots(normals,indices,offsets,adj,
-                     normals,indices,offsets,next,ent_size);
-
-    // Make the inner rows of volumes
-    for(int i=2; i<=steps; i++)
-    {
-        std::swap(curr,next);
-        trans(i,adj,adj_size,&next,&row_alloc,&row_size);
-        connect_the_dots(normals,indices,offsets,curr,
-                         normals,indices,offsets,next,ent_size);
-    }
-
-
-    // Two of these things are not like the others
-    // Two of these things just do not belong
-    delete[] curr;
-    delete[] next;
-    free(normals);
-    free(ents);
-    free(adj);
-    free(indices);
-    free(offsets);
-}
-
-int ExtrudeMesh::transform(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
-                           int steps,const CopyVerts &trans)
-{
-    int err;
-
-    iBase_EntityHandle *ents=0; int ent_alloc=0, ent_size=0;
-    iBase_EntityHandle *adj=0;  int adj_alloc=0, adj_size=0;
-    int *indices=0;             int ind_alloc=0, ind_size=0;
-    int *offsets=0;             int off_alloc=0, off_size=0;
-
-    iMesh_getAdjEntIndices(impl_,src,iBase_FACE,iMesh_ALL_TOPOLOGIES,
-                           iBase_VERTEX,
-                           &ents,    &ent_alloc, &ent_size,
-                           &adj,     &adj_alloc, &adj_size,
-                           &indices, &ind_alloc, &ind_size,
-                           &offsets, &off_alloc, &off_size,
-                           &err);
-    assert(!err);
-
-    iBase_EntityHandle *ents2=0; int ent2_alloc=0, ent2_size=0;
-    iBase_EntityHandle *adj2=0;  int adj2_alloc=0, adj2_size=0;
-    int *indices2=0;             int ind2_alloc=0, ind2_size=0;
-    int *offsets2=0;             int off2_alloc=0, off2_size=0;
-
-    iMesh_getAdjEntIndices(impl_,dest,iBase_FACE,iMesh_ALL_TOPOLOGIES,
-                           iBase_VERTEX,
-                           &ents2,    &ent2_alloc, &ent2_size,
-                           &adj2,     &adj2_alloc, &adj2_size,
-                           &indices2, &ind2_alloc, &ind2_size,
-                           &offsets2, &off2_alloc, &off2_size,
-                           &err);
-    assert(!err);
-
-    if(steps == 1)
-    {
-        double dv[3];
-        vtx_diff(dv,impl_,adj2[indices2[ offsets2[0] ]],
-                          adj [indices [ offsets [0] ]]);
-
-        int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
-        int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dv);
-
-        connect_the_dots(normals, indices, offsets, adj,
-                         normals2,indices2,offsets2,adj2,ent_size);
-
-        free(normals); free(normals2);
-    }
-    else
+    if(inner_rows > 0)
     {
         int row_alloc = adj_size,row_size;
-        iBase_EntityHandle *curr = new iBase_EntityHandle[row_alloc];
-        iBase_EntityHandle *next = new iBase_EntityHandle[row_alloc];
+        curr = new iBase_EntityHandle[row_alloc];
+        next = new iBase_EntityHandle[row_alloc];
         trans(1,adj,adj_size,&next,&row_alloc,&row_size);
 
-        double dv[3];
-        vtx_diff(dv,impl_,next[0],adj[0]);
-        int *normals  = get_normals(adj, indices, offsets, ent_size, dv);
+        vtx_diff(dx,impl_,next[0],adj[0]);
+        normals = get_normals(adj,indices,offsets,ent_size,dx);
 
-        // Make the first row of volumes
+        // Make the first set of volumes
         connect_the_dots(normals,indices,offsets,adj,
                          normals,indices,offsets,next,ent_size);
 
-        // Make the inner rows of volumes
-        for(int i=2; i<steps; i++)
+        // Make the inner volumes
+        for(int i=2; i<=inner_rows; i++)
         {
             std::swap(curr,next);
             trans(i,adj,adj_size,&next,&row_alloc,&row_size);
             connect_the_dots(normals,indices,offsets,curr,
                              normals,indices,offsets,next,ent_size);
         }
+    }
 
-        vtx_diff(dv,impl_,adj2[indices2[ offsets2[0] ]],
+    if(use_dest)
+    {
+        iBase_EntityHandle *ents2=0; int ent2_alloc=0, ent2_size=0;
+        iBase_EntityHandle *adj2=0;  int adj2_alloc=0, adj2_size=0;
+        int *indices2=0;             int ind2_alloc=0, ind2_size=0;
+        int *offsets2=0;             int off2_alloc=0, off2_size=0;
+
+        iMesh_getAdjEntIndices(impl_,dest,iBase_FACE,iMesh_ALL_TOPOLOGIES,
+                               iBase_VERTEX,
+                               &ents2,    &ent2_alloc, &ent2_size,
+                               &adj2,     &adj2_alloc, &adj2_size,
+                               &indices2, &ind2_alloc, &ind2_size,
+                               &offsets2, &off2_alloc, &off2_size,
+                               &err);
+        assert(!err);
+
+        vtx_diff(dx,impl_,adj2[indices2[ offsets2[0] ]],
                           next[indices [ offsets [0] ]]);
-        int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dv);
+        if(!normals)
+            normals = get_normals(adj,indices,offsets,ent_size,dx);
+        int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dx);
 
-        // Make the final row of volumes
         connect_the_dots(normals, indices, offsets, next,
                          normals2,indices2,offsets2,adj2,ent_size);
 
-        delete[] curr;
-        delete[] next;
-        free(normals); free(normals2);
+        free(normals2);
+        free(ents2);
+        free(adj2);
+        free(indices2);
+        free(offsets2);
     }
 
-    free(ents);    free(ents2);
-    free(adj);     free(adj2);
-    free(indices); free(indices2);
-    free(offsets); free(offsets2);
+    if(inner_rows > 0)
+    {
+        delete curr;
+        delete next;
+    }
+
+    free(normals);
+    free(ents);
+    free(adj);
+    free(indices);
+    free(offsets);
+
+    return 0;
 }
 
 // calculate the normals for each face (1 = towards v, -1 = away from v)
@@ -419,14 +403,14 @@ void test1()
     iBase_EntityHandle faces[] = {quad, tri};
     double v[] = {0,0,1};
     int steps = 5;
-    ext->translate(faces,2,v,steps);
+    ext->translate(faces,2,v,steps,true);
 
     int count;
     iMesh_getNumOfType(mesh,0,iBase_VERTEX,&count,&err);
     assert(err == 0 && count == 5*(steps+1)+1);
 
     iMesh_getNumOfType(mesh,0,iBase_FACE,&count,&err);
-    assert(err == 0 && count == 2);
+    assert(err == 0 && count == 4);
 
     iMesh_getNumOfType(mesh,0,iBase_REGION,&count,&err);
     assert(err == 0 && count == steps*2);

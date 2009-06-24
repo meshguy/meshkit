@@ -1,4 +1,5 @@
 #include "CopyMesh.hpp"
+#include "CopyVerts.hpp"
 #include "MBCN.hpp"
 #include <stdlib.h>
 #include <algorithm>
@@ -398,21 +399,15 @@ int CopyMesh::copy_move_verts(iBase_EntitySetHandle copy_set,
   std::vector<iBase_EntityHandle> new_verts(verts_size);
   iBase_EntityHandle *new_verts_ptr = &new_verts[0];
 
-    // get position of vertices, transform with move vector
-  double *coords = NULL;
-  int coords_alloc = 0, coords_size;
-  iMesh_getVtxArrCoords(imeshImpl, verts, verts_size,
-                        iBase_INTERLEAVED, &coords, &coords_alloc, &coords_size, &err);
-  ERRORR("Failed to get vtx coords.", iBase_FAILURE);
-  if (NULL != dx) {
-    for (int i = 0; i < 3*verts_size; i+=3)
-      coords[i] += dx[0], coords[i+1] += dx[1], coords[i+2] += dx[2];
-  }
-  
     // copy vertices
   int tmp_size, tmp_alloc = verts_size;
-  iMesh_createVtxArr(imeshImpl, verts_size, iBase_INTERLEAVED, coords, coords_size,
-                     &new_verts_ptr, &tmp_alloc, &tmp_size, &err);
+
+  double vec[] = {0,0,0};
+  if(dx == NULL)
+      dx = vec;
+
+  CopyMoveVerts copier(imeshImpl,dx);
+  copier(1,verts,verts_size,&new_verts_ptr,&tmp_alloc,&tmp_size);
   ERRORR("Couldn't create new vertices.", iBase_FAILURE);
   assert(tmp_size == verts_size);
 
@@ -426,8 +421,6 @@ int CopyMesh::copy_move_verts(iBase_EntitySetHandle copy_set,
                      &new_verts_ptr,  &tmp_alloc, &tmp_size, &err);
   ERRORR("Error getting local copy tag data on old verts.", iBase_FAILURE);
 #endif
-
-  free(coords);
   free(verts);
   
   return iBase_SUCCESS;

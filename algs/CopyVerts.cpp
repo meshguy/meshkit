@@ -31,7 +31,8 @@ void CopyVerts::operator ()(int n,iBase_EntityHandle *src,int src_size,
     free(coords);
 }
 
-CopyMoveVerts::CopyMoveVerts(iMesh_Instance impl,double *dv) : CopyVerts(impl)
+CopyMoveVerts::CopyMoveVerts(iMesh_Instance impl,const double *dv)
+    : CopyVerts(impl)
 {
     memcpy(dv_,dv,sizeof(dv_));
 }
@@ -69,8 +70,8 @@ static double * normalize(double *res,const double *a)
         res[i] = a[i]/d;
 }
 
-CopyRotateVerts::CopyRotateVerts(iMesh_Instance impl,double *origin,double *z,
-                                 double theta)
+CopyRotateVerts::CopyRotateVerts(iMesh_Instance impl,const double *origin,
+                                 const double *z,double theta)
     : CopyVerts(impl),theta_(theta)
 {
     memcpy(origin_,origin,sizeof(origin_));
