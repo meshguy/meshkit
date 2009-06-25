@@ -1,11 +1,9 @@
 #include "ExtrudeMesh.hpp"
 
-#include "CopyMesh.hpp"
-
 #include <cassert>
 #include <iostream>
 
-ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh) : impl_(mesh)
+ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh) : impl_(mesh),copy_(mesh)
 {}
 
 ExtrudeMesh::~ExtrudeMesh()
@@ -186,7 +184,6 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src,int steps,
     if(copy_faces)
     {
         int err;
-        CopyMesh copy(impl_);
 
         iBase_EntitySetHandle parent;
         iMesh_createEntSet(impl_,false,&parent,&err);
@@ -194,9 +191,9 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src,int steps,
         iMesh_addEntSet(impl_,src,parent,&err);
         assert(!err);
         
-        copy.add_copy_expand_list(&src,   1,CopyMesh::COPY);
-        copy.add_copy_expand_list(&parent,1,CopyMesh::EXPAND);
-        copy.copy_transform_entities(src,trans,0,0,0);
+        copy_.add_copy_expand_list(&src,   1,CopyMesh::COPY);
+        copy_.add_copy_expand_list(&parent,1,CopyMesh::EXPAND);
+        copy_.copy_transform_entities(src,trans,0,0,0);
 
         iMesh_rmvEntSet(impl_,src,parent,&err);
         assert(!err);
