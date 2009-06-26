@@ -32,25 +32,29 @@ public:
 
     int translate(iBase_EntityHandle *src,int size,int steps,const double *dx,
                   bool copy_faces = false);
-    int translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,int size,
-                  int steps);
     int translate(iBase_EntitySetHandle src,int steps,const double *dx,
                   bool copy_faces = false);
+    int translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,int size,
+                  int steps);
     int translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                   int steps);
 
     int rotate(iBase_EntityHandle *src,int size,int steps,const double *origin,
-               const double *z,double angle);
+               const double *z,double angle,bool copy_faces = false);
     int rotate(iBase_EntitySetHandle src,int steps,const double *origin,
-               const double *z,double angle);
+               const double *z,double angle,bool copy_faces = false);
+    int rotate(iBase_EntityHandle *src,iBase_EntityHandle *dest,int size,
+               int steps,const double *origin,const double *z,double angle);
+    int rotate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,int steps,
+               const double *origin,const double *z,double angle);
 
 
     int extrude(iBase_EntityHandle *src,int size,int steps,
                 const CopyVerts &trans,bool copy_faces = false);
-    int extrude(iBase_EntityHandle *src,iBase_EntityHandle *dest,int size,
-                int steps,const CopyVerts &trans);
     int extrude(iBase_EntitySetHandle src,int steps,const CopyVerts &trans,
                 bool copy_faces = false);
+    int extrude(iBase_EntityHandle *src,iBase_EntityHandle *dest,int size,
+                int steps,const CopyVerts &trans);
     int extrude(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                 int steps,const CopyVerts &trans);
 private:
