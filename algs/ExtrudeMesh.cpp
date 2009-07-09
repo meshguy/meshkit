@@ -1,27 +1,8 @@
 #include "ExtrudeMesh.hpp"
 
+#include "vec_utils.hpp"
 #include <cassert>
 #include <iostream>
-
-ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh) : impl_(mesh),copy_(mesh)
-{}
-
-ExtrudeMesh::~ExtrudeMesh()
-{}
-
-// This is not very C++-y! But it's simple, so I'm ok with it!
-static double * cross(double *res,double *a,double *b)
-{
-    res[0] = a[1]*b[2] - a[2]*b[1];
-    res[1] = a[2]*b[0] - a[0]*b[2];
-    res[2] = a[0]*b[1] - a[1]*b[0];
-    return res;
-}
-
-static double dot(double *a,double *b)
-{
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-}
 
 static double * vtx_diff(double *res,iMesh_Instance mesh,iBase_EntityHandle a,
                          iBase_EntityHandle b)
@@ -37,6 +18,152 @@ static double * vtx_diff(double *res,iMesh_Instance mesh,iBase_EntityHandle a,
     for(int i=0; i<3; i++)
         res[i] = xa[i]-xb[i];
     return res;
+}
+
+
+ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh)
+    : impl_(mesh),copy_(mesh),updated_set_(false)
+{}
+
+ExtrudeMesh::~ExtrudeMesh()
+{
+    for(std::vector<tag_data>::iterator i=extrude_tags_.begin();
+        i!=extrude_tags_.end(); ++i)
+    {
+        free(i->value);
+    }
+}
+
+int ExtrudeMesh::add_extrude_tag(const std::string &tag_name,
+                                 const char *tag_val)
+{
+    iBase_TagHandle tag_handle = 0;
+    int err;
+    iMesh_getTagHandle(impl_,tag_name.c_str(),&tag_handle,&err,
+                       tag_name.length());
+    if(err != iBase_SUCCESS)
+        ERRORR("Failed to get handle for tag "+tag_name,iBase_FAILURE);
+
+    return add_extrude_tag(tag_handle,tag_val);
+}
+
+int ExtrudeMesh::add_extrude_tag(iBase_TagHandle tag_handle,const char *tag_val)
+{
+    assert(tag_handle);
+    int err = iBase_SUCCESS;
+    char *tmp = NULL;
+
+    if(tag_val)
+    {
+        int tag_size;
+        iMesh_getTagSizeBytes(impl_,tag_handle,&tag_size,&err);
+        if (err != iBase_SUCCESS)
+            ERRORR("Failed to get size of tag",iBase_FAILURE);
+        tmp = static_cast<char*>(malloc(tag_size));
+        memcpy(tmp,tag_val,tag_size);
+    }
+
+    extrude_tags_.push_back(tag_data(tag_handle,tmp));
+
+    return err;
+}
+
+int ExtrudeMesh::update_sets()
+{
+    if(updated_set_)
+        reset_sets();
+    copy_.update_ce_lists();
+
+    int err;
+    iBase_EntitySetHandle root;
+    iMesh_getRootSet(impl_,&root,&err);
+    ERRORR("Trouble getting root set",iBase_FAILURE);
+  
+    if(!extrude_tags_.empty())
+    {
+        iBase_EntitySetHandle *tmp_sets;
+        int tmp_alloc, tmp_size;
+        int err;
+        for(std::vector<tag_data>::iterator i=extrude_tags_.begin();
+            i!=extrude_tags_.end(); ++i)
+        {
+            tmp_sets = NULL;
+            tmp_alloc = 0;
+            iMesh_getEntSetsByTagsRec(impl_,root,&i->tag,
+                                      (i->value ? &i->value:NULL),1,0,
+                                      &tmp_sets,&tmp_alloc,&tmp_size,&err);
+            ERRORR("Couldn't get tagged sets.", iBase_FAILURE);
+
+            for(int j=0; j<tmp_size; j++) 
+                extrude_sets_.insert(tmp_sets[j]);
+            free(tmp_sets);
+        }
+    }
+
+    updated_set_ = true;
+    return iBase_SUCCESS;
+}
+
+int ExtrudeMesh::reset_sets()
+{
+    copy_.reset_ce_lists();
+    extrude_sets_.clear();
+    updated_set_ = false;
+
+    return iBase_SUCCESS;
+}
+
+void ExtrudeMesh::process_sets(iBase_TagHandle local_tag,new_sets_t &new_sets)
+{
+    int err;
+
+    new_sets.reserve(extrude_sets_.size());
+    bool first = new_sets.empty();
+    new_sets_t::iterator curr=new_sets.begin();
+
+    for(std::set<iBase_EntitySetHandle>::iterator i=extrude_sets_.begin();
+        i!=extrude_sets_.end(); ++i)
+    {
+        iBase_EntityHandle *ents = NULL;
+        int ent_alloc=0,ent_size;
+
+        iMesh_getEntities(impl_,*i,iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
+                          &ents,&ent_alloc,&ent_size,&err);
+        assert(!err);
+
+        std::vector<iBase_EntityHandle> tags(ent_size,iBase_EntityHandle(0));
+        iBase_EntityHandle *tag_ptr = &tags[0];
+        int tag_alloc=tags.size(),tag_size;
+        iMesh_getEHArrData(impl_,ents,ent_size,local_tag,
+                           &tag_ptr,&tag_alloc,&tag_size,&err);
+        assert(!err);
+
+        free(ents);
+        std::remove_if(tags.begin(),tags.end(),std::bind2nd(
+                           std::equal_to<iBase_EntityHandle>(),
+                           iBase_EntityHandle(0)
+                           ));
+
+        if(!tags.empty())
+        {
+            iBase_EntitySetHandle set;
+            if(first)
+            {
+                iMesh_createEntSet(impl_,false,&set,&err);
+                new_sets.push_back(set);
+            }
+            else
+                set = *curr;
+
+            for(std::vector<iBase_EntityHandle>::iterator j=tags.begin();
+                j!=tags.end(); ++j)
+            {
+                iMesh_addEntToSet(impl_,*j,set,&err);
+                assert(!err);
+            }
+            ++curr;
+        }
+    }
 }
 
 int ExtrudeMesh::translate(iBase_EntityHandle *src,int size,int steps,
@@ -246,6 +373,9 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
 {
     assert(new_rows > 0 || use_dest);
 
+    if(!updated_set_)
+        update_sets();
+
     int err;
 
     iBase_EntityHandle *ents=0; int ent_alloc=0, ent_size=0;
@@ -267,6 +397,13 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     iBase_EntityHandle *next = adj;
     int *normals = 0;
 
+    iBase_TagHandle local_tag;
+    const char *tag_name = "local_copy";
+    iMesh_createTag(impl_,tag_name,1,iBase_ENTITY_HANDLE,&local_tag,&err,
+                    strlen(tag_name));
+    assert(!err);
+    new_sets_t new_sets;
+
     if(new_rows > 0)
     {
         int row_alloc = adj_size,row_size;
@@ -278,16 +415,18 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
         normals = get_normals(adj,indices,offsets,ent_size,dx);
 
         // Make the first set of volumes
-        connect_the_dots(normals,indices,offsets,adj,
-                         normals,indices,offsets,next,ent_size);
+        connect_the_dots(ents,ent_size,local_tag,new_sets,
+                         normals,indices,offsets,adj,
+                         normals,indices,offsets,next);
 
         // Make the inner volumes
         for(int i=2; i<=new_rows; i++)
         {
             std::swap(curr,next);
             trans(i,adj,adj_size,&next,&row_alloc,&row_size);
-            connect_the_dots(normals,indices,offsets,curr,
-                             normals,indices,offsets,next,ent_size);
+            connect_the_dots(ents,ent_size,local_tag,new_sets,
+                             normals,indices,offsets,curr,
+                             normals,indices,offsets,next);
         }
     }
 
@@ -313,8 +452,9 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
             normals = get_normals(adj,indices,offsets,ent_size,dx);
         int *normals2 = get_normals(adj2,indices2,offsets2,ent2_size,dx);
 
-        connect_the_dots(normals, indices, offsets, next,
-                         normals2,indices2,offsets2,adj2,ent_size);
+        connect_the_dots(ents,ent_size,local_tag,new_sets,
+                         normals, indices, offsets, next,
+                         normals2,indices2,offsets2,adj2);
 
         free(normals2);
         free(ents2);
@@ -322,6 +462,9 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
         free(indices2);
         free(offsets2);
     }
+
+    iMesh_destroyTag(impl_,local_tag,true,&err);
+    assert(!err);
 
     if(new_rows > 0)
     {
@@ -379,11 +522,10 @@ int * ExtrudeMesh::get_normals(iBase_EntityHandle *verts,int *indices,
     return normals;
 }
 
-void ExtrudeMesh::connect_the_dots(int *pre_norms, int *pre_inds,
-                                   int *pre_offs, iBase_EntityHandle *pre,
-                                   int *post_norms,int *post_inds,
-                                   int *post_offs,iBase_EntityHandle *post,
-                                   int size)
+void ExtrudeMesh::connect_the_dots(
+    iBase_EntityHandle *src,int size,iBase_TagHandle local_tag,new_sets_t &sets,
+    int *pre_norms, int *pre_inds, int *pre_offs, iBase_EntityHandle *pre,
+    int *post_norms,int *post_inds,int *post_offs,iBase_EntityHandle *post)
 {
     int err;
     using namespace std;
@@ -423,8 +565,13 @@ void ExtrudeMesh::connect_the_dots(int *pre_norms, int *pre_inds,
             assert(false);
 
         assert(status==0 && err==0);
+
+        iMesh_setEHData(impl_,src[i],local_tag,out,&err);
+        assert(!err);
         delete[] nodes;
     }
+
+    process_sets(local_tag,sets);
 }
 
 void test1()
@@ -652,6 +799,11 @@ void test4()
     iMesh_addEntArrToSet(mesh,faces,1,set,&err);
     assert(!err);
 
+    iBase_TagHandle tag;
+    iMesh_createTag(mesh,"my_tag",1,iBase_BYTES,&tag,&err,6);
+    iMesh_setEntSetData(mesh,set,tag,"x",1,&err);
+    ext->add_extrude_tag(tag,"x");
+
     int steps = 200;
     double origin[] = {0,-3,0};
     double z[] = {1,1,1};
@@ -667,6 +819,9 @@ void test4()
 
     iMesh_getNumOfType(mesh,0,iBase_REGION,&count,&err);
     assert(err == 0 && count == steps);
+
+    iMesh_getNumEntSets(mesh,root_set,0,&count,&err);
+    assert(err == 0 && count == 2);
 
     iMesh_destroyEntSet(mesh,set,&err);
     assert(!err);

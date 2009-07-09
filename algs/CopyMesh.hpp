@@ -94,17 +94,6 @@ public:
                     int *new_ents_allocated = 0,
                     int *new_ents_size = 0);
   
-    /* \brief Copy and move all the entities
-     */
-/*  int copy_move_entities(iBase_EntityHandle *ent_handles,
-                         int num_ents,
-                         const double dx,
-                         const double dy,
-                         const double dz,
-                         iBase_EntityHandle **new_ents = NULL,
-                         int *new_ents_allocated = 0,
-                         int *new_ents_size = 0);*/
-  
     /* \brief Copy/move all entities in a set
      */
   int copy_move_entities(iBase_EntitySetHandle set_handle,

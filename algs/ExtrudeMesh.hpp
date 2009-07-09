@@ -8,6 +8,8 @@
 class ExtrudeMesh
 {
 public:
+    typedef std::vector<iBase_EntitySetHandle> new_sets_t;
+
     explicit ExtrudeMesh(iMesh_Instance impl);
     virtual ~ExtrudeMesh();
 
@@ -16,19 +18,13 @@ public:
         return impl_;
     }
 
-    iBase_TagHandle copy_tag();
-    int add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
-                             int copy_or_expand);
-    int reset_ce_lists();
-    int add_copy_tag  (const std::string &tag_name, const char *tag_val = NULL);
-    int add_copy_tag  (iBase_TagHandle tag_handle,  const char *tag_val = NULL);
-    int add_expand_tag(const std::string &tag_name, const char *tag_val = NULL);
-    int add_expand_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
-    int add_unique_tag(const std::string &tag_name);
-    int add_unique_tag(iBase_TagHandle tag_handle);
-    std::set<iBase_EntitySetHandle> & copy_sets();
-    std::set<iBase_EntitySetHandle> & expand_sets();
-    std::set<iBase_EntitySetHandle> & unique_sets();
+    int add_extrude_tag(const std::string &tag_name,const char *tag_val = NULL);
+    int add_extrude_tag(iBase_TagHandle tag_handle, const char *tag_val = NULL);
+
+    std::set<iBase_EntitySetHandle> & extrude_sets();
+
+    int update_sets();
+    int reset_sets();
 
     int translate(iBase_EntityHandle *src,int size,int steps,const double *dx,
                   bool copy_faces = false);
@@ -57,6 +53,22 @@ public:
                 int steps,const CopyVerts &trans);
     int extrude(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                 int steps,const CopyVerts &trans);
+
+    // Forwards from CopyMesh
+    iBase_TagHandle copy_tag();
+    int add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
+                             int copy_or_expand);
+    int reset_ce_lists();
+    int add_copy_tag  (const std::string &tag_name, const char *tag_val = NULL);
+    int add_copy_tag  (iBase_TagHandle tag_handle,  const char *tag_val = NULL);
+    int add_expand_tag(const std::string &tag_name, const char *tag_val = NULL);
+    int add_expand_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
+    int add_unique_tag(const std::string &tag_name);
+    int add_unique_tag(iBase_TagHandle tag_handle);
+
+    std::set<iBase_EntitySetHandle> & copy_sets();
+    std::set<iBase_EntitySetHandle> & expand_sets();
+    std::set<iBase_EntitySetHandle> & unique_sets();
 private:
     int do_extrusion(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
                      bool use_dest,int inner_rows,const CopyVerts &trans);
@@ -64,14 +76,30 @@ private:
     int * get_normals(iBase_EntityHandle *verts,int *indices,int *offsets,
                       int size,double *dv);
 
-    void connect_the_dots(int *pre_normals, int *pre_indices, int *pre_offsets,
-                          iBase_EntityHandle *pre,
-                          int *post_normals,int *post_indices,int *post_offsets,
-                          iBase_EntityHandle *post,
-                          int size);
+    void connect_the_dots(
+        iBase_EntityHandle *src,int size,iBase_TagHandle local_tag,
+        new_sets_t &sets,
+        int *pre_norms, int *pre_inds, int *pre_offs, iBase_EntityHandle *pre,
+        int *post_norms,int *post_inds,int *post_offs,iBase_EntityHandle *post);
+
+    void process_sets(iBase_TagHandle local_tag,new_sets_t &sets);
 
     iMesh_Instance impl_;
     CopyMesh copy_;
+
+    struct tag_data
+    {
+        tag_data(iBase_TagHandle tag,char *value)
+            : tag(tag), value(value)
+        {}
+
+        iBase_TagHandle tag;
+        char *value;
+    };
+
+    bool updated_set_;
+    std::vector<tag_data> extrude_tags_;
+    std::set<iBase_EntitySetHandle> extrude_sets_;
 };
 
 inline iBase_TagHandle
