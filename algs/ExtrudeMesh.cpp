@@ -11,9 +11,9 @@ static double * vtx_diff(double *res,iMesh_Instance mesh,iBase_EntityHandle a,
     double xa[3],xb[3];
 
     iMesh_getVtxCoord(mesh,a,xa+0,xa+1,xa+2,&err);
-    assert(!err);
+    ERROR("Couldn't get vertex coords");
     iMesh_getVtxCoord(mesh,b,xb+0,xb+1,xb+2,&err);
-    assert(!err);
+    ERROR("Couldn't get vertex coords");
 
     for(int i=0; i<3; i++)
         res[i] = xa[i]-xb[i];
@@ -49,7 +49,6 @@ int ExtrudeMesh::add_extrude_tag(const std::string &tag_name,
 
 int ExtrudeMesh::add_extrude_tag(iBase_TagHandle tag_handle,const char *tag_val)
 {
-    assert(tag_handle);
     int err = iBase_SUCCESS;
     char *tmp = NULL;
 
@@ -129,16 +128,16 @@ void ExtrudeMesh::process_sets(iBase_TagHandle local_tag,new_sets_t &new_sets)
 
         iMesh_getEntities(impl_,*i,iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
                           &ents,&ent_alloc,&ent_size,&err);
-        assert(!err);
+        ERROR("Couldn't get entities.");
 
         std::vector<iBase_EntityHandle> tags(ent_size,iBase_EntityHandle(0));
         iBase_EntityHandle *tag_ptr = &tags[0];
         int tag_alloc=tags.size(),tag_size;
         iMesh_getEHArrData(impl_,ents,ent_size,local_tag,
                            &tag_ptr,&tag_alloc,&tag_size,&err);
-        assert(!err);
-
         free(ents);
+        ERROR("Couldn't get entity handle tags.");
+
         std::remove_if(tags.begin(),tags.end(),std::bind2nd(
                            std::equal_to<iBase_EntityHandle>(),
                            iBase_EntityHandle(0)
@@ -159,7 +158,7 @@ void ExtrudeMesh::process_sets(iBase_TagHandle local_tag,new_sets_t &new_sets)
                 j!=tags.end(); ++j)
             {
                 iMesh_addEntToSet(impl_,*j,set,&err);
-                assert(!err);
+                ERROR("Couldn't add entity to extrude set.");
             }
             ++curr;
         }
@@ -184,21 +183,21 @@ int ExtrudeMesh::translate(iBase_EntityHandle *src,iBase_EntityHandle *dest,
     int err;
     iBase_EntitySetHandle src_set,dest_set;
     iMesh_createEntSet(impl_,false,&src_set,&err);
-    assert(!err);
+    ERRORR("Couldn't create source entity set.",err);
     iMesh_createEntSet(impl_,false,&dest_set,&err);
-    assert(!err);
+    ERRORR("Couldn't create target entity set.",err);
     
     iMesh_addEntArrToSet(impl_,src,size,src_set,&err);
-    assert(!err);
+    ERRORR("Couldn't add entities to source entity set.",err);
     iMesh_addEntArrToSet(impl_,dest,size,dest_set,&err);
-    assert(!err);
+    ERRORR("Couldn't add entities to target entity set.",err);
 
     int ret = translate(src_set,dest_set,steps);
 
     iMesh_destroyEntSet(impl_,src_set,&err);
-    assert(!err);
+    ERRORR("Couldn't destroy source entity set.",err);
     iMesh_destroyEntSet(impl_,dest_set,&err);
-    assert(!err);
+    ERRORR("Couldn't destroy target entity set.",err);
 
     return ret;
 }
@@ -219,28 +218,27 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,iBase_EntitySetHandle dest,
         iMesh_EntityIterator iter;
         iMesh_initEntIter(impl_,ends[i],iBase_FACE,iMesh_ALL_TOPOLOGIES,&iter,
                           &err);
-        assert(!err);
+        ERRORR("Couldn't create entity iterator.",err);
 
         iBase_EntityHandle face;
         int has_data;
         iMesh_getNextEntIter(impl_,iter,&face,&has_data,&err);
-        assert(!err);
-        assert(has_data);
+        ERRORR("Couldn't get next element of iterator.",err);
+        assert(has_data); // TODO: don't use assert
 
         iMesh_endEntIter(impl_,iter,&err);
-        assert(!err);
+        ERRORR("Couldn't destroy entity iterator.",err);
 
         iBase_EntityHandle *verts=0;
         int verts_alloc=0,verts_size=0;
         iMesh_getEntAdj(impl_,face,iBase_VERTEX,&verts,&verts_alloc,
                         &verts_size,&err);
-        assert(!err);
+        ERRORR("Couldn't get adjacencies.",err);
 
         iMesh_getVtxCoord(impl_,verts[0],coords[i]+0,coords[i]+1,coords[i]+2,
                           &err);
-        assert(!err);
-
         free(verts);
+        ERRORR("Couldn't get vertex coordinates.",err);
     }
 
     for(int i=0; i<3; i++)
@@ -284,15 +282,15 @@ int ExtrudeMesh::extrude(iBase_EntityHandle *src,int size,int steps,
     int err;
     iBase_EntitySetHandle set;
     iMesh_createEntSet(impl_,false,&set,&err);
-    assert(!err);
+    ERRORR("Couldn't create source entity set.",err);
     
     iMesh_addEntArrToSet(impl_,src,size,set,&err);
-    assert(!err);
+    ERRORR("Couldn't add entities to source entity set.",err);
 
     int ret = extrude(set,steps,trans,copy_faces);
 
     iMesh_destroyEntSet(impl_,set,&err);
-    assert(!err);
+    ERRORR("Couldn't destroy source entity set.",err);
 
     return ret;
 }
@@ -306,29 +304,29 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src,int steps,
 
         iBase_EntitySetHandle parent;
         iMesh_createEntSet(impl_,false,&parent,&err);
-        assert(!err);
+        ERRORR("Couldn't create parent entity set.",err);
         iMesh_addEntSet(impl_,src,parent,&err);
-        assert(!err);
+        ERRORR("Couldn't add source entity set to parent.",err);
         
         copy_.add_copy_expand_list(&src,   1,CopyMesh::COPY);
         copy_.add_copy_expand_list(&parent,1,CopyMesh::EXPAND);
         copy_.copy_transform_entities(src,trans,0,0,0);
 
         iMesh_rmvEntSet(impl_,src,parent,&err);
-        assert(!err);
+        ERRORR("Couldn't remove source entity set from parent.",err);
 
         iBase_EntitySetHandle dest;
         iBase_EntitySetHandle *tmp = &dest;
         int tmp_alloc=1,tmp_size=0;
         iMesh_getEntSets(impl_,parent,0,&tmp,&tmp_alloc,&tmp_size,&err);
-        assert(!err);
+        ERRORR("Couldn't get entity sets in parent.",err);
 
         int ret = do_extrusion(src,dest,true,steps-1,trans);
 
         iMesh_destroyEntSet(impl_,parent,&err);
-        assert(!err);
+        ERRORR("Couldn't destroy parent entity set.",err);
         iMesh_destroyEntSet(impl_,dest,&err);
-        assert(!err);
+        ERRORR("Couldn't destroy target entity set.",err);
 
         return ret;
     }
@@ -342,21 +340,21 @@ int ExtrudeMesh::extrude(iBase_EntityHandle *src,iBase_EntityHandle *dest,
     int err;
     iBase_EntitySetHandle src_set,dest_set;
     iMesh_createEntSet(impl_,false,&src_set,&err);
-    assert(!err);
+    ERRORR("Couldn't create source entity set.",err);
     iMesh_createEntSet(impl_,false,&dest_set,&err);
-    assert(!err);
+    ERRORR("Couldn't create target entity set.",err);
     
     iMesh_addEntArrToSet(impl_,src,size,src_set,&err);
-    assert(!err);
+    ERRORR("Couldn't add entities to source entity set.",err);
     iMesh_addEntArrToSet(impl_,dest,size,dest_set,&err);
-    assert(!err);
+    ERRORR("Couldn't add entities to target entity set.",err);
 
     int ret = extrude(src_set,dest_set,steps,trans);
 
     iMesh_destroyEntSet(impl_,src_set,&err);
-    assert(!err);
+    ERRORR("Couldn't destroy source entity set.",err);
     iMesh_destroyEntSet(impl_,dest_set,&err);
-    assert(!err);
+    ERRORR("Couldn't destroy target entity set.",err);
 
     return ret;
 }
@@ -390,7 +388,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
                            &indices, &ind_alloc, &ind_size,
                            &offsets, &off_alloc, &off_size,
                            &err);
-    assert(!err);
+    ERRORR("Trouble getting source adjacencies.",err);
 
     double dx[3];
     iBase_EntityHandle *curr;
@@ -401,7 +399,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     const char *tag_name = "local_copy";
     iMesh_createTag(impl_,tag_name,1,iBase_ENTITY_HANDLE,&local_tag,&err,
                     strlen(tag_name));
-    assert(!err);
+    ERRORR("Couldn't create local copy tag.",err);
     new_sets_t new_sets;
 
     if(new_rows > 0)
@@ -444,7 +442,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
                                &indices2, &ind2_alloc, &ind2_size,
                                &offsets2, &off2_alloc, &off2_size,
                                &err);
-        assert(!err);
+        ERRORR("Trouble getting target adjacencies.",err);
 
         vtx_diff(dx,impl_,adj2[indices2[ offsets2[0] ]],
                           next[indices [ offsets [0] ]]);
@@ -464,7 +462,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     }
 
     iMesh_destroyTag(impl_,local_tag,true,&err);
-    assert(!err);
+    ERRORR("Couldn't destroy local tag.",err);
 
     if(new_rows > 0)
     {
@@ -482,7 +480,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
 }
 
 // calculate the normals for each face (1 = towards v, -1 = away from v)
-// TODO: this can fail with non-convex polygons
+// TODO: this can fail with non-convex faces
 int * ExtrudeMesh::get_normals(iBase_EntityHandle *verts,int *indices,
                                int *offsets,int size,double *dv)
 {
@@ -496,13 +494,15 @@ int * ExtrudeMesh::get_normals(iBase_EntityHandle *verts,int *indices,
         int coord_alloc=0,coord_size=0;
 
         iBase_EntityHandle curr_verts[3];
-        if(offsets[i+1] - offsets[i] > 2)
+        if(offsets[i+1] - offsets[i] > 2) // face
         {
             for(int j=0; j<3; j++)
                 curr_verts[j] = verts[indices[ offsets[i]+j ]];
 
             iMesh_getVtxArrCoords(impl_,curr_verts,3,iBase_INTERLEAVED,
                                   &coords,&coord_alloc,&coord_size,&err);
+            ERROR("Couldn't get vertex coordinates.");
+
             for(int j=0; j<3; j++)
             {
                 a[j] = coords[1*3 + j] - coords[0*3 + j];
@@ -511,12 +511,13 @@ int * ExtrudeMesh::get_normals(iBase_EntityHandle *verts,int *indices,
 
             normals[i] = (dot( cross(res,a,b),dv ) > 0) ? 1:-1;
         }
-        else if(offsets[i+1] - offsets[i] == 2)
+        else if(offsets[i+1] - offsets[i] == 2) // line
         {
-            normals[i] = 1; // TODO
+            normals[i] = 1; // TODO: figure out a way of distinguishing swapped
+                            // lines
         }
-        else
-            assert(false);
+        else // vertex
+            normals[i] = 1;
     }
 
     return normals;
@@ -561,13 +562,15 @@ void ExtrudeMesh::connect_the_dots(
         else if(count == 2) // line
             iMesh_createEnt(impl_,iMesh_QUADRILATERAL,nodes,4,&out,&status,
                             &err);
+        else if(count == 1) // vertex
+            iMesh_createEnt(impl_,iMesh_LINE_SEGMENT,nodes,2,&out,&status,&err);
         else
-            assert(false);
+            std::cerr << "Couldn't extrude face; unusual shape." << std::endl;
 
-        assert(status==0 && err==0);
+        ERROR("Couldn't create extruded face.");
 
         iMesh_setEHData(impl_,src[i],local_tag,out,&err);
-        assert(!err);
+        ERROR("Couldn't set local tag data.");
         delete[] nodes;
     }
 
