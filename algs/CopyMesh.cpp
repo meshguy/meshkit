@@ -1,4 +1,5 @@
 #include "CopyMesh.hpp"
+#include "CopyVerts.hpp"
 #include "MBCN.hpp"
 #include <stdlib.h>
 #include <algorithm>
@@ -122,6 +123,47 @@ int CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
                                  int *new_ents_size,
                                  bool do_merge) 
 {
+  double zero[3] = {0,0,0};
+  if(dx == NULL)
+    dx = zero;
+  return copy_transform_entities(ent_handles, num_ents,
+                                 CopyMoveVerts(imeshImpl, dx),
+                                 new_ents, new_ents_alloc, new_ents_size,
+                                 do_merge);
+}
+
+int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
+                                      const CopyVerts &trans,
+                                      iBase_EntityHandle **new_ents,
+                                      int *new_ents_alloc,
+                                      int *new_ents_size,
+                                      bool do_merge)
+{
+  int err;
+  iBase_EntityHandle *ents = NULL;
+  int ents_alloc = 0, ents_size;
+  iMesh_getEntitiesRec(imeshImpl, set_handle, 
+                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
+                       &ents, &ents_alloc, &ents_size, &err);
+  ERRORR("Failed to get entities from set recursively.", err);
+  
+  int result = copy_transform_entities(ents, ents_size, trans, 
+                                       new_ents, new_ents_alloc, new_ents_size,
+                                       do_merge);
+
+  free(ents);
+  return result;
+}
+
+
+int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
+                                      int num_ents,
+                                      const CopyVerts &trans,
+                                      iBase_EntityHandle **new_ents,
+                                      int *new_ents_allocated,
+                                      int *new_ents_size,
+                                      bool do_merge)
+{
   int err;
 
     // create a tag for this local copy operation
@@ -152,7 +194,7 @@ int CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
                        copy_set, &err);
   ERRORR("Failed to add verts to set", err);
 
-  err = copy_move_verts(copy_set, dx, local_tag);
+  err = copy_transform_verts(copy_set, trans, local_tag);
   ERRORR("Failed to copy/move vertices.", iBase_FAILURE);
 
     // now copy entities
@@ -383,9 +425,9 @@ int CopyMesh::copy_move_ents(iBase_EntitySetHandle copy_set,
   return iBase_SUCCESS;
 }
 
-int CopyMesh::copy_move_verts(iBase_EntitySetHandle copy_set, 
-                              const double *dx,
-                              iBase_TagHandle local_tag) 
+int CopyMesh::copy_transform_verts(iBase_EntitySetHandle copy_set, 
+                                   const CopyVerts &copier,
+                                   iBase_TagHandle local_tag) 
 {
     // get the vertices in the order they exist in the set, w/o duplicates
   iBase_EntityHandle *verts = NULL;
@@ -398,21 +440,9 @@ int CopyMesh::copy_move_verts(iBase_EntitySetHandle copy_set,
   std::vector<iBase_EntityHandle> new_verts(verts_size);
   iBase_EntityHandle *new_verts_ptr = &new_verts[0];
 
-    // get position of vertices, transform with move vector
-  double *coords = NULL;
-  int coords_alloc = 0, coords_size;
-  iMesh_getVtxArrCoords(imeshImpl, verts, verts_size,
-                        iBase_INTERLEAVED, &coords, &coords_alloc, &coords_size, &err);
-  ERRORR("Failed to get vtx coords.", iBase_FAILURE);
-  if (NULL != dx) {
-    for (int i = 0; i < 3*verts_size; i+=3)
-      coords[i] += dx[0], coords[i+1] += dx[1], coords[i+2] += dx[2];
-  }
-  
     // copy vertices
   int tmp_size, tmp_alloc = verts_size;
-  iMesh_createVtxArr(imeshImpl, verts_size, iBase_INTERLEAVED, coords, coords_size,
-                     &new_verts_ptr, &tmp_alloc, &tmp_size, &err);
+  copier(verts, verts_size, &new_verts_ptr, &tmp_alloc, &tmp_size);
   ERRORR("Couldn't create new vertices.", iBase_FAILURE);
   assert(tmp_size == verts_size);
 
@@ -426,8 +456,6 @@ int CopyMesh::copy_move_verts(iBase_EntitySetHandle copy_set,
                      &new_verts_ptr,  &tmp_alloc, &tmp_size, &err);
   ERRORR("Error getting local copy tag data on old verts.", iBase_FAILURE);
 #endif
-
-  free(coords);
   free(verts);
   
   return iBase_SUCCESS;
