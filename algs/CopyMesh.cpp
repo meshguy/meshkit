@@ -132,6 +132,53 @@ int CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
                                  do_merge);
 }
 
+  /* \brief Copy and rotate all the entities
+   */
+int CopyMesh::copy_rotate_entities(iBase_EntitySetHandle set_handle,
+                                   const double *origin,
+                                   const double *z,
+                                   double theta,
+                                   iBase_EntityHandle **new_ents,
+                                   int *new_ents_alloc,
+                                   int *new_ents_size,
+                                   bool do_merge)
+{
+  int err;
+  iBase_EntityHandle *ents = NULL;
+  int ents_alloc = 0, ents_size;
+  iMesh_getEntitiesRec(imeshImpl, set_handle, 
+                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
+                       &ents, &ents_alloc, &ents_size, &err);
+  ERRORR("Failed to get entities from set recursively.", err);
+  
+  int result = copy_rotate_entities(ents, ents_size, origin, z, theta, 
+                                  new_ents, new_ents_alloc, new_ents_size,
+                                  do_merge);
+
+  free(ents);
+  return result;
+}
+
+
+  /* \brief Copy and rotate all the entities
+   */
+int CopyMesh::copy_rotate_entities(iBase_EntityHandle *ent_handles,
+                                   int num_ents,
+                                   const double *origin,
+                                   const double *z,
+                                   double theta,
+                                   iBase_EntityHandle **new_ents,
+                                   int *new_ents_alloc,
+                                   int *new_ents_size,
+                                   bool do_merge) 
+{
+  return copy_transform_entities(ent_handles, num_ents,
+                                 CopyRotateVerts(imeshImpl, origin, z, theta),
+                                 new_ents, new_ents_alloc, new_ents_size,
+                                 do_merge);
+}
+
+
 int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
                                       const CopyVerts &trans,
                                       iBase_EntityHandle **new_ents,

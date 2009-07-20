@@ -385,7 +385,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
   ERRORR("Trouble getting source adjacencies.", err);
 
   double dx[3];
-  iBase_EntityHandle *curr;
+  iBase_EntityHandle *curr = 0;
   iBase_EntityHandle *next = adj;
   int *normals = 0;
 

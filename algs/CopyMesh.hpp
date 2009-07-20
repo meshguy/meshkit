@@ -113,6 +113,25 @@ public:
                          int *new_ents_size = 0,
                          bool do_merge = true);
 
+  int copy_rotate_entities(iBase_EntitySetHandle set_handle,
+                           const double *origin,
+                           const double *z,
+                           double theta,
+                           iBase_EntityHandle **new_ents = NULL,
+                           int *new_ents_allocated = 0,
+                           int *new_ents_size = 0,
+                           bool do_merge = true);
+
+  int copy_rotate_entities(iBase_EntityHandle *ent_handles,
+                           int num_ents,
+                           const double *origin,
+                           const double *z,
+                           double theta,
+                           iBase_EntityHandle **new_ents = NULL,
+                           int *new_ents_allocated = 0,
+                           int *new_ents_size = 0,
+                           bool do_merge = true);
+
   int copy_transform_entities(iBase_EntitySetHandle set_handle,
                               const CopyVerts &trans,
                               iBase_EntityHandle **new_ents = NULL,

@@ -208,7 +208,7 @@ AC_ARG_WITH(camal,
 [AC_HELP_STRING([--with-camal=DIR], [Specify location of CAMAL library.])],
 [CAMAL_VAL=$withval
  DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-camal=\"${withval}\""
- ], [CAMAL_VAL=])
+ ], [CAMAL_VAL=no])
  
 CAMAL_VERSION=
 CAMAL_CPPFLAGS=
@@ -338,7 +338,7 @@ fi
 
 if test $HAVE_CAMAL = yes; then
   AC_MSG_RESULT([Camal version: $CAMAL_VERSION])
-elif test "x$CAMAL_VAL" != "x"; then
+elif test "x$CAMAL_VAL" != "xno"; then
   AC_MSG_ERROR([Camal not found or not usable.])
 fi
 
@@ -375,11 +375,11 @@ AC_CONFIG_HEADERS([MKVersion.h])
 AC_CONFIG_FILES([Makefile 
                  meshkit.make 
                  testdir.h
-		 algs/Makefile
-		 xforms/Makefile
-		 utils/Makefile
-                 camal/Makefile
+                 algs/Makefile
+                 xforms/Makefile
+                 utils/Makefile
                  ])
+                 #camal/Makefile
 
 AC_OUTPUT
 

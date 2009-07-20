@@ -24,4 +24,5 @@ double * normalize(double *res, const double *a)
   double d = dist(a);
   for(int i=0; i<3; i++)
     res[i] = a[i]/d;
+  return res;
 }
