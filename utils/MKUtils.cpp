@@ -111,3 +111,28 @@ int MKUtils::assign_global_ids(iBase_EntitySetHandle this_set,
   return iBase_SUCCESS;
 }
 
+// HJK : dummy main function
+// need real implementation
+int main()
+{
+  int err;
+  iMesh_Instance mesh;
+  iMesh_newMesh("", &mesh, &err, 0);
+  ERRORR("Couldn't create mesh.", 1);
+
+  iBase_EntitySetHandle root_set;
+  iMesh_getRootSet(mesh, &root_set, &err);
+  ERRORR("Couldn't get root set.", 1);
+
+  MKUtils mkutils(mesh);
+  /*
+  mkutils.assign_global_ids(iBase_EntitySetHandle this_set,
+                        const int dimension, 
+                        const int start_id,
+                        const bool largest_dim_only,
+                        const bool parallel,
+                        const char *tag_name = "GLOBAL_ID");
+  */
+  return 0;
+}
+
