@@ -1,6 +1,6 @@
 #include "CopyMesh.hpp"
 #include "CopyVerts.hpp"
-#include "MBCN.hpp"
+#include "MBCN.h"
 #include <stdlib.h>
 #include <algorithm>
 #include <functional>

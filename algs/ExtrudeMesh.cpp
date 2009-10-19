@@ -3,6 +3,7 @@
 #include "vec_utils.hpp"
 #include <cassert>
 #include <iostream>
+#include <algorithm>
 
 static double * vtx_diff(double *res, iMesh_Instance mesh, iBase_EntityHandle a,
                          iBase_EntityHandle b)

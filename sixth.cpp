@@ -5,7 +5,7 @@
 #include "CopyMesh.hpp"
 
 iMesh_Instance impl;
-iBase_EntityHandle root_set;
+iBase_EntitySetHandle root_set;
 
 const int UNITCELL_DUCT = 0, ASSY_TYPES = 1;
 
