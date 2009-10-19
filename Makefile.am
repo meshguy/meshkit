@@ -7,7 +7,11 @@ ACLOCAL_AMFLAGS = -I m4
 @IMESH_CONFIG_OPTIONS@
 
 # Subdirectories to build
-SUBDIRS = utils .
+SUBDIRS = .
+if ENABLE_utils
+  SUBDIRS += utils
+  INCLUDES += -I$(top_srcdir)/utils
+endif
 if ENABLE_algs
   SUBDIRS += algs
   INCLUDES += -I$(top_srcdir)/algs
@@ -53,6 +57,10 @@ LIBS += $(IMESH_LIBS)
 #CXXFLAGS += $(IMESH_CXXFLAGS)
 #CFLAGS += $(IMESH_CFLAGS)
 #LDFLAGS += $(IMESH_LDFLAGS)
+endif
+
+if HAVE_MOAB
+pin217_CXXFLAGS += -DMOAB
 endif
 
 # Automake doesn't seem to have a directory defined for
