@@ -1,6 +1,8 @@
 #ifndef CUTCELLMESH_HPP
 #define CUTCELLMESH_HPP
 
+#include <vector>
+
 #include "iMesh.h"
 
 #ifdef DAGMC
