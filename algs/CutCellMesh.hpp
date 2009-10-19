@@ -3,11 +3,11 @@
 
 #include "iMesh.h"
 
-//#ifdef MOAB
+#ifdef DAGMC
 #include "MBInterface.hpp"
 #include "MBOrientedBoxTreeTool.hpp"
 #include "MBCartVect.hpp"
-//#endif
+#endif
 
 enum EdgeStatus {
   INSIDE,
@@ -39,12 +39,11 @@ public:
   int make_hex_vertices();
   int make_initial_hexes();
   
-
-  //#ifdef MOAB
+#ifdef DAGMC
   MBInterface* moab_instance() {return reinterpret_cast<MBInterface*> (m_mesh);}
   void set_initial_division(const MBOrientedBox& box);
   int find_intersected_surfaces(MBOrientedBoxTreeTool& tool);
-  //#endif
+#endif
 
 private:
 
@@ -66,17 +65,14 @@ private:
   EdgeStatus getEdgeStatus(const double dZ, bool bMoveNext);
   bool set_hex_status(int index, int value);
 
-  //#ifdef MOAB
+#ifdef DAGMC
   MBEntityHandle m_hTreeRoot;
-  
-  //MBTag obbTag;
-  
   std::vector<MBEntityHandle> triList, surfList;
   std::vector<double> distList; 
 
   //MBTag get_tag( const char* name, int size, MBTagType store, MBDataType type,
   //             bool create_if_missing = true);
-  //#endif
+#endif
 };
 
 #endif

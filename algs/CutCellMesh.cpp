@@ -10,11 +10,11 @@
 #include "CutCellMesh.hpp"
 #include "iMesh.h"
 
-//#ifdef MOAB
+#ifdef DAGMC
 #include "MBCore.hpp"
 #include "MBRange.hpp"
 #include "MBOrientedBox.hpp" // MBMatrix3.hpp is included
-//#endif
+#endif
 
 #define MB_OBB_TREE_TAG_NAME "OBB_TREE"
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
@@ -38,7 +38,7 @@ CutCellMesh::~CutCellMesh()
 
 int CutCellMesh::do_mesh()
 {
-  //#ifdef MOAB
+ #ifdef DAGMC
   // get all triangles
   MBRange tris;
   MBErrorCode result = moab_instance()->
@@ -97,7 +97,8 @@ int CutCellMesh::do_mesh()
                   &err);
   ERRORR("Failed to get edges of hex.", err);
   delete hex_edges;
-  
+#endif 
+ 
   return iBase_SUCCESS;
 }
 
@@ -235,7 +236,17 @@ EdgeStatus CutCellMesh::getEdgeStatus(const double dZ, bool bMoveNext)
   }
 }
 
-//#ifdef MOAB
+bool CutCellMesh::set_hex_status(int index, int value)
+{
+  if (index < 0 || index > m_nHex - 1) {
+    return false;
+  }
+
+  if (m_vnHexStatus[index] != 0) m_vnHexStatus[index] = value;
+  return true;
+}
+
+#ifdef DAGMC
 void CutCellMesh::set_initial_division(const MBOrientedBox& box)
 {
   // get initial division
@@ -390,14 +401,4 @@ int CutCellMesh::find_intersected_surfaces(MBOrientedBoxTreeTool& tool)
   
   return iBase_SUCCESS;
 }
-
-bool CutCellMesh::set_hex_status(int index, int value)
-{
-  if (index < 0 || index > m_nHex - 1) {
-    return false;
-  }
-
-  if (m_vnHexStatus[index] != 0) m_vnHexStatus[index] = value;
-  return true;
-}
-//#endif
+#endif

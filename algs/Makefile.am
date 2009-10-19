@@ -67,8 +67,7 @@ CPPFLAGS += $(IMESH_CPPFLAGS)
 #LDFLAGS += $(IMESH_LDFLAGS)
 endif
 
-if HAVE_MOAB
-CutCellMesh_test_CXXFLAGS += -DMOAB
-#CutCellMesh_test_LDADD += $(MOAB_LIBS)
+if HAVE_DAGMC
+CXXFLAGS += -DDAGMC
 endif
 

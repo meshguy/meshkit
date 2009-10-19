@@ -169,9 +169,10 @@ CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabl
 ################################################################################
 #                           MOAB
 ################################################################################
-AC_CHECK_FILE([$IMESH_DIR/lib/libMOAB.a], [have_moab=yes]) 
-#AC_CHECK_LIB([MOAB], [MBCore], [have_moab=yes])
+AC_CHECK_FILE([$IMESH_DIR/lib/libMOAB.a], [have_moab=yes])
+AC_CHECK_FILE([$IMESH_DIR/include/MBMatrix3.hpp], [have_dagmc=yes])
 AM_CONDITIONAL(HAVE_MOAB, [test "xyes" == "x$have_moab"])
+AM_CONDITIONAL(HAVE_DAGMC, [test "xyes" == "x$have_dagmc"])
 
 
 ###############################################################################
