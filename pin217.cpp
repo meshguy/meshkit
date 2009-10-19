@@ -4,8 +4,11 @@
 #include "MergeMesh.hpp"
 #include "CopyMesh.hpp"
 
+#define DEFAULT_TEST_FILE "pin1.cub"
+#define DEFAULT_OUTPUT_FILE "output.cub"
+
 iMesh_Instance impl;
-iBase_EntityHandle root_set;
+iBase_EntitySetHandle root_set;
 
 int get_copy_expand_sets(CopyMesh *cm,
                          iBase_EntitySetHandle orig_set, 
@@ -17,6 +20,7 @@ int extend_expand_sets(CopyMesh *cm);
 int main(int argc, char **argv) 
 {
     // make a mesh instance
+  std::cout <<"\nExecuting Pin217 Program\n\n";
   int err;
   iMesh_newMesh("MOAB", &impl, &err, 4);
   ERRORR("Failed to create instance.", 1);
@@ -25,10 +29,19 @@ int main(int argc, char **argv)
 
   CopyMesh *cm = new CopyMesh(impl);
   MergeMesh *mm = new MergeMesh(impl);
+  char* input_file_name = NULL;
+  char* output_file_name = NULL;
 
-  if (1 == argc) {
+  if (3 == argc) {
+    input_file_name = argv[1];
+    output_file_name = argv[2];
+  }
+  else {
+    if (argc < 1) return 1;
     std::cerr << "Usage: " << argv[0] << " <meshfile>" << std::endl;
-    return 1;
+    printf("  No file specified.  Defaulting to: %s %s\n", DEFAULT_TEST_FILE);
+    input_file_name = DEFAULT_TEST_FILE;
+    output_file_name = DEFAULT_OUTPUT_FILE;
   }
 
   std::vector<std::string> ctags, etags, utags;
@@ -66,18 +79,19 @@ int main(int argc, char **argv)
   iMesh_createEntSet(impl, 0, &orig_set, &err);
   ERRORR("Couldn't create orig entity set.", err);
   
-    // read the file
-  iMesh_load(impl, orig_set, argv[1], NULL, &err, strlen(argv[1]), 0);
+    // read the file 
+  iMesh_load(impl, orig_set, input_file_name, NULL, &err, strlen(input_file_name), 0);
   ERRORR("Couldn't read mesh file.", err);
 
   std::cout << "Loaded initial mesh." << std::endl;
 
     // get the entities we want to copy, basically all the non-set entities
+  int orig_ents_alloc = 0, orig_ents_size; 
   iBase_EntityHandle *orig_ents = NULL;
-  int orig_ents_alloc = 0, orig_ents_size;
-  iMesh_getEntities(impl, orig_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
-                    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
-  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
+
+  iMesh_getEntities(impl, orig_set, iBase_ALL_TYPES,iMesh_HEXAHEDRON,
+                 &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
+   ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
   
     // get the copy/expand sets
   int three = 3;
@@ -129,11 +143,11 @@ int main(int argc, char **argv)
   ERRORR("Error assigning global ids.", err);
 
     // export
-  std::cout << "Saving in file " << argv[2] << std::endl;
-  iMesh_save(impl, root_set, argv[2], NULL, &err, 
-             strlen(argv[2]), 0);
+  std::cout << "Saving in file " << output_file_name << std::endl;
+  iMesh_save(impl, root_set, output_file_name, NULL, &err, 
+             strlen(output_file_name), 0);
   ERRORR("Failed to save mesh.", 1);
-  std::cout << "Wrote " << argv[2] << std::endl;
+  std::cout << "Wrote " << output_file_name << std::endl;
 
   delete cm;
   delete mm;
