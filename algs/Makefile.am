@@ -20,17 +20,19 @@ libMKalgs_la_SOURCES = \
 	ExtrudeMesh.cpp \
 	MergeMesh.cpp \
 	vec_utils.cpp \
-	vec_utils.hpp
+	vec_utils.hpp \
+	CutCellMesh.cpp
 
 # The list of header files which are to be installed
 libMKalgs_la_include_HEADERS = \
 	CopyMesh.hpp \
 	CopyVerts.hpp \
 	ExtrudeMesh.hpp \
-	MergeMesh.hpp
+	MergeMesh.hpp \
+	CutCellMesh.hpp
 
 # Tests and such
-check_PROGRAMS = CopyMesh_test ExtrudeMesh_test
+check_PROGRAMS = CopyMesh_test ExtrudeMesh_test CutCellMesh_test
 TESTS = $(check_PROGRAMS)
 
 CopyMesh_test_SOURCES = CopyMesh.cpp
@@ -43,13 +45,18 @@ ExtrudeMesh_test_DEPENDENCIES = ExtrudeMesh.hpp libMKalgs.la
 ExtrudeMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 ExtrudeMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) 
 
+CutCellMesh_test_SOURCES = CutCellMesh_test.cpp
+CutCellMesh_test_DEPENDENCIES = CutCellMesh.hpp libMKalgs.la
+CutCellMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+CutCellMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS)
+
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
 INCLUDES += -I$(top_srcdir) -I$(top_builddir)
 
 if HAVE_IGEOM
-INCLUDES += $(iGeom_INCLUDES)
-CPPFLAGS += $(iGeom_CPPFLAGS)
+INCLUDES += $(IGEOM_INCLUDES)
+CPPFLAGS += $(IGEOM_CPPFLAGS)
 endif
 
 if HAVE_IMESH
@@ -58,5 +65,10 @@ CPPFLAGS += $(IMESH_CPPFLAGS)
 #CXXFLAGS += $(IMESH_CXXFLAGS)
 #CFLAGS += $(IMESH_CFLAGS)
 #LDFLAGS += $(IMESH_LDFLAGS)
+endif
+
+if HAVE_MOAB
+CutCellMesh_test_CXXFLAGS += -DMOAB
+#CutCellMesh_test_LDADD += $(MOAB_LIBS)
 endif
 

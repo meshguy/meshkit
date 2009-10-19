@@ -165,6 +165,15 @@ CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may f
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabled] )
 
+
+################################################################################
+#                           MOAB
+################################################################################
+AC_CHECK_FILE([$IMESH_DIR/lib/libMOAB.a], [have_moab=yes]) 
+#AC_CHECK_LIB([MOAB], [MBCore], [have_moab=yes])
+AM_CONDITIONAL(HAVE_MOAB, [test "xyes" == "x$have_moab"])
+
+
 ###############################################################################
 #                           Optional Tools
 ###############################################################################
