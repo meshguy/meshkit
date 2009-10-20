@@ -1,3 +1,71 @@
+/*
+ * SIXTH program
+ *
+ * Program for generating sixth-core hexagonal lattice of hexagonal assemblies
+ * in a fast reactor core.  The core is arranged around a central hexagonal
+ * assembly (oriented with points of the hexagon pointing up and down, and flat
+ * sides on the left and right), with subsequent rings of assemblies around 
+ * that.  The inner-most assembly is ring #1.  The program allows an arbitrary
+ * number of assembly types, each read from a separate mesh file.
+ *
+ * This program takes as input:
+ * NRINGS: number of rings in the core
+ * PACK_TYPE: 0: unit cell packing in hexagonal NRINGS-ring lattice, with
+ *               an outer duct wall (specified in second mesh file)
+ *            1: assembly-type lattice
+ * PITCH: horizontal pitch between unit cells or assemblies
+ * SYMM: 1/symmetry, usually 6 here
+ * assembly types in lattice: NRINGS*(NRINGS+1) assembly type integers,
+ *   specifying the integer assembly types in the 1st row, 2nd row, etc.
+ *   There are NRINGS assemblies in the 1st row, (NRINGS-1) in the 2nd row, 
+ *   etc.  Each row above the 1st starts with x and y displacements of
+ *   PITCH*cos(pi/3) and PITCH*sin(pi/3), resp, from the start of the last row.
+ *   An assembly type of -1 indicates no assembly at this position.  Assembly
+ *   types are indexed from zero.
+ * assembly mesh files: the mesh file containing the mesh for each assembly
+ *   type; should be n+1 file names, one on each line, where n is the maximum
+ *   assembly index in the assembly types lattice above.
+ * background assembly: y=yes, n=no
+ * if background assembly = y, background mesh file
+ * output mesh file: file name to which the final mesh is written
+ *
+ * Sample input file (after you remove the '*' on each line):
+ * 
+ * 9
+ * 1
+ * 14.685
+ * 6
+ * 6   4   4   4   4   2   2   3   -1
+ *   5   1   0   0   2   2   3   -1
+ *     5   0   1   0   2   2   3
+ *       5   0   0   2   2   3
+ *         5   2   2   2   3
+ *           2   2   2   3
+ *             2   3   3
+ *               3   -1
+ *                 -1
+ * fuel_assy.h5m
+ * ctrl_assy.h5m
+ * fuel_assy.h5m
+ * fuel_assy.h5m
+ * fuel_assy_half.h5m
+ * fuel_assy_half_angle.h5m
+ * ctrl_assy_sixth.h5m
+ * y
+ * sodium_all.h5m
+ * sixth.h5m
+ * 
+ * NOTE: Assembly types are arranged in a wedge, but the actual arrangement
+ * of assemblies in the core will look more like an inverted wedge (a "delta"),
+ * since assemblies are displaced in +x and +y direction in increasing rows.
+ * Also, in the above mesh, a sixth-assembly is used at the center, half-
+ * assemblies along the bottom row, and half_angle assemblies as the first
+ * assembly in each row; this makes the mesh resolve the exact symmetry planes
+ * of a 1/6 core.  In other words, you should be able to copy/rotate this 1/6
+ * mesh 5 times, merge, and get a complete 360 degree core (though I haven't
+ * verified this).
+ * 
+ */
 #include <cfloat>
 #include <math.h>
 #include "MKUtils.hpp"
