@@ -10,7 +10,7 @@
 #include "CutCellMesh.hpp"
 #include "iMesh.h"
 
-#ifdef DAGMC
+#ifdef MOAB
 #include "MBCore.hpp"
 #include "MBRange.hpp"
 #include "MBOrientedBox.hpp" // MBMatrix3.hpp is included
@@ -38,7 +38,7 @@ CutCellMesh::~CutCellMesh()
 
 int CutCellMesh::do_mesh()
 {
- #ifdef DAGMC
+ #ifdef MOAB
   // get all triangles
   MBRange tris;
   MBErrorCode result = moab_instance()->
@@ -246,7 +246,7 @@ bool CutCellMesh::set_hex_status(int index, int value)
   return true;
 }
 
-#ifdef DAGMC
+#ifdef MOAB
 void CutCellMesh::set_initial_division(const MBOrientedBox& box)
 {
   // get initial division
