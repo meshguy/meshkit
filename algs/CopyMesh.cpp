@@ -100,11 +100,11 @@ int CopyMesh::copy_move_entities(iBase_EntitySetHandle set_handle,
   iBase_EntityHandle *ents = NULL;
   int ents_alloc = 0, ents_size;
   iMesh_getEntitiesRec(imeshImpl, set_handle, 
-                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
+                       iBase_ALL_TYPES, iMesh_HEXAHEDRON, true,
                        &ents, &ents_alloc, &ents_size, &err);
   ERRORR("Failed to get entities from set recursively.", err);
   
-  int result = copy_move_entities(ents, ents_size, dx, 
+ int result = copy_move_entities(ents, ents_size, dx, 
                                   new_ents, new_ents_alloc, new_ents_size,
                                   do_merge);
 
@@ -212,7 +212,6 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
                                       bool do_merge)
 {
   int err;
-
     // create a tag for this local copy operation
   iBase_TagHandle local_tag;
   iMesh_createTag(imeshImpl, "local_copy", 1, iBase_ENTITY_HANDLE,
@@ -228,6 +227,7 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
   iMesh_addEntArrToSet(imeshImpl, ent_handles, num_ents,
                        copy_set, &err);
   ERRORR("Failed to add ents to set", err);
+ 
   iBase_EntityHandle *verts = NULL;
   int verts_alloc = 0, verts_size;
   int *offset = NULL, offset_alloc = 0, offset_size;
@@ -235,7 +235,8 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
                      iBase_VERTEX,
                      &verts, &verts_alloc, &verts_size,
                      &offset, &offset_alloc, &offset_size,
-                     &err );
+                     &err ); 
+	 
   ERRORR("Failed to get adj entities in copy set", err);
   iMesh_addEntArrToSet(imeshImpl, verts, verts_size,
                        copy_set, &err);
@@ -632,7 +633,7 @@ int CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
 #include "MergeMesh.hpp"
 
 iMesh_Instance impl;
-iBase_EntityHandle root_set;
+iBase_EntitySetHandle root_set;
 
 int check_num_ents(int ent_type, int expected) 
 {
@@ -712,13 +713,30 @@ int main(int argc, char **argv)
     double xmin[3] = {DBL_MAX, DBL_MAX, DBL_MAX};
     double xmax[3] = {DBL_MIN, DBL_MIN, DBL_MIN};
     double *ncoords = NULL;
-    int ncoords_alloc = 0, ncoords_size;
+    //int ncoords_alloc = 0, ncoords_size;
     int *inset = NULL, inset_alloc = 0, inset_size;
     ERRORR("Couldn't get root set.", 1);
     int sorder = iBase_INTERLEAVED;
-    iMesh_getAllVtxCoords (impl, root_set,
-                           &ncoords, &ncoords_alloc, &ncoords_size,
-                           &inset, &inset_alloc, &inset_size, &sorder, &err);
+    /*
+    iBase_EntityHandle *verts = NULL;
+    int verts_alloc = 0, verts_size;
+    double *vert_coords = NULL;
+    int vert_coords_alloc = 0, vert_coords_size;
+    verts = NULL;
+    verts_alloc = 0;
+    int storage_order = 0;
+
+    iMesh_getEntities(impl, root_set, iBase_VERTEX, 
+		      iMesh_POINT, &verts, &verts_alloc, &verts_size, &result);
+    ERRORR("Didn't get all vertices.", 1);
+    */
+    int vert_coords_alloc = 0, vert_coords_size;
+    int storage_order = 0;
+
+    iMesh_getVtxArrCoords (impl, verts,
+                           verts_size, storage_order, &ncoords,
+			   &vert_coords_alloc, &vert_coords_size,
+			   &err);
     ERRORR("Didn't get vtx coords.", 1);
 
     int num_err = 0;
@@ -779,12 +797,27 @@ int main(int argc, char **argv)
       cm->add_unique_tag(utags[i]);
       
       // copy
-    err = cm->copy_move_entities(&root_set, 1, dx, NULL, NULL, NULL,
+    iBase_EntityHandle* new_ents = NULL;
+    int new_ents_alloc = 0;
+    int new_ents_size = 0;
+    err = cm->copy_move_entities(root_set, dx, &new_ents,
+				 &new_ents_alloc, &new_ents_size,
                                  false);
     ERRORR("Failed to copy_move entities.", 1);
-    
-      // merge
-    err = mm->merge_entities(NULL, 0, 1.0e-8);
+    //getting elements for merge mesh   
+    iBase_EntityHandle *ents = NULL;
+    int ents_alloc = 0, ents_size;
+    iMesh_getEntitiesRec(impl, root_set, 
+                       iBase_ALL_TYPES, iMesh_HEXAHEDRON, true,
+                       &ents, &ents_alloc, &ents_size, &err);
+    ERRORR("Failed to get entities from set recursively.", err);
+      // merge 
+    const double merge_tol =  1.0e-8;
+      const int do_merge = 0;
+    const int update_sets= 0;
+    iBase_TagHandle merge_tag = NULL;
+    err = mm->merge_entities(ents, ents_size, merge_tol,
+			     do_merge, update_sets, merge_tag);
     ERRORR("Failed to merge entities.", 1);
 
       // export
@@ -915,7 +948,6 @@ int make_ents(CopyMesh *cm, iBase_EntityHandle *&ents,
       1, 0, 1, 0, 
       1, 0, 0, 1
   };
-
   int err;
 
     // set the adjacency table to request faces
@@ -981,10 +1013,10 @@ int make_ents(CopyMesh *cm, iBase_EntityHandle *&ents,
   }
   
     // ES1: geom dim = 3, hexes 1-3, C
-  iMesh_addEntArrToSet(cm->impl(), ents, 3, esets, &err);
+  iMesh_addEntArrToSet(cm->impl(), ents, 3, *esets, &err);
   ERRORR("Failed to add ents to set 1.", err);
   int dum = 3;
-  iMesh_setEntSetIntData(cm->impl(), esets[0], gtag, dum, &err);
+  iMesh_setEntSetIntData(cm->impl(),esets[0], gtag, dum, &err);
   ERRORR("Failed to set geom set tag on set 1.", err);
   
     // ES2: geom dim = 2, faces all, -
@@ -993,7 +1025,7 @@ int make_ents(CopyMesh *cm, iBase_EntityHandle *&ents,
   iMesh_getEntities(cm->impl(), root_set, iBase_FACE, iMesh_ALL_TOPOLOGIES,
                     &faces, &faces_alloc, &faces_size, &err);
   ERRORR("Failed to get faces.", err);
-  iMesh_addEntArrToSet(cm->impl(), faces, faces_size, esets+1, &err);
+  iMesh_addEntArrToSet(cm->impl(), faces, faces_size, *(esets+1), &err);
   ERRORR("Failed to add ents to set 2.", err);
   dum = 2;
   iMesh_setEntSetIntData(cm->impl(), esets[1], gtag, dum, &err);
@@ -1001,34 +1033,34 @@ int make_ents(CopyMesh *cm, iBase_EntityHandle *&ents,
   free(faces);
 
     // ES3: - , skin nodes, E
-  iMesh_addEntArrToSet(cm->impl(), verts, verts_size, esets+2, &err);
+  iMesh_addEntArrToSet(cm->impl(), verts, verts_size, *(esets+2), &err);
   ERRORR("Failed to add ents to set 3.", err);
   err = cm->add_copy_expand_list(esets+2, 1, CopyMesh::EXPAND);
   ERRORR("Failed to add set 3 to expand list.", err);
 
     // ES4: mat set, set 1, E
-  iMesh_addEntSet(cm->impl(), esets[0], esets+3, &err);
+  iMesh_addEntSet(cm->impl(), esets[0],*(esets+3), &err);
   ERRORR("Failed to add set to set 4.", err);
   dum = 100;
   iMesh_setEntSetIntData(cm->impl(), esets[3], mtag, dum, &err);
   ERRORR("Failed to set mat set tag on set 4.", err);
 
     // ES5: neu set, set 2, E
-  iMesh_addEntSet(cm->impl(), esets[1], esets+4, &err);
+  iMesh_addEntSet(cm->impl(), esets[1],*(esets+4), &err);
   ERRORR("Failed to add set to set 5.", err);
   dum = 101;
   iMesh_setEntSetIntData(cm->impl(), esets[4], ntag, dum, &err);
   ERRORR("Failed to set neu set tag on set 5.", err);
 
     // ES6: dir set, set 3, E
-  iMesh_addEntSet(cm->impl(), esets[2], esets+5, &err);
+  iMesh_addEntSet(cm->impl(), esets[2],*(esets+5), &err);
   ERRORR("Failed to add set to set 6.", err);
   dum = 102;
   iMesh_setEntSetIntData(cm->impl(), esets[5], dtag, dum, &err);
   ERRORR("Failed to set dir set tag on set 6.", err);
 
     // ES7: -, set 4, C
-  iMesh_addEntSet(cm->impl(), esets[3], esets+6, &err);
+  iMesh_addEntSet(cm->impl(), esets[3],*(esets+6), &err);
   ERRORR("Failed to add set to set 7.", err);
   err = cm->add_copy_expand_list(esets+6, 1, CopyMesh::COPY);
   ERRORR("Failed to add set 7 to copy list.", err);
