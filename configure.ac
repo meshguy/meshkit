@@ -386,7 +386,6 @@ AC_CONFIG_FILES([Makefile
                  algs/Makefile
                  xforms/Makefile
                  utils/Makefile
-		 plibs/Makefile
                  ])
                  #camal/Makefile
 
