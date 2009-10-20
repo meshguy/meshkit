@@ -100,11 +100,11 @@ int CopyMesh::copy_move_entities(iBase_EntitySetHandle set_handle,
   iBase_EntityHandle *ents = NULL;
   int ents_alloc = 0, ents_size;
   iMesh_getEntitiesRec(imeshImpl, set_handle, 
-                       iBase_ALL_TYPES, iMesh_HEXAHEDRON, true,
+                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
                        &ents, &ents_alloc, &ents_size, &err);
   ERRORR("Failed to get entities from set recursively.", err);
   
- int result = copy_move_entities(ents, ents_size, dx, 
+  int result = copy_move_entities(ents, ents_size, dx, 
                                   new_ents, new_ents_alloc, new_ents_size,
                                   do_merge);
 
@@ -227,21 +227,32 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
   iMesh_addEntArrToSet(imeshImpl, ent_handles, num_ents,
                        copy_set, &err);
   ERRORR("Failed to add ents to set", err);
- 
-  iBase_EntityHandle *verts = NULL;
-  int verts_alloc = 0, verts_size;
-  int *offset = NULL, offset_alloc = 0, offset_size;
-  iMesh_getEntArrAdj(imeshImpl, ent_handles, num_ents,
-                     iBase_VERTEX,
-                     &verts, &verts_alloc, &verts_size,
-                     &offset, &offset_alloc, &offset_size,
-                     &err ); 
-	 
-  ERRORR("Failed to get adj entities in copy set", err);
-  iMesh_addEntArrToSet(imeshImpl, verts, verts_size,
-                       copy_set, &err);
-  ERRORR("Failed to add verts to set", err);
 
+  for (int d = iBase_EDGE; d <= iBase_REGION; d++) {
+    iBase_EntityHandle *tmp_ents = NULL;
+    int tmp_ents_alloc = 0, tmp_ents_size;
+    iMesh_getEntities(imeshImpl, copy_set, 
+                      d, iMesh_ALL_TOPOLOGIES,
+                      &tmp_ents, &tmp_ents_alloc, &tmp_ents_size, &err);
+    ERRORR("Failed to get copy_set entities.", iBase_FAILURE);
+
+    iBase_EntityHandle *verts = NULL;
+    int verts_alloc = 0, verts_size;
+    int *offset = NULL, offset_alloc = 0, offset_size;
+    iMesh_getEntArrAdj(imeshImpl, tmp_ents, tmp_ents_size,
+                       iBase_VERTEX,
+                       &verts, &verts_alloc, &verts_size,
+                       &offset, &offset_alloc, &offset_size,
+                       &err );
+    ERRORR("Failed to get adj entities in copy set", err);
+    iMesh_addEntArrToSet(imeshImpl, verts, verts_size,
+                         copy_set, &err);
+    ERRORR("Failed to add verts to set", err);
+    free(verts);
+    free(offset);
+    free(tmp_ents);
+  }
+  
   err = copy_transform_verts(copy_set, trans, local_tag);
   ERRORR("Failed to copy/move vertices.", iBase_FAILURE);
 
@@ -265,9 +276,6 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
     ERRORR("Failed to tag copied sets.", iBase_FAILURE);
   }
     
-  free(verts);
-  free(offset);
-
     // destroy local tag, removing it from all entities
   iMesh_destroyTag(imeshImpl, local_tag, true, &err);
   ERRORR("Failed to force-destroy local copy tag.", iBase_FAILURE);
