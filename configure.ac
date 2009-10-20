@@ -207,7 +207,6 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
 MK_OPTIONAL_TOOL([algs],    [yes])
 MK_OPTIONAL_TOOL([xforms],    [yes])
 MK_OPTIONAL_TOOL([utils],    [yes])
-MK_OPTIONAL_TOOL([plibs],    [yes])
 
 
 ################################################################################
