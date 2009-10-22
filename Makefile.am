@@ -60,7 +60,7 @@ LIBS += $(IMESH_LIBS)
 endif
 
 if HAVE_MOAB
-pin217_CXXFLAGS += -DMOAB
+CPPFLAGS += -DMOAB
 endif
 
 # Automake doesn't seem to have a directory defined for

@@ -156,8 +156,8 @@ int main(int argc, char **argv)
   iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num1, &err);
   ERRORR("Trouble getting number of entities before merge.", err);
   
-//  err = mm->merge_entities(ents, ents_size, 1.0e-7);
-//  ERRORR("Trouble merging entities.", err);
+  err = mm->merge_entities(ents, ents_size, 1.0e-7);
+  ERRORR("Trouble merging entities.", err);
   
   iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num2, &err);
   ERRORR("Trouble getting number of entities after merge.", err);

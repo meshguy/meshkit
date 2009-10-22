@@ -171,7 +171,7 @@ CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabl
 ################################################################################
 AC_CHECK_FILE([$IMESH_DIR/lib/libMOAB.a], [have_moab=yes])
 AM_CONDITIONAL(HAVE_MOAB, [test "xyes" == "x$have_moab"])
-
+AC_SUBST([HAVE_MOAB])
 
 ###############################################################################
 #                           Optional Tools

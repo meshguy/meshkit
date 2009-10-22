@@ -275,7 +275,12 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
     err = tag_copied_sets(&copyTags[0], &copyTagVals[0], copyTags.size());
     ERRORR("Failed to tag copied sets.", iBase_FAILURE);
   }
-    
+
+    // get all the copies
+  iMesh_getEHArrData(imeshImpl, ent_handles, num_ents, local_tag, 
+                     new_ents, new_ents_allocated, new_ents_size, &err);
+  ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
+
     // destroy local tag, removing it from all entities
   iMesh_destroyTag(imeshImpl, local_tag, true, &err);
   ERRORR("Failed to force-destroy local copy tag.", iBase_FAILURE);
@@ -613,12 +618,19 @@ int CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
         // get the tag value
       iMesh_getEntSetData(imeshImpl, *sit, tags[t], 
                           &tag_space_ptr, &tag_space_alloc, &tag_space_size, &err);
-      if (iBase_TAG_NOT_FOUND == err) continue;
+      if (iBase_TAG_NOT_FOUND == err) {
+          // reset, just in case we return after this setting of err
+        err = iBase_SUCCESS;
+        continue;
+      }
       ERRORR("Problem getting copy tag for set.", err);
 
         // compare to tag value if necessary
-      if (tag_vals && tag_vals[t] && strncmp(tag_vals[t], tag_space_ptr, tag_size))
+      if (tag_vals && tag_vals[t] && strncmp(tag_vals[t], tag_space_ptr, tag_size)) {
+          // reset, just in case we return after this setting of err
+        err = iBase_SUCCESS;
         continue;
+      }      
       
         // if we got here, we should set the tag on the copy; get the copy
       iBase_EntitySetHandle copy_set;
@@ -702,8 +714,8 @@ int main(int argc, char **argv)
     ERRORR("Making entities failed.", err);
     
     double dx[] = {1.0,0.0,0.0};
-    iBase_EntityHandle *new_ents = ents + ents_size/2;
-    new_ents_alloc = ents_size/2;
+    iBase_EntityHandle *new_ents = ents + ents_size;
+    new_ents_alloc = ents_size;
     
   
     err = cm->copy_move_entities(ents, ents_size, dx,
@@ -718,41 +730,29 @@ int main(int argc, char **argv)
     err = mm->merge_entities(ents, ents_size+new_ents_size, 1.0e-8);
     ERRORR("Failed to merge entities.", 1);
 
-    double xmin[3] = {DBL_MAX, DBL_MAX, DBL_MAX};
-    double xmax[3] = {DBL_MIN, DBL_MIN, DBL_MIN};
-    double *ncoords = NULL;
-    //int ncoords_alloc = 0, ncoords_size;
-    int *inset = NULL, inset_alloc = 0, inset_size;
-    ERRORR("Couldn't get root set.", 1);
-    int sorder = iBase_INTERLEAVED;
-    /*
-    iBase_EntityHandle *verts = NULL;
-    int verts_alloc = 0, verts_size;
+      // now get all vertices, put in new verts array
+    iBase_EntityHandle *nverts = NULL;
+    int nverts_alloc = 0, nverts_size;
+    iMesh_getEntities(impl, root_set, iBase_VERTEX, iMesh_ALL_TOPOLOGIES, 
+                      &nverts, &nverts_alloc, &nverts_size, &err);
+    ERRORR("Didn't get all vertices.", 1);
+
+      // and their coords
     double *vert_coords = NULL;
     int vert_coords_alloc = 0, vert_coords_size;
-    verts = NULL;
-    verts_alloc = 0;
-    int storage_order = 0;
-
-    iMesh_getEntities(impl, root_set, iBase_VERTEX, 
-		      iMesh_POINT, &verts, &verts_alloc, &verts_size, &result);
-    ERRORR("Didn't get all vertices.", 1);
-    */
-    int vert_coords_alloc = 0, vert_coords_size;
-    int storage_order = 0;
-
-    iMesh_getVtxArrCoords (impl, verts,
-                           verts_size, storage_order, &ncoords,
-			   &vert_coords_alloc, &vert_coords_size,
-			   &err);
+    int sorder = iBase_INTERLEAVED;
+    iMesh_getVtxArrCoords (impl, nverts, nverts_size, sorder, 
+                           &vert_coords, &vert_coords_alloc, &vert_coords_size,
+                           &err);
     ERRORR("Didn't get vtx coords.", 1);
 
-    int num_err = 0;
-    for (int i = 0; i < inset_size; i++) {
-      if (!inset[i]) num_err++;
+    double xmin[3] = {DBL_MAX, DBL_MAX, DBL_MAX};
+    double xmax[3] = {DBL_MIN, DBL_MIN, DBL_MIN};
+
+    for (int i = 0; i < nverts_size; i++) {
       for (int j = 0; j < 3; j++) {
-        if (ncoords[3*i+j] < xmin[j]) xmin[j] = ncoords[3*i+j];
-        if (ncoords[3*i+j] > xmax[j]) xmax[j] = ncoords[3*i+j];
+        if (vert_coords[3*i+j] < xmin[j]) xmin[j] = vert_coords[3*i+j];
+        if (vert_coords[3*i+j] > xmax[j]) xmax[j] = vert_coords[3*i+j];
       }
     }
     if (xmin[0] != 0.0 || xmin[1] != 0.0 || xmin[2] != 0.0 ||
@@ -763,20 +763,17 @@ int main(int argc, char **argv)
       return 1;
     }
 
-    iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num_err, &err);
-    ERRORR("Didn't get num verts.", 1);
-  
     int expected = 2*verts_size - 8;
-    if (num_err != expected) {
-      std::cerr << "Didn't get right # vertices; got " << num_err 
+    if (nverts_size != expected) {
+      std::cerr << "Didn't get right # vertices; got " << nverts_size
                 << ", expected " << expected << std::endl;
     
       return 1;
     }
   
     free(verts);
+    free(nverts);
     free(ents);
-    free(ncoords);
   }
   
   else {
