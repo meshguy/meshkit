@@ -5,7 +5,7 @@
 #include "CopyMesh.hpp"
 
 #define DEFAULT_TEST_FILE "pin1.cub"
-#define DEFAULT_OUTPUT_FILE "output.cub"
+#define DEFAULT_OUTPUT_FILE "pin217-out.h5m"
 
 iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
   int orig_ents_alloc = 0, orig_ents_size; 
   iBase_EntityHandle *orig_ents = NULL;
 
-  iMesh_getEntities(impl, orig_set, iBase_ALL_TYPES,iMesh_HEXAHEDRON,
+  iMesh_getEntities(impl, orig_set, iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
                  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
    ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
   
@@ -129,11 +129,22 @@ int main(int argc, char **argv)
       ERRORR("Failed to tag copied sets.", iBase_FAILURE);
     }
   }
-    
-    // merge
-  std::cout << "Merged entities." << std::endl;
-  err = mm->merge_entities(NULL, 0, 1.0e-8);
-  if (0 != err) std::cerr << "Failed to merge entities." << std::endl;
+       //getting elements (ents) for merge_entities   
+    const double merge_tol =  1.0e-8;
+    const int do_merge = 0;
+    const int update_sets= 0; 
+    iBase_TagHandle merge_tag = NULL;
+    iBase_EntityHandle *ents = NULL;
+    int ents_alloc = 0, ents_size;
+    iMesh_getEntitiesRec(impl, root_set, 
+                       iBase_ALL_TYPES, iMesh_HEXAHEDRON, true,
+                       &ents, &ents_alloc, &ents_size, &err);
+    ERRORR("Failed to get entities from set recursively.", err);
+
+      // merge  
+    err = mm->merge_entities(ents, ents_size, merge_tol,
+			     do_merge, update_sets, merge_tag);
+    ERRORR("Failed to merge entities.", 1);   
 
     // assign new global ids
   std::cout << "Assigning global ids." << std::endl;
