@@ -170,7 +170,7 @@ CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabl
 #                           MOAB
 ################################################################################
 AC_CHECK_FILE([$IMESH_DIR/lib/libMOAB.a], [have_moab=yes])
-AM_CONDITIONAL(HAVE_MOAB, [test "xyes" == "x$have_moab"])
+AM_CONDITIONAL(HAVE_MOAB, [test "xyes" = "x$have_moab"])
 AC_SUBST([HAVE_MOAB])
 
 ###############################################################################
@@ -367,6 +367,97 @@ AM_CONDITIONAL( HAVE_CAMAL_PAVER,  [test $HAVE_CAMAL_PAVER  = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_SWEEP,  [test $HAVE_CAMAL_SWEEP  = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_TET,    [test $HAVE_CAMAL_TET    = yes] )
 
+
+################################################################################
+#                           TetGen
+################################################################################
+AC_ARG_WITH(tetgen, 
+[AC_HELP_STRING([--with-tetgen=DIR], [Specify location of TetGen library.])],
+[TETGEN_VAL=$withval
+ DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-tetgen=\"${withval}\""
+ ], [TETGEN_VAL=no])
+ 
+TETGEN_CPPFLAGS=
+TETGEN_LDFLAGS=
+TETGEN_LIBS=
+
+# check if iRel is enable
+if test "xyes" != "x$HAVE_IREL"; then
+  case "x$TETGEN_VAL" in
+    xno)
+      ;;
+    x|xyes)
+      AC_MSG_WARN([TetGen support disabled because iRel not found])
+      TETGEN_VAL=no
+      ;;
+    *)
+      AC_MSG_ERROR([TetGen cannot be enabled w/out iRel])
+      ;;
+  esac
+fi
+
+# Check for TETGEN headers and libraries
+if test "xno" = "x$TETGEN_VAL"; then
+  HAVE_TETGEN=no
+else
+  TETGEN_DIR="$TETGEN_VAL"
+
+  if test "x" = "x$TETGEN_VAL"; then
+    TETGEN_DIR=yes
+  fi
+
+  if test "xyes" != "x$TETGEN_DIR"; then
+    if ! test -d "$TETGEN_DIR"; then
+      AC_MSG_ERROR([$TETGEN_DIR: not a directory])
+    fi
+    
+    if test -d "$TETGEN_DIR/include"; then
+      TETGEN_CPPFLAGS="-I$TETGEN_DIR/include"
+    else
+      AC_MSG_WARN([$TETGEN_DIR/include: no such directory])
+      TETGEN_CPPFLAGS="-I$TETGEN_DIR"
+    fi
+    
+    if test -d "$TETGEN_DIR/lib"; then
+      TETGEN_LDFLAGS="-L$TETGEN_DIR/lib"
+    else
+      AC_MSG_WARN([$TETGEN_DIR/lib: no such directory])
+      TETGEN_LDFLAGS="-L$TETGEN_DIR"
+    fi
+  fi
+
+  old_LIBS="$LIBS"
+  old_LDFLAGS="$LDFLAGS"
+  old_CPPFLAGS="$CPPFLAGS"
+  LDFLAGS="$LDFLAGS $TETGEN_LDFLAGS -ltet"
+  CPPFLAGS="$CPPFLAGS $TETGEN_CPPFLAGS"
+  AC_LANG_PUSH([C++])
+
+  AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([#include "tetgen.h"],
+        [tetgenio dummy])],
+    [TETGEN_LIBS="$TETGEN_LDFLAGS -ltet"] [HAVE_TETGEN=yes],
+    [AC_MSG_WARN([libtet is not installed.])])
+
+  AC_LANG_POP([C++])
+  LIBS="$old_LIBS"
+  LDFLAGS="$old_LDFLAGS"
+  CPPFLAGS="$old_CPPFLAGS"
+fi
+
+if test "x$HAVE_TETGEN" = "xyes"; then
+  AC_MSG_RESULT([TetGen is found.])
+elif test "x$TETGEN_VAL" != "xno"; then
+  AC_MSG_ERROR([TetGen not found or not usable.])
+fi
+
+AC_SUBST([TETGEN_CPPFLAGS])
+AC_SUBST([TETGEN_LDFLAGS])
+AC_SUBST([TETGEN_LIBS])
+AC_SUBST([HAVE_TETGEN])
+
+AM_CONDITIONAL(HAVE_TETGEN, [test "x$HAVE_TETGEN" = "xyes"])
+
 ################################################################################
 #                           Output Files
 ################################################################################
@@ -386,6 +477,7 @@ AC_CONFIG_FILES([Makefile
                  algs/Makefile
                  xforms/Makefile
                  utils/Makefile
+		 plibs/Makefile
                  ])
                  #camal/Makefile
 
