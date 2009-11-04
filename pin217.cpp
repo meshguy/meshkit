@@ -129,9 +129,9 @@ int main(int argc, char **argv)
       ERRORR("Failed to tag copied sets.", iBase_FAILURE);
     }
   }
-       //getting elements (ents) for merge_entities   
+       //getting hexahedron elements for merge_entities   
     const double merge_tol =  1.0e-8;
-    const int do_merge = 0;
+    const int do_merge = 1;
     const int update_sets= 0; 
     iBase_TagHandle merge_tag = NULL;
     iBase_EntityHandle *ents = NULL;
@@ -142,9 +142,19 @@ int main(int argc, char **argv)
     ERRORR("Failed to get entities from set recursively.", err);
 
       // merge  
+    int num1, num2;
+  
+    iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num1, &err);
+    ERRORR("Trouble getting number of entities after merge.", err);
+
     err = mm->merge_entities(ents, ents_size, merge_tol,
 			     do_merge, update_sets, merge_tag);
     ERRORR("Failed to merge entities.", 1);   
+    
+    iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num2, &err);
+    ERRORR("Trouble getting number of entities after merge.", err);
+
+    std::cout << "Merged " << num1 - num2 << " vertices." << std::endl;
 
     // assign new global ids
   std::cout << "Assigning global ids." << std::endl;
