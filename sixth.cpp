@@ -95,13 +95,23 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
                bool &back_mesh,
                std::vector<std::string> &files, 
                std::vector<int> &assy_types,
-               std::string &outfile);
+               std::string &outfile, bool &global_ids);
+
+int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
+               bool &back_mesh,
+               std::vector<std::string> &files, 
+               std::vector<int> &assy_types,
+			std::string &outfile, bool &global_ids);
 
 int del_orig_mesh(std::vector<iBase_EntitySetHandle> &assys,
                   const bool back_mesh);
 
 int main(int argc, char **argv) 
 {
+  int test_flag;
+    if (1 == argc) {
+    test_flag = 1;
+  }
     // make a mesh instance
   int err;
   iMesh_newMesh("MOAB", &impl, &err, 4);
@@ -118,10 +128,17 @@ int main(int argc, char **argv)
   std::vector<int> assy_types;
   bool back_mesh;
   std::string outfile;
-  err = read_input(nrings, pack_type, pitch, symm, back_mesh,
-                   files, assy_types, outfile);
+  bool global_ids;
+  if (test_flag == 1){
+    err = read_input_defaults(nrings, pack_type, pitch, symm, back_mesh,
+			      files, assy_types, outfile, global_ids);
   ERRORR("Couldn't parse input.", err);
-
+  }
+  else{
+    err = read_input(nrings, pack_type, pitch, symm, back_mesh,
+		     files, assy_types, outfile, global_ids);
+  ERRORR("Couldn't parse input.", err);
+  }
   std::vector<iBase_EntitySetHandle> assys;
   iBase_EntitySetHandle orig_set;
   for (unsigned int i = 0; i < files.size(); i++) {
@@ -151,12 +168,17 @@ int main(int argc, char **argv)
                     iBase_REGION, iMesh_ALL_TOPOLOGIES,
                     &ents, &ents_alloc, &ents_size, &err);
   ERRORR("Trouble getting entities for merge.", err);
-
+  
+  const double merge_tol =  1.0e-8;
+  const int do_merge = 1;
+  const int update_sets= 0; 
+  iBase_TagHandle merge_tag = NULL;
   int num1, num2;
   iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num1, &err);
   ERRORR("Trouble getting number of entities before merge.", err);
   
-  err = mm->merge_entities(ents, ents_size, 1.0e-7);
+  err = mm->merge_entities(ents, ents_size, merge_tol,
+			   do_merge, update_sets,merge_tag);
   ERRORR("Trouble merging entities.", err);
   
   iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num2, &err);
@@ -164,10 +186,20 @@ int main(int argc, char **argv)
 
   std::cout << "Merged " << num1 - num2 << " vertices." << std::endl;
 
+    // assign new global ids
+  if (global_ids == true){
+    std::cout << "Assigning global ids." << std::endl;
+    MKUtils mu(impl);
+    err = mu.assign_global_ids(root_set, 3, 1, true, false,
+                             "GLOBAL_ID");
+    ERRORR("Error assigning global ids.", err);
+  }
+
+   // export
   iMesh_save(impl, root_set, outfile.c_str(), NULL, &err, 
              strlen(outfile.c_str()), 0);
   ERRORR("Trouble writing output mesh.", err);
-  
+  std::cout << "Saved: "<< outfile.c_str() <<std::endl;
   return iBase_SUCCESS;
 }
 
@@ -208,8 +240,7 @@ int copy_move_assys(CopyMesh *cm,
   double PI = acos(-1.0);
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
-  int err;
-
+  int err; 
   int i = 0;
   for (int n1 = 0; n1 < nrings; n1++) {
     dx[1] = n1 * pitch * sin(PI/3.0);
@@ -221,7 +252,6 @@ int copy_move_assys(CopyMesh *cm,
       dx[0] = .5 * n1 * pitch + (n2 - n1) * pitch;
       new_ents = NULL;
       new_ents_alloc = 0;
-      
       err = cm->copy_move_entities(assys[assy_types[i]], dx, 
                                    &new_ents, &new_ents_alloc, &new_ents_size,
                                    false);
@@ -238,7 +268,7 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
                bool &back_mesh,
                std::vector<std::string> &files, 
                std::vector<int> &assy_types,
-               std::string &outfile) 
+               std::string &outfile, bool &global_ids) 
 {
   std::cout << "Nrings: ";
   std::cin >> nrings;
@@ -284,6 +314,15 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
     }
     else
       back_mesh = false;
+
+    std::cout << "New global ids (y/n)?" << std::endl;
+    scanf("%s", filename);
+    if (filename[0] == 'y' || filename[0] == 'Y') {
+      scanf("%s", filename); 
+      global_ids = true;
+    }
+    else
+      global_ids = false;
   }
 
   char filename[1024];
@@ -293,3 +332,76 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
 
   return iBase_SUCCESS;
 }
+
+
+int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
+               bool &back_mesh,
+               std::vector<std::string> &files, 
+               std::vector<int> &assy_types,
+	       std::string &outfile, bool &global_ids) 
+{
+  std::cout << "Using defaults for running sixth program \n  Usage: sixth <any_character> for user defined inputs";
+  nrings = 3;
+  std::cout << "\n\n----Inputs to Sixth Program----\n\nNrings: " << nrings;
+  pack_type = 1;
+  std::cout << "\nPacking type: 1 (for Assembly) 0 (for Unit Cell Duct)"; 
+  std::cout << "\nUsing packing type: " << pack_type;
+  pitch = 14.685;
+  std::cout << "\nPitch: "<< pitch;
+  symm = 6;
+  std::cout << "\n1/Symmetry: " << symm;
+
+
+  // ASSY_TYPES is setup as default case
+  if (UNITCELL_DUCT == pack_type) {
+    std::string filename;
+    std::cout << "\nUnit cell file: "; std::cin >> filename; files.push_back(filename);
+    std::cout << "\nDuct file: "; std::cin >> filename; files.push_back(filename);
+    back_mesh = true;
+  }
+  else if (ASSY_TYPES == pack_type) {
+    std::cout << "\nNo. of assembly types = 2"; //both types are pin1.cub
+    //manually enter nrings(nrings+1)/2 assy types
+     assy_types.push_back(0);
+     assy_types.push_back(1);
+     assy_types.push_back(0);
+    
+    // get the number of assy types then read that many filenames
+    std::set<int> all_assys;
+    for (std::vector<int>::iterator vit = assy_types.begin();
+	 vit != assy_types.end(); vit++) all_assys.insert(*vit);
+    all_assys.erase(-1);
+   
+    //char filename[] = "fuel_assy.cub";
+    char filename[] = "pin1.cub";
+    for (unsigned int i = 0; i < all_assys.size(); i++) {
+      std::cout << "\nAssy " << i  << ": "<< filename;
+      files.push_back(std::string(filename));
+    }
+    char bfilename[] = "y"; 
+    std::cout << "\nBackground assembly (y/n)?: " << bfilename << std::endl;
+     
+    if (bfilename[0] == 'y' || bfilename[0] == 'Y') {
+      char bfile[] = "test_sodium_all.cub";
+      //char bfile[] = "sodium_all.cub";
+      std::cout << "Defaulting to file: " << bfile;
+
+      files.push_back(std::string(bfile));
+      back_mesh = true;
+    }
+    else
+      back_mesh = false;
+  }
+  char g_id[]= "n";
+  std::cout << "\nNew global ids (y/n)? " << g_id;
+  global_ids = false;
+  char filename[] = "sixth_test.h5m";
+  std::cout << "\nOutput file: "<< filename << std::endl;
+  outfile = filename;
+
+  std::cout << "\n------------------------------\n\n";
+
+  return iBase_SUCCESS;
+}
+
+
