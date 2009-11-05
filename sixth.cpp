@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   ERRORR("Trouble getting entities for merge.", err);
   
   const double merge_tol =  1.0e-8;
-  const int do_merge = 1;
+  const int do_merge = 0;
   const int update_sets= 0; 
   iBase_TagHandle merge_tag = NULL;
   int num1, num2;
