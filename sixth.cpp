@@ -341,7 +341,7 @@ int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
 	       std::string &outfile, bool &global_ids) 
 {
   std::cout << "Using defaults for running sixth program \n  Usage: sixth <any_character> for user defined inputs";
-  nrings = 3;
+  nrings = 2;
   std::cout << "\n\n----Inputs to Sixth Program----\n\nNrings: " << nrings;
   pack_type = 1;
   std::cout << "\nPacking type: 1 (for Assembly) 0 (for Unit Cell Duct)"; 
