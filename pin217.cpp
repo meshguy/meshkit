@@ -54,7 +54,7 @@ int main(int argc, char **argv)
       .5*ASSY_PITCH*sin(PI/6.0)/sin(PI/3.0);
 
   int NRINGS = 8;
-  bool sixth_core[] = {
+    bool sixth_core[] = {
       false, true, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false,
@@ -63,8 +63,8 @@ int main(int argc, char **argv)
       false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false 
-  };
-/*  bool sixth_core[] = {
+      };
+    /*  bool sixth_core[] = {
       false, true, true, true, true, true, true, true, 
       true, true, true, true, true, true, true, false,
       true, true, true, true, true, true, true, false,
@@ -73,8 +73,8 @@ int main(int argc, char **argv)
       true, true, true, true, false, false, false, false,
       true, true, true, false, false, false, false, false,
       true, false, false, false, false, false, false, false 
-  };
-*/
+      };*/
+
   iBase_EntitySetHandle orig_set;
   iMesh_createEntSet(impl, 0, &orig_set, &err);
   ERRORR("Couldn't create orig entity set.", err);
@@ -131,13 +131,13 @@ int main(int argc, char **argv)
   }
        //getting hexahedron elements for merge_entities   
     const double merge_tol =  1.0e-8;
-    const int do_merge = 1;
+    const int do_merge = 1; //0 or 1 for off or on respectively 
     const int update_sets= 0; 
     iBase_TagHandle merge_tag = NULL;
     iBase_EntityHandle *ents = NULL;
     int ents_alloc = 0, ents_size;
-    iMesh_getEntitiesRec(impl, root_set, 
-                       iBase_ALL_TYPES, iMesh_HEXAHEDRON, true,
+    iMesh_getEntities(impl, root_set, 
+                       iBase_REGION, iMesh_ALL_TOPOLOGIES,
                        &ents, &ents_alloc, &ents_size, &err);
     ERRORR("Failed to get entities from set recursively.", err);
 
