@@ -165,26 +165,25 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
         
         if ((from - MBCartVect(&coords[3*j])).length_squared() < mergeTolSq) {
           merge_tag_val[j] = *rit;
-          if (j < lr_size) inleaf_merged = true;
-          else outleaf_merged = true;
+          if (j < lr_size){
+	    inleaf_merged = true;}
+          else{
+	    outleaf_merged = true;}
+
           deadEnts.insert(to_ent);
         }
-      }
-
-      if (outleaf_merged) {
-        result = mbImpl->tag_set_data(merge_tag, leaf_range2, &merge_tag_val[leaf_range.size()]);
+	if (inleaf_merged) {
+	  result = mbImpl->tag_set_data(merge_tag, leaf_range, &merge_tag_val[0]);
+	  if (MB_SUCCESS != result) return result;
+	}
+	if (outleaf_merged) {
+	  result = mbImpl->tag_set_data(merge_tag, leaf_range2, &merge_tag_val[leaf_range.size()]);
         if (MB_SUCCESS != result) return result;
+	}
       }
     }
-    
-    if (inleaf_merged) {
-      result = mbImpl->tag_set_data(merge_tag, leaf_range, &merge_tag_val[0]);
-      if (MB_SUCCESS != result) return result;
-    }
-
     result = iter.step();
   }
-
   return MB_SUCCESS;
 }
 
