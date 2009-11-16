@@ -108,6 +108,8 @@ int del_orig_mesh(std::vector<iBase_EntitySetHandle> &assys,
 
 int main(int argc, char **argv) 
 {
+  // set the dimension based on input mesh - 2D meshes or 3D mesh??
+  int set_DIM = 3;
   int test_flag;
     if (1 == argc) {
     test_flag = 1;
@@ -164,13 +166,21 @@ int main(int argc, char **argv)
 
   iBase_EntityHandle *ents = NULL; 
   int ents_alloc = 0, ents_size;
+
+  if(set_DIM ==2){
+    iMesh_getEntities(impl, root_set,
+                    iBase_FACE, iMesh_ALL_TOPOLOGIES,
+                    &ents, &ents_alloc, &ents_size, &err);
+  }   
+  else{
   iMesh_getEntities(impl, root_set,
                     iBase_REGION, iMesh_ALL_TOPOLOGIES,
                     &ents, &ents_alloc, &ents_size, &err);
+  }
   ERRORR("Trouble getting entities for merge.", err);
   
   const double merge_tol =  1.0e-8;
-  const int do_merge = 0;
+  const int do_merge = 1;
   const int update_sets= 0; 
   iBase_TagHandle merge_tag = NULL;
   int num1, num2;
@@ -346,7 +356,7 @@ int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
   pack_type = 1;
   std::cout << "\nPacking type: 1 (for Assembly) 0 (for Unit Cell Duct)"; 
   std::cout << "\nUsing packing type: " << pack_type;
-  pitch = 14.685;
+  pitch = 15.685;
   std::cout << "\nPitch: "<< pitch;
   symm = 6;
   std::cout << "\n1/Symmetry: " << symm;
@@ -362,9 +372,11 @@ int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
   else if (ASSY_TYPES == pack_type) {
     std::cout << "\nNo. of assembly types = 2"; //both types are pin1.cub
     //manually enter nrings(nrings+1)/2 assy types
-     assy_types.push_back(0);
+    //  for(int test=1;test<=15;test++){
+    assy_types.push_back(0);
      assy_types.push_back(1);
      assy_types.push_back(0);
+     //    }
     
     // get the number of assy types then read that many filenames
     std::set<int> all_assys;
