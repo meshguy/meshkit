@@ -1,50 +1,45 @@
-#include "CutCellMesh.hpp"
-#include "iGeom.h"
-
 #include <iostream>
+#include <time.h>
 
-#define DEFAULT_TEST_FILE_GEOM "sphere.stl"
-#define DEFAULT_TEST_FILE_MESH "sphere.stl"
+#include "CutCellMesh.hpp"
+
+#define DEFAULT_TEST_FILE_GEOM "sphere.stp"
+//#define DEFAULT_TEST_FILE_GEOM "../../../test_files/step/ilcmesh.stp"
+//#define DEFAULT_TEST_FILE_GEOM "../../../test_files/step/ilcmesh_1body.stp"
+
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 
-int load_and_cutcell_test(const char *filename_geom, const char *filename_mesh);
+int load_and_cutcell_test(const char *filename_geom, double size);
 
 int main(int argc, char* argv[])
 {
   // check command line arg
   const char *filename_geom = 0;
-  const char *filename_mesh = 0;
+  double size = -1.;
 
   if (argc == 3) {
     filename_geom = argv[1];
-    filename_mesh = argv[2];
+    size = atof(argv[2]);
+  }
+  else if (argc == 2) { // tesla test case, remove it
+    filename_geom = DEFAULT_TEST_FILE_GEOM;
+    size = atof(argv[1]);
   }
   else {
-    printf("Usage: %s <geom_filename> <mesh_filename>\n", argv[0]);
+    printf("Usage: %s <geom_filename> <interval_size>\n", argv[0]);
     if (argc != 1) return 1;
-    printf("  No file specified.  Defaulting to: %s %s\n", DEFAULT_TEST_FILE_GEOM,
-	   DEFAULT_TEST_FILE_MESH);
+    printf("No file specified.  Defaulting to: %s\n", DEFAULT_TEST_FILE_GEOM);
     filename_geom = DEFAULT_TEST_FILE_GEOM;
-    filename_mesh = DEFAULT_TEST_FILE_MESH;
   }
 
-  if (load_and_cutcell_test(filename_geom, filename_mesh)) return 1;
+  if (load_and_cutcell_test(filename_geom, size)) return 1;
 
   return 0;
 }
 
-int load_and_cutcell_test(const char *filename_geom, const char *filename_mesh)
-{/*
-  // initialize the Geom
-  int err;
-  iGeom_Instance geom;
-  iGeom_newGeom("", &geom, &err, 0);
-
-  // load geom file
-  iGeom_load(geom, filename_geom, NULL, &err, strlen(filename_geom), 0);
-  ERRORR("can not load a geometry.", 1);
- */
+int load_and_cutcell_test(const char *filename_geom, double size)
+{
   // initialize the Mesh
   int err;
   iMesh_Instance mesh;
@@ -55,19 +50,26 @@ int load_and_cutcell_test(const char *filename_geom, const char *filename_mesh)
   iMesh_getRootSet(mesh, &root_set, &err);
   ERRORR("Couldn't get root set.", 1);
 
-  // load a mesh file, just surface triangle now
-  // should be changed
-  iMesh_load(mesh, root_set, filename_mesh, NULL, &err, strlen(filename_mesh), 0);
+  // read geometry and establish facet mesh
+  clock_t start_time = clock();
+  iMesh_load(mesh, root_set, filename_geom, NULL, &err, strlen(filename_geom), 0);
   ERRORR("Couldn't load mesh file.", 1);
+  clock_t load_time = clock();
 
   // make cut cell mesher
-  CutCellMesh *ccm = new CutCellMesh(mesh, root_set);
+  CutCellMesh *ccm = new CutCellMesh(mesh, root_set, size);
 
-  // get initial cartesian cell division
+  // do mesh
   err = ccm->do_mesh();
   ERRORR("Couldn't cut-cell mesh.", 1);
+  clock_t mesh_time = clock();
 
-  std::cerr << "Cut-cell mesh is succesfully produced." << std::endl;
+  std::cout << "Cut-cell mesh is succesfully produced." << std::endl;
+  std::cout << "Time including loading is "
+	    << (double) (mesh_time - start_time)/CLOCKS_PER_SEC
+	    << " secs, Time excluding loading is "
+	    << (double) (mesh_time - load_time)/CLOCKS_PER_SEC
+	    << std::endl;
 
   delete ccm;
   iMesh_dtor(mesh, &err);
