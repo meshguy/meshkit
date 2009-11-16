@@ -19,9 +19,11 @@ int extend_expand_sets(CopyMesh *cm);
 
 int main(int argc, char **argv) 
 {
-    // make a mesh instance
+  //set the dimension based on input mesh - 2D meshes or 3D mesh??
+  int set_DIM = 3;
   std::cout <<"\nExecuting Pin217 Program\n\n";
   int err;
+  // make a mesh instance
   iMesh_newMesh("MOAB", &impl, &err, 4);
   ERRORR("Failed to create instance.", 1);
   
@@ -47,14 +49,15 @@ int main(int argc, char **argv)
   std::vector<std::string> ctags, etags, utags;
   std::vector<char*> cvals, evals;
   std::string infile, outfile;
-  double dx[3] = {0.0, 0.0, 0.0};
+  //  double dx[3] = {0.0, 0.0, 0.0};
+  double dx[2] = {0.0, 0.0};
   double ASSY_PITCH=14.685;
   double PI = acos(-1.0);
   double Y_SEP=.5*ASSY_PITCH/sin(PI/3.0) + 
       .5*ASSY_PITCH*sin(PI/6.0)/sin(PI/3.0);
 
   int NRINGS = 8;
-    bool sixth_core[] = {
+  bool sixth_core[] = {
       false, true, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false,
@@ -64,7 +67,7 @@ int main(int argc, char **argv)
       false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false 
       };
-    /*  bool sixth_core[] = {
+  /*  bool sixth_core[] = {
       false, true, true, true, true, true, true, true, 
       true, true, true, true, true, true, true, false,
       true, true, true, true, true, true, true, false,
@@ -94,12 +97,11 @@ int main(int argc, char **argv)
    ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
   
     // get the copy/expand sets
-  int three = 3;
   int num_etags = 3, num_ctags = 1;
   const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
   const char *etag_vals[] = {NULL, NULL, NULL};
   const char *ctag_names[] = {"GEOM_DIMENSION"};
-  const char *ctag_vals[] = {(const char*)&three};
+  const char *ctag_vals[]={(const char*)&set_DIM};
   err = get_copy_expand_sets(cm, orig_set, etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
   ERRORR("Failed to add expand lists.", iBase_FAILURE);
   err = get_copy_expand_sets(cm, orig_set, ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
@@ -125,8 +127,8 @@ int main(int argc, char **argv)
       std::cout << "Copy/moved irow=" << irow << ", icol=" << icol << std::endl;
       free(new_ents);
 
-      err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
-      ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+         err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
+       ERRORR("Failed to tag copied sets.", iBase_FAILURE);
     }
   }
        //getting hexahedron elements for merge_entities   
@@ -136,11 +138,19 @@ int main(int argc, char **argv)
     iBase_TagHandle merge_tag = NULL;
     iBase_EntityHandle *ents = NULL;
     int ents_alloc = 0, ents_size;
-    iMesh_getEntities(impl, root_set, 
-                       iBase_REGION, iMesh_ALL_TOPOLOGIES,
-                       &ents, &ents_alloc, &ents_size, &err);
-    ERRORR("Failed to get entities from set recursively.", err);
-
+ if(set_DIM ==2){
+    iMesh_getEntities(impl, root_set,
+                    iBase_FACE, iMesh_ALL_TOPOLOGIES,
+                    &ents, &ents_alloc, &ents_size, &err);
+     ERRORR("Failed to get entities from set recursively.", err);
+ }   
+  else{
+  iMesh_getEntities(impl, root_set,
+                    iBase_REGION, iMesh_ALL_TOPOLOGIES,
+                    &ents, &ents_alloc, &ents_size, &err);
+     ERRORR("Failed to get entities from set recursively.", err);
+  }
+ 
       // merge  
     int num1, num2;
   
