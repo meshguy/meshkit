@@ -5,6 +5,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include <sstream>
+#include <algorithm>
 
 #include "CutCellMesh.hpp"
 
