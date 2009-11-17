@@ -4,7 +4,7 @@
 #include "MergeMesh.hpp"
 #include "CopyMesh.hpp"
 #include "ExtrudeMesh.hpp"
-#define DEFAULT_TEST_FILE "2D-hexagon1.cub"
+#define DEFAULT_TEST_FILE "pin1.cub"
 #define DEFAULT_OUTPUT_FILE "pin217-out.h5m"
 
 iMesh_Instance impl;
