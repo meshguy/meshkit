@@ -20,7 +20,7 @@ int extend_expand_sets(CopyMesh *cm);
 int main(int argc, char **argv) 
 {
   //set the dimension based on input mesh - 2D meshes or 3D mesh??
-  int set_DIM = 2;
+  int set_DIM = 3;
   std::cout <<"\nExecuting Pin217 Program\n\n";
   int err;
   // make a mesh instance
@@ -171,8 +171,7 @@ int main(int argc, char **argv)
   iBase_EntityHandle faces[] = {*ents };
   double v[] = { 0, 0, 1 };
   int steps = 5;
-  //  err = ext->translate(faces, ents_size, steps, v);
-  // err = ext->translate(root_set,steps, v);
+  err = ext->translate(faces, ents_size, steps, v);
   ERRORR("Couldn't extrude mesh", 1);
  
    // assign new global ids
