@@ -171,7 +171,7 @@ int main(int argc, char **argv)
   iBase_EntityHandle faces[] = {*ents };
   double v[] = { 0, 0, 1 };
   int steps = 5;
-  err = ext->translate(faces, ents_size, steps, v);
+  // err = ext->translate(faces, ents_size, steps, v);
   ERRORR("Couldn't extrude mesh", 1);
  
    // assign new global ids
