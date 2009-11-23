@@ -10,35 +10,40 @@
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 
-int load_and_cutcell_test(const char *filename_geom, double size);
+int load_and_cutcell(const char *filename_geom, double size,
+		     int exp, int s_exp, int exp_type);
 
 int main(int argc, char* argv[])
 {
   // check command line arg
   const char *filename_geom = 0;
   double size = -1.;
+  int exp = 0;
+  int s_exp = 0;
+  int exp_type = 0;
 
-  if (argc == 3) {
+  if (argc == 6) {
     filename_geom = argv[1];
     size = atof(argv[2]);
-  }
-  else if (argc == 2) { // tesla test case, remove it
-    filename_geom = DEFAULT_TEST_FILE_GEOM;
-    size = atof(argv[1]);
+    exp = atof(argv[3]);
+    s_exp = atof(argv[4]);
+    exp_type = atof(argv[5]);
   }
   else {
-    printf("Usage: %s <geom_filename> <interval_size>\n", argv[0]);
+    printf("Usage: %s <geom_filename> <interval_size> <export[0 1]> <separate_export[0 1] <export_file_type[0 1]>\n", argv[0]);
     if (argc != 1) return 1;
     printf("No file specified.  Defaulting to: %s\n", DEFAULT_TEST_FILE_GEOM);
     filename_geom = DEFAULT_TEST_FILE_GEOM;
   }
-
-  if (load_and_cutcell_test(filename_geom, size)) return 1;
-
+  
+  if (load_and_cutcell(filename_geom, size, exp,
+		       s_exp, exp_type)) return 1;
+  
   return 0;
 }
 
-int load_and_cutcell_test(const char *filename_geom, double size)
+int load_and_cutcell(const char *filename_geom, double size,
+		     int exp, int s_exp, int exp_type)
 {
   // initialize the Mesh
   int err;
@@ -60,7 +65,7 @@ int load_and_cutcell_test(const char *filename_geom, double size)
   CutCellMesh *ccm = new CutCellMesh(mesh, root_set, size);
 
   // do mesh
-  err = ccm->do_mesh();
+  err = ccm->do_mesh(exp, s_exp, exp_type);
   ERRORR("Couldn't cut-cell mesh.", 1);
   clock_t mesh_time = clock();
 

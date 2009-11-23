@@ -55,15 +55,20 @@ class CutCellMesh
 {
 public:
 
-  explicit CutCellMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set, double size = -1.);
-  virtual ~CutCellMesh();
+  //explicit CutCellMesh(iMesh_Instance mesh,
+  CutCellMesh(iMesh_Instance mesh,
+	      iBase_EntitySetHandle root_set,
+	      double size = -1.);
+  
+  //virtual ~CutCellMesh();
+  ~CutCellMesh();
 
   iMesh_Instance mesh_impl() const
   {
     return m_mesh;
   }
 
-  int do_mesh();
+  int do_mesh(int exp, int s_exp, int file_type);
   int set_division();
   int make_hex_vertices();
   int make_hexes();
@@ -104,7 +109,9 @@ private:
   int set_tag_info();
 
   int print_debug();
-  int write_mesh(const char* file_name);
+  int export_mesh(int s_exp, int file_type);
+  int write_mesh(int type, int file_type, iBase_EntityHandle* handles,
+		 int& n_elem);
   void util_getrusage(struct rusage &r_usage);
 
 #ifdef MOAB

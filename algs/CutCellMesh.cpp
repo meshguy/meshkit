@@ -23,26 +23,25 @@ const bool debug = false;
 bool equal_to(double d1, double d2) { return abs(d1 - d2) < 10e-7; }
 
 CutCellMesh::CutCellMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set, double size)
-  : m_mesh(mesh), m_hRootSet(root_set)
+  : m_mesh(mesh), m_hRootSet(root_set), m_dInputSize(size)
 {
   m_elem_status_tag_handle = NULL;
   m_cut_fraction_tag_handle = NULL;
   m_nStatus = OUTSIDE;
-  m_dInputSize = size;
 }
 
 CutCellMesh::~CutCellMesh()
 {
 }
 
-int CutCellMesh::do_mesh()
+int CutCellMesh::do_mesh(int exp, int s_exp, int file_type)
 {
  #ifdef MOAB
   
   clock_t time1 = clock();
   struct rusage r_usage;
-  long int rss1, rss2, rss3, rss4, rss5, rss7,
-    msize1, msize2, msize3, msize4, msize5, msize7;
+  long int rss1, rss2, rss3, rss4, rss5, rss7, rss8,
+    msize1, msize2, msize3, msize4, msize5, msize7, msize8;
   static size_t pagesize = getpagesize();
   util_getrusage(r_usage);
   rss1 = r_usage.ru_maxrss*pagesize;
@@ -60,11 +59,6 @@ int CutCellMesh::do_mesh()
   rss2 = r_usage.ru_maxrss*pagesize;
   msize2 = r_usage.ru_idrss*pagesize;
 
-  if (false) {
-    err = write_mesh("input.vtk");
-    ERRORR("Couldn't write input mesh.", err);
-  }
-  
   // 2. build OBB trees for all triangles
   MBOrientedBoxTreeTool tool(reinterpret_cast<MBInterface*> (m_mesh));
   if (tool.build(tris, m_hTreeRoot) != MB_SUCCESS) {
@@ -122,6 +116,15 @@ int CutCellMesh::do_mesh()
     ERRORR("Couldn't print debug info.", err);
   }
 
+  if (exp) {
+    err = export_mesh(s_exp, file_type);
+    ERRORR("Couldn't print debug info.", err);
+  }
+  clock_t time8 = clock();
+  util_getrusage(r_usage);
+  rss8 = r_usage.ru_maxrss*pagesize;
+  msize8 = r_usage.ru_idrss*pagesize;
+
   std::cout << "triangle_construct_time="
 	    << (double) (time2 - time1)/CLOCKS_PER_SEC
 	    << ", OBB_tree_construct_time="
@@ -136,6 +139,8 @@ int CutCellMesh::do_mesh()
 	    << (double) (time7 - time6)/CLOCKS_PER_SEC
 	    << ", mesh_set_info_time="
 	    << (double) (time7 - time3)/CLOCKS_PER_SEC
+	    << ", export_time="
+	    << (double) (time8 - time7)/CLOCKS_PER_SEC
 	    << std::endl;
   std::cout << "start_memory=" << rss1 << " " << msize1
 	    << ", triangle_construct_memory=" << rss2 << " " << msize2
@@ -143,6 +148,7 @@ int CutCellMesh::do_mesh()
 	    << ", box_building_time=" << rss4 << " " << msize4
 	    << ", hex_construct_time=" << rss5 << " " << msize5
 	    << ", end_memory=" << rss7 << " " << msize7
+	    << ", export_memory=" << rss8 << " " << msize8
 	    << std::endl;
 
   return iBase_SUCCESS;
@@ -169,135 +175,271 @@ int CutCellMesh::print_debug()
 		   &hex_status_size, &err);
   ERRORR("Failed to get hex status.\n", err);
 
-  int n_inside_hex = 0;
-  int n_outside_hex = 0;
-  int n_boundary_hex = 0;
-  int hex_stat;
-  std::vector<iBase_EntityHandle> insideHex, outsideHex, bndrHex;
-  for (i = 0; i < hex_status_size; i++) {
-    if (hex_status[i] == 0) {
-      n_inside_hex++;
-      hex_stat = 0;
+  if (debug) {
+    int n_inside_hex = 0;
+    int n_outside_hex = 0;
+    int n_boundary_hex = 0;
+    int hex_stat;
+    std::vector<iBase_EntityHandle> insideHex, outsideHex, bndrHex;
+    for (i = 0; i < hex_status_size; i++) {
+      if (hex_status[i] == 0) {
+	n_inside_hex++;
+	hex_stat = 0;
       insideHex.push_back(hex_handles[i]);
-    }
-    else if (hex_status[i] == 1) {
-      n_outside_hex++;
-      hex_stat = 1;
-      outsideHex.push_back(hex_handles[i]);
-    }
+      }
+      else if (hex_status[i] == 1) {
+	n_outside_hex++;
+	hex_stat = 1;
+	outsideHex.push_back(hex_handles[i]);
+      }
     else if (hex_status[i] == 2) {
       n_boundary_hex++;
       hex_stat = 2;
       bndrHex.push_back(hex_handles[i]);
     }
     else ERRORR("Hex element status should be inside/outside/boundary.\n", 1);
-    //std::cout << "elem:" << i << ", handle:" << hex_handles[i]
-    //      << ", status:" << hex_stat << ", status1:" << (int) hex_status[i] << std::endl;
-  }
-  
-  std::cout << "# of hex:" << hex_size << ", # of inside hex:" << n_inside_hex
-	    << ", # of outside hex:" << n_outside_hex
-	    << ", # of boundary hex:" << n_boundary_hex
-	    << ", geom vol:"
-	    << n_inside_hex*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
-	    << ", vox vol:" << hex_size*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
-	    << std::endl;
-
-  // get elems and vertex coordinates
-  iBase_EntityHandle *adj_vertices = NULL;
-  int adj_vertices_alloc = 0, adj_vertices_size;
-  int *vertex_offsets = NULL;
-  int vertex_offsets_alloc = 0, vertex_offsets_size;
-  iMesh_getEntArrAdj(m_mesh, hex_handles, hex_size, iBase_VERTEX,
-		     &adj_vertices, &adj_vertices_alloc, &adj_vertices_size,
-		     &vertex_offsets, &vertex_offsets_alloc,
-		     &vertex_offsets_size, &err);
-  ERRORR("Couldn't get entity adjacency.\n", err);
-
-  double *vert_coords = NULL;
-  int vert_coords_alloc = 0, vert_coords_size;
-  iMesh_getVtxArrCoords(m_mesh, adj_vertices, adj_vertices_size,
-			iBase_INTERLEAVED, &vert_coords,
-			&vert_coords_alloc, &vert_coords_size, &err);
-  ERRORR("Couldn't get vertex coordinates.\n", err);
-
-  // save inside/outside/boundary elements separately
-  iBase_EntitySetHandle insideSet, outsideSet, bndrSet;
-  int is_list = 1;
-  MBErrorCode result;
-
-  if (n_inside_hex > 0) {
-    iMesh_createEntSet(m_mesh, is_list, &insideSet, &err);
-    ERRORR("Couldn't create inside set.\n", err);
-    iMesh_addEntArrToSet(m_mesh, &insideHex[0], n_inside_hex, insideSet, &err);
-    ERRORR("Couldn't add inside hexes.\n", err);
+      //std::cout << "elem:" << i << ", handle:" << hex_handles[i]
+      //      << ", status:" << hex_stat << ", status1:" << (int) hex_status[i] << std::endl;
+    }
     
-    std::string inside;
-    std::stringstream ss;
-    ss << "inside";
-    ss << m_dInputSize;
-    ss >> inside;
-    inside += std::string(".vtk");
-
-    result = moab_instance()->write_mesh(inside.c_str(),
-					 (const MBEntityHandle*) &insideSet,
-					 1);
-    if (MB_SUCCESS != result) {
-      std::cerr << "Failed to write inside hex mesh." << std::endl;
-      return iBase_FAILURE;
+    std::cout << "# of hex:" << hex_size << ", # of inside hex:" << n_inside_hex
+	      << ", # of outside hex:" << n_outside_hex
+	      << ", # of boundary hex:" << n_boundary_hex
+	      << ", geom vol:"
+	      << n_inside_hex*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
+	      << ", vox vol:" << hex_size*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
+	      << std::endl;
+    
+    // get elems and vertex coordinates
+    iBase_EntityHandle *adj_vertices = NULL;
+    int adj_vertices_alloc = 0, adj_vertices_size;
+    int *vertex_offsets = NULL;
+    int vertex_offsets_alloc = 0, vertex_offsets_size;
+    iMesh_getEntArrAdj(m_mesh, hex_handles, hex_size, iBase_VERTEX,
+		       &adj_vertices, &adj_vertices_alloc, &adj_vertices_size,
+		       &vertex_offsets, &vertex_offsets_alloc,
+		       &vertex_offsets_size, &err);
+    ERRORR("Couldn't get entity adjacency.\n", err);
+    
+    double *vert_coords = NULL;
+    int vert_coords_alloc = 0, vert_coords_size;
+    iMesh_getVtxArrCoords(m_mesh, adj_vertices, adj_vertices_size,
+			  iBase_INTERLEAVED, &vert_coords,
+			  &vert_coords_alloc, &vert_coords_size, &err);
+    ERRORR("Couldn't get vertex coordinates.\n", err);
+    
+    // save inside/outside/boundary elements separately
+    iBase_EntitySetHandle insideSet, outsideSet, bndrSet;
+    int is_list = 1;
+    MBErrorCode result;
+    
+    if (n_inside_hex > 0) {
+      iMesh_createEntSet(m_mesh, is_list, &insideSet, &err);
+      ERRORR("Couldn't create inside set.\n", err);
+      iMesh_addEntArrToSet(m_mesh, &insideHex[0], n_inside_hex, insideSet, &err);
+      ERRORR("Couldn't add inside hexes.\n", err);
+      
+      std::string inside;
+      std::stringstream ss;
+      ss << "inside";
+      ss << m_dInputSize;
+      ss >> inside;
+      inside += std::string(".vtk");
+      
+      result = moab_instance()->write_mesh(inside.c_str(),
+					   (const MBEntityHandle*) &insideSet,
+					   1);
+      if (MB_SUCCESS != result) {
+	std::cerr << "Failed to write inside hex mesh." << std::endl;
+	return iBase_FAILURE;
+      }
+      std::cout << "inside.vtk" << std::endl;
     }
-    std::cout << "inside.vtk" << std::endl;
-  }
-
-  if (n_outside_hex > 0) {
-    iMesh_createEntSet(m_mesh, is_list, &outsideSet, &err);
-    ERRORR("Couldn't create outside set.\n", err);
-    iMesh_addEntArrToSet(m_mesh, &outsideHex[0], n_outside_hex, outsideSet, &err);
-    ERRORR("Couldn't add outside hexes.\n", err);
-
-    std::string outside;
-    std::stringstream ss;
-    ss << "outside";
-    ss << m_dInputSize;
-    ss >> outside;
-    outside += std::string(".vtk");
-    result = moab_instance()->write_mesh(outside.c_str(),
-					 (const MBEntityHandle*) &outsideSet,
-					 1);
-    if (MB_SUCCESS != result) {
-      std::cerr << "Failed to write outside hex mesh." << std::endl;
-      return iBase_FAILURE;
+    
+    if (n_outside_hex > 0) {
+      iMesh_createEntSet(m_mesh, is_list, &outsideSet, &err);
+      ERRORR("Couldn't create outside set.\n", err);
+      iMesh_addEntArrToSet(m_mesh, &outsideHex[0], n_outside_hex, outsideSet, &err);
+      ERRORR("Couldn't add outside hexes.\n", err);
+      
+      std::string outside;
+      std::stringstream ss;
+      ss << "outside";
+      ss << m_dInputSize;
+      ss >> outside;
+      outside += std::string(".vtk");
+      result = moab_instance()->write_mesh(outside.c_str(),
+					   (const MBEntityHandle*) &outsideSet,
+					   1);
+      if (MB_SUCCESS != result) {
+	std::cerr << "Failed to write outside hex mesh." << std::endl;
+	return iBase_FAILURE;
+      }
+      std::cout << "outside.vtk" << std::endl;
     }
-    std::cout << "outside.vtk" << std::endl;
-  }
-
-  if (n_boundary_hex > 0) {
-    iMesh_createEntSet(m_mesh, is_list, &bndrSet, &err);
-    ERRORR("Couldn't create boundary set.\n", err);
-    iMesh_addEntArrToSet(m_mesh, &bndrHex[0], n_boundary_hex, bndrSet, &err);
-    ERRORR("Couldn't add boundary hexes.\n", err);
-
-    std::string boundary;
-    std::stringstream ss;
-    ss << "boundary";
-    ss << m_dInputSize;
-    ss >> boundary;
-    boundary += std::string(".vtk");
-
-    result = moab_instance()->write_mesh(boundary.c_str(),
-					 (const MBEntityHandle*) &bndrSet,
-					 1);
-    if (MB_SUCCESS != result) {
-      std::cerr << "Failed to write boundary hex mesh." << std::endl;
-      return iBase_FAILURE;
+    
+    if (n_boundary_hex > 0) {
+      iMesh_createEntSet(m_mesh, is_list, &bndrSet, &err);
+      ERRORR("Couldn't create boundary set.\n", err);
+      iMesh_addEntArrToSet(m_mesh, &bndrHex[0], n_boundary_hex, bndrSet, &err);
+      ERRORR("Couldn't add boundary hexes.\n", err);
+      
+      std::string boundary;
+      std::stringstream ss;
+      ss << "boundary";
+      ss << m_dInputSize;
+      ss >> boundary;
+      boundary += std::string(".vtk");
+      
+      result = moab_instance()->write_mesh(boundary.c_str(),
+					   (const MBEntityHandle*) &bndrSet,
+					   1);
+      if (MB_SUCCESS != result) {
+	std::cerr << "Failed to write boundary hex mesh." << std::endl;
+	return iBase_FAILURE;
+      }
+      std::cout << "boundary.vtk" << std::endl;
     }
-    std::cout << "boundary.vtk" << std::endl;
   }
 
   free(hex_handles);
   free(hex_status);
-  free(adj_vertices);
-  free(vert_coords);
+
+  return iBase_SUCCESS;
+}
+
+int CutCellMesh::export_mesh(int s_exp, int file_type)
+{ 
+  // get all hexes
+  clock_t time1 = clock();
+  int i, err;
+  iBase_EntityHandle* hex_handles = NULL;
+  int hex_allocated = 0;
+  int hex_size = 0;
+  iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
+		    iMesh_HEXAHEDRON, &hex_handles,
+		    &hex_allocated, &hex_size, &err);
+  ERRORR("Failed to get hexes.\n", err); 
+  
+  char* hex_status = new char[hex_size];
+  int hex_status_alloc = 0;
+  int hex_status_size = 0;
+  iMesh_getArrData(m_mesh, hex_handles,
+		   hex_size, m_elem_status_tag_handle,
+		   &hex_status, &hex_status_alloc,
+		   &hex_status_size, &err);
+  ERRORR("Failed to get hex status.\n", err);
+  std::cout << "# of hex:" << hex_size << std::endl;
+  clock_t time2 = clock();
+  clock_t time3;
+
+  if (s_exp) {
+    int n_inside_hex = 0;
+    int n_outside_hex = 0;
+    int n_boundary_hex = 0;
+    int hex_stat;
+    std::vector<iBase_EntityHandle> insideHex, outsideHex, bndrHex;
+    for (i = 0; i < hex_status_size; i++) {
+      if (hex_status[i] == 0) {
+	n_inside_hex++;
+	hex_stat = 0;
+      insideHex.push_back(hex_handles[i]);
+      }
+      else if (hex_status[i] == 1) {
+	n_outside_hex++;
+	hex_stat = 1;
+	outsideHex.push_back(hex_handles[i]);
+      }
+    else if (hex_status[i] == 2) {
+      n_boundary_hex++;
+      hex_stat = 2;
+      bndrHex.push_back(hex_handles[i]);
+    }
+    else ERRORR("Hex element status should be inside/outside/boundary.\n", 1);
+    }
+    
+    std::cout << "# of inside hex:" << n_inside_hex
+	      << ", # of outside hex:" << n_outside_hex
+	      << ", # of boundary hex:" << n_boundary_hex
+	      << ", geom vol:"
+	      << n_inside_hex*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
+	      << ", vox vol:" << hex_size*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
+	      << std::endl;
+    time3 = clock();
+
+    // save inside/outside/boundary elements separately
+    if (n_inside_hex > 0) {
+      err = write_mesh(0, file_type, &insideHex[0], n_inside_hex);
+      ERRORR("Couldn't write inside mesh.", err);
+    }
+    
+    if (n_outside_hex > 0) {
+      err = write_mesh(1, file_type, &outsideHex[0], n_outside_hex);
+      ERRORR("Couldn't write outside mesh.", err);
+    }
+    
+    if (n_boundary_hex > 0) {
+      err = write_mesh(2, file_type, &bndrHex[0], n_boundary_hex);
+      ERRORR("Couldn't write boundary mesh.", err);
+    }
+  }
+  else {
+    err = write_mesh(3, file_type, hex_handles, hex_size);
+    ERRORR("Couldn't write all hex mesh.", err);
+  }
+
+  std::cout << "hex_handle_get_time="
+	    << (double) (time2 - time1)/CLOCKS_PER_SEC
+	    << ", separate_write_time="
+	    << (double) (time3 - time2)/CLOCKS_PER_SEC
+	    << std::endl;
+
+  free(hex_handles);
+  free(hex_status);
+
+  return iBase_SUCCESS;
+}
+
+int CutCellMesh::write_mesh(int type, int file_type,
+			    iBase_EntityHandle* handles, int& n_elem)
+{
+  clock_t time1 = clock();
+  int is_list = 1, err;
+  MBErrorCode result;
+  iBase_EntitySetHandle set;
+
+  iMesh_createEntSet(m_mesh, is_list, &set, &err);
+  ERRORR("Couldn't create set.\n", err);
+
+  iMesh_addEntArrToSet(m_mesh, handles, n_elem, set, &err);
+  ERRORR("Couldn't add hexes.\n", err);
+  clock_t time2 = clock();
+
+  std::string file_name;
+  std::stringstream ss;
+  if (type == 0) ss << "inside";
+  else if (type == 1) ss << "outside";
+  else if (type == 2) ss << "boundary";
+  else if (type == 3) ss << "all_mesh";
+  ss << m_dInputSize;
+  ss >> file_name;
+  if (file_type) file_name += std::string(".vtk");
+  else file_name += std::string(".h5m");
+  
+  result = moab_instance()->write_mesh(file_name.c_str(),
+				       (const MBEntityHandle*) &set, 1);
+  if (MB_SUCCESS != result) {
+    std::cerr << "Failed to write hex mesh." << std::endl;
+    return iBase_FAILURE;
+  }
+  std::cout << "Elements are exported." << std::endl;
+  clock_t time3 = clock();
+
+  std::cout << "set_creation_time="
+	    << (double) (time2 - time1)/CLOCKS_PER_SEC
+	    << ", write_time="
+	    << (double) (time3 - time2)/CLOCKS_PER_SEC
+	    << std::endl;
 
   return iBase_SUCCESS;
 }
@@ -332,18 +474,6 @@ int CutCellMesh::make_hex_vertices()
 		     &vertex_alloc, &vertex_size, &err);
   delete [] vertexCoords;
   ERRORR("Failed to create vertices.\n", err);
-
-  return iBase_SUCCESS;
-}
-
-int CutCellMesh::write_mesh(const char* file_name)
-{
-  MBErrorCode result = moab_instance()->write_mesh(file_name);
-  std::cout << file_name << std::endl;
-  if (MB_SUCCESS != result) {
-    std::cerr << "Failed to write result mesh." << std::endl;
-    return iBase_FAILURE;
-  }
 
   return iBase_SUCCESS;
 }
