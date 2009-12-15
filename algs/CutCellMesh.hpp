@@ -38,15 +38,49 @@ struct CutFraction {
   double fraction[3];
 
   CutFraction() {
-    for (int i = 0; i < 3; i ++) {
-      fraction[i] = 0.;
-    }
+    for (int i = 0; i < 3; i ++) fraction[i] = -1.;
   }
 
   CutFraction(int dir, double val) {
     for (int i = 0; i < 3; i ++) {
       if (i == dir) fraction[i] = val;
-      else fraction[i] = 0.;
+      else fraction[i] = -1.;
+    }
+  };
+};
+
+struct CutCellSurfKey {
+  int i, j, k, l;
+
+  CutCellSurfKey() {
+    i = j = k = l = 0;
+  };
+
+  CutCellSurfKey(int ii, int jj, int kk, int ll) {
+    i = ii;
+    j = jj;
+    k = kk;
+    l = ll;
+  };
+};
+
+struct LessThan
+{
+  bool operator() (const CutCellSurfKey key1, const CutCellSurfKey key2) const
+  {
+    if (key1.i < key2.i) return true;
+    else if (key1.i > key2.i) return false;
+    else {
+      if (key1.j < key2.j) return true;
+      else if (key1.j > key2.j) return false;
+      else {
+	if (key1.k < key2.k) return true;
+	else if (key1.k > key2.k) return false;
+	else {
+	  if (key1.l < key2.l) return true;
+	  else return false;
+	}
+      }
     }
   };
 };
@@ -55,33 +89,18 @@ class CutCellMesh
 {
 public:
 
-  //explicit CutCellMesh(iMesh_Instance mesh,
   CutCellMesh(iMesh_Instance mesh,
 	      iBase_EntitySetHandle root_set,
 	      double size = -1.);
   
-  //virtual ~CutCellMesh();
   ~CutCellMesh();
 
-  iMesh_Instance mesh_impl() const
-  {
-    return m_mesh;
-  }
+  int do_mesh(int exp, int file_type);
 
-  int do_mesh(int exp, int s_exp, int file_type);
-  int set_division();
-  int make_hex_vertices();
-  int make_hexes();
-  bool move_ray(MBOrientedBoxTreeTool& tool,
-		double* startPnt, double* endPnt,
-		double tol, int& nIntersect, int dir);
-  
-#ifdef MOAB
-  MBInterface* moab_instance() {return reinterpret_cast<MBInterface*> (m_mesh);}
-  void set_division(const MBOrientedBox& box);
-  int find_intersections(MBOrientedBoxTreeTool& tool);
-  int fire_rays(MBOrientedBoxTreeTool& tool, int dir);
-#endif
+  // query function for techX
+  bool get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
+			  std::map< CutCellSurfKey, std::vector<double>, LessThan>& rmdCutCellSurfEdge,
+			  std::vector<int>& rvnInsideCell, bool isCornerExterior = true);
 
 private:
 
@@ -90,6 +109,9 @@ private:
   iMesh_Instance m_mesh;
   iBase_EntitySetHandle m_hRootSet;
   std::vector<double> m_vdIntersection;
+  int m_iStartHex;
+  bool m_bMove;
+  double m_curPnt;
 
   int m_nNode[3], m_nDiv[3], m_iElem;
   double m_dIntervalSize[3], m_origin_coords[3], m_dInputSize;
@@ -101,20 +123,38 @@ private:
   std::vector<iBase_EntityHandle> m_vhVertex;
   std::vector<iBase_EntityHandle> m_vhHex;
   std::vector<char> m_vnHexStatus;
-  std::map<iBase_EntityHandle, CutFraction> m_mdCutFraction;
+  std::map<int, CutFraction> m_mdCutFraction;
+  std::vector<EdgeStatus> m_vnEdgeStatus[3];
 
+  int make_hex_vertices();
+  int make_hexes();
+  
   EdgeStatus getEdgeStatus(const double dZ, bool& bMoveNext);
   bool set_neighbor_hex_status(int dir, int i, int j, int k);
-  bool set_hex_status(int index, EdgeStatus value);
+  bool set_hex_status(int index, EdgeStatus value, int dir);
+  bool set_edge_status(int dir);
   int set_tag_info();
 
-  int print_debug();
-  int export_mesh(int s_exp, int file_type);
+  int export_mesh(int file_type);
   int write_mesh(int type, int file_type, iBase_EntityHandle* handles,
 		 int& n_elem);
   void util_getrusage(struct rusage &r_usage);
+  double get_edge_fraction(int idHex, int dir);
+  double get_uncut_edge_fraction(int i, int j, int k, int dir);
 
-#ifdef MOAB
+  // test
+  bool export_fraction_edges(std::map< CutCellSurfKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge);
+  bool make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles);
+
+#ifdef MOAB    
+  MBInterface* moab_instance() {return reinterpret_cast<MBInterface*> (m_mesh);}
+  void set_division(const MBOrientedBox& box);
+  int find_intersections(MBOrientedBoxTreeTool& tool);
+  int fire_rays(MBOrientedBoxTreeTool& tool, int dir);
+  bool move_ray(MBOrientedBoxTreeTool& tool,
+		double* startPnt, double* endPnt,
+		double tol, int& nIntersect, int dir);
+
   MBEntityHandle m_hTreeRoot;
   std::vector<MBEntityHandle> triList, surfList;
   std::vector<double> distList; 
