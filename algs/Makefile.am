@@ -21,7 +21,8 @@ libMKalgs_la_SOURCES = \
 	MergeMesh.cpp \
 	vec_utils.cpp \
 	vec_utils.hpp \
-	CutCellMesh.cpp
+	CutCellMesh.cpp \
+        ProjectShell.cpp
 
 # The list of header files which are to be installed
 libMKalgs_la_include_HEADERS = \
@@ -29,10 +30,12 @@ libMKalgs_la_include_HEADERS = \
 	CopyVerts.hpp \
 	ExtrudeMesh.hpp \
 	MergeMesh.hpp \
-	CutCellMesh.hpp
+	CutCellMesh.hpp \
+        ProjectShell.hpp
 
 # Tests and such
-check_PROGRAMS = CopyMesh_test ExtrudeMesh_test CutCellMesh_test
+check_PROGRAMS = CopyMesh_test ExtrudeMesh_test CutCellMesh_test \
+		 ProjectShell_test 
 TESTS = $(check_PROGRAMS)
 
 CopyMesh_test_SOURCES = CopyMesh.cpp
@@ -49,6 +52,11 @@ CutCellMesh_test_SOURCES = CutCellMesh_test.cpp
 CutCellMesh_test_DEPENDENCIES = CutCellMesh.hpp libMKalgs.la
 CutCellMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 CutCellMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS)
+
+ProjectShell_test_SOURCES = ProjectShell_test.cpp
+ProjectShell_test_DEPENDENCIES = ProjectShell.hpp libMKalgs.la
+ProjectShell_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+ProjectShell_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
