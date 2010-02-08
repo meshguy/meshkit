@@ -41,6 +41,7 @@ int main(int argc, char **argv)
   namelen  = strlen( name2.c_str() );
   iMesh_save(trimesh, 0, name2.c_str(), NULL, &err, namelen, 0);
 
+/*
   cout << "Before Cleanup .... " << endl;
   Jaal::getVertexFaceDegrees(trimesh);
 
@@ -57,9 +58,7 @@ int main(int argc, char **argv)
 //  qClean.search_diamonds();
 //  qClean.search_doublets();
 //  qm->getVertexFaceDegrees();
-   qm->saveAs("quad1");
-
-/*
+    qm->saveAs("quad1");
 
   iMesh_dtor( trimesh, &err);
   iMesh_dtor( quadmesh, &err);
