@@ -277,9 +277,11 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
   }
 
     // get all the copies
-  iMesh_getEHArrData(imeshImpl, ent_handles, num_ents, local_tag, 
-                     new_ents, new_ents_allocated, new_ents_size, &err);
-  ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
+  if (new_ents) {
+      iMesh_getEHArrData(imeshImpl, ent_handles, num_ents, local_tag, 
+                         new_ents, new_ents_allocated, new_ents_size, &err);
+      ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
+  }
 
     // destroy local tag, removing it from all entities
   iMesh_destroyTag(imeshImpl, local_tag, true, &err);
