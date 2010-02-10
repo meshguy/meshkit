@@ -16,7 +16,7 @@
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 
 const bool debug = false;
-bool equal_to(double d1, double d2) { return abs(d1 - d2) < 10e-7; }
+static bool equal_to(double d1, double d2) { return abs(d1 - d2) < 10e-7; }
 
 int dbg = 0;
 std::ofstream mout;// some debug file

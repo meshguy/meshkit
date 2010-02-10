@@ -21,7 +21,7 @@
 #define ERRORRF(a) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return false;}}
 
 const bool debug = false;
-bool equal_to(double d1, double d2) { return abs(d1 - d2) < 10e-7; }
+static bool equal_to(double d1, double d2) { return abs(d1 - d2) < 10e-7; }
 
 CutCellMesh::CutCellMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set, double size)
   : m_mesh(mesh), m_hRootSet(root_set), m_dInputSize(size)
