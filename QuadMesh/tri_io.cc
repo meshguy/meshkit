@@ -174,6 +174,15 @@ int Jaal::readMeshData( iMesh_Instance &imesh, const string &fname)
     m->readData(fname);
 //  m = readOffData(fname);
 
+    if( !m->isConsistentlyOriented() ) {
+       cout << "Warning:Trying to make Triangle Mesh consistently oriented " << endl;
+       m->makeConsistentlyOriented();
+       if( m->isConsistentlyOriented() )
+            cout << "Info: Triangle Mesh is now consistently oriented: Very good " << endl;
+       else
+            cout << "Alas ! Triangle Mesh is still inconsistently oriented: Check manually " << endl;
+    }
+
     iBase_EntitySetHandle rootSet = 0;
     map<Vertex*, iBase_EntityHandle>  mapNodes;
 

@@ -24,6 +24,8 @@ int main(int argc, char **argv)
 
   Jaal::getVertexFaceDegrees(trimesh);
 
+  Jaal::mesh_shape_optimization( trimesh );
+
   string name0 = "trimesh.vtk";
   int namelen0  = strlen( name0.c_str() );
   iMesh_save(trimesh, 0, name0.c_str(), NULL, &err, namelen0, 0);
@@ -35,13 +37,10 @@ int main(int argc, char **argv)
   int namelen  = strlen( name1.c_str() );
   iMesh_save(trimesh, 0, name1.c_str(), NULL, &err, namelen, 0);
 
-  Jaal::laplacian_smoothing(trimesh, 500);
-
   string name2 = "quad1.vtk";
   namelen  = strlen( name2.c_str() );
   iMesh_save(trimesh, 0, name2.c_str(), NULL, &err, namelen, 0);
 
-/*
   cout << "Before Cleanup .... " << endl;
   Jaal::getVertexFaceDegrees(trimesh);
 
@@ -49,18 +48,33 @@ int main(int argc, char **argv)
   qm->fromMOAB( trimesh );
   qm->saveAs("quad0");
 
-   QuadCleanUp qClean(qm);
+  QuadCleanUp qClean(qm);
+// qClean.cleanup_boundary();
+// qClean.search_flat_quads();
+// Jaal::laplacian_smoothing(qm, 500);
+
    qClean.remove_doublets();
-   qClean.cleanup_boundary();
+   qClean.remove_diamonds();
+   qClean.remove_doublets();
+   qClean.remove_doublets();
+
+// qm->set_strip_markers();
+   qClean.search_bridges(); 
+   qm->setWavefront(2);
+   qm->getAspectRatio();
+   cout << " Surface Area " << qm->getSurfaceArea() << endl;
+   qm->saveAs("quad1");
+
+
+/*
    qClean.remove_doublets();
    qClean.remove_diamonds();
 
-//  qClean.search_diamonds();
 //  qClean.search_doublets();
 //  qm->getVertexFaceDegrees();
-    qm->saveAs("quad1");
 
   iMesh_dtor( trimesh, &err);
   iMesh_dtor( quadmesh, &err);
 */
+
 }

@@ -116,10 +116,12 @@ public:
 
   MeshEntity()
   {
-    constrained = 0; // Default: No Contrainted
-    boundarymark = 0; // Default: Internal entity
+    locked = 0; // Default: No lock
+    intTag = 0;
     visitMark = 0; // Default: Not yet visited.
     removeMark = 0; // Default: Active< not removable.
+    constrained = 0; // Default: No Contrainted
+    boundarymark = 0; // Default: Internal entity
     moab_entity_handle = 0; // Default: Handle not available.
   }
 
@@ -136,6 +138,21 @@ public:
   void setRemoveMark(bool r)
   {
     removeMark = r;
+  }
+
+  void setLock()
+  {
+    locked = 1;
+  }
+
+  bool isLocked()
+  {
+    return locked;
+  }
+
+  void releaseLock()
+  {
+    locked = 0;
   }
 
   bool isRemoved() const
@@ -178,6 +195,13 @@ public:
   {
     return gid;
   }
+
+  void setTag( int v)
+  {
+    intTag = v;
+  }
+  int getTag() const
+  { return intTag;}
 
 #ifdef USE_BOOST_LIBS
   template<class T>
@@ -241,10 +265,19 @@ public:
   iBase_EntityHandle get_MOAB_Handle() const
   { return moab_entity_handle;}
 
+  void setLayerID( int l )
+  { layerID = l;}
+
+  int getLayerID() const
+  { return layerID;}
+
 protected:
   size_t gid;
   bool constrained;
   int boundarymark;
+  int intTag;
+  int layerID;
+  volatile bool locked;
   volatile char checkID;
   volatile bool visitMark, removeMark;
 
@@ -278,7 +311,7 @@ public:
 
   static double length(const Vertex *v0, const Vertex *v1);
   static double length2(const Vertex *v0, const Vertex *v1);
-  static Point3D mid_point(const Vertex *v0, const Vertex *v1);
+  static Point3D mid_point(const Vertex *v0, const Vertex *v1, double alpha = 0.5);
 
   void setXYZCoords(const Point3D &p)
   {
@@ -390,12 +423,9 @@ public:
 
   Vertex* getClone() const;
 
-  void setLayerID( int l )
-  { layerID = l;}
-  int getLayerID() const
-  { return layerID;}
   void setFeatureLength( double f )
   { featureLength = f;}
+
   double getFeatureLength( ) const
   { return featureLength;}
 
@@ -403,7 +433,6 @@ private:
   // void * operator new( size_t size, void *);
 
   double featureLength;
-  int layerID;
 
   Vertex *mate;
   Face *primalface;
@@ -460,6 +489,10 @@ public:
   static const int QUADRILATERAL = 4;
 
   static FaceType create_quad(const FaceType t1, const FaceType t2);
+
+  static double   tri_area ( const Point3D &p0, const Point3D &p1, const Point3D &p2);
+  static double   quad_area( const Point3D &p0, const Point3D &p1,
+                             const Point3D &p2, const Point3D &p3);
 
   Face()
   {
@@ -572,9 +605,33 @@ public:
 
   bool hasBoundaryNode() const
   {
-     for( int i = 0; i < connect.size(); i++)
-        if( connect[i]->isBoundary() ) return 1;
-     return 0;
+    for( int i = 0; i < connect.size(); i++)
+    if( connect[i]->isBoundary() ) return 1;
+    return 0;
+  }
+
+  bool hasBoundaryEdge() const
+  {
+    int nSize = connect.size();
+    for( int i = 0; i < nSize; i++)
+    if( connect[i]->isBoundary() && connect[(i+1)%nSize]->isBoundary() ) return 1;
+    return 0;
+  }
+
+  vector<Face*> getRelations212();
+
+  bool isConvex();
+
+  double getAspectRatio();
+  double getArea()
+  {
+     if( connect.size() == 4 ) {
+         return quad_area( connect[0]->getXYZCoords(),
+	                   connect[1]->getXYZCoords(),
+	                   connect[2]->getXYZCoords(),
+	                   connect[3]->getXYZCoords() );
+     }
+     return 0.0;
   }
 
 private:
@@ -668,7 +725,7 @@ public:
   bool isSimple();
   bool isConsistentlyOriented();
   void makeConsistentlyOriented();
-  int  getNumOfConnectedComponents();
+  int getNumOfConnectedComponents();
 
   size_t getBoundarySize(int d) const;
 
@@ -743,42 +800,78 @@ public:
   // Save the mesh and all its attributes ( in the simple format ).
   void saveAs(const string &s);
 
-  void emptyAll()
+  // Empty every thing in the Mesh, but don't delete the objects.
+  void emptyAll();
+
+  // Empty every thing in the Mesh, and also deallocate all the objects.
+  void clearAll();
+
+  // Reverse the connection of all the faces in the mesh.
+  void reverse()
   {
-     nodes.clear();
-     edges.clear();
-     faces.clear();
-  }
-
-  void clearAll()
-  {
-    for( size_t i = 0; i < nodes.size(); i++)
-    delete nodes[i];
-    nodes.clear();
-
-    for( size_t i = 0; i < edges.size(); i++)
-    delete edges[i];
-    edges.clear();
-
     for( size_t i = 0; i < faces.size(); i++)
-    delete faces[i];
-    faces.clear();
+         faces[i]->reverse();;
   }
 
+  // Collect Vertex-Face degree information. Ideally an internal vertex has 4 faces.
   vector<int> getVertexFaceDegrees();
 
-  vector<Face*> get_Depth_First_Ordered_Faces( Face *f = NULL );
-  vector<Face*> get_Breadth_First_Ordered_Faces( Face *f = NULL );
-
+  // Collect nodes and faces in Depth First Sequence ...
   vector<Vertex*> get_Depth_First_Ordered_Nodes( Vertex *f = NULL );
+  vector<Face*> get_Depth_First_Ordered_Faces( Face *f = NULL );
+
+  // Collect nodes and faces in Breadth First Sequence ...
   vector<Vertex*> get_Breadth_First_Ordered_Nodes( Vertex *f = NULL );
+  vector<Face*> get_Breadth_First_Ordered_Faces( Face *f = NULL );
+  //
+  // Creates waves of nodes/faces starting from the boundary. Each vertex/face
+  // is assigned layerID, denoting the position in the wave fronts.
+  // Used in smoothing the nodes in Advancing front style.
+  //
+  int setWavefront(int ofwhat);
 
-  void setWavefront();
-
+  //  Converts the mesh into MOAB data structures.
   int toMOAB( iMesh_Instance &imesh, iBase_EntitySetHandle eset = 0 );
+
+  //  Fill the mesh from MOAB..
   int fromMOAB( iMesh_Instance imesh, iBase_EntitySetHandle eset = 0);
 
   int check_unused_objects();
+
+  //
+  // Connect a strip of faces. Termination occurs when the face is reached
+  // (1) At the boundary (2) Return back to the starting face.
+  // There will be two strips per quadrilateral which are orthogonal to each
+  // other. Using in the Ring Collapse Simplification
+  //
+  void get_quad_strips(Face *rootface, vector<Face*> &strip1,
+      vector<Face*> &strip2);
+
+  //
+  void set_strip_markers();
+
+  // Collect all the boundary nodes in the mesh..
+  vector<Vertex*> get_bound_nodes();
+
+  //
+  // Collect all the boundary faces in the mesh. The boundary faces could be
+  // defined in two ways, bound_what flag is used for that purpose.
+  // bound_what  = 0   At least one vertex is on the boundary
+  //             = 1   At least one edge is on the boundary.
+  //
+  vector<Face*> get_bound_faces( int bound_what = 1);
+
+  //
+  // Get the Aspect ratio of each face in the mesh. Aspect ratio is defined
+  // as min_edge_length/max_edge_length..
+  //
+  vector<float> getAspectRatio(bool sorted = 1);
+
+  //
+  // Get unsigned surface area of the mesh. The calculation is for both 
+  // 2D and 3D surface elements...
+  //
+  double  getSurfaceArea();
 
 private:
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Vertex *v);
@@ -802,7 +895,19 @@ private:
 
   int build_relations00();
   int build_relations02();
+
+  int setNodeWavefront();
+  int setFaceWavefront();
 };
+
+inline Point3D make_vector( const Point3D &head, const Point3D &tail)
+{
+  Point3D xyz;
+  xyz[0] = head[0] - tail[0];
+  xyz[1] = head[1] - tail[1];
+  xyz[2] = head[2] - tail[2];
+  return xyz;
+}
 
 inline Point3D make_vector( const Vertex* head, const Vertex *tail)
 {
@@ -825,6 +930,15 @@ inline double magnitude( const Point3D &A )
 inline double dot_product( const Point3D &A, const Point3D &B)
 {
   return A[0]*B[0] + A[1]*B[1] + A[2]*B[2];
+}
+
+inline Point3D cross_product( const Point3D &A, const Point3D &B)
+{
+  Point3D C;
+  C[0] = A[1]*B[2] - A[2]*B[1];
+  C[1] = A[2]*B[0] - A[0]*B[2];
+  C[2] = A[0]*B[1] - A[1]*B[0];
+  return C;
 }
 
 inline double getAngle( const Point3D &A, const Point3D &B)

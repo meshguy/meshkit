@@ -84,16 +84,15 @@ EdgeType Edge::newObject()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Point3D Vertex::mid_point(const Vertex *v0, const Vertex *v1)
+Point3D Vertex::mid_point(const Vertex *v0, const Vertex *v1, double alpha)
 {
-
   Point3D p0 = v0->getXYZCoords();
   Point3D p1 = v1->getXYZCoords();
 
   Point3D pmid;
-  pmid[0] = 0.5 * (p0[0] + p1[0]);
-  pmid[1] = 0.5 * (p0[1] + p1[1]);
-  pmid[2] = 0.5 * (p0[2] + p1[2]);
+  pmid[0] = (1 - alpha) * p0[0] + alpha * p1[0];
+  pmid[1] = (1 - alpha) * p0[1] + alpha * p1[1];
+  pmid[2] = (1 - alpha) * p0[2] + alpha * p1[2];
 
   return pmid;
 }
@@ -156,6 +155,46 @@ Point3D Face::getCentroid() const
   return pc;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+double Face :: quad_area( const Point3D &p0, const Point3D &p1, 
+                          const Point3D &p2, const Point3D &p3)
+{
+  /////////////////////////////////////////////////////////////////////////////
+  // For explanation of some amazing proofs and theorems, please refer to the
+  // following site. This implementation is based on this article.
+  // 
+  // http://softsurfer.com/Archive/algorithm_0101/algorithm_0101.htm#Quadrilaterals
+  //
+  //////////////////////////////////////////////////////////////////////////////
+
+  Point3D v2v0   = make_vector( p2, p0);
+  Point3D v3v1   = make_vector( p3, p1);
+  Point3D d0d1   = cross_product( v2v0, v3v1 ); 
+
+  double area = 0.5*magnitude( d0d1 );
+  return area;
+}
+////////////////////////////////////////////////////////////////////////////////
+
+double Face :: getAspectRatio() 
+{
+    int nSize = connect.size();
+
+    double minlen = MAXDOUBLE;
+    double maxlen = 0.0;
+
+    for( int i = 0; i < nSize; i++) {
+         Vertex *v0  = connect[(i+0)%nSize];
+         Vertex *v1  = connect[(i+1)%nSize];
+	 double len2 = Vertex::length2( v0, v1 );
+	 if( len2  > maxlen ) maxlen = len2;
+	 if( len2  < minlen ) minlen = len2;
+    }
+
+    return sqrt( minlen/maxlen );
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
@@ -175,6 +214,31 @@ vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
   return faceneighs;
 }
 ///////////////////////////////////////////////////////////////////////////////
+
+vector<FaceType> Face::getRelations212()
+{
+  vector<FaceType> faceneighs, edgeneighs;
+
+  int nSize = connect.size();
+  for (int i = 0; i < nSize; i++)
+  {
+    Vertex *v0 = connect[(i + 0) % nSize];
+    Vertex *v1 = connect[(i + 1) % nSize];
+    edgeneighs = Mesh::getRelations112(v0, v1);
+    for (int j = 0; j < edgeneighs.size(); j++)
+    {
+      if (edgeneighs[j] != this)
+      {
+        if (find(faceneighs.begin(), faceneighs.end(), edgeneighs[j])
+            == faceneighs.end())
+          faceneighs.push_back(edgeneighs[j]);
+      }
+    }
+  }
+  return faceneighs;
+}
+///////////////////////////////////////////////////////////////////////////////
+
 
 size_t Mesh::count_edges()
 {
@@ -417,15 +481,30 @@ void Mesh::saveAs(const string &s)
     connect = face->getConnection();
     int nnodes = connect.size();
     ofile << nnodes << " ";
-    for (int j = 0; j < nnodes; j++) {
+    for (int j = 0; j < nnodes; j++)
+    {
       int vid = connect[j]->getID();
-      if( vid >= numnodes ) {
-          cout << "Vertex indexing out of range " << vid << endl;
-	  exit(0);
+      if (vid >= numnodes)
+      {
+        cout << "Vertex indexing out of range " << vid << endl;
+        exit(0);
       }
       ofile << vid << " ";
     }
     ofile << endl;
+  }
+
+  for (size_t i = 0; i < numnodes; i++)
+  {
+    Vertex *vertex = nodes[i];
+    ofile << vertex->getTag() << " ";
+  }
+  ofile << endl;
+
+  for (size_t i = 0; i < numfaces; i++)
+  {
+    Face *face = faces[i];
+    ofile << face->getTag() << " ";
   }
 }
 
@@ -630,7 +709,9 @@ bool Mesh::isSimple()
   return simple;
 
 }
+
 ///////////////////////////////////////////////////////////////////////////////
+
 bool Mesh::isConsistentlyOriented()
 {
   int consistent = 1;
@@ -720,10 +801,10 @@ void Mesh::makeConsistentlyOriented()
           int dir2 = neighs[1]->getOrientation(v0, v1);
           if (dir1 * dir2 == 1)
           {
-            if (!neighs[0]->isVisited() && neighs[1]->isVisited() )
+            if (!neighs[0]->isVisited() && neighs[1]->isVisited())
               neighs[0]->reverse();
 
-            if (!neighs[1]->isVisited() && neighs[0]->isVisited() )
+            if (!neighs[1]->isVisited() && neighs[0]->isVisited())
               neighs[1]->reverse();
           }
           faceQ.push_back(neighs[0]);
@@ -799,8 +880,8 @@ int Mesh::getNumOfComponents()
           neighs = Mesh::getRelations112(v0, v1);
           if (neighs.size() == 2)
           {
-              faceQ.push_back(neighs[0]);
-              faceQ.push_back(neighs[1]);
+            faceQ.push_back(neighs[0]);
+            faceQ.push_back(neighs[1]);
           }
         }
       }
@@ -959,18 +1040,20 @@ void expand_strip(Face *prevface, Vertex *v0, Vertex *v1, list<Face*> &strip)
 }
 ////////////////////////////////////////////////////////////////////
 
-void get_quad_strip(Mesh *mesh, Face *rootface, vector<Face*> &strip1, vector<
-    Face*> &strip2)
+void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
+    vector<Face*> &strip2)
 {
+
   Vertex *v0, *v1;
 
   list<Face*> strip01, strip12, strip23, strip03;
-  int numfaces = mesh->getSize(0);
+  list<Face*>::const_iterator it;
+  size_t numfaces = getSize(2);
 
   // Strip Starting from edge 0-1
-  for (int i = 0; i < numfaces; i++)
+  for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = mesh->getFace(i);
+    Face *face = getFace(i);
     face->setVisitMark(0);
   }
 
@@ -980,11 +1063,13 @@ void get_quad_strip(Mesh *mesh, Face *rootface, vector<Face*> &strip1, vector<
   rootface->setVisitMark(1);
   strip01.push_back(rootface);
   expand_strip(rootface, v0, v1, strip01);
+  for (it = strip01.begin(); it != strip01.end(); ++it)
+    strip1.push_back(*it);
 
   // Strip Starting from edge 2-3
-  for (int i = 0; i < numfaces; i++)
+  for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = mesh->getFace(i);
+    Face *face = getFace(i);
     face->setVisitMark(0);
   }
 
@@ -994,11 +1079,13 @@ void get_quad_strip(Mesh *mesh, Face *rootface, vector<Face*> &strip1, vector<
   rootface->setVisitMark(1);
   strip23.push_back(rootface);
   expand_strip(rootface, v0, v1, strip23);
+  for (it = strip23.begin(); it != strip23.end(); ++it)
+    strip1.push_back(*it);
 
   // Strip Starting from edge 1-2
-  for (int i = 0; i < numfaces; i++)
+  for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = mesh->getFace(i);
+    Face *face = getFace(i);
     face->setVisitMark(0);
   }
 
@@ -1008,11 +1095,13 @@ void get_quad_strip(Mesh *mesh, Face *rootface, vector<Face*> &strip1, vector<
   rootface->setVisitMark(1);
   strip12.push_back(rootface);
   expand_strip(rootface, v0, v1, strip12);
+  for (it = strip12.begin(); it != strip12.end(); ++it)
+    strip2.push_back(*it);
 
   // Strip Starting from edge 0-3
-  for (int i = 0; i < numfaces; i++)
+  for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = mesh->getFace(i);
+    Face *face = getFace(i);
     face->setVisitMark(0);
   }
 
@@ -1022,9 +1111,92 @@ void get_quad_strip(Mesh *mesh, Face *rootface, vector<Face*> &strip1, vector<
   rootface->setVisitMark(1);
   strip12.push_back(rootface);
   expand_strip(rootface, v0, v1, strip03);
+
+  for (it = strip03.begin(); it != strip03.end(); ++it)
+    strip2.push_back(*it);
+}
+
+vector<Face*> Mesh::get_bound_faces(int bound_what)
+{
+  int relexist = build_relations(0, 2);
+
+  assert(getAdjTable(0, 2));
+
+  search_boundary();
+
+  size_t numfaces = getSize(2);
+
+  set<Face*> bfaces;
+
+  if (bound_what == 0)
+  {
+    for (size_t i = 0; i < numfaces; i++)
+    {
+      Face *face = getFace(i);
+      if (face->hasBoundaryNode())
+        bfaces.insert(face);
+    }
+  }
+
+  if (bound_what == 1)
+  {
+    for (size_t i = 0; i < numfaces; i++)
+    {
+      Face *face = getFace(i);
+      if (face->hasBoundaryEdge())
+        bfaces.insert(face);
+    }
+  }
+
+  vector<Face*> result;
+
+  size_t nSize = bfaces.size();
+
+  if (nSize)
+  {
+    result.resize(nSize);
+    set<Face*>::const_iterator it;
+
+    size_t index = 0;
+    for (it = bfaces.begin(); it != bfaces.end(); ++it)
+      result[index++] = *it;
+  }
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+void Mesh::set_strip_markers()
+{
+  vector<Face*> bound_faces = get_bound_faces(1);
+
+  size_t numfaces = getSize(2);
+  for (size_t i = 0; i < numfaces; i++)
+  {
+    Face *face = getFace(i);
+    face->setTag(0);
+  }
+
+  vector<Face*> strip1, strip2;
+  int id = 0;
+  for (size_t i = 0; i < bound_faces.size(); i++)
+  {
+    strip1.clear();
+    strip2.clear();
+    get_quad_strips(bound_faces[i], strip1, strip2);
+    id++;
+    for (int j = 0; j < strip1.size(); j++)
+      strip1[j]->setTag(id);
+    /*
+     id++;
+     for( int j = 0; j < strip2.size(); j++) 
+     strip2[j]->setTag( id );
+     */
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 iBase_EntityHandle Mesh::get_MOAB_Handle(iMesh_Instance imesh, Vertex *vertex)
 {
   int err;
@@ -1088,7 +1260,7 @@ iBase_EntityHandle Mesh::get_MOAB_Handle(iMesh_Instance imesh, Face *face)
 
 int Mesh::toMOAB(iMesh_Instance &imesh, iBase_EntitySetHandle entitySet)
 {
-  int status, err;
+  int status, result, err;
 
   if (imesh == 0)
   {
@@ -1097,6 +1269,14 @@ int Mesh::toMOAB(iMesh_Instance &imesh, iBase_EntitySetHandle entitySet)
     iMesh_newMesh(options, &imesh, &err, optlen);
     assert(!err);
   }
+
+  search_boundary();
+
+  const char *tagname = "fixed";
+  int namelen = strlen(tagname);
+
+  iBase_TagHandle idtag;
+  iMesh_createTag(imesh, tagname, 1, iBase_INTEGER, &idtag, &result, namelen);
 
   iBase_EntityHandle newHandle;
 
@@ -1107,6 +1287,8 @@ int Mesh::toMOAB(iMesh_Instance &imesh, iBase_EntitySetHandle entitySet)
     newHandle = get_MOAB_Handle(imesh, v);
     if (entitySet)
       iMesh_addEntToSet(imesh, newHandle, entitySet, &err);
+    int bmark = v->getBoundaryMark();
+    iMesh_setIntData(imesh, newHandle, idtag, bmark, &err);
   }
 
   size_t numfaces = getSize(2);
@@ -1222,6 +1404,7 @@ int Mesh::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entitySet)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
+
 vector<int> Mesh::getVertexFaceDegrees()
 {
   int relexist = build_relations(0, 2);
@@ -1261,33 +1444,197 @@ vector<int> Mesh::getVertexFaceDegrees()
     clear_relations(0, 2);
   return degree;
 }
+
 ///////////////////////////////////////////////////////////////////////////////
 
-int Mesh :: check_unused_objects()
+
+int Mesh::setNodeWavefront()
 {
-   set<Vertex*> vset;
-   for( size_t i = 0; i < nodes.size(); i++)
-        vset.insert( nodes[i] );
+  int relexist = build_relations(0, 0);
 
-   if( vset.size() != nodes.size() ) 
-       cout << "Warning: There are some duplicated nodes in the mesh " << endl;
+  size_t numNodes = getSize(0);
 
+  for (size_t i = 0; i < numNodes; i++)
+  {
+    Vertex *v = getNode(i);
+    v->setLayerID(-1);
+    v->setVisitMark(0);
+  }
 
-   cout << " Hello " << endl;
-   size_t numfaces = getSize(2);
-   for( size_t i = 0; i < numfaces; i++) {
-        Face *f = getFace(i);
-	if( !f->isRemoved() ) {
-	for( int j = 0; j < f->getSize(0); j++) {
-	     Vertex *v = f->getConnection(j);
-	     if( v->isRemoved() ) 
-	         cout << "Goofed up: Face vertex is deleted " << endl;
-	     if( vset.find( v ) == vset.end() ) 
-	         cout << "Warning: A face vertex is not in the node list " << v->getID() << endl;
-        }
-	}
+  deque<Vertex*> vertexQ;
+  for (size_t i = 0; i < numNodes; i++)
+  {
+    Vertex *v = getNode(i);
+    if (v->isBoundary())
+    {
+      v->setLayerID(0);
+      vertexQ.push_back(v);
     }
-    return 0;
+  }
+
+  vector<Vertex*> neighs;
+  while (vertexQ.empty())
+  {
+    Vertex *currVertex = vertexQ.front();
+    vertexQ.pop_front();
+    if (currVertex->isVisited())
+    {
+      int layerid = currVertex->getLayerID();
+      neighs = currVertex->getRelations0();
+      for (int i = 0; i < neighs.size(); i++)
+      {
+        Vertex *vn = neighs[i];
+        if (!vn->isVisited())
+        {
+          vertexQ.push_back(vn);
+          vn->setLayerID(layerid + 1);
+        }
+      }
+      currVertex->setVisitMark(1);
+    }
+  }
+
+  for (size_t i = 0; i < numNodes; i++)
+  {
+    Vertex *v = getNode(i);
+    assert(v->isVisited());
+  }
+
+  if (!relexist)
+    clear_relations(0, 0);
+
+  return 0;
+}
+///////////////////////////////////////////////////////////////////////////////
+int Mesh::setFaceWavefront()
+{
+  int relexist = build_relations(0, 2);
+  search_boundary();
+
+  size_t numFaces = getSize(2);
+
+  for (size_t i = 0; i < numFaces; i++)
+  {
+    Face *f = getFace(i);
+    f->setLayerID(0);
+    f->setVisitMark(0);
+  }
+
+  deque<Face*> faceQ, nextQ;
+  for (size_t i = 0; i < numFaces; i++)
+  {
+    Face *f = getFace(i);
+    if (f->hasBoundaryEdge())
+    {
+      f->setLayerID(1);
+      faceQ.push_back(f);
+    }
+  }
+
+  vector<Face*> neighs;
+  int layerid = 1;
+  while (!faceQ.empty())
+  {
+    for (size_t i = 0; i < faceQ.size(); i++)
+      faceQ[i]->setVisitMark(1);
+
+    nextQ.clear();
+
+    for (size_t j = 0; j < faceQ.size(); j++)
+    {
+      Face *currFace = faceQ[j];
+      neighs = currFace->getRelations212();
+      for (int i = 0; i < neighs.size(); i++)
+      {
+        Face *vn = neighs[i];
+        if (!vn->isVisited())
+          nextQ.push_back(vn);
+      }
+    }
+
+    layerid++;
+    for (size_t i = 0; i < nextQ.size(); i++)
+      nextQ[i]->setLayerID(layerid);
+
+    faceQ = nextQ;
+  }
+
+  for (size_t i = 0; i < numFaces; i++)
+  {
+    Face *f = getFace(i);
+    assert(f->isVisited());
+    int itag = f->getLayerID();
+    f->setTag(itag);
+  }
+
+  if (!relexist)
+    clear_relations(0, 2);
+
+  return 0;
+}
+///////////////////////////////////////////////////////////////////////////////
+int Mesh::setWavefront(int forwhat)
+{
+  if (forwhat == 0)
+    return setNodeWavefront();
+  if (forwhat == 2)
+    return setFaceWavefront();
+
+  return 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+int Mesh::check_unused_objects()
+{
+  set<Vertex*> vset;
+  for (size_t i = 0; i < nodes.size(); i++)
+    vset.insert(nodes[i]);
+
+  if (vset.size() != nodes.size())
+    cout << "Warning: There are some duplicated nodes in the mesh " << endl;
+
+  size_t numfaces = getSize(2);
+  for (size_t i = 0; i < numfaces; i++)
+  {
+    Face *f = getFace(i);
+    if (!f->isRemoved())
+    {
+      for (int j = 0; j < f->getSize(0); j++)
+      {
+        Vertex *v = f->getConnection(j);
+        if (v->isRemoved())
+          cout << "Goofed up: Face vertex is deleted " << endl;
+        if (vset.find(v) == vset.end())
+          cout << "Warning: A face vertex is not in the node list "
+              << v->getID() << endl;
+      }
+    }
+  }
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+double Mesh :: getSurfaceArea()
+{
+   double facearea, sumArea = 0.0;
+
+   size_t numfaces = getSize(2);
+   double minarea = MAXDOUBLE;
+   double maxarea = 0.0;
+   for( size_t i = 0; i < numfaces; i++) {
+       Face *face = getFace(i);
+       facearea   = face->getArea();
+       sumArea    += facearea;
+       if( facearea < minarea) minarea = facearea;
+       if( facearea > maxarea) maxarea = facearea;
+   }
+
+   cout << "Info:   Min face Area : " << minarea << endl;
+   cout << "Info:   Max face Area : " << maxarea << endl;
+
+   return sumArea;
 }
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1301,6 +1648,54 @@ vector<int> Jaal::getVertexFaceDegrees(iMesh_Instance &imesh)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+vector<float> Mesh :: getAspectRatio( bool sorted )
+{
+ size_t numfaces = getSize(2);
+
+ vector<float> quality;
+ quality.resize(numfaces );
+
+ for( size_t i = 0; i < numfaces; i++) {
+      Face *face = getFace(i);
+      quality[i] = face->getAspectRatio();
+ }
+
+ if( sorted )
+     std::sort( quality.begin(), quality.end() );
+
+  float minval = *min_element( quality.begin(), quality.end() );
+  float maxval = *max_element( quality.begin(), quality.end() );
+
+  cout << "Info: Minimum Aspect Ratio  " << minval << endl; 
+  cout << "Info: Maximum Aspect Ratio  " << maxval << endl; 
+
+ return  quality;
+}
+///////////////////////////////////////////////////////////////////////////////
+void Mesh :: emptyAll()
+{
+    nodes.clear();
+    edges.clear();
+    faces.clear();
+}
+///////////////////////////////////////////////////////////////////////////////
+
+void Mesh :: clearAll()
+{
+    for( size_t i = 0; i < nodes.size(); i++)
+    delete nodes[i];
+    nodes.clear();
+
+    for( size_t i = 0; i < edges.size(); i++)
+    delete edges[i];
+    edges.clear();
+
+    for( size_t i = 0; i < faces.size(); i++)
+    delete faces[i];
+    faces.clear();
+}
+///////////////////////////////////////////////////////////////////////////////
+
 #ifdef USE_MESQUITE
 
 using namespace Mesquite;
@@ -1316,20 +1711,20 @@ int run_global_smoother( Mesquite::Mesh* mesh, MsqError& err )
   // creates a mean ratio quality metric ...
   IdealWeightInverseMeanRatio* mean_ratio = new IdealWeightInverseMeanRatio(err);
   if (err) return 1;
-  mean_ratio->set_averaging_method(QualityMetric::SUM, err); 
+  mean_ratio->set_averaging_method(QualityMetric::SUM, err);
   if (err) return 1;
-  
+
   // ... and builds an objective function with it
   LPtoPTemplate* obj_func = new LPtoPTemplate(mean_ratio, 1, err);
   if (err) return 1;
-  
+
   // creates the feas newt optimization procedures
   FeasibleNewton* pass1 = new FeasibleNewton( obj_func, true );
   pass1->use_global_patch();
   if (err) return 1;
-  
+
   QualityAssessor stop_qa( mean_ratio );
-  
+
   // **************Set stopping criterion****************
   TerminationCriterion tc_inner;
   tc_inner.add_absolute_vertex_movement( OF_value );
@@ -1341,12 +1736,12 @@ int run_global_smoother( Mesquite::Mesh* mesh, MsqError& err )
 
   queue1.add_quality_assessor(&stop_qa, err);
   if (err) return 1;
-   
+
   // adds 1 pass of pass1 to mesh_set1
   queue1.set_master_quality_improver(pass1, err);
   if (err) return 1;
-  
-  queue1.add_quality_assessor(&stop_qa, err); 
+
+  queue1.add_quality_assessor(&stop_qa, err);
   if (err) return 1;
 
   // launches optimization on mesh_set
@@ -1354,12 +1749,14 @@ int run_global_smoother( Mesquite::Mesh* mesh, MsqError& err )
   cout << " Error " << err << endl;
   if (err) return 1;
 
-  MeshWriter::write_vtk(mesh, "feasible-newton-result.vtk", err); 
+  MeshWriter::write_vtk(mesh, "feasible-newton-result.vtk", err);
   if (err) return 1;
   cout << "Wrote \"feasible-newton-result.vtk\"" << endl;
 
   return 0;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 int run_local_smoother( Mesquite::Mesh* mesh, MsqError& err )
 {
@@ -1371,18 +1768,18 @@ int run_local_smoother( Mesquite::Mesh* mesh, MsqError& err )
   // creates a mean ratio quality metric ...
   IdealWeightInverseMeanRatio* mean_ratio = new IdealWeightInverseMeanRatio(err);
   if (err) return 1;
-  mean_ratio->set_averaging_method(QualityMetric::SUM, err); 
+  mean_ratio->set_averaging_method(QualityMetric::SUM, err);
   if (err) return 1;
 
   // ... and builds an objective function with it
   LPtoPTemplate* obj_func = new LPtoPTemplate(mean_ratio, 1, err);
   if (err) return 1;
-  
+
   // creates the smart laplacian optimization procedures
   SmartLaplacianSmoother* pass1 = new SmartLaplacianSmoother( obj_func );
-  
+
   QualityAssessor stop_qa( mean_ratio );
-  
+
   // **************Set stopping criterion****************
   TerminationCriterion tc_inner;
   tc_inner.add_absolute_vertex_movement( OF_value );
@@ -1393,25 +1790,27 @@ int run_local_smoother( Mesquite::Mesh* mesh, MsqError& err )
 
   queue1.add_quality_assessor(&stop_qa, err);
   if (err) return 1;
-   
+
   // adds 1 pass of pass1 to mesh_set
   queue1.set_master_quality_improver(pass1, err);
   if (err) return 1;
-  
-  queue1.add_quality_assessor(&stop_qa, err); 
+
+  queue1.add_quality_assessor(&stop_qa, err);
   if (err) return 1;
 
   // launches optimization on mesh_set
   queue1.run_instructions(mesh, err);
   if (err) return 1;
 
-  MeshWriter::write_vtk(mesh, "smart-laplacian-result.vtk", err); 
+  MeshWriter::write_vtk(mesh, "smart-laplacian-result.vtk", err);
   if (err) return 1;
   cout << "Wrote \"smart-laplacian-result.vtk\"" << endl;
 
   //print_timing_diagnostics( cout );
   return 0;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 int Jaal::mesh_shape_optimization(iMesh_Instance imesh)
 {
@@ -1424,30 +1823,29 @@ int Jaal::mesh_shape_optimization(iMesh_Instance imesh)
   Mesquite::Mesh* mesqmesh = new Mesquite::MsqIMesh(imesh, rootSet, iBase_FACE, ierr, "fixed");
   assert(!ierr);
 
-   run_global_smoother( mesqmesh, ierr );
-
-/*
   Mesquite::PlanarDomain domain(Mesquite::PlanarDomain::XY);
 
-  Mesquite::LaplacianIQ laplacian_smoother;
-  laplacian_smoother.run_instructions(mesqmesh, &domain, ierr);
-  if (ierr) return 1;
+  /*
+   Mesquite::LaplacianIQ laplacian_smoother;
+   laplacian_smoother.run_instructions(mesqmesh, &domain, ierr);
+   if (ierr) return 1;
+   run_global_smoother( mesqmesh, ierr );
+   */
 
-   cout << " Improvment :" << endl;
-   Mesquite::ShapeImprovementWrapper shape_wrapper(ierr);
-   if (ierr)
-   {
-   cout << "Shape wrapper error " << ierr << endl;
-   exit(2);
-   }
-   shape_wrapper.run_instructions(mesqmesh, &domain, ierr);
+  cout << " Improvment :" << endl;
+  Mesquite::ShapeImprovementWrapper shape_wrapper(ierr);
+  if (ierr)
+  {
+    cout << "Shape wrapper error " << ierr << endl;
+    exit(2);
+  }
+  shape_wrapper.run_instructions(mesqmesh, &domain, ierr);
 
-   if (ierr)
-   {
-   cout << "Error smoothing mesh " << ierr << endl;
-   return 1;
-   }
-*/
+  if (ierr)
+  {
+    cout << "Error smoothing mesh " << ierr << endl;
+    return 1;
+  }
 
   return 0;
 

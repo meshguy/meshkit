@@ -54,7 +54,6 @@ int Tri2Quads::collapse_matched_triangles(Mesh *trimesh,
 
   if (replace)
   {
-    cout << " Triangle mesh removed " << endl;
     for (size_t i = 0; i < matching.size(); i++)
     {
       size_t f1 = matching[i].first;
