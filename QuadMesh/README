@@ -1,5 +1,24 @@
+******************************************************************************
             JQuad:  All Quadrilateral Mesh Generator
-	  *******************************************
+	                 Version 1.0
+
+For professional suggestions, comments and criticism, please send-emil to:
+	             Chaman Singh Verma
+	        Department of Computer Science,
+	        University of Wisconsin-Madison
+		     csverma@cs.wisc.edu.
+
+This work is supported by: 
+                       Dr. Tim Tautges
+                  Argonne National Lab. Chicago
+		      tautges@mcs.anl.gov
+
+Main ideas in this software are borrowed from:
+
+1.  Converting Triangulations to Quadrangulations.
+    Suneeta Ramaswamy, Pedro Ramos etc...
+
+******************************************************************************
 
 Introduction:  Given a triangle mesh, JQuad converts it into All Quadrilateral
 mesh. If the number of edges on the boundaries is even, then it will not put
@@ -28,6 +47,3 @@ Usage: Example dataset sq.1.ele sq.1.node
 
 This will generate quad0.vtk and quad1.vtk. quad1.vtk uses Laplacian Smoothing
 on the quad0.vtk, therefore the mesh will have better quality.
-
-
-
