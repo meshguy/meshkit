@@ -62,6 +62,7 @@ private:
   int remove_interior_doublet(Vertex *vertex);
   int remove_boundary_singlet(Vertex *vertex);
   int diamond_collapse(Diamond &d);
+  int remove_bridge( const Bridge &b);
 
   // High level utility function composed of basic functions...
   void cleanup_internal_boundary_face();

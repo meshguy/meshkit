@@ -661,6 +661,7 @@ class Mesh
 
 public:
   static vector<FaceType> getRelations112(NodeType v0, NodeType v1);
+  static vector<FaceType> getRelations102(NodeType v0, NodeType v1);
 
   typedef vector<NodeType> NodeContainer;
   typedef vector<EdgeType> EdgeContainer;

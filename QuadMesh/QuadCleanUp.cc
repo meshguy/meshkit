@@ -977,6 +977,124 @@ int QuadCleanUp::remove_boundary_singlet(Vertex *vertex)
 }
 
 ////////////////////////////////////////////////////////////////////
+int QuadCleanUp::  remove_bridge(const Bridge &bridge)
+{
+  Vertex *v0 = bridge.vertex0;
+  Vertex *v1 = bridge.vertex1;
+
+  vector<Face*> neighs = Mesh::getRelations102(v0,v1);
+
+  for( int i = 0; i < neighs.size(); i++)
+       if( neighs[i]->isRemoved() ) return 1;
+
+  assert( neighs.size() == 4);
+
+  // Create a closed chain of bounding edges ...
+
+  list<Edge>  boundedges;
+  for( int i = 0; i < neighs.size(); i++) {
+       Face *face  = neighs[i];
+       for( int j = 0; j < 4; j++) {
+            Vertex *ev0 = face->getConnection((j+0)%4);
+            Vertex *ev1 = face->getConnection((j+1)%4);
+	    if( ev0 == v0 || ev0 == v1 ) continue;
+	    if( ev1 == v0 || ev1 == v1 ) continue;
+            Edge edge(ev0,ev1);
+	    boundedges.push_back( edge );
+       }
+   }
+   assert( boundedges.size() == 6 );
+
+  // Create a closed chain of bounding nodess ...
+
+   vector<Vertex*> chain_nodes(6);
+
+   Edge edge = boundedges.front(); boundedges.pop_front();
+   chain_nodes[0] = edge.getConnection(0);
+   chain_nodes[1] = edge.getConnection(1);
+
+   Vertex *curr_vertex = chain_nodes[0];
+
+   int index = 2;
+   list<Edge>::iterator it;
+   for( int i = 0; i < 4; i++) {
+       for( it = boundedges.begin(); it != boundedges.end(); ++it) 
+       {
+            edge = *it;
+	    if( edge.getConnection(0) == curr_vertex ) {
+	        curr_vertex =  edge.getConnection(1);
+	        chain_nodes[index++] =  curr_vertex;
+	        break;
+            }
+	    if( edge.getConnection(1) == curr_vertex ) {
+	        curr_vertex =  edge.getConnection(0);
+	        chain_nodes[index++] =  curr_vertex;
+	        break;
+            }
+       }
+
+       if( it != boundedges.end() ) boundedges.erase(it);
+   }
+
+   for( int i = 0; i < 6; i++) {
+      for( int j = 0; j < 6; j++) 
+           chain_nodes[i]->removeRelation2( neighs[j] );
+   }
+
+   // Add two quadrlaterals along two diagonally min-degree vertices.
+
+   int degree[3];
+
+   for( int i = 0; i < 3; i++) {
+        int d0 = chain_nodes[(i+0)%6]->getRelations2().size();
+        int d1 = chain_nodes[(i+3)%6]->getRelations2().size();
+	degree[i] = d0 + d1;
+   }
+
+   int minat = 0;
+   int mindegree = degree[0];
+
+   for(int i = 0; i < 3; i++)  {
+        if( degree[i] < mindegree ) {
+	    minat = i;
+	    mindegree = degree[i];
+        }
+   }
+
+   vector<Vertex*> qConnect(4);
+   for( int i = 0; i < 4; i++) 
+       qConnect[i] = chain_nodes[(minat+i) % 6];
+   Face *quad1 = new Face;
+   quad1->setConnection( qConnect );
+   mesh->addFace( quad1 );
+   for( int i = 0; i < 4; i++) 
+       qConnect[i]->addRelation2( quad1 );
+
+   for( int i = 0; i < 4; i++) 
+         qConnect[i] = chain_nodes[(minat+ 3+ i) % 6];
+   Face *quad2 = new Face;
+   quad2->setConnection( qConnect );
+   for( int i = 0; i < 4; i++) 
+       qConnect[i]->addRelation2( quad2 );
+   mesh->addFace( quad2 );
+
+   for( int i = 0; i < neighs.size(); i++) 
+        neighs[i]->setRemoveMark(1);
+
+   v0->setRemoveMark(1);
+   v1->setRemoveMark(1);
+
+   return 0;
+
+}
+////////////////////////////////////////////////////////////////////
+
+void QuadCleanUp :: remove_bridges()
+{
+
+
+}
+////////////////////////////////////////////////////////////////////
 
 void QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
     bool allow_boundary_faces)

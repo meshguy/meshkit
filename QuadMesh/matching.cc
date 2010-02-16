@@ -60,9 +60,9 @@ int main(int argc, char **argv)
 
 // qm->set_strip_markers();
    qClean.search_bridges(); 
-   qm->setWavefront(2);
-   qm->getAspectRatio();
-   cout << " Surface Area " << qm->getSurfaceArea() << endl;
+//   qm->setWavefront(2);
+//   qm->getAspectRatio();
+//   cout << " Surface Area " << qm->getSurfaceArea() << endl;
    qm->saveAs("quad1");
 
 

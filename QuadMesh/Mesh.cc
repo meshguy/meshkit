@@ -232,6 +232,38 @@ double Face :: getAspectRatio()
 
 ///////////////////////////////////////////////////////////////////////////////
 
+vector<FaceType> Mesh::getRelations102(NodeType vtx0, NodeType vtx1)
+{
+  vector<FaceType> v0faces = vtx0->getRelations2();
+  vector<FaceType> v1faces = vtx1->getRelations2();
+
+  if (v0faces.empty() || v1faces.empty())
+  {
+    cout << "Warning: Vertex-Faces relations are empty " << endl;
+  }
+
+  set<FaceType> vset;
+  for( int i = 0; i < v0faces.size(); i++) 
+       vset.insert( v0faces[i] );
+
+  for( int i = 0; i < v1faces.size(); i++) 
+       vset.insert( v1faces[i] );
+
+  vector<FaceType>  faceneighs;
+
+  /*
+  set<FaceType>::const_itearator it;
+
+  int index = 0;
+  for( it = vset.begin(); it != vset.end(); ++it)
+       faceneighs[index+] = *it;
+  */
+
+  return faceneighs;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
 {
   vector<FaceType> v0faces = vtx0->getRelations2();
