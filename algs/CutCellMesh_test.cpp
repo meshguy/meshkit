@@ -1,5 +1,7 @@
 #include <iostream>
 #include <time.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "CutCellMesh.hpp"
 
