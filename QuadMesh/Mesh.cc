@@ -156,6 +156,36 @@ Point3D Face::getCentroid() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+double Face :: tri_area( const Point3D &p0, const Point3D &p1, const Point3D &p2)
+{
+   ////////////////////////////////////////////////////////////////////////////////
+   // Ref: http://mathworld.wolfram.com/HeronsFormula.html
+   //
+   // Heron's formular  A = sqrt(s(s-a)(s-b)(s-c)) is expensive because if require
+   // three square roots for each a,b, and c.
+   // Instead we will use alternate formula of "Heron" which avoids three
+   // expensive square roots.
+   //
+   // Sorting is done to reduce the truncation errors. Very similar to Kahan's
+   // Original idea.
+   ////////////////////////////////////////////////////////////////////////////////
+
+   double d[3];
+   d[0] = length2(p1,p2);
+   d[1] = length2(p2,p0);
+   d[2] = length2(p0,p1);
+
+   std::sort( d, d + 3 ); // May be we should have optimized version than STL one 
+
+   double a2 = d[0];
+   double b2 = d[1];
+   double c2 = d[2];
+
+   double area = 0.25*sqrt(4*a2*b2 - (a2+b2-c2)*(a2+b2-c2) );
+   return area;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 
 double Face :: quad_area( const Point3D &p0, const Point3D &p1, 
                           const Point3D &p2, const Point3D &p3)
@@ -165,6 +195,11 @@ double Face :: quad_area( const Point3D &p0, const Point3D &p1,
   // following site. This implementation is based on this article.
   // 
   // http://softsurfer.com/Archive/algorithm_0101/algorithm_0101.htm#Quadrilaterals
+  //
+  // For Bretschneider's Formula: refer to 
+  // http://mathworld.wolfram.com/BretschneidersFormula.html
+  // Given a general quadrilateral with sides of lengths a, b, c, and d, the area is given by
+  // K	= 1/4sqrt(4p^2q^2-(b^2+d^2-a^2-c^2)^2)
   //
   //////////////////////////////////////////////////////////////////////////////
 
@@ -709,9 +744,7 @@ bool Mesh::isSimple()
   return simple;
 
 }
-
 ///////////////////////////////////////////////////////////////////////////////
-
 bool Mesh::isConsistentlyOriented()
 {
   int consistent = 1;

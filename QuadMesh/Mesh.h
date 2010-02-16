@@ -491,6 +491,16 @@ public:
   static FaceType create_quad(const FaceType t1, const FaceType t2);
 
   static double   tri_area ( const Point3D &p0, const Point3D &p1, const Point3D &p2);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Calculate Area of Quadrilateral:
+  // Example : Convex Case 
+  //           Coorindates  (0.0,0.0)  ( 1.0, 1.0), (2.0, 0.0), (1,0, -1.0)
+  //           Result :  2*( 0.5*2.0*1.0 ) = 2.0;
+  //           Concave case:
+  //           Coodinates: ( 0.0, 0.0), 10, 2), (2.0, 0.0), (10, -2)
+  //           Result : 2 *( 0.5*2.0* 2.0) = 4.0
+  /////////////////////////////////////////////////////////////////////////////
   static double   quad_area( const Point3D &p0, const Point3D &p1,
                              const Point3D &p2, const Point3D &p3);
 
@@ -920,6 +930,22 @@ inline Point3D make_vector( const Vertex* head, const Vertex *tail)
   xyz[2] = phead[2] - ptail[2];
 
   return xyz;
+}
+
+inline double length( const Point3D &A, const Point3D &B)
+{
+   double dx = A[0] - B[0];
+   double dy = A[1] - B[1];
+   double dz = A[2] - B[2];
+   return sqrt( dx*dx + dy*dy + dz*dz );
+}
+
+inline double length2( const Point3D &A, const Point3D &B)
+{
+   double dx = A[0] - B[0];
+   double dy = A[1] - B[1];
+   double dz = A[2] - B[2];
+   return dx*dx + dy*dy + dz*dz;
 }
 
 inline double magnitude( const Point3D &A )
