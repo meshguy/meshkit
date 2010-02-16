@@ -1353,7 +1353,7 @@ int ProjectShell::writeNewMesh(iMesh_Instance mesh)
 		          iBase_INTEGER ,
 		          &pos_tag_handle,
 		          &ierr,
-		          std::strlen(tagName1) ) ;	 
+		          strlen(tagName1) ) ;	 
 	
   if (ierr!=0)
     {
@@ -1391,7 +1391,7 @@ int ProjectShell::writeNewMesh(iMesh_Instance mesh)
 		          iBase_INTEGER ,
 		          &neg_tag_handle,
 		          &ierr,
-		          std::strlen(tagName1) ) ;	 
+		          strlen(tagName1) ) ;	 
 	
   if (ierr!=0)
     {
