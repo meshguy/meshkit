@@ -8,6 +8,7 @@
 #include <sstream>
 #include <queue>
 #include <algorithm>
+#include <string.h>
 
 #include "ProjectShell.hpp"
 #include "vec_utils.hpp"
