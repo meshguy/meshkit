@@ -249,15 +249,15 @@ vector<FaceType> Mesh::getRelations102(NodeType vtx0, NodeType vtx1)
   for( int i = 0; i < v1faces.size(); i++) 
        vset.insert( v1faces[i] );
 
-  vector<FaceType>  faceneighs;
+  std::set<FaceType>::iterator it;
 
-  /*
-  set<FaceType>::const_itearator it;
-
-  int index = 0;
-  for( it = vset.begin(); it != vset.end(); ++it)
-       faceneighs[index+] = *it;
-  */
+  vector<FaceType> faceneighs;
+  if( vset.size() ) {
+     faceneighs.resize( vset.size() );
+     int index = 0;
+     for( it = vset.begin(); it != vset.end(); ++it)
+          faceneighs[index++] = *it;
+  }
 
   return faceneighs;
 }

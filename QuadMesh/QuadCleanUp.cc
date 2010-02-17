@@ -979,6 +979,15 @@ int QuadCleanUp::remove_boundary_singlet(Vertex *vertex)
 ////////////////////////////////////////////////////////////////////
 int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 {
+
+  //
+  // Presently this code does not check the convexity of the hexagon
+  // which is split into two quadrilateral. So in some sense, this
+  // is not a robust code and probably smoothing might solve the 
+  // problem, so we can not guarantee.
+  //
+  //
+
   Vertex *v0 = bridge.vertex0;
   Vertex *v1 = bridge.vertex1;
 
@@ -1091,6 +1100,8 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 
 void QuadCleanUp :: remove_bridges()
 {
+
+
 
 
 }

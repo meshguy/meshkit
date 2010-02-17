@@ -1,9 +1,52 @@
 #ifndef QUADCLEAN_H
 #define QUADCLEAN_H
 
+////////////////////////////////////////////////////////////////////////////////
+//                      Quad-Cleanup
+//
+// Developed by:  Chaman Singh Verma
+//                Department of Computer Sciences.
+//                The University of Wisconsin, Madison
+// 
+// Work Supported by:  
+//                 Dr. Tim Tautges
+//                 Argonne National Lab, Chicago
+//
+//
+// Objective:  Given a quadrilateral mesh, this class implements various strategies
+// to improve the quadrilateral mesh both geometrically and topologically. The 
+// Laplacian ( local and global ) is used for geometric quality improvement, and for
+// topological improvements various operations are used. 
+// The two basis operations for topological improvements are 
+//  1)   Face close
+//  2)   doublet insertion and removal.
+//
+
+// Reference Papers:
+//  1) Topological Improvement Procedures for Quadrilateral Finite Element Meshes
+//     S.A. Canann,  S.N. Muthikrishnan and R.K. Phillips
+
+//  2) Automated All Quadrilateral Mesh Adaptation Through Refinment and Coarsening
+//     Bret Dallas Anderson
+//     Master Thesis, Brigham Young University.
+//
+// For suggestios, bugs and criticisms, please send e-mail to
+//                      csverma@cs.wisc.edu
+//
+// Last Date update:  16th Feb 2010.
+//
+///////////////////////////////////////////////////////////////////////////////////
+
 #include "Mesh.h"
 
 BEGIN_JAAL_NAMESPACE
+
+///////////////////////////////////////////////////////////////////////////////////
+// Diamond:  An element whose at least one of the opposite vertex is surrounded by
+//           three faces. In many cases, diamonds are essential in the quadrilateral
+// mesh and they can not be removed, Finding the minimum number of diamonds is hard,
+// and we are working towards it.
+///////////////////////////////////////////////////////////////////////////////////
 
 struct Diamond
 {
@@ -11,10 +54,17 @@ struct Diamond
   Vertex *vertex0, *vertex1;
 };
 
+/////////////////////////////////////////////////////////////////////////////////////
+//Bridge:  An Edge whose two end vertices are surrounded by three faces. By removing
+//         a bridge, we essentially remove two diamonds. But the removal method is
+//         different. In the bridge we use element removal followed by edge swapping.
+/////////////////////////////////////////////////////////////////////////////////////
+
 struct Bridge
 {
   Vertex *vertex0, *vertex1;
 };
+
 
 class QuadCleanUp
 {
@@ -81,3 +131,5 @@ private:
 END_JAAL_NAMESPACE
 
 #endif
+
+///////////////////////////////////////////////////////////////////////////////
