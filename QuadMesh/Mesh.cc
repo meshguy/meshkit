@@ -156,6 +156,7 @@ Point3D Face::getCentroid() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 double Face :: tri_area( const Point3D &p0, const Point3D &p1, const Point3D &p2)
 {
    ////////////////////////////////////////////////////////////////////////////////
@@ -198,9 +199,18 @@ double Face :: quad_area( const Point3D &p0, const Point3D &p1,
   //
   // For Bretschneider's Formula: refer to 
   // http://mathworld.wolfram.com/BretschneidersFormula.html
-  // Given a general quadrilateral with sides of lengths a, b, c, and d, the area is given by
-  // K	= 1/4sqrt(4p^2q^2-(b^2+d^2-a^2-c^2)^2)
+  // Given a general quadrilateral with sides of lengths a, b, c, and d, the area 
+  // is given by
+  //              K = 1/4sqrt(4p^2q^2-(b^2+d^2-a^2-c^2)^2)
   //
+  // It seems that the first method is better because it doesn't require
+  // expensive 6 lenghts. ( 4 sides + 2 diagonal ). But a proper analysis needs
+  // be done. But probably, the most amazing thing about the formula is that
+  // it is valid for 3D quadrilateral and for both convex and concave.
+  // But why it handles concavity, I am not quite sure.
+  //
+  // Chaman Singh Verma
+  // 16th Feb 2010.
   //////////////////////////////////////////////////////////////////////////////
 
   Point3D v2v0   = make_vector( p2, p0);
@@ -209,6 +219,46 @@ double Face :: quad_area( const Point3D &p0, const Point3D &p1,
 
   double area = 0.5*magnitude( d0d1 );
   return area;
+}
+////////////////////////////////////////////////////////////////////////////////
+bool Face :: is_convex_quad(const Point3D &p0, const Point3D &p1, 
+                            const Point3D &p2, const Point3D &p3)
+{
+  double qarea  = quad_area(p0, p1, p2, p3);
+
+  double tarea1, tarea2;
+  tarea1 = tri_area( p0, p1, p2);
+  tarea2 = tri_area( p0, p2, p3);
+  if( fabs(tarea1 + tarea2- qarea) > 1.0E-10 ) return 0;
+
+  tarea1 = tri_area( p0, p1, p3);
+  tarea2 = tri_area( p1, p2, p3);
+  if( fabs(tarea1 + tarea2 - qarea) > 1.0E-10 ) return 0;
+
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+int Mesh :: check_convexity()
+{
+   size_t numfaces = getSize(2);
+
+   int itag;
+   for( size_t i = 0; i < numfaces; i++) {
+        Face *face = getFace(i);
+	itag = 0;
+	if( face->getSize(0) == 4 ) 
+	    itag = Face::is_convex_quad( face->getConnection(0)->getXYZCoords(),
+	                           face->getConnection(1)->getXYZCoords(),
+	                           face->getConnection(2)->getXYZCoords(),
+	                           face->getConnection(3)->getXYZCoords() );
+        cout << itag << " ";
+        if( itag == 0) 
+	    face->setTag(1);
+        else
+	    face->setTag(2);
+
+   }
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -280,6 +330,7 @@ vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
 
   return faceneighs;
 }
+
 ///////////////////////////////////////////////////////////////////////////////
 
 vector<FaceType> Face::getRelations212()
@@ -305,7 +356,6 @@ vector<FaceType> Face::getRelations212()
   return faceneighs;
 }
 ///////////////////////////////////////////////////////////////////////////////
-
 
 size_t Mesh::count_edges()
 {

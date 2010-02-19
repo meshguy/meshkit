@@ -482,13 +482,15 @@ private:
 
 class Face : public MeshEntity
 {
-
 public:
-
   static const int TRIANGLE = 3;
   static const int QUADRILATERAL = 4;
 
   static FaceType create_quad(const FaceType t1, const FaceType t2);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Use modified Heron formula for find out the area of a triangle
+  /////////////////////////////////////////////////////////////////////////////
 
   static double   tri_area ( const Point3D &p0, const Point3D &p1, const Point3D &p2);
 
@@ -504,6 +506,8 @@ public:
   static double   quad_area( const Point3D &p0, const Point3D &p1,
                              const Point3D &p2, const Point3D &p3);
 
+  static bool is_convex_quad(const Point3D &p0, const Point3D &p1,
+                             const Point3D &p2, const Point3D &p3);
   Face()
   {
     removeMark = 0;
@@ -884,6 +888,9 @@ public:
   //
   double  getSurfaceArea();
 
+  // Check the Convexity..
+
+  int check_convexity();
 private:
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Vertex *v);
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Face *v);
