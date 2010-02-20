@@ -1107,8 +1107,8 @@ void QuadCleanUp :: remove_bridges()
 }
 ////////////////////////////////////////////////////////////////////
 
-void QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
-    bool allow_boundary_faces)
+int QuadCleanUp::remove_diamonds_once(bool both_sides,
+                                 bool allow_boundary_faces)
 {
   int relexist = mesh->build_relations(0, 2);
 
@@ -1156,11 +1156,6 @@ void QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
   }
   cout << "#Diamonds removed from the mesh : " << ncount << endl;
 
-  /*
-   if( ncount > 0 && recursive == 1 ) 
-   remove_diamonds(recursive, both_sides, allow_boundary_faces);
-   */
-
   if (!relexist)
     mesh->clear_relations(0, 2);
 
@@ -1169,10 +1164,29 @@ void QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
   mesh->enumerate(2);
 
   set_regular_node_tag();
+
+  return ncount;
 }
+
 ////////////////////////////////////////////////////////////////////
 
-void QuadCleanUp::remove_doublets(bool recursive)
+void QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
+    bool allow_boundary_faces)
+{
+   int ncount = remove_diamonds_once(both_sides,allow_boundary_faces);
+
+   if( recursive ) {
+       while(1) {
+       ncount = remove_diamonds_once(both_sides,allow_boundary_faces);
+       if( ncount == 0) break;
+       }
+   }
+    
+}
+
+////////////////////////////////////////////////////////////////////
+
+int QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes )
 {
   size_t numNodes = mesh->getSize(0);
 
@@ -1199,6 +1213,7 @@ void QuadCleanUp::remove_doublets(bool recursive)
     cout << "Warning: There are interior doublets still left in the mesh "
         << doublets.size() << endl;
 
+  if( allow_boundary_nodes ) {
   vector<Vertex*> singlets = search_boundary_singlets();
   for (size_t i = 0; i < singlets.size(); i++)
   {
@@ -1207,17 +1222,13 @@ void QuadCleanUp::remove_doublets(bool recursive)
       ncount++;
   }
 
-  /*
-   if( ncount > 0 && recursive == 1 ) 
-   remove_doublets(recursive);
-   */
-
   mesh->prune();
 
-  singlets = search_boundary_singlets();
-  if (doublets.size())
-    cout << "Warning: There are boundary singlets still left in the mesh "
+      singlets = search_boundary_singlets();
+      if (doublets.size())
+      cout << "Warning: There are boundary singlets still left in the mesh "
         << singlets.size() << endl;
+  }
 
   mesh->enumerate(0);
   mesh->enumerate(2);
@@ -1226,6 +1237,21 @@ void QuadCleanUp::remove_doublets(bool recursive)
     mesh->clear_relations(0, 2);
 
   set_regular_node_tag();
+  return ncount;
+}
+
+////////////////////////////////////////////////////////////////////
+
+void QuadCleanUp::remove_doublets( bool recursive, bool allow_boundary_nodes )
+{
+     int ncount = remove_doublets_once( allow_boundary_nodes );
+
+     if( recursive ) {
+        while( 1 ) {
+             ncount = remove_doublets_once( allow_boundary_nodes );
+	     if( ncount == 0) break;
+        }
+     }
 }
 
 ////////////////////////////////////////////////////////////////////

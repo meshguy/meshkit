@@ -85,7 +85,7 @@ public:
   // Removal Methods ...
   void remove_diamonds(bool recursive = 1, bool check_both_sides = 1,
       bool allow_boundary_faces = 1);
-  void remove_doublets(bool recursive = 1);
+  void remove_doublets(bool recursive = 1, bool allow_boundary_nodes = 0);
   void remove_bridges();
   void cleanup_boundary(double cutOffAngle = 100.0);
 
@@ -113,6 +113,8 @@ private:
   int remove_boundary_singlet(Vertex *vertex);
   int diamond_collapse(Diamond &d);
   int remove_bridge( const Bridge &b);
+  int remove_diamonds_once(bool check_both_sides = 1, bool allow_boundary_faces = 1);
+  int remove_doublets_once( bool allow_boundary_nodes = 0);
 
   // High level utility function composed of basic functions...
   void cleanup_internal_boundary_face();

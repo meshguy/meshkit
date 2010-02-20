@@ -54,17 +54,24 @@ int main(int argc, char **argv)
 // Jaal::laplacian_smoothing(qm, 500);
 
    qClean.remove_doublets();
+   qClean.remove_diamonds(1, 1, 0);
+   qClean.remove_doublets();
+
+   /*
    qClean.remove_diamonds();
    qClean.remove_doublets();
    qClean.remove_doublets();
+   */
 
 // qm->set_strip_markers();
-   qClean.search_bridges(); 
+// qClean.search_bridges(); 
 //   qm->setWavefront(2);
 //   qm->getAspectRatio();
 //   cout << " Surface Area " << qm->getSurfaceArea() << endl;
-   qm->saveAs("quad1");
 
+  qm->check_convexity();
+  qm->saveAs("quad1");
+  exit(0);
 
 /*
    qClean.remove_doublets();
