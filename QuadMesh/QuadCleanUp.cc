@@ -289,7 +289,7 @@ vector<Face*> QuadCleanUp::search_diamonds(bool both_sides,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-vector<Bridge> QuadCleanUp::search_bridges()
+vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
 {
   //  Public Function ...
   vBridges.clear();
@@ -333,15 +333,13 @@ vector<Bridge> QuadCleanUp::search_bridges()
       neighs = v0->getRelations2();
       for (int j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
-      if (visitCount)
-        continue;
+      if (visitCount) continue;
       int d0 = neighs.size();
 
       neighs = v1->getRelations2();
       for (int j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
-      if (visitCount)
-        continue;
+      if (visitCount) continue;
       int d1 = neighs.size();
 
       neighs = v2->getRelations2();
@@ -979,7 +977,6 @@ int QuadCleanUp::remove_boundary_singlet(Vertex *vertex)
 ////////////////////////////////////////////////////////////////////
 int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 {
-
   //
   // Presently this code does not check the convexity of the hexagon
   // which is split into two quadrilateral. So in some sense, this
@@ -987,7 +984,6 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
   // problem, so we can not guarantee.
   //
   //
-
   Vertex *v0 = bridge.vertex0;
   Vertex *v1 = bridge.vertex1;
 
@@ -1050,7 +1046,45 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
            chain_nodes[i]->removeRelation2( neighs[j] );
    }
 
-   // Add two quadrlaterals along two diagonally min-degree vertices.
+   //
+   // Only for the convex polygons, we can be sure about joining two diagonal.
+   // May be there are some other elegant ways, but for now, just try to adjust
+   // coordinates of all the six vertices so that they lie on the circle/sphere. 
+   // 
+   Point3D pCenter = Vertex::mid_point(v0, v1);
+
+   double radialdist[6];
+   for( int i = 0; i < 6; i++) 
+        radialdist[i] = length2( pCenter, chain_nodes[i]->getXYZCoords() );
+   sort( radialdist, radialdist + 6);
+   double radius2 = radialdist[4];  // Bias towards large length.
+
+   // Keep these nodes fixed and smooth the mesh.
+   for( int j = 0; j < 6; j++) 
+        chain_nodes[j]->setConstrainedMark(1);
+
+   // Try bringing the nodes closer the circle/sphere boundary
+   for( int i  = 0; i < 5; i++) 
+   {
+       for( int j = 0; j < 6; j++) {
+            double d = length2( pCenter, chain_nodes[j]->getXYZCoords() );
+	    if( d/radius2 > 1.10) {
+	        // Attract the node towards center.
+	    } else if( d/radius2 < 0.90) {
+	        // Repeal the node from the center.
+	    } else {
+	        //  Force the node to come on the boundary...
+	    }
+        }
+        // Carry out laplacian smoothing 5 times (arbitrary choice).
+        laplacian_smoothing(mesh, 5);
+   }
+   // Unmark the nodes..
+   for( int j = 0; j < 6; j++) 
+        chain_nodes[j]->setConstrainedMark(0);
+
+   // Hopefully by now the enclosing polygon is convex. Now add two 
+   // quadrlaterals along two diagonally min-degree vertices.
 
    int degree[3];
 
@@ -1070,6 +1104,8 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
         }
    }
 
+   // Finally update the data strucutures...
+
    vector<Vertex*> qConnect(4);
    for( int i = 0; i < 4; i++) 
        qConnect[i] = chain_nodes[(minat+i) % 6];
@@ -1087,23 +1123,37 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
        qConnect[i]->addRelation2( quad2 );
    mesh->addFace( quad2 );
 
+   // Remove all the neighboring faces and the two bridge nodes...
    for( int i = 0; i < neighs.size(); i++) 
         neighs[i]->setRemoveMark(1);
-
    v0->setRemoveMark(1);
    v1->setRemoveMark(1);
 
    return 0;
-
 }
 ////////////////////////////////////////////////////////////////////
 
-void QuadCleanUp :: remove_bridges()
+void QuadCleanUp :: remove_bridges( bool allow_boundary_nodes )
 {
+  int relexist = mesh->build_relations(0, 2);
 
+  search_bridges( allow_boundary_nodes );
 
+  int ncount = 0;
+  for (size_t i = 0; i < vBridges.size(); i++)
+  {
+     int err = remove_bridge( vBridges[i] );
+     if( !err ) ncount++;
+  }
 
+  if( ncount ) {
+     mesh->prune();
+     mesh->enumerate(0);
+     mesh->enumerate(2);
+  }
 
+  if (!relexist)
+    mesh->clear_relations(0, 2);
 }
 ////////////////////////////////////////////////////////////////////
 
@@ -1159,9 +1209,11 @@ int QuadCleanUp::remove_diamonds_once(bool both_sides,
   if (!relexist)
     mesh->clear_relations(0, 2);
 
-  mesh->prune();
-  mesh->enumerate(0);
-  mesh->enumerate(2);
+  if( ncount )  {
+      mesh->prune();
+      mesh->enumerate(0);
+      mesh->enumerate(2);
+  }
 
   set_regular_node_tag();
 
@@ -1203,15 +1255,17 @@ int QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes )
     if (!err)
       ncount++;
   }
-  mesh->prune();
 
-  cout << "Info :  #of Interior doublets removed from the mesh " << ncount
-      << endl;
+  if( ncount )  {
+     mesh->prune();
+     cout << "Info :  #of Interior doublets removed from the mesh " << ncount
+          << endl;
 
-  doublets = search_interior_doublets();
-  if (doublets.size())
-    cout << "Warning: There are interior doublets still left in the mesh "
+     doublets = search_interior_doublets();
+     if (doublets.size())
+        cout << "Warning: There are interior doublets still left in the mesh "
         << doublets.size() << endl;
+  }
 
   if( allow_boundary_nodes ) {
   vector<Vertex*> singlets = search_boundary_singlets();
@@ -1222,16 +1276,19 @@ int QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes )
       ncount++;
   }
 
-  mesh->prune();
-
+  if( ncount ) {
+      mesh->prune();
       singlets = search_boundary_singlets();
       if (doublets.size())
       cout << "Warning: There are boundary singlets still left in the mesh "
-        << singlets.size() << endl;
+           << singlets.size() << endl;
+  }
   }
 
-  mesh->enumerate(0);
-  mesh->enumerate(2);
+  if( ncount ) {
+     mesh->enumerate(0);
+     mesh->enumerate(2);
+  }
 
   if (!relexist)
     mesh->clear_relations(0, 2);
