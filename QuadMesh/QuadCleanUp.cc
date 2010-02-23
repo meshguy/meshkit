@@ -328,15 +328,25 @@ vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
       if (v3->isBoundary())
         continue;
 
-      int visitCount = 0;
+      int visitCount  = 0;
+      int hitBoundary = 0;
 
       neighs = v0->getRelations2();
+      for (int j = 0; j < neighs.size(); j++) 
+        if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
+      if( hitBoundary ) continue;
+
       for (int j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount) continue;
+
       int d0 = neighs.size();
 
       neighs = v1->getRelations2();
+      for (int j = 0; j < neighs.size(); j++)
+        if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
+      if( hitBoundary ) continue;
+
       for (int j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount) continue;
@@ -344,12 +354,20 @@ vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
 
       neighs = v2->getRelations2();
       for (int j = 0; j < neighs.size(); j++)
+        if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
+      if( hitBoundary ) continue;
+
+      for (int j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
         continue;
       int d2 = neighs.size();
 
       neighs = v3->getRelations2();
+      for (int j = 0; j < neighs.size(); j++)
+        if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
+      if( hitBoundary ) continue;
+
       for (int j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
@@ -1018,7 +1036,7 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
    chain_nodes[0] = edge.getConnection(0);
    chain_nodes[1] = edge.getConnection(1);
 
-   Vertex *curr_vertex = chain_nodes[0];
+   Vertex *curr_vertex = chain_nodes[1];
 
    int index = 2;
    list<Edge>::iterator it;
@@ -1058,23 +1076,43 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
         radialdist[i] = length2( pCenter, chain_nodes[i]->getXYZCoords() );
    sort( radialdist, radialdist + 6);
    double radius2 = radialdist[4];  // Bias towards large length.
+   double radius  = sqrt(radius2);
 
    // Keep these nodes fixed and smooth the mesh.
    for( int j = 0; j < 6; j++) 
         chain_nodes[j]->setConstrainedMark(1);
 
+   Point3D oldPos, newPos, posVec;
+   double  alpha;
    // Try bringing the nodes closer the circle/sphere boundary
-   for( int i  = 0; i < 5; i++) 
+   for( int i  = 0; i < 1; i++) 
    {
        for( int j = 0; j < 6; j++) {
-            double d = length2( pCenter, chain_nodes[j]->getXYZCoords() );
+            oldPos = chain_nodes[j]->getXYZCoords();
+            double d = length2( pCenter, oldPos);
 	    if( d/radius2 > 1.10) {
 	        // Attract the node towards center.
+	        alpha = 0.90;
+	        newPos[0] =  (1.0-alpha)*pCenter[0] + alpha*oldPos[0];
+	        newPos[1] =  (1.0-alpha)*pCenter[1] + alpha*oldPos[1];
+	        newPos[2] =  (1.0-alpha)*pCenter[2] + alpha*oldPos[2];
 	    } else if( d/radius2 < 0.90) {
 	        // Repeal the node from the center.
+	        alpha = 1.10;
+	        newPos[0] =  (1.0-alpha)*pCenter[0] + alpha*oldPos[0];
+	        newPos[1] =  (1.0-alpha)*pCenter[1] + alpha*oldPos[1];
+	        newPos[2] =  (1.0-alpha)*pCenter[2] + alpha*oldPos[2];
 	    } else {
 	        //  Force the node to come on the boundary...
+	        posVec[0] =  oldPos[0] - pCenter[0];
+	        posVec[1] =  oldPos[1] - pCenter[1];
+	        posVec[2] =  oldPos[2] - pCenter[2];
+		alpha     =  radius/magnitude( posVec );
+		newPos[0] =  pCenter[0] + alpha*posVec[0];
+		newPos[1] =  pCenter[1] + alpha*posVec[1];
+		newPos[2] =  pCenter[2] + alpha*posVec[2];
 	    }
+            chain_nodes[j]->setXYZCoords( newPos );
         }
         // Carry out laplacian smoothing 5 times (arbitrary choice).
         laplacian_smoothing(mesh, 5);
@@ -1105,9 +1143,9 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
    }
 
    // Finally update the data strucutures...
-
+   minat = 0;
    vector<Vertex*> qConnect(4);
-   for( int i = 0; i < 4; i++) 
+   for( int i = 0; i < 4; i++)  
        qConnect[i] = chain_nodes[(minat+i) % 6];
    Face *quad1 = new Face;
    quad1->setConnection( qConnect );
@@ -1136,6 +1174,8 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 void QuadCleanUp :: remove_bridges( bool allow_boundary_nodes )
 {
   int relexist = mesh->build_relations(0, 2);
+
+  mesh->search_boundary();
 
   search_bridges( allow_boundary_nodes );
 

@@ -80,13 +80,13 @@ public:
   vector<Face*> search_flat_quads();
   vector<Vertex*> search_interior_doublets();
   vector<Vertex*> search_boundary_singlets();
-  vector<Bridge> search_bridges();
+  vector<Bridge> search_bridges( bool allow_boundary_nodes = 0);
 
   // Removal Methods ...
   void remove_diamonds(bool recursive = 1, bool check_both_sides = 1,
       bool allow_boundary_faces = 1);
   void remove_doublets(bool recursive = 1, bool allow_boundary_nodes = 0);
-  void remove_bridges();
+  void remove_bridges( bool allow_boundary_nodes = 0);
   void cleanup_boundary(double cutOffAngle = 100.0);
 
   // Insert methods ...
