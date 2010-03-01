@@ -72,6 +72,7 @@
 #include "MergeMesh.hpp"
 #include "CopyMesh.hpp"
 
+
 iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
 
@@ -91,7 +92,23 @@ int copy_move_assys(CopyMesh *cm,
                     std::vector<int> &assy_types,
                     std::vector<iBase_EntitySetHandle> &assys);
 
+int copy_move_sq_assys(CopyMesh *cm,
+                    const int nrings, const int pack_type,
+                    const double pitch,
+                    const int symm,
+                    std::vector<int> &assy_types,
+                    std::vector<iBase_EntitySetHandle> &assys);
+
+
+
 int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
+               bool &back_mesh,
+               std::vector<std::string> &files, 
+               std::vector<int> &assy_types,
+               std::string &outfile, bool &global_ids);
+
+
+int read_sq_input(int &nrings, int &pack_type, double &pitch, int &symm,
                bool &back_mesh,
                std::vector<std::string> &files, 
                std::vector<int> &assy_types,
@@ -109,6 +126,7 @@ int del_orig_mesh(std::vector<iBase_EntitySetHandle> &assys,
 int main(int argc, char **argv) 
 {
   // set the dimension based on input mesh - 2D meshes or 3D mesh??
+  char* input;
   int set_DIM = 3;
   int test_flag;
     if (1 == argc) {
@@ -137,9 +155,17 @@ int main(int argc, char **argv)
   ERRORR("Couldn't parse input.", err);
   }
   else{
-    err = read_input(nrings, pack_type, pitch, symm, back_mesh,
-		     files, assy_types, outfile, global_ids);
-  ERRORR("Couldn't parse input.", err);
+    input = argv[1];
+    if(!strcmp(input, "hexagonal")){
+      err = read_input(nrings, pack_type, pitch, symm, back_mesh,
+		       files, assy_types, outfile, global_ids);
+      ERRORR("Couldn't parse input.", err);
+    }
+    else if(!strcmp(input,"square")){
+      err = read_sq_input(nrings, pack_type, pitch, symm, back_mesh,
+		       files, assy_types, outfile, global_ids);
+      ERRORR("Couldn't parse input.", err);
+    }
   }
   std::vector<iBase_EntitySetHandle> assys;
   iBase_EntitySetHandle orig_set;
@@ -156,10 +182,22 @@ int main(int argc, char **argv)
   }
   
   std::cout << "Loaded mesh files." << std::endl;
+  if(!strcmp(input, "hexagonal")){
+    err = copy_move_assys(cm, nrings, pack_type, pitch, symm, 
+			  assy_types, assys);
+    ERRORR("Failed in copy/move step.", err);
+  }
+  else if(!strcmp(input,"square")){
+    err = copy_move_sq_assys(cm, nrings, pack_type, pitch, symm, 
+			  assy_types, assys);
+    ERRORR("Failed in copy/move step.", err);
+  } 
+  else{
+    err = copy_move_assys(cm, nrings, pack_type, pitch, symm, 
+			  assy_types, assys);
+    ERRORR("Failed in copy/move step.", err);
+  }
 
-  err = copy_move_assys(cm, nrings, pack_type, pitch, symm, 
-                        assy_types, assys);
-  ERRORR("Failed in copy/move step.", err);
 
   err = del_orig_mesh(assys, back_mesh);
   ERRORR("Failed in delete step.", err);
@@ -274,6 +312,43 @@ int copy_move_assys(CopyMesh *cm,
   return iBase_SUCCESS;
 }
 
+
+int copy_move_sq_assys(CopyMesh *cm,
+                    const int nrings, const int pack_type,
+                    const double pitch,
+                    const int symm,
+                    std::vector<int> &assy_types,
+                    std::vector<iBase_EntitySetHandle> &assys) 
+{
+  double dx[3] = {0.0, 0.0, 0.0};
+  double PI = acos(-1.0);
+  iBase_EntityHandle *new_ents;
+  int new_ents_alloc, new_ents_size;
+  int err; 
+  int i = 0;
+  for (int n1 = 0; n1 < nrings; n1++) {
+    dx[1] = n1 * pitch;
+    for (int n2 = 0; n2 < nrings; n2++) {
+      if (-1 == assy_types[i]) {
+        i++;
+        continue;
+      }
+      dx[0] = n2 * pitch;
+      new_ents = NULL;
+      new_ents_alloc = 0;
+      err = cm->copy_move_entities(assys[assy_types[i]], dx, 
+                                   &new_ents, &new_ents_alloc, &new_ents_size,
+                                   false);
+      ERRORR("Failed to copy_move entities.", 1);
+      std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2 << std::endl;
+      free(new_ents);
+      i++;
+    }
+  }
+  return iBase_SUCCESS;
+}
+
+
 int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
                bool &back_mesh,
                std::vector<std::string> &files, 
@@ -312,13 +387,13 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
     char filename[1024];
     for (unsigned int i = 0; i < all_assys.size(); i++) {
       std::cout << "Assy " << i << " file: "; 
-      scanf("%s", filename); 
+      std::cin >> filename;
       files.push_back(std::string(filename));
     }
     std::cout << "Background assembly (y/n)?" << std::endl;
-    scanf("%s", filename);
+    std::cin >> filename;
     if (filename[0] == 'y' || filename[0] == 'Y') {
-      scanf("%s", filename); 
+      std::cin >> filename;
       files.push_back(std::string(filename));
       back_mesh = true;
     }
@@ -326,9 +401,9 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
       back_mesh = false;
 
     std::cout << "New global ids (y/n)?" << std::endl;
-    scanf("%s", filename);
+    std::cin >> filename;
     if (filename[0] == 'y' || filename[0] == 'Y') {
-      scanf("%s", filename); 
+      std::cin >> filename;
       global_ids = true;
     }
     else
@@ -337,7 +412,7 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
 
   char filename[1024];
   std::cout << "Output file: " << std::endl;
-  scanf("%s", filename); 
+  std::cin >> filename;
   outfile = filename;
 
   return iBase_SUCCESS;
@@ -415,5 +490,74 @@ int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
 
   return iBase_SUCCESS;
 }
+
+int read_sq_input(int &nrings, int &pack_type, double &pitch, int &symm,
+               bool &back_mesh,
+               std::vector<std::string> &files, 
+               std::vector<int> &assy_types,
+	       std::string &outfile, bool &global_ids) 
+{ std::cout << "Number of assemblies in X/Y (assuming square): ";
+  std::cin >> nrings;
+  std::cout << "Packing type: ";
+  std::cin >> pack_type;
+  std::cout << "Pitch: ";
+  std::cin >> pitch;
+//   std::cout << "1/Symmetry: ";
+//   std::cin >> symm;
+
+  if (UNITCELL_DUCT == pack_type) {
+    std::string filename;
+    std::cout << "Unit cell file: "; std::cin >> filename; files.push_back(filename);
+    std::cout << "Duct file: "; std::cin >> filename; files.push_back(filename);
+    back_mesh = true;
+  }
+  else if (ASSY_TYPES == pack_type) {
+      // read n(n+1)/2 assy types, then file names
+    int tot_assys = nrings*nrings;
+    int dum;
+    for (int i = 0; i < tot_assys; i++) {
+      std::cin >> dum;
+      assy_types.push_back(dum);
+    }
+    
+    // get the number of assy types then read that many filenames
+    std::set<int> all_assys;
+    for (std::vector<int>::iterator vit = assy_types.begin();
+         vit != assy_types.end(); vit++) all_assys.insert(*vit);
+    all_assys.erase(-1);
+    char filename[1024];
+    for (unsigned int i = 0; i < all_assys.size(); i++) {
+      std::cout << "Assy " << i << " file: "; 
+      std::cin >> filename;
+      files.push_back(std::string(filename));
+    }
+    std::cout << "Background assembly (y/n)?" << std::endl;
+    std::cin >> filename;
+    if (filename[0] == 'y' || filename[0] == 'Y') {
+      std::cin >> filename;
+      files.push_back(std::string(filename));
+      back_mesh = true;
+    }
+    else
+      back_mesh = false;
+
+    std::cout << "New global ids (y/n)?" << std::endl;
+    std::cin >> filename;
+    if (filename[0] == 'y' || filename[0] == 'Y') {
+      std::cin >> filename;
+      global_ids = true;
+    }
+    else
+      global_ids = false;
+  }
+
+  char filename[1024];
+  std::cout << "Output file: " << std::endl;
+  std::cin >> filename;
+  outfile = filename;
+
+  return iBase_SUCCESS;
+}
+
 
 
