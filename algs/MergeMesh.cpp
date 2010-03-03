@@ -32,7 +32,7 @@ int MergeMesh::merge_entities(iBase_EntityHandle *elems,
 int MergeMesh::perform_merge(iBase_TagHandle merge_tag) 
 {
 #ifdef MOAB
-    // put into a range
+  // put into a range
   return perform_merge((MBTag) merge_tag);
 #else
   return iBase_NOT_SUPPORTED;
@@ -47,13 +47,13 @@ MBErrorCode MergeMesh::merge_entities(MBRange &elems,
                                       const int update_sets,
                                       MBTag merge_tag) 
 {
-    // get the skin of the entities
+  // get the skin of the entities
   MBSkinner skinner(mbImpl);
   MBRange skin_range;
   MBErrorCode result = skinner.find_skin(elems, 0, skin_range);
   if (MB_SUCCESS != result) return result;
 
-    // create a tag to mark merged-to entity; reuse tree_root
+  // create a tag to mark merged-to entity; reuse tree_root
   MBEntityHandle tree_root = 0;
   if (0 == merge_tag) {
     result = mbImpl->tag_create("__merge_tag", sizeof(MBEntityHandle), 
@@ -63,16 +63,16 @@ MBErrorCode MergeMesh::merge_entities(MBRange &elems,
   }
   else mbMergeTag = merge_tag;
   
-    // build a kd tree with the vertices
+  // build a kd tree with the vertices
   MBAdaptiveKDTree kd(mbImpl, true);
   result = kd.build_tree(skin_range, tree_root);
   if (MB_SUCCESS != result) return result;
 
-    // find matching vertices, mark them
+  // find matching vertices, mark them
   result = find_merged_to(tree_root, mbMergeTag);
   if (MB_SUCCESS != result) return result;
   
-    // merge them if requested
+  // merge them if requested
   if (do_merge) {
     result = perform_merge(mbMergeTag);
     if (MB_SUCCESS != result) return result;
@@ -109,13 +109,14 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
   MBErrorCode result = tree.get_tree_iterator(tree_root, iter);
   if (MB_SUCCESS != result) return result;
   
-    // evaluate vertices in this leaf
+  // evaluate vertices in this leaf
   MBRange leaf_range, leaf_range2, leaves_checked;
   std::vector<double> coords;
   std::vector<MBEntityHandle> merge_tag_val, leaves_out;
 
   while (result != MB_ENTITY_NOT_FOUND) {
     leaves_checked.insert(iter.handle());
+    leaf_range.clear();
     result = mbImpl->get_entities_by_handle(iter.handle(), leaf_range);
     if (MB_SUCCESS != result) return result;
     coords.resize(3*leaf_range.size());
@@ -134,7 +135,7 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
       MBCartVect from(&coords[3*i]);
       inleaf_merged = false;
 
-        // check close-by leaves too
+      // check close-by leaves too
       leaves_out.clear();
       result = tree.leaves_within_distance(tree_root, from.array(), mergeTol,
                                            leaves_out);
@@ -156,10 +157,10 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
         outleaf_merged = false;
       }
 
-        // check other verts in this leaf
+      // check other verts in this leaf
       for (unsigned int j = i+1; j < merge_tag_val.size(); j++) {
         MBEntityHandle to_ent = j >= lr_size ? leaf_range2[j-lr_size] : 
-            leaf_range[j];
+	  leaf_range[j];
         
         if (*rit == to_ent) continue;
         
@@ -172,16 +173,20 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
 
           deadEnts.insert(to_ent);
         }
-	if (inleaf_merged) {
-	  result = mbImpl->tag_set_data(merge_tag, leaf_range, &merge_tag_val[0]);
-	  if (MB_SUCCESS != result) return result;
-	}
-	if (outleaf_merged) {
-	  result = mbImpl->tag_set_data(merge_tag, leaf_range2, &merge_tag_val[leaf_range.size()]);
-        if (MB_SUCCESS != result) return result;
-	}
+
       }
+      if (outleaf_merged) {
+	result = mbImpl->tag_set_data(merge_tag, leaf_range2, &merge_tag_val[leaf_range.size()]);
+        if (MB_SUCCESS != result) return result;
+	outleaf_merged = false;
+      }
+      if (inleaf_merged) {
+	result = mbImpl->tag_set_data(merge_tag, leaf_range, &merge_tag_val[0]);
+	if (MB_SUCCESS != result) return result;
+      }
+
     }
+ 
     result = iter.step();
   }
   return MB_SUCCESS;
