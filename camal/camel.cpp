@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <string.h>
 
-const bool debug = true;
+const bool debug = false;
 
 CMEL::CMEL( iGeom_Instance geom, 
             iMesh_Instance mesh, 

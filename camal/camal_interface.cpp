@@ -12,16 +12,25 @@
 #include "camal_interface.hpp"
 #include "camel.hpp"
 #include "CAMALGeomEval.hpp"
+#include "CAMALSizeEval.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <assert.h>
 #include <algorithm>
+#include <math.h>
 
-#include "CMLTriMesher.hpp"
-#include "CMLTetMesher.hpp"
-#include "CMLGeomEval.hpp"
+#if CAMAL_VERSION > 500
+  #include "CMLDefines.h"
+  #include "CMLTriAdvance.hpp"
+  #include "CMLTriDelaunay.hpp"
+  #include "CMLTetMesher.hpp"
+#else
+  #include "CMLTriMesher.hpp"
+  #include "CMLTetMesher.hpp"
+#endif
 
-const bool debug = true;
+const bool debug = false;
 
 bool CAMAL_bdy_loops_coords(CMEL *cmel,
                             iBase_EntityHandle gentity,
@@ -187,7 +196,7 @@ bool CAMAL_mesh_entity(CMEL *cmel,
   std::vector<int> connect;
   bool success;
   int new_points;
-  
+
   CAMALGeomEval geom_eval(cmel->geomIface, gentity);
   geom_eval.set_mesh_size(mesh_size);
   
@@ -213,10 +222,37 @@ bool CAMAL_mesh_entity(CMEL *cmel,
       return success;
     }
 
+    // set boundary mesh size
+    int n_bdy_verts = bdy_verts.size();
+    if (n_bdy_verts != bdy_coords.size()/3) {
+      std::cerr << "# of boundary vertices are not matched." << std::endl;
+      return false;
+    }
+
+
+    if (mesh_size < 0.) {
+      double tot_length = 0.;
+      for (unsigned int i = 0; i < n_bdy_verts; i++) {
+	tot_length += sqrt((bdy_coords[3*i] - bdy_coords[3*((i + 1)%n_bdy_verts)])*
+			   (bdy_coords[3*i] - bdy_coords[3*((i + 1)%n_bdy_verts)]) +
+			   (bdy_coords[3*i + 1] - bdy_coords[3*((i + 1)%n_bdy_verts) + 1])*
+			   (bdy_coords[3*i + 1] - bdy_coords[3*((i + 1)%n_bdy_verts) + 1]) +
+			   (bdy_coords[3*i + 2] - bdy_coords[3*((i + 1)%n_bdy_verts) + 2])*
+			   (bdy_coords[3*i + 2] - bdy_coords[3*((i + 1)%n_bdy_verts) + 2]));
+      }
+      mesh_size = tot_length/n_bdy_verts;
+      geom_eval.set_mesh_size(mesh_size);
+    }
+
+#if CAMAL_VERSION > 500
+    CAMALSizeEval size_eval(mesh_size);
+#endif
+
       // pass to CAMAL
     if (debug) {
-      std::cout << "Surface " << cmel->get_gentity_id(gentity) 
-                << " boundary mesh: " << std::endl;
+      std::cout << "Surface " << cmel->get_gentity_id(gentity)
+		<< ", mesh_size = " << mesh_size
+                << ", boundary mesh: " << std::endl;
       std::cout << bdy_coords.size()/3 << "  " << loop_sizes.size() << std::endl;
       for (unsigned int i = 0; i < bdy_coords.size()/3; i++)
         std::cout << bdy_coords[3*i] << "  " 
@@ -232,9 +268,26 @@ bool CAMAL_mesh_entity(CMEL *cmel,
            vit != loops.end(); vit++)
         std::cout << *vit << std::endl;
       
+      int err;
+      iBase_EntitySetHandle outset;
+      std::string outfile;
+      std::stringstream ss;
+      ss << "boundary";
+      ss << mesh_intervals;
+      ss >> outfile;
+      outfile += ".vtk";
+      iMesh_createEntSet(cmel->meshIface, false, &outset, &err);
+      iMesh_addEntArrToSet(cmel->meshIface, &bdy_verts[0], bdy_verts.size(), outset, &err);
+      iMesh_save(cmel->meshIface, outset, outfile.c_str(), 0,
+		 &err, outfile.length(), 0);
     }
       
+#if CAMAL_VERSION > 500
+    CMLTriAdvance tri_mesher(&geom_eval);
+#else
     CMLTriMesher tri_mesher(&geom_eval);
+#endif
+
     success = tri_mesher.set_boundary_mesh(bdy_coords.size()/3, &bdy_coords[0],
                                            (int)loop_sizes.size(), 
                                            &loop_sizes[0], &loops[0]);
@@ -242,7 +295,11 @@ bool CAMAL_mesh_entity(CMEL *cmel,
       std::cerr << "Failed setting boundary mesh" << std::endl;
       return success;
     }
-  
+
+#if CAMAL_VERSION > 500 
+    tri_mesher.set_sizing_function(CML::LINEAR_SIZING);
+#endif
+
       // generate the mesh
     int num_tris;
     success = tri_mesher.generate_mesh(new_points, num_tris);
@@ -251,10 +308,8 @@ bool CAMAL_mesh_entity(CMEL *cmel,
       return success;
     }
     
-    if (debug) {
-      std::cout << "Meshed surface " << cmel->get_gentity_id(gentity) << " with "
-                << new_points << " new vertices and " << num_tris << " triangles." << std::endl;
-    }
+    std::cout << "Meshed surface " << cmel->get_gentity_id(gentity) << " with "
+	      << new_points << " new vertices and " << num_tris << " triangles." << std::endl;
 
       // get the generated mesh
     bdy_coords.resize(3*(bdy_verts.size() + new_points));
@@ -295,7 +350,7 @@ bool CAMAL_mesh_entity(CMEL *cmel,
     
     CMLTetMesher tet_mesher;
     success = tet_mesher.set_boundary_mesh(bdy_coords.size()/3, &bdy_coords[0],
-                                           bdy_conn.size()/3, &bdy_conn[0]);
+					   bdy_conn.size()/3, &bdy_conn[0]);
     if (!success) {
       std::cerr << "Failed setting boundary mesh" << std::endl;
       return success;
@@ -308,8 +363,8 @@ bool CAMAL_mesh_entity(CMEL *cmel,
       std::cerr << "Failed generating mesh" << std::endl;
       return success;
     }
-
-      // get the generated mesh
+    
+     // get the generated mesh
     bdy_coords.resize(3*(bdy_verts.size() + new_points));
     connect.resize(4*num_tets);
     success = tet_mesher.get_mesh(new_points, &bdy_coords[0], num_tets, &connect[0]);

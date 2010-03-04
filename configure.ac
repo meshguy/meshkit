@@ -235,8 +235,7 @@ CAMAL_LIBS=
 # knowing the version.
 # NOTE: This is a space-separated list.  Other supported 
 #       versions may be appended.
-CAMAL_VERSIONS="330"
-
+CAMAL_VERSIONS="510 330 310"
 
 if test "xyes" != "x$HAVE_IREL"; then
   case "x$CAMAL_VAL" in
@@ -256,6 +255,7 @@ if test "xno" = "x$CAMAL_VAL"; then
   HAVE_CAMAL=no
   HAVE_CAMAL_PAVER=no
   HAVE_CAMAL_TRIADV=no
+  HAVE_CAMAL_TRIDELAUNAY=no
   HAVE_CAMAL_SWEEP=no
   HAVE_CAMAL_TET=no
 else
@@ -312,13 +312,10 @@ else
   CPPFLAGS="$CPPFLAGS $CAMAL_CPPFLAGS"
   AC_LANG_PUSH([C++])
   
-  AC_CHECK_HEADER( [CMLTriMesher.hpp],[HAVE_CAMAL_TRIADV=yes], [HAVE_CAMAL_TRIADV=no] )
-  AC_CHECK_HEADER( [CMLPaver.hpp],    [HAVE_CAMAL_PAVER=yes],  [HAVE_CAMAL_PAVER=no] )
-  AC_CHECK_HEADER( [CMLSweeper.hpp],  [HAVE_CAMAL_SWEEP=yes],  [HAVE_CAMAL_SWEEP=no] )
-  AC_CHECK_HEADER( [CMLTetMesher.hpp],[HAVE_CAMAL_TET=yes],    [HAVE_CAMAL_TET=no] )
-  AC_CHECK_HEADER( [CMLGeomEval.hpp], [HAVE_CAMAL=yes],        [HAVE_CAMAL=no] )
+  
   
   for ver in $CAMAL_VERSIONS; do
+    AC_CHECK_LIB( [CMLSizer], [main], [CAMAL_VERSION=$ver; break;] )
     AC_CHECK_LIB( [CMLShr$ver], [main], [CAMAL_VERSION=$ver; break;] )
   done
   if test "x$CAMAL_VERSION" = "x"; then
@@ -328,11 +325,34 @@ else
     HAVE_CAMAL_SWEEP=no
     HAVE_CAMAL_TET=no
   else
-    CAMAL_LIBS="-lCMLShr$CAMAL_VERSION -lCMLUtl$CAMAL_VERSION -lCMLShr$CAMAL_VERSION"
-    AC_CHECK_LIB( [CMLPave$CAMAL_VERSION],  [main], [CAMAL_LIBS="-lCMLPave$CAMAL_VERSION  $CAMAL_LIBS"], [HAVE_CAMAL_PAVER=no],  [$CAMAL_LIBS] )
-    AC_CHECK_LIB( [CMLTri$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTri$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TRIADV=no], [$CAMAL_LIBS] )
-    AC_CHECK_LIB( [CMLSweep$CAMAL_VERSION], [main], [CAMAL_LIBS="-lCMLSweep$CAMAL_VERSION $CAMAL_LIBS"], [HAVE_CAMAL_SWEEP=no],  [$CAMAL_LIBS] )
-    AC_CHECK_LIB( [CMLTet$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTet$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TET=no],    [$CAMAL_LIBS] )
+    if test "x$CAMAL_VERSION" = "x510"; then
+      AC_CHECK_HEADER( [CMLTriAdvance.hpp],[HAVE_CAMAL_TRIADV=yes], [HAVE_CAMAL_TRIADV=no] )
+      AC_CHECK_HEADER( [CMLTriDelaunay.hpp],[HAVE_CAMAL_TRIDEL=yes], [HAVE_CAMAL_TRIDEL=no] )
+      AC_CHECK_HEADER( [CMLPaver.hpp],    [HAVE_CAMAL_PAVER=yes],  [HAVE_CAMAL_PAVER=no] )
+      AC_CHECK_HEADER( [CMLSweeper.hpp],  [HAVE_CAMAL_SWEEP=yes],  [HAVE_CAMAL_SWEEP=no] )
+      AC_CHECK_HEADER( [CMLTetMesher.hpp],[HAVE_CAMAL_TET=yes],    [HAVE_CAMAL_TET=no] )
+      AC_CHECK_HEADER( [CMLSurfEval.hpp], [HAVE_CAMAL=yes],        [HAVE_CAMAL=no] )
+
+      CAMAL_LIBS="-lCMLSizer"
+      AC_CHECK_LIB( [CMLPave],   [main], [CAMAL_LIBS="-lCMLPave $CAMAL_LIBS"], [HAVE_CAMAL_PAVER=no],  [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLTri],    [main], [CAMAL_LIBS="-lCMLTri $CAMAL_LIBS"], [HAVE_CAMAL_TRIADV=no], [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLDelTri], [main], [CAMAL_LIBS="-lCMLDelTri $CAMAL_LIBS"], [HAVE_CAMAL_TRIDEL=no], [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLSweep],  [main], [CAMAL_LIBS="-lCMLSweep $CAMAL_LIBS"], [HAVE_CAMAL_SWEEP=no],  [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLTet],    [main], [CAMAL_LIBS="-lCMLTet $CAMAL_LIBS"], [HAVE_CAMAL_TET=no],    [$CAMAL_LIBS] )
+    else
+      AC_CHECK_HEADER( [CMLTriMesher.hpp],[HAVE_CAMAL_TRIADV=yes], [HAVE_CAMAL_TRIADV=no] )
+      AC_CHECK_HEADER( [CMLPaver.hpp],    [HAVE_CAMAL_PAVER=yes],  [HAVE_CAMAL_PAVER=no] )
+      AC_CHECK_HEADER( [CMLSweeper.hpp],  [HAVE_CAMAL_SWEEP=yes],  [HAVE_CAMAL_SWEEP=no] )
+      AC_CHECK_HEADER( [CMLTetMesher.hpp],[HAVE_CAMAL_TET=yes],    [HAVE_CAMAL_TET=no] )
+      AC_CHECK_HEADER( [CMLGeomEval.hpp], [HAVE_CAMAL=yes],        [HAVE_CAMAL=no] )
+
+      CAMAL_LIBS="-lCMLShr$CAMAL_VERSION -lCMLUtl$CAMAL_VERSION -lCMLShr$CAMAL_VERSION"
+      AC_CHECK_LIB( [CMLPave$CAMAL_VERSION],  [main], [CAMAL_LIBS="-lCMLPave$CAMAL_VERSION  $CAMAL_LIBS"], [HAVE_CAMAL_PAVER=no],  [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLTri$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTri$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TRIADV=no], [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLSweep$CAMAL_VERSION], [main], [CAMAL_LIBS="-lCMLSweep$CAMAL_VERSION $CAMAL_LIBS"], [HAVE_CAMAL_SWEEP=no],  [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLTet$CAMAL_VERSION],   [main], [CAMAL_LIBS="-lCMLTet$CAMAL_VERSION   $CAMAL_LIBS"], [HAVE_CAMAL_TET=no],    [$CAMAL_LIBS] )
+    fi
+    
       # CMLTet requires libg2c of built with g77: check if it exists on this system
     AC_CHECK_LIB( [g2c], [s_cmp], [CAMAL_LIBS="$CAMAL_LIBS -lg2c"] )
     
@@ -357,12 +377,14 @@ AC_SUBST([CAMAL_LIBS])
 
 AC_SUBST([HAVE_CAMAL])
 AC_SUBST([HAVE_CAMAL_TRIADV])
+AC_SUBST([HAVE_CAMAL_TRIDEL])
 AC_SUBST([HAVE_CAMAL_PAVER])
 AC_SUBST([HAVE_CAMAL_SWEEP])
 AC_SUBST([HAVE_CAMAL_TET])
 
 AM_CONDITIONAL( HAVE_CAMAL,        [test $HAVE_CAMAL        = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_TRIADV, [test $HAVE_CAMAL_TRIADV = yes] )
+AM_CONDITIONAL( HAVE_CAMAL_TRIDEL, [test $HAVE_CAMAL_TRIDEL = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_PAVER,  [test $HAVE_CAMAL_PAVER  = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_SWEEP,  [test $HAVE_CAMAL_SWEEP  = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_TET,    [test $HAVE_CAMAL_TET    = yes] )
@@ -477,9 +499,9 @@ AC_CONFIG_FILES([Makefile
                  algs/Makefile
                  xforms/Makefile
                  utils/Makefile
+		 camal/Makefile
 		 plibs/Makefile
                  ])
-                 #camal/Makefile
 
 AC_OUTPUT
 
