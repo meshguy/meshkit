@@ -16,6 +16,10 @@ if ENABLE_algs
   SUBDIRS += algs
   INCLUDES += -I$(top_srcdir)/algs
 endif
+if ENABLE_rgg
+  SUBDIRS += rgg
+  INCLUDES += -I$(top_srcdir)/rgg
+endif
 if ENABLE_xforms
   SUBDIRS += xforms
   INCLUDES += -I$(top_srcdir)/xforms

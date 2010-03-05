@@ -205,6 +205,7 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
                          [ENABLE_TOOLS=$enableval],[ENABLE_TOOLS=] )
   # Individual tools
 MK_OPTIONAL_TOOL([algs],    [yes])
+MK_OPTIONAL_TOOL([rgg],    [yes])
 MK_OPTIONAL_TOOL([xforms],    [yes])
 MK_OPTIONAL_TOOL([utils],    [yes])
 
@@ -497,6 +498,7 @@ AC_CONFIG_FILES([Makefile
                  meshkit.make 
                  testdir.h
                  algs/Makefile
+		 rgg/Makefile
                  xforms/Makefile
                  utils/Makefile
 		 camal/Makefile
