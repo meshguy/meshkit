@@ -1,0 +1,73 @@
+! ###############################################################################
+! Square PWR Assembly Definition with CellMaterials (Prism) around Pins
+! ###############################################################################
+!
+GeometryType Cartesian  
+!
+Materials 17 PWR_FC_F_01 M1  PWR_FC_C_01 M2  PWR_FC_M_01 M3 &
+PWR_GT_F_01 M4  PWR_GT_C_01 M5  PWR_GT_M_01 M6 &
+PWR_XFC_01 M7  PWR_XFC_C_01 M8  PWR_XFC_M_01 M9 &
+PWR_CFC_01 M10  PWR_CFC_C_01 M11  PWR_CFC_M_01 M12 &
+PWR_CFC_01 M13  PWR_CFC_C_01 M14  PWR_CFC_M_01 M15 &
+Mat_Block G1 Mat_Coolant C1
+!
+Dimensions 2 0.0 0.0 0 124.0 23.0 23.0 23.5 23.5  G1 C1
+!
+Pincells 5 
+!
+! Standard fuel cell (1)
+PWR_FC_01 FC 3
+Pitch  1.26472 1.26472 124.0 
+Cylinder 2 0.0 0.0  0.0 124.0   0.5 0.6  M1 M2                                                                                                
+CellMaterial  0.0 124.0 M3   
+!
+! Guide Tube pin-cell (2)
+PWR_GT_01 GT 3
+Pitch  1.26472 1.26472 124.0
+Cylinder 2 0.0 0.0  0.0 124.0   0.5 0.6  M1 M2
+CellMaterial  0.0 124.0 M3
+!
+! Left/right edge PWR cell (3)
+PWR_XFC_01 XFC 3
+Pitch  1.31472 1.26472 124.0
+Cylinder 2 0.0 0.0  0.0 124.0   0.5 0.6  M1 M2
+CellMaterial  0.0 124.0 M3
+!
+! Top/bottom edge PWR cell (4)
+PWR_YFC_01 YFC 3
+Pitch  1.26472 1.31472 124.0
+Cylinder 2 0.0 0.0  0.0 124.0   0.5 0.6  M1 M2
+CellMaterial  0.0 124.0 M3
+!
+! Corner edge PWR cell (5)
+PWR_CFC_01 CFC 3
+Pitch  1.31472 1.31472 124.0
+Cylinder 2 0.0 0.0  0.0 124.0   0.5 0.6  M1 M2
+CellMaterial  0.0 124.0 M3
+!
+Assembly 17 17
+! 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17
+CFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC CFC    !  1
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    !  2
+XFC  FC  FC  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  FC  FC XFC    !  3
+XFC  FC  FC  gt  FC  FC  FC  FC  FC  FC  FC  FC  FC  gt  FC  FC XFC    !  4
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    !  5
+XFC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC XFC    !  6
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    !  7
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    !  8
+XFC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC XFC    !  9
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    ! 10
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    ! 11
+XFC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  FC  FC XFC    ! 12
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    ! 13
+XFC  FC  FC  gt  FC  FC  FC  FC  FC  FC  FC  FC  FC  gt  FC  FC XFC    ! 14
+XFC  FC  FC  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  FC  FC XFC    ! 15
+XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    ! 16
+CFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC CFC    ! 17
+END     ! This is a must                  
+                                                                                         
+
+
+
+
+
