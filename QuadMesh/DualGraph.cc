@@ -31,7 +31,7 @@ int DualGraph::build(Mesh *m)
   Face *face;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    face = mesh->getFace(iface);
+    face = mesh->getFaceAt(iface);
     assert(face);
     face->setID(iface);
     dualvtx = face->getNewDualNode();
@@ -44,7 +44,7 @@ int DualGraph::build(Mesh *m)
   vector<FaceType> neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    face = mesh->getFace(iface);
+    face = mesh->getFaceAt(iface);
     int nc = face->getSize(0);
     for (int j = 0; j < nc; j++)
     {

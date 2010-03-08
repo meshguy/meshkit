@@ -122,7 +122,7 @@ public:
     removeMark = 0; // Default: Active< not removable.
     constrained = 0; // Default: No Contrainted
     boundarymark = 0; // Default: Internal entity
-    moab_entity_handle = 0; // Default: Handle not available.
+    moab_entity_handle = (iBase_EntityHandle)0; // Default: Handle not available.
   }
 
   void setVisitMark(bool r)
@@ -639,6 +639,12 @@ public:
   double getAspectRatio();
   double getArea()
   {
+     if( connect.size() == 3 ) {
+         return tri_area( connect[0]->getXYZCoords(),
+	                   connect[1]->getXYZCoords(),
+	                   connect[2]->getXYZCoords() );
+     }
+
      if( connect.size() == 4 ) {
          return quad_area( connect[0]->getXYZCoords(),
 	                   connect[1]->getXYZCoords(),
@@ -679,6 +685,7 @@ public:
     }
     hasdual = 0;
     meshname = "unknown";
+    boundary_status = 0;
   }
 
   ~Mesh()
@@ -711,7 +718,7 @@ public:
 
   int getNumOfComponents();
 
-  void readData(const string &f);
+  int readData(const string &f);
 
   bool getAdjTable(int i, int j) const
   {
@@ -737,6 +744,9 @@ public:
     return 0;
   }
 
+  bool setBoundaryStatus( bool v ) { boundary_status = v; }
+  bool getBoundaryStatus() const { return boundary_status; }
+
   bool isSimple();
   bool isConsistentlyOriented();
   void makeConsistentlyOriented();
@@ -755,8 +765,9 @@ public:
     addNode( vnodes[i] );
   }
 
-  NodeType getNode(size_t id) const
+  NodeType getNodeAt(size_t id) const
   {
+    assert( !nodes[id]->isRemoved() );
     assert(id >= 0 && id < nodes.size());
     return nodes[id];
   }
@@ -775,8 +786,10 @@ public:
     addFace( vfaces[i] );
   }
 
-  FaceType getFace(size_t id) const
+  FaceType getFaceAt(size_t id) const
   {
+    assert( !faces[id]->isRemoved() );
+    assert(id >= 0 && id < faces.size());
     return faces[id];
   }
 
@@ -784,12 +797,13 @@ public:
   // a la Lazy garbage collection.
   //
   void prune();
+  bool isPruned() const;
 
   // Renumber mesh entities starting from index = 0
   void enumerate(int etype);
 
   // Search the boundary of the mesh (nodes, edges, and faces).
-  void search_boundary();
+  int search_boundary();
 
   int build_relations(int src, int dst)
   {
@@ -891,6 +905,11 @@ public:
   // Check the Convexity..
 
   int check_convexity();
+
+  // Collect Quadlity Statistics
+
+  int get_quality_statistics( const string &s );
+
 private:
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Vertex *v);
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Face *v);
@@ -900,6 +919,7 @@ private:
   string meshname;
 
   bool hasdual;
+  bool boundary_status;
 
   NodeContainer nodes;
   EdgeContainer edges;
@@ -916,6 +936,9 @@ private:
 
   int setNodeWavefront();
   int setFaceWavefront();
+
+  int read_off_format_data( const string &s);
+  int read_triangle_format_data( const string &s);
 };
 
 inline Point3D make_vector( const Point3D &head, const Point3D &tail)
@@ -1005,13 +1028,12 @@ Mesh* readOffData(const string &s);
 Mesh *struct_tri_grid(int nx, int ny);
 Mesh *struct_quad_grid(int nx, int ny);
 
-void mesh_quality(Mesh *mesh);
-
 ////////////////////////////////////////////////////////////////////////////////
 // Mesh Optimization ...
 ////////////////////////////////////////////////////////////////////////////////
 
-void laplacian_smoothing(Mesh *mesh, int numIters);
+void laplacian_smoothing(Mesh *mesh, int numIters, int verbose = 0);
+void laplacian_smoothing(Mesh *mesh, vector<Vertex*> &q, int numIters, int verbose = 0);
 void laplacian_smoothing(iMesh_Instance imesh, int numIters);
 
 int mesh_shape_optimization(iMesh_Instance imesh );

@@ -245,14 +245,13 @@ int Mesh :: check_convexity()
 
    int itag;
    for( size_t i = 0; i < numfaces; i++) {
-        Face *face = getFace(i);
+        Face *face = getFaceAt(i);
 	itag = 0;
 	if( face->getSize(0) == 4 ) 
 	    itag = Face::is_convex_quad( face->getConnection(0)->getXYZCoords(),
 	                           face->getConnection(1)->getXYZCoords(),
 	                           face->getConnection(2)->getXYZCoords(),
 	                           face->getConnection(3)->getXYZCoords() );
-        cout << itag << " ";
         if( itag == 0) 
 	    face->setTag(1);
         else
@@ -322,6 +321,16 @@ vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
   if (v0faces.empty() || v1faces.empty())
   {
     cout << "Warning: Vertex-Faces relations are empty " << endl;
+  }
+
+  for( size_t i = 0; i < v0faces.size()-1; i++) {
+       assert( v0faces[i] < v0faces[i+1] );
+       assert( !v0faces[i]->isRemoved() );
+  }
+
+  for( size_t i = 0; i < v1faces.size()-1; i++) {
+       assert( v1faces[i] < v1faces[i+1] );
+       assert( !v1faces[i]->isRemoved() );
   }
 
   vector<FaceType> faceneighs;
@@ -407,6 +416,18 @@ void Mesh::prune()
   faces = livefaces;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+bool Mesh::isPruned() const 
+{
+   for( size_t i = 0; i < nodes.size(); i++) 
+        if( nodes[i]->isRemoved() ) return 0;
+
+   for( size_t i = 0; i < faces.size(); i++) 
+        if( faces[i]->isRemoved() ) return 0;
+
+   return 1;
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 void Mesh::enumerate(int etype)
@@ -664,7 +685,7 @@ int Mesh::build_relations02()
 
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = getFace(iface);
+    Face *face = getFaceAt(iface);
     assert(face);
     for (size_t j = 0; j < face->getSize(0); j++)
     {
@@ -690,7 +711,7 @@ int Mesh::build_relations00()
 
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = getFace(iface);
+    Face *face = getFaceAt(iface);
     assert(face);
     size_t nnodes = face->getSize(0);
     for (size_t j = 0; j < nnodes; j++)
@@ -716,7 +737,7 @@ void Mesh::clear_relations(int src, int dst)
   {
     for (size_t i = 0; i < numnodes; i++)
     {
-      Vertex *vtx = getNode(i);
+      Vertex *vtx = getNodeAt(i);
       vtx->clearRelations(0);
     }
     adjTable[0][0] = 0;
@@ -726,7 +747,7 @@ void Mesh::clear_relations(int src, int dst)
   {
     for (size_t i = 0; i < numnodes; i++)
     {
-      Vertex *vtx = getNode(i);
+      Vertex *vtx = getNodeAt(i);
       vtx->clearRelations(2);
     }
     adjTable[0][2] = 0;
@@ -735,17 +756,30 @@ void Mesh::clear_relations(int src, int dst)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Mesh::search_boundary()
+int Mesh::search_boundary()
 {
+  if( boundary_status == 1 ) return 1;
+
+  if( !isPruned() ) prune();
+
   int relexist = build_relations(0, 2);
 
-  size_t numfaces = getSize(2);
+  cout << " Searching Boundary " << endl;
 
+  size_t numnodes = getSize(0);
+  for (size_t inode = 0; inode < numnodes; inode++) 
+  {
+       Vertex *v = getNodeAt(inode);
+       v->setTag(0);
+  }
+
+  size_t numfaces = getSize(2);
   vector<FaceType> neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = getFace(iface);
+    Face *face = getFaceAt(iface);
     assert(face);
+    face->setTag(0);
     size_t nnodes = face->getSize(0);
     for (size_t j = 0; j < nnodes; j++)
     {
@@ -758,12 +792,20 @@ void Mesh::search_boundary()
         v1->setBoundaryMark(1);
         int bmark = max(1, face->getBoundaryMark());
         face->setBoundaryMark(bmark);
+        face->setTag(1);
+        v0->setTag(1);
+        v1->setTag(1);
       }
     }
   }
 
   if (!relexist)
     clear_relations(0, 2);
+
+  boundary_status = 1;
+
+  return 0;
+
 }
 ///////////////////////////////////////////////////////////////////////////////
 Mesh::FaceContainer Mesh::filter(int facetype) const
@@ -804,7 +846,7 @@ bool Mesh::isSimple()
   vector<FaceType> neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = getFace(iface);
+    Face *face = getFaceAt(iface);
     assert(face);
     int nnodes = face->getSize(0);
     for (int j = 0; j < nnodes; j++)
@@ -837,7 +879,7 @@ bool Mesh::isConsistentlyOriented()
   vector<FaceType> neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = getFace(iface);
+    Face *face = getFaceAt(iface);
     assert(face);
     int nnodes = face->getSize(0);
     for (int j = 0; j < nnodes; j++)
@@ -889,12 +931,12 @@ void Mesh::makeConsistentlyOriented()
 
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    face = getFace(iface);
+    face = getFaceAt(iface);
     face->setID(iface);
     face->setVisitMark(0);
   }
 
-  face = getFace(0);
+  face = getFaceAt(0);
   faceQ.push_back(face);
 
   while (!faceQ.empty())
@@ -931,7 +973,7 @@ void Mesh::makeConsistentlyOriented()
 
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    face = getFace(iface);
+    face = getFaceAt(iface);
     if (!face->isVisited())
       cout << "Error: not visited : " << face->getID() << " "
           << face->isVisited() << endl;
@@ -954,7 +996,7 @@ int Mesh::getNumOfComponents()
 
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    face = getFace(iface);
+    face = getFaceAt(iface);
     face->setID(iface);
     face->setVisitMark(0);
   }
@@ -967,7 +1009,7 @@ int Mesh::getNumOfComponents()
     faceQ.clear();
     for (size_t iface = 0; iface < numfaces; iface++)
     {
-      face = getFace(iface);
+      face = getFaceAt(iface);
       if (!face->isVisited())
       {
         faceQ.push_back(face);
@@ -1005,7 +1047,7 @@ int Mesh::getNumOfComponents()
 
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    face = getFace(iface);
+    face = getFaceAt(iface);
     if (!face->isVisited())
       cout << "Error: not visited : " << face->getID() << " "
           << face->isVisited() << endl;
@@ -1051,16 +1093,16 @@ Mesh *struct_tri_grid(int nx, int ny)
       int n1 = n0 + 1;
       int n2 = n1 + nx;
       int n3 = n0 + nx;
-      connect[0] = trimesh->getNode(n0);
-      connect[1] = trimesh->getNode(n1);
-      connect[2] = trimesh->getNode(n2);
+      connect[0] = trimesh->getNodeAt(n0);
+      connect[1] = trimesh->getNodeAt(n1);
+      connect[2] = trimesh->getNodeAt(n2);
       newtri = new Face;
       newtri->setConnection(connect);
       trimesh->addFace(newtri);
 
-      connect[0] = trimesh->getNode(n0);
-      connect[1] = trimesh->getNode(n2);
-      connect[2] = trimesh->getNode(n3);
+      connect[0] = trimesh->getNodeAt(n0);
+      connect[1] = trimesh->getNodeAt(n2);
+      connect[2] = trimesh->getNodeAt(n3);
       newtri = new Face;
       newtri->setConnection(connect);
       trimesh->addFace(newtri);
@@ -1106,10 +1148,10 @@ Mesh *struct_quad_grid(int nx, int ny)
       int n1 = n0 + 1;
       int n2 = n1 + nx;
       int n3 = n0 + nx;
-      connect[0] = quadmesh->getNode(n0);
-      connect[1] = quadmesh->getNode(n1);
-      connect[2] = quadmesh->getNode(n2);
-      connect[3] = quadmesh->getNode(n3);
+      connect[0] = quadmesh->getNodeAt(n0);
+      connect[1] = quadmesh->getNodeAt(n1);
+      connect[2] = quadmesh->getNodeAt(n2);
+      connect[3] = quadmesh->getNodeAt(n3);
       newquad = new Face;
       newquad->setConnection(connect);
       quadmesh->addFace(newquad);
@@ -1168,7 +1210,7 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
   // Strip Starting from edge 0-1
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = getFace(i);
+    Face *face = getFaceAt(i);
     face->setVisitMark(0);
   }
 
@@ -1184,7 +1226,7 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
   // Strip Starting from edge 2-3
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = getFace(i);
+    Face *face = getFaceAt(i);
     face->setVisitMark(0);
   }
 
@@ -1200,7 +1242,7 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
   // Strip Starting from edge 1-2
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = getFace(i);
+    Face *face = getFaceAt(i);
     face->setVisitMark(0);
   }
 
@@ -1216,7 +1258,7 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
   // Strip Starting from edge 0-3
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = getFace(i);
+    Face *face = getFaceAt(i);
     face->setVisitMark(0);
   }
 
@@ -1247,7 +1289,7 @@ vector<Face*> Mesh::get_bound_faces(int bound_what)
   {
     for (size_t i = 0; i < numfaces; i++)
     {
-      Face *face = getFace(i);
+      Face *face = getFaceAt(i);
       if (face->hasBoundaryNode())
         bfaces.insert(face);
     }
@@ -1257,7 +1299,7 @@ vector<Face*> Mesh::get_bound_faces(int bound_what)
   {
     for (size_t i = 0; i < numfaces; i++)
     {
-      Face *face = getFace(i);
+      Face *face = getFaceAt(i);
       if (face->hasBoundaryEdge())
         bfaces.insert(face);
     }
@@ -1288,7 +1330,7 @@ void Mesh::set_strip_markers()
   size_t numfaces = getSize(2);
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = getFace(i);
+    Face *face = getFaceAt(i);
     face->setTag(0);
   }
 
@@ -1331,11 +1373,13 @@ iBase_EntityHandle Mesh::get_MOAB_Handle(iMesh_Instance imesh, Vertex *vertex)
 ///////////////////////////////////////////////////////////////////////////////
 iBase_EntityHandle Mesh::get_MOAB_Handle(iMesh_Instance imesh, Face *face)
 {
-  iBase_EntityHandle newHandle = face->get_MOAB_Handle();
-  if (newHandle)
-    return newHandle;
-
   int status, err;
+
+  // Not a good way. Shouldn't delete it if the connectivity is unchanged.
+
+  iBase_EntityHandle newHandle = face->get_MOAB_Handle();
+  if (newHandle) 
+      iMesh_deleteEnt(imesh, newHandle, &err);
 
   vector<iBase_EntityHandle> connect;
 
@@ -1391,25 +1435,33 @@ int Mesh::toMOAB(iMesh_Instance &imesh, iBase_EntitySetHandle entitySet)
   int namelen = strlen(tagname);
 
   iBase_TagHandle idtag;
-  iMesh_createTag(imesh, tagname, 1, iBase_INTEGER, &idtag, &result, namelen);
+
+  iMesh_getTagHandle(imesh, tagname, &idtag, &err, namelen);
+
+  if( err ) 
+      iMesh_createTag(imesh, tagname, 1, iBase_INTEGER, &idtag, &err, namelen);
+
+  assert( !err );
 
   iBase_EntityHandle newHandle;
 
   size_t numnodes = getSize(0);
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *v = getNode(i);
+    Vertex *v = getNodeAt(i);
     newHandle = get_MOAB_Handle(imesh, v);
+    assert( newHandle );
     if (entitySet)
       iMesh_addEntToSet(imesh, newHandle, entitySet, &err);
     int bmark = v->getBoundaryMark();
     iMesh_setIntData(imesh, newHandle, idtag, bmark, &err);
+    assert( !err );
   }
 
   size_t numfaces = getSize(2);
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *f = getFace(i);
+    Face *f = getFaceAt(i);
     newHandle = get_MOAB_Handle(imesh, f);
     if (entitySet)
       iMesh_addEntToSet(imesh, newHandle, entitySet, &err);
@@ -1532,7 +1584,7 @@ vector<int> Mesh::getVertexFaceDegrees()
   vector<Face*> neighs;
   for (int i = 0; i < numnodes; i++)
   {
-    Vertex *v = getNode(i);
+    Vertex *v = getNodeAt(i);
     neighs = v->getRelations2();
     degree[i] = neighs.size();
   }
@@ -1562,7 +1614,6 @@ vector<int> Mesh::getVertexFaceDegrees()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
 int Mesh::setNodeWavefront()
 {
   int relexist = build_relations(0, 0);
@@ -1571,7 +1622,7 @@ int Mesh::setNodeWavefront()
 
   for (size_t i = 0; i < numNodes; i++)
   {
-    Vertex *v = getNode(i);
+    Vertex *v = getNodeAt(i);
     v->setLayerID(-1);
     v->setVisitMark(0);
   }
@@ -1579,7 +1630,7 @@ int Mesh::setNodeWavefront()
   deque<Vertex*> vertexQ;
   for (size_t i = 0; i < numNodes; i++)
   {
-    Vertex *v = getNode(i);
+    Vertex *v = getNodeAt(i);
     if (v->isBoundary())
     {
       v->setLayerID(0);
@@ -1611,7 +1662,7 @@ int Mesh::setNodeWavefront()
 
   for (size_t i = 0; i < numNodes; i++)
   {
-    Vertex *v = getNode(i);
+    Vertex *v = getNodeAt(i);
     assert(v->isVisited());
   }
 
@@ -1624,27 +1675,43 @@ int Mesh::setNodeWavefront()
 int Mesh::setFaceWavefront()
 {
   int relexist = build_relations(0, 2);
+
+  cout << " Wavefront relation " << relexist << endl;
+
   search_boundary();
 
   size_t numFaces = getSize(2);
 
   for (size_t i = 0; i < numFaces; i++)
   {
-    Face *f = getFace(i);
+    Face *f = getFaceAt(i);
     f->setLayerID(0);
     f->setVisitMark(0);
   }
 
+
   deque<Face*> faceQ, nextQ;
   for (size_t i = 0; i < numFaces; i++)
   {
-    Face *f = getFace(i);
+    Face *f = getFaceAt(i);
     if (f->hasBoundaryEdge())
     {
       f->setLayerID(1);
       faceQ.push_back(f);
-    }
+      /*
+      if( f->getTag() == 0 ) {
+           cout << f->getConnection(0)->isBoundary() << " "
+           << f->getConnection(1)->isBoundary() << " "
+           << f->getConnection(2)->isBoundary() << " "
+           << f->getConnection(3)->isBoundary() << endl;
+          f->setTag(5);
+          f->setTag(1);
+      }
+      */
+    } else
+      assert( f->getTag() == 0 );
   }
+
 
   vector<Face*> neighs;
   int layerid = 1;
@@ -1676,9 +1743,11 @@ int Mesh::setFaceWavefront()
 
   for (size_t i = 0; i < numFaces; i++)
   {
-    Face *f = getFace(i);
+    Face *f = getFaceAt(i);
     assert(f->isVisited());
     int itag = f->getLayerID();
+    cout << itag << endl;
+//  if( itag > 1) itag = 0;
     f->setTag(itag);
   }
 
@@ -1712,7 +1781,7 @@ int Mesh::check_unused_objects()
   size_t numfaces = getSize(2);
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *f = getFace(i);
+    Face *f = getFaceAt(i);
     if (!f->isRemoved())
     {
       for (int j = 0; j < f->getSize(0); j++)
@@ -1739,7 +1808,7 @@ double Mesh :: getSurfaceArea()
    double minarea = MAXDOUBLE;
    double maxarea = 0.0;
    for( size_t i = 0; i < numfaces; i++) {
-       Face *face = getFace(i);
+       Face *face = getFaceAt(i);
        facearea   = face->getArea();
        sumArea    += facearea;
        if( facearea < minarea) minarea = facearea;
@@ -1771,7 +1840,7 @@ vector<float> Mesh :: getAspectRatio( bool sorted )
  quality.resize(numfaces );
 
  for( size_t i = 0; i < numfaces; i++) {
-      Face *face = getFace(i);
+      Face *face = getFaceAt(i);
       quality[i] = face->getAspectRatio();
  }
 
@@ -1808,6 +1877,65 @@ void Mesh :: clearAll()
     for( size_t i = 0; i < faces.size(); i++)
     delete faces[i];
     faces.clear();
+}
+///////////////////////////////////////////////////////////////////////////////
+int Mesh::get_quality_statistics( const string &fname)
+{
+  ofstream ofile(fname.c_str(), ios::out);
+  if( ofile.fail() ) {
+      cout << "Warning: Cann't open file " << fname << endl;
+      return 1;
+  }
+
+  // Collect Element Area informtion
+  size_t numfaces = getSize(2);
+  vector<double>  quality(numfaces);
+
+  double minval, maxval, stddev, avgval, medianval;
+
+  for( size_t i = 0; i < numfaces; i++) {
+       Face *face = getFaceAt(i);
+       quality[i] = face->getArea();
+  }
+
+  sort( quality.begin(), quality.end() );
+  minval = quality.front();
+  maxval = quality.back();
+
+  ofile <<  "# ********************************************* " << endl;
+  ofile <<  "# Measure            Element Area        " << endl;
+  ofile <<  "# Num of Elements  " <<   numfaces   << endl;
+  ofile <<  "# Min              " <<   minval     << endl;
+  ofile <<  "# Max              " <<   maxval     << endl;
+  ofile <<  "# Average          " <<   avgval     << endl;
+  ofile <<  "# MeanVal          " <<   medianval  << endl;
+  ofile <<  "# StdDev           " <<   stddev     << endl;
+  for( size_t i = 0; i < numfaces; i++)
+       ofile << quality[i] << endl;
+  ofile <<  " ********************************************* " << endl;
+
+
+  for( size_t i = 0; i < numfaces; i++) {
+       Face *face = getFaceAt(i);
+       quality[i] = face->getAspectRatio();
+  }
+
+  sort( quality.begin(), quality.end() );
+  minval = quality.front();
+  maxval = quality.back();
+
+  ofile <<  "# Measure            Aspect Ratio      " << endl;
+  ofile <<  "# Num of Elements  " <<   numfaces   << endl;
+  ofile <<  "# Min              " <<   minval     << endl;
+  ofile <<  "# Max              " <<   maxval     << endl;
+  ofile <<  "# Average          " <<   avgval     << endl;
+  ofile <<  "# MeanVal          " <<   medianval  << endl;
+  ofile <<  "# StdDev           " <<   stddev     << endl;
+
+  for( size_t i = 0; i < numfaces; i++)
+       ofile << quality[i] << endl;
+  ofile <<  " ********************************************* " << endl;
+
 }
 ///////////////////////////////////////////////////////////////////////////////
 

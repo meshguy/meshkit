@@ -23,7 +23,7 @@ void skip_comments(FILE *f)
 }
 //##############################################################################
 
-Mesh* Jaal::readOffData( const string &fname)
+int Mesh ::read_off_format_data(const string &fname)
 {
   ifstream infile( fname.c_str(), ios::in);
   if( infile.fail() ) {
@@ -31,8 +31,6 @@ Mesh* Jaal::readOffData( const string &fname)
       return NULL;
   }
 
-  Mesh *mesh = new Mesh;
- 
   //  The codelet is borrowed from TriMesh Software
   vector<int> facevtx;
   double  x, y, z;
@@ -44,7 +42,7 @@ Mesh* Jaal::readOffData( const string &fname)
   infile >> str;
   assert( str == "OFF");
 
-  int  numNodes, numFaces, numEdges;
+  size_t  numNodes, numFaces, numEdges;
   infile >> numNodes >> numFaces >> numEdges;
 
   Point3D p3d;
@@ -55,10 +53,10 @@ Mesh* Jaal::readOffData( const string &fname)
        p3d[2] = z;
        vertex = Vertex::newObject();
        vertex->setXYZCoords(p3d);
-       mesh->addNode( vertex );
+       addNode( vertex );
   } 
 
-  for( int i = 0; i < numFaces; i++) 
+  for( size_t i = 0; i < numFaces; i++) 
   {
        infile >> numNodes;
 
@@ -70,27 +68,27 @@ Mesh* Jaal::readOffData( const string &fname)
        switch( numNodes )
        {
           case 3:
-              connect[0] = mesh->getNode(facevtx[0]);
-              connect[1] = mesh->getNode(facevtx[1]);
-              connect[2] = mesh->getNode(facevtx[2]);
+              connect[0] = getNodeAt(facevtx[0]);
+              connect[1] = getNodeAt(facevtx[1]);
+              connect[2] = getNodeAt(facevtx[2]);
               break;
           case 4:
-              connect[0] = mesh->getNode(facevtx[0]);
-              connect[1] = mesh->getNode(facevtx[1]);
-              connect[2] = mesh->getNode(facevtx[2]);
-              connect[3] = mesh->getNode(facevtx[3]);
+              connect[0] = getNodeAt(facevtx[0]);
+              connect[1] = getNodeAt(facevtx[1]);
+              connect[2] = getNodeAt(facevtx[2]);
+              connect[3] = getNodeAt(facevtx[3]);
               break;
           default:
               for( int j = 0; j < numNodes; j++) 
-                   connect[j] = mesh->getNode(facevtx[j]);
+                   connect[j] = getNodeAt(facevtx[j]);
               break; 
        }
        Face *face = new Face;
        face->setConnection( connect );
-       mesh->addFace(face);
+       addFace(face);
    }  
-
-   return mesh;
+   cout << " Reading Off file finished " << endl;
+   return 0;
 }
 
 //##############################################################################

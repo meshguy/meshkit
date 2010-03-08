@@ -46,8 +46,8 @@ int Tri2Quads::collapse_matched_triangles(Mesh *trimesh,
   {
     size_t f1 = matching[i].first;
     size_t f2 = matching[i].second;
-    tri1 = trimesh->getFace(f1);
-    tri2 = trimesh->getFace(f2);
+    tri1 = trimesh->getFaceAt(f1);
+    tri2 = trimesh->getFaceAt(f2);
     quad = Face::create_quad(tri1, tri2);
     outmesh->addFace(quad);
   }
@@ -58,8 +58,8 @@ int Tri2Quads::collapse_matched_triangles(Mesh *trimesh,
     {
       size_t f1 = matching[i].first;
       size_t f2 = matching[i].second;
-      tri1 = trimesh->getFace(f1);
-      tri2 = trimesh->getFace(f2);
+      tri1 = trimesh->getFaceAt(f1);
+      tri2 = trimesh->getFaceAt(f2);
       tri1->setRemoveMark(1);
       tri2->setRemoveMark(1);
     }
@@ -457,7 +457,7 @@ void Tri2Quads::percolateup()
 
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = trimesh->getFace(i);
+    Face *face = trimesh->getFaceAt(i);
     Vertex *u = face->getDualNode();
     assert(u);
     Vertex *v = u->getDualMate();
@@ -572,7 +572,7 @@ int Tri2Quads :: getQuadMesh( iMesh_Instance inmesh,
     size_t numnodes = tmesh->getSize(0);
     for (size_t i = 0; i < numnodes; i++)
     {
-      Vertex *v = tmesh->getNode(i);
+      Vertex *v = tmesh->getNodeAt(i);
       iBase_EntityHandle newHandle = v->get_MOAB_Handle();
       assert( newHandle );
       iMesh_addEntToSet(inmesh, newHandle, qmeshSet, &err);
@@ -649,14 +649,14 @@ int Tri2Quads::getQuadMesh(Mesh *inmesh, bool replace, Mesh *outmesh, int topo)
   if (outmesh == NULL ) {
     
     size_t numNodes = quadmesh->getSize(0);
-    for( int i = 0; i < numNodes; i++) {
-         Vertex *v = quadmesh->getNode(i);
+    for( size_t i = 0; i < numNodes; i++) {
+         Vertex *v = quadmesh->getNodeAt(i);
 	 trimesh->addNode(v);
     }
 
     size_t numQuads = quadmesh->getSize(2);
-    for( int i = 0; i < numQuads; i++) {
-         Face *q = quadmesh->getFace(i);
+    for( size_t i = 0; i < numQuads; i++) {
+         Face *q = quadmesh->getFaceAt(i);
 	 trimesh->addFace(q);
     }
     quadmesh->emptyAll();

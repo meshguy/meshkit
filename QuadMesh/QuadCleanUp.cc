@@ -11,7 +11,7 @@ void QuadCleanUp::initialize_wavefront()
 
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *vertex = mesh->getNode(i);
+    Vertex *vertex = mesh->getNodeAt(i);
     if (vertex->isBoundary())
       vertex->setConstrainedMark(1);
     else
@@ -20,6 +20,7 @@ void QuadCleanUp::initialize_wavefront()
 }
 
 ////////////////////////////////////////////////////////////////////
+
 vector<Vertex*> QuadCleanUp::next_front_nodes() const
 {
   set<Vertex*> vset;
@@ -28,7 +29,7 @@ vector<Vertex*> QuadCleanUp::next_front_nodes() const
   size_t numnodes = mesh->getSize(0);
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *vertex = mesh->getNode(i);
+    Vertex *vertex = mesh->getNodeAt(i);
     if (!vertex->isConstrained())
     {
       neighs = vertex->getRelations0();
@@ -58,7 +59,7 @@ vector<int> QuadCleanUp::getVertexFaceDegrees()
   vector<Face*> neighs;
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *v = mesh->getNode(i);
+    Vertex *v = mesh->getNodeAt(i);
     neighs = v->getRelations2();
     degree[i] = neighs.size();
   }
@@ -92,7 +93,7 @@ Vertex* QuadCleanUp::get_VertexOf_FaceDegree(int n)
   vector<Face*> neighs;
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *v = mesh->getNode(i);
+    Vertex *v = mesh->getNodeAt(i);
     neighs = v->getRelations2();
     if (neighs.size() == size_t(n))
       return v;
@@ -119,7 +120,7 @@ vector<Face*> QuadCleanUp::search_diamonds(bool both_sides,
 
   for (int iface = 0; iface < numfaces; iface++)
   {
-    Face *face = mesh->getFace(iface);
+    Face *face = mesh->getFaceAt(iface);
     face->setVisitMark(0);
     face->setTag(0);
   }
@@ -128,7 +129,7 @@ vector<Face*> QuadCleanUp::search_diamonds(bool both_sides,
   vector<Face*> diamonds, neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = mesh->getFace(iface);
+    Face *face = mesh->getFaceAt(iface);
     if (face->getSize(0) == 4)
     {
       Vertex *v0 = face->getConnection(0);
@@ -291,7 +292,16 @@ vector<Face*> QuadCleanUp::search_diamonds(bool both_sides,
 /////////////////////////////////////////////////////////////////////////////
 vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
 {
-  //  Public Function ...
+  //
+  // This module identifies independent set of bridges. A bridge is defined
+  // as an edge whoose end points have three neighbouring cells. 
+  // So if an edge is selected as a bridge, then all its neighbours are locked,
+  // therefore, they cann't be part of another bridge. Therefore, operations
+  // on bridge can executed independently..
+  //
+  // A Bridge is surrounded by four quads and enclosed by six edges and six
+  // nodes.
+  //
   vBridges.clear();
 
   size_t numfaces = mesh->getSize(2);
@@ -300,9 +310,9 @@ vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
 
   assert(mesh->getAdjTable(0, 2));
 
-  for (int iface = 0; iface < numfaces; iface++)
+  for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = mesh->getFace(iface);
+    Face *face = mesh->getFaceAt(iface);
     face->setVisitMark(0);
     face->setTag(0);
   }
@@ -311,7 +321,7 @@ vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
   vector<Face*> diamonds, neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = mesh->getFace(iface);
+    Face *face = mesh->getFaceAt(iface);
     if (face->getSize(0) == 4)
     {
       Vertex *v0 = face->getConnection(0);
@@ -453,7 +463,7 @@ vector<Face*> QuadCleanUp::search_flat_quads()
   int edgefaces[4];
   for (size_t iface = 0; iface < numfaces; iface++)
   {
-    Face *face = mesh->getFace(iface);
+    Face *face = mesh->getFaceAt(iface);
     assert(face);
     if (face->getSize(0) == 4)
     {
@@ -508,6 +518,14 @@ vector<Face*> QuadCleanUp::search_flat_quads()
 
 vector<Vertex*> QuadCleanUp::search_interior_doublets()
 {
+ //
+ // An interior doublet is a vertex, which is shared by two
+ // face neighbours. They are undesirables in the quadmesh.
+ // as it would mean the angle is 180 between some adjacent
+ // edges...
+
+ // This module finds doublets in the interiour mesh...
+
   size_t numnodes = mesh->getSize(0);
 
   int relexist = mesh->build_relations(0, 2);
@@ -519,7 +537,7 @@ vector<Vertex*> QuadCleanUp::search_interior_doublets()
   vector<Vertex*> doublets;
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *v = mesh->getNode(i);
+    Vertex *v = mesh->getNodeAt(i);
     if (!v->isBoundary() && (v->getRelations2().size() == 2))
       doublets.push_back(v);
   }
@@ -535,6 +553,15 @@ vector<Vertex*> QuadCleanUp::search_interior_doublets()
 
 vector<Vertex*> QuadCleanUp::search_boundary_singlets()
 {
+  //
+  // A boundary singlet is a vertex which is shared by only one face.
+  // They are undesirables in the quad mesh as that would mean large
+  // angle on some of the edges..
+  // 
+  // For the flat singlet ( angle closer to 180 degree ). it is easy
+  // to remove the neighbouring quad from the mesh.
+  //
+
   size_t numnodes = mesh->getSize(0);
 
   int relexist = mesh->build_relations(0, 2);
@@ -546,7 +573,7 @@ vector<Vertex*> QuadCleanUp::search_boundary_singlets()
   vector<Vertex*> singlets;
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *v = mesh->getNode(i);
+    Vertex *v = mesh->getNodeAt(i);
     if (v->isBoundary() && (v->getRelations2().size() == 1))
       singlets.push_back(v);
   }
@@ -562,10 +589,14 @@ vector<Vertex*> QuadCleanUp::search_boundary_singlets()
 
 int QuadCleanUp::face_close(Face *face, Vertex *v0, Vertex *v2)
 {
-  //  Private function ...
   assert(face->getSize(0) == 4);
   assert(mesh->getAdjTable(0, 2));
 
+  //
+  // We shouldn't modify the boundary, therefore skip this operation. It is
+  // advisable to close the face, if the diagonal distance between (v0,v2)
+  // is much less than the diagonal distance between (v1,v3). 
+  //
   if (v0->isBoundary() || v2->isBoundary())
     return 1;
 
@@ -644,18 +675,21 @@ int QuadCleanUp::face_close(Face *face, Vertex *v0, Vertex *v2)
     }
   }
 
+  // Add a new vertex in the mesh...
   Point3D p3d = Vertex::mid_point(v0, v2);
-
   Vertex *newvtx = Vertex::newObject();
   newvtx->setXYZCoords(p3d);
   newvtx->setID(mesh->getSize(0));
   mesh->addNode(newvtx);
 
+  // This face will go away, remove this from vertex relationship.
   v0->removeRelation2(face);
   v1->removeRelation2(face);
   v2->removeRelation2(face);
   v3->removeRelation2(face);
 
+  // Affected neighbouring faces must replace the v0/v2 the new
+  // vertex and the new vertex has new neighbours.
   for (size_t i = 0; i < vr0.size(); i++)
   {
     vr0[i]->replaceNode(v0, newvtx);
@@ -670,6 +704,7 @@ int QuadCleanUp::face_close(Face *face, Vertex *v0, Vertex *v2)
       newvtx->addRelation2(vr2[i]);
   }
 
+  // Two nodes and face go away from the mesh..
   v0->setRemoveMark(1);
   v2->setRemoveMark(1);
   face->setRemoveMark(1);
@@ -686,7 +721,7 @@ void QuadCleanUp::set_regular_node_tag()
 
   for (size_t i = 0; i < numnodes; i++)
   {
-    Vertex *vertex = mesh->getNode(i);
+    Vertex *vertex = mesh->getNodeAt(i);
     if (vertex->getRelations2().size() == 4)
       vertex->setTag(0);
     else
@@ -999,11 +1034,17 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
   // Presently this code does not check the convexity of the hexagon
   // which is split into two quadrilateral. So in some sense, this
   // is not a robust code and probably smoothing might solve the 
-  // problem, so we can not guarantee.
+  // problem, but we can not guarantee.
   //
+  // One workaround will be to ensure all the enclosing vertices
+  // are on a circle. 
   //
+ 
   Vertex *v0 = bridge.vertex0;
   Vertex *v1 = bridge.vertex1;
+
+  if( v0->isRemoved() ) return 1;
+  if( v1->isRemoved() ) return 1;
 
   vector<Face*> neighs = Mesh::getRelations102(v0,v1);
 
@@ -1060,16 +1101,18 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
    }
 
    for( int i = 0; i < 6; i++) {
-      for( int j = 0; j < 6; j++) 
+      for( int j = 0; j < 4; j++) 
            chain_nodes[i]->removeRelation2( neighs[j] );
    }
-
+  
    //
    // Only for the convex polygons, we can be sure about joining two diagonal.
    // May be there are some other elegant ways, but for now, just try to adjust
    // coordinates of all the six vertices so that they lie on the circle/sphere. 
    // 
    Point3D pCenter = Vertex::mid_point(v0, v1);
+   v0->setConstrainedMark(1);
+   v1->setConstrainedMark(1);
 
    double radialdist[6];
    for( int i = 0; i < 6; i++) 
@@ -1085,7 +1128,8 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
    Point3D oldPos, newPos, posVec;
    double  alpha;
    // Try bringing the nodes closer the circle/sphere boundary
-   for( int i  = 0; i < 1; i++) 
+   
+   for( int i = 0; i < 1; i++) 
    {
        for( int j = 0; j < 6; j++) {
             oldPos = chain_nodes[j]->getXYZCoords();
@@ -1115,8 +1159,9 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
             chain_nodes[j]->setXYZCoords( newPos );
         }
         // Carry out laplacian smoothing 5 times (arbitrary choice).
-        laplacian_smoothing(mesh, 5);
+        laplacian_smoothing(mesh, chain_nodes, 5);
    }
+
    // Unmark the nodes..
    for( int j = 0; j < 6; j++) 
         chain_nodes[j]->setConstrainedMark(0);
@@ -1149,9 +1194,9 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
        qConnect[i] = chain_nodes[(minat+i) % 6];
    Face *quad1 = new Face;
    quad1->setConnection( qConnect );
-   mesh->addFace( quad1 );
    for( int i = 0; i < 4; i++) 
        qConnect[i]->addRelation2( quad1 );
+   mesh->addFace( quad1 );
 
    for( int i = 0; i < 4; i++) 
          qConnect[i] = chain_nodes[(minat+ 3+ i) % 6];
@@ -1161,7 +1206,6 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
        qConnect[i]->addRelation2( quad2 );
    mesh->addFace( quad2 );
 
-   // Remove all the neighboring faces and the two bridge nodes...
    for( int i = 0; i < neighs.size(); i++) 
         neighs[i]->setRemoveMark(1);
    v0->setRemoveMark(1);
@@ -1173,7 +1217,11 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 
 void QuadCleanUp :: remove_bridges( bool allow_boundary_nodes )
 {
-  int relexist = mesh->build_relations(0, 2);
+  // These relationship are used in "remove_bridge" function call
+  // and it is optimization step to call them here.
+  //
+  int rel0exist = mesh->build_relations(0,0);
+  int rel2exist = mesh->build_relations(0,2);
 
   mesh->search_boundary();
 
@@ -1192,26 +1240,33 @@ void QuadCleanUp :: remove_bridges( bool allow_boundary_nodes )
      mesh->enumerate(2);
   }
 
-  if (!relexist)
-    mesh->clear_relations(0, 2);
+  if (!rel0exist)
+   mesh->clear_relations(0, 0);
+
+  if (!rel2exist)
+   mesh->clear_relations(0, 2);
 }
 ////////////////////////////////////////////////////////////////////
 
 int QuadCleanUp::remove_diamonds_once(bool both_sides,
                                  bool allow_boundary_faces)
 {
-  int relexist = mesh->build_relations(0, 2);
+  int rel0exist = mesh->build_relations(0, 0);
+  int rel2exist = mesh->build_relations(0, 2);
 
   mesh->search_boundary();
 
   search_diamonds(both_sides, allow_boundary_faces);
 
+  vector<Vertex*> vertexQ;
   for (size_t i = 0; i < vDiamonds.size(); i++)
   {
     Vertex *v0 = vDiamonds[i].vertex0;
     Vertex *v1 = vDiamonds[i].vertex1;
     v0->setConstrainedMark(1);
     v1->setConstrainedMark(1);
+    vertexQ.push_back(v0);
+    vertexQ.push_back(v1);
   }
 
   Point3D p3d0, p3d1;
@@ -1226,7 +1281,7 @@ int QuadCleanUp::remove_diamonds_once(bool both_sides,
       v0->setXYZCoords(p3d0);
       v1->setXYZCoords(p3d1);
     }
-    laplacian_smoothing(mesh, 1);
+    laplacian_smoothing(mesh, vertexQ, 5);
   }
 
   for (size_t i = 0; i < vDiamonds.size(); i++)
@@ -1246,7 +1301,10 @@ int QuadCleanUp::remove_diamonds_once(bool both_sides,
   }
   cout << "#Diamonds removed from the mesh : " << ncount << endl;
 
-  if (!relexist)
+  if (!rel0exist)
+    mesh->clear_relations(0, 0);
+
+  if (!rel2exist)
     mesh->clear_relations(0, 2);
 
   if( ncount )  {
@@ -1256,6 +1314,7 @@ int QuadCleanUp::remove_diamonds_once(bool both_sides,
   }
 
   set_regular_node_tag();
+  mesh->setBoundaryStatus(0);
 
   return ncount;
 }
@@ -1273,7 +1332,6 @@ void QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
        if( ncount == 0) break;
        }
    }
-    
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -1334,6 +1392,8 @@ int QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes )
     mesh->clear_relations(0, 2);
 
   set_regular_node_tag();
+  mesh->setBoundaryStatus(0);
+
   return ncount;
 }
 
@@ -1364,7 +1424,7 @@ void QuadCleanUp::cleanup_internal_boundary_face()
   int ncount = 0;
   for (size_t i = 0; i < numfaces; i++)
   {
-    Face *face = mesh->getFace(i);
+    Face *face = mesh->getFaceAt(i);
     if (face->hasBoundaryNode())
     {
       int nfnodes = face->getSize(0);
@@ -1416,7 +1476,7 @@ void QuadCleanUp::cleanup_boundary(double cutOffAngle)
   vector<Vertex*> neighs;
   for (size_t i = 0; i < numnodes; i++)
   {
-    node = mesh->getNode(i);
+    node = mesh->getNodeAt(i);
     if (node->isBoundary())
     {
       neighs = node->getRelations0();
@@ -1468,6 +1528,8 @@ void QuadCleanUp::cleanup_boundary(double cutOffAngle)
   mesh->prune();
   mesh->enumerate(0);
   mesh->enumerate(2);
+
+  mesh->setBoundaryStatus(0);
 }
 
 ///////////////////////////////////////////////////////////////////////
