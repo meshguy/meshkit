@@ -744,27 +744,46 @@ public:
     return 0;
   }
 
+  // If the topology of the mesh is changed, make sure to setBoundaryStatus = 0
+  // so that it is again determined. 
   bool setBoundaryStatus( bool v ) { boundary_status = v; }
+
+  // If the boundary nodes and faces are knowm, return the value = 1. otherwise 0
   bool getBoundaryStatus() const { return boundary_status; }
 
+  // A mesh is simple, when each edge is shared by at the most two faces which is
+  // topological simple. A geometrically simple mesh will not have any crossing,
+  // or overlapping edges, but this has not been checked right now.
   bool isSimple();
+
+  // A mesh is consistently oriented when an edge shared by two faces, traversed in
+  // opposite direction. Such a mesh will have proper normals ( either all inside or
+  // or all outside ).
   bool isConsistentlyOriented();
+
+  //  Make the mesh consistent. 
   void makeConsistentlyOriented();
+
+  //  How many strongly connected components this mesh has ?
   int getNumOfConnectedComponents();
 
+  //  Get #of boundary nodes, edges, and faces information.
   size_t getBoundarySize(int d) const;
 
+  // Appends a node in the mesh.
   void addNode(NodeType v)
   {
     nodes.push_back(v);
   }
 
+  // Appends a bulk of nodes in the mesh.
   void addNodes( const vector<NodeType> &vnodes)
   {
     for( size_t i = 0; i < vnodes.size(); i++)
     addNode( vnodes[i] );
   }
 
+  // Get the node at the specified position in the container.
   NodeType getNodeAt(size_t id) const
   {
     assert( !nodes[id]->isRemoved() );
@@ -772,20 +791,24 @@ public:
     return nodes[id];
   }
 
+  // Get All the nodes in the mesh after lazy prunning ( Garbage collection ).
   const vector<NodeType> &getNodes()
   { return nodes;}
 
+  // Add a face in the mesh. No duplication is checked..
   void addFace(FaceType v)
   {
     faces.push_back(v);
   }
 
+  // Add bulk of faces in the mesh. No duplication is checked..
   void addFaces( vector<FaceType> & vfaces)
   {
     for( size_t i = 0; i < vfaces.size(); i++)
     addFace( vfaces[i] );
   }
 
+  // Get the face at the specified position in the container.
   FaceType getFaceAt(size_t id) const
   {
     assert( !faces[id]->isRemoved() );
@@ -797,6 +820,8 @@ public:
   // a la Lazy garbage collection.
   //
   void prune();
+
+  // Check if the lazy garbage collection is performed..
   bool isPruned() const;
 
   // Renumber mesh entities starting from index = 0
@@ -805,6 +830,7 @@ public:
   // Search the boundary of the mesh (nodes, edges, and faces).
   int search_boundary();
 
+  // Build entity-entity relations.
   int build_relations(int src, int dst)
   {
     if (src == 0 && dst == 0) return build_relations00();
@@ -812,6 +838,7 @@ public:
     return 1;
   }
 
+  // clean specified entity-entity relations.
   void clear_relations(int src, int dst);
 
   // Return all the edges of the primal mesh ...
@@ -835,15 +862,16 @@ public:
   // Empty every thing in the Mesh, and also deallocate all the objects.
   void clearAll();
 
-  // Reverse the connection of all the faces in the mesh.
+  // Reverse the connection of all the faces in the mesh. This will be flip
+  // the normal of each face.
   void reverse()
   {
     for( size_t i = 0; i < faces.size(); i++)
          faces[i]->reverse();;
   }
 
-  // Collect Vertex-Face degree information. Ideally an internal vertex has 4 faces.
-  vector<int> getVertexFaceDegrees();
+  // Collect topological information. Ideally an internal vertex has 4 faces.
+  vector<int> get_topological_statistics(int entity = 0, bool sorted = 1);
 
   // Collect nodes and faces in Depth First Sequence ...
   vector<Vertex*> get_Depth_First_Ordered_Nodes( Vertex *f = NULL );
@@ -903,11 +931,9 @@ public:
   double  getSurfaceArea();
 
   // Check the Convexity..
-
   int check_convexity();
 
   // Collect Quadlity Statistics
-
   int get_quality_statistics( const string &s );
 
 private:
@@ -998,6 +1024,8 @@ inline Point3D cross_product( const Point3D &A, const Point3D &B)
   return C;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 inline double getAngle( const Point3D &A, const Point3D &B)
 {
   double AB = dot_product(A,B);
@@ -1023,8 +1051,6 @@ int quadrangulate(Mesh *mesh);
 ////////////////////////////////////////////////////////////////////////////////
 //Helper functions ....
 ////////////////////////////////////////////////////////////////////////////////
-Mesh* readOffData(const string &s);
-
 Mesh *struct_tri_grid(int nx, int ny);
 Mesh *struct_quad_grid(int nx, int ny);
 

@@ -1572,7 +1572,7 @@ int Mesh::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entitySet)
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-vector<int> Mesh::getVertexFaceDegrees()
+vector<int> Mesh::get_topological_statistics( int entity, bool sorted )
 {
   int relexist = build_relations(0, 2);
 
@@ -1826,7 +1826,7 @@ vector<int> Jaal::getVertexFaceDegrees(iMesh_Instance &imesh)
 {
   Mesh *jmesh = new Mesh;
   jmesh->fromMOAB(imesh);
-  vector<int> quality = jmesh->getVertexFaceDegrees();
+  vector<int> quality = jmesh->get_topological_statistics();
   delete jmesh;
   return quality;
 }
