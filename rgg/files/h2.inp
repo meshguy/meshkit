@@ -6,10 +6,10 @@ GeometryType Hexagonal
 !
 Materials 21 SFR_FC_F_01 F1  SFR_FC_C_01 C1  SFR_FC_M_01 M1 &  ! Lower shielding
              SFR_FC_F_02 F2  SFR_FC_C_02 C2  SFR_FC_M_02 M2 &  ! Lower structure
-             SFR_FC_F_02 F3  SFR_FC_C_03 C3  SFR_FC_M_03 M3 &  ! Active core
-             SFR_FC_F_02 F4  SFR_FC_C_04 C4  SFR_FC_M_04 M4 &  ! Upper plenum
-             SFR_FC_F_02 F5  SFR_FC_C_05 C5  SFR_FC_M_05 M5 &  ! Upper structure
-             SFR_FC_F_02 F6  SFR_FC_C_06 C6  SFR_FC_M_06 M6 &   ! Upper Shielding
+             SFR_FC_F_03 F3  SFR_FC_C_03 C3  SFR_FC_M_03 M3 &  ! Active core
+             SFR_FC_F_04 F4  SFR_FC_C_04 C4  SFR_FC_M_04 M4 &  ! Upper plenum
+             SFR_FC_F_05 F5  SFR_FC_C_05 C5  SFR_FC_M_05 M5 &  ! Upper structure
+             SFR_FC_F_06 F6  SFR_FC_C_06 C6  SFR_FC_M_06 M6 &   ! Upper Shielding
 	     Mat_Coolant C11 Mat_Fuel  F8 Mat_Block G1
 !
 Dimensions 3 0.0 0.0 -0 130.0 60.0 62.3 65.1 G1 C11 F8 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 

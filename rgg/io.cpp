@@ -939,26 +939,26 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	CHECK("Couldn't move cell.");
 	cells[n-1]=cell;
 
-	  //search for the full name of the abbreviated Cell Mat and set name
-	  for(int p=1;p<= m_szAssmMatAlias.GetSize();p++){
-	    if(strcmp (szVCellMat(nCells).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      sMatName = m_szAssmMat(p);
-	    }
+	//search for the full name of the abbreviated Cell Mat and set name
+	for(int p=1;p<= m_szAssmMatAlias.GetSize();p++){
+	  if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+	    sMatName = m_szAssmMat(p);
 	  }
+	}
 
-	  std::cout << "created: " << sMatName << std::endl;	
-	  iGeom_setData(geom, cell, this_tag,
+	std::cout << "created: " << sMatName << std::endl;	
+	iGeom_setData(geom, cell, this_tag,
+		      sMatName.c_str(), sMatName.size(), &err);
+	CHECK("setData failed");
+
+	int err = Get_Max_Surf(cell, &max_surf);
+	sMatName+="_surface";
+	if(max_surf !=0){
+	  iGeom_setData(geom, max_surf, this_tag,
 			sMatName.c_str(), sMatName.size(), &err);
 	  CHECK("setData failed");
-
-	  int err = Get_Max_Surf(cell, &max_surf);
-	  sMatName+="_surface";
-	  if(max_surf !=0){
-	    iGeom_setData(geom, max_surf, this_tag,
-			  sMatName.c_str(), sMatName.size(), &err);
-	    CHECK("setData failed");
-	    std::cout << "created: " << sMatName << std::endl;
-	  }
+	  std::cout << "created: " << sMatName << std::endl;
+	}
 
       }
       // loop and create cylinders
@@ -974,9 +974,8 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
-	m_Pincell(i).GetCylMat(nCyl, szVCylMat);
+	m_Pincell(i).GetCylMat(n, szVCylMat);
 	m_Pincell(i).GetCylZPos(n, dVCylZPos);
-
 	dHeight = dVCylZPos(2)-dVCylZPos(1);
 
 	for (int m=1; m<=nRadii; m++){ 
@@ -1009,14 +1008,13 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  cyls[nRadii-1]=tmp_vol;
 
 	}
-  
+	std::cout << "hi  "<< szVCylMat(1) << std::endl;
 	//set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
 	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	  if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
 	    sMatName = m_szAssmMat(p);
 	  }
 	}
-	std::cout << "created: " << sMatName << std::endl;
 	tmp_vol1=cyls[0]; //inner most cyl
 
 	iGeom_setData(geom, tmp_vol1, this_tag,
@@ -1083,38 +1081,12 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
       if(m_szGeomType =="hexagonal"){
 	
 	m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-
-	//       if(nCyl >0){
-	// 	// create prism
-	// 	iGeom_createPrism(geom, dHeightTotal, 6, 
-	// 			  dSide, dSide,
-	// 			  &cell, &err); 
-	// 	CHECK("Prism creation failed.");
-	//       }
       }
       // if cartesian geometry
       if(m_szGeomType =="cartesian"){  
 	
 	m_Pincell(i).GetPitch(PX, PY, PZ);
-	
-	// 	if(nCells <0){
-	// 	  // create brick
-	// 	  iGeom_createBrick( geom,PX,PY,dHeight,&cell,&err );
-	// 	  CHECK("Couldn't create pincell.");
-	//	}
       }
-      //    if(nCyl>1){
-      //      dZMove = (dVEndZ(n)+dVEndZ(n-1))/2.0;
-      //     }
-      //     else{
-      //       dZMove = 0;
-      //     }
-
-      //     if(nCyl >0){
-      //       // position the brick in assembly
-      //       iGeom_moveEnt(geom, cell, dX, dY, dZMove, &err); 
-      //       cells[n-1]=cell;
-      //     }
 
       // loop and create cylinders
       if(nCyl > 0){
@@ -1129,7 +1101,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
-	m_Pincell(i).GetCylMat(nCyl, szVCylMat);
+	m_Pincell(i).GetCylMat(n, szVCylMat);
 	m_Pincell(i).GetCylZPos(n, dVCylZPos);
 
 	dHeight = dVCylZPos(2)-dVCylZPos(1);
@@ -1149,29 +1121,6 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  CHECK("Couldn't move cyl.");
 	  cyls[m-1] = cyl;
 	}
-
-	//      // copy cyl before subtract 
-	//       iGeom_copyEnt(geom, cyls[nRadii-1], &tmp_vol, &err);
-	//       CHECK("Couldn't copy inner duct wall prism.");
-
-	//       // subtract outer most cyl from brick
-	//       iGeom_subtractEnts(geom, cells[n-1], cyls[nRadii-1], &tmp_new, &err);
-	//       CHECK("Subtract of inner from outer failed.");
-    
-	//       // copy the new into the cyl array
-	//       cells[n-1] = tmp_new; cell = tmp_new;
-	//       cyls[nRadii-1]=tmp_vol;
-
-	//       //search for the full name of the abbreviated Cell Mat and set name
-	//       for(int p=1;p<= m_szAssmMatAlias.GetSize();p++){
-	//       	if(strcmp (szVCellMat(nCyl).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	//       	  sMatName = m_szAssmMatAlias(p);
-	//       	}
-	//       }
-    
-	//       iGeom_setData(geom, cell, this_tag,
-	//       		    sMatName.c_str(), 10, &err);
-	//       CHECK("setData failed");
 
 	//set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
 	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
