@@ -467,7 +467,7 @@ public:
     connect[1] = v[1];
   }
 
-  NodeType getConnection(int id) const
+  NodeType getNodeAt(int id) const
   {
     return connect[id];
   }
@@ -585,12 +585,12 @@ public:
     connect = v;
   }
 
-  const vector<NodeType> &getConnection() const
+  const vector<NodeType> &getNodes() const
   {
     return connect;
   }
 
-  NodeType getConnection(int id) const
+  NodeType getNodeAt(int id) const
   {
     return connect[id];
   }
@@ -632,6 +632,7 @@ public:
     return 0;
   }
 
+  vector<Face*> getRelations202();  
   vector<Face*> getRelations212();
 
   bool isConvex();
@@ -786,7 +787,6 @@ public:
   // Get the node at the specified position in the container.
   NodeType getNodeAt(size_t id) const
   {
-    assert( !nodes[id]->isRemoved() );
     assert(id >= 0 && id < nodes.size());
     return nodes[id];
   }
@@ -811,7 +811,6 @@ public:
   // Get the face at the specified position in the container.
   FaceType getFaceAt(size_t id) const
   {
-    assert( !faces[id]->isRemoved() );
     assert(id >= 0 && id < faces.size());
     return faces[id];
   }
@@ -936,6 +935,19 @@ public:
   // Collect Quadlity Statistics
   int get_quality_statistics( const string &s );
 
+  //
+  // Check if the surface triangulation is Delaunay. Works only for
+  // triangle mesh. We use Jonathan Shewchuk's predicates and all his
+  // ideas. For 2D check with Circum-Circle and for 2D Equitorial Sphere.
+  //
+  int isDelaunay() const; 
+
+  //  
+  // If the surface triangulation is not Delaunay, use edge-flips to 
+  // tranform the mesh into Delaunay.
+  //
+  int makeDelaunay();
+
 private:
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Vertex *v);
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Face *v);
@@ -953,9 +965,9 @@ private:
 
   string filename;
   std::map<int, int> global2local;
-  void readNodes(const string &s);
-  void readEdges(const string &s);
-  void readFaces(const string &s);
+  void readTriNodes(const string &s);
+  void readTriEdges(const string &s);
+  void readTriFaces(const string &s);
 
   int build_relations00();
   int build_relations02();
@@ -964,6 +976,7 @@ private:
   int setFaceWavefront();
 
   int read_off_format_data( const string &s);
+  int read_simple_format_data( const string &s);
   int read_triangle_format_data( const string &s);
 };
 

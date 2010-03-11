@@ -17,13 +17,19 @@ int main(int argc, char **argv)
   }
   string fname = argv[1];
 
+/*
+  Mesh *q1 = Jaal::struct_quad_grid( 10, 10);
+  q1->saveAs( "quad3");
+  exit(0);
+  */
+
   iMesh_Instance trimesh;
   iMesh_newMesh(NULL, &trimesh, &err, 0);
 
   Jaal::readMeshData( trimesh, fname );
 
   Jaal::getVertexFaceDegrees(trimesh);
-//  Jaal::mesh_shape_optimization( trimesh );
+  Jaal::mesh_shape_optimization( trimesh );
 
   string name0 = "trimesh.vtk";
   int namelen0  = strlen( name0.c_str() );
@@ -39,10 +45,8 @@ int main(int argc, char **argv)
 //cout << "Before Cleanup .... " << endl;
 //Jaal::getVertexFaceDegrees(trimesh);
 
-  cout << " ************************************* " << endl;
   Mesh *qm = new Mesh;
   qm->fromMOAB( trimesh );
-  qm->get_quality_statistics( "qual.txt" );
 
   iMesh_Instance qmesh = 0;
 
@@ -51,12 +55,10 @@ int main(int argc, char **argv)
 // qClean.search_flat_quads();
    Jaal::laplacian_smoothing(qm, 500);
    qClean.remove_doublets();
+   qClean.remove_bridges();
    qClean.remove_diamonds(1, 1, 0);
    qClean.remove_doublets();
    qClean.remove_bridges();
-   qClean.search_bridges(); 
-   qClean.remove_bridges();
-   qClean.search_bridges(); 
 // qm->setWavefront(2);
 // qm->search_boundary();
 // qClean.search_bridges();
@@ -64,7 +66,8 @@ int main(int argc, char **argv)
 // qm->getAspectRatio();
 // cout << " Surface Area " << qm->getSurfaceArea() << endl;
 // qm->check_convexity();
-//qm->search_boundary();
+// qm->search_boundary();
+   qClean.search_yrings(); 
   qm->saveAs("quad1");
   exit(0);
 

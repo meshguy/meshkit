@@ -248,10 +248,10 @@ int Mesh :: check_convexity()
         Face *face = getFaceAt(i);
 	itag = 0;
 	if( face->getSize(0) == 4 ) 
-	    itag = Face::is_convex_quad( face->getConnection(0)->getXYZCoords(),
-	                           face->getConnection(1)->getXYZCoords(),
-	                           face->getConnection(2)->getXYZCoords(),
-	                           face->getConnection(3)->getXYZCoords() );
+	    itag = Face::is_convex_quad( face->getNodeAt(0)->getXYZCoords(),
+	                           face->getNodeAt(1)->getXYZCoords(),
+	                           face->getNodeAt(2)->getXYZCoords(),
+	                           face->getNodeAt(3)->getXYZCoords() );
         if( itag == 0) 
 	    face->setTag(1);
         else
@@ -340,6 +340,29 @@ vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
   return faceneighs;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+vector<FaceType> Face::getRelations202()
+{
+  vector<FaceType> faceneighs, vneighs;
+
+  int nSize = connect.size();
+  for (int i = 0; i < nSize; i++)
+  {
+    Vertex *v0 = connect[(i + 0) % nSize];
+    vneighs = v0->getRelations2();
+    for (int j = 0; j < vneighs.size(); j++)
+    {
+      if (vneighs[j] != this)
+      {
+        if (find(faceneighs.begin(), faceneighs.end(), vneighs[j])
+            == faceneighs.end())
+          faceneighs.push_back(vneighs[j]);
+      }
+    }
+  }
+  return faceneighs;
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 vector<FaceType> Face::getRelations212()
@@ -495,9 +518,9 @@ int Mesh::isHomogeneous() const
 
 NodeType Face::opposite_node(const FaceType tri, NodeType n1, NodeType n2)
 {
-  NodeType tn0 = tri->getConnection(0);
-  NodeType tn1 = tri->getConnection(1);
-  NodeType tn2 = tri->getConnection(2);
+  NodeType tn0 = tri->getNodeAt(0);
+  NodeType tn1 = tri->getNodeAt(1);
+  NodeType tn2 = tri->getNodeAt(2);
 
   if (tn0 == n1 && tn1 == n2)
     return tn2;
@@ -523,10 +546,10 @@ NodeType Face::opposite_node(const FaceType tri, NodeType n1, NodeType n2)
 void Face::opposite_nodes(const FaceType quad, NodeType n1, NodeType n2,
     NodeType &n3, NodeType &n4)
 {
-  NodeType qn0 = quad->getConnection(0);
-  NodeType qn1 = quad->getConnection(1);
-  NodeType qn2 = quad->getConnection(2);
-  NodeType qn3 = quad->getConnection(3);
+  NodeType qn0 = quad->getNodeAt(0);
+  NodeType qn1 = quad->getNodeAt(1);
+  NodeType qn2 = quad->getNodeAt(2);
+  NodeType qn3 = quad->getNodeAt(3);
 
   if ((qn0 == n1 && qn1 == n2) || (qn0 == n2 && qn1 == n1))
   {
@@ -567,7 +590,7 @@ FaceType Face::create_quad(const FaceType t1, const FaceType t2)
   vector<NodeType> connect;
   NodeType commonnodes[3];
 
-  connect = t1->getConnection();
+  connect = t1->getNodes();
 
   int index = 0;
   for (int i = 0; i < 3; i++)
@@ -616,7 +639,7 @@ void Mesh::saveAs(const string &s)
   for (size_t i = 0; i < numfaces; i++)
   {
     Face *face = faces[i];
-    connect = face->getConnection();
+    connect = face->getNodes();
     int nnodes = connect.size();
     ofile << nnodes << " ";
     for (int j = 0; j < nnodes; j++)
@@ -689,7 +712,7 @@ int Mesh::build_relations02()
     assert(face);
     for (size_t j = 0; j < face->getSize(0); j++)
     {
-      Vertex *vtx = face->getConnection(j);
+      Vertex *vtx = face->getNodeAt(j);
       vtx->addRelation2(face);
     }
   }
@@ -716,8 +739,8 @@ int Mesh::build_relations00()
     size_t nnodes = face->getSize(0);
     for (size_t j = 0; j < nnodes; j++)
     {
-      Vertex *v0 = face->getConnection(j);
-      Vertex *v1 = face->getConnection((j + 1) % nnodes);
+      Vertex *v0 = face->getNodeAt(j);
+      Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
       v0->addRelation0(v1);
       v1->addRelation0(v0);
     }
@@ -783,8 +806,8 @@ int Mesh::search_boundary()
     size_t nnodes = face->getSize(0);
     for (size_t j = 0; j < nnodes; j++)
     {
-      Vertex *v0 = face->getConnection(j);
-      Vertex *v1 = face->getConnection((j + 1) % nnodes);
+      Vertex *v0 = face->getNodeAt(j);
+      Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
       neighs = Mesh::getRelations112(v0, v1);
       if (neighs.size() == 1)
       {
@@ -851,8 +874,8 @@ bool Mesh::isSimple()
     int nnodes = face->getSize(0);
     for (int j = 0; j < nnodes; j++)
     {
-      Vertex *v0 = face->getConnection(j);
-      Vertex *v1 = face->getConnection((j + 1) % nnodes);
+      Vertex *v0 = face->getNodeAt(j);
+      Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
       neighs = Mesh::getRelations112(v0, v1);
       if (neighs.size() > 2)
       {
@@ -884,8 +907,8 @@ bool Mesh::isConsistentlyOriented()
     int nnodes = face->getSize(0);
     for (int j = 0; j < nnodes; j++)
     {
-      Vertex *v0 = face->getConnection(j);
-      Vertex *v1 = face->getConnection((j + 1) % nnodes);
+      Vertex *v0 = face->getNodeAt(j);
+      Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
       neighs = Mesh::getRelations112(v0, v1);
       if (neighs.size() == 2)
       {
@@ -896,11 +919,11 @@ bool Mesh::isConsistentlyOriented()
           cout << "Warning: Mesh is not consistently oriented " << endl;
           cout << "Face 1: ";
           for (int k = 0; k < neighs[0]->getSize(0); k++)
-            cout << neighs[0]->getConnection(k)->getID() << " ";
+            cout << neighs[0]->getNodeAt(k)->getID() << " ";
           cout << endl;
           cout << "Face 2: ";
           for (int k = 0; k < neighs[1]->getSize(0); k++)
-            cout << neighs[1]->getConnection(k)->getID() << " ";
+            cout << neighs[1]->getNodeAt(k)->getID() << " ";
           cout << endl;
           consistent = 0;
           break;
@@ -949,8 +972,8 @@ void Mesh::makeConsistentlyOriented()
       int nnodes = face->getSize(0);
       for (int j = 0; j < nnodes; j++)
       {
-        Vertex *v0 = face->getConnection(j);
-        Vertex *v1 = face->getConnection((j + 1) % nnodes);
+        Vertex *v0 = face->getNodeAt(j);
+        Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
         neighs = Mesh::getRelations112(v0, v1);
         if (neighs.size() == 2)
         {
@@ -1032,8 +1055,8 @@ int Mesh::getNumOfComponents()
         assert(nnodes == 4);
         for (int j = 0; j < nnodes; j++)
         {
-          Vertex *v0 = face->getConnection(j);
-          Vertex *v1 = face->getConnection((j + 1) % nnodes);
+          Vertex *v0 = face->getNodeAt(j);
+          Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
           neighs = Mesh::getRelations112(v0, v1);
           if (neighs.size() == 2)
           {
@@ -1113,7 +1136,7 @@ Mesh *struct_tri_grid(int nx, int ny)
 
 /////////////////////////////////////////////////////////////////////////////
 
-Mesh *struct_quad_grid(int nx, int ny)
+Mesh * Jaal::struct_quad_grid(int nx, int ny)
 {
   Mesh *quadmesh = new Mesh;
 
@@ -1214,8 +1237,8 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
     face->setVisitMark(0);
   }
 
-  v0 = rootface->getConnection(0);
-  v1 = rootface->getConnection(1);
+  v0 = rootface->getNodeAt(0);
+  v1 = rootface->getNodeAt(1);
 
   rootface->setVisitMark(1);
   strip01.push_back(rootface);
@@ -1230,8 +1253,8 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
     face->setVisitMark(0);
   }
 
-  v0 = rootface->getConnection(2);
-  v1 = rootface->getConnection(3);
+  v0 = rootface->getNodeAt(2);
+  v1 = rootface->getNodeAt(3);
 
   rootface->setVisitMark(1);
   strip23.push_back(rootface);
@@ -1246,8 +1269,8 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
     face->setVisitMark(0);
   }
 
-  v0 = rootface->getConnection(1);
-  v1 = rootface->getConnection(2);
+  v0 = rootface->getNodeAt(1);
+  v1 = rootface->getNodeAt(2);
 
   rootface->setVisitMark(1);
   strip12.push_back(rootface);
@@ -1262,8 +1285,8 @@ void Mesh::get_quad_strips(Face *rootface, vector<Face*> &strip1,
     face->setVisitMark(0);
   }
 
-  v0 = rootface->getConnection(0);
-  v1 = rootface->getConnection(3);
+  v0 = rootface->getNodeAt(0);
+  v1 = rootface->getNodeAt(3);
 
   rootface->setVisitMark(1);
   strip12.push_back(rootface);
@@ -1388,7 +1411,7 @@ iBase_EntityHandle Mesh::get_MOAB_Handle(iMesh_Instance imesh, Face *face)
 
   for (int j = 0; j < nnodes; j++)
   {
-    Vertex *v = face->getConnection(j);
+    Vertex *v = face->getNodeAt(j);
     connect[j] = get_MOAB_Handle(imesh, v);
   }
 
@@ -1700,10 +1723,10 @@ int Mesh::setFaceWavefront()
       faceQ.push_back(f);
       /*
       if( f->getTag() == 0 ) {
-           cout << f->getConnection(0)->isBoundary() << " "
-           << f->getConnection(1)->isBoundary() << " "
-           << f->getConnection(2)->isBoundary() << " "
-           << f->getConnection(3)->isBoundary() << endl;
+           cout << f->getNodeAt(0)->isBoundary() << " "
+           << f->getNodeAt(1)->isBoundary() << " "
+           << f->getNodeAt(2)->isBoundary() << " "
+           << f->getNodeAt(3)->isBoundary() << endl;
           f->setTag(5);
           f->setTag(1);
       }
@@ -1786,7 +1809,7 @@ int Mesh::check_unused_objects()
     {
       for (int j = 0; j < f->getSize(0); j++)
       {
-        Vertex *v = f->getConnection(j);
+        Vertex *v = f->getNodeAt(j);
         if (v->isRemoved())
           cout << "Goofed up: Face vertex is deleted " << endl;
         if (vset.find(v) == vset.end())
@@ -2068,12 +2091,12 @@ int Jaal::mesh_shape_optimization(iMesh_Instance imesh)
 
   Mesquite::PlanarDomain domain(Mesquite::PlanarDomain::XY);
 
-  /*
-   Mesquite::LaplacianIQ laplacian_smoother;
-   laplacian_smoother.run_instructions(mesqmesh, &domain, ierr);
-   if (ierr) return 1;
-   run_global_smoother( mesqmesh, ierr );
-   */
+/*
+  Mesquite::LaplacianIQ laplacian_smoother;
+  laplacian_smoother.run_instructions(mesqmesh, &domain, ierr);
+  if (ierr) return 1;
+  run_global_smoother( mesqmesh, ierr );
+*/
 
   cout << " Improvment :" << endl;
   Mesquite::ShapeImprovementWrapper shape_wrapper(ierr);

@@ -81,13 +81,13 @@ int Tri2Quads::quadrangulate_boundary_triangle(Face *face)
 
   for (int i = 0; i < 3; i++)
   {
-    Vertex *ev1 = face->getConnection((i + 1) % 3);
-    Vertex *ev2 = face->getConnection((i + 2) % 3);
+    Vertex *ev1 = face->getNodeAt((i + 1) % 3);
+    Vertex *ev2 = face->getNodeAt((i + 2) % 3);
     if (ev1->isBoundary() && ev2->isBoundary())
     {
       bv0 = ev1;
       bv1 = ev2;
-      bv2 = face->getConnection(i);
+      bv2 = face->getNodeAt(i);
       break;
     }
   }
@@ -158,26 +158,26 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   Vertex *vertex;
   for (int i = 0; i < 3; i++)
   {
-    vertex = parentface->getConnection(i);
+    vertex = parentface->getNodeAt(i);
     vertex->clearRelations(2);
 
-    vertex = face1->getConnection(i);
+    vertex = face1->getNodeAt(i);
     vertex->clearRelations(2);
 
-    vertex = face2->getConnection(i);
+    vertex = face2->getNodeAt(i);
     vertex->clearRelations(2);
   }
 
   // Rebuild vertex-face relations...
   for (int i = 0; i < 3; i++)
   {
-    vertex = parentface->getConnection(i);
+    vertex = parentface->getNodeAt(i);
     vertex->addRelation2(parentface);
 
-    vertex = face1->getConnection(i);
+    vertex = face1->getNodeAt(i);
     vertex->addRelation2(face1);
 
-    vertex = face2->getConnection(i);
+    vertex = face2->getNodeAt(i);
     vertex->addRelation2(face2);
   }
 
@@ -190,8 +190,8 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   vector<Face*> neighs;
   for (int i = 0; i < 3; i++)
   {
-    Vertex *v0 = parentface->getConnection((i + 1) % 3);
-    Vertex *v1 = parentface->getConnection((i + 2) % 3);
+    Vertex *v0 = parentface->getNodeAt((i + 1) % 3);
+    Vertex *v1 = parentface->getNodeAt((i + 2) % 3);
     neighs = Mesh::getRelations112(v0, v1);
 
     if (neighs.size() == 1)
@@ -211,8 +211,8 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
 
   // Match Child1 and One of the Split Triangle ...
   maxfaceID++;
-  ev0 = parentface->getConnection((edge1 + 1) % 3);
-  ev1 = parentface->getConnection((edge1 + 2) % 3);
+  ev0 = parentface->getNodeAt((edge1 + 1) % 3);
+  ev1 = parentface->getNodeAt((edge1 + 2) % 3);
   connect[0] = steiner;
   connect[1] = ev0;
   connect[2] = ev1;
@@ -232,8 +232,8 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
 
   // Match Child2 and One of the Split Triangle ...
   maxfaceID++;
-  ev0 = parentface->getConnection((edge2 + 1) % 3);
-  ev1 = parentface->getConnection((edge2 + 2) % 3);
+  ev0 = parentface->getNodeAt((edge2 + 1) % 3);
+  ev1 = parentface->getNodeAt((edge2 + 2) % 3);
   connect[0] = steiner;
   connect[1] = ev0;
   connect[2] = ev1;
@@ -252,8 +252,8 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   btree->addNode(bnode2);
 
   // Now Parent have different connectivity ...
-  ev0 = parentface->getConnection((edge3 + 1) % 3);
-  ev1 = parentface->getConnection((edge3 + 2) % 3);
+  ev0 = parentface->getNodeAt((edge3 + 1) % 3);
+  ev1 = parentface->getNodeAt((edge3 + 2) % 3);
   connect[0] = steiner;
   connect[1] = ev0;
   connect[2] = ev1;
@@ -267,13 +267,13 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
 
   for (int i = 0; i < 3; i++)
   {
-    vertex = parentface->getConnection(i);
+    vertex = parentface->getNodeAt(i);
     vertex->clearRelations(2);
 
-    vertex = face1->getConnection(i);
+    vertex = face1->getNodeAt(i);
     vertex->clearRelations(2);
 
-    vertex = face2->getConnection(i);
+    vertex = face2->getNodeAt(i);
     vertex->clearRelations(2);
   }
 

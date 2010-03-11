@@ -113,7 +113,7 @@ void Jaal::laplacian_smoothing( Mesh *mesh, vector<Vertex*> &vertexQ, int numIte
        if( vertex->isConstrained() ) {
            vector<Vertex*> neighs = vertex->getRelations0();
 	   for( int j = 0; j < neighs.size(); j++) {
-	        if( neighs[i]->isVisited() == 0) {
+	        if( neighs[j]->isVisited() == 0) {
 		    vertexQ.push_back( neighs[j] );
                     neighs[j]->setVisitMark(1);
                 }
@@ -130,7 +130,7 @@ void Jaal::laplacian_smoothing( Mesh *mesh, vector<Vertex*> &vertexQ, int numIte
 	    if( localerror > 1.0E-05) {
                 vector<Vertex*> neighs = vertex->getRelations0();
 	        for( int j = 0; j < neighs.size(); j++) {
-	            if( neighs[i]->isVisited() == 0) {
+	            if( neighs[j]->isVisited() == 0) {
 		        vertexQ.push_back( neighs[j] );
                         neighs[j]->setVisitMark(1);
                     }

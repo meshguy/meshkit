@@ -30,6 +30,9 @@
 //     Bret Dallas Anderson
 //     Master Thesis, Brigham Young University.
 //
+//  3) Non-Local Topological Clean-Up ( The idea of yring  is from this paper)
+//     Guy Bunin. 
+//
 // For suggestios, bugs and criticisms, please send e-mail to
 //                      csverma@cs.wisc.edu
 //
@@ -65,6 +68,12 @@ struct Bridge
   Vertex *vertex0, *vertex1;
 };
 
+struct YRing
+{
+   Vertex *apex;
+   vector<Face*> faces;
+};
+
 
 class QuadCleanUp
 {
@@ -81,12 +90,14 @@ public:
   vector<Vertex*> search_interior_doublets();
   vector<Vertex*> search_boundary_singlets();
   vector<Bridge> search_bridges( bool allow_boundary_nodes = 0);
+  vector<YRing>  search_yrings();
 
   // Removal Methods ...
   void remove_diamonds(bool recursive = 1, bool check_both_sides = 1,
       bool allow_boundary_faces = 1);
   void remove_doublets(bool recursive = 1, bool allow_boundary_nodes = 0);
-  void remove_bridges( bool allow_boundary_nodes = 0);
+  void remove_bridges( bool recursive = 1, bool allow_boundary_nodes = 0);
+  void remove_yrings ( bool recursive = 1);
   void cleanup_boundary(double cutOffAngle = 100.0);
 
   // Insert methods ...
@@ -105,7 +116,8 @@ private:
   Mesh *mesh;
 
   vector<Diamond> vDiamonds; // Diamonds in the mesh;
-  vector<Bridge> vBridges; // Bridges in the mesh.
+  vector<Bridge>  vBridges; // Bridges in the mesh.
+  vector<YRing>   vYRings;
 
   // Basic Operations ...
   int face_close(Face *face, Vertex *v0, Vertex *v2);
@@ -113,8 +125,11 @@ private:
   int remove_boundary_singlet(Vertex *vertex);
   int diamond_collapse(Diamond &d);
   int remove_bridge( const Bridge &b);
+  int remove_yring(  const YRing &r);
+  int remove_bridges_once( bool allow_boundary_nodes = 0);
   int remove_diamonds_once(bool check_both_sides = 1, bool allow_boundary_faces = 1);
   int remove_doublets_once( bool allow_boundary_nodes = 0);
+  int remove_yrings();
 
   // High level utility function composed of basic functions...
   void cleanup_internal_boundary_face();

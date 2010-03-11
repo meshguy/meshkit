@@ -48,8 +48,8 @@ int DualGraph::build(Mesh *m)
     int nc = face->getSize(0);
     for (int j = 0; j < nc; j++)
     {
-      v0 = face->getConnection((j + 0) % nc);
-      v1 = face->getConnection((j + 1) % nc);
+      v0 = face->getNodeAt((j + 0) % nc);
+      v1 = face->getNodeAt((j + 1) % nc);
       neighs = Mesh::getRelations112(v0, v1);
       if (neighs.size() == 2)
       {
@@ -84,8 +84,8 @@ void DualGraph::node_node_adjacency_rep()
   for (int i = 0; i < numedges; i++)
   {
     Edge *edge = edges[i];
-    Vertex *v0 = edge->getConnection(0);
-    Vertex *v1 = edge->getConnection(1);
+    Vertex *v0 = edge->getNodeAt(0);
+    Vertex *v1 = edge->getNodeAt(1);
     addEdge(v0, v1);
     delete edge;
   }
@@ -164,8 +164,8 @@ void DualGraph::writeEdges(const string &fname)
 
   for (int i = 0; i < numedges; i++)
   {
-    int id0 = edges[i]->getConnection(0)->getID();
-    int id1 = edges[i]->getConnection(1)->getID();
+    int id0 = edges[i]->getNodeAt(0)->getID();
+    int id1 = edges[i]->getNodeAt(1)->getID();
     ofile << i << " " << id0 << " " << id1 << endl;
   }
 
