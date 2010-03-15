@@ -5,6 +5,44 @@
 using namespace Jaal;
 
 ////////////////////////////////////////////////////////////////////
+void YRing :: create_boundary()
+{
+  assert( faces.size() == 13 );
+
+  vector<Vertex*> inner_nodes;
+  inner_nodes.reserve(7);
+
+  vector<Face*> faces = apex->getRelations2();
+  for( size_t i = 0; i < faces.size(); i++)  {
+       Face *face = faces[i];
+       for( int j = 0; j < 4; j++)  {
+            Vertex *v = face->getNodeAt(j);
+	    if( std::find(inner_nodes.begin(), inner_nodes.end(), v)  == inner_nodes.end()) 
+	        inner_nodes.push_back(v);
+       }
+  }
+
+  assert( inner_nodes.size() == 7 );
+  sort( inner_nodes.begin(), inner_nodes.end() );
+  boundary.clear();
+
+  boundary.reserve(14);
+  for( size_t i = 0; i < faces.size(); i++)  {
+       Face *face = faces[i];
+       for( int j = 0; j < 4; j++) {
+            Vertex *v0 = face->getNodeAt((j+0)%4);
+            Vertex *v1 = face->getNodeAt((j+1)%4);
+	    if( std::binary_search( inner_nodes.begin(), inner_nodes.end(), v0) ) continue;
+	    if( std::binary_search( inner_nodes.begin(), inner_nodes.end(), v1) ) continue;
+	    Edge newedge(v0, v1);
+	    boundary.push_back(newedge);
+       }
+  }
+  assert( boundary.size() == 14 );
+
+}
+////////////////////////////////////////////////////////////////////
+
 void QuadCleanUp::initialize_wavefront()
 {
   size_t numnodes = mesh->getSize(0);
@@ -43,6 +81,17 @@ vector<Vertex*> QuadCleanUp::next_front_nodes() const
       }
     }
   }
+  neighs.clear();
+  if( vset.empty() ) return neighs;
+
+  neighs.resize( vset.size() );
+  set<Vertex*>::const_iterator it;
+
+  int index = 0;
+  for( it = vset.begin(); it != vset.end(); ++it)
+       neighs[index++] = *it;
+ return neighs;
+
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -118,7 +167,7 @@ vector<Face*> QuadCleanUp::search_diamonds(bool both_sides,
 
   assert(mesh->getAdjTable(0, 2));
 
-  for (int iface = 0; iface < numfaces; iface++)
+  for (size_t iface = 0; iface < numfaces; iface++)
   {
     Face *face = mesh->getFaceAt(iface);
     face->setVisitMark(0);
@@ -151,32 +200,32 @@ vector<Face*> QuadCleanUp::search_diamonds(bool both_sides,
       int visitCount = 0;
 
       neighs = v0->getRelations2();
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
         continue;
       int d0 = neighs.size();
 
       neighs = v1->getRelations2();
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
         continue;
       int d1 = neighs.size();
 
       neighs = v2->getRelations2();
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
         continue;
-      int d2 = neighs.size();
+      size_t d2 = neighs.size();
 
       neighs = v3->getRelations2();
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
         continue;
-      int d3 = neighs.size();
+      size_t d3 = neighs.size();
 
       bool enlist = 0;
 
@@ -263,19 +312,19 @@ vector<Face*> QuadCleanUp::search_diamonds(bool both_sides,
         diamonds.push_back(face);
         face->setTag(1);
         neighs = v0->getRelations2();
-        for (int j = 0; j < neighs.size(); j++)
+        for (size_t j = 0; j < neighs.size(); j++)
           neighs[j]->setVisitMark(1);
 
         neighs = v1->getRelations2();
-        for (int j = 0; j < neighs.size(); j++)
+        for (size_t j = 0; j < neighs.size(); j++)
           neighs[j]->setVisitMark(1);
 
         neighs = v2->getRelations2();
-        for (int j = 0; j < neighs.size(); j++)
+        for (size_t j = 0; j < neighs.size(); j++)
           neighs[j]->setVisitMark(1);
 
         neighs = v3->getRelations2();
-        for (int j = 0; j < neighs.size(); j++)
+        for (size_t j = 0; j < neighs.size(); j++)
           neighs[j]->setVisitMark(1);
       }
 
@@ -342,43 +391,43 @@ vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
       int hitBoundary = 0;
 
       neighs = v0->getRelations2();
-      for (int j = 0; j < neighs.size(); j++) 
+      for (size_t j = 0; j < neighs.size(); j++) 
         if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
       if( hitBoundary ) continue;
 
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount) continue;
 
       int d0 = neighs.size();
 
       neighs = v1->getRelations2();
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
       if( hitBoundary ) continue;
 
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount) continue;
       int d1 = neighs.size();
 
       neighs = v2->getRelations2();
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
       if( hitBoundary ) continue;
 
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
         continue;
       int d2 = neighs.size();
 
       neighs = v3->getRelations2();
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         if( neighs[j]->hasBoundaryNode() ) hitBoundary = 1;
       if( hitBoundary ) continue;
 
-      for (int j = 0; j < neighs.size(); j++)
+      for (size_t j = 0; j < neighs.size(); j++)
         visitCount += neighs[j]->isVisited();
       if (visitCount)
         continue;
@@ -421,13 +470,13 @@ vector<Bridge> QuadCleanUp::search_bridges( bool allow_boundary_nodes )
       if (enlist)
       {
         neighs = bridge.vertex0->getRelations2();
-        for (int j = 0; j < neighs.size(); j++)
+        for (size_t j = 0; j < neighs.size(); j++)
         {
           neighs[j]->setVisitMark(1);
           neighs[j]->setTag(1);
         }
         neighs = bridge.vertex1->getRelations2();
-        for (int j = 0; j < neighs.size(); j++)
+        for (size_t j = 0; j < neighs.size(); j++)
         {
           neighs[j]->setVisitMark(1);
           neighs[j]->setTag(1);
@@ -459,7 +508,7 @@ vector<YRing> QuadCleanUp::search_yrings()
   // A Bridge is surrounded by four quads and enclosed by six edges and six
   // nodes.
   //
-  vYRings.clear();
+  vyRings.clear();
 
   size_t numnodes = mesh->getSize(0);
   size_t numfaces = mesh->getSize(2);
@@ -481,7 +530,6 @@ vector<YRing> QuadCleanUp::search_yrings()
     face->setTag(0);
   }
 
-  Bridge bridge;
   vector<Face*> neighs1, neighs2;
   set<Face*>    ringneighs;
 
@@ -501,10 +549,10 @@ vector<YRing> QuadCleanUp::search_yrings()
     if( neighs1.size() !=  3)  continue;
 
     ringneighs.clear();
-    for (int j = 0; j < neighs1.size(); j++) 
+    for (size_t j = 0; j < neighs1.size(); j++) 
 	  {
 	       neighs2 = neighs1[j]->getRelations202();
-               for( int k = 0; k < neighs2.size(); k++ )
+               for( size_t k = 0; k < neighs2.size(); k++ )
 	            ringneighs.insert( neighs2[k] );
     }
 
@@ -538,18 +586,19 @@ vector<YRing> QuadCleanUp::search_yrings()
 	         
        }
        index++;
-       vYRings.push_back(newring);
+       vyRings.push_back(newring);
+   }
    }
    }
 
-   }
-
+   for( size_t i = 0; i < vyRings.size(); i++)
+        vyRings[i].create_boundary();
 
   if (!relexist)
     mesh->clear_relations(0, 2);
 
-  cout << "Info: Number of YRings in the mesh " << vYRings.size() << endl;
-  return vYRings;
+  cout << "Info: Number of YRings in the mesh " << vyRings.size() << endl;
+  return vyRings;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -575,7 +624,7 @@ int  QuadCleanUp :: remove_yring( const YRing &aring)
    //
    // 
 
-
+   return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -904,7 +953,7 @@ Vertex* QuadCleanUp::insert_doublet(Face *face, Vertex *v0, Vertex *v2)
   connect[3] = v2;
 
   Face *newquad1 = new Face;
-  newquad1->setConnection(connect);
+  newquad1->setNodes(connect);
   mesh->addFace(newquad1);
 
   face->setRemoveMark(1);
@@ -915,7 +964,7 @@ Vertex* QuadCleanUp::insert_doublet(Face *face, Vertex *v0, Vertex *v2)
   connect[3] = v0;
 
   Face *newquad2 = new Face;
-  newquad2->setConnection(connect);
+  newquad2->setNodes(connect);
   mesh->addFace(newquad2);
 
   if (mesh->getAdjTable(0, 2))
@@ -1100,7 +1149,7 @@ int QuadCleanUp::remove_interior_doublet(Vertex *vertex)
   connect[3] = o2;
 
   Face *newquad = new Face;
-  newquad->setConnection(connect);
+  newquad->setNodes(connect);
   mesh->addFace(newquad);
 
   d1->addRelation2(newquad);
@@ -1187,7 +1236,7 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 
   vector<Face*> neighs = Mesh::getRelations102(v0,v1);
 
-  for( int i = 0; i < neighs.size(); i++)
+  for( size_t i = 0; i < neighs.size(); i++)
        if( neighs[i]->isRemoved() ) return 1;
 
   assert( neighs.size() == 4);
@@ -1195,7 +1244,7 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
   // Create a closed chain of bounding edges ...
 
   list<Edge>  boundedges;
-  for( int i = 0; i < neighs.size(); i++) {
+  for( size_t i = 0; i < neighs.size(); i++) {
        Face *face  = neighs[i];
        for( int j = 0; j < 4; j++) {
             Vertex *ev0 = face->getNodeAt((j+0)%4);
@@ -1255,7 +1304,7 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 
    double radialdist[6];
    for( int i = 0; i < 6; i++) 
-        radialdist[i] = length2( pCenter, chain_nodes[i]->getXYZCoords() );
+        radialdist[i] = Math::length2( pCenter, chain_nodes[i]->getXYZCoords() );
    sort( radialdist, radialdist + 6);
    double radius2 = radialdist[4];  // Bias towards large length.
    double radius  = sqrt(radius2);
@@ -1272,7 +1321,7 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
    {
        for( int j = 0; j < 6; j++) {
             oldPos = chain_nodes[j]->getXYZCoords();
-            double d = length2( pCenter, oldPos);
+            double d = Math::length2( pCenter, oldPos);
 	    if( d/radius2 > 1.10) {
 	        // Attract the node towards center.
 	        alpha = 0.90;
@@ -1290,7 +1339,7 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
 	        posVec[0] =  oldPos[0] - pCenter[0];
 	        posVec[1] =  oldPos[1] - pCenter[1];
 	        posVec[2] =  oldPos[2] - pCenter[2];
-		alpha     =  radius/magnitude( posVec );
+		alpha     =  radius/Math::magnitude( posVec );
 		newPos[0] =  pCenter[0] + alpha*posVec[0];
 		newPos[1] =  pCenter[1] + alpha*posVec[1];
 		newPos[2] =  pCenter[2] + alpha*posVec[2];
@@ -1332,7 +1381,7 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
    for( int i = 0; i < 4; i++)  
        qConnect[i] = chain_nodes[(minat+i) % 6];
    Face *quad1 = new Face;
-   quad1->setConnection( qConnect );
+   quad1->setNodes( qConnect );
    for( int i = 0; i < 4; i++) 
        qConnect[i]->addRelation2( quad1 );
    mesh->addFace( quad1 );
@@ -1340,12 +1389,12 @@ int QuadCleanUp::  remove_bridge(const Bridge &bridge)
    for( int i = 0; i < 4; i++) 
          qConnect[i] = chain_nodes[(minat+ 3+ i) % 6];
    Face *quad2 = new Face;
-   quad2->setConnection( qConnect );
+   quad2->setNodes( qConnect );
    for( int i = 0; i < 4; i++) 
        qConnect[i]->addRelation2( quad2 );
    mesh->addFace( quad2 );
 
-   for( int i = 0; i < neighs.size(); i++) 
+   for( size_t i = 0; i < neighs.size(); i++) 
         neighs[i]->setRemoveMark(1);
    v0->setRemoveMark(1);
    v1->setRemoveMark(1);
@@ -1494,8 +1543,6 @@ void QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
 
 int QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes )
 {
-  size_t numNodes = mesh->getSize(0);
-
   int relexist = mesh->build_relations(0, 2);
 
   mesh->search_boundary();
@@ -1577,7 +1624,6 @@ void QuadCleanUp::cleanup_internal_boundary_face()
 
   vector<Face*> boundfaces;
 
-  int ncount = 0;
   for (size_t i = 0; i < numfaces; i++)
   {
     Face *face = mesh->getFaceAt(i);
@@ -1642,7 +1688,7 @@ void QuadCleanUp::cleanup_boundary(double cutOffAngle)
         {
           Point3D v1 = make_vector(neighs[0], node);
           Point3D v2 = make_vector(neighs[1], node);
-          double angle = getAngle(v1, v2);
+          double angle = Math::getAngle(v1, v2);
           if (angle > cutOffAngle)
             degree2nodes.push_back(node);
         }

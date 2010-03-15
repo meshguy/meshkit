@@ -21,36 +21,14 @@
 #include "SimpleArray.h"
 #endif
 
-#ifdef USE_BOOST_LIBS
-#include <boost/utility.hpp>
-#include <boost/any.hpp>
-#include <boost/foreach.hpp>
-#include <boost/array.hpp>
-typedef boost::array<double, 3> Vec3D;
-typedef boost::array<double, 3> Point3D;
-#endif
-
-class Point3D
-{
-public:
-  double &operator[](int i)
-  {
-    return data[i];
-  }
-  double operator[](int i) const
-  {
-    return data[i];
-  }
-private:
-  double data[3];
-};
-
 #ifdef USE_MESQUITE
 #include <Mesquite_all_headers.hpp>
 #endif
 
 #define BEGIN_JAAL_NAMESPACE  namespace Jaal {
 #define END_JAAL_NAMESPACE    }
+
+#include "basic_math.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -460,7 +438,7 @@ public:
     connect[1] = n2;
   }
 
-  void setConnection(const vector<NodeType> &v)
+  void setNodes(const vector<NodeType> &v)
   {
     assert(v.size() == 2);
     connect[0] = v[0];
@@ -543,7 +521,7 @@ public:
     return -1;
   }
 
-  int reverse()
+  void reverse()
   { std::reverse( connect.begin(), connect.end() );}
 
   int getOrientation( const Vertex *ev0, const Vertex *ev1) const
@@ -580,7 +558,7 @@ public:
     return 0;
   }
 
-  void setConnection(const vector<NodeType> &v)
+  void setNodes(const vector<NodeType> &v)
   {
     connect = v;
   }
@@ -747,7 +725,7 @@ public:
 
   // If the topology of the mesh is changed, make sure to setBoundaryStatus = 0
   // so that it is again determined. 
-  bool setBoundaryStatus( bool v ) { boundary_status = v; }
+  void setBoundaryStatus( bool v ) { boundary_status = v; }
 
   // If the boundary nodes and faces are knowm, return the value = 1. otherwise 0
   bool getBoundaryStatus() const { return boundary_status; }
@@ -979,82 +957,6 @@ private:
   int read_simple_format_data( const string &s);
   int read_triangle_format_data( const string &s);
 };
-
-inline Point3D make_vector( const Point3D &head, const Point3D &tail)
-{
-  Point3D xyz;
-  xyz[0] = head[0] - tail[0];
-  xyz[1] = head[1] - tail[1];
-  xyz[2] = head[2] - tail[2];
-  return xyz;
-}
-
-inline Point3D make_vector( const Vertex* head, const Vertex *tail)
-{
-  Point3D phead = head->getXYZCoords();
-  Point3D ptail = tail->getXYZCoords();
-
-  Point3D xyz;
-  xyz[0] = phead[0] - ptail[0];
-  xyz[1] = phead[1] - ptail[1];
-  xyz[2] = phead[2] - ptail[2];
-
-  return xyz;
-}
-
-inline double length( const Point3D &A, const Point3D &B)
-{
-   double dx = A[0] - B[0];
-   double dy = A[1] - B[1];
-   double dz = A[2] - B[2];
-   return sqrt( dx*dx + dy*dy + dz*dz );
-}
-
-inline double length2( const Point3D &A, const Point3D &B)
-{
-   double dx = A[0] - B[0];
-   double dy = A[1] - B[1];
-   double dz = A[2] - B[2];
-   return dx*dx + dy*dy + dz*dz;
-}
-
-inline double magnitude( const Point3D &A )
-{
-  return sqrt( A[0]*A[0] + A[1]*A[1] + A[2]*A[2] );
-}
-
-inline double dot_product( const Point3D &A, const Point3D &B)
-{
-  return A[0]*B[0] + A[1]*B[1] + A[2]*B[2];
-}
-
-inline Point3D cross_product( const Point3D &A, const Point3D &B)
-{
-  Point3D C;
-  C[0] = A[1]*B[2] - A[2]*B[1];
-  C[1] = A[2]*B[0] - A[0]*B[2];
-  C[2] = A[0]*B[1] - A[1]*B[0];
-  return C;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-inline double getAngle( const Point3D &A, const Point3D &B)
-{
-  double AB = dot_product(A,B);
-  double Am = magnitude(A);
-  double Bm = magnitude(B);
-
-  if( Am < 1.0E-15 || Bm < 1.0E-15) return 0.0;
-
-  double x = AB/(Am*Bm);
-
-  if( x > 1.0) x = 1.0;
-  if( x < -1.0) x = -1.0;
-
-  return 180*acos(x)/M_PI;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Graph Matching operations ....
 ///////////////////////////////////////////////////////////////////////////////
@@ -1088,9 +990,23 @@ int quadrangulation(iMesh_Instance &imesh, iBase_EntitySetHandle input_mesh = 0,
 
 void mesh_optimization(Mesh *mesh);
 
+inline Point3D make_vector( const Vertex* head, const Vertex *tail)
+{
+  Point3D phead = head->getXYZCoords();
+  Point3D ptail = tail->getXYZCoords();
+
+  Point3D xyz;
+  xyz[0] = phead[0] - ptail[0];
+  xyz[1] = phead[1] - ptail[1];
+  xyz[2] = phead[2] - ptail[2];
+
+  return xyz;
+}
+
 #endif
 
 END_JAAL_NAMESPACE
+
 
 #endif
 

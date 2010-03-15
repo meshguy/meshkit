@@ -72,6 +72,8 @@ struct YRing
 {
    Vertex *apex;
    vector<Face*> faces;
+   vector<Edge>  boundary;
+   void create_boundary();
 };
 
 
@@ -117,7 +119,7 @@ private:
 
   vector<Diamond> vDiamonds; // Diamonds in the mesh;
   vector<Bridge>  vBridges; // Bridges in the mesh.
-  vector<YRing>   vYRings;
+  vector<YRing>   vyRings;
 
   // Basic Operations ...
   int face_close(Face *face, Vertex *v0, Vertex *v2);

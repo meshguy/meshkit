@@ -27,7 +27,6 @@ int DualGraph::build(Mesh *m)
 
   nodes.resize(numfaces);
 
-  Point3D p3d;
   Face *face;
   for (size_t iface = 0; iface < numfaces; iface++)
   {

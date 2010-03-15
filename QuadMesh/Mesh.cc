@@ -172,9 +172,9 @@ double Face :: tri_area( const Point3D &p0, const Point3D &p1, const Point3D &p2
    ////////////////////////////////////////////////////////////////////////////////
 
    double d[3];
-   d[0] = length2(p1,p2);
-   d[1] = length2(p2,p0);
-   d[2] = length2(p0,p1);
+   d[0] = Math::length2(p1,p2);
+   d[1] = Math::length2(p2,p0);
+   d[2] = Math::length2(p0,p1);
 
    std::sort( d, d + 3 ); // May be we should have optimized version than STL one 
 
@@ -213,11 +213,11 @@ double Face :: quad_area( const Point3D &p0, const Point3D &p1,
   // 16th Feb 2010.
   //////////////////////////////////////////////////////////////////////////////
 
-  Point3D v2v0   = make_vector( p2, p0);
-  Point3D v3v1   = make_vector( p3, p1);
-  Point3D d0d1   = cross_product( v2v0, v3v1 ); 
+  Point3D v2v0   = Math::make_vector( p2, p0);
+  Point3D v3v1   = Math::make_vector( p3, p1);
+  Point3D d0d1   = Math::cross_product( v2v0, v3v1 ); 
 
-  double area = 0.5*magnitude( d0d1 );
+  double area = 0.5*Math::magnitude( d0d1 );
   return area;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,6 +258,7 @@ int Mesh :: check_convexity()
 	    face->setTag(2);
 
    }
+   return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -611,7 +612,7 @@ FaceType Face::create_quad(const FaceType t1, const FaceType t2)
   connect[3] = commonnodes[1];
 
   Face *qface = new Face;
-  qface->setConnection(connect);
+  qface->setNodes(connect);
   return qface;
 }
 
@@ -1120,14 +1121,14 @@ Mesh *struct_tri_grid(int nx, int ny)
       connect[1] = trimesh->getNodeAt(n1);
       connect[2] = trimesh->getNodeAt(n2);
       newtri = new Face;
-      newtri->setConnection(connect);
+      newtri->setNodes(connect);
       trimesh->addFace(newtri);
 
       connect[0] = trimesh->getNodeAt(n0);
       connect[1] = trimesh->getNodeAt(n2);
       connect[2] = trimesh->getNodeAt(n3);
       newtri = new Face;
-      newtri->setConnection(connect);
+      newtri->setNodes(connect);
       trimesh->addFace(newtri);
     }
   }
@@ -1176,7 +1177,7 @@ Mesh * Jaal::struct_quad_grid(int nx, int ny)
       connect[2] = quadmesh->getNodeAt(n2);
       connect[3] = quadmesh->getNodeAt(n3);
       newquad = new Face;
-      newquad->setConnection(connect);
+      newquad->setNodes(connect);
       quadmesh->addFace(newquad);
     }
   }
@@ -1365,7 +1366,7 @@ void Mesh::set_strip_markers()
     strip2.clear();
     get_quad_strips(bound_faces[i], strip1, strip2);
     id++;
-    for (int j = 0; j < strip1.size(); j++)
+    for (size_t j = 0; j < strip1.size(); j++)
       strip1[j]->setTag(id);
     /*
      id++;
@@ -1442,7 +1443,7 @@ iBase_EntityHandle Mesh::get_MOAB_Handle(iMesh_Instance imesh, Face *face)
 
 int Mesh::toMOAB(iMesh_Instance &imesh, iBase_EntitySetHandle entitySet)
 {
-  int status, result, err;
+  int  err;
 
   if (imesh == 0)
   {
@@ -1523,7 +1524,7 @@ int Mesh::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entitySet)
 
   Point3D p3d;
   double x, y, z;
-  for (size_t i = 0; i < numNodes; i++)
+  for (int i = 0; i < numNodes; i++)
   {
     Vertex *vtx = Vertex::newObject();
     moab2jaalNodes[nodeHandles[i]] = vtx;
@@ -1557,14 +1558,14 @@ int Mesh::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entitySet)
   if (numTris)
   {
     connect.resize(3);
-    for (int i = 0; i < numTris; i++)
+    for (size_t i = 0; i < numTris; i++)
     {
       iMesh_getEntAdj(imesh, tfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(
           facenodes), &err);
       for (int j = 0; j < 3; j++)
         connect[j] = moab2jaalNodes[facenodes[j]];
       Face *face = new Face;
-      face->setConnection(connect);
+      face->setNodes(connect);
       face->set_MOAB_Handle(tfaceHandles[i]);
       addFace(face);
     }
@@ -1585,7 +1586,7 @@ int Mesh::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entitySet)
       for (int j = 0; j < 4; j++)
         connect[j] = moab2jaalNodes[facenodes[j]];
       Face *face = new Face;
-      face->setConnection(connect);
+      face->setNodes(connect);
       face->set_MOAB_Handle(qfaceHandles[i]);
       addFace(face);
     }

@@ -5,11 +5,16 @@
 
 #include "Tri2Quad.h"
 #include "QuadCleanUp.h"
+#include "circumcenter.h"
 
 using namespace Jaal;
 
 int main(int argc, char **argv)
 {
+
+  UnitTest::test_tri3d_circumcenter();
+  exit(0);
+  
   int err;
   if( argc != 2) {
       cout << "Usage: Executable trimeshfile " << endl;
@@ -17,11 +22,10 @@ int main(int argc, char **argv)
   }
   string fname = argv[1];
 
-/*
-  Mesh *q1 = Jaal::struct_quad_grid( 10, 10);
+  Mesh *q1 = new Mesh;
+  q1->readData( argv[1] );
   q1->saveAs( "quad3");
   exit(0);
-  */
 
   iMesh_Instance trimesh;
   iMesh_newMesh(NULL, &trimesh, &err, 0);

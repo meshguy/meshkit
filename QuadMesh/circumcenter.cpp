@@ -2,6 +2,8 @@
 #include <stdio.h>
 
 #include "circumcenter.h"
+#include <iostream>
+using namespace std;
 
 //
 //Let a, b, c, d, and m be vectors in R^3.  Let ax, ay, and az be the components

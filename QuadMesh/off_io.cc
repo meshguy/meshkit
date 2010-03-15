@@ -28,7 +28,7 @@ int Mesh ::read_off_format_data(const string &fname)
   ifstream infile( fname.c_str(), ios::in);
   if( infile.fail() ) {
       cout << "Warning: Cann't open file " << fname << endl;
-      return NULL;
+      return 1;
   }
 
   //  The codelet is borrowed from TriMesh Software
@@ -84,7 +84,7 @@ int Mesh ::read_off_format_data(const string &fname)
               break; 
        }
        Face *face = new Face;
-       face->setConnection( connect );
+       face->setNodes( connect );
        addFace(face);
    }  
    cout << " Reading Off file finished " << endl;

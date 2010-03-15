@@ -108,7 +108,7 @@ int Tri2Quads::quadrangulate_boundary_triangle(Face *face)
   maxfaceID++;
   Face *rootQuad = new Face;
   rootQuad->setID(maxfaceID);
-  rootQuad->setConnection(qconnect);
+  rootQuad->setNodes(qconnect);
 
   face->setRemoveMark(1);
 
@@ -217,7 +217,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   connect[1] = ev0;
   connect[2] = ev1;
   qface = new Face;
-  qface->setConnection(connect);
+  qface->setNodes(connect);
   qface->setID(maxfaceID);
   Vertex *dc1 = qface->getNewDualNode();
   dc1->setID(maxfaceID);
@@ -239,7 +239,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   connect[2] = ev1;
   qface = new Face;
   qface->setID(maxfaceID);
-  qface->setConnection(connect);
+  qface->setNodes(connect);
   Vertex *dc2 = qface->getNewDualNode();
   dc2->setID(maxfaceID);
   trimesh->addFace(qface);
@@ -257,7 +257,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   connect[0] = steiner;
   connect[1] = ev0;
   connect[2] = ev1;
-  parentface->setConnection(connect);
+  parentface->setNodes(connect);
   Point3D p3d = parentface->getCentroid();
   Vertex *dc3 = parentface->getDualNode();
   dc3->setXYZCoords(p3d);
@@ -428,7 +428,7 @@ void Tri2Quads::percolateup()
 {
   steinerNodes.clear();
   steinerFaces.clear();
-  //    nodematching.clear();
+
   int height = btree->getHeight();
   list<BinaryNode*> levelnodes;
   list<BinaryNode*>::const_iterator it;
@@ -482,7 +482,6 @@ void Tri2Quads::percolateup()
     Face *rootface = root->getDualNode()->getPrimalFace();
     quadrangulate_boundary_triangle(rootface);
   }
-
 
 }
 
