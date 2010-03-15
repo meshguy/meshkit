@@ -22,7 +22,8 @@ libMKalgs_la_SOURCES = \
 	vec_utils.cpp \
 	vec_utils.hpp \
 	CutCellMesh.cpp \
-        ProjectShell.cpp
+        ProjectShell.cpp \
+        EdgeMesher.cpp
 
 # The list of header files which are to be installed
 libMKalgs_la_include_HEADERS = \
@@ -31,7 +32,8 @@ libMKalgs_la_include_HEADERS = \
 	ExtrudeMesh.hpp \
 	MergeMesh.hpp \
 	CutCellMesh.hpp \
-        ProjectShell.hpp
+        ProjectShell.hpp \
+        EdgeMesher.hpp
 
 # Tests and such
 check_PROGRAMS = CopyMesh_test ExtrudeMesh_test CutCellMesh_test \
