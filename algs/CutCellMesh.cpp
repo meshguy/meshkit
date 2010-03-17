@@ -12,7 +12,6 @@
 #ifdef MOAB
 #include "MBCore.hpp"
 #include "MBRange.hpp"
-#include "MBOrientedBox.hpp" // MBMatrix3.hpp is included
 #endif
 
 #define MB_OBB_TREE_TAG_NAME "OBB_TREE"
@@ -85,8 +84,8 @@ int CutCellMesh::do_mesh(int exp, int file_type)
   msize3 = r_usage.ru_idrss*pagesize;
   
   // 3. build box
-  MBOrientedBox box;
-  result = tool.box(m_hTreeRoot, box);
+  double box_center[3], box_axis1[3], box_axis2[3], box_axis3[3];
+  result = tool.box(m_hTreeRoot, box_center, box_axis1, box_axis2, box_axis3);
   if (MB_SUCCESS != result) {
     std::cerr << "Error getting box for tree root set.";
     return iBase_FAILURE;
@@ -97,7 +96,7 @@ int CutCellMesh::do_mesh(int exp, int file_type)
   msize4 = r_usage.ru_idrss*pagesize;
 
   // 4. set division
-  set_division(box);
+  set_division(box_center, box_axis1, box_axis2, box_axis3);
 
   // 5. make hex vertices
   err = make_hex_vertices();
@@ -554,21 +553,30 @@ int CutCellMesh::set_tag_info()
   return iBase_SUCCESS;
 }
 
-void CutCellMesh::set_division(const MBOrientedBox& box)
+static inline double axis_len( const double* axis )
 {
-  double box_length_ave = 2./3.*(box.length[0] + box.length[1] + box.length[2]);
+  return std::sqrt(axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2]);
+}
+
+void CutCellMesh::set_division( const double* center,
+                                const double* axis1,
+                                const double* axis2,
+                                const double* axis3)
+{
+  double lengths[3] = { axis_len(axis1), axis_len(axis2), axis_len(axis3) };
+  double box_length_ave = 2./3.*(lengths[0] + lengths[1] + lengths[2]);
 
   // default value is adjusted to large geometry file
   // interval_size_estimate : 2*L*sqrt(2*PI*sqrt(2)/# of tris)
   if (m_dInputSize < 0.) m_dInputSize = 2.*box_length_ave*sqrt(8.886/m_nTri);
 
   for (int i = 0; i < 3; i++) {
-    m_nDiv[i] = 2.*box.length[i]/m_dInputSize;
-    m_dIntervalSize[i] = 2.*box.length[i]/m_nDiv[i];
+    m_nDiv[i] = 2.*lengths[i]/m_dInputSize;
+    m_dIntervalSize[i] = 2.*lengths[i]/m_nDiv[i];
     if (m_nDiv[i]*.07 > 3) m_nDiv[i] += m_nDiv[i]*.07;
     else m_nDiv[i] += 3;
     m_nNode[i] = m_nDiv[i] + 1;
-    m_origin_coords[i] = box.center[i] - .5*m_nDiv[i]*m_dIntervalSize[i];
+    m_origin_coords[i] = center[i] - .5*m_nDiv[i]*m_dIntervalSize[i];
   }
 
   m_nHex = m_nDiv[0]*m_nDiv[1]*m_nDiv[2];

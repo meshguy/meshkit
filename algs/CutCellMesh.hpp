@@ -148,7 +148,10 @@ private:
 
 #ifdef MOAB    
   MBInterface* moab_instance() {return reinterpret_cast<MBInterface*> (m_mesh);}
-  void set_division(const MBOrientedBox& box);
+  void set_division(const double* center,
+                    const double* axis1,
+                    const double* axis2,
+                    const double* axis3);
   int find_intersections(MBOrientedBoxTreeTool& tool);
   int fire_rays(MBOrientedBoxTreeTool& tool, int dir);
   bool move_ray(MBOrientedBoxTreeTool& tool,
