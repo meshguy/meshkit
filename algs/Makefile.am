@@ -62,7 +62,7 @@ ProjectShell_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
-INCLUDES += -I$(top_srcdir) -I$(top_builddir)
+INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils
 
 if HAVE_IGEOM
 INCLUDES += $(IGEOM_INCLUDES)
