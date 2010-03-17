@@ -7,8 +7,6 @@
 #include "MBCartVect.hpp"
 #endif
 
-using namespace moab;
-
 int MergeMesh::merge_entities(iBase_EntityHandle *elems,
                               int elems_size,
                               const double merge_tol,
