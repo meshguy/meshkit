@@ -3,6 +3,11 @@
 
 #include <math.h>
 #include <values.h>
+#include <iostream>
+using namespace std;
+
+#define ANGLE_IN_DEGREES  0
+#define ANGLE_IN_RADIANS  1
 
 #ifdef USE_BOOST_LIBS
 #include <boost/utility.hpp>
@@ -34,7 +39,7 @@ typedef Array<double,4> Array4D;
 
 namespace Math
 {
-inline Point3D make_vector( const Point3D &head, const Point3D &tail)
+inline Point3D create_vector( const Point3D &head, const Point3D &tail)
 {
   Point3D xyz;
   xyz[0] = head[0] - tail[0];
@@ -81,7 +86,7 @@ inline Point3D cross_product( const Point3D &A, const Point3D &B)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline double getAngle( const Point3D &A, const Point3D &B)
+inline double getVectorAngle( const Point3D &A, const Point3D &B)
 {
   double AB = dot_product(A,B);
   double Am = magnitude(A);
@@ -96,6 +101,47 @@ inline double getAngle( const Point3D &A, const Point3D &B)
 
   return 180*acos(x)/M_PI;
 }
+
+//////////////////////////////////////////////////////////////////////////////
+
+template <class T, size_t n>
+inline double getAngle(const Array<T, n> &VecA, const Array<T, n> &VecB, 
+                int unit_measure)
+  {
+      double Abar, Bbar, theta;
+      Abar = magnitude(VecA);
+      Bbar = magnitude(VecB);
+
+      if (Abar < 1.0E-10 || Bbar < 1.0E-10) {
+          cout << " Warning: Error in Angle calculation " << endl;
+          cout << " Magnitude of Vector A is " << Abar << endl;
+          cout << " Magnitude of Vector B is " << Bbar << endl;
+          return 0.0;
+      }
+
+      double value = dot_product(VecA, VecB) / (Abar * Bbar);
+
+      if (value > 1.0) value = 1.0;
+      if (value < -1.0) value = -1.0;
+
+      theta = acos(value);
+
+      if (unit_measure == ANGLE_IN_DEGREES) theta *= (180.0 / M_PI);
+
+      return theta;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+template <class T, size_t n>
+inline T getAngle(const Array<T, n> &pa, const Array<T, n> &pb,
+const Array<T, n> &pc, int unit_measure = 0)
+{
+      Array<T, n> VecA = create_vector(pb, pa);
+      Array<T, n> VecB = create_vector(pc, pa);
+      return getAngle(VecA, VecB, unit_measure);
+}
+
 
 }
 
