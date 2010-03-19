@@ -1,4 +1,4 @@
-#include "Refine2D.h"
+#include "MeshRefine2D.h"
 
 iMesh_Instance read_off_file( const string &s);
 int write_off_file( iMesh_Instance &mesh, const string &s);
@@ -1321,6 +1321,7 @@ int GradeRefine2D :: execute()
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef TEST_MESHREFINE
 int main(int argc, char **argv)
 {
     iMesh_Instance mesh = read_off_file( "model.off");
@@ -1335,4 +1336,5 @@ int main(int argc, char **argv)
     
     return 0;
 }
+#endif
 
