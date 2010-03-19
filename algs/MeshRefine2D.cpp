@@ -143,19 +143,19 @@ MeshRefine2D:: edge_centroid( iBase_EntityHandle v1, iBase_EntityHandle v2) cons
   double x, y, z;
   Point3D p3d;
 
-  p3d.x = 0.0;
-  p3d.y = 0.0;
-  p3d.z = 0.0;
+  p3d[0] = 0.0;
+  p3d[1] = 0.0;
+  p3d[2] = 0.0;
 
   iMesh_getVtxCoord(mesh, v1, &x, &y, &z, &err);
-  p3d.x += x; p3d.y += y; p3d.z += z;
+  p3d[0] += x; p3d[1] += y; p3d[2] += z;
 
   iMesh_getVtxCoord(mesh, v2, &x, &y, &z, &err);
-  p3d.x += x; p3d.y += y; p3d.z += z;
+  p3d[0] += x; p3d[1] += y; p3d[2] += z;
 
-  p3d.x *= 0.5;
-  p3d.y *= 0.5;
-  p3d.z *= 0.5;
+  p3d[0] *= 0.5;
+  p3d[1] *= 0.5;
+  p3d[2] *= 0.5;
 
   return p3d;
 }
@@ -198,14 +198,14 @@ MeshRefine2D:: face_centroid( iBase_EntityHandle facehandle) const
   Point3D p3d;
   for(int i =  0; i < numNodes; i++) {
       iMesh_getVtxCoord(mesh, facenodes[i], &x, &y, &z, &err);
-      p3d.x += x;
-      p3d.y += y;
-      p3d.z += z;
+      p3d[0] += x;
+      p3d[1] += y;
+      p3d[2] += z;
   }
 
-  p3d.x /= (double)numNodes;
-  p3d.y /= (double)numNodes;
-  p3d.z /= (double)numNodes;
+  p3d[0] /= (double)numNodes;
+  p3d[1] /= (double)numNodes;
+  p3d[2] /= (double)numNodes;
 
   return p3d;
 }
@@ -253,7 +253,7 @@ MeshRefine2D::setVertexOnEdge( iBase_EntityHandle v1, iBase_EntityHandle v2,
       if( allow_edge_refinement(edgehandle) ) 
       {
           Point3D p3d = edge_centroid(v1,v2);
-          iMesh_createVtx(mesh, p3d.x, p3d.y, p3d.z, &vmid, &err);
+          iMesh_createVtx(mesh, p3d[0], p3d[1], p3d[2], &vmid, &err);
           iMesh_setEHData(mesh, edgehandle, vertex_on_edge_tag, vmid, &err);
           return 0;
       }
@@ -266,7 +266,7 @@ MeshRefine2D::setVertexOnEdge( iBase_EntityHandle v1, iBase_EntityHandle v2,
       iMesh_getEHData(mesh, edgehandle, vertex_on_edge_tag, &vmid, &err);
       if( err ) {
           Point3D p3d = edge_centroid(v1,v2);
-          iMesh_createVtx(mesh, p3d.x, p3d.y, p3d.z, &vmid, &err);
+          iMesh_createVtx(mesh, p3d[0], p3d[1], p3d[2], &vmid, &err);
           iMesh_setEHData(mesh, edgehandle, vertex_on_edge_tag, vmid, &err);
       }
       return 0;
@@ -818,7 +818,7 @@ int CentroidRefine2D::refine_tri(const iBase_EntityHandle &oldface)
   iBase_EntityHandle facehandle, vcenter;
 
   Point3D p3d = face_centroid(oldface);
-  iMesh_createVtx(mesh, p3d.x, p3d.y, p3d.z, &vcenter, &err);
+  iMesh_createVtx(mesh, p3d[0], p3d[1], p3d[2], &vcenter, &err);
 
   SimpleArray<iBase_EntityHandle> eConnect;
   iMesh_getEntAdj(mesh, oldface, iBase_VERTEX, ARRAY_INOUT(eConnect), &err);
@@ -864,7 +864,7 @@ int  CentroidRefine2D::refine_quad(const iBase_EntityHandle &oldface)
   iBase_EntityHandle  facehandle, vcenter;
 
   Point3D p3d = face_centroid(oldface);
-  iMesh_createVtx(mesh, p3d.x, p3d.y, p3d.z, &vcenter, &err);
+  iMesh_createVtx(mesh, p3d[0], p3d[1], p3d[2], &vcenter, &err);
 
   SimpleArray<iBase_EntityHandle> eConnect;
   iMesh_getEntAdj(mesh, oldface, iBase_VERTEX, ARRAY_INOUT(eConnect), &err);
@@ -1103,7 +1103,7 @@ int Refine2D14::refine_quad(const iBase_EntityHandle &oldface)
   iBase_EntityHandle  facehandle, vcenter;
 
   Point3D p3d = face_centroid(oldface);
-  iMesh_createVtx(mesh, p3d.x, p3d.y, p3d.z, &vcenter, &err);
+  iMesh_createVtx(mesh, p3d[0], p3d[1], p3d[2], &vcenter, &err);
 
   SimpleArray<iBase_EntityHandle> eConnect;
   iMesh_getEntAdj(mesh, oldface, iBase_VERTEX, ARRAY_INOUT(eConnect), &err);

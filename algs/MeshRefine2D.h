@@ -16,12 +16,7 @@
 using namespace std;
 
 #include "SimpleArray.h"
-
-struct Point3D
-{
-  Point3D() { x = 0.0; y = 0.0; z = 0.0; }
-  double x, y, z;
-};
+#include "basic_math.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 //   MeshRefine2D:
