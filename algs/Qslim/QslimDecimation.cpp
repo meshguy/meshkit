@@ -339,7 +339,7 @@ static
 
    if( opts.logfile && opts.selected_output&OUTPUT_CONTRACTIONS )
 
-//      *opts.logfile << "pair ( v" << v0->validID()+1 << " v" << v1->validID()+1 << " ) cost: " << -pair->cost <<  endl;
+      *opts.logfile << "pair ( v" <<  mb->id_from_handle(v0) << " v" <<  mb->id_from_handle(v1) << " ) cost: " << -pair->cost <<  std::endl;
    //
 	// NOTICE:  In the heap we use the negative cost.  That's because
 	//          the heap is implemented as a MAX heap.
