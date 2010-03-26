@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
   iMesh_getRootSet(mesh, &root_set, &err);
   ERRORR("Couldn't get root set.", 1);
 
-  // read geometry and establish facet mesh
+  // read initial mesh file
   clock_t start_time = clock();
   iMesh_load(mesh, root_set, filename, NULL, &err, strlen(filename), 0);
   ERRORR("Couldn't load mesh file.", 1);
@@ -226,13 +226,27 @@ int main(int argc, char* argv[])
   // make decimate mesher
   QslimDecimation *qsld = new QslimDecimation(mesh, root_set);
 
-  // do mesh
+  // do simplification
   err = qsld->decimate(options);
   ERRORR("Couldn't decimate mesh.", 1);
-  clock_t mesh_time = clock();
+  clock_t decimate_time = clock();
 
+  std::cout << "Writing output file " << outfile <<std::endl;
   // save the output in a new file
   iMesh_save(mesh, root_set, outfile, NULL, &err, strlen(outfile), 0);
+
+  clock_t write_time = clock();
+
+
+   std::cout << "Decimate algorithm successful." << std::endl;
+
+   std::cout << " load time: "
+             << (double) (load_time - start_time)/CLOCKS_PER_SEC
+             << "s \n simplification time: "
+             << (double) (decimate_time - load_time)/CLOCKS_PER_SEC
+             << "s \n write time: "
+             << (double) (write_time - decimate_time )/CLOCKS_PER_SEC
+             << " s." << std::endl;
 
   delete qsld;
   iMesh_dtor(mesh, &err);

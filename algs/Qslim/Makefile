@@ -4,14 +4,11 @@ CXX=/homes/sharp/3rdparty/mpich2/mpich2-1.1.1p1/gcc/bin/mpicxx
 .cpp.o:
 	$(CXX) $(CFLAGS) -c $<
 
-
-GFX2_FLAGS =  
-
 include /homes/iulian/lib/MOAB/lib/moab.make
 include /homes/iulian/lib/MOAB/lib/iMesh-Defs.inc
 
 # debug options
-OPTFLAGS = -O0 -g $(GFX2_FLAGS)
+OPTFLAGS = -O0 -g
 FEATURES =
 
 CFLAGS = $(IMESH_INCLUDES) $(MOAB_INCLUDES) $(OPTFLAGS) 
@@ -27,8 +24,9 @@ QSLIM_OBJS = $(QSLIM_SRCS:.cpp=.o)
 
 
 qslim2     : $(QSLIM_OBJS)
-	$(CXX) -o $@ $(QSLIM_OBJS) -lm $(IMESH_LIBS) $(MOAB_LIBS_LINK)
+	$(CXX) -o $@ $(QSLIM_OBJS) $(OPTFLAGS) -lm $(IMESH_LIBS)\
+		 $(MOAB_LIBS_LINK)
 
 
 clean:
-	rm -rf *.o qst
+	rm -rf *.o qslim2

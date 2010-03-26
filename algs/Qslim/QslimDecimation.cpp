@@ -14,6 +14,7 @@
 #include "Mat4.h"
 #include "defs.h"
 #include "quadrics.h"
+#include <time.h>
 
 // those are used in model navigation/simplification
 #include "primitives.h"
@@ -605,16 +606,23 @@ int  QslimDecimation::decimate(QslimOptions & iOpts)
      return 1;// error
    //MBEntityHandle mbSet = reinterpret_cast<MBEntityHandle>(m_InitialSet);
 
+   clock_t start_time = clock();
    int err = Init();
    if (err)
    {
 	   std::cerr << "Error in initialization of decimation. Abort\n";
 	   return 1;
    }
-
+   clock_t init_time = clock();
+   std::cout<<"   Initialization  "
+		   << (double) (init_time - start_time)/CLOCKS_PER_SEC << " s.\n";
 
     while( validFaceCount > opts.face_target  && decimate_min_error() < opts.error_tolerance )
 		decimate_contract();
+
+    clock_t finish_time = clock();
+    std::cout<<"   Decimation: "
+    		   << (double) (finish_time - init_time )/CLOCKS_PER_SEC << " s.\n";
     // now that we are done , delete the vertices that are invalid
     std::vector<MBEntityHandle> invalidVerts;
     for (MBRange::iterator rit =verts.begin(); rit!=verts.end(); rit++)
@@ -629,26 +637,7 @@ int  QslimDecimation::decimate(QslimOptions & iOpts)
     // hopefully, the edges and triangles are already fine with it
     MBErrorCode rval = mb->delete_entities( &(invalidVerts[0]) ,invalidVerts.size());
     //slim_time = gfx_get_time() - slim_time;
-#if 0
-    if( outfile )
-    {
-        write_time = gfx_get_time();
-        *outfile << M0;
-        write_time = gfx_get_time() - write_time;
-    }
-    else
-        write_time = 0.0;
 
-
-    std::cerr << endl << endl;
-    std::cerr << "Setup time        : " << setup_time << " sec" << endl;
-    std::cerr << "Quadrix init time : " << init_time << " sec" << endl;
-    std::cerr << "Quadrix slim time : " << slim_time << " sec" << endl;
-    std::cerr << "Output time       : " << write_time << " sec" << endl;
-    std::cerr << endl;
-    std::cerr << "Total time        : " << setup_time+init_time+slim_time+write_time
-         << " sec" << std::endl;
-#endif
 
    return 0;
 }
@@ -733,7 +722,8 @@ int  QslimDecimation::Init ()
          rval = mb->get_connectivity(tr, conn, num_nodes);
          for ( j=0; j<3; j++ )
          {
-            vertex_info ( conn[j] ).Q += Q;
+        	vert_info& vj_info = vertex_info (conn[j] );
+        	vj_info.Q += Q;
             vertex_info ( conn[j] ).norm += norm;
 
          }
@@ -765,10 +755,12 @@ int  QslimDecimation::Init ()
              }
 
              B *= opts.boundary_constraint_weight;
-             vertex_info ( conn[0] ).Q += B;
-             vertex_info ( conn[0] ).norm += norm;
-             vertex_info ( conn[1] ).Q += B;
-             vertex_info ( conn[1] ).norm += norm;
+             vert_info& v0_info = vertex_info (conn[0] );
+             vert_info& v1_info = vertex_info (conn[1] );
+             v0_info.Q += B;
+             v0_info.norm += norm;
+             v1_info.Q += B;
+             v1_info.norm += norm;
           }
       }
    }
