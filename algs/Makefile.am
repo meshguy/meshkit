@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS = 
+SUBDIRS = Qslim
 
 @IGEOM_CONFIG_OPTIONS@
 @IMESH_CONFIG_OPTIONS@

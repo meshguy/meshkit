@@ -498,6 +498,7 @@ AC_CONFIG_FILES([Makefile
                  meshkit.make 
                  testdir.h
                  algs/Makefile
+                 algs/Qslim/Makefile
 		 rgg/Makefile
                  xforms/Makefile
                  utils/Makefile

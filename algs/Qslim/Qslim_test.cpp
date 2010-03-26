@@ -22,8 +22,8 @@ std::string usage_string =
 "-B <weight>	Use boundary preservation planes with given weight.\n"
 "-m		Preserve mesh quality.\n"
 "-a		Enable area weighting.\n"
-"-p     Height fields positivity. Used for height fields, assume triangles are originally \n"
-"         positively oriented."
+"-p 	Height fields positivity. Used for height fields, assume triangles \n"
+"				are originally positively oriented."
 "\n";
 
 std::string logging_usage_string =
@@ -47,166 +47,178 @@ int main(int argc, char* argv[])
   // in the process, a mesh file is read (instanced) and the
   // set of triangles is passed
   // it could be the root set for the mesh
+  std::string fstr, ostr;
   if (argc<=1)
   {
 	  std::cout<<usage_string;
-	  return 1;
+	  std::cout << "\n\n";
+	  std::cout<< "default arguments: -s 4500 -B 1000 -p -o out.smf ./partBed.smf \n";
+	  options.face_target = 4500;
+	  options.will_constrain_boundaries = true;
+	  options.boundary_constraint_weight = 1000;
+	  options.height_fields = 1;
+	  fstr="./partBed.smf";
+	  filename = fstr.c_str();
+	  ostr = "out.smf";
+	  outfile = ostr.c_str();
   }
-  // the file should be the last argument; if not, we have a problem, we will not be able to read it
-  filename = argv[argc-1];
-  int i=1;// will loop through arguments, and process them
-  for (i=1; i<argc-1 ; i++)
+  else
   {
-	  if (argv[i][0]=='-')
+	  // the file should be the last argument; if not, we have a problem, we will not be able to read it
+	  filename = argv[argc-1];
+	  int i=1;// will loop through arguments, and process them
+	  for (i=1; i<argc-1 ; i++)
 	  {
-		  switch (argv[i][1])
+		  if (argv[i][0]=='-')
 		  {
-			  case 'l':
+			  switch (argv[i][1])
 			  {
-				  // open a log file
-				  options.logfile = new std::ofstream(argv[i+1]);
-				  if (!options.logfile)
+				  case 'l':
 				  {
-					  // cannot open log file, exit
-					  std::cout << "can't open log file\n";
-					  return 1;
+					  // open a log file
+					  options.logfile = new std::ofstream(argv[i+1]);
+					  if (!options.logfile)
+					  {
+						  // cannot open log file, exit
+						  std::cout << "can't open log file\n";
+						  return 1;
+					  }
+					  i++;
+					  break;
 				  }
-				  i++;
-				  break;
-			  }
-			  case 'L':
-				  // parse the logging options
-			  {
-				  char *c;
-				  int errflg = 0;
-                  c = argv[i]+2;// skip -L
-				  while( *c )
-					{
-						if( *c=='x' )
-							options.selected_output |= OUTPUT_CONTRACTIONS;
-						else if( *c=='q' )
-							options.selected_output |= OUTPUT_QUADRICS;
-						else if( *c=='c' )
-							options.selected_output |= OUTPUT_COST;
-						else if( *c=='v' )
-							options.selected_output |= OUTPUT_VERT_NOTES;
-						else if( *c=='f' )
-							options.selected_output |= OUTPUT_FACE_NOTES;
-						else if( *c=='d' )
-							options.selected_output |= OUTPUT_MODEL_DEFN;
-						else if( *c=='A' )
-							options.selected_output |= OUTPUT_ALL;
-						else
-						errflg++;
-						c++;
-					}
-				  if (errflg>0)
+				  case 'L':
+					  // parse the logging options
 				  {
-					  std::cout<<logging_usage_string;
-					  std::cout<< "!! Ignore the error it\n";
+					  char *c;
+					  int errflg = 0;
+					  c = argv[i]+2;// skip -L
+					  while( *c )
+						{
+							if( *c=='x' )
+								options.selected_output |= OUTPUT_CONTRACTIONS;
+							else if( *c=='q' )
+								options.selected_output |= OUTPUT_QUADRICS;
+							else if( *c=='c' )
+								options.selected_output |= OUTPUT_COST;
+							else if( *c=='v' )
+								options.selected_output |= OUTPUT_VERT_NOTES;
+							else if( *c=='f' )
+								options.selected_output |= OUTPUT_FACE_NOTES;
+							else if( *c=='d' )
+								options.selected_output |= OUTPUT_MODEL_DEFN;
+							else if( *c=='A' )
+								options.selected_output |= OUTPUT_ALL;
+							else
+							errflg++;
+							c++;
+						}
+					  if (errflg>0)
+					  {
+						  std::cout<<logging_usage_string;
+						  std::cout<< "!! Ignore the error it\n";
 
+					  }
+					  break;
 				  }
-				  break;
-			  }
-			  case 'a':
-			  {
-				  options.will_weight_by_area = 1;
-				  break;
-			  }
-			  case 'B':
-			  {
-				  options.boundary_constraint_weight = atof(argv[i+1]);
-				  options.will_constrain_boundaries = 1;
-				  i++;
-				  break;
-			  }
-			  case 's':
-			  {
-				  options.face_target = atoi(argv[i+1]);
-				  i++;
-				  break;
-			  }
-			  case 't':
-			  {
-				  options.pair_selection_tolerance = atof(argv[i+1]);
-				  i++;
-				  break;
-			  }
-			  case 'o':
-			  {
-				  outfile = argv[i+1];
-				  i++;
-				  break;
-			  }
-
-			  case 'O':
-			  {
-				  char * c ;
-				  c = argv[i]+2;
-			  	  int ival = atoi(c);
-			  	  if( ival < 0 || ival > PLACE_OPTIMAL )
-			  		  ival=PLACE_OPTIMAL;
-			  	  options.placement_policy = ival;
-			  	  break;
-			  }
-
-			  case 'Q':
-			  {
-			  	  options.will_use_plane_constraint = false;
-			  	  options.will_use_vertex_constraint = false;
-			  	  options.will_use_plane_constraint = false;
-
-			  	  char * c ;
-			  	  c = argv[i]+2;
-				  while( *c )
+				  case 'a':
 				  {
-				     if( *c=='p' )
-					    options.will_use_plane_constraint = true;
-				     else if( *c=='v' )
-					    options.will_use_vertex_constraint = true;
-				     else
-					 {
-				    	std::cout<< "wrong input " << argv[i] << std::endl;
-					 }
-				     c++;
+					  options.will_weight_by_area = 1;
+					  break;
 				  }
-			  	  break;
-			  }
+				  case 'B':
+				  {
+					  options.boundary_constraint_weight = atof(argv[i+1]);
+					  options.will_constrain_boundaries = 1;
+					  i++;
+					  break;
+				  }
+				  case 's':
+				  {
+					  options.face_target = atoi(argv[i+1]);
+					  i++;
+					  break;
+				  }
+				  case 't':
+				  {
+					  options.pair_selection_tolerance = atof(argv[i+1]);
+					  i++;
+					  break;
+				  }
+				  case 'o':
+				  {
+					  outfile = argv[i+1];
+					  i++;
+					  break;
+				  }
 
-			  case 'e':
-			  {
-				 options.error_tolerance = atof(argv[i+1]);
-				 i++;
-				 break;
-			  }
+				  case 'O':
+				  {
+					  char * c ;
+					  c = argv[i]+2;
+					  int ival = atoi(c);
+					  if( ival < 0 || ival > PLACE_OPTIMAL )
+						  ival=PLACE_OPTIMAL;
+					  options.placement_policy = ival;
+					  break;
+				  }
 
-			  case 'b':
-			  {
-			  	 options.will_preserve_boundaries = true;
-			  	 break;
-			  }
+				  case 'Q':
+				  {
+					  options.will_use_plane_constraint = false;
+					  options.will_use_vertex_constraint = false;
+					  options.will_use_plane_constraint = false;
 
-			  case 'm':
-			  {
-			  	 options.will_preserve_mesh_quality = true;
-			  	 break;
-			  }
+					  char * c ;
+					  c = argv[i]+2;
+					  while( *c )
+					  {
+						 if( *c=='p' )
+							options.will_use_plane_constraint = true;
+						 else if( *c=='v' )
+							options.will_use_vertex_constraint = true;
+						 else
+						 {
+							std::cout<< "wrong input " << argv[i] << std::endl;
+						 }
+						 c++;
+					  }
+					  break;
+				  }
 
-			  case 'p':
-			  {
-			  	 options.height_fields = true;
-			  	 break;
-			  }
+				  case 'e':
+				  {
+					 options.error_tolerance = atof(argv[i+1]);
+					 i++;
+					 break;
+				  }
 
-			  default :
-			  {
-				 std::cout << "unsupported wrong input argument " << argv[i] <<std::endl;
-				 return 0;
-		      }
+				  case 'b':
+				  {
+					 options.will_preserve_boundaries = true;
+					 break;
+				  }
+
+				  case 'm':
+				  {
+					 options.will_preserve_mesh_quality = true;
+					 break;
+				  }
+
+				  case 'p':
+				  {
+					 options.height_fields = true;
+					 break;
+				  }
+
+				  default :
+				  {
+					 std::cout << "unsupported wrong input argument " << argv[i] <<std::endl;
+					 return 0;
+				  }
+			  }
 		  }
 	  }
   }
-  
   // initialize the Mesh
   int err;
   iMesh_Instance mesh;
