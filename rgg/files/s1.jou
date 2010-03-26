@@ -1,0 +1,154 @@
+### Example journal file for creating mesh ###
+# after creating geometry 's1.sat' from 's1.inp' using nrgen_test play this in cubit
+
+import 's1.sat'
+
+# -----------------------------------------------------------------------------------
+# Identify the curves for meshing and/or specfying boundary conditions
+# -----------------------------------------------------------------------------------
+# define variables to identify boundary curves for interval setup
+
+#{PITCH_ASSEMBLY=23.0}
+#{HEIGHT_CORE_MODEL = 124.0}
+#{PIN_PITCH = 1.26472}
+#{NPINS = 17}
+#{CORPLUS =  NPINS*PIN_PITCH-0.5001*PIN_PITCH/2.0}
+
+curve in volume all with x_coor > {CORPLUS} && z_coor > {0.99*HEIGHT_CORE_MODEL} name 'ASSEMBLY_BORDER_XPLUS'
+curve in volume all with x_coor < {-0.5001*PIN_PITCH} && z_coor > {0.99*HEIGHT_CORE_MODEL} name 'ASSEMBLY_BORDER_XMINUS'
+curve in volume all with y_coor > {CORPLUS} && z_coor > {0.99*HEIGHT_CORE_MODEL} name 'ASSEMBLY_BORDER_YPLUS'
+curve in volume all with y_coor < {-0.5001*PIN_PITCH} && z_coor > {0.99*HEIGHT_CORE_MODEL} name 'ASSEMBLY_BORDER_YMINUS'
+
+# create groups for meshing 
+
+group "L_ASSEMBLY_BORDER_XPLUS"  add curve name "ASSEMBLY_BORDER_XPLUS" 
+group "L_ASSEMBLY_BORDER_XMINUS" add curve name "ASSEMBLY_BORDER_XMINUS"
+group "L_ASSEMBLY_BORDER_YPLUS"  add curve name "ASSEMBLY_BORDER_YPLUS" 
+group "L_ASSEMBLY_BORDER_YMINUS" add curve name "ASSEMBLY_BORDER_YMINUS"
+
+group "FCF_01_SURF" add surface name "pwr_fc_f_01_surface" 
+group "FCC_01_SURF" add surface name "pwr_fc_c_01_surface"
+group "FCM_01_SURF" add surface name "pwr_fc_m_01_surface"
+
+group "GTF_01_SURF" add surface name "pwr_gt_f_01_surface"
+group "GTC_01_SURF" add surface name "pwr_gt_c_01_surface"
+group "GTM_01_SURF" add surface name "pwr_gt_m_01_surface"
+
+group "XFC_01_SURF" add surface name "pwr_xfc_01_surface"
+group "XFCC_01_SURF" add surface name "pwr_xfc_c_01_surface"
+group "XFCM_01_SURF" add surface name "pwr_xfc_m_01_surface"
+
+group "CFC_01_SURF" add surface name "pwr_cfc_01_surface"
+group "CFCC_01_SURF" add surface name "pwr_cfc_c_01_surface"
+group "CFCM_01_SURF" add surface name "pwr_cfc_m_01_surface"
+
+group "BLOCK_SURF" add surface name "mat_block_surface"
+group "COOLANT_SURF" add surface name "mat_coolant_surface"
+
+group "FCF_01" add body name "pwr_fc_f_01"
+group "FCC_01" add body name "pwr_fc_c_01"
+group "FCM_01" add body name "pwr_fc_m_01"
+
+group "GTF_01" add body name "pwr_gt_f_01"
+group "GTC_01" add body name "pwr_gt_c_01"
+group "GTM_01" add body name "pwr_gt_m_01"
+
+group "XFC_01" add body name "pwr_xfc_01"
+group "XFCC_01" add body name "pwr_xfc_c_01"
+group "XFCM_01" add body name "pwr_xfc_m_01"
+
+group "CFC_01" add body name "pwr_cfc_01"
+group "CFCC_01" add body name "pwr_cfc_c_01"
+group "CFCM_01" add body name "pwr_cfc_m_01"
+
+group "BLOCK1" add body name "mat_block"
+group "COOLANT" add body name "mat_coolant"
+
+# color the groups
+color body in FCF_01    red
+color body in FCC_01    maroon
+color body in FCM_01    lightpink
+
+color body in GTF_01    blue
+color body in GTC_01    deepskyblue
+color body in GTM_01    lightblue
+
+color body in XFC_01     yellow
+color body in XFCC_01    lightgoldenrodyellow
+color body in XFCM_01    lightyellow
+
+color body in XFC_01     green
+color body in XFCC_01    springgreen
+color body in XFCM_01    lightgreen
+
+color body in BLOCK1     brown
+color body in COOLANT   saddlebrown
+
+# assign intervals & Mesh
+
+surface in FCF_01_SURF interval 16
+surface in  FCF_01_SURF scheme circle interval 1 fraction 0.8
+mesh surface in FCF_01_SURF
+
+surface in FCM_01_SURF interval 16
+surface in  FCM_01_SURF scheme circle interval 1 fraction 0.8
+mesh surface in FCM_01_SURF
+
+surface in FCC_01_SURF interval 16
+surface in  FCC_01_SURF scheme hole rad_intervals 1 bias 0.0
+mesh surface in FCC_01_SURF
+
+surface in XFC_01_SURF interval 16
+surface in  XFC_01_SURF scheme circle interval 1 fraction 0.8
+mesh surface in XFC_01_SURF
+
+surface in XFCM_01_SURF interval 16
+surface in  XFCM_01_SURF scheme circle interval 1 fraction 0.8
+mesh surface in XFCM_01_SURF
+
+surface in XFCC_01_SURF interval 16
+surface in  XFCC_01_SURF scheme hole rad_intervals 1 bias 0.0
+mesh surface in XFCC_01_SURF
+
+surface in GTM_01_SURF interval 16
+surface in  GTM_01_SURF scheme hole rad_intervals 1 bias 0.0
+mesh surface in GTM_01_SURF
+
+surface in GTC_01_SURF interval 16
+surface in  GTC_01_SURF scheme circle interval 1 fraction 0.8
+mesh surface in GTC_01_SURF
+
+surface in GTF_01_SURF interval 16
+surface in  GTF_01_SURF scheme hole rad_intervals 1 bias 0.0
+mesh surface in GTF_01_SURF
+
+surface in CFC_01_SURF interval 16
+surface in  CFC_01_SURF scheme hole rad_intervals 1 bias 0.0
+mesh surface in CFC_01_SURF
+
+curve in L_ASSEMBLY_BORDER_XPLUS interval {4*17}
+curve in L_ASSEMBLY_BORDER_XPLUS scheme equal
+mesh curve in L_ASSEMBLY_BORDER_XPLUS
+
+curve in L_ASSEMBLY_BORDER_XMINUS interval {4*17}
+curve in L_ASSEMBLY_BORDER_XMINUS scheme equal
+mesh curve in L_ASSEMBLY_BORDER_XMINUS
+
+curve in L_ASSEMBLY_BORDER_YPLUS interval {4*17}
+curve in L_ASSEMBLY_BORDER_YPLUS scheme equal
+mesh curve in L_ASSEMBLY_BORDER_YPLUS
+
+curve in L_ASSEMBLY_BORDER_YMINUS interval {4*17}
+curve in L_ASSEMBLY_BORDER_YMINUS scheme equal
+mesh curve in L_ASSEMBLY_BORDER_YMINUS
+
+surface in BLOCK_SURF size 0.2
+surface in BLOCK_SURF scheme TriMesh
+mesh surface in BLOCK_SURF
+
+surface in COOLANT_SURF size 0.2
+surface in COOLANT_SURF scheme TriMesh
+mesh surface in COOLANT_SURF
+
+save as 's1.cub'
+stop
