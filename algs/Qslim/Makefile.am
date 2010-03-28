@@ -17,19 +17,9 @@ libAlgsQslim_la_SOURCES = QslimOptions.cpp QslimDecimation.cpp \
 	     Heap.cpp Mat4.cpp primitives.cpp
 
 # The list of header files which are to be installed
-libAlgsQslim_la_include_HEADERS = 3D.h \
-	Array.h \
-	Buffer.h \
-	Heap.h \
-	Mat4.h \
+libAlgsQslim_la_include_HEADERS = \
 	QslimDecimation.h \
-	QslimOptions.h \
-	Vec3.h \
-	Vec4.h \
-	defs.h \
-	primitives.h \
-	quadrics.h \
-	std.h
+	QslimOptions.h 
 
 
 # Tests and such
