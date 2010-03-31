@@ -784,12 +784,13 @@ int CNrgen::ReadAndCreate()
       CHECK("Imprint failed.");
       std::cout << "\n--------------------------------------------------"<<std::endl;
 
+      // commented out because cubit doesn't rotate merged geometries
       // now  merge
-      std::cout << "\n\nMerging...." << std::endl;
-      iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
-      CHECK("Merge failed.");
-      std::cout <<"merging finished."<< std::endl;
-      std::cout << "\n--------------------------------------------------"<<std::endl;
+  //     std::cout << "\n\nMerging...." << std::endl;
+//       iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
+//       CHECK("Merge failed.");
+//       std::cout <<"merging finished."<< std::endl;
+//       std::cout << "\n--------------------------------------------------"<<std::endl;
 
       // branch for creating planar geometry
       if(m_nPlanar ==1){ // this is set in main program nrgen_test.cpp
@@ -815,17 +816,17 @@ int CNrgen::ReadAndCreate()
 	int t=0;
 	double dtol = m_dVZAssm(2);
 	for (int i = 0; i < surfs.size(); ++i){ 
-	  if (max_corn[3*i+2] < dtol)  t++;
+	  if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol))
+	    t++;
 	}
 
 	SimpleArray<iBase_EntityHandle> max_surfs(t);
 	SimpleArray<iBase_EntityHandle> new_surfs(t);
 
 	t=0;
-
 	for (int i = 0; i < surfs.size(); ++i){
 	  // first find the max z-coordinate
-	  if (max_corn[3*i+2] <  dtol){
+	  if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol)){
 	    max_surfs[t] = surfs[i];
 	    t++;
 	  }
@@ -1008,7 +1009,6 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  cyls[nRadii-1]=tmp_vol;
 
 	}
-	std::cout << "hi  "<< szVCylMat(1) << std::endl;
 	//set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
 	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	  if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
