@@ -82,6 +82,13 @@ EdgeType Edge::newObject()
   return e;
 }
 
+FaceType Face::newObject()
+{
+  Face *f = new Face;
+  assert(f);
+  return f;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 Point3D Vertex::mid_point(const Vertex *v0, const Vertex *v1, double alpha)
@@ -157,6 +164,31 @@ Point3D Face::getCentroid() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Vec3D Face :: normal( const Point3D &p0, const Point3D &p1, const Point3D &p2)
+{
+  Point3D p2p0   = Math::create_vector( p2, p0);
+  Point3D p1p0   = Math::create_vector( p1, p0);
+  Point3D normal = Math::cross_product( p2p0, p1p0 ); 
+
+  double mag = Math::magnitude( normal );
+  normal[0] /= mag;
+  normal[1] /= mag;
+  normal[2] /= mag;
+
+  return normal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Vec3D Face :: normal( const Vertex *v0, const Vertex *v1, const Vertex *v2)
+{
+  return Math::normal( v0->getXYZCoords(),
+                       v1->getXYZCoords(),
+		       v2->getXYZCoords() );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 double Face :: tri_area( const Point3D &p0, const Point3D &p1, const Point3D &p2)
 {
    ////////////////////////////////////////////////////////////////////////////////
@@ -213,8 +245,8 @@ double Face :: quad_area( const Point3D &p0, const Point3D &p1,
   // 16th Feb 2010.
   //////////////////////////////////////////////////////////////////////////////
 
-  Point3D v2v0   = Math::make_vector( p2, p0);
-  Point3D v3v1   = Math::make_vector( p3, p1);
+  Point3D v2v0   = Math::create_vector( p2, p0);
+  Point3D v3v1   = Math::create_vector( p3, p1);
   Point3D d0d1   = Math::cross_product( v2v0, v3v1 ); 
 
   double area = 0.5*Math::magnitude( d0d1 );
@@ -239,6 +271,32 @@ bool Face :: is_convex_quad(const Point3D &p0, const Point3D &p1,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+vector<Vertex*> Face :: getRelations0()
+{
+   vector<Vertex*> vneighs;
+   set<Vertex*>    vset;
+
+   for( int i = 0; i < connect.size(); i++) {
+        Vertex *vertex = connect[i];
+	vneighs = vertex->getRelations0();
+	for( size_t j = 0; j < vneighs.size(); j++) 
+	     vset.insert( vneighs[j] );
+   }
+
+   for( int i = 0; i < connect.size(); i++) 
+        vset.erase( connect[i] );
+
+   vector<Vertex*> vresult;
+   if( !vset.empty() ) {
+        set<Vertex*>::const_iterator it;
+	size_t index = 0;
+	for( it = vset.begin(); it != vset.end(); ++it)
+	     vresult[index++] = *it;
+   }
+   return vresult;
+}
+////////////////////////////////////////////////////////////////////////////////
+
 int Mesh :: check_convexity()
 {
    size_t numfaces = getSize(2);
@@ -281,6 +339,107 @@ double Face :: getAspectRatio()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+int Mesh :: make_chain( vector<Edge> &boundedges )
+{
+   size_t nSize = boundedges.size();
+
+   Edge edge = boundedges.front();
+
+   list<Edge>  listedges;
+   for( int i = 1; i < boundedges.size(); i++) 
+        listedges.push_back( boundedges[i] );
+   boundedges.clear();
+
+   boundedges.reserve( nSize );
+         
+   Vertex *first_vertex = edge.getNodeAt(0);
+   Vertex *curr_vertex  = edge.getNodeAt(1);
+
+   boundedges.push_back(edge);
+
+   list<Edge>::iterator it;
+
+   for( int i = 0; i < nSize; i++) {
+       for( it = listedges.begin(); it != listedges.end(); ++it) 
+       {
+            edge = *it;
+	    Vertex *v0 = edge.getNodeAt(0);
+	    Vertex *v1 = edge.getNodeAt(1);
+	    if( v0 == curr_vertex ) {
+	        curr_vertex =  v1;
+	        boundedges.push_back( edge );
+	        break;
+            }
+	    if( v1 == curr_vertex ) {
+	        curr_vertex =  v0;
+		Edge newedge(v1,v0);
+	        boundedges.push_back( newedge );
+	        break;
+            }
+       }
+       if( it != listedges.end() ) listedges.erase(it);
+   }
+
+   return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+int Mesh :: is_closeable_chain( const vector<Edge> &boundedges ) 
+{
+   std::map<Vertex*, set<Vertex*> > relations00;
+
+   for( size_t i  = 0; i < boundedges.size(); i++) {
+        Vertex *v0 = boundedges[i].getNodeAt(0);
+        Vertex *v1 = boundedges[i].getNodeAt(1);
+	relations00[v0].insert(v1);
+	relations00[v1].insert(v0);
+   }
+
+   std::map<Vertex*, set<Vertex*> > :: const_iterator it;
+   for( it = relations00.begin(); it != relations00.end(); ++it){
+        Vertex *v = it->first;
+	if( relations00[v].size() != 2 ) return 0;
+   }
+
+   return 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+int  Mesh :: is_closed_chain( const vector<Edge> &boundedges ) 
+{
+   Vertex *first_vertex = boundedges[0].getNodeAt(0);
+   Vertex *curr_vertex  = boundedges[0].getNodeAt(1);
+
+   for ( size_t i = 1; i < boundedges.size(); i++) {
+         if( boundedges[i].getNodeAt(0) != curr_vertex) return 0;
+	 curr_vertex = boundedges[i].getNodeAt(1);
+   }
+   if( curr_vertex != first_vertex ) return 0;
+
+   return 1;
+}
+///////////////////////////////////////////////////////////////////////////////
+int Mesh :: rotate_chain( vector<Edge> &boundedges, Vertex *first_vertex)
+{
+   size_t nSize = boundedges.size();
+   if( !is_closeable_chain(boundedges) ) return 1;
+
+   vector<Edge>  listedges(nSize);
+   int istart = 0;
+   for( size_t i = 0; i < nSize; i++) {
+        if( boundedges[i].getNodeAt(0) == first_vertex ) istart = i;
+	listedges[i] = boundedges[i];
+   }
+
+   for( size_t i = 0; i < nSize; i++)
+	boundedges[i] = listedges[(i+ istart)%nSize];
+
+   return 0;
+}
+///////////////////////////////////////////////////////////////////////////////
+
 
 vector<FaceType> Mesh::getRelations102(NodeType vtx0, NodeType vtx1)
 {
@@ -537,6 +696,7 @@ NodeType Face::opposite_node(const FaceType tri, NodeType n1, NodeType n2)
     return tn1;
   if (tn2 == n2 && tn0 == n1)
     return tn1;
+
   cout << " Warning: You should not come here " << endl;
   cout << " Face " << tn0 << " " << tn1 << " " << tn2 << endl;
   cout << " search for " << n1 << "  " << n2 << endl;
@@ -787,8 +947,6 @@ int Mesh::search_boundary()
   if( !isPruned() ) prune();
 
   int relexist = build_relations(0, 2);
-
-  cout << " Searching Boundary " << endl;
 
   size_t numnodes = getSize(0);
   for (size_t inode = 0; inode < numnodes; inode++) 
@@ -1671,7 +1829,7 @@ int Mesh::setNodeWavefront()
     {
       int layerid = currVertex->getLayerID();
       neighs = currVertex->getRelations0();
-      for (int i = 0; i < neighs.size(); i++)
+      for (size_t i = 0; i < neighs.size(); i++)
       {
         Vertex *vn = neighs[i];
         if (!vn->isVisited())
@@ -1699,8 +1857,6 @@ int Mesh::setNodeWavefront()
 int Mesh::setFaceWavefront()
 {
   int relexist = build_relations(0, 2);
-
-  cout << " Wavefront relation " << relexist << endl;
 
   search_boundary();
 
@@ -1750,7 +1906,7 @@ int Mesh::setFaceWavefront()
     {
       Face *currFace = faceQ[j];
       neighs = currFace->getRelations212();
-      for (int i = 0; i < neighs.size(); i++)
+      for (size_t i = 0; i < neighs.size(); i++)
       {
         Face *vn = neighs[i];
         if (!vn->isVisited())
@@ -1770,8 +1926,6 @@ int Mesh::setFaceWavefront()
     Face *f = getFaceAt(i);
     assert(f->isVisited());
     int itag = f->getLayerID();
-    cout << itag << endl;
-//  if( itag > 1) itag = 0;
     f->setTag(itag);
   }
 
@@ -1822,6 +1976,43 @@ int Mesh::check_unused_objects()
   return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+bool Mesh::isDelaunay() 
+{
+  bool retval = 1;
+  int relexist = build_relations(0,0);
+
+  Point3D  pa, pb, pc, pd, pCenter;
+
+  size_t numfaces = getSize(2);
+
+  for (size_t i = 0; i < numfaces; i++)
+  {
+    Face *face = getFaceAt(i);
+    face->setTag(1);
+  }
+   for( size_t i = 0; i < numfaces; i++) {
+       Face *face = getFaceAt(i);
+       pa = face->getNodeAt(0)->getXYZCoords();
+       pb = face->getNodeAt(1)->getXYZCoords();
+       pc = face->getNodeAt(2)->getXYZCoords();
+       TriCircumCenter3D( &pa[0], &pb[0], &pc[0], &pCenter[0]);
+       double radius2 = Math::length2( pa, pCenter );
+       vector<Vertex*> neighs = face->getRelations0();
+       for( size_t j = 0; j < neighs.size(); j++) {
+            pd = neighs[j]->getXYZCoords();
+            if( Math::length2( pd, pCenter ) < radius2) {
+	        face->setTag(0);
+	        retval = 0;
+		break;
+            }
+        }
+    }
+
+
+   if (!relexist)
+       clear_relations(0, 0);
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 double Mesh :: getSurfaceArea()

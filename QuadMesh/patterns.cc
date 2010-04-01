@@ -118,6 +118,7 @@ void gen_circle_pattern( )
    Circle *circle;
    vector<Shape2D*> shapes;
 
+/*
    circle = new Circle;
    circle->radius    = 1.2;
    circle->center[0] = 0.0;
@@ -128,7 +129,7 @@ void gen_circle_pattern( )
 
    int nCount = 8;
    double radius = 0.45, radius2  = 1.0;
-   for( int i = 0; i < 10; i++) {
+   for( int i = 0; i < 2; i++) {
       double angle = 0;
       radius2 += 1.0;
       for( int j = 0; j < nCount; j++) {
@@ -143,6 +144,7 @@ void gen_circle_pattern( )
       }
       nCount += 6;
    }
+*/
 
    circle = new Circle;
    circle->radius    = 12.0;

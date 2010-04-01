@@ -129,9 +129,9 @@ void Mesh::readFaces( const string &fname)
            n1 = global2local[n1];
            n2 = global2local[n2];
 
-           connect[0] = getNodeAt(n0);
-           connect[1] = getNodeAt(n1);
-           connect[2] = getNodeAt(n2);
+           connect[0] = getNode(n0);
+           connect[1] = getNode(n1);
+           connect[2] = getNode(n2);
 	   newface = new Face;
 	   newface->setConnection(connect);
 	   faces[i] = newface;
@@ -148,10 +148,10 @@ void Mesh::readFaces( const string &fname)
            n1 = global2local[n1];
            n2 = global2local[n2];
            n3 = global2local[n3];
-           connect[0] = getNodeAt(n0);
-           connect[1] = getNodeAt(n1);
-           connect[2] = getNodeAt(n2);
-           connect[3] = getNodeAt(n3);
+           connect[0] = getNode(n0);
+           connect[1] = getNode(n1);
+           connect[2] = getNode(n2);
+           connect[3] = getNode(n3);
 	   newface = new Face;
 	   newface->setConnection(connect);
 	   faces[i] = newface;
@@ -160,18 +160,7 @@ void Mesh::readFaces( const string &fname)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-int Mesh::readData( const string &fname)
-{
-   if( fname.rfind("off") != string::npos) 
-       return read_off_format_data( fname );
-
-   return read_triangle_format_data(fname);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-int Mesh::read_triangle_format_data( const string &fname)
+void Mesh::readData( const string &fname)
 {
    readNodes( fname );
    readEdges( fname );
@@ -179,12 +168,11 @@ int Mesh::read_triangle_format_data( const string &fname)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
 int Jaal::readMeshData( iMesh_Instance &imesh, const string &fname)
 {
-    Mesh *m = new Mesh; assert( m != NULL );
+    Mesh *m = new Mesh;
     m->readData(fname);
-// m = readOffData(fname);
+//  m = readOffData(fname);
 
     if( !m->isConsistentlyOriented() ) {
        cout << "Warning:Trying to make Triangle Mesh consistently oriented " << endl;
@@ -196,7 +184,7 @@ int Jaal::readMeshData( iMesh_Instance &imesh, const string &fname)
     }
 
     iBase_EntitySetHandle rootSet = 0;
-//  map<Vertex*, iBase_EntityHandle>  mapNodes;
+    map<Vertex*, iBase_EntityHandle>  mapNodes;
 
     m->toMOAB(imesh, rootSet);
 

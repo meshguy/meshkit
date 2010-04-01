@@ -417,6 +417,16 @@ void TriCircumCenter3D( double *a, double *b, double *c, double *result,
    result[1] += a[1];
    result[2] += a[2];
 }
+
+/****************************************************************************/
+void TriCircumCenter3D( double *a, double *b, double *c, double *result)
+{
+   double xi, eta;
+   tricircumcenter3d(a, b, c, result, &xi, & eta);
+   result[0] += a[0];
+   result[1] += a[1];
+   result[2] += a[2];
+}
 /****************************************************************************/
 void TetCircumCenter( double *a, double *b, double *c, double *d, double *result, 
 		      double *param)

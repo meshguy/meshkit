@@ -51,10 +51,9 @@ BEGIN_JAAL_NAMESPACE
 // and we are working towards it.
 ///////////////////////////////////////////////////////////////////////////////////
 
-struct Diamond
-{
-  Face *face;
-  Vertex *vertex0, *vertex1;
+struct Diamond {
+    Face *face;
+    Vertex *vertex0, *vertex1;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -63,88 +62,91 @@ struct Diamond
 //         different. In the bridge we use element removal followed by edge swapping.
 /////////////////////////////////////////////////////////////////////////////////////
 
-struct Bridge
-{
-  Vertex *vertex0, *vertex1;
+struct Bridge {
+    Vertex *vertex0, *vertex1;
 };
 
-struct YRing
-{
-   Vertex *apex;
-   vector<Face*> faces;
-   vector<Edge>  boundary;
-   void create_boundary();
-};
-
-
-class QuadCleanUp
-{
+class YRing {
 public:
-  QuadCleanUp(Mesh *m)
-  {
-    mesh = m;
-  }
+    int patternID;
+    Vertex *apex;
+    vector<Face*> faces;
+    bool isValid();
+private:
+    vector<Vertex*> boundnodes;
+    vector<Edge> boundary;
+    void create_boundary();
+};
 
-  // Query methods ...
-  vector<Face*> search_diamonds(bool check_both_sides = 1,
-      bool allow_boundary_faces = 1);
-  vector<Face*> search_flat_quads();
-  vector<Vertex*> search_interior_doublets();
-  vector<Vertex*> search_boundary_singlets();
-  vector<Bridge> search_bridges( bool allow_boundary_nodes = 0);
-  vector<YRing>  search_yrings();
+class QuadCleanUp {
+public:
 
-  // Removal Methods ...
-  void remove_diamonds(bool recursive = 1, bool check_both_sides = 1,
-      bool allow_boundary_faces = 1);
-  void remove_doublets(bool recursive = 1, bool allow_boundary_nodes = 0);
-  void remove_bridges( bool recursive = 1, bool allow_boundary_nodes = 0);
-  void remove_yrings ( bool recursive = 1);
-  void cleanup_boundary(double cutOffAngle = 100.0);
+    QuadCleanUp(Mesh *m) {
+        mesh = m;
+    }
 
-  // Insert methods ...
-  Vertex* insert_doublet(Face *face);
-  Vertex* insert_boundary_doublet(Face *face);
-  Vertex* insert_doublet(Face *face, Vertex *v0, Vertex *v2);
+    // Query methods ...
+    vector<Face*> search_diamonds(bool check_both_sides = 1,
+            bool allow_boundary_faces = 1);
+    vector<Face*> search_flat_quads();
+    vector<Vertex*> search_interior_doublets();
+    vector<Vertex*> search_boundary_singlets();
+    vector<Bridge> search_bridges(bool allow_boundary_nodes = 0);
+    vector<YRing> search_yrings();
 
-  // Utility functions ...
-  void get_strips(Face *face, vector<Face*> &strip1, vector<Face*> strip2);
+    // Removal Methods ...
+    void remove_diamonds(bool recursive = 1, bool check_both_sides = 1,
+            bool allow_boundary_faces = 1);
+    void remove_doublets(bool recursive = 1, bool allow_boundary_nodes = 0);
+    void remove_bridges(bool recursive = 1, bool allow_boundary_nodes = 0);
+    void remove_yrings(bool recursive = 1);
+    int clean_layer(int id);
+    void cleanup_boundary(double cutOffAngle = 100.0);
+    void advancing_front_cleanup();
 
-  // Topological Quality method ...
-  vector<int> getVertexFaceDegrees();
+    // Insert methods ...
+    Vertex* insert_doublet(Face *face);
+    Vertex* insert_boundary_doublet(Face *face);
+    Vertex* insert_doublet(Face *face, Vertex *v0, Vertex *v2);
+
+    // Utility functions ...
+    void get_strips(Face *face, vector<Face*> &strip1, vector<Face*> strip2);
+
+    // Topological Quality method ...
+    vector<int> getVertexFaceDegrees();
 
 private:
-  // Input-output instance. Input mesh is modified...
-  Mesh *mesh;
+    // Input-output instance. Input mesh is modified...
+    Mesh *mesh;
 
-  vector<Diamond> vDiamonds; // Diamonds in the mesh;
-  vector<Bridge>  vBridges; // Bridges in the mesh.
-  vector<YRing>   vyRings;
+    vector<Diamond> vDiamonds; // Diamonds in the mesh;
+    vector<Bridge> vBridges; // Bridges in the mesh.
+    vector<YRing> vyRings;
 
-  // Basic Operations ...
-  int face_close(Face *face, Vertex *v0, Vertex *v2);
-  int remove_interior_doublet(Vertex *vertex);
-  int remove_boundary_singlet(Vertex *vertex);
-  int diamond_collapse(Diamond &d);
-  int remove_bridge( const Bridge &b);
-  int remove_yring(  const YRing &r);
-  int remove_bridges_once( bool allow_boundary_nodes = 0);
-  int remove_diamonds_once(bool check_both_sides = 1, bool allow_boundary_faces = 1);
-  int remove_doublets_once( bool allow_boundary_nodes = 0);
-  int remove_yrings();
+    // Basic Operations ...
+    int face_close(Face *face, Vertex *v0, Vertex *v2);
+    int remove_interior_doublet(Vertex *vertex);
+    int remove_boundary_singlet(Vertex *vertex);
+    int diamond_collapse(Diamond &d);
+    int remove_bridge(const Bridge &b);
+    int remove_yring(const YRing &r);
+    int remove_bridges_once(bool allow_boundary_nodes = 0);
+    int remove_diamonds_once(bool check_both_sides = 1, bool allow_boundary_faces = 1);
+    int remove_doublets_once(bool allow_boundary_nodes = 0);
+    int remove_yrings();
 
-  // High level utility function composed of basic functions...
-  void cleanup_internal_boundary_face();
+    // High level utility function composed of basic functions...
+    void cleanup_internal_boundary_face();
 
-  // Create wavefront of nodes/faces ...
-  void initialize_wavefront();
-  vector<Vertex*> next_front_nodes() const;
+    // Create wavefront of nodes/faces ...
+    void initialize_wavefront();
+    vector<Vertex*> next_front_nodes() const;
 
-  // Quality: Set the tag for regular (= 0)/irregular node (> 0) value
-  void set_regular_node_tag();
+    // Quality: Set the tag for regular (= 0)/irregular node (> 0) value
+    void set_regular_node_tag();
 
-  // Get the histogram of vertex-face topological information. (ideal is 4)
-  Vertex* get_VertexOf_FaceDegree(int n);
+    // Get the histogram of vertex-face topological information. (ideal is 4)
+    Vertex* get_VertexOf_FaceDegree(int n);
 };
 
 END_JAAL_NAMESPACE

@@ -29,6 +29,7 @@
 #define END_JAAL_NAMESPACE    }
 
 #include "basic_math.h"
+#include "circumcenter.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -433,16 +434,20 @@ public:
 
   Edge(NodeType n1, NodeType n2)
   {
-    assert(n1 != n2);
-    connect[0] = n1;
-    connect[1] = n2;
+    setNodes(n1,n2);
   }
 
   void setNodes(const vector<NodeType> &v)
   {
     assert(v.size() == 2);
-    connect[0] = v[0];
-    connect[1] = v[1];
+    setNodes( v[0], v[1] );
+  }
+
+  void setNodes( Vertex *v1, Vertex *v2 )
+  {
+    assert( v1 != v2 );
+    connect[0] = v1;
+    connect[1] = v2;
   }
 
   NodeType getNodeAt(int id) const
@@ -464,6 +469,7 @@ public:
   static const int TRIANGLE = 3;
   static const int QUADRILATERAL = 4;
 
+  static FaceType newObject();
   static FaceType create_quad(const FaceType t1, const FaceType t2);
 
   /////////////////////////////////////////////////////////////////////////////
@@ -471,6 +477,9 @@ public:
   /////////////////////////////////////////////////////////////////////////////
 
   static double   tri_area ( const Point3D &p0, const Point3D &p1, const Point3D &p2);
+
+  static Vec3D    normal( const Vertex *v0,  const Vertex *v1, const Vertex *v2 );
+  static Vec3D    normal( const Point3D &p0, const Point3D &p1, const Point3D &v2 );
 
   /////////////////////////////////////////////////////////////////////////////
   // Calculate Area of Quadrilateral:
@@ -612,8 +621,18 @@ public:
 
   vector<Face*> getRelations202();  
   vector<Face*> getRelations212();
+  vector<Vertex*> getRelations0();
 
-  bool isConvex();
+  bool isConvex()
+  {
+     if( connect.size() <= 3 ) return 1;
+     if( connect.size() == 4 ) 
+         return is_convex_quad( connect[0]->getXYZCoords(),
+	                        connect[1]->getXYZCoords(),
+	                        connect[2]->getXYZCoords(),
+	                        connect[3]->getXYZCoords() );
+     return 0;
+  }
 
   double getAspectRatio();
   double getArea()
@@ -651,6 +670,10 @@ class Mesh
 public:
   static vector<FaceType> getRelations112(NodeType v0, NodeType v1);
   static vector<FaceType> getRelations102(NodeType v0, NodeType v1);
+  static int  make_chain(vector<Edge> &edges);
+  static int  is_closed_chain(const vector<Edge> &edges);
+  static int  is_closeable_chain(const vector<Edge> &edges);
+  static int  rotate_chain(vector<Edge> &edges, Vertex* start_vertex);
 
   typedef vector<NodeType> NodeContainer;
   typedef vector<EdgeType> EdgeContainer;
@@ -765,7 +788,7 @@ public:
   // Get the node at the specified position in the container.
   NodeType getNodeAt(size_t id) const
   {
-    assert(id >= 0 && id < nodes.size());
+    assert(id < nodes.size());
     return nodes[id];
   }
 
@@ -789,7 +812,7 @@ public:
   // Get the face at the specified position in the container.
   FaceType getFaceAt(size_t id) const
   {
-    assert(id >= 0 && id < faces.size());
+    assert(id < faces.size());
     return faces[id];
   }
 
@@ -918,13 +941,14 @@ public:
   // triangle mesh. We use Jonathan Shewchuk's predicates and all his
   // ideas. For 2D check with Circum-Circle and for 2D Equitorial Sphere.
   //
-  int isDelaunay() const; 
+  bool isDelaunay(); 
 
   //  
   // If the surface triangulation is not Delaunay, use edge-flips to 
   // tranform the mesh into Delaunay.
   //
   int makeDelaunay();
+
 
 private:
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Vertex *v);
@@ -957,6 +981,11 @@ private:
   int read_simple_format_data( const string &s);
   int read_triangle_format_data( const string &s);
 };
+
+struct MeshOptimization
+{
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Graph Matching operations ....
 ///////////////////////////////////////////////////////////////////////////////

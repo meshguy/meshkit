@@ -187,6 +187,8 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   steinerNodes.push_back(steiner);
 
   int edge1, edge2, edge3;
+
+  edge1 = edge2 = edge3 = -1;
   vector<Face*> neighs;
   for (int i = 0; i < 3; i++)
   {

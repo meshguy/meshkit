@@ -1,22 +1,13 @@
 #ifndef REFINE_H
 #define REFINE_H
 
-#include <assert.h>
-#include <math.h>
-#include <string.h>
-#include <algorithm>
-
-#include <iGeom.h>
-#include <iMesh.h>
-#include <iRel.h>
-
-#include <vector>
 #include <bitset>
+#include "Mesh.h"
+#include "EdgeFlip.h"
+
+#include "basic_math.h"
 
 using namespace std;
-
-#include "SimpleArray.h"
-#include "basic_math.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 //   MeshRefine2D:
@@ -68,6 +59,8 @@ using namespace std;
  * REFINE CURVATURE    : Create high density mesh near high curvature.
  */
 
+namespace Jaal 
+{
 enum RefinePolicy { CENTROID_PLACEMENT, CIRCUMCENTER_PLACEMENT, LONGEST_EDGE_BISECTION};
 
 enum RefineObjective {REFINE_AREA, REFINE_ASPECT_RATIO, REFINE_CURVATURE};
@@ -81,16 +74,18 @@ class MeshRefine2D
 
   MeshRefine2D() { 
      boundary_split_flag = 0; 
+     numIterations   = 1;
   }
   virtual ~MeshRefine2D() {}
 
-  void setMesh(  iMesh_Instance &m ) {  mesh = m; }
-  void setGeometry(  const iGeom_Instance &g ) { geom = g; }
+  void setMesh( Mesh *m ) {  mesh = m; }
+
+// void setGeometry(  const iGeom_Instance &g ) { geom = g; }
 
   void setBoundarySplitFlag( bool f ) { boundary_split_flag = f; }
 
-  vector<iBase_EntityHandle> getNewNodes() const { return insertedNodes; }
-  vector<iBase_EntityHandle> getNewFaces() const { return insertedFaces; }
+  vector<Vertex*> getNewNodes() const { return insertedNodes; }
+  vector<Face*>   getNewFaces() const { return insertedFaces; }
 
   size_t  getNumFacesRefined() const { return numfacesRefined; }
 
@@ -98,66 +93,49 @@ class MeshRefine2D
 
   virtual int initialize();
 
+  void setNumOfIterations( int i ) { numIterations = i; }
+
  protected:
-    int finalize();
+    Mesh *mesh;
+    struct RefinedEdge
+    {
+       Edge    *edge;
+       Vertex  *midVertex;
+    };
+    map<Vertex*, vector<RefinedEdge> > refinededges;
 
-    typedef iBase_EntityHandle EHandle;
-    int   numIterations;
-
-    iBase_TagHandle remove_tag, vertex_on_edge_tag, boundary_tag, globalID_tag;
-
-    iBase_EntitySetHandle rootSet, currSet;
-    vector<iBase_EntitySetHandle>  entitySets;
-
-    iMesh_Instance mesh;
-    iGeom_Instance geom;
-
-    vector<EHandle>  hangingVertex; 
-    vector<EHandle>  insertedNodes;
-    vector<EHandle>  insertedFaces;
+    vector<Face*>    insertedFaces;
+    vector<Vertex*>  hangingVertex, insertedNodes;
     
+    int     numIterations;
     bool    boundary_split_flag;                
     size_t  numfacesRefined;
 
-    int setVertexOnEdge(EHandle v1, EHandle v2, EHandle &vmid);
-    int getVertexOnEdge(EHandle v1, EHandle v2, EHandle &vmid) const;
+    int finalize();
 
-    bool searchEdge( EHandle v1, EHandle v2, EHandle &edgehandle) const; 
-    bool allow_edge_refinement( EHandle &edgehandle ) const;
+    int setVertexOnEdge(Vertex *v1, Vertex *v2);
+    Vertex *getVertexOnEdge(Vertex *v1, Vertex *v2) const;
 
-    double  edge_length( EHandle v1, EHandle v2)  const;
-    Point3D edge_centroid( EHandle v1, EHandle v2) const;
+    bool hasEdge( Vertex *v1, Vertex *v2) const; 
+    bool allow_edge_refinement( const Edge *edge) const;
 
-    double  face_aspect_ratio( EHandle v1 ) const;
-    Point3D face_centroid( EHandle f) const;
+    Edge* create_new_edge( const Vertex *v1, const Vertex *v2 );
 
-    int getVertexCoords(EHandle vHandle, Point3D &p3d) const
-    {
-      int err;
-      double x, y, z;
-      iMesh_getVtxCoord(mesh, vHandle, &x, &y, &z, &err);
-      p3d[0] = x;
-      p3d[1] = y;
-      p3d[2] = z;
-      return err;
+    void  append_new_node( Vertex *v0 );
+    Face* append_new_triangle(Vertex *v0, Vertex *v1, Vertex *v2);
+    Face* append_new_quad(Vertex *v0, Vertex *v1, Vertex *v2, Vertex *v3);
+
+    void remove_it( Face *face) {
+         face->setRemoveMark(1);
     }
-
-    void setVertexCoords(EHandle f, const Point3D &p);
-
-    EHandle create_new_edge( EHandle v1, EHandle v2 );
-
-    int prune_mesh();
 
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Sqrt3Refine2D : public MeshRefine2D
+struct Sqrt3Refine2D : public MeshRefine2D
 {
-  public:
    int execute();
-  private:
-   int create_tags();
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,46 +143,15 @@ class Sqrt3Refine2D : public MeshRefine2D
 class CentroidRefine2D : public MeshRefine2D
 {
  public:
+   CentroidRefine2D() {}
+   CentroidRefine2D(Mesh *m) { setMesh(m); }
 
-   int  initialize();
    int  execute();
-
  private:
-  int atomicOp( const iBase_EntityHandle &f);
-  int refine_tri( const iBase_EntityHandle &f);
-  int refine_quad( const iBase_EntityHandle &f);
+  int atomicOp(  Face *f);
+  int refine_tri( Face *f);
+  int refine_quad( Face *f);
 };
-
-///////////////////////////////////////////////////////////////////////////////
-
-class ConsistencyRefine2D : public MeshRefine2D
-{
-   public:
-     ~ConsistencyRefine2D() {}
-
-     int  initialize();
-     int  execute();
-
-   private:
-     bitset<3>  edge0, edge1, edge2, bitvec;
-     typedef iBase_EntityHandle EHandle;
-
-     int create_tags();
-
-     int  atomicOp( const EHandle &f);
-     void  refineEdge0(const EHandle &f);
-     void  refineEdge1(const EHandle &f);
-     void  refineEdge2(const EHandle &f);
-     void  subDivideQuad2Tri( const vector<EHandle>  &qnodes);
-
-     void  checkFaceConsistency( const EHandle &f);
-
-     void  makeConsistent();
-     void  makeConsistent1( const EHandle &f );
-     void  makeConsistent2( const EHandle &f );
-     void  makeConsistent3( const EHandle &f );
-};
-
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -224,9 +171,34 @@ class LongestEdgeRefine2D : public MeshRefine2D
   int  execute();
 
  private:
-  int create_tags();
   double cutOffAspectRatio;
-  int  atomicOp( const iBase_EntityHandle &f);
+  int  atomicOp( const Face *face);
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+class ConsistencyRefine2D : public MeshRefine2D
+{
+   public:
+     ~ConsistencyRefine2D() {}
+
+     int  initialize();
+     int  execute();
+
+   private:
+     bitset<3>  edge0, edge1, edge2, bitvec;
+
+     int   atomicOp( Face *f);
+     void  refineEdge0(const Face *f);
+     void  refineEdge1(const Face *f);
+     void  refineEdge2(const Face *f);
+
+     void  subDivideQuad2Tri( const vector<Vertex*>  &qnodes);
+     void  makeConsistent1( Face *f );
+     void  makeConsistent2( Face *f );
+     void  makeConsistent3( Face *f );
+     void  makeConsistent();
+     void  checkFaceConsistency( Face *f);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -241,9 +213,9 @@ class Refine2D14 : public MeshRefine2D
   int  execute();
 
  private:
-  int  atomicOp( const iBase_EntityHandle &f);
-  int  refine_tri(const iBase_EntityHandle &f);
-  int  refine_quad(const iBase_EntityHandle &f);
+  int  atomicOp( Face *f);
+  int  refine_tri( Face *f);
+  int  refine_quad( Face *f);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -271,7 +243,7 @@ class ObtuseRefine2D : public MeshRefine2D
 
   private:
    double cutoffAngle;
-   int   atomicOp(const iBase_EntityHandle &f);
+   int   atomicOp(const Face *f);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -284,10 +256,12 @@ class GradeRefine2D : public MeshRefine2D
    int  execute();
 
   private:
-     int atomicOp( const iBase_EntityHandle &v);
+     int atomicOp( const Vertex *v);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+
+}
 
 #endif
 
