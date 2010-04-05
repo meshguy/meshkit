@@ -1,4 +1,4 @@
-#include <iostream.h>
+#include <iostream>
 #include "std.h"
 #include "Heap.h"
 
@@ -47,8 +47,8 @@ void Heap::insert(Heapable *t,double v)
 {
     if( size == maxLength() )
     {
-	cerr << "NOTE: Growing heap from " << size << " to " << 2*size << endl;
-	resize(2*size);
+    	std::cerr << "NOTE: Growing heap from " << size << " to " << 2*size << std::endl;
+    	resize(2*size);
     }
 
     int i = size++;
@@ -67,13 +67,13 @@ void Heap::update(Heapable *t,double v)
 
     if( i >= size )
     {
-	cerr << "WARNING: Attempting to update past end of heap!" << endl;
-	return;
+    	std::cerr << "WARNING: Attempting to update past end of heap!" << std::endl;
+    	return;
     }
     else if( i == NOT_IN_HEAP )
     {
-	cerr << "WARNING: Attempting to update object not in heap!" << endl;
-	return;
+    	std::cerr << "WARNING: Attempting to update object not in heap!" << std::endl;
+    	return;
     }
 
     float old=ref(i).import;
@@ -104,16 +104,16 @@ heap_node *Heap::extract()
 heap_node *Heap::kill(int i)
 {
     if( i>=size )
-	cerr << "WARNING: Attempt to delete invalid heap node." << endl;
+    	std::cerr << "WARNING: Attempt to delete invalid heap node." << std::endl;
 
     swap(i, size-1);
     size--;
     ref(size).obj->notInHeap();
 
     if( ref(i).import < ref(size).import )
-	downheap(i);
+    	downheap(i);
     else
-	upheap(i);
+    	upheap(i);
 
 
     return &ref(size);

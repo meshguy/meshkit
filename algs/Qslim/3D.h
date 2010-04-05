@@ -5,15 +5,6 @@
 #include "Vec4.h"
 #include "Array.h"
 
-//
-// Generally useful geometric functions
-//
-extern Vec3 randomPoint(const Vec3&, const Vec3&);  // on segment
-extern Vec3 randomPoint(const Vec3&, const Vec3&, const Vec3&); // in triangle
-
-extern double triangleArea(const Vec3&, const Vec3&, const Vec3&);
-extern double triangleCompactness(const Vec3&, const Vec3&, const Vec3&);
-
 class Bounds
 {
 public:
@@ -58,38 +49,6 @@ public:
     }
     Vec4 coeffs() const { return Vec4(n,d); }
 };
-
-
-//
-// A triangular face in 3D (ie. a 2-simplex in E3)
-//
-class Face3
-{
-protected:
-    Plane P;
-
-private:
-    void recalcPlane() { P.calcFrom(vertexPos(0),vertexPos(1),vertexPos(2)); }
-    void recalcPlane(const Vec3& a,const Vec3& b,const Vec3& c)
-    { P.calcFrom(a,b,c); }
-
-public:
-    Face3(const Vec3& a,const Vec3& b,const Vec3& c)
-	: P(a,b,c)
-    { }
-
-    //
-    // Basic primitive operations on faces
-    virtual const Vec3& vertexPos(int i) const = 0;
-    virtual void vertexPos(int i, const Vec3&) = 0; 
-    const Plane& plane() { if(!P.isValid()) recalcPlane();   return P;}
-    void invalidatePlane() { P.markInvalid(); }
-
-    double distTo(const Vec3& p) const;
-    double area();
-};
-
-
 
 // GFXGEOM_3D_INCLUDED
 #endif

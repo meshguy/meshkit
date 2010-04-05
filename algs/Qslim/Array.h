@@ -1,8 +1,6 @@
 #ifndef GFXTOOLS_ARRAY_INCLUDED // -*- C++ -*-
 #define GFXTOOLS_ARRAY_INCLUDED
 
-#include <string.h>
-
 template<class T>
 class array {
 protected:
