@@ -46,12 +46,12 @@ int classifyVertex(MBInterface * mb, MBEntityHandle v1)
       return 0;// everything interior
    else
       if (nBorder == adjEdges.size() )
-	  return 2;
+    	  return 2;
       else
           return 1; // some edges are interior
 }
 
-Vec3 convertMBVertexToVec3(MBInterface * mbi, MBEntityHandle v)
+Vec3 getVec3FromMBVertex(MBInterface * mbi, MBEntityHandle v)
 {
 	double c[3];
 	mbi->get_coords(&v, 1, c);
@@ -67,9 +67,9 @@ Plane trianglePlane(MBInterface * mb, MBEntityHandle tri)
 	int num_nodes;
 	MBErrorCode rval = mb->get_connectivity(tri, conn, num_nodes);
 	assert(3==num_nodes && rval == MB_SUCCESS);
-	Vec3 ve1=convertMBVertexToVec3( mb, conn[0]);
-	Vec3 ve2=convertMBVertexToVec3( mb, conn[1]);
-	Vec3 ve3=convertMBVertexToVec3( mb, conn[2]);
+	Vec3 ve1=getVec3FromMBVertex( mb, conn[0]);
+	Vec3 ve2=getVec3FromMBVertex( mb, conn[1]);
+	Vec3 ve3=getVec3FromMBVertex( mb, conn[2]);
 	return Plane(ve1, ve2, ve3);
 
 }

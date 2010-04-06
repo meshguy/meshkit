@@ -158,8 +158,8 @@ static
       bool pair_is_valid (MBEntityHandle u, MBEntityHandle v)// Vertex *u, Vertex *v )
 {
    //
-	Vec3 vu = convertMBVertexToVec3(mb, u);
-	Vec3 vv = convertMBVertexToVec3(mb, v);
+	Vec3 vu = getVec3FromMBVertex(mb, u);
+	Vec3 vv = getVec3FromMBVertex(mb, v);
 	return norm2(vu-vv)<proximity_limit;
    //return  norm2 ( *u - *v ) < proximity_limit;
 }
@@ -180,7 +180,7 @@ static
 	    nmapped++;
 	}
 	else
-		f1 = convertMBVertexToVec3(mb, conn[0]);
+		f1 = getVec3FromMBVertex(mb, conn[0]);
 
 	if ( conn[1] == v1 || conn[1] == v2 )
 	{
@@ -188,7 +188,7 @@ static
 		nmapped++;
 	}
 	else
-		f2 = convertMBVertexToVec3(mb, conn[1]);
+		f2 = getVec3FromMBVertex(mb, conn[1]);
 
 	if ( conn[2] == v1 || conn[2] == v2 )
 	{
@@ -196,7 +196,7 @@ static
 		nmapped++;
 	}
 	else
-		f3 = convertMBVertexToVec3(mb, conn[2]);
+		f3 = getVec3FromMBVertex(mb, conn[2]);
 
 
 // find vertices in face tria
@@ -748,8 +748,8 @@ int  QslimDecimation::Init ()
 
              if ( opts.will_weight_by_area )
              {
-                Vec3 ve1 = convertMBVertexToVec3(mb, conn[0]);
-                Vec3 ve2 = convertMBVertexToVec3(mb, conn[1]);
+                Vec3 ve1 = getVec3FromMBVertex(mb, conn[0]);
+                Vec3 ve2 = getVec3FromMBVertex(mb, conn[1]);
                 norm = norm2 ( ve1-ve2 );
                 B *= norm;
              }

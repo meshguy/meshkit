@@ -147,8 +147,8 @@ Mat4 quadrix_discontinuity_constraint( MBEntityHandle mbe
 	const MBEntityHandle * conn;
 	int num_nodes;
 	mb->get_connectivity(mbe, conn, num_nodes);
-    Vec3 dest = convertMBVertexToVec3(mb, conn[1]); //
-    Vec3 org = convertMBVertexToVec3(mb, conn[0]);
+    Vec3 dest = getVec3FromMBVertex(mb, conn[1]); //
+    Vec3 org = getVec3FromMBVertex(mb, conn[0]);
     Vec3 e = dest - org;
 
     Vec3 n2 = e ^ n;
@@ -289,43 +289,46 @@ double quadrix_pair_target(const Mat4& Q,
     // boundary constraint quadrics are quite effective.  But, I've left it
     // in anyway.
     //
-    Vec3 vec1 = convertMBVertexToVec3(mb, v1);
-    Vec3 vec2 = convertMBVertexToVec3(mb, v2);
+    Vec3 vec1 = getVec3FromMBVertex(mb, v1);
+    Vec3 vec2 = getVec3FromMBVertex(mb, v2);
     if( opts.will_preserve_boundaries )
     {
-	int c1 = classifyVertex(mb, v1);
-	int c2 = classifyVertex(mb, v2);
+    	int c1 = classifyVertex(mb, v1);
+    	int c2 = classifyVertex(mb, v2);
 
-	if( c1 > c2 )
-	{
-	    candidate = vec1;
-	    return quadrix_evaluate_vertex(candidate, Q);
-	}
-	else if( c2 > c1 )
-	{
-	    //candidate = *v2;
-	    candidate = vec2;
-	    return quadrix_evaluate_vertex(candidate, Q);
-	}
-	else if( c1>0 && policy>PLACE_LINE )
-	    policy = PLACE_LINE;
+    	// if both are on boundary, put a high penalty cost
+    	if (c1>0 && c2>0)
+    		return 1.e11;// greater than quality error
+    	if( c1 > c2 )
+    	{
+    		candidate = vec1;
+    		return quadrix_evaluate_vertex(candidate, Q);
+    	}
+    	else if( c2 > c1 )
+		{
+			//candidate = *v2;
+			candidate = vec2;
+			return quadrix_evaluate_vertex(candidate, Q);
+		}
+		else if( c1>0 && policy>PLACE_LINE )
+			policy = PLACE_LINE;
 
-	if( policy == PLACE_OPTIMAL ) assert(c1==0 && c2==0);
+    	if( policy == PLACE_OPTIMAL ) assert(c1==0 && c2==0);
     }
 
     switch( policy )
     {
     case PLACE_OPTIMAL:
-	if( quadrix_find_best_fit(Q, candidate) )
-	    break;
+    	if( quadrix_find_best_fit(Q, candidate) )
+    		break;
 
     case PLACE_LINE:
-	if( quadrix_find_line_fit(Q, vec1, vec2, candidate) )
-	    break;
+    	if( quadrix_find_line_fit(Q, vec1, vec2, candidate) )
+    		break;
 
     default:
-	quadrix_find_local_fit(Q, vec1, vec2, candidate);
-	break;
+    	quadrix_find_local_fit(Q, vec1, vec2, candidate);
+		break;
     }
 
     return quadrix_evaluate_vertex(candidate, Q);

@@ -20,6 +20,7 @@ std::string usage_string =
 "-On		Optimal placement policy.\n"
 "			0=endpoints, 1=endormid, 2=line, 3=optimal [default]\n"
 "-B <weight>	Use boundary preservation planes with given weight.\n"
+"-b         preserve boundary (do not use with -B option) "
 "-m		Preserve mesh quality.\n"
 "-a		Enable area weighting.\n"
 "-p 	Height fields positivity. Used for height fields, assume triangles \n"

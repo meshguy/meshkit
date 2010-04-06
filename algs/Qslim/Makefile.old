@@ -8,7 +8,9 @@ include /homes/iulian/lib/MOAB/lib/moab.make
 include /homes/iulian/lib/MOAB/lib/iMesh-Defs.inc
 
 # debug options
-OPTFLAGS = -O0 -g
+# these are for using in concert with gcov
+#OPTFLAGS = -O0 -g  -fprofile-arcs -ftest-coverage
+OPTFLAGS = -O0 -g  
 FEATURES =
 
 CFLAGS = $(IMESH_INCLUDES) $(MOAB_INCLUDES) $(OPTFLAGS) 

@@ -21,7 +21,7 @@ extern int classifyVertex(MBInterface * mb, MBEntityHandle v);
 extern MBErrorCode contractionRegion(MBInterface * mb, MBEntityHandle v1, MBEntityHandle v2,
 		std::vector<MBEntityHandle> & changed);
 
-extern Vec3 convertMBVertexToVec3(MBInterface * mb, MBEntityHandle v);
+extern Vec3 getVec3FromMBVertex(MBInterface * mb, MBEntityHandle v);
 
 extern Plane trianglePlane(MBInterface * mb, MBEntityHandle tri);
 
