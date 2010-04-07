@@ -32,7 +32,7 @@ public:
 	double error_tolerance;
 
 
-	int will_use_plane_constraint;
+	int     will_use_plane_constraint;
 	int     will_use_vertex_constraint;
 
 	int     will_preserve_boundaries;
@@ -42,6 +42,7 @@ public:
 
 	int     will_weight_by_area;
 	int     height_fields;
+	int     timingIntervals;
 
 	int placement_policy;
 	double pair_selection_tolerance;

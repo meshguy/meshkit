@@ -25,6 +25,7 @@ QslimOptions::QslimOptions() {
 
 	will_weight_by_area = false;
 	height_fields = false;
+	timingIntervals = 10;
 
 	placement_policy = PLACE_OPTIMAL;
 

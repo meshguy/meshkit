@@ -12,19 +12,20 @@
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 
 std::string usage_string =
-"-o <file>	Output final model to given file.\n"
-"-s <count>	Set the target number of faces.\n"
+"-o <file>	    Output final model to given file.\n"
+"-s <count>	    Set the target number of faces.\n"
+"-i <timings>   Intervals for timing reports.\n"
 "-e <thresh>	Set the maximum error tolerance.\n"
-"-t <t>		Set pair selection tolerance.\n"
-"-Q[pv]		Select what constraint quadrics to use [default=p].\n"
-"-On		Optimal placement policy.\n"
-"			0=endpoints, 1=endormid, 2=line, 3=optimal [default]\n"
+"-t <t>		    Set pair selection tolerance.\n"
+"-Q[pv]		    Select what constraint quadrics to use [default=p].\n"
+"-On		    Optimal placement policy.\n"
+"			    0=endpoints, 1=endormid, 2=line, 3=optimal [default]\n"
 "-B <weight>	Use boundary preservation planes with given weight.\n"
-"-b         preserve boundary (do not use with -B option) "
-"-m		Preserve mesh quality.\n"
-"-a		Enable area weighting.\n"
-"-p 	Height fields positivity. Used for height fields, assume triangles \n"
-"				are originally positively oriented."
+"-b             preserve boundary (do not use with -B option) \n"
+"-m		        Preserve mesh quality.\n"
+"-a		        Enable area weighting.\n"
+"-p 	        Height fields positivity. Used for height fields, assume triangles \n"
+"                   are originally positively oriented."
 "\n";
 
 std::string logging_usage_string =
@@ -209,6 +210,12 @@ int main(int argc, char* argv[])
 				  {
 					 options.height_fields = true;
 					 break;
+				  }
+				  case 'i':
+				  {
+					  options.timingIntervals=atof(argv[i+1]);
+					  i++;
+					  break;
 				  }
 
 				  default :

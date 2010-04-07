@@ -617,13 +617,35 @@ int  QslimDecimation::decimate(QslimOptions & iOpts)
    std::cout<<"   Initialization  "
 		   << (double) (init_time - start_time)/CLOCKS_PER_SEC << " s.\n";
 
-    while( validFaceCount > opts.face_target  && decimate_min_error() < opts.error_tolerance )
+   int faces_reduction = validFaceCount-opts.face_target;
+   int counter=0, interval=0;
+   clock_t currentTime=init_time;
+    while( validFaceCount > opts.face_target
+    		&& decimate_min_error() < opts.error_tolerance )
+    {
+    	int initf=validFaceCount;
+    	// big routine
 		decimate_contract();
+		counter += (initf-validFaceCount);
+		if (counter >faces_reduction/opts.timingIntervals)
+		{
+			// print some time stats
+			clock_t p10_time=clock();
+			std::cout << "     "<<++interval<<
+					"/" << opts.timingIntervals << " reduce to " << validFaceCount <<
+					" faces in " <<
+					(double) (p10_time - currentTime)/CLOCKS_PER_SEC << " s, total:" <<
+					(double) (p10_time - init_time)/CLOCKS_PER_SEC << " s.\n";
+			counter = 0;
+			currentTime = p10_time;
+		}
+    }
 
     clock_t finish_time = clock();
     std::cout<<"   Decimation: "
     		   << (double) (finish_time - init_time )/CLOCKS_PER_SEC << " s.\n";
     // now that we are done , delete the vertices that are invalid
+#if 0
     std::vector<MBEntityHandle> invalidVerts;
     for (MBRange::iterator rit =verts.begin(); rit!=verts.end(); rit++)
     {
@@ -637,7 +659,19 @@ int  QslimDecimation::decimate(QslimOptions & iOpts)
     // hopefully, the edges and triangles are already fine with it
     MBErrorCode rval = mb->delete_entities( &(invalidVerts[0]) ,invalidVerts.size());
     //slim_time = gfx_get_time() - slim_time;
-
+#endif
+    // delete them one by one, although a little inefficient
+    for (MBRange::const_reverse_iterator rit = verts.rbegin(); rit != verts.rend(); rit++)
+    {
+    	MBEntityHandle v = *rit;
+    	// check the validity
+     	if (ehIsValid(v))
+    	    continue;
+     	MBErrorCode rval = mb->delete_entities( &v, 1);
+    }
+    clock_t delete_vTime = clock();
+    std::cout<<"   Delete Vertices: "
+        		   << (double) (delete_vTime - finish_time)/CLOCKS_PER_SEC << " s.\n";
 
    return 0;
 }
