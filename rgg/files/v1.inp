@@ -4,20 +4,20 @@
 !
 GeometryType Hexagonal  
 !                                     
-Materials 6 Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_Control R1 Mat_FHH H1       
+Materials 10 Mat_C2Coolant C02 Mat_C1Coolant C01 Mat_OCoolant C1Out Mat_Coolant C1 Mat_SCoolant SC1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_Control R1 Mat_FHH H1       
 !
-Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1 ! 2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1Out ! 2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
 Pincells 8 1.87960 
 ! 1
 Cell_Fuel       FC 1
-Cylinder  2 0.0 0.0    0.0 793.0   0.6225 0.6350 F1 C1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6225  F1 
 ! 2
 Cell_BurnPoison BP 1
-Cylinder  2 0.0 0.0    0.0 793.0   0.6225 0.6350 P1 C1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6225  P1 
 ! 3
 Cell_SmallCoolant    SC 1
-Cylinder  1 0.0 0.0    0.0 793.0   0.6350 C1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6350 SC1
 ! 4
 Cell_Coolant    CC 1
 Cylinder  1 0.0 0.0    0.0 793.0   0.79375 C1
@@ -27,7 +27,7 @@ Cell_FuelHandle FH 0
 Cell_Graphite   GC 0
 ! 7
 AVol_Control CR 1                                         
-Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C1 R1 C1 
+Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C01 R1 C02
 ! 8
 AVol_FHH     FH2 1
 Cylinder  1  0.0 0.0 0.0 793.0 2.0 H1                     

@@ -34,20 +34,12 @@ block 6 name "CarbonBlock"
 block all element type quad8
 block 6 element type tri6
 
-#sideset 1 curve all with y_coord >= 18.65
-volume all move -21.105 -16.28   # approximately recenter the assembly
-sideset 1 curve all with y_coord >= 18.6
-rotate surface all about z angle 60
-sideset 2 curve all with y_coord >= 18.25
-rotate surface all about z angle 60
-sideset 3 curve all with y_coord >= 18.25
-rotate surface all about z angle 60
-sideset 4 curve all with y_coord >= 18.65
-rotate surface all about z angle 60
-sideset 5 curve all with y_coord >= 18.65
-rotate surface all about z angle 60
-sideset 6 curve all with y_coord >= 18.65
-rotate surface all about z angle 60  # Back to the beginning
+sideset 1 curve side_edge1@A
+sideset 2 curve side_edge2@A
+sideset 3 curve side_edge3@A
+sideset 4 curve side_edge4@A
+sideset 5 curve side_edge5@A
+sideset 6 curve side_edge6@A
 
 
 # merge the geometry

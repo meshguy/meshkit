@@ -446,7 +446,8 @@ int CNrgen::ReadAndCreate()
   iBase_EntityHandle assm = NULL, max_surf = NULL;
   SimpleArray<iBase_EntityHandle> assms(m_nDimensions); // setup while reading the problem size
   iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
-  SimpleArray<iBase_EntityHandle> in_pins, all_geom;
+  SimpleArray<iBase_EntityHandle> in_pins, all_geom, all;
+  double xmax=0.0, ymax=0.0, zmax=0.0,xmin=0.0,ymin=0.0,zmin=0.0;
   
   // get tag handle for 'NAME' tag, already created as iGeom instance is created
   iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
@@ -710,7 +711,37 @@ int CNrgen::ReadAndCreate()
 	  CHECK("setData failed");
 	  std::cout << "created: " << sMatName << std::endl;
 	}
-	
+	//  Naming outermost block edges
+	std::cout << "Naming outermost block edges" << std::endl;	
+	SimpleArray<iBase_EntityHandle> edges;
+	iGeom_getEntAdj( geom, assms[m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
+			 &err );
+	CHECK( "ERROR : getEntAdj failed!" );
+
+	// get the top corner edges
+	int count =0;//index for edge names
+	std::ostringstream os;
+	for (int i = 0; i < edges.size(); ++i){   
+	  iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
+			       &xmax,&ymax,&zmax, &err);
+	  if(zmax==zmin){
+	    if(zmax==m_dVZAssm(2)){
+	      //we have a corner edge - name it
+	      sMatName="side_edge";
+	      ++count;
+	      os << sMatName << count;
+	      sMatName=os.str();
+	      tmp_vol=edges[i];
+	      iGeom_setData(geom, tmp_vol, this_tag,
+			    sMatName.c_str(), sMatName.size(), &err);
+	      CHECK("setData failed"); 
+	      std::cout << "created: " << sMatName << std::endl;  
+	      os.str("");
+	      sMatName="";
+	    }
+	  }
+	}
+
 	// now subtract the outermost hexes
 	for(int n=m_nDimensions; n>1 ; n--){
 	  
@@ -770,6 +801,7 @@ int CNrgen::ReadAndCreate()
 
       std::cout << "\n--------------------------------------------------"<<std::endl;
 
+
       // getting all entities for merge and imprint
       SimpleArray<iBase_EntityHandle> entities;
       iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
@@ -777,26 +809,26 @@ int CNrgen::ReadAndCreate()
       double dTol = 0.01;
 
 
-      
+      //commented because this is handle in .jou file      
       // now imprint
-      std::cout << "\n\nImprinting...." << std::endl;
-      iGeom_imprintEnts(geom, ARRAY_IN(entities),&err); 
-      CHECK("Imprint failed.");
-      std::cout << "\n--------------------------------------------------"<<std::endl;
+//       std::cout << "\n\nImprinting...." << std::endl;
+//       iGeom_imprintEnts(geom, ARRAY_IN(entities),&err); 
+//       CHECK("Imprint failed.");
+//       std::cout << "\n--------------------------------------------------"<<std::endl;
 
       // commented out because cubit doesn't rotate merged geometries
       // now  merge
-  //     std::cout << "\n\nMerging...." << std::endl;
-//       iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
-//       CHECK("Merge failed.");
-//       std::cout <<"merging finished."<< std::endl;
-//       std::cout << "\n--------------------------------------------------"<<std::endl;
+      //     std::cout << "\n\nMerging...." << std::endl;
+      //       iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
+      //       CHECK("Merge failed.");
+      //       std::cout <<"merging finished."<< std::endl;
+      //       std::cout << "\n--------------------------------------------------"<<std::endl;
 
       // branch for creating planar geometry
       if(m_nPlanar ==1){ // this is set in main program nrgen_test.cpp
 	std::cout << "\nCREATING TOP SURFACE..." << std::endl;
 	iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
-	CHECK( "ERROR : getRootSet failed!" );
+	CHECK( "ERROR : Failed to get all geom" );
 
 	// get the surface with max z
 	SimpleArray<iBase_EntityHandle> surfs;
@@ -841,6 +873,24 @@ int CNrgen::ReadAndCreate()
 	  iGeom_deleteEnt(geom, all_geom[i], &err);
 	  CHECK( "Problems deleting cyl." );
 	}
+      }
+
+      // position the assembly such that origin is at the center
+      iGeom_getBoundBox(geom,&xmin,&ymin,&zmin,
+			&xmax,&ymax,&zmax, &err);
+      CHECK("Failed getting bounding box");
+
+      // moving all geom entities to center      
+      double xcenter = (xmin+xmax)/2.0;
+      double ycenter = (ymin+ymax)/2.0;
+      SimpleArray<iBase_EntityHandle> all;
+      iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+      CHECK("Failed to get all entities");
+
+      std::cout << "Moving all geom entities to center.." <<std::endl;
+      for(int i=0; i<all.size(); i++){
+	iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,0,&err);
+	CHECK("Failed to move entities");
       }
 
       // save .sat file
