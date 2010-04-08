@@ -6,43 +6,47 @@ RGG aka Reactor Geometry Generator program is a tool to generate assembly geomet
 In order to use rgg program use standard autotools commands:
 ----------------------------------------------------------------------------------------------------------------------------------------------
 autoreconf -fi;
-./configure --with-igeom=/homes/jain/lib/CGM-acis --enable-debug;
-cd rgg_source; 
+./configure --with-igeom=<igeom-dir> --with-imesh=<imesh-dir> --with-irel=<irel-dir> --enable-algs --enable-rgg --enable-debug
+make
+cd rgg; 
 make nrgen_test; 
 nrgen_test;
 ----------------------------------------------------------------------------------------------------------------------------------------------
 Launch the executable 'nrgen_test' from the rgg directory as follows
-usage: nrgen_test <inpufile name.inp> <o/p file name .sat>
+usage: nrgen_test <inpufile name WITHOUT EXTENSION> 
+RGG by default assumes that:
+input file name is  <inpufile name WITHOUT EXTENSION>.inp
+geometry file name is  <inpufile name WITHOUT EXTENSION>.sat or brep based on the geometry engine
+Journal file name is  <inpufile name WITHOUT EXTENSION>.jou
 ----------------------------------------------------------------------------------------------------------------------------------------------
 
 EXAMPLE (Sample input files can be found in files directory in rgg)
 ----------------------------------------------------------------------------------------------------------------------------------------------
-nrgen_test ./files/s1.inp ./files/s1.sat
+nrgen_test ./files/v1
 ----------------------------------------------------------------------------------------------------------------------------------------------
 Note: .sat is created when compiled with CGM based on ACIS, use .brep when compiled with CGM based on OCC
 
 v1.inp has the following lines:
-----------------------------------------------------------------------------------------------------------------------------------------------
 ! #############################################################################################################
 ! Hexagonal VHTR Control Fuel Block Assembly Definition without CellMaterials (Prism) around individual Pins
 ! #############################################################################################################
 !
-GeometryType Hexagonal  ! Card Card_Data    - GeometryType Hexagonal/Cartesian
+GeometryType Hexagonal  
 !                                     
-Materials 6 Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_Control R1 Mat_FHH H1  !'Materials' Material No_of_Materials Name Alias
+Materials 10 Mat_C2Coolant C02 Mat_C1Coolant C01 Mat_OCoolant C1Out Mat_Coolant C1 Mat_SCoolant SC1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_Control R1 Mat_FHH H1       
 !
-Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1 ! 'Dimensions' No._of_blocks center_of_blocks(X,Y) Zstart Zend Pitch_of_blocks Alias_of_blocks
+Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1Out ! 2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
-Pincells 8 1.87960 ! 'Pincells' No_of_pincells pitch
+Pincells 8 1.87960 
 ! 1
-Cell_Fuel       FC 1 !Pincell_Name Pincell_Alias No_of_Lines_to_define_pincell
-Cylinder  2 0.0 0.0    0.0 793.0   0.6225 0.6350 F1 C1  ! 'Cylinder' No_of_cylinders center_of_cylinder(X,Y) Zstart Zend Radii_of_Cylinders Material_Alias
+Cell_Fuel       FC 1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6225  F1 
 ! 2
 Cell_BurnPoison BP 1
-Cylinder  2 0.0 0.0    0.0 793.0   0.6225 0.6350 P1 C1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6225  P1 
 ! 3
 Cell_SmallCoolant    SC 1
-Cylinder  1 0.0 0.0    0.0 793.0   0.6350 C1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6350 SC1
 ! 4
 Cell_Coolant    CC 1
 Cylinder  1 0.0 0.0    0.0 793.0   0.79375 C1
@@ -52,12 +56,11 @@ Cell_FuelHandle FH 0
 Cell_Graphite   GC 0
 ! 7
 AVol_Control CR 1                                         
-Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C1 R1 C1 
+Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C01 R1 C02
 ! 8
 AVol_FHH     FH2 1
-Cylinder  1  0.0 0.0 0.0 793.0 2.0 H1   
-!                  
-Assembly 11    ! 'Assembly' No_of_pincells_on_flat_side                                             
+Cylinder  1  0.0 0.0 0.0 793.0 2.0 H1                     
+Assembly 11                                                 
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
                    FC  CC  FC  FC  GC  GC  GC  GC  FC  FC  CC  FC
                  CC  FC  FC  CC  GC  GC  GC  GC  GC  CC  FC  FC  CC
@@ -79,4 +82,5 @@ Assembly 11    ! 'Assembly' No_of_pincells_on_flat_side
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+Section Y 0
 END ! This is a must

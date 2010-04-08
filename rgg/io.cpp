@@ -12,9 +12,7 @@ file with input o/p funtions
 #include "math.h"
 #include <string.h>
 #include <stdlib.h>
-#define DEFAULT_TEST_FILE "Twopin.inp"
-#define DEFAULT_OUTPUT_FILE "Twopin.sat"
-
+#define DEFAULT_TEST_FILE "Twopin"
 
 #define CHECK( STR ) if (err != iBase_SUCCESS) return print_error( STR, err, geom, __FILE__, __LINE__ )
 #define ARRAY_INOUT( A ) A.ptr(), &A.capacity(), &A.size()
@@ -106,35 +104,46 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  // set the geometry engine 
-  char* input_file_name = NULL;
-  char* output_file_name = NULL;
-
+  //set geometry engine 
   int err;
+  std::string engine;
+  //ACIS ENGINE
+  engine = "ACIS";
   iGeom_newGeom( 0, &geom, &err, 0 ); // this is default way of specifying ACIS engine
+
+  // OCC ENGINE
+  // engine = "OCC;
   //  iGeom_newGeom( ";engine=OCC", &geom, &err, 12 );
 
-  // set input file
+  // set and open input output files
   bool bDone = false;
   do{
- 
-    if (3 == argc) {
-      input_file_name = argv[1];
-      output_file_name = argv[2];
+    if (2 == argc) {
+      m_szFile = argv[1];
+      m_szInFile=m_szFile+".inp";
+      m_szGeomFile = m_szFile+".sat";
+      if(engine =="OCC"){
+	m_szGeomFile = m_szFile+".brep";
+      }
+      m_szJouFile = m_szFile+".jou";
     }
     else {
-      //  if (argc < 1) return 1;
-      std::cerr << "Usage: " << argv[0] << " <input file>" << " <output file>" << std::endl;
-      std::cout <<"  No file specified.  Defaulting to: " << DEFAULT_TEST_FILE
-		<< "  " << DEFAULT_OUTPUT_FILE << std::endl;
-      input_file_name = (char *)DEFAULT_TEST_FILE;
-      output_file_name = (char *)DEFAULT_OUTPUT_FILE;
+      std::cerr << "Usage: " << argv[0] << " <input file> WITHOUT EXTENSION"<< std::endl;   
+      m_szInFile = (char *)DEFAULT_TEST_FILE;
+      m_szGeomFile = (char *)DEFAULT_TEST_FILE;
+      m_szJouFile = (char *)DEFAULT_TEST_FILE;
+      m_szFile =  (char *)DEFAULT_TEST_FILE;
+      m_szInFile+=".inp";
+      m_szGeomFile+=".sat";
+      if(engine =="OCC"){
+	m_szGeomFile = m_szFile+".brep";
+      }
+      m_szJouFile+=".jou";
+      std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
+		<< "  " << m_szGeomFile << "  " << m_szJouFile << std::endl;
     }
-    //  std::cin >> m_szFileNameIn ;
-    m_szFileNameIn =input_file_name;// argv[1];//"sq1.inp";
-    std::cout << "\nEntered input file name: " <<  input_file_name <<std::endl;
     // open the file
-    m_FileInput.open (m_szFileNameIn.c_str(), std::ios::in); 
+    m_FileInput.open (m_szInFile.c_str(), std::ios::in); 
     if (!m_FileInput){
       std::cout << "Unable to open file" << std::endl;
       m_FileInput.clear ();
@@ -142,16 +151,21 @@ void CNrgen::PrepareIO (int argc, char *argv[])
     else
       bDone = true; // file opened successfully
   } while (!bDone);
+  std::cout << "\nEntered input file name: " <<  m_szInFile <<std::endl;
 
-
-  // set o/p file name
+  // open the file
   do{
-
-    // std::cin >> m_szFileNameOut;
-    m_szFileNameOut = output_file_name;//argv[2];//"sq1.sat"; // set here for debugging
-    std::cout << "Entered o/p file name: " <<  output_file_name 
-	      << "\nInfo: o/p file extension must correspond to geometry engine used to build cgm " << std::endl;
+    m_FileOutput.open (m_szJouFile.c_str(), std::ios::out); 
+    if (!m_FileOutput){
+      std::cout << "Unable to open o/p file" << std::endl;
+      m_FileOutput.clear ();
+    }
+    else
+      bDone = true; // file opened successfully
   } while (!bDone);
+
+  std::cout<<"o/p geometry file name: "<<m_szGeomFile << "\no/p Cubit journal file name: "<< m_szJouFile    
+	   << "\nInfo: o/p file extension must correspond to geometry engine used to build cgm " << std::endl;
 }
 
 void CNrgen::CountPinCylinders ()
@@ -811,10 +825,10 @@ int CNrgen::ReadAndCreate()
 
       //commented because this is handle in .jou file      
       // now imprint
-//       std::cout << "\n\nImprinting...." << std::endl;
-//       iGeom_imprintEnts(geom, ARRAY_IN(entities),&err); 
-//       CHECK("Imprint failed.");
-//       std::cout << "\n--------------------------------------------------"<<std::endl;
+      //       std::cout << "\n\nImprinting...." << std::endl;
+      //       iGeom_imprintEnts(geom, ARRAY_IN(entities),&err); 
+      //       CHECK("Imprint failed.");
+      //       std::cout << "\n--------------------------------------------------"<<std::endl;
 
       // commented out because cubit doesn't rotate merged geometries
       // now  merge
@@ -892,12 +906,63 @@ int CNrgen::ReadAndCreate()
 	iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,0,&err);
 	CHECK("Failed to move entities");
       }
-
+      std::cout << "\n--------------------------------------------------"<<std::endl;
+  
+      // section the assembly as described in section card
+      char cDir;
+      double dOffset;
+      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
+			       MAXCHARS, szComment))
+	IOErrorHandler (INVALIDINPUT);
+      if (szInputString.substr(0,7) == "section"){
+	std::cout << "Sectioning geometry .." << std::endl;
+	std::istringstream szFormatString (szInputString);
+	szFormatString >> card >> cDir >> dOffset;
+	iBase_EntityHandle sec=NULL;
+	double yzplane = 0.0;
+	double xzplane = 0.0;
+	if( cDir =='x'){
+	  yzplane = 1.0;
+	  xzplane = 0.0;
+	}
+	if( cDir =='y'){
+	  yzplane = 0.0;
+	  xzplane = 1.0;
+	}
+	// loop and section/delete entities
+	for(int i=0; i<all.size(); i++){
+	  //get the bounding box to decide
+	  iGeom_getEntBoundBox(geom,all[i],&xmin,&ymin,&zmin,
+			       &xmax,&ymax,&zmax, &err);
+	  CHECK("Failed get bound box");
+	  if(xmax<dOffset && yzplane ==1){
+	    iGeom_deleteEnt(geom,all[i],&err);
+	    CHECK("Failed delete entities");
+	    continue;
+	  }
+	  if(ymax<dOffset && xzplane ==1){
+	    iGeom_deleteEnt(geom,all[i],&err);
+	    CHECK("Failed delete entities");
+	    continue;
+	  }
+	  else{	  
+	    if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
+	      iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
+	      CHECK("Failed to section ent");
+	    }
+	    if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
+	      iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
+	      CHECK("Failed to section ent");
+	    }
+	  }
+	}
+      }
+      
       // save .sat file
-      iGeom_save(geom, m_szFileNameOut.c_str(), NULL, &err, m_szFileNameOut.length() , 0);
+      iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
       CHECK("Save to file failed.");
       
-      std::cout << "Normal Termination.\n"<< m_szFileNameOut << " file saved." << std::endl;
+      std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
     }// if assembly card ends
 
     if (szInputString.substr(0,3) == "end"){
@@ -910,6 +975,70 @@ int CNrgen::ReadAndCreate()
   return 1;
 }
 
+int CNrgen::CreateCubitJournal()
+//---------------------------------------------------------------------------
+//Function: Create Cubit Journal File for generating mesh
+//Input:    none
+//Output:   none
+//---------------------------------------------------------------------------
+{
+  // variables
+  std::string szGrp, szBlock;
+  m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
+  m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
+  // import the geometry file
+  m_FileOutput << "# Import geometry file " << std::endl;
+  m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
+  m_FileOutput << "#Creating groups" << std::endl;  
+  // group creation dumps. each material surface  has a group
+  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    szGrp = "g_"+ m_szAssmMat(p);
+    m_szAssmMat(p);
+    m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+  }
+
+  // block creation dumps
+  m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
+  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    szBlock = "b_"+ m_szAssmMat(p);
+    szGrp = "g_"+ m_szAssmMat(p);
+    m_FileOutput << "block " << p << " surface in " << szGrp  << std::endl;
+    m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
+  }
+
+  // sideset creation dumps
+  m_FileOutput << "#Creating blocks, Note: you might need to change @ extensions" << std::endl; 
+  if(m_szGeomType =="hexagonal"){
+    for(int i=1; i<=6; i++)
+      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+  }
+  if(m_szGeomType =="cartesian"){
+    for(int i=1; i<=4; i++)
+      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+  }
+
+  // merge and imprint
+  m_FileOutput << "#merge geometry" << std::endl; 
+  m_FileOutput << "imprint all\n" << "merge all" << std::endl;
+
+  //now set the sizes
+  m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
+  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    szGrp = "g_"+ m_szAssmMat(p);
+    m_FileOutput << "surface in " << szGrp << " interval XX"  << std::endl;
+    m_FileOutput << "surface in " << szGrp << " scheme YY" << " <scheme options>"  << std::endl;
+    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
+  }  
+
+  // save as .cub file dump
+  m_FileOutput << "#Save file" << std::endl; 
+  std::string szSave = m_szFile + ".cub";
+  m_FileOutput << "save as '"<< szSave <<"'"<<std::endl;   
+
+  std::cout << "Cubit journal file created: " << m_szJouFile << std::endl;
+  return 1;
+}
+  
 
 int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 //---------------------------------------------------------------------------

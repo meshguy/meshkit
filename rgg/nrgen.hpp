@@ -34,6 +34,8 @@ public:
 
   int CreatePinCell(int i, double dX,
 		    double dY, double dZ);
+  
+  int CreateCubitJournal();
   void ComputePinCentroid(int, CMatrix<std::string>, int, int,
 			  double&, double&, double&);
   int TerminateProgram ();
@@ -45,8 +47,10 @@ public:
   int m_nLineNumber, m_nPlanar;	   // current line number in input file
   std::ifstream m_FileInput;	// File Input
   std::ofstream m_FileOutput;	// File Output
-  std::string m_szFileNameOut;
-  std::string m_szFileNameIn;
+  std::string m_szFile;
+  std::string m_szInFile;
+  std::string m_szGeomFile;
+  std::string m_szJouFile;
 private:
   CMatrix<std::string> m_Assembly;
   std::string m_szGeomType;
