@@ -840,7 +840,7 @@ int CNrgen::ReadAndCreate()
 
       // branch for creating planar geometry
       if(m_nPlanar ==1){ // this is set in main program nrgen_test.cpp
-	std::cout << "\nCREATING TOP SURFACE..." << std::endl;
+	std::cout << "Creating top surface of 2D assembly..." << std::endl;
 	iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
 	CHECK( "ERROR : Failed to get all geom" );
 
@@ -887,6 +887,8 @@ int CNrgen::ReadAndCreate()
 	  iGeom_deleteEnt(geom, all_geom[i], &err);
 	  CHECK( "Problems deleting cyl." );
 	}
+	std::cout << "--------------------------------------------------"<<std::endl;
+
       }
 
       // position the assembly such that origin is at the center
@@ -906,7 +908,7 @@ int CNrgen::ReadAndCreate()
 	iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,0,&err);
 	CHECK("Failed to move entities");
       }
-      std::cout << "\n--------------------------------------------------"<<std::endl;
+      std::cout <<"--------------------------------------------------"<<std::endl;
   
       // section the assembly as described in section card
       char cDir;
@@ -956,6 +958,7 @@ int CNrgen::ReadAndCreate()
 	    }
 	  }
 	}
+	std::cout <<"--------------------------------------------------"<<std::endl;
       }
       
       // save .sat file

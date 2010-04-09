@@ -1,30 +1,34 @@
 Introduction
 ----------------------------------------------------------------------------------------------------------------------------------------------
-RGG aka Reactor Geometry Generator program is a tool to generate assembly geometry in OpenCascase or ACIS format using CGM (ITAPS, ANL).
+RGG aka Reactor Geometry Generator program is a tool to generate assembly geometry in OpenCascade or ACIS format using CGM (ITAPS, ANL).
 ----------------------------------------------------------------------------------------------------------------------------------------------
 
-In order to use rgg program use standard autotools commands:
+In order to use rgg program use standard autotools commands to build 'MeshKit' - https://svn.mcs.anl.gov/repos/fathom/MeshKit/trunk
 ----------------------------------------------------------------------------------------------------------------------------------------------
-autoreconf -fi;
+autoreconf -fi
 ./configure --with-igeom=<igeom-dir> --with-imesh=<imesh-dir> --with-irel=<irel-dir> --enable-algs --enable-rgg --enable-debug
 make
-cd rgg; 
-make nrgen_test; 
-nrgen_test;
+cd rgg
+make nrgen_test
+nrgen_test
 ----------------------------------------------------------------------------------------------------------------------------------------------
+
+RUNNING RGG
+----------------------------------------------------------------------------------------------------------------------------------------------
+nrgen_test command launches a default test based on input file TwoPin.inp in the rgg source code directory
 Launch the executable 'nrgen_test' from the rgg directory as follows
 usage: nrgen_test <inpufile name WITHOUT EXTENSION> 
 RGG by default assumes that:
-input file name is  <inpufile name WITHOUT EXTENSION>.inp
-geometry file name is  <inpufile name WITHOUT EXTENSION>.sat or brep based on the geometry engine
-Journal file name is  <inpufile name WITHOUT EXTENSION>.jou
+Input file name is  <input file name WITHOUT EXTENSION>.inp
+Geometry file name created by RGG is  <input file name WITHOUT EXTENSION>.sat or .brep based on the geometry engine*
+Journal file name created by RGG is  <input file name WITHOUT EXTENSION>.jou
 ----------------------------------------------------------------------------------------------------------------------------------------------
 
 EXAMPLE (Sample input files can be found in files directory in rgg)
 ----------------------------------------------------------------------------------------------------------------------------------------------
-nrgen_test ./files/v1
+To launch v1 from rgg directory issue command 'nrgen_test ./files/v1'
 ----------------------------------------------------------------------------------------------------------------------------------------------
-Note: .sat is created when compiled with CGM based on ACIS, use .brep when compiled with CGM based on OCC
+*Note: .sat is created when compiled with CGM(igeom) based on ACIS, use .brep when compiled with CGM based on OCC
 
 v1.inp has the following lines:
 ! #############################################################################################################

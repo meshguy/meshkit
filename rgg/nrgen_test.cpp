@@ -12,15 +12,16 @@ in the input file
 
 int main (int argc, char *argv[])
 {
-  
+  int err;
   CNrgen TheNR; // the one and only NR!
 
    // switch to set as 1 for surface only
   TheNR.m_nPlanar = 0;
+
   // show program banner
   TheNR.Banner (std::cout); 
 
-  // Prepare for I/O
+  // prepare for I/O
   TheNR.PrepareIO (argc, argv);
   
   // start the timer 
@@ -33,22 +34,27 @@ int main (int argc, char *argv[])
   TheNR.CountPinCylinders ();
   
   // read the problem size and create pincell
-  int i = TheNR.ReadAndCreate ();
-  if (i!=1)
-    std::cout << "Error in function ReadAndCreate";
+  err = TheNR.ReadAndCreate ();
+  if (err!=1)
+    std::cout << "Error in function ReadAndCreate\n";
   
+  // create the .jou file
+  err = TheNR.CreateCubitJournal();
+  if (err!=1)
+    std::cout << "Error in function CreateCubitJournal\n";
+
   // get the current date and time
   Timer.GetDateTime (szDateTime);
   std::cout << "Ending at : " << szDateTime;
  
-  // compute the elapsed time -----------------------------------------------
+  // compute the elapsed time
   std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
 	    << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
 
-  // Close input and output files
-  int j = TheNR.TerminateProgram ();
-  if (j!=1)
-    std::cout << "Error ";
+  // close input and output files
+  err = TheNR.TerminateProgram ();
+  if (err!=1)
+    std::cout << "Error while terminating \n";
   std::cout << "\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<std::endl;
   
   return 0;
