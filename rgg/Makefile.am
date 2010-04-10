@@ -30,7 +30,7 @@ libMKrgg_la_include_HEADERS = \
 	cylinder.hpp \
 	vectortemplate.hpp \
         matrixtemplate.hpp \
-	constants.hpp
+	simplearray.hpp
 
 # Tests and such
 check_PROGRAMS = nrgen_test

@@ -10,11 +10,11 @@ CNrgen class definition.
 
 #include <fstream>
 #include <iostream>
-#include "constants.hpp"
+#include <math.h>
 #include "vectortemplate.hpp"
 #include "matrixtemplate.hpp"
 #include "pincell.hpp"
-
+#include "simplearray.hpp"
 #include "iGeom.h"
 
 class CNrgen
@@ -30,7 +30,24 @@ public:
   void CountPinCylinders ();
   int  ReadAndCreate ();
   int Get_Max_Surf (iBase_EntityHandle vol, iBase_EntityHandle* max_surf);
+  int Center_Assm();
+  int Section_Assm (char&, double&);
+  int Rotate_Assm (char&, double&);
+  int Create_HexAssm(std::string &);
+  int Create_CartAssm(std::string &);
+  int CreateOuterCovering();
+  int Imprint_Merge ();
+  int Subtract_Pins ();
+  int Create2DSurf();
+
+bool Print_Error( const char* desc, 
+			 int err,
+			 iGeom_Instance geom,
+			 const char* file,
+			 int line );
+
   void ReadPinCellData(int i);
+
 
   int CreatePinCell(int i, double dX,
 		    double dY, double dZ);
@@ -52,6 +69,8 @@ public:
   std::string m_szGeomFile;
   std::string m_szJouFile;
 private:
+  double pi;
+  int err;
   CMatrix<std::string> m_Assembly;
   std::string m_szGeomType;
   int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol;
@@ -63,6 +82,15 @@ private:
   int m_nPin, m_nPinX, m_nPinY;
   double m_dPitch;
 
+  // igeom related
+  SimpleArray<iBase_EntityHandle> assms, in_pins;
+  iGeom_Instance geom;
+  iBase_EntitySetHandle root_set;
+  
+  // parsing related
+  std::string szInputString;
+  std::string szComment;
+  int MAXCHARS;
 
   // error handlers
   void ErrorHandler (int) const; 

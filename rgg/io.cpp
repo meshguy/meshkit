@@ -9,75 +9,16 @@ file with input o/p funtions
 #include "nrgen.hpp"
 #include "parser.hpp"
 #include <fstream>
-#include "math.h"
+#include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#define DEFAULT_TEST_FILE "Twopin"
 
-#define CHECK( STR ) if (err != iBase_SUCCESS) return print_error( STR, err, geom, __FILE__, __LINE__ )
+// helper macro for igeom
+#define CHECK( STR ) if (err != iBase_SUCCESS) return Print_Error( STR, err, geom, __FILE__, __LINE__ )
 #define ARRAY_INOUT( A ) A.ptr(), &A.capacity(), &A.size()
 #define ARRAY_IN( A ) &A[0], A.size()
 
-static bool print_error( const char* desc, 
-			 int err,
-			 iGeom_Instance geom,
-			 const char* file,
-			 int line );
-
-
-
-// SIMPLE ARRAY TEMPLATE
-/* Frees allocated arrays for us */
-template <typename T> class SimpleArray
-{
-private:
-  T* arr;
-  int arrSize;
-  int arrAllocated;
-     
-public:
-  SimpleArray() : arr(0) , arrSize(0), arrAllocated(0) {}
-  SimpleArray( unsigned s ) :arrSize(s), arrAllocated(s) {
-    arr = (T*)malloc(s*sizeof(T));
-    for (unsigned i = 0; i < s; ++i)
-      new (arr+i) T();
-  }
-    
-  ~SimpleArray() {
-    for (int i = 0; i < size(); ++i)
-      arr[i].~T();
-    free(arr);
-  }
-
-  T**  ptr()            { return &arr; }
-  int& size()           { return arrSize; }
-  int  size()     const { return arrSize; }
-  int& capacity()       { return arrAllocated; }
-  int  capacity() const { return arrAllocated; }
-    
-  typedef T* iterator;
-  typedef const T* const_iterator;
-  iterator       begin()       { return arr; }
-  const_iterator begin() const { return arr; }
-  iterator         end()       { return arr + arrSize; }
-  const_iterator   end() const { return arr + arrSize; }
-    
-    
-  T& operator[]( unsigned idx )       { return arr[idx]; }
-  T  operator[]( unsigned idx ) const { return arr[idx]; }
-};
-
-const int MAXCHARS = 300;
-std::string szInputString;
-std::string szComment = "!";
-double pi = M_PI;
-
-iGeom_Instance geom = NULL;
-iBase_EntitySetHandle root_set= NULL;
-iBase_EntitySetHandle set  = NULL;
-iBase_EntityHandle* allvols = NULL;
-int nVols = 0;
-
+#define DEFAULT_TEST_FILE "Twopin"
 
 // NRGEN CLASS FUNCIONS:
 
@@ -105,7 +46,6 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 // ---------------------------------------------------------------------------
 {
   //set geometry engine 
-  int err;
   std::string engine;
   //ACIS ENGINE
   engine = "ACIS";
@@ -176,10 +116,9 @@ void CNrgen::CountPinCylinders ()
 // ---------------------------------------------------------------------------
 {
   CParser Parse;
-  int nCyl =0, nCellMat=0;
+  int nCyl =0, nCellMat=0, nInputLines;
   std::string card;
   std::string szVolId, szVolAlias;
-  int nInputLines;
   m_nLineNumber =0;
 
   // count the total number of cylinder commands in each pincell
@@ -244,20 +183,12 @@ void CNrgen::ReadPinCellData (int i)
 //---------------------------------------------------------------------------
 {
   CParser Parse;
-  std::string card;
-  std::string szVolId, szVolAlias;
-  int nInputLines;
+  std::string card, szVolId, szVolAlias;
+  int nInputLines, nMaterials, nCyl = 0, nRadii, nCellMat;
   double dLZ, dFlatF, dPX, dPY, dPZ;
-  int nMaterials;
-  CVector <std::string> szVMatName, szVMatAlias;
-  int nCyl=0;
-  int nRadii;
+  CVector <std::string> szVMatName, szVMatAlias, szVCylMat, szVCellMat;
   CVector<double>dVCoor(2); // XY Pos of cylinder
-  CVector<double> dVCylRadii,dVCylZPos;
-  CVector<std::string> szVCylMat;
-  CVector<std::string> szVCellMat;
-  CVector<double> dZVStart, dZVEnd;
-  int nCellMat;
+  CVector<double> dVCylRadii,dVCylZPos,dZVStart, dZVEnd;
 
   //loop over input lines
   if (m_szGeomType == "cartesian"){
@@ -317,6 +248,7 @@ void CNrgen::ReadPinCellData (int i)
 	for(int k=1; k<=2; k++)
 	  szFormatString >> dVCylZPos(k);
 	m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+
 	// reading Radii
 	for(int l=1; l<= nRadii; l++)
 	  szFormatString >> dVCylRadii(l);
@@ -447,26 +379,8 @@ int CNrgen::ReadAndCreate()
   m_FileInput.seekg (0L, std::ios::beg);
 	
   CParser Parse;
-  std::string card, szVolId, szVolAlias;
-  int nInputLines, nTempPin;
-  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0;
-  int err;
-  double  dP, dH, dSide, dHeight;
-  // name tag handle
-  iBase_TagHandle this_tag;
-  char* tag_name =(char *)"NAME";
-  std::string sMatName = "";
-
-  iBase_EntityHandle assm = NULL, max_surf = NULL;
-  SimpleArray<iBase_EntityHandle> assms(m_nDimensions); // setup while reading the problem size
-  iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
-  SimpleArray<iBase_EntityHandle> in_pins, all_geom, all;
-  double xmax=0.0, ymax=0.0, zmax=0.0,xmin=0.0,ymin=0.0,zmin=0.0;
-  
-  // get tag handle for 'NAME' tag, already created as iGeom instance is created
-  iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
-  CHECK("getTagHandle failed");
-  
+  std::string card;
+    
   // start reading the input file break when encounter end
   for(;;){
     if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
@@ -501,6 +415,9 @@ int CNrgen::ReadAndCreate()
 
 	m_dVAssmPitch.SetSize(m_nDimensions); m_szMAlias.SetSize(m_nDimensions);
 
+	assms.setSize(m_nDimensions); // setup while reading the problem size
+
+
 	for (int i=1; i<=m_nDimensions; i++)
 	  szFormatString >> m_dVAssmPitch(i);
 
@@ -517,6 +434,7 @@ int CNrgen::ReadAndCreate()
 
 	m_dVAssmPitchX.SetSize(m_nDimensions);	m_dVAssmPitchY.SetSize(m_nDimensions);
 	m_szMAlias.SetSize(m_nDimensions);
+	assms.setSize(m_nDimensions); // setup while reading the problem size
 
 	for (int i=1; i<=m_nDimensions; i++)
 	  szFormatString >> m_dVAssmPitchX(i) >> m_dVAssmPitchY(i);
@@ -541,434 +459,57 @@ int CNrgen::ReadAndCreate()
       }
     }
     if (szInputString.substr(0,8) == "assembly"){
-      std::cout << "\ngetting Assembly data and creating ..\n"<< std::endl;
-
-      // read and create the assembly for hexagonal lattice
       if(m_szGeomType =="hexagonal"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_nPin;
-
-	// width of the hexagon is n*n+1/2
-	int nWidth =2*m_nPin -1;
-
-	// creating a square array of size width
-	m_Assembly.SetSize(nWidth, nWidth);
-
-	int t; // index for hexagonal lattice
-
-	for(int m=1; m<=nWidth; m++){
-	  if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
-				   MAXCHARS, szComment))
-	    IOErrorHandler (INVALIDINPUT);
-	  if(m>m_nPin)
-	    t = 2*m_nPin - m;
-	  else
-	    t = m;
-	  std::istringstream szFormatString1 (szInputString);
-
-	  for(int n=1; n<=(m_nPin + t - 1); n++){
-	    szFormatString1 >> m_Assembly(m,n);
-
-	    // find that pincell
-	    for(int b=1; b<=m_nPincells; b++){
-	      m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-	      if(m_Assembly(m,n) == szVolAlias)
-		nTempPin = b;
-	    }
-	    // now compute the location and create it
-	    ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);	    
-
-	    // now create the pincell in the location found
-	    std::cout << "\n--------------------------------------------------"<<std::endl;
-	    std::cout << " m = " << m <<" n = " << n << std::endl;
-	    std::cout << "creating pin: " << nTempPin;
-	    std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
-	    
-	    int error = CreatePinCell(nTempPin, dX, dY,dZ);
-	    if (error!=1)
-	      std::cout << "Error in function CreatePinCell";
-  
-	  }
-	}
-
-	if(m_nDimensions >0){
-
-	  // get all the entities (in pins)defined so far, in an entity set - for subtraction later
-	  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
-	  CHECK( "ERROR : getRootSet failed!" );
-
-	  // create outermost hexes
-	  std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
-	  for(int n=1;n<=m_nDimensions; n++){
-	    dSide = m_dVAssmPitch(n)/(sqrt(3));
-	    dHeight = m_dVZAssm(2) - m_dVZAssm(1);
-
-	    // creating coverings
-	    iGeom_createPrism(geom, dHeight, 6, 
-			      dSide, dSide,
-			      &assm, &err); 
-	    CHECK("Prism creation failed.");
-	  
-	    // rotate the prism
-	    iGeom_rotateEnt (geom, assm, 30, 0, 0, 1, &err);
-	    CHECK("Rotation failed failed.");
-
-	    m_Pincell(1).GetPitch(dP, dH);
-	    dX = m_nPin*dP;
-	    dY = (m_nPin-1)*dP*sqrt(3.0)/2.0;
-	    dZ = (m_dVZAssm(2) + m_dVZAssm(1))/2.0;
-
-	    // position the prism
-	    iGeom_moveEnt(geom, assm, dX,dY,dZ, &err);
-	    CHECK("Move failed failed.");  
-
-	    assms[n-1]=assm;
-	  }
-	} // if dimension ends
-      } // if hexagonal ends
-
-
-      if(m_szGeomType == "cartesian"){
-
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_nPinX >> m_nPinY;
-	m_Assembly.SetSize(m_nPinX,m_nPinY);
-
-	//read the next line to get assembly info &store assembly info
-	for(int m=1; m<=m_nPinY; m++){
-	  if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
-				   MAXCHARS, szComment))
-	    IOErrorHandler (INVALIDINPUT);
-	  std::istringstream szFormatString1 (szInputString);
-	    
-	  //store the line read in Assembly array and create / position the pin in the core
-	  for(int n=1; n<=m_nPinX; n++){
-	    szFormatString1 >> m_Assembly(m,n);
-	      
-	    // loop thro' all pins to get the type of pin
-	    for(int b=1; b<=m_nPincells; b++){
-	      m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-	      if(m_Assembly(m,n) == szVolAlias)
-		nTempPin = b;
-	    }
-
-	    //now compute the location where the pin needs to be placed
-	    ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
-
-	    // now create the pincell in the location found
-	    std::cout << "\n--------------------------------------------------"<<std::endl;
-	    std::cout << " m = " << m <<" n = " << n << std::endl;
-	    std::cout << "creating pin: " << nTempPin;
-	    std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
-
-	    int error = CreatePinCell(nTempPin, dX, dY, dZ);
-	    if (error!=1)
-	      std::cout << "Error in function CreatePinCell";
-
-	    // dMoveX and dMoveY are stored for positioning the outer squares later
-	    if(m == m_nPinY && n ==m_nPinX){
-	      dMoveX = dX/2.0;
-	      dMoveY = dY/2.0;
-	    }
-	  }
-	}
-	std::cout << "\n--------------------------------------------------"<<std::endl;
-	
-	if(m_nDimensions > 0){
-	  // get all the entities (in pins)defined so far, in an entity set - for subtraction later
-	  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
-	  CHECK( "ERROR : getRootSet failed!" );
-	
-	
-	  // create outermost rectangular blocks
-	  std::cout << "\nCreating surrounding outer blocks .." << std::endl;
-	  for(int n=1;n<=m_nDimensions; n++){
-	    dHeight = m_dVZAssm(2) - m_dVZAssm(1);
-	  
-	    iGeom_createBrick(geom, m_dVAssmPitchX(n),  m_dVAssmPitchY(n),dHeight, 
-			      &assm, &err); 
-	    CHECK("Prism creation failed.");	  
-	  
-	    //		  ComputePinCentroid(nTempPin, m_Assembly, m_nPinX, m_nPinY, dX, dY, dZ);
-	    dX = m_dVAssmPitchX(n)/4.0;
-	    dY =  m_dVAssmPitchY(n)/4.0;
-	    dZ = (m_dVZAssm(2) + m_dVZAssm(1))/2.0;
-	    std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
-	    iGeom_moveEnt(geom, assm, dMoveX,dMoveY,dZ, &err);
-	    CHECK("Move failed failed.");  
-	  
-	    assms[n-1]=assm;
-	  }
-	} // if m_nDimensions ends
-      } // if cartesian ends
-      
-	// name the innermost outer covering common for both cartesian and hexagonal assembliees   
-      if(m_nDimensions >0){
-	int tag_no;
-	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	  if(strcmp ( m_szMAlias(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	    sMatName =  m_szAssmMat(p);
-	    tag_no=p;
-	  }
-	}
-	std::cout << "\ncreated innermost block: " << sMatName << std::endl;
-	
-	tmp_vol = assms[0];
-	iGeom_setData(geom, tmp_vol, this_tag,
-		      sMatName.c_str(), sMatName.size(), &err);
-	CHECK("setData failed");
-	int err = Get_Max_Surf(tmp_vol, &max_surf);
-	if(max_surf !=0){
-	  sMatName+="_surface";
-	  iGeom_setData(geom, max_surf, this_tag,
-			sMatName.c_str(), sMatName.size(), &err);
-	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << std::endl;
-	}
-	//  Naming outermost block edges
-	std::cout << "Naming outermost block edges" << std::endl;	
-	SimpleArray<iBase_EntityHandle> edges;
-	iGeom_getEntAdj( geom, assms[m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
-			 &err );
-	CHECK( "ERROR : getEntAdj failed!" );
-
-	// get the top corner edges
-	int count =0;//index for edge names
-	std::ostringstream os;
-	for (int i = 0; i < edges.size(); ++i){   
-	  iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
-			       &xmax,&ymax,&zmax, &err);
-	  if(zmax==zmin){
-	    if(zmax==m_dVZAssm(2)){
-	      //we have a corner edge - name it
-	      sMatName="side_edge";
-	      ++count;
-	      os << sMatName << count;
-	      sMatName=os.str();
-	      tmp_vol=edges[i];
-	      iGeom_setData(geom, tmp_vol, this_tag,
-			    sMatName.c_str(), sMatName.size(), &err);
-	      CHECK("setData failed"); 
-	      std::cout << "created: " << sMatName << std::endl;  
-	      os.str("");
-	      sMatName="";
-	    }
-	  }
-	}
-
-	// now subtract the outermost hexes
-	for(int n=m_nDimensions; n>1 ; n--){
-	  
-	  if(n>1){
-	    
-	    // copy cyl before subtract 
-	    iGeom_copyEnt(geom, assms[n-2], &tmp_vol, &err);
-	    CHECK("Couldn't copy inner duct wall prism.");
-	    
-	    // subtract outer most cyl from brick
-	    iGeom_subtractEnts(geom, assms[n-1], tmp_vol, &tmp_new, &err);
-	    CHECK("Subtract of inner from outer failed.");	  
-	    
-	    assms[n-1]=tmp_new;
-	    
-	    // name the vols by searching for the full name of the abbreviated Cell Mat
-	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	      if(strcmp ( m_szMAlias(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		sMatName =  m_szAssmMat(p);
-	      }
-	    }
-	    std::cout << "created: " << sMatName << std::endl;
-	    
-	    iGeom_setData(geom, tmp_new, this_tag,
-			  sMatName.c_str(), sMatName.size(), &err);
-	    CHECK("setData failed");
-
-	
-	    int err = Get_Max_Surf(tmp_new, &max_surf);
-	    if(max_surf !=0){
-	      sMatName+="_surface";
-	      iGeom_setData(geom, max_surf, this_tag,
-			    sMatName.c_str(), sMatName.size(), &err);
-	      CHECK("setData failed");
-	      std::cout << "created: " << sMatName << std::endl;
-	    }
-	  }
-	}
-	tmp_vol = assms[0];
-	iBase_EntityHandle tmp_new1 = NULL;
-
-	std::cout << "\n--------------------------------------------------"<<std::endl;
-	// subtract the innermost hex from the pins
-	iBase_EntityHandle unite= NULL;
-	SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
-	std::cout << "Subtracting all pins from assembly .. " << std::endl;
-
-	for (int i=0; i<in_pins.size();i++){
-	  iGeom_copyEnt(geom, in_pins[i], &copy_inpins[i], &err);
-	  CHECK("Couldn't copy inner duct wall prism.");		  
-	}
-	iGeom_uniteEnts(geom,ARRAY_IN(in_pins), &unite, &err);
-	CHECK( "uniteEnts failed!" );	  
-	iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
-	CHECK("Couldn't subtract pins from block.");
+	Create_HexAssm(szInputString);
       }
-
-      std::cout << "\n--------------------------------------------------"<<std::endl;
-
-
-      // getting all entities for merge and imprint
-      SimpleArray<iBase_EntityHandle> entities;
-      iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
-      CHECK( "ERROR : getRootSet failed!" );
-      double dTol = 0.01;
-
-
-      //commented because this is handle in .jou file      
-      // now imprint
-      //       std::cout << "\n\nImprinting...." << std::endl;
-      //       iGeom_imprintEnts(geom, ARRAY_IN(entities),&err); 
-      //       CHECK("Imprint failed.");
-      //       std::cout << "\n--------------------------------------------------"<<std::endl;
-
-      // commented out because cubit doesn't rotate merged geometries
-      // now  merge
-      //     std::cout << "\n\nMerging...." << std::endl;
-      //       iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
-      //       CHECK("Merge failed.");
-      //       std::cout <<"merging finished."<< std::endl;
-      //       std::cout << "\n--------------------------------------------------"<<std::endl;
-
-      // branch for creating planar geometry
-      if(m_nPlanar ==1){ // this is set in main program nrgen_test.cpp
-	std::cout << "Creating top surface of 2D assembly..." << std::endl;
-	iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
-	CHECK( "ERROR : Failed to get all geom" );
-
-	// get the surface with max z
-	SimpleArray<iBase_EntityHandle> surfs;
- 	int *offset = NULL, offset_alloc = 0, offset_size;
-       
-	iGeom_getArrAdj( geom, ARRAY_IN(all_geom) , iBase_FACE, ARRAY_INOUT(surfs),
-			 &offset, &offset_alloc, &offset_size, &err ); 
-	CHECK( "ERROR : getArrAdj failed!" );
- 
- 	SimpleArray<double> max_corn, min_corn;
-	iGeom_getArrBoundBox( geom, ARRAY_IN(surfs), iBase_INTERLEAVED, 
-			      ARRAY_INOUT( min_corn ),
-			      ARRAY_INOUT( max_corn ),
-			      &err );
-	CHECK( "Problems getting max surf for rotation." );
-  
-	int t=0;
-	double dtol = m_dVZAssm(2);
-	for (int i = 0; i < surfs.size(); ++i){ 
-	  if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol))
-	    t++;
-	}
-
-	SimpleArray<iBase_EntityHandle> max_surfs(t);
-	SimpleArray<iBase_EntityHandle> new_surfs(t);
-
-	t=0;
-	for (int i = 0; i < surfs.size(); ++i){
-	  // first find the max z-coordinate
-	  if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol)){
-	    max_surfs[t] = surfs[i];
-	    t++;
-	  }
-	}
-
-	for(int i = 0; i < max_surfs.size(); ++i){
-	  iGeom_copyEnt(geom, max_surfs[i], &new_surfs[i], &err);
-	  CHECK( "Problems creating surface." );
-	}
-
-	for(int i=0; i<all_geom.size(); i++){
-	  iGeom_deleteEnt(geom, all_geom[i], &err);
-	  CHECK( "Problems deleting cyl." );
-	}
-	std::cout << "--------------------------------------------------"<<std::endl;
-
+      if(m_szGeomType =="cartesian"){
+	Create_CartAssm(szInputString);
       }
+      CreateOuterCovering();
 
-      // position the assembly such that origin is at the center
-      iGeom_getBoundBox(geom,&xmin,&ymin,&zmin,
-			&xmax,&ymax,&zmax, &err);
-      CHECK("Failed getting bounding box");
-
-      // moving all geom entities to center      
-      double xcenter = (xmin+xmax)/2.0;
-      double ycenter = (ymin+ymax)/2.0;
-      SimpleArray<iBase_EntityHandle> all;
-      iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-      CHECK("Failed to get all entities");
-
-      std::cout << "Moving all geom entities to center.." <<std::endl;
-      for(int i=0; i<all.size(); i++){
-	iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,0,&err);
-	CHECK("Failed to move entities");
+      // subtract pins before save
+      Subtract_Pins();   
+      if(m_nPlanar ==1){
+	Create2DSurf();
       }
-      std::cout <<"--------------------------------------------------"<<std::endl;
-  
-      // section the assembly as described in section card
+    }
+    // section the assembly as described in section card
+    if (szInputString.substr(0,7) == "section"){
+      std::cout << "Sectioning geometry .." << std::endl;
       char cDir;
       double dOffset;
-      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
-			       MAXCHARS, szComment))
-	IOErrorHandler (INVALIDINPUT);
-      if (szInputString.substr(0,7) == "section"){
-	std::cout << "Sectioning geometry .." << std::endl;
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> cDir >> dOffset;
-	iBase_EntityHandle sec=NULL;
-	double yzplane = 0.0;
-	double xzplane = 0.0;
-	if( cDir =='x'){
-	  yzplane = 1.0;
-	  xzplane = 0.0;
-	}
-	if( cDir =='y'){
-	  yzplane = 0.0;
-	  xzplane = 1.0;
-	}
-	// loop and section/delete entities
-	for(int i=0; i<all.size(); i++){
-	  //get the bounding box to decide
-	  iGeom_getEntBoundBox(geom,all[i],&xmin,&ymin,&zmin,
-			       &xmax,&ymax,&zmax, &err);
-	  CHECK("Failed get bound box");
-	  if(xmax<dOffset && yzplane ==1){
-	    iGeom_deleteEnt(geom,all[i],&err);
-	    CHECK("Failed delete entities");
-	    continue;
-	  }
-	  if(ymax<dOffset && xzplane ==1){
-	    iGeom_deleteEnt(geom,all[i],&err);
-	    CHECK("Failed delete entities");
-	    continue;
-	  }
-	  else{	  
-	    if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
-	      iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
-	      CHECK("Failed to section ent");
-	    }
-	    if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
-	      iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
-	      CHECK("Failed to section ent");
-	    }
-	  }
-	}
-	std::cout <<"--------------------------------------------------"<<std::endl;
-      }
-      
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> cDir >> dOffset;
+      // call section fn
+      Section_Assm(cDir, dOffset);
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
+    // ceter the assembly 
+    if (szInputString.substr(0,6) == "center"){
+      std::cout << "Positioning assembly to center" << std::endl;
+      Center_Assm();
+      std::cout <<"--------------------------------------------------"<<std::endl;
+    }
+    // rotate the assembly if rotate card is specified
+    if (szInputString.substr(0,6) == "rotate"){
+      char cDir;
+      double dAngle;
+      std::cout << "Rotating geometry .." << std::endl;
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> cDir >> dAngle;
+      // call rotate fn
+      Rotate_Assm(cDir, dAngle);
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
+    if (szInputString.substr(0,3) == "end"){
+      // impring merge before saving
+      //      Imprint_Merge();
       // save .sat file
       iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
       CHECK("Save to file failed.");
-      
       std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
-    }// if assembly card ends
-
-    if (szInputString.substr(0,3) == "end"){
       break;
     }
   }
@@ -1050,7 +591,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 //Output:   none
 //---------------------------------------------------------------------------
 {
-  int nRadii=0, nCyl=0, err=0, nCells = 0;
+  int nRadii=0, nCyl=0, nCells = 0;
   double dCylMoveX = 0.0, dCylMoveY = 0.0, dHeightTotal = 0.0;
   CVector<double> dVCylZPos(2), dVCylXYPos(2);
   CVector<std::string> szVMatName; CVector<std::string> szVMatAlias;
@@ -1134,7 +675,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), sMatName.size(), &err);
 	CHECK("setData failed");
 
-	int err = Get_Max_Surf(cell, &max_surf);
+	 Get_Max_Surf(cell, &max_surf);
 	sMatName+="_surface";
 	if(max_surf !=0){
 	  iGeom_setData(geom, max_surf, this_tag,
@@ -1202,7 +743,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
-	int err = Get_Max_Surf(tmp_vol1, &max_surf);
+	Get_Max_Surf(tmp_vol1, &max_surf);
 	if(max_surf !=0){
 	  sMatName+="_surface";
 	  iGeom_setData(geom, max_surf, this_tag,
@@ -1235,7 +776,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 	  if(max_surf !=0){
-	    int err = Get_Max_Surf(tmp_new, &max_surf);
+	    Get_Max_Surf(tmp_new, &max_surf);
 	    sMatName+="_surface";
 	    iGeom_setData(geom, max_surf, this_tag,
 			  sMatName.c_str(), sMatName.size(), &err);
@@ -1317,7 +858,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
 
-	int err = Get_Max_Surf(tmp_vol1, &max_surf);
+	Get_Max_Surf(tmp_vol1, &max_surf);
 	if(max_surf !=NULL){
 	  sMatName+="_surface";
 	  iGeom_setData(geom, max_surf, this_tag,
@@ -1347,7 +888,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  iGeom_setData(geom, tmp_new, this_tag,
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
-	  int err = Get_Max_Surf(tmp_new, &max_surf);
+	  Get_Max_Surf(tmp_new, &max_surf);
 	  if(max_surf !=0){
 
 	    sMatName+="_surface";
@@ -1453,7 +994,6 @@ int CNrgen::TerminateProgram ()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  int err;
   iGeom_dtor(geom, &err);
   CHECK( "Interface destruction didn't work properly." );
   // close the input and output files
@@ -1464,7 +1004,7 @@ int CNrgen::TerminateProgram ()
 
 
 // print error function definition
-static bool print_error( const char* desc, 
+bool CNrgen::Print_Error( const char* desc, 
                          int err,
                          iGeom_Instance geom,
                          const char* file,
@@ -1494,7 +1034,6 @@ int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf)
   // get the surface with max z
   //  iBase_EntityHandle tmp_surf = 0;
   double dZCoor=-1.0e6;
-  int err;
   SimpleArray<iBase_EntityHandle> surfs;
   iGeom_getEntAdj( geom, cyl, iBase_FACE, ARRAY_INOUT(surfs), &err );
   CHECK( "Problems getting max surf for rotation." );
@@ -1520,3 +1059,534 @@ int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf)
   }
   return 0;
 } 
+int CNrgen::Center_Assm ()
+// ---------------------------------------------------------------------------
+// Function: centers all the entities along x and y axis
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  double xmin, xmax, ymin, ymax, zmin, zmax;
+  // position the assembly such that origin is at the center before sa
+  iGeom_getBoundBox(geom,&xmin,&ymin,&zmin,
+		    &xmax,&ymax,&zmax, &err);
+  CHECK("Failed getting bounding box");
+
+  // moving all geom entities to center      
+  double xcenter = (xmin+xmax)/2.0;
+  double ycenter = (ymin+ymax)/2.0;
+  SimpleArray<iBase_EntityHandle> all;
+  iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+  CHECK("Failed to get all entities");
+
+  for(int i=0; i<all.size(); i++){
+    iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,0,&err);
+    CHECK("Failed to move entities");
+  }
+  return 1;
+}
+
+int CNrgen::Section_Assm (char &cDir, double &dOffset)
+// ---------------------------------------------------------------------------
+// Function: sections the assembly about the cutting plane
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  double xmin, xmax, ymin, ymax, zmin, zmax;
+  iBase_EntityHandle sec=NULL;
+  double yzplane = 0.0;
+  double xzplane = 0.0;
+  if( cDir =='x'){
+    yzplane = 1.0;
+    xzplane = 0.0;
+  }
+  if( cDir =='y'){
+    yzplane = 0.0;
+    xzplane = 1.0;
+  }
+  SimpleArray<iBase_EntityHandle> all;
+  iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );  
+  CHECK("Failed to get all entities");
+  // loop and section/delete entities
+  for(int i=0; i<all.size(); i++){
+    //get the bounding box to decide
+    iGeom_getEntBoundBox(geom,all[i],&xmin,&ymin,&zmin,
+			 &xmax,&ymax,&zmax, &err);
+    CHECK("Failed get bound box");
+    if(xmax<dOffset && yzplane ==1){
+      iGeom_deleteEnt(geom,all[i],&err);
+      CHECK("Failed delete entities");
+      continue;
+    }
+    if(ymax<dOffset && xzplane ==1){
+      iGeom_deleteEnt(geom,all[i],&err);
+      CHECK("Failed delete entities");
+      continue;
+    }
+    else{	  
+      if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
+	iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
+	CHECK("Failed to section ent");
+      }
+      if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
+	iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
+	CHECK("Failed to section ent");
+      }
+    }
+  }
+  return 1;
+}
+
+int CNrgen::Rotate_Assm (char &cDir, double &dAngle)
+// ---------------------------------------------------------------------------
+// Function: rotates the whole assembly
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  double dX = 0.0, dY=0.0, dZ=0.0;
+  if( cDir =='x'){
+    dX = 1.0;
+  }
+  if( cDir =='y'){
+    dY = 1.0;
+  }
+  if( cDir =='z'){
+    dZ = 1.0;
+  }
+  SimpleArray<iBase_EntityHandle> all;
+  iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );  
+  CHECK("Failed to get all entities");
+  // loop and rotate all entities
+  for(int i=0; i<all.size(); i++){
+    //get the bounding box to decide
+    iGeom_rotateEnt(geom,all[i],dAngle,
+		    dX, dY, dZ, &err);
+    CHECK("Failed rotate entities");
+  }
+  return 1;
+}
+int CNrgen::Create_HexAssm(std::string &szInputString)
+// ---------------------------------------------------------------------------
+// Function: read and create the assembly for hexagonal lattice
+// Input:    error code
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  CParser Parse;
+  std::string card, szVolId, szVolAlias;
+  int nInputLines, nTempPin, t;
+  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0;
+  double  dP, dH, dSide, dHeight;
+  iBase_EntityHandle assm = NULL;
+  std::cout << "\ngetting Assembly data and creating ..\n"<< std::endl;
+  std::istringstream szFormatString (szInputString);
+
+  szFormatString >> card >> m_nPin;
+
+  // width of the hexagon is n*n+1/2
+  int nWidth =2*m_nPin -1;
+
+  // creating a square array of size width
+  m_Assembly.SetSize(nWidth, nWidth);
+
+  for(int m=1; m<=nWidth; m++){
+    if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
+			     MAXCHARS, szComment))
+      IOErrorHandler (INVALIDINPUT);
+    if(m>m_nPin)
+      t = 2*m_nPin - m;
+    else
+      t = m;
+    std::istringstream szFormatString1 (szInputString);
+
+    for(int n=1; n<=(m_nPin + t - 1); n++){
+      szFormatString1 >> m_Assembly(m,n);
+
+      // find that pincell
+      for(int b=1; b<=m_nPincells; b++){
+	m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+	if(m_Assembly(m,n) == szVolAlias)
+	  nTempPin = b;
+      }
+
+      // now compute the location and create it
+      ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);	    
+
+      // now create the pincell in the location found
+      std::cout << "\n--------------------------------------------------"<<std::endl;
+      std::cout << " m = " << m <<" n = " << n << std::endl;
+      std::cout << "creating pin: " << nTempPin;
+      std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
+	    
+      int error = CreatePinCell(nTempPin, dX, dY,dZ);
+      if (error!=1)
+	std::cout << "Error in function CreatePinCell";
+    }
+  }
+
+  // get all the entities (in pins)defined so far, in an entity set - for subtraction later
+  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
+  CHECK( "ERROR : getRootSet failed!" );
+
+  if(m_nDimensions >0){
+
+    // create outermost hexes
+    std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
+    for(int n=1;n<=m_nDimensions; n++){
+      dSide = m_dVAssmPitch(n)/(sqrt(3));
+      dHeight = m_dVZAssm(2) - m_dVZAssm(1);
+
+      // creating coverings
+      iGeom_createPrism(geom, dHeight, 6, 
+			dSide, dSide,
+			&assm, &err); 
+      CHECK("Prism creation failed.");
+	  
+      // rotate the prism
+      iGeom_rotateEnt (geom, assm, 30, 0, 0, 1, &err);
+      CHECK("Rotation failed failed.");
+
+      m_Pincell(1).GetPitch(dP, dH);
+      dX = m_nPin*dP;
+      dY = (m_nPin-1)*dP*sqrt(3.0)/2.0;
+      dZ = (m_dVZAssm(2) + m_dVZAssm(1))/2.0;
+
+      // position the prism
+      iGeom_moveEnt(geom, assm, dX,dY,dZ, &err);
+      CHECK("Move failed failed.");  
+      
+      // populate the coverings array
+      assms[n-1]=assm;
+    }
+  } 
+}
+
+int CNrgen::Create_CartAssm(std::string &szInputString)
+// ---------------------------------------------------------------------------
+// Function: read and create the assembly for cartesian lattice
+// Input:    error code
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  CParser Parse;
+  std::string card, szVolId, szVolAlias;
+  int nInputLines, nTempPin;
+  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0, dHeight = 0;
+  iBase_EntityHandle assm = NULL;
+
+  std::istringstream szFormatString (szInputString);
+  szFormatString >> card >> m_nPinX >> m_nPinY;
+  m_Assembly.SetSize(m_nPinX,m_nPinY);
+
+  //read the next line to get assembly info &store assembly info
+  for(int m=1; m<=m_nPinY; m++){
+    if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
+			     MAXCHARS, szComment))
+      IOErrorHandler (INVALIDINPUT);
+    std::istringstream szFormatString1 (szInputString);
+	    
+    //store the line read in Assembly array and create / position the pin in the core
+    for(int n=1; n<=m_nPinX; n++){
+      szFormatString1 >> m_Assembly(m,n);
+	      
+      // loop thro' all pins to get the type of pin
+      for(int b=1; b<=m_nPincells; b++){
+	m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+	if(m_Assembly(m,n) == szVolAlias)
+	  nTempPin = b;
+      }
+
+      //now compute the location where the pin needs to be placed
+      ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+
+      // now create the pincell in the location found
+      std::cout << "\n--------------------------------------------------"<<std::endl;
+      std::cout << " m = " << m <<" n = " << n << std::endl;
+      std::cout << "creating pin: " << nTempPin;
+      std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
+
+      int error = CreatePinCell(nTempPin, dX, dY, dZ);
+      if (error!=1)
+	std::cout << "Error in function CreatePinCell";
+
+      // dMoveX and dMoveY are stored for positioning the outer squares later
+      if(m == m_nPinY && n ==m_nPinX){
+	dMoveX = dX/2.0;
+	dMoveY = dY/2.0;
+      }
+    }
+  }
+  std::cout << "\n--------------------------------------------------"<<std::endl;
+
+  // get all the entities (in pins)defined so far, in an entity set - for subtraction later
+  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
+  CHECK( "ERROR : getRootSet failed!" );
+
+	
+  if(m_nDimensions > 0){
+	
+    // create outermost rectangular blocks
+    std::cout << "\nCreating surrounding outer blocks .." << std::endl;
+    for(int n=1;n<=m_nDimensions; n++){
+      dHeight = m_dVZAssm(2) - m_dVZAssm(1);
+      iGeom_createBrick(geom, m_dVAssmPitchX(n),  m_dVAssmPitchY(n),dHeight, 
+			&assm, &err); 
+      CHECK("Prism creation failed.");	  
+      
+      // position the outer block to match the pins	  
+      dX = m_dVAssmPitchX(n)/4.0;
+      dY =  m_dVAssmPitchY(n)/4.0;
+      dZ = (m_dVZAssm(2) + m_dVZAssm(1))/2.0;
+      std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
+      iGeom_moveEnt(geom, assm, dMoveX,dMoveY,dZ, &err);
+      CHECK("Move failed failed.");  
+
+      // populate the outer covering array squares
+      assms[n-1]=assm;
+    }
+  } 
+}
+
+int CNrgen::CreateOuterCovering () 
+// ---------------------------------------------------------------------------
+// Function: displays error messages related to input data
+// Input:    error code
+// Output:   none
+// ---------------------------------------------------------------------------
+{ 
+  double xmin, xmax, ymin, ymax, zmin, zmax;
+  iBase_TagHandle this_tag;
+  char* tag_name =(char *)"NAME";
+  std::string sMatName = "";
+
+  // get tag handle for 'NAME' tag, already created as iGeom instance is created
+  iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
+  CHECK("getTagHandle failed");
+  iBase_EntityHandle assm = NULL, max_surf = NULL, tmp_vol= NULL, tmp_new= NULL;
+
+  // name the innermost outer covering common for both cartesian and hexagonal assembliees   
+  if(m_nDimensions >0){
+    int tag_no;
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      if(strcmp ( m_szMAlias(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+	sMatName =  m_szAssmMat(p);
+	tag_no=p;
+      }
+    }
+    std::cout << "\ncreated innermost block: " << sMatName << std::endl;
+	
+    tmp_vol = assms[0];
+    iGeom_setData(geom, tmp_vol, this_tag,
+		  sMatName.c_str(), sMatName.size(), &err);
+    CHECK("setData failed");
+    Get_Max_Surf(tmp_vol, &max_surf);
+    if(max_surf !=0){
+      sMatName+="_surface";
+      iGeom_setData(geom, max_surf, this_tag,
+		    sMatName.c_str(), sMatName.size(), &err);
+      CHECK("setData failed");
+      std::cout << "created: " << sMatName << std::endl;
+    }
+
+    //  Naming outermost block edges - sidesets in cubit journal file
+    std::cout << "Naming outermost block edges" << std::endl;	
+    SimpleArray<iBase_EntityHandle> edges;
+    iGeom_getEntAdj( geom, assms[m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
+		     &err );
+    CHECK( "ERROR : getEntAdj failed!" );
+
+    // get the top corner edges of the outer most covering
+    int count =0;//index for edge names
+    std::ostringstream os;
+    for (int i = 0; i < edges.size(); ++i){   
+      iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
+			   &xmax,&ymax,&zmax, &err);
+      CHECK("getEntBoundBox failed.");   
+      if(zmax==zmin){
+	if(zmax==m_dVZAssm(2)){
+
+	  //we have a corner edge - name it
+	  sMatName="side_edge";
+	  ++count;
+	  os << sMatName << count;
+	  sMatName=os.str();
+	  tmp_vol=edges[i];
+	  iGeom_setData(geom, tmp_vol, this_tag,
+			sMatName.c_str(), sMatName.size(), &err);
+	  CHECK("setData failed"); 
+	  std::cout << "created: " << sMatName << std::endl;  
+	  os.str("");
+	  sMatName="";
+	}
+      }
+    }
+
+    // now subtract the outermost hexes and name them
+    for(int n=m_nDimensions; n>1 ; n--){
+      if(n>1){ 
+
+	// copy cyl before subtract 
+	iGeom_copyEnt(geom, assms[n-2], &tmp_vol, &err);
+	CHECK("Couldn't copy inner duct wall prism.");
+	    
+	// subtract outer most cyl from brick
+	iGeom_subtractEnts(geom, assms[n-1], tmp_vol, &tmp_new, &err);
+	CHECK("Subtract of inner from outer failed.");	  
+	    
+	assms[n-1]=tmp_new;
+	    
+	// name the vols by searching for the full name of the abbreviated Cell Mat
+	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	  if(strcmp ( m_szMAlias(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+	    sMatName =  m_szAssmMat(p);
+	  }
+	}
+	std::cout << "created: " << sMatName << std::endl;
+	    
+	iGeom_setData(geom, tmp_new, this_tag,
+		      sMatName.c_str(), sMatName.size(), &err);
+	CHECK("setData failed");
+
+	Get_Max_Surf(tmp_new, &max_surf);
+	if(max_surf !=0){
+	  sMatName+="_surface";
+	  iGeom_setData(geom, max_surf, this_tag,
+			sMatName.c_str(), sMatName.size(), &err);
+	  CHECK("setData failed");
+	  std::cout << "created: " << sMatName << std::endl;
+	}
+      }
+    }
+  }
+  std::cout << "\n--------------------------------------------------"<<std::endl;
+  return 1;
+}
+
+int CNrgen::Subtract_Pins()
+// ---------------------------------------------------------------------------
+// Function: subtract the pins from the outer block
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
+  SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
+  if (m_nDimensions >0){
+    tmp_vol = assms[0];
+
+    // subtract the innermost hex from the pins
+    std::cout << "Subtracting all pins from assembly .. " << std::endl;
+
+    // make a copy of the pins
+    for (int i=0; i<in_pins.size();i++){
+      iGeom_copyEnt(geom, in_pins[i], &copy_inpins[i], &err);
+      CHECK("Couldn't copy inner duct wall prism.");		  
+    }					
+    // unite all pins
+    iGeom_uniteEnts(geom,ARRAY_IN(in_pins), &unite, &err);
+    CHECK( "uniteEnts failed!" );	  
+
+    // subtract inner covering with united pins
+    iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
+    CHECK("Couldn't subtract pins from block.");
+  }
+  std::cout << "\n--------------------------------------------------"<<std::endl;
+  return 1;
+}
+
+int CNrgen::Imprint_Merge()
+// ---------------------------------------------------------------------------
+// Function: Imprint and Merge 
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  // getting all entities for merge and imprint
+  SimpleArray<iBase_EntityHandle> entities;
+  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
+  CHECK( "ERROR : getRootSet failed!" );
+  
+  //  now imprint
+  std::cout << "\n\nImprinting...." << std::endl;
+  iGeom_imprintEnts(geom, ARRAY_IN(entities),&err); 
+  CHECK("Imprint failed.");
+  std::cout << "\n--------------------------------------------------"<<std::endl;
+  
+  // merge tolerance
+  double dTol = 1e-4;
+  // now  merge
+  std::cout << "\n\nMerging...." << std::endl;
+  iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
+  CHECK("Merge failed.");
+  std::cout <<"merging finished."<< std::endl;
+  std::cout << "\n--------------------------------------------------"<<std::endl;
+  return 1;
+}
+
+int CNrgen::Create2DSurf ()
+// ---------------------------------------------------------------------------
+// Function: creating planar top surface with zmax 
+// Input:    error code
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  SimpleArray<iBase_EntityHandle>  all_geom;
+  SimpleArray<iBase_EntityHandle> surfs;
+  int *offset = NULL, offset_alloc = 0, offset_size;
+  int t=0;
+  std::cout << "Creating top surface of 2D assembly..." << std::endl;
+
+  // get all the entities in the model (delete after making a copy of top surface)
+  iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
+  CHECK( "ERROR : Failed to get all geom" );
+
+  // get all the surfaces in the model
+  iGeom_getArrAdj( geom, ARRAY_IN(all_geom) , iBase_FACE, ARRAY_INOUT(surfs),
+		   &offset, &offset_alloc, &offset_size, &err ); 
+  CHECK( "ERROR : getArrAdj failed!" );
+ 
+  SimpleArray<double> max_corn, min_corn;
+  iGeom_getArrBoundBox( geom, ARRAY_IN(surfs), iBase_INTERLEAVED, 
+			ARRAY_INOUT( min_corn ),
+			ARRAY_INOUT( max_corn ),
+			&err );
+  CHECK( "Problems getting max surf for rotation." );
+
+  // find the number of surfaces 't' for array allocation
+  double dtol = m_dVZAssm(2);
+  for (int i = 0; i < surfs.size(); ++i){ 
+    if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol))
+      t++;
+  }
+  
+  // allocate arrays
+  SimpleArray<iBase_EntityHandle> max_surfs(t);
+  SimpleArray<iBase_EntityHandle> new_surfs(t);
+  t=0;
+
+  // store the max surfaces in max_surfs
+  for (int i = 0; i < surfs.size(); ++i){
+
+    // locate surfaces for which max and min zcoord is same as maxz coord
+    if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol)){
+      max_surfs[t] = surfs[i];
+      t++;
+    }
+  }
+
+  // make a copy of max_surfs
+  for(int i = 0; i < max_surfs.size(); ++i){
+    iGeom_copyEnt(geom, max_surfs[i], &new_surfs[i], &err);
+    CHECK( "Problems creating surface." );
+  }
+
+  // delete all the old ents
+  for(int i=0; i<all_geom.size(); i++){
+    iGeom_deleteEnt(geom, all_geom[i], &err);
+    CHECK( "Problems deleting cyls." );
+  }
+  std::cout << "--------------------------------------------------"<<std::endl;
+  return 1;
+}

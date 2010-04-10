@@ -17,6 +17,13 @@ CNrgen::CNrgen ()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
+  
+  geom = NULL;
+  root_set= NULL;
+  szInputString;
+  szComment = "!";
+  MAXCHARS = 300;
+  pi = M_PI;
 }
 
 CNrgen::~CNrgen ()
