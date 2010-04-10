@@ -53,4 +53,10 @@ Assembly 11
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+Center
+Rotate Z 30
+Section Y 0     
+Section X 0
+Rotate Z -30
+Section Y 0
 END ! This is a must

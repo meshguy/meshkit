@@ -16,7 +16,7 @@ int main (int argc, char *argv[])
   CNrgen TheNR; // the one and only NR!
 
    // switch to set as 1 for surface only
-  TheNR.m_nPlanar = 0;
+  TheNR.m_nPlanar = 1;
 
   // show program banner
   TheNR.Banner (std::cout); 
