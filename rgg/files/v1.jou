@@ -1,0 +1,101 @@
+### Example journal file for creating mesh ###
+# after creating geometry 'v1.sat' from 'v1.inp' using nrgen_test play this in cubit
+
+import 'v1.sat'
+
+
+# set interval on edges
+
+group "F_SURF" add surface name "mat_fuel" 
+group "B_SURF" add surface name "mat_block"
+group "C_SURF" add surface name "mat_coolant"
+group "CS_SURF" add surface name "mat_scoolant"
+group "C01_SURF" add surface name "mat_c1coolant"
+group "C02_SURF" add surface name "mat_c2coolant"
+group "COUT_SURF" add surface name "mat_ocoolant"
+group "P_SURF" add surface name "mat_poison"
+group "CON_SURF" add surface name "mat_control"
+group "FHH_SURF" add surface name "mat_fhh"
+
+
+# ABW: adding blocks
+block 1 surface in F_SURF
+block 1 name "FuelBlock"
+block 2 surface in C_SURF surface in CS_SURF surface in C01_SURF surface in C02_SURF 
+block 2 name "CoolantBlock"
+block 3 surface in CON_SURF
+block 3 name "ControlBlock"
+block 4 surface in P_SURF
+block 4 name "PoisonBlock"
+block 5 surface in FHH_SURF
+block 5 name "FuelHandleBlock"
+block 6 surface in B_SURF surface in COUT_SURF
+block 6 name "CarbonBlock"
+block all element type quad8
+block 6 element type tri6
+
+#sideset 1 curve all with y_coord >= 18.65
+volume all move -21.105 -16.28   # approximately recenter the assembly
+sideset 1 curve all with y_coord >= 18.6
+rotate surface all about z angle 60
+sideset 2 curve all with y_coord >= 18.25
+rotate surface all about z angle 60
+sideset 3 curve all with y_coord >= 18.25
+rotate surface all about z angle 60
+sideset 4 curve all with y_coord >= 18.65
+rotate surface all about z angle 60
+sideset 5 curve all with y_coord >= 18.65
+rotate surface all about z angle 60
+sideset 6 curve all with y_coord >= 18.65
+rotate surface all about z angle 60  # Back to the beginning
+
+
+# merge the geometry
+imprint all
+merge all
+
+surface  in F_SURF  interval 10
+surface in F_SURF scheme  circle interval 1 fraction 0.8
+mesh surface in F_SURF
+
+
+surface  in CS_SURF  interval 10
+surface in CS_SURF scheme  circle interval 1 fraction 0.8
+mesh surface in CS_SURF
+
+
+surface  in P_SURF  interval 10
+surface in  P_SURF scheme  circle interval 1 fraction 0.8
+mesh surface in P_SURF
+
+surface  in C_SURF  interval 13
+surface in  C_SURF scheme  circle interval 1 fraction 0.8
+mesh surface in C_SURF
+
+surface  in FHH_SURF  interval 14
+surface in  FHH_SURF scheme  circle interval 1 fraction 0.8
+mesh surface in FHH_SURF
+
+surface  in C01_SURF  interval 32
+surface in  C01_SURF scheme  circle interval 1 fraction 0.8
+mesh surface in C01_SURF
+
+surface in CON_SURF interval 66
+surface in  CON_SURF scheme hole rad_intervals 3 bias 0.0
+mesh surface in CON_SURF
+
+
+surface in  C02_SURF interval 66
+surface in  C02_SURF scheme hole rad_intervals 2 bias 0.0
+mesh surface in C02_SURF
+
+
+surface in B_SURF size 1
+surface in B_SURF scheme trimesh
+mesh surface in B_SURF
+
+surface in COUT_SURF size 1
+surface in COUT_SURF scheme trimesh
+mesh surface in COUT_SURF
+
+export mesh 'v1.e' overwrite
