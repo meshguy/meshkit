@@ -31,9 +31,9 @@ QslimOptions opts; // external
 int uniqID(MBEntityHandle v)
 {
     int val;
-    MBErrorCode rval = mb->tag_get_data(uniqIDtag, &v, 1, &val); 
+    MBErrorCode rval = mb->tag_get_data(uniqIDtag, &v, 1, &val);
     assert(rval==MB_SUCCESS);
-    return val;   
+    return val;
 }
 // the vertices are not deleted anymore, just invalidated
 // the edges are deleted, though, and triangles
@@ -95,11 +95,11 @@ int validVertCount;
 static inline
       vert_info& vertex_info ( MBEntityHandle v)//Vertex *v )
 {
-   //  MBEntityHandle should return an integer tag with an 
+   //  MBEntityHandle should return an integer tag with an
    //  index in the big array of vert_info
    //   something like: return tag
-   //   for the time being, we can return the simple id... 
-   return vinfo ( uniqID(v) ); 
+   //   for the time being, we can return the simple id...
+   return vinfo ( uniqID(v) );
 }
 
 static
@@ -165,7 +165,7 @@ static
 }
 
 static
-      int predict_face ( MBEntityHandle tria, MBEntityHandle v1, 
+      int predict_face ( MBEntityHandle tria, MBEntityHandle v1,
           MBEntityHandle v2, /*Face& F, Vertex *v1, Vertex *v2,*/
          Vec3& vnew, Vec3& f1, Vec3& f2, Vec3& f3 )
 {
@@ -219,7 +219,7 @@ static
 #define MESH_INVERSION_PENALTY 1e9
 
 static
-      double pair_mesh_positivity (/* Model& M,*/ MBEntityHandle v1, 
+      double pair_mesh_positivity (/* Model& M,*/ MBEntityHandle v1,
           MBEntityHandle v2, /*Vertex *v1, Vertex *v2,*/ Vec3& vnew )
 {
    std::vector<MBEntityHandle> changed;
@@ -317,7 +317,7 @@ static
 {
    MBEntityHandle v0 = pair->v0;
    MBEntityHandle v1 = pair->v1;
-  
+
   // Vertex *v0 = pair->v0;
   // Vertex *v1 = pair->v1;
 
@@ -672,6 +672,8 @@ int  QslimDecimation::decimate(QslimOptions & iOpts)
     clock_t delete_vTime = clock();
     std::cout<<"   Delete Vertices: "
         		   << (double) (delete_vTime - finish_time)/CLOCKS_PER_SEC << " s.\n";
+    // we need to delete the tags we created; they are artificial
+    //
 
    return 0;
 }
@@ -687,7 +689,7 @@ int  QslimDecimation::Init ()
    // create all the edges if not existing
    MBRange edgs;
    mb->get_adjacencies(triangles, 1, true, edgs, MBInterface::UNION );
-   
+
    // MBRange verts;// the vertices are always there, they do not need to be created
    mb->get_adjacencies(triangles, 0, true, verts, MBInterface::UNION );
    int numNodes = verts.size();
@@ -696,8 +698,8 @@ int  QslimDecimation::Init ()
    // set a unique integer tag with the position in vinfo array
    //  this will be used instead of v->uniqID in the vinfo array
    int def_data = -1;
-   
-   rval = mb->tag_create("uniqID", sizeof(int), MB_TAG_SPARSE, uniqIDtag, &def_data);
+
+   rval = mb->tag_create("uniqID", sizeof(int), MB_TAG_DENSE, uniqIDtag, &def_data);
   if (MB_SUCCESS != rval)
     return 1;
    def_data = 1;// valid by default
@@ -721,7 +723,7 @@ int  QslimDecimation::Init ()
   {
     for (it=verts.begin(); it!=verts.end(); it++)
      {
-        MBEntityHandle v = *it; 
+        MBEntityHandle v = *it;
         double coords[3];
         rval=mb->get_coords(&v, 1, coords);
         *opts.logfile<< "v: " << uniqID(v) << " " << mb->id_from_handle(v)<<
@@ -733,7 +735,7 @@ int  QslimDecimation::Init ()
    if ( opts.will_use_vertex_constraint )
     for (it=verts.begin(); it!=verts.end(); it++)
      {
-        MBEntityHandle v = *it; 
+        MBEntityHandle v = *it;
         vertex_info ( v ).Q = quadrix_vertex_constraint ( v );
      }
 
@@ -768,7 +770,7 @@ int  QslimDecimation::Init ()
    {
 	   std::cout << "  Decimate:  Accumulating discontinuity constraints." << std::endl;
       for ( it = edgs.begin(); it!=edgs.end(); it++ )
-      { 
+      {
          MBEntityHandle edg=*it;
          if ( is_border( edg) )
           {
@@ -776,7 +778,7 @@ int  QslimDecimation::Init ()
              int num_nodes;
              rval = mb->get_connectivity(edg, conn, num_nodes);
              if (MB_SUCCESS!=rval)
-                return 1;// fail 
+                return 1;// fail
              Mat4 B = quadrix_discontinuity_constraint ( edg );
              double norm = 0.0;
 
@@ -806,13 +808,13 @@ int  QslimDecimation::Init ()
 
    std::cout << "  Decimate:  Collecting pairs [edges]." << std::endl;
    for ( it=edgs.begin(); it!=edgs.end(); it++ )
-   { 
+   {
       MBEntityHandle edg = *it;
       const MBEntityHandle * conn;
       int num_nodes;
       rval = mb->get_connectivity(edg, conn, num_nodes);
       if (MB_SUCCESS!=rval)
-         return 1;// fail 
+         return 1;// fail
       pair_info *pair = new_pair ( conn[0], conn[1] );
       compute_pair_info ( pair );
       pair_count++;

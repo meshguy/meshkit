@@ -251,10 +251,14 @@ int main(int argc, char* argv[])
   ERRORR("Couldn't decimate mesh.", 1);
   clock_t decimate_time = clock();
 
-  std::cout << "Writing output file " << outfile <<std::endl;
-  // save the output in a new file
-  iMesh_save(mesh, root_set, outfile, NULL, &err, strlen(outfile), 0);
-
+  if (outfile &&  strlen(outfile) > 0)
+  {
+     std::cout << "Writing output file " << outfile <<std::endl;
+     // save the output in a new file
+     iMesh_save(mesh, root_set, outfile, NULL, &err, strlen(outfile), 0);
+  }
+  else
+     std::cout << " no output file provided. \n";
   clock_t write_time = clock();
 
 

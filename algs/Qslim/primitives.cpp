@@ -207,14 +207,85 @@ MBErrorCode contract (MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1, Ve
       
 
     }
-    /*
- *  merge_entities(EntityHandle entity_to_keep, 
- *                          EntityHandle entity_to_remove,
- *                       bool auto_merge,
- *                   bool delete_removed_entity)
- */
+    else // this should appear only when proximity limit > 0
+    {
+    	// in this case, we only need to worry if vertex 0 and 1 are connected to the same
+    	// vertex 2; then we need to merge edges v0-v2 and v1 - v2
+    	// no triangles get deleted, only those edges
+    	// get edges connected to vertex v0
+    	std::vector<MBEntityHandle> edges0;
+    	rval = mb->get_adjacencies(&v0, 1, 1, false, edges0, MBInterface::UNION);
+
+    	// get edges connected to vertex v1
+		std::vector<MBEntityHandle> edges1;
+		rval = mb->get_adjacencies(&v1, 1, 1, false, edges1, MBInterface::UNION);
+    	// find all edges that will be merged, of type v0-v2 v1-v2 (so that they have a
+		// common vertex v2
+		// in that case, we will have to merge them as before, and delete the
+		// one that contains v1 before
+		// for sure, there is no edge from v0 to v1 !!!
+		// keep all the vertices from edges1, different from v1
+		std::vector<MBEntityHandle> otherVertices1;
+		for (int i1=0; i1<edges1.size(); i1++)
+		{
+			MBEntityHandle edgeThatGoes= edges1[i1];
+			// find the other vertex, not v1
+			int nn;
+			const MBEntityHandle * conn2;
+			mb->get_connectivity(edgeThatGoes, conn2, nn);
+			int other=0;
+			if (conn2[0] == v1)
+				other=1;
+			else if (conn2[1] == v1)// is this really necessary in a correct model?
+				other = 0;
+			otherVertices1.push_back(conn2[other]);
+		}
+		for (int i=0; i<edges0.size(); i++)
+		{
+			MBEntityHandle edgeThatStays= edges0[i];
+			// find the other vertex, not v0
+			int nn;
+			const MBEntityHandle * conn2;
+			mb->get_connectivity(edgeThatStays, conn2, nn);
+			int other=0;
+			if (conn2[0] == v1)
+				other=1;
+			else if (conn2[1] == v1)// is this really necessary in a correct model?
+				other = 0;
+			MBEntityHandle v2 = conn2[other];
+			// let's see now if v2 is among vertices from otherVertices1
+			// if yes, then we have a match, edges that need collapsed
+			for (int i1=0; i1<otherVertices1.size(); i1++)
+			{
+				if (v2==otherVertices1[i1])
+				{
+					// we have a match, some work to do
+					edgePairsToMerge.push_back(edgeThatStays);
+					edgePairsToMerge.push_back(edges1[i1]);
+					break; // we stopp looking for a match, only one possible
+				}
+			}
+		}
+
+	   // first merge vertices v0 and v1 : will also NOT delete v1 (yet)
+	   // the tag on v1 will be deleted too, and we do not want that, at least until
+	   // after the merging of edges, and deleting the pair
+	   rval = mb->merge_entities(v0, v1, false, false);
+	   // merge edgePairsToMerge // now, v0 and v1 should be collapsed!
+	   for (int j=0; j<edgePairsToMerge.size(); j+=2)
+	   {
+		   // will also delete edges that contained v1 before
+		   mb->merge_entities(edgePairsToMerge[j], edgePairsToMerge[j+1],
+			  false, true);
+	   }
+       // all the triangles connected to v0 are now changed, need recomputation
+	   //
+	   rval = mb->get_adjacencies(&v0, 1, 2, false, changed, MBInterface::UNION);
+
+    }
+
     
-     return MB_SUCCESS;
+    return MB_SUCCESS;
   
 }
 
