@@ -83,6 +83,10 @@ MBErrorCode MergeMesh::merge_entities(MBRange &elems,
 
 MBErrorCode MergeMesh::perform_merge(MBTag merge_tag) 
 {
+  if (deadEnts.size()==0){
+    std::cout << "\nWarning: Geometries don't have a common face; Nothing to merge" << std::endl;
+    return MB_SUCCESS; //nothing to merge carry on with the program
+  }
   if (mbImpl->type_from_handle(*deadEnts.rbegin()) != MBVERTEX) 
     return MB_FAILURE;
   

@@ -77,7 +77,7 @@ iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
 
 const int UNITCELL_DUCT = 0, ASSY_TYPES = 1;
-
+int set_DIM = 3;
 int get_copy_expand_sets(CopyMesh *cm,
                          iBase_EntitySetHandle orig_set, 
                          const char **tag_names, const char **tag_vals, 
@@ -127,7 +127,6 @@ int main(int argc, char **argv)
 {
   // set the dimension based on input mesh - 2D meshes or 3D mesh??
   char* input;
-  int set_DIM = 3;
   int test_flag;
     if (1 == argc) {
     test_flag = 1;
@@ -180,7 +179,7 @@ int main(int argc, char **argv)
 
     assys.push_back(orig_set);
   }
-  
+ 
   std::cout << "Loaded mesh files." << std::endl;
   if(!strcmp(input, "hexagonal")){
     err = copy_move_assys(cm, nrings, pack_type, pitch, symm, 
@@ -248,6 +247,13 @@ int main(int argc, char **argv)
              strlen(outfile.c_str()), 0);
   ERRORR("Trouble writing output mesh.", err);
   std::cout << "Saved: "<< outfile.c_str() <<std::endl;
+
+  delete cm;
+  delete mm;
+  
+  iMesh_dtor(impl, &err);
+  ERRORR("Destructor failed.", 1);
+
   return iBase_SUCCESS;
 }
 
@@ -282,7 +288,7 @@ int copy_move_assys(CopyMesh *cm,
                     const double pitch,
                     const int symm,
                     std::vector<int> &assy_types,
-                    std::vector<iBase_EntitySetHandle> &assys) 
+                    std::vector<iBase_EntitySetHandle> &assys)
 {
   double dx[3] = {0.0, 0.0, 0.0};
   double PI = acos(-1.0);
@@ -290,6 +296,13 @@ int copy_move_assys(CopyMesh *cm,
   int new_ents_alloc, new_ents_size;
   int err; 
   int i = 0;
+  // get the copy/expand sets
+  int num_etags = 3, num_ctags = 1;
+  const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
+  const char *etag_vals[] = {NULL, NULL, NULL};
+  const char *ctag_names[] = {"GEOM_DIMENSION"};
+  const char *ctag_vals[]={(const char*)&set_DIM};
+
   for (int n1 = 0; n1 < nrings; n1++) {
     dx[1] = n1 * pitch * sin(PI/3.0);
     for (int n2 = n1; n2 < nrings; n2++) {
@@ -300,13 +313,25 @@ int copy_move_assys(CopyMesh *cm,
       dx[0] = .5 * n1 * pitch + (n2 - n1) * pitch;
       new_ents = NULL;
       new_ents_alloc = 0;
+
+ 
+      err = get_copy_expand_sets(cm,assys[assy_types[i]], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+      ERRORR("Failed to add expand lists.", iBase_FAILURE);
+      err = get_copy_expand_sets(cm,assys[assy_types[i]], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+      ERRORR("Failed to add expand lists.", iBase_FAILURE);
+      err = extend_expand_sets(cm);
+      ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+
       err = cm->copy_move_entities(assys[assy_types[i]], dx, 
                                    &new_ents, &new_ents_alloc, &new_ents_size,
                                    false);
       ERRORR("Failed to copy_move entities.", 1);
-      std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2 << std::endl;
+      std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
       free(new_ents);
       i++;
+
+//       err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
+//       ERRORR("Failed to tag copied sets.", iBase_FAILURE);
     }
   }
   return iBase_SUCCESS;
@@ -314,11 +339,11 @@ int copy_move_assys(CopyMesh *cm,
 
 
 int copy_move_sq_assys(CopyMesh *cm,
-                    const int nrings, const int pack_type,
-                    const double pitch,
-                    const int symm,
-                    std::vector<int> &assy_types,
-                    std::vector<iBase_EntitySetHandle> &assys) 
+		       const int nrings, const int pack_type,
+		       const double pitch,
+		       const int symm,
+		       std::vector<int> &assy_types,
+		       std::vector<iBase_EntitySetHandle> &assys) 
 {
   double dx[3] = {0.0, 0.0, 0.0};
   double PI = acos(-1.0);
@@ -326,6 +351,13 @@ int copy_move_sq_assys(CopyMesh *cm,
   int new_ents_alloc, new_ents_size;
   int err; 
   int i = 0;
+
+  // get the copy/expand sets
+  int num_etags = 3, num_ctags = 1;
+  const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
+  const char *etag_vals[] = {NULL, NULL, NULL};
+  const char *ctag_names[] = {"GEOM_DIMENSION"};
+  const char *ctag_vals[]={(const char*)&set_DIM};
   for (int n1 = 0; n1 < nrings; n1++) {
     dx[1] = n1 * pitch;
     for (int n2 = 0; n2 < nrings; n2++) {
@@ -336,13 +368,25 @@ int copy_move_sq_assys(CopyMesh *cm,
       dx[0] = n2 * pitch;
       new_ents = NULL;
       new_ents_alloc = 0;
+
+      err = get_copy_expand_sets(cm,assys[assy_types[i]], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+      ERRORR("Failed to add expand lists.", iBase_FAILURE);
+      err = get_copy_expand_sets(cm,assys[assy_types[i]], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+      ERRORR("Failed to add expand lists.", iBase_FAILURE);
+      err = extend_expand_sets(cm);
+      ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+
       err = cm->copy_move_entities(assys[assy_types[i]], dx, 
                                    &new_ents, &new_ents_alloc, &new_ents_size,
                                    false);
       ERRORR("Failed to copy_move entities.", 1);
-      std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2 << std::endl;
+      std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
       free(new_ents);
       i++;
+    
+//       err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
+//       ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+    
     }
   }
   return iBase_SUCCESS;
@@ -449,8 +493,8 @@ int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
     //manually enter nrings(nrings+1)/2 assy types
     //  for(int test=1;test<=15;test++){
     assy_types.push_back(0);
-     assy_types.push_back(1);
-     assy_types.push_back(0);
+    assy_types.push_back(1);
+    assy_types.push_back(2);
      //    }
     
     // get the number of assy types then read that many filenames
@@ -479,9 +523,9 @@ int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
     else
       back_mesh = false;
   }
-  char g_id[]= "n";
+  char g_id[]= "y";
   std::cout << "\nNew global ids (y/n)? " << g_id;
-  global_ids = false;
+  global_ids = true;
   char filename[] = "sixth_test.h5m";
   std::cout << "\nOutput file: "<< filename << std::endl;
   outfile = filename;
@@ -559,5 +603,53 @@ int read_sq_input(int &nrings, int &pack_type, double &pitch, int &symm,
   return iBase_SUCCESS;
 }
 
+
+
+int get_copy_expand_sets(CopyMesh *cm,
+                         iBase_EntitySetHandle orig_set, 
+                         const char **tag_names, const char **tag_vals, 
+                         int num_tags, int copy_or_expand) 
+{
+  int err = iBase_SUCCESS;
+
+  for (int i = 0; i < num_tags; i++) {
+    iBase_TagHandle tmp_tag;
+    iMesh_getTagHandle(impl, tag_names[i], &tmp_tag, &err, strlen(tag_names[i]));
+    ERRORR("Failed to get tag handle.", iBase_FAILURE);
+    iBase_EntitySetHandle *tmp_sets = NULL;
+    int tmp_alloc = 0, tmp_size;
+    iMesh_getEntSetsByTagsRec(impl, orig_set, &tmp_tag, &tag_vals[i], 1, 0,
+                              &tmp_sets, &tmp_alloc, &tmp_size, &err);
+    ERRORR("Failure getting sets by tags.", err);
+    if (0 != tmp_size) {
+      err = cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
+      ERRORR("Failed to add copy/expand lists.", iBase_FAILURE);
+    }
+    free(tmp_sets);
+  }
+  return err;
+}
+
+int extend_expand_sets(CopyMesh *cm) 
+{
+    // check expand sets for any contained sets which aren't already copy sets, 
+    // and add them to the list
+  int err;
+  
+  for (std::set<iBase_EntitySetHandle>::iterator sit = cm->expand_sets().begin();
+       sit != cm->expand_sets().end(); sit++) {
+    iBase_EntitySetHandle *sets = NULL;
+    int sets_alloc = 0, sets_size;
+    iMesh_getEntSets(impl, *sit, 1, &sets, &sets_alloc, &sets_size, &err);
+    ERRORR("Failed to get contained sets.", err);
+    if (sets_size) {
+      err = cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
+      ERRORR("Failed to add copy sets for expand extension.", err);
+    }
+    free(sets);
+  }
+  
+  return iBase_SUCCESS;
+}
 
 
