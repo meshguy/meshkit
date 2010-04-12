@@ -149,6 +149,7 @@ int main(int argc, char **argv)
   std::string outfile;
   bool global_ids;
   if (test_flag == 1){
+    input = "default";
     err = read_input_defaults(nrings, pack_type, pitch, symm, back_mesh,
 			      files, assy_types, outfile, global_ids);
   ERRORR("Couldn't parse input.", err);
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
 			  assy_types, assys);
     ERRORR("Failed in copy/move step.", err);
   } 
-  else{
+  else if(!strcmp(input,"default")){
     err = copy_move_assys(cm, nrings, pack_type, pitch, symm, 
 			  assy_types, assys);
     ERRORR("Failed in copy/move step.", err);
@@ -346,7 +347,6 @@ int copy_move_sq_assys(CopyMesh *cm,
 		       std::vector<iBase_EntitySetHandle> &assys) 
 {
   double dx[3] = {0.0, 0.0, 0.0};
-  double PI = acos(-1.0);
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
   int err; 
