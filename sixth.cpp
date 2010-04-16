@@ -72,7 +72,6 @@
 #include "MergeMesh.hpp"
 #include "CopyMesh.hpp"
 
-
 iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
 
@@ -93,13 +92,18 @@ int copy_move_assys(CopyMesh *cm,
                     std::vector<iBase_EntitySetHandle> &assys);
 
 int copy_move_sq_assys(CopyMesh *cm,
-                    const int nrings, const int pack_type,
-                    const double pitch,
-                    const int symm,
-                    std::vector<int> &assy_types,
-                    std::vector<iBase_EntitySetHandle> &assys);
+		       const int nrings, const int pack_type,
+		       const double pitch,
+		       const int symm,
+		       std::vector<int> &assy_types,
+		       std::vector<iBase_EntitySetHandle> &assys);
 
-
+int copy_move_hex_assys(CopyMesh *cm,
+		       const int nrings, const int pack_type,
+		       const double pitch,
+		       const int symm,
+		       std::vector<int> &assy_types,
+		       std::vector<iBase_EntitySetHandle> &assys);
 
 int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
                bool &back_mesh,
@@ -107,6 +111,12 @@ int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
                std::vector<int> &assy_types,
                std::string &outfile, bool &global_ids);
 
+
+int read_hex_input(int &nrings, int &pack_type, double &pitch, int &symm,
+		   bool &back_mesh,
+		   std::vector<std::string> &files, 
+		   std::vector<int> &assy_types,
+		   std::string &outfile, bool &global_ids);
 
 int read_sq_input(int &nrings, int &pack_type, double &pitch, int &symm,
                bool &back_mesh,
@@ -122,6 +132,7 @@ int read_input_defaults(int &nrings, int &pack_type, double &pitch, int &symm,
 
 int del_orig_mesh(std::vector<iBase_EntitySetHandle> &assys,
                   const bool back_mesh);
+
 
 int main(int argc, char **argv) 
 {
@@ -148,8 +159,10 @@ int main(int argc, char **argv)
   bool back_mesh;
   std::string outfile;
   bool global_ids;
+
+  // reading user input
   if (test_flag == 1){
-    input = "default";
+    input = (char*) "default";
     err = read_input_defaults(nrings, pack_type, pitch, symm, back_mesh,
 			      files, assy_types, outfile, global_ids);
   ERRORR("Couldn't parse input.", err);
@@ -157,7 +170,7 @@ int main(int argc, char **argv)
   else{
     input = argv[1];
     if(!strcmp(input, "hexagonal")){
-      err = read_input(nrings, pack_type, pitch, symm, back_mesh,
+      err = read_hex_input(nrings, pack_type, pitch, symm, back_mesh,
 		       files, assy_types, outfile, global_ids);
       ERRORR("Couldn't parse input.", err);
     }
@@ -167,6 +180,7 @@ int main(int argc, char **argv)
       ERRORR("Couldn't parse input.", err);
     }
   }
+
   std::vector<iBase_EntitySetHandle> assys;
   iBase_EntitySetHandle orig_set;
   for (unsigned int i = 0; i < files.size(); i++) {
@@ -180,10 +194,26 @@ int main(int argc, char **argv)
 
     assys.push_back(orig_set);
   }
- 
   std::cout << "Loaded mesh files." << std::endl;
+
+//   // get the copy/expand sets
+//   int num_etags = 3, num_ctags = 1;
+//   const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
+//   const char *etag_vals[] = {NULL, NULL, NULL};
+//   const char *ctag_names[] = {"GEOM_DIMENSION"};
+//   const char *ctag_vals[]={(const char*)&set_DIM};
+//   for (unsigned int i = 0; i < files.size(); i++) {
+//     err = get_copy_expand_sets(cms[i],assys[assy_types[i]], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+//     ERRORR("Failed to add expand lists.", iBase_FAILURE);
+//     err = get_copy_expand_sets(cms[i],assys[assy_types[i]], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+//     ERRORR("Failed to add expand lists.", iBase_FAILURE);
+//     err = extend_expand_sets(cms[i]);
+//     ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+//   }
+
+     // move the assys based on the geometry type
   if(!strcmp(input, "hexagonal")){
-    err = copy_move_assys(cm, nrings, pack_type, pitch, symm, 
+    err = copy_move_hex_assys(cm, nrings, pack_type, pitch, symm, 
 			  assy_types, assys);
     ERRORR("Failed in copy/move step.", err);
   }
@@ -197,11 +227,12 @@ int main(int argc, char **argv)
 			  assy_types, assys);
     ERRORR("Failed in copy/move step.", err);
   }
-
-
+  
+  // delete all original meshes
   err = del_orig_mesh(assys, back_mesh);
   ERRORR("Failed in delete step.", err);
 
+  //get entities for merging
   iBase_EntityHandle *ents = NULL; 
   int ents_alloc = 0, ents_size;
 
@@ -284,6 +315,91 @@ int del_orig_mesh(std::vector<iBase_EntitySetHandle> &assys,
   return iBase_SUCCESS;
 }
 
+int copy_move_hex_assys(CopyMesh *cm,
+			const int nrings, const int pack_type,
+			const double pitch,
+			const int symm,
+			std::vector<int> &assy_types,
+			std::vector<iBase_EntitySetHandle> &assys)
+{
+  double dx[3] = {0.0, 0.0, 0.0};
+  double PI = acos(-1.0);
+  iBase_EntityHandle *new_ents;
+  int new_ents_alloc, new_ents_size;
+  int err; 
+  int i = 0, bd = 0;
+
+
+  for (int n1 = 0; n1 < nrings; n1++) {
+    if(n1%2==0){//check if n1 is even
+      for (int n2 = 0; n2 < n1+1; n2++) {
+	if (-1 == assy_types[i]) {
+	  i++;
+	  if(n2 > n1/2)
+	    ++bd; // index for assemblies below diagonal needs updatation
+	  continue;
+	}
+	if(n2 <= n1/2){// before or equal to diagonal
+	  dx[0] = n2 * pitch;
+	  dx[1] = n1 * pitch * sin(PI/3.0);
+	}
+	else{//below the diagonal
+	  dx[0] = (n1 + 1 + bd) * pitch / 2.0; 
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	  ++bd;	  
+	}	  
+	new_ents = NULL;
+	new_ents_alloc = 0;
+
+	err = cm->copy_move_entities(assys[assy_types[i]], dx, 
+				     &new_ents, &new_ents_alloc, &new_ents_size,
+				     false);
+	ERRORR("Failed to copy_move entities.", 1);
+	std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+	free(new_ents);
+	i++;
+      }
+    }
+    else{// n1 is odd
+      for (int n2 = 0; n2 < n1; n2++) {
+	if (-1 == assy_types[i]){
+	  i++;
+	  if(n2 > (n1+1)/2)
+	    ++bd; // index for assemblies below diagonal needs updatation
+	  continue;
+
+	}
+	if(n2 <= (n1-1)/2){// before or equal to diagonal
+	  dx[0] = (2 * n2 + 1) * pitch / 2.0;
+	  dx[1] = n1 * pitch * sin(PI/3.0);
+
+	}
+	else{//below the diagonal 
+	  dx[0] = (n1 + 1 + bd) * pitch / 2.0; 
+	  if (bd == 0) // first n2 = 1 assembly
+	    dx[1] = pitch * sin(PI/3.0);
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	  ++bd;	
+	}
+	new_ents = NULL;
+	new_ents_alloc = 0;
+
+	err = cm->copy_move_entities(assys[assy_types[i]], dx, 
+				     &new_ents, &new_ents_alloc, &new_ents_size,
+				     false);
+	ERRORR("Failed to copy_move entities.", 1);
+	std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+	free(new_ents);
+	i++;
+      }
+    }
+    bd = 0;
+  }
+  return iBase_SUCCESS;
+}  
+
+
+
 int copy_move_assys(CopyMesh *cm,
                     const int nrings, const int pack_type,
                     const double pitch,
@@ -304,24 +420,28 @@ int copy_move_assys(CopyMesh *cm,
   const char *ctag_names[] = {"GEOM_DIMENSION"};
   const char *ctag_vals[]={(const char*)&set_DIM};
 
+
+
+
+
+
+  err = get_copy_expand_sets(cm,assys[assy_types[i]], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+  ERRORR("Failed to add expand lists.", iBase_FAILURE);
+  err = get_copy_expand_sets(cm,assys[assy_types[i]], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+  ERRORR("Failed to add expand lists.", iBase_FAILURE);
+  err = extend_expand_sets(cm);
+  ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+
   for (int n1 = 0; n1 < nrings; n1++) {
-    dx[1] = n1 * pitch * sin(PI/3.0);
     for (int n2 = n1; n2 < nrings; n2++) {
       if (-1 == assy_types[i]) {
         i++;
         continue;
       }
+      dx[1] = n1 * pitch * sin(PI/3.0);
       dx[0] = .5 * n1 * pitch + (n2 - n1) * pitch;
       new_ents = NULL;
       new_ents_alloc = 0;
-
- 
-      err = get_copy_expand_sets(cm,assys[assy_types[i]], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
-      ERRORR("Failed to add expand lists.", iBase_FAILURE);
-      err = get_copy_expand_sets(cm,assys[assy_types[i]], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
-      ERRORR("Failed to add expand lists.", iBase_FAILURE);
-      err = extend_expand_sets(cm);
-      ERRORR("Failed to extend expand lists.", iBase_FAILURE);
 
       err = cm->copy_move_entities(assys[assy_types[i]], dx, 
                                    &new_ents, &new_ents_alloc, &new_ents_size,
@@ -330,9 +450,6 @@ int copy_move_assys(CopyMesh *cm,
       std::cout << "Copy/moved n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
       free(new_ents);
       i++;
-
-//       err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
-//       ERRORR("Failed to tag copied sets.", iBase_FAILURE);
     }
   }
   return iBase_SUCCESS;
@@ -391,6 +508,81 @@ int copy_move_sq_assys(CopyMesh *cm,
   }
   return iBase_SUCCESS;
 }
+
+
+int read_hex_input(int &nrings, int &pack_type, double &pitch, int &symm,
+               bool &back_mesh,
+               std::vector<std::string> &files, 
+               std::vector<int> &assy_types,
+               std::string &outfile, bool &global_ids) 
+{
+  int tot_assys;
+  std::cout << "Nrings: ";
+  std::cin >> nrings;
+  std::cout << "Packing type: ";
+  std::cin >> pack_type;
+  std::cout << "Pitch: ";
+  std::cin >> pitch;
+  std::cout << "1/Symmetry: ";
+  std::cin >> symm;
+
+  if (UNITCELL_DUCT == pack_type) {
+    std::string filename;
+    std::cout << "Unit cell file: "; std::cin >> filename; files.push_back(filename);
+    std::cout << "Duct file: "; std::cin >> filename; files.push_back(filename);
+    back_mesh = true;
+  }
+  else if (ASSY_TYPES == pack_type) {
+      // read n(n+1)/2 assy types, then file names
+    if(nrings % 2 == 0)
+      tot_assys = (nrings * (nrings))/2;
+    else
+      tot_assys = ((nrings * (nrings-1))/2) +  (nrings+1)/2;
+    int dum;
+    for (int i = 0; i < tot_assys; i++) {
+      std::cin >> dum;
+      assy_types.push_back(dum);
+    }
+    
+      // get the number of assy types then read that many filenames
+    std::set<int> all_assys;
+    for (std::vector<int>::iterator vit = assy_types.begin();
+         vit != assy_types.end(); vit++) all_assys.insert(*vit);
+    all_assys.erase(-1);
+    char filename[1024];
+    for (unsigned int i = 0; i < all_assys.size(); i++) {
+      std::cout << "Assy " << i << " file: "; 
+      std::cin >> filename;
+      files.push_back(std::string(filename));
+    }
+    std::cout << "Background assembly (y/n)?" << std::endl;
+    std::cin >> filename;
+    if (filename[0] == 'y' || filename[0] == 'Y') {
+      std::cin >> filename;
+      files.push_back(std::string(filename));
+      back_mesh = true;
+    }
+    else
+      back_mesh = false;
+
+    std::cout << "New global ids (y/n)?" << std::endl;
+    std::cin >> filename;
+    if (filename[0] == 'y' || filename[0] == 'Y') {
+      std::cin >> filename;
+      global_ids = true;
+    }
+    else
+      global_ids = false;
+  }
+
+  char filename[1024];
+  std::cout << "Output file: " << std::endl;
+  std::cin >> filename;
+  outfile = filename;
+
+  return iBase_SUCCESS;
+}
+
 
 
 int read_input(int &nrings, int &pack_type, double &pitch, int &symm,
