@@ -66,6 +66,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 	m_szGeomFile = m_szFile+".brep";
       }
       m_szJouFile = m_szFile+".jou";
+      m_szSchFile = "schemes.jou";
     }
     else {
       std::cerr << "Usage: " << argv[0] << " <input file> WITHOUT EXTENSION"<< std::endl;   
@@ -79,6 +80,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 	m_szGeomFile = m_szFile+".brep";
       }
       m_szJouFile+=".jou";
+      m_szSchFile = "schemes.jou";
       std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
 		<< "  " << m_szGeomFile << "  " << m_szJouFile << std::endl;
     }
@@ -103,6 +105,17 @@ void CNrgen::PrepareIO (int argc, char *argv[])
     else
       bDone = true; // file opened successfully
   } while (!bDone);
+  // open the scheme file for writing
+  do{
+    m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out); 
+    if (!m_SchemesFile){
+      std::cout << "Unable to open o/p file" << std::endl;
+      m_SchemesFile.clear ();
+    }
+    else
+      bDone = true; // file opened successfully
+  } while (!bDone);
+
 
   std::cout<<"o/p geometry file name: "<<m_szGeomFile << "\no/p Cubit journal file name: "<< m_szJouFile    
 	   << "\nInfo: o/p file extension must correspond to geometry engine used to build cgm " << std::endl;
@@ -485,6 +498,16 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
+    if (szInputString.substr(0,4) == "move"){
+      std::cout << "Moving geometry .." << std::endl;
+      double dX, dY, dZ;
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> dX >> dY >> dZ;
+      // call section fn
+      Move_Assm(dX, dY, dZ);
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
     // ceter the assembly 
     if (szInputString.substr(0,6) == "center"){
       std::cout << "Positioning assembly to center" << std::endl;
@@ -505,7 +528,9 @@ int CNrgen::ReadAndCreate()
     }
     if (szInputString.substr(0,3) == "end"){
       // impring merge before saving
-      //      Imprint_Merge();
+      Imprint_Merge();
+      // position the assembly to the center
+      Center_Assm();
       // save .sat file
       iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
       CHECK("Save to file failed.");
@@ -528,57 +553,126 @@ int CNrgen::CreateCubitJournal()
 {
   // variables
   std::string szGrp, szBlock;
-  m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
-  m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
-  // import the geometry file
-  m_FileOutput << "# Import geometry file " << std::endl;
-  m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
-  m_FileOutput << "#Creating groups" << std::endl;  
-  // group creation dumps. each material surface  has a group
-  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szGrp = "g_"+ m_szAssmMat(p);
-    m_szAssmMat(p);
-    m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+  if(m_nPlanar ==1 || m_nPlanar ==0){
+    m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
+    m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
+    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
+    // import the geometry file
+    m_FileOutput << "# Import geometry file " << std::endl;
+    m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
+    m_FileOutput << "#Creating groups" << std::endl;  
+    // group creation dumps. each material surface  has a group
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_szAssmMat(p);
+      m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+    }
+
+    // block creation dumps
+    m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szBlock = "b_"+ m_szAssmMat(p);
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_FileOutput << "block " << p << " surface in " << szGrp  << std::endl;
+      m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
+    }
+
+    // sideset creation dumps
+    m_FileOutput << "#Creating blocks, Note: you might need to change @ extensions" << std::endl; 
+    if(m_szGeomType =="hexagonal"){
+      for(int i=1; i<=6; i++)
+	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+    }
+    if(m_szGeomType =="cartesian"){
+      for(int i=1; i<=4; i++)
+	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+    }
+
+    // merge and imprint
+    m_FileOutput << "#merge geometry" << std::endl; 
+    m_FileOutput << "imprint all\n" << "merge all" << std::endl;
+
+    //now set the sizes
+    m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_FileOutput << "surface in " << szGrp << " size XX"  << std::endl;
+      m_FileOutput << "surface in " << szGrp << " scheme YY" << " <scheme options>"  << std::endl;
+      m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
+    }  
+
+    // save as .cub file dump
+    m_FileOutput << "#Save file" << std::endl; 
+    std::string szSave = m_szFile + ".cub";
+    m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl;   
   }
 
-  // block creation dumps
-  m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
-  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szBlock = "b_"+ m_szAssmMat(p);
-    szGrp = "g_"+ m_szAssmMat(p);
-    m_FileOutput << "block " << p << " surface in " << szGrp  << std::endl;
-    m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
+  else{
+    m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
+    m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
+    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
+    // import the geometry file
+    m_FileOutput << "# Import geometry file " << std::endl;
+    m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
+    m_FileOutput << "#Creating groups" << std::endl;  
+    // group creation dumps. each material surface  has a group
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_szAssmMat(p);
+      m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+    }
+
+    // block creation dumps
+    m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szBlock = "b_"+ m_szAssmMat(p);
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_FileOutput << "block " << p << " body in " << szGrp  << std::endl;
+      m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
+    }
+
+    // sideset creation dumps
+    m_FileOutput << "#Creating blocks, Note: you might need to change @ extensions" << std::endl; 
+    if(m_szGeomType =="hexagonal"){
+      for(int i=1; i<=6; i++)
+	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+    }
+    if(m_szGeomType =="cartesian"){
+      for(int i=1; i<=4; i++)
+	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+    }
+
+    // merge and imprint
+    m_FileOutput << "#merge geometry" << std::endl; 
+    m_FileOutput << "imprint all\n" << "merge all" << std::endl;
+
+    //now set the sizes
+    m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_FileOutput << "body in " << szGrp << " size XX"  << std::endl;
+      m_FileOutput << "body in " << szGrp << " scheme YY" << " <scheme options>"  << std::endl;
+      m_FileOutput << "mesh body in " << szGrp << "\n#" << std::endl;   
+    }  
+
+    // save as .cub file dump
+    m_FileOutput << "#Save file" << std::endl; 
+    std::string szSave = m_szFile + ".cub";
+    m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl;   
   }
 
-  // sideset creation dumps
-  m_FileOutput << "#Creating blocks, Note: you might need to change @ extensions" << std::endl; 
-  if(m_szGeomType =="hexagonal"){
-    for(int i=1; i<=6; i++)
-      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
-  }
-  if(m_szGeomType =="cartesian"){
-    for(int i=1; i<=4; i++)
-      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
-  }
 
-  // merge and imprint
-  m_FileOutput << "#merge geometry" << std::endl; 
-  m_FileOutput << "imprint all\n" << "merge all" << std::endl;
 
-  //now set the sizes
-  m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
-  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szGrp = "g_"+ m_szAssmMat(p);
-    m_FileOutput << "surface in " << szGrp << " interval XX"  << std::endl;
-    m_FileOutput << "surface in " << szGrp << " scheme YY" << " <scheme options>"  << std::endl;
-    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
-  }  
 
-  // save as .cub file dump
-  m_FileOutput << "#Save file" << std::endl; 
-  std::string szSave = m_szFile + ".cub";
-  m_FileOutput << "save as '"<< szSave <<"'"<<std::endl;   
+  // writing to schemes .jou 
+  
+  m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
+  m_SchemesFile << "#{CIRCLE =\"circle interval 1 fraction 0.8\"}" << std::endl;
+  m_SchemesFile << "#{HOLE = \"hole rad_interval 2 bias 0.0\"}" << std::endl;
+  m_SchemesFile << "#{PAVE = \"pave\"}" << std::endl;
+  m_SchemesFile << "#{MAP = \"map\"}" << std::endl;
 
+  std::cout << "Schemes file created: " << m_szSchFile << std::endl;
   std::cout << "Cubit journal file created: " << m_szJouFile << std::endl;
   return 1;
 }
@@ -600,13 +694,14 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
  
   double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
   iBase_EntityHandle cell;
-  iBase_EntityHandle cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL, max_surf = NULL;
+  iBase_EntityHandle cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL, max_surf = NULL, min_surf = NULL;
 
   // name tag handle
   iBase_TagHandle this_tag= NULL;
   char* tag_name = (char*)"NAME";
 
   std::string sMatName = "";
+  std::string sMatName1 = "";
 
   // get tag handle for 'NAME' tag, already created as iGeom instance is created
   iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
@@ -675,13 +770,17 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), sMatName.size(), &err);
 	CHECK("setData failed");
 
-	 Get_Max_Surf(cell, &max_surf);
+	Get_Max_Surf(cell, &max_surf, &min_surf);
 	sMatName+="_surface";
+	sMatName1=sMatName+"bottom";
 	if(max_surf !=0){
 	  iGeom_setData(geom, max_surf, this_tag,
 			sMatName.c_str(), sMatName.size(), &err);
 	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << std::endl;
+	  iGeom_setData(geom, min_surf, this_tag,
+			sMatName1.c_str(), sMatName1.size(), &err);
+	  CHECK("setData failed");
+	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
 	}
 
       }
@@ -743,13 +842,17 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
-	Get_Max_Surf(tmp_vol1, &max_surf);
+	Get_Max_Surf(tmp_vol1, &max_surf, &min_surf);
 	if(max_surf !=0){
 	  sMatName+="_surface";
+	  sMatName1=sMatName+"bottom";
 	  iGeom_setData(geom, max_surf, this_tag,
 			sMatName.c_str(), sMatName.size(), &err);
 	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << std::endl;
+	  iGeom_setData(geom, min_surf, this_tag,
+			sMatName1.c_str(), sMatName1.size(), &err);
+	  CHECK("setData failed");
+	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
 	}   
 
 	// other cyl annulus after substraction
@@ -776,12 +879,16 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 	  if(max_surf !=0){
-	    Get_Max_Surf(tmp_new, &max_surf);
+	    Get_Max_Surf(tmp_new, &max_surf, &min_surf);
 	    sMatName+="_surface";
+	    sMatName1=sMatName+"bottom";
 	    iGeom_setData(geom, max_surf, this_tag,
 			  sMatName.c_str(), sMatName.size(), &err);
 	    CHECK("setData failed");
-	    std::cout << "created: " << sMatName << std::endl;
+	    iGeom_setData(geom, min_surf, this_tag,
+			  sMatName1.c_str(), sMatName1.size(), &err);
+	    CHECK("setData failed");
+	    std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
 	  }
 
 	  // copy the new into the cyl array
@@ -858,13 +965,18 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
 
-	Get_Max_Surf(tmp_vol1, &max_surf);
+	Get_Max_Surf(tmp_vol1, &max_surf, &min_surf);
 	if(max_surf !=NULL){
 	  sMatName+="_surface";
+	  sMatName1=sMatName+"bottom";
+
 	  iGeom_setData(geom, max_surf, this_tag,
 			sMatName.c_str(), sMatName.size(), &err);
 	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << std::endl;     
+	  iGeom_setData(geom, min_surf, this_tag,
+			sMatName1.c_str(), sMatName1.size(), &err);
+	  CHECK("setData failed");
+	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;     
 	}
 
 	// other cyl annulus after substraction
@@ -888,15 +1000,19 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  iGeom_setData(geom, tmp_new, this_tag,
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
-	  Get_Max_Surf(tmp_new, &max_surf);
+	  Get_Max_Surf(tmp_new, &max_surf, &min_surf);
 	  if(max_surf !=0){
 
 	    sMatName+="_surface";
+	    sMatName1=sMatName+"bottom";
 	    if (max_surf !=0){
 	      iGeom_setData(geom, max_surf, this_tag,
 			    sMatName.c_str(), sMatName.size(), &err);
 	      CHECK("setData failed");
-	      std::cout << "created: " << sMatName << std::endl;
+	      iGeom_setData(geom, min_surf, this_tag,
+			    sMatName1.c_str(), sMatName1.size(), &err);
+	      CHECK("setData failed");
+	      std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
 	    }
 	  }
 
@@ -999,16 +1115,18 @@ int CNrgen::TerminateProgram ()
   // close the input and output files
   m_FileInput.close ();
   m_FileOutput.close ();
+  m_SchemesFile.close ();
+
   return 1;
 }
 
 
 // print error function definition
 bool CNrgen::Print_Error( const char* desc, 
-                         int err,
-                         iGeom_Instance geom,
-                         const char* file,
-                         int line )
+			  int err,
+			  iGeom_Instance geom,
+			  const char* file,
+			  int line )
 {
   char buffer[1024];
   int err2 = err;
@@ -1024,7 +1142,7 @@ bool CNrgen::Print_Error( const char* desc,
   return false; // must always return false or CHECK macro will break
 }
 
-int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf)
+int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf,iBase_EntityHandle* min_surf )
 // ---------------------------------------------------------------------------
 // Function: terminates the program steps by closing the input/output files
 // Input:    none
@@ -1032,7 +1150,6 @@ int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf)
 // ---------------------------------------------------------------------------
 {
   // get the surface with max z
-  //  iBase_EntityHandle tmp_surf = 0;
   double dZCoor=-1.0e6;
   SimpleArray<iBase_EntityHandle> surfs;
   iGeom_getEntAdj( geom, cyl, iBase_FACE, ARRAY_INOUT(surfs), &err );
@@ -1051,6 +1168,9 @@ int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf)
 	dZCoor = min_corn[3*i+2];
 	*max_surf = surfs[i];
       }
+      if(min_corn[3*i+2]==0){//bottom surface
+	*min_surf = surfs[i];
+      }
     }
   }
   if (0 == max_surf) {
@@ -1059,6 +1179,9 @@ int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf)
   }
   return 0;
 } 
+
+
+
 int CNrgen::Center_Assm ()
 // ---------------------------------------------------------------------------
 // Function: centers all the entities along x and y axis
@@ -1075,12 +1198,13 @@ int CNrgen::Center_Assm ()
   // moving all geom entities to center      
   double xcenter = (xmin+xmax)/2.0;
   double ycenter = (ymin+ymax)/2.0;
+  double zcenter = (m_dVZAssm(2) - m_dVZAssm(1))/2.0;//move up
   SimpleArray<iBase_EntityHandle> all;
   iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
   CHECK("Failed to get all entities");
 
   for(int i=0; i<all.size(); i++){
-    iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,0,&err);
+    iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,-zcenter,&err);
     CHECK("Failed to move entities");
   }
   return 1;
@@ -1167,6 +1291,27 @@ int CNrgen::Rotate_Assm (char &cDir, double &dAngle)
   }
   return 1;
 }
+
+int CNrgen::Move_Assm (double &dX,double &dY, double &dZ)
+// ---------------------------------------------------------------------------
+// Function: rotates the whole assembly
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  SimpleArray<iBase_EntityHandle> all;
+  iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );  
+  CHECK("Failed to get all entities");
+  // loop and rotate all entities
+  for(int i=0; i<all.size(); i++){
+    //get the bounding box to decide
+    iGeom_moveEnt(geom,all[i],
+		  dX, dY, dZ, &err);
+    CHECK("Failed move entities");
+  }
+  return 1;
+}
+
 int CNrgen::Create_HexAssm(std::string &szInputString)
 // ---------------------------------------------------------------------------
 // Function: read and create the assembly for hexagonal lattice
@@ -1177,7 +1322,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
   CParser Parse;
   std::string card, szVolId, szVolAlias;
   int nInputLines, nTempPin, t;
-  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0;
+  double dX = 0.0, dY =0.0, dZ=0.0;
   double  dP, dH, dSide, dHeight;
   iBase_EntityHandle assm = NULL;
   std::cout << "\ngetting Assembly data and creating ..\n"<< std::endl;
@@ -1261,6 +1406,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
       assms[n-1]=assm;
     }
   } 
+  return 0;
 }
 
 int CNrgen::Create_CartAssm(std::string &szInputString)
@@ -1347,6 +1493,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
       assms[n-1]=assm;
     }
   } 
+  return 0;
 }
 
 int CNrgen::CreateOuterCovering () 
@@ -1360,11 +1507,12 @@ int CNrgen::CreateOuterCovering ()
   iBase_TagHandle this_tag;
   char* tag_name =(char *)"NAME";
   std::string sMatName = "";
+  std::string sMatName1 = "";
 
   // get tag handle for 'NAME' tag, already created as iGeom instance is created
   iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
   CHECK("getTagHandle failed");
-  iBase_EntityHandle assm = NULL, max_surf = NULL, tmp_vol= NULL, tmp_new= NULL;
+  iBase_EntityHandle max_surf = NULL, min_surf = NULL, tmp_vol= NULL, tmp_new= NULL;
 
   // name the innermost outer covering common for both cartesian and hexagonal assembliees   
   if(m_nDimensions >0){
@@ -1381,13 +1529,17 @@ int CNrgen::CreateOuterCovering ()
     iGeom_setData(geom, tmp_vol, this_tag,
 		  sMatName.c_str(), sMatName.size(), &err);
     CHECK("setData failed");
-    Get_Max_Surf(tmp_vol, &max_surf);
+    Get_Max_Surf(tmp_vol, &max_surf, &min_surf);
     if(max_surf !=0){
       sMatName+="_surface";
+      sMatName1=sMatName+"bottom";
       iGeom_setData(geom, max_surf, this_tag,
 		    sMatName.c_str(), sMatName.size(), &err);
       CHECK("setData failed");
-      std::cout << "created: " << sMatName << std::endl;
+      iGeom_setData(geom, min_surf, this_tag,
+		    sMatName1.c_str(), sMatName1.size(), &err);
+      CHECK("setData failed");
+      std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
     }
 
     //  Naming outermost block edges - sidesets in cubit journal file
@@ -1449,13 +1601,17 @@ int CNrgen::CreateOuterCovering ()
 		      sMatName.c_str(), sMatName.size(), &err);
 	CHECK("setData failed");
 
-	Get_Max_Surf(tmp_new, &max_surf);
+	Get_Max_Surf(tmp_new, &max_surf, &min_surf);
 	if(max_surf !=0){
 	  sMatName+="_surface";
+	  sMatName1=sMatName+"bottom";	
 	  iGeom_setData(geom, max_surf, this_tag,
 			sMatName.c_str(), sMatName.size(), &err);
 	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << std::endl;
+	  iGeom_setData(geom, min_surf, this_tag,
+			sMatName1.c_str(), sMatName1.size(), &err);
+	  CHECK("setData failed");
+	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
 	}
       }
     }
@@ -1514,14 +1670,14 @@ int CNrgen::Imprint_Merge()
   CHECK("Imprint failed.");
   std::cout << "\n--------------------------------------------------"<<std::endl;
   
-  // merge tolerance
-  double dTol = 1e-4;
-  // now  merge
-  std::cout << "\n\nMerging...." << std::endl;
-  iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
-  CHECK("Merge failed.");
-  std::cout <<"merging finished."<< std::endl;
-  std::cout << "\n--------------------------------------------------"<<std::endl;
+  //   // merge tolerance
+  //   double dTol = 1e-4;
+  //   // now  merge
+  //   std::cout << "\n\nMerging...." << std::endl;
+  //   iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
+  //   CHECK("Merge failed.");
+  //   std::cout <<"merging finished."<< std::endl;
+  //   std::cout << "\n--------------------------------------------------"<<std::endl;
   return 1;
 }
 
@@ -1536,7 +1692,7 @@ int CNrgen::Create2DSurf ()
   SimpleArray<iBase_EntityHandle> surfs;
   int *offset = NULL, offset_alloc = 0, offset_size;
   int t=0;
-  std::cout << "Creating top surface of 2D assembly..." << std::endl;
+  std::cout << "Creating surface; 2D assembly specified..." << std::endl;
 
   // get all the entities in the model (delete after making a copy of top surface)
   iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
@@ -1586,6 +1742,17 @@ int CNrgen::Create2DSurf ()
   for(int i=0; i<all_geom.size(); i++){
     iGeom_deleteEnt(geom, all_geom[i], &err);
     CHECK( "Problems deleting cyls." );
+  }
+  // position the final assembly at the center
+  // get the assembly on z=0 plane
+  double zcenter = m_dVZAssm(2)/2.0;//move up
+  SimpleArray<iBase_EntityHandle> all;
+  iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+  CHECK("Failed to get all entities");
+
+  for(int i=0; i<all.size(); i++){
+    iGeom_moveEnt(geom,all[i],0,0,-zcenter,&err);
+    CHECK("Failed to move entities");
   }
   std::cout << "--------------------------------------------------"<<std::endl;
   return 1;

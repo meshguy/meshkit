@@ -29,10 +29,13 @@ public:
   void PrepareIO (int argc, char *argv[]);
   void CountPinCylinders ();
   int  ReadAndCreate ();
-  int Get_Max_Surf (iBase_EntityHandle vol, iBase_EntityHandle* max_surf);
+  int Get_Max_Surf (iBase_EntityHandle vol,
+		    iBase_EntityHandle* max_surf,
+		    iBase_EntityHandle* min_surf);
   int Center_Assm();
   int Section_Assm (char&, double&);
   int Rotate_Assm (char&, double&);
+  int Move_Assm (double&,double&,double&);
   int Create_HexAssm(std::string &);
   int Create_CartAssm(std::string &);
   int CreateOuterCovering();
@@ -64,10 +67,12 @@ bool Print_Error( const char* desc,
   int m_nLineNumber, m_nPlanar;	   // current line number in input file
   std::ifstream m_FileInput;	// File Input
   std::ofstream m_FileOutput;	// File Output
-  std::string m_szFile;
-  std::string m_szInFile;
-  std::string m_szGeomFile;
-  std::string m_szJouFile;
+  std::ofstream m_SchemesFile; 	// Scheme journal file output
+  std::string m_szFile;       // just the top level name
+  std::string m_szInFile;     // input file
+  std::string m_szGeomFile;   // o/p geometry file
+  std::string m_szJouFile;    // cubit journal file
+  std::string m_szSchFile;   // cubit journal scheme file
 private:
   double pi;
   int err;
