@@ -256,6 +256,7 @@ int main(int argc, char* argv[])
      std::cout << "Writing output file " << outfile <<std::endl;
      // save the output in a new file
      iMesh_save(mesh, root_set, outfile, NULL, &err, strlen(outfile), 0);
+     ERRORR("Couldn't save result mesh file.", 1);
   }
   else
      std::cout << " no output file provided. \n";
