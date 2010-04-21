@@ -563,6 +563,7 @@ int CNrgen::CreateCubitJournal()
 //---------------------------------------------------------------------------
 {
   // variables
+  int nSideset=0, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot;
 
   // stuff common to both surface and volume
@@ -577,19 +578,24 @@ int CNrgen::CreateCubitJournal()
   // sideset curves on top surface creation dumps
   m_FileOutput << "#Creating curve sidesets, Note: you might need to change @ extensions" << std::endl; 
   if(m_szGeomType =="hexagonal"){
-    for(int i=1; i<=6; i++)
-      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+    for(i=1; i<=6; i++){
+      ++nSideset;
+      m_FileOutput << "sideset " << nSideset << " curve side_edge" << i << "@A" << std::endl; 
+    }
   }
   if(m_szGeomType =="cartesian"){
-    for(int i=1; i<=4; i++)
-      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+    for(j=1; j<=4; j++){
+      ++nSideset;
+      m_FileOutput << "sideset " << nSideset << " curve side_edge" << j << "@A" << std::endl; 
+    }
   }
   
   // top surface sidesets
   m_FileOutput << "#Creating top surface sidesets, Note: you might need to change @ extensions" << std::endl; 
   for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szSurfTop = m_szAssmMatAlias(p)+"_top@A";
-    m_FileOutput << "sideset " << "surface " << szSurfTop  << std::endl;
+    szSurfTop = m_szAssmMat(p)+"_top@A";
+    ++nSideset;
+    m_FileOutput << "sideset " << nSideset << " surface " << szSurfTop  << std::endl;
   }
 
   if(m_nPlanar ==1){ // when geometry surface is specified
@@ -630,7 +636,8 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "#Creating top surface sidesets, Note: you might need to change @ extensions" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szSurfTop = m_szAssmMatAlias(p)+"_bot@A";
-      m_FileOutput << "sideset " << "surface " << szSurfTop  << std::endl;
+      ++nSideset;
+      m_FileOutput << "sideset " << nSideset << " surface " << szSurfTop  << std::endl;
     }
 
     // sideset surface on outer covering creation dumps
@@ -1102,7 +1109,7 @@ void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
       dX+= dPX/2.0;
       // find the previous pincell type
       // check if it's dummy
-      if(m_Assembly(m,n-1)=="x"){
+      if((m_Assembly(m,n-1)=="x")||(m_Assembly(m,n-1)=="xx")){
 	dX+=dPX/2.0;
       }
       else{
@@ -1119,7 +1126,7 @@ void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
     if (m > 1 && n==1){
       dY+= dPY/2.0;
       // check if it's dummy
-      if(m_Assembly(m-1,n)=="x"){
+      if((m_Assembly(m-1,n)=="x")||(m_Assembly(m-1,n)=="xx")){
 	dY+=dPY/2.0;
       }
       else{
@@ -1414,7 +1421,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
     for(int n=1; n<=(m_nPin + t - 1); n++){
       szFormatString1 >> m_Assembly(m,n);
       // if dummy pincell skip and continue
-      if(m_Assembly(m,n) == "x"){
+      if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
 	continue;
       }
       // find that pincell
@@ -1505,7 +1512,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
     for(int n=1; n<=m_nPinX; n++){
       szFormatString1 >> m_Assembly(m,n);
       // if dummy pincell skip and continue
-      if(m_Assembly(m,n) == "x"){
+      if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
 	continue;
       }	      
       // loop thro' all pins to get the type of pin
