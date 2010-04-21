@@ -7,7 +7,7 @@ private:
   T* arr;
   int arrSize;
   int arrAllocated;
-     
+  int i;
 public:
   SimpleArray() : arr(0) , arrSize(0), arrAllocated(0) {}
   SimpleArray( unsigned s ) :arrSize(s), arrAllocated(s) {
@@ -19,11 +19,11 @@ public:
     arrSize = s; 
     arrAllocated = s;
     arr = (T*)malloc(s*sizeof(T));
-    for (unsigned i = 0; i < s; ++i)
+    for (i = 0; i < s; ++i)
       new (arr+i) T();
   }    
   ~SimpleArray() {
-    for (int i = 0; i < size(); ++i)
+    for (i = 0; i < size(); ++i)
       arr[i].~T();
     free(arr);
   }

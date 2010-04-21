@@ -33,13 +33,13 @@ libMKrgg_la_include_HEADERS = \
 	simplearray.hpp
 
 # Tests and such
-check_PROGRAMS = nrgen_test
+check_PROGRAMS = assygen
 TESTS = $(check_PROGRAMS)
 
-nrgen_test_SOURCES = nrgen_test.cpp
-nrgen_test_DEPENDENCIES = nrgen.hpp libMKrgg.la
-nrgen_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-nrgen_test_LDADD = libMKrgg.la $(IGEOM_LIBS) 
+assygen_SOURCES = assygen.cpp
+assygen_DEPENDENCIES = nrgen.hpp libMKrgg.la
+assygen_CXXFLAGS = -DTEST $(CXXFLAGS)
+assygen_LDADD = libMKrgg.la $(IGEOM_LIBS) 
 
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)

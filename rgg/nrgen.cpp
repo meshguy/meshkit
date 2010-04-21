@@ -17,10 +17,9 @@ CNrgen::CNrgen ()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  
+  m_nPlanar = 0; //default is 3D
   geom = NULL;
   root_set= NULL;
-  szInputString;
   szComment = "!";
   MAXCHARS = 300;
   pi = M_PI;

@@ -142,7 +142,10 @@ void CNrgen::CountPinCylinders ()
     if (szInputString.substr(0,8) == "pincells"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_nPincells;
-      m_Pincell.SetSize(m_nPincells);
+      if(m_nPincells>0)
+	m_Pincell.SetSize(m_nPincells);
+      else if(m_nPincells ==0)
+	m_Pincell.SetSize(1); // assume the user if using dummy pincell
 
       // count the number of cylinder lines for each pincell
       for (int i=1; i<=m_nPincells; i++){
@@ -174,7 +177,8 @@ void CNrgen::CountPinCylinders ()
 	  m_Pincell(i).SetNumCyl(nCyl);
 	}
 	else if(nCyl ==0){
-	  m_Pincell(i).SetCellMatSize(nCellMat);
+	  if(nInputLines >0)
+	    m_Pincell(i).SetCellMatSize(nCellMat);
 	}
 	nCyl = 0;
 	nCellMat = 0;
@@ -404,6 +408,14 @@ int CNrgen::ReadAndCreate()
       szFormatString >> card >> m_szGeomType;
     }
 
+    if (szInputString.substr(0,8) == "geometry"){
+      std::string outfile;
+ 
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> outfile;
+      if(strcmp (outfile.c_str(), "surface") == 0)
+	m_nPlanar=1;
+    }   
     if (szInputString.substr(0,9) == "materials"){
 
       std::cout << "getting assembly material data" << std::endl;
@@ -414,7 +426,6 @@ int CNrgen::ReadAndCreate()
       for (int j=1; j<=m_nAssemblyMat; j++)
 	szFormatString >> m_szAssmMat(j) >> m_szAssmMatAlias(j);
     }   
-
     if (szInputString.substr(0,10) == "dimensions"){
 
       std::cout << "getting assembly dimensions" << std::endl;
@@ -539,7 +550,7 @@ int CNrgen::ReadAndCreate()
     }
   }
   // check data for validity
-  if (m_nPincells < 1) 
+  if (m_nPincells < 0) 
     IOErrorHandler (PINCELLS);
   return 1;
 }
@@ -552,22 +563,45 @@ int CNrgen::CreateCubitJournal()
 //---------------------------------------------------------------------------
 {
   // variables
-  std::string szGrp, szBlock;
-  if(m_nPlanar ==1 || m_nPlanar ==0){
-    m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
-    m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
-    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
-    // import the geometry file
-    m_FileOutput << "# Import geometry file " << std::endl;
-    m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
-    m_FileOutput << "#Creating groups" << std::endl;  
+  std::string szGrp, szBlock, szSurfTop, szSurfBot;
+
+  // stuff common to both surface and volume
+  m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
+  m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
+  m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
+  
+  // import the geometry file
+  m_FileOutput << "# Import geometry file " << std::endl;
+  m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
+
+  // sideset curves on top surface creation dumps
+  m_FileOutput << "#Creating curve sidesets, Note: you might need to change @ extensions" << std::endl; 
+  if(m_szGeomType =="hexagonal"){
+    for(int i=1; i<=6; i++)
+      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+  }
+  if(m_szGeomType =="cartesian"){
+    for(int i=1; i<=4; i++)
+      m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
+  }
+  
+  // top surface sidesets
+  m_FileOutput << "#Creating top surface sidesets, Note: you might need to change @ extensions" << std::endl; 
+  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    szSurfTop = m_szAssmMatAlias(p)+"_top@A";
+    m_FileOutput << "sideset " << "surface " << szSurfTop  << std::endl;
+  }
+
+  if(m_nPlanar ==1){ // when geometry surface is specified
+
     // group creation dumps. each material surface  has a group
+    m_FileOutput << "#Creating groups" << std::endl;  
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       m_szAssmMat(p);
       m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
     }
-
+    
     // block creation dumps
     m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -577,20 +611,9 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
     }
 
-    // sideset creation dumps
-    m_FileOutput << "#Creating blocks, Note: you might need to change @ extensions" << std::endl; 
-    if(m_szGeomType =="hexagonal"){
-      for(int i=1; i<=6; i++)
-	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
-    }
-    if(m_szGeomType =="cartesian"){
-      for(int i=1; i<=4; i++)
-	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
-    }
-
-    // merge and imprint
+    // merge
     m_FileOutput << "#merge geometry" << std::endl; 
-    m_FileOutput << "imprint all\n" << "merge all" << std::endl;
+    m_FileOutput << "merge all" << std::endl;
 
     //now set the sizes
     m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
@@ -600,28 +623,34 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "surface in " << szGrp << " scheme YY" << " <scheme options>"  << std::endl;
       m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
     }  
-
-    // save as .cub file dump
-    m_FileOutput << "#Save file" << std::endl; 
-    std::string szSave = m_szFile + ".cub";
-    m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl;   
   }
+  else{ // when geometry volume is specified
 
-  else{
-    m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
-    m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
-    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
-    // import the geometry file
-    m_FileOutput << "# Import geometry file " << std::endl;
-    m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
-    m_FileOutput << "#Creating groups" << std::endl;  
+    // bottom surface sidesets
+    m_FileOutput << "#Creating top surface sidesets, Note: you might need to change @ extensions" << std::endl; 
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szSurfTop = m_szAssmMatAlias(p)+"_bot@A";
+      m_FileOutput << "sideset " << "surface " << szSurfTop  << std::endl;
+    }
+
+    // sideset surface on outer covering creation dumps
+    m_FileOutput << "#Creating curve sidesets, Note: you might need to change @ extensions" << std::endl; 
+    if(m_szGeomType =="hexagonal"){
+      for(int i=1; i<=6; i++)
+	m_FileOutput << "sideset " << i << " surface side" << i << "@A" << std::endl; 
+    }
+    if(m_szGeomType =="cartesian"){
+      for(int i=1; i<=4; i++)
+	m_FileOutput << "sideset " << i << " surface side" << i << "@A" << std::endl; 
+    }
+
     // group creation dumps. each material surface  has a group
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       m_szAssmMat(p);
       m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
     }
-
+  
     // block creation dumps
     m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -630,22 +659,11 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << p << " body in " << szGrp  << std::endl;
       m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
     }
-
-    // sideset creation dumps
-    m_FileOutput << "#Creating blocks, Note: you might need to change @ extensions" << std::endl; 
-    if(m_szGeomType =="hexagonal"){
-      for(int i=1; i<=6; i++)
-	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
-    }
-    if(m_szGeomType =="cartesian"){
-      for(int i=1; i<=4; i++)
-	m_FileOutput << "sideset " << i << " curve side_edge" << i << "@A" << std::endl; 
-    }
-
+  
     // merge and imprint
     m_FileOutput << "#merge geometry" << std::endl; 
-    m_FileOutput << "imprint all\n" << "merge all" << std::endl;
-
+    m_FileOutput << "merge all" << std::endl;
+  
     //now set the sizes
     m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -654,18 +672,14 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "body in " << szGrp << " scheme YY" << " <scheme options>"  << std::endl;
       m_FileOutput << "mesh body in " << szGrp << "\n#" << std::endl;   
     }  
-
-    // save as .cub file dump
-    m_FileOutput << "#Save file" << std::endl; 
-    std::string szSave = m_szFile + ".cub";
-    m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl;   
   }
 
-
-
+  // save as .cub file dump
+  m_FileOutput << "#Save file" << std::endl; 
+  std::string szSave = m_szFile + ".cub";
+  m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl; 
 
   // writing to schemes .jou 
-  
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
   m_SchemesFile << "#{CIRCLE =\"circle interval 1 fraction 0.8\"}" << std::endl;
   m_SchemesFile << "#{HOLE = \"hole rad_interval 2 bias 0.0\"}" << std::endl;
@@ -694,13 +708,14 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
  
   double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
   iBase_EntityHandle cell;
-  iBase_EntityHandle cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL, max_surf = NULL, min_surf = NULL;
+  iBase_EntityHandle cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL, max_surf = NULL, min_surf = NULL, cell_copy = NULL;
 
   // name tag handle
   iBase_TagHandle this_tag= NULL;
   char* tag_name = (char*)"NAME";
 
   std::string sMatName = "";
+  std::string sMatName0 = "";
   std::string sMatName1 = "";
 
   // get tag handle for 'NAME' tag, already created as iGeom instance is created
@@ -771,29 +786,31 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	CHECK("setData failed");
 
 	Get_Max_Surf(cell, &max_surf, &min_surf);
-	sMatName+="_surface";
-	sMatName1=sMatName+"bottom";
+	sMatName0=sMatName+"_top";
+	sMatName1=sMatName+"_bot";
 	if(max_surf !=0){
 	  iGeom_setData(geom, max_surf, this_tag,
-			sMatName.c_str(), sMatName.size(), &err);
+			sMatName0.c_str(), sMatName0.size(), &err);
 	  CHECK("setData failed");
 	  iGeom_setData(geom, min_surf, this_tag,
 			sMatName1.c_str(), sMatName1.size(), &err);
 	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
+	  std::cout << "created: " << sMatName0 << ",  " << sMatName1 << std::endl;
 	}
-
       }
       // loop and create cylinders
       if(nCyl > 0){
 	m_Pincell(i).GetCylSizes(n, nRadii);
 	SimpleArray<iBase_EntityHandle> cyls(nRadii);
-
+	SimpleArray<iBase_EntityHandle> cell_copys(nRadii);
+	SimpleArray<iBase_EntityHandle> intersec_main(nRadii);
+	SimpleArray<iBase_EntityHandle> intersec_copy(nRadii);
+	iBase_EntityHandle intersec, tmp_intersec;
 	//declare variables
 	CVector<double> dVCylRadii(nRadii);
 	CVector<std::string> szVMat(nRadii);
 	CVector<std::string> szVCylMat(nRadii);
- 
+	
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
@@ -815,56 +832,80 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  iGeom_moveEnt(geom, cyl, dCylMoveX,dCylMoveY,dZMove, &err);
 	  CHECK("Couldn't move cyl.");
 	  cyls[m-1] = cyl;
+
+	  //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
+	  if(m==1){
+	    tmp_vol1=cyls[0]; //inner most cyl
+	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	      if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+		sMatName = m_szAssmMat(p);
+	      }
+	    }
+
+
+	    iGeom_setData(geom, tmp_vol1, this_tag,
+			  sMatName.c_str(), 10, &err);
+	    CHECK("setData failed");
+	    Get_Max_Surf(tmp_vol1, &max_surf, &min_surf);
+	    if(max_surf !=0){
+	      sMatName0=sMatName+"_top";
+	      sMatName1=sMatName+"_bot";
+	      iGeom_setData(geom, max_surf, this_tag,
+			    sMatName0.c_str(), sMatName0.size(), &err);
+	      CHECK("setData failed");
+	      iGeom_setData(geom, min_surf, this_tag,
+			    sMatName1.c_str(), sMatName1.size(), &err);
+	      CHECK("setData failed");
+	      std::cout << "created: " << sMatName0 << ",  " << sMatName1 << std::endl;
+	    }   
+
+
+	  }
+
+	  //copy cell nRadii  times for intersection with cylinders
+	  iGeom_copyEnt(geom, cells[n-1], &cell_copy, &err);
+	  CHECK("Couldn't copy inner duct wall prism.");
+	  cell_copys[m-1] = cell_copy;
+
+	  iGeom_intersectEnts(geom, cell_copys[m-1], cyls[m-1],&intersec,&err);
+  	  CHECK("intersection failed"); 
+
+	  iGeom_copyEnt(geom, intersec, &tmp_intersec, &err);
+	  CHECK("Couldn't copy inner duct wall prism.");
+	  intersec_main[m-1] = tmp_intersec;	  
+	  intersec_copy[m-1] = intersec;
+	  intersec = NULL;
 	}
  
 	if(nCells > 0){
 	  // copy cyl before subtract 
-	  iGeom_copyEnt(geom, cyls[nRadii-1], &tmp_vol, &err);
-	  CHECK("Couldn't copy inner duct wall prism.");
-	
-	  // subtract outer most cyl from brick
-	  iGeom_subtractEnts(geom, cells[n-1], cyls[nRadii-1], &tmp_new, &err);
+	  // 	  iGeom_copyEnt(geom, cyls[nRadii-1], &tmp_vol, &err);
+	  // 	  CHECK("Couldn't copy inner duct wall prism.");
+
+	  //	  subtract outer most cyl from brick
+	  iGeom_subtractEnts(geom, cells[n-1], intersec_copy[nRadii-1], &tmp_new, &err);
 	  CHECK("Subtract of inner from outer failed.");
 	
-	  // copy the new into the cyl array
-	  cells[n-1] = tmp_new; cell = tmp_new;
-	  cyls[nRadii-1]=tmp_vol;
+	  // 	  // copy the new into the cyl array
+	  // 	  cells[n-1] = tmp_new; cell = tmp_new;
+	  // 	  cyls[nRadii-1]=tmp_vol;
 
 	}
-	//set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	  if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	    sMatName = m_szAssmMat(p);
-	  }
-	}
-	tmp_vol1=cyls[0]; //inner most cyl
-
-	iGeom_setData(geom, tmp_vol1, this_tag,
-		      sMatName.c_str(), 10, &err);
-	CHECK("setData failed");
-	Get_Max_Surf(tmp_vol1, &max_surf, &min_surf);
-	if(max_surf !=0){
-	  sMatName+="_surface";
-	  sMatName1=sMatName+"bottom";
-	  iGeom_setData(geom, max_surf, this_tag,
-			sMatName.c_str(), sMatName.size(), &err);
-	  CHECK("setData failed");
-	  iGeom_setData(geom, min_surf, this_tag,
-			sMatName1.c_str(), sMatName1.size(), &err);
-	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
-	}   
 
 	// other cyl annulus after substraction
 	for (int b=nRadii; b>1; b--){  
 
-	  iGeom_copyEnt(geom, cyls[b-2], &tmp_vol, &err);
-	  CHECK("Couldn't copy inner duct wall prism.");
+ 	  //subtract tmp vol from the outer most
+	  if(intersec_main[b-2] !=NULL){
+	    iGeom_subtractEnts(geom, intersec_main[b-1], intersec_main[b-2], &tmp_new, &err);
+	    CHECK("Subtract of inner from outer failed.");
+	  }
+	  else{
+	    iGeom_subtractEnts(geom, intersec_copy[b-1], intersec_main[b-2], &tmp_new, &err);
+	    CHECK("Subtract of inner from outer failed.");
+	  }
 
-	  //subtract tmp vol from the outer most
-	  iGeom_subtractEnts(geom, cyls[b-1], tmp_vol, &tmp_new, &err);
-	  CHECK("Subtract of inner from outer failed.");
-  
+	  
 	  // now search for the full name of the abbreviated Cell Mat
 	  int tag_no;
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -880,15 +921,15 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  CHECK("setData failed");
 	  if(max_surf !=0){
 	    Get_Max_Surf(tmp_new, &max_surf, &min_surf);
-	    sMatName+="_surface";
-	    sMatName1=sMatName+"bottom";
+	    sMatName0=sMatName+"_top";
+	    sMatName1=sMatName+"_bot";
 	    iGeom_setData(geom, max_surf, this_tag,
-			  sMatName.c_str(), sMatName.size(), &err);
+			  sMatName0.c_str(), sMatName0.size(), &err);
 	    CHECK("setData failed");
 	    iGeom_setData(geom, min_surf, this_tag,
 			  sMatName1.c_str(), sMatName1.size(), &err);
 	    CHECK("setData failed");
-	    std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
+	    std::cout << "created: " << sMatName0 << ",  " << sMatName1 << std::endl;
 	  }
 
 	  // copy the new into the cyl array
@@ -967,16 +1008,16 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 
 	Get_Max_Surf(tmp_vol1, &max_surf, &min_surf);
 	if(max_surf !=NULL){
-	  sMatName+="_surface";
-	  sMatName1=sMatName+"bottom";
+	  sMatName0=sMatName+"_top";
+	  sMatName1=sMatName+"_bot";
 
 	  iGeom_setData(geom, max_surf, this_tag,
-			sMatName.c_str(), sMatName.size(), &err);
+			sMatName0.c_str(), sMatName0.size(), &err);
 	  CHECK("setData failed");
 	  iGeom_setData(geom, min_surf, this_tag,
 			sMatName1.c_str(), sMatName1.size(), &err);
 	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;     
+	  std::cout << "created: " << sMatName0 << ",  " << sMatName1 << std::endl;     
 	}
 
 	// other cyl annulus after substraction
@@ -1003,16 +1044,16 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  Get_Max_Surf(tmp_new, &max_surf, &min_surf);
 	  if(max_surf !=0){
 
-	    sMatName+="_surface";
-	    sMatName1=sMatName+"bottom";
+	    sMatName0=sMatName+"_top";
+	    sMatName1=sMatName+"_bot";
 	    if (max_surf !=0){
 	      iGeom_setData(geom, max_surf, this_tag,
-			    sMatName.c_str(), sMatName.size(), &err);
+			    sMatName0.c_str(), sMatName0.size(), &err);
 	      CHECK("setData failed");
 	      iGeom_setData(geom, min_surf, this_tag,
 			    sMatName1.c_str(), sMatName1.size(), &err);
 	      CHECK("setData failed");
-	      std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
+	      std::cout << "created: " << sMatName0 << ",  " << sMatName1 << std::endl;
 	    }
 	  }
 
@@ -1024,6 +1065,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
   }
   return 1;
 }
+
 
 void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly, 
 				 int m, int n, double &dX, double &dY, double &dZ)
@@ -1059,24 +1101,36 @@ void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
     else{
       dX+= dPX/2.0;
       // find the previous pincell type
-      for(int b=1; b<=m_nPincells; b++){
-	m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-	if(m_Assembly(m,n-1) == szVolAlias)
-	  nTempPin1 = b;
-      }      
-      m_Pincell(nTempPin1).GetPitch(dPX1, dPY1, dPZ1);
-      // now add half of X pitch to the previous cells pitch
-      dX+= dPX1/2.0;
+      // check if it's dummy
+      if(m_Assembly(m,n-1)=="x"){
+	dX+=dPX/2.0;
+      }
+      else{
+	for(int b=1; b<=m_nPincells; b++){
+	  m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+	  if(m_Assembly(m,n-1) == szVolAlias)
+	    nTempPin1 = b;
+	}      
+	m_Pincell(nTempPin1).GetPitch(dPX1, dPY1, dPZ1);
+	// now add half of X pitch to the previous cells pitch
+	dX+= dPX1/2.0;
+      }
     }
     if (m > 1 && n==1){
       dY+= dPY/2.0;
-      for(int c=1; c<=m_nPincells; c++){
-	m_Pincell(c).GetLineOne(szVolId, szVolAlias, nInputLines);
-	if(m_Assembly(m-1,n) == szVolAlias)
-	  nTempPin2 = c;
+      // check if it's dummy
+      if(m_Assembly(m-1,n)=="x"){
+	dY+=dPY/2.0;
       }
-      m_Pincell(nTempPin2).GetPitch(dPX2, dPY2, dPZ2);	
-      dY+= dPY2/2.0;
+      else{
+	for(int c=1; c<=m_nPincells; c++){
+	  m_Pincell(c).GetLineOne(szVolId, szVolAlias, nInputLines);
+	  if(m_Assembly(m-1,n) == szVolAlias)
+	    nTempPin2 = c;
+	}
+	m_Pincell(nTempPin2).GetPitch(dPX2, dPY2, dPZ2);	
+	dY+= dPY2/2.0;
+      }
     }   
     dZ = 0.0; // moving in XY plane only
   }//if cartesian ends
@@ -1092,7 +1146,7 @@ void CNrgen::IOErrorHandler (ErrorStates ECode) const
   std::cerr << '\n';
 
   if (ECode == PINCELLS) // invalid number of pincells
-    std::cerr << "Number of pincells must be >= 1.";
+    std::cerr << "Number of pincells must be >= 0.";
   else if (ECode == INVALIDINPUT) // invalid input
     std::cerr << "Invalid input.";
   else
@@ -1150,7 +1204,8 @@ int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf,i
 // ---------------------------------------------------------------------------
 {
   // get the surface with max z
-  double dZCoor=-1.0e6;
+  double dTol=1.0e-3, dZTemp;
+  int flag = 0, locTemp;
   SimpleArray<iBase_EntityHandle> surfs;
   iGeom_getEntAdj( geom, cyl, iBase_FACE, ARRAY_INOUT(surfs), &err );
   CHECK( "Problems getting max surf for rotation." );
@@ -1163,18 +1218,28 @@ int CNrgen:: Get_Max_Surf(iBase_EntityHandle cyl, iBase_EntityHandle* max_surf,i
   CHECK( "Problems getting max surf for rotation." );
   for (int i = 0; i < surfs.size(); ++i){
     // first find the max z-coordinate
-    if(min_corn[3*i+2]==max_corn[3*i+2]){
-      if(min_corn[3*i+2] > dZCoor){
-	dZCoor = min_corn[3*i+2];
-	*max_surf = surfs[i];
+    if( (abs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
+      if(flag == 0){
+	dZTemp = min_corn[3*i+2];
+	locTemp = i;
+	flag = 1;
       }
-      if(min_corn[3*i+2]==0){//bottom surface
+      else if(dZTemp > min_corn[3*i+2]){
+	// we have a bot surface
 	*min_surf = surfs[i];
+	// the top surface is dZTemp
+	*max_surf = surfs[locTemp];
+      }
+      else{
+	//we have a top surface
+	*min_surf = surfs[locTemp];
+	// the top surface is dZTemp
+	*max_surf = surfs[i];	
       }
     }
   }
   if (0 == max_surf) {
-    std::cerr << "Couldn't find max surf for rotation." << std::endl;
+    std::cerr << "Couldn't find max surf" << std::endl;
     return false;
   }
   return 0;
@@ -1198,7 +1263,7 @@ int CNrgen::Center_Assm ()
   // moving all geom entities to center      
   double xcenter = (xmin+xmax)/2.0;
   double ycenter = (ymin+ymax)/2.0;
-  double zcenter = (m_dVZAssm(2) - m_dVZAssm(1))/2.0;//move up
+  double zcenter = (zmin+zmax)/2.0;
   SimpleArray<iBase_EntityHandle> all;
   iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
   CHECK("Failed to get all entities");
@@ -1348,7 +1413,10 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 
     for(int n=1; n<=(m_nPin + t - 1); n++){
       szFormatString1 >> m_Assembly(m,n);
-
+      // if dummy pincell skip and continue
+      if(m_Assembly(m,n) == "x"){
+	continue;
+      }
       // find that pincell
       for(int b=1; b<=m_nPincells; b++){
 	m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
@@ -1436,7 +1504,10 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
     //store the line read in Assembly array and create / position the pin in the core
     for(int n=1; n<=m_nPinX; n++){
       szFormatString1 >> m_Assembly(m,n);
-	      
+      // if dummy pincell skip and continue
+      if(m_Assembly(m,n) == "x"){
+	continue;
+      }	      
       // loop thro' all pins to get the type of pin
       for(int b=1; b<=m_nPincells; b++){
 	m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
@@ -1498,7 +1569,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
 
 int CNrgen::CreateOuterCovering () 
 // ---------------------------------------------------------------------------
-// Function: displays error messages related to input data
+// Function: this function sets the names of the coverings
 // Input:    error code
 // Output:   none
 // ---------------------------------------------------------------------------
@@ -1507,6 +1578,7 @@ int CNrgen::CreateOuterCovering ()
   iBase_TagHandle this_tag;
   char* tag_name =(char *)"NAME";
   std::string sMatName = "";
+  std::string sMatName0 = "";
   std::string sMatName1 = "";
 
   // get tag handle for 'NAME' tag, already created as iGeom instance is created
@@ -1531,15 +1603,15 @@ int CNrgen::CreateOuterCovering ()
     CHECK("setData failed");
     Get_Max_Surf(tmp_vol, &max_surf, &min_surf);
     if(max_surf !=0){
-      sMatName+="_surface";
-      sMatName1=sMatName+"bottom";
+      sMatName0=sMatName+"_top";
+      sMatName1=sMatName+"_bot";
       iGeom_setData(geom, max_surf, this_tag,
-		    sMatName.c_str(), sMatName.size(), &err);
+		    sMatName0.c_str(), sMatName0.size(), &err);
       CHECK("setData failed");
       iGeom_setData(geom, min_surf, this_tag,
 		    sMatName1.c_str(), sMatName1.size(), &err);
       CHECK("setData failed");
-      std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
+      std::cout << "created: " << sMatName0 << ",  " << sMatName1 << std::endl;
     }
 
     //  Naming outermost block edges - sidesets in cubit journal file
@@ -1555,7 +1627,7 @@ int CNrgen::CreateOuterCovering ()
     for (int i = 0; i < edges.size(); ++i){   
       iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
 			   &xmax,&ymax,&zmax, &err);
-      CHECK("getEntBoundBox failed.");   
+      CHECK("getEntBoundBox failed."); 
       if(zmax==zmin){
 	if(zmax==m_dVZAssm(2)){
 
@@ -1573,8 +1645,39 @@ int CNrgen::CreateOuterCovering ()
 	  sMatName="";
 	}
       }
+ 
     }
-
+    if(m_nPlanar == 0){
+      //  Naming outermost block faces - sidesets in cubit journal file
+      std::cout << "Naming outermost block faces" << std::endl;	
+      SimpleArray<iBase_EntityHandle> faces;
+      iGeom_getEntAdj( geom, assms[m_nDimensions-1] , iBase_FACE,ARRAY_INOUT(faces),
+		       &err );
+      CHECK( "ERROR : getEntAdj failed!" );
+      // get the top corner edges of the outer most covering
+      count =0;//index for edge names
+      double dTol = 1e-3;
+      for (int i = 0; i < faces.size(); ++i){   
+	iGeom_getEntBoundBox(geom, faces[i],&xmin,&ymin,&zmin,
+			     &xmax,&ymax,&zmax, &err);
+	CHECK("getEntBoundBox failed."); 
+	if((zmax-zmin)> dTol){
+	  //we have a side - name it
+	  sMatName="side";
+	  ++count;
+	  os << sMatName << count;
+	  sMatName=os.str();
+	  tmp_vol=faces[i];
+	  iGeom_setData(geom, tmp_vol, this_tag,
+			sMatName.c_str(), sMatName.size(), &err);
+	  CHECK("setData failed"); 
+	  std::cout << "created: " << sMatName << std::endl;  
+	  os.str("");
+	  sMatName="";
+	}
+      }
+    }
+  
     // now subtract the outermost hexes and name them
     for(int n=m_nDimensions; n>1 ; n--){
       if(n>1){ 
@@ -1603,15 +1706,15 @@ int CNrgen::CreateOuterCovering ()
 
 	Get_Max_Surf(tmp_new, &max_surf, &min_surf);
 	if(max_surf !=0){
-	  sMatName+="_surface";
-	  sMatName1=sMatName+"bottom";	
+	  sMatName0=sMatName+"_top";
+	  sMatName1=sMatName+"_bot";	
 	  iGeom_setData(geom, max_surf, this_tag,
-			sMatName.c_str(), sMatName.size(), &err);
+			sMatName0.c_str(), sMatName0.size(), &err);
 	  CHECK("setData failed");
 	  iGeom_setData(geom, min_surf, this_tag,
 			sMatName1.c_str(), sMatName1.size(), &err);
 	  CHECK("setData failed");
-	  std::cout << "created: " << sMatName << ",  " << sMatName1 << std::endl;
+	  std::cout << "created: " << sMatName0 << ",  " << sMatName1 << std::endl;
 	}
       }
     }
@@ -1627,9 +1730,9 @@ int CNrgen::Subtract_Pins()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
-  SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
-  if (m_nDimensions >0){
+  if (m_nDimensions >0 && in_pins.size()>0){
+    iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
+    SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
     tmp_vol = assms[0];
 
     // subtract the innermost hex from the pins
