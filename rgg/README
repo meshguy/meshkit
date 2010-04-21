@@ -9,15 +9,15 @@ autoreconf -fi
 ./configure --with-igeom=<igeom-dir> --with-imesh=<imesh-dir> --with-irel=<irel-dir> --enable-algs --enable-rgg --enable-debug
 make
 cd rgg
-make nrgen_test
-nrgen_test
+make assygen
+assygen
 ----------------------------------------------------------------------------------------------------------------------------------------------
 
 RUNNING RGG
 ----------------------------------------------------------------------------------------------------------------------------------------------
-nrgen_test command launches a default test based on input file TwoPin.inp in the rgg source code directory
-Launch the executable 'nrgen_test' from the rgg directory as follows
-usage: nrgen_test <inpufile name WITHOUT EXTENSION> 
+assygen command launches a default test based on input file TwoPin.inp in the rgg source code directory
+Launch the executable 'assygen' from the rgg directory as follows
+usage: assygen <inpufile name WITHOUT EXTENSION> 
 RGG by default assumes that:
 Input file name is  <input file name WITHOUT EXTENSION>.inp
 Geometry file name created by RGG is  <input file name WITHOUT EXTENSION>.sat or .brep based on the geometry engine*
@@ -26,7 +26,7 @@ Journal file name created by RGG is  <input file name WITHOUT EXTENSION>.jou
 
 EXAMPLE (Sample input files can be found in files directory in rgg)
 ----------------------------------------------------------------------------------------------------------------------------------------------
-To launch v1 from rgg directory issue command 'nrgen_test ./files/v1'
+To launch v1 from rgg directory issue command 'assygen ./files/v1'
 ----------------------------------------------------------------------------------------------------------------------------------------------
 *Note: .sat is created when compiled with CGM(igeom) based on ACIS, use .brep when compiled with CGM based on OCC
 
