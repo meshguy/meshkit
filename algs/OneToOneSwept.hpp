@@ -17,8 +17,6 @@
 #include <vector>
 #include <map>
 
-#include "MeshImprove.hpp"
-
 
 #include "SimpleArray.h"
 
