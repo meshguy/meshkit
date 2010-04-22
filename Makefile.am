@@ -33,7 +33,7 @@ endif
 DEFS = $(DEFINES) 
 INCLUDES += -I$(top_builddir) -I$(top_srcdir)
 
-check_PROGRAMS = pin217 sixth
+check_PROGRAMS = pin217 coregen 
 TESTS = $(check_PROGRAMS)
 
 pin217_SOURCES = pin217.cpp
@@ -42,11 +42,11 @@ pin217_DEPENDENCIES = algs/CopyMesh.hpp algs/MergeMesh.hpp algs/libMKalgs.la uti
 pin217_CXXFLAGS = $(CXXFLAGS)
 pin217_LDADD = algs/libMKalgs.la utils/libMKutils.la $(IMESH_LIBS)
 
-sixth_SOURCES = sixth.cpp
-sixth_INCLUDES = algs utils
-sixth_DEPENDENCIES = algs/CopyMesh.hpp algs/MergeMesh.hpp algs/libMKalgs.la utils/libMKutils.la
-sixth_CXXFLAGS = $(CXXFLAGS)
-sixth_LDADD = algs/libMKalgs.la utils/libMKutils.la $(IMESH_LIBS)
+coregen_SOURCES = coregen.cpp
+coregen_INCLUDES = algs utils rgg
+coregen_DEPENDENCIES = algs/CopyMesh.hpp algs/MergeMesh.hpp algs/libMKalgs.la utils/libMKutils.la rgg/libMKrgg.la
+coregen_CXXFLAGS = $(CXXFLAGS)
+coregen_LDADD = algs/libMKalgs.la utils/libMKutils.la rgg/libMKrgg.la $(IMESH_LIBS) $(IGEOM_LIBS)
 
 if HAVE_IGEOM
 INCLUDES += $(iGeom_INCLUDES)
