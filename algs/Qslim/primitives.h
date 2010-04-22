@@ -16,13 +16,8 @@
 #include <vector>
 
 extern int validFaceCount; // defined in QslimDecimation
-extern MBTag validTag;   // defined in QslimDecimation
-extern int ehIsValid(MBEntityHandle v);  // defined in QslimDecimation; maybe we should pass Interface too
 extern QslimOptions opts;
-
-extern void filterValid(std::vector<MBEntityHandle> & input, std::vector<MBEntityHandle> & filtered);
 extern int classifyVertex(MBInterface * mb, MBEntityHandle v);
-
 
 extern MBErrorCode contractionRegion(MBInterface * mb, MBEntityHandle v1, MBEntityHandle v2,
 		std::vector<MBEntityHandle> & changed);
