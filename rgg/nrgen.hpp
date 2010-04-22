@@ -29,9 +29,8 @@ public:
   void PrepareIO (int argc, char *argv[]);
   void CountPinCylinders ();
   int  ReadAndCreate ();
-  int Get_Max_Surf (iBase_EntityHandle vol,
-		    iBase_EntityHandle* max_surf,
-		    iBase_EntityHandle* min_surf);
+  int Name_Faces(const std::string sMatName, const iBase_EntityHandle body, 
+		   iBase_TagHandle this_tag);
   int Center_Assm();
   int Section_Assm (char&, double&);
   int Rotate_Assm (char&, double&);
