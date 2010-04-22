@@ -1030,12 +1030,12 @@ void OneToOneSwept::SurfaceSpecifying()
 
 		for (int j=0; j < gVertexList.size(); j=j+2)
 		{
-			if (abs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
+			if (fabs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 			{
 				gsEdgeList[index-1].connect[0] = &gVertexList[j];
 				continue;
 			}
-			if (abs(sqrt(pow(pts[1].px-gVertexList[j].xyzCoords[0],2)+pow(pts[1].py-gVertexList[j].xyzCoords[1],2)+pow(pts[1].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
+			if (fabs(sqrt(pow(pts[1].px-gVertexList[j].xyzCoords[0],2)+pow(pts[1].py-gVertexList[j].xyzCoords[1],2)+pow(pts[1].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 			{
 				gsEdgeList[index-1].connect[1] = &gVertexList[j];
 				continue;
@@ -1060,12 +1060,12 @@ void OneToOneSwept::SurfaceSpecifying()
 
 		for (int j=1; j < gVertexList.size(); j=j+2)
 		{
-			if (abs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
+			if (fabs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 			{
 				gtEdgeList[index-1].connect[0] = &gVertexList[j];
 				continue;
 			}
-			if (abs(sqrt(pow(pts[1].px-gVertexList[j].xyzCoords[0],2)+pow(pts[1].py-gVertexList[j].xyzCoords[1],2)+pow(pts[1].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
+			if (fabs(sqrt(pow(pts[1].px-gVertexList[j].xyzCoords[0],2)+pow(pts[1].py-gVertexList[j].xyzCoords[1],2)+pow(pts[1].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 			{
 				gtEdgeList[index-1].connect[1] = &gVertexList[j];
 				continue;
@@ -1117,12 +1117,12 @@ void OneToOneSwept::SurfaceSpecifying()
 	
 			for (int j=0; j < gVertexList.size(); j++)
 			{
-				if (abs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
+				if (fabs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 				{
 					gLinkSides[index-1].connect[0] = &gVertexList[j];
 					continue;
 				}
-				if (abs(sqrt(pow(pts[1].px-gVertexList[j].xyzCoords[0],2)+pow(pts[1].py-gVertexList[j].xyzCoords[1],2)+pow(pts[1].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
+				if (fabs(sqrt(pow(pts[1].px-gVertexList[j].xyzCoords[0],2)+pow(pts[1].py-gVertexList[j].xyzCoords[1],2)+pow(pts[1].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 				{
 					gLinkSides[index-1].connect[1] = &gVertexList[j];
 					continue;
