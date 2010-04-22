@@ -66,7 +66,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 	m_szGeomFile = m_szFile+".brep";
       }
       m_szJouFile = m_szFile+".jou";
-      m_szSchFile = "schemes.jou";
+      m_szSchFile = "template.jou";
     }
     else {
       std::cerr << "Usage: " << argv[0] << " <input file> WITHOUT EXTENSION"<< std::endl;   
@@ -80,7 +80,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 	m_szGeomFile = m_szFile+".brep";
       }
       m_szJouFile+=".jou";
-      m_szSchFile = "schemes.jou";
+      m_szSchFile = "template.jou";
       std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
 		<< "  " << m_szGeomFile << "  " << m_szJouFile << std::endl;
     }
@@ -565,14 +565,29 @@ int CNrgen::CreateCubitJournal()
   // variables
   int nSideset=0, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize;
-
+  double dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
+  double dMid = dHeight/2.0;
  // writing to schemes .jou 
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
+  m_SchemesFile << "##Schemes " << std::endl  ;
   m_SchemesFile << "#{CIRCLE =\"circle interval 1 fraction 0.8\"}" << std::endl;
   m_SchemesFile << "#{HOLE = \"hole rad_interval 2 bias 0.0\"}" << std::endl;
   m_SchemesFile << "#{PAVE = \"pave\"}" << std::endl;
   m_SchemesFile << "#{MAP = \"map\"}" << std::endl;
-  m_SchemesFile << "Set sizes here:" << std::endl;
+  m_SchemesFile << "#{SWEEP = \"sweep\"}" << std::endl;  
+  m_SchemesFile << "## Dimensions" << std::endl;
+  if(m_szGeomType == "hexagonal"){
+    m_SchemesFile << "#{PITCH =" << m_dVAssmPitch(m_nDimensions) << "}" << std::endl;
+  }
+  else if(m_szGeomType == "cartesian"){
+    m_SchemesFile << "#{PITCHX =}" << m_dVAssmPitchX(m_nDimensions) << std::endl;
+    m_SchemesFile << "#{PITCHY =}" << m_dVAssmPitchY(m_nDimensions) << std::endl;
+  }
+  m_SchemesFile << "#{Z_HEIGHT = " << dHeight << "}" << std::endl;
+  m_SchemesFile << "#{Z_MID = " << dMid << "}" << std::endl;
+
+  m_SchemesFile << "##Set Axial Size" << std::endl;
+  m_SchemesFile << "{AXIAL_SIZE = <set size>}" << std::endl;
 
 
   // stuff common to both surface and volume
@@ -584,27 +599,34 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "# Import geometry file " << std::endl;
   m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
 
+  // merge
+  m_FileOutput << "#merge geometry" << std::endl; 
+  m_FileOutput << "merge all" << std::endl;
+
   // sideset curves on top surface creation dumps
   m_FileOutput << "#Creating curve sidesets, Note: you might need to change @ extensions" << std::endl; 
   if(m_szGeomType =="hexagonal"){
     for(i=1; i<=6; i++){
       ++nSideset;
-      m_FileOutput << "sideset " << nSideset << " curve side_edge" << i << "@A" << std::endl; 
+      m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << i  << "\"" << std::endl;
+      m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;    
     }
   }
   if(m_szGeomType =="cartesian"){
     for(j=1; j<=4; j++){
       ++nSideset;
-      m_FileOutput << "sideset " << nSideset << " curve side_edge" << j << "@A" << std::endl; 
+      m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
+      m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;
     }
   }
   
   // top surface sidesets
-  m_FileOutput << "#Creating top surface sidesets, Note: you might need to change @ extensions" << std::endl; 
+  m_FileOutput << "#Creating top surface sidesets" << std::endl; 
   for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szSurfTop = m_szAssmMat(p)+"_top@A";
+    szSurfTop = m_szAssmMat(p)+"_top";
     ++nSideset;
-    m_FileOutput << "sideset " << nSideset << " surface " << szSurfTop  << std::endl;
+    m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
   }
 
   if(m_nPlanar ==1){ // when geometry surface is specified
@@ -626,17 +648,14 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
     }
 
-    // merge
-    m_FileOutput << "#merge geometry" << std::endl; 
-    m_FileOutput << "merge all" << std::endl;
-
+  
     //now set the sizes
     m_FileOutput << "#Set Meshing Scheme and Sizes, set schemes in include file schemes.jou" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       szSize =  m_szAssmMat(p) + "_size";
       m_FileOutput << "surface in " << szGrp << " size {"  << szSize <<"}" << std::endl;
-      m_FileOutput << "surface in " << szGrp << " scheme {" << "<from schemes.jou>}"  << std::endl;
+      m_FileOutput << "surface in " << szGrp << " scheme {" << "PAVE"  << std::endl;
       m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
 
       // dumping these sizes schemes.jou also
@@ -646,22 +665,12 @@ int CNrgen::CreateCubitJournal()
   else{ // when geometry volume is specified
 
     // bottom surface sidesets
-    m_FileOutput << "#Creating top surface sidesets, Note: you might need to change @ extensions" << std::endl; 
+    m_FileOutput << "#Creating top surface sidesets" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-      szSurfTop = m_szAssmMatAlias(p)+"_bot@A";
+      szSurfTop = m_szAssmMat(p)+"_bot";
       ++nSideset;
-      m_FileOutput << "sideset " << nSideset << " surface " << szSurfTop  << std::endl;
-    }
-
-    // sideset surface on outer covering creation dumps
-    m_FileOutput << "#Creating curve sidesets, Note: you might need to change @ extensions" << std::endl; 
-    if(m_szGeomType =="hexagonal"){
-      for(int i=1; i<=6; i++)
-	m_FileOutput << "sideset " << i << " surface side" << i << "@A" << std::endl; 
-    }
-    if(m_szGeomType =="cartesian"){
-      for(int i=1; i<=4; i++)
-	m_FileOutput << "sideset " << i << " surface side" << i << "@A" << std::endl; 
+      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+      m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
     }
 
     // group creation dumps. each material surface  has a group
@@ -680,21 +689,19 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
     }
   
-    // merge and imprint
-    m_FileOutput << "#merge geometry" << std::endl; 
-    m_FileOutput << "merge all" << std::endl;
-  
     //now set the sizes
     m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
+    m_FileOutput << "surface with z_coord > {-Z_MID +.1*Z_HEIGHT}" <<
+      " and z_coord < {Z_MID - .1*Z_HEIGHT} size {AXIAL_SIZE}\n" << std::endl ;
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       szSize =  m_szAssmMat(p) + "_size";
-      m_FileOutput << "body in " << szGrp << " size  {"  << szSize <<"}" << std::endl;
-      m_FileOutput << "body in " << szGrp << " scheme {" << "<from schemes.jou>}"  << std::endl;
-      m_FileOutput << "mesh body in " << szGrp << "\n#" << std::endl;   
+      m_FileOutput << "vol in body in " << szGrp << " size  {"  << szSize <<"}" << std::endl;
+      m_FileOutput << "vol in body in " << szGrp << " scheme {" << "SWEEP}"  << std::endl;
+      m_FileOutput << "mesh vol in body in " << szGrp << "\n#" << std::endl;   
 
       // dumping these sizes schemes.jou also
-      m_SchemesFile << "#{"  << szSize <<" = <set_values>\"}" << std::endl;
+      m_SchemesFile << "#{"  << szSize <<" = <set_values>}" << std::endl;
 
     }  
   }
