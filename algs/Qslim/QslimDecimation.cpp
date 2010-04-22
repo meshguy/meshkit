@@ -228,12 +228,12 @@ Vec3& vnew) {
 	}
 
 	// double Nsum = 0;
-	double positivityMin = 1;// to help preserve the positive orientation of triangles
+	//double positivityMin = 0;// to help preserve the positive orientation of triangles
 
 	if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS)
 		*opts.logfile << " positivity for v1, v2: " << mb->id_from_handle(v1)
 				<< " " << mb->id_from_handle(v2) << std::endl;
-	for (int i = 0; i < changed.size() && positivityMin > 0; i++) {
+	for (int i = 0; i < changed.size(); i++) {
 		//Face& F = *changed ( i );
 		MBEntityHandle F = changed[i];
 		Vec3 f1, f2, f3;
@@ -242,27 +242,23 @@ Vec3& vnew) {
 		//
 		// Only consider non-degenerate faces
 		if (nmapped < 2) {
-			Plane Pnew(f1, f2, f3);
+			// replace this with a hands on computation
+			double positiv = (f2[0]-f1[0])*(f3[1]-f1[1])-(f2[1]-f1[1])*(f3[0]-f1[0]);
+			if (positiv<=0)
+			{
+				if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS)
+					*opts.logfile << "Triangle " << mb->id_from_handle(F)
+						<< " nmapped " << nmapped << " orient: " << positiv << std::endl;
 
-			Vec3 normalNew = Pnew.normal();
-			if (normalNew[Z] < positivityMin)
-				positivityMin = normalNew[Z]; // Z direction!!!
-			if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS)
-				*opts.logfile << "Triangle " << mb->id_from_handle(F)
-						<< " nmapped " << nmapped << std::endl;
-			if (opts.logfile && positivityMin <= 0 && opts.selected_output
-					& OUTPUT_CONTRACTIONS)
-				*opts.logfile << "Triangle " << mb->id_from_handle(F)
-						<< " normal Z:" << normalNew[Z] << std::endl;
+				return MESH_INVERSION_PENALTY * 10;
+			}
 		}
 	}
 
 	//return (-Nmin) * MESH_INVERSION_PENALTY;
 
-	if (positivityMin <= 0)
-		return MESH_INVERSION_PENALTY * 10;
-	else
-		return 0.0;
+
+	return 0.0;
 }
 
 static
