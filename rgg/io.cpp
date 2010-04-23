@@ -541,7 +541,7 @@ int CNrgen::ReadAndCreate()
       // impring merge before saving
       Imprint_Merge();
       // position the assembly to the center
-      Center_Assm();
+      //   Center_Assm();
       // save .sat file
       iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
       CHECK("Save to file failed.");
@@ -583,12 +583,13 @@ int CNrgen::CreateCubitJournal()
     m_SchemesFile << "#{PITCHX =}" << m_dVAssmPitchX(m_nDimensions) << std::endl;
     m_SchemesFile << "#{PITCHY =}" << m_dVAssmPitchY(m_nDimensions) << std::endl;
   }
-  m_SchemesFile << "#{Z_HEIGHT = " << dHeight << "}" << std::endl;
-  m_SchemesFile << "#{Z_MID = " << dMid << "}" << std::endl;
-
-  m_SchemesFile << "##Set Axial Size" << std::endl;
-  m_SchemesFile << "#{AXIAL_SIZE = <set size>}" << std::endl;
-
+  if( m_nPlanar ==0){
+    m_SchemesFile << "#{Z_HEIGHT = " << dHeight << "}" << std::endl;
+    m_SchemesFile << "#{Z_MID = " << dMid << "}" << std::endl;
+    
+    m_SchemesFile << "##Set Axial Size" << std::endl;
+    m_SchemesFile << "#{AXIAL_SIZE = <set size>}" << std::endl;
+  }
 
   // stuff common to both surface and volume
   m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
@@ -648,19 +649,6 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
     }
 
-  
-    //now set the sizes
-    m_FileOutput << "#Set Meshing Scheme and Sizes, set schemes in include file schemes.jou" << std::endl; 
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-      szGrp = "g_"+ m_szAssmMat(p);
-      szSize =  m_szAssmMat(p) + "_size";
-      m_FileOutput << "surface in " << szGrp << " size {"  << szSize <<"}" << std::endl;
-      m_FileOutput << "surface in " << szGrp << " scheme {" << "PAVE"  << std::endl;
-      m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
-
-      // dumping these sizes schemes.jou also
-      m_SchemesFile << "#{"  << szSize <<" = <set_values>\"}" << std::endl;
-    }  
   }
   else{ // when geometry volume is specified
 
@@ -690,7 +678,7 @@ int CNrgen::CreateCubitJournal()
     }
   
     //now set the sizes
-    m_FileOutput << "#Set Meshing Scheme and Sizes" << std::endl; 
+    m_FileOutput << "#Set Meshing Scheme and Sizes, use template.jou to specify sizes" << std::endl; 
     m_FileOutput << "surface with z_coord > {-Z_MID +.1*Z_HEIGHT}" <<
       " and z_coord < {Z_MID - .1*Z_HEIGHT} size {AXIAL_SIZE}\n" << std::endl ;
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -705,6 +693,20 @@ int CNrgen::CreateCubitJournal()
 
     }  
   }
+  // some more common stuff meshing surfaces set the sizes and mesh
+  m_FileOutput << "#surfaces mesh, use template.jou to specify sizes" << std::endl; 
+  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    szGrp = "g_"+ m_szAssmMat(p);
+    szSize =  m_szAssmMat(p) + "_surf_size";
+    m_FileOutput << "surface in " << szGrp << " size {"  << szSize <<"}" << std::endl;
+    m_FileOutput << "surface in " << szGrp << " scheme {" << "PAVE" << "}"  << std::endl;
+    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
+
+    // dumping these sizes schemes.jou also
+    m_SchemesFile << "#{"  << szSize <<" = <set_values>}" << std::endl;
+  }  
+
+
 
   // save as .cub file dump
   m_FileOutput << "#Save file" << std::endl; 
