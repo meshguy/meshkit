@@ -44,6 +44,8 @@ public:
 	int     height_fields;
 	int     timingIntervals;
 
+	int useDelayedDeletion;
+
 	int placement_policy;
 	double pair_selection_tolerance;
 	std::ostream * logfile;

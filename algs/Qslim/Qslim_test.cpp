@@ -217,6 +217,11 @@ int main(int argc, char* argv[])
 					  i++;
 					  break;
 				  }
+				  case 'd':
+				  {
+					  options.useDelayedDeletion = true;
+					  break;
+				  }
 
 				  default :
 				  {

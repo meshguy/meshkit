@@ -27,6 +27,8 @@ QslimOptions::QslimOptions() {
 	height_fields = false;
 	timingIntervals = 10;
 
+	useDelayedDeletion = false;
+
 	placement_policy = PLACE_OPTIMAL;
 
 	pair_selection_tolerance = 0.0;
