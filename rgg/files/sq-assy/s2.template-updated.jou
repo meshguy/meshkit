@@ -13,9 +13,9 @@
 ##Set Mesh Sizes
 #{AXIAL_MESH_SIZE = 10}
 #{RADIAL_MESH_SIZE = 2}
-#{pwr_fc_f_01_size = RADIAL_MESH_SIZE}
 #{mat_block_size = RADIAL_MESH_SIZE}
 #{mat_coolant_size = RADIAL_MESH_SIZE}
-#{pwr_fc_f_01_surf_size = RADIAL_MESH_SIZE}
+#{pwr_rf_r_01_size = RADIAL_MESH_SIZE}
 #{mat_block_surf_size = RADIAL_MESH_SIZE}
 #{mat_coolant_surf_size = RADIAL_MESH_SIZE}
+#{pwr_rf_r_01_surf_size = RADIAL_MESH_SIZE}

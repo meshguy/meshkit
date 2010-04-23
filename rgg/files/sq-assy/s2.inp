@@ -4,22 +4,22 @@
 !
 GeometryType Cartesian  
 !
-Materials 3 PWR_FC_F_01 M1 Mat_Block G1 Mat_Coolant C1
+Materials 3 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3
 !
-Dimensions 2 0.0 0.0 0 124.0 18.0 18.0 23.5 23.5  G1 C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Duct 2 0.0 0.0 0 124.0 18.0 18.0 23.5 23.5  G1 C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
 Pincells 1 
-!
-! Standard fuel cell (1)
-PWR_FC_01 FC 2
+!                                                                                          
+! reflector
+PWR_RF_01 RF 2
 Pitch  4.0 4.0 124.0 
-Cylinder 1 0.0 0.0  0.0 124.0   1.5  M1                                                                                                
+Cylinder 1 0.0 0.0  0.0 124.0   1.95 M3  
 !
 Assembly 4 4 
-FC FC FC FC
-FC FC FC FC
-FC FC FC FC
-FC FC FC FC
+RF RF RF RF
+RF XX XX RF
+RF XX XX RF
+RF RF RF RF
 Center
 END     ! This is a must                  
                                                                                          

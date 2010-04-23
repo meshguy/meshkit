@@ -9,19 +9,26 @@ coregen = ../../../coregen
 
 assygen = ../../assygen
 
-MESH_FILES = s1.cub  
+MESH_FILES = s1.cub  s2.cub  
 
-GEOM_FILES = s1.sat  
+GEOM_FILES = s1.sat  s2.sat  
 
-JOU_FILES = s1.jou  
+JOU_FILES = s1-updated.jou  s2.jou  
 
-ASSYGEN_FILES = s1.inp  
+INJOU_FILES = s1.template-updated.jou  s2.template-updated.jou  
+
+ASSYGEN_FILES = s1.inp  s2.inp  
 
 sq-assy.h5m : ${MESH_FILES}
 	${coregen} sq-assy
-s1.cub : s1.sat  s1-updated.jou s1.template-updated.jou
+s1.cub : s1.sat  s1-updated.jou  s1.template-updated.jou
 	${CUBIT} s1-updated.jou
 
 s1.sat : s1.inp
 	${assygen} s1
 
+s2.cub : s2.sat  s2-updated.jou  s2.template-updated.jou
+	${CUBIT} s2-updated.jou
+
+s2.sat : s2.inp
+	${assygen} s2
