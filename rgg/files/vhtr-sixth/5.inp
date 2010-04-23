@@ -1,0 +1,42 @@
+! #############################################################################################################
+! Hexagonal VHTR Control Rod Assembly with no Fuel Pins
+! #############################################################################################################
+!
+Geometry Surface
+GeometryType Hexagonal  
+!                                     
+Materials 5 Mat_C2Coolant C02 Mat_C1Coolant C01 Mat_OCoolant C1Out Mat_Block G1  Mat_Control R1      
+!
+Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1Out ! 2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+!
+Pincells 1 1.87960 
+! 1
+Cell_Control CR 1                                         
+Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C01 R1 C02
+Assembly 11                                                 
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  CR  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+ XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+Center
+Rotate Z 30
+Center
+Section X 0
+END ! This is a must

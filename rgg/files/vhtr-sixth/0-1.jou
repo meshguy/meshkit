@@ -1,0 +1,45 @@
+## This file is created by rgg program in MeshKit ##
+#User needs to specify mesh interval and schemes in this file
+#
+{include("0-1.template.jou")}
+# Import geometry file 
+import '0.sat'
+#merge geometry
+merge all
+#Creating curve sidesets, Note: you might need to change @ extensions
+group 'tmpgrp' equals curve name "side_edge1"
+sideset 1 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge2"
+sideset 2 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge3"
+sideset 3 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge4"
+sideset 4 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge5"
+sideset 5 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge6"
+sideset 6 curve in tmpgrp
+#Creating top surface sidesets
+group 'tmpgrp' equals surface name "mat_ocoolant_top"
+sideset 7 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_block_top"
+sideset 8 surface in tmpgrp
+#Creating groups
+group "g_mat_ocoolant" add surface name "mat_ocoolant"
+group "g_mat_block" add surface name "mat_block"
+#Creating blocks, Note: you might need to combine some blocks
+block 1 surface in g_mat_ocoolant
+block 1 name "b_mat_ocoolant"
+block 2 surface in g_mat_block
+block 2 name "b_mat_block"
+#surfaces mesh, use template.jou to specify sizes
+surface in g_mat_ocoolant size {mat_ocoolant_surf_size}
+surface in g_mat_ocoolant scheme {PAVE}
+mesh surface in g_mat_ocoolant
+#
+surface in g_mat_block size {mat_block_surf_size}
+surface in g_mat_block scheme {PAVE}
+mesh surface in g_mat_block
+#
+#Save file
+save as '0.cub' overwrite

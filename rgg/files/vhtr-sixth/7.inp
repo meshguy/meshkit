@@ -1,0 +1,54 @@
+! ######################################################################################################
+! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins
+! ######################################################################################################
+!
+Geometry Surface
+GeometryType Hexagonal  
+!                                     
+Materials 6 Mat_OCoolant C1Out Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_FHH H1       
+!
+Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1Out ! 2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+!
+!
+Pincells 5 1.87960 
+! 1
+Cell_Fuel       FC 1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6225 F1
+! 2
+Cell_BurnPoison BP 1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6225 P1
+! 3
+Cell_SmallCoolant    SC 1
+Cylinder  1 0.0 0.0    0.0 793.0   0.6350 C1
+! 4
+Cell_Coolant    CC 1
+Cylinder  1 0.0 0.0    0.0 793.0   0.79375 C1
+! 5
+Cell_FHH     FH2 1
+Cylinder  1  0.0 0.0 0.0 793.0 2.0 H1                
+Assembly 11                                                 
+                     BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+                   FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
+                 CC  FC  FC  CC  FC  CC  FC  CC  FC  CC  FC  FC  CC
+               FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC
+             FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
+           CC  FC  FC  CC  FC  FC  CC  CC  FC  FC  CC  FC  CC  FC  FC  CC
+         FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC
+       FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
+     CC  FC  FC  CC  FC  FC  CC  FC  FC  SC  FC  FC  CC  FC  FC  CC  FC  FC  CC
+   FC  FC  CC  FC  FC  CC  FC  FC  SC  XX  XX  SC  FC  FC  CC  FC  FC  CC  FC  FC
+ BP  CC  FC  FC  CC  FC  FC  CC  FC  XX  FH2  XX  FC  CC  FC  FC  CC  FC  FC  CC  BP
+   FC  FC  CC  FC  FC  CC  FC  FC  SC  XX  XX  SC  FC  FC  CC  FC  FC  CC  FC  FC
+     CC  FC  FC  CC  FC  FC  CC  FC  FC  SC  FC  FC  CC  FC  FC  CC  FC  FC  CC
+       FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
+         FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC
+           CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
+             FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
+               FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC
+                 CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
+                   FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
+                     BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+Center
+Rotate Z 30
+Center	
+END ! This is a must

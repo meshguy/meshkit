@@ -580,8 +580,8 @@ int CNrgen::CreateCubitJournal()
     m_SchemesFile << "#{PITCH =" << m_dVAssmPitch(m_nDimensions) << "}" << std::endl;
   }
   else if(m_szGeomType == "cartesian"){
-    m_SchemesFile << "#{PITCHX =}" << m_dVAssmPitchX(m_nDimensions) << std::endl;
-    m_SchemesFile << "#{PITCHY =}" << m_dVAssmPitchY(m_nDimensions) << std::endl;
+    m_SchemesFile << "#{PITCHX =" << m_dVAssmPitchX(m_nDimensions)<< "}" << std::endl;
+    m_SchemesFile << "#{PITCHY =" << m_dVAssmPitchY(m_nDimensions) << "}" << std::endl;
   }
   if( m_nPlanar ==0){
     m_SchemesFile << "#{Z_HEIGHT = " << dHeight << "}" << std::endl;
@@ -1089,7 +1089,6 @@ void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
       dY+= dPY/2.0;
       // check if it's dummy
       if((m_Assembly(m-1,n)=="x")||(m_Assembly(m-1,n)=="xx")){
-	dY+=dPY/2.0;
       }
       else{
 	for(int c=1; c<=m_nPincells; c++){

@@ -1,0 +1,113 @@
+## This file is created by rgg program in MeshKit ##
+#User needs to specify mesh interval and schemes in this file
+#
+{include("10-1.template.jou")}
+# Import geometry file 
+import '10.sat'
+#merge geometry
+merge all
+#Creating curve sidesets, Note: you might need to change @ extensions
+group 'tmpgrp' equals curve name "side_edge3"
+sideset 3 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge4"
+sideset 4 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge5"
+sideset 5 curve in tmpgrp
+#Creating top surface sidesets
+group 'tmpgrp' equals surface name "mat_c2coolant_top"
+sideset 7 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_c1coolant_top"
+sideset 8 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_ocoolant_top"
+sideset 9 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_coolant_top"
+sideset 10 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_scoolant_top"
+sideset 11 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_fuel_top"
+sideset 12 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_block_top"
+sideset 13 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_poison_top"
+sideset 14 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_control_top"
+sideset 15 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_fhh_top"
+sideset 16 surface in tmpgrp
+#Creating groups
+group "g_mat_c2coolant" add surface name "mat_c2coolant"
+group "g_mat_c1coolant" add surface name "mat_c1coolant"
+group "g_mat_ocoolant" add surface name "mat_ocoolant"
+group "g_mat_coolant" add surface name "mat_coolant"
+group "g_mat_scoolant" add surface name "mat_scoolant"
+group "g_mat_fuel" add surface name "mat_fuel"
+group "g_mat_block" add surface name "mat_block"
+group "g_mat_poison" add surface name "mat_poison"
+group "g_mat_control" add surface name "mat_control"
+group "g_mat_fhh" add surface name "mat_fhh"
+#Creating blocks, Note: you might need to combine some blocks
+block 1 surface in g_mat_c2coolant
+block 1 name "b_mat_c2coolant"
+block 2 surface in g_mat_c1coolant
+block 2 name "b_mat_c1coolant"
+block 3 surface in g_mat_ocoolant
+block 3 name "b_mat_ocoolant"
+block 4 surface in g_mat_coolant
+block 4 name "b_mat_coolant"
+block 5 surface in g_mat_scoolant
+block 5 name "b_mat_scoolant"
+block 6 surface in g_mat_fuel
+block 6 name "b_mat_fuel"
+block 7 surface in g_mat_block
+block 7 name "b_mat_block"
+block 8 surface in g_mat_poison
+block 8 name "b_mat_poison"
+block 9 surface in g_mat_control
+block 9 name "b_mat_control"
+block 10 surface in g_mat_fhh
+block 10 name "b_mat_fhh"
+#surfaces mesh, use template.jou to specify sizes
+surface in g_mat_c1coolant size {mat_c1coolant_surf_size}
+surface in g_mat_c1coolant scheme {CIRCLE}
+mesh surface in g_mat_c1coolant
+#
+surface in g_mat_control size {mat_control_surf_size}
+surface in g_mat_control scheme {HOLE}
+mesh surface in g_mat_control
+#
+surface in g_mat_c2coolant size {mat_c2coolant_surf_size}
+surface in g_mat_c2coolant scheme {HOLE}
+mesh surface in g_mat_c2coolant
+#
+
+surface in g_mat_ocoolant size {mat_ocoolant_surf_size}
+surface in g_mat_ocoolant scheme {PAVE}
+mesh surface in g_mat_ocoolant
+#
+surface in g_mat_coolant size {mat_coolant_surf_size}
+surface in g_mat_coolant scheme {CIRCLE}
+mesh surface in g_mat_coolant
+#
+surface in g_mat_scoolant size {mat_scoolant_surf_size}
+surface in g_mat_scoolant scheme {CIRCLE}
+mesh surface in g_mat_scoolant
+#
+surface in g_mat_fuel size {mat_fuel_surf_size}
+surface in g_mat_fuel scheme {CIRCLE}
+mesh surface in g_mat_fuel
+#
+surface in g_mat_poison size {mat_poison_surf_size}
+surface in g_mat_poison scheme {CIRCLE}
+mesh surface in g_mat_poison
+#
+
+surface in g_mat_fhh size {mat_fhh_surf_size}
+surface in g_mat_fhh scheme {CIRCLE}
+mesh surface in g_mat_fhh
+#
+surface in g_mat_block size {mat_block_surf_size}
+surface in g_mat_block scheme {PAVE}
+mesh surface in g_mat_block
+#
+#Save file
+save as '10.cub' overwrite

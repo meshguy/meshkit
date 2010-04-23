@@ -1,0 +1,22 @@
+## This file is created by rgg program in MeshKit ##
+##Schemes 
+#{CIRCLE ="circle interval 0.1 fraction 0.5"}
+#{HOLE = "hole rad_interval 0.1 bias 0.0"}
+#{PAVE = "pave"}
+#{MAP = "map"}
+#{SWEEP = "sweep"}
+## Dimensions
+#{PITCHX =23.5}
+#{PITCHY =23.5}
+#{Z_HEIGHT = 124}
+#{Z_MID = 62}
+##Set Axial Size
+#{AXIAL_SIZE = 3}
+#{pwr_fc_f_01_size = 0.5}
+#{pwr_fc_c_01_size = 0.5}
+#{mat_block_size = 0.5}
+#{mat_coolant_size = 0.5}
+#{pwr_fc_f_01_surf_size = 0.5}
+#{pwr_fc_c_01_surf_size = 0.5}
+#{mat_block_surf_size = 0.5}
+#{mat_coolant_surf_size = 0.5}

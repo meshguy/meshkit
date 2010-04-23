@@ -1,0 +1,15 @@
+## This file is created by rgg program in MeshKit ##
+##Schemes 
+#{CIRCLE ="circle interval 1 fraction 0.8"}
+#{HOLE = "hole rad_interval 2 bias 0.0"}
+#{PAVE = "pave"}
+#{MAP = "map"}
+#{SWEEP = "sweep"}
+## Dimensions
+#{PITCH =37.3}
+#{mat_control_surf_size = 0.45}
+#{mat_c1coolant_surf_size = 0.6}
+#{mat_c2coolant_surf_size = 0.3}
+#{mat_ocoolant_surf_size = 0.5}
+#{mat_block_surf_size = 0.9}
+
