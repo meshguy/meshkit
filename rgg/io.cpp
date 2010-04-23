@@ -257,7 +257,7 @@ void CNrgen::ReadPinCellData (int i)
 	//set local array
 	dVCylRadii.SetSize(nRadii);
 	szVCylMat.SetSize(nRadii);
-	dVCylZPos.SetSize(nRadii);
+	dVCylZPos.SetSize(2);
 	//
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 
@@ -448,7 +448,48 @@ int CNrgen::ReadAndCreate()
 	for (int i=1; i<=m_nDimensions; i++)
 	  szFormatString >> m_szMAlias(i);
       }   
-      if(m_szGeomType =="cartesian"){
+       if(m_szGeomType =="cartesian"){
+	std::istringstream szFormatString (szInputString);
+	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
+
+	szFormatString >> card >> m_nDimensions 
+		       >> m_dVXYAssm(1) >> m_dVXYAssm(2)
+		       >> m_dVZAssm(1) >> m_dVZAssm(2);
+
+	m_dVAssmPitchX.SetSize(m_nDimensions);	m_dVAssmPitchY.SetSize(m_nDimensions);
+	m_szMAlias.SetSize(m_nDimensions);
+	assms.setSize(m_nDimensions); // setup while reading the problem size
+
+	for (int i=1; i<=m_nDimensions; i++)
+	  szFormatString >> m_dVAssmPitchX(i) >> m_dVAssmPitchY(i);
+
+	for (int i=1; i<=m_nDimensions; i++)
+	  szFormatString >> m_szMAlias(i);
+      }  
+    }
+    if (szInputString.substr(0,4) == "duct"){
+
+      std::cout << "getting assembly dimensions" << std::endl;
+      if(m_szGeomType =="hexagonal"){
+	std::istringstream szFormatString (szInputString);
+	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
+
+	szFormatString >> card >> m_nDimensions 
+		       >> m_dVXYAssm(1) >> m_dVXYAssm(2)
+		       >> m_dVZAssm(1) >> m_dVZAssm(2);
+
+	m_dVAssmPitch.SetSize(m_nDimensions); m_szMAlias.SetSize(m_nDimensions);
+
+	assms.setSize(m_nDimensions); // setup while reading the problem size
+
+
+	for (int i=1; i<=m_nDimensions; i++)
+	  szFormatString >> m_dVAssmPitch(i);
+
+	for (int i=1; i<=m_nDimensions; i++)
+	  szFormatString >> m_szMAlias(i);
+      }   
+       if(m_szGeomType =="cartesian"){
 	std::istringstream szFormatString (szInputString);
 	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
 
@@ -582,7 +623,7 @@ int CNrgen::CreateCubitJournal()
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize;
   double dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
   double dMid = dHeight/2.0;
- // writing to schemes .jou 
+  // writing to schemes .jou 
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
   m_SchemesFile << "##Schemes " << std::endl  ;
   m_SchemesFile << "#{CIRCLE =\"circle interval 1 fraction 0.8\"}" << std::endl;
@@ -890,7 +931,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  cell_copys[m-1] = cell_copy;
 
 	  iGeom_intersectEnts(geom, cell_copys[m-1], cyls[m-1],&intersec,&err);
-  	  CHECK("intersection failed"); 
+	  CHECK("intersection failed"); 
 
 	  iGeom_copyEnt(geom, intersec, &tmp_intersec, &err);
 	  CHECK("Couldn't copy inner duct wall prism.");
@@ -917,7 +958,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	// other cyl annulus after substraction
 	for (int b=nRadii; b>1; b--){  
 
- 	  //subtract tmp vol from the outer most
+	  //subtract tmp vol from the outer most
 	  if(intersec_main[b-2] !=NULL){
 	    iGeom_subtractEnts(geom, intersec_main[b-1], intersec_main[b-2], &tmp_new, &err);
 	    CHECK("Subtract of inner from outer failed.");
@@ -1172,9 +1213,9 @@ bool CNrgen::Print_Error( const char* desc,
   buffer[sizeof(buffer)-1] = '\0';
   
   std::cerr << "ERROR: " << desc << std::endl
-            << "  Error code: " << err << std::endl
-            << "  Error desc: " << buffer << std::endl
-            << "  At        : " << file << ':' << line << std::endl
+	    << "  Error code: " << err << std::endl
+	    << "  Error desc: " << buffer << std::endl
+	    << "  At        : " << file << ':' << line << std::endl
     ;
   
   return false; // must always return false or CHECK macro will break
@@ -1202,9 +1243,9 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
   
   SimpleArray<double> max_corn, min_corn;
   iGeom_getArrBoundBox( geom, ARRAY_IN(surfs), iBase_INTERLEAVED, 
-                        ARRAY_INOUT( min_corn ),
-                        ARRAY_INOUT( max_corn ),
-                        &err );
+			ARRAY_INOUT( min_corn ),
+			ARRAY_INOUT( max_corn ),
+			&err );
   CHECK( "Problems getting max surf for rotation." );
   for (int i = 0; i < surfs.size(); ++i){
     // first find the max z-coordinate
@@ -1516,7 +1557,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
   CParser Parse;
   std::string card, szVolId, szVolAlias;
   int nInputLines, nTempPin;
-  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0, dHeight = 0;
+  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0, dHeight = 0, dPX, dPY, dPZ;
   iBase_EntityHandle assm = NULL;
 
   std::istringstream szFormatString (szInputString);
@@ -1535,6 +1576,8 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
       szFormatString1 >> m_Assembly(m,n);
       // if dummy pincell skip and continue
       if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+	m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+	dX+=dPX;
 	continue;
       }	      
       // loop thro' all pins to get the type of pin
