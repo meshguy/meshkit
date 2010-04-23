@@ -1,0 +1,23 @@
+! To run this test file: MeshKit> coregen 2-assms
+Geometry Surface  			! 'Geometry' card defines if the meshes are volume or surface
+GeometryType Hexagonal			! 'GeometryType' card can take values Hexagonal Cartesian and Default
+Assemblies 4 37.3			! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
+8.cub  AA                     	  	! Meshfile name followed by alias 
+1.cub  LA
+2.cub  RA
+11.cub CA
+Lattice 11
+CA  &
+AA  &
+LA  AA  RA &
+AA  AA  AA &
+LA  AA  AA  AA  RA &
+AA  AA  AA  AA  AA &
+LA  AA  AA  AA  AA  AA  RA &
+AA  AA  AA  AA  AA  AA  AA &
+LA  AA  AA  AA  AA  AA  AA  AA  RA &
+AA  AA  AA  AA  AA  AA  AA  AA  AA &
+LA  AA  AA  AA -1 -1  -1  AA  AA  AA   RA 
+Symmetry 6
+end					! 'END' card is a MUST; Marks the end of file for the file reader
+

@@ -7,18 +7,8 @@ import '11.sat'
 #merge geometry
 merge all
 #Creating curve sidesets, Note: you might need to change @ extensions
-group 'tmpgrp' equals curve name "side_edge1"
-sideset 1 curve in tmpgrp
-group 'tmpgrp' equals curve name "side_edge2"
-sideset 2 curve in tmpgrp
-group 'tmpgrp' equals curve name "side_edge3"
-sideset 3 curve in tmpgrp
-group 'tmpgrp' equals curve name "side_edge4"
-sideset 4 curve in tmpgrp
 group 'tmpgrp' equals curve name "side_edge5"
 sideset 5 curve in tmpgrp
-group 'tmpgrp' equals curve name "side_edge6"
-sideset 6 curve in tmpgrp
 #Creating top surface sidesets
 group 'tmpgrp' equals surface name "mat_ocoolant_top"
 sideset 7 surface in tmpgrp

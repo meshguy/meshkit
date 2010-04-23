@@ -1,7 +1,11 @@
-Steps to build .cub file for running coregen example
+Steps to build a 2 sixth core from 2 types of assys from 4 mesh files:
+1, 2 and 11.cub are the block assemblies with different section.
+8.cub is a VHTR assembly.
 
--> 1.inp with assygen to generated 1.sat
+-> set the path of your cubit executable in the makefile
 
--> run 1,2,8,11-updated.jou with cubit to generate .cub files
+-> build coregen and assygen
 
--> run coregen 2-assms
+-> from the pwd invoke 'make'
+
+-> see the .jou files produced by assygen, the updated ones create this assembly
