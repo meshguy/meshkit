@@ -6,8 +6,7 @@ Assemblies 4 37.3			! 'Assemblies' card defines there is one assembly with pitch
 ./rgg/files/2-assys/1.cub  LA
 ./rgg/files/2-assys/2.cub  RA
 ./rgg/files/2-assys/11.cub CA
-Lattice 11				! 'Lattice' card defines core had 2 rings next define these rings based on Aliases
-CA &			! Assembly arrangement must be in one line, Note the usage of '&' sign, it signals continuation of input in the next line
+Lattice 11
 AA &
 LA  AA  RA &
 AA  AA  AA &
