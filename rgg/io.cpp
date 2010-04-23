@@ -737,7 +737,7 @@ int CNrgen::CreateCubitJournal()
     //now set the sizes
     m_FileOutput << "#Set Meshing Scheme and Sizes, use template.jou to specify sizes" << std::endl; 
     m_FileOutput << "surface with z_coord > {-Z_MID +.1*Z_HEIGHT}" <<
-      " and z_coord < {Z_MID - .1*Z_HEIGHT} size {AXIAL_SIZE}\n" << std::endl ;
+      " and z_coord < {Z_MID - .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}\n" << std::endl ;
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       szSize =  m_szAssmMat(p) + "_size";
