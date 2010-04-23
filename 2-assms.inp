@@ -1,0 +1,23 @@
+! To run this test file: MeshKit> coregen 2-assms
+Geometry Surface
+GeometryType Hexagonal
+Assemblies 4 37.3
+./rgg/files/2-assms/8.cub  AA 
+./rgg/files/2-assms/1.cub  LA
+./rgg/files/2-assms/2.cub  RA
+./rgg/files/2-assms/11.cub CA
+Lattice 11
+CA &
+AA &
+LA  AA  RA &
+AA  AA  AA &
+LA  AA  AA  AA  RA &
+AA  AA  AA  AA  AA &
+LA  AA  AA  AA  AA  AA  RA &
+AA  AA  AA  AA  AA  AA  AA &
+LA  AA  AA  AA  AA  AA  AA  AA  RA &
+AA  AA  AA  AA  AA  AA  AA  AA  AA &
+LA  AA  AA  AA -1 -1  -1  AA  AA  AA   RA 
+Symmetry 6
+end
+
