@@ -74,6 +74,7 @@ bool Print_Error( const char* desc,
   std::string m_szSchFile;   // cubit journal scheme file
 private:
   double pi;
+  double m_RadialSize, m_AxialSize;
   int err;
   CMatrix<std::string> m_Assembly;
   std::string m_szGeomType;

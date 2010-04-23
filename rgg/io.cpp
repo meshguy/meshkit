@@ -537,6 +537,21 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
+    // Handle mesh size inputs
+    if (szInputString.substr(0,14) == "radialmeshsize"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_RadialSize;
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
+    // Handle mesh size inputs
+    if (szInputString.substr(0,13) == "axialmeshsize"){
+      double m_AxialSize;
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_AxialSize;
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
     if (szInputString.substr(0,3) == "end"){
       // impring merge before saving
       Imprint_Merge();
@@ -587,9 +602,10 @@ int CNrgen::CreateCubitJournal()
     m_SchemesFile << "#{Z_HEIGHT = " << dHeight << "}" << std::endl;
     m_SchemesFile << "#{Z_MID = " << dMid << "}" << std::endl;
     
-    m_SchemesFile << "##Set Axial Size" << std::endl;
-    m_SchemesFile << "#{AXIAL_SIZE = <set size>}" << std::endl;
   }
+  m_SchemesFile << "##Set Mesh Sizes" << std::endl;
+  m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_AxialSize << "}" << std::endl;
+  m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_RadialSize << "}" << std::endl;
 
   // stuff common to both surface and volume
   m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
@@ -689,7 +705,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "mesh vol in body in " << szGrp << "\n#" << std::endl;   
 
       // dumping these sizes schemes.jou also
-      m_SchemesFile << "#{"  << szSize <<" = <set_values>}" << std::endl;
+      m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
 
     }  
   }
@@ -703,7 +719,7 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
 
     // dumping these sizes schemes.jou also
-    m_SchemesFile << "#{"  << szSize <<" = <set_values>}" << std::endl;
+    m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
   }  
 
 

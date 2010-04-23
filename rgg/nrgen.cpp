@@ -23,6 +23,8 @@ CNrgen::CNrgen ()
   szComment = "!";
   MAXCHARS = 300;
   pi = M_PI;
+  m_RadialSize = -1.0;
+  m_AxialSize = -1.0;
 }
 
 CNrgen::~CNrgen ()
