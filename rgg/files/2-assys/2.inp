@@ -1,0 +1,40 @@
+! #############################################################################################################
+! Hexagonal VHTR Control Fuel Block Assembly Definition without CellMaterials (Prism) around individual Pins
+! #############################################################################################################
+!
+Geometry Surface
+GeometryType Hexagonal  
+!                                     
+Materials 2 Mat_OCoolant C1Out  Mat_Block G1 
+!
+Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1Out ! 2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+!
+Pincells 0 1.87960 
+Assembly 11                                                 
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+ XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+Center
+Rotate Z 150
+Center
+Section X 0
+Rotate Z 120
+END ! This is a must

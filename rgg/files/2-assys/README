@@ -1,0 +1,7 @@
+Steps to build .cub file for running coregen example
+
+-> 1.inp with assygen to generated 1.sat
+
+-> run 1,2,8,11-updated.jou with cubit to generate .cub files
+
+-> run coregen 2-assms
