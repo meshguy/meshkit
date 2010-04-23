@@ -69,11 +69,22 @@ int load_and_cutcell(const char *filename_geom, double size,
   // techX query function test
   double boxMin[3], boxMax[3];
   int nDiv[3];
-  std::map< CutCellSurfKey, std::vector<double>, LessThan > mdCutCellSurfEdge;
-  std::vector<int> vnInsideCell;
+  std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan > mdCutCellSurfEdge;
+  std::vector<int> vnInsideCellTechX;
   
-  bool rVal = ccm->get_grid_and_edges(boxMin, boxMax, nDiv,
-				      mdCutCellSurfEdge, vnInsideCell);
+  bool rVal = ccm->get_grid_and_edges_techX(boxMin, boxMax, nDiv,
+					    mdCutCellSurfEdge, vnInsideCellTechX);
+  if (!rVal) {
+    std::cerr << "Couldn't get mesh information for TechX." << std::endl;
+    return 1;
+  }
+  clock_t query_time_techX = clock();
+
+  // multiple intersection fraction query test
+  std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan > mdCutCellEdge;
+  std::vector<int> vnInsideCell;
+  rVal = ccm->get_grid_and_edges(boxMin, boxMax, nDiv,
+				 mdCutCellEdge, vnInsideCell);
   if (!rVal) {
     std::cerr << "Couldn't get mesh information." << std::endl;
     return 1;
@@ -88,7 +99,9 @@ int load_and_cutcell(const char *filename_geom, double size,
 	    << " secs, Time excluding loading: "
 	    << (double) (mesh_time - load_time)/CLOCKS_PER_SEC
 	    << " secs, TechX query time: "
-	    << (double) (query_time - mesh_time)/CLOCKS_PER_SEC
+	    << (double) (query_time_techX - mesh_time)/CLOCKS_PER_SEC
+	    << " secs, multiple fraction points query time: "
+	    << (double) (query_time - query_time_techX)/CLOCKS_PER_SEC
 	    << " secs." << std::endl;
 
   delete ccm;
