@@ -30,11 +30,11 @@ void CNrgen::Banner (std::ostream& OF)
 // ---------------------------------------------------------------------------
 {
   std::cout << '\n';
-  std::cout << "\t\t--------------------------------------------" << '\n';
+  std::cout << "\t\t---------------------------------------------------------" << '\n';
   std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
-  std::cout << "\t\t\tArgonne National Laboratory" << '\n';
-  std::cout << "\t\t\t        2009-2010         " << '\n';
-  std::cout << "\t\t--------------------------------------------" << '\n';
+  std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
+  std::cout << "\t\t\t\t        2009-2010         " << '\n';
+  std::cout << "\t\t---------------------------------------------------------" << '\n';
   std::cout << "\nsee README file for using the program and details on various cards.\n"<< std::endl;
 }
 
@@ -66,7 +66,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 	m_szGeomFile = m_szFile+".brep";
       }
       m_szJouFile = m_szFile+".jou";
-      m_szSchFile = "template.jou";
+      m_szSchFile = m_szFile+".template.jou";
     }
     else {
       std::cerr << "Usage: " << argv[0] << " <input file> WITHOUT EXTENSION"<< std::endl;   
@@ -80,7 +80,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
 	m_szGeomFile = m_szFile+".brep";
       }
       m_szJouFile+=".jou";
-      m_szSchFile = "template.jou";
+      m_szSchFile = m_szFile+".template.jou";
       std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
 		<< "  " << m_szGeomFile << "  " << m_szJouFile << std::endl;
     }
@@ -587,7 +587,7 @@ int CNrgen::CreateCubitJournal()
   m_SchemesFile << "#{Z_MID = " << dMid << "}" << std::endl;
 
   m_SchemesFile << "##Set Axial Size" << std::endl;
-  m_SchemesFile << "{AXIAL_SIZE = <set size>}" << std::endl;
+  m_SchemesFile << "#{AXIAL_SIZE = <set size>}" << std::endl;
 
 
   // stuff common to both surface and volume
