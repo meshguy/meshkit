@@ -25,6 +25,7 @@ CNrgen::CNrgen ()
   pi = M_PI;
   m_RadialSize = -1.0;
   m_AxialSize = -1.0;
+  m_Centered = false;
 }
 
 CNrgen::~CNrgen ()

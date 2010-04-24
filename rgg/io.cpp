@@ -564,6 +564,7 @@ int CNrgen::ReadAndCreate()
     if (szInputString.substr(0,6) == "center"){
       std::cout << "Positioning assembly to center" << std::endl;
       Center_Assm();
+      m_Centered = true;
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
     // rotate the assembly if rotate card is specified
@@ -622,7 +623,7 @@ int CNrgen::CreateCubitJournal()
   int nSideset=0, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize;
   double dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
-  double dMid = dHeight/2.0;
+  double dMid = (m_Centered ? 0.0 : m_dVZAssm(1) + dHeight/2.0);
   // writing to schemes .jou 
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
   m_SchemesFile << "##Schemes " << std::endl  ;
@@ -653,7 +654,7 @@ int CNrgen::CreateCubitJournal()
     if (m_szGeomType == "hexagonal")
       m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
     else
-      m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*0.5*(PITCHX+PITCHY)}" << std::endl;
+      m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.05*0.5*(PITCHX+PITCHY)}" << std::endl;
   }
   else
     m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_RadialSize << "}" << std::endl;

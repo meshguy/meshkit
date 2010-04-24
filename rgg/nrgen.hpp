@@ -86,6 +86,7 @@ private:
   CVector<CPincell> m_Pincell;
   int m_nPin, m_nPinX, m_nPinY;
   double m_dPitch;
+  bool m_Centered;
 
   // igeom related
   SimpleArray<iBase_EntityHandle> assms, in_pins;
