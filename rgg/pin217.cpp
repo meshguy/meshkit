@@ -127,9 +127,9 @@ int main(int argc, char **argv)
       ERRORR("Failed to copy_move entities.", 1);
       std::cout << "Copy/moved irow=" << irow << ", icol=" << icol << std::endl;
       free(new_ents);
-
-         err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
-       ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+      
+      err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
+      ERRORR("Failed to tag copied sets.", iBase_FAILURE);
     }
   }
        //getting hexahedron elements for merge_entities   
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
   delete cm;
   delete mm;
   free(orig_ents);
-  
+   
   iMesh_dtor(impl, &err);
   ERRORR("Destructor failed.", 1);
   
@@ -214,7 +214,8 @@ int get_copy_expand_sets(CopyMesh *cm,
     iMesh_getEntSetsByTagsRec(impl, orig_set, &tmp_tag, &tag_vals[i], 1, 0,
                               &tmp_sets, &tmp_alloc, &tmp_size, &err);
     ERRORR("Failure getting sets by tags.", err);
-    
+       std::cout << " (tmp_size)"<< tmp_size << std::endl;   
+  
     if (0 != tmp_size) {
       err = cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
       ERRORR("Failed to add copy/expand lists.", iBase_FAILURE);
@@ -237,6 +238,7 @@ int extend_expand_sets(CopyMesh *cm)
     int sets_alloc = 0, sets_size;
     iMesh_getEntSets(impl, *sit, 1, &sets, &sets_alloc, &sets_size, &err);
     ERRORR("Failed to get contained sets.", err);
+    std::cout << " (sets_size)"<< sets_size << std::endl;
     if (sets_size) {
       err = cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
       ERRORR("Failed to add copy sets for expand extension.", err);
