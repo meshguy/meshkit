@@ -5,7 +5,7 @@
 #specify your cubit executable's patch
 CUBIT = /home/rajeev/cubit-32/bin/cubit -warning -nographics -nojournal -batch --graph
 
-coregen = ../../../coregen
+coregen = ../../coregen
 
 assygen = ../../assygen
 
