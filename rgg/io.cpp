@@ -645,8 +645,18 @@ int CNrgen::CreateCubitJournal()
     
   }
   m_SchemesFile << "##Set Mesh Sizes" << std::endl;
-  m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_AxialSize << "}" << std::endl;
-  m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_RadialSize << "}" << std::endl;
+  if (-1 == m_AxialSize)
+    m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
+  else
+    m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_AxialSize << "}" << std::endl;
+  if (-1 == m_RadialSize) {
+    if (m_szGeomType == "hexagonal")
+      m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
+    else
+      m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*0.5*(PITCHX+PITCHY)}" << std::endl;
+  }
+  else
+    m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_RadialSize << "}" << std::endl;
 
   // stuff common to both surface and volume
   m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
@@ -736,8 +746,8 @@ int CNrgen::CreateCubitJournal()
   
     //now set the sizes
     m_FileOutput << "#Set Meshing Scheme and Sizes, use template.jou to specify sizes" << std::endl; 
-    m_FileOutput << "surface with z_coord > {-Z_MID +.1*Z_HEIGHT}" <<
-      " and z_coord < {Z_MID - .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}\n" << std::endl ;
+    m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
+      " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}\n" << std::endl ;
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       szSize =  m_szAssmMat(p) + "_size";
