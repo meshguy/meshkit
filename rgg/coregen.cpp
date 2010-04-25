@@ -846,7 +846,7 @@ int write_makefile(){
     name = "";
   }
 
-  make_file << "\n\n" << outfile << " : ${MESH_FILES}" << std::endl;
+  make_file << "\n\n" << outfile << " : ${MESH_FILES} " << ifile <<  std::endl;
   make_file << "\t" << "${coregen} " << iname << std::endl;
   for(unsigned int i=0; i<files.size(); i++){
     make_file << files[i] << " : " << f_sat[i] << "  " << f_jou[i] << "  " << f_injou[i] << std::endl;

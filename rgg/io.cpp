@@ -448,7 +448,7 @@ int CNrgen::ReadAndCreate()
 	for (int i=1; i<=m_nDimensions; i++)
 	  szFormatString >> m_szMAlias(i);
       }   
-       if(m_szGeomType =="cartesian"){
+      if(m_szGeomType =="cartesian"){
 	std::istringstream szFormatString (szInputString);
 	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
 
@@ -489,7 +489,7 @@ int CNrgen::ReadAndCreate()
 	for (int i=1; i<=m_nDimensions; i++)
 	  szFormatString >> m_szMAlias(i);
       }   
-       if(m_szGeomType =="cartesian"){
+      if(m_szGeomType =="cartesian"){
 	std::istringstream szFormatString (szInputString);
 	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
 
@@ -511,14 +511,23 @@ int CNrgen::ReadAndCreate()
 
     if (szInputString.substr(0,8) == "pincells"){
       std::istringstream szFormatString (szInputString);
+      
       szFormatString >> card >> m_nPincells >> m_dPitch;
       
       // loop thro' the pincells and read/store pincell data
       for (int i=1; i<=m_nPincells; i++){
 
+	double dTotalHeight;
 	//get the number of cylinder in each pincell
-	double dTotalHeight = m_dVZAssm(2)-m_dVZAssm(1);
+	if(m_nDimensions > 0){
+	  dTotalHeight = m_dVZAssm(2)-m_dVZAssm(1);
+	}
+	else{
+	  dTotalHeight = 0; // nothing specified only pincells in the model
+	}
+
 	m_Pincell(i).SetPitch(m_dPitch, dTotalHeight);
+
 	ReadPinCellData(i);
 	std::cout << "\nread pincell " << i << std::endl;
       }
@@ -622,8 +631,11 @@ int CNrgen::CreateCubitJournal()
   // variables
   int nSideset=0, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize;
-  double dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
-  double dMid = (m_Centered ? 0.0 : m_dVZAssm(1) + dHeight/2.0);
+  double dHeight = 0.0, dMid = 0.0;
+  if(m_nDimensions > 0){
+    double dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
+    double dMid = (m_Centered ? 0.0 : m_dVZAssm(1) + dHeight/2.0);
+  }
   // writing to schemes .jou 
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
   m_SchemesFile << "##Schemes " << std::endl  ;
@@ -634,11 +646,15 @@ int CNrgen::CreateCubitJournal()
   m_SchemesFile << "#{SWEEP = \"sweep\"}" << std::endl;  
   m_SchemesFile << "## Dimensions" << std::endl;
   if(m_szGeomType == "hexagonal"){
-    m_SchemesFile << "#{PITCH =" << m_dVAssmPitch(m_nDimensions) << "}" << std::endl;
+    if(m_nDimensions > 0){
+      m_SchemesFile << "#{PITCH =" << m_dVAssmPitch(m_nDimensions) << "}" << std::endl;
+    }
   }
   else if(m_szGeomType == "cartesian"){
-    m_SchemesFile << "#{PITCHX =" << m_dVAssmPitchX(m_nDimensions)<< "}" << std::endl;
-    m_SchemesFile << "#{PITCHY =" << m_dVAssmPitchY(m_nDimensions) << "}" << std::endl;
+    if(m_nDimensions > 0){    
+      m_SchemesFile << "#{PITCHX =" << m_dVAssmPitchX(m_nDimensions)<< "}" << std::endl;
+      m_SchemesFile << "#{PITCHY =" << m_dVAssmPitchY(m_nDimensions) << "}" << std::endl;
+    }
   }
   if( m_nPlanar ==0){
     m_SchemesFile << "#{Z_HEIGHT = " << dHeight << "}" << std::endl;
@@ -1770,17 +1786,23 @@ int CNrgen::Subtract_Pins()
     std::cout << "Subtracting all pins from assembly .. " << std::endl;
 
     // make a copy of the pins
-    for (int i=0; i<in_pins.size();i++){
-      iGeom_copyEnt(geom, in_pins[i], &copy_inpins[i], &err);
-      CHECK("Couldn't copy inner duct wall prism.");		  
-    }					
-    // unite all pins
-    iGeom_uniteEnts(geom,ARRAY_IN(in_pins), &unite, &err);
-    CHECK( "uniteEnts failed!" );	  
+    if(in_pins.size() > 1){
+      for (int i=0; i<in_pins.size();i++){
+	iGeom_copyEnt(geom, in_pins[i], &copy_inpins[i], &err);
+	CHECK("Couldn't copy inner duct wall prism.");		  
+      }					
+      // unite all pins
+      iGeom_uniteEnts(geom,ARRAY_IN(in_pins), &unite, &err);
+      CHECK( "uniteEnts failed!" );	  
 
-    // subtract inner covering with united pins
-    iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
-    CHECK("Couldn't subtract pins from block.");
+      // subtract inner covering with united pins
+      iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
+      CHECK("Couldn't subtract pins from block.");
+    }
+    else{ // only one pin in in_pins
+      iGeom_copyEnt(geom, in_pins[0], &copy_inpins[0], &err);
+      iGeom_subtractEnts(geom, tmp_vol, in_pins[0], &tmp_new1, &err);
+    }
   }
   std::cout << "\n--------------------------------------------------"<<std::endl;
   return 1;

@@ -26,6 +26,7 @@ CNrgen::CNrgen ()
   m_RadialSize = -1.0;
   m_AxialSize = -1.0;
   m_Centered = false;
+  m_nDimensions = 0;
 }
 
 CNrgen::~CNrgen ()
