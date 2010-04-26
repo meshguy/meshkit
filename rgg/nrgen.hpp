@@ -53,7 +53,10 @@ bool Print_Error( const char* desc,
 
   int CreatePinCell(int i, double dX,
 		    double dY, double dZ);
-  
+
+  int CreatePinCell1(int i, double dX,
+		    double dY, double dZ);  
+
   int CreateCubitJournal();
   void ComputePinCentroid(int, CMatrix<std::string>, int, int,
 			  double&, double&, double&);
