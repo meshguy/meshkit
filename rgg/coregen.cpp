@@ -120,7 +120,7 @@ int write_makefile();
 
 iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
-#define DEFAULT_TEST_FILE "coregen_default"
+#define DEFAULT_TEST_FILE "twoassm"
 
 const int UNITCELL_DUCT = 0, ASSY_TYPES = 1;
 
