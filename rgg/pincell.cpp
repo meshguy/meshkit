@@ -22,7 +22,8 @@ CPincell::CPincell (const CPincell& NO)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-// TBC
+  m_nIFlag = 0;
+  // TBC
 }
 
 CPincell::~CPincell ()
@@ -42,10 +43,23 @@ void CPincell::SetLineOne (std::string szVolId, std::string szVolAlias, int nInp
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_szVolId = szVolId;
-	m_szVolAlias = szVolAlias;
-	m_nInputLines = nInputLines;
+  m_szVolId = szVolId;
+  m_szVolAlias = szVolAlias;
+  m_nInputLines = nInputLines;
 }
+
+
+void CPincell::SetIntersectFlag (int nIFlag)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  m_nIFlag = nIFlag;
+}
+
+
 
 void CPincell::SetPitch (double dFlatF, double dZL)
 // ---------------------------------------------------------------------------
@@ -54,8 +68,8 @@ void CPincell::SetPitch (double dFlatF, double dZL)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_dFlatF = dFlatF;
-	m_dZL = dZL;
+  m_dFlatF = dFlatF;
+  m_dZL = dZL;
 }
 
 void CPincell::SetPitch (double dPX, double dPY, double dPZ)
@@ -65,9 +79,9 @@ void CPincell::SetPitch (double dPX, double dPY, double dPZ)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_dPX = dPX;
-	m_dPY = dPY;
-	m_dPZ = dPZ;
+  m_dPX = dPX;
+  m_dPY = dPY;
+  m_dPZ = dPZ;
 }
 
 void CPincell::SetMatArray (int nMaterials)
@@ -77,9 +91,9 @@ void CPincell::SetMatArray (int nMaterials)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_nMaterials = nMaterials;
-	m_szVMatName.SetSize(nMaterials);
-	m_szVMatAlias.SetSize(nMaterials);
+  m_nMaterials = nMaterials;
+  m_szVMatName.SetSize(nMaterials);
+  m_szVMatAlias.SetSize(nMaterials);
 }
 
 void CPincell::SetMat(CVector<std::string> szVMatName, CVector<std::string> szVMatAlias)
@@ -89,8 +103,8 @@ void CPincell::SetMat(CVector<std::string> szVMatName, CVector<std::string> szVM
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_szVMatName = szVMatName;
-	m_szVMatAlias = szVMatAlias;
+  m_szVMatName = szVMatName;
+  m_szVMatAlias = szVMatAlias;
 }
 
 void CPincell::SetNumCyl(const int nCyl)
@@ -100,8 +114,8 @@ void CPincell::SetNumCyl(const int nCyl)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_nNumCyl = nCyl;
-	m_VCyl.SetSize(nCyl);
+  m_nNumCyl = nCyl;
+  m_VCyl.SetSize(nCyl);
 }
 
 void CPincell::GetNumCyl(int &nCyl)
@@ -111,7 +125,7 @@ void CPincell::GetNumCyl(int &nCyl)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	nCyl = m_VCyl.GetSize();
+  nCyl = m_VCyl.GetSize();
 }
 
 void CPincell::SetCylSizes(int nCyl,int nRadii)
@@ -121,7 +135,7 @@ void CPincell::SetCylSizes(int nCyl,int nRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).SetSizes(nRadii);
+  m_VCyl(nCyl).SetSizes(nRadii);
 }
 
 void CPincell::SetCylPos(int nCyl, CVector<double> dVCoor)
@@ -131,7 +145,7 @@ void CPincell::SetCylPos(int nCyl, CVector<double> dVCoor)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).SetPos(dVCoor);
+  m_VCyl(nCyl).SetPos(dVCoor);
 }
 
 
@@ -142,7 +156,7 @@ void CPincell::SetCylRadii(int nCyl, CVector<double> dVRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).SetRadii(dVRadii);
+  m_VCyl(nCyl).SetRadii(dVRadii);
 }
 
 
@@ -154,7 +168,7 @@ void CPincell::SetCylZPos(int nCyl, CVector<double> dVZCoor)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).SetZPos(dVZCoor);
+  m_VCyl(nCyl).SetZPos(dVZCoor);
 }
 
 void CPincell::SetCylMat(int nCyl, CVector<std::string> szVMat)
@@ -164,7 +178,7 @@ void CPincell::SetCylMat(int nCyl, CVector<std::string> szVMat)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).SetMat(szVMat);
+  m_VCyl(nCyl).SetMat(szVMat);
 }
 
 void CPincell::SetCellMatSize(int nSize)
@@ -174,9 +188,9 @@ void CPincell::SetCellMatSize(int nSize)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_dVZStart.SetSize(nSize);
-	m_dVZEnd.SetSize(nSize);
-	m_szVCellMat.SetSize(nSize);
+  m_dVZStart.SetSize(nSize);
+  m_dVZEnd.SetSize(nSize);
+  m_szVCellMat.SetSize(nSize);
 }
 
 void CPincell::SetCellMat(CVector<double> dZVStart, CVector<double> dVZEnd, CVector<std::string> szVCellMat) 
@@ -186,9 +200,9 @@ void CPincell::SetCellMat(CVector<double> dZVStart, CVector<double> dVZEnd, CVec
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_dVZStart = dZVStart;
-	m_dVZEnd = dVZEnd;
-	m_szVCellMat = szVCellMat;
+  m_dVZStart = dZVStart;
+  m_dVZEnd = dVZEnd;
+  m_szVCellMat = szVCellMat;
 }
 
 //////
@@ -201,10 +215,23 @@ void CPincell::GetLineOne (std::string &szVolId, std::string &szVolAlias, int &n
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	szVolId = m_szVolId;
-	szVolAlias = m_szVolAlias;
-	nInputLines = m_nInputLines;
+  szVolId = m_szVolId;
+  szVolAlias = m_szVolAlias;
+  nInputLines = m_nInputLines;
 }
+
+
+void CPincell::GetIntersectFlag (int &nIFlag)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  nIFlag =   m_nIFlag;
+}
+
+
 
 void CPincell::GetPitch (double &dFlatF, double &dZL)
 // ---------------------------------------------------------------------------
@@ -213,8 +240,8 @@ void CPincell::GetPitch (double &dFlatF, double &dZL)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	dFlatF = m_dFlatF;
-	dZL = m_dZL;
+  dFlatF = m_dFlatF;
+  dZL = m_dZL;
 }
 
 void CPincell::GetPitch (double &dPX, double &dPY, double  &dPZ)
@@ -224,9 +251,9 @@ void CPincell::GetPitch (double &dPX, double &dPY, double  &dPZ)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	dPX = m_dPX;
-	dPY = m_dPY;
-	dPZ = m_dPZ;
+  dPX = m_dPX;
+  dPY = m_dPY;
+  dPZ = m_dPZ;
 }
 
 void CPincell::GetCylSizes(int &nCyl,int &nRadii)
@@ -236,7 +263,7 @@ void CPincell::GetCylSizes(int &nCyl,int &nRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).GetSizes(nRadii);
+  m_VCyl(nCyl).GetSizes(nRadii);
 }
 
 void CPincell::GetMat(CVector<std::string> &szVMatName, CVector<std::string> &szVMatAlias)
@@ -246,8 +273,8 @@ void CPincell::GetMat(CVector<std::string> &szVMatName, CVector<std::string> &sz
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	szVMatName = m_szVMatName;
-	szVMatAlias = m_szVMatAlias;
+  szVMatName = m_szVMatName;
+  szVMatAlias = m_szVMatAlias;
 }
 
 void CPincell::GetCylPos(int &nCyl, CVector<double> &dVCoor)
@@ -257,7 +284,7 @@ void CPincell::GetCylPos(int &nCyl, CVector<double> &dVCoor)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).GetPos(dVCoor);
+  m_VCyl(nCyl).GetPos(dVCoor);
 }
 
 void CPincell::GetCylZPos(int &nCyl, CVector<double> &dVCoor)
@@ -267,7 +294,7 @@ void CPincell::GetCylZPos(int &nCyl, CVector<double> &dVCoor)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).GetZPos(dVCoor);
+  m_VCyl(nCyl).GetZPos(dVCoor);
 }
 
 
@@ -278,7 +305,7 @@ void CPincell::GetCylRadii(int &nCyl, CVector<double> &dVRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).GetRadii(dVRadii);
+  m_VCyl(nCyl).GetRadii(dVRadii);
 }
 
 void CPincell::GetCylMat(int &nCyl, CVector<std::string> &szVMat)
@@ -288,7 +315,7 @@ void CPincell::GetCylMat(int &nCyl, CVector<std::string> &szVMat)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	m_VCyl(nCyl).GetMat(szVMat);
+  m_VCyl(nCyl).GetMat(szVMat);
 }
 
 
@@ -300,9 +327,9 @@ void CPincell::GetCellMat(CVector<double> &dVZStart, CVector<double> &dVZEnd, CV
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	dVZStart = m_dVZStart;
-	dVZEnd = m_dVZEnd;
-	szVCellMat = m_szVCellMat;
+  dVZStart = m_dVZStart;
+  dVZEnd = m_dVZEnd;
+  szVCellMat = m_szVCellMat;
 }
 
 void CPincell::GetCellMatSize(int &nSize)
@@ -312,7 +339,7 @@ void CPincell::GetCellMatSize(int &nSize)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-   nSize = m_szVCellMat.GetSize();
+  nSize = m_szVCellMat.GetSize();
 }
 
 void CPincell::GetMatArray (int &nMaterials)
@@ -322,6 +349,6 @@ void CPincell::GetMatArray (int &nMaterials)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-	nMaterials = m_nMaterials;
+  nMaterials = m_nMaterials;
 	
 }
