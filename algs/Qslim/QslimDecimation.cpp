@@ -707,7 +707,7 @@ int QslimDecimation::Init() {
 		// the default valid data is 1; set it to 0 only to "mark" the vertex invalid for future deletion
 		// is it really necessary if we put the default value as 1 anyway
 
-		rval = mb->tag_set_data(validTag, &v, 1, &def_data_bit);
+		//rval = mb->tag_set_data(validTag, &v, 1, &def_data_bit);
 	}
 	MBRange::iterator it;
 	if (opts.logfile && opts.selected_output & OUTPUT_MODEL_DEFN) {

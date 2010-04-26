@@ -20,7 +20,7 @@ extern MBTag validTag;   // defined in QslimDecimation
 extern int ehIsValid(MBEntityHandle v);  // defined in QslimDecimation; maybe we should pass Interface too
 extern QslimOptions opts;
 
-extern void filterValid(std::vector<MBEntityHandle> & io);
+extern void filterValid(MBInterface * mb, std::vector<MBEntityHandle> & io);
 extern int classifyVertex(MBInterface * mb, MBEntityHandle v);
 
 extern MBErrorCode contractionRegion(MBInterface * mb, MBEntityHandle v1, MBEntityHandle v2,

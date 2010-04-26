@@ -24,8 +24,9 @@ std::string usage_string =
 "-b             preserve boundary (do not use with -B option) \n"
 "-m		        Preserve mesh quality.\n"
 "-a		        Enable area weighting.\n"
-"-p 	        Height fields positivity. Used for height fields, assume triangles \n"
-"                   are originally positively oriented."
+"-p 	        Height fields positivity. Used for height fields, assume \n"
+"                   triangles are originally positively oriented."
+"-d 	        Use delayed deletion, as opposed to merging \n"
 "\n";
 
 std::string logging_usage_string =

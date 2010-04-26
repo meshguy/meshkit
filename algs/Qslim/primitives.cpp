@@ -7,15 +7,20 @@
 
 #include "primitives.h"
 
-void filterValid(std::vector<MBEntityHandle> & io) {
+void filterValid(MBInterface * mb, std::vector<MBEntityHandle> & io) {
 	int next = 0, size = io.size();
+	std::vector<unsigned char> tags(size);
+	MBErrorCode rval = mb->tag_get_data(validTag, &io[0], size, &tags[0] );
+	if (MB_SUCCESS != rval)
+			return;
 	for (int i = 0; i < size; i++) {
-		MBEntityHandle eh = io[i];
-		if (ehIsValid(eh)) {
-			io[next++] = eh;
+		//MBEntityHandle eh = io[i];
+		if (tags[i]) {
+			io[next++] = io[i];
 		}
 	}
-	io.resize(next);
+	if (next<size)
+		io.resize(next);
 	return;
 }
 
@@ -30,7 +35,7 @@ MBErrorCode contractionRegion(MBInterface * mb, MBEntityHandle v1,
 	MBErrorCode rval = mb->get_adjacencies(vlist, 2, 2, false, changed,
 			MBInterface::UNION);
 	if (opts.useDelayedDeletion)
-		filterValid(changed);
+		filterValid(mb, changed);
 	return rval;
 }
 
@@ -45,7 +50,7 @@ int classifyVertex(MBInterface * mb, MBEntityHandle v1) {
 	if (MB_SUCCESS != rval)
 		return 0; // interior??
 	if (opts.useDelayedDeletion)
-		filterValid(adjEdges);
+		filterValid(mb, adjEdges);
 	int nBorder = 0;
 	for (int i = 0; i < adjEdges.size(); i++) {
 		MBEntityHandle edg = adjEdges[i];
@@ -53,7 +58,7 @@ int classifyVertex(MBInterface * mb, MBEntityHandle v1) {
 		rval = mb->get_adjacencies(&edg, 1, 2, false, adjFaces,
 				MBInterface::UNION);
 		if (opts.useDelayedDeletion)
-			filterValid(adjFaces);
+			filterValid(mb, adjFaces);
 		if (adjFaces.size() == 1)
 			nBorder++;
 	}
@@ -108,7 +113,7 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 	MBErrorCode rval = mb->get_adjacencies(vlist, 2, 1, false, edges,
 			MBInterface::UNION);
 	if (opts.useDelayedDeletion)
-		filterValid(edges);
+		filterValid(mb, edges);
 	if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 		*opts.logfile << "Edges Adjacent:" << edges.size();
 		for (int i = 0; i < edges.size(); i++)
@@ -170,7 +175,7 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 			std::vector<MBEntityHandle> tris;
 			rval = mb->get_adjacencies(&ev0v1, 1, 2, false, tris,
 					MBInterface::UNION);
-			filterValid(tris);
+			filterValid(mb, tris);
 			if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 				*opts.logfile << "Triangles adjacent to found edge:"
 						<< tris.size() << ":";
@@ -183,7 +188,7 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 				std::vector<MBEntityHandle> localEdges;
 				rval = mb->get_adjacencies(&triangleThatCollapses, 1, 1, false,
 						localEdges, MBInterface::UNION);
-				filterValid(localEdges);
+				filterValid(mb, localEdges);
 				if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 					*opts.logfile << "Triangle " << mb->id_from_handle(
 							triangleThatCollapses) << " Edges: "
@@ -260,7 +265,7 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 							std::vector<MBEntityHandle> localEdges;
 							rval = mb->get_adjacencies(&tr, 1, 1, false,
 									localEdges, MBInterface::UNION);
-							filterValid(localEdges);
+							filterValid(mb, localEdges);
 							*opts.logfile << "Triangle t"
 									<< mb->id_from_handle(tr)
 									<< "  filtered : " << localEdges.size();
@@ -341,7 +346,7 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 				MBEntityHandle tr = trisChanged[i];
 				rval = mb->get_adjacencies(&tr, 1, 1, false, localEdges,
 						MBInterface::UNION);
-				filterValid(localEdges);
+				filterValid(mb, localEdges);
 				if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 					*opts.logfile << "Triangle t" << mb->id_from_handle(tr)
 							<< "  filtered : " << localEdges.size();
@@ -353,7 +358,7 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 				assert(localEdges.size()==3);
 			}
 
-			filterValid(adj_entities);
+			filterValid(mb, adj_entities);
 			changed = adj_entities; // deep copy
 			if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 				*opts.logfile << "Triangles changed:" << changed.size();
@@ -371,13 +376,13 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 			std::vector<MBEntityHandle> edges0;
 			rval = mb->get_adjacencies(&v0, 1, 1, false, edges0,
 					MBInterface::UNION);
-			filterValid(edges0);
+			filterValid(mb, edges0);
 
 			// get edges connected to vertex v1
 			std::vector<MBEntityHandle> edges1;
 			rval = mb->get_adjacencies(&v1, 1, 1, false, edges1,
 					MBInterface::UNION);
-			filterValid(edges1);
+			filterValid(mb, edges1);
 			// find all edges that will be merged, of type v0-v2 v1-v2 (so that they have a
 			// common vertex v2
 			// in that case, we will have to merge them as before, and delete the
@@ -487,7 +492,7 @@ MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
 			//
 			rval = mb->get_adjacencies(&v0, 1, 2, false, changed,
 					MBInterface::UNION);
-			filterValid(changed);
+			filterValid(mb, changed);
 
 		}
 		// end big copy from version 3512
