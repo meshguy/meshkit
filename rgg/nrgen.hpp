@@ -51,10 +51,10 @@ bool Print_Error( const char* desc,
   void ReadPinCellData(int i);
 
 
-  int CreatePinCell(int i, double dX,
+  int CreatePinCell_Intersect(int i, double dX,
 		    double dY, double dZ);
 
-  int CreatePinCell1(int i, double dX,
+  int CreatePinCell(int i, double dX,
 		    double dY, double dZ);  
 
   int CreateCubitJournal();

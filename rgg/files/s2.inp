@@ -4,12 +4,10 @@
 !
 GeometryType Cartesian  
 !
-Materials 17 PWR_FC_F_01 M1  PWR_FC_C_01 M2  PWR_FC_M_01 M3 &
+Materials 12 PWR_FC_F_01 M1  PWR_FC_C_01 M2  PWR_FC_M_01 M3 &
 PWR_GT_F_01 M4  PWR_GT_C_01 M5  PWR_GT_M_01 M6 &
 PWR_XFC_01 M7  PWR_XFC_C_01 M8  PWR_XFC_M_01 M9 &
-PWR_CFC_01 M10  PWR_CFC_C_01 M11  PWR_CFC_M_01 M12 &
-PWR_CFC_01 M13  PWR_CFC_C_01 M14  PWR_CFC_M_01 M15 &
-Mat_Block G1 Mat_Coolant C1
+PWR_CFC_01 M10  Mat_Block G1 Mat_Coolant C1
 !
 Dimensions 2 0.0 0.0 0 124.0 23.0 23.0 23.5 23.5  G1 C1
 !
@@ -64,6 +62,9 @@ XFC  FC  FC  gt  FC  FC  FC  FC  FC  FC  FC  FC  FC  gt  FC  FC XFC    ! 14
 XFC  FC  FC  FC  FC  gt  FC  FC  gt  FC  FC  gt  FC  FC  FC  FC XFC    ! 15
 XFC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC  FC XFC    ! 16
 CFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC YFC CFC    ! 17
+!
+Center
+!
 END     ! This is a must                  
                                                                                          
 

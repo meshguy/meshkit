@@ -8,7 +8,7 @@ Materials 4 Mat_Coolant C1 Mat_Fuel  F1 Mat_Poison P1 Mat_Block G1
 !
 Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1
 !
-Pincells 5 1.87960 
+Pincells 4 1.87960 
 ! 1
 Cell_Fuel       FC 1
 Cylinder  2 0.0 0.0    0.0 793.0   0.6225 0.6350 F1 C1
@@ -20,9 +20,7 @@ Cell_SmallCoolant    SC 1
 Cylinder  1 0.0 0.0    0.0 793.0   0.6350 C1
 ! 4
 Cell_Coolant    CC 1
-Cylinder  1 0.0 0.0    0.0 793.0   0.79375 C1
-! 5
-Cell_FuelHandle FH 0                 
+Cylinder  1 0.0 0.0    0.0 793.0   0.79375 C1       
 Assembly 11                                                 
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
@@ -33,9 +31,9 @@ Assembly 11
          FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC
        FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
      CC  FC  FC  CC  FC  FC  CC  FC  FC  SC  FC  FC  CC  FC  FC  CC  FC  FC  CC
-   FC  FC  CC  FC  FC  CC  FC  FC  SC  FH  FH  SC  FC  FC  CC  FC  FC  CC  FC  FC
- BP  CC  FC  FC  CC  FC  FC  CC  FC  FH  FH  FH  FC  CC  FC  FC  CC  FC  FC  CC  BP
-   FC  FC  CC  FC  FC  CC  FC  FC  SC  FH  FH  SC  FC  FC  CC  FC  FC  CC  FC  FC
+   FC  FC  CC  FC  FC  CC  FC  FC  SC  XX  XX  SC  FC  FC  CC  FC  FC  CC  FC  FC
+ BP  CC  FC  FC  CC  FC  FC  CC  FC  XX  XX  XX  FC  CC  FC  FC  CC  FC  FC  CC  BP
+   FC  FC  CC  FC  FC  CC  FC  FC  SC  XX  XX  SC  FC  FC  CC  FC  FC  CC  FC  FC
      CC  FC  FC  CC  FC  FC  CC  FC  FC  SC  FC  FC  CC  FC  FC  CC  FC  FC  CC
        FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
          FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC
@@ -45,4 +43,5 @@ Assembly 11
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+Center
 END ! This is a must

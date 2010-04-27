@@ -8,7 +8,7 @@ Materials 6 Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_Control R
 !
 Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1
 !                                     
-Pincells 8 1.87960  
+Pincells 6 1.87960  
 ! 1
 Cell_Fuel       FC 2
 Cylinder  2 0.0 0.0    0.0 793.0   0.6225 0.6350 F1 C1
@@ -26,29 +26,25 @@ Cell_Coolant    CC 2
 Cylinder  1 0.0 0.0    0.0 793.0   0.79375 C1
 CellMaterial 0.0 793.0 G1
 ! 5
-Cell_FuelHandle FH 0
-! 6
-Cell_Graphite   GC 0
-! 7
-AVol_Control CR 1                                         
+Cell_Control CR 1                                         
 Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C1 R1 C1 
-! 8
-AVol_FHH     FH2 1
+! 6
+Cell_FHH     FH2 1
 Cylinder  1  0.0 0.0 0.0 793.0 2.0 H1  
 ! 
 Assembly 11                                                 
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
-                   FC  CC  FC  FC  GC  GC  GC  GC  FC  FC  CC  FC
-                 CC  FC  FC  CC  GC  GC  GC  GC  GC  CC  FC  FC  CC
-               FC  FC  CC  FC  GC  GC  GC  GC  GC  GC  FC  CC  FC  FC
-             FC  CC  FC  FC  GC  GC  GC  CR  GC  GC  GC  FC  FC  CC  FC
-           CC  FC  FC  CC  FC  GC  GC  GC  GC  GC  GC  FC  CC  FC  FC  CC
-         FC  FC  CC  FC  FC  CC  GC  GC  GC  GC  GC  CC  FC  FC  CC  FC  FC
-       FC  CC  FC  FC  CC  FC  FC  GC  GC  GC  GC  FC  FC  CC  FC  FC  CC  FC
+                   FC  CC  FC  FC  XX  XX  XX  XX  FC  FC  CC  FC
+                 CC  FC  FC  CC  XX  XX  XX  XX  XX  CC  FC  FC  CC
+               FC  FC  CC  FC  XX  XX  XX  XX  XX  XX  FC  CC  FC  FC
+             FC  CC  FC  FC  XX  XX  XX  CR  XX  XX  XX  FC  FC  CC  FC
+           CC  FC  FC  CC  FC  XX  XX  XX  XX  XX  XX  FC  CC  FC  FC  CC
+         FC  FC  CC  FC  FC  CC  XX  XX  XX  XX  XX  CC  FC  FC  CC  FC  FC
+       FC  CC  FC  FC  CC  FC  FC  XX  XX  XX  XX  FC  FC  CC  FC  FC  CC  FC
      CC  FC  FC  CC  FC  FC  CC  FC  FC  SC  FC  FC  CC  FC  FC  CC  FC  FC  CC
-   FC  FC  CC  FC  FC  CC  FC  FC  SC  FH  FH  SC  FC  FC  CC  FC  FC  CC  FC  FC
- BP  CC  FC  FC  CC  FC  FC  CC  FC  FH  FH2  FH  FC  CC  FC  FC  CC  FC  FC  CC  BP
-   FC  FC  CC  FC  FC  CC  FC  FC  SC  FH  FH  SC  FC  FC  CC  FC  FC  CC  FC  FC
+   FC  FC  CC  FC  FC  CC  FC  FC  SC  XX  XX  SC  FC  FC  CC  FC  FC  CC  FC  FC
+ BP  CC  FC  FC  CC  FC  FC  CC  FC  XX  FH2  XX  FC  CC  FC  FC  CC  FC  FC  CC  BP
+   FC  FC  CC  FC  FC  CC  FC  FC  SC  XX  XX  SC  FC  FC  CC  FC  FC  CC  FC  FC
      CC  FC  FC  CC  FC  FC  CC  FC  FC  SC  FC  FC  CC  FC  FC  CC  FC  FC  CC
        FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
          FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC
@@ -58,4 +54,5 @@ Assembly 11
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+Center
 END
