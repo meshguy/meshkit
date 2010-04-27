@@ -646,7 +646,8 @@ int CNrgen::CreateCubitJournal()
     dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
     dMid = (m_Centered ? 0.0 : m_dVZAssm(1) + dHeight/2.0);
   }
-  // writing to schemes .jou 
+
+// writing to schemes .jou 
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
   m_SchemesFile << "##Schemes " << std::endl  ;
   m_SchemesFile << "#{CIRCLE =\"circle interval 1 fraction 0.8\"}" << std::endl;
@@ -672,10 +673,15 @@ int CNrgen::CreateCubitJournal()
     
   }
   m_SchemesFile << "##Set Mesh Sizes" << std::endl;
-  if (-1 == m_AxialSize)
-    m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
-  else
-    m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_AxialSize << "}" << std::endl;
+
+// volume only
+  if(m_nPlanar == 0){
+    if (-1 == m_AxialSize)
+      m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
+    else
+      m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_AxialSize << "}" << std::endl;
+  }
+
   if (-1 == m_RadialSize) {
     if (m_szGeomType == "hexagonal")
       m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
@@ -685,18 +691,21 @@ int CNrgen::CreateCubitJournal()
   else
     m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_RadialSize << "}" << std::endl;
 
-  // stuff common to both surface and volume
+// stuff common to both surface and volume
   m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
   m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
   m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
+  m_FileOutput << "#" << std::endl;
   
   // import the geometry file
   m_FileOutput << "# Import geometry file " << std::endl;
   m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
+  m_FileOutput << "#" << std::endl;
 
   // merge
   m_FileOutput << "#merge geometry" << std::endl; 
   m_FileOutput << "merge all" << std::endl;
+  m_FileOutput << "#" << std::endl;
 
   // sideset curves on top surface creation dumps
   m_FileOutput << "#Creating curve sidesets, Note: you might need to change @ extensions" << std::endl; 
@@ -713,6 +722,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
       m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;
     }
+    m_FileOutput << "#" << std::endl;
   }
   
   // top surface sidesets
@@ -723,8 +733,10 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
     m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
   }
+  m_FileOutput << "#" << std::endl;
 
-  if(m_nPlanar ==1){ // when geometry surface is specified
+//surface only
+  if(m_nPlanar ==1){ 
 
     // group creation dumps. each material surface  has a group
     m_FileOutput << "#Creating groups" << std::endl;  
@@ -733,7 +745,8 @@ int CNrgen::CreateCubitJournal()
       m_szAssmMat(p);
       m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
     }
-    
+    m_FileOutput << "#" << std::endl;
+
     // block creation dumps
     m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -742,8 +755,11 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << p << " surface in " << szGrp  << std::endl;
       m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
     }
+    m_FileOutput << "#" << std::endl;
   }
-  else{ // when geometry volume is specified
+
+// volume only
+  else{ 
 
     // bottom surface sidesets
     m_FileOutput << "#Creating top surface sidesets" << std::endl; 
@@ -753,6 +769,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
       m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
     }
+    m_FileOutput << "#" << std::endl;
 
     // group creation dumps. each material surface  has a group
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -760,7 +777,8 @@ int CNrgen::CreateCubitJournal()
       m_szAssmMat(p);
       m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
     }
-  
+    m_FileOutput << "#" << std::endl;
+
     // block creation dumps
     m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -769,7 +787,8 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << p << " body in " << szGrp  << std::endl;
       m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
     }
-  
+    m_FileOutput << "#" << std::endl;
+
     //now set the sizes
     m_FileOutput << "#Set Meshing Scheme and Sizes, use template.jou to specify sizes" << std::endl; 
 
@@ -787,10 +806,11 @@ int CNrgen::CreateCubitJournal()
 
       // dumping these sizes schemes.jou also
       m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
-
     }  
+    m_FileOutput << "#" << std::endl;
   }
-  // some more common stuff meshing surfaces set the sizes and mesh
+
+// some more common stuff meshing top surfaces set the sizes and mesh
   m_FileOutput << "#surfaces mesh, use template.jou to specify sizes" << std::endl; 
   for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
     szSurfTop = m_szAssmMat(p) + "_top";
@@ -804,18 +824,20 @@ int CNrgen::CreateCubitJournal()
     // dumping these sizes schemes.jou also
     m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
   }  
+  m_FileOutput << "#" << std::endl;
 
   // mesh all command after meshing surface
    m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
    m_FileOutput << "mesh tmpgrp" << std::endl;
-
-    m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
-      " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
-   if(m_nPlanar == 0) // volumes
+   m_FileOutput << "#" << std::endl;
+   
+   if(m_nPlanar == 0){ // volumes only
+     m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
+       " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
      m_FileOutput << "mesh vol all" << std::endl;
-
+   }
   // save as .cub file dump
-  m_FileOutput << "\n#\n#Save file" << std::endl; 
+  m_FileOutput << "#\n#Save file" << std::endl; 
   std::string szSave = m_szFile + ".cub";
   m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl; 
   m_FileOutput << "exit" << std::endl; 

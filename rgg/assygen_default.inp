@@ -30,8 +30,8 @@ Cylinder 2 2.0 -2.0  0.0 40.0   1.0 1.6 CR C1
 !
 Assembly 4 4 
 RF RF RF RF
-RF Q2 Q1 RF
-RF Q3 Q4 RF
+RF Q1 Q2 RF
+RF Q4 Q3 RF
 RF RF RF RF
 Center
 END     ! This is a must  
