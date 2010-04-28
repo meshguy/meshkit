@@ -12,15 +12,14 @@ Pincells 1
 !
 ! Standard fuel cell (1)
 PWR_FC_01 FC 2
-Pitch  4.0 4.0 124.0 
-Cylinder 1 0.0 0.0  0.0 124.0   1.5  M1                                                                                                
+Pitch  9.0 9.0 124.0 
+Cylinder 1 0.0 0.0  0.0 124.0   3.0  M1
 !
-Assembly 4 4 
-FC FC FC FC
-FC FC FC FC
-FC FC FC FC
-FC FC FC FC
+Assembly 2 2
+FC FC
+FC FC
 Center
+RadialMeshSize 2.0
 END     ! This is a must                  
                                                                                          
 
