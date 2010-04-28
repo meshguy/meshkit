@@ -20,7 +20,4 @@ Assembly 2
 Center
 Rotate Z 30
 Section X 0
-Rotate Z 210
-Section Y 0
-Rotate Z 270
 END ! This is a must

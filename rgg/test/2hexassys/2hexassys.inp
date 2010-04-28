@@ -1,11 +1,13 @@
 Geometry Surface
 GeometryType Hexagonal
-Assemblies 2 10.0
+Assemblies 4 10.0
 a1.cub A1
 a2.cub A2
+a3.cub A3
+a4.cub A4
 Lattice 3
 A1 &
-A2 A2 &
-A1 A1 A1
+A2 &
+A3 A2 A4
 end
 

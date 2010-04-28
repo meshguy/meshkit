@@ -18,9 +18,8 @@ Assembly 2
        P1 P1 P1
 	P1 P1
 Center
-Rotate Z 30
+Rotate Z 150
+Center
 Section X 0
-Rotate Z 210
-Section Y 0
-Rotate Z 270
+Rotate Z 120
 END ! This is a must
