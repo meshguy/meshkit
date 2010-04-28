@@ -22,7 +22,8 @@ class CNrgen
 public:
   CNrgen ();    // ctor
   ~CNrgen ();   // dtor
-  enum ErrorStates {PINCELLS, INVALIDINPUT};
+  enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE,
+		    ENEGATIVE, EALIAS, EPIN};
 
   // helper functions
   void Banner (std::ostream& OF);

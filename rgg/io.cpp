@@ -103,6 +103,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
     if (!m_FileOutput){
       std::cout << "Unable to open o/p file" << std::endl;
       m_FileOutput.clear ();
+      exit(1);
     }
     else
       bDone = true; // file opened successfully
@@ -113,6 +114,7 @@ void CNrgen::PrepareIO (int argc, char *argv[])
     if (!m_SchemesFile){
       std::cout << "Unable to open o/p file" << std::endl;
       m_SchemesFile.clear ();
+      exit(1);
     }
     else
       bDone = true; // file opened successfully
@@ -218,6 +220,14 @@ void CNrgen::ReadPinCellData (int i)
       IOErrorHandler (INVALIDINPUT);
     std::istringstream szFormatString (szInputString);
     szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
+
+    // error checking
+    if( (strcmp (szVolAlias.c_str(), "") == 0) ||
+	(strcmp (szVolId.c_str(), "") == 0))
+      IOErrorHandler(EPIN);
+    if( nInputLines < 0 )
+      IOErrorHandler(ENEGATIVE);
+
     m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
     if(szIFlag == "intersect"){
       m_Pincell(i).SetIntersectFlag(1);
@@ -234,6 +244,8 @@ void CNrgen::ReadPinCellData (int i)
 	std::istringstream szFormatString (szInputString);
 	std::cout << "\ngetting pitch data";
 	szFormatString >> card >> dPX >> dPY >> dPZ;
+	if( dPX < 0 || dPY < 0 || dPZ < 0 )
+	  IOErrorHandler(ENEGATIVE);
 	m_Pincell(i).SetPitch (dPX, dPY, dPZ);
       } 
       if (szInputString.substr(0,9) == "materials"){
@@ -248,9 +260,10 @@ void CNrgen::ReadPinCellData (int i)
 	//set class variable sizes
 	m_Pincell(i).SetMatArray(nMaterials);
 	std::cout << "\ngetting material data";
-	for(int j=1; j<= nMaterials; j++)
+	for(int j=1; j<= nMaterials; j++){
 	  szFormatString >> szVMatName(j) >> szVMatAlias(j);
-	m_Pincell(i).SetMat(szVMatName, szVMatAlias);
+	}
+	  m_Pincell(i).SetMat(szVMatName, szVMatAlias);
       }
       if (szInputString.substr(0,8) == "cylinder"){
 
@@ -274,13 +287,19 @@ void CNrgen::ReadPinCellData (int i)
 	m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
 
 	// reading Radii
-	for(int l=1; l<= nRadii; l++)
+	for(int l=1; l<= nRadii; l++){
 	  szFormatString >> dVCylRadii(l);
+	  if( dVCylRadii(l) < 0 )
+	    IOErrorHandler(ENEGATIVE);
+	}
 	m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
 
 	// reading Material alias
-	for(int m=1; m<= nRadii; m++)
+	for(int m=1; m<= nRadii; m++){
 	  szFormatString >> szVCylMat(m);
+	  if(strcmp (szVCylMat(m).c_str(), "") == 0)  
+	    IOErrorHandler(EALIAS);
+	}
 	m_Pincell(i).SetCylMat(nCyl, szVCylMat);
       }
       if (szInputString.substr(0,12) == "cellmaterial"){
@@ -295,8 +314,11 @@ void CNrgen::ReadPinCellData (int i)
 	dZVEnd.SetSize(nCellMat);
 	szVCellMat.SetSize(nCellMat);
 
-	for(int k=1; k<=nCellMat; k++) 
+	for(int k=1; k<=nCellMat; k++){
 	  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
+	  if(strcmp (szVCellMat(k).c_str(), "") == 0)  
+	    IOErrorHandler(EALIAS);
+	}	  
 	m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);			
       }
     }
@@ -310,6 +332,14 @@ void CNrgen::ReadPinCellData (int i)
       IOErrorHandler (INVALIDINPUT);
     std::istringstream szFormatString (szInputString);
     szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
+
+   // error checking
+    if( (strcmp (szVolAlias.c_str(), "") == 0) ||
+	(strcmp (szVolId.c_str(), "") == 0))
+      IOErrorHandler(EPIN);
+    if( nInputLines < 0 )
+      IOErrorHandler(ENEGATIVE);
+
     m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
     if(szIFlag == "intersect"){
       m_Pincell(i).SetIntersectFlag(1);
@@ -326,6 +356,8 @@ void CNrgen::ReadPinCellData (int i)
 	std::istringstream szFormatString (szInputString);
 	std::cout << "\ngetting pitch data";
 	szFormatString >> card >> dFlatF >> dLZ;
+	if( dFlatF < 0 || dLZ < 0 )
+	  IOErrorHandler(ENEGATIVE);
 	m_Pincell(i).SetPitch (dFlatF, dLZ);			
       } 
       if (szInputString.substr(0,9) == "materials"){
@@ -366,13 +398,20 @@ void CNrgen::ReadPinCellData (int i)
 	m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
 
 	// reading Radii
-	for(int l=1; l<= nRadii; l++)
+	for(int l=1; l<= nRadii; l++){
 	  szFormatString >> dVCylRadii(l);
+	  if( dVCylRadii(l) < 0 )
+	    IOErrorHandler(ENEGATIVE);
+	}
 	m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
 
 	// reading Material alias
-	for(int m=1; m<= nRadii; m++)
+	for(int m=1; m<= nRadii; m++){
 	  szFormatString >> szVCylMat(m);
+	  if(strcmp (szVCylMat(m).c_str(), "") == 0)  
+	    IOErrorHandler(EALIAS);
+	}
+
 	m_Pincell(i).SetCylMat(nCyl, szVCylMat);
       }
       if (szInputString.substr(0,12) == "cellmaterial"){
@@ -387,8 +426,11 @@ void CNrgen::ReadPinCellData (int i)
 	dZVEnd.SetSize(nCellMat);
 	szVCellMat.SetSize(nCellMat);
 	
-	for(int k=1; k<=nCellMat; k++) 
+	for(int k=1; k<=nCellMat; k++){ 
 	  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
+	  if(strcmp (szVCellMat(k).c_str(), "") == 0)  
+	    IOErrorHandler(EALIAS);
+	}
 	m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);			
       }
     }
@@ -406,7 +448,7 @@ int CNrgen::ReadAndCreate()
   //Rewind the input file
   m_FileInput.clear (std::ios_base::goodbit);
   m_FileInput.seekg (0L, std::ios::beg);
-	
+  m_nLineNumber = 0;
   CParser Parse;
   std::string card;
     
@@ -418,12 +460,14 @@ int CNrgen::ReadAndCreate()
     if (szInputString.substr(0,12) == "geometrytype"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_szGeomType;
+      if( (strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
+	  (strcmp (m_szGeomType.c_str(), "cartesian") != 0))
+	IOErrorHandler(EGEOMTYPE);
     }
 
     if (szInputString.substr(0,8) == "geometry"){
       std::string outfile;
- 
-      std::istringstream szFormatString (szInputString);
+       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> outfile;
       if(strcmp (outfile.c_str(), "surface") == 0)
 	m_nPlanar=1;
@@ -434,11 +478,16 @@ int CNrgen::ReadAndCreate()
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_nAssemblyMat;
       m_szAssmMat.SetSize(m_nAssemblyMat); m_szAssmMatAlias.SetSize(m_nAssemblyMat);
-      
-      for (int j=1; j<=m_nAssemblyMat; j++)
+      for (int j=1; j<=m_nAssemblyMat; j++){
 	szFormatString >> m_szAssmMat(j) >> m_szAssmMatAlias(j);
+	if( (strcmp (m_szAssmMat(j).c_str(), "") == 0) ||
+	    (strcmp (m_szAssmMatAlias(j).c_str(), "") == 0)){
+   	  IOErrorHandler(EMAT);
+	}
+      }
     }   
-    if (szInputString.substr(0,10) == "dimensions"){
+    if( (szInputString.substr(0,10) == "dimensions") || 
+	 (szInputString.substr(0,4) == "duct") ){
 
       std::cout << "getting assembly dimensions" << std::endl;
       if(m_szGeomType =="hexagonal"){
@@ -454,11 +503,17 @@ int CNrgen::ReadAndCreate()
 	assms.setSize(m_nDimensions); // setup while reading the problem size
 
 
-	for (int i=1; i<=m_nDimensions; i++)
+	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_dVAssmPitch(i);
+	  if( m_dVAssmPitch(i) < 0 )
+	    IOErrorHandler(ENEGATIVE);
+	}
 
-	for (int i=1; i<=m_nDimensions; i++)
+	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_szMAlias(i);
+	  if(strcmp (m_szMAlias(i).c_str(), "") == 0)  
+	    IOErrorHandler(EALIAS);
+	}
       }   
       if(m_szGeomType =="cartesian"){
 	std::istringstream szFormatString (szInputString);
@@ -472,64 +527,28 @@ int CNrgen::ReadAndCreate()
 	m_szMAlias.SetSize(m_nDimensions);
 	assms.setSize(m_nDimensions); // setup while reading the problem size
 
-	for (int i=1; i<=m_nDimensions; i++)
+	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_dVAssmPitchX(i) >> m_dVAssmPitchY(i);
+	  if( m_dVAssmPitchX(i) < 0 || m_dVAssmPitchY(i) < 0 )
+	    IOErrorHandler(ENEGATIVE);
+	}
 
-	for (int i=1; i<=m_nDimensions; i++)
+	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_szMAlias(i);
+	  if(strcmp (m_szMAlias(i).c_str(), "") == 0)  
+	    IOErrorHandler(EALIAS);
+	}
       }  
     }
-    if (szInputString.substr(0,4) == "duct"){
-
-      std::cout << "getting assembly dimensions" << std::endl;
-      if(m_szGeomType =="hexagonal"){
-	std::istringstream szFormatString (szInputString);
-	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
-
-	szFormatString >> card >> m_nDimensions 
-		       >> m_dVXYAssm(1) >> m_dVXYAssm(2)
-		       >> m_dVZAssm(1) >> m_dVZAssm(2);
-
-	m_dVAssmPitch.SetSize(m_nDimensions); m_szMAlias.SetSize(m_nDimensions);
-
-	assms.setSize(m_nDimensions); // setup while reading the problem size
-
-
-	for (int i=1; i<=m_nDimensions; i++)
-	  szFormatString >> m_dVAssmPitch(i);
-
-	for (int i=1; i<=m_nDimensions; i++)
-	  szFormatString >> m_szMAlias(i);
-      }   
-      if(m_szGeomType =="cartesian"){
-	std::istringstream szFormatString (szInputString);
-	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
-
-	szFormatString >> card >> m_nDimensions 
-		       >> m_dVXYAssm(1) >> m_dVXYAssm(2)
-		       >> m_dVZAssm(1) >> m_dVZAssm(2);
-
-	m_dVAssmPitchX.SetSize(m_nDimensions);	m_dVAssmPitchY.SetSize(m_nDimensions);
-	m_szMAlias.SetSize(m_nDimensions);
-	assms.setSize(m_nDimensions); // setup while reading the problem size
-
-	for (int i=1; i<=m_nDimensions; i++)
-	  szFormatString >> m_dVAssmPitchX(i) >> m_dVAssmPitchY(i);
-
-	for (int i=1; i<=m_nDimensions; i++)
-	  szFormatString >> m_szMAlias(i);
-      }  
-    }
-
     if (szInputString.substr(0,8) == "pincells"){
       std::istringstream szFormatString (szInputString);
       
       szFormatString >> card >> m_nPincells >> m_dPitch;
-      
-      // loop thro' the pincells and read/store pincell data
-      for (int i=1; i<=m_nPincells; i++){
+      if(m_nPincells < 0)
+	IOErrorHandler(ENEGATIVE);      
 
-	double dTotalHeight;
+	// this is an option if a user wants to specify pitch here
+	double dTotalHeight = 0.0;
 	//get the number of cylinder in each pincell
 	if(m_nDimensions > 0){
 	  dTotalHeight = m_dVZAssm(2)-m_dVZAssm(1);
@@ -538,7 +557,12 @@ int CNrgen::ReadAndCreate()
 	  dTotalHeight = 0; // nothing specified only pincells in the model
 	}
 
-	m_Pincell(i).SetPitch(m_dPitch, dTotalHeight);
+      // loop thro' the pincells and read/store pincell data  
+      for (int i=1; i<=m_nPincells; i++){
+
+	// set pitch if specified in pincell card
+	if(m_dPitch > 0.0)
+	  m_Pincell(i).SetPitch(m_dPitch, dTotalHeight);
 
 	ReadPinCellData(i);
 	std::cout << "\nread pincell " << i << std::endl;
@@ -604,6 +628,8 @@ int CNrgen::ReadAndCreate()
     if (szInputString.substr(0,14) == "radialmeshsize"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_RadialSize;
+      if(m_RadialSize < 0)
+	IOErrorHandler(ENEGATIVE);     
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
@@ -612,14 +638,16 @@ int CNrgen::ReadAndCreate()
       double m_AxialSize;
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_AxialSize;
+      if(m_AxialSize < 0)
+	IOErrorHandler(ENEGATIVE);
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
     if (szInputString.substr(0,3) == "end"){
-      // impring merge before saving
+ 
+     // impring merge before saving
       Imprint_Merge();
-      // position the assembly to the center
-      //   Center_Assm();
+ 
       // save .sat file
       iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
       CHECK("Save to file failed.");
@@ -627,9 +655,6 @@ int CNrgen::ReadAndCreate()
       break;
     }
   }
-  // check data for validity
-  if (m_nPincells < 0) 
-    IOErrorHandler (PINCELLS);
   return 1;
 }
 
@@ -930,6 +955,16 @@ void CNrgen::IOErrorHandler (ErrorStates ECode) const
     std::cerr << "Number of pincells must be >= 0.";
   else if (ECode == INVALIDINPUT) // invalid input
     std::cerr << "Invalid input.";
+  else if (ECode == EMAT) // invalid input
+    std::cerr << "Invalid Material Data.";
+  else if (ECode == EGEOMTYPE) // invalid input
+    std::cerr << "Invalid GeomType Data.";
+  else if (ECode == EALIAS) // invalid input
+    std::cerr << "Error Reading Aliases.";
+  else if (ECode == ENEGATIVE) // invalid input
+    std::cerr << "Unexpected negative value.";
+  else if (ECode == EPIN) // invalid input
+    std::cerr << "Invalid pinCell specs.";
   else
     std::cerr << "Unknown error ...?";
 
