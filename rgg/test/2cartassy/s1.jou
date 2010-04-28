@@ -1,0 +1,76 @@
+## This file is created by rgg program in MeshKit ##
+#User needs to specify mesh interval and schemes in this file
+#
+{include("s1.template.jou")}
+#
+# Import geometry file 
+import 's1.sat'
+#
+#merge geometry
+merge all
+#
+#Creating curve sidesets, Note: you might need to change @ extensions
+group 'tmpgrp' equals curve name "side_edge1"
+sideset 1 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge2"
+sideset 2 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge3"
+sideset 3 curve in tmpgrp
+group 'tmpgrp' equals curve name "side_edge4"
+sideset 4 curve in tmpgrp
+#
+#Creating top surface sidesets
+group 'tmpgrp' equals surface name "pwr_fc_f_01_top"
+sideset 5 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_block_top"
+sideset 6 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_coolant_top"
+sideset 7 surface in tmpgrp
+#
+#Creating top surface sidesets
+group 'tmpgrp' equals surface name "pwr_fc_f_01_bot"
+sideset 8 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_block_bot"
+sideset 9 surface in tmpgrp
+group 'tmpgrp' equals surface name "mat_coolant_bot"
+sideset 10 surface in tmpgrp
+#
+group "g_pwr_fc_f_01" add body name "pwr_fc_f_01"
+group "g_mat_block" add body name "mat_block"
+group "g_mat_coolant" add body name "mat_coolant"
+#
+#Creating blocks, Note: you might need to combine some blocks
+block 1 body in g_pwr_fc_f_01
+block 1 name "b_pwr_fc_f_01"
+block 2 body in g_mat_block
+block 2 name "b_mat_block"
+block 3 body in g_mat_coolant
+block 3 name "b_mat_coolant"
+#
+#Set Meshing Scheme and Sizes, use template.jou to specify sizes
+group 'tmpgrp' equals surface name "pwr_fc_f_01_bot"
+surface in tmpgrp  size {pwr_fc_f_01_surf_size}
+group 'tmpgrp' equals surface name "mat_block_bot"
+surface in tmpgrp  size {mat_block_surf_size}
+group 'tmpgrp' equals surface name "mat_coolant_bot"
+surface in tmpgrp  size {mat_coolant_surf_size}
+#
+#surfaces mesh, use template.jou to specify sizes
+group 'tmpgrp' equals surface name "pwr_fc_f_01_top"
+surface in tmpgrp  size {pwr_fc_f_01_surf_size}
+surface in tmpgrp scheme {PAVE}
+group 'tmpgrp' equals surface name "mat_block_top"
+surface in tmpgrp  size {mat_block_surf_size}
+surface in tmpgrp scheme {PAVE}
+group 'tmpgrp' equals surface name "mat_coolant_top"
+surface in tmpgrp  size {mat_coolant_surf_size}
+surface in tmpgrp scheme {PAVE}
+#
+group 'tmpgrp' add surface name '_top'
+mesh tmpgrp
+#
+surface with z_coord > {Z_MID -.1*Z_HEIGHT} and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}
+mesh vol all
+#
+#Save file
+save as 's1.cub' overwrite
