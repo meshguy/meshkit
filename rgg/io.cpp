@@ -88,7 +88,9 @@ void CNrgen::PrepareIO (int argc, char *argv[])
     m_FileInput.open (m_szInFile.c_str(), std::ios::in); 
     if (!m_FileInput){
       std::cout << "Unable to open file" << std::endl;
+      std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
       m_FileInput.clear ();
+      exit(1);
     }
     else
       bDone = true; // file opened successfully
@@ -840,7 +842,7 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "#\n#Save file" << std::endl; 
   std::string szSave = m_szFile + ".cub";
   m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl; 
-  m_FileOutput << "exit" << std::endl; 
+
 
   std::cout << "Schemes file created: " << m_szSchFile << std::endl;
   std::cout << "Cubit journal file created: " << m_szJouFile << std::endl;

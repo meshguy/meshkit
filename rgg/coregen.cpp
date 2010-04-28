@@ -568,7 +568,9 @@ int  prepareIO (int argc, char *argv[])
     file_input.open (ifile.c_str(), std::ios::in); 
     if (!file_input){
       std::cout << "Unable to open file" << std::endl;
+      std::cout << "Usage: coregen <input file WITHOUT EXTENSION>"<< std::endl; 
       file_input.clear ();
+      exit(1);
     }
     else
       bDone = true; // file opened successfully
