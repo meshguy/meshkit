@@ -1,0 +1,11 @@
+Geometry Surface
+GeometryType Hexagonal
+Assemblies 2 10.0
+a1.cub A1
+a2.cub A2
+Lattice 3
+A1 &
+A2 A2 &
+A1 A1 A1
+end
+
