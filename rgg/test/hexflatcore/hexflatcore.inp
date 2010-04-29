@@ -1,0 +1,20 @@
+!
+!
+Geometry Surface         	 ! 'Geometry' card defines if the meshes are volume or surface
+!
+GeometryType HexFlat    	 ! 'GeometryType' card can take values Hexagonal Cartesian and Default
+!
+Assemblies 4 10.0	     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
+a1.cub  A1      	         ! Meshfile name followed by alias 
+a2.cub  A2
+a3.cub  A3
+a4.cub  A4
+!
+Lattice 3           	         ! 'Lattice' card defines core had 2 rings next define these rings based on Aliases
+A1 &
+A3 A4 &         	         ! Assembly arrangement must be in one line, Note the usage of '&' sign, it signals continuation of input in the next line
+A3 A2 A4
+!
+Symmetry 6	                 !  'Symmetry' card defines the desired symmetry for the o/p mesh
+!
+END                              ! 'END' card is a MUST marks the end of file for the file reader

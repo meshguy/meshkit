@@ -84,7 +84,7 @@ int get_copy_expand_sets(CopyMesh *cm,
 
 int extend_expand_sets(CopyMesh *cm);
 
-int copy_move_assys(CopyMesh *cm,
+int copy_move_hex_flat_assys(CopyMesh *cm,
                     const int nrings, const int pack_type,
                     const double pitch,
                     const int symm,
@@ -98,7 +98,7 @@ int copy_move_sq_assys(CopyMesh *cm,
 		        std::vector<std::string> &core_alias,
 		       std::vector<iBase_EntitySetHandle> &assys);
 
-int copy_move_hex_assys(CopyMesh *cm,
+int copy_move_hex_vertex_assys(CopyMesh *cm,
 		       const int nrings, const int pack_type,
 		       const double pitch,
 		       const int symm,
@@ -196,8 +196,8 @@ int main(int argc, char **argv)
   std::cout << "Loaded mesh files." << std::endl;
 
   // move the assys based on the geometry type
-  if(!strcmp(geom_type.c_str(), "hexagonal")){
-    err = copy_move_hex_assys(cm, nrings, pack_type, pitch, symm, 
+  if(!strcmp(geom_type.c_str(), "hexvertex")){
+    err = copy_move_hex_vertex_assys(cm, nrings, pack_type, pitch, symm, 
 			  core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
@@ -206,8 +206,8 @@ int main(int argc, char **argv)
 			  core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   } 
-  else if(!strcmp(geom_type.c_str(),"default")){
-    err = copy_move_assys(cm, nrings, pack_type, pitch, symm, 
+  else if(!strcmp(geom_type.c_str(),"hexflat")){
+    err = copy_move_hex_flat_assys(cm, nrings, pack_type, pitch, symm, 
 			  core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
@@ -308,7 +308,7 @@ int del_orig_mesh(std::vector<iBase_EntitySetHandle> &assys,
   return iBase_SUCCESS;
 }
 
-int copy_move_hex_assys(CopyMesh *cm,
+int copy_move_hex_vertex_assys(CopyMesh *cm,
 			const int nrings, const int pack_type,
 			const double pitch,
 			const int symm,
@@ -316,7 +316,8 @@ int copy_move_hex_assys(CopyMesh *cm,
 			std::vector<iBase_EntitySetHandle> &assys)
 {
   double dx[3] = {0.0, 0.0, 0.0};
-  double PI = acos(-1.0);
+  double dxnew[3] = {0.0, 0.0, 0.0};
+  double PI = acos(-1.0), radius;
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
   int err; 
@@ -346,12 +347,16 @@ int copy_move_hex_assys(CopyMesh *cm,
 	new_ents = NULL;
 	new_ents_alloc = 0;
 
-	err = cm->copy_move_entities(assys[assm_index], dx, 
+	// starting from x-axis
+	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
+	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));	  
+
+	err = cm->copy_move_entities(assys[assm_index], dxnew, 
 				     &new_ents, &new_ents_alloc, &new_ents_size,
 				     false);
 	ERRORR("Failed to copy_move entities.", 1);
 	std::cout << "Copy/moved A: " << assm_index 
-		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 	free(new_ents);
 	i++;
       }
@@ -381,12 +386,17 @@ int copy_move_hex_assys(CopyMesh *cm,
 	new_ents = NULL;
 	new_ents_alloc = 0;
 
-	err = cm->copy_move_entities(assys[assm_index], dx, 
+
+	// starting from x-axis
+	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
+	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
+
+	err = cm->copy_move_entities(assys[assm_index], dxnew, 
 				     &new_ents, &new_ents_alloc, &new_ents_size,
 				     false);
 	ERRORR("Failed to copy_move entities.", 1);
 	std::cout << "Copy/moved A: " << assm_index 
-		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 	free(new_ents);
 	i++;
       }
@@ -396,7 +406,7 @@ int copy_move_hex_assys(CopyMesh *cm,
   return iBase_SUCCESS;
 }  
 
-int copy_move_assys(CopyMesh *cm,
+int copy_move_hex_flat_assys(CopyMesh *cm,
                     const int nrings, const int pack_type,
                     const double pitch,
                     const int symm,
@@ -417,14 +427,14 @@ int copy_move_assys(CopyMesh *cm,
 //   const char *ctag_vals[]={(const char*)&set_DIM};
 
   for (int n1 = 0; n1 < nrings; n1++) {
-    for (int n2 = n1; n2 < nrings; n2++) {
+    for (int n2 = 0; n2 < n1+1; n2++) {
       err = find_assm(i,assm_index);
       if (-1 == assm_index) {
         i++;
         continue;
       }
-      dx[1] = n1 * pitch * sin(PI/3.0);
-      dx[0] = .5 * n1 * pitch + (n2 - n1) * pitch;
+      dx[1] = n1 * pitch * sin(PI/3.0)  - n2 * pitch * sin(PI/3.0);
+      dx[0] = n1 * pitch *  cos(PI/3.0)  + n2 * pitch * cos(PI/3.0);
       new_ents = NULL;
       new_ents_alloc = 0;
 
@@ -638,7 +648,7 @@ int read_inputs ()
     if (input_string.substr(0,12) == "geometrytype"){
       std::istringstream formatString (input_string);
       formatString >> card >> geom_type;
-      if(geom_type == "hexagonal"){
+      if(geom_type == "hexvertex"){
 
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
@@ -727,7 +737,7 @@ int read_inputs ()
 	}		
       }
 
-      else if (geom_type =="default"){
+      else if (geom_type =="hexflat"){
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
 				 MAXCHARS, comment))
