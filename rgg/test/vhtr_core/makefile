@@ -4,11 +4,11 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit --no-gui --batch
+CUBIT = cubit
 
-coregen = ../../coregen
+COREGEN = ../../coregen
 
-assygen = ../../assygen
+ASSYGEN = ../../assygen
 
 MESH_FILES = 0.cub  1.cub  2.cub  3.cub  4.cub  5.cub  6.cub  7.cub  8.cub  9.cub  10.cub  11.cub  
 
@@ -20,77 +20,77 @@ INJOU_FILES = 0.template.jou  1.template.jou  2.template.jou  3.template.jou  4.
 
 ASSYGEN_FILES = 0.inp  1.inp  2.inp  3.inp  4.inp  5.inp  6.inp  7.inp  8.inp  9.inp  10.inp  11.inp  
 
-vhtr-sixth.h5m : ${MESH_FILES} vhtr-sixth.inp
-	${coregen} vhtr-sixth
+vhtr_core.h5m : ${MESH_FILES} vhtr_core.inp
+	${COREGEN} vhtr_core
 0.cub : 0.sat  0.jou  0.template.jou
-	${CUBIT} 0.jou
+	${CUBIT} -nogui -nobatch 0.jou
 
-0.sat : 0.inp
-	${assygen} 0
+0.sat 0.jou 0.template.jou : 0.inp
+	${ASSYGEN} 0
 
 1.cub : 1.sat  1.jou  1.template.jou
-	${CUBIT} 1.jou
+	${CUBIT} -nogui -nobatch 1.jou
 
-1.sat : 1.inp
-	${assygen} 1
+1.sat 1.jou 1.template.jou : 1.inp
+	${ASSYGEN} 1
 
 2.cub : 2.sat  2.jou  2.template.jou
-	${CUBIT} 2.jou
+	${CUBIT} -nogui -nobatch 2.jou
 
-2.sat : 2.inp
-	${assygen} 2
+2.sat 2.jou 2.template.jou : 2.inp
+	${ASSYGEN} 2
 
 3.cub : 3.sat  3.jou  3.template.jou
-	${CUBIT} 3.jou
+	${CUBIT} -nogui -nobatch 3.jou
 
-3.sat : 3.inp
-	${assygen} 3
+3.sat 3.jou 3.template.jou : 3.inp
+	${ASSYGEN} 3
 
 4.cub : 4.sat  4.jou  4.template.jou
-	${CUBIT} 4.jou
+	${CUBIT} -nogui -nobatch 4.jou
 
-4.sat : 4.inp
-	${assygen} 4
+4.sat 4.jou 4.template.jou : 4.inp
+	${ASSYGEN} 4
 
 5.cub : 5.sat  5.jou  5.template.jou
-	${CUBIT} 5.jou
+	${CUBIT} -nogui -nobatch 5.jou
 
-5.sat : 5.inp
-	${assygen} 5
+5.sat 5.jou 5.template.jou : 5.inp
+	${ASSYGEN} 5
 
 6.cub : 6.sat  6.jou  6.template.jou
-	${CUBIT} 6.jou
+	${CUBIT} -nogui -nobatch 6.jou
 
-6.sat : 6.inp
-	${assygen} 6
+6.sat 6.jou 6.template.jou : 6.inp
+	${ASSYGEN} 6
 
 7.cub : 7.sat  7.jou  7.template.jou
-	${CUBIT} 7.jou
+	${CUBIT} -nogui -nobatch 7.jou
 
-7.sat : 7.inp
-	${assygen} 7
+7.sat 7.jou 7.template.jou : 7.inp
+	${ASSYGEN} 7
 
 8.cub : 8.sat  8.jou  8.template.jou
-	${CUBIT} 8.jou
+	${CUBIT} -nogui -nobatch 8.jou
 
-8.sat : 8.inp
-	${assygen} 8
+8.sat 8.jou 8.template.jou : 8.inp
+	${ASSYGEN} 8
 
 9.cub : 9.sat  9.jou  9.template.jou
-	${CUBIT} 9.jou
+	${CUBIT} -nogui -nobatch 9.jou
 
-9.sat : 9.inp
-	${assygen} 9
+9.sat 9.jou 9.template.jou : 9.inp
+	${ASSYGEN} 9
 
 10.cub : 10.sat  10.jou  10.template.jou
-	${CUBIT} 10.jou
+	${CUBIT} -nogui -nobatch 10.jou
 
-10.sat : 10.inp
-	${assygen} 10
+10.sat 10.jou 10.template.jou : 10.inp
+	${ASSYGEN} 10
 
 11.cub : 11.sat  11.jou  11.template.jou
-	${CUBIT} 11.jou
+	${CUBIT} -nogui -nobatch 11.jou
 
-11.sat : 11.inp
-	${assygen} 11
+11.sat 11.jou 11.template.jou : 11.inp
+	${ASSYGEN} 11
 

@@ -7,7 +7,7 @@ GeometryType Hexagonal
 !                                     
 Materials 6 Mat_OCoolant C1Out Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_FHH H1       
 !
-Dimensions 2 0.0 0.0 -0 793.0 36.0 37.3  G1 C1Out ! 2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Duct 2 0.0 0.0    0.0 793.0    36.0 37.3     G1 C1Out 
 !
 Pincells 5 1.87960 
 ! 1
