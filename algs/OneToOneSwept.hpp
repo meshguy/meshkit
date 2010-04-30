@@ -124,6 +124,8 @@ private:
 	int isVertexCorner(iBase_EntityHandle gNodeHandle, iBase_EntityHandle gFaceHandle);
 	int is_SamePoint(double ptx1, double pty1, double ptz1, double ptx2, double pty2, double ptz2);
 	int getLinkingMesh();
+	
+	int MeshSetting();
 };
 
 

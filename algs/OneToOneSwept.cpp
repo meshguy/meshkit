@@ -17,6 +17,8 @@ OneToOneSwept::OneToOneSwept(iGeom_Instance &geometry, iMesh_Instance &Mesh, iRe
 	assoc = association;
 	rel   = irel;
 	
+	MeshSetting();
+	
 	buildAssociation(geom, mesh, assoc, rel);
 	
 	int err;
@@ -32,6 +34,30 @@ OneToOneSwept::OneToOneSwept(iGeom_Instance &geometry, iMesh_Instance &Mesh, iRe
 	assert(!err);
 	iMesh_getTagHandle(mesh, tag, &mesh_id_tag, &err, namelen);
 	assert(!err);
+}
+
+int OneToOneSwept::MeshSetting()
+{
+    int err;
+
+    SimpleArray<int> adjTable;
+    iMesh_getAdjTable(mesh, ARRAY_INOUT(adjTable), &err);
+    assert(!err);
+    if (adjTable[5] == 0) adjTable[5] = 1;
+    if (adjTable[4] == 0) adjTable[4] = 1;
+    if (adjTable[10] == 0) adjTable[10] = 1;
+    if (adjTable[8] == 0) adjTable[8] = 1;
+    if (adjTable[6] == 0) adjTable[6] = 1;
+    
+    iMesh_setAdjTable(mesh, ARRAY_IN(adjTable), &err);
+    if (err)
+    {
+        char descr[1000];
+        int len = 1000;
+        iMesh_getDescription(mesh, descr, &err, len);
+        cout << descr << endl;
+        exit(0);
+    }
 }
 
 int OneToOneSwept::getList()
