@@ -1,6 +1,6 @@
 ! To run this test file: MeshKit> coregen 2-assms
 Geometry Volume  			! 'Geometry' card defines if the meshes are volume or surface
-GeometryType Cartesian			! 'GeometryType' card can take values Hexagonal Cartesian and Default
+GeometryType Rectangular			! 'GeometryType' card can take values Hexagonal Rectangular and Default
 Assemblies 2 23.5 23.5			! 'Assemblies' card defines there is one assembly with pitch  (Note this should takecare of background mesh)
 s1.cub S1                   	  	! Meshfile name followed by alias 
 s2.cub S2

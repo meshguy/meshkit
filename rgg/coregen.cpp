@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 			  core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
-  else if(!strcmp(geom_type.c_str(),"cartesian")){
+  else if(!strcmp(geom_type.c_str(),"rectangular")){
     err = copy_move_sq_assys(cm, nrings, pack_type, pitch, symm, 
 			  core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
@@ -694,7 +694,7 @@ int read_inputs ()
 	}		
       }
 
-      else if(geom_type == "cartesian"){
+      else if(geom_type == "rectangular"){
 
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
@@ -813,9 +813,9 @@ int write_makefile(){
   make_file << "##" << std::endl;
   make_file << "## Check your coregen, assygen and cubit location" << std::endl;
   make_file << "##" << std::endl;
-  make_file << "\nCUBIT = cubit --no-gui --batch\n" << std::endl;
-  make_file << "coregen = ../../coregen\n" << std::endl;
-  make_file << "assygen = ../../assygen\n" << std::endl;
+  make_file << "\nCUBIT = cubit\n" << std::endl;
+  make_file << "COREGEN = ../../coregen\n" << std::endl;
+  make_file << "ASSYGEN = ../../assygen\n" << std::endl;
 
   make_file << "MESH_FILES = " ;
   for(unsigned int i=0; i<files.size(); i++)
@@ -861,13 +861,13 @@ int write_makefile(){
   }
 
   make_file << "\n\n" << outfile << " : ${MESH_FILES} " << ifile <<  std::endl;
-  make_file << "\t" << "${coregen} " << iname << std::endl;
+  make_file << "\t" << "${COREGEN} " << iname << std::endl;
   for(unsigned int i=0; i<files.size(); i++){
     make_file << files[i] << " : " << f_sat[i] << "  " << f_jou[i] << "  " << f_injou[i] << std::endl;
-    make_file << "\t" << "${CUBIT} " << f_jou[i] <<"\n" << std::endl;
+    make_file << "\t" << "${CUBIT} -nogui -nobatch " << f_jou[i] <<"\n" << std::endl;
 
-    make_file << f_sat[i] << " : " << f_inp[i] << std::endl;
-    make_file << "\t" << "${assygen} " << f_no_ext[i] << "\n" << std::endl;
+    make_file << f_sat[i] << " " << f_jou[i] << " " << f_injou[i] << " : " << f_inp[i] << std::endl;
+    make_file << "\t" << "${ASSYGEN} " << f_no_ext[i] << "\n" << std::endl;
   }
 
   make_file.close();

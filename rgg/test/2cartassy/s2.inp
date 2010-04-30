@@ -2,7 +2,7 @@
 ! Square PWR Assembly Definition without CellMaterials (Prism) around Pins
 ! ###############################################################################
 !
-GeometryType Cartesian  
+GeometryType Rectangular
 !
 Materials 3 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3
 !

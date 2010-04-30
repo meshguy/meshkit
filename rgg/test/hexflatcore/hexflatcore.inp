@@ -2,7 +2,7 @@
 !
 Geometry Surface         	 ! 'Geometry' card defines if the meshes are volume or surface
 !
-GeometryType HexFlat    	 ! 'GeometryType' card can take values Hexagonal Cartesian and Default
+GeometryType HexFlat    	 ! 'GeometryType' card can take values Hexagonal Rectangular
 !
 Assemblies 4 10.0	     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
 a1.cub  A1      	         ! Meshfile name followed by alias 

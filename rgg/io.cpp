@@ -212,7 +212,7 @@ void CNrgen::ReadPinCellData (int i)
   CVector<double> dVCylRadii,dVCylZPos,dZVStart, dZVEnd;
 
   //loop over input lines
-  if (m_szGeomType == "cartesian"){
+  if (m_szGeomType == "rectangular"){
 
     std::cout << "\ngetting volume id";
     if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
@@ -322,7 +322,7 @@ void CNrgen::ReadPinCellData (int i)
 	m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);			
       }
     }
-  }//if cartesian ends
+  }//if rectangular ends
 
   if (m_szGeomType == "hexagonal"){
 
@@ -461,7 +461,7 @@ int CNrgen::ReadAndCreate()
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_szGeomType;
       if( (strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
-	  (strcmp (m_szGeomType.c_str(), "cartesian") != 0))
+	  (strcmp (m_szGeomType.c_str(), "rectangular") != 0))
 	IOErrorHandler(EGEOMTYPE);
     }
 
@@ -515,7 +515,7 @@ int CNrgen::ReadAndCreate()
 	    IOErrorHandler(EALIAS);
 	}
       }   
-      if(m_szGeomType =="cartesian"){
+      if(m_szGeomType =="rectangular"){
 	std::istringstream szFormatString (szInputString);
 	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
 
@@ -572,7 +572,7 @@ int CNrgen::ReadAndCreate()
       if(m_szGeomType =="hexagonal"){
 	Create_HexAssm(szInputString);
       }
-      if(m_szGeomType =="cartesian"){
+      if(m_szGeomType =="rectangular"){
 	Create_CartAssm(szInputString);
       }
       CreateOuterCovering();
@@ -688,7 +688,7 @@ int CNrgen::CreateCubitJournal()
       m_SchemesFile << "#{PITCH =" << m_dVAssmPitch(m_nDimensions) << "}" << std::endl;
     }
   }
-  else if(m_szGeomType == "cartesian"){
+  else if(m_szGeomType == "rectangular"){
     if(m_nDimensions > 0){    
       m_SchemesFile << "#{PITCHX =" << m_dVAssmPitchX(m_nDimensions)<< "}" << std::endl;
       m_SchemesFile << "#{PITCHY =" << m_dVAssmPitchY(m_nDimensions) << "}" << std::endl;
@@ -743,7 +743,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;    
     }
   }
-  if(m_szGeomType =="cartesian"){
+  if(m_szGeomType =="rectangular"){
     for(j=1; j<=4; j++){
       ++nSideset;
       m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
@@ -897,7 +897,7 @@ void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
       dY = (m-1)*(0.5*dP/sin(pi/3.0) + 0.5*dP*sin(pi/6.0)/sin(pi/3.0)); 
     }     
   }
-  if(m_szGeomType == "cartesian"){
+  if(m_szGeomType == "rectangular"){
     double dPX, dPY, dPZ, dPX1, dPY1, dPZ1, dPX2, dPY2, dPZ2;
     m_Pincell(nTempPin).GetPitch(dPX, dPY, dPZ);
     if (n==1){
@@ -939,7 +939,7 @@ void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
       }
     }   
     dZ = 0.0; // moving in XY plane only
-  }//if cartesian ends
+  }//if rectangular ends
 }
 
 void CNrgen::IOErrorHandler (ErrorStates ECode) const
@@ -1348,7 +1348,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 
 int CNrgen::Create_CartAssm(std::string &szInputString)
 // ---------------------------------------------------------------------------
-// Function: read and create the assembly for cartesian lattice
+// Function: read and create the assembly for rectangular lattice
 // Input:    error code
 // Output:   none
 // ---------------------------------------------------------------------------
@@ -1464,7 +1464,7 @@ int CNrgen::CreateOuterCovering ()
   CHECK("getTagHandle failed");
   iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
 
-  // name the innermost outer covering common for both cartesian and hexagonal assembliees   
+  // name the innermost outer covering common for both rectangular and hexagonal assembliees   
   if(m_nDimensions >0){
     int tag_no;
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -1754,8 +1754,8 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  CHECK("Prism creation failed.");
 	}
       }  
-      // if cartesian geometry
-      if(m_szGeomType =="cartesian"){  
+      // if rectangular geometry
+      if(m_szGeomType =="rectangular"){  
 
 	m_Pincell(i).GetPitch(PX, PY, PZ);
 	
@@ -1895,8 +1895,8 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	
 	m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
       }
-      // if cartesian geometry
-      if(m_szGeomType =="cartesian"){  
+      // if rectangular geometry
+      if(m_szGeomType =="rectangular"){  
 	
 	m_Pincell(i).GetPitch(PX, PY, PZ);
       }
@@ -2047,8 +2047,8 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	  CHECK("Prism creation failed.");
 	}
       }  
-      // if cartesian geometry
-      if(m_szGeomType =="cartesian"){  
+      // if rectangular geometry
+      if(m_szGeomType =="rectangular"){  
 
 	m_Pincell(i).GetPitch(PX, PY, PZ);
 	
@@ -2203,8 +2203,8 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	CHECK("Prism creation failed.");
 
       }
-      // if cartesian geometry
-      if(m_szGeomType =="cartesian"){  
+      // if rectangular geometry
+      if(m_szGeomType =="rectangular"){  
 	
 	m_Pincell(i).GetPitch(PX, PY, PZ);
 	// create brick

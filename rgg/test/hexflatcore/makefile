@@ -4,7 +4,7 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit --no-gui --batch
+CUBIT = cubit -nograph -batch
 
 coregen = ../../coregen
 
@@ -25,24 +25,24 @@ hexflatcore.h5m : ${MESH_FILES} hexflatcore.inp
 a1.cub : a1.sat  a1.jou  a1.template.jou
 	${CUBIT} a1.jou
 
-a1.sat : a1.inp
+a1.sat a1.jou a1.template.jou: a1.inp
 	${assygen} a1
 
 a2.cub : a2.sat  a2.jou  a2.template.jou
 	${CUBIT} a2.jou
 
-a2.sat : a2.inp
+a2.sat a2.jou a2.template.jou: a2.inp
 	${assygen} a2
 
 a3.cub : a3.sat  a3.jou  a3.template.jou
 	${CUBIT} a3.jou
 
-a3.sat : a3.inp
+a3.sat a3.jou a3.template.jou: a3.inp
 	${assygen} a3
 
 a4.cub : a4.sat  a4.jou  a4.template.jou
 	${CUBIT} a4.jou
 
-a4.sat : a4.inp
+a4.sat a4.jou a4.template.jou: a4.inp
 	${assygen} a4
 
