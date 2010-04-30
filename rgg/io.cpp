@@ -667,7 +667,7 @@ int CNrgen::CreateCubitJournal()
 {
   // variables
   int nSideset=0, i, j;
-  std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize;
+  std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
   if(m_nDimensions > 0){
     dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
@@ -734,8 +734,21 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "merge all" << std::endl;
   m_FileOutput << "#" << std::endl;
 
+  // top surface sidesets
+  m_FileOutput << "#Creating top surface sidesets" << std::endl; 
+  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    szSurfTop = m_szAssmMat(p)+"_top";
+    ++nSideset;
+    m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
+  }
+  m_FileOutput << "#" << std::endl;
+
+//surface only
+  if(m_nPlanar ==1){ 
+
   // sideset curves on top surface creation dumps
-  m_FileOutput << "#Creating curve sidesets, Note: you might need to change @ extensions" << std::endl; 
+  m_FileOutput << "#Creating side curve sidesets" << std::endl; 
   if(m_szGeomType =="hexagonal"){
     for(i=1; i<=6; i++){
       ++nSideset;
@@ -751,19 +764,6 @@ int CNrgen::CreateCubitJournal()
     }
     m_FileOutput << "#" << std::endl;
   }
-  
-  // top surface sidesets
-  m_FileOutput << "#Creating top surface sidesets" << std::endl; 
-  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szSurfTop = m_szAssmMat(p)+"_top";
-    ++nSideset;
-    m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
-  }
-  m_FileOutput << "#" << std::endl;
-
-//surface only
-  if(m_nPlanar ==1){ 
 
     // group creation dumps. each material surface  has a group
     m_FileOutput << "#Creating groups" << std::endl;  
@@ -789,11 +789,19 @@ int CNrgen::CreateCubitJournal()
   else{ 
 
     // bottom surface sidesets
-    m_FileOutput << "#Creating top surface sidesets" << std::endl; 
+    m_FileOutput << "#Creating bot and side surface sidesets" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szSurfTop = m_szAssmMat(p)+"_bot";
+      szSurfSide = m_szAssmMat(p)+"_side";  
+
+      m_FileOutput << "#" << std::endl;
+
       ++nSideset;
       m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+      m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
+
+      ++nSideset;
+      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfSide  << "\"" << std::endl;
       m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
     }
     m_FileOutput << "#" << std::endl;
