@@ -51,6 +51,20 @@ Journal file name created by RGG is  <input file name WITHOUT EXTENSION>.jou
 B. 'coregen' program
 Launch the executable 'coregen' from the rgg directory as follows
 usage: coregen <inpufile name WITHOUT EXTENSION> 
+
+C. Running tests in rgg/test/<dir_name>
+These tests create a core from scratch. 
+Test cases first run 'assygen' to generate the required .sat (geometry) files, then run 'cubit' to generate .cub (meshes) files and finally run 'coregen' to create the core mesh in .h5m file format.
+
+Test in rgg/test directory can be run by simply using the makefile ('make') in each of the test directories. 
+Warning: Check 'cubit' path in the makefile (rgg/test/<test_case>/makefile) before running.
+
+Presently, there are 4 test cases:
+1. 2cartassy: Two rectangular assemblies are used to form a 3x3 core lattice.
+2. hexvertexcore: A hexvertex core is formed in this test. It has 3 rings.
+3. hexflatcore: This test is a hexflatcore with 3 rings.
+4. vhtr-hexvertexcore: A full VHTR core with 11 rings.
+
 -------------------------------------------------------------------------------------------------------
 EXAMPLE (Sample input files can be found in files directory in rgg)
 -------------------------------------------------------------------------------------------------------

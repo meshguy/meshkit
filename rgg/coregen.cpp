@@ -77,28 +77,28 @@
 #include <sstream>
 #include <string>
 ;
-int get_copy_expand_sets(CopyMesh *cm,
+int get_copy_expand_sets(CopyMesh **cm,
                          iBase_EntitySetHandle orig_set, 
                          const char **tag_names, const char **tag_vals, 
                          int num_tags, int copy_or_expand);
 
 int extend_expand_sets(CopyMesh *cm);
 
-int copy_move_hex_flat_assys(CopyMesh *cm,
+int copy_move_hex_flat_assys(CopyMesh **cm,
                     const int nrings, const int pack_type,
                     const double pitch,
                     const int symm,
                     std::vector<std::string> &core_alias,
                     std::vector<iBase_EntitySetHandle> &assys);
 
-int copy_move_sq_assys(CopyMesh *cm,
+int copy_move_sq_assys(CopyMesh **cm,
 		       const int nrings, const int pack_type,
 		       const double pitch,
 		       const int symm,
 		        std::vector<std::string> &core_alias,
 		       std::vector<iBase_EntitySetHandle> &assys);
 
-int copy_move_hex_vertex_assys(CopyMesh *cm,
+int copy_move_hex_vertex_assys(CopyMesh **cm,
 		       const int nrings, const int pack_type,
 		       const double pitch,
 		       const int symm,
@@ -176,7 +176,12 @@ int main(int argc, char **argv)
   
   iMesh_getRootSet(impl, &root_set, &err);
 
-  CopyMesh *cm = new CopyMesh(impl);
+  CopyMesh* cm[files.size()];
+  for (unsigned int i = 0; i < files.size(); i++) {
+    cm[i] = new CopyMesh(impl);
+  }  
+
+  //  CopyMesh *cm = new CopyMesh(impl);
   MergeMesh *mm = new MergeMesh(impl);
 
   std::vector<iBase_EntitySetHandle> assys;
@@ -265,7 +270,9 @@ int main(int argc, char **argv)
   ERRORR("Trouble writing output mesh.", err);
   std::cout << "Saved: "<< outfile.c_str() <<std::endl;
 
-  delete cm;
+  for (unsigned int i = 0; i < files.size(); i++) {
+    delete cm[i];
+  } 
   delete mm;
   
   iMesh_dtor(impl, &err);
@@ -308,7 +315,7 @@ int del_orig_mesh(std::vector<iBase_EntitySetHandle> &assys,
   return iBase_SUCCESS;
 }
 
-int copy_move_hex_vertex_assys(CopyMesh *cm,
+int copy_move_hex_vertex_assys(CopyMesh **cm,
 			const int nrings, const int pack_type,
 			const double pitch,
 			const int symm,
@@ -317,7 +324,7 @@ int copy_move_hex_vertex_assys(CopyMesh *cm,
 {
   double dx[3] = {0.0, 0.0, 0.0};
   double dxnew[3] = {0.0, 0.0, 0.0};
-  double PI = acos(-1.0), radius;
+  double PI = acos(-1.0);
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
   int err; 
@@ -351,7 +358,7 @@ int copy_move_hex_vertex_assys(CopyMesh *cm,
 	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
 	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));	  
 
-	err = cm->copy_move_entities(assys[assm_index], dxnew, 
+	err = cm[assm_index]->copy_move_entities(assys[assm_index], dxnew, 
 				     &new_ents, &new_ents_alloc, &new_ents_size,
 				     false);
 	ERRORR("Failed to copy_move entities.", 1);
@@ -391,7 +398,7 @@ int copy_move_hex_vertex_assys(CopyMesh *cm,
 	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
 	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
 
-	err = cm->copy_move_entities(assys[assm_index], dxnew, 
+	err = cm[assm_index]->copy_move_entities(assys[assm_index], dxnew, 
 				     &new_ents, &new_ents_alloc, &new_ents_size,
 				     false);
 	ERRORR("Failed to copy_move entities.", 1);
@@ -406,7 +413,7 @@ int copy_move_hex_vertex_assys(CopyMesh *cm,
   return iBase_SUCCESS;
 }  
 
-int copy_move_hex_flat_assys(CopyMesh *cm,
+int copy_move_hex_flat_assys(CopyMesh **cm,
                     const int nrings, const int pack_type,
                     const double pitch,
                     const int symm,
@@ -438,7 +445,7 @@ int copy_move_hex_flat_assys(CopyMesh *cm,
       new_ents = NULL;
       new_ents_alloc = 0;
 
-      err = cm->copy_move_entities(assys[assm_index], dx, 
+      err = cm[assm_index]->copy_move_entities(assys[assm_index], dx, 
                                    &new_ents, &new_ents_alloc, &new_ents_size,
                                    false);
       ERRORR("Failed to copy_move entities.", 1);
@@ -452,7 +459,7 @@ int copy_move_hex_flat_assys(CopyMesh *cm,
 }
 
 
-int copy_move_sq_assys(CopyMesh *cm,
+int copy_move_sq_assys(CopyMesh **cm,
 		       const int nrings, const int pack_type,
 		       const double pitch,
 		       const int symm,
@@ -491,7 +498,7 @@ int copy_move_sq_assys(CopyMesh *cm,
 //       err = extend_expand_sets(cm);
 //       ERRORR("Failed to extend expand lists.", iBase_FAILURE);
 
-      err = cm->copy_move_entities(assys[assm_index], dx, 
+      err = cm[assm_index]->copy_move_entities(assys[assm_index], dx, 
                                    &new_ents, &new_ents_alloc, &new_ents_size,
                                    false);
       ERRORR("Failed to copy_move entities.", 1);
