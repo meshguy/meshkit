@@ -1,6 +1,7 @@
 #include <iostream>
 #include "std.h"
 #include "Heap.h"
+#include <string.h> /* for memcpy */
 
 
 void Heap::swap(int i,int j)
