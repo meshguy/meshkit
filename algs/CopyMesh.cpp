@@ -26,6 +26,7 @@ CopyMesh::CopyMesh(iMesh_Instance impl)
 {
   // allocate copy tag
   copyTag = 0;
+  cm_index = 0;
 }
 
 int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
@@ -50,7 +51,7 @@ int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_se
     if(err != iBase_SUCCESS && err != iBase_TAG_ALREADY_EXISTS) // if tag didn't exist already and we have some other error
       ERROR("Couldn't create copy mesh tag.");
     while(err == iBase_TAG_ALREADY_EXISTS){
-      std::ostringstream os;
+      std::ostringstream os("");
       ++cm_index;
 
       os << tag_name << cm_index;
