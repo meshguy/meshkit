@@ -5,15 +5,13 @@ Geometry Volume         	 ! 'Geometry' card defines if the meshes are volume or 
 !
 GeometryType hexflat    	 ! 'GeometryType' card can take values Hexagonal Cartesian and Default
 !
-Assemblies 2 14.685     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
+Assemblies 1 15.685     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
 pin1.cub  A1      	         ! Meshfile name followed by alias 
-pin1.cub A2
 !
-Lattice 3           	         ! 'Lattice' card defines core had 2 rings next define these rings based on Aliases
+Lattice 2           	         ! 'Lattice' card defines core had 2 rings next define these rings based on Aliases
 A1 &
-A1 A1 &         	         ! Assembly arrangement must be in one line, Note the usage of '&' sign, it signals continuation of input in the next line
-A2 A1 A1
+A1 A1 	        	         ! Assembly arrangement must be in one line, Note the usage of '&' sign, it signals continuation of input in the next line
 !
-Symmetry 6	                 !  'Symmetry' card defines the desired symmetry for the o/p mesh
+Background test_sodium_all.cub
 !
 END                              ! 'END' card is a MUST marks the end of file for the file reader
