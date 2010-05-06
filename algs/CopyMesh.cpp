@@ -47,9 +47,9 @@ int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_se
     std::string tag_name= "__CopyMeshTag";
     iMesh_createTag(imeshImpl, tag_name.c_str(), 1,
 		    iBase_ENTITY_HANDLE, &copyTag, &err, tag_name.size());    
-    if(err != 0 && err != 16) // if tag didn't exist already and we have some other error
+    if(err != iBase_SUCCESS && err != iBase_TAG_ALREADY_EXISTS) // if tag didn't exist already and we have some other error
       ERROR("Couldn't create copy mesh tag.");
-    while(err == 16){
+    while(err == iBase_TAG_ALREADY_EXISTS){
       std::ostringstream os;
       ++cm_index;
 
@@ -57,7 +57,7 @@ int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_se
       tag_name = os.str();
       iMesh_createTag(imeshImpl, tag_name.c_str(), 1,
 		      iBase_ENTITY_HANDLE, &copyTag, &err, tag_name.size());       
-      if(err != 0 && err != 16) // if tag didn't exist already and we have some other error
+      if(err != iBase_SUCCESS && err != iBase_TAG_ALREADY_EXISTS) // if tag didn't exist already and we have some other error
 	ERROR("Couldn't create copy mesh tag.");
     }
   }
