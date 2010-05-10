@@ -1,0 +1,35 @@
+! #############################################################################################################
+! Example Core generation full vhtr core
+! #############################################################################################################
+!
+Geometry Surface				 ! 'Geometry' card defines if the meshes are volume or surface
+GeometryType HexFull				 ! 'GeometryType' card can take values Hexagonal Rectangular
+Assemblies 2 10.0				 ! 'Assemblies' card defines the number of assembly mesh files and their pitch
+fuel.cub  FF				         ! Meshfile name followed by alias 
+control.cub  C1
+Lattice 11					 ! 'Lattice' card defines arrangement of assemblies in core
+!
+                     C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                            &
+                   C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                          &
+                 C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                        &
+               C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                      &
+             C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                    &
+           C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                  &
+         C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                &
+       C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1              &
+     C1  C1  C1  C1  C1  C1  C1  C1  FF  FF  FF  C1  C1  C1  C1  C1  C1  C1  C1            &
+   C1  C1  C1  C1  C1  C1  C1  C1  FF  C1  C1  FF  C1  C1  C1  C1  C1  C1  C1  C1          &
+ C1  C1  C1  C1  C1  C1  C1  C1  FF  C1  FF  C1  FF  C1  C1  C1  C1  C1  C1  C1  C1        &
+   C1  C1  C1  C1  C1  C1  C1  C1  FF  C1  C1  FF  C1  C1  C1  C1  C1  C1  C1  C1          &
+     C1  C1  C1  C1  C1  C1  C1  C1  FF  FF  FF  C1  C1  C1  C1  C1  C1  C1  C1            &
+       C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1              &
+         C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                &
+           C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                  &
+             C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                    &
+               C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                      &
+                 C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                        &
+                   C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1                          &
+                     C1  C1  C1  C1  C1  C1  C1  C1  C1  C1  C1 
+!
+END		 				 ! 'END' card is a MUST marks the end of file for the file reader
+

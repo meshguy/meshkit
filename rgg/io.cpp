@@ -13,8 +13,6 @@ file with input o/p funtions
 #include <string.h>
 #include <stdlib.h>
 
-// helper macro for igeom
-#define CHECK( STR ) if (err != iBase_SUCCESS) return Print_Error( STR, err, geom, __FILE__, __LINE__ )
 #define ARRAY_INOUT( A ) A.ptr(), &A.capacity(), &A.size()
 #define ARRAY_IN( A ) &A[0], A.size()
 
@@ -38,7 +36,7 @@ void CNrgen::Banner (std::ostream& OF)
   std::cout << "\nsee README file for using the program and details on various cards.\n"<< std::endl;
 }
 
-void CNrgen::PrepareIO (int argc, char *argv[])
+int CNrgen::PrepareIO (int argc, char *argv[])
 // ---------------------------------------------------------------------------
 // Function: Obtains file names and opens input/output files
 // Input:    command line arguments
@@ -108,7 +106,8 @@ void CNrgen::PrepareIO (int argc, char *argv[])
     else
       bDone = true; // file opened successfully
   } while (!bDone);
-  // open the scheme file for writing
+
+  // open the template journal file for writing
   do{
     m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out); 
     if (!m_SchemesFile){
@@ -120,24 +119,21 @@ void CNrgen::PrepareIO (int argc, char *argv[])
       bDone = true; // file opened successfully
   } while (!bDone);
 
-
   std::cout<<"o/p geometry file name: "<<m_szGeomFile << "\no/p Cubit journal file name: "<< m_szJouFile    
 	   << "\nInfo: o/p file extension must correspond to geometry engine used to build cgm " << std::endl;
+  return 0;
 }
 
-void CNrgen::CountPinCylinders ()
-// ---------------------------------------------------------------------------
-// Function: reads the input file to count the no. of cyl in a pincell 
+int CNrgen::CountPinCylinders ()
+// -------------------------------------------------------------------------------------------
+// Function: reads the input file to count the no. of cyl in a pincell, before the actual read
 // Input:    none
 // Output:   none
-// ---------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------
 {
   CParser Parse;
-  int nCyl =0, nCellMat=0, nInputLines;
-  std::string card;
-  std::string szVolId, szVolAlias;
-  m_nLineNumber =0;
-
+  int nCyl =0, nCellMat=0, nInputLines=0;
+  std::string card, szVolId, szVolAlias;
   // count the total number of cylinder commands in each pincell
   for(;;){
     if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
@@ -159,7 +155,8 @@ void CNrgen::CountPinCylinders ()
 	  IOErrorHandler (INVALIDINPUT);
 	std::istringstream szFormatString1 (szInputString);
 	szFormatString1 >> szVolId >> szVolAlias >> nInputLines;
-	
+	if(szFormatString1.fail())
+	  IOErrorHandler(INVALIDINPUT);
 	// loop thru the input lines of each pincell
 	for(int l=1; l<=nInputLines; l++){	
 	  if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
@@ -194,22 +191,22 @@ void CNrgen::CountPinCylinders ()
       break;
     }
   }
+  return 0;
 }
 
-void CNrgen::ReadPinCellData (int i)
+int CNrgen::ReadPinCellData (int i)
 //---------------------------------------------------------------------------
-//Function: reading file and storing data
+//Function: reading pincell i from file and storing the data
 //Input:    none
 //Output:   none
 //---------------------------------------------------------------------------
 {
   CParser Parse;
   std::string card, szVolId, szVolAlias, szIFlag;
-  int nInputLines, nMaterials, nCyl = 0, nRadii, nCellMat;
-  double dLZ, dFlatF, dPX, dPY, dPZ;
+  int nInputLines, nMaterials, nCyl = 0, nRadii=0, nCellMat=0;
+  double dLZ=0.0, dFlatF=0.0, dPX=0.0, dPY=0.0, dPZ=0.0;
   CVector <std::string> szVMatName, szVMatAlias, szVCylMat, szVCellMat;
-  CVector<double>dVCoor(2); // XY Pos of cylinder
-  CVector<double> dVCylRadii,dVCylZPos,dZVStart, dZVEnd;
+  CVector<double> dVCoor(2), dVCylRadii, dVCylZPos, dZVStart, dZVEnd;
 
   //loop over input lines
   if (m_szGeomType == "rectangular"){
@@ -244,7 +241,8 @@ void CNrgen::ReadPinCellData (int i)
 	std::istringstream szFormatString (szInputString);
 	std::cout << "\ngetting pitch data";
 	szFormatString >> card >> dPX >> dPY >> dPZ;
-	if( dPX < 0 || dPY < 0 || dPZ < 0 )
+
+	if( dPX < 0 || dPY < 0 || dPZ < 0 || szFormatString.fail())
 	  IOErrorHandler(ENEGATIVE);
 	m_Pincell(i).SetPitch (dPX, dPY, dPZ);
       } 
@@ -252,7 +250,9 @@ void CNrgen::ReadPinCellData (int i)
 
 	std::istringstream szFormatString (szInputString);
 	szFormatString >> card >> nMaterials;
-
+	if(szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);
+	  
 	//setting local arrays
 	szVMatName.SetSize(nMaterials);
 	szVMatAlias.SetSize(nMaterials);
@@ -262,8 +262,10 @@ void CNrgen::ReadPinCellData (int i)
 	std::cout << "\ngetting material data";
 	for(int j=1; j<= nMaterials; j++){
 	  szFormatString >> szVMatName(j) >> szVMatAlias(j);
+	  if(szFormatString.fail())
+	    IOErrorHandler(INVALIDINPUT);	
 	}
-	  m_Pincell(i).SetMat(szVMatName, szVMatAlias);
+	m_Pincell(i).SetMat(szVMatName, szVMatAlias);
       }
       if (szInputString.substr(0,8) == "cylinder"){
 
@@ -271,6 +273,8 @@ void CNrgen::ReadPinCellData (int i)
 	std::cout << "\ngetting cylinder data";
 	std::istringstream szFormatString (szInputString);
 	szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+	if(szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);	
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 	m_Pincell(i).SetCylPos(nCyl, dVCoor);
 
@@ -278,18 +282,20 @@ void CNrgen::ReadPinCellData (int i)
 	dVCylRadii.SetSize(nRadii);
 	szVCylMat.SetSize(nRadii);
 	dVCylZPos.SetSize(2);
-	//
-	m_Pincell(i).SetCylSizes(nCyl, nRadii);
+       	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 
 	// reading ZCoords
-	for(int k=1; k<=2; k++)
+	for(int k=1; k<=2; k++){
 	  szFormatString >> dVCylZPos(k);
+	  if(szFormatString.fail())
+	    IOErrorHandler(INVALIDINPUT);	
+	}
 	m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
 
 	// reading Radii
 	for(int l=1; l<= nRadii; l++){
 	  szFormatString >> dVCylRadii(l);
-	  if( dVCylRadii(l) < 0 )
+	  if( dVCylRadii(l) < 0  || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
 	m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
@@ -297,7 +303,7 @@ void CNrgen::ReadPinCellData (int i)
 	// reading Material alias
 	for(int m=1; m<= nRadii; m++){
 	  szFormatString >> szVCylMat(m);
-	  if(strcmp (szVCylMat(m).c_str(), "") == 0)  
+	  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())  
 	    IOErrorHandler(EALIAS);
 	}
 	m_Pincell(i).SetCylMat(nCyl, szVCylMat);
@@ -316,7 +322,7 @@ void CNrgen::ReadPinCellData (int i)
 
 	for(int k=1; k<=nCellMat; k++){
 	  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
-	  if(strcmp (szVCellMat(k).c_str(), "") == 0)  
+	  if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())  
 	    IOErrorHandler(EALIAS);
 	}	  
 	m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);			
@@ -333,7 +339,7 @@ void CNrgen::ReadPinCellData (int i)
     std::istringstream szFormatString (szInputString);
     szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
 
-   // error checking
+    // error checking
     if( (strcmp (szVolAlias.c_str(), "") == 0) ||
 	(strcmp (szVolId.c_str(), "") == 0))
       IOErrorHandler(EPIN);
@@ -356,7 +362,7 @@ void CNrgen::ReadPinCellData (int i)
 	std::istringstream szFormatString (szInputString);
 	std::cout << "\ngetting pitch data";
 	szFormatString >> card >> dFlatF >> dLZ;
-	if( dFlatF < 0 || dLZ < 0 )
+	if( dFlatF < 0 || dLZ < 0  || szFormatString.fail())
 	  IOErrorHandler(ENEGATIVE);
 	m_Pincell(i).SetPitch (dFlatF, dLZ);			
       } 
@@ -364,7 +370,8 @@ void CNrgen::ReadPinCellData (int i)
 
 	std::istringstream szFormatString (szInputString);
 	szFormatString >> card >> nMaterials;
-
+	if(szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);
 	//setting local arrays
 	szVMatName.SetSize(nMaterials);
 	szVMatAlias.SetSize(nMaterials);
@@ -372,8 +379,11 @@ void CNrgen::ReadPinCellData (int i)
 	//set class variable sizes
 	m_Pincell(i).SetMatArray(nMaterials);
 	std::cout << "\ngetting material data";
-	for(int j=1; j<= nMaterials; j++)
+	for(int j=1; j<= nMaterials; j++){
 	  szFormatString >> szVMatName(j) >> szVMatAlias(j);
+	  if(szFormatString.fail())
+	    IOErrorHandler(INVALIDINPUT);
+	}
 	m_Pincell(i).SetMat(szVMatName, szVMatAlias);
       }
       if (szInputString.substr(0,8) == "cylinder"){
@@ -382,6 +392,8 @@ void CNrgen::ReadPinCellData (int i)
 	std::cout << "\ngetting cylinder data";
 	std::istringstream szFormatString (szInputString);
 	szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+	if(szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 	m_Pincell(i).SetCylPos(nCyl, dVCoor);
 
@@ -400,7 +412,7 @@ void CNrgen::ReadPinCellData (int i)
 	// reading Radii
 	for(int l=1; l<= nRadii; l++){
 	  szFormatString >> dVCylRadii(l);
-	  if( dVCylRadii(l) < 0 )
+	  if( dVCylRadii(l) < 0 || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
 	m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
@@ -408,7 +420,7 @@ void CNrgen::ReadPinCellData (int i)
 	// reading Material alias
 	for(int m=1; m<= nRadii; m++){
 	  szFormatString >> szVCylMat(m);
-	  if(strcmp (szVCylMat(m).c_str(), "") == 0)  
+	  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())  
 	    IOErrorHandler(EALIAS);
 	}
 
@@ -428,13 +440,14 @@ void CNrgen::ReadPinCellData (int i)
 	
 	for(int k=1; k<=nCellMat; k++){ 
 	  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
-	  if(strcmp (szVCellMat(k).c_str(), "") == 0)  
+	  if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())  
 	    IOErrorHandler(EALIAS);
 	}
 	m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);			
       }
     }
   }// if hexagonal end
+  return 0;
 }
 
 
@@ -461,15 +474,15 @@ int CNrgen::ReadAndCreate()
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_szGeomType;
       if( (strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
-	  (strcmp (m_szGeomType.c_str(), "rectangular") != 0))
+	  (strcmp (m_szGeomType.c_str(), "rectangular") != 0) || szFormatString.fail())
 	IOErrorHandler(EGEOMTYPE);
     }
 
     if (szInputString.substr(0,8) == "geometry"){
       std::string outfile;
-       std::istringstream szFormatString (szInputString);
+      std::istringstream szFormatString (szInputString);
       szFormatString >> card >> outfile;
-      if(strcmp (outfile.c_str(), "surface") == 0)
+      if(strcmp (outfile.c_str(), "surface") == 0 || szFormatString.fail())
 	m_nPlanar=1;
     }   
     if (szInputString.substr(0,9) == "materials"){
@@ -477,6 +490,8 @@ int CNrgen::ReadAndCreate()
       std::cout << "getting assembly material data" << std::endl;
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_nAssemblyMat;
+      if(szFormatString.fail())
+	IOErrorHandler(INVALIDINPUT);
       m_szAssmMat.SetSize(m_nAssemblyMat); m_szAssmMatAlias.SetSize(m_nAssemblyMat);
       for (int j=1; j<=m_nAssemblyMat; j++){
 	szFormatString >> m_szAssmMat(j) >> m_szAssmMatAlias(j);
@@ -487,7 +502,7 @@ int CNrgen::ReadAndCreate()
       }
     }   
     if( (szInputString.substr(0,10) == "dimensions") || 
-	 (szInputString.substr(0,4) == "duct") ){
+	(szInputString.substr(0,4) == "duct") ){
 
       std::cout << "getting assembly dimensions" << std::endl;
       if(m_szGeomType =="hexagonal"){
@@ -517,25 +532,27 @@ int CNrgen::ReadAndCreate()
       }   
       if(m_szGeomType =="rectangular"){
 	std::istringstream szFormatString (szInputString);
-	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
-
+	m_dVXYAssm.SetSize(2); 
+	m_dVZAssm.SetSize(2);
 	szFormatString >> card >> m_nDimensions 
 		       >> m_dVXYAssm(1) >> m_dVXYAssm(2)
 		       >> m_dVZAssm(1) >> m_dVZAssm(2);
-
-	m_dVAssmPitchX.SetSize(m_nDimensions);	m_dVAssmPitchY.SetSize(m_nDimensions);
+	if (szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);	  
+	m_dVAssmPitchX.SetSize(m_nDimensions);
+	m_dVAssmPitchY.SetSize(m_nDimensions);
 	m_szMAlias.SetSize(m_nDimensions);
-	assms.setSize(m_nDimensions); // setup while reading the problem size
+	assms.setSize(m_nDimensions); 
 
 	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_dVAssmPitchX(i) >> m_dVAssmPitchY(i);
-	  if( m_dVAssmPitchX(i) < 0 || m_dVAssmPitchY(i) < 0 )
+	  if( m_dVAssmPitchX(i) < 0 || m_dVAssmPitchY(i) < 0 || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
 
 	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_szMAlias(i);
-	  if(strcmp (m_szMAlias(i).c_str(), "") == 0)  
+	  if(strcmp (m_szMAlias(i).c_str(), "") == 0 || szFormatString.fail())  
 	    IOErrorHandler(EALIAS);
 	}
       }  
@@ -547,15 +564,15 @@ int CNrgen::ReadAndCreate()
       if(m_nPincells < 0)
 	IOErrorHandler(ENEGATIVE);      
 
-	// this is an option if a user wants to specify pitch here
-	double dTotalHeight = 0.0;
-	//get the number of cylinder in each pincell
-	if(m_nDimensions > 0){
-	  dTotalHeight = m_dVZAssm(2)-m_dVZAssm(1);
-	}
-	else{
-	  dTotalHeight = 0; // nothing specified only pincells in the model
-	}
+      // this is an option if a user wants to specify pitch here
+      double dTotalHeight = 0.0;
+      //get the number of cylinder in each pincell
+      if(m_nDimensions > 0){
+	dTotalHeight = m_dVZAssm(2)-m_dVZAssm(1);
+      }
+      else{
+	dTotalHeight = 0; // nothing specified only pincells in the model
+      }
 
       // loop thro' the pincells and read/store pincell data  
       for (int i=1; i<=m_nPincells; i++){
@@ -564,34 +581,41 @@ int CNrgen::ReadAndCreate()
 	if(m_dPitch > 0.0)
 	  m_Pincell(i).SetPitch(m_dPitch, dTotalHeight);
 
-	ReadPinCellData(i);
+	err = ReadPinCellData(i);
+	ERRORR("Error in ReadPinCellData", err);	
 	std::cout << "\nread pincell " << i << std::endl;
       }
     }
     if (szInputString.substr(0,8) == "assembly"){
       if(m_szGeomType =="hexagonal"){
-	Create_HexAssm(szInputString);
+	err = Create_HexAssm(szInputString);
+	ERRORR("Error in Create_HexAssm", err);	
       }
       if(m_szGeomType =="rectangular"){
-	Create_CartAssm(szInputString);
+	err = Create_CartAssm(szInputString);
+	ERRORR("Error in Create_CartAssm", err);
       }
-      CreateOuterCovering();
+      err = CreateOuterCovering();
+      ERRORR("Error in CreateOuterCovering", err);
 
       // subtract pins before save
       Subtract_Pins();   
       if(m_nPlanar ==1){
-	Create2DSurf();
+	err = Create2DSurf();
+	ERRORR("Error in Create2DSurf", err);
       }
     }
+
     // section the assembly as described in section card
     if (szInputString.substr(0,7) == "section"){
       std::cout << "Sectioning geometry .." << std::endl;
       char cDir;
       double dOffset;
+      std::string szReverse = "";
       std::istringstream szFormatString (szInputString);
-      szFormatString >> card >> cDir >> dOffset;
-      // call section fn
-      Section_Assm(cDir, dOffset);
+      szFormatString >> card >> cDir >> dOffset >> szReverse;
+      err = Section_Assm(cDir, dOffset, szReverse);
+      ERRORR("Error in Section_Assm", err);
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
@@ -600,15 +624,16 @@ int CNrgen::ReadAndCreate()
       double dX, dY, dZ;
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> dX >> dY >> dZ;
-      // call section fn
-      Move_Assm(dX, dY, dZ);
+      err = Move_Assm(dX, dY, dZ);
+      ERRORR("Error in Move_Assm", err);
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
     // ceter the assembly 
     if (szInputString.substr(0,6) == "center"){
       std::cout << "Positioning assembly to center" << std::endl;
-      Center_Assm();
+      err = Center_Assm();
+      ERRORR("Error in Center_Assm", err);
       m_Centered = true;
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
@@ -619,16 +644,18 @@ int CNrgen::ReadAndCreate()
       std::cout << "Rotating geometry .." << std::endl;
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> cDir >> dAngle;
-      // call rotate fn
-      Rotate_Assm(cDir, dAngle);
+      if(szFormatString.fail())
+	IOErrorHandler(INVALIDINPUT);
+      err = Rotate_Assm(cDir, dAngle);
+      ERRORR("Error in Rotate_Assm", err);
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
     // Handle mesh size inputs
     if (szInputString.substr(0,14) == "radialmeshsize"){
       std::istringstream szFormatString (szInputString);
-      szFormatString >> card >> m_RadialSize;
-      if(m_RadialSize < 0)
+      szFormatString >> card >> m_dRadialSize;
+      if(m_dRadialSize < 0 || szFormatString.fail())
 	IOErrorHandler(ENEGATIVE);     
       std::cout <<"--------------------------------------------------"<<std::endl;
 
@@ -637,15 +664,15 @@ int CNrgen::ReadAndCreate()
     if (szInputString.substr(0,13) == "axialmeshsize"){
       double m_AxialSize;
       std::istringstream szFormatString (szInputString);
-      szFormatString >> card >> m_AxialSize;
-      if(m_AxialSize < 0)
+      szFormatString >> card >> m_dAxialSize;
+      if(m_dAxialSize < 0 || szFormatString.fail())
 	IOErrorHandler(ENEGATIVE);
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
     if (szInputString.substr(0,3) == "end"){
  
-     // impring merge before saving
+      // impring merge before saving
       Imprint_Merge();
  
       // save .sat file
@@ -655,7 +682,7 @@ int CNrgen::ReadAndCreate()
       break;
     }
   }
-  return 1;
+  return 0;
 }
 
 int CNrgen::CreateCubitJournal()
@@ -674,7 +701,7 @@ int CNrgen::CreateCubitJournal()
     dMid = (m_Centered ? 0.0 : m_dVZAssm(1) + dHeight/2.0);
   }
 
-// writing to schemes .jou 
+  // writing to schemes .jou 
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
   m_SchemesFile << "##Schemes " << std::endl  ;
   m_SchemesFile << "#{CIRCLE =\"circle interval 1 fraction 0.8\"}" << std::endl;
@@ -701,24 +728,24 @@ int CNrgen::CreateCubitJournal()
   }
   m_SchemesFile << "##Set Mesh Sizes" << std::endl;
 
-// volume only
+  // volume only
   if(m_nPlanar == 0){
-    if (-1 == m_AxialSize)
+    if (-1.0 == m_dAxialSize)
       m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
     else
-      m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_AxialSize << "}" << std::endl;
+      m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_dAxialSize << "}" << std::endl;
   }
 
-  if (-1 == m_RadialSize) {
+  if (-1.0 == m_dRadialSize) {
     if (m_szGeomType == "hexagonal")
       m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
     else
       m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.02*0.5*(PITCHX+PITCHY)}" << std::endl;
   }
   else
-    m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_RadialSize << "}" << std::endl;
+    m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_dRadialSize << "}" << std::endl;
 
-// stuff common to both surface and volume
+  // stuff common to both surface and volume
   m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
   m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
   m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
@@ -744,26 +771,26 @@ int CNrgen::CreateCubitJournal()
   }
   m_FileOutput << "#" << std::endl;
 
-//surface only
+  //surface only
   if(m_nPlanar ==1){ 
 
-  // sideset curves on top surface creation dumps
-  m_FileOutput << "#Creating side curve sidesets" << std::endl; 
-  if(m_szGeomType =="hexagonal"){
-    for(i=1; i<=6; i++){
-      ++nSideset;
-      m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << i  << "\"" << std::endl;
-      m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;    
+    // sideset curves on top surface creation dumps
+    m_FileOutput << "#Creating side curve sidesets" << std::endl; 
+    if(m_szGeomType =="hexagonal"){
+      for(i=1; i<=6; i++){
+	++nSideset;
+	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << i  << "\"" << std::endl;
+	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;    
+      }
     }
-  }
-  if(m_szGeomType =="rectangular"){
-    for(j=1; j<=4; j++){
-      ++nSideset;
-      m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
-      m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;
+    if(m_szGeomType =="rectangular"){
+      for(j=1; j<=4; j++){
+	++nSideset;
+	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
+	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;
+      }
+      m_FileOutput << "#" << std::endl;
     }
-    m_FileOutput << "#" << std::endl;
-  }
 
     // group creation dumps. each material surface  has a group
     m_FileOutput << "#Creating groups" << std::endl;  
@@ -785,7 +812,7 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "#" << std::endl;
   }
 
-// volume only
+  // volume only
   else{ 
 
     // bottom surface sidesets
@@ -835,9 +862,9 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfBot  << "\"" << std::endl;
       m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
 
-//       m_FileOutput << "vol in body in " << szGrp << " size  {"  << szSize <<"}" << std::endl;
-//       m_FileOutput << "vol in body in " << szGrp << " scheme {" << "SWEEP}"  << std::endl;
-//       m_FileOutput << "mesh vol in body in " << szGrp << "\n#" << std::endl;   
+      //       m_FileOutput << "vol in body in " << szGrp << " size  {"  << szSize <<"}" << std::endl;
+      //       m_FileOutput << "vol in body in " << szGrp << " scheme {" << "SWEEP}"  << std::endl;
+      //       m_FileOutput << "mesh vol in body in " << szGrp << "\n#" << std::endl;   
 
       // dumping these sizes schemes.jou also
       m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
@@ -845,7 +872,7 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "#" << std::endl;
   }
 
-// some more common stuff meshing top surfaces set the sizes and mesh
+  // some more common stuff meshing top surfaces set the sizes and mesh
   m_FileOutput << "#surfaces mesh, use template.jou to specify sizes" << std::endl; 
   for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
     szSurfTop = m_szAssmMat(p) + "_top";
@@ -862,15 +889,15 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "#" << std::endl;
 
   // mesh all command after meshing surface
-   m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
-   m_FileOutput << "mesh tmpgrp" << std::endl;
-   m_FileOutput << "#" << std::endl;
+  m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
+  m_FileOutput << "mesh tmpgrp" << std::endl;
+  m_FileOutput << "#" << std::endl;
    
-   if(m_nPlanar == 0){ // volumes only
-     m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
-       " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
-     m_FileOutput << "mesh vol all" << std::endl;
-   }
+  if(m_nPlanar == 0){ // volumes only
+    m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
+      " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
+    m_FileOutput << "mesh vol all" << std::endl;
+  }
   // save as .cub file dump
   m_FileOutput << "#\n#Save file" << std::endl; 
   std::string szSave = m_szFile + ".cub";
@@ -879,15 +906,15 @@ int CNrgen::CreateCubitJournal()
 
   std::cout << "Schemes file created: " << m_szSchFile << std::endl;
   std::cout << "Cubit journal file created: " << m_szJouFile << std::endl;
-  return 1;
+  return 0;
 }
   
-void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly, 
-				 int m, int n, double &dX, double &dY, double &dZ)
+int CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly, 
+				int m, int n, double &dX, double &dY, double &dZ)
 // ---------------------------------------------------------------------------
-// Function: displays error messages related to input data
-// Input:    error code
-// Output:   none
+// Function: computes the centroid in the whole assembly of rectangular or hexagonal pincell
+// Input:    number and location of the pincell
+// Output:   coordinates of pin in assembly
 // ---------------------------------------------------------------------------
 {
   int nTempPin1 = 0, nTempPin2 = 0, nInputLines;
@@ -948,6 +975,7 @@ void CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
     }   
     dZ = 0.0; // moving in XY plane only
   }//if rectangular ends
+  return 0;
 }
 
 void CNrgen::IOErrorHandler (ErrorStates ECode) const
@@ -995,11 +1023,11 @@ int CNrgen::TerminateProgram ()
   m_FileOutput.close ();
   m_SchemesFile.close ();
 
-  return 1;
+  return 0;
 }
 
 
-// print error function definition
+// print error function definition (iGeom)
 bool CNrgen::Print_Error( const char* desc, 
 			  int err,
 			  iGeom_Instance geom,
@@ -1141,20 +1169,23 @@ int CNrgen::Center_Assm ()
     iGeom_moveEnt(geom,all[i],-xcenter,-ycenter,-zcenter,&err);
     CHECK("Failed to move entities");
   }
-  return 1;
+  return 0;
 }
 
-int CNrgen::Section_Assm (char &cDir, double &dOffset)
+int CNrgen::Section_Assm (char &cDir, double &dOffset, const std::string szReverse)
 // ---------------------------------------------------------------------------
 // Function: sections the assembly about the cutting plane
 // Input:    none
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  double xmin, xmax, ymin, ymax, zmin, zmax;
-  iBase_EntityHandle sec=NULL;
-  double yzplane = 0.0;
-  double xzplane = 0.0;
+  double xmin, xmax, ymin, ymax, zmin, zmax, yzplane = 0.0, xzplane = 0.0;
+  iBase_EntityHandle sec = NULL;
+  int nReverse = 0;
+  // check if reverse side is needed
+  if(szReverse == "reverse"){
+    nReverse = 1;
+  }
   if( cDir =='x'){
     yzplane = 1.0;
     xzplane = 0.0;
@@ -1167,33 +1198,43 @@ int CNrgen::Section_Assm (char &cDir, double &dOffset)
   iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );  
   CHECK("Failed to get all entities");
   // loop and section/delete entities
-  for(int i=0; i<all.size(); i++){
+  for(int i=0; i < all.size(); i++){
     //get the bounding box to decide
     iGeom_getEntBoundBox(geom,all[i],&xmin,&ymin,&zmin,
 			 &xmax,&ymax,&zmax, &err);
     CHECK("Failed get bound box");
-    if(xmax<dOffset && yzplane ==1){
+    if(xmin > dOffset && yzplane ==1 && nReverse ==1){
       iGeom_deleteEnt(geom,all[i],&err);
       CHECK("Failed delete entities");
       continue;
     }
-    if(ymax<dOffset && xzplane ==1){
+    if(ymin > dOffset && xzplane == 1 && nReverse ==1){
+      iGeom_deleteEnt(geom,all[i],&err);
+      CHECK("Failed delete entities");
+      continue;
+    }
+    if(xmax < dOffset && yzplane ==1 && nReverse ==0){
+      iGeom_deleteEnt(geom,all[i],&err);
+      CHECK("Failed delete entities");
+      continue;
+    }
+    if(ymax < dOffset && xzplane == 1 && nReverse ==0){
       iGeom_deleteEnt(geom,all[i],&err);
       CHECK("Failed delete entities");
       continue;
     }
     else{	  
       if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
-	iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
+	iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset, nReverse,&sec,&err);
 	CHECK("Failed to section ent");
       }
       if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
-	iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,false,&sec,&err);
+	iGeom_sectionEnt(geom, all[i],yzplane,xzplane,0, dOffset,nReverse,&sec,&err);
 	CHECK("Failed to section ent");
       }
     }
   }
-  return 1;
+  return 0;
 }
 
 int CNrgen::Rotate_Assm (char &cDir, double &dAngle)
@@ -1223,7 +1264,7 @@ int CNrgen::Rotate_Assm (char &cDir, double &dAngle)
 		    dX, dY, dZ, &err);
     CHECK("Failed rotate entities");
   }
-  return 1;
+  return 0;
 }
 
 int CNrgen::Move_Assm (double &dX,double &dY, double &dZ)
@@ -1243,7 +1284,7 @@ int CNrgen::Move_Assm (double &dX,double &dY, double &dZ)
 		  dX, dY, dZ, &err);
     CHECK("Failed move entities");
   }
-  return 1;
+  return 0;
 }
 
 int CNrgen::Create_HexAssm(std::string &szInputString)
@@ -1282,6 +1323,8 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 
     for(int n=1; n<=(m_nPin + t - 1); n++){
       szFormatString1 >> m_Assembly(m,n);
+      if(szFormatString1.fail())
+	IOErrorHandler (INVALIDINPUT);
       // if dummy pincell skip and continue
       if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
 	continue;
@@ -1294,7 +1337,8 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
       }
 
       // now compute the location and create it
-      ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);	    
+      err = ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);	    
+      ERRORR("Error in function ComputePinCentroid", err);
 
       // now create the pincell in the location found
       std::cout << "\n--------------------------------------------------"<<std::endl;
@@ -1304,14 +1348,12 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 
       m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
       if(nIFlag){
-	int error = CreatePinCell_Intersect(nTempPin, dX, dY, dZ);
-	if (error!=1)
-	  std::cout << "Error in function CreatePinCell";
+	err = CreatePinCell_Intersect(nTempPin, dX, dY, dZ);
+	ERRORR("Error in function CreatePinCell_Intersect", err);
       }
       else{
-	int error = CreatePinCell(nTempPin, dX, dY, dZ);
-	if (error!=1)
-	  std::cout << "Error in function CreatePinCell";
+	err = CreatePinCell(nTempPin, dX, dY, dZ);
+	ERRORR("Error in function CreatePinCell", err);
       }
     }
   }
@@ -1334,7 +1376,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 			&assm, &err); 
       CHECK("Prism creation failed.");
 	  
-      // rotate the prism
+      // rotate the prism to match the pins
       iGeom_rotateEnt (geom, assm, 30, 0, 0, 1, &err);
       CHECK("Rotation failed failed.");
 
@@ -1381,6 +1423,9 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
     //store the line read in Assembly array and create / position the pin in the core
     for(int n=1; n<=m_nPinX; n++){
       szFormatString1 >> m_Assembly(m,n);
+      if(szFormatString1.fail())
+	IOErrorHandler (INVALIDINPUT);
+
       // if dummy pincell skip and continue
       if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
 	m_Pincell(1).GetPitch(dPX, dPY, dPZ);
@@ -1395,7 +1440,8 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
       }
 
       //now compute the location where the pin needs to be placed
-      ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+      err = ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+      ERRORR("Error in function ComputePinCentroid", err);
 
       // now create the pincell in the location found
       std::cout << "\n--------------------------------------------------"<<std::endl;
@@ -1405,14 +1451,12 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
 
       m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
       if(nIFlag){
-	int error = CreatePinCell_Intersect(nTempPin, dX, dY, dZ);
-	if (error!=1)
-	  std::cout << "Error in function CreatePinCell";
+	err = CreatePinCell_Intersect(nTempPin, dX, dY, dZ);
+	ERRORR("Error in function CreatePinCell_Intersect", err);
       }
       else{
-	int error = CreatePinCell(nTempPin, dX, dY, dZ);
-	if (error!=1)
-	  std::cout << "Error in function CreatePinCell";
+	err = CreatePinCell(nTempPin, dX, dY, dZ);
+	ERRORR("Error in function CreatePinCell", err);
       }
       // dMoveX and dMoveY are stored for positioning the outer squares later
       if(m == m_nPinY && n ==m_nPinX){
@@ -1489,6 +1533,7 @@ int CNrgen::CreateOuterCovering ()
     CHECK("setData failed");
 
     err = Name_Faces(sMatName, tmp_vol, this_tag);
+    ERRORR("Error in function Name_Faces", err);
 
     //  Naming outermost block edges - sidesets in cubit journal file
     std::cout << "Naming outermost block edges" << std::endl;	
@@ -1554,7 +1599,7 @@ int CNrgen::CreateOuterCovering ()
     }
   }
   std::cout << "\n--------------------------------------------------"<<std::endl;
-  return 1;
+  return 0;
 }
 
 int CNrgen::Subtract_Pins()
@@ -1592,7 +1637,7 @@ int CNrgen::Subtract_Pins()
     }
   }
   std::cout << "\n--------------------------------------------------"<<std::endl;
-  return 1;
+  return 0;
 }
 
 int CNrgen::Imprint_Merge()
@@ -1621,7 +1666,7 @@ int CNrgen::Imprint_Merge()
   //   CHECK("Merge failed.");
   //   std::cout <<"merging finished."<< std::endl;
   //   std::cout << "\n--------------------------------------------------"<<std::endl;
-  return 1;
+  return 0;
 }
 
 int CNrgen::Create2DSurf ()
@@ -1698,7 +1743,9 @@ int CNrgen::Create2DSurf ()
     CHECK("Failed to move entities");
   }
   std::cout << "--------------------------------------------------"<<std::endl;
-  return 1;
+
+  free(offset);
+  return 0;
 }
 
 
@@ -1711,14 +1758,10 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 {
   int nRadii=0, nCyl=0, nCells = 0;
   double dCylMoveX = 0.0, dCylMoveY = 0.0, dHeightTotal = 0.0;
-  CVector<double> dVCylZPos(2), dVCylXYPos(2);
-  CVector<std::string> szVMatName; CVector<std::string> szVMatAlias;
-  CVector<std::string> szVCellMat;
-  CVector<double> dVStartZ; CVector<double> dVEndZ;
- 
   double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
-  iBase_EntityHandle cell;
-  iBase_EntityHandle cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
+  CVector<double> dVCylZPos(2), dVCylXYPos(2), dVStartZ, dVEndZ;;
+  CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
+  iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
 
   // name tag handle
   iBase_TagHandle this_tag= NULL;
@@ -1794,7 +1837,8 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), sMatName.size(), &err);
 	CHECK("setData failed");
 
-	err= Name_Faces(sMatName, cell, this_tag);
+	Name_Faces(sMatName, cell, this_tag);
+	CHECK("Name_Faces failed");
       }
       // loop and create cylinders
       if(nCyl > 0){
@@ -1855,6 +1899,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
+	ERRORR("Error in function Name_Faces", err);
 
 	// other cyl annulus after substraction
 	for (int b=nRadii; b>1; b--){  
@@ -1881,6 +1926,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  CHECK("setData failed");
 
 	  err= Name_Faces(sMatName, tmp_new, this_tag);
+	  ERRORR("Error in function Name_Faces", err);
 
 	  // copy the new into the cyl array
 	  cyls[b-1] = tmp_new;
@@ -1957,6 +2003,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	CHECK("setData failed");
 
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
+	ERRORR("Error in function Name_Faces", err);
 
 	// other cyl annulus after substraction
 	for (int b=nRadii; b>1; b--){  
@@ -1980,7 +2027,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 	  err= Name_Faces(sMatName, tmp_new, this_tag);
-
+	  ERRORR("Error in function Name_Faces", err);
 
 	  // copy the new into the cyl array
 	  cyls[b-1] = tmp_new;
@@ -1988,7 +2035,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
       }
     }
   }
-  return 1;
+  return 0;
 }
 
 
@@ -2001,14 +2048,10 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 {
   int nRadii=0, nCyl=0, nCells = 0;
   double dCylMoveX = 0.0, dCylMoveY = 0.0, dHeightTotal = 0.0;
-  CVector<double> dVCylZPos(2), dVCylXYPos(2);
-  CVector<std::string> szVMatName; CVector<std::string> szVMatAlias;
-  CVector<std::string> szVCellMat;
-  CVector<double> dVStartZ; CVector<double> dVEndZ;
-  iBase_EntityHandle intersec;
   double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
-  iBase_EntityHandle cell;
-  iBase_EntityHandle cyl= NULL, tmp_vol1= NULL, tmp_new= NULL, cell_copy = NULL;
+  CVector<double> dVCylZPos(2), dVCylXYPos(2), dVEndZ, dVStartZ;
+  CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
+  iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol1= NULL, tmp_new= NULL, cell_copy = NULL, intersec = NULL;
 
   // name tag handle
   iBase_TagHandle this_tag= NULL;
@@ -2133,6 +2176,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	CHECK("setData failed");
 	    
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
+	ERRORR("Error in function Name_Faces", err);
 	 
 	// copy the outermost cyl
 	iGeom_copyEnt(geom, intersec_main[nRadii-1], &tmp_intersec, &err);
@@ -2155,6 +2199,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(),sMatName.size(), &err);
 	CHECK("setData failed");
 	err = Name_Faces(sMatName, tmp_new, this_tag);
+	ERRORR("Error in function Name_Faces", err);
 
  	for (int b=nRadii; b>1; b--){  
 
@@ -2178,6 +2223,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 	  err = Name_Faces(sMatName, tmp_new, this_tag);
+	  ERRORR("Error in function Name_Faces", err);
 
 	  // copy the new into the cyl array
 	  cyls[b-1] = tmp_new;
@@ -2227,15 +2273,12 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
       // loop and create cylinders
       if(nCyl > 0){
 	m_Pincell(i).GetCylSizes(n, nRadii);
-	SimpleArray<iBase_EntityHandle> cyls(nRadii);
-	SimpleArray<iBase_EntityHandle> cell_copys(nRadii);
-	SimpleArray<iBase_EntityHandle> intersec_main(nRadii);
-	SimpleArray<iBase_EntityHandle> intersec_copy(nRadii);
-	iBase_EntityHandle  tmp_intersec;
+
 	//declare variables
+	SimpleArray<iBase_EntityHandle> cyls(nRadii), cell_copys(nRadii), intersec_main(nRadii), intersec_copy(nRadii);
+	iBase_EntityHandle  tmp_intersec;
 	CVector<double> dVCylRadii(nRadii);
-	CVector<std::string> szVMat(nRadii);
-	CVector<std::string> szVCylMat(nRadii);
+	CVector<std::string> szVMat(nRadii), szVCylMat(nRadii);
 	
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
@@ -2261,8 +2304,6 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	  CHECK("Couldn't copy inner duct wall prism.");
 	  //	  cell_copys[m-1] = cell_copy;
 
-
- 
 	  iGeom_intersectEnts(geom, cell_copy, cyls[m-1],&intersec,&err);
 	  CHECK("intersection failed"); 
 	  intersec_main[m-1] = intersec;	  
@@ -2281,6 +2322,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	CHECK("setData failed");
 	    
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
+	ERRORR("Error in function Name_Faces", err);
 
 	// delete the cell as this is the case when no. cell material is specified
 	iGeom_deleteEnt(geom, cells[n-1], &err);
@@ -2310,6 +2352,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 	  err = Name_Faces(sMatName, tmp_new, this_tag);
+	  ERRORR("Error in function Name_Faces", err);
 
 	  // copy the new into the cyl array
 	  cyls[b-1] = tmp_new;
@@ -2319,5 +2362,5 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
     }
   }
-  return 1;
+  return 0;
 }

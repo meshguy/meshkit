@@ -10,7 +10,7 @@ Vector template class definition.
 #include <string>
 #include <iostream>
 #include <cassert>
-
+#include <stdlib.h>
 
 // defines the vector template class
 template <class T>
@@ -336,7 +336,8 @@ void CVector<T>::ErrorHandler (int nErrorCode, int nR) const
             std::cerr << "Constructor. Incompatible vectors.\n";
         break;
     }
-    // exit (1);
+    std::cerr << "Unable to populate vectors." << std::endl;
+    exit (1);
 }
 
 #endif

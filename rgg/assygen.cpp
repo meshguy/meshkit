@@ -12,33 +12,34 @@ in the input file
 
 int main (int argc, char *argv[])
 {
-  int err;
-  CNrgen TheNR; // the one and only NR!
+  int err = 0;
+  // the one and only NR!
+  CNrgen TheNR; 
 
-  // show program banner
-  TheNR.Banner (std::cout); 
-
-  // prepare for I/O
-  TheNR.PrepareIO (argc, argv);
-  
   // start the timer 
   CClock Timer;
   std::string szDateTime;
   Timer.GetDateTime (szDateTime);
   std::cout << "\nStarting out at : " << szDateTime << "\n";
   
-  //count pin cylinders and cell material, needed for setting array size before actual read
-  TheNR.CountPinCylinders ();
+  // show program banner
+  TheNR.Banner (std::cout); 
   
+  // prepare for I/O
+  err =  TheNR.PrepareIO (argc, argv);
+  ERRORR("Error in function PrepareIO", err);
+ 
+  //count pin cylinders and cell material, needed for setting array size before actual read
+  err = TheNR.CountPinCylinders ();
+  ERRORR("Error in function CountPinCylinders", err);
+
   // read the problem size and create pincell
-  err = TheNR.ReadAndCreate ();
-  if (err!=1)
-    std::cout << "Error in function ReadAndCreate\n";
+  TheNR.ReadAndCreate ();
+  ERRORR("Error in function ReadAndCreate", err);
   
   // create the .jou file
-  err = TheNR.CreateCubitJournal();
-  if (err!=1)
-    std::cout << "Error in function CreateCubitJournal\n";
+  TheNR.CreateCubitJournal();
+  ERRORR("Error in function CreateCubitJournal", err);
 
   // get the current date and time
   Timer.GetDateTime (szDateTime);
@@ -49,9 +50,9 @@ int main (int argc, char *argv[])
 	    << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
 
   // close input and output files
-  err = TheNR.TerminateProgram ();
-  if (err!=1)
-    std::cout << "Error while terminating \n";
+  TheNR.TerminateProgram ();
+  ERRORR("Error in function TerminateProgram", err);
+
   std::cout << "\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<std::endl;
   
   return 0;

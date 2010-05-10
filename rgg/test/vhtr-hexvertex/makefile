@@ -23,73 +23,73 @@ ASSYGEN_FILES = 0.inp  1.inp  2.inp  3.inp  4.inp  5.inp  6.inp  7.inp  8.inp  9
 vhtr-hexvertex.h5m : ${MESH_FILES} vhtr-hexvertex.inp
 	${COREGEN} vhtr-hexvertex
 0.cub : 0.sat  0.jou  0.template.jou
-	${CUBIT} -nogui -nobatch 0.jou
+	${CUBIT} 0.jou
 
 0.sat 0.jou 0.template.jou : 0.inp
 	${ASSYGEN} 0
 
 1.cub : 1.sat  1.jou  1.template.jou
-	${CUBIT} -nogui -nobatch 1.jou
+	${CUBIT} 1.jou
 
 1.sat 1.jou 1.template.jou : 1.inp
 	${ASSYGEN} 1
 
 2.cub : 2.sat  2.jou  2.template.jou
-	${CUBIT} -nogui -nobatch 2.jou
+	${CUBIT} 2.jou
 
 2.sat 2.jou 2.template.jou : 2.inp
 	${ASSYGEN} 2
 
 3.cub : 3.sat  3.jou  3.template.jou
-	${CUBIT} -nogui -nobatch 3.jou
+	${CUBIT} 3.jou
 
 3.sat 3.jou 3.template.jou : 3.inp
 	${ASSYGEN} 3
 
 4.cub : 4.sat  4.jou  4.template.jou
-	${CUBIT} -nogui -nobatch 4.jou
+	${CUBIT} 4.jou
 
 4.sat 4.jou 4.template.jou : 4.inp
 	${ASSYGEN} 4
 
 5.cub : 5.sat  5.jou  5.template.jou
-	${CUBIT} -nogui -nobatch 5.jou
+	${CUBIT} 5.jou
 
 5.sat 5.jou 5.template.jou : 5.inp
 	${ASSYGEN} 5
 
 6.cub : 6.sat  6.jou  6.template.jou
-	${CUBIT} -nogui -nobatch 6.jou
+	${CUBIT} 6.jou
 
 6.sat 6.jou 6.template.jou : 6.inp
 	${ASSYGEN} 6
 
 7.cub : 7.sat  7.jou  7.template.jou
-	${CUBIT} -nogui -nobatch 7.jou
+	${CUBIT} 7.jou
 
 7.sat 7.jou 7.template.jou : 7.inp
 	${ASSYGEN} 7
 
 8.cub : 8.sat  8.jou  8.template.jou
-	${CUBIT} -nogui -nobatch 8.jou
+	${CUBIT} 8.jou
 
 8.sat 8.jou 8.template.jou : 8.inp
 	${ASSYGEN} 8
 
 9.cub : 9.sat  9.jou  9.template.jou
-	${CUBIT} -nogui -nobatch 9.jou
+	${CUBIT} 9.jou
 
 9.sat 9.jou 9.template.jou : 9.inp
 	${ASSYGEN} 9
 
 10.cub : 10.sat  10.jou  10.template.jou
-	${CUBIT} -nogui -nobatch 10.jou
+	${CUBIT} 10.jou
 
 10.sat 10.jou 10.template.jou : 10.inp
 	${ASSYGEN} 10
 
 11.cub : 11.sat  11.jou  11.template.jou
-	${CUBIT} -nogui -nobatch 11.jou
+	${CUBIT} 11.jou
 
 11.sat 11.jou 11.template.jou : 11.inp
 	${ASSYGEN} 11

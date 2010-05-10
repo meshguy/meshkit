@@ -14,7 +14,7 @@
 #include "clock.hpp"
 #include <sstream>
 #include <string>
-;
+
 int get_copy_expand_sets(CopyMesh *cm,
                          iBase_EntitySetHandle orig_set, 
                          const char **tag_names, const char **tag_vals, 
@@ -30,6 +30,13 @@ int copy_move_hex_flat_assys(CopyMesh **cm,
 			     std::vector<iBase_EntitySetHandle> &assys);
 
 int copy_move_sq_assys(CopyMesh **cm,
+		       const int nrings, const int pack_type,
+		       const double pitch,
+		       const int symm,
+		       std::vector<std::string> &core_alias,
+		       std::vector<iBase_EntitySetHandle> &assys);
+
+int copy_move_hex_full_assys(CopyMesh **cm,
 		       const int nrings, const int pack_type,
 		       const double pitch,
 		       const int symm,
@@ -103,15 +110,18 @@ int main(int argc, char **argv)
 
   // read inputs and open makefile for writing
   err = prepareIO (argc, argv);
+  ERRORR("Failed to create instance.", 1);
   err = read_inputs();
+  ERRORR("Failed to read inputs.", 1);
   err = write_makefile();
+  ERRORR("Failed to write a makefile.", 1);
 
   // make a mesh instance
   iMesh_newMesh("MOAB", &impl, &err, 4);
   ERRORR("Failed to create instance.", 1);
   
   iMesh_getRootSet(impl, &root_set, &err);
-
+  ERRORR("Couldn't get the root set", err);
   // create cm instances for each mesh file
   CopyMesh* cm[files.size()];
   for (unsigned int i = 0; i < files.size(); i++) {
@@ -149,6 +159,11 @@ int main(int argc, char **argv)
   } 
   else if(!strcmp(geom_type.c_str(),"hexflat")){
     err = copy_move_hex_flat_assys(cm, nrings, pack_type, pitch, symm, 
+				   core_alias, assys);
+    ERRORR("Failed in copy/move step.", err);
+  }
+  else if(!strcmp(geom_type.c_str(),"hexfull")){
+    err = copy_move_hex_full_assys(cm, nrings, pack_type, pitch, symm, 
 				   core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
@@ -460,6 +475,89 @@ int copy_move_hex_flat_assys(CopyMesh **cm,
   return iBase_SUCCESS;
 }
 
+
+int copy_move_hex_full_assys(CopyMesh **cm,
+			     const int nrings, const int pack_type,
+			     const double pitch,
+			     const int symm,
+			     std::vector<std::string> &core_alias, 
+			     std::vector<iBase_EntitySetHandle> &assys)
+{
+  double dx[3] = {0.0, 0.0, 0.0};
+  double PI = acos(-1.0);
+  iBase_EntityHandle *new_ents;
+  int new_ents_alloc, new_ents_size;
+  int err, assm_index; 
+  int i = 0;
+
+  // get the copy/expand sets
+  int num_etags = 3, num_ctags = 1;
+  const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
+  const char *etag_vals[] = {NULL, NULL, NULL};
+  const char *ctag_names[] = {"GEOM_DIMENSION"};
+  const char *ctag_vals[]={(const char*)&set_DIM};
+
+  for (unsigned int i = 0; i < files.size(); i++) {
+    err = get_copy_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+    ERRORR("Failed to add expand lists.", iBase_FAILURE);
+    err = get_copy_expand_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+    ERRORR("Failed to add expand lists.", iBase_FAILURE);
+    err = extend_expand_sets(cm[i]);
+    ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+  }
+
+  int t, width = 2 * nrings - 1;
+  for (int n1 = 1; n1 <= width; n1++) {
+    if(n1 > nrings)
+      t = 2 * nrings - n1;
+    else
+      t = n1;
+
+    for (int n2 = 1; n2 <= (nrings + t - 1); n2++) {
+      err = find_assm(i,assm_index);
+      if (-1 == assm_index) {
+        i++;
+        continue;
+      }
+
+    if (n1 < nrings){
+      dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + 
+	(n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
+      dx[1] = (n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+    }
+    else{
+      dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
+	(2 * nrings - n1 -1) * pitch / 2.0;
+      dx[1] = (n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)); 
+    }     
+      new_ents = NULL;
+      new_ents_alloc = 0;
+      new_ents_size = 0;
+
+      int orig_ents_alloc = 0, orig_ents_size;
+      iBase_EntityHandle *orig_ents = NULL;
+
+      iMesh_getEntities(impl, assys[assm_index], iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
+			&orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
+      ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
+
+      err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx,
+					       &new_ents, &new_ents_alloc, &new_ents_size,
+					       false);
+      ERRORR("Failed to copy_move entities.", 1);
+      std::cout << "Copy/moved A: " << assm_index 
+		<< " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+
+      free(new_ents);
+      free(orig_ents);
+      i++;
+    
+      err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
+      ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+    }
+  }
+  return iBase_SUCCESS;
+}
 
 int copy_move_sq_assys(CopyMesh **cm,
 		       const int nrings, const int pack_type,
@@ -798,6 +896,47 @@ int read_inputs ()
 	  core_alias.push_back(temp_alias);
 	}        
       }
+      else if (geom_type =="hexfull"){
+	// reading pitch info
+	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				 MAXCHARS, comment))
+	  ERRORR("Reading input file failed",1);
+	if (input_string.substr(0,10) == "assemblies"){
+	  std::istringstream formatString (input_string);
+	  formatString >> card >> nassys >> pitch;
+	}
+    
+	// reading file and alias names
+	for(int i=1;i<=nassys;i++){
+	  if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				   MAXCHARS, comment))
+	    ERRORR("Reading input file failed",1);    
+	  std::istringstream formatString (input_string);
+	  formatString >> meshfile >> mf_alias;
+	  files.push_back(meshfile);
+	  assm_alias.push_back(mf_alias);
+	}
+    
+	// reading lattice 
+	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				 MAXCHARS, comment))
+	  ERRORR("Reading input file failed",1);
+	if (input_string.substr(0,7) == "lattice"){
+	  std::istringstream formatString (input_string);
+	  formatString >> card >> nrings;
+	  tot_assys = 3 * (nrings * (nrings - 1)) + 1;
+	}
+
+	// now reading the arrangement
+	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				 MAXCHARS, comment))
+	  ERRORR("Reading input file failed",1);    
+	std::istringstream formatString (input_string);
+	for(int i=1;i<=tot_assys;i++){
+	  formatString >> temp_alias;
+	  core_alias.push_back(temp_alias);
+	}        
+      }
       else{
 	ERRORR("Invalid geometry type",1);
       }
@@ -884,7 +1023,7 @@ int write_makefile(){
   make_file << "\t" << "${COREGEN} " << iname << std::endl;
   for(unsigned int i=0; i<files.size(); i++){
     make_file << files[i] << " : " << f_sat[i] << "  " << f_jou[i] << "  " << f_injou[i] << std::endl;
-    make_file << "\t" << "${CUBIT} -nogui -nobatch " << f_jou[i] <<"\n" << std::endl;
+    make_file << "\t" << "${CUBIT} " << f_jou[i] <<"\n" << std::endl;
 
     make_file << f_sat[i] << " " << f_jou[i] << " " << f_injou[i] << " : " << f_inp[i] << std::endl;
     make_file << "\t" << "${ASSYGEN} " << f_no_ext[i] << "\n" << std::endl;

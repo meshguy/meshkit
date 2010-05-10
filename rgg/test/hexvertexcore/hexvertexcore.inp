@@ -1,13 +1,17 @@
-Geometry Surface
-GeometryType HexVertex
-Assemblies 4 10.0
-a1.cub A1
+! #############################################################################################################
+! Core generation from example assemblies a1.inp to a4.inp
+! #############################################################################################################
+!
+Geometry Surface		! 'Geometry' card defines if the meshes are volume or surface
+GeometryType HexVertex		! 'GeometryType' card can take values Hexagonal Rectangular
+Assemblies 4 10.0		! 'Assemblies' card defines the number of assembly mesh files and their pitch
+a1.cub A1			! Meshfile name followed by alias
 a2.cub A2
 a3.cub A3
 a4.cub A4
-Lattice 3
+Lattice 3			! 'Lattice' card defines arrangement of assemblies in core
 A1 &
 A2 &
 A3 A2 A4
-end
+END				! 'END' card is a MUST marks the end of file for the file reader
 

@@ -14,6 +14,7 @@ Matrix template class
 #include <cmath>
 #include "arraybase.hpp"
 #include <stdlib.h>
+
 // defines the Matrix class
 template <class T>
 class CMatrix
@@ -418,6 +419,7 @@ void CMatrix<T>::ErrorHandler (int nErrorCode, int nR, int nC) const
             std::cerr << "Matrix::Incompatible matrices.\n";
         break;
     }
+    std::cerr << "Unable to populate matrix.\n";
     exit (1);
 }
 

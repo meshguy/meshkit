@@ -17,6 +17,12 @@ CNrgen class definition.
 #include "simplearray.hpp"
 #include "iGeom.h"
 
+// helper macro for assygen
+#define ERRORR(a,b) {if (0 != err) {std::cerr << a << std::endl; return b;}}
+
+// helper macro for igeom
+#define CHECK( STR ) if (err != iBase_SUCCESS) return Print_Error( STR, err, geom, __FILE__, __LINE__ )
+
 class CNrgen
 {
 public:
@@ -25,15 +31,14 @@ public:
   enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE,
 		    ENEGATIVE, EALIAS, EPIN};
 
-  // helper functions
   void Banner (std::ostream& OF);
-  void PrepareIO (int argc, char *argv[]);
-  void CountPinCylinders ();
-  int  ReadAndCreate ();
+  int PrepareIO (int argc, char *argv[]);
+  int CountPinCylinders ();
+  int ReadAndCreate ();
   int Name_Faces(const std::string sMatName, const iBase_EntityHandle body, 
 		   iBase_TagHandle this_tag);
   int Center_Assm();
-  int Section_Assm (char&, double&);
+  int Section_Assm (char&, double&, const std::string);
   int Rotate_Assm (char&, double&);
   int Move_Assm (double&,double&,double&);
   int Create_HexAssm(std::string &);
@@ -42,54 +47,54 @@ public:
   int Imprint_Merge ();
   int Subtract_Pins ();
   int Create2DSurf();
-
-bool Print_Error( const char* desc, 
+  int ReadPinCellData(int i);
+  int CreatePinCell_Intersect(int i, double dX,
+		    double dY, double dZ);
+  int CreatePinCell(int i, double dX,
+		    double dY, double dZ);  
+  int CreateCubitJournal();
+  int ComputePinCentroid(int, CMatrix<std::string>, int, int,
+			 double&, double&, double&);
+  bool Print_Error(const char* desc, 
 			 int err,
 			 iGeom_Instance geom,
 			 const char* file,
 			 int line );
-
-  void ReadPinCellData(int i);
-
-
-  int CreatePinCell_Intersect(int i, double dX,
-		    double dY, double dZ);
-
-  int CreatePinCell(int i, double dX,
-		    double dY, double dZ);  
-
-  int CreateCubitJournal();
-  void ComputePinCentroid(int, CMatrix<std::string>, int, int,
-			  double&, double&, double&);
   int TerminateProgram ();
 
-  // modifier functions
-  void SetSize ();
-
-  // variables
-  int m_nLineNumber, m_nPlanar;	   // current line number in input file
-  std::ifstream m_FileInput;	// File Input
-  std::ofstream m_FileOutput;	// File Output
-  std::ofstream m_SchemesFile; 	// Scheme journal file output
-  std::string m_szFile;       // just the top level name
-  std::string m_szInFile;     // input file
-  std::string m_szGeomFile;   // o/p geometry file
-  std::string m_szJouFile;    // cubit journal file
-  std::string m_szSchFile;   // cubit journal scheme file
 private:
-  double pi;
-  double m_RadialSize, m_AxialSize;
-  int err;
-  CMatrix<std::string> m_Assembly;
-  std::string m_szGeomType;
-  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol;
-  CVector<double> m_dVAssmPitch, m_dVAssmPitchX, m_dVAssmPitchY;;
-  CVector<double> m_dVXYAssm, m_dVZAssm, m_dAssmSize;
-  CVector<std::string> m_szAssmMat, m_szAssmMatAlias, m_szMAlias;
 
-  CVector<CPincell> m_Pincell;
-  int m_nPin, m_nPinX, m_nPinY;
-  double m_dPitch;
+  // file Input
+  std::ifstream m_FileInput;  
+    
+  // journal file Output
+  std::ofstream m_FileOutput, m_SchemesFile;
+
+  // string for file names
+  std::string m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;    
+
+  // matrix for holding pincell arrangement
+  CMatrix<std::string> m_Assembly; 
+
+  // vector for duct specification 
+  CVector<double> m_dVAssmPitch, m_dVAssmPitchX, m_dVAssmPitchY, m_dVXYAssm, m_dVZAssm, m_dAssmSize;
+  
+  // vector for material names
+  CVector<std::string> m_szAssmMat, m_szAssmMatAlias, m_szMAlias;  
+
+  // vector holding a pincell
+  CVector<CPincell> m_Pincell; 
+
+  // string for geomtype
+  std::string m_szGeomType;       
+
+  // integers for vectors sizes, err etc
+  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar; 
+
+  // doubles for pincell pitch, pi and mesh sizes resp.
+  double m_dPitch, pi, m_dRadialSize, m_dAxialSize;      
+ 
+  // bool for checking if assembly is centered
   bool m_Centered;
 
   // igeom related
@@ -103,7 +108,6 @@ private:
   int MAXCHARS;
 
   // error handlers
-  void ErrorHandler (int) const; 
   void IOErrorHandler (ErrorStates) const;
   friend class CPincell;
 };
