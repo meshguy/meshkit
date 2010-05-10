@@ -1,5 +1,5 @@
 ! ###############################################################################
-! Square PWR Assembly Definition without CellMaterials (Prism) around Pins
+! Example Rectangular Assembly 1
 ! ###############################################################################
 !
 GeometryType Rectangular

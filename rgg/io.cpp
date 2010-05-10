@@ -662,7 +662,6 @@ int CNrgen::ReadAndCreate()
     }
     // Handle mesh size inputs
     if (szInputString.substr(0,13) == "axialmeshsize"){
-      double m_AxialSize;
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_dAxialSize;
       if(m_dAxialSize < 0 || szFormatString.fail())
