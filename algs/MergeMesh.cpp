@@ -7,6 +7,8 @@
 #include "MBCartVect.hpp"
 #endif
 
+#include <algorithm>
+
 int MergeMesh::merge_entities(iBase_EntityHandle *elems,
                               int elems_size,
                               const double merge_tol,
@@ -19,8 +21,7 @@ int MergeMesh::merge_entities(iBase_EntityHandle *elems,
   
 #ifdef MOAB  
   MBRange tmp_elems;
-  MBEntityHandle *tmp_elems_ptr = (MBEntityHandle*) elems;
-  std::copy(tmp_elems_ptr, tmp_elems_ptr+elems_size, mb_range_inserter(tmp_elems));
+  tmp_elems.insert( (MBEntityHandle*)elems, (MBEntityHandle*)elems + elems_size );
   MBErrorCode result = merge_entities(tmp_elems, do_merge, update_sets, (MBTag) merge_tag);
   return (MB_SUCCESS == result ? iBase_SUCCESS : iBase_FAILURE);
 #else
@@ -110,18 +111,27 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
   MBAdaptiveKDTreeIter iter;
   MBAdaptiveKDTree tree(mbImpl);
   
-  MBErrorCode result = tree.get_tree_iterator(tree_root, iter);
-  if (MB_SUCCESS != result) return result;
-  
   // evaluate vertices in this leaf
-  MBRange leaf_range, leaf_range2, leaves_checked;
+  MBRange leaf_range, leaf_range2;
+  std::vector<MBEntityHandle> sorted_leaves;
   std::vector<double> coords;
   std::vector<MBEntityHandle> merge_tag_val, leaves_out;
+  
+  MBErrorCode result = tree.get_tree_iterator(tree_root, iter);
+  if (MB_SUCCESS != result) return result;
+  while (result == MB_SUCCESS) {
+    sorted_leaves.push_back( iter.handle() );
+    result = iter.step();
+  }
+  if (result != MB_ENTITY_NOT_FOUND)
+    return result;
+  std::sort( sorted_leaves.begin(), sorted_leaves.end() );
+  
+  std::vector<MBEntityHandle>::iterator it;
+  for (it = sorted_leaves.begin(); it != sorted_leaves.end(); ++it) {
 
-  while (result != MB_ENTITY_NOT_FOUND) {
-    leaves_checked.insert(iter.handle());
     leaf_range.clear();
-    result = mbImpl->get_entities_by_handle(iter.handle(), leaf_range);
+    result = mbImpl->get_entities_by_handle(*it, leaf_range);
     if (MB_SUCCESS != result) return result;
     coords.resize(3*leaf_range.size());
     merge_tag_val.resize(leaf_range.size());
@@ -146,7 +156,7 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
       leaf_range2.clear();
       for (std::vector<MBEntityHandle>::iterator vit = leaves_out.begin();
            vit != leaves_out.end(); vit++) {
-        if (leaves_checked.find(*vit) == leaves_checked.end()) {
+        if (*vit > *it) { // if we haven't visited this leaf yet in the outer loop
           result = mbImpl->get_entities_by_handle(*vit, leaf_range2, MBInterface::UNION);
           if (MB_SUCCESS != result) return result;
         }
@@ -190,8 +200,6 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
       }
 
     }
- 
-    result = iter.step();
   }
   return MB_SUCCESS;
 }
