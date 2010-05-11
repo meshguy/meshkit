@@ -3,6 +3,8 @@
 !
 Geometry Volume         	 ! 'Geometry' card defines if the meshes are volume or surface
 !
+Symmetry 6			 ! 'Symmetry' card defines the desired symmetry in the model
+!
 GeometryType hexflat    	 ! 'GeometryType' card can take values Hexagonal Cartesian and Default
 !
 Assemblies 1 15.685     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)

@@ -50,7 +50,9 @@ int copy_move_hex_vertex_assys(CopyMesh **cm,
 			       std::vector<std::string> &core_alias,
 			       std::vector<iBase_EntitySetHandle> &assys);
 
-int read_inputs();
+int read_inputs_phase2();
+
+int read_inputs_phase1();
 
 int banner();
 
@@ -70,7 +72,7 @@ iBase_EntitySetHandle root_set;
 const int UNITCELL_DUCT = 0, ASSY_TYPES = 1;
 
 // declare variables read in the inputs
-int nrings, nringsx, nringsy, pack_type =1, symm = 6;
+int nrings, nringsx, nringsy, pack_type =1, symm = 1;
 double pitch, pitchx, pitchy;
 bool global_ids = true, back_mesh;
 std::vector<std::string> files;
@@ -110,12 +112,14 @@ int main(int argc, char **argv)
 
   // read inputs and open makefile for writing
   err = prepareIO (argc, argv);
-  ERRORR("Failed to create instance.", 1);
-  err = read_inputs();
-  ERRORR("Failed to read inputs.", 1);
+  ERRORR("Failed in preparing i/o.", 1);
+  err = read_inputs_phase1();
+  ERRORR("Failed to read inputs in phase1.", 1);
+  err = read_inputs_phase2();
+  ERRORR("Failed to read inputs in phase2.", 1);
   err = write_makefile();
   ERRORR("Failed to write a makefile.", 1);
-
+ 
   // make a mesh instance
   iMesh_newMesh("MOAB", &impl, &err, 4);
   ERRORR("Failed to create instance.", 1);
@@ -147,22 +151,22 @@ int main(int argc, char **argv)
   std::cout << "Loaded mesh files." << std::endl;
 
   // move the assys based on the geometry type
-  if(!strcmp(geom_type.c_str(), "hexvertex")){
+  if(!strcmp(geom_type.c_str(), "hexvertex") && symm == 6){
     err = copy_move_hex_vertex_assys(cm, nrings, pack_type, pitch, symm, 
 				     core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
-  else if(!strcmp(geom_type.c_str(),"rectangular")){
+  else if(!strcmp(geom_type.c_str(),"rectangular") && symm == 1){
     err = copy_move_sq_assys(cm, nrings, pack_type, pitch, symm, 
 			     core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   } 
-  else if(!strcmp(geom_type.c_str(),"hexflat")){
+  else if(!strcmp(geom_type.c_str(),"hexflat") && symm == 6){
     err = copy_move_hex_flat_assys(cm, nrings, pack_type, pitch, symm, 
 				   core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
-  else if(!strcmp(geom_type.c_str(),"hexfull")){
+  else if(!strcmp(geom_type.c_str(),"hexflat") && symm == 1){
     err = copy_move_hex_full_assys(cm, nrings, pack_type, pitch, symm, 
 				   core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
@@ -747,8 +751,13 @@ int banner ()
 }
 
 
-int read_inputs ()
+int read_inputs_phase2 ()
 {
+  //Rewind the input file
+  file_input.clear (std::ios_base::goodbit);
+  file_input.seekg (0L, std::ios::beg);
+  linenumber = 0;
+
   CParser parse;
   int err;
   for(;;){
@@ -756,17 +765,10 @@ int read_inputs ()
 			     MAXCHARS, comment))
       ERRORR("Reading input file failed",1);
 
-    if (input_string.substr(0,8) == "geometry"){
-      std::istringstream formatString (input_string);
-      formatString >> card >> geometry;
-      if((strcmp(geometry.c_str(), "surface")==0)){
-	set_DIM = 2;
-      }
-    }
     if (input_string.substr(0,12) == "geometrytype"){
       std::istringstream formatString (input_string);
       formatString >> card >> geom_type;
-      if(geom_type == "hexvertex"){
+      if(geom_type == "hexvertex" && symm == 6){
 
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
@@ -812,7 +814,7 @@ int read_inputs ()
 	}        
       }
 
-      else if(geom_type == "rectangular"){
+      else if(geom_type == "rectangular" && symm ==1){
 
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
@@ -855,7 +857,7 @@ int read_inputs ()
 	}        
       }
 
-      else if (geom_type =="hexflat"){
+      else if (geom_type =="hexflat" && symm == 6){
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
 				 MAXCHARS, comment))
@@ -896,7 +898,7 @@ int read_inputs ()
 	  core_alias.push_back(temp_alias);
 	}        
       }
-      else if (geom_type =="hexfull"){
+      else if (geom_type =="hexflat" && symm == 1){
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
 				 MAXCHARS, comment))
@@ -941,6 +943,32 @@ int read_inputs ()
 	ERRORR("Invalid geometry type",1);
       }
     }
+    // breaking condition
+    if(input_string.substr(0,3) == "end"){
+      std::istringstream formatstring (input_string);
+      break;
+    }
+  }
+  return iBase_SUCCESS;
+}
+
+
+int read_inputs_phase1 ()
+{
+  CParser parse;
+  int err;
+  for(;;){
+    if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+			     MAXCHARS, comment))
+      ERRORR("Reading input file failed",1);
+
+    if (input_string.substr(0,8) == "geometry"){
+      std::istringstream formatString (input_string);
+      formatString >> card >> geometry;
+      if((strcmp(geometry.c_str(), "surface")==0)){
+	set_DIM = 2;
+      }
+    }
     // background mesh
     if (input_string.substr(0,10) == "background"){
       std::istringstream formatString (input_string);
@@ -962,7 +990,6 @@ int read_inputs ()
   }
   return iBase_SUCCESS;
 }
-
 
 int write_makefile(){
   std::string name;

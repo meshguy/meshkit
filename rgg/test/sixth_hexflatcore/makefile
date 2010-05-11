@@ -20,8 +20,8 @@ INJOU_FILES = a1.template.jou  a2.template.jou  a3.template.jou  a4.template.jou
 
 ASSYGEN_FILES = a1.inp  a2.inp  a3.inp  a4.inp  
 
-hexflatcore.h5m : ${MESH_FILES} hexflatcore.inp
-	${COREGEN} hexflatcore
+sixth_hexflat.h5m : ${MESH_FILES} sixth_hexflatcore.inp
+	${COREGEN} sixth_hexflatcore
 a1.cub : a1.sat  a1.jou  a1.template.jou
 	${CUBIT} a1.jou
 

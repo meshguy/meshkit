@@ -20,8 +20,8 @@ INJOU_FILES = s1.template.jou  s2.template.jou
 
 ASSYGEN_FILES = s1.inp  s2.inp  
 
-2cartassy.h5m : ${MESH_FILES} 2cartassy.inp
-	${COREGEN} 2cartassy
+simple_rectcore.h5m : ${MESH_FILES} simple_rectcore.inp
+	${COREGEN} simple_rectcore
 s1.cub : s1.sat  s1.jou  s1.template.jou
 	${CUBIT} s1.jou
 

@@ -3,6 +3,7 @@
 ! #############################################################################################################
 !
 Geometry Volume  			! 'Geometry' card defines if the meshes are volume or surface
+Symmetry 1			        ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Rectangular and Default
 Assemblies 2 23.5 23.5			! 'Assemblies' card defines there is one assembly with pitch  (Note this should takecare of background mesh)
 s1.cub S1                   	  	! Meshfile name followed by alias 

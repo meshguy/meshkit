@@ -4,6 +4,8 @@
 !
 Geometry Surface         	 ! 'Geometry' card defines if the meshes are volume or surface
 !
+Symmetry 6                       ! 'Symmetry' card defines the desired symmetry in the model
+!
 GeometryType HexFlat    	 ! 'GeometryType' card can take values Hexagonal Rectangular
 !
 Assemblies 4 10.0	     	 ! 'Assemblies' card defines the number of assembly mesh files and their pitch

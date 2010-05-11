@@ -1,8 +1,9 @@
 ! To run this test file: MeshKit> coregen coregen_default; this file uses .cub file from geometry of assygen default case
 Geometry Volume  			! 'Geometry' card defines if the meshes are volume or surface
-GeometryType Rectangular			! 'GeometryType' card can take values Hexagonal Cartesian and Default
-Assemblies 1 23.5 23.5			! 'Assemblies' card defines there is one assembly with pitch  (Note this should takecare of background mesh)
-assygen_default.cub S1                   	  	! Meshfile name followed by alias 
+Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
+GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
+Assemblies 1 23.5 23.5			! 'Assemblies' card defines the number of assembly mesh files and pitch
+assygen_default.cub S1                  ! Meshfile name followed by alias 
 Lattice 2 2 
 S1 S1 &
 S1 S1 

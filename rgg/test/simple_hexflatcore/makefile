@@ -20,8 +20,8 @@ INJOU_FILES = fuel.template.jou  control.template.jou
 
 ASSYGEN_FILES = fuel.inp  control.inp  
 
-hexfull.h5m : ${MESH_FILES} hexfull.inp
-	${COREGEN} hexfull
+simple_hexflatcore.h5m : ${MESH_FILES} simple_hexflatcore.inp
+	${COREGEN} simple_hexflatcore
 fuel.cub : fuel.sat  fuel.jou  fuel.template.jou
 	${CUBIT} fuel.jou
 
