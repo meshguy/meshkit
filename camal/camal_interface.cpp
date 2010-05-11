@@ -31,6 +31,7 @@
 #endif
 
 const bool debug = false;
+iBase_TagHandle index_tag;
 
 bool CAMAL_bdy_loops_coords(CMEL *cmel,
                             iBase_EntityHandle gentity,
@@ -70,7 +71,6 @@ bool CAMAL_bdy_loops_coords(CMEL *cmel,
   bdy_verts.erase(std::unique(bdy_verts.begin(), bdy_verts.end()), bdy_verts.end());
 
     // assign ids to vertices
-  iBase_TagHandle index_tag;
   success = cmel->assign_tmp_indices(bdy_verts, index_tag);
   if (!success) return success;
 
@@ -156,7 +156,6 @@ bool CAMAL_bdy_connect_coords(CMEL *cmel,
   bdy_verts.erase(std::unique(bdy_verts.begin(), bdy_verts.end()), bdy_verts.end()); 
 
     // assign ids to vertices
-  iBase_TagHandle index_tag;
   bool success = cmel->assign_tmp_indices(bdy_verts, index_tag);
   if (!success) return false;
 
