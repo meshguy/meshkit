@@ -1,0 +1,85 @@
+\documentclass[11pt, a4paper]{paper}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfig}
+
+\title {\bf Jaal:: Engineering A High Quality All Quads Surface Mesher } 
+\author {
+Chaman Singh Verma\thanks{csverma@cs.wisc.edu}, Tim Taugtes \thanks{tautges@mcs.anl.gov} }
+
+\begin{document}
+\maketitle
+\abstract { 
+Applications of All-Quad surface mesh are abound, but to the best of our knowledge, there does not
+exist any reliable public domain All-Quads meshing implementation even for complex 2D domains. Among 
+various techniques that have been proposed in the past, probably {\em triangle to quad} transformation is
+the most intuitive, appealing, and most importantly, robust.
+
+The main objective of the work is to relax convexity condition from Suneeta's tree matching algorithm
+to produce an extremely fast and robust all -quad meshing algorithm. After generating topologically
+an {\em All Quad Mesh} using matching algorithm, we improve the resulting mesh using simple clean-up operations,
+and quadrilateral shape optimization libaries.
+
+This All Quad Mesh algorithm is part of MOAB toolkit, which is an open source library supporting mesh infrastructure for 
+petacscale field simulations.
+
+We demonstrate the effectivness of our algorithm for both CAD and non-CAD geometrical models.
+Initial experiments shows that our implementation is at least 100 times faster than the original
+implementation of Suneeta's algorithm for generating topological correct mesh. Performance with
+all the cleanup operations and optimization is also within some reasonable limits for some of the 
+benchmarking models.
+}
+
+\section { Introduction }
+Quadrilateral mesh generation have been used since late 70s for many commerical CFD codes. The importance
+of unstructured quadrilateral mesh for the complex geometries is well known, but it is extremely surprsing 
+know( to the best of our knowledge) that there does not exist any open source All-Quad surface meshing algorithm at par with high visible unstructured triangular mesh {\em Triangle }.
+
+Quadrilateral mesh generation do not have the theoretical strong backup as the trinagle mesh generation, 
+still we strongly believe that it is possible to engineering an All-Quad meshing algorithm with some 
+set heurtistics, known algorithms and optimization libraries that can produce an extremely high quality
+quadrilateral mesh for most of models of practical importance, if not all. 
+
+In this work, we focus on {\em Triangle to Quad} transformation approach because of its simplicity and
+robustness. Qmorph implementation has similar final goals, it generates high quality quadrilateral mesh
+with sweeping {\em Advancing front } to transform and cleanup at the same step. This approach suuffers
+from one of the serious problem quality mesh in the regions of front collisions. Therefore, we strongly
+believe in the second approach i.e. seperate generating topological correct quadrilateral mesh from the
+quality improvement. For this reason, we follow our implementations on the idea of using graph matching
+for quadrilateral mesh generation, first proposed by Suneeta et. al. In fact, our work is so much influenced
+by her work, that for most of the theoretical proofs and implementation ideas are taken from her work.  
+
+The rest of the paper is organized as follows: Section 1, describes Triangle to Quad tranformation using graph and tree matching algorithms. Section 2, descibes improving topologically correct but geometrically unacceptable quadrilateral mesh. Section 3 describes results for both CAD and non-CAD geometrical models.
+Section 4. describes implementation details and finally in Section 5, we conclude this work.
+ \begin{figure}
+ \begin{center}
+ \includegraphics[scale=0.4]{quadflow.eps}
+ \caption{There are seven independent components in developing high quality all-quad meshing algorithm.}
+ \end{center}
+ \label{fig:flowchart}
+\end{figure} 
+\section {Literature survery on all-quad meshing algorithms}
+\section { Graph Matching Algorithm }
+\begin{figure}
+ \begin{center}
+ \includegraphics[scale=0.5]{graphtree.eps}
+ %\includegraphics[scale=0.4]{dfs.eps}
+ %\includegraphics[scale=0.4]{bfs.eps}
+ \caption{Converting Graph into a tree.}
+ \end{center}
+ \label{fig:graph_tree}
+\end{figure} 
+\section { Topological Clean-up}
+\subsection{ Quadrilateral Convexity }
+\subsection{ Basic Operations}
+\subsubsection{ Face Closing }
+\subsubsection{ Face Opening }
+\subsubsection{ Face Swapping }
+\subsection { Advancing front clean-up}
+\subsection { Boundary improvement}
+\subsection { Volume Preserving Laplacian Smoothing}
+\section {Results}
+\section { Implementation details }
+
+\section {Conclusions}
+\end{document}
