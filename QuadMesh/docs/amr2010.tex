@@ -1,7 +1,7 @@
 \documentclass[11pt, a4paper]{paper}
 \usepackage{amsmath}
 \usepackage{graphicx}
-\usepackage{subfig}
+%\usepackage{subfig}
 
 \title {\bf Jaal:: An Dual Tree Matching Approach to High Quality All-Quads Surface Meshing  } 
 \author {
@@ -66,7 +66,7 @@ Section 4. describes implementation details and finally in Section 5, we conclud
 %\end{figure} 
 \section {Previous work on all-quad meshing algorithms}
 
-\item {\em Maturity of  2D/3D triangle mesh generation}
+%\item {Maturity of  2D and 3D triangle mesh generation}
 
 \begin{itemize}
 \item {\em Triangle to Quad-Transformation}
@@ -112,6 +112,50 @@ Section 4. describes implementation details and finally in Section 5, we conclud
 \caption { (A) Input Triangle Mesh. (B) Quad Mesh using Edmonds Generalized
 Graph Matching Algorithm (C) Quad Mesh using simplified Tree Matching Algorithm }
 \end{figure}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|} 
+\hline Model  & \multicolumn{2}{c|}{Input Mesh} & \multicolumn{3}{c|} {Graph Matching} & \multicolumn{3}{c|}{Tree Matching}  \\ \hline
+\hline        & \# of  & \# of  & \# of &  \# of  & CPU    &  \# of   & \# of    & CPU      \\
+              &  Nodes &  Tri  &  Nodes &  Quads  & Cycles &   Nodes  &  Quads   & Cycles   \\
+\hline 
+\hline Plane  &  66049 &  131072 &  66049 &  65536 & 1.058E+11   &  66049   &  65536   & 3.729E+09 \\
+\hline Sphere &  40962 &   81920 &  40962 &  40960 & 1.761E+11   &  41088   &  41086   & 2.539E+09 \\
+\hline Torus  &  50000 &  100000 &  50000 &  50000 & 2.695E+10   &  50000   &  50000   & 2.385E+09 \\
+\hline Bunny   &  34834 &  69451 &  34834 & 34726 & 1.944E+10 &  35697 &  35588 &  2.402E+09 \\
+\hline Hand    &  50085 &  99999 &  50085 & 50000 & 5.134E+10 &  53131 &  53045 &  4.043E+09  \\
+\hline CAD     &  5096 &  10224 &  5096 &  5112 &  7.627E+08 &  5297 &  5313 & 2.444E+08 \\
+\hline Statue  &  187644 &  375284 &  187644 & 187642 & 1.284E+12 &  189712 &  189710 &  1.246E+10 \\
+\hline Art     &  241607 &  483226 &  241607 & 241613 & 8.729E+11 &  251280 &  251286 &  2.692E+10\\
+\hline
+\end{tabular}
+\caption{Comparision of performance of Edmond's Perfect Graph Matching and 
+         Sunteeta's approximate Tree Matching Algorithms }
+\end{center}
+\end{table}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c|c|c|} 
+\hline \# of Triangles &  Edmond's       & Suneeta's     \\
+               & Perfect Graph Matching  & Tree Matching  \\ 
+\hline  320    &   7.755E+06             & 5.636E+06      \\
+\hline  1280   &   4.685E+07             & 2.263E+07       \\
+\hline  5120   &   4.885E+08             & 1.266E+08       \\
+\hline  20480  &   1.048E+10             & 5.642E+08       \\
+\hline  81920  &   1.767E+11             & 2.575E+09       \\
+\hline  327680 &      -                  & 1.371E+10       \\
+\hline  1310720 &      -                 & 2.033E+11       \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+
+
 
 %\begin{figure}
 % \begin{center}
