@@ -364,7 +364,8 @@ bool CAMAL_mesh_entity(CMEL *cmel,
     }
     
      // get the generated mesh
-    bdy_coords.resize(3*(bdy_verts.size() + new_points));
+    //bdy_coords.resize(3*(bdy_verts.size() + new_points));
+    bdy_coords.resize(3*new_points);
     connect.resize(4*num_tets);
     success = tet_mesher.get_mesh(new_points, &bdy_coords[0], num_tets, &connect[0]);
     if (!success) {
@@ -377,7 +378,7 @@ bool CAMAL_mesh_entity(CMEL *cmel,
 
     // put new mesh back into interface
   success = cmel->create_vertices_elements(gentity, bdy_verts, 
-                                           &bdy_coords[3*bdy_verts.size()], new_points,
+                                           &bdy_coords[3*bdy_verts.size()], new_points-bdy_verts.size(),
                                            connect, etop, new_entities);
   if (!success)
     std::cerr << "Failed create generated mesh" << std::endl;
