@@ -21,15 +21,30 @@ int MeshRefine2D :: finalize()
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void 
+MeshRefine2D::RefinedEdgeMap::clear()
+{
+  std::map<Vertex*, vector<RefinedEdge> >::const_iterator it;
+
+  for( it = refined_edges.begin(); it != refined_edges.end(); ++it) 
+  {
+   const vector<RefinedEdge> &refedges = it->second;
+   for( size_t i = 0; i < refedges.size(); i++) 
+        delete refedges[i].edge;
+  }
+  refined_edges.clear();
+}
+
+///////////////////////////////////////////////////////////////////////////////
 bool
-MeshRefine2D::hasEdge( Vertex *v1, Vertex *v2) const
+MeshRefine2D::RefinedEdgeMap::hasEdge( Vertex *v1, Vertex *v2) const
 {
    Vertex *vmin = std::min(v1,v2);
 
    std::map<Vertex*, vector<RefinedEdge> >::const_iterator it;
-   it = refinededges.find(vmin);
+   it = refined_edges.find(vmin);
 
-   if( it == refinededges.end() ) return 1;
+   if( it == refined_edges.end() ) return 0;
 
    const vector<RefinedEdge> &refedges = it->second;
    for( int i = 0; i < refedges.size(); i++) {
@@ -44,7 +59,7 @@ MeshRefine2D::hasEdge( Vertex *v1, Vertex *v2) const
 ///////////////////////////////////////////////////////////////////////////////
 
 bool 
-MeshRefine2D:: allow_edge_refinement( const Edge *edge) const
+MeshRefine2D::RefinedEdgeMap::allow_edge_refinement( const Edge *edge) const
 {
    if( edge->isBoundary() || edge->isConstrained() ) 
         if( boundary_split_flag == 0) return 0;
@@ -55,7 +70,7 @@ MeshRefine2D:: allow_edge_refinement( const Edge *edge) const
 ///////////////////////////////////////////////////////////////////////////////
 
 int 
-MeshRefine2D::setVertexOnEdge( Vertex *v1, Vertex *v2) 
+MeshRefine2D::RefinedEdgeMap::setVertexOnEdge( Vertex *v1, Vertex *v2) 
 {
   if( hasEdge(v1,v2) ) return 0;
 
@@ -69,7 +84,8 @@ MeshRefine2D::setVertexOnEdge( Vertex *v1, Vertex *v2)
       refedge.edge = edge;
       refedge.midVertex = v;
       Vertex *vmin = std::min(v1,v2);
-      refinededges[vmin].push_back( refedge );
+      refined_edges[vmin].push_back( refedge );
+      cout << refined_edges.size() << endl;
       return 0;
    }
 
@@ -78,14 +94,14 @@ MeshRefine2D::setVertexOnEdge( Vertex *v1, Vertex *v2)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Vertex* MeshRefine2D::getVertexOnEdge( Vertex *v1, Vertex *v2 ) const
+Vertex* MeshRefine2D::RefinedEdgeMap::getVertexOnEdge( Vertex *v1, Vertex *v2 ) const
 {
    Vertex *vmin = std::min(v1,v2);
 
    std::map<Vertex*, vector<RefinedEdge> >::const_iterator it;
-   it = refinededges.find(vmin);
+   it = refined_edges.find(vmin);
 
-   if( it == refinededges.end() ) return NULL;
+   if( it == refined_edges.end() ) return NULL;
    const vector<RefinedEdge> &refedges = it->second;
    for( int i = 0; i < refedges.size(); i++) {
         Vertex *ev1 = refedges[i].edge->getNodeAt(0);
@@ -98,6 +114,7 @@ Vertex* MeshRefine2D::getVertexOnEdge( Vertex *v1, Vertex *v2 ) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
 void MeshRefine2D::append_new_node( Vertex *vertex) 
 {
   mesh->addNode( vertex );
@@ -136,6 +153,7 @@ Face* MeshRefine2D::append_new_quad( Vertex *v0, Vertex *v1 , Vertex *v2, Vertex
   insertedFaces.push_back( face );
   return face;
 }
+
 ///////////////////////////////////////////////////////////////////////////////
 
 int Sqrt3Refine2D :: execute()
@@ -170,7 +188,7 @@ int LongestEdgeRefine2D :: atomicOp( const Face *oldface)
        {
            Vertex *v1 = oldface->getNodeAt( (i+1)%3);
            Vertex *v2 = oldface->getNodeAt( (i+2)%3);
-           setVertexOnEdge(v1,v2);
+           edgemap->setVertexOnEdge(v1,v2);
         }
    }
 
@@ -181,11 +199,11 @@ int LongestEdgeRefine2D :: atomicOp( const Face *oldface)
 
 int LongestEdgeRefine2D::execute() 
 {
+  edgemap = new RefinedEdgeMap;
 
-  initialize();
+  size_t numfaces = mesh->getSize(2);
 
   size_t ncount = 0;
-  size_t numfaces = mesh->getSize(2);
   for( size_t i = 0; i < numfaces; i++) {
        Face *face = mesh->getFaceAt(i);
 	double ratio  = face->getAspectRatio();
@@ -196,39 +214,34 @@ int LongestEdgeRefine2D::execute()
   }
 
   if( ncount ) {
-      ConsistencyRefine2D consistency;
-      consistency.setMesh(mesh);
+      ConsistencyRefine2D consistency(mesh, edgemap);
       consistency.execute();
       finalize();
   } else
     cout << "Warning: No Edge was refined " << endl;
+
+  edgemap->clear();
+
+  delete edgemap;
+
 
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int ConsistencyRefine2D :: initialize() 
+int  ConsistencyRefine2D :: execute()
 {
   hangingVertex.resize(3);
   edge0.set(0);
   edge1.set(1);
   edge2.set(2);
 
-  MeshRefine2D::initialize();
+  makeConsistent();
+
+  finalize();
 
   return 0;
-}
-
-//#############################################################################
-
-int  ConsistencyRefine2D :: execute()
-{
-    initialize();
-    makeConsistent();
-    finalize();
-
-    return 0;
 }
 
 //#############################################################################
@@ -266,7 +279,6 @@ void ConsistencyRefine2D :: subDivideQuad2Tri( const vector<Vertex*> &connect)
 
 void ConsistencyRefine2D :: makeConsistent1( Face *oldface)
 {
-  int err, status;
   //------------------------------------------------------------------
   // When only one edge is inconsistent, we can direcly join the
   // hanging node to the opposite node of the triangle. Therefore
@@ -426,10 +438,11 @@ void ConsistencyRefine2D :: makeConsistent3( Face *oldface)
 void ConsistencyRefine2D :: checkFaceConsistency( Face *oldface ) 
 {
   bitvec.reset();
+
   for( int i = 0; i < 3; i++) {
     Vertex *v1  = oldface->getNodeAt( (i+1)%3 );
     Vertex *v2  = oldface->getNodeAt( (i+2)%3 );
-    hangingVertex[i] = getVertexOnEdge( v1, v2 );
+    hangingVertex[i] = edgemap->getVertexOnEdge( v1, v2 );
     if( hangingVertex[i] ) bitvec.set(i);
   }
 
@@ -439,8 +452,6 @@ void ConsistencyRefine2D :: checkFaceConsistency( Face *oldface )
 
 int ConsistencyRefine2D :: atomicOp(Face *oldface)
 {
-    remove_it( oldface );
-    
     checkFaceConsistency( oldface );
 
     switch( bitvec.count() )
@@ -458,7 +469,11 @@ int ConsistencyRefine2D :: atomicOp(Face *oldface)
 	  makeConsistent3( oldface );
 	  break;
      }
-     return 0;
+
+
+    remove_it( oldface );
+
+    return 0;
 }
 
 //#############################################################################
@@ -474,6 +489,7 @@ void ConsistencyRefine2D :: makeConsistent()
   //**********************************************************************
 
   size_t numfaces = mesh->getSize(2);
+
   for( size_t i = 0; i < numfaces ; i++) 
         atomicOp( mesh->getFaceAt(i) );
 }
@@ -545,12 +561,13 @@ int CentroidRefine2D::execute()
        size_t numfaces = mesh->getSize(2);
        for( size_t i = 0; i < numfaces; i++)
             atomicOp( mesh->getFaceAt(i)  );
-
   }
 
   mesh->prune();
   mesh->enumerate(0);
   mesh->enumerate(2);
+
+  assert( mesh->isSimple() );
 
   return 0;
 }
@@ -589,6 +606,8 @@ int ObtuseRefine2D :: atomicOp( const Face *oldface)
 ///////////////////////////////////////////////////////////////////////////
 int ObtuseRefine2D :: execute()
 {
+  edgemap = new RefinedEdgeMap;
+
   initialize();
 
   size_t numfaces = mesh->getSize(2);
@@ -599,14 +618,15 @@ int ObtuseRefine2D :: execute()
        if( !err ) ncount++;
   }
 
-
-  ConsistencyRefine2D refine;
   if( ncount ) {
-      refine.setMesh(mesh);
+      ConsistencyRefine2D refine(mesh, edgemap);
       refine.execute();
       finalize();
   } else 
       cout << "Warning: No triangle was refined " << endl;
+
+  edgemap->clear();
+  delete edgemap;
 
   return 0;
 }
@@ -620,15 +640,15 @@ int Refine2D14::refine_quad(Face *oldface)
   Vertex *v2 = oldface->getNodeAt( 2 );
   Vertex *v3 = oldface->getNodeAt( 3 );
 
-  setVertexOnEdge( v0,v1 );
-  setVertexOnEdge( v2,v3 );
-  setVertexOnEdge( v0,v2 );
-  setVertexOnEdge( v1,v3 );
+  edgemap->setVertexOnEdge( v0,v1 );
+  edgemap->setVertexOnEdge( v2,v3 );
+  edgemap->setVertexOnEdge( v0,v2 );
+  edgemap->setVertexOnEdge( v1,v3 );
 
-  Vertex *v01  = getVertexOnEdge( v0,v1 );
-  Vertex *v23  = getVertexOnEdge( v2,v3 );
-  Vertex *v02  = getVertexOnEdge( v0,v2 );
-  Vertex *v13  = getVertexOnEdge( v1,v3 );
+  Vertex *v01  = edgemap->getVertexOnEdge( v0,v1 );
+  Vertex *v23  = edgemap->getVertexOnEdge( v2,v3 );
+  Vertex *v02  = edgemap->getVertexOnEdge( v0,v2 );
+  Vertex *v13  = edgemap->getVertexOnEdge( v1,v3 );
 
   Vertex *vcenter = Vertex::newObject();
   vcenter->setXYZCoords( oldface->getCentroid() );
@@ -651,13 +671,13 @@ int Refine2D14:: refine_tri( Face *oldface)
   Vertex *v1 = oldface->getNodeAt( 1 );
   Vertex *v2 = oldface->getNodeAt( 2 );
 
-  setVertexOnEdge(v0,v1);    
-  setVertexOnEdge(v1,v2);    
-  setVertexOnEdge(v2,v0);  
+  edgemap->setVertexOnEdge(v0,v1);    
+  edgemap->setVertexOnEdge(v1,v2);    
+  edgemap->setVertexOnEdge(v2,v0);  
 
-  Vertex *v01 = getVertexOnEdge( v0, v1 );
-  Vertex *v12 = getVertexOnEdge( v1, v2 );
-  Vertex *v20 = getVertexOnEdge( v2, v0 );
+  Vertex *v01 = edgemap->getVertexOnEdge( v0, v1 );
+  Vertex *v12 = edgemap->getVertexOnEdge( v1, v2 );
+  Vertex *v20 = edgemap->getVertexOnEdge( v2, v0 );
 
   vector<iBase_EntityHandle> tconn(3);
 
@@ -687,6 +707,7 @@ int Refine2D14::atomicOp(Face *oldface)
 
 int Refine2D14 ::execute() 
 {
+  edgemap = new RefinedEdgeMap;
   initialize();
 
   size_t numfaces = mesh->getSize(2);
@@ -698,11 +719,14 @@ int Refine2D14 ::execute()
   }
 
   if( ncount ) {
-      ConsistencyRefine2D refine;
-      refine.setMesh(mesh);
+      ConsistencyRefine2D refine(mesh, edgemap);
       refine.execute();
       MeshRefine2D::finalize();
   }
+
+  edgemap->clear();
+
+  delete edgemap;
 
   return 0;
 }
@@ -754,6 +778,8 @@ int GradeRefine2D :: finalize()
 
 int GradeRefine2D :: execute()
 {
+    edgemap = new RefinedEdgeMap;
+
     initialize();
 
     size_t numnodes = mesh->getSize(0);
@@ -764,13 +790,14 @@ int GradeRefine2D :: execute()
 	 if( !err ) ncount++;
     }
 
-/*
     if( ncount ) {
         ConsistencyRefine2D refine(mesh, edgemap);
         refine.execute();
         finalize();
     }
-*/
+
+    edgemap->clear();
+    delete edgemap;
 
     return ncount;
 }

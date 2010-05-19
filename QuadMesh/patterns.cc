@@ -126,31 +126,36 @@ void gen_circle_pattern( )
    circle->numSegments = 20;
    circle->discretize();
    shapes.push_back(circle);
+*/
 
    int nCount = 8;
-   double radius = 0.45, radius2  = 1.0;
-   for( int i = 0; i < 2; i++) {
+   double radius1 = 10.00, radius2  = 50.0, holeRadius = 2.0;
+   int nRings = 5;
+
+   double dr  = (radius2-radius1)/(double)nRings;
+
+   for( int i = 0; i <= nRings; i++) {
       double angle = 0;
-      radius2 += 1.0;
+      double radius = radius1 + i*dr;
+      cout << radius << endl;
       for( int j = 0; j < nCount; j++) {
            circle = new Circle;
-           circle->radius    = radius;
-           circle->center[0] = radius2*cos(angle);
-           circle->center[1] = radius2*sin(angle);
+           circle->radius    = holeRadius;
+           circle->center[0] = radius*cos(angle);
+           circle->center[1] = radius*sin(angle);
 	   angle += 2.0*M_PI/(double)nCount;
-           circle->numSegments = 8;
+           circle->numSegments = 32;
            circle->discretize();
            shapes.push_back(circle);
       }
       nCount += 6;
    }
-*/
 
    circle = new Circle;
-   circle->radius    = 12.0;
+   circle->radius    = radius2 + dr;
    circle->center[0] = 0.0;
    circle->center[1] = 0.0;
-   circle->numSegments = 100;
+   circle->numSegments = 200;
    circle->discretize();
    shapes.push_back(circle);
 

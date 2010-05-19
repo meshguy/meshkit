@@ -51,9 +51,36 @@ BEGIN_JAAL_NAMESPACE
 // and we are working towards it.
 ///////////////////////////////////////////////////////////////////////////////////
 
-struct Diamond {
+class FaceClose
+{
+    public:
+      FaceClose( Mesh *m, Face *f, Vertex *v0, Vertex *v1 )
+      { mesh = m; face = f; vertex0 = v0; vertex1 = v1; replacedNode = NULL; }
+ 
+    bool isSafe() const;
+    void makeShield();
+    int  apply();
+
+    Mesh *mesh;
     Face *face;
     Vertex *vertex0, *vertex1;
+    Vertex *replacedNode;
+    set<Face*>  shield;
+};
+
+class Doublet
+{
+    public:
+      Doublet( Mesh *m, Vertex *v ) { mesh = m; vertex = v; replacedFace = NULL; }
+
+      bool isSafe() const;
+      void makeShield();
+      int  remove();
+
+      Mesh   *mesh;
+      Vertex *vertex;
+      Face   *replacedFace;
+      Face   *shield[2];
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -79,6 +106,7 @@ private:
 };
 
 class QuadCleanUp {
+    static bool isDoublet( const Vertex *v);
 public:
 
     QuadCleanUp(Mesh *m) {
@@ -86,21 +114,22 @@ public:
     }
 
     // Query methods ...
-    vector<Face*> search_diamonds(bool check_both_sides = 1,
+    vector<FaceClose> search_diamonds(bool check_both_sides = 1,
             bool allow_boundary_faces = 1);
     vector<Face*> search_flat_quads();
-    vector<Vertex*> search_interior_doublets();
     vector<Vertex*> search_boundary_singlets();
+    vector<Doublet> search_interior_doublets();
     vector<Bridge> search_bridges(bool allow_boundary_nodes = 0);
     vector<YRing> search_yrings();
 
     // Removal Methods ...
     void remove_diamonds(bool recursive = 1, bool check_both_sides = 1,
             bool allow_boundary_faces = 1);
-    void remove_doublets(bool recursive = 1, bool allow_boundary_nodes = 0);
+    void remove_doublets(bool recursive = 1);
+    void search_and_remove_doublets(bool recursive = 1);
     void remove_bridges(bool recursive = 1, bool allow_boundary_nodes = 0);
     void remove_yrings(bool recursive = 1);
-    int clean_layer(int id);
+    int  clean_layer(int id);
     void cleanup_boundary(double cutOffAngle = 100.0);
     void advancing_front_cleanup();
 
@@ -119,20 +148,27 @@ private:
     // Input-output instance. Input mesh is modified...
     Mesh *mesh;
 
-    vector<Diamond> vDiamonds; // Diamonds in the mesh;
-    vector<Bridge> vBridges; // Bridges in the mesh.
     vector<YRing> vyRings;
+    vector<Bridge> vBridges; // Bridges in the mesh.
+    vector<Doublet> vDoublets;
+    vector<FaceClose> vDiamonds; // Diamonds in the mesh;
 
     // Basic Operations ...
+    int clean_layer_once(int id);
+
     int face_close(Face *face, Vertex *v0, Vertex *v2);
-    int remove_interior_doublet(Vertex *vertex);
+    int diamond_collapse(FaceClose &d);
+    int remove_interior_doublet(Doublet &d);
     int remove_boundary_singlet(Vertex *vertex);
-    int diamond_collapse(Diamond &d);
     int remove_bridge(const Bridge &b);
     int remove_yring(const YRing &r);
     int remove_bridges_once(bool allow_boundary_nodes = 0);
-    int remove_diamonds_once(bool check_both_sides = 1, bool allow_boundary_faces = 1);
-    int remove_doublets_once(bool allow_boundary_nodes = 0);
+    int remove_diamonds_once();
+
+    int remove_doublets_once();
+    int search_and_remove_doublets_once();
+
+    int remove_interior_doublets_once();
     int remove_yrings();
 
     // High level utility function composed of basic functions...

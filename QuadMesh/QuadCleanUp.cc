@@ -4,6 +4,179 @@
 
 using namespace Jaal;
 
+///////////////////////////////////////////////////////////////////////////////
+void set_diamond_tag(Mesh *mesh, vector<FaceClose> &diamonds)
+{
+   size_t numfaces = mesh->getSize(2);
+   for( size_t i = 0; i <  numfaces; i++) {
+        Face *face = mesh->getFaceAt(i);
+        face->setTag( 0  );
+   }
+
+   set<Face*>::const_iterator it;
+   for( size_t i = 0; i < diamonds.size(); i++) {
+        for( it = diamonds[i].shield.begin(); it != diamonds[i].shield.end(); ++it){
+	     Face *face = *it;
+	     face->setTag(1);
+        }
+   }
+
+   for( size_t i = 0; i < diamonds.size(); i++) {
+        Face *face = diamonds[i].face;
+        face->setTag(2);
+   }
+}
+
+////////////////////////////////////////////////////////////////////
+
+void set_doublet_tag(Mesh *mesh, vector<Doublet> &doublet)
+{
+/*
+   size_t numfaces = mesh->getSize(2);
+   for( size_t i = 0; i <  numfaces; i++) {
+        Face *face = mesh->getFaceAt(i);
+        face->setTag( 0  );
+   }
+
+   set<Face*>::const_iterator it;
+   for( size_t i = 0; i < diamonds.size(); i++) {
+        for( it = diamonds[i].shield.begin(); it != diamonds[i].shield.end(); ++it){
+	     Face *face = *it;
+	     face->setTag(1);
+        }
+   }
+
+   for( size_t i = 0; i < diamonds.size(); i++) {
+        Face *face = diamonds[i].face;
+        face->setTag(2);
+   }
+*/
+}
+
+
+////////////////////////////////////////////////////////////////////
+
+bool FaceClose :: isSafe() const 
+{
+   if( vertex0->isBoundary() ) return 0;
+   if( vertex1->isBoundary() ) return 0;
+
+   assert( face->hasNode( vertex0 ) );
+   assert( face->hasNode( vertex1 ) );
+
+   Vertex *v0 = face->getNodeAt(0);
+   Vertex *v1 = face->getNodeAt(1);
+   Vertex *v2 = face->getNodeAt(2);
+   Vertex *v3 = face->getNodeAt(3);
+
+   vector<Face*> neighs;
+
+   neighs = v0->getRelations2();
+   for (size_t j = 0; j < neighs.size(); j++)
+       if( neighs[j]->isVisited() ) return 0;
+
+   // Every neighbour must share only one diamond vertex.
+   for (size_t j = 0; j < neighs.size(); j++) {
+        if( neighs[j] != face ) {
+	    int val0 = neighs[j]->hasNode(vertex0);
+	    int val1 = neighs[j]->hasNode(vertex1);
+	    if( val0 + val1 == 2 ) return 0;
+        }
+   }
+
+   neighs = v1->getRelations2();
+   for (size_t j = 0; j < neighs.size(); j++)
+       if( neighs[j]->isVisited() ) return 0;
+
+   // Every neighbour must share only one diamond vertex.
+   for (size_t j = 0; j < neighs.size(); j++) {
+        if( neighs[j] != face ) {
+	    int val0 = neighs[j]->hasNode(vertex0);
+	    int val1 = neighs[j]->hasNode(vertex1);
+	    if( val0 + val1 == 2 ) return 0;
+        }
+   }
+
+   neighs = v2->getRelations2();
+   for (size_t j = 0; j < neighs.size(); j++)
+       if( neighs[j]->isVisited() ) return 0;
+
+   // Every neighbour must share only one diamond vertex.
+   for (size_t j = 0; j < neighs.size(); j++) {
+        if( neighs[j] != face ) {
+	    int val0 = neighs[j]->hasNode(vertex0);
+	    int val1 = neighs[j]->hasNode(vertex1);
+	    if( val0 + val1 == 2 ) return 0;
+        }
+   }
+
+   neighs = v3->getRelations2();
+   for (size_t j = 0; j < neighs.size(); j++)
+       if( neighs[j]->isVisited() ) return 0;
+
+   // Every neighbour must share only one diamond vertex.
+   for (size_t j = 0; j < neighs.size(); j++) {
+        if( neighs[j] != face ) {
+	    int val0 = neighs[j]->hasNode(vertex0);
+	    int val1 = neighs[j]->hasNode(vertex1);
+	    if( val0 + val1 == 2 ) return 0;
+        }
+   }
+
+   return 1;
+}
+////////////////////////////////////////////////////////////////////
+void FaceClose :: makeShield() 
+{
+   Vertex *v0 = face->getNodeAt(0);
+   Vertex *v1 = face->getNodeAt(1);
+   Vertex *v2 = face->getNodeAt(2);
+   Vertex *v3 = face->getNodeAt(3);
+
+   vector<Face*> neighs;
+   shield.clear();
+
+   neighs = vertex0->getRelations2(); assert( !neighs.empty() );
+   for (size_t j = 0; j < neighs.size(); j++) {
+       neighs[j]->setVisitMark(1);
+       shield.insert( neighs[j] );
+   }
+
+   neighs = vertex1->getRelations2(); assert( !neighs.empty() );
+   for (size_t j = 0; j < neighs.size(); j++) {
+       neighs[j]->setVisitMark(1);
+       shield.insert( neighs[j] );
+   }
+}
+
+////////////////////////////////////////////////////////////////////
+
+bool Doublet::isSafe() const 
+{
+  assert( vertex  );
+
+  if( vertex->isRemoved() ) return 0;
+
+  vector<Face*> apexfaces = vertex->getRelations2();
+  for (size_t i = 0; i < apexfaces.size(); i++) {
+        Face *face = apexfaces[i];
+	if( face->isRemoved() ) return 0;
+	if( face->isVisited() ) return 0;
+  }
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////
+
+void Doublet::makeShield() 
+{
+  vector<Face*> apexfaces = vertex->getRelations2();
+  for (size_t i = 0; i < apexfaces.size(); i++) {
+        Face *face = apexfaces[i];
+	face->setVisitMark(1);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////
 
 void
@@ -179,15 +352,16 @@ QuadCleanUp::getVertexFaceDegrees() {
     int mindegree = *min_element(degree.begin(), degree.end());
     int maxdegree = *max_element(degree.begin(), degree.end());
 
-    cout << " Min Vertex-Face Degree : " << mindegree << endl;
-    cout << " Max Vertex-Face Degree : " << maxdegree << endl;
-
+    cout << "Topological Information :" << endl;
+    cout << "Min Vertex-Face Degree : " << mindegree << endl;
+    cout << "Max Vertex-Face Degree : " << maxdegree << endl;
+    cout << "Node-Face Degree  |  "  <<  " Count " << endl;
     for (int i = mindegree; i <= maxdegree; i++) {
         int ncount = 0;
         for (size_t j = 0; j < degree.size(); j++)
             if (degree[j] == i)
                 ncount++;
-        cout << "Degree : " << i << " Count " << ncount << endl;
+        cout <<  i <<  "        " << ncount << endl;
     }
 
     if (!relexist)
@@ -213,9 +387,8 @@ QuadCleanUp::get_VertexOf_FaceDegree(int n) {
 
 ////////////////////////////////////////////////////////////////////
 
-vector<Face*>
+vector<FaceClose>
 QuadCleanUp::search_diamonds(bool both_sides, bool allow_boundary_faces) {
-    //  Public Function ...
     vDiamonds.clear();
 
     size_t numfaces = mesh->getSize(2);
@@ -230,61 +403,31 @@ QuadCleanUp::search_diamonds(bool both_sides, bool allow_boundary_faces) {
     for (size_t iface = 0; iface < numfaces; iface++) {
         Face *face = mesh->getFaceAt(iface);
         face->setVisitMark(0);
-        face->setTag(0);
     }
 
-    Diamond diamond;
-    vector<Face*> diamonds, neighs;
+    vector<Face*>  neighs;
+    Vertex *vertex0, *vertex1;
+
     for (size_t iface = 0; iface < numfaces; iface++) {
         Face *face = mesh->getFaceAt(iface);
-        if (face->getSize(0) == 4) {
             Vertex *v0 = face->getNodeAt(0);
             Vertex *v1 = face->getNodeAt(1);
             Vertex *v2 = face->getNodeAt(2);
             Vertex *v3 = face->getNodeAt(3);
 
-            if (!allow_boundary_faces) {
-                if (v0->isBoundary())
-                    continue;
-                if (v1->isBoundary())
-                    continue;
-                if (v2->isBoundary())
-                    continue;
-                if (v3->isBoundary())
-                    continue;
-            }
-            int visitCount = 0;
-
             neighs = v0->getRelations2();
-            for (size_t j = 0; j < neighs.size(); j++)
-                visitCount += neighs[j]->isVisited();
-            if (visitCount)
-                continue;
-            int d0 = neighs.size();
+            size_t d0 = neighs.size();
 
             neighs = v1->getRelations2();
-            for (size_t j = 0; j < neighs.size(); j++)
-                visitCount += neighs[j]->isVisited();
-            if (visitCount)
-                continue;
-            int d1 = neighs.size();
+            size_t d1 = neighs.size();
 
             neighs = v2->getRelations2();
-            for (size_t j = 0; j < neighs.size(); j++)
-                visitCount += neighs[j]->isVisited();
-            if (visitCount)
-                continue;
             size_t d2 = neighs.size();
 
             neighs = v3->getRelations2();
-            for (size_t j = 0; j < neighs.size(); j++)
-                visitCount += neighs[j]->isVisited();
-            if (visitCount)
-                continue;
             size_t d3 = neighs.size();
 
             bool enlist = 0;
-
             int boundCount = 0;
             if (allow_boundary_faces) {
                 boundCount += v0->isBoundary();
@@ -295,88 +438,63 @@ QuadCleanUp::search_diamonds(bool both_sides, bool allow_boundary_faces) {
 
             if (boundCount == 1) {
                 enlist = 1;
-                diamond.face = face;
                 if (v0->isBoundary()) {
-                    diamond.vertex0 = v1;
-                    diamond.vertex1 = v3;
+                    vertex0 = v1;
+                    vertex1 = v3;
                 }
                 if (v1->isBoundary()) {
-                    diamond.vertex0 = v2;
-                    diamond.vertex1 = v0;
+                    vertex0 = v2;
+                    vertex1 = v0;
                 }
                 if (v2->isBoundary()) {
-                    diamond.vertex0 = v1;
-                    diamond.vertex1 = v3;
+                    vertex0 = v1;
+                    vertex1 = v3;
                 }
                 if (v3->isBoundary()) {
-                    diamond.vertex0 = v0;
-                    diamond.vertex1 = v2;
+                    vertex0 = v0;
+                    vertex1 = v2;
                 }
-                vDiamonds.push_back(diamond);
             }
 
             if (boundCount == 0) {
                 if (both_sides) {
                     if ((d0 == 3 && d2 == 3)) {
                         enlist = 1;
-                        diamond.face = face;
-                        diamond.vertex0 = v0;
-                        diamond.vertex1 = v2;
-                        vDiamonds.push_back(diamond);
+                        vertex0 = v0;
+                        vertex1 = v2;
                     } else if (d1 == 3 && d3 == 3) {
                         enlist = 1;
-                        diamond.face = face;
-                        diamond.vertex0 = v1;
-                        diamond.vertex1 = v3;
-                        vDiamonds.push_back(diamond);
+                        vertex0 = v1;
+                        vertex1 = v3;
                     }
                 } else {
                     if ((d0 == 3 || d2 == 3) || (d1 == 3 || d3 == 3)) {
                         if (d0 + d2 < d1 + d3) {
                             enlist = 1;
-                            diamond.face = face;
-                            diamond.vertex0 = v0;
-                            diamond.vertex1 = v2;
-                            vDiamonds.push_back(diamond);
+                            vertex0 = v0;
+                            vertex1 = v2;
                         } else {
                             enlist = 1;
-                            diamond.face = face;
-                            diamond.vertex0 = v1;
-                            diamond.vertex1 = v3;
-                            vDiamonds.push_back(diamond);
+                            vertex0 = v1;
+                            vertex1 = v3;
                         }
                     }
                 }
             }
 
             if (enlist) {
-                diamonds.push_back(face);
-                face->setTag(1);
-                neighs = v0->getRelations2();
-                for (size_t j = 0; j < neighs.size(); j++)
-                    neighs[j]->setVisitMark(1);
-
-                neighs = v1->getRelations2();
-                for (size_t j = 0; j < neighs.size(); j++)
-                    neighs[j]->setVisitMark(1);
-
-                neighs = v2->getRelations2();
-                for (size_t j = 0; j < neighs.size(); j++)
-                    neighs[j]->setVisitMark(1);
-
-                neighs = v3->getRelations2();
-                for (size_t j = 0; j < neighs.size(); j++)
-                    neighs[j]->setVisitMark(1);
+	        FaceClose diamond(mesh, face, vertex0, vertex1);
+		if( diamond.isSafe() ) {
+		    diamond.makeShield();
+                    vDiamonds.push_back(diamond);
+                }
             }
-
-        }
     }
 
     if (!relexist)
         mesh->clear_relations(0, 2);
 
-    cout << "Number of Diamonds " << diamonds.size() << endl;
-    return diamonds;
+    return vDiamonds;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -729,7 +847,14 @@ QuadCleanUp::search_flat_quads() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-vector<Vertex*>
+bool QuadCleanUp :: isDoublet(const Vertex *v)
+{
+   if (!v->isBoundary() && (v->getRelations2().size() == 2)) return 1;
+   return 0;
+}
+///////////////////////////////////////////////////////////////////////////////
+
+vector<Doublet>
 QuadCleanUp::search_interior_doublets() {
     //
     // An interior doublet is a vertex, which is shared by two
@@ -747,18 +872,31 @@ QuadCleanUp::search_interior_doublets() {
 
     assert(mesh->getAdjTable(0, 2));
 
-    vector<Vertex*> doublets;
+    size_t numfaces = mesh->getSize(2);
+
+    for( int i = 0; i < numfaces; i++) {
+         Face *face = mesh->getFaceAt(i);
+	 face->setVisitMark(0);
+    }
+
+    vDoublets.clear();
+
     for (size_t i = 0; i < numnodes; i++) {
-        Vertex *v = mesh->getNodeAt(i);
-        if (!v->isBoundary() && (v->getRelations2().size() == 2))
-            doublets.push_back(v);
+        Vertex *vertex = mesh->getNodeAt(i);
+        if( isDoublet( vertex ) ) {
+            Doublet newdoublet(mesh, vertex);
+	    if( newdoublet.isSafe() ) {
+	        newdoublet.makeShield();
+	        vDoublets.push_back(newdoublet);
+	    }
+        }
     }
 
     if (!relexist)
         mesh->clear_relations(0, 2);
 
-    cout << "Number of interior doublets Detected : " << doublets.size() << endl;
-    return doublets;
+    cout << "Number of interior doublets Detected : " << vDoublets.size() << endl;
+    return vDoublets;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -799,9 +937,12 @@ QuadCleanUp::search_boundary_singlets() {
 ////////////////////////////////////////////////////////////////////
 
 int
-QuadCleanUp::face_close(Face *face, Vertex *v0, Vertex *v2) {
+FaceClose::apply()
+{
     assert(face->getSize(0) == 4);
-    assert(mesh->getAdjTable(0, 2));
+
+    Vertex *v0 = vertex0;
+    Vertex *v2 = vertex1;
 
     //
     // We shouldn't modify the boundary, therefore skip this operation. It is
@@ -818,7 +959,6 @@ QuadCleanUp::face_close(Face *face, Vertex *v0, Vertex *v2) {
             break;
         }
     }
-
     assert(vpos >= 0);
     if (face->getNodeAt((vpos + 2) % 4) != v2) {
         cout << "Warning: Face-open requires opposite vertices " << endl;
@@ -833,17 +973,11 @@ QuadCleanUp::face_close(Face *face, Vertex *v0, Vertex *v2) {
     Vertex *v1 = face->getNodeAt((vpos + 1) % 4);
     Vertex *v3 = face->getNodeAt((vpos + 3) % 4);
 
-    vector<Face*> vr0 = v0->getRelations2();
-    vector<Face*> vr1 = v1->getRelations2();
-    vector<Face*> vr2 = v2->getRelations2();
-    vector<Face*> vr3 = v3->getRelations2();
-
     // Add a new vertex in the mesh...
     Point3D p3d = Vertex::mid_point(v0, v2);
-    Vertex *newvtx = Vertex::newObject();
-    newvtx->setXYZCoords(p3d);
-    newvtx->setID(mesh->getSize(0));
-    mesh->addNode(newvtx);
+    replacedNode  = Vertex::newObject();
+    replacedNode->setXYZCoords(p3d);
+    mesh->addNode( replacedNode );
 
     // This face will go away, remove this from vertex relationship.
     v0->removeRelation2(face);
@@ -851,24 +985,88 @@ QuadCleanUp::face_close(Face *face, Vertex *v0, Vertex *v2) {
     v2->removeRelation2(face);
     v3->removeRelation2(face);
 
-    // Affected neighbouring faces must replace the v0/v2 the new
-    // vertex and the new vertex has new neighbours.
+    vector<Face*> vr0 = v0->getRelations2();
+    vector<Face*> vr1 = v1->getRelations2();
+    vector<Face*> vr2 = v2->getRelations2();
+    vector<Face*> vr3 = v3->getRelations2();
+
     for (size_t i = 0; i < vr0.size(); i++) {
-        vr0[i]->replaceNode(v0, newvtx);
-        if (vr0[i] != face)
-            newvtx->addRelation2(vr0[i]);
+         Face *face = vr0[i];
+	 assert( face->isValid() );
+    }
+
+    for (size_t i = 0; i < vr1.size(); i++) {
+         Face *face = vr1[i];
+	 assert( face->isValid() );
     }
 
     for (size_t i = 0; i < vr2.size(); i++) {
-        vr2[i]->replaceNode(v2, newvtx);
-        if (vr0[i] != face)
-            newvtx->addRelation2(vr2[i]);
+         Face *face = vr2[i];
+	 assert( face->isValid() );
+    }
+
+    for (size_t i = 0; i < vr3.size(); i++) {
+         Face *face = vr3[i];
+	 assert( face->isValid() );
+    }
+
+    // Affected neighbouring faces must replace the v0/v2 the new
+    // vertex and the new vertex has new neighbours.
+    for (size_t i = 0; i < vr0.size(); i++) {
+        assert( !vr0[i]->isRemoved() );
+        vr0[i]->replaceNode(v0, replacedNode );
+        replacedNode->addRelation2(vr0[i]);
+    }
+
+    for (size_t i = 0; i < vr2.size(); i++) {
+        assert( !vr2[i]->isRemoved() );
+	assert(  vr2[i]->hasNode(v2 ) );
+        vr2[i]->replaceNode(v2, replacedNode);
+        replacedNode->addRelation2(vr2[i]);
+	assert( !vr2[i]->hasNode(v2 ) );
+    }
+
+    if( mesh->getAdjTable(0,0) ) {
+        vector<Vertex*> rel0;
+        rel0 = vertex0->getRelations0();
+        for( size_t i = 0; i < rel0.size(); i++) {
+             replacedNode->addRelation0( rel0[i] );
+             rel0[i]->addRelation0( replacedNode );
+	     rel0[i]->removeRelation0( vertex0 );
+        }
+
+       rel0 = vertex1->getRelations0();
+       for( size_t i = 0; i < rel0.size(); i++) {
+            replacedNode->addRelation0( rel0[i] );
+            rel0[i]->addRelation0( replacedNode );
+	    rel0[i]->removeRelation0( vertex1 );
+       }
     }
 
     // Two nodes and face go away from the mesh..
     v0->setRemoveMark(1);
     v2->setRemoveMark(1);
     face->setRemoveMark(1);
+
+    for (size_t i = 0; i < vr0.size(); i++) {
+         Face *face = vr0[i];
+	 assert( face->isValid() );
+    }
+
+    for (size_t i = 0; i < vr1.size(); i++) {
+         Face *face = vr1[i];
+	 assert( face->isValid() );
+    }
+
+    for (size_t i = 0; i < vr2.size(); i++) {
+         Face *face = vr2[i];
+	 assert( face->isValid() );
+    }
+
+    for (size_t i = 0; i < vr3.size(); i++) {
+         Face *face = vr3[i];
+	 assert( face->isValid() );
+    }
 
     return 0;
 }
@@ -893,66 +1091,162 @@ QuadCleanUp::set_regular_node_tag() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 int
-QuadCleanUp::clean_layer(int layernum) 
+QuadCleanUp::clean_layer_once(int layernum ) 
 {
-    int relexist2 = mesh->build_relations(0, 2);
-
-    mesh->setWavefront(2);
-
     size_t numnodes = mesh->getSize(0);
+    size_t numfaces = mesh->getSize(2);
 
-    Diamond diamond;
+    for( size_t i = 0; i < numfaces; i++) {
+         Face *face = mesh->getFaceAt(i);
+	 face->setVisitMark(0);
+	 assert( !face->isRemoved() );
+    }
+
+    // Here we are using a narrow domain search for doublets for efficiency
+    // purpose and therefore don't call the member functions which searches
+    // doublets in the entire mesh...
+    //
+    while(1) {
+
+    vDoublets.clear();
+    for( size_t i = 0; i < numnodes; i++) {
+         Vertex *vertex = mesh->getNodeAt(i);
+	 int lid = vertex->getLayerID();
+	 if( lid == layernum-1 || lid == layernum || lid == layernum+1) {
+             if( isDoublet(vertex) ) {
+	         Doublet newdoublet(mesh, vertex);
+		 if( newdoublet.isSafe() ) {
+		     newdoublet.makeShield();
+		     vDoublets.push_back(newdoublet);
+                 }
+             }
+	 }
+    }
+
+    if( vDoublets.empty() )  break;
+
+    remove_doublets_once();
+
+    int layerid[4];
+    for( size_t i = 0; i < vDoublets.size(); i++) {
+         Face *face = vDoublets[i].replacedFace;
+	 if( face ) {
+	    for( int j = 0; j < 4; j++) 
+	         layerid[j] = face->getNodeAt(j)->getLayerID();
+            int minid = *min_element( layerid, layerid + 4 );
+            face->setLayerID(minid);
+         }
+    }
+    }
+
+    // At this stage, the mesh must be free of any doublets.
+
+    vDiamonds.clear();
+
     vector<Face*> neighs;
     Vertex *currnode, *oppnode;
-    vector<Diamond> sandwitch_faces;
 
     for (size_t i = 0; i < numnodes; i++) {
         Vertex *currnode = mesh->getNodeAt(i);
-        int id = currnode->getTag();
+        int id = currnode->getLayerID();
         if (id == layernum) {
             neighs = currnode->getRelations2();
             for (size_t j = 0; j < neighs.size(); j++) {
                 Face *face = neighs[j];
-                if (face->getTag() == layernum + 1) {
+                if (face->getLayerID() == layernum + 1) {
                     int k = face->queryNodeAt(currnode);
-                    oppnode = face->getNodeAt((j + 2) % 4);
-                    if ((oppnode->getTag() == layernum + 2) && (!oppnode->isBoundary())) {
-                        diamond.face = face;
-                        diamond.vertex0 = currnode;
-                        diamond.vertex1 = oppnode;
-                        sandwitch_faces.push_back(diamond);
-                        break;
-                    }
-                }
-            }
-        }
+                        Vertex *vside0 = face->getNodeAt((k + 1) % 4);
+                        Vertex *vside1 = face->getNodeAt((k + 3) % 4);
+                        if ( (vside0->getLayerID() == layernum + 1) && 
+			     (vside1->getLayerID() == layernum + 1) &&
+			     (!vside0->isBoundary()  && !vside1->isBoundary() ) ) 
+		        {
+                             FaceClose diamond(mesh, face,vside0, vside1);
+			     if( diamond.isSafe() ) {
+				 diamond.makeShield();
+                                 vDiamonds.push_back(diamond);
+                                 break;
+                             }
+                        }
+		}
+             }
+         }
     }
 
-    int ncount = 0;
-    for (size_t i = 0; i < sandwitch_faces.size(); i++) {
-        int err = diamond_collapse(sandwitch_faces[i]);
-        if (!err) ncount++;
+    static int niter = 0;
+    if( niter == 0) {
+        Jaal::set_layer_tag( mesh );
+        mesh->saveAs("debug0");
     }
 
-    if (ncount) {
-        mesh->prune();
-        mesh->enumerate(0);
-        mesh->enumerate(2);
-    }
+    int ncount = remove_diamonds_once();
 
-    if (!relexist2) mesh->clear_relations(0, 2);
+    if( niter == 0) {
+        Jaal::set_layer_tag( mesh );
+        mesh->saveAs("debug1");
+	exit(0);
+    }
+    niter++;
+
+    for( size_t i = 0; i < vDiamonds.size(); i++) {
+         Vertex *vertex = vDiamonds[i].replacedNode;
+	 if( vertex ) 
+	     vertex->setLayerID( layernum + 1);
+    }
 
     return ncount;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+int 
+QuadCleanUp::clean_layer(int layernum ) 
+{
+   if( mesh->isHomogeneous() != 4 ) {
+        cout << "Warning: layer cleaning only for quad mesh " << endl;
+	return 1;
+   }
+
+   int relexist2 = mesh->build_relations(0, 2);
+   int ncount = 0;
+
+   assert( !mesh->hasDuplicates(2) );
+
+   mesh->setWavefront(0);
+   mesh->setWavefront(2);
+
+   assert( mesh->getAdjTable(0,2) );
+
+   static int id = 0;
+   while(1) {
+       int n = clean_layer_once( layernum );
+       if( mesh->hasDuplicates(2) ) {
+           cout << "Error: Mesh has Duplicates " << endl;
+	   exit(0);
+       }
+       if( n == 0) break;
+       ncount += n;
+       id++;
+  }
+
+  cout << " CSV " << endl;
+  Jaal::set_layer_tag(mesh);
+  mesh->saveAs("debug");
+
+  exit(0);
+
+  if (!relexist2) mesh->clear_relations(0, 2);
+  return ncount;
+}
+////////////////////////////////////////////////////////////////////////////////
 void QuadCleanUp :: advancing_front_cleanup()
 {
+   search_and_remove_doublets( 1 );
 
+   int numlayers = mesh->setWavefront(2);
 
-
+   for( int i = 0; i < numlayers; i++) 
+        clean_layer(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1070,11 +1364,11 @@ QuadCleanUp::insert_boundary_doublet(Face *face) {
 ////////////////////////////////////////////////////////////////////////////////
 
 int
-QuadCleanUp::diamond_collapse(Diamond &diamond) {
+QuadCleanUp::diamond_collapse(FaceClose &closeface) {
 
     //  Private function ...
 
-    Face *face = diamond.face;
+    Face *face = closeface.face;
     if (face->getSize(0) != 4)
         return 1;
 
@@ -1105,15 +1399,16 @@ QuadCleanUp::diamond_collapse(Diamond &diamond) {
         if (vr3[i]->isRemoved())
             return 1;
 
-    return face_close(face, diamond.vertex0, diamond.vertex1);
+   closeface.apply();
 
-    return 1;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////
 
 int
-QuadCleanUp::remove_interior_doublet(Vertex *vertex) {
+Doublet ::remove() {
+
     if (vertex->isBoundary())
         return 1;
 
@@ -1121,6 +1416,8 @@ QuadCleanUp::remove_interior_doublet(Vertex *vertex) {
 
     if (neighs.size() != 2)
         return 1;
+
+    assert( neighs[0] != neighs[1] );
 
     Vertex *d1 = NULL, *d2 = NULL, *o1 = NULL, *o2 = NULL;
 
@@ -1157,6 +1454,7 @@ QuadCleanUp::remove_interior_doublet(Vertex *vertex) {
     assert(d2);
     assert(o1);
     assert(o2);
+    assert( o1 != o2 );
 
     d1->removeRelation2(neighs[0]);
     d1->removeRelation2(neighs[1]);
@@ -1425,7 +1723,8 @@ QuadCleanUp::remove_bridge(const Bridge &bridge) {
 ////////////////////////////////////////////////////////////////////
 
 int
-QuadCleanUp::remove_bridges_once(bool allow_boundary_nodes) {
+QuadCleanUp::remove_bridges_once(bool allow_boundary_nodes) 
+{
     // These relationship are used in "remove_bridge" function call
     // and it is optimization step to call them here.
     //
@@ -1457,8 +1756,8 @@ QuadCleanUp::remove_bridges_once(bool allow_boundary_nodes) {
     cout << "Info: number of bridges removed " << ncount << endl;
 
     return ncount;
-
 }
+
 ////////////////////////////////////////////////////////////////////
 
 void
@@ -1476,14 +1775,10 @@ QuadCleanUp::remove_bridges(bool recursive, bool allow_boundary_nodes) {
 ////////////////////////////////////////////////////////////////////
 
 int
-QuadCleanUp::remove_diamonds_once(bool both_sides,
-        bool allow_boundary_faces) {
+QuadCleanUp::remove_diamonds_once() 
+{
     int rel0exist = mesh->build_relations(0, 0);
     int rel2exist = mesh->build_relations(0, 2);
-
-    mesh->search_boundary();
-
-    search_diamonds(both_sides, allow_boundary_faces);
 
     vector<Vertex*> vertexQ;
     for (size_t i = 0; i < vDiamonds.size(); i++) {
@@ -1496,7 +1791,7 @@ QuadCleanUp::remove_diamonds_once(bool both_sides,
     }
 
     Point3D p3d0, p3d1;
-    for (size_t j = 0; j < 2; j++) {
+    for (size_t j = 0; j < 4; j++) {
         for (size_t i = 0; i < vDiamonds.size(); i++) {
             Vertex *v0 = vDiamonds[i].vertex0;
             Vertex *v1 = vDiamonds[i].vertex1;
@@ -1515,13 +1810,11 @@ QuadCleanUp::remove_diamonds_once(bool both_sides,
         v1->setConstrainedMark(0);
     }
 
-    int ncount = 0;
-    for (size_t i = 0; i < vDiamonds.size(); i++) {
-        int err = diamond_collapse(vDiamonds[i]);
-        if (!err)
-            ncount++;
+    int err, ncount = 0;
+    for (size_t i = 0; i < vDiamonds.size() ; i++) {
+        err = diamond_collapse(vDiamonds[i]);
+        if (!err) ncount++;
     }
-    cout << "#Diamonds removed from the mesh : " << ncount << endl;
 
     if (!rel0exist)
         mesh->clear_relations(0, 0);
@@ -1535,9 +1828,6 @@ QuadCleanUp::remove_diamonds_once(bool both_sides,
         mesh->enumerate(2);
     }
 
-    set_regular_node_tag();
-    mesh->setBoundaryStatus(0);
-
     return ncount;
 }
 
@@ -1546,62 +1836,50 @@ QuadCleanUp::remove_diamonds_once(bool both_sides,
 void
 QuadCleanUp::remove_diamonds(bool recursive, bool both_sides,
         bool allow_boundary_faces) {
-    int ncount = remove_diamonds_once(both_sides, allow_boundary_faces);
+
+    int rel0exist = mesh->build_relations(0, 0);
+    int rel2exist = mesh->build_relations(0, 2);
+
+    mesh->search_boundary();
+
+    search_diamonds(both_sides, allow_boundary_faces);
+    int ncount = remove_diamonds_once();
 
     if (recursive) {
         while (1) {
-            ncount = remove_diamonds_once(both_sides, allow_boundary_faces);
+            search_diamonds(both_sides, allow_boundary_faces);
+            ncount = remove_diamonds_once();
             if (ncount == 0) break;
         }
     }
+
+    if (!rel0exist)
+        mesh->clear_relations(0, 0);
+
+    if (!rel2exist)
+        mesh->clear_relations(0, 2);
 }
 
 ////////////////////////////////////////////////////////////////////
 
 int
-QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes) {
+QuadCleanUp::remove_interior_doublets_once() 
+{
     int relexist = mesh->build_relations(0, 2);
 
     mesh->search_boundary();
 
-    vector<Vertex*> doublets = search_interior_doublets();
+    vector<Doublet> doublets = search_interior_doublets();
 
     int ncount = 0;
     for (size_t i = 0; i < doublets.size(); i++) {
-        int err = remove_interior_doublet(doublets[i]);
+        int err = doublets[i].remove();
         if (!err)
             ncount++;
     }
 
     if (ncount) {
         mesh->prune();
-        cout << "Info :  #of Interior doublets removed from the mesh " << ncount
-                << endl;
-
-        doublets = search_interior_doublets();
-        if (doublets.size())
-            cout << "Warning: There are interior doublets still left in the mesh "
-                << doublets.size() << endl;
-    }
-
-    if (allow_boundary_nodes) {
-        vector<Vertex*> singlets = search_boundary_singlets();
-        for (size_t i = 0; i < singlets.size(); i++) {
-            int err = remove_boundary_singlet(singlets[i]);
-            if (!err)
-                ncount++;
-        }
-
-        if (ncount) {
-            mesh->prune();
-            singlets = search_boundary_singlets();
-            if (doublets.size())
-                cout << "Warning: There are boundary singlets still left in the mesh "
-                    << singlets.size() << endl;
-        }
-    }
-
-    if (ncount) {
         mesh->enumerate(0);
         mesh->enumerate(2);
     }
@@ -1609,8 +1887,44 @@ QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes) {
     if (!relexist)
         mesh->clear_relations(0, 2);
 
-    set_regular_node_tag();
-    mesh->setBoundaryStatus(0);
+    return ncount;
+}
+
+////////////////////////////////////////////////////////////////////
+
+int
+QuadCleanUp::remove_doublets_once() 
+{
+    int ncount = 0;
+    for (size_t i = 0; i < vDoublets.size(); i++) {
+        int err = vDoublets[i].remove();
+        if (!err)
+            ncount++;
+    }
+
+    if (ncount) {
+        mesh->prune();
+        mesh->enumerate(0);
+        mesh->enumerate(2);
+    }
+
+    return ncount;
+}
+
+////////////////////////////////////////////////////////////////////
+
+int
+QuadCleanUp::search_and_remove_doublets_once() 
+{
+    int relexist = mesh->build_relations(0, 2);
+
+    mesh->search_boundary();
+    vector<Doublet> doublets = search_interior_doublets();
+
+    int ncount = remove_doublets_once();
+
+    if (!relexist)
+        mesh->clear_relations(0, 2);
 
     return ncount;
 }
@@ -1618,12 +1932,13 @@ QuadCleanUp::remove_doublets_once(bool allow_boundary_nodes) {
 ////////////////////////////////////////////////////////////////////
 
 void
-QuadCleanUp::remove_doublets(bool recursive, bool allow_boundary_nodes) {
-    int ncount = remove_doublets_once(allow_boundary_nodes);
+QuadCleanUp::search_and_remove_doublets(bool recursive) 
+{
+    int ncount = search_and_remove_doublets_once();
 
     if (recursive) {
         while (1) {
-            ncount = remove_doublets_once(allow_boundary_nodes);
+            ncount = search_and_remove_doublets_once();
             if (ncount == 0) break;
         }
     }
@@ -1651,7 +1966,7 @@ QuadCleanUp::cleanup_internal_boundary_face() {
                     v0 = face->getNodeAt((j + 1) % nfnodes);
                     v1 = face->getNodeAt((j + 3) % nfnodes);
                     if (!v0->isBoundary() && !v1->isBoundary()) {
-                        face_close(face, v0, v1);
+                        FaceClose closeface(mesh, face,v0,v1);
                         break;
                     }
                 }
@@ -1675,7 +1990,6 @@ QuadCleanUp::cleanup_boundary(double cutOffAngle) {
     // First try to handle flat node...
     ///////////////////////////////////////////////////////////////
     //  vector<Vertex*> flatnodes = search_flat_nodes();
-
     //  cleanup_internal_boundary_face() ;
 
     int relexist = mesh->build_relations(0, 0);

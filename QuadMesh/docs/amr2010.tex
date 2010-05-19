@@ -10,20 +10,23 @@ Chaman Singh Verma\thanks{csverma@cs.wisc.edu}, Tim Taugtes \thanks{tautges@mcs.
 \begin{document}
 \maketitle
 \abstract { 
-Applications of All-Quad surface mesh are abound, but to the best of our knowledge, there does not
-exist any reliable public domain All-Quads meshing implementation even for complex 2D domains. Among 
-various techniques that have been proposed in the past, probably {\em triangle to quad} transformation is
-the most intuitive, appealing, and most importantly, robust.
+Applications of All-Quad surface mesh are abound, as well as literature to generate and edit 
+them, but to the best of our knowledge, there does not exist any high quality public domain 
+all-quads mesh implementation even for complex 2D domains. 
 
-The main objective of the work is to relax convexity condition from Suneeta's tree matching algorithm
-to produce an extremely fast and robust all -quad meshing algorithm. After generating topologically
-an {\em All Quad Mesh} using matching algorithm, we improve the resulting mesh using simple clean-up operations,
-and quadrilateral shape optimization libaries.
+We plan to implement a sinple and reliable all-quad mesh algorithm which is
+suitable for spectral finite elements analysis.  Among various techniques that have been 
+proposed in the past, we will use {\em triangle to quad} transformation which is probably the
+easiest, intuitive, and most importantly, robust. Our quad meshing algorithm
+has two independent components (1) Suneeta's tree mathching algorithm which combines trianngles
+into quads, but we relax convexity condition from Suneeta's all quad meshing algorithm
+(2) After generating topologically an {\em All Quad Mesh} using matching algorithm, we improve the 
+resulting mesh using simple clean-up operations, and quadrilateral shape optimization libaries.
 
-This All Quad Mesh algorithm is part of MOAB toolkit, which is an open source library supporting mesh infrastructure for 
-petacscale field simulations.
+This All Quad Mesh algorithm is part of MOAB toolkit, which is an open source library supporting mesh 
+infrastructure for petacscale field simulations.
 
-We demonstrate the effectivness of our algorithm for both CAD and non-CAD geometrical models.
+We demonstrate the effectivness of our implementationfor both CAD and non-CAD geometrical models.
 Initial experiments shows that our implementation is at least 100 times faster than the original
 implementation of Suneeta's algorithm for generating topological correct mesh. Performance with
 all the cleanup operations and optimization is also within some reasonable limits for some of the 
@@ -32,16 +35,18 @@ benchmarking models.
 
 \section { Introduction }
 Quadrilateral mesh generation have been used since late 70s by many commerical 
-CFD codes. The importance of unstructured quadrilateral mesh for the complex 
+CFD codes and by computer graphics communities for texture applications. 
+The importance of unstructured quadrilateral mesh for the complex 
 geometries is well known, but it is extremely surprising to  know that 
 (to the best of our knowledge) that there does not exist any open source 
-All-Quads surface meshing algorithm at par with high visible unstructured 
+all-quads surface meshing algorithm at par with highly visible unstructured 
 triangular mesh i.e. {\em Triangle }. \cite{jonathan}
 
-Quadrilateral mesh generation do not have the theoretically  
-strong backup as the trinagle mesh generation, still we strongly believe that it is possible to engineering an All-Quad meshing algorithm with some 
-set of heurtistics, known algorithms and optimization libraries that can 
-produce an extremely high quality quadrilateral mesh for most of models of 
+Quadrilateral mesh generation is probably hard problems as it does not have 
+a theoretically  strong backup as a trinagle mesh generation. Still,  we strongly 
+believe that it is possible to engineering an all-quads meshing algorithm  by 
+integrating components; a set of heurtistics, known algorithms and optimization libraries 
+that can produce an extremely high quality quadrilateral mesh for most of models of 
 practical importance, if not all. 
 
 In this work, we focus on {\em Triangle to Quad} transformation approach because 
@@ -54,7 +59,10 @@ mesh generation toolkits. Once we have topologically acceptable quad mesh,
 we apply simple {|em Quads CleanUp } operations and shape optimization library
 {\em Mesquite} to improve the resulting mesh.
 
-The rest of the paper is organized as follows: Section 1, describes Triangle to Quad tranformation using graph and tree matching algorithms. Section 2, descibes improving topologically correct but geometrically unacceptable quadrilateral mesh. Section 3 describes results for both CAD and non-CAD geometrical models.
+The rest of the paper is organized as follows: Section 1, describes Triangle to Quad 
+tranformation using graph and tree matching algorithms. Section 2, descibes improving 
+topologically correct but geometrically unacceptable quadrilateral mesh. Section 3 
+describes results for both CAD and non-CAD geometrical models.
 Section 4. describes implementation details and finally in Section 5, we conclude this work.
 
 % \begin{figure}
@@ -64,20 +72,110 @@ Section 4. describes implementation details and finally in Section 5, we conclud
 % \end{center}
 % \label{fig:flowchart}
 %\end{figure} 
+
 \section {Previous work on all-quad meshing algorithms}
 
-%\item {Maturity of  2D and 3D triangle mesh generation}
+Quadrilateral mesh generation can be broadly classified into two categories
+(1) Direct Methods (2) Indirect Methods. Indirect methods relies on some
+background mesh ( mostly triangle ) which guide quadrilateral mesh
+generation. These methods exploits the maturity of high quality triangle
+mesh generators in both 2D and 3D domains and delegate the inherent complexities 
+of geometric representation of the models to the triangle mesh generators. 
+Direct methods on the other
+hand, work directly on the geometric model without the aid of any background
+mesh. They have the advantage of producing extremely high quality mesh in most
+of the cases, but the computational complexities are too high and reliablity 
+often is a concern.
+
+Some techniques for all-quads meshing that are available in the literature
+are:
 
 \begin{itemize}
-\item {\em Triangle to Quad-Transformation}
-\item {\em Surface Parameterization }
+\item {\em Triangle to Quad-Transformation:}
+Generating a topological quadrilateral mesh from a triangle mesh 
+without considering the quality is extremely simple \cite{suneeta}. Just by 
+adding {\em Steiner Points } at the centroid and each of three edges of the triangle
+will generate three quadrilaterals as shown in the figure
+\ref{fig:simplequad}. Although the algorithm is simple, the resulting
+quadrilateral mesh has extremely poor quality which could be unsuitable for many
+applications.
+{\em Paving} The paving algorithm \cite{cass,ted} is a tightly controlled
+progressive boundary algorithm. This technqiue generates a finite element mesh
+by iteratively layering rows of elements along the interior of a region until
+the entire object is meshed. The major challenge in this algorithm is to
+produce high quality mesh when the paving boundaries collide.  
+{\em Q-Morph} circumvents the difficulties of paving algorithm near the front
+collision regions by using background triangle mesh. Triangles are combined to
+form quadrilaterals of given shapes and sizes. This also has some problem near
+the collision ....... "expand here ".
+{\em Graph Matching}
+Graph matching algorithms \cite{edmonds}, \cite{suneeta} pairs neighbouring
+triangles to define a single quadrilaterals, this method seeks pairing
+combinations that will couple every element with another. The {\em maximum
+cardinality matching} is the problem of finding maximum such matchings. A {\em
+perfect matching } in a graph $G$ is a subset of edges such that each node
+in $G$ is met by exactly one edge if the subset. Given a real weigth $w_e$ for
+every edge $e$ of $G$, the {\em minimum weight perfect-matching problem} is to
+find a perfect matching $M$ of minimum weight. One of the fundamental results
+in combinatorial optimization is the polynomial-time {\em Blooson} algorithm
+for computing minimum-weight pefect matching by Edmonds. 
+
+\item {\em Surface Parameterization } Surface parameterization have been
+extensively studied for computer graphics applications. A nice survey is
+presented by Alliez et.al. \cite{alliez}
+The method of Boier-Martin et al. [2004] clusters the surface into macropatches 
+and parameterizes each surface patch. Kharevych et al. [2006] find a conformal
+parameterization via circle patterns. In contrast to Gu and Yau, they use
+cone-singularities to increase the flexibility of purely conformal mappings. 
+Dong et al. [2006] compute the Morse-Smale complex of eigenfunctions of the mesh 
+Laplacian to compute a patch layout. The nodes of the complex are then utilized 
+similarly to the cone singularities in [Kharevych et al., 2006].  Early approaches 
+for quadrangular remeshing guided by principal curvature directions are from 
+Alliez et al. [2003]. They were extended by Marinov and Kobbelt [2004], and base on 
+the integration of curvature lines on the surface. Dong et al. [2005b] presented an 
+algorithm which traces isolines in two conjugate harmonic vector fields. Marinov and 
+Kobbelt [2006] focus on creating coarse quad-dominant meshes by approximating the 
+surface with very few patches, which are then individually subdivided into quads.
+Tong et al. [2006] use harmonic one-forms for surface parameterization. They 
+enlarge the space of harmonic one-forms by allowing additional singular points on 
+the surface. 
+QuadCover is an algorithm to compute a global continuous parameterization
+for an arbitrary given simplicial 2-manifold. The algorithm runs 
+automatically and the parameter lines align optimally with a user-defined frame field, 
+for example, the principal curvature directions.
+
+
 \item {\em Spectral Quadrangulation }
+Garland et.al \cite{garland} proposed spectral method for surface
+quadrangulation over a triangulaed maninfold of arbitrary genus. This
+apporach is based on the Morse theorem that for almost all real functions,
+the Morse-Smale complex consisting of the ridge lines that extends from
+its saaddle to its extrema, forms fully conforming semi-regular quadrangular 
+regions. The main challenges in this approaches are (1) Selecting Morse
+function (2) Solving large eigenvalue problem (3) Shifting eigenvalues on the
+feature lines (4) Traversing ridge lines. All these steps are non-trivial to
+implement.
 \item {\em Quad-Dominated }
-\item {\em Graph Matching }
+
+
 \item {\em Circle Packing }
+In this method, before constructing a mesh, the domain is filled with closely
+packed circles. The geodesic Voronoi diagram of the points of the tangencies
+of these circle forms a quadrilateral mesh with $O(n log n)$ time complexity.
+
 \end {itemize}
 
 {\em Mesh Cleanup}
+Most of the algorithms produce quad mesh with suboptimal quality and it is
+often necessary to cleanup the mesh.Topological and geometric improvement
+methods were presented by {Staten and Canann 1997; Kin- ney 1997 which 
+results in simplified models; however, it does not provide a controllable 
+means to reduce element counts in the final mesh. Another improvement 
+technique [Bremer et al. 2002], developed to augment vertex valences on
+grafted surfaces, uses a ring collapse methods. Related quadrilateral 
+coarsening approaches have also exploited the ring structure, developing 
+restructuring [Staten et al. 2008] and localized deletion techniques 
+[Dewey 2008].
 
 % Advancing front Recombination ( QMorph ) 
 % ... ( Paving )
@@ -104,6 +202,11 @@ Section 4. describes implementation details and finally in Section 5, we conclud
 %      Suneeta's Complexity estimation.
 
 \section { Graph Matching Algorithm }
+Assume we have a simple triangulated mesh $M $ i.e. every edge is shared by at most two faces which can
+be converted into a graph $G = (V,E)$ with $V$ as the set of nodes and $E$ as
+the set of edges.  
+
+
 
 \begin{figure}
 \includegraphics[scale=0.33]{torus1.eps}

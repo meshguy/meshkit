@@ -95,14 +95,54 @@ class MeshRefine2D
 
   void setNumOfIterations( int i ) { numIterations = i; }
 
+  // Set Desired Mesh Quality 
+  void setAspectRatio( double a )  { desiredAspectRatio = a; }
+  void setDesiredArea( double a )  { desiredArea     = a; }
+  void setMinimumAngle( double a ) { desiredMinAngle = a; }
+  void setMaximumAngle( double a ) { desiredMaxAngle = a; }
+  void setFeatureAngle( double a ) { featureAngle    = a; }
+  void setMaximumCells( size_t a ) { maxAllowedCells = a; }
+
  protected:
     Mesh *mesh;
-    struct RefinedEdge
+
+    class RefinedEdgeMap
     {
-       Edge    *edge;
-       Vertex  *midVertex;
+       public:
+        void clear();
+
+        bool hasEdge( Vertex *v1, Vertex *v2) const; 
+        bool allow_edge_refinement( const Edge *edge) const;
+
+        int setVertexOnEdge(Vertex *v1, Vertex *v2);
+        Vertex *getVertexOnEdge(Vertex *v1, Vertex *v2) const;
+        bool  boundary_split_flag;                
+
+	// Get All the inserted vertices on the edges..
+	vector<Vertex*>  getInsertedNodes() const
+	{
+	    vector<Vertex*> result;
+            std::map<Vertex*, vector<RefinedEdge> >::const_iterator it;
+	    for( it = refined_edges.begin(); it != refined_edges.end(); ++it) 
+	    {
+	        const vector<RefinedEdge> &refedges = it->second;
+		for( size_t i = 0; i < refedges.size(); i++) 
+		     result.push_back( refedges[i].midVertex );
+
+            }
+	    return result;
+	}
+       private:
+        struct RefinedEdge
+        {
+            Edge    *edge;
+            Vertex  *midVertex;
+        };
+        Edge* create_new_edge( const Vertex *v1, const Vertex *v2 );
+        std::map<Vertex*, vector<RefinedEdge> > refined_edges;
     };
-    map<Vertex*, vector<RefinedEdge> > refinededges;
+
+    RefinedEdgeMap *edgemap;
 
     vector<Face*>    insertedFaces;
     vector<Vertex*>  hangingVertex, insertedNodes;
@@ -111,15 +151,12 @@ class MeshRefine2D
     bool    boundary_split_flag;                
     size_t  numfacesRefined;
 
+    double  desiredAspectRatio, desiredArea;
+    double  desiredMinAngle, desiredMaxAngle;
+    double  featureAngle;
+    size_t  maxAllowedCells;
+
     int finalize();
-
-    int setVertexOnEdge(Vertex *v1, Vertex *v2);
-    Vertex *getVertexOnEdge(Vertex *v1, Vertex *v2) const;
-
-    bool hasEdge( Vertex *v1, Vertex *v2) const; 
-    bool allow_edge_refinement( const Edge *edge) const;
-
-    Edge* create_new_edge( const Vertex *v1, const Vertex *v2 );
 
     void  append_new_node( Vertex *v0 );
     Face* append_new_triangle(Vertex *v0, Vertex *v1, Vertex *v2);
@@ -163,11 +200,15 @@ class LongestEdgeRefine2D : public MeshRefine2D
     cutOffAspectRatio = 0.50; 
   }
 
+  LongestEdgeRefine2D(Mesh *m) { 
+      setMesh(m); 
+      cutOffAspectRatio = 0.50; 
+  }
+
   ~LongestEdgeRefine2D() {}
 
   void setCutOffAspectRatio(double asp) { cutOffAspectRatio = asp;}
 
-  int  initialize();
   int  execute();
 
  private:
@@ -180,9 +221,12 @@ class LongestEdgeRefine2D : public MeshRefine2D
 class ConsistencyRefine2D : public MeshRefine2D
 {
    public:
+     ConsistencyRefine2D() { }
+     ConsistencyRefine2D( Mesh *m, RefinedEdgeMap *emap) 
+        { setMesh(m); edgemap = emap;}
+
      ~ConsistencyRefine2D() {}
 
-     int  initialize();
      int  execute();
 
    private:

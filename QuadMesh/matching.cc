@@ -12,88 +12,73 @@ using namespace Jaal;
 
 int main(int argc, char **argv)
 {
+  Tri2Quads t2quad;
+
   int err;
   if( argc != 2) {
       cout << "Usage: Executable trimeshfile " << endl;
       return 1;
   }
   string fname = argv[1];
-  Mesh *mesh = new Mesh;
-  mesh->readData( fname );
-
-/*
-  CentroidRefine2D mrefine(mesh);
-  mrefine.setNumOfIterations(3);
-  mrefine.execute();
-  exit(0);
-*/
-
-  cout << "Edge Flipping " << endl;
-
-
-  EdgeFlip edgeflip(mesh);
-  edgeflip.execute();
-  mesh->saveAs("ref");
-  exit(0);
-
-  cout << " Smoothing " << endl;
-
-  laplacian_smoothing( mesh, 10 );
-
-  mesh->saveAs("ref");
-
-
-  exit(0);
-  string vtkfile;
-
-  iMesh_Instance trimesh;
-  iMesh_newMesh(NULL, &trimesh, &err, 0);
-  Jaal::readMeshData( trimesh, fname );
-
-/*
-  cout << " Refinement " << endl;
-//Refine2D14  meshrefine;
-//CentroidRefine2D  meshrefine;
-//LongestEdgeRefine2D  meshrefine;
-  ObtuseRefine2D  meshrefine;
-  meshrefine.setBoundarySplitFlag(0);
-  meshrefine.setMesh( trimesh );
-
-  for( int i = 0; i < 5; i++) {
-       ostringstream oss;
-       oss << "trimesh" << i << ".vtk";
-       vtkfile = oss.str();
-       cout << vtkfile << endl;
-       int namelen0  = strlen( vtkfile.c_str() );
-       iMesh_save(trimesh, 0, vtkfile.c_str(), NULL, &err, namelen0, 0);
-       meshrefine.execute();
-  }
-  Jaal::getVertexFaceDegrees(trimesh);
-  Jaal::mesh_shape_optimization( trimesh );
-  */
-
-  Tri2Quads t2quad;
-  t2quad.getQuadMesh(trimesh, 0, 1);
-
-/*
-  string name1 = "quad0.vtk";
-  int namelen  = strlen( name1.c_str() );
-  iMesh_save(trimesh, 0, name1.c_str(), NULL, &err, namelen, 0);
-*/
-
-//cout << "Before Cleanup .... " << endl;
-//Jaal::getVertexFaceDegrees(trimesh);
 
   Mesh *qm = new Mesh;
-  qm->fromMOAB( trimesh );
+  qm->readFromFile( argv[1] );
+
+  // Preprocessing Steps ...
+  qm->saveAs( "inmesh");
+  QuadCleanUp qClean(qm);
+  cout << "Input Mesh: " << endl;
+  cout << "      #Nodes     : " << qm->getSize(0) << endl;
+  cout << "      #Triangles : " << qm->getSize(2) << endl;
+  qClean.getVertexFaceDegrees();
+
+  // Core Stuff ...
+  t2quad.getQuadMesh( qm, 1);
+
+  // Post Processing ...
+  cout << "Info: Storing QuadMesh in qmesh.dat" << endl;
+  cout << "Output Mesh: " << endl;
+  cout << "      #Nodes   : " << qm->getSize(0) << endl;
+  cout << "      #Quads   : " << qm->getSize(2) << endl;
+  qClean.getVertexFaceDegrees();
+
+  Jaal::laplacian_smoothing( qm, 100, 1);
+  qClean.search_and_remove_doublets();
+
+  qm->makeConsistentlyOriented();
+// qm->reverse();
+  qm->saveAs( "qmesh0");
 
   iMesh_Instance qmesh = 0;
+  qm->toMOAB( qmesh );
 
-  QuadCleanUp qClean(qm);
-// qClean.cleanup_boundary();
+  // call mesquite on ...
+  qm->shapeOptimize();
+
+  string name1 = "quad0.vtk";
+  int namelen  = strlen( name1.c_str() );
+  iMesh_save(qmesh, 0, name1.c_str(), NULL, &err, namelen, 0);
+
+
+
+
+
+
+
+/*
+  qClean.advancing_front_cleanup();
+  qm->saveAs( "clean");
+
+  exit(0);
+
+
+  iMesh_Instance qmesh = 0;
+  qm->saveAs("quad0");
+  exit(0);
+
+  qClean.cleanup_boundary();
 // qClean.search_flat_quads();
    Jaal::laplacian_smoothing(qm, 500);
-   qClean.remove_doublets();
    qClean.remove_bridges();
    qClean.remove_diamonds(1, 1, 1);
    qClean.remove_doublets();
@@ -114,7 +99,6 @@ int main(int argc, char **argv)
    qm->saveAs("quad1");
    exit(0);
 
-/*
    qClean.remove_doublets();
    qClean.remove_diamonds();
 
@@ -123,6 +107,7 @@ int main(int argc, char **argv)
 
   iMesh_dtor( trimesh, &err);
   iMesh_dtor( quadmesh, &err);
+
 */
 
 }

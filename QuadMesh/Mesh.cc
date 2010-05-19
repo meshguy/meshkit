@@ -135,6 +135,140 @@ double Vertex::length2(const Vertex *v0, const Vertex *v1)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+int Face :: quad_tessalate( const vector<Vertex*> &orgNodes, vector<Vertex*> &rotatedNodes)
+{
+   double A013 = tri_area( orgNodes[0]->getXYZCoords(), 
+                           orgNodes[1]->getXYZCoords(), 
+                           orgNodes[3]->getXYZCoords() );
+
+   double A123 = tri_area( orgNodes[1]->getXYZCoords(), 
+                           orgNodes[2]->getXYZCoords(), 
+                           orgNodes[3]->getXYZCoords() );
+
+   double A012 = tri_area( orgNodes[0]->getXYZCoords(), 
+                           orgNodes[1]->getXYZCoords(), 
+                           orgNodes[2]->getXYZCoords() );
+
+   double A023 = tri_area( orgNodes[0]->getXYZCoords(), 
+                           orgNodes[2]->getXYZCoords(), 
+                           orgNodes[3]->getXYZCoords() );
+
+   rotatedNodes.resize(4);
+   if( fabs(A013) + fabs(A123) < fabs(A012) + fabs(A023) ) {
+       rotatedNodes[0] = orgNodes[1];
+       rotatedNodes[1] = orgNodes[2];
+       rotatedNodes[2] = orgNodes[3];
+       rotatedNodes[3] = orgNodes[0];
+       return 1;
+   }
+   rotatedNodes[0] = orgNodes[0];
+   rotatedNodes[1] = orgNodes[1];
+   rotatedNodes[2] = orgNodes[2];
+   rotatedNodes[3] = orgNodes[3];
+   return 0;
+}
+///////////////////////////////////////////////////////////////////////////////
+
+NodeType Face::opposite_node(const FaceType tri, NodeType n1, NodeType n2)
+{
+  NodeType tn0 = tri->getNodeAt(0);
+  NodeType tn1 = tri->getNodeAt(1);
+  NodeType tn2 = tri->getNodeAt(2);
+
+  if (tn0 == n1 && tn1 == n2)
+    return tn2;
+  if (tn0 == n2 && tn1 == n1)
+    return tn2;
+
+  if (tn1 == n1 && tn2 == n2)
+    return tn0;
+  if (tn1 == n2 && tn2 == n1)
+    return tn0;
+
+  if (tn2 == n1 && tn0 == n2)
+    return tn1;
+  if (tn2 == n2 && tn0 == n1)
+    return tn1;
+
+  cout << " Warning: You should not come here " << endl;
+  cout << " Face " << tn0 << " " << tn1 << " " << tn2 << endl;
+  cout << " search for " << n1 << "  " << n2 << endl;
+  exit(0);
+}
+///////////////////////////////////////////////////////////////////////////////
+
+void Face::opposite_nodes(const FaceType quad, NodeType n1, NodeType n2,
+    NodeType &n3, NodeType &n4)
+{
+  NodeType qn0 = quad->getNodeAt(0);
+  NodeType qn1 = quad->getNodeAt(1);
+  NodeType qn2 = quad->getNodeAt(2);
+  NodeType qn3 = quad->getNodeAt(3);
+
+  if ((qn0 == n1 && qn1 == n2) || (qn0 == n2 && qn1 == n1))
+  {
+    n3 = qn2;
+    n4 = qn3;
+    return;
+  }
+
+  if ((qn1 == n1 && qn2 == n2) || (qn1 == n2 && qn2 == n1))
+  {
+    n3 = qn0;
+    n4 = qn3;
+    return;
+  }
+
+  if ((qn2 == n1 && qn3 == n2) || (qn2 == n2 && qn3 == n1))
+  {
+    n3 = qn0;
+    n4 = qn1;
+    return;
+  }
+
+  if ((qn3 == n1 && qn0 == n2) || (qn3 == n2 && qn0 == n1))
+  {
+    n3 = qn1;
+    n4 = qn2;
+    return;
+  }
+
+  cout << " Warning: You should not come here " << endl;
+  cout << " search for " << n1 << "  " << n2 << endl;
+  exit(0);
+}
+///////////////////////////////////////////////////////////////////////////////
+
+FaceType Face::create_quad(const FaceType t1, const FaceType t2)
+{
+  vector<NodeType> connect;
+  NodeType commonnodes[3];
+
+  connect = t1->getNodes();
+
+  int index = 0;
+  for (int i = 0; i < 3; i++)
+  {
+    if (t2->hasNode(connect[i]))
+      commonnodes[index++] = connect[i];
+  }
+
+  assert(index == 2);
+
+  NodeType ot1 = Face::opposite_node(t1, commonnodes[0], commonnodes[1]);
+  NodeType ot2 = Face::opposite_node(t2, commonnodes[0], commonnodes[1]);
+
+  connect.resize(4);
+  connect[0] = ot1;
+  connect[1] = commonnodes[0];
+  connect[2] = ot2;
+  connect[3] = commonnodes[1];
+
+  Face *qface = new Face;
+  qface->setNodes(connect);
+  return qface;
+}
+
 
 Point3D Face::getCentroid() const
 {
@@ -276,14 +410,16 @@ vector<Vertex*> Face :: getRelations0()
    vector<Vertex*> vneighs;
    set<Vertex*>    vset;
 
-   for( int i = 0; i < connect.size(); i++) {
+   int nnodes = connect.size();
+
+   for( int i = 0; i < nnodes; i++) {
         Vertex *vertex = connect[i];
 	vneighs = vertex->getRelations0();
 	for( size_t j = 0; j < vneighs.size(); j++) 
 	     vset.insert( vneighs[j] );
    }
 
-   for( int i = 0; i < connect.size(); i++) 
+   for( int i = 0; i < nnodes; i++) 
         vset.erase( connect[i] );
 
    vector<Vertex*> vresult;
@@ -295,29 +431,7 @@ vector<Vertex*> Face :: getRelations0()
    }
    return vresult;
 }
-////////////////////////////////////////////////////////////////////////////////
 
-int Mesh :: check_convexity()
-{
-   size_t numfaces = getSize(2);
-
-   int itag;
-   for( size_t i = 0; i < numfaces; i++) {
-        Face *face = getFaceAt(i);
-	itag = 0;
-	if( face->getSize(0) == 4 ) 
-	    itag = Face::is_convex_quad( face->getNodeAt(0)->getXYZCoords(),
-	                           face->getNodeAt(1)->getXYZCoords(),
-	                           face->getNodeAt(2)->getXYZCoords(),
-	                           face->getNodeAt(3)->getXYZCoords() );
-        if( itag == 0) 
-	    face->setTag(1);
-        else
-	    face->setTag(2);
-
-   }
-   return 0;
-}
 ////////////////////////////////////////////////////////////////////////////////
 
 double Face :: getAspectRatio() 
@@ -338,7 +452,159 @@ double Face :: getAspectRatio()
     return sqrt( minlen/maxlen );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+vector<FaceType> Face::getRelations202()
+{
+  vector<FaceType> faceneighs, vneighs;
+
+  int nSize = connect.size();
+  for (int i = 0; i < nSize; i++)
+  {
+    Vertex *v0 = connect[(i + 0) % nSize];
+    vneighs = v0->getRelations2();
+    for (size_t j = 0; j < vneighs.size(); j++)
+    {
+      if (vneighs[j] != this)
+      {
+        if (find(faceneighs.begin(), faceneighs.end(), vneighs[j])
+            == faceneighs.end())
+          faceneighs.push_back(vneighs[j]);
+      }
+    }
+  }
+  return faceneighs;
+}
 ///////////////////////////////////////////////////////////////////////////////
+
+vector<FaceType> Face::getRelations212()
+{
+  vector<FaceType> faceneighs, edgeneighs;
+
+  int nSize = connect.size();
+  for (int i = 0; i < nSize; i++)
+  {
+    Vertex *v0 = connect[(i + 0) % nSize];
+    Vertex *v1 = connect[(i + 1) % nSize];
+    edgeneighs = Mesh::getRelations112(v0, v1);
+    for (size_t j = 0; j < edgeneighs.size(); j++)
+    {
+      if (edgeneighs[j] != this)
+      {
+        if (find(faceneighs.begin(), faceneighs.end(), edgeneighs[j])
+            == faceneighs.end())
+          faceneighs.push_back(edgeneighs[j]);
+      }
+    }
+  }
+  return faceneighs;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool Face :: isValid() const
+{
+   if( isRemoved() ) return 0;
+
+   for( int i = 0; i < connect.size(); i++) 
+        if( connect[i]->isRemoved() ) return 0;
+
+   for( int i = 0; i < connect.size(); i++) {
+        int ncount = 0;
+        for( int j = 0; j < connect.size(); j++) 
+	     if( connect[i] == connect[j] ) ncount++;
+        if( ncount != 1 ) return 0;
+   }
+   return 1;
+}
+
+int Mesh :: check_convexity()
+{
+   size_t numfaces = getSize(2);
+
+   int itag;
+   size_t nconvex = 0, nconcave = 0;
+   for( size_t i = 0; i < numfaces; i++) {
+        Face *face = getFaceAt(i);
+	itag = 0;
+	if( face->getSize(0) == 4 ) 
+	    itag = Face::is_convex_quad( face->getNodeAt(0)->getXYZCoords(),
+	                           face->getNodeAt(1)->getXYZCoords(),
+	                           face->getNodeAt(2)->getXYZCoords(),
+	                           face->getNodeAt(3)->getXYZCoords() );
+        if( itag == 0) {
+	    face->setTag(1);
+	    nconcave++;
+        } else {
+	    face->setTag(2);
+	    nconvex++;
+        }
+   }
+
+   cout << "Info: Total Number of faces " << numfaces << " #Convex : " << nconvex << " #Concave " << nconcave << endl;
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+vector<double> Mesh :: getCoordsArray()
+{
+   size_t numnodes = getSize(0);
+
+   vector<double> vcoords(3*numnodes);
+   for( size_t i = 0; i < numnodes; i++) {
+        Vertex *v = getNodeAt(i);
+	Point3D xyz = v->getXYZCoords();
+	vcoords[3*i+0] = xyz[0];
+	vcoords[3*i+1] = xyz[1];
+	vcoords[3*i+2] = xyz[2];
+   }
+   return vcoords;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+vector<size_t> Mesh :: getNodesArray()
+{
+   size_t numfaces  = getSize(2);
+
+   vector<size_t> nodearray;
+
+   int topo = isHomogeneous();
+   if( topo ) nodearray.reserve(topo*numfaces);
+
+   for( size_t i = 0; i < numfaces; i++) {
+        Face *face = getFaceAt(i);
+        for( int j = 0; j <  face->getSize(0); j++) {
+             Vertex *v = face->getNodeAt(j);
+	     nodearray.push_back( v->getID() );
+        }
+   }
+
+   return nodearray;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int Mesh :: setCoordsArray( const vector<double> &vcoords)
+{
+   size_t numnodes = getSize(0);
+
+   if( vcoords.size() != 3*numnodes ) return 1;
+
+   Point3D xyz;
+   for( size_t i = 0; i < numnodes; i++) {
+        Vertex *v = getNodeAt(i);
+	xyz[0] = vcoords[3*i+0] ;
+	xyz[1] = vcoords[3*i+1] ;
+	xyz[2] = vcoords[3*i+2] ;
+	v->setXYZCoords( xyz );
+   }
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int Mesh :: make_chain( vector<Edge> &boundedges )
 {
    size_t nSize = boundedges.size();
@@ -346,7 +612,7 @@ int Mesh :: make_chain( vector<Edge> &boundedges )
    Edge edge = boundedges.front();
 
    list<Edge>  listedges;
-   for( int i = 1; i < boundedges.size(); i++) 
+   for( size_t i = 1; i < boundedges.size(); i++) 
         listedges.push_back( boundedges[i] );
    boundedges.clear();
 
@@ -359,7 +625,7 @@ int Mesh :: make_chain( vector<Edge> &boundedges )
 
    list<Edge>::iterator it;
 
-   for( int i = 0; i < nSize; i++) {
+   for( size_t i = 0; i < nSize; i++) {
        for( it = listedges.begin(); it != listedges.end(); ++it) 
        {
             edge = *it;
@@ -421,6 +687,7 @@ int  Mesh :: is_closed_chain( const vector<Edge> &boundedges )
    return 1;
 }
 ///////////////////////////////////////////////////////////////////////////////
+
 int Mesh :: rotate_chain( vector<Edge> &boundedges, Vertex *first_vertex)
 {
    size_t nSize = boundedges.size();
@@ -452,10 +719,10 @@ vector<FaceType> Mesh::getRelations102(NodeType vtx0, NodeType vtx1)
   }
 
   set<FaceType> vset;
-  for( int i = 0; i < v0faces.size(); i++) 
+  for( size_t i = 0; i < v0faces.size(); i++) 
        vset.insert( v0faces[i] );
 
-  for( int i = 0; i < v1faces.size(); i++) 
+  for( size_t i = 0; i < v1faces.size(); i++) 
        vset.insert( v1faces[i] );
 
   std::set<FaceType>::iterator it;
@@ -483,15 +750,17 @@ vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
     cout << "Warning: Vertex-Faces relations are empty " << endl;
   }
 
-  for( size_t i = 0; i < v0faces.size()-1; i++) {
-       assert( v0faces[i] < v0faces[i+1] );
+  for( size_t i = 0; i < v0faces.size(); i++) 
        assert( !v0faces[i]->isRemoved() );
-  }
 
-  for( size_t i = 0; i < v1faces.size()-1; i++) {
-       assert( v1faces[i] < v1faces[i+1] );
+  for( size_t i = 0; i < v0faces.size()-1; i++) 
+       assert( v0faces[i] < v0faces[i+1] );
+
+  for( size_t i = 0; i < v1faces.size(); i++) 
        assert( !v1faces[i]->isRemoved() );
-  }
+
+  for( size_t i = 0; i < v1faces.size()-1; i++)
+       assert( v1faces[i] < v1faces[i+1] );
 
   vector<FaceType> faceneighs;
   set_intersection(v0faces.begin(), v0faces.end(), v1faces.begin(),
@@ -500,53 +769,6 @@ vector<FaceType> Mesh::getRelations112(NodeType vtx0, NodeType vtx1)
   return faceneighs;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-vector<FaceType> Face::getRelations202()
-{
-  vector<FaceType> faceneighs, vneighs;
-
-  int nSize = connect.size();
-  for (int i = 0; i < nSize; i++)
-  {
-    Vertex *v0 = connect[(i + 0) % nSize];
-    vneighs = v0->getRelations2();
-    for (int j = 0; j < vneighs.size(); j++)
-    {
-      if (vneighs[j] != this)
-      {
-        if (find(faceneighs.begin(), faceneighs.end(), vneighs[j])
-            == faceneighs.end())
-          faceneighs.push_back(vneighs[j]);
-      }
-    }
-  }
-  return faceneighs;
-}
-///////////////////////////////////////////////////////////////////////////////
-
-vector<FaceType> Face::getRelations212()
-{
-  vector<FaceType> faceneighs, edgeneighs;
-
-  int nSize = connect.size();
-  for (int i = 0; i < nSize; i++)
-  {
-    Vertex *v0 = connect[(i + 0) % nSize];
-    Vertex *v1 = connect[(i + 1) % nSize];
-    edgeneighs = Mesh::getRelations112(v0, v1);
-    for (int j = 0; j < edgeneighs.size(); j++)
-    {
-      if (edgeneighs[j] != this)
-      {
-        if (find(faceneighs.begin(), faceneighs.end(), edgeneighs[j])
-            == faceneighs.end())
-          faceneighs.push_back(edgeneighs[j]);
-      }
-    }
-  }
-  return faceneighs;
-}
 ///////////////////////////////////////////////////////////////////////////////
 
 size_t Mesh::count_edges()
@@ -575,8 +797,37 @@ size_t Mesh::count_edges()
 
 void Mesh::prune()
 {
-  NodeContainer livenodes;
+  // Clean (Node, *) Relations ...
+  if ( adjTable[0][0] ) 
+  {
+     vector<Vertex*>  relations0;
+     for (size_t i = 0; i < nodes.size(); i++)
+     {
+        relations0 = nodes[i]->getRelations0();
+        for (size_t j = 0; j < relations0.size(); j++)
+        {
+	   if( relations0[j]->isRemoved() ) 
+	       nodes[i]->removeRelation0( relations0[j] );
+        }
+     }
+  }
 
+  if ( adjTable[0][2] ) 
+  {
+     vector<Face*>  relations2;
+     for (size_t i = 0; i < nodes.size(); i++)
+     {
+        relations2 = nodes[i]->getRelations2();
+        for (size_t j = 0; j < relations2.size(); j++)
+        {
+	   if( relations2[j]->isRemoved() ) 
+	       nodes[i]->removeRelation2( relations2[j] );
+        }
+     }
+  }
+
+  // Clean Node Container ...
+  NodeContainer livenodes;
   livenodes.reserve(nodes.size());
   for (size_t i = 0; i < nodes.size(); i++)
   {
@@ -587,6 +838,7 @@ void Mesh::prune()
   }
   nodes = livenodes;
 
+  // Clean face Container ...
   FaceContainer livefaces;
   livefaces.reserve(faces.size());
   for (size_t i = 0; i < faces.size(); i++)
@@ -597,6 +849,18 @@ void Mesh::prune()
       delete faces[i];
   }
   faces = livefaces;
+
+  for (size_t i = 0; i < faces.size(); i++)
+  {
+      for( int j = 0; j < faces[i]->getSize(0); j++) { 
+           Vertex *v = faces[j]->getNodeAt(j);
+	   if( v->isRemoved() ) {
+	       cout << "Error: A live faces has removed vertex " << endl;
+	       exit(0);
+           }
+      }
+  }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -674,107 +938,6 @@ int Mesh::isHomogeneous() const
 
   return maxnodes;
 }
-///////////////////////////////////////////////////////////////////////////////
-
-NodeType Face::opposite_node(const FaceType tri, NodeType n1, NodeType n2)
-{
-  NodeType tn0 = tri->getNodeAt(0);
-  NodeType tn1 = tri->getNodeAt(1);
-  NodeType tn2 = tri->getNodeAt(2);
-
-  if (tn0 == n1 && tn1 == n2)
-    return tn2;
-  if (tn0 == n2 && tn1 == n1)
-    return tn2;
-
-  if (tn1 == n1 && tn2 == n2)
-    return tn0;
-  if (tn1 == n2 && tn2 == n1)
-    return tn0;
-
-  if (tn2 == n1 && tn0 == n2)
-    return tn1;
-  if (tn2 == n2 && tn0 == n1)
-    return tn1;
-
-  cout << " Warning: You should not come here " << endl;
-  cout << " Face " << tn0 << " " << tn1 << " " << tn2 << endl;
-  cout << " search for " << n1 << "  " << n2 << endl;
-  exit(0);
-}
-///////////////////////////////////////////////////////////////////////////////
-
-void Face::opposite_nodes(const FaceType quad, NodeType n1, NodeType n2,
-    NodeType &n3, NodeType &n4)
-{
-  NodeType qn0 = quad->getNodeAt(0);
-  NodeType qn1 = quad->getNodeAt(1);
-  NodeType qn2 = quad->getNodeAt(2);
-  NodeType qn3 = quad->getNodeAt(3);
-
-  if ((qn0 == n1 && qn1 == n2) || (qn0 == n2 && qn1 == n1))
-  {
-    n3 = qn2;
-    n4 = qn3;
-    return;
-  }
-
-  if ((qn1 == n1 && qn2 == n2) || (qn1 == n2 && qn2 == n1))
-  {
-    n3 = qn0;
-    n4 = qn3;
-    return;
-  }
-
-  if ((qn2 == n1 && qn3 == n2) || (qn2 == n2 && qn3 == n1))
-  {
-    n3 = qn0;
-    n4 = qn1;
-    return;
-  }
-
-  if ((qn3 == n1 && qn0 == n2) || (qn3 == n2 && qn0 == n1))
-  {
-    n3 = qn1;
-    n4 = qn2;
-    return;
-  }
-
-  cout << " Warning: You should not come here " << endl;
-  cout << " search for " << n1 << "  " << n2 << endl;
-  exit(0);
-}
-///////////////////////////////////////////////////////////////////////////////
-
-FaceType Face::create_quad(const FaceType t1, const FaceType t2)
-{
-  vector<NodeType> connect;
-  NodeType commonnodes[3];
-
-  connect = t1->getNodes();
-
-  int index = 0;
-  for (int i = 0; i < 3; i++)
-  {
-    if (t2->hasNode(connect[i]))
-      commonnodes[index++] = connect[i];
-  }
-
-  assert(index == 2);
-
-  NodeType ot1 = Face::opposite_node(t1, commonnodes[0], commonnodes[1]);
-  NodeType ot2 = Face::opposite_node(t2, commonnodes[0], commonnodes[1]);
-
-  connect.resize(4);
-  connect[0] = ot1;
-  connect[1] = commonnodes[0];
-  connect[2] = ot2;
-  connect[3] = commonnodes[1];
-
-  Face *qface = new Face;
-  qface->setNodes(connect);
-  return qface;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -796,18 +959,27 @@ void Mesh::saveAs(const string &s)
     ofile << p3d[0] << " " << p3d[1] << " " << p3d[2] << endl;
   }
 
-  vector<NodeType> connect;
+  vector<NodeType> oldConnect, newConnect;
   for (size_t i = 0; i < numfaces; i++)
   {
     Face *face = faces[i];
-    connect = face->getNodes();
-    int nnodes = connect.size();
+    if( face->getSize(0) == 4 ) {
+        oldConnect = face->getNodes();
+	Face::quad_tessalate( oldConnect, newConnect ); // Because of OpenGL
+    } else
+        newConnect = face->getNodes();
+
+    int nnodes = newConnect.size();
     ofile << nnodes << " ";
     for (int j = 0; j < nnodes; j++)
     {
-      int vid = connect[j]->getID();
+      size_t vid = newConnect[j]->getID();
       if (vid >= numnodes)
       {
+        assert( !face->isRemoved() );
+        assert( !newConnect[j]->isRemoved() );
+	cout << face->getID() << endl;
+        cout << face->isRemoved() << endl;
         cout << "Vertex indexing out of range " << vid << endl;
         exit(0);
       }
@@ -841,7 +1013,7 @@ int Mesh::nearest_neighbour(const Vertex *myself, Vertex* &nearest,
 
   vector<Vertex*> neighs = myself->getRelations0();
 
-  for (int i = 0; i < neighs.size(); i++)
+  for (size_t i = 0; i < neighs.size(); i++)
   {
     double d = Vertex::length2(myself, neighs[i]);
     if (d < mindist)
@@ -858,20 +1030,38 @@ int Mesh::nearest_neighbour(const Vertex *myself, Vertex* &nearest,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int Mesh::build_relations02()
+int Mesh::build_relations02( bool rebuild )
 {
-  if (adjTable[0][2] == 1)
-    return 1;
+  size_t numfaces = getSize(2);
+
+  if( getAdjTable(0,2) ) {
+      for (size_t iface = 0; iface < numfaces; iface++)
+      {
+         Face *face = getFaceAt(iface);
+	 assert( !face->isRemoved() );
+         for (int j = 0; j < face->getSize(0); j++)
+         {
+            Vertex *vtx = face->getNodeAt(j);
+	    assert( !vtx->isRemoved() );
+            assert( vtx->hasRelation2(face) );
+         }
+      }
+  }
+
+  // Delete all the old stuff and rebuild new. Sometimes used for debugging purpose
+  // also.
+  if( rebuild ) clear_relations(0, 2);  
+
+  if (adjTable[0][2] == 1) return 1;
 
   clear_relations(0, 2);
 
-  size_t numfaces = getSize(2);
 
   for (size_t iface = 0; iface < numfaces; iface++)
   {
     Face *face = getFaceAt(iface);
     assert(face);
-    for (size_t j = 0; j < face->getSize(0); j++)
+    for (int j = 0; j < face->getSize(0); j++)
     {
       Vertex *vtx = face->getNodeAt(j);
       vtx->addRelation2(face);
@@ -884,10 +1074,13 @@ int Mesh::build_relations02()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int Mesh::build_relations00()
+int Mesh::build_relations00( bool rebuild )
 {
-  if (adjTable[0][0] == 1)
-    return 1;
+  // Delete all the old stuff and rebuild new. Sometimes used for debugging purpose
+  // also.
+  if( rebuild ) clear_relations(0, 0);  
+
+  if (adjTable[0][0] == 1) return 1;
 
   clear_relations(0, 0);
 
@@ -955,6 +1148,7 @@ int Mesh::search_boundary()
        v->setTag(0);
   }
 
+  int bmark;
   size_t numfaces = getSize(2);
   vector<FaceType> neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
@@ -970,13 +1164,18 @@ int Mesh::search_boundary()
       neighs = Mesh::getRelations112(v0, v1);
       if (neighs.size() == 1)
       {
-        v0->setBoundaryMark(1);
-        v1->setBoundaryMark(1);
-        int bmark = max(1, face->getBoundaryMark());
+        bmark = max(1, face->getBoundaryMark());
         face->setBoundaryMark(bmark);
-        face->setTag(1);
+
+        bmark = max(1, v0->getBoundaryMark());
+        v0->setBoundaryMark(bmark);
+
+        bmark = max(1, v1->getBoundaryMark());
+        v1->setBoundaryMark(bmark);
+
         v0->setTag(1);
         v1->setTag(1);
+        face->setTag(1);
       }
     }
   }
@@ -1240,7 +1439,7 @@ int Mesh::getNumOfComponents()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Mesh *struct_tri_grid(int nx, int ny)
+Mesh *Jaal::struct_tri_grid(int nx, int ny)
 {
   Mesh *trimesh = new Mesh;
 
@@ -1737,7 +1936,7 @@ int Mesh::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entitySet)
   if (numQuads)
   {
     connect.resize(4);
-    for (int i = 0; i < numQuads; i++)
+    for (size_t i = 0; i < numQuads; i++)
     {
       iMesh_getEntAdj(imesh, qfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(
           facenodes), &err);
@@ -1800,6 +1999,8 @@ int Mesh::setNodeWavefront()
 {
   int relexist = build_relations(0, 0);
 
+  search_boundary();
+
   size_t numNodes = getSize(0);
 
   for (size_t i = 0; i < numNodes; i++)
@@ -1809,49 +2010,54 @@ int Mesh::setNodeWavefront()
     v->setVisitMark(0);
   }
 
-  deque<Vertex*> vertexQ;
+  vector<Vertex*> vertexQ, nextQ;
   for (size_t i = 0; i < numNodes; i++)
   {
     Vertex *v = getNodeAt(i);
     if (v->isBoundary())
     {
       v->setLayerID(0);
+      v->setVisitMark(1);
       vertexQ.push_back(v);
     }
   }
 
-  vector<Vertex*> neighs;
-  while (vertexQ.empty())
-  {
-    Vertex *currVertex = vertexQ.front();
-    vertexQ.pop_front();
-    if (currVertex->isVisited())
-    {
-      int layerid = currVertex->getLayerID();
-      neighs = currVertex->getRelations0();
-      for (size_t i = 0; i < neighs.size(); i++)
-      {
-        Vertex *vn = neighs[i];
-        if (!vn->isVisited())
-        {
-          vertexQ.push_back(vn);
-          vn->setLayerID(layerid + 1);
-        }
-      }
-      currVertex->setVisitMark(1);
-    }
+  if( vertexQ.empty() ) {
+      cout << "Warning: No boundary detected " << endl;
   }
 
-  for (size_t i = 0; i < numNodes; i++)
+  vector<Vertex*> neighs;
+
+  int layerid = 1;
+  while(!vertexQ.empty())
   {
-    Vertex *v = getNodeAt(i);
-    assert(v->isVisited());
+    nextQ.clear();
+    nextQ.reserve( vertexQ.size() );
+    for( size_t j = 0; j < vertexQ.size(); j++) {
+         Vertex *currVertex = vertexQ[j];
+         neighs = currVertex->getRelations0();
+         for (size_t i = 0; i < neighs.size(); i++)
+         {
+             Vertex *vn = neighs[i];
+             if (!vn->isVisited()) nextQ.push_back(vn);
+         }
+    }
+
+    for( size_t j = 0; j < nextQ.size(); j++){
+         Vertex *currVertex = nextQ[j];
+	 currVertex->setLayerID(layerid);
+	 currVertex->setVisitMark(1);
+    }
+    vertexQ = nextQ;
+    layerid++;
   }
 
   if (!relexist)
     clear_relations(0, 0);
 
-  return 0;
+  cout << "Info: Number of layers in node front : " << layerid << endl;
+
+  return layerid;
 }
 ///////////////////////////////////////////////////////////////////////////////
 int Mesh::setFaceWavefront()
@@ -1869,55 +2075,45 @@ int Mesh::setFaceWavefront()
     f->setVisitMark(0);
   }
 
-
-  deque<Face*> faceQ, nextQ;
+  vector<Face*> faceQ, nextQ;
   for (size_t i = 0; i < numFaces; i++)
   {
     Face *f = getFaceAt(i);
+    assert( !f->isRemoved()  );
     if (f->hasBoundaryEdge())
     {
-      f->setLayerID(1);
+      f->setLayerID(0);
+      f->setVisitMark(1);
       faceQ.push_back(f);
-      /*
-      if( f->getTag() == 0 ) {
-           cout << f->getNodeAt(0)->isBoundary() << " "
-           << f->getNodeAt(1)->isBoundary() << " "
-           << f->getNodeAt(2)->isBoundary() << " "
-           << f->getNodeAt(3)->isBoundary() << endl;
-          f->setTag(5);
-          f->setTag(1);
-      }
-      */
-    } else
-      assert( f->getTag() == 0 );
+    }
   }
 
-
-  vector<Face*> neighs;
   int layerid = 1;
+  vector<Face*> neighs;
+
   while (!faceQ.empty())
   {
-    for (size_t i = 0; i < faceQ.size(); i++)
-      faceQ[i]->setVisitMark(1);
-
     nextQ.clear();
-
+    nextQ.reserve( faceQ.size() );
     for (size_t j = 0; j < faceQ.size(); j++)
     {
       Face *currFace = faceQ[j];
       neighs = currFace->getRelations212();
       for (size_t i = 0; i < neighs.size(); i++)
       {
-        Face *vn = neighs[i];
-        if (!vn->isVisited())
-          nextQ.push_back(vn);
+        Face *nf = neighs[i];
+        if (!nf->isVisited())
+          nextQ.push_back(nf);
       }
     }
 
-    layerid++;
-    for (size_t i = 0; i < nextQ.size(); i++)
-      nextQ[i]->setLayerID(layerid);
+    for (size_t i = 0; i < nextQ.size(); i++) 
+    {
+         nextQ[i]->setLayerID(layerid);
+	 nextQ[i]->setVisitMark(1);
+    }
 
+    layerid++;
     faceQ = nextQ;
   }
 
@@ -1925,24 +2121,25 @@ int Mesh::setFaceWavefront()
   {
     Face *f = getFaceAt(i);
     assert(f->isVisited());
-    int itag = f->getLayerID();
-    f->setTag(itag);
   }
 
   if (!relexist)
     clear_relations(0, 2);
 
-  return 0;
+  cout << "Info: Number of layers in face front : " << layerid << endl;
+
+  return layerid;
 }
 ///////////////////////////////////////////////////////////////////////////////
 int Mesh::setWavefront(int forwhat)
 {
   if (forwhat == 0)
     return setNodeWavefront();
+
   if (forwhat == 2)
     return setFaceWavefront();
 
-  return 1;
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2124,7 +2321,7 @@ int Mesh::get_quality_statistics( const string &fname)
   ofile <<  "# Max              " <<   maxval     << endl;
   ofile <<  "# Average          " <<   avgval     << endl;
   ofile <<  "# MeanVal          " <<   medianval  << endl;
-  ofile <<  "# StdDev           " <<   stddev     << endl;
+//ofile <<  "# StdDev           " <<   stddev     << endl;
   for( size_t i = 0; i < numfaces; i++)
        ofile << quality[i] << endl;
   ofile <<  " ********************************************* " << endl;
@@ -2152,7 +2349,75 @@ int Mesh::get_quality_statistics( const string &fname)
   ofile <<  " ********************************************* " << endl;
 
 }
+
 ///////////////////////////////////////////////////////////////////////////////
+
+int Mesh :: hasDuplicates( int what )
+{
+   map<Vertex*, vector<Face*> > mapfaces;
+
+   size_t numfaces = getSize(2);
+   assert( numfaces );
+
+   for( size_t i = 0; i < numfaces; i++) {
+        Face *face = getFaceAt(i);
+	Vertex *vertex = face->getHashNode();
+	mapfaces[vertex].push_back(face);
+   }
+
+   for( size_t i = 0; i < numfaces; i++) {
+        Face *face = getFaceAt(i);
+	const vector<Face*> &hashfaces = mapfaces[face->getHashNode() ];
+	size_t ncount = 0;
+	for( size_t j = 0; j < hashfaces.size(); j++) 
+	     if( hashfaces[j]->isSameAs(face) ) ncount++;
+        if( ncount != 1 ) {
+	    cout << "Warning: Mesh has some duplicate faces " << endl;
+	    return 1;
+        }
+   }
+   return 0;
+}
+///////////////////////////////////////////////////////////////////////////////
+void Jaal::set_layer_tag(Mesh *mesh )
+{
+   size_t numnodes = mesh->getSize(0);
+   for( size_t i = 0; i <  numnodes; i++) {
+        Vertex *vertex = mesh->getNodeAt(i);
+	vertex->setTag( vertex->getLayerID() );
+   }
+
+   size_t numfaces = mesh->getSize(2);
+   for( size_t i = 0; i <  numfaces; i++) {
+        Face *face = mesh->getFaceAt(i);
+	face->setTag( face->getLayerID() );
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void Jaal::set_boundary_tag(Mesh *mesh )
+{
+   size_t numnodes = mesh->getSize(0);
+   for( size_t i = 0; i <  numnodes; i++) {
+        Vertex *vertex = mesh->getNodeAt(i);
+	if( vertex->isBoundary() )
+	    vertex->setTag( 1  );
+        else
+	    vertex->setTag( 0  );
+   }
+
+   size_t numfaces = mesh->getSize(2);
+   for( size_t i = 0; i <  numfaces; i++) {
+        Face *face = mesh->getFaceAt(i);
+	if( face->hasBoundaryEdge() ) 
+	    face->setTag( 1  );
+        else
+	    face->setTag( 0  );
+   }
+}
+
+
 
 #ifdef USE_MESQUITE
 

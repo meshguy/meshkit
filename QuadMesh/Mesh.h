@@ -97,6 +97,7 @@ public:
   {
     locked = 0; // Default: No lock
     intTag = 0;
+    layerID   = -1;
     visitMark = 0; // Default: Not yet visited.
     removeMark = 0; // Default: Active< not removable.
     constrained = 0; // Default: No Contrainted
@@ -472,6 +473,10 @@ public:
   static FaceType newObject();
   static FaceType create_quad(const FaceType t1, const FaceType t2);
 
+  // This function is for concave quads. Arrange vertices so that OpenGL can render them
+  // correctly. When you save the mesh, probably the connectivity may change.
+  static int quad_tessalate( const vector<Vertex*> &orgNodes, vector<Vertex*> &rotatedNodes);
+
   /////////////////////////////////////////////////////////////////////////////
   // Use modified Heron formula for find out the area of a triangle
   /////////////////////////////////////////////////////////////////////////////
@@ -509,12 +514,26 @@ public:
 
   static int check_on_boundary(const FaceType tri);
 
+  Vertex*  getHashNode() const {
+           return *min_element( connect.begin(), connect.end() );
+	   }
+
   int getType() const
   {
     if( connect.size() == 3) return Face::TRIANGLE;
     if( connect.size() == 4) return Face::QUADRILATERAL;
     return 0;
   }
+
+  bool isSameAs( const Face *rhs) const {
+       if( rhs->getSize(0) != getSize(0) ) return 0;
+
+       for( int i = 0; i < getSize(0); i++) 
+            if( !rhs->hasNode( connect[i] ) ) return 0;
+
+       return 1;
+  }
+
 
   bool hasNode(const NodeType &vertex) const
   {
@@ -558,6 +577,7 @@ public:
         return 0;
       }
     }
+    cout <<" Warning: Requested node not replaced " << endl;
     return 1;
   }
 
@@ -569,6 +589,11 @@ public:
 
   void setNodes(const vector<NodeType> &v)
   {
+    for( size_t i = 0; i < v.size(); i++) {
+       for( size_t j = 0; j < v.size(); j++) {
+         if( i != j ) assert( v[i] != v[j] );
+       }
+    }
     connect = v;
   }
 
@@ -639,8 +664,8 @@ public:
   {
      if( connect.size() == 3 ) {
          return tri_area( connect[0]->getXYZCoords(),
-	                   connect[1]->getXYZCoords(),
-	                   connect[2]->getXYZCoords() );
+	                  connect[1]->getXYZCoords(),
+	                  connect[2]->getXYZCoords() );
      }
 
      if( connect.size() == 4 ) {
@@ -651,6 +676,8 @@ public:
      }
      return 0.0;
   }
+
+  bool isValid() const;
 
 private:
   // void * operator new( size_t size, void *);
@@ -666,7 +693,6 @@ private:
 
 class Mesh
 {
-
 public:
   static vector<FaceType> getRelations112(NodeType v0, NodeType v1);
   static vector<FaceType> getRelations102(NodeType v0, NodeType v1);
@@ -720,7 +746,7 @@ public:
 
   int getNumOfComponents();
 
-  int readData(const string &f);
+  int readFromFile(const string &f);
 
   bool getAdjTable(int i, int j) const
   {
@@ -831,10 +857,10 @@ public:
   int search_boundary();
 
   // Build entity-entity relations.
-  int build_relations(int src, int dst)
+  int build_relations(int src, int dst, bool rebuild = 0)
   {
-    if (src == 0 && dst == 0) return build_relations00();
-    if (src == 0 && dst == 2) return build_relations02();
+    if (src == 0 && dst == 0) return build_relations00( rebuild );
+    if (src == 0 && dst == 2) return build_relations02( rebuild );
     return 1;
   }
 
@@ -949,6 +975,23 @@ public:
   //
   int makeDelaunay();
 
+  // Get the nodes coordinates as a stream ( Used for interface with other
+  // software. example Mesquite )
+  vector<double> getCoordsArray() ;
+
+  // Get the node connectivity as a stream ( Used for interface with other
+  // software. example Mesquite )
+  vector<size_t>   getNodesArray() ;
+
+  // Reset the coordinates of nodes, ( Generally it comes from optimization
+  // modules. The array size must match in order to reflect changes.
+  int  setCoordsArray( const vector<double> &v);
+
+  int shape_optimize();
+
+  // Check if there are duplicate faces in the mesh;
+
+  int hasDuplicates( int what );
 
 private:
   iBase_EntityHandle get_MOAB_Handle(iMesh_Instance imesh, Vertex *v);
@@ -971,12 +1014,13 @@ private:
   void readTriEdges(const string &s);
   void readTriFaces(const string &s);
 
-  int build_relations00();
-  int build_relations02();
+  int build_relations00( bool rebuild = 0);
+  int build_relations02( bool rebuild = 0);
 
   int setNodeWavefront();
   int setFaceWavefront();
 
+  int read_vtk_format_data( const string &s);
   int read_off_format_data( const string &s);
   int read_simple_format_data( const string &s);
   int read_triangle_format_data( const string &s);
@@ -985,6 +1029,11 @@ private:
 struct MeshOptimization
 {
 };
+///////////////////////////////////////////////////////////////////////////////
+// Set Tag Values for Visualzation and sometimes debugging
+///////////////////////////////////////////////////////////////////////////////
+void set_layer_tag( Mesh *m );
+void set_boundary_tag( Mesh *m);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Graph Matching operations ....
@@ -1005,7 +1054,6 @@ Mesh *struct_quad_grid(int nx, int ny);
 void laplacian_smoothing(Mesh *mesh, int numIters, int verbose = 0);
 void laplacian_smoothing(Mesh *mesh, vector<Vertex*> &q, int numIters, int verbose = 0);
 void laplacian_smoothing(iMesh_Instance imesh, int numIters);
-
 int mesh_shape_optimization(iMesh_Instance imesh );
 
 #ifdef USE_MOAB
