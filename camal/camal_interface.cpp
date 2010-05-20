@@ -311,7 +311,8 @@ bool CAMAL_mesh_entity(CMEL *cmel,
 	      << new_points << " new vertices and " << num_tris << " triangles." << std::endl;
 
       // get the generated mesh
-    bdy_coords.resize(3*(bdy_verts.size() + new_points));
+    //bdy_coords.resize(3*(bdy_verts.size() + new_points));
+    bdy_coords.resize(3* new_points);
     connect.resize(3*num_tris);
     success = tri_mesher.get_mesh(new_points, &bdy_coords[0], num_tris, &connect[0]);
     if (!success) {
