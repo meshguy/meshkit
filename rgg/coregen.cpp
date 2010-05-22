@@ -37,11 +37,11 @@ int copy_move_sq_assys(CopyMesh **cm,
 		       std::vector<iBase_EntitySetHandle> &assys);
 
 int copy_move_hex_full_assys(CopyMesh **cm,
-		       const int nrings, const int pack_type,
-		       const double pitch,
-		       const int symm,
-		       std::vector<std::string> &core_alias,
-		       std::vector<iBase_EntitySetHandle> &assys);
+			     const int nrings, const int pack_type,
+			     const double pitch,
+			     const int symm,
+			     std::vector<std::string> &core_alias,
+			     std::vector<iBase_EntitySetHandle> &assys);
 
 int copy_move_hex_vertex_assys(CopyMesh **cm,
 			       const int nrings, const int pack_type,
@@ -49,6 +49,15 @@ int copy_move_hex_vertex_assys(CopyMesh **cm,
 			       const int symm,
 			       std::vector<std::string> &core_alias,
 			       std::vector<iBase_EntitySetHandle> &assys);
+
+
+int copy_move_one_twelfth_assys(CopyMesh **cm,
+			       const int nrings, const int pack_type,
+			       const double pitch,
+			       const int symm,
+			       std::vector<std::string> &core_alias,
+			       std::vector<iBase_EntitySetHandle> &assys);
+
 
 int read_inputs_phase2();
 
@@ -169,6 +178,11 @@ int main(int argc, char **argv)
   else if(!strcmp(geom_type.c_str(),"hexflat") && symm == 1){
     err = copy_move_hex_full_assys(cm, nrings, pack_type, pitch, symm, 
 				   core_alias, assys);
+    ERRORR("Failed in copy/move step.", err);
+  }
+  else if(!strcmp(geom_type.c_str(),"hexflat") && symm == 12){
+    err = copy_move_one_twelfth_assys(cm, nrings, pack_type, pitch, symm, 
+				     core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
 
@@ -409,6 +423,98 @@ int copy_move_hex_vertex_assys(CopyMesh **cm,
   return iBase_SUCCESS;
 }  
 
+int copy_move_one_twelfth_assys(CopyMesh **cm,
+			       const int nrings, const int pack_type,
+			       const double pitch,
+			       const int symm,
+			       std::vector<std::string> &core_alias,
+			       std::vector<iBase_EntitySetHandle> &assys)
+{
+  double dx[3] = {0.0, 0.0, 0.0};
+  double dxnew[3] = {0.0, 0.0, 0.0};
+  double PI = acos(-1.0);
+  iBase_EntityHandle *new_ents;
+  int new_ents_alloc, new_ents_size;
+  int err; 
+  int i = 0, flag = 0;
+  int assm_index;
+
+  // get the copy/expand sets
+  int num_etags = 3, num_ctags = 1;
+  const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
+  const char *etag_vals[] = {NULL, NULL, NULL};
+  const char *ctag_names[] = {"GEOM_DIMENSION"};
+  const char *ctag_vals[]={(const char*)&set_DIM};
+ 
+  for (unsigned int i = 0; i < files.size(); i++) {
+    err = get_copy_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+    ERRORR("Failed to add expand lists.", iBase_FAILURE);
+    err = get_copy_expand_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+    ERRORR("Failed to add expand lists.", iBase_FAILURE);
+    err = extend_expand_sets(cm[i]);
+    ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+  }  
+
+
+  for (int n1 = 0; n1 < nrings; n1++) {
+    int loc = (n1 + 2)/2;    
+
+    if( flag == 0 ){
+      dx[0] = (n1 + loc - 1) * pitch / 2.0;
+      dx[1] = (n1 - loc + 1) * pitch * sin(PI/3.0);
+      flag = 1;
+    }
+    else{
+      dx[0] = (n1 + loc) * pitch / 2.0;
+      dx[1] = (n1 - loc) * pitch * sin(PI/3.0);
+      flag = 0;
+    }
+
+    for (int n2 = 0; n2 < loc; n2++) {
+      err = find_assm(i,assm_index);
+      if (-1 == assm_index) {
+        i++;
+        continue;
+      }  
+    
+      dxnew[1] = dx[1] - n2 * pitch * sin(PI/3.0);
+      dxnew[0] = dx[0] + n2 * pitch * cos(PI/3.0);
+
+      new_ents = NULL;
+      new_ents_alloc = 0;
+      new_ents_size = 0;
+
+      int orig_ents_alloc = 0, orig_ents_size;
+      iBase_EntityHandle *orig_ents = NULL;
+
+      iMesh_getEntities(impl, assys[assm_index], iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
+			&orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
+      ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
+
+      err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew,
+					       &new_ents, &new_ents_alloc, &new_ents_size,
+					       false);
+      ERRORR("Failed to copy_move entities.", 1);
+      std::cout << "Copy/moved A: " << assm_index 
+		<< " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
+
+      free(new_ents);
+      free(orig_ents);
+      i++;
+      dxnew[0] = 0.0;
+      dxnew[1] = 0.0;
+      err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
+      ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+    }
+    dx[0] = 0.0;
+    dx[1] = 0.0;
+  }
+
+  return iBase_SUCCESS;
+}  
+
+
+
 int copy_move_hex_flat_assys(CopyMesh **cm,
 			     const int nrings, const int pack_type,
 			     const double pitch,
@@ -524,16 +630,16 @@ int copy_move_hex_full_assys(CopyMesh **cm,
         continue;
       }
 
-    if (n1 < nrings){
-      dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + 
-	(n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-      dx[1] = (n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
-    }
-    else{
-      dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
-	(2 * nrings - n1 -1) * pitch / 2.0;
-      dx[1] = (n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)); 
-    }     
+      if (n1 < nrings){
+	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + 
+	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
+	dx[1] = (n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+      }
+      else{
+	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
+	  (2 * nrings - n1 -1) * pitch / 2.0;
+	dx[1] = (n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)); 
+      }     
       new_ents = NULL;
       new_ents_alloc = 0;
       new_ents_size = 0;
@@ -939,6 +1045,53 @@ int read_inputs_phase2 ()
 	  core_alias.push_back(temp_alias);
 	}        
       }
+      if(geom_type == "hexflat" && symm == 12){
+
+	// reading pitch info
+	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				 MAXCHARS, comment))
+	  ERRORR("Reading input file failed",1);
+	if (input_string.substr(0,10) == "assemblies"){
+	  std::istringstream formatString (input_string);
+	  formatString >> card >> nassys >> pitch;
+	}
+    
+	// reading file and alias names
+	for(int i=1;i<=nassys;i++){
+	  if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				   MAXCHARS, comment))
+	    ERRORR("Reading input file failed",1);    
+	  std::istringstream formatString (input_string);
+	  formatString >> meshfile >> mf_alias;
+	  files.push_back(meshfile);
+	  assm_alias.push_back(mf_alias);
+	}
+    
+	// reading lattice 
+	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				 MAXCHARS, comment))
+	  ERRORR("Reading input file failed",1);
+	if (input_string.substr(0,7) == "lattice"){
+	  std::istringstream formatString (input_string);
+	  formatString >> card >> nrings;
+	  if(nrings % 2 == 0)
+	    tot_assys = (nrings*(nrings + 2))/4;
+	  else
+	    tot_assys = ((nrings+1) * (nrings+1))/4;
+	}
+
+	std::cout << tot_assys << "total" << std::endl;
+	// now reading the arrangement
+	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
+				 MAXCHARS, comment))
+	  ERRORR("Reading input file failed",1);    
+	std::istringstream formatString (input_string);
+	for(int i=1;i<=tot_assys;i++){
+	  formatString >> temp_alias;
+	  core_alias.push_back(temp_alias);
+	}        
+      }
+
       else{
 	ERRORR("Invalid geometry type",1);
       }
