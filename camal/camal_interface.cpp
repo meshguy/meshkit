@@ -230,18 +230,28 @@ bool CAMAL_mesh_entity(CMEL *cmel,
 
 
     if (mesh_size < 0.) {
-      double tot_length = 0.;
-      for (unsigned int i = 0; i < n_bdy_verts; i++) {
-	tot_length += sqrt((bdy_coords[3*i] - bdy_coords[3*((i + 1)%n_bdy_verts)])*
-			   (bdy_coords[3*i] - bdy_coords[3*((i + 1)%n_bdy_verts)]) +
-			   (bdy_coords[3*i + 1] - bdy_coords[3*((i + 1)%n_bdy_verts) + 1])*
-			   (bdy_coords[3*i + 1] - bdy_coords[3*((i + 1)%n_bdy_verts) + 1]) +
-			   (bdy_coords[3*i + 2] - bdy_coords[3*((i + 1)%n_bdy_verts) + 2])*
-			   (bdy_coords[3*i + 2] - bdy_coords[3*((i + 1)%n_bdy_verts) + 2]));
-      }
-      mesh_size = tot_length/n_bdy_verts;
-      geom_eval.set_mesh_size(mesh_size);
+	double tot_length = 0.;
+	unsigned int start_current_loop = 0;
+	for (unsigned int k = 0; k < loop_sizes.size(); k++) {
+	  // for each loop, compute the edge lengths individually
+	  int current_loop_size = loop_sizes[k];
+	  for (unsigned int i = 0; i < current_loop_size; i++) {
+		unsigned int i1 = loops[start_current_loop + i];
+		unsigned int i2 = loops[start_current_loop + (i + 1) % current_loop_size];
+		tot_length += sqrt((bdy_coords[3 * i1] - bdy_coords[3 * i2])
+			* (bdy_coords[3 * i1] - bdy_coords[3 * i2])
+			+ (bdy_coords[3 * i1+1] - bdy_coords[3 * i2+1])
+			* (bdy_coords[3 * i1+1] - bdy_coords[3 * i2+1])
+			+ (bdy_coords[3 * i1+2] - bdy_coords[3 * i2+2])
+			* (bdy_coords[3 * i1+2] - bdy_coords[3 * i2+2]) );
+		}
+		start_current_loop+=current_loop_size;
+	  }
+	mesh_size = tot_length / n_bdy_verts;
+	geom_eval.set_mesh_size(mesh_size);
     }
+
+
 
 #if CAMAL_VERSION > 500
     CAMALSizeEval size_eval(mesh_size);
