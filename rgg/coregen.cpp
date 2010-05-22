@@ -1045,7 +1045,7 @@ int read_inputs_phase2 ()
 	  core_alias.push_back(temp_alias);
 	}        
       }
-      if(geom_type == "hexflat" && symm == 12){
+      else if(geom_type == "hexflat" && symm == 12){
 
 	// reading pitch info
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
