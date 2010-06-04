@@ -319,9 +319,9 @@ int CopyMesh::process_ce_sets(std::set<iBase_EntitySetHandle> &cesets,
     // - handle entities
     iBase_EntityHandle *tmp_ents = NULL;
     int tmp_ents_alloc = 0, tmp_ents_size;
-    iMesh_getEntities(imeshImpl, *sit, 
-                      iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
-                      &tmp_ents, &tmp_ents_alloc, &tmp_ents_size, &err);
+    iMesh_getEntitiesRec(imeshImpl, *sit, 
+                         iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
+                         &tmp_ents, &tmp_ents_alloc, &tmp_ents_size, &err);
     ERRORR("Failed to get ceSet entities.", iBase_FAILURE);
 
     // get copy tags and remove null ones
@@ -654,6 +654,12 @@ int CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
       iMesh_getEntSetEHData(imeshImpl, *sit, copyTag, 
                             reinterpret_cast<iBase_EntityHandle*>(&copy_set), 
                             &err);
+      if (iBase_TAG_NOT_FOUND == err) {
+        // we (probably) didn't copy anything from this set, so ignore it
+        err = iBase_SUCCESS;
+        continue;
+      }
+
       ERRORR("Didn't get copied set from orig copy set.", err);
       iMesh_setEntSetData(imeshImpl, copy_set, tags[t], 
                           tag_space_ptr, tag_size, &err);
