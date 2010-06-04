@@ -242,7 +242,7 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
                        copy_set, &err);
   ERRORR("Failed to add ents to set", err);
 
-  for (int d = iBase_REGION; d <= iBase_REGION; d++) {
+  for (int d = iBase_EDGE; d <= iBase_REGION; d++) {
     iBase_EntityHandle *tmp_ents = NULL;
     int tmp_ents_alloc = 0, tmp_ents_size;
 
@@ -423,7 +423,7 @@ int CopyMesh::copy_move_ents(iBase_EntitySetHandle copy_set,
   int pos = 0;
   while (iMesh_POINT == topos[pos] && pos < topos_size) 
     pos++;
-  if (pos == topos_size) return iBase_SUCCESS;
+  if (pos == ents_size) return iBase_SUCCESS;
 
   // get connectivity
   iBase_EntityHandle *verts = NULL;

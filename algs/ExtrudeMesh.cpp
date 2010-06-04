@@ -313,7 +313,7 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src, int steps,
     iBase_EntitySetHandle dest;
     iBase_EntitySetHandle *tmp = &dest;
     int tmp_alloc=1,tmp_size=0;
-    iMesh_getEntSets(impl_ ,parent, 0, &tmp, &tmp_alloc, &tmp_size, &err);
+    iMesh_getEntSets(impl_, parent, 0, &tmp, &tmp_alloc, &tmp_size, &err);
     ERRORR("Couldn't get entity sets in parent.", err);
 
     int ret = do_extrusion(src, dest, true, steps-1, trans);
@@ -371,10 +371,10 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
 
   int err;
 
-  iBase_EntityHandle *ents=0; int ent_alloc=0, ent_size=0;
-  iBase_EntityHandle *adj=0;  int adj_alloc=0, adj_size=0;
-  int *indices=0;       int ind_alloc=0, ind_size=0;
-  int *offsets=0;       int off_alloc=0, off_size=0;
+  iBase_EntityHandle *ents = NULL; int ent_alloc = 0, ent_size;
+  iBase_EntityHandle *adj = NULL;  int adj_alloc = 0, adj_size;
+  int *indices = NULL;             int ind_alloc = 0, ind_size;
+  int *offsets = NULL;             int off_alloc = 0, off_size;
 
   iMesh_getAdjEntIndices(impl_,src, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
                          iBase_VERTEX,
@@ -422,12 +422,11 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
   }
 
   if(use_dest) {
-    iBase_EntityHandle *ents2=0; int ent2_alloc=0, ent2_size=0;
-    iBase_EntityHandle *adj2=0;  int adj2_alloc=0, adj2_size=0;
-    int *indices2=0;             int ind2_alloc=0, ind2_size=0;
-    int *offsets2=0;             int off2_alloc=0, off2_size=0;
-
-    iMesh_getAdjEntIndices(impl_, dest, iBase_FACE, iMesh_ALL_TOPOLOGIES,
+    iBase_EntityHandle *ents2 = NULL; int ent2_alloc = 0, ent2_size;
+    iBase_EntityHandle *adj2 = NULL;  int adj2_alloc = 0, adj2_size;
+    int *indices2 = NULL;             int ind2_alloc = 0, ind2_size;
+    int *offsets2 = NULL;             int off2_alloc = 0, off2_size;
+    iMesh_getAdjEntIndices(impl_, dest, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
                            iBase_VERTEX,
                            &ents2,    &ent2_alloc, &ent2_size,
                            &adj2,     &adj2_alloc, &adj2_size,
@@ -526,7 +525,7 @@ void ExtrudeMesh::connect_the_dots(
     // translation) we add the vertices in reverse order. Otherwise, we go
     // in the usual order. If count is 2, then we are creating quads and so
     // need to swap the order of the post set of verts.
-    
+
     int dx = pre_norms [i];
     int dy = post_norms[i] * (count == 2 ? -1:1);
     int x  = (dx == 1) ? pre_offs [i] : pre_offs [i+1]-1;
@@ -534,7 +533,7 @@ void ExtrudeMesh::connect_the_dots(
 
     iBase_EntityHandle *nodes = new iBase_EntityHandle[count*2];
     for(int j=0; j<count; j++) {
-      nodes[j]     = pre [ pre_inds [x + dx*j] ];
+      nodes[j]       = pre [ pre_inds [x + dx*j] ];
       nodes[j+count] = post[ post_inds[y + dy*j] ];
     }
 
