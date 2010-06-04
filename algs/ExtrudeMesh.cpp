@@ -1,4 +1,5 @@
 #include "ExtrudeMesh.hpp"
+#include "LocalTag.hpp"
 
 #include "vec_utils.hpp"
 #include <cassert>
@@ -390,11 +391,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
   iBase_EntityHandle *next = adj;
   int *normals = 0;
 
-  iBase_TagHandle local_tag;
-  const char *tag_name = "local_copy";
-  iMesh_createTag(impl_, tag_name, 1, iBase_ENTITY_HANDLE, &local_tag, &err,
-                  strlen(tag_name));
-  ERRORR("Couldn't create local copy tag.", err);
+  LocalTag local_tag(impl_);
   new_sets_t new_sets;
 
   if(new_rows > 0) {
@@ -451,9 +448,6 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     free(indices2);
     free(offsets2);
   }
-
-  iMesh_destroyTag(impl_, local_tag, true, &err);
-  ERRORR("Couldn't destroy local tag.", err);
 
   if(new_rows > 0) {
     delete curr;

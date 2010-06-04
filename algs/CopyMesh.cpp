@@ -1,5 +1,6 @@
 #include "CopyMesh.hpp"
 #include "CopyVerts.hpp"
+#include "LocalTag.hpp"
 #include "MBCN.h"
 #include <stdlib.h>
 #include <algorithm>
@@ -227,10 +228,7 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
 {
   int err;
   // create a tag for this local copy operation
-  iBase_TagHandle local_tag;
-  iMesh_createTag(imeshImpl, "local_copy", 1, iBase_ENTITY_HANDLE,
-                  &local_tag, &err, 13);
-  ERRORR("Failed to create local copy tag.", err);
+  LocalTag local_tag(imeshImpl);
 
   // create a set to hold entities to be copied
   iBase_EntitySetHandle copy_set = NULL;
@@ -297,10 +295,6 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
 		       new_ents, new_ents_allocated, new_ents_size, &err);
     ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
   }
-
-  // destroy local tag, removing it from all entities
-  iMesh_destroyTag(imeshImpl, local_tag, true, &err);
-  ERRORR("Failed to force-destroy local copy tag.", iBase_FAILURE);
   
   return iBase_SUCCESS;
 }
