@@ -119,7 +119,8 @@ iBase_EntitySetHandle root_set;
 const int UNITCELL_DUCT = 0, ASSY_TYPES = 1;
 
 // declare variables read in the inputs
-int nrings, nringsx, nringsy, pack_type =1, symm = 1;
+int err = 0;
+int nrings, nringsx, nringsy, pack_type = 1, symm = 1;
 double pitch, pitchx, pitchy;
 bool global_ids = true, back_mesh;
 std::vector<std::string> files;
@@ -147,7 +148,6 @@ int MAXCHARS = 300;
 
 int main(int argc, char **argv) 
 {
-  int err;
 
   // print banner
   err = banner();
@@ -357,7 +357,7 @@ int extend_expand_sets(CopyMesh *cm)
 {
   // check expand sets for any contained sets which aren't already copy sets, 
   // and add them to the list
-  int err;
+  int err = iBase_SUCCESS;
   
   for (std::set<iBase_EntitySetHandle>::iterator sit = cm->expand_sets().begin();
        sit != cm->expand_sets().end(); sit++) {
@@ -414,7 +414,6 @@ int copy_move_hex_vertex_assys_p1(CopyMesh **cm,
 {
   double dx[3] = {0.0, 0.0, 0.0};
   double dxnew[3] = {0.0, 0.0, 0.0};
-  int err; 
   int i = 0, bd = 0;
   int assm_index;
   int flags[files.size()];
@@ -514,7 +513,6 @@ int copy_move_hex_vertex_assys(CopyMesh **cm,
   double dxnew[3] = {0.0, 0.0, 0.0};
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
-  int err; 
   int i = 0, bd = 0;
   int assm_index;
 
@@ -681,7 +679,6 @@ int copy_move_one_twelfth_assys_p1(CopyMesh **cm,
 {
   double dx[3] = {0.0, 0.0, 0.0};
   double dxnew[3] = {0.0, 0.0, 0.0};
-  int err; 
   int i = 0, flag = 0;
   int flags[files.size()];
   int assm_index;
@@ -716,11 +713,10 @@ int copy_move_one_twelfth_assys_p1(CopyMesh **cm,
       dxnew[0] = dx[0] + n2 * pitch * cos(PI/3.0);
       if(flags[assm_index] == 0){
 
-	dx[0] = n2 * pitchx;
  	move_verts(assys[assm_index], dxnew);
 
 	std::cout << "Copy/moved A: " << assm_index 
-		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
       }
       i++;
       flags[assm_index] = 1;
@@ -743,7 +739,6 @@ int copy_move_one_twelfth_assys(CopyMesh **cm,
   double dxnew[3] = {0.0, 0.0, 0.0};
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
-  int err; 
   int i = 0, flag = 0;
   int assm_index;
   int flags[files.size()];
@@ -845,7 +840,7 @@ int copy_move_hex_flat_assys_p1(CopyMesh **cm,
 				std::vector<iBase_EntitySetHandle> &assys)
 {
   double dx[3] = {0.0, 0.0, 0.0};
-  int err, assm_index; 
+  int assm_index; 
   int i = 0;
   int flags[files.size()];
 
@@ -891,7 +886,7 @@ int copy_move_hex_flat_assys(CopyMesh **cm,
   double dx[3] = {0.0, 0.0, 0.0};
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
-  int err, assm_index; 
+  int assm_index; 
   int flags[files.size()];
   CMatrix<double> dx_orig(files.size(), 3);
   dx_orig.Set(0.0);
@@ -978,7 +973,7 @@ int copy_move_hex_full_assys_p1(CopyMesh **cm,
 				std::vector<iBase_EntitySetHandle> &assys)
 {
   double dx[3] = {0.0, 0.0, 0.0};
-  int err, assm_index; 
+  int  assm_index; 
   int flags[files.size()];
   int i = 0;
 
@@ -1034,7 +1029,7 @@ int copy_move_hex_full_assys(CopyMesh **cm,
   double dx[3] = {0.0, 0.0, 0.0};
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
-  int err, assm_index; 
+  int assm_index; 
   int flags[files.size()];
   CMatrix<double> dx_orig(files.size(), 3);
   dx_orig.Set(0.0);
@@ -1132,7 +1127,6 @@ int copy_move_sq_assys_p1(CopyMesh **cm,
 			  std::vector<iBase_EntitySetHandle> &assys) 
 {
   double dx[3] = {0.0, 0.0, 0.0};
-  int err; 
   int i = 0, assm_index;
 
   int flags[files.size()];
@@ -1178,7 +1172,6 @@ int copy_move_sq_assys(CopyMesh **cm,
   double dx[3] = {0.0, 0.0, 0.0};
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
-  int err; 
   int i = 0, assm_index;
   int flags[files.size()];
   CMatrix<double> dx_orig(files.size(), 3);
@@ -1547,7 +1540,6 @@ int read_inputs_phase2 ()
 	    tot_assys = ((nrings+1) * (nrings+1))/4;
 	}
 
-	std::cout << tot_assys << "total" << std::endl;
 	// now reading the arrangement
 	if (!parse.ReadNextLine (file_input, linenumber, input_string, 
 				 MAXCHARS, comment))
