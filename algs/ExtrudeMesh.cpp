@@ -121,13 +121,14 @@ void ExtrudeMesh::process_sets(iBase_TagHandle local_tag, new_sets_t &new_sets)
   new_sets_t::iterator curr=new_sets.begin();
 
   for(std::set<iBase_EntitySetHandle>::iterator i=extrude_sets_.begin();
-      i!=extrude_sets_.end(); ++i) {
+      i!=extrude_sets_.end(); ++i, ++curr) {
     iBase_EntityHandle *ents = NULL;
     int ent_alloc=0,ent_size;
-
-    iMesh_getEntities(impl_, *i, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, &ents,
-                      &ent_alloc, &ent_size, &err);
+    iMesh_getEntitiesRec(impl_, *i, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
+                         &ents, &ent_alloc, &ent_size, &err);
     ERROR("Couldn't get entities.");
+
+    if(ent_size == 0) continue;
 
     std::vector<iBase_EntityHandle> tags(ent_size, iBase_EntityHandle(0));
     iBase_EntityHandle *tag_ptr = &tags[0];
@@ -135,14 +136,14 @@ void ExtrudeMesh::process_sets(iBase_TagHandle local_tag, new_sets_t &new_sets)
     iMesh_getEHArrData(impl_, ents, ent_size, local_tag, &tag_ptr, &tag_alloc,
                        &tag_size, &err);
     free(ents);
-    ERROR("Couldn't get entity handle tags.");
 
-    std::remove_if(tags.begin(), tags.end(), std::bind2nd(
+    std::vector<iBase_EntityHandle>::iterator new_end;
+    new_end = std::remove_if(tags.begin(), tags.end(), std::bind2nd(
                      std::equal_to<iBase_EntityHandle>(),
                      iBase_EntityHandle(0)
                      ));
 
-    if(!tags.empty()) {
+    if(new_end != tags.begin()) {
       iBase_EntitySetHandle set;
       if(first) {
         iMesh_createEntSet(impl_, false, &set, &err);
@@ -151,12 +152,8 @@ void ExtrudeMesh::process_sets(iBase_TagHandle local_tag, new_sets_t &new_sets)
       else
         set = *curr;
 
-      for(std::vector<iBase_EntityHandle>::iterator j=tags.begin();
-          j!=tags.end(); ++j) {
-        iMesh_addEntToSet(impl_, *j, set, &err);
-        ERROR("Couldn't add entity to extrude set.");
-      }
-      ++curr;
+      iMesh_addEntArrToSet(impl_, &tags[0], tags.size(), set, &err);
+      ERROR("Couldn't add entity to extrude set.");
     }
   }
 }
@@ -534,8 +531,8 @@ void ExtrudeMesh::connect_the_dots(
     int status;
     iBase_EntityHandle out;
 
-    if(count == 4)    // quad
-      iMesh_createEnt(impl_, iMesh_HEXAHEDRON, nodes, 8,&out, &status, &err);
+    if(count == 4)      // quad
+      iMesh_createEnt(impl_, iMesh_HEXAHEDRON, nodes, 8, &out, &status, &err);
     else if(count == 3) // tri
       iMesh_createEnt(impl_, iMesh_PRISM, nodes, 6, &out, &status, &err);
     else if(count == 2) // line

@@ -319,15 +319,17 @@ int CopyMesh::process_ce_sets(std::set<iBase_EntitySetHandle> &cesets,
     ERRORR("Failed to get ceSet entities.", iBase_FAILURE);
 
     // get copy tags and remove null ones
-    std::vector<iBase_EntitySetHandle> tmp_tags(tmp_ents_size, (iBase_EntitySetHandle)0);
+    std::vector<iBase_EntitySetHandle> tmp_tags(tmp_ents_size, iBase_EntitySetHandle(0));
     iBase_EntityHandle *tmp_tags_ptr = reinterpret_cast<iBase_EntityHandle*>(&tmp_tags[0]);
     int tmp_tags_alloc = tmp_ents_size, tmp_tags_size;
     iMesh_getEHArrData(imeshImpl, tmp_ents, tmp_ents_size, local_tag, 
                        &tmp_tags_ptr, &tmp_tags_alloc, &tmp_tags_size, &err);
+
     std::vector<iBase_EntitySetHandle>::iterator new_end, vit;
-    new_end = std::remove_if(tmp_tags.begin(), tmp_tags.end(), 
-                             std::bind2nd(std::equal_to<iBase_EntitySetHandle>(),
-                                          (iBase_EntitySetHandle)0));
+    new_end = std::remove_if(tmp_tags.begin(), tmp_tags.end(), std::bind2nd(
+                                 std::equal_to<iBase_EntitySetHandle>(),
+                                 iBase_EntitySetHandle(0)
+                                 ));
 
     // - if non-zero copied ents & copy set, make a new copy set, add copied ents
     if (new_end != tmp_tags.begin() && copy_or_expand == COPY) {
