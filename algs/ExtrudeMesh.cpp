@@ -116,43 +116,39 @@ void ExtrudeMesh::process_sets(iBase_TagHandle local_tag, new_sets_t &new_sets)
 {
   int err;
 
-  new_sets.reserve(extrude_sets_.size());
-  bool first = new_sets.empty();
-  new_sets_t::iterator curr=new_sets.begin();
+  if(new_sets.empty())
+      new_sets.resize(extrude_sets_.size());
 
-  for(std::set<iBase_EntitySetHandle>::iterator i=extrude_sets_.begin();
-      i!=extrude_sets_.end(); ++i, ++curr) {
+  std::set<iBase_EntitySetHandle>::iterator in;
+  new_sets_t::iterator out;
+
+  for(in = extrude_sets_.begin(), out = new_sets.begin();
+      in != extrude_sets_.end(); ++in, ++out) {
     iBase_EntityHandle *ents = NULL;
-    int ent_alloc=0,ent_size;
-    iMesh_getEntitiesRec(impl_, *i, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
-                         &ents, &ent_alloc, &ent_size, &err);
+    int ents_alloc=0,ents_size;
+    iMesh_getEntitiesRec(impl_, *in,
+                         iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
+                         &ents, &ents_alloc, &ents_size, &err);
     ERROR("Couldn't get entities.");
 
-    if(ent_size == 0) continue;
+    // get copy tags and save non-null ones
+    std::vector<iBase_EntityHandle> tmp_tags;
+    tmp_tags.reserve(ents_size);
 
-    std::vector<iBase_EntityHandle> tags(ent_size, iBase_EntityHandle(0));
-    iBase_EntityHandle *tag_ptr = &tags[0];
-    int tag_alloc=tags.size(),tag_size;
-    iMesh_getEHArrData(impl_, ents, ent_size, local_tag, &tag_ptr, &tag_alloc,
-                       &tag_size, &err);
+    for(int j = 0; j < ents_size; j++) {
+      iBase_EntityHandle eh_tag;
+      iMesh_getEHData(impl_, ents[j], local_tag, &eh_tag, &err);
+      if (iBase_SUCCESS == err && eh_tag) 
+        tmp_tags.push_back(eh_tag);
+    }
     free(ents);
 
-    std::vector<iBase_EntityHandle>::iterator new_end;
-    new_end = std::remove_if(tags.begin(), tags.end(), std::bind2nd(
-                     std::equal_to<iBase_EntityHandle>(),
-                     iBase_EntityHandle(0)
-                     ));
-
-    if(new_end != tags.begin()) {
-      iBase_EntitySetHandle set;
-      if(first) {
-        iMesh_createEntSet(impl_, false, &set, &err);
-        new_sets.push_back(set);
+    if(!tmp_tags.empty()) {
+      if(!*out) {
+        iMesh_createEntSet(impl_, false, &*out, &err);
       }
-      else
-        set = *curr;
 
-      iMesh_addEntArrToSet(impl_, &tags[0], tags.size(), set, &err);
+      iMesh_addEntArrToSet(impl_, &tmp_tags[0], tmp_tags.size(), *out, &err);
       ERROR("Couldn't add entity to extrude set.");
     }
   }
