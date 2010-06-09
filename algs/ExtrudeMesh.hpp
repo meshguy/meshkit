@@ -16,6 +16,8 @@ public:
     return impl_;
   }
 
+  iBase_TagHandle extrude_tag();
+
   int add_extrude_tag(const std::string &tag_name, const char *tag_val = NULL);
   int add_extrude_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
 
@@ -93,9 +95,16 @@ private:
   };
 
   bool updated_set_;
+  iBase_TagHandle extrude_tag_;
   std::vector<tag_data> extrude_tags_;
   std::set<iBase_EntitySetHandle> extrude_sets_;
 };
+
+inline iBase_TagHandle
+ExtrudeMesh::extrude_tag()
+{
+  return extrude_tag_;
+}
 
 inline iBase_TagHandle
 ExtrudeMesh::copy_tag()

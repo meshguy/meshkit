@@ -22,6 +22,150 @@
                                iBase_MEMORY_ALLOCATION_FAILED); }	\
   }
 
+int process_ce_sets(iMesh_Instance imeshImpl,
+                    std::set<iBase_EntitySetHandle> &cesets,
+                    iBase_TagHandle local_tag) 
+{
+  int err;
+
+  std::set<iBase_EntitySetHandle>::iterator src;
+  for (src = cesets.begin(); src != cesets.end(); ++src) {
+    iBase_EntitySetHandle dest = NULL;
+    iMesh_getEntSetEHData(imeshImpl, *src, local_tag,
+                          reinterpret_cast<iBase_EntityHandle*>(&dest), &err);
+
+    // - handle entities
+    iBase_EntityHandle *tmp_ents = NULL;
+    int tmp_ents_alloc = 0, tmp_ents_size;
+    iMesh_getEntitiesRec(imeshImpl, *src,
+                         iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
+                         &tmp_ents, &tmp_ents_alloc, &tmp_ents_size, &err);
+    ERRORR("Failed to get ceSet entities.", iBase_FAILURE);
+
+    // get copy tags and save non-null ones
+    std::vector<iBase_EntityHandle> tmp_tags;
+    tmp_tags.reserve(tmp_ents_size);
+
+    for (int i = 0; i < tmp_ents_size; i++) {
+      iBase_EntityHandle eh_tag;
+      iMesh_getEHData(imeshImpl, tmp_ents[i], local_tag, &eh_tag, &err);
+      if (iBase_SUCCESS == err && eh_tag) 
+        tmp_tags.push_back(eh_tag);
+    }
+    free(tmp_ents);
+
+    if (!tmp_tags.empty()) {
+      // if this is a copy set, make a new set first
+      if (dest == NULL) {
+        iMesh_createEntSet(imeshImpl, false, &dest, &err);
+        ERRORR("Failed to create copied set.", iBase_FAILURE);
+        iMesh_setEntSetEHData(imeshImpl, *src, local_tag,
+                              reinterpret_cast<iBase_EntityHandle>(dest), &err);
+        ERRORR("Failed to tag copied set.", iBase_FAILURE);
+      }
+
+      iMesh_addEntArrToSet(imeshImpl, &tmp_tags[0], tmp_tags.size(), dest,
+                           &err);
+      ERRORR("Failed to add copied entities to ce set.", iBase_FAILURE);
+    }
+  
+    // - handle sets
+    iBase_EntitySetHandle *tmp_sets = NULL;
+    int tmp_sets_alloc = 0, tmp_sets_size;
+    iMesh_getEntSets(imeshImpl, *src, 1,
+                     &tmp_sets, &tmp_sets_alloc, &tmp_sets_size, &err);
+    ERRORR("Failed to get ceSet entities.", iBase_FAILURE);
+    
+    // get copy tags and save non-null ones
+    std::vector<iBase_EntitySetHandle> tmp_set_tags;
+    tmp_set_tags.reserve(tmp_sets_size);
+    for (int i = 0; i < tmp_sets_size; i++) {
+      iBase_EntityHandle eh_tag;
+      iMesh_getEntSetEHData(imeshImpl, tmp_sets[i], local_tag, &eh_tag, &err);
+      if (iBase_SUCCESS == err && eh_tag) 
+        tmp_set_tags.push_back(reinterpret_cast<iBase_EntitySetHandle>(eh_tag));
+    }
+
+    if (!tmp_set_tags.empty()) {
+      // might need to create set here
+      if (dest == NULL) {
+        iMesh_createEntSet(imeshImpl, false, &dest, &err);
+        ERRORR("Failed to create copied set.", iBase_FAILURE);
+        iMesh_setEntSetEHData(imeshImpl, *src, local_tag, 
+                              reinterpret_cast<iBase_EntityHandle>(dest), &err);
+        ERRORR("Failed to tag copied set.", iBase_FAILURE);
+      }
+
+      std::vector<iBase_EntitySetHandle>::iterator vit;
+      for (vit = tmp_set_tags.begin(); vit != tmp_set_tags.end(); vit++) {
+        iMesh_addEntSet(imeshImpl, *vit, dest, &err);
+        ERRORR("Failed to add set to ce set.", iBase_FAILURE);
+      }
+    }
+  }
+  
+  // xxx - still need to do unique tags
+  // - for each unique tag
+  //   . if this set has the tag, add/append to get unique value
+
+  return iBase_SUCCESS;
+}
+
+int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
+                  const std::set<iBase_EntitySetHandle> &copySets,
+                  iBase_TagHandle tag, const char *tag_val)
+{
+  int err = iBase_SUCCESS;
+
+  int tag_size;
+  iMesh_getTagSizeBytes(imeshImpl, tag, &tag_size, &err);
+  ERRORR("Failed to get tag size.", err);
+
+  // allocate temp space for tag value
+  std::vector<char> value;
+  value.resize(tag_size);
+  char *value_ptr = &value[0];
+  int value_alloc = tag_size, value_size;
+  
+  // for each orig copy set with this tag, copy it to its copy
+  std::set<iBase_EntitySetHandle>::iterator set;
+  for (set = copySets.begin(); set != copySets.end(); ++set) {
+    // get the tag value
+    iMesh_getEntSetData(imeshImpl, *set, tag, 
+                        &value_ptr, &value_alloc, &value_size, &err);
+    if (iBase_TAG_NOT_FOUND == err) {
+      // reset, just in case we return after this setting of err
+      err = iBase_SUCCESS;
+      continue;
+    }
+    ERRORR("Problem getting copy tag for set.", err);
+
+    // compare to tag value if necessary
+    if (tag_val && strncmp(tag_val, value_ptr, tag_size)) {
+      // reset, just in case we return after this setting of err
+      err = iBase_SUCCESS;
+      continue;
+    }      
+      
+    // if we got here, we should set the tag on the copy; get the copy
+    iBase_EntitySetHandle copy_set;
+    iMesh_getEntSetEHData(imeshImpl, *set, copyTag, 
+                          reinterpret_cast<iBase_EntityHandle*>(&copy_set), 
+                          &err);
+    if (iBase_TAG_NOT_FOUND == err) {
+      // we (probably) didn't copy anything from this set, so ignore it
+      err = iBase_SUCCESS;
+      continue;
+    }
+    ERRORR("Didn't get copied set from orig copy set.", err);
+
+    iMesh_setEntSetData(imeshImpl, copy_set, tag, value_ptr, tag_size, &err);
+    ERRORR("Failed to set data on copied set.", err);
+  }
+  
+  return err;
+}
+
 CopyMesh::CopyMesh(iMesh_Instance impl) 
   : imeshImpl(impl), updatedCELists(false)
 {
@@ -70,9 +214,9 @@ int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_se
 /* \brief Copy all the entities in the set
  */
 int CopyMesh::copy_entities(iBase_EntitySetHandle set_handle,
-			    iBase_EntityHandle **new_ents,
-			    int *new_ents_allocated,
-			    int *new_ents_size) 
+                            iBase_EntityHandle **new_ents,
+                            int *new_ents_allocated,
+                            int *new_ents_size) 
 {
   iBase_EntityHandle *ents = NULL;
   int ents_alloc = 0, ents_size;
@@ -93,10 +237,10 @@ int CopyMesh::copy_entities(iBase_EntitySetHandle set_handle,
 /* \brief Copy all the entities
  */
 int CopyMesh::copy_entities(iBase_EntityHandle *ent_handles,
-			    int num_ents,
-			    iBase_EntityHandle **new_ents,
-			    int *new_ents_allocated,
-			    int *new_ents_size) 
+                            int num_ents,
+                            iBase_EntityHandle **new_ents,
+                            int *new_ents_allocated,
+                            int *new_ents_size) 
 {
   return copy_move_entities(ent_handles, num_ents, NULL,
                             new_ents, new_ents_allocated, new_ents_size);;
@@ -318,95 +462,6 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
   return iBase_SUCCESS;
 }
 
-int process_ce_sets(iMesh_Instance imeshImpl,
-                    std::set<iBase_EntitySetHandle> &cesets,
-                    iBase_TagHandle local_tag) 
-{
-  int err;
-
-  std::set<iBase_EntitySetHandle>::iterator src;
-  for (src = cesets.begin(); src != cesets.end(); ++src) {
-    iBase_EntitySetHandle dest = NULL;
-    iMesh_getEntSetEHData(imeshImpl, *src, local_tag,
-                          reinterpret_cast<iBase_EntityHandle*>(&dest), &err);
-
-    // - handle entities
-    iBase_EntityHandle *tmp_ents = NULL;
-    int tmp_ents_alloc = 0, tmp_ents_size;
-    iMesh_getEntitiesRec(imeshImpl, *src,
-                         iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
-                         &tmp_ents, &tmp_ents_alloc, &tmp_ents_size, &err);
-    ERRORR("Failed to get ceSet entities.", iBase_FAILURE);
-
-    // get copy tags and save non-null ones
-    std::vector<iBase_EntityHandle> tmp_tags;
-    tmp_tags.reserve(tmp_ents_size);
-
-    for (int i = 0; i < tmp_ents_size; i++) {
-      iBase_EntityHandle eh_tag;
-      iMesh_getEHData(imeshImpl, tmp_ents[i], local_tag, &eh_tag, &err);
-      if (iBase_SUCCESS == err && eh_tag) 
-        tmp_tags.push_back(eh_tag);
-    }
-    free(tmp_ents);
-
-    if (!tmp_tags.empty()) {
-      // if this is a copy set, make a new set first
-      if (dest == NULL) {
-        iMesh_createEntSet(imeshImpl, false, &dest, &err);
-        ERRORR("Failed to create copied set.", iBase_FAILURE);
-        iMesh_setEntSetEHData(imeshImpl, *src, local_tag,
-                              reinterpret_cast<iBase_EntityHandle>(dest), &err);
-        ERRORR("Failed to tag copied set.", iBase_FAILURE);
-      }
-
-      iMesh_addEntArrToSet(imeshImpl, &tmp_tags[0], tmp_tags.size(), dest,
-                           &err);
-      ERRORR("Failed to add copied entities to ce set.", iBase_FAILURE);
-    }
-  
-    // - handle sets
-    iBase_EntitySetHandle *tmp_sets = NULL;
-    int tmp_sets_alloc = 0, tmp_sets_size;
-    iMesh_getEntSets(imeshImpl, *src, 1,
-                     &tmp_sets, &tmp_sets_alloc, &tmp_sets_size, &err);
-    ERRORR("Failed to get ceSet entities.", iBase_FAILURE);
-    
-    // get copy tags and save non-null ones
-    std::vector<iBase_EntitySetHandle> tmp_set_tags;
-    tmp_set_tags.reserve(tmp_sets_size);
-    for (int i = 0; i < tmp_sets_size; i++) {
-      iBase_EntityHandle eh_tag;
-      iMesh_getEntSetEHData(imeshImpl, tmp_sets[i], local_tag, &eh_tag, &err);
-      if (iBase_SUCCESS == err && eh_tag) 
-        tmp_set_tags.push_back(reinterpret_cast<iBase_EntitySetHandle>(eh_tag));
-    }
-
-    if (!tmp_set_tags.empty()) {
-      // might need to create set here
-      if (dest == NULL) {
-        iMesh_createEntSet(imeshImpl, false, &dest, &err);
-        ERRORR("Failed to create copied set.", iBase_FAILURE);
-        iMesh_setEntSetEHData(imeshImpl, *src, local_tag, 
-                              reinterpret_cast<iBase_EntityHandle>(dest), &err);
-        ERRORR("Failed to tag copied set.", iBase_FAILURE);
-      }
-
-      std::vector<iBase_EntitySetHandle>::iterator vit;
-      for (vit = tmp_set_tags.begin(); vit != tmp_set_tags.end(); vit++) {
-        iMesh_addEntSet(imeshImpl, *vit, dest, &err);
-        ERRORR("Failed to add set to ce set.", iBase_FAILURE);
-      }
-    }
-  }
-  
-  // xxx - still need to do unique tags
-  // - for each unique tag
-  //   . if this set has the tag, add/append to get unique value
-
-  return iBase_SUCCESS;
-}
-
 int CopyMesh::copy_move_ents(iBase_EntitySetHandle copy_set,
                              iBase_TagHandle local_tag) 
 {
@@ -615,58 +670,11 @@ int CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
                               const int num_tags) 
 {
   int err = iBase_SUCCESS;
-  std::vector<char> tag_space;
-  char *tag_space_ptr;
-  int tag_space_alloc, tag_space_size;
   assert(copyTag);
   
   for (int t = 0; t < num_tags; t++) {
-    // get tag handle & size
-    int tag_size;
-    iMesh_getTagSizeBytes(imeshImpl, tags[t], &tag_size, &err);
-    ERRORR("Failed to get tag size.", err);
-
-    // allocate tmp space for tag value
-    tag_space.resize(tag_size);
-    tag_space_ptr = &tag_space[0];
-    tag_space_alloc = tag_size;
-    
-    // for each orig copy set with this tag, copy it to its copy
-    for (std::set<iBase_EntitySetHandle>::iterator sit = copySets.begin();
-         sit != copySets.end(); sit++) {
-      // get the tag value
-      iMesh_getEntSetData(imeshImpl, *sit, tags[t], 
-                          &tag_space_ptr, &tag_space_alloc, &tag_space_size, &err);
-      if (iBase_TAG_NOT_FOUND == err) {
-	// reset, just in case we return after this setting of err
-        err = iBase_SUCCESS;
-        continue;
-      }
-      ERRORR("Problem getting copy tag for set.", err);
-
-      // compare to tag value if necessary
-      if (tag_vals && tag_vals[t] && strncmp(tag_vals[t], tag_space_ptr, tag_size)) {
-	// reset, just in case we return after this setting of err
-        err = iBase_SUCCESS;
-        continue;
-      }      
-      
-      // if we got here, we should set the tag on the copy; get the copy
-      iBase_EntitySetHandle copy_set;
-      iMesh_getEntSetEHData(imeshImpl, *sit, copyTag, 
-                            reinterpret_cast<iBase_EntityHandle*>(&copy_set), 
-                            &err);
-      if (iBase_TAG_NOT_FOUND == err) {
-        // we (probably) didn't copy anything from this set, so ignore it
-        err = iBase_SUCCESS;
-        continue;
-      }
-
-      ERRORR("Didn't get copied set from orig copy set.", err);
-      iMesh_setEntSetData(imeshImpl, copy_set, tags[t], 
-                          tag_space_ptr, tag_size, &err);
-      ERRORR("Failed to set data on copied set.", err);
-    }
+    tag_copy_sets(imeshImpl, copyTag, copySets, tags[t],
+                  tag_vals ? tag_vals[t] : NULL);
   }
   
   return err;

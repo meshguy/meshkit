@@ -20,6 +20,9 @@ int process_ce_sets(iMesh_Instance imeshImpl,
                     std::set<iBase_EntitySetHandle> &cesets,
                     iBase_TagHandle local_tag);
 
+int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
+                  const std::set<iBase_EntitySetHandle> &copySets,
+                  iBase_TagHandle tag, const char *tag_val);
 
 class CopyMesh 
 {

@@ -24,7 +24,7 @@ static double * vtx_diff(double *res, iMesh_Instance mesh, iBase_EntityHandle a,
 
 
 ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh)
-  : impl_(mesh), copy_(mesh), updated_set_(false)
+  : impl_(mesh), copy_(mesh), updated_set_(false), extrude_tag_(0)
 {}
 
 ExtrudeMesh::~ExtrudeMesh()
@@ -32,6 +32,12 @@ ExtrudeMesh::~ExtrudeMesh()
   for(std::vector<tag_data>::iterator i=extrude_tags_.begin();
       i!=extrude_tags_.end(); ++i) {
     free(i->value);
+  }
+
+  if(extrude_tag_) {
+    int err;
+    iMesh_destroyTag(impl_, extrude_tag_, true, &err);
+    ERROR("Failed to destroy extrude tag.");
   }
 }
 
@@ -64,6 +70,12 @@ int ExtrudeMesh::add_extrude_tag(iBase_TagHandle tag_handle,
   }
 
   extrude_tags_.push_back(tag_data(tag_handle, tmp));
+
+  if(!extrude_tag_) {
+    iMesh_createTag(impl_, "__ExtrudeMeshTag", 1,
+                    iBase_ENTITY_HANDLE, &extrude_tag_, &err, 16);
+    ERROR("Couldn't create copy mesh tag.");
+  }
 
   return err;
 }
@@ -397,7 +409,27 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
   free(indices);
   free(offsets);
 
-  return 0;
+  // set the extrude tag on all extruded sets
+  if(extrude_tag_) {
+    std::set<iBase_EntitySetHandle>::iterator set;
+    for(set = extrude_sets_.begin(); set != extrude_sets_.end(); ++set) {
+      iBase_EntityHandle eh;
+      iMesh_getEntSetEHData(impl_, *set, local_tag, &eh, &err);
+      if(err == iBase_SUCCESS) {
+        iMesh_setEntSetEHData(impl_, *set, extrude_tag_, eh, &err);
+        ERRORR("Failed to tag extruded set with extrude tag.", iBase_FAILURE);
+      }
+    }
+  }
+
+  std::vector<tag_data>::iterator tag;
+  for(tag = extrude_tags_.begin(); tag != extrude_tags_.end(); ++tag) {
+    err = tag_copy_sets(impl_, extrude_tag_, extrude_sets_, tag->tag,
+                        tag->value);
+    ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+  }
+
+  return iBase_SUCCESS;
 }
 
 // calculate the normals for each face (1 = towards v, -1 = away from v)
@@ -446,7 +478,6 @@ void ExtrudeMesh::connect_the_dots(
   int *post_norms, int *post_inds, int *post_offs, iBase_EntityHandle *post)
 {
   int err;
-  using namespace std;
 
   for(int i=0; i<size; i++) {
     int count = pre_offs[i+1] - pre_offs[i];
