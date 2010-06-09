@@ -112,48 +112,6 @@ int ExtrudeMesh::reset_sets()
   return iBase_SUCCESS;
 }
 
-void ExtrudeMesh::process_sets(iBase_TagHandle local_tag, new_sets_t &new_sets)
-{
-  int err;
-
-  if(new_sets.empty())
-      new_sets.resize(extrude_sets_.size());
-
-  std::set<iBase_EntitySetHandle>::iterator in;
-  new_sets_t::iterator out;
-
-  for(in = extrude_sets_.begin(), out = new_sets.begin();
-      in != extrude_sets_.end(); ++in, ++out) {
-    iBase_EntityHandle *ents = NULL;
-    int ents_alloc=0,ents_size;
-    iMesh_getEntitiesRec(impl_, *in,
-                         iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
-                         &ents, &ents_alloc, &ents_size, &err);
-    ERROR("Couldn't get entities.");
-
-    // get copy tags and save non-null ones
-    std::vector<iBase_EntityHandle> tmp_tags;
-    tmp_tags.reserve(ents_size);
-
-    for(int j = 0; j < ents_size; j++) {
-      iBase_EntityHandle eh_tag;
-      iMesh_getEHData(impl_, ents[j], local_tag, &eh_tag, &err);
-      if (iBase_SUCCESS == err && eh_tag) 
-        tmp_tags.push_back(eh_tag);
-    }
-    free(ents);
-
-    if(!tmp_tags.empty()) {
-      if(!*out) {
-        iMesh_createEntSet(impl_, false, &*out, &err);
-      }
-
-      iMesh_addEntArrToSet(impl_, &tmp_tags[0], tmp_tags.size(), *out, &err);
-      ERROR("Couldn't add entity to extrude set.");
-    }
-  }
-}
-
 int ExtrudeMesh::translate(iBase_EntityHandle *src, int size, int steps,
                            const double *dx, bool copy_faces)
 {
@@ -291,29 +249,16 @@ int ExtrudeMesh::extrude(iBase_EntitySetHandle src, int steps,
   if(copy_faces) {
     int err;
 
-    iBase_EntitySetHandle parent;
-    iMesh_createEntSet(impl_, false, &parent, &err);
-    ERRORR("Couldn't create parent entity set.", err);
-    iMesh_addEntSet(impl_, src, parent, &err);
-    ERRORR("Couldn't add source entity set to parent.", err);
-    
-    copy_.add_copy_expand_list(&src,    1, CopyMesh::COPY);
-    copy_.add_copy_expand_list(&parent, 1, CopyMesh::EXPAND);
+    copy_.add_copy_expand_list(&src, 1, CopyMesh::COPY);
     copy_.copy_transform_entities(src, trans, 0, 0, 0);
 
-    iMesh_rmvEntSet(impl_, src, parent, &err);
-    ERRORR("Couldn't remove source entity set from parent.", err);
-
     iBase_EntitySetHandle dest;
-    iBase_EntitySetHandle *tmp = &dest;
-    int tmp_alloc=1,tmp_size=0;
-    iMesh_getEntSets(impl_, parent, 0, &tmp, &tmp_alloc, &tmp_size, &err);
-    ERRORR("Couldn't get entity sets in parent.", err);
+    iMesh_getEntSetEHData(impl_, src, copy_.copy_tag(),
+                          reinterpret_cast<iBase_EntityHandle*>(&dest), &err);
+    ERRORR("Couldn't get target entity set.", err);
 
     int ret = do_extrusion(src, dest, true, steps-1, trans);
 
-    iMesh_destroyEntSet(impl_, parent, &err);
-    ERRORR("Couldn't destroy parent entity set.", err);
     iMesh_destroyEntSet(impl_, dest, &err);
     ERRORR("Couldn't destroy target entity set.", err);
 
@@ -385,7 +330,6 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
   int *normals = 0;
 
   LocalTag local_tag(impl_);
-  new_sets_t new_sets;
 
   if(new_rows > 0) {
     int row_alloc = adj_size, row_size;
@@ -397,7 +341,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     normals = get_normals(adj, indices, offsets, ent_size, dx);
 
     // Make the first set of volumes
-    connect_the_dots(ents, ent_size, local_tag, new_sets,
+    connect_the_dots(ents, ent_size, local_tag,
                      normals, indices, offsets, adj,
                      normals, indices, offsets, next);
 
@@ -405,7 +349,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     for(int i=2; i<=new_rows; i++) {
       std::swap(curr, next);
       trans(i, adj, adj_size, &next, &row_alloc, &row_size);
-      connect_the_dots(ents, ent_size, local_tag, new_sets,
+      connect_the_dots(ents, ent_size, local_tag,
                        normals, indices, offsets, curr,
                        normals, indices, offsets, next);
     }
@@ -431,7 +375,7 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
       normals = get_normals(adj, indices, offsets, ent_size, dx);
     int *normals2 = get_normals(adj2, indices2, offsets2, ent2_size, dx);
 
-    connect_the_dots(ents, ent_size, local_tag, new_sets,
+    connect_the_dots(ents, ent_size, local_tag,
                      normals,  indices,  offsets,  next,
                      normals2, indices2, offsets2, adj2);
 
@@ -498,7 +442,6 @@ int * ExtrudeMesh::get_normals(iBase_EntityHandle *verts, int *indices,
 
 void ExtrudeMesh::connect_the_dots(
   iBase_EntityHandle *src, int size, iBase_TagHandle local_tag,
-  new_sets_t &sets,
   int *pre_norms,  int *pre_inds,  int *pre_offs,  iBase_EntityHandle *pre,
   int *post_norms, int *post_inds, int *post_offs, iBase_EntityHandle *post)
 {
@@ -546,7 +489,7 @@ void ExtrudeMesh::connect_the_dots(
     delete[] nodes;
   }
 
-  process_sets(local_tag, sets);
+  process_ce_sets(impl_, extrude_sets_, local_tag);
 }
 
 #ifdef TEST

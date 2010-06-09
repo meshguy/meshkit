@@ -8,8 +8,6 @@
 class ExtrudeMesh
 {
 public:
-  typedef std::vector<iBase_EntitySetHandle> new_sets_t;
-
   explicit ExtrudeMesh(iMesh_Instance impl);
   virtual ~ExtrudeMesh();
 
@@ -78,11 +76,8 @@ private:
 
   void connect_the_dots(
     iBase_EntityHandle *src, int size, iBase_TagHandle local_tag, 
-    new_sets_t &sets,
     int *pre_norms,  int *pre_inds,  int *pre_offs,  iBase_EntityHandle *pre,
     int *post_norms, int *post_inds, int *post_offs, iBase_EntityHandle *post);
-
-  void process_sets(iBase_TagHandle local_tag, new_sets_t &sets);
 
   iMesh_Instance impl_;
   CopyMesh copy_;
