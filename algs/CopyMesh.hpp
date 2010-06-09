@@ -16,6 +16,11 @@
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 
+int process_ce_sets(iMesh_Instance imeshImpl,
+                    std::set<iBase_EntitySetHandle> &cesets,
+                    iBase_TagHandle local_tag);
+
+
 class CopyMesh 
 {
 public:
@@ -150,10 +155,6 @@ public:
 
   int update_ce_lists();
   
-  int process_ce_sets(std::set<iBase_EntitySetHandle> &cesets,
-                      int copy_or_expand,
-                      iBase_TagHandle local_tag);
-
   /* \brief Tag copied sets with indicated tag from original set
    */
   int tag_copied_sets(const char **tag_names, const char **tag_vals,
