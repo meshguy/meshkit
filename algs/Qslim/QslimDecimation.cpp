@@ -24,6 +24,10 @@ MBInterface * mb;
 MBTag uniqIDtag; // this will be used to mark vertices MBEntityHandles
 MBTag validTag;
 
+// this will be used to store plane data for each triangle, as 4 doubles
+// will be updated only if needed ( -m option == opts.will_preserve_mesh_quality)
+MBTag planeDataTag;
+
 MBRange verts; // original list of vertices, that are part of the original triangles
 MBRange triangles;
 MBRange edgs;
@@ -422,6 +426,16 @@ void do_contract(pair_info *pair) {
 	// Perform the actual contraction
 	std::vector<MBEntityHandle> changed;
 	MBErrorCode rval1 = contract(mb, v0, v1, vnew, changed);
+	// this is a list of triangles still connected to v0 (are they valid? probably)
+	if (opts.will_preserve_mesh_quality)
+	{
+		// recompute normals only in this case, because they are not needed otherwise
+		int size = changed.size();
+		for (int i=0; i<size; i++)
+		{
+			computeTrianglePlane (mb, changed[i]);
+		}
+	}
 	assert (MB_SUCCESS == rval1);
 
 #ifdef SUPPORT_VCOLOR
@@ -675,6 +689,22 @@ int QslimDecimation::Init() {
 	MBEntityHandle * set = reinterpret_cast<MBEntityHandle *> (&m_InitialSet);
 	MBErrorCode rval = mb->get_entities_by_type(*set, MBTRI, triangles);
 	validFaceCount = triangles.size();// this gets reduced every time we simplify the model
+
+	// store the normals/planes computed at each triangle
+	// we may need just the normals, but compute planes, it is about the same job
+	double defPlane[] = {0., 0., 1., 0.};
+	rval = mb->tag_create("PlaneTriangleData", 4*sizeof(double), MB_TAG_DENSE,
+			/* MBTag */ planeDataTag,
+				&defPlane);
+
+	// compute the triangle plane and store it, for each triangle
+	for (MBRange::iterator itr = triangles.begin(); itr != triangles.end(); itr++) {
+		// this index i will be the index in the vinfo array
+		MBEntityHandle tri = *itr;
+		computeTrianglePlane(mb, tri);
+		// setting the data for the tag/triangle is done in the compute
+		//rval = mb->tag_set_data(planeDataTag, &tri, 1, &plane);
+	}
 
 	// create all the edges if not existing
 	mb->get_adjacencies(triangles, 1, true, edgs, MBInterface::UNION);
