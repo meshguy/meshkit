@@ -229,12 +229,11 @@ int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
 }
 
 CopyMesh::CopyMesh(iMesh_Instance impl) 
-  : imeshImpl(impl), updatedCELists(false)
-{
-  // allocate copy tag
-  copyTag = 0;
-  cm_index = 0;
-}
+  : imeshImpl(impl), updatedCELists(false), copyTag(impl, "__CopyMeshTag")
+{}
+
+CopyMesh::~CopyMesh() 
+{}
 
 int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
                                    int copy_or_expand) 
@@ -251,25 +250,6 @@ int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_se
     }
   }
 
-  if (0 == copyTag && copy_or_expand == COPY) {
-    std::string tag_name= "__CopyMeshTag";
-    iMesh_createTag(imeshImpl, tag_name.c_str(), 1,
-		    iBase_ENTITY_HANDLE, &copyTag, &err, tag_name.size());    
-    if(err != iBase_SUCCESS && err != iBase_TAG_ALREADY_EXISTS) // if tag didn't exist already and we have some other error
-      ERROR("Couldn't create copy mesh tag.");
-    while(err == iBase_TAG_ALREADY_EXISTS){
-      std::ostringstream os("");
-      ++cm_index;
-
-      os << tag_name << cm_index;
-      tag_name = os.str();
-      iMesh_createTag(imeshImpl, tag_name.c_str(), 1,
-		      iBase_ENTITY_HANDLE, &copyTag, &err, tag_name.size());       
-      if(err != iBase_SUCCESS && err != iBase_TAG_ALREADY_EXISTS) // if tag didn't exist already and we have some other error
-	ERROR("Couldn't create copy mesh tag.");
-    }
-  }
-  
   return iBase_SUCCESS;
 }
 
@@ -498,14 +478,12 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
   ERRORR("Failed to update expand/expand sets.", iBase_FAILURE);
 
   // set the copy tag on all copied sets
-  if (copyTag) {
-    for (set = copySets.begin(); set != copySets.end(); ++set) {
-      iBase_EntityHandle eh;
-      iMesh_getEntSetEHData(imeshImpl, *set, local_tag, &eh, &err);
-      if (iBase_SUCCESS == err) {
-        iMesh_setEntSetEHData(imeshImpl, *set, copyTag, eh, &err);
-        ERRORR("Failed to tag copied set with copyTag.", iBase_FAILURE);
-      }
+  for (set = copySets.begin(); set != copySets.end(); ++set) {
+    iBase_EntityHandle eh;
+    iMesh_getEntSetEHData(imeshImpl, *set, local_tag, &eh, &err);
+    if (iBase_SUCCESS == err) {
+      iMesh_setEntSetEHData(imeshImpl, *set, copyTag, eh, &err);
+      ERRORR("Failed to tag copied set with copyTag.", iBase_FAILURE);
     }
   }
 

@@ -3,6 +3,7 @@
 
 #include "iMesh_extensions.h"
 #include "CopyVerts.hpp"
+#include "LocalTag.hpp"
 
 #include <string>
 #include <vector>
@@ -205,9 +206,6 @@ private:
   //- interface instance
   iMesh_Instance imeshImpl;
 
-  //- index to append to cm tag name in fn: add_copy_expand_list
-  int cm_index;
-
   //- tags indicating which sets should be expanded to include new ents
   std::vector<iBase_TagHandle> expandTags;
 
@@ -239,18 +237,8 @@ private:
   bool updatedCELists;
   
   //- tag storing copy-to tag
-  iBase_TagHandle copyTag;
-  
+  LocalTag copyTag;
 };
-
-inline CopyMesh::~CopyMesh() 
-{
-  if (0 != copyTag) {
-    int err;
-    iMesh_destroyTag(imeshImpl, copyTag, true, &err);
-    if (iBase_SUCCESS != err) ERROR("Failed to destroy copyTag.");
-  }
-}
 
 inline int CopyMesh::add_copy_tag(const std::string &tag_name, const char *tag_val) 
 {
@@ -288,12 +276,6 @@ inline int CopyMesh::add_copy_tag(iBase_TagHandle tag_handle, const char *tag_va
   else
     copyTagVals.push_back(NULL);
 
-  if (!copyTag) {
-    iMesh_createTag(imeshImpl, "__CopyMeshTag", 1,
-                    iBase_ENTITY_HANDLE, &copyTag, &err, 13);
-    ERROR("Couldn't create copy mesh tag.");
-  }
-  
   return err;
 }
 

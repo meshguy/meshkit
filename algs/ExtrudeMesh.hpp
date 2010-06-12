@@ -4,6 +4,7 @@
 #include "iMesh_extensions.h"
 #include "CopyVerts.hpp"
 #include "CopyMesh.hpp"
+#include "LocalTag.hpp"
 
 class ExtrudeMesh
 {
@@ -95,7 +96,7 @@ private:
   };
 
   bool updated_set_;
-  iBase_TagHandle extrude_tag_;
+  LocalTag extrude_tag_;
   std::vector<tag_data> extrude_tags_;
   std::set<iBase_EntitySetHandle> extrude_sets_;
 };
