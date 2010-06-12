@@ -135,11 +135,10 @@ int process_ce_subsets(iMesh_Instance imeshImpl, iBase_EntitySetHandle src,
 
     // If this child set is one of our cesets, add just the set...
     if (cesets.find(children[i]) != cesets.end()) {
-      if (src == dest)
-        continue;
-
       err = get_dest_set(imeshImpl, local_tag, src, &dest);
       ERRORR("Failed to get copied set.", iBase_FAILURE);
+
+      if (src == dest) continue;
 
       iMesh_addEntSet(imeshImpl, children[i], dest, &err);
       ERRORR("Failed to add set to ce set.", iBase_FAILURE);
