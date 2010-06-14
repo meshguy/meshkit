@@ -316,13 +316,12 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
   int *indices = NULL;             int ind_alloc = 0, ind_size;
   int *offsets = NULL;             int off_alloc = 0, off_size;
 
-  iMesh_getAdjEntIndices(impl_,src, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
-                         iBase_VERTEX,
-                         &ents,    &ent_alloc, &ent_size,
-                         &adj,     &adj_alloc, &adj_size,
-                         &indices, &ind_alloc, &ind_size,
-                         &offsets, &off_alloc, &off_size,
-                         &err);
+  iMesh_getStructure(impl_, src,
+                     &ents,    &ent_alloc, &ent_size,
+                     &adj,     &adj_alloc, &adj_size,
+                     &indices, &ind_alloc, &ind_size,
+                     &offsets, &off_alloc, &off_size,
+                     &err);
   ERRORR("Trouble getting source adjacencies.", err);
 
   double dx[3];
@@ -361,13 +360,12 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     iBase_EntityHandle *adj2 = NULL;  int adj2_alloc = 0, adj2_size;
     int *indices2 = NULL;             int ind2_alloc = 0, ind2_size;
     int *offsets2 = NULL;             int off2_alloc = 0, off2_size;
-    iMesh_getAdjEntIndices(impl_, dest, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
-                           iBase_VERTEX,
-                           &ents2,    &ent2_alloc, &ent2_size,
-                           &adj2,     &adj2_alloc, &adj2_size,
-                           &indices2, &ind2_alloc, &ind2_size,
-                           &offsets2, &off2_alloc, &off2_size,
-                           &err);
+    iMesh_getStructure(impl_, dest,
+                       &ents2,    &ent2_alloc, &ent2_size,
+                       &adj2,     &adj2_alloc, &adj2_size,
+                       &indices2, &ind2_alloc, &ind2_size,
+                       &offsets2, &off2_alloc, &off2_size,
+                       &err);
     ERRORR("Trouble getting target adjacencies.", err);
 
     vtx_diff(dx, impl_, adj2[indices2[ offsets2[0] ]],

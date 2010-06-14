@@ -25,6 +25,21 @@ int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
                   const std::set<iBase_EntitySetHandle> &copySets,
                   iBase_TagHandle tag, const char *tag_val);
 
+void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
+                        iBase_EntityHandle **ents,
+                        int *ents_allocated,
+                        int *ents_size,
+                        iBase_EntityHandle **unique_adj,
+                        int *unique_adj_allocated,
+                        int *unique_adj_size,
+                        int **indices,
+                        int *indices_allocated,
+                        int *indices_size,
+                        int **offsets,
+                        int *offsets_allocated,
+                        int *offsets_size,
+                        int *err);
+
 class CopyMesh 
 {
 public:
@@ -172,16 +187,9 @@ public:
   enum {COPY = 0, EXPAND, UNIQUE};
   
 private:
-  
-  //- copy entities, from connect indices in ind, types in topos, and
-  //- # verts in offset
-  int copy_move_ents(iBase_EntitySetHandle copy_set,
-                     iBase_TagHandle local_tag);
-  
-  //- copy/move vertices, putting results in new_ents
-  int copy_transform_verts(iBase_EntitySetHandle copy_set,
-                           const CopyVerts &copier,
-                           iBase_TagHandle local_tag);
+  int connect_the_dots(iBase_EntityHandle *ents, int size,
+                       iBase_TagHandle local_tag, int *indices, int *offsets,
+                       iBase_EntityHandle *verts);
 
   //- get the copy/expand sets based on copy/expand tags
   int get_copy_expand_sets(iBase_EntitySetHandle *&copy_sets,

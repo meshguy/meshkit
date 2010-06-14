@@ -33,6 +33,7 @@ libMKalgs_la_include_HEADERS = \
 	CopyVerts.hpp \
 	ExtrudeMesh.hpp \
 	LocalTag.hpp \
+	ArrayManager.hpp \
 	MergeMesh.hpp \
 	CutCellMesh.hpp \
 	ProjectShell.hpp \

@@ -1,6 +1,7 @@
 #include "CopyMesh.hpp"
 #include "CopyVerts.hpp"
 #include "LocalTag.hpp"
+#include "ArrayManager.hpp"
 #include "MBCN.h"
 #include <stdlib.h>
 #include <algorithm>
@@ -9,18 +10,6 @@
 /*
  * - call update_ce_lists to update copySets or expandSets
  */
-
-#define CHECK_SIZE(array, allocated, size, type, retval)                  \
-  if (0 != allocated && NULL != array && allocated < (size)) {            \
-    ERRORR("Allocated array not large enough to hold returned contents.", \
-           iBase_MEMORY_ALLOCATION_FAILED);                               \
-  }                                                                       \
-  if (allocated == 0 || NULL == array) {                                  \
-    array = (type*)malloc((size)*sizeof(type));                           \
-    allocated=(size);                                                     \
-    if (NULL == array) {ERRORR("Couldn't allocate array.",                \
-                               iBase_MEMORY_ALLOCATION_FAILED); }         \
-  }
 
 /**\brief  Get the entities copied from a set
  *
@@ -228,6 +217,75 @@ int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
   return err;
 }
 
+void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
+                        iBase_EntityHandle **ents,
+                        int *ents_allocated,
+                        int *ents_size,
+                        iBase_EntityHandle **unique_adj,
+                        int *unique_adj_allocated,
+                        int *unique_adj_size,
+                        int **indices,
+                        int *indices_allocated,
+                        int *indices_size,
+                        int **offsets,
+                        int *offsets_allocated,
+                        int *offsets_size,
+                        int *err)
+{
+  // 1) Get source entities, making sure verts are first
+  int num;
+  iMesh_getNumOfTypeRec(instance, set, iBase_ALL_TYPES, true, &num, err);
+  if (*err != iBase_SUCCESS) return;
+
+  ALLOC_CHECK_ARRAY(ents, num);
+
+  iBase_EntityHandle *non_vert = NULL;
+  iBase_EntityHandle *block = *ents;
+  int block_alloc = *ents_allocated, block_size;
+  for (int d = iBase_VERTEX; d <= iBase_REGION; ++d) {
+    iMesh_getEntitiesRec(instance, set, d, iMesh_ALL_TOPOLOGIES, true,
+                         &block, &block_alloc, &block_size, err);
+    if (*err != iBase_SUCCESS) return;
+
+    block_alloc -= block_size;
+    block += block_size;
+    if (d == iBase_VERTEX)
+      non_vert = block;
+  }
+
+  // 2) Get verts adjacent to all source entitites (verts are adj to themselves)
+  std::vector<iBase_EntityHandle> all_adj(*ents, non_vert);
+
+  iBase_EntityHandle *tmp_adj = NULL;
+  int tmp_adj_alloc = 0, tmp_adj_size;
+  int count = *ents_size - (non_vert - *ents);
+  iMesh_getEntArrAdj(instance, non_vert, count, iBase_VERTEX,
+                     &tmp_adj, &tmp_adj_alloc, &tmp_adj_size, offsets,
+                     offsets_allocated, offsets_size, err);
+  if (*err != iBase_SUCCESS) return;
+
+  all_adj.insert(all_adj.end(), tmp_adj, tmp_adj+tmp_adj_size);
+  std::sort(all_adj.begin(), all_adj.end());
+  free(tmp_adj);
+
+  // 3) Get unique adjacent vertices and offsets
+  ALLOC_CHECK_ARRAY(unique_adj, all_adj.size()); // TODO?
+  ALLOC_CHECK_ARRAY(indices, all_adj.size());
+
+  std::copy(all_adj.begin(), all_adj.end(), *unique_adj);
+  *unique_adj_size = std::unique(*unique_adj, *unique_adj+*unique_adj_size) -
+    *unique_adj;
+
+  for (size_t i = 0; i < all_adj.size(); ++i) {
+    (*indices)[i] = std::lower_bound(*unique_adj, *unique_adj+*unique_adj_size,
+                                     all_adj[i]) - *unique_adj;
+  }
+
+  KEEP_ARRAY(ents);
+  KEEP_ARRAY(unique_adj);
+  KEEP_ARRAY(indices);
+}
+
 CopyMesh::CopyMesh(iMesh_Instance impl) 
   : imeshImpl(impl), updatedCELists(false), copyTag(impl, "__CopyMeshTag")
 {}
@@ -380,30 +438,6 @@ int CopyMesh::copy_rotate_entities(iBase_EntityHandle *ent_handles,
 }
 
 
-int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
-                                      const CopyVerts &trans,
-                                      iBase_EntityHandle **new_ents,
-                                      int *new_ents_alloc,
-                                      int *new_ents_size,
-                                      bool do_merge)
-{
-  int err;
-  iBase_EntityHandle *ents = NULL;
-  int ents_alloc = 0, ents_size;
-  iMesh_getEntitiesRec(imeshImpl, set_handle, 
-                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
-                       &ents, &ents_alloc, &ents_size, &err);
-  ERRORR("Failed to get entities from set recursively.", err);
-  
-  int result = copy_transform_entities(ents, ents_size, trans, 
-                                       new_ents, new_ents_alloc, new_ents_size,
-                                       do_merge);
-
-  free(ents);
-  return result;
-}
-
-
 int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
                                       int num_ents,
                                       const CopyVerts &trans,
@@ -413,49 +447,55 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
                                       bool do_merge)
 {
   int err;
+
+  iBase_EntitySetHandle set;
+  iMesh_createEntSet(imeshImpl, false, &set, &err);
+  ERRORR("Couldn't create source entity set.", err);
+  
+  iMesh_addEntArrToSet(imeshImpl, ent_handles, num_ents, set, &err);
+  ERRORR("Couldn't add entities to source entity set.", err);
+
+  int ret = copy_transform_entities(set, trans, new_ents, new_ents_allocated,
+                                    new_ents_size, do_merge);
+
+  iMesh_destroyEntSet(imeshImpl, set, &err);
+  ERRORR("Couldn't destroy source entity set.", err);
+
+  return ret;
+}
+
+int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
+                                      const CopyVerts &trans,
+                                      iBase_EntityHandle **new_ents,
+                                      int *new_ents_allocated,
+                                      int *new_ents_size,
+                                      bool do_merge)
+{
+  int err;
   LocalTag local_tag(imeshImpl);
 
-  // create a set to hold entities to be copied
-  iBase_EntitySetHandle copy_set = NULL;
-  iMesh_createEntSet(imeshImpl, false, &copy_set, &err);
-  ERRORR("Failed to create set.", err);
+  iBase_EntityHandle *ents  = NULL; int ents_alloc  = 0, ents_size;
+  iBase_EntityHandle *verts = NULL; int verts_alloc = 0, verts_size;
+  int *indices              = NULL; int ind_alloc   = 0, ind_size;
+  int *offsets              = NULL; int off_alloc   = 0, off_size;
 
-  // add entities & adj vertices
-  iMesh_addEntArrToSet(imeshImpl, ent_handles, num_ents,
-                       copy_set, &err);
-  ERRORR("Failed to add ents to set", err);
+  iMesh_getStructure(imeshImpl, set_handle,
+                     &ents,    &ents_alloc,  &ents_size,
+                     &verts,   &verts_alloc, &verts_size,
+                     &indices, &ind_alloc,   &ind_size,
+                     &offsets, &off_alloc,   &off_size,
+                     &err);
+  ERRORR("Trouble getting source adjacencies.", err);
 
-  for (int d = iBase_EDGE; d <= iBase_REGION; d++) {
-    iBase_EntityHandle *tmp_ents = NULL;
-    int tmp_ents_alloc = 0, tmp_ents_size;
+  iBase_EntityHandle *new_verts = (iBase_EntityHandle*)malloc(
+    sizeof(iBase_EntityHandle)*ents_size);
+  int new_verts_alloc = ents_size, new_verts_size;
+  trans(verts, verts_size, &new_verts, &new_verts_alloc, &new_verts_size);
+  ERRORR("Couldn't create new vertices.", iBase_FAILURE);
+  assert(tmp_size == verts_size);
 
-    iMesh_getEntities(imeshImpl, copy_set, 
-                      d, iMesh_ALL_TOPOLOGIES,
-                      &tmp_ents, &tmp_ents_alloc, &tmp_ents_size, &err);
-    ERRORR("Failed to get copy_set entities.", iBase_FAILURE);
-
-    iBase_EntityHandle *verts = NULL;
-    int verts_alloc = 0, verts_size;
-    int *offset = NULL, offset_alloc = 0, offset_size;
-    iMesh_getEntArrAdj(imeshImpl, tmp_ents, tmp_ents_size,
-                       iBase_VERTEX,
-                       &verts, &verts_alloc, &verts_size,
-                       &offset, &offset_alloc, &offset_size,
-                       &err );
-    ERRORR("Failed to get adj entities in copy set", err);
-    iMesh_addEntArrToSet(imeshImpl, verts, verts_size,
-                         copy_set, &err);
-    ERRORR("Failed to add verts to set", err);
-    free(verts);
-    free(offset);
-    free(tmp_ents);
-  }
-  
-  err = copy_transform_verts(copy_set, trans, local_tag);
-  ERRORR("Failed to copy/move vertices.", iBase_FAILURE);
-
-  // now copy entities
-  err = copy_move_ents(copy_set, local_tag);
+  err = connect_the_dots(ents, ents_size, local_tag, indices, offsets,
+                         new_verts);
   ERRORR("Failed to copy/move entities.", iBase_FAILURE);
 
   // take care of copy/expand sets
@@ -494,23 +534,27 @@ int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
 
   // get all the copies
   if (new_ents) {
-    iMesh_getEHArrData(imeshImpl, ent_handles, num_ents, local_tag, 
+    iMesh_getEHArrData(imeshImpl, ents, ents_size, local_tag, 
 		       new_ents, new_ents_allocated, new_ents_size, &err);
     ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
   }
   
+  free(new_verts);
+  free(ents);
+  free(verts);
+  free(indices);
+  free(offsets);
+
   return iBase_SUCCESS;
 }
 
-int CopyMesh::copy_move_ents(iBase_EntitySetHandle copy_set,
-                             iBase_TagHandle local_tag) 
+int CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
+                               iBase_TagHandle local_tag,
+                               int *indices, int *offsets,
+                               iBase_EntityHandle *verts)
 {
   int err;
-  iBase_EntityHandle *ents = NULL;
-  int ents_alloc = 0, ents_size;
-  iMesh_getEntities(imeshImpl, copy_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
-                    &ents, &ents_alloc, &ents_size, &err);
-  ERRORR("Failed to get all ents in copy set.", err);
+
   int *topos = NULL, topos_alloc = 0, topos_size;
   iMesh_getEntArrTopo(imeshImpl, ents, ents_size,
                       &topos, &topos_alloc, &topos_size, &err);
@@ -522,55 +566,46 @@ int CopyMesh::copy_move_ents(iBase_EntitySetHandle copy_set,
     pos++;
   if (pos == ents_size) return iBase_SUCCESS;
 
-  // get connectivity
-  iBase_EntityHandle *verts = NULL;
-  int verts_alloc = 0, verts_size;
-  int *offset = NULL, offset_alloc = 0, offset_size;
-  ents_size -= pos;
-  iMesh_getEntArrAdj(imeshImpl, &ents[pos], ents_size, iBase_VERTEX,
-                     &verts, &verts_alloc, &verts_size,
-                     &offset, &offset_alloc, &offset_size, &err);
-  ERRORR("Failed to get adj verts of all ents.", err);
-
   // for each run of same size & type
   iBase_EntityHandle *tmp_ents = &ents[pos];
   int *tmp_topos = &topos[pos];
   int start_idx, end_idx = 0;
   
   std::vector<iBase_EntityHandle> connect, new_ents;
-  iBase_EntityHandle *connect_ptr, *new_ents_ptr;
   std::vector<int> status;
-  int status_alloc, status_size, *status_ptr;
-  int num_corner_verts;
   while (end_idx < ents_size) {
     
     // get next run; end_idx points to start of *next* element,
     // or offset_size if no elems left
     start_idx = end_idx++;
     int topo_start = tmp_topos[start_idx];
-    int vtx_per_ent = offset[end_idx] - offset[start_idx];
+    int vtx_per_ent = offsets[end_idx] - offsets[start_idx];
     int mbcn_type;
+    int num_corner_verts;
+
     iMesh_MBCNType(topo_start, &mbcn_type);
     MBCN_VerticesPerEntity(mbcn_type, &num_corner_verts);
     while (end_idx < ents_size &&
            tmp_topos[end_idx] == topo_start &&
-           offset[end_idx+1] - offset[end_idx] == vtx_per_ent)
+           offsets[end_idx+1] - offsets[end_idx] == vtx_per_ent)
       end_idx++;
 
     // build vector of vtx handles
     int num_ents = end_idx - start_idx;
     int totv = vtx_per_ent * num_ents;
     connect.resize(totv);
-    connect_ptr = &connect[0];
-    int tmp_alloc = totv, tmp_size = totv; 
-    iMesh_getEHArrData(imeshImpl,
-                       &verts[offset[start_idx]], totv,
-                       local_tag, &connect_ptr, &tmp_alloc, &tmp_size, &err);
-    ERRORR("Couldn't get connectivity for copied ents.", iBase_FAILURE);
-    
+    for(int i=0; i<totv; i++)
+      connect[i] = verts[indices[offsets[start_idx] + i]];
+
     // create entities
-    status.resize(num_ents); status_ptr = &status[0]; status_alloc = status.size();
-    new_ents.resize(num_ents); new_ents_ptr = &new_ents[0]; tmp_alloc = num_ents;
+    status.resize(num_ents);
+    int *status_ptr = &status[0];
+    int status_alloc = status.size(), status_size;
+    
+    new_ents.resize(num_ents);
+    iBase_EntityHandle *new_ents_ptr = &new_ents[0];
+    int tmp_alloc = num_ents, tmp_size;
+
     if (1 < num_ents && num_corner_verts == vtx_per_ent) {
       iMesh_createEntArr(imeshImpl, topo_start, 
                          &connect[0], connect.size(),
@@ -579,8 +614,8 @@ int CopyMesh::copy_move_ents(iBase_EntitySetHandle copy_set,
       ERRORR("Couldn't create new entities.", iBase_FAILURE);
     }
     else {
-      // use single-entity function in this case, entity might have higher-order nodes
-      // (imesh fcn doesn't have argument for # entities)
+      // use single-entity function in this case, entity might have higher-order
+      // nodes (imesh fcn doesn't have argument for # entities)
       tmp_size = 0;
       for (int i = 0; i < num_ents; i++) {
         iMesh_createEnt(imeshImpl, topo_start, 
@@ -597,42 +632,6 @@ int CopyMesh::copy_move_ents(iBase_EntitySetHandle copy_set,
     ERRORR("Error setting local copy tag data on old ents.", iBase_FAILURE);
   }
 
-  return iBase_SUCCESS;
-}
-
-int CopyMesh::copy_transform_verts(iBase_EntitySetHandle copy_set, 
-                                   const CopyVerts &copier,
-                                   iBase_TagHandle local_tag) 
-{
-  // get the vertices in the order they exist in the set, w/o duplicates
-  iBase_EntityHandle *verts = NULL;
-  int verts_alloc = 0, verts_size;
-  int err;
-  iMesh_getEntities(imeshImpl, copy_set, iBase_VERTEX, iMesh_ALL_TOPOLOGIES,
-                    &verts, &verts_alloc, &verts_size, &err);
-  ERRORR("Failed to get verts in copy set.", err);
-  
-  std::vector<iBase_EntityHandle> new_verts(verts_size);
-  iBase_EntityHandle *new_verts_ptr = &new_verts[0];
-
-  // copy vertices
-  int tmp_size, tmp_alloc = verts_size;
-  copier(verts, verts_size, &new_verts_ptr, &tmp_alloc, &tmp_size);
-  ERRORR("Couldn't create new vertices.", iBase_FAILURE);
-  assert(tmp_size == verts_size);
-
-  // set the local copy tags
-  iMesh_setEHArrData(imeshImpl, verts, verts_size, local_tag, 
-                     &new_verts[0],  verts_size, &err);
-  ERRORR("Error setting local copy tag data on old verts.", iBase_FAILURE);
-
-#ifndef NDEBUG
-  iMesh_getEHArrData(imeshImpl, verts, verts_size, local_tag, 
-                     &new_verts_ptr,  &tmp_alloc, &tmp_size, &err);
-  ERRORR("Error getting local copy tag data on old verts.", iBase_FAILURE);
-#endif
-  free(verts);
-  
   return iBase_SUCCESS;
 }
 
