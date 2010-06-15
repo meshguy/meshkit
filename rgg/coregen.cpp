@@ -4,6 +4,11 @@
  * Program for assembling hexaganal and rectangular nuclear reactor assembly meshes and form a core mesh
  * 
  */
+#ifdef MOAB
+#include "MBInterface.hpp"
+#include "MBRange.hpp"
+#endif
+
 #include <cfloat>
 #include <math.h>
 #include "MKUtils.hpp"
@@ -15,6 +20,7 @@
 #include <sstream>
 #include <string>
 #include "matrixtemplate.hpp"
+
 int get_copy_expand_sets(CopyMesh *cm,
                          iBase_EntitySetHandle orig_set, 
                          const char **tag_names, const char **tag_vals, 
@@ -145,7 +151,7 @@ std::vector<std::string> core_alias;
 std::string input_string;
 std::string comment = "!";
 int MAXCHARS = 300;
-
+char mem_var, mem_var1, mem_var2, mem_var3;
 int main(int argc, char **argv) 
 {
 
@@ -238,7 +244,6 @@ int main(int argc, char **argv)
 				      core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
 
-
     err = copy_move_hex_full_assys(cm, nrings, pack_type, pitch, symm, 
 				   core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
@@ -253,6 +258,7 @@ int main(int argc, char **argv)
 				      core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
+
 
   // delete all original meshes
 //   err = del_orig_mesh(assys, back_mesh);
@@ -302,6 +308,44 @@ int main(int argc, char **argv)
 			       "GLOBAL_ID");
     ERRORR("Error assigning global ids.", err);
   }
+
+
+  // check the memory usage
+#ifdef MOAB
+    MBInterface *mbImpl;
+    MBRange sets, verts, elems, all, quads, edges;
+    mbImpl = (MBInterface*) impl;
+    unsigned long set_mem, set_am, tag_mem, tag_am;
+    unsigned long nodes, nodes_am, elements, elements_am, total, total_am, edg, edg_am, qua, qua_am;
+    mbImpl->get_entities_by_dimension( 0, 3, elems );
+    mbImpl->get_entities_by_dimension( 0, 1, edges );
+    mbImpl->get_entities_by_dimension( 0, 2, quads );
+    mbImpl->get_entities_by_type( 0, MBMAXTYPE, all );
+    mbImpl->get_entities_by_type( 0, MBENTITYSET, sets );
+    mbImpl->get_entities_by_type( 0, MBVERTEX, verts );
+    mbImpl->estimated_memory_use( sets, 0, 0, &set_mem, &set_am, 0, 0, 0, 0, &tag_mem, &tag_am );
+    mbImpl->estimated_memory_use( all, &total, &total_am, 0, 0, 0, 0, 0, 0, 0, 0 );
+    mbImpl->estimated_memory_use( verts, &nodes, &nodes_am, 0, 0, 0, 0, 0, 0, 0, 0 );
+    mbImpl->estimated_memory_use( elems, &elements, &elements_am, 0, 0, 0, 0, 0, 0, 0, 0 );
+    mbImpl->estimated_memory_use( edges, &edg, &edg_am, 0, 0, 0, 0, 0, 0, 0, 0 );
+    mbImpl->estimated_memory_use( quads, &qua, &qua_am, 0, 0, 0, 0, 0, 0, 0, 0 );
+    //    mbImpl->estimated_memory_use(0,0,0,&total); 
+    std::cout << "Total memory used:      " << total << " ("<< total_am  << ")"<< std::endl;
+    std::cout << "Total no. of 3D ents:   " << elems.size() << std::endl;
+    std::cout << "3D ents storage:        " << elements  << " ("<< elements_am  << ")"<< std::endl;
+    std::cout << "Vertex:                 "<< (unsigned long)verts.size() << std::endl;
+    std::cout << "Vertex storage          "<< nodes  << " ("<< nodes_am  << ")"<< std::endl;
+    std::cout << "1D ents:                "<< (unsigned long)edges.size() << std::endl;
+    std::cout << "1D ents storag          "<< edg  << " ("<< edg_am  << ")"<< std::endl;
+    std::cout << "2D ents:                "<< (unsigned long)quads.size() << std::endl;
+    std::cout << "2D ents storag          "<< qua  << " ("<< qua_am  << ")"<< std::endl;
+    std::cout << "Sets:                   "<< (unsigned long)sets.size() << std::endl;
+    std::cout << "Set storage:            "<< set_mem  << " ("<< set_am  << ")"<< std::endl;
+    std::cout << "Tag storage:            "<< tag_mem  << " ("<< tag_am  << ")"<< std::endl;
+#endif
+
+
+
 
   // export
   iMesh_save(impl, root_set, outfile.c_str(), NULL, &err, 
