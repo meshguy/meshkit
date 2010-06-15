@@ -487,12 +487,11 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
                      &err);
   ERRORR("Trouble getting source adjacencies.", err);
 
-  iBase_EntityHandle *new_verts = (iBase_EntityHandle*)malloc(
-    sizeof(iBase_EntityHandle)*ents_size);
-  int new_verts_alloc = ents_size, new_verts_size;
+  iBase_EntityHandle *new_verts = NULL;
+  int new_verts_alloc = 0, new_verts_size;
   trans(verts, verts_size, &new_verts, &new_verts_alloc, &new_verts_size);
   ERRORR("Couldn't create new vertices.", iBase_FAILURE);
-  assert(tmp_size == verts_size);
+  assert(new_verts_size == verts_size);
 
   err = connect_the_dots(ents, ents_size, local_tag, indices, offsets,
                          new_verts);
