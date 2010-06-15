@@ -242,7 +242,7 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
   iBase_EntityHandle *non_vert = NULL;
   iBase_EntityHandle *block = *ents;
   int block_alloc = *ents_allocated, block_size;
-  for (int d = iBase_VERTEX; d <= iBase_REGION; ++d) {
+  for (int d = iBase_VERTEX; d <= iBase_REGION && block_alloc; ++d) {
     iMesh_getEntitiesRec(instance, set, d, iMesh_ALL_TOPOLOGIES, true,
                          &block, &block_alloc, &block_size, err);
     if (*err != iBase_SUCCESS) return;
@@ -265,7 +265,6 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
   if (*err != iBase_SUCCESS) return;
 
   all_adj.insert(all_adj.end(), tmp_adj, tmp_adj+tmp_adj_size);
-  std::sort(all_adj.begin(), all_adj.end());
   free(tmp_adj);
 
   // 3) Get unique adjacent vertices and offsets
@@ -273,6 +272,7 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
   ALLOC_CHECK_ARRAY(indices, all_adj.size());
 
   std::copy(all_adj.begin(), all_adj.end(), *unique_adj);
+  std::sort(*unique_adj, *unique_adj+*unique_adj_size);
   *unique_adj_size = std::unique(*unique_adj, *unique_adj+*unique_adj_size) -
     *unique_adj;
 
