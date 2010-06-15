@@ -242,8 +242,8 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
   iBase_EntityHandle *non_vert = NULL;
   iBase_EntityHandle *block = *ents;
   int block_alloc = *ents_allocated, block_size;
-  for (int d = iBase_VERTEX; d <= iBase_REGION && block_alloc; ++d) {
-    iMesh_getEntitiesRec(instance, set, d, iMesh_ALL_TOPOLOGIES, true,
+  for (int t = iMesh_POINT; t < iMesh_ALL_TOPOLOGIES && block_alloc; ++t) {
+    iMesh_getEntitiesRec(instance, set, iBase_ALL_TYPES, t, true,
                          &block, &block_alloc, &block_size, err);
     if (*err != iBase_SUCCESS) return;
 
@@ -567,71 +567,65 @@ int CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
   if (pos == ents_size) return iBase_SUCCESS;
 
   // for each run of same size & type
-  iBase_EntityHandle *tmp_ents = &ents[pos];
-  int *tmp_topos = &topos[pos];
-  int start_idx, end_idx = 0;
-  
   std::vector<iBase_EntityHandle> connect, new_ents;
   std::vector<int> status;
-  while (end_idx < ents_size) {
-    
-    // get next run; end_idx points to start of *next* element,
-    // or offset_size if no elems left
-    start_idx = end_idx++;
-    int topo_start = tmp_topos[start_idx];
-    int vtx_per_ent = offsets[end_idx] - offsets[start_idx];
+  int begin, end = pos;
+  while (end < ents_size) {
+    // get next run; end points to start of *next* element,
+    // or ents_size if no elems left
+    begin = end++;
+
+    int topo = topos[begin];
+    int vtx_per_ent = offsets[end] - offsets[begin];
+    while (end < ents_size &&
+           topos[end] == topo &&
+           offsets[end+1] - offsets[end] == vtx_per_ent)
+      end++;
+    int num_ents = end - begin;
+
     int mbcn_type;
     int num_corner_verts;
-
-    iMesh_MBCNType(topo_start, &mbcn_type);
+    iMesh_MBCNType(topo, &mbcn_type);
     MBCN_VerticesPerEntity(mbcn_type, &num_corner_verts);
-    while (end_idx < ents_size &&
-           tmp_topos[end_idx] == topo_start &&
-           offsets[end_idx+1] - offsets[end_idx] == vtx_per_ent)
-      end_idx++;
 
     // build vector of vtx handles
-    int num_ents = end_idx - start_idx;
-    int totv = vtx_per_ent * num_ents;
-    connect.resize(totv);
-    for(int i=0; i<totv; i++)
-      connect[i] = verts[indices[offsets[start_idx] + i]];
+    connect.resize(vtx_per_ent * num_ents);
+    for (size_t i = 0; i < connect.size(); i++)
+      connect[i] = verts[indices[offsets[begin] + i]];
 
     // create entities
-    status.resize(num_ents);
-    int *status_ptr = &status[0];
-    int status_alloc = status.size(), status_size;
-    
     new_ents.resize(num_ents);
-    iBase_EntityHandle *new_ents_ptr = &new_ents[0];
-    int tmp_alloc = num_ents, tmp_size;
 
-    if (1 < num_ents && num_corner_verts == vtx_per_ent) {
-      iMesh_createEntArr(imeshImpl, topo_start, 
-                         &connect[0], connect.size(),
-                         &new_ents_ptr, &tmp_alloc, &tmp_size,
+    if (num_corner_verts == vtx_per_ent) {
+      status.resize(num_ents);
+
+      iBase_EntityHandle *new_ents_ptr = &new_ents[0];
+      int new_ents_alloc = num_ents, new_ents_size;
+      int *status_ptr = &status[0];
+      int status_alloc = num_ents, status_size;
+      iMesh_createEntArr(imeshImpl, topo, &connect[0], connect.size(),
+                         &new_ents_ptr, &new_ents_alloc, &new_ents_size,
                          &status_ptr, &status_alloc, &status_size, &err);
       ERRORR("Couldn't create new entities.", iBase_FAILURE);
     }
     else {
       // use single-entity function in this case, entity might have higher-order
       // nodes (imesh fcn doesn't have argument for # entities)
-      tmp_size = 0;
       for (int i = 0; i < num_ents; i++) {
-        iMesh_createEnt(imeshImpl, topo_start, 
-                        &connect[i*vtx_per_ent], vtx_per_ent, 
-                        new_ents_ptr+i, status_ptr, &err);
+        int status;
+        iMesh_createEnt(imeshImpl, topo, &connect[i*vtx_per_ent],
+                        vtx_per_ent, &new_ents[i], &status, &err);
         ERRORR("Couldn't create new entities.", iBase_FAILURE);
-        tmp_size++;
       }
     }
 
     // set the local copy tags
-    iMesh_setEHArrData(imeshImpl, &tmp_ents[start_idx], num_ents, local_tag, 
-                       new_ents_ptr,  tmp_size, &err);
+    iMesh_setEHArrData(imeshImpl, &ents[begin], num_ents, local_tag, 
+                       &new_ents[0], num_ents, &err);
     ERRORR("Error setting local copy tag data on old ents.", iBase_FAILURE);
   }
 
+  free(topos);
   return iBase_SUCCESS;
 }
 
