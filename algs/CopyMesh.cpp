@@ -249,7 +249,7 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
 
     block_alloc -= block_size;
     block += block_size;
-    if (d == iBase_VERTEX)
+    if (t == iMesh_POINT)
       non_vert = block;
   }
 
