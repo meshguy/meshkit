@@ -123,9 +123,9 @@ public:
    */
   int copy_move_entities(iBase_EntitySetHandle set_handle,
                          const double *dx,
-                         iBase_EntityHandle **new_ents,
-                         int *new_ents_alloc,
-                         int *new_ents_size,
+                         iBase_EntityHandle **new_ents = NULL,
+                         int *new_ents_alloc = 0,
+                         int *new_ents_size = 0,
                          bool do_merge = true);
   
   /* \brief Copy and move all the entities
@@ -332,6 +332,13 @@ inline int CopyMesh::add_unique_tag(iBase_TagHandle tag_handle)
 
 inline int CopyMesh::reset_ce_lists()
 {
+  std::vector<tag_data>::iterator i;
+  for (i = copyTags.begin(); i != copyTags.end(); ++i)
+    free(i->value);
+
+  for (i = expandTags.begin(); i != expandTags.end(); ++i)
+    free(i->value);
+
   copySets.clear();
   expandSets.clear();
   updatedCELists = false;
