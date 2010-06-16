@@ -30,10 +30,9 @@ ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh)
 
 ExtrudeMesh::~ExtrudeMesh()
 {
-  for(std::vector<tag_data>::iterator i=extrude_tags_.begin();
-      i!=extrude_tags_.end(); ++i) {
+  std::vector<tag_data>::iterator i;
+  for(i = extrude_tags_.begin(); i != extrude_tags_.end(); ++i)
     free(i->value);
-  }
 }
 
 int ExtrudeMesh::add_extrude_tag(const std::string &tag_name,
@@ -52,10 +51,10 @@ int ExtrudeMesh::add_extrude_tag(const std::string &tag_name,
 int ExtrudeMesh::add_extrude_tag(iBase_TagHandle tag_handle,
                                  const char *tag_val)
 {
-  int err = iBase_SUCCESS;
   char *tmp = NULL;
 
   if(tag_val) {
+    int err;
     int tag_size;
     iMesh_getTagSizeBytes(impl_, tag_handle, &tag_size, &err);
     if (err != iBase_SUCCESS)
@@ -65,8 +64,7 @@ int ExtrudeMesh::add_extrude_tag(iBase_TagHandle tag_handle,
   }
 
   extrude_tags_.push_back(tag_data(tag_handle, tmp));
-
-  return err;
+  return iBase_SUCCESS;
 }
 
 int ExtrudeMesh::update_sets()
