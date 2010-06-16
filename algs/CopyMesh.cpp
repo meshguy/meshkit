@@ -660,21 +660,15 @@ int CopyMesh::update_tagged_sets(iBase_EntitySetHandle from_set,
                                  int num_tags,
                                  std::set<iBase_EntitySetHandle> &tagged_sets)
 {
-  // if xxx
-  iBase_EntitySetHandle *tmp_sets;
-  int tmp_alloc, tmp_size;
   int err;
   for (int i = 0; i < num_tags; i++) {
-    tmp_sets = NULL;
-    tmp_alloc = 0;
+    iBase_EntitySetHandle *tmp_sets = NULL;
+    int tmp_alloc = 0, tmp_size;
     iMesh_getEntSetsByTagsRec(imeshImpl, from_set, &tag_handles[i], 
-                              (tag_vals[i] ? &tag_vals[i] : NULL),
-                              1, 0,
+                              (tag_vals[i] ? &tag_vals[i] : NULL), 1, false,
                               &tmp_sets, &tmp_alloc, &tmp_size, &err);
     ERRORR("Couldn't get tagged sets.", iBase_FAILURE);
-    for (int j = 0; j < tmp_size; j++) 
-      tagged_sets.insert(tmp_sets[j]);
-    
+    tagged_sets.insert(tmp_sets, tmp_sets+tmp_size);    
     free(tmp_sets);
   }
 
@@ -685,31 +679,33 @@ int CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,
                               const int num_tags) 
 {
   int err;
-  std::vector<iBase_TagHandle> tag_handles;
   
   for (int t = 0; t < num_tags; t++) {
-    // get tag handle & size
-    iBase_TagHandle th;
-    iMesh_getTagHandle(imeshImpl, tag_names[t], &th, &err, strlen(tag_names[t]));
+    iBase_TagHandle tag;
+    iMesh_getTagHandle(imeshImpl, tag_names[t], &tag, &err,
+                       strlen(tag_names[t]));
     ERRORR("Failed to get tag handle.", err);
-    tag_handles.push_back(th);
+
+    err = tag_copy_sets(imeshImpl, copyTag, copySets, tag,
+                        tag_vals ? tag_vals[t] : NULL);
+    ERRORR("Failed to tag copied set.", err);
   }
 
-  return tag_copied_sets(&tag_handles[0], tag_vals, num_tags);
+  return iBase_SUCCESS;
 }
 
 int CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
                               const int num_tags) 
 {
-  int err = iBase_SUCCESS;
-  assert(copyTag);
+  int err;
   
   for (int t = 0; t < num_tags; t++) {
-    tag_copy_sets(imeshImpl, copyTag, copySets, tags[t],
-                  tag_vals ? tag_vals[t] : NULL);
+    err = tag_copy_sets(imeshImpl, copyTag, copySets, tags[t],
+                        tag_vals ? tag_vals[t] : NULL);
+    ERRORR("Failed to tag copied set.", err);
   }
   
-  return err;
+  return iBase_SUCCESS;
 }
     
 #ifdef TEST
