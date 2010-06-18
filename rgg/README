@@ -1,5 +1,14 @@
+TABLE OF CONTENTS:
+
+1. INTRODUCTION
+2. DEFAULT TEST CASE
+3. RUNNING
+4. EXAMPLE 
+5. SECTION A: Syntax and Keyword Definition
+6. SECTION B: Detailed Installation Instructions
+
 ------------------------------------------------------------------------------------------------------
-Introduction
+1. INTRODUCTION
 ------------------------------------------------------------------------------------------------------
 
 RGG consists of two programs:
@@ -15,7 +24,7 @@ make
 cd rgg
 make assygen coregen
 --------------------------------------------------------------------------------------------------------
-DEFAULT TEST CASE
+2. DEFAULT TEST CASE
 --------------------------------------------------------------------------------------------------------
 
 On the MeshKit/rgg directory launch the following commands:
@@ -37,7 +46,7 @@ in the first step, and creates  mesh file: assygen_default.cub.
 The fourth command "coregen coregen_default":
 Launches coregen program, reads coregen_default.inp and generates the reactor core mesh file coregen_default.h5m. coregen also creates a makefile called 'coregen_defaults.makefile'. This makefile can be used automate the regeneration of assemblies (mesh file in third command).
 -------------------------------------------------------------------------------------------------------
-RUNNING 
+3. RUNNING 
 -------------------------------------------------------------------------------------------------------
 
 A. 'assygen' program
@@ -67,7 +76,7 @@ Presently, there are 4 test cases:
 4. vhtr-hexvertexcore: A full VHTR core with 11 rings.
 
 -------------------------------------------------------------------------------------------------------
-EXAMPLE (Sample input files can be found in files directory in rgg)
+4. EXAMPLE (Sample input files can be found in files directory in rgg)
 -------------------------------------------------------------------------------------------------------
 A VHTR surface assembly has the following lines:
 ! #############################################################################################################
@@ -129,3 +138,209 @@ Assembly 11
 Center
 Section Y 0
 END ! This is a must
+
+============================================
+SECTION A: Syntax and Keyword Definition
+============================================
+
+-------------------------------------------
+Keywords used in AssyGen input file:
+-------------------------------------------
+
+In any of the input to AssyGen, keyword lines can be split across lines in the file using the ‘&’ continuation.  character, for readability.
+
+1.  Geometry: Assembly geometry can be output as a collection of 2D surfaces, or as a collection of volumes swept out by those surfaces. If this keyword is not given, AssyGen produces a volumetric model by default.
+
+2.  GeometryType: This keyword defines the geometry type and can take  values ‘Hexagonal’ or ‘Rectangular’ depending on the type of assembly specified in the ‘Assembly’ keyword.
+
+3.  Materials: Materials keyword defines all the material names followed by their aliases. First input to this keyword is the number of materials. Material aliases defined here are used in subsequent keywords to assign materials.
+
+4.  Duct: The layers of duct wall material are described using this keyword, with the first layer of duct corresponding to the background material in the unit cells of the assembly. The first 	field specifies the number of layers in the duct wall, followed by the X, Y location of center of the duct wall layers, and the starting and ending Z coordinates for all duct wall material. The width of the layers in X and Y (rectangular) or the flat-to-flat distance (hexagonal)appears next. Next, the material aliases for each layer of background material are specified.
+
+5.  Pincells: A pincell corresponds to a unit cell type as described in Section 3. This keyword’s first input field is the number of pincells. The next keyword is the pitch (hexagonal) or X and Y pitch (rectangular). Alternatively; all pincells can define their pitch using ‘Pitch’ Keyword.
+
+6.  ‘Pincell Alias’: This is not a keyword, it begins with pincell name defined by the user,followed by the pincell alias and finally the number of subsequent lines this pincell will use to define its properties. 
+
+7.  Pitch: For ‘Hexagonal’ Geometry this keyword has only one field, the pitch of the hexagonal unit cell. For ‘Rectangular’ geometry this keyword takes 3 inputs – the X and Y pitch of the unit cell, and the length, width and height of the pincell.
+
+8.  Cylinder: First input to this command is the number of concentric cylinders in the pincell. Next X, Y of the center and the Z start and Z end of the cylinders is specified. Finally the radii and material alias for the cylinders are specified.
+
+9.  CellMaterial: This creates a background material for the unit cell, and results in unit cell boundaries appearing explicitly in the assembly. The starting and ending axial position is specified, along with the material alias for the background material.
+
+10. Assembly: The lattice arrangement is specified using this keyword. For rectangular lattices,the first two fields indicate the number of unit cells in the X and Y directions; for hexagonal lattices, the first field indicates the number of rings in the lattice.
+
+11. <cell_alias>: Unit cell aliases are  given, one line of aliases per row  in the assembly starting from top left proceeding to bottom  right. 
+
+12. Rotate: Rotates the entire assembly model by the specified angle (in degrees) around the specified axis.
+
+13. Center: Centers the entire assembly model about the origin.
+
+14. Section: Subtracts everything on the negative side of the  specified. if Reverse is given, the positive side of that axis. If offset is given, model is sectioned at that coordinate on  the specified axis, instead of at the zero value.
+
+15. AxialMeshSize: Mesh size in the axial direction; for assemblies where the “Geoemtry Surface” keyword is not specified, this size is specified in the meshing script.
+
+16. RadialMeshSize: Mesh size in the radial direction; this size is written to the journal file for meshing the assembly model.
+
+17. End: This command marks the end of AssyGen input file.
+
+----------------------------
+Syntax used with AssyGen:
+----------------------------
+
+GeometryType {Hexagonal | Rectangular}
+Materials <nmat> {<material name> <material alias>} * nmat 
+Duct <n_layers> <x_center> <y_center> <z_start> <z_end>   {<duct_rad>  (Hexagonal) | <duct_x> <duct_y> (Cartesian) } * n_layers {material} * n_layers
+Pincells <n_cells> <pitch>
+{
+   <cell_name>  <cell_alias> <n_line>
+ { {Pitch <z_start> <z_end>    	       
+	      {mat}*n_cyl} 
+   {Cylinder <n_cyl> <x_0> <y_0>      	       <z_start> <z_end>    	       {<r_cyl>} * n_cyl              {mat}*n_cyl} 
+   {CellMaterial <n_cyl> <x_0> <y_0>      	       <z_start> <z_end>    	       {<r_cyl>} * n_cyl              {mat}*n_cyl} 
+} * ncells
+
+Lattice {n_ring | n_x n_y}
+{
+	{<cell_alias>} * (1+3*n_ring*(n_ring-1)) | ! Hexagonal
+	{<cell_alias>} * n_x*n_y ! Rectangular
+}
+[Rotate {x | y | z} <angle>]
+[Center]
+[Section {x | y | z} <offset> [reverse] ]
+[Move <x> <y> <z> ]
+[AxialMeshSize <size>]
+[RadialMeshSize <size>]
+END
+
+--------------------------------------- 
+Syntax used with CUBIT journal file:
+---------------------------------------
+
+# This file is automatically created by assygen program
+{include(“<mesh_file>.template.jou”)}
+import ‘<mesh_file>.sat’
+merge all
+{
+ 	group ‘tmpgrp’ equals surface name <material name>{ _top/_bot/_side } 
+	sideset  <sideset_no>  surface in tmpgrp
+}  * nmat
+{ 
+	group    g_<material name>   add body name  “<material name>
+	block  <block_no>  body in   g_<material name>
+	block  <block_no>  name  b_<material name>
+}   * nmat
+
+
+{
+	group ‘tmpgrp’ equals surface name <material name>_top
+	surface in ‘tmpgrp’ size {<mat_name>_surf_size}
+	surface in ‘tmpgrp’ scheme {PAVE}
+	<x> <y> <z> ]
+group ‘tmpgrp’ add surface name ‘_top’
+mesh tmpgrp
+surface with z_coord > {Z_MID -.1*Z_HEIGHT} and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}
+mesh vol all
+save as <mesh_file>.cub
+
+--------------------------------------
+Keywords used in CoreGen input file:
+--------------------------------------
+
+1.  Geometry: Surface or volume core models can be generated; if unspecified, the default is to generate a volume model.
+
+2.  GeometryType: The GeometryType is specified as rectangular,hexflat, or hexvertex (see section 2.2.1 for a description of the hexagonal lattice types).
+
+3.  Assemblies: This keyword specifies the number of different assembly types, and the pitch of the lattice arrangement (two values for a rectangular lattice, and one for a hexagonal lattice).
+
+4.  <mesh_file>: For each assembly type, a file name containing the mesh for that assembly type and the alias used to reference that assembly type appear on a separate line.
+
+5.  Lattice: The number of assemblies in the X and Y directions (rectangular) or the number of rings (hexflat or hexvertex) in the core.
+
+6.  <assy_alias>: Assembly aliases are listed in order of appearance in the core lattice of the specified type, as described in Section 2.2. Note the number of assemblies in a given core depends on the lattice type and the parameters specified with the Lattice keyword. Assemblyaliases in the lattice should all appear on one line. Line continuation characters ‘&’ can be used to break lines in the file, to make the input file easier to read.
+
+7.  Background: If specified, this keyword specifies an assembly mesh that fills interstices regions between assemblies, along with any structure surrounding the core, like a core barrel.
+
+----------------------------
+Syntax used with CoreGen:
+----------------------------
+
+Geometry {Surface | Volume}
+GeometryType {Hexflat | Hexvertex | Rectangular}
+Assemblies <n_assys> {<pitch_x> <pitch_y> (rectangular) | <pitch> (hexflat or hexvertex for hexagonal)} {<mesh_file> <assy_alias>} * n_assys
+Lattice {<n_x> <n_y> (rectangular) | <n_rings> (hexagonal)}
+	{<assy_alias>} * {<n_x>*<n_y> (rectangular) | 1+3*<n_rings>*(<n_rings>-1) (hexflat or hexvertex, full) | 
+	<n_rings>*(<n_rings>+1)/2 (hexflat, symmetry=6) |
+	<n_rings>*(<n_rings>+1)/2 – floor(<n_rings>/2) (hexvertex, symmetry=6)|
+	(<n_rings>*<n_rings>) + 2*<n_rings>)/4 + N%2)/2) (hexflat, symmetry=12)
+}
+[Symmetry 1(rectangular, hexagonal-hexflat) | 6(hexagonal-hexflat/hexvertex) | 12(hexagonal-hexflat)]
+[Background <mesh_file>]
+END
+
+-----------------------------------------
+Syntax of makefile created by CoreGen:
+-----------------------------------------
+# This makefile is automatically created by coregen program
+CUBIT = cubit
+COREGEN = ../../coregen
+ASSYGEN = ../../assygen
+MESH_FILES = { <mesh_file>.cub  }   		*n_assys
+GEOM_FILES = { <mesh_file> .sat }               *n_assys
+JOU = { <mesh_file>.jou }                       *n_assys
+IN_JOU= { <mesh_file>.template.jou }  	        *n_assys
+ASSYGEN_FILES = { <mesh_file>.inp } 	        *n_assys
+
+<coregen_input>.h5m: <dependencies>
+       ${COREGEN} <coregen_input>
+{
+	<mesh_file>.cub: <dependencies>
+       ${CUBIT} <mesh_file>.jou
+
+	<mesh_file>.sat: <dependencies>
+       ${ASSYGEN} <mesh_file>
+} * n_assys
+
+
+==============================================
+SECTION B: Detailed Installation Instructions
+==============================================
+
+Build and Installation Instructions:
+The software prerequisites for  building the tools described here, and the means of obtaining them, are: 
+
+• CGM: the Common Geometry Module; download and build instructions can be found at http://trac.mcs.anl.gov/projects/ITAPS/wiki/CGM. Although CGM supports both the ACIS and Open.Cascade modeling engines, the latter is not yet robust enough to support AssyGen and CoreGen, so the ACIS version should be used. Note that CGM can be configured to use ACIS libraries through the CUBIT mesh generation toolkit.
+
+• MOAB: the Mesh-Oriented database; download and build instructions can be found at
+http://trac.mcs.anl.gov/projects/ITAPS/wiki/MOAB. MOAB depends on the HDF5 library, which is necessary for storing meshes generated by CoreGen; see MOAB build instructions for accessing and building this library.
+
+• Lasso: a library for relating mesh to geometry. Download and build instructions are located at http://trac.mcs.anl.gov/projects/ITAPS/wiki/Lasso. Lasso requires compiled versions of MOAB and CGM before it can be compiled.
+
+• CUBIT: a mesh generation toolkit developed at Sandia National Laboratories. See http://cubit.sandia.gov/. CUBIT is available for a nominal fee for government use in the US. The source code for the AssyGen and CoreGen tools is released as open source software, under and LGPL license. The tools are part of the MeshKit library for mesh generation. This software resides in an svn repository located at Argonne National Laboratory. 
+These tools are built using the following steps.
+
+1. Download the MeshKit source code using subversion:
+
+2. svn co https://svn.mcs.anl.gov/repos/fathom/MeshKit/trunk MeshKit
+
+3. Change to the MeshKit source directory, and configure the library, using Linux autotools commands:
+cd MeshKit
+autoreconf –fi
+./configure –with-imesh=<MOAB_DIR> --with-cgm=<CGM_DIR>
+--with-lasso=<LASSO_DIR> --prefix=$PWD
+Where <MOAB_DIR>, <CGM_DIR>, and <LASSO_DIR> are the top-level directories of the MOAB, CGM, and Lasso libraries, respectively.
+
+4. Compile and install MeshKit:
+make install
+
+5. Build/test AssyGen and CoreGen:
+cd rgg
+make assygen coregen
+make check
+After this procedure is finished, the AssyGen and CoreGen executables will be in the <MESHKIT_DIR>/rgg directory. AssyGen and CoreGen can be run using the commands:
+assygen <input>
+coregen <input>
+where <input> is the base name (the filename without the extension) of the input file. The output of AssyGen will be the files <input>.sat (the assembly model geometry), and <input>.jou and template.jou for generating assembly mesh.
+Any problems building, installing, or running these tools should be sent to the Fathom email list at
+fathom@lists.mcs.anl.gov.
+
+
