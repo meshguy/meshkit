@@ -68,6 +68,7 @@ int CCrgen::copy_move()
 				      core_alias, assys);
     ERRORR("Failed in copy/move step.", err);
   }
+  return iBase_SUCCESS;
 }
 
 
