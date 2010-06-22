@@ -17,6 +17,9 @@
 
 extern int validFaceCount; // defined in QslimDecimation
 extern MBTag validTag;   // defined in QslimDecimation
+// the plane data will be stored for each triangle, and recomputed for each triangle
+// it will be needed only for the -m option active (so do not recompute if you do not need it)
+extern MBTag planeDataTag;  // defined in QslimDecimation
 extern int ehIsValid(MBEntityHandle v);  // defined in QslimDecimation; maybe we should pass Interface too
 extern QslimOptions opts;
 
@@ -28,7 +31,10 @@ extern MBErrorCode contractionRegion(MBInterface * mb, MBEntityHandle v1, MBEnti
 
 extern Vec3 getVec3FromMBVertex(MBInterface * mb, MBEntityHandle v);
 
+// this will just retrieve it from the tag data
 extern Plane trianglePlane(MBInterface * mb, MBEntityHandle tri);
+
+extern void computeTrianglePlane (MBInterface * mb, MBEntityHandle tri);
 
 extern MBErrorCode contract (MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1, Vec3 & vnew, std::vector<MBEntityHandle> & changed );
 

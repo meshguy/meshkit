@@ -692,6 +692,10 @@ int CNrgen::CreateCubitJournal()
 //---------------------------------------------------------------------------
 {
   // variables
+  int nColor;
+  std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
+                          "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
+			  "gold", "orange", "brown", "pink", "khakhi", "black", "aquamurine", "mediumslateblue"};
   int nSideset=0, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
@@ -896,7 +900,29 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
       " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
     m_FileOutput << "mesh vol all" << std::endl;
+  // color now
+     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szGrp = "g_"+ m_szAssmMat(p);
+      if(p>20)
+	nColor = 1;
+      else 
+	nColor = p;
+      m_FileOutput << "color body in " << szGrp << " " << color[nColor] << std::endl;
+    }
   }
+  else{ //surfaces
+   // color now
+     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szGrp = "g_"+ m_szAssmMat(p);
+      if(p>20)
+	nColor = 1;
+      else 
+	nColor = p;
+      m_FileOutput << "color surface in " << szGrp << " " << color[nColor] << std::endl;
+    }
+  }   
+
+
   // save as .cub file dump
   m_FileOutput << "#\n#Save file" << std::endl; 
   std::string szSave = m_szFile + ".cub";

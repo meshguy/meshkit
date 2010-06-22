@@ -81,6 +81,14 @@ Vec3 getVec3FromMBVertex(MBInterface * mbi, MBEntityHandle v) {
 // it will be much cheaper to store it, for "-m" option
 // there, we will need it a lot
 Plane trianglePlane(MBInterface * mb, MBEntityHandle tri) {
+	// retrieve it from tag
+	Plane pl;
+	mb->tag_get_data(planeDataTag, &tri, 1, &pl);
+	return pl;
+}
+
+void computeTrianglePlane (MBInterface * mb, MBEntityHandle tri)
+{
 	// get connectivity of triangle
 	const MBEntityHandle * conn;
 	int num_nodes;
@@ -89,8 +97,9 @@ Plane trianglePlane(MBInterface * mb, MBEntityHandle tri) {
 	Vec3 ve1 = getVec3FromMBVertex(mb, conn[0]);
 	Vec3 ve2 = getVec3FromMBVertex(mb, conn[1]);
 	Vec3 ve3 = getVec3FromMBVertex(mb, conn[2]);
-	return Plane(ve1, ve2, ve3);
-
+	Plane pl = Plane(ve1, ve2, ve3);
+	mb->tag_set_data(planeDataTag, &tri, 1, &pl);
+	return;
 }
 
 MBErrorCode contract(MBInterface * mb, MBEntityHandle v0, MBEntityHandle v1,
