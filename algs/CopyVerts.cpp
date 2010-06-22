@@ -36,7 +36,9 @@ void CopyVerts::operator ()(int n, iBase_EntityHandle *src, int src_size,
 CopyMoveVerts::CopyMoveVerts(iMesh_Instance impl, const double *dv, int max)
   : CopyVerts(impl, max)
 {
-  memcpy(dv_, dv, sizeof(dv_));
+  dv_[0] = dv[0]/max;
+  dv_[1] = dv[1]/max;
+  dv_[2] = dv[2]/max;
 }
 
 void CopyMoveVerts::transform(int n, int, double *coords) const
@@ -48,7 +50,7 @@ void CopyMoveVerts::transform(int n, int, double *coords) const
 
 CopyRotateVerts::CopyRotateVerts(iMesh_Instance impl, const double *origin,
                                  const double *z, double theta, int max)
-  : CopyVerts(impl, max), theta_(theta)
+  : CopyVerts(impl, max), theta_(theta/max)
 {
   memcpy(origin_, origin, sizeof(origin_));
   normalize(z_, z);

@@ -4,12 +4,11 @@
 #include "iMesh_extensions.h"
 #include "CopyVerts.hpp"
 #include "CopyMesh.hpp"
+#include "LocalTag.hpp"
 
 class ExtrudeMesh
 {
 public:
-  typedef std::vector<iBase_EntitySetHandle> new_sets_t;
-
   explicit ExtrudeMesh(iMesh_Instance impl);
   virtual ~ExtrudeMesh();
 
@@ -17,6 +16,8 @@ public:
   {
     return impl_;
   }
+
+  iBase_TagHandle extrude_tag();
 
   int add_extrude_tag(const std::string &tag_name, const char *tag_val = NULL);
   int add_extrude_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
@@ -78,11 +79,8 @@ private:
 
   void connect_the_dots(
     iBase_EntityHandle *src, int size, iBase_TagHandle local_tag, 
-    new_sets_t &sets,
     int *pre_norms,  int *pre_inds,  int *pre_offs,  iBase_EntityHandle *pre,
     int *post_norms, int *post_inds, int *post_offs, iBase_EntityHandle *post);
-
-  void process_sets(iBase_TagHandle local_tag, new_sets_t &sets);
 
   iMesh_Instance impl_;
   CopyMesh copy_;
@@ -98,9 +96,16 @@ private:
   };
 
   bool updated_set_;
+  LocalTag extrude_tag_;
   std::vector<tag_data> extrude_tags_;
   std::set<iBase_EntitySetHandle> extrude_sets_;
 };
+
+inline iBase_TagHandle
+ExtrudeMesh::extrude_tag()
+{
+  return extrude_tag_;
+}
 
 inline iBase_TagHandle
 ExtrudeMesh::copy_tag()

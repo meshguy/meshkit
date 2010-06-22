@@ -23,20 +23,22 @@ libMKalgs_la_SOURCES = \
 	vec_utils.cpp \
 	vec_utils.hpp \
 	CutCellMesh.cpp \
-        ProjectShell.cpp \
-        EdgeMesher.cpp \
-        OneToOneSwept.cpp
+	ProjectShell.cpp \
+	EdgeMesher.cpp \
+	OneToOneSwept.cpp
 
 # The list of header files which are to be installed
 libMKalgs_la_include_HEADERS = \
 	CopyMesh.hpp \
 	CopyVerts.hpp \
 	ExtrudeMesh.hpp \
+	LocalTag.hpp \
+	ArrayManager.hpp \
 	MergeMesh.hpp \
 	CutCellMesh.hpp \
-        ProjectShell.hpp \
-        EdgeMesher.hpp \
-        OneToOneSwept.hpp
+	ProjectShell.hpp \
+	EdgeMesher.hpp \
+	OneToOneSwept.hpp
 
 # Tests and such
 check_PROGRAMS = CopyMesh_test ExtrudeMesh_test CutCellMesh_test \
@@ -46,22 +48,22 @@ TESTS = $(check_PROGRAMS)
 CopyMesh_test_SOURCES = CopyMesh.cpp
 CopyMesh_test_DEPENDENCIES = CopyMesh.hpp libMKalgs.la
 CopyMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-CopyMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) 
+CopyMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp
 ExtrudeMesh_test_DEPENDENCIES = ExtrudeMesh.hpp libMKalgs.la
 ExtrudeMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-ExtrudeMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) 
+ExtrudeMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 CutCellMesh_test_SOURCES = CutCellMesh_test.cpp
 CutCellMesh_test_DEPENDENCIES = CutCellMesh.hpp libMKalgs.la
 CutCellMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-CutCellMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS)
+CutCellMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 ProjectShell_test_SOURCES = ProjectShell_test.cpp
 ProjectShell_test_DEPENDENCIES = ProjectShell.hpp libMKalgs.la
 ProjectShell_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-ProjectShell_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS)
+ProjectShell_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
