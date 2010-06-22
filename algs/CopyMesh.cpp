@@ -11,7 +11,7 @@
  * - call update_ce_lists to update copySets or expandSets
  */
 
-/**\brief  Get the entities copied from a set
+/**\brief Get the entities copied from a set
  *
  * Given a set and a tag, return the values of the tag set on entities from that
  * set (i.e. the copied entities).
@@ -47,7 +47,7 @@ int get_copied_ents(iMesh_Instance imeshImpl, iBase_EntitySetHandle set,
   return iBase_SUCCESS;
 }
 
-/**\brief  Create a copy set if one doesn't exist yet
+/**\brief Create a copy set if one doesn't exist yet
  *
  * Given a source set and a tag, create a destination (copy) set unless one
  * already exists.
@@ -79,7 +79,7 @@ int get_dest_set(iMesh_Instance imeshImpl, iBase_TagHandle local_tag,
   return iBase_SUCCESS;
 }
 
-/**\brief  Add copied entities/sets recursively
+/**\brief Add copied entities/sets recursively
  *
  * Helper function for process_ce_sets. This adds any entities directly
  * contained in the current set to the dest set and then loops through the
@@ -94,7 +94,7 @@ int get_dest_set(iMesh_Instance imeshImpl, iBase_TagHandle local_tag,
 static
 int process_ce_subsets(iMesh_Instance imeshImpl, iBase_EntitySetHandle src,
                        iBase_EntitySetHandle current,
-                       std::set<iBase_EntitySetHandle> &cesets,
+                       const std::set<iBase_EntitySetHandle> &cesets,
                        iBase_TagHandle local_tag) 
 {
   int err;
@@ -149,11 +149,11 @@ int process_ce_subsets(iMesh_Instance imeshImpl, iBase_EntitySetHandle src,
 // - for each unique tag
 //   . if this set has the tag, add/append to get unique value
 int process_ce_sets(iMesh_Instance imeshImpl,
-                    std::set<iBase_EntitySetHandle> &cesets,
+                    const std::set<iBase_EntitySetHandle> &cesets,
                     iBase_TagHandle local_tag) 
 {
   int err;
-  std::set<iBase_EntitySetHandle>::iterator src;
+  std::set<iBase_EntitySetHandle>::const_iterator src;
   for (src = cesets.begin(); src != cesets.end(); ++src) {
     err = process_ce_subsets(imeshImpl, *src, *src, cesets, local_tag);
     ERRORR("Failed to process contained sets.", iBase_FAILURE);
@@ -210,7 +210,8 @@ int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
     }
     ERRORR("Didn't get copied set from orig copy set.", err);
 
-    iMesh_setEntSetData(imeshImpl, copy_set, tag, value_ptr, tag_size, &err);
+    if (copy_set != *set)
+      iMesh_setEntSetData(imeshImpl, copy_set, tag, value_ptr, tag_size, &err);
     ERRORR("Failed to set data on copied set.", err);
   }
   
@@ -318,6 +319,46 @@ int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_se
   return iBase_SUCCESS;
 }
 
+int CopyMesh::add_copy_tag(iBase_TagHandle tag_handle, const char *tag_val)
+{
+  assert(tag_handle != NULL);
+  char *tmp = NULL;
+
+  if (tag_val) {
+    int err;
+    int tag_size;
+    iMesh_getTagSizeBytes(imeshImpl, tag_handle, &tag_size, &err);
+    if (iBase_SUCCESS != err)
+      ERRORR("Failed to get size of tag", iBase_FAILURE);
+    tmp = static_cast<char*>(malloc(tag_size));
+    memcpy(tmp, tag_val, tag_size);
+  }
+
+  copyTags.push_back(tag_data(tag_handle, tmp));
+  return iBase_SUCCESS;
+}
+
+int CopyMesh::add_expand_tag(iBase_TagHandle tag_handle, const char *tag_val)
+{
+  assert(tag_handle != NULL);
+  char *tmp = NULL;
+
+  if (tag_val) {
+    int err;
+    int tag_size;
+    iMesh_getTagSizeBytes(imeshImpl, tag_handle, &tag_size, &err);
+    if (iBase_SUCCESS != err)
+      ERRORR("Failed to get size of tag", iBase_FAILURE);
+    tmp = static_cast<char*>(malloc(tag_size));
+    memcpy(tmp, tag_val, tag_size);
+  }
+
+  expandTags.push_back(tag_data(tag_handle, tmp));
+  return iBase_SUCCESS;
+}
+
+
+
 /* \brief Copy all the entities in the set
  */
 int CopyMesh::copy_entities(iBase_EntitySetHandle set_handle,
@@ -418,8 +459,8 @@ int CopyMesh::copy_rotate_entities(iBase_EntitySetHandle set_handle,
   ERRORR("Failed to get entities from set recursively.", err);
   
   int result = copy_rotate_entities(ents, ents_size, origin, z, theta, 
-				    new_ents, new_ents_alloc, new_ents_size,
-				    do_merge);
+                                    new_ents, new_ents_alloc, new_ents_size,
+                                    do_merge);
 
   free(ents);
   return result;
@@ -501,6 +542,14 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
   ERRORR("Couldn't create new vertices.", iBase_FAILURE);
   assert(new_verts_size == verts_size);
 
+  // set the local copy tags on vertices
+  // XXX: Should this really happen? Doing so adds more entities to copy sets
+  // than explicitly passed into this function. This may be a domain-specific
+  // question.
+  iMesh_setEHArrData(imeshImpl, verts, verts_size, local_tag, 
+                     new_verts, new_verts_size, &err);
+  ERRORR("Error setting local copy tag data on old vertices.", iBase_FAILURE);
+
   // now connect the new vertices to make the higher-dimension entities
   err = connect_the_dots(ents, ents_size, local_tag, indices, offsets,
                          new_verts);
@@ -547,7 +596,7 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
 		       new_ents, new_ents_allocated, new_ents_size, &err);
     ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
   }
-  
+
   free(new_verts);
   free(ents);
   free(verts);
@@ -657,7 +706,7 @@ int CopyMesh::update_ce_lists()
   
   return iBase_SUCCESS;
 }
-  
+
 int CopyMesh::update_tagged_sets(iBase_EntitySetHandle from_set,
                                  const std::vector<CopyMesh::tag_data> &tags,
                                  std::set<iBase_EntitySetHandle> &tagged_sets)
@@ -677,7 +726,7 @@ int CopyMesh::update_tagged_sets(iBase_EntitySetHandle from_set,
 
   return iBase_SUCCESS;
 }
-    
+
 int CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,
                               const int num_tags) 
 {
@@ -710,7 +759,7 @@ int CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
   
   return iBase_SUCCESS;
 }
-    
+
 #ifdef TEST
 
 #include <cfloat>
