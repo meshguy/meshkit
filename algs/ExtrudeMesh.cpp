@@ -792,9 +792,9 @@ int test4()
   ERRORR("Couldn't add entities to set", 1);
 
   iBase_TagHandle tag;
-/*  iMesh_createTag(mesh, "my_tag", 1, iBase_BYTES, &tag, &err, 6);
+  iMesh_createTag(mesh, "my_tag", 1, iBase_BYTES, &tag, &err, 6);
   iMesh_setEntSetData(mesh, set, tag, "x", 1, &err);
-  ext->add_extrude_tag(tag, "x");*/
+  ext->add_extrude_tag(tag, "x");
 
   int steps = 200;
   double origin[] = { 0, -3, 0 };
@@ -821,8 +821,8 @@ int test4()
 
   iMesh_getNumEntSets(mesh, root_set, 0, &count, &err);
   ERRORR("Couldn't get number of entity sets.", 1);
-//  if(count != 2)
-//    return 1;
+  if(count != 2)
+    return 1;
 
 #ifdef TESTSAVE
   const char *file = "test4.vtk";
