@@ -1,10 +1,7 @@
 #ifndef SIMP_ARR_H
 #define SIMP_ARR_H
 
-#include <stdlib.h>
-
-#include <iostream>
-using namespace std;
+#include <cstdlib>
 
 template <typename T> 
 class SimpleArray
