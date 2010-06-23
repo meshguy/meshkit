@@ -16,8 +16,8 @@ void CopyVerts::operator ()(int n, iBase_EntityHandle *src, int src_size,
 {
   int err;
 
-  double *coords=0;
-  int coords_alloc=0,coords_size=0;
+  double *coords = NULL;
+  int coords_alloc = 0, coords_size;
   iMesh_getVtxArrCoords(impl_, src, src_size, iBase_INTERLEAVED, &coords,
                         &coords_alloc, &coords_size, &err);
   assert(!err);
