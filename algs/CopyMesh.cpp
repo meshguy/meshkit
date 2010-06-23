@@ -270,6 +270,10 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
                      &tmp_off, &tmp_off_alloc, &tmp_off_size, err);
   if (*err != iBase_SUCCESS) return;
 
+  // shift all the offsets to account for vertices
+  for(int i = num_verts; i < *offsets_size; ++i)
+    (*offsets)[i] += num_verts;
+
   all_adj.reserve(all_adj.size() + tmp_adj_size);
   all_adj.insert(all_adj.end(), tmp_adj, tmp_adj+tmp_adj_size);
   free(tmp_adj);
@@ -630,7 +634,7 @@ int CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
   int pos = 0;
   while (iMesh_POINT == topos[pos] && pos < topos_size) 
     pos++;
-  if (pos == ents_size) return iBase_SUCCESS;
+  if (pos == topos_size) return iBase_SUCCESS;
 
   // for each run of same size & type
   std::vector<iBase_EntityHandle> connect, new_ents;
