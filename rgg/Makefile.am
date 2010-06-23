@@ -21,8 +21,8 @@ libMKrgg_la_SOURCES = \
 	parser.cpp \
 	pincell.cpp  \
 	cylinder.cpp \
-        crgen.cpp \
-        copymove.cpp 
+	crgen.cpp \
+	copymove.cpp 
 
 # The list of header files which are to be installed
 libMKrgg_la_include_HEADERS = \
@@ -32,7 +32,6 @@ libMKrgg_la_include_HEADERS = \
 	cylinder.hpp \
 	vectortemplate.hpp \
 	matrixtemplate.hpp \
-        simplearray.hpp \
 	crgen.hpp 
 
 # Tests and such
