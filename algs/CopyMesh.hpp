@@ -3,7 +3,7 @@
 
 #include "iMesh_extensions.h"
 #include "CopyVerts.hpp"
-#include "LocalTag.hpp"
+#include "../utils/LocalTag.hpp"
 
 #include <string>
 #include <vector>
