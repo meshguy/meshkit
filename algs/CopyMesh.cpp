@@ -1,7 +1,6 @@
 #include "CopyMesh.hpp"
 #include "CopyVerts.hpp"
-#include "LocalTag.hpp"
-#include "ArrayManager.hpp"
+#include "../utils/ArrayManager.hpp"
 #include "MBCN.h"
 #include <stdlib.h>
 #include <algorithm>

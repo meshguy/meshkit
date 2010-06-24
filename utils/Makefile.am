@@ -19,6 +19,9 @@ libMKutils_la_SOURCES = \
 
 # The list of header files which are to be installed
 libMKutils_la_include_HEADERS = \
+	ArrayManager.hpp \
+	LocalTag.hpp \
+	SimpleArray.h \
 	MKUtils.hpp 
 
 # Tests and such
