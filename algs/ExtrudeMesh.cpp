@@ -1,6 +1,6 @@
 #include "ExtrudeMesh.hpp"
-#include "LocalTag.hpp"
 
+#include "../utils/SimpleArray.h"
 #include "vec_utils.hpp"
 #include <cassert>
 #include <iostream>
@@ -36,7 +36,7 @@ ExtrudeMesh::~ExtrudeMesh()
 }
 
 int ExtrudeMesh::add_extrude_tag(const std::string &tag_name,
-                 const char *tag_val)
+                                 const char *tag_val)
 {
   iBase_TagHandle tag_handle = 0;
   int err;
@@ -83,15 +83,13 @@ int ExtrudeMesh::update_sets()
     int err;
     for(std::vector<tag_data>::iterator i=extrude_tags_.begin();
         i!=extrude_tags_.end(); ++i) {
-      iBase_EntitySetHandle *tmp_sets = NULL;
-      int tmp_alloc = 0, tmp_size;
+      SimpleArray<iBase_EntitySetHandle> tmp_sets;
       iMesh_getEntSetsByTagsRec(impl_, root, &i->tag,
                                 (i->value ? &i->value:NULL), 1, 0,
-                                &tmp_sets, &tmp_alloc, &tmp_size, &err);
+                                ARRAY_INOUT(tmp_sets), &err);
       ERRORR("Couldn't get tagged sets.", iBase_FAILURE);
 
-      extrude_sets_.insert(tmp_sets, tmp_sets+tmp_size);
-      free(tmp_sets);
+      extrude_sets_.insert(tmp_sets.begin(), tmp_sets.end());
     }
   }
 
@@ -174,15 +172,12 @@ int ExtrudeMesh::translate(iBase_EntitySetHandle src,
     iMesh_endEntIter(impl_, iter, &err);
     ERRORR("Couldn't destroy entity iterator.", err);
 
-    iBase_EntityHandle *verts = NULL;
-    int verts_alloc = 0, verts_size;
-    iMesh_getEntAdj(impl_, face, iBase_VERTEX, &verts, &verts_alloc,
-                    &verts_size, &err);
+    SimpleArray<iBase_EntityHandle> verts;
+    iMesh_getEntAdj(impl_, face, iBase_VERTEX, ARRAY_INOUT(verts), &err);
     ERRORR("Couldn't get adjacencies.", err);
 
     iMesh_getVtxCoord(impl_, verts[0], coords[i]+0, coords[i]+1, coords[i]+2,
                       &err);
-    free(verts);
     ERRORR("Couldn't get vertex coordinates.", err);
   }
 
@@ -309,90 +304,74 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
 
   int err;
 
-  iBase_EntityHandle *ents = NULL; int ent_alloc = 0, ent_size;
-  iBase_EntityHandle *adj = NULL;  int adj_alloc = 0, adj_size;
-  int *indices = NULL;             int ind_alloc = 0, ind_size;
-  int *offsets = NULL;             int off_alloc = 0, off_size;
+  SimpleArray<iBase_EntityHandle> ents;
+  SimpleArray<iBase_EntityHandle> adj;
+  SimpleArray<int> indices;
+  SimpleArray<int> offsets;
 
-  iMesh_getStructure(impl_, src,
-                     &ents,    &ent_alloc, &ent_size,
-                     &adj,     &adj_alloc, &adj_size,
-                     &indices, &ind_alloc, &ind_size,
-                     &offsets, &off_alloc, &off_size,
-                     &err);
+  iMesh_getStructure(impl_, src, ARRAY_INOUT(ents), ARRAY_INOUT(adj),
+                     ARRAY_INOUT(indices), ARRAY_INOUT(offsets), &err);
   ERRORR("Trouble getting source adjacencies.", err);
 
   double dx[3];
   iBase_EntityHandle *curr = 0;
-  iBase_EntityHandle *next = adj;
+  iBase_EntityHandle *next = &adj[0];
   int *normals = 0;
 
   LocalTag local_tag(impl_);
 
   if(new_rows > 0) {
-    int row_alloc = adj_size, row_size;
+    int row_alloc = adj.size(), row_size;
     curr = new iBase_EntityHandle[row_alloc];
     next = new iBase_EntityHandle[row_alloc];
-    trans(1, adj, adj_size, &next, &row_alloc, &row_size);
+    trans(1, ARRAY_IN(adj), &next, &row_alloc, &row_size);
 
     vtx_diff(dx, impl_, next[0], adj[0]);
-    normals = get_normals(adj, indices, offsets, ent_size, dx);
+    normals = get_normals(&adj[0], &indices[0], &offsets[0], ents.size(), dx);
 
     // Make the first set of volumes
-    connect_the_dots(ents, ent_size, local_tag,
-                     normals, indices, offsets, adj,
-                     normals, indices, offsets, next);
+    connect_the_dots(ARRAY_IN(ents), local_tag,
+                     &normals[0], &indices[0], &offsets[0], &adj[0],
+                     &normals[0], &indices[0], &offsets[0], &next[0]);
 
     // Make the inner volumes
     for(int i=2; i<=new_rows; i++) {
       std::swap(curr, next);
-      trans(i, adj, adj_size, &next, &row_alloc, &row_size);
-      connect_the_dots(ents, ent_size, local_tag,
-                       normals, indices, offsets, curr,
-                       normals, indices, offsets, next);
+      trans(i, ARRAY_IN(adj), &next, &row_alloc, &row_size);
+      connect_the_dots(ARRAY_IN(ents), local_tag,
+                       &normals[0], &indices[0], &offsets[0], &curr[0],
+                       &normals[0], &indices[0], &offsets[0], &next[0]);
     }
   }
 
   if(use_dest) {
-    iBase_EntityHandle *ents2 = NULL; int ent2_alloc = 0, ent2_size;
-    iBase_EntityHandle *adj2 = NULL;  int adj2_alloc = 0, adj2_size;
-    int *indices2 = NULL;             int ind2_alloc = 0, ind2_size;
-    int *offsets2 = NULL;             int off2_alloc = 0, off2_size;
-    iMesh_getStructure(impl_, dest,
-                       &ents2,    &ent2_alloc, &ent2_size,
-                       &adj2,     &adj2_alloc, &adj2_size,
-                       &indices2, &ind2_alloc, &ind2_size,
-                       &offsets2, &off2_alloc, &off2_size,
-                       &err);
+    SimpleArray<iBase_EntityHandle> ents2;
+    SimpleArray<iBase_EntityHandle> adj2;
+    SimpleArray<int> indices2;
+    SimpleArray<int> offsets2;
+
+    iMesh_getStructure(impl_, dest, ARRAY_INOUT(ents2), ARRAY_INOUT(adj2),
+                       ARRAY_INOUT(indices2), ARRAY_INOUT(offsets2), &err);
     ERRORR("Trouble getting target adjacencies.", err);
 
     vtx_diff(dx, impl_, adj2[indices2[ offsets2[0] ]],
                         next[indices [ offsets [0] ]]);
     if(!normals)
-      normals = get_normals(adj, indices, offsets, ent_size, dx);
-    int *normals2 = get_normals(adj2, indices2, offsets2, ent2_size, dx);
+      normals = get_normals(&adj[0], &indices[0], &offsets[0], ents.size(), dx);
+    int *normals2 = get_normals(&adj2[0], &indices2[0], &offsets2[0],
+                                ents.size(), dx);
 
-    connect_the_dots(ents, ent_size, local_tag,
-                     normals,  indices,  offsets,  next,
-                     normals2, indices2, offsets2, adj2);
+    connect_the_dots(ARRAY_IN(ents), local_tag,
+                     &normals[0],  &indices[0],  &offsets[0],  &next[0],
+                     &normals2[0], &indices2[0], &offsets2[0], &adj2[0]);
 
     free(normals2);
-    free(ents2);
-    free(adj2);
-    free(indices2);
-    free(offsets2);
   }
 
   if(new_rows > 0) {
     delete[] curr;
     delete[] next;
   }
-
-  free(normals);
-  free(ents);
-  free(adj);
-  free(indices);
-  free(offsets);
 
   // set the extrude tag on all extruded sets
   std::set<iBase_EntitySetHandle>::iterator set;
@@ -431,17 +410,15 @@ int * ExtrudeMesh::get_normals(iBase_EntityHandle *verts, int *indices,
       for(int j=0; j<3; j++)
         curr_verts[j] = verts[indices[ offsets[i]+j ]];
 
-      double *coords = NULL;
-      int coord_alloc = 0, coord_size;
+      SimpleArray<double> coords;
       iMesh_getVtxArrCoords(impl_, curr_verts, 3, iBase_INTERLEAVED,
-                            &coords, &coord_alloc, &coord_size, &err);
+                            ARRAY_INOUT(coords), &err);
       ERROR("Couldn't get vertex coordinates.");
 
       for(int j=0; j<3; j++) {
         a[j] = coords[1*3 + j] - coords[0*3 + j];
         b[j] = coords[2*3 + j] - coords[1*3 + j];
       }
-      free(coords);
       normals[i] = (dot( cross(res,a,b),dv ) > 0) ? 1:-1;
     }
     else if(offsets[i+1] - offsets[i] == 2) { // line
