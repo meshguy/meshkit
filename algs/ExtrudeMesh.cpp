@@ -373,6 +373,8 @@ int ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     delete[] next;
   }
 
+  free(normals);
+
   // set the extrude tag on all extruded sets
   std::set<iBase_EntitySetHandle>::iterator set;
   for(set = extrude_sets_.begin(); set != extrude_sets_.end(); ++set) {
