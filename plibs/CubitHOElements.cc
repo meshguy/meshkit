@@ -19,9 +19,9 @@
 #include <iMesh.h>
 #include <iRel.h>
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 
-#include "SpectralElements.h"
+#include "SpectralElements.hpp"
 
 using namespace std;
 

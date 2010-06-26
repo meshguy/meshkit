@@ -12,7 +12,7 @@
 
 #include "ITAPVertex.h"
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #include "SearchUV.h"
 
 class ITAPEdge : public GEdge

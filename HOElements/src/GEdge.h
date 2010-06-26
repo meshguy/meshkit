@@ -10,7 +10,7 @@
 
 #include <ANN/ANN.h>
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 
 using namespace std;
 

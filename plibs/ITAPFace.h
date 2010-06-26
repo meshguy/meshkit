@@ -11,7 +11,7 @@
 #include "ITAPEdge.h"
 
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 
 class ITAPFace : public GFace 
 {

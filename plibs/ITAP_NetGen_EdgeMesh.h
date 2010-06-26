@@ -10,7 +10,7 @@
 using namespace std;
 using namespace netgen;
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #include "SearchUV.h"
 
 #define TCL_OK 0

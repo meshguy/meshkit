@@ -18,7 +18,7 @@
 
 //#include <boost/array.hpp>
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 
 struct Point3D
 {
