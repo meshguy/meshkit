@@ -1,6 +1,6 @@
 #include "ExtrudeMesh.hpp"
 
-#include "../utils/SimpleArray.h"
+#include "SimpleArray.h"
 #include "vec_utils.hpp"
 #include <cassert>
 #include <iostream>

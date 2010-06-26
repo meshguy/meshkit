@@ -1,7 +1,7 @@
 #include "CopyVerts.hpp"
 
 #include "vec_utils.hpp"
-#include "../utils/SimpleArray.h"
+#include "SimpleArray.h"
 #include <cassert>
 #include <cmath>
 #include <cstdlib>

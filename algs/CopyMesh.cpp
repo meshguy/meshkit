@@ -1,7 +1,7 @@
 #include "CopyMesh.hpp"
 #include "CopyVerts.hpp"
-#include "../utils/ArrayManager.hpp"
-#include "../utils/SimpleArray.h"
+#include "ArrayManager.hpp"
+#include "SimpleArray.h"
 #include "MBCN.h"
 #include <stdlib.h>
 #include <algorithm>

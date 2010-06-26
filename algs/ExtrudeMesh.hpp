@@ -4,7 +4,7 @@
 #include "iMesh_extensions.h"
 #include "CopyVerts.hpp"
 #include "CopyMesh.hpp"
-#include "../utils/LocalTag.hpp"
+#include "LocalTag.hpp"
 
 class ExtrudeMesh
 {
