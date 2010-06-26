@@ -206,7 +206,6 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
   # Individual tools
 MK_OPTIONAL_TOOL([algs],    [yes])
 MK_OPTIONAL_TOOL([rgg],    [yes])
-MK_OPTIONAL_TOOL([xforms],    [yes])
 MK_OPTIONAL_TOOL([utils],    [yes])
 
 
@@ -499,11 +498,10 @@ AC_CONFIG_FILES([Makefile
                  testdir.h
                  algs/Makefile
                  algs/Qslim/Makefile
-		 rgg/Makefile
-                 xforms/Makefile
+				 rgg/Makefile
                  utils/Makefile
-		 camal/Makefile
-		 plibs/Makefile
+				 camal/Makefile
+				 plibs/Makefile
                  ])
 
 AC_OUTPUT
