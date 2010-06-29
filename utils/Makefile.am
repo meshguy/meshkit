@@ -21,7 +21,7 @@ libMKutils_la_SOURCES = \
 libMKutils_la_include_HEADERS = \
 	ArrayManager.hpp \
 	LocalTag.hpp \
-	../SimpleArray.hpp \
+	SimpleArray.hpp \
 	MKUtils.hpp 
 
 # Tests and such
