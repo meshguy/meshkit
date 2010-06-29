@@ -2,7 +2,7 @@
 
 #include <time.h>
 #include <stdlib.h>
-#include <string>
+#include <string.h>
 
 #include "QslimDecimation.h"
 #include "QslimOptions.h"
@@ -25,7 +25,7 @@ std::string usage_string =
 "-m		        Preserve mesh quality.\n"
 "-a		        Enable area weighting.\n"
 "-p 	        Height fields positivity. Used for height fields, assume \n"
-"                   triangles are originally positively oriented."
+"                   triangles are originally positively oriented. \n"
 "-d 	        Use delayed deletion, as opposed to merging \n"
 "\n";
 
