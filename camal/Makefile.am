@@ -9,10 +9,11 @@ SUBDIRS =
 @IREL_CONFIG_OPTIONS@
 
 # Things to build
-lib_LTLIBRARIES = libMKcamal.la
+lib_LTLIBRARIES = libMKcamal.la libSmooth.la
 
 # The directory in which to install headers
 libMKcamal_la_includedir = $(includedir)
+libSmooth_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libMKcamal_la_SOURCES = \
@@ -26,10 +27,25 @@ libMKcamal_la_include_HEADERS = \
 	camal_interface.hpp \
 	camel.hpp \
 	CAMALGeomEval.hpp \
-	CAMALSizeEval.hpp
+	CAMALSizeEval.hpp 
+
+# The list of source files, and any header files that do not need to be installed
+libSmooth_la_SOURCES = \
+	SmoothMeshEval.cpp \
+	CamalPaveDriver.cpp \
+	CAMALSizeEval.cpp \
+	SmoothCurveEval.cpp
+
+# The list of header files which are to be installed
+libSmooth_la_include_HEADERS = \
+	SmoothMeshEval.hpp \
+	CamalPaveDriver.hpp \
+	CAMALSizeEval.hpp \
+	SmoothCurveEval.hpp
+	
 
 # Tests
-check_PROGRAMS = Camal_test IceSheet_test
+check_PROGRAMS = Camal_test IceSheet_test SmoothIceSheet_test addGeoSets
 
 if HAVE_CAMAL
 TESTS = $(check_PROGRAMS)
@@ -44,6 +60,16 @@ IceSheet_test_SOURCES = icesheet_test.cpp
 IceSheet_test_DEPENDENCIES = libMKcamal.la
 IceSheet_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 IceSheet_test_LDADD = libMKcamal.la $(CAMAL_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+
+SmoothIceSheet_test_SOURCES = smooth_test.cpp
+SmoothIceSheet_test_DEPENDENCIES = libSmooth.la
+SmoothIceSheet_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+SmoothIceSheet_test_LDADD = libSmooth.la $(CAMAL_LIBS) $(IMESH_LIBS) 
+
+addGeoSets_SOURCES = Geometrize.cpp
+addGeoSets_DEPENDENCIES = libSmooth.la
+addGeoSets_CXXFLAGS = -DTEST $(CXXFLAGS)
+addGeoSets_LDADD = libSmooth.la $(IMESH_LIBS) 
 
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
