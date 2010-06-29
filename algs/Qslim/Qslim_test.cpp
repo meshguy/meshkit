@@ -2,7 +2,7 @@
 
 #include <time.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 
 #include "QslimDecimation.h"
 #include "QslimOptions.h"
