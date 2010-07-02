@@ -39,7 +39,7 @@ int get_copied_ents(iMesh_Instance imeshImpl, iBase_EntitySetHandle set,
   for (int i = 0; i < tmp_ents.size(); i++) {
     iBase_EntityHandle eh_tag;
     iMesh_getEHData(imeshImpl, tmp_ents[i], local_tag, &eh_tag, &err);
-    if (iBase_SUCCESS == err && eh_tag) 
+    if (iBase_SUCCESS == err && eh_tag)
       ents.push_back(eh_tag);
   }
 

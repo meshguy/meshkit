@@ -515,7 +515,7 @@ int CNrgen::ReadAndCreate()
 
 	m_dVAssmPitch.SetSize(m_nDimensions); m_szMAlias.SetSize(m_nDimensions);
 
-	assms.setSize(m_nDimensions); // setup while reading the problem size
+	assms.resize(m_nDimensions); // setup while reading the problem size
 
 
 	for (int i=1; i<=m_nDimensions; i++){
@@ -542,7 +542,7 @@ int CNrgen::ReadAndCreate()
 	m_dVAssmPitchX.SetSize(m_nDimensions);
 	m_dVAssmPitchY.SetSize(m_nDimensions);
 	m_szMAlias.SetSize(m_nDimensions);
-	assms.setSize(m_nDimensions); 
+	assms.resize(m_nDimensions); 
 
 	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_dVAssmPitchX(i) >> m_dVAssmPitchY(i);
@@ -2263,6 +2263,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
     // get cylinder data
     m_Pincell(i).GetNumCyl(nCyl);
     nCells = nCyl;
+    cells.resize(nCells);
 
     for(int n=1;n<=nCells; n++){
 
