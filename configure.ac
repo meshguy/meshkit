@@ -206,7 +206,6 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
   # Individual tools
 MK_OPTIONAL_TOOL([algs],    [yes])
 MK_OPTIONAL_TOOL([rgg],    [yes])
-MK_OPTIONAL_TOOL([xforms],    [yes])
 MK_OPTIONAL_TOOL([utils],    [yes])
 
 
@@ -325,6 +324,7 @@ else
     HAVE_CAMAL_PAVER=no
     HAVE_CAMAL_SWEEP=no
     HAVE_CAMAL_TET=no
+    HAVE_CAMAL_EDGE=no
   else
     if test "x$CAMAL_VERSION" = "x510"; then
       AC_CHECK_HEADER( [CMLTriAdvance.hpp],[HAVE_CAMAL_TRIADV=yes], [HAVE_CAMAL_TRIADV=no] )
@@ -333,6 +333,7 @@ else
       AC_CHECK_HEADER( [CMLSweeper.hpp],  [HAVE_CAMAL_SWEEP=yes],  [HAVE_CAMAL_SWEEP=no] )
       AC_CHECK_HEADER( [CMLTetMesher.hpp],[HAVE_CAMAL_TET=yes],    [HAVE_CAMAL_TET=no] )
       AC_CHECK_HEADER( [CMLSurfEval.hpp], [HAVE_CAMAL=yes],        [HAVE_CAMAL=no] )
+      AC_CHECK_HEADER( [CMLEdgeMesher.hpp], [HAVE_CAMAL=yes],        [HAVE_CAMAL=no] )
 
       CAMAL_LIBS="-lCMLSizer"
       AC_CHECK_LIB( [CMLPave],   [main], [CAMAL_LIBS="-lCMLPave $CAMAL_LIBS"], [HAVE_CAMAL_PAVER=no],  [$CAMAL_LIBS] )
@@ -340,6 +341,7 @@ else
       AC_CHECK_LIB( [CMLDelTri], [main], [CAMAL_LIBS="-lCMLDelTri $CAMAL_LIBS"], [HAVE_CAMAL_TRIDEL=no], [$CAMAL_LIBS] )
       AC_CHECK_LIB( [CMLSweep],  [main], [CAMAL_LIBS="-lCMLSweep $CAMAL_LIBS"], [HAVE_CAMAL_SWEEP=no],  [$CAMAL_LIBS] )
       AC_CHECK_LIB( [CMLTet],    [main], [CAMAL_LIBS="-lCMLTet $CAMAL_LIBS"], [HAVE_CAMAL_TET=no],    [$CAMAL_LIBS] )
+      AC_CHECK_LIB( [CMLEdgeMesher],    [main], [CAMAL_LIBS="-lCMLEdgeMesher $CAMAL_LIBS"], [HAVE_CAMAL_EDGE=no],    [$CAMAL_LIBS] )
     else
       AC_CHECK_HEADER( [CMLTriMesher.hpp],[HAVE_CAMAL_TRIADV=yes], [HAVE_CAMAL_TRIADV=no] )
       AC_CHECK_HEADER( [CMLPaver.hpp],    [HAVE_CAMAL_PAVER=yes],  [HAVE_CAMAL_PAVER=no] )
@@ -382,6 +384,7 @@ AC_SUBST([HAVE_CAMAL_TRIDEL])
 AC_SUBST([HAVE_CAMAL_PAVER])
 AC_SUBST([HAVE_CAMAL_SWEEP])
 AC_SUBST([HAVE_CAMAL_TET])
+AC_SUBST([HAVE_CAMAL_EDGE])
 
 AM_CONDITIONAL( HAVE_CAMAL,        [test $HAVE_CAMAL        = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_TRIADV, [test $HAVE_CAMAL_TRIADV = yes] )
@@ -389,6 +392,7 @@ AM_CONDITIONAL( HAVE_CAMAL_TRIDEL, [test $HAVE_CAMAL_TRIDEL = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_PAVER,  [test $HAVE_CAMAL_PAVER  = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_SWEEP,  [test $HAVE_CAMAL_SWEEP  = yes] )
 AM_CONDITIONAL( HAVE_CAMAL_TET,    [test $HAVE_CAMAL_TET    = yes] )
+AM_CONDITIONAL( HAVE_CAMAL_EDGE,   [test $HAVE_CAMAL_EDGE   = yes] )
 
 
 ################################################################################
@@ -499,11 +503,10 @@ AC_CONFIG_FILES([Makefile
                  testdir.h
                  algs/Makefile
                  algs/Qslim/Makefile
-		 rgg/Makefile
-                 xforms/Makefile
+				 rgg/Makefile
                  utils/Makefile
-		 camal/Makefile
-		 plibs/Makefile
+				 camal/Makefile
+				 plibs/Makefile
                  ])
 
 AC_OUTPUT

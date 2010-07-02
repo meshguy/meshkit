@@ -20,10 +20,6 @@ if ENABLE_rgg
   SUBDIRS += rgg
   INCLUDES += -I$(top_srcdir)/rgg
 endif
-if ENABLE_xforms
-  SUBDIRS += xforms
-  INCLUDES += -I$(top_srcdir)/xforms
-endif
 if HAVE_CAMAL
   SUBDIRS += camal
   INCLUDES += -I$(top_srcdir)/camal

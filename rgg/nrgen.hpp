@@ -14,7 +14,7 @@ CNrgen class definition.
 #include "vectortemplate.hpp"
 #include "matrixtemplate.hpp"
 #include "pincell.hpp"
-#include "simplearray.hpp"
+#include "SimpleArray.hpp"
 #include "iGeom.h"
 
 // helper macro for assygen

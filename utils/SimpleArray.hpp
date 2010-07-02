@@ -1,10 +1,7 @@
 #ifndef SIMP_ARR_H
 #define SIMP_ARR_H
 
-#include <stdlib.h>
-
-#include <iostream>
-using namespace std;
+#include <cstdlib>
 
 template <typename T> 
 class SimpleArray
@@ -15,9 +12,9 @@ class SimpleArray
     int arrAllocated;
      
   public:
-    SimpleArray() : arr(0) , arrSize(0), arrAllocated(0) {}
+    SimpleArray() : arr(NULL) , arrSize(0), arrAllocated(0) {}
 
-    SimpleArray( unsigned s ) :arrSize(s), arrAllocated(s) 
+    SimpleArray( unsigned s ) : arr(NULL), arrSize(s), arrAllocated(s) 
     {
       resize(s);
     }
@@ -34,23 +31,23 @@ class SimpleArray
 
     int  resize( unsigned s ) 
     {
-      if( s == 0) return 0;
+      if (s == 0) return 0;
       clear();
       arr = (T*)malloc(s*sizeof(T));
       for (unsigned i = 0; i < s; ++i)
         new (arr+i) T();
-      arrSize   = s;
-      arrAllocated = s;
+      arrSize = arrAllocated = s;
       return 0;
     }
 
     void clear() 
     {
-      if( arr == 0) return;
+      if (arr == NULL) return;
       for (int i = 0; i < size(); ++i)
            arr[i].~T();
       free(arr); 
-      arr = 0; arrSize = 0; arrAllocated = 0;
+      arr = NULL;
+      arrSize = arrAllocated = 0;
     }
 
     typedef T* iterator;

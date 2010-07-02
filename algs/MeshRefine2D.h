@@ -15,7 +15,7 @@
 
 using namespace std;
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #include "basic_math.h"
 
 /////////////////////////////////////////////////////////////////////////////////

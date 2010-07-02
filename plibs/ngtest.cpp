@@ -17,7 +17,7 @@
 #include <iMesh.h>
 #include <iRel.h>
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #include "ITAP_NetGen_Mesh.h"
 
 using namespace std;

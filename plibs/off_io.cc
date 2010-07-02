@@ -10,7 +10,7 @@
 using namespace std;
 
 #include <iMesh.h>
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 
 iMesh_Instance read_off_file( const string &filename )
 {

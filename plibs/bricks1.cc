@@ -26,7 +26,7 @@
 #include <iMesh.h>
 #include <iRel.h>
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 
 using namespace std;
 

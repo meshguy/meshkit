@@ -20,7 +20,7 @@
 #include <iRel.h>
 #include <MBCN.hpp>
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #include "GEdge.h"
 #include "GFace.h"
 #include "tfiblend.h"

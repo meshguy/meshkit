@@ -12,7 +12,7 @@ using namespace netgen;
 #include <iMesh.h>
 #include <iRel.h>
 
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #include "SearchUV.h"
 
 #define PARAMETERSPACE -1

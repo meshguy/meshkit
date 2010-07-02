@@ -1,6 +1,7 @@
 #include "CopyVerts.hpp"
 
 #include "vec_utils.hpp"
+#include "SimpleArray.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -16,21 +17,18 @@ void CopyVerts::operator ()(int n, iBase_EntityHandle *src, int src_size,
 {
   int err;
 
-  double *coords=0;
-  int coords_alloc=0,coords_size=0;
-  iMesh_getVtxArrCoords(impl_, src, src_size, iBase_INTERLEAVED, &coords,
-                        &coords_alloc, &coords_size, &err);
-  assert(!err);
+  SimpleArray<double> coords;
+  iMesh_getVtxArrCoords(impl_, src, src_size, iBase_INTERLEAVED,
+                        ARRAY_INOUT(coords), &err);
+  if(err) return;
 
   for(int i=0; i<src_size; i++)
-    transform(n,i,coords + i*3);
+    transform(n,i,&coords[i*3]);
 
-  iMesh_createVtxArr(impl_, src_size, iBase_INTERLEAVED, coords, coords_size,
+  iMesh_createVtxArr(impl_, src_size, iBase_INTERLEAVED, ARRAY_IN(coords),
                      dest, dest_alloc, dest_size, &err);
-  assert(!err);
+  if(err) return;
   assert(*dest_size == src_size); // Sanity check
-
-  free(coords);
 }
 
 CopyMoveVerts::CopyMoveVerts(iMesh_Instance impl, const double *dv, int max)

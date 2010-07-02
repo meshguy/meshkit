@@ -18,7 +18,7 @@
 #ifdef USE_MOAB
 #include <iMesh.h>
 #include <MBInterface.hpp>
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #endif
 
 #ifdef USE_MESQUITE

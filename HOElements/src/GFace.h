@@ -13,7 +13,7 @@
 #include <iRel.h>
 
 #include "GEdge.h"
-#include "SimpleArray.h"
+#include "SimpleArray.hpp"
 #include "TFIMap.h"
 
 using namespace std;
