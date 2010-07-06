@@ -9,6 +9,7 @@
 #include "CubitVector.hpp"
 #include "SmoothMeshEval.hpp"
 
+extern bool use_cgm;
 // most of these functions will simply pass the call to the ref edge
 // (delegate)
 // it is most likely what CUBIT does with CAMAL
@@ -98,16 +99,27 @@ bool SmoothCurveEval::position_from_u(double u,
                                double& x, double& y, double& z )
 {
 	// we will call the evaluator from smooth face evaluator
-	assert (this->_smoothFaceEval);
-	MBCartVect position;
-	_smoothFaceEval->evaluate_loop_at_u(_loopIndex, u, position);
-	assert(_ref_edge);
-	CubitVector output_position;
-	CubitStatus status = _ref_edge->position_from_u ( u, output_position);
-	if (CUBIT_SUCCESS==status)
+
+	if (!use_cgm)
 	{
-		output_position.get_xyz( x, y, z ) ;
+		assert (this->_smoothFaceEval);
+		MBCartVect position;
+		_smoothFaceEval->evaluate_loop_at_u(_loopIndex, u, position);
+		x = position[0];
+		y = position[1];
+		z = position[2];
 		return true;
+	}
+	else
+	{
+		assert(_ref_edge);
+		CubitVector output_position;
+		CubitStatus status = _ref_edge->position_from_u ( u, output_position);
+		if (CUBIT_SUCCESS==status)
+		{
+			output_position.get_xyz( x, y, z ) ;
+			return true;
+		}
 	}
 	return false;
 

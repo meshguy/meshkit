@@ -104,14 +104,23 @@ void SmoothMeshEval::move_to_surface(double& x, double& y, double& z) {
 	assert(_smooth_face);
 	CubitVector location(x, y, z);
 	MBCartVect loc2(x, y, z);
-	_smooth_face->move_to_surface(location);
-	location.get_xyz(x, y, z);
-	// try our luck
 	bool trim = false;// is it needed?
 	bool outside = true;
 	MBCartVect closestPoint;
+        if (use_cgm)
+	{
+           _smooth_face->move_to_surface(location);
+	    location.get_xyz(x, y, z);
+        }
+        else
+        {
+	// try our luck
 	// not interested in normal
-	MBErrorCode rval = project_to_facets_main(loc2, trim, outside, &closestPoint, NULL);
+	      MBErrorCode rval = project_to_facets_main(loc2, trim, outside, &closestPoint, NULL);
+               x = closestPoint[0];
+               y = closestPoint[1];
+               z = closestPoint[2];
+         }
 #if 0
 
 	int result;
@@ -126,12 +135,6 @@ void SmoothMeshEval::move_to_surface(double& x, double& y, double& z) {
 		<< x << "," << y << "," << z << std::endl;
 	}
 #endif
-	if (!use_cgm) // default
-	{
-		x = closestPoint[0];
-		y = closestPoint[1];
-		z = closestPoint[2];
-	}
 }
 
 void SmoothMeshEval::move_to_surface(double& x, double& y, double& z,
@@ -147,17 +150,19 @@ bool SmoothMeshEval::normal_at(double x, double y, double z, double& nx,
 	assert(_smooth_face);
 	CubitVector location(x, y, z);
 	MBCartVect loc2(x, y, z);
-	CubitVector v = _smooth_face->normal_at(location);
-	v.get_xyz(nx, ny, nz);
-			// try our luck
-	bool trim = false;// is it needed?
-	bool outside = true;
+        if (use_cgm)
+        { 
+	   CubitVector v = _smooth_face->normal_at(location);
+	   v.get_xyz(nx, ny, nz);
+        }
+        else
+        {			// try our luck
+	   bool trim = false;// is it needed?
+	   bool outside = true;
 	//MBCartVect closestPoint;// not needed
 	// not interested in normal
-	MBCartVect normal;
-	MBErrorCode rval = project_to_facets_main(loc2, trim, outside, NULL, &normal);
-	if (!use_cgm) // default
-	{
+	   MBCartVect normal;
+	   MBErrorCode rval = project_to_facets_main(loc2, trim, outside, NULL, &normal);
 		nx = normal[0];
 		ny = normal[1];
 		nz = normal[2];
@@ -2571,7 +2576,7 @@ MBErrorCode SmoothMeshEval::eval_bezier_patch_normal( MBEntityHandle facet,
   Bsum += B;
   normal += B * Nijk[9];
 
-  assert(fabs(Bsum - 1.0) < 1e-9);
+  //assert(fabs(Bsum - 1.0) < 1e-9);
 
   normal.normalize();
 
