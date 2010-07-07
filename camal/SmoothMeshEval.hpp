@@ -199,6 +199,8 @@ private:
     MBCartVect  P[3][5],  // edge control points
     MBCartVect  G[6] ) ;   // return internal control points
 
+  void DumpModelControlPoints();
+
   iMesh_Instance _meshIface;
   iBase_EntitySetHandle _surf_set;
 

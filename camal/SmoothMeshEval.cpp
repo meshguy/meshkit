@@ -4,6 +4,7 @@
 //#include "moab/GeomTopoTool.hpp"
 
 #include <algorithm>
+#include <iomanip>
 
 // included in the header now
 // #include "MBRange.hpp"
@@ -107,20 +108,18 @@ void SmoothMeshEval::move_to_surface(double& x, double& y, double& z) {
 	bool trim = false;// is it needed?
 	bool outside = true;
 	MBCartVect closestPoint;
-        if (use_cgm)
-	{
-           _smooth_face->move_to_surface(location);
-	    location.get_xyz(x, y, z);
-        }
-        else
-        {
-	// try our luck
-	// not interested in normal
-	      MBErrorCode rval = project_to_facets_main(loc2, trim, outside, &closestPoint, NULL);
-               x = closestPoint[0];
-               y = closestPoint[1];
-               z = closestPoint[2];
-         }
+	if (use_cgm) {
+		_smooth_face->move_to_surface(location);
+		location.get_xyz(x, y, z);
+	} else {
+		// try our luck
+		// not interested in normal
+		MBErrorCode rval = project_to_facets_main(loc2, trim, outside,
+				&closestPoint, NULL);
+		x = closestPoint[0];
+		y = closestPoint[1];
+		z = closestPoint[2];
+	}
 #if 0
 
 	int result;
@@ -150,19 +149,17 @@ bool SmoothMeshEval::normal_at(double x, double y, double z, double& nx,
 	assert(_smooth_face);
 	CubitVector location(x, y, z);
 	MBCartVect loc2(x, y, z);
-        if (use_cgm)
-        { 
-	   CubitVector v = _smooth_face->normal_at(location);
-	   v.get_xyz(nx, ny, nz);
-        }
-        else
-        {			// try our luck
-	   bool trim = false;// is it needed?
-	   bool outside = true;
-	//MBCartVect closestPoint;// not needed
-	// not interested in normal
-	   MBCartVect normal;
-	   MBErrorCode rval = project_to_facets_main(loc2, trim, outside, NULL, &normal);
+	if (use_cgm) {
+		CubitVector v = _smooth_face->normal_at(location);
+		v.get_xyz(nx, ny, nz);
+	} else { // try our luck
+		bool trim = false;// is it needed?
+		bool outside = true;
+		//MBCartVect closestPoint;// not needed
+		// not interested in normal
+		MBCartVect normal;
+		MBErrorCode rval = project_to_facets_main(loc2, trim, outside, NULL,
+				&normal);
 		nx = normal[0];
 		ny = normal[1];
 		nz = normal[2];
@@ -432,6 +429,9 @@ int SmoothMeshEval::Initialize() {
 	// initialize geom topo tool, and construct obb tree
 	initialize_geom_topo_tool();
 
+	if (debug_surf_eval) {
+		DumpModelControlPoints();
+	}
 	return 0; // success
 }
 MBErrorCode SmoothMeshEval::initialize_geom_topo_tool() {
@@ -1053,6 +1053,82 @@ MBErrorCode SmoothMeshEval::init_facet_control_points(MBCartVect N[6], // vertex
 	return rval;
 }
 
+void SmoothMeshEval::DumpModelControlPoints()
+{
+	// here, we will dump all control points from edges and facets (6 control points for each facet)
+	// we may also create some edges; maybe later...
+	// create a point3D file
+	// output a Point3D file (special visit format)
+	std::ofstream point3DFile;
+	point3DFile.open("control.Point3D");
+	point3DFile << "# x y z \n";
+	std::ofstream point3DEdgeFile;
+	point3DEdgeFile.open("controlEdge.Point3D");
+	point3DEdgeFile << "# x y z \n";
+	std::ofstream smoothPoints;
+	smoothPoints.open("smooth.Point3D");
+	smoothPoints << "# x y z \n";
+	MBCartVect controlPoints[3]; // edge control points
+	for (MBRange::iterator it = _edges.begin(); it!=_edges.end(); it++)
+	{
+		MBEntityHandle edge=*it;
+
+		_mb->tag_get_data(_edgeCtrlTag, &edge, 1, (double*) &controlPoints[0]);
+		for (int i=0; i<3; i++)
+		{
+			MBCartVect & c = controlPoints[i];
+			point3DEdgeFile <<std::setprecision(11)<< c[0]<< " " << c[1]<< " "
+						<< c[2]<<" \n";
+		}
+	}
+	MBCartVect controlTriPoints[6]; // triangle control points
+	MBCartVect P_facet[3];// result in 3 "mid" control points
+	for (MBRange::iterator it2 = _triangles.begin(); it2!=_triangles.end(); it2++)
+	{
+		MBEntityHandle tri=*it2;
+
+		_mb->tag_get_data(_facetCtrlTag, &tri, 1, (double*) &controlTriPoints[0]);
+
+		// draw a line of points between pairs of control points
+		int numPoints = 7;
+		for (int n=0; n<numPoints; n++)
+		{
+			double a = 1.*n/(numPoints-1);
+			double b = 1.0-a;
+
+			P_facet[0] = a * controlTriPoints[3] + b * controlTriPoints[4];
+			//1,2,1
+			P_facet[1] = a * controlTriPoints[0] + b * controlTriPoints[5];
+			//1,1,2
+			P_facet[2] = a * controlTriPoints[1] + b * controlTriPoints[2];
+			for (int i=0; i<3; i++)
+			{
+				MBCartVect & c = P_facet[i];
+				point3DFile <<std::setprecision(11)<< c[0]<< " " << c[1]<< " " << c[2]<<" \n";
+			}
+		}
+
+		// evaluate for each triangle a lattice of points
+		int N=40;
+		for (int k=0; k<=N; k++)
+		{
+			for (int m=0; m<=N-k; m++)
+			{
+				int n= N-m-k;
+				MBCartVect areacoord(1.*k/N, 1.*m/N, 1.*n/N);
+				MBCartVect pt;
+				eval_bezier_patch( tri, areacoord, pt);
+				smoothPoints <<std::setprecision(11)<< pt[0]<< " " << pt[1]<< " "
+										<< pt[2]<<" \n";
+
+			}
+		}
+	}
+	point3DFile.close();
+	smoothPoints.close();
+	point3DEdgeFile.close();
+	return;
+}
 //===========================================================================
 //Function Name: evaluate_single
 //
@@ -1508,26 +1584,24 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 	static int mydebug = 0;
 	bool outside_facet, best_outside_facet = true;
 	MBCartVect close_point, best_point, best_areacoord;
-	MBEntityHandle best_facet= 0L;// no best facet found yet
+	MBEntityHandle best_facet = 0L;// no best facet found yet
 	MBEntityHandle facet;
 	assert(facet_list.size() > 0);
 
 	double big_dist = compareTol * 1.0e3;
 
 	int nevald = 0;
-  double tol = compareTol * 10;
-  const double atol = 0.001;
-  double mindist = 1.e20;
-  bool done = false; // maybe not use this
+	double tol = compareTol * 10;
+	const double atol = 0.001;
+	double mindist = 1.e20;
+	bool done = false; // maybe not use this
 
 	// from the list of close facets, determine the closest point
-	for (int i=0; i<facet_list.size(); i++)
-	{
+	for (int i = 0; i < facet_list.size(); i++) {
 		facet = facet_list[i];
 		MBCartVect pt_on_plane;
 		double dist_to_plane;
-		project_to_facet_plane(facet, this_point, pt_on_plane,
-				dist_to_plane);
+		project_to_facet_plane(facet, this_point, pt_on_plane, dist_to_plane);
 
 		MBCartVect areacoord;
 		//MBCartVect close_point;
@@ -1538,20 +1612,19 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 			// edge of the patch if necessary
 
 
-
 			if (project_to_facet(facet, this_point, areacoord, close_point,
 					outside_facet, compareTol) != MB_SUCCESS) {
 				return MB_FAILURE;
 			}
 			//if (closest_point_ptr)
-				//*closest_point_ptr = close_point;
+			//*closest_point_ptr = close_point;
 		}
 		// keep track of the minimum distance
 
-		double dist = (close_point-this_point).length();//close_point.distance_between(this_point);
-		if ( (best_outside_facet == outside_facet && dist < mindist)
-				|| (best_outside_facet && !outside_facet && (dist
-						< big_dist || best_facet==0L/*!best_facet*/))) {
+		double dist = (close_point - this_point).length();//close_point.distance_between(this_point);
+		if ((best_outside_facet == outside_facet && dist < mindist)
+				|| (best_outside_facet && !outside_facet && (dist < big_dist
+						|| best_facet == 0L/*!best_facet*/))) {
 			mindist = dist;
 			best_point = close_point;
 			best_facet = facet;
@@ -1617,7 +1690,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 
 	DLIList<CubitFacet *> used_facet_list;
 	for (ii = 0; ii < facet_list.size(); ii++)
-		facet_list.get_and_step()->marked(0);
+	facet_list.get_and_step()->marked(0);
 
 	int nfacets = facet_list.size();
 	int nevald = 0;
@@ -1643,7 +1716,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 		for (ii = facet_list.size(); ii > 0 && !done; ii--) {
 			facet = facet_list.get_and_step();
 			if (facet->marked())
-				continue;
+			continue;
 
 			// Try to trivially reject this facet with a bounding box test
 			// (Does the bounding box of the facet intersect with the
@@ -1681,7 +1754,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 				// edge of the patch if necessary
 
 				if (project_to_facet(facet, this_point, areacoord, close_point,
-						outside_facet, compare_tol) != CUBIT_SUCCESS) {
+								outside_facet, compare_tol) != CUBIT_SUCCESS) {
 					return CUBIT_FAILURE;
 				}
 			} else {
@@ -1713,7 +1786,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 						}
 					} else {
 						if (project_to_facetedge(facet, 1, 2, this_point,
-								pt_on_plane, close_point, outside_facet, trim)
+										pt_on_plane, close_point, outside_facet, trim)
 								!= CUBIT_SUCCESS) {
 							return CUBIT_FAILURE;
 						}
@@ -1726,7 +1799,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 						}
 					} else {
 						if (project_to_facetedge(facet, 2, 0, this_point,
-								pt_on_plane, close_point, outside_facet, trim)
+										pt_on_plane, close_point, outside_facet, trim)
 								!= CUBIT_SUCCESS) {
 							return CUBIT_FAILURE;
 						}
@@ -1734,7 +1807,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 				} else {
 					outside_facet = CUBIT_TRUE;
 					if (project_to_facetedge(facet, 0, 1, this_point,
-							pt_on_plane, close_point, outside_facet, trim)
+									pt_on_plane, close_point, outside_facet, trim)
 							!= CUBIT_SUCCESS) {
 						return CUBIT_FAILURE;
 					}
@@ -1746,7 +1819,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 			double dist = close_point.distance_between(this_point);
 			if ((best_outside_facet == outside_facet && dist < mindist)
 					|| (best_outside_facet && !outside_facet && (dist
-							< big_dist || !best_facet))) {
+									< big_dist || !best_facet))) {
 				mindist = dist;
 				best_point = close_point;
 				best_facet = facet;
@@ -1809,7 +1882,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 
 	if (!trim && best_outside_facet && interp_order != 4) {
 		if (project_to_facet(best_facet, this_point, best_areacoord,
-				best_point, best_outside_facet, compare_tol) != CUBIT_SUCCESS) {
+						best_point, best_outside_facet, compare_tol) != CUBIT_SUCCESS) {
 			return CUBIT_FAILURE;
 		}
 
@@ -1861,7 +1934,6 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 	//end copy
 }
 
-
 //===========================================================================
 //Function Name: project_to_patch
 //
@@ -1871,288 +1943,274 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 //              assumes that the point is contained within the patch -
 //              if not, it will project to one of its edges.
 //===========================================================================
-MBErrorCode SmoothMeshEval::project_to_patch(
-  MBEntityHandle facet,     // (IN) the facet where the patch is defined
-  MBCartVect &ac,       // (IN) area coordinate initial guess (from linear facet)
-  MBCartVect &pt,       // (IN) point we are projecting to patch
-  MBCartVect &eval_pt,  // (OUT) The projected point
-  MBCartVect *eval_norm, // (OUT) normal at evaluated point
-  bool &outside, // (OUT) the closest point on patch to pt is on an edge
-  double compare_tol,    // (IN) comparison tolerance
-  int edge_id )          // (IN) only used if this is to be projected to one
-                         //      of the edges.  Otherwise, should be -1
+MBErrorCode SmoothMeshEval::project_to_patch(MBEntityHandle facet, // (IN) the facet where the patch is defined
+		MBCartVect &ac, // (IN) area coordinate initial guess (from linear facet)
+		MBCartVect &pt, // (IN) point we are projecting to patch
+		MBCartVect &eval_pt, // (OUT) The projected point
+		MBCartVect *eval_norm, // (OUT) normal at evaluated point
+		bool &outside, // (OUT) the closest point on patch to pt is on an edge
+		double compare_tol, // (IN) comparison tolerance
+		int edge_id) // (IN) only used if this is to be projected to one
+//      of the edges.  Otherwise, should be -1
 {
-  MBErrorCode status = MB_SUCCESS;
+	MBErrorCode status = MB_SUCCESS;
 
-  // see if we are at a vertex
+	// see if we are at a vertex
 
 #define INCR 0.01
-  const double tol = compare_tol;
+	const double tol = compare_tol;
 
-  if (is_at_vertex( facet, pt, ac, compare_tol, eval_pt, eval_norm ))
-  {
-    outside = false;
-    return MB_SUCCESS;
-  }
+	if (is_at_vertex(facet, pt, ac, compare_tol, eval_pt, eval_norm)) {
+		outside = false;
+		return MB_SUCCESS;
+	}
 
-  // check if the start ac is inside the patch -if not, then move it there
+	// check if the start ac is inside the patch -if not, then move it there
 
-  int nout = 0;
-  const double atol = 0.001;
-  if(move_ac_inside( ac, atol ))
-    nout++;
+	int nout = 0;
+	const double atol = 0.001;
+	if (move_ac_inside(ac, atol))
+		nout++;
 
-  int diverge = 0;
-  int iter = 0;
-  MBCartVect  newpt;
-  eval_bezier_patch(facet, ac, newpt);
-  MBCartVect move = pt - newpt;
-  double lastdist = move.length();
-  double bestdist = lastdist;
-  MBCartVect bestac = ac;
-  MBCartVect bestpt = newpt;
-  MBCartVect bestnorm;
+	int diverge = 0;
+	int iter = 0;
+	MBCartVect newpt;
+	eval_bezier_patch(facet, ac, newpt);
+	MBCartVect move = pt - newpt;
+	double lastdist = move.length();
+	double bestdist = lastdist;
+	MBCartVect bestac = ac;
+	MBCartVect bestpt = newpt;
+	MBCartVect bestnorm;
 
-  // If we are already close enough, then return now
+	// If we are already close enough, then return now
 
-  if (lastdist <= tol && !eval_norm && nout == 0) {
-    eval_pt = pt;
-    outside = false;
-    return status;
-  }
+	if (lastdist <= tol && !eval_norm && nout == 0) {
+		eval_pt = pt;
+		outside = false;
+		return status;
+	}
 
-  double ratio, mag, umove, vmove, det, distnew, movedist;
-  MBCartVect lastpt = newpt;
-  MBCartVect lastac = ac;
-  MBCartVect norm;
-  MBCartVect xpt, ypt, zpt, xac, yac, zac, xvec, yvec, zvec;
-  MBCartVect du, dv, newac;
-  bool done = false;
-  while (!done) {
+	double ratio, mag, umove, vmove, det, distnew, movedist;
+	MBCartVect lastpt = newpt;
+	MBCartVect lastac = ac;
+	MBCartVect norm;
+	MBCartVect xpt, ypt, zpt, xac, yac, zac, xvec, yvec, zvec;
+	MBCartVect du, dv, newac;
+	bool done = false;
+	while (!done) {
 
-    // We will be locating the projected point within the u,v,w coordinate
-    // system of the triangular bezier patch.  Since u+v+w=1, the components
-    // are not linearly independent.  We will choose only two of the
-    // coordinates to use and compute the third.
+		// We will be locating the projected point within the u,v,w coordinate
+		// system of the triangular bezier patch.  Since u+v+w=1, the components
+		// are not linearly independent.  We will choose only two of the
+		// coordinates to use and compute the third.
 
-    int system;
-    if (lastac[0] >= lastac[1] && lastac[0] >= lastac[2]) {
-      system = 0;
-    }
-    else if (lastac[1] >= lastac[2]) {
-      system = 1;
-    }
-    else {
-      system = 2;
-    }
+		int system;
+		if (lastac[0] >= lastac[1] && lastac[0] >= lastac[2]) {
+			system = 0;
+		} else if (lastac[1] >= lastac[2]) {
+			system = 1;
+		} else {
+			system = 2;
+		}
 
-    // compute the surface derivatives with respect to each
-    // of the barycentric coordinates
+		// compute the surface derivatives with respect to each
+		// of the barycentric coordinates
 
 
-    if (system == 1 || system == 2) {
-      xac[0] = lastac[0]+INCR; // xac.x( lastac.x() + INCR );
-      if (lastac[1] + lastac[2] == 0.0)
-        return MB_FAILURE;
-      ratio = lastac[2] / (lastac[1] + lastac[2]);//ratio = lastac.z() / (lastac.y() + lastac.z());
-      xac[1] =  (1.0 - xac[0]) * (1.0 - ratio) ;//xac.y( (1.0 - xac.x()) * (1.0 - ratio) );
-      xac[2] =  1.0 - xac[0] - xac[1]; // xac.z( 1.0 - xac.x() - xac.y() );
-      eval_bezier_patch(facet, xac, xpt);
-      xvec = xpt - lastpt;
-      xvec /= INCR;
-    }
-    if (system == 0 || system == 2) {
-       yac[1] = ( lastac[1] + INCR );//yac.y( lastac.y() + INCR );
-       if (lastac[0] + lastac[2] == 0.0)//if (lastac.x() + lastac.z() == 0.0)
-        return MB_FAILURE;
-       ratio = lastac[2] / (lastac[0] + lastac[2]);//ratio = lastac.z() / (lastac.x() + lastac.z());
-       yac[0] = ( (1.0 - yac[1]) * (1.0 - ratio) );//yac.x( (1.0 - yac.y()) * (1.0 - ratio) );
-       yac[2] = ( 1.0 - yac[0] - yac[1] );//yac.z( 1.0 - yac.x() - yac.y() );
-       eval_bezier_patch(facet, yac, ypt);
-       yvec = ypt - lastpt;
-       yvec /= INCR;
-    }
-    if (system == 0 || system == 1) {
-    	zac[2] = ( lastac[2] + INCR );//zac.z( lastac.z() + INCR );
-    	if (lastac[0] + lastac[1] == 0.0)//if (lastac.x() + lastac.y() == 0.0)
-          return MB_FAILURE;
-    	ratio = lastac[1] / (lastac[0] + lastac[1]);//ratio = lastac.y() / (lastac.x() + lastac.y());
-    	zac[0] = ( (1.0 - zac[2]) * (1.0 - ratio) );//zac.x( (1.0 - zac.z()) * (1.0 - ratio) );
-    	zac[1] = ( 1.0 - zac[0] - zac[2] );//zac.y( 1.0 - zac.x() - zac.z() );
-      eval_bezier_patch(facet, zac, zpt);
-      zvec = zpt - lastpt;
-      zvec /= INCR;
-    }
+		if (system == 1 || system == 2) {
+			xac[0] = lastac[0] + INCR; // xac.x( lastac.x() + INCR );
+			if (lastac[1] + lastac[2] == 0.0)
+				return MB_FAILURE;
+			ratio = lastac[2] / (lastac[1] + lastac[2]);//ratio = lastac.z() / (lastac.y() + lastac.z());
+			xac[1] = (1.0 - xac[0]) * (1.0 - ratio);//xac.y( (1.0 - xac.x()) * (1.0 - ratio) );
+			xac[2] = 1.0 - xac[0] - xac[1]; // xac.z( 1.0 - xac.x() - xac.y() );
+			eval_bezier_patch(facet, xac, xpt);
+			xvec = xpt - lastpt;
+			xvec /= INCR;
+		}
+		if (system == 0 || system == 2) {
+			yac[1] = (lastac[1] + INCR);//yac.y( lastac.y() + INCR );
+			if (lastac[0] + lastac[2] == 0.0)//if (lastac.x() + lastac.z() == 0.0)
+				return MB_FAILURE;
+			ratio = lastac[2] / (lastac[0] + lastac[2]);//ratio = lastac.z() / (lastac.x() + lastac.z());
+			yac[0] = ((1.0 - yac[1]) * (1.0 - ratio));//yac.x( (1.0 - yac.y()) * (1.0 - ratio) );
+			yac[2] = (1.0 - yac[0] - yac[1]);//yac.z( 1.0 - yac.x() - yac.y() );
+			eval_bezier_patch(facet, yac, ypt);
+			yvec = ypt - lastpt;
+			yvec /= INCR;
+		}
+		if (system == 0 || system == 1) {
+			zac[2] = (lastac[2] + INCR);//zac.z( lastac.z() + INCR );
+			if (lastac[0] + lastac[1] == 0.0)//if (lastac.x() + lastac.y() == 0.0)
+				return MB_FAILURE;
+			ratio = lastac[1] / (lastac[0] + lastac[1]);//ratio = lastac.y() / (lastac.x() + lastac.y());
+			zac[0] = ((1.0 - zac[2]) * (1.0 - ratio));//zac.x( (1.0 - zac.z()) * (1.0 - ratio) );
+			zac[1] = (1.0 - zac[0] - zac[2]);//zac.y( 1.0 - zac.x() - zac.z() );
+			eval_bezier_patch(facet, zac, zpt);
+			zvec = zpt - lastpt;
+			zvec /= INCR;
+		}
 
-    // compute the surface normal
+		// compute the surface normal
 
-     switch (system) {
-     case 0:
-       du = yvec;
-       dv = zvec;
-       break;
-     case 1:
-       du = zvec;
-       dv = xvec;
-       break;
-     case 2:
-       du = xvec;
-       dv = yvec;
-       break;
-     }
-     norm = du * dv;
-     mag = norm.length();
-     if (mag < DBL_EPSILON) {
-       return MB_FAILURE;
-       // do something else here (it is likely a flat triangle -
-       // so try evaluating just an edge of the bezier patch)
-     }
-     norm /= mag;
-     if (iter == 0)
-       bestnorm = norm;
+		switch (system) {
+		case 0:
+			du = yvec;
+			dv = zvec;
+			break;
+		case 1:
+			du = zvec;
+			dv = xvec;
+			break;
+		case 2:
+			du = xvec;
+			dv = yvec;
+			break;
+		}
+		norm = du * dv;
+		mag = norm.length();
+		if (mag < DBL_EPSILON) {
+			return MB_FAILURE;
+			// do something else here (it is likely a flat triangle -
+			// so try evaluating just an edge of the bezier patch)
+		}
+		norm /= mag;
+		if (iter == 0)
+			bestnorm = norm;
 
-     // project the move vector to the tangent plane
+		// project the move vector to the tangent plane
 
-     move = (norm * move) * norm;
+		move = (norm * move) * norm;
 
-     // compute an equivalent u-v-w vector
+		// compute an equivalent u-v-w vector
 
-     MBCartVect absnorm( fabs(norm[0]), fabs(norm[1]), fabs(norm[2]) );
-     if (absnorm[2] >= absnorm[1] && absnorm[2] >= absnorm[0]) {
-       det = du[0] * dv[1] - dv[0] * du[1];
-       if (fabs(det) <= DBL_EPSILON) {
-         return MB_FAILURE;  // do something else here
-       }
-       umove = (move[0] * dv[1] - dv[0] * move[1]) / det;
-       vmove = (du[0] * move[1] - move[0] * du[1]) / det;
-     }
-     else if (absnorm[1] >= absnorm[2] && absnorm[1] >= absnorm[0]) {
-       det = du[0] * dv[2] - dv[0] * du[2];
-       if (fabs(det) <= DBL_EPSILON) {
-         return MB_FAILURE;
-       }
-       umove = (move[0] * dv[2] - dv[0] * move[2]) / det;
-       vmove = (du[0] * move[2] - move[0] * du[2]) / det;
-     }
-     else {
-       det = du[1] * dv[2] - dv[1] * du[2];
-       if (fabs(det) <= DBL_EPSILON) {
-         return MB_FAILURE;
-       }
-       umove = (move[1] * dv[2] - dv[1] * move[2]) / det;
-       vmove = (du[1] * move[2] - move[1] * du[2]) / det;
-     }
+		MBCartVect absnorm(fabs(norm[0]), fabs(norm[1]), fabs(norm[2]));
+		if (absnorm[2] >= absnorm[1] && absnorm[2] >= absnorm[0]) {
+			det = du[0] * dv[1] - dv[0] * du[1];
+			if (fabs(det) <= DBL_EPSILON) {
+				return MB_FAILURE; // do something else here
+			}
+			umove = (move[0] * dv[1] - dv[0] * move[1]) / det;
+			vmove = (du[0] * move[1] - move[0] * du[1]) / det;
+		} else if (absnorm[1] >= absnorm[2] && absnorm[1] >= absnorm[0]) {
+			det = du[0] * dv[2] - dv[0] * du[2];
+			if (fabs(det) <= DBL_EPSILON) {
+				return MB_FAILURE;
+			}
+			umove = (move[0] * dv[2] - dv[0] * move[2]) / det;
+			vmove = (du[0] * move[2] - move[0] * du[2]) / det;
+		} else {
+			det = du[1] * dv[2] - dv[1] * du[2];
+			if (fabs(det) <= DBL_EPSILON) {
+				return MB_FAILURE;
+			}
+			umove = (move[1] * dv[2] - dv[1] * move[2]) / det;
+			vmove = (du[1] * move[2] - move[1] * du[2]) / det;
+		}
 
-    /* === compute the new u-v coords and evaluate surface at new location */
+		/* === compute the new u-v coords and evaluate surface at new location */
 
-    switch (system) {
-    case 0:
-    	newac[1] = ( lastac[1] + umove );//newac.y( lastac.y() + umove );
-    	newac[2] = ( lastac[2] + vmove );//newac.z( lastac.z() + vmove );
-    	newac[0] = ( 1.0 - newac[1] - newac[2] );//newac.x( 1.0 - newac.y() - newac.z() );
-      break;
-    case 1:
-    	newac[2] = ( lastac[2] + umove );//newac.z( lastac.z() + umove );
-    	newac[0] = ( lastac[0] + vmove );//newac.x( lastac.x() + vmove );
-    	newac[1] =( 1.0 - newac[2] - newac[0] );//newac.y( 1.0 - newac.z() - newac.x() );
-      break;
-    case 2:
-    	newac[0] =( lastac[0] + umove );//newac.x( lastac.x() + umove );
-    	newac[1] = ( lastac[1] + vmove );//newac.y( lastac.y() + vmove );
-    	newac[2] = ( 1.0 - newac[0] - newac[1] );//newac.z( 1.0 - newac.x() - newac.y() );
-      break;
-    }
+		switch (system) {
+		case 0:
+			newac[1] = (lastac[1] + umove);//newac.y( lastac.y() + umove );
+			newac[2] = (lastac[2] + vmove);//newac.z( lastac.z() + vmove );
+			newac[0] = (1.0 - newac[1] - newac[2]);//newac.x( 1.0 - newac.y() - newac.z() );
+			break;
+		case 1:
+			newac[2] = (lastac[2] + umove);//newac.z( lastac.z() + umove );
+			newac[0] = (lastac[0] + vmove);//newac.x( lastac.x() + vmove );
+			newac[1] = (1.0 - newac[2] - newac[0]);//newac.y( 1.0 - newac.z() - newac.x() );
+			break;
+		case 2:
+			newac[0] = (lastac[0] + umove);//newac.x( lastac.x() + umove );
+			newac[1] = (lastac[1] + vmove);//newac.y( lastac.y() + vmove );
+			newac[2] = (1.0 - newac[0] - newac[1]);//newac.z( 1.0 - newac.x() - newac.y() );
+			break;
+		}
 
-    // Keep it inside the patch
+		// Keep it inside the patch
 
-    if ( newac[0] >= -atol &&
-         newac[1] >= -atol &&
-         newac[2] >= -atol) {
-      nout = 0;
-    }
-    else {
-      if (move_ac_inside( newac, atol ) )
-        nout++;
-    }
+		if (newac[0] >= -atol && newac[1] >= -atol && newac[2] >= -atol) {
+			nout = 0;
+		} else {
+			if (move_ac_inside(newac, atol))
+				nout++;
+		}
 
-    // Evaluate at the new location
+		// Evaluate at the new location
 
-    if (edge_id != -1)
-      ac_at_edge( newac, newac, edge_id );  // move to edge first
-    eval_bezier_patch(facet, newac, newpt);
+		if (edge_id != -1)
+			ac_at_edge(newac, newac, edge_id); // move to edge first
+		eval_bezier_patch(facet, newac, newpt);
 
-    // Check for convergence
+		// Check for convergence
 
-    distnew = (pt-newpt).length();//pt.distance_between(newpt);
-    move = newpt - lastpt;
-    movedist = move.length();
-    if (movedist < tol ||
-        distnew < tol ) {
-      done = true;
-      if (distnew < bestdist)
-      {
-        bestdist = distnew;
-        bestac = newac;
-        bestpt = newpt;
-        bestnorm = norm;
-      }
-    }
-    else {
+		distnew = (pt - newpt).length();//pt.distance_between(newpt);
+		move = newpt - lastpt;
+		movedist = move.length();
+		if (movedist < tol || distnew < tol) {
+			done = true;
+			if (distnew < bestdist) {
+				bestdist = distnew;
+				bestac = newac;
+				bestpt = newpt;
+				bestnorm = norm;
+			}
+		} else {
 
-      // don't allow more than 30 iterations
+			// don't allow more than 30 iterations
 
-      iter++;
-      if (iter > 30) {
-        //if (movedist > tol * 100.0) nout=1;
-        done = true;
-      }
+			iter++;
+			if (iter > 30) {
+				//if (movedist > tol * 100.0) nout=1;
+				done = true;
+			}
 
-      // Check for divergence - don't allow more than 5 divergent
-      // iterations
+			// Check for divergence - don't allow more than 5 divergent
+			// iterations
 
-      if (distnew > lastdist) {
-        diverge++;
-        if (diverge > 10) {
-          done = true;
-          //if (movedist > tol * 100.0) nout=1;
-        }
-      }
+			if (distnew > lastdist) {
+				diverge++;
+				if (diverge > 10) {
+					done = true;
+					//if (movedist > tol * 100.0) nout=1;
+				}
+			}
 
-      // Check if we are continuing to project outside the facet.
-      // If so, then stop now
+			// Check if we are continuing to project outside the facet.
+			// If so, then stop now
 
-      if (nout > 3) {
-        done = true;
-      }
+			if (nout > 3) {
+				done = true;
+			}
 
-      // set up for next iteration
+			// set up for next iteration
 
-      if (!done) {
-        if (distnew < bestdist)
-        {
-          bestdist = distnew;
-          bestac = newac;
-          bestpt = newpt;
-          bestnorm = norm;
-        }
-        lastdist = distnew;
-        lastpt = newpt;
-        lastac = newac;
-        move = pt - lastpt;
-      }
-    }
-  }
+			if (!done) {
+				if (distnew < bestdist) {
+					bestdist = distnew;
+					bestac = newac;
+					bestpt = newpt;
+					bestnorm = norm;
+				}
+				lastdist = distnew;
+				lastpt = newpt;
+				lastac = newac;
+				move = pt - lastpt;
+			}
+		}
+	}
 
-  eval_pt = bestpt;
-  if (eval_norm) {
-    *eval_norm = bestnorm;
-  }
-  outside = (nout > 0) ? true : false;
-  ac = bestac;
+	eval_pt = bestpt;
+	if (eval_norm) {
+		*eval_norm = bestnorm;
+	}
+	outside = (nout > 0) ? true : false;
+	ac = bestac;
 
-  return status;
+	return status;
 }
-
 
 //===========================================================================
 //Function Name: ac_at_edge
@@ -2160,37 +2218,35 @@ MBErrorCode SmoothMeshEval::project_to_patch(
 //Member Type:  PRIVATE
 //Description:  determine the area coordinate of the facet at the edge
 //===========================================================================
-void SmoothMeshEval::ac_at_edge( MBCartVect &fac,  // facet area coordinate
-								MBCartVect &eac,   // edge area coordinate
-                                int edge_id )      // id of edge
+void SmoothMeshEval::ac_at_edge(MBCartVect &fac, // facet area coordinate
+		MBCartVect &eac, // edge area coordinate
+		int edge_id) // id of edge
 {
-  double u, v, w;
-  switch (edge_id)
-  {
-  case 0:
-    u = 0.0;
-    v = fac[1] / (fac[1] + fac[2]);//v = fac.y() / (fac.y() + fac.z());
-    w = 1.0 - v;
-    break;
-  case 1:
-	u = fac[0] / (fac[0] + fac[2]);// u = fac.x() / (fac.x() + fac.z());
-    v = 0.0;
-    w = 1.0 - u;
-    break;
-  case 2:
-	u = fac[0] / (fac[0] + fac[1]);//u = fac.x() / (fac.x() + fac.y());
-    v = 1.0 - u;
-    w = 0.0;
-    break;
-  default:
-    assert(0);
-    break;
-  }
-  eac[0] = u;
-  eac[1] = v;
-  eac[2] = w; //= MBCartVect(u, v, w);
+	double u, v, w;
+	switch (edge_id) {
+	case 0:
+		u = 0.0;
+		v = fac[1] / (fac[1] + fac[2]);//v = fac.y() / (fac.y() + fac.z());
+		w = 1.0 - v;
+		break;
+	case 1:
+		u = fac[0] / (fac[0] + fac[2]);// u = fac.x() / (fac.x() + fac.z());
+		v = 0.0;
+		w = 1.0 - u;
+		break;
+	case 2:
+		u = fac[0] / (fac[0] + fac[1]);//u = fac.x() / (fac.x() + fac.y());
+		v = 1.0 - u;
+		w = 0.0;
+		break;
+	default:
+		assert(0);
+		break;
+	}
+	eac[0] = u;
+	eac[1] = v;
+	eac[2] = w; //= MBCartVect(u, v, w);
 }
-
 
 //===========================================================================
 //Function Name: project_to_facet
@@ -2199,63 +2255,58 @@ void SmoothMeshEval::ac_at_edge( MBCartVect &fac,  // facet area coordinate
 //Description:  project to a single facet.  Uses the input areacoord as
 //              a starting guess.
 //===========================================================================
-MBErrorCode SmoothMeshEval::project_to_facet( MBEntityHandle facet,
-                                       MBCartVect &pt,
-                                       MBCartVect &areacoord,
-                                       MBCartVect &close_point,
-                                       bool &outside_facet,
-                                       double compare_tol)
-{
+MBErrorCode SmoothMeshEval::project_to_facet(MBEntityHandle facet,
+		MBCartVect &pt, MBCartVect &areacoord, MBCartVect &close_point,
+		bool &outside_facet, double compare_tol) {
 
-  MBErrorCode stat = MB_SUCCESS;
-  const MBEntityHandle * conn3;
-  	int nnodes;
-  	_mb->get_connectivity(facet, conn3, nnodes);
-  	//
-  	//double coords[9]; // store the coordinates for the nodes
-  	//_mb->get_coords(conn3, 3, coords);
-  	MBCartVect p[3];
-  	_mb->get_coords(conn3, 3, (double*) &p[0]);
-  /*CubitPoint *pt0 = facet->point(0);
-  CubitPoint *pt1 = facet->point(1);
-  CubitPoint *pt2 = facet->point(2);
+	MBErrorCode stat = MB_SUCCESS;
+	const MBEntityHandle * conn3;
+	int nnodes;
+	_mb->get_connectivity(facet, conn3, nnodes);
+	//
+	//double coords[9]; // store the coordinates for the nodes
+	//_mb->get_coords(conn3, 3, coords);
+	MBCartVect p[3];
+	_mb->get_coords(conn3, 3, (double*) &p[0]);
+	/*CubitPoint *pt0 = facet->point(0);
+	 CubitPoint *pt1 = facet->point(1);
+	 CubitPoint *pt2 = facet->point(2);
 
-  int interp_order = facet->eval_order();
-  if (facet->is_flat())
-  {
-    interp_order = 0;
-  }
+	 int interp_order = facet->eval_order();
+	 if (facet->is_flat())
+	 {
+	 interp_order = 0;
+	 }
 
-  switch(interp_order) {
-  case 0:
-    close_point.x( areacoord.x() * pt0->x() +
-                   areacoord.y() * pt1->x() +
-                   areacoord.z() * pt2->x() );
-    close_point.y( areacoord.x() * pt0->y() +
-                   areacoord.y() * pt1->y() +
-                   areacoord.z() * pt2->y() );
-    close_point.z( areacoord.x() * pt0->z() +
-                   areacoord.y() * pt1->z() +
-                   areacoord.z() * pt2->z() );
-    outside_facet = CUBIT_FALSE;
-    break;
-  case 1:
-  case 2:
-  case 3:
-    assert(0);  // not available from this function
-    break;
-  case 4:
-    {*/
-      int edge_id = -1;
-      stat = project_to_patch(facet, areacoord, pt, close_point, NULL,
-                              outside_facet, compare_tol, edge_id );
-   /* }
-    break;
-  }*/
+	 switch(interp_order) {
+	 case 0:
+	 close_point.x( areacoord.x() * pt0->x() +
+	 areacoord.y() * pt1->x() +
+	 areacoord.z() * pt2->x() );
+	 close_point.y( areacoord.x() * pt0->y() +
+	 areacoord.y() * pt1->y() +
+	 areacoord.z() * pt2->y() );
+	 close_point.z( areacoord.x() * pt0->z() +
+	 areacoord.y() * pt1->z() +
+	 areacoord.z() * pt2->z() );
+	 outside_facet = CUBIT_FALSE;
+	 break;
+	 case 1:
+	 case 2:
+	 case 3:
+	 assert(0);  // not available from this function
+	 break;
+	 case 4:
+	 {*/
+	int edge_id = -1;
+	stat = project_to_patch(facet, areacoord, pt, close_point, NULL,
+			outside_facet, compare_tol, edge_id);
+	/* }
+	 break;
+	 }*/
 
-  return stat;
+	return stat;
 }
-
 
 //===========================================================================
 //Function Name: is_at_vertex
@@ -2263,19 +2314,18 @@ MBErrorCode SmoothMeshEval::project_to_facet( MBEntityHandle facet,
 //Member Type:  PRIVATE
 //Description:  determine if the point is at one of the facet's vertices
 //===========================================================================
-bool SmoothMeshEval::is_at_vertex(
-  MBEntityHandle facet,  // (IN) facet we are evaluating
-  MBCartVect &pt,    // (IN) the point
-  MBCartVect &ac,    // (IN) the ac of the point on the facet plane
-  double compare_tol, // (IN) return TRUE of closer than this
-  MBCartVect &eval_pt, // (OUT) location at vertex if TRUE
-  MBCartVect *eval_norm_ptr ) // (OUT) normal at vertex if TRUE
+bool SmoothMeshEval::is_at_vertex(MBEntityHandle facet, // (IN) facet we are evaluating
+		MBCartVect &pt, // (IN) the point
+		MBCartVect &ac, // (IN) the ac of the point on the facet plane
+		double compare_tol, // (IN) return TRUE of closer than this
+		MBCartVect &eval_pt, // (OUT) location at vertex if TRUE
+		MBCartVect *eval_norm_ptr) // (OUT) normal at vertex if TRUE
 {
-  double dist;
-  MBCartVect vert_loc;
-  const double actol = 0.1;
-  // get coordinates get_coords
-  const MBEntityHandle * conn3;
+	double dist;
+	MBCartVect vert_loc;
+	const double actol = 0.1;
+	// get coordinates get_coords
+	const MBEntityHandle * conn3;
 	int nnodes;
 	_mb->get_connectivity(facet, conn3, nnodes);
 	//
@@ -2285,52 +2335,45 @@ bool SmoothMeshEval::is_at_vertex(
 	_mb->get_coords(conn3, 3, (double*) &p[0]);
 	// also get the normals at nodes
 	MBCartVect NN[3];
-	_mb->tag_get_data(_gradientTag, conn3, 3, (double*)&NN[0]);
-  if (fabs(ac[0]) < actol && fabs(ac[1]) < actol) {
-    vert_loc = p[2];
-    dist =(pt-vert_loc).length(); //pt.distance_between( vert_loc );
-    if (dist <= compare_tol)
-    {
-      eval_pt = vert_loc;
-      if (eval_norm_ptr)
-      {
-        *eval_norm_ptr = NN[2];
-      }
-      return true;
-    }
-  }
+	_mb->tag_get_data(_gradientTag, conn3, 3, (double*) &NN[0]);
+	if (fabs(ac[0]) < actol && fabs(ac[1]) < actol) {
+		vert_loc = p[2];
+		dist = (pt - vert_loc).length(); //pt.distance_between( vert_loc );
+		if (dist <= compare_tol) {
+			eval_pt = vert_loc;
+			if (eval_norm_ptr) {
+				*eval_norm_ptr = NN[2];
+			}
+			return true;
+		}
+	}
 
-  if (fabs(ac[0]) < actol && fabs(ac[2]) < actol) {
-    vert_loc = p[1];
-    dist = (pt-vert_loc).length();//pt.distance_between( vert_loc );
-    if (dist <= compare_tol)
-    {
-      eval_pt = vert_loc;
-      if (eval_norm_ptr)
-      {
-        *eval_norm_ptr = NN[1];//facet->point(1)->normal( facet );
-      }
-      return true;
-    }
-  }
+	if (fabs(ac[0]) < actol && fabs(ac[2]) < actol) {
+		vert_loc = p[1];
+		dist = (pt - vert_loc).length();//pt.distance_between( vert_loc );
+		if (dist <= compare_tol) {
+			eval_pt = vert_loc;
+			if (eval_norm_ptr) {
+				*eval_norm_ptr = NN[1];//facet->point(1)->normal( facet );
+			}
+			return true;
+		}
+	}
 
-  if (fabs(ac[1]) < actol && fabs(ac[2]) < actol) {
-    vert_loc = p[0];
-    dist = (pt-vert_loc).length();//pt.distance_between( vert_loc );
-    if (dist <= compare_tol)
-    {
-      eval_pt = vert_loc;
-      if (eval_norm_ptr)
-      {
-        *eval_norm_ptr = NN[0];
-      }
-      return true;
-    }
-  }
+	if (fabs(ac[1]) < actol && fabs(ac[2]) < actol) {
+		vert_loc = p[0];
+		dist = (pt - vert_loc).length();//pt.distance_between( vert_loc );
+		if (dist <= compare_tol) {
+			eval_pt = vert_loc;
+			if (eval_norm_ptr) {
+				*eval_norm_ptr = NN[0];
+			}
+			return true;
+		}
+	}
 
-  return false;
+	return false;
 }
-
 
 //===========================================================================
 //Function Name: move_ac_inside
@@ -2340,30 +2383,28 @@ bool SmoothMeshEval::is_at_vertex(
 //              patch if any of its components are < 0
 //              Return if the ac was modified.
 //===========================================================================
-bool SmoothMeshEval::move_ac_inside( MBCartVect &ac, double tol )
-{
-  int nout = 0;
-  if (ac[0] < -tol) {
-    ac[0]= 0.0 ;
-    ac[1] =  ac[1] / (ac[1] + ac[2]) ; //( ac.y() / (ac.y() + ac.z()) ;
-    ac[2] = 1.-ac[1]; //ac.z( 1.0 - ac.y() );
-    nout++;
-  }
-  if (ac[1] < -tol) {
-    ac[1] = 0.;//ac.y( 0.0 );
-    ac[0] = ac[0]/(ac[0]+ac[2]);//ac.x( ac.x() / (ac.x() + ac.z()) );
-    ac[2] = 1.-ac[0];//ac.z( 1.0 - ac.x() );
-    nout++;
-  }
-  if (ac[2] < -tol) {
-    ac[2] = 0.;// ac.z( 0.0 );
-    ac[0] = ac[0]/(ac[0]+ac[1]);//ac.x( ac.x() / (ac.x() + ac.y()) );
-    ac[1] = 1.-ac[0]; // ac.y( 1.0 - ac.x() );
-    nout++;
-  }
-  return (nout > 0) ? true : false;
+bool SmoothMeshEval::move_ac_inside(MBCartVect &ac, double tol) {
+	int nout = 0;
+	if (ac[0] < -tol) {
+		ac[0] = 0.0;
+		ac[1] = ac[1] / (ac[1] + ac[2]); //( ac.y() / (ac.y() + ac.z()) ;
+		ac[2] = 1. - ac[1]; //ac.z( 1.0 - ac.y() );
+		nout++;
+	}
+	if (ac[1] < -tol) {
+		ac[1] = 0.;//ac.y( 0.0 );
+		ac[0] = ac[0] / (ac[0] + ac[2]);//ac.x( ac.x() / (ac.x() + ac.z()) );
+		ac[2] = 1. - ac[0];//ac.z( 1.0 - ac.x() );
+		nout++;
+	}
+	if (ac[2] < -tol) {
+		ac[2] = 0.;// ac.z( 0.0 );
+		ac[0] = ac[0] / (ac[0] + ac[1]);//ac.x( ac.x() / (ac.x() + ac.y()) );
+		ac[1] = 1. - ac[0]; // ac.y( 1.0 - ac.x() );
+		nout++;
+	}
+	return (nout > 0) ? true : false;
 }
-
 
 //===========================================================================
 //Function Name: hodograph
@@ -2394,191 +2435,187 @@ bool SmoothMeshEval::move_ac_inside( MBCartVect &ac, double tol )
 //Member Type:  PRIVATE
 //Descriptoin:  evaluate the bezier patch defined at a facet
 //===========================================================================
-MBErrorCode SmoothMeshEval::eval_bezier_patch_normal( MBEntityHandle facet,
-		MBCartVect &areacoord,
-		MBCartVect &normal )
-{
-  // interpolate internal control points
+MBErrorCode SmoothMeshEval::eval_bezier_patch_normal(MBEntityHandle facet,
+		MBCartVect &areacoord, MBCartVect &normal) {
+	// interpolate internal control points
 
-  MBCartVect gctrl_pts[6];
-  //facet->get_control_points( gctrl_pts );
-  MBErrorCode rval = _mb->tag_get_data(_facetCtrlTag, &facet, 1, &gctrl_pts[0]);
-  assert(rval == MB_SUCCESS);
-  // _gradientTag
-  // get normals at points
-  const MBEntityHandle * conn3;
-  		int nnodes;
-  rval = _mb->get_connectivity(facet, conn3, nnodes);
+	MBCartVect gctrl_pts[6];
+	//facet->get_control_points( gctrl_pts );
+	MBErrorCode rval = _mb->tag_get_data(_facetCtrlTag, &facet, 1,
+			&gctrl_pts[0]);
+	assert(rval == MB_SUCCESS);
+	// _gradientTag
+	// get normals at points
+	const MBEntityHandle * conn3;
+	int nnodes;
+	rval = _mb->get_connectivity(facet, conn3, nnodes);
 
-  MBCartVect NN[3];
-  rval =  _mb->tag_get_data(_gradientTag, conn3, 3, &NN[0]);
+	MBCartVect NN[3];
+	rval = _mb->tag_get_data(_gradientTag, conn3, 3, &NN[0]);
 
-  assert(rval == MB_SUCCESS);
+	assert(rval == MB_SUCCESS);
 
-  if (fabs(areacoord[1] + areacoord[2]) < 1.0e-6) {
-    normal = NN[0];
-    return MB_SUCCESS;
-  }
-  if (fabs(areacoord[0] + areacoord[2]) < 1.0e-6) {
-    normal = NN[1];//facet->point(1)->normal(facet);
-    return MB_SUCCESS;
-  }
-  if (fabs(areacoord[0] + areacoord[1]) < 1.0e-6) {
-    normal = NN[2]; //facet->point(2)->normal(facet);
-    return MB_SUCCESS;
-  }
+	if (fabs(areacoord[1] + areacoord[2]) < 1.0e-6) {
+		normal = NN[0];
+		return MB_SUCCESS;
+	}
+	if (fabs(areacoord[0] + areacoord[2]) < 1.0e-6) {
+		normal = NN[1];//facet->point(1)->normal(facet);
+		return MB_SUCCESS;
+	}
+	if (fabs(areacoord[0] + areacoord[1]) < 1.0e-6) {
+		normal = NN[2]; //facet->point(2)->normal(facet);
+		return MB_SUCCESS;
+	}
 
-  // compute the hodograph of the quartic Gregory patch
+	// compute the hodograph of the quartic Gregory patch
 
-  MBCartVect Nijk[10];
-  //hodograph(facet,areacoord,Nijk);
-  // start copy from hodograph
-  //CubitVector gctrl_pts[6];
-  // facet->get_control_points( gctrl_pts );
-   MBCartVect P_facet[3];
+	MBCartVect Nijk[10];
+	//hodograph(facet,areacoord,Nijk);
+	// start copy from hodograph
+	//CubitVector gctrl_pts[6];
+	// facet->get_control_points( gctrl_pts );
+	MBCartVect P_facet[3];
 
-   //2,1,1
-   /*P_facet[0] = (1.0e0 / (areacoord.y() + areacoord.z())) *
-                (areacoord.y() * gctrl_pts[3] +
-                 areacoord.z() * gctrl_pts[4]);*/
-   P_facet[0] = (1.0e0 / (areacoord[1] + areacoord[2])) *
-                   (areacoord[1] * gctrl_pts[3] +
-                    areacoord[2] * gctrl_pts[4]);
-   //1,2,1
-   /*P_facet[1] = (1.0e0 / (areacoord.x() + areacoord.z())) *
-                (areacoord.x() * gctrl_pts[0] +
-                 areacoord.z() * gctrl_pts[5]);*/
-   P_facet[1] = (1.0e0 / (areacoord[0] + areacoord[2])) *
-                   (areacoord[0] * gctrl_pts[0] +
-                    areacoord[2] * gctrl_pts[5]);
-   //1,1,2
-   /*P_facet[2] = (1.0e0 / (areacoord.x() + areacoord.y())) *
-                (areacoord.x() * gctrl_pts[1] +
-                 areacoord.y() * gctrl_pts[2]);*/
-   P_facet[2] = (1.0e0 / (areacoord[0] + areacoord[1])) *
-                   (areacoord[0] * gctrl_pts[1] +
-                    areacoord[1] * gctrl_pts[2]);
+	//2,1,1
+	/*P_facet[0] = (1.0e0 / (areacoord.y() + areacoord.z())) *
+	 (areacoord.y() * gctrl_pts[3] +
+	 areacoord.z() * gctrl_pts[4]);*/
+	P_facet[0] = (1.0e0 / (areacoord[1] + areacoord[2])) * (areacoord[1]
+			* gctrl_pts[3] + areacoord[2] * gctrl_pts[4]);
+	//1,2,1
+	/*P_facet[1] = (1.0e0 / (areacoord.x() + areacoord.z())) *
+	 (areacoord.x() * gctrl_pts[0] +
+	 areacoord.z() * gctrl_pts[5]);*/
+	P_facet[1] = (1.0e0 / (areacoord[0] + areacoord[2])) * (areacoord[0]
+			* gctrl_pts[0] + areacoord[2] * gctrl_pts[5]);
+	//1,1,2
+	/*P_facet[2] = (1.0e0 / (areacoord.x() + areacoord.y())) *
+	 (areacoord.x() * gctrl_pts[1] +
+	 areacoord.y() * gctrl_pts[2]);*/
+	P_facet[2] = (1.0e0 / (areacoord[0] + areacoord[1])) * (areacoord[0]
+			* gctrl_pts[1] + areacoord[1] * gctrl_pts[2]);
 
-   // corner control points are just the normals at the points
+	// corner control points are just the normals at the points
 
-   //3, 0, 0
-   Nijk[0] = NN[0];
-   //0, 3, 0
-   Nijk[3] = NN[1];
-   //0, 0, 3
-   Nijk[9] = NN[2];//facet->point(2)->normal(facet);
+	//3, 0, 0
+	Nijk[0] = NN[0];
+	//0, 3, 0
+	Nijk[3] = NN[1];
+	//0, 0, 3
+	Nijk[9] = NN[2];//facet->point(2)->normal(facet);
 
-   // fill in the boundary control points.  Define as the normal to the local
-   // triangle formed by the quartic control point lattice
+	// fill in the boundary control points.  Define as the normal to the local
+	// triangle formed by the quartic control point lattice
 
-   // store here again the 9 control points on the edges
-   MBCartVect CP[9]; // 9 control points on the edges,
-   rval = _mb->tag_get_data(_facetEdgeCtrlTag, &facet, 1, &CP[0]);
-   // there are 3 CP for each edge, 0, 1, 2; first edge is 1-2
-   //CubitFacetEdge *edge;
-   //edge = facet->edge( 2 );
-   //CubitVector ctrl_pts[5];
-   //edge->control_points(facet, ctrl_pts);
+	// store here again the 9 control points on the edges
+	MBCartVect CP[9]; // 9 control points on the edges,
+	rval = _mb->tag_get_data(_facetEdgeCtrlTag, &facet, 1, &CP[0]);
+	// there are 3 CP for each edge, 0, 1, 2; first edge is 1-2
+	//CubitFacetEdge *edge;
+	//edge = facet->edge( 2 );
+	//CubitVector ctrl_pts[5];
+	//edge->control_points(facet, ctrl_pts);
 
-   //2, 1, 0
-   //Nijk[1] = (ctrl_pts[2] - ctrl_pts[1]) * (P_facet[0] - ctrl_pts[1]);
-   Nijk[1] = (CP[7] - CP[6]) * (P_facet[0] - CP[6]);
-   Nijk[1].normalize();
+	//2, 1, 0
+	//Nijk[1] = (ctrl_pts[2] - ctrl_pts[1]) * (P_facet[0] - ctrl_pts[1]);
+	Nijk[1] = (CP[7] - CP[6]) * (P_facet[0] - CP[6]);
+	Nijk[1].normalize();
 
-   //1, 2, 0
-   //Nijk[2] = (ctrl_pts[3] - ctrl_pts[2]) * (P_facet[1] - ctrl_pts[2]);
-   Nijk[2] = (CP[8] - CP[7]) * (P_facet[1] - CP[7]);
-   Nijk[2].normalize();
+	//1, 2, 0
+	//Nijk[2] = (ctrl_pts[3] - ctrl_pts[2]) * (P_facet[1] - ctrl_pts[2]);
+	Nijk[2] = (CP[8] - CP[7]) * (P_facet[1] - CP[7]);
+	Nijk[2].normalize();
 
-   //edge = facet->edge( 0 );
-   //edge->control_points(facet, ctrl_pts);
+	//edge = facet->edge( 0 );
+	//edge->control_points(facet, ctrl_pts);
 
-   //0, 2, 1
-   //Nijk[6] = (ctrl_pts[1] - P_facet[1]) * (ctrl_pts[2] - P_facet[1]);
-   Nijk[6] = (CP[0] - P_facet[1]) * (CP[1] - P_facet[1]);
-   Nijk[6].normalize();
+	//0, 2, 1
+	//Nijk[6] = (ctrl_pts[1] - P_facet[1]) * (ctrl_pts[2] - P_facet[1]);
+	Nijk[6] = (CP[0] - P_facet[1]) * (CP[1] - P_facet[1]);
+	Nijk[6].normalize();
 
-   //0, 1, 2
-   //Nijk[8] = (ctrl_pts[2] - P_facet[2]) * (ctrl_pts[3] - P_facet[2]);
-   Nijk[8] = (CP[1] - P_facet[2]) * (CP[2] - P_facet[2]);
-   Nijk[8].normalize();
+	//0, 1, 2
+	//Nijk[8] = (ctrl_pts[2] - P_facet[2]) * (ctrl_pts[3] - P_facet[2]);
+	Nijk[8] = (CP[1] - P_facet[2]) * (CP[2] - P_facet[2]);
+	Nijk[8].normalize();
 
-   //edge = facet->edge( 1 );
-   //edge->control_points(facet, ctrl_pts);
+	//edge = facet->edge( 1 );
+	//edge->control_points(facet, ctrl_pts);
 
-   //1, 0, 2
-   //Nijk[7] = (P_facet[2] - ctrl_pts[2]) * (ctrl_pts[1] - ctrl_pts[2]);
-   Nijk[7] = (P_facet[2] - CP[4]) * (CP[3] - CP[4]);
-   Nijk[7].normalize();
+	//1, 0, 2
+	//Nijk[7] = (P_facet[2] - ctrl_pts[2]) * (ctrl_pts[1] - ctrl_pts[2]);
+	Nijk[7] = (P_facet[2] - CP[4]) * (CP[3] - CP[4]);
+	Nijk[7].normalize();
 
-   //2, 0, 1
-   //Nijk[4] = (P_facet[0] - ctrl_pts[3]) * (ctrl_pts[2] - ctrl_pts[3]);
-   Nijk[4] = (P_facet[0] - CP[5]) * (CP[4] - CP[5]);
-   Nijk[4].normalize();
+	//2, 0, 1
+	//Nijk[4] = (P_facet[0] - ctrl_pts[3]) * (ctrl_pts[2] - ctrl_pts[3]);
+	Nijk[4] = (P_facet[0] - CP[5]) * (CP[4] - CP[5]);
+	Nijk[4].normalize();
 
-   //1, 1, 1
-   Nijk[5] = (P_facet[1] - P_facet[0]) * (P_facet[2] - P_facet[0]);
-   Nijk[5].normalize();
-  // end copy from hodograph
+	//1, 1, 1
+	Nijk[5] = (P_facet[1] - P_facet[0]) * (P_facet[2] - P_facet[0]);
+	Nijk[5].normalize();
+	// end copy from hodograph
 
-  // sum the contribution from each of the control points
+	// sum the contribution from each of the control points
 
-  normal = MBCartVect(0.0e0, 0.0e0, 0.0e0);
+	normal = MBCartVect(0.0e0, 0.0e0, 0.0e0);
 
-  //i=3; j=0; k=0;
-  double Bsum = 0.0;
-  double B = cube(areacoord[0]);
-  Bsum += B;
-  normal += B * Nijk[0];
+	//i=3; j=0; k=0;
+	double Bsum = 0.0;
+	double B = cube(areacoord[0]);
+	Bsum += B;
+	normal += B * Nijk[0];
 
-  //i=2; j=1; k=0;
-  B = 3.0 * sqr(areacoord[0]) * areacoord[1];
-  Bsum += B;
-  normal += B * Nijk[1];
+	//i=2; j=1; k=0;
+	B = 3.0 * sqr(areacoord[0]) * areacoord[1];
+	Bsum += B;
+	normal += B * Nijk[1];
 
-  //i=1; j=2; k=0;
-  B = 3.0 * areacoord[0] * sqr(areacoord[1]);
-  Bsum += B;
-  normal += B * Nijk[2];
+	//i=1; j=2; k=0;
+	B = 3.0 * areacoord[0] * sqr(areacoord[1]);
+	Bsum += B;
+	normal += B * Nijk[2];
 
-  //i=0; j=3; k=0;
-  B = cube(areacoord[1]);
-  Bsum += B;
-  normal += B * Nijk[3];
+	//i=0; j=3; k=0;
+	B = cube(areacoord[1]);
+	Bsum += B;
+	normal += B * Nijk[3];
 
-  //i=2; j=0; k=1;
-  B = 3.0 * sqr(areacoord[0]) * areacoord[2];
-  Bsum += B;
-  normal += B * Nijk[4];
+	//i=2; j=0; k=1;
+	B = 3.0 * sqr(areacoord[0]) * areacoord[2];
+	Bsum += B;
+	normal += B * Nijk[4];
 
-    //i=1; j=1; k=1;
-  B = 6.0 * areacoord[0] * areacoord[1] * areacoord[2];
-  Bsum += B;
-  normal += B * Nijk[5];
+	//i=1; j=1; k=1;
+	B = 6.0 * areacoord[0] * areacoord[1] * areacoord[2];
+	Bsum += B;
+	normal += B * Nijk[5];
 
-  //i=0; j=2; k=1;
-  B = 3.0 * sqr(areacoord[1]) * areacoord[2];
-  Bsum += B;
-  normal += B * Nijk[6];
+	//i=0; j=2; k=1;
+	B = 3.0 * sqr(areacoord[1]) * areacoord[2];
+	Bsum += B;
+	normal += B * Nijk[6];
 
-  //i=1; j=0; k=2;
-  B = 3.0 * areacoord[0] * sqr(areacoord[2]);
-  Bsum += B;
-  normal += B * Nijk[7];
+	//i=1; j=0; k=2;
+	B = 3.0 * areacoord[0] * sqr(areacoord[2]);
+	Bsum += B;
+	normal += B * Nijk[7];
 
-  //i=0; j=1; k=2;
-  B = 3.0 * areacoord[1] * sqr(areacoord[2]);
-  Bsum += B;
-  normal += B * Nijk[8];
+	//i=0; j=1; k=2;
+	B = 3.0 * areacoord[1] * sqr(areacoord[2]);
+	Bsum += B;
+	normal += B * Nijk[8];
 
-  //i=0; j=0; k=3;
-  B = cube(areacoord[2]);
-  Bsum += B;
-  normal += B * Nijk[9];
+	//i=0; j=0; k=3;
+	B = cube(areacoord[2]);
+	Bsum += B;
+	normal += B * Nijk[9];
 
-  //assert(fabs(Bsum - 1.0) < 1e-9);
+	//assert(fabs(Bsum - 1.0) < 1e-9);
 
-  normal.normalize();
+	normal.normalize();
 
-  return MB_SUCCESS;
+	return MB_SUCCESS;
 }
