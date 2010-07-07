@@ -22,7 +22,7 @@ libMKalgs_la_SOURCES = \
 	MergeMesh.cpp \
 	vec_utils.cpp \
 	vec_utils.hpp \
-	CutCellMesh.cpp \
+	EBMesh.cpp \
 	ProjectShell.cpp \
 	EdgeMesher.cpp \
 	OneToOneSwept.cpp
@@ -33,13 +33,13 @@ libMKalgs_la_include_HEADERS = \
 	CopyVerts.hpp \
 	ExtrudeMesh.hpp \
 	MergeMesh.hpp \
-	CutCellMesh.hpp \
+	EBMesh.hpp \
 	ProjectShell.hpp \
 	EdgeMesher.hpp \
 	OneToOneSwept.hpp
 
 # Tests and such
-check_PROGRAMS = CopyMesh_test ExtrudeMesh_test CutCellMesh_test \
+check_PROGRAMS = CopyMesh_test ExtrudeMesh_test EBMesh_test \
 		 ProjectShell_test 
 TESTS = $(check_PROGRAMS)
 
@@ -53,10 +53,10 @@ ExtrudeMesh_test_DEPENDENCIES = ExtrudeMesh.hpp libMKalgs.la
 ExtrudeMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 ExtrudeMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
-CutCellMesh_test_SOURCES = CutCellMesh_test.cpp
-CutCellMesh_test_DEPENDENCIES = CutCellMesh.hpp libMKalgs.la
-CutCellMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-CutCellMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+EBMesh_test_SOURCES = EBMesh_test.cpp
+EBMesh_test_DEPENDENCIES = EBMesh.hpp libMKalgs.la
+EBMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+EBMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 ProjectShell_test_SOURCES = ProjectShell_test.cpp
 ProjectShell_test_DEPENDENCIES = ProjectShell.hpp libMKalgs.la
