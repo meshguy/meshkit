@@ -588,7 +588,7 @@ void EdgeMesher::get_related_entityset(iBase_EntitySetHandle &mesh_entityset)
 	int switch_order=0;
 	int ierr;
 
-	iRel_getEntSetAssociation(assoc, rel, gEdgeHandle, switch_order, &(mesh_entityset), &ierr);
+	iRel_getEntSetRelation(assoc, rel, gEdgeHandle, switch_order, &(mesh_entityset), &ierr);
 	if (ierr)
 	{
                 iMesh_createEntSet(mesh, 1, &mesh_entityset, &ierr);
@@ -604,7 +604,7 @@ void EdgeMesher::get_related_entityset(iBase_EntitySetHandle &mesh_entityset)
                 iMesh_setEntSetIntData(mesh, mesh_entityset, dim_tag, dim, &ierr);
 		assert(!ierr);
 
-                iRel_setEntSetAssociation(assoc, rel, gEdgeHandle, mesh_entityset, &ierr);
+                iRel_setEntSetRelation(assoc, rel, gEdgeHandle, mesh_entityset, &ierr);
 		assert(!ierr);
 	}
 }
@@ -616,7 +616,7 @@ void EdgeMesher::ShowCoorData()
 	SimpleArray<iBase_EntityHandle> VertexArr;
 	SimpleArray<double> CoordinateArr;	
 	
-	iRel_getEntSetAssociation(assoc, rel, gEdgeHandle, 0, &meshSet, &err);
+	iRel_getEntSetRelation(assoc, rel, gEdgeHandle, 0, &meshSet, &err);
 	assert(!err);
 	
 	iMesh_getEntities(mesh, meshSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(VertexArr), &err);

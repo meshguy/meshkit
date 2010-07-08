@@ -69,7 +69,7 @@ int OneToOneSwept::getList()
 	iBase_EntitySetHandle SourceSets;
 	
 	//get the vertex list on the source surface
-	iRel_getEntSetAssociation(assoc, rel, sourceSurface, 0, &SourceSets, &err);
+	iRel_getEntSetRelation(assoc, rel, sourceSurface, 0, &SourceSets, &err);
 	Nodes.clear();
 	//get inner nodes not boundary nodes
 	iMesh_getEntities(mesh, SourceSets, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(Nodes), &err);
@@ -112,7 +112,7 @@ int OneToOneSwept::getList()
 	for (int i=0; i < gsEdgeList.size(); i++)
 	{
 		iBase_EntitySetHandle tmpSet;
-		iRel_getEntSetAssociation(assoc, rel, gsEdgeList[i].gEdgeHandle, 0, &tmpSet, &err);
+		iRel_getEntSetRelation(assoc, rel, gsEdgeList[i].gEdgeHandle, 0, &tmpSet, &err);
 		assert(!err);
 		Nodes.clear();
 		iMesh_getEntities(mesh, tmpSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(Nodes), &err);
@@ -147,7 +147,7 @@ int OneToOneSwept::getList()
 	for (int i=0; i < gVertexList.size(); i=i+2)
 	{
 		iBase_EntitySetHandle tmpSet;
-		iRel_getEntSetAssociation(assoc, rel, gVertexList[i].gVertexHandle, 0, &tmpSet, &err);
+		iRel_getEntSetRelation(assoc, rel, gVertexList[i].gVertexHandle, 0, &tmpSet, &err);
 		assert(!err);
 		Nodes.clear();
 		iMesh_getEntities(mesh, tmpSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(Nodes), &err);
@@ -299,7 +299,7 @@ int OneToOneSwept::FindCorners()
 		int tindex = cornerPairs[i];//get the corresponding corner on the target surface
 		
 		iBase_EntitySetHandle tmpSet;
-		iRel_getEntSetAssociation(assoc, rel, gVertexList[i].gVertexHandle, 0, &tmpSet, &err);
+		iRel_getEntSetRelation(assoc, rel, gVertexList[i].gVertexHandle, 0, &tmpSet, &err);
 		assert(!err);
 		SimpleArray<iBase_EntityHandle> Nodes;
 		iMesh_getEntities(mesh, tmpSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(Nodes), &err);
@@ -319,7 +319,7 @@ int OneToOneSwept::FindCorners()
 		TVertexList[ID].onBoundary = false;
 		
 		//determine whether there is a mesh vertex at this position
-		iRel_getEntSetAssociation(assoc, rel, gVertexList[tindex].gVertexHandle, 0, &tmpSet, &err);
+		iRel_getEntSetRelation(assoc, rel, gVertexList[tindex].gVertexHandle, 0, &tmpSet, &err);
 		if (err)
 		{//there is no existing mesh vertex at this location
 			iMesh_createVtx(mesh, gVertexList[tindex].xyzCoords[0], gVertexList[tindex].xyzCoords[1], gVertexList[tindex].xyzCoords[2], &TVertexList[ID].gVertexHandle, &err);
@@ -330,7 +330,7 @@ int OneToOneSwept::FindCorners()
 			iMesh_addEntToSet(mesh, TVertexList[ID].gVertexHandle, entityset, &err);
 			assert(!err);
 		
-			iRel_setEntSetAssociation(assoc, rel, gVertexList[tindex].gVertexHandle, entityset, &err);
+			iRel_setEntSetRelation(assoc, rel, gVertexList[tindex].gVertexHandle, entityset, &err);
 			assert(!err);
 			pts.px = gVertexList[tindex].xyzCoords[0];
 			pts.py = gVertexList[tindex].xyzCoords[1];
@@ -339,7 +339,7 @@ int OneToOneSwept::FindCorners()
 		}
 		else
 		{//there is an existing vertex at this location
-			iRel_getEntSetAssociation(assoc, rel, gVertexList[tindex].gVertexHandle, 0, &tmpSet, &err);
+			iRel_getEntSetRelation(assoc, rel, gVertexList[tindex].gVertexHandle, 0, &tmpSet, &err);
 			assert(!err);
 			
 			SimpleArray<iBase_EntityHandle> tmpNodes;
@@ -386,7 +386,7 @@ int OneToOneSwept::TargetSurfProjection()
 	cout << "Target surface meshing..." << endl;
 	int err;
 	iBase_EntitySetHandle targetSet;
-	iRel_getEntSetAssociation(assoc, rel, targetSurface, 0, &targetSet, &err);
+	iRel_getEntSetRelation(assoc, rel, targetSurface, 0, &targetSet, &err);
 	if (!err)
 	{//there exists an mesh on the target surfaces
 		return 1;
@@ -421,7 +421,7 @@ int OneToOneSwept::TargetSurfProjection()
 	{
 		//get the mesh entityset for edge[i]
 		
-		iRel_getEntSetAssociation(assoc, rel, gsEdgeList[i].gEdgeHandle, 0, &edgeMeshSets[i], &err);
+		iRel_getEntSetRelation(assoc, rel, gsEdgeList[i].gEdgeHandle, 0, &edgeMeshSets[i], &err);
 		assert(!err);
 		
 		//get the edge nodes for edge[i] mesh
@@ -439,7 +439,7 @@ int OneToOneSwept::TargetSurfProjection()
 		
 		//detect whether there exists an mesh for the edge on the target surface
 		iBase_EntitySetHandle entityset;
-		iRel_getEntSetAssociation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, 0, &entityset, &err);
+		iRel_getEntSetRelation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, 0, &entityset, &err);
 		if (!err)
 		{//there exists an mesh on the boundary of target surface
 			SimpleArray<iBase_EntityHandle> tnodes;
@@ -600,7 +600,7 @@ int OneToOneSwept::TargetSurfProjection()
 		}
 		
 		//create entityset for storing the nodes on the target boundary edge and build association between the geometry and mesh
-		iRel_getEntSetAssociation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, 0, &entityset, &err);
+		iRel_getEntSetRelation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, 0, &entityset, &err);
 		if (err) //there is no entityset associated with gtEdgeList[index_t].gEdgeHandle
 		{
 			iMesh_createEntSet(mesh, 1, &entityset, &err);
@@ -643,10 +643,10 @@ int OneToOneSwept::TargetSurfProjection()
 		iMesh_addEntArrToSet(mesh, &tedgeHandle[0], tedgeHandle.size(), entityset, &err);
 		assert(!err);
 		
-		iRel_getEntSetAssociation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, 0, &entityset, &err);
+		iRel_getEntSetRelation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, 0, &entityset, &err);
 		if (err) //there is no entityset associated with gtEdgeList[index_t].gEdgeHandle
 		{
-			iRel_setEntSetAssociation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, entityset, &err);
+			iRel_setEntSetRelation(assoc, rel, gtEdgeList[index_t].gEdgeHandle, entityset, &err);
 			assert(!err);
 		}								
 	}
@@ -731,7 +731,7 @@ int OneToOneSwept::TargetSurfProjection()
 	iBase_EntitySetHandle entityset;  //this entityset is for storing the inner nodes on the target surface
 	vector<iBase_EntityHandle>  newNodehandle(0), newEdgeHandle(0);
 	int newIndex=0;
-	iRel_getEntSetAssociation(assoc, rel, targetSurface, 0, &entityset, &err);
+	iRel_getEntSetRelation(assoc, rel, targetSurface, 0, &entityset, &err);
 	if (err) //there is no entityset associated with targetSurface
 	{
 		iMesh_createEntSet(mesh, 1, &entityset, &err);
@@ -861,10 +861,10 @@ int OneToOneSwept::TargetSurfProjection()
 	assert(!err);
 	
 	//build the association
-	iRel_getEntSetAssociation(assoc, rel, targetSurface, 0, &entityset, &err);
+	iRel_getEntSetRelation(assoc, rel, targetSurface, 0, &entityset, &err);
 	if (err) //there is no entityset associated with region[0]
 	{
-		iRel_setEntSetAssociation(assoc, rel, targetSurface, entityset, &err);
+		iRel_setEntSetRelation(assoc, rel, targetSurface, entityset, &err);
 		assert(!err);	
 	}
 }
@@ -922,7 +922,7 @@ void OneToOneSwept::SurfaceSpecifying()
 	//make sure this is one-to-one sweeeping
 	assert(gVolume.size()==1);
 	volEntity = gVolume[0];
-	iRel_setEntSetAssociation(assoc, rel, gVolume[0], volumeSet, &err);
+	iRel_setEntSetRelation(assoc, rel, gVolume[0], volumeSet, &err);
 	assert(!err);
 	
 	gFaces.clear();
@@ -1264,11 +1264,11 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
     iMesh_getTagHandle(mesh, tag2, &geom_dim_tag, &err, namelen);
     assert(!err);
 
-    iRel_newAssoc(0, &assoc, &err, 0);
+    iRel_newRel(0, &assoc, &err, 0);
 
-    iRel_createAssociation(assoc,
-                           geom, 0, iRel_IGEOM_IFACE,
-                           mesh, 2, iRel_IMESH_IFACE, &rel, &err);
+    iRel_createRelation(assoc,
+                        geom, iRel_ENTITY, iRel_IGEOM_IFACE,
+                        mesh, iRel_BOTH, iRel_IMESH_IFACE, &rel, &err);
     assert(!err);
 
     // Get all the entitySet in the mesh
@@ -1410,7 +1410,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
             }
 
             if (gEntity)
-                iRel_setEntSetAssociation(assoc, rel, gEntity, entitySets[i], &err);
+                iRel_setEntSetRelation(assoc, rel, gEntity, entitySets[i], &err);
         }
     }
 
@@ -1484,7 +1484,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
             }
 
             if (gEntity)
-                iRel_setEntSetAssociation(assoc, rel, gEntity, entitySets[i], &err);
+                iRel_setEntSetRelation(assoc, rel, gEntity, entitySets[i], &err);
         }
     }
 
@@ -1545,7 +1545,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
             }
             if (gEntity)
 	    {
-                iRel_setEntSetAssociation(assoc, rel, gEntity, entitySets[i], &err);
+                iRel_setEntSetRelation(assoc, rel, gEntity, entitySets[i], &err);
 		assert(!err);
 	    }        
 	}
@@ -1585,7 +1585,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
                 if (mapCells.find(geom_id) != mapCells.end())
                 {
                     gEntity = mapCells[geom_id];
-                    iRel_setEntSetAssociation(assoc, rel, gEntity, entitySets[i], &err);
+                    iRel_setEntSetRelation(assoc, rel, gEntity, entitySets[i], &err);
                 }
             }
         }
@@ -1620,7 +1620,7 @@ int OneToOneSwept::InnerLayerMeshing()
 	for (int i=0; i < gLinkSides.size(); i++)
 	{
 		iBase_EntitySetHandle testset;
-		iRel_getEntSetAssociation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &testset, &err);
+		iRel_getEntSetRelation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &testset, &err);
 		if (!err)
 		{//there is the mesh for the linking sides
 			SimpleArray<iBase_EntityHandle> lvertices;
@@ -2068,7 +2068,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		//find the corresponding mesh vertex on the target surface in order to get index for mesh vertex
 		iBase_EntitySetHandle CornerSet;
 		SimpleArray<iBase_EntityHandle> tmpNodes;
-		iRel_getEntSetAssociation(assoc, rel, gVertexList[sIndex].gVertexHandle, 0, &CornerSet, &err);
+		iRel_getEntSetRelation(assoc, rel, gVertexList[sIndex].gVertexHandle, 0, &CornerSet, &err);
 		assert(!err);
 		iMesh_getEntities(mesh, CornerSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(tmpNodes), &err);
 		assert(!err);
@@ -2086,7 +2086,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//detect whether linking side[i] is discretized or not
 		iBase_EntitySetHandle TestSet;
-		iRel_getEntSetAssociation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &TestSet, &err);
+		iRel_getEntSetRelation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &TestSet, &err);
 		if (!err)
 		{//linking side gLinkSides[i] has been discretized
 			SimpleArray<iBase_EntityHandle> vertices;
@@ -2170,7 +2170,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		
 		//create the entityset	for the gLinkSides[i]
 		iBase_EntitySetHandle entityset;
-		iRel_getEntSetAssociation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &entityset, &err);
+		iRel_getEntSetRelation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &entityset, &err);
 		if (err)  //there is no entityset associated with gLinkSides[i].gEdgeHandle
 		{
 			iMesh_createEntSet(mesh, 1, &entityset, &err);
@@ -2181,10 +2181,10 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		iMesh_addEntArrToSet(mesh, &edgeHandle[0], edgeHandle.size(), entityset, &err);
 		
 		//create the irel between the linking sides and entityset
-		iRel_getEntSetAssociation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &entityset, &err);
+		iRel_getEntSetRelation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &entityset, &err);
 		if (err)  //there is no entityset associated with gLinkSides[i].gEdgeHandle
 		{
-			iRel_setEntSetAssociation(assoc, rel, gLinkSides[i].gEdgeHandle, entityset, &err);
+			iRel_setEntSetRelation(assoc, rel, gLinkSides[i].gEdgeHandle, entityset, &err);
 			assert(!err);
 		}
 	}
@@ -2252,12 +2252,12 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		
 		
 		
-		iRel_getEntSetAssociation(assoc, rel, gLinkFaceList[i].gFaceHandle, 0, &tmpSet, &err);
+		iRel_getEntSetRelation(assoc, rel, gLinkFaceList[i].gFaceHandle, 0, &tmpSet, &err);
 		if(!err)
 		{
 			isMeshed[i] = true;
 			
-			iRel_getEntSetAssociation(assoc, rel, gsEdgeList[sEdgeIndex].gEdgeHandle, 0, &aEdgeSet, &err);
+			iRel_getEntSetRelation(assoc, rel, gsEdgeList[sEdgeIndex].gEdgeHandle, 0, &aEdgeSet, &err);
 			assert(!err);
 			
 			iMesh_getEntities(mesh, aEdgeSet, iBase_VERTEX, iMesh_ALL_TOPOLOGIES, ARRAY_INOUT(aNodes), &err);
@@ -2479,7 +2479,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		
 			//parametrize the linking surface
 			//loop over the layers
-			iRel_getEntSetAssociation(assoc, rel, gsEdgeList[sEdgeIndex].gEdgeHandle, 0, &edgeNodeSet, &err);
+			iRel_getEntSetRelation(assoc, rel, gsEdgeList[sEdgeIndex].gEdgeHandle, 0, &edgeNodeSet, &err);
 			assert(!err);
 			mNodes.clear();
 			iMesh_getEntities(mesh, edgeNodeSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(mNodes), &err);
@@ -2504,7 +2504,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			//find the corresponding the bottom mesh corner and top mesh corner
 			iBase_EntitySetHandle tmpSet;
 			SimpleArray<iBase_EntityHandle> tmpNodes;
-			iRel_getEntSetAssociation(assoc, rel, gsEdgeList[sEdgeIndex].connect[0]->gVertexHandle, 0, &tmpSet, &err);
+			iRel_getEntSetRelation(assoc, rel, gsEdgeList[sEdgeIndex].connect[0]->gVertexHandle, 0, &tmpSet, &err);
 			assert(!err);
 			iMesh_getEntities(mesh, tmpSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(tmpNodes), &err);
 			assert(!err);
@@ -2513,7 +2513,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			assert(!err);
 		
 			//get the index for mesh vertices on the source edge
-			iRel_getEntSetAssociation(assoc, rel, gsEdgeList[sEdgeIndex].connect[1]->gVertexHandle, 0, &tmpSet, &err);
+			iRel_getEntSetRelation(assoc, rel, gsEdgeList[sEdgeIndex].connect[1]->gVertexHandle, 0, &tmpSet, &err);
 			assert(!err);
 			iMesh_getEntities(mesh, tmpSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(tmpNodes), &err);
 			assert(!err);
@@ -3051,7 +3051,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	
 			//create the entityset for linking surface[i]
 			iBase_EntitySetHandle entityset;
-			iRel_getEntSetAssociation(assoc, rel, gLinkFaceList[i].gFaceHandle, 0, &entityset, &err);
+			iRel_getEntSetRelation(assoc, rel, gLinkFaceList[i].gFaceHandle, 0, &entityset, &err);
 			if (err)	//there is no entityset associated with gLinkFaceList[i].gFaceHandle
 			{
 				iMesh_createEntSet(mesh, 1, &entityset, &err);
@@ -3064,11 +3064,11 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			iMesh_addEntArrToSet(mesh, &faceHandle[0], faceIndex, entityset, &err);
 			assert(!err);
 	
-			iRel_getEntSetAssociation(assoc, rel, gLinkFaceList[i].gFaceHandle, 0, &entityset, &err);
+			iRel_getEntSetRelation(assoc, rel, gLinkFaceList[i].gFaceHandle, 0, &entityset, &err);
 			if (err)//there is no entityset associated with gLinkFaceList[i].gFaceHandle
 			{
 				//create the irel between the linking sides and entityset
-				iRel_setEntSetAssociation(assoc, rel, gLinkFaceList[i].gFaceHandle, entityset, &err);
+				iRel_setEntSetRelation(assoc, rel, gLinkFaceList[i].gFaceHandle, entityset, &err);
 				assert(!err);
 			}
 		}

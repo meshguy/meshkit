@@ -77,6 +77,12 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
                         int *offsets_size,
                         int *err);
 
+int connect_the_dots(iMesh_Instance instance, iBase_EntityHandle *ents,
+                     int size, iBase_TagHandle local_tag, int *indices,
+                     int *offsets, iBase_EntityHandle *verts);
+
+
+
 class CopyMesh 
 {
 public:
@@ -236,10 +242,6 @@ private:
     iBase_TagHandle tag;
     char *value;
   };
-
-  int connect_the_dots(iBase_EntityHandle *ents, int size,
-                       iBase_TagHandle local_tag, int *indices, int *offsets,
-                       iBase_EntityHandle *verts);
 
   //- get the copy/expand sets based on copy/expand tags
   int get_copy_expand_sets(iBase_EntitySetHandle *&copy_sets,

@@ -295,6 +295,84 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
   KEEP_ARRAY(offsets);
 }
 
+int connect_the_dots(iMesh_Instance imeshImpl, iBase_EntityHandle *ents,
+                     int ents_size, iBase_TagHandle local_tag, int *indices,
+                     int *offsets, iBase_EntityHandle *verts)
+{
+  int err;
+
+  SimpleArray<int> topos;
+  iMesh_getEntArrTopo(imeshImpl, ents, ents_size, ARRAY_INOUT(topos), &err);
+  ERRORR("Failed to get topos of all ents.", err);
+  
+  // scan forward to first non-vertex
+  int pos = 0;
+  while (iMesh_POINT == topos[pos] && pos < topos.size())
+    pos++;
+  if (pos == topos.size()) return iBase_SUCCESS;
+
+  // for each run of same size & type
+  std::vector<iBase_EntityHandle> connect, new_ents;
+  std::vector<int> status;
+  int begin, end = pos;
+  while (end < ents_size) {
+    // get next run; end points to start of *next* element,
+    // or ents_size if no elems left
+    begin = end++;
+
+    int topo = topos[begin];
+    int vtx_per_ent = offsets[end] - offsets[begin];
+    while (end < ents_size &&
+           topos[end] == topo &&
+           offsets[end+1] - offsets[end] == vtx_per_ent)
+      end++;
+    int num_ents = end - begin;
+
+    int mbcn_type;
+    int num_corner_verts;
+    iMesh_MBCNType(topo, &mbcn_type);
+    MBCN_VerticesPerEntity(mbcn_type, &num_corner_verts);
+
+    // build vector of vtx handles
+    connect.resize(vtx_per_ent * num_ents);
+    for (size_t i = 0; i < connect.size(); i++)
+      connect[i] = verts[indices[offsets[begin] + i]];
+
+    // create entities
+    new_ents.resize(num_ents);
+
+    if (num_corner_verts == vtx_per_ent) {
+      status.resize(num_ents);
+
+      iBase_EntityHandle *new_ents_ptr = &new_ents[0];
+      int new_ents_alloc = num_ents, new_ents_size;
+      int *status_ptr = &status[0];
+      int status_alloc = num_ents, status_size;
+      iMesh_createEntArr(imeshImpl, topo, &connect[0], connect.size(),
+                         &new_ents_ptr, &new_ents_alloc, &new_ents_size,
+                         &status_ptr, &status_alloc, &status_size, &err);
+      ERRORR("Couldn't create new entities.", iBase_FAILURE);
+    }
+    else {
+      // use single-entity function in this case, entity might have higher-order
+      // nodes (imesh fcn doesn't have argument for # entities)
+      for (int i = 0; i < num_ents; i++) {
+        int status;
+        iMesh_createEnt(imeshImpl, topo, &connect[i*vtx_per_ent],
+                        vtx_per_ent, &new_ents[i], &status, &err);
+        ERRORR("Couldn't create new entities.", iBase_FAILURE);
+      }
+    }
+
+    // set the local copy tags
+    iMesh_setEHArrData(imeshImpl, &ents[begin], num_ents, local_tag, 
+                       &new_ents[0], num_ents, &err);
+    ERRORR("Error setting local copy tag data on old ents.", iBase_FAILURE);
+  }
+
+  return iBase_SUCCESS;
+}
+
 CopyMesh::CopyMesh(iMesh_Instance impl) 
   : imeshImpl(impl), updatedCELists(false), copyTag(impl, "__CopyMeshTag")
 {}
@@ -541,8 +619,8 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
   ERRORR("Error setting local copy tag data on old vertices.", iBase_FAILURE);
 
   // now connect the new vertices to make the higher-dimension entities
-  err = connect_the_dots(ARRAY_IN(ents), local_tag, &indices[0], &offsets[0],
-                         &new_verts[0]);
+  err = connect_the_dots(imeshImpl, ARRAY_IN(ents), local_tag, &indices[0],
+                         &offsets[0], &new_verts[0]);
   ERRORR("Couldn't create new entities.", iBase_FAILURE);
 
   // take care of copy/expand sets
@@ -585,85 +663,6 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
     iMesh_getEHArrData(imeshImpl, ARRAY_IN(ents), local_tag, 
                        new_ents, new_ents_allocated, new_ents_size, &err);
     ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
-  }
-
-  return iBase_SUCCESS;
-}
-
-int CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
-                               iBase_TagHandle local_tag,
-                               int *indices, int *offsets,
-                               iBase_EntityHandle *verts)
-{
-  int err;
-
-  SimpleArray<int> topos;
-  iMesh_getEntArrTopo(imeshImpl, ents, ents_size, ARRAY_INOUT(topos), &err);
-  ERRORR("Failed to get topos of all ents.", err);
-  
-  // scan forward to first non-vertex
-  int pos = 0;
-  while (iMesh_POINT == topos[pos] && pos < topos.size())
-    pos++;
-  if (pos == topos.size()) return iBase_SUCCESS;
-
-  // for each run of same size & type
-  std::vector<iBase_EntityHandle> connect, new_ents;
-  std::vector<int> status;
-  int begin, end = pos;
-  while (end < ents_size) {
-    // get next run; end points to start of *next* element,
-    // or ents_size if no elems left
-    begin = end++;
-
-    int topo = topos[begin];
-    int vtx_per_ent = offsets[end] - offsets[begin];
-    while (end < ents_size &&
-           topos[end] == topo &&
-           offsets[end+1] - offsets[end] == vtx_per_ent)
-      end++;
-    int num_ents = end - begin;
-
-    int mbcn_type;
-    int num_corner_verts;
-    iMesh_MBCNType(topo, &mbcn_type);
-    MBCN_VerticesPerEntity(mbcn_type, &num_corner_verts);
-
-    // build vector of vtx handles
-    connect.resize(vtx_per_ent * num_ents);
-    for (size_t i = 0; i < connect.size(); i++)
-      connect[i] = verts[indices[offsets[begin] + i]];
-
-    // create entities
-    new_ents.resize(num_ents);
-
-    if (num_corner_verts == vtx_per_ent) {
-      status.resize(num_ents);
-
-      iBase_EntityHandle *new_ents_ptr = &new_ents[0];
-      int new_ents_alloc = num_ents, new_ents_size;
-      int *status_ptr = &status[0];
-      int status_alloc = num_ents, status_size;
-      iMesh_createEntArr(imeshImpl, topo, &connect[0], connect.size(),
-                         &new_ents_ptr, &new_ents_alloc, &new_ents_size,
-                         &status_ptr, &status_alloc, &status_size, &err);
-      ERRORR("Couldn't create new entities.", iBase_FAILURE);
-    }
-    else {
-      // use single-entity function in this case, entity might have higher-order
-      // nodes (imesh fcn doesn't have argument for # entities)
-      for (int i = 0; i < num_ents; i++) {
-        int status;
-        iMesh_createEnt(imeshImpl, topo, &connect[i*vtx_per_ent],
-                        vtx_per_ent, &new_ents[i], &status, &err);
-        ERRORR("Couldn't create new entities.", iBase_FAILURE);
-      }
-    }
-
-    // set the local copy tags
-    iMesh_setEHArrData(imeshImpl, &ents[begin], num_ents, local_tag, 
-                       &new_ents[0], num_ents, &err);
-    ERRORR("Error setting local copy tag data on old ents.", iBase_FAILURE);
   }
 
   return iBase_SUCCESS;
