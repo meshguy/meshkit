@@ -21,6 +21,9 @@ CCrgen class declaration
 #include <string>
 #include "matrixtemplate.hpp"
 
+#define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
+#define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
+
 class CCrgen
 {
 public:
