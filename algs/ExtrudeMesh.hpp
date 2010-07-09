@@ -19,63 +19,64 @@ public:
 
   iBase_TagHandle extrude_tag();
 
-  int add_extrude_tag(const std::string &tag_name, const char *tag_val = NULL);
-  int add_extrude_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
+  void add_extrude_tag(const std::string &tag_name, const char *tag_val = NULL);
+  void add_extrude_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
 
   std::set<iBase_EntitySetHandle> & extrude_sets();
 
-  int update_sets();
-  int reset_sets();
+  void update_sets();
+  void reset_sets();
 
-  int translate(iBase_EntityHandle *src, int size, int steps, const double *dx,
-                bool copy_faces = false);
-  int translate(iBase_EntitySetHandle src, int steps, const double *dx,
-                bool copy_faces = false);
-  int translate(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
-                int steps);
-  int translate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
-                int steps);
+  void translate(iBase_EntityHandle *src, int size, int steps, const double *dx,
+                 bool copy_faces = false);
+  void translate(iBase_EntitySetHandle src, int steps, const double *dx,
+                 bool copy_faces = false);
+  void translate(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
+                 int steps);
+  void translate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
+                 int steps);
 
-  int rotate(iBase_EntityHandle *src, int size, int steps, const double *origin,
-             const double *z, double angle, bool copy_faces = false);
-  int rotate(iBase_EntitySetHandle src, int steps, const double *origin,
-             const double *z, double angle, bool copy_faces = false);
-  int rotate(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
-             int steps, const double *origin, const double *z, double angle);
-  int rotate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest, int steps,
-             const double *origin, const double *z, double angle);
-
-
-  int extrude(iBase_EntityHandle *src, int size, int steps,
-              const CopyVerts &trans, bool copy_faces = false);
-  int extrude(iBase_EntitySetHandle src, int steps, const CopyVerts &trans,
+  void rotate(iBase_EntityHandle *src, int size, int steps,
+              const double *origin, const double *z, double angle,
               bool copy_faces = false);
-  int extrude(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
-              int steps, const CopyVerts &trans);
-  int extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest, int steps,
-              const CopyVerts &trans);
+  void rotate(iBase_EntitySetHandle src, int steps, const double *origin,
+              const double *z, double angle, bool copy_faces = false);
+  void rotate(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
+              int steps, const double *origin, const double *z, double angle);
+  void rotate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest, int steps,
+              const double *origin, const double *z, double angle);
+
+
+  void extrude(iBase_EntityHandle *src, int size, int steps,
+               const CopyVerts &trans, bool copy_faces = false);
+  void extrude(iBase_EntitySetHandle src, int steps, const CopyVerts &trans,
+               bool copy_faces = false);
+  void extrude(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
+               int steps, const CopyVerts &trans);
+  void extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest, int steps,
+               const CopyVerts &trans);
 
   // Forwards from CopyMesh
   iBase_TagHandle copy_tag();
-  int add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
-                           int copy_or_expand);
-  int reset_ce_lists();
-  int add_copy_tag  (const std::string &tag_name, const char *tag_val = NULL);
-  int add_copy_tag  (iBase_TagHandle tag_handle,  const char *tag_val = NULL);
-  int add_expand_tag(const std::string &tag_name, const char *tag_val = NULL);
-  int add_expand_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
-  int add_unique_tag(const std::string &tag_name);
-  int add_unique_tag(iBase_TagHandle tag_handle);
+  void add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
+                            int copy_or_expand);
+  void reset_ce_lists();
+  void add_copy_tag  (const std::string &tag_name, const char *tag_val = NULL);
+  void add_copy_tag  (iBase_TagHandle tag_handle,  const char *tag_val = NULL);
+  void add_expand_tag(const std::string &tag_name, const char *tag_val = NULL);
+  void add_expand_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
+  void add_unique_tag(const std::string &tag_name);
+  void add_unique_tag(iBase_TagHandle tag_handle);
 
   std::set<iBase_EntitySetHandle> & copy_sets();
   std::set<iBase_EntitySetHandle> & expand_sets();
   std::set<iBase_EntitySetHandle> & unique_sets();
 private:
-  int do_extrusion(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
-           bool use_dest, int inner_rows, const CopyVerts &trans);
+  void do_extrusion(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
+                    bool use_dest, int inner_rows, const CopyVerts &trans);
 
-  int * get_normals(iBase_EntityHandle *verts, int *indices, int *offsets,
-                    int size, double *dv);
+  std::vector<int> get_normals(iBase_EntityHandle *verts, int *indices,
+                               int *offsets, int size, double *dv);
 
   void connect_the_dots(
     iBase_EntityHandle *src, int size, iBase_TagHandle local_tag, 
@@ -113,53 +114,53 @@ ExtrudeMesh::copy_tag()
   return copy_.copy_tag();
 }
 
-inline int
+inline void
 ExtrudeMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, 
                                   int num_ce_sets, int copy_or_expand)
 {
-  return copy_.add_copy_expand_list(ce_sets, num_ce_sets, copy_or_expand);
+  copy_.add_copy_expand_list(ce_sets, num_ce_sets, copy_or_expand);
 }
 
-inline int
+inline void
 ExtrudeMesh::reset_ce_lists()
 {
-  return copy_.reset_ce_lists();
+  copy_.reset_ce_lists();
 }
 
-inline int
+inline void
 ExtrudeMesh::add_copy_tag(const std::string &tag_name, const char *tag_val)
 {
-  return copy_.add_copy_tag(tag_name, tag_val);
+  copy_.add_copy_tag(tag_name, tag_val);
 }
 
-inline int
+inline void
 ExtrudeMesh::add_copy_tag(iBase_TagHandle tag_handle, const char *tag_val)
 {
-  return copy_.add_copy_tag(tag_handle, tag_val);
+  copy_.add_copy_tag(tag_handle, tag_val);
 }
 
-inline int
+inline void
 ExtrudeMesh::add_expand_tag(const std::string &tag_name, const char *tag_val)
 {
-  return copy_.add_expand_tag(tag_name, tag_val);
+  copy_.add_expand_tag(tag_name, tag_val);
 }
 
-inline int
+inline void
 ExtrudeMesh::add_expand_tag(iBase_TagHandle tag_handle, const char *tag_val)
 {
-  return copy_.add_expand_tag(tag_handle, tag_val);
+  copy_.add_expand_tag(tag_handle, tag_val);
 }
 
-inline int
+inline void
 ExtrudeMesh::add_unique_tag(const std::string &tag_name)
 {
-  return copy_.add_unique_tag(tag_name);
+  copy_.add_unique_tag(tag_name);
 }
 
-inline int
+inline void
 ExtrudeMesh::add_unique_tag(iBase_TagHandle tag_handle)
 {
-  return copy_.add_unique_tag(tag_handle);
+  copy_.add_unique_tag(tag_handle);
 }
 
 inline std::set<iBase_EntitySetHandle> &

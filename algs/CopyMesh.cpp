@@ -1,10 +1,13 @@
 #include "CopyMesh.hpp"
 #include "CopyVerts.hpp"
 #include "ArrayManager.hpp"
+#include "LocalSet.hpp"
 #include "SimpleArray.hpp"
 #include "MBCN.h"
-#include <stdlib.h>
+
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 
 /*
@@ -19,19 +22,18 @@
  * \param set the set containing the entities we want
  * \param local_tag the tag relating source and target entities
  * \param ents a vector which will hold our copied entities
- * \return an ITAPS error code
  */
 static
-int get_copied_ents(iMesh_Instance imeshImpl, iBase_EntitySetHandle set,
-                    iBase_TagHandle local_tag,
-                    std::vector<iBase_EntityHandle> &ents)
+void get_copied_ents(iMesh_Instance imeshImpl, iBase_EntitySetHandle set,
+                     iBase_TagHandle local_tag,
+                     std::vector<iBase_EntityHandle> &ents)
 {
   int err;
 
   SimpleArray<iBase_EntityHandle> tmp_ents;
   iMesh_getEntities(imeshImpl, set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
                     ARRAY_INOUT(tmp_ents), &err);
-  ERRORR("Failed to get ceSet entities.", iBase_FAILURE);
+  check_error(imeshImpl, err);
 
   ents.reserve(tmp_ents.size());
 
@@ -42,8 +44,6 @@ int get_copied_ents(iMesh_Instance imeshImpl, iBase_EntitySetHandle set,
     if (iBase_SUCCESS == err && eh_tag)
       ents.push_back(eh_tag);
   }
-
-  return iBase_SUCCESS;
 }
 
 /**\brief Create a copy set if one doesn't exist yet
@@ -54,28 +54,25 @@ int get_copied_ents(iMesh_Instance imeshImpl, iBase_EntitySetHandle set,
  * \param local_tag the tag relating source and target sets
  * \param src the source set
  * \param dest pointer to the destination set
- * \return an ITAPS error code
  */
 static
-int get_dest_set(iMesh_Instance imeshImpl, iBase_TagHandle local_tag,
-                 iBase_EntitySetHandle src, iBase_EntitySetHandle *dest)
+void get_dest_set(iMesh_Instance imeshImpl, iBase_TagHandle local_tag,
+                  iBase_EntitySetHandle src, iBase_EntitySetHandle *dest)
 {
   int err;
 
-  if (dest == NULL) return iBase_FAILURE;
+  if (dest == NULL) return;
 
   iMesh_getEntSetEHData(imeshImpl, src, local_tag,
                         reinterpret_cast<iBase_EntityHandle*>(dest), &err);
 
   if (err != iBase_SUCCESS) {
     iMesh_createEntSet(imeshImpl, false, dest, &err);
-    ERRORR("Failed to create copied set.", iBase_FAILURE);
+    check_error(imeshImpl, err);
     iMesh_setEntSetEHData(imeshImpl, src, local_tag,
                           reinterpret_cast<iBase_EntityHandle>(*dest), &err);
-    ERRORR("Failed to tag copied set.", iBase_FAILURE);
+    check_error(imeshImpl, err);
   }
-
-  return iBase_SUCCESS;
 }
 
 /**\brief Add copied entities/sets recursively
@@ -88,85 +85,72 @@ int get_dest_set(iMesh_Instance imeshImpl, iBase_TagHandle local_tag,
  * \param src the source set
  * \param current the child set to examine (start with current == src)
  * \param local_tag the tag relating source and target sets
- * \return an ITAPS error code
  */
 static
-int process_ce_subsets(iMesh_Instance imeshImpl, iBase_EntitySetHandle src,
-                       iBase_EntitySetHandle current,
-                       const std::set<iBase_EntitySetHandle> &cesets,
-                       iBase_TagHandle local_tag) 
+void process_ce_subsets(iMesh_Instance imeshImpl, iBase_EntitySetHandle src,
+                        iBase_EntitySetHandle current,
+                        const std::set<iBase_EntitySetHandle> &cesets,
+                        iBase_TagHandle local_tag) 
 {
   int err;
   iBase_EntitySetHandle dest;
 
   // First, add entities directly contained in this set.
   std::vector<iBase_EntityHandle> tmp_tags;
-  err = get_copied_ents(imeshImpl, current, local_tag, tmp_tags);
-  ERRORR("Failed to get copied ents.", iBase_FAILURE);
+  get_copied_ents(imeshImpl, current, local_tag, tmp_tags);
 
   if (!tmp_tags.empty()) {
-    err = get_dest_set(imeshImpl, local_tag, src, &dest);
-    ERRORR("Failed to get copied set.", iBase_FAILURE);
+    get_dest_set(imeshImpl, local_tag, src, &dest);
     iMesh_addEntArrToSet(imeshImpl, &tmp_tags[0], tmp_tags.size(), dest,
                          &err);
-    ERRORR("Failed to add copied entities to ce set.", iBase_FAILURE);
+    check_error(imeshImpl, err);
   }
 
   // Next, start looking at children.
   SimpleArray<iBase_EntitySetHandle> children;
   iMesh_getEntSets(imeshImpl, current, 1, ARRAY_INOUT(children), &err);
-  ERRORR("Failed to get ceSet sets.", iBase_FAILURE);
+  check_error(imeshImpl, err);
 
   for (int i = 0; i < children.size(); i++) {
 
     // If this child set is one of our cesets, add just the set...
     if (cesets.find(children[i]) != cesets.end()) {
-      err = get_dest_set(imeshImpl, local_tag, src, &dest);
-      ERRORR("Failed to get copied set.", iBase_FAILURE);
-
+      get_dest_set(imeshImpl, local_tag, src, &dest);
       if (src == dest) continue;
 
       iMesh_addEntSet(imeshImpl, children[i], dest, &err);
-      ERRORR("Failed to add set to ce set.", iBase_FAILURE);
+      check_error(imeshImpl, err);
     }
 
     // ... otherwise, add the entities and recurse into the next level of
     // children.
     else {
-      err = process_ce_subsets(imeshImpl, src, children[i], cesets, local_tag);
-      ERRORR("Failed to process contained sets.", iBase_FAILURE);
+      process_ce_subsets(imeshImpl, src, children[i], cesets, local_tag);
     }
   }
-
-  return iBase_SUCCESS;
 }
 
 // xxx - still need to do unique tags
 // - for each unique tag
 //   . if this set has the tag, add/append to get unique value
-int process_ce_sets(iMesh_Instance imeshImpl,
-                    const std::set<iBase_EntitySetHandle> &cesets,
-                    iBase_TagHandle local_tag) 
+void process_ce_sets(iMesh_Instance imeshImpl,
+                     const std::set<iBase_EntitySetHandle> &cesets,
+                     iBase_TagHandle local_tag) 
 {
-  int err;
   std::set<iBase_EntitySetHandle>::const_iterator src;
-  for (src = cesets.begin(); src != cesets.end(); ++src) {
-    err = process_ce_subsets(imeshImpl, *src, *src, cesets, local_tag);
-    ERRORR("Failed to process contained sets.", iBase_FAILURE);
-  }
-  
-  return iBase_SUCCESS;
+  for (src = cesets.begin(); src != cesets.end(); ++src)
+    process_ce_subsets(imeshImpl, *src, *src, cesets, local_tag);
 }
 
-int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
+void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
                   const std::set<iBase_EntitySetHandle> &copySets,
                   iBase_TagHandle tag, const char *tag_val)
 {
-  int err = iBase_SUCCESS;
+  int err;
 
   int tag_size;
   iMesh_getTagSizeBytes(imeshImpl, tag, &tag_size, &err);
-  ERRORR("Failed to get tag size.", err);
+  check_error(imeshImpl, err);
 
   // allocate temp space for tag value
   std::vector<char> value;
@@ -180,38 +164,28 @@ int tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
     // get the tag value
     iMesh_getEntSetData(imeshImpl, *set, tag, 
                         &value_ptr, &value_alloc, &value_size, &err);
-    if (iBase_TAG_NOT_FOUND == err) {
-      // reset, just in case we return after this setting of err
-      err = iBase_SUCCESS;
+    if (err == iBase_TAG_NOT_FOUND)
       continue;
-    }
-    ERRORR("Problem getting copy tag for set.", err);
+    check_error(imeshImpl, err);
 
     // compare to tag value if necessary
-    if (tag_val && strncmp(tag_val, value_ptr, tag_size)) {
-      // reset, just in case we return after this setting of err
-      err = iBase_SUCCESS;
+    if (tag_val && strncmp(tag_val, value_ptr, tag_size))
       continue;
-    }      
       
     // if we got here, we should set the tag on the copy; get the copy
     iBase_EntitySetHandle copy_set;
     iMesh_getEntSetEHData(imeshImpl, *set, copyTag, 
                           reinterpret_cast<iBase_EntityHandle*>(&copy_set), 
                           &err);
-    if (iBase_TAG_NOT_FOUND == err) {
-      // we (probably) didn't copy anything from this set, so ignore it
-      err = iBase_SUCCESS;
+    if (err == iBase_TAG_NOT_FOUND)
       continue;
-    }
-    ERRORR("Didn't get copied set from orig copy set.", err);
+    check_error(imeshImpl, err);
 
-    if (copy_set != *set)
+    if (copy_set != *set) {
       iMesh_setEntSetData(imeshImpl, copy_set, tag, value_ptr, tag_size, &err);
-    ERRORR("Failed to set data on copied set.", err);
+      check_error(imeshImpl, err);
+    }
   }
-  
-  return err;
 }
 
 void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
@@ -309,22 +283,18 @@ CopyMesh::~CopyMesh()
     free(i->value);
 }
 
-int CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
-                                   int copy_or_expand) 
+void CopyMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets,
+                                    int num_ce_sets, int copy_or_expand) 
 {
   if (copy_or_expand == COPY)
     copySets.insert(ce_sets, ce_sets+num_ce_sets);
   else if (copy_or_expand == EXPAND)
     expandSets.insert(ce_sets, ce_sets+num_ce_sets);
-  else {
-    std::cerr << "Needs to be copy or expand." << std::endl;
-    return iBase_INVALID_ARGUMENT;
-  }
-
-  return iBase_SUCCESS;
+  else
+    throw MKException(iBase_INVALID_ARGUMENT, "Needs to be copy or expand.");
 }
 
-int CopyMesh::add_copy_tag(iBase_TagHandle tag_handle, const char *tag_val)
+void CopyMesh::add_copy_tag(iBase_TagHandle tag_handle, const char *tag_val)
 {
   assert(tag_handle != NULL);
   char *tmp = NULL;
@@ -333,17 +303,16 @@ int CopyMesh::add_copy_tag(iBase_TagHandle tag_handle, const char *tag_val)
     int err;
     int tag_size;
     iMesh_getTagSizeBytes(imeshImpl, tag_handle, &tag_size, &err);
-    if (iBase_SUCCESS != err)
-      ERRORR("Failed to get size of tag", iBase_FAILURE);
+    check_error(imeshImpl, err);
+
     tmp = static_cast<char*>(malloc(tag_size));
     memcpy(tmp, tag_val, tag_size);
   }
 
   copyTags.push_back(tag_data(tag_handle, tmp));
-  return iBase_SUCCESS;
 }
 
-int CopyMesh::add_expand_tag(iBase_TagHandle tag_handle, const char *tag_val)
+void CopyMesh::add_expand_tag(iBase_TagHandle tag_handle, const char *tag_val)
 {
   assert(tag_handle != NULL);
   char *tmp = NULL;
@@ -352,57 +321,56 @@ int CopyMesh::add_expand_tag(iBase_TagHandle tag_handle, const char *tag_val)
     int err;
     int tag_size;
     iMesh_getTagSizeBytes(imeshImpl, tag_handle, &tag_size, &err);
-    if (iBase_SUCCESS != err)
-      ERRORR("Failed to get size of tag", iBase_FAILURE);
+    check_error(imeshImpl, err);
+
     tmp = static_cast<char*>(malloc(tag_size));
     memcpy(tmp, tag_val, tag_size);
   }
 
   expandTags.push_back(tag_data(tag_handle, tmp));
-  return iBase_SUCCESS;
 }
 
 
 
 /* \brief Copy all the entities in the set
  */
-int CopyMesh::copy_entities(iBase_EntitySetHandle set_handle,
-                            iBase_EntityHandle **new_ents,
-                            int *new_ents_allocated,
-                            int *new_ents_size) 
+void CopyMesh::copy_entities(iBase_EntitySetHandle set_handle,
+                             iBase_EntityHandle **new_ents,
+                             int *new_ents_allocated,
+                             int *new_ents_size) 
 {
   int err;
 
   SimpleArray<iBase_EntityHandle> ents;
   iMesh_getEntities(imeshImpl, set_handle, iBase_ALL_TYPES,
                     iMesh_ALL_TOPOLOGIES, ARRAY_INOUT(ents), &err);
-  ERRORR("Couldn't get entities in set.", iBase_FAILURE);
+  check_error(imeshImpl, err);
   
-  return copy_move_entities(ARRAY_IN(ents), NULL, new_ents, new_ents_allocated,
-                            new_ents_size);
+  copy_move_entities(ARRAY_IN(ents), NULL, new_ents, new_ents_allocated,
+                     new_ents_size);
 }
 
   
 /* \brief Copy all the entities
  */
-int CopyMesh::copy_entities(iBase_EntityHandle *ent_handles,
-                            int num_ents,
-                            iBase_EntityHandle **new_ents,
-                            int *new_ents_allocated,
-                            int *new_ents_size) 
+void CopyMesh::copy_entities(iBase_EntityHandle *ent_handles,
+                             int num_ents,
+                             iBase_EntityHandle **new_ents,
+                             int *new_ents_allocated,
+                             int *new_ents_size) 
 {
-  return copy_move_entities(ent_handles, num_ents, NULL,
-                            new_ents, new_ents_allocated, new_ents_size);;
+  copy_move_entities(ent_handles, num_ents, NULL,
+                     new_ents, new_ents_allocated, new_ents_size);;
 }
 
 /* \brief Copy and move all the entities
  */
-int CopyMesh::copy_move_entities(iBase_EntitySetHandle set_handle,
-                                 const double *dx,
-                                 iBase_EntityHandle **new_ents,
-                                 int *new_ents_alloc,
-                                 int *new_ents_size,
-                                 bool do_merge) 
+void CopyMesh::copy_move_entities(iBase_EntitySetHandle set_handle,
+                                  const double *dx,
+                                  iBase_EntityHandle **new_ents,
+                                  int *new_ents_alloc,
+                                  int *new_ents_size,
+                                  bool do_merge) 
 {
   int err;
 
@@ -410,42 +378,42 @@ int CopyMesh::copy_move_entities(iBase_EntitySetHandle set_handle,
   iMesh_getEntitiesRec(imeshImpl, set_handle, 
                        iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
                        ARRAY_INOUT(ents), &err);
-  ERRORR("Failed to get entities from set recursively.", err);
+  check_error(imeshImpl, err);
   
-  return copy_move_entities(ARRAY_IN(ents), dx, new_ents, new_ents_alloc,
-                            new_ents_size, do_merge);
+  copy_move_entities(ARRAY_IN(ents), dx, new_ents, new_ents_alloc,
+                     new_ents_size, do_merge);
 }
 
 
 /* \brief Copy and move all the entities
  */
-int CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
-                                 int num_ents,
-                                 const double *dx,
-                                 iBase_EntityHandle **new_ents,
-                                 int *new_ents_alloc,
-                                 int *new_ents_size,
-                                 bool do_merge) 
+void CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
+                                  int num_ents,
+                                  const double *dx,
+                                  iBase_EntityHandle **new_ents,
+                                  int *new_ents_alloc,
+                                  int *new_ents_size,
+                                  bool do_merge) 
 {
   double zero[3] = {0,0,0};
   if(dx == NULL)
     dx = zero;
-  return copy_transform_entities(ent_handles, num_ents,
-                                 CopyMoveVerts(imeshImpl, dx),
-                                 new_ents, new_ents_alloc, new_ents_size,
-                                 do_merge);
+  copy_transform_entities(ent_handles, num_ents,
+                          CopyMoveVerts(imeshImpl, dx),
+                          new_ents, new_ents_alloc, new_ents_size,
+                          do_merge);
 }
 
 /* \brief Copy and rotate all the entities
  */
-int CopyMesh::copy_rotate_entities(iBase_EntitySetHandle set_handle,
-                                   const double *origin,
-                                   const double *z,
-                                   double theta,
-                                   iBase_EntityHandle **new_ents,
-                                   int *new_ents_alloc,
-                                   int *new_ents_size,
-                                   bool do_merge)
+void CopyMesh::copy_rotate_entities(iBase_EntitySetHandle set_handle,
+                                    const double *origin,
+                                    const double *z,
+                                    double theta,
+                                    iBase_EntityHandle **new_ents,
+                                    int *new_ents_alloc,
+                                    int *new_ents_size,
+                                    bool do_merge)
 {
   int err;
 
@@ -453,65 +421,57 @@ int CopyMesh::copy_rotate_entities(iBase_EntitySetHandle set_handle,
   iMesh_getEntitiesRec(imeshImpl, set_handle, 
                        iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
                        ARRAY_INOUT(ents), &err);
-  ERRORR("Failed to get entities from set recursively.", err);
+  check_error(imeshImpl, err);
   
-  return copy_rotate_entities(ARRAY_IN(ents), origin, z, theta, new_ents,
-                              new_ents_alloc, new_ents_size, do_merge);
-
+  copy_rotate_entities(ARRAY_IN(ents), origin, z, theta, new_ents,
+                       new_ents_alloc, new_ents_size, do_merge);
 }
 
 
 /* \brief Copy and rotate all the entities
  */
-int CopyMesh::copy_rotate_entities(iBase_EntityHandle *ent_handles,
-                                   int num_ents,
-                                   const double *origin,
-                                   const double *z,
-                                   double theta,
-                                   iBase_EntityHandle **new_ents,
-                                   int *new_ents_alloc,
-                                   int *new_ents_size,
-                                   bool do_merge) 
+void CopyMesh::copy_rotate_entities(iBase_EntityHandle *ent_handles,
+                                    int num_ents,
+                                    const double *origin,
+                                    const double *z,
+                                    double theta,
+                                    iBase_EntityHandle **new_ents,
+                                    int *new_ents_alloc,
+                                    int *new_ents_size,
+                                    bool do_merge) 
 {
-  return copy_transform_entities(ent_handles, num_ents,
-                                 CopyRotateVerts(imeshImpl, origin, z, theta),
-                                 new_ents, new_ents_alloc, new_ents_size,
-                                 do_merge);
+  copy_transform_entities(ent_handles, num_ents,
+                          CopyRotateVerts(imeshImpl, origin, z, theta),
+                          new_ents, new_ents_alloc, new_ents_size,
+                          do_merge);
 }
 
 
-int CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
-                                      int num_ents,
-                                      const CopyVerts &trans,
-                                      iBase_EntityHandle **new_ents,
-                                      int *new_ents_allocated,
-                                      int *new_ents_size,
-                                      bool do_merge)
+void CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
+                                       int num_ents,
+                                       const CopyVerts &trans,
+                                       iBase_EntityHandle **new_ents,
+                                       int *new_ents_allocated,
+                                       int *new_ents_size,
+                                       bool do_merge)
 {
   int err;
 
-  iBase_EntitySetHandle set;
-  iMesh_createEntSet(imeshImpl, false, &set, &err);
-  ERRORR("Couldn't create source entity set.", err);
+  LocalSet set(imeshImpl);
   
   iMesh_addEntArrToSet(imeshImpl, ent_handles, num_ents, set, &err);
-  ERRORR("Couldn't add entities to source entity set.", err);
+  check_error(imeshImpl, err);
 
-  int ret = copy_transform_entities(set, trans, new_ents, new_ents_allocated,
+  copy_transform_entities(set, trans, new_ents, new_ents_allocated,
                                     new_ents_size, do_merge);
-
-  iMesh_destroyEntSet(imeshImpl, set, &err);
-  ERRORR("Couldn't destroy source entity set.", err);
-
-  return ret;
 }
 
-int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
-                                      const CopyVerts &trans,
-                                      iBase_EntityHandle **new_ents,
-                                      int *new_ents_allocated,
-                                      int *new_ents_size,
-                                      bool do_merge)
+void CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
+                                       const CopyVerts &trans,
+                                       iBase_EntityHandle **new_ents,
+                                       int *new_ents_allocated,
+                                       int *new_ents_size,
+                                       bool do_merge)
 {
   int err;
   LocalTag local_tag(imeshImpl);
@@ -524,12 +484,11 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
   iMesh_getStructure(imeshImpl, set_handle, ARRAY_INOUT(ents),
                      ARRAY_INOUT(verts), ARRAY_INOUT(indices),
                      ARRAY_INOUT(offsets), &err);
-  ERRORR("Trouble getting source adjacencies.", err);
+  check_error(imeshImpl, err);
 
   // copy the vertices
   SimpleArray<iBase_EntityHandle> new_verts;
   trans(ARRAY_IN(verts), ARRAY_INOUT(new_verts));
-  ERRORR("Couldn't create new vertices.", iBase_FAILURE);
   assert(new_verts.size() == verts.size());
 
   // set the local copy tags on vertices
@@ -538,31 +497,26 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
   // question.
   iMesh_setEHArrData(imeshImpl, ARRAY_IN(verts), local_tag,
                      ARRAY_IN(new_verts), &err);
-  ERRORR("Error setting local copy tag data on old vertices.", iBase_FAILURE);
+  check_error(imeshImpl, err);
 
   // now connect the new vertices to make the higher-dimension entities
-  err = connect_the_dots(ARRAY_IN(ents), local_tag, &indices[0], &offsets[0],
-                         &new_verts[0]);
-  ERRORR("Couldn't create new entities.", iBase_FAILURE);
+  connect_the_dots(ARRAY_IN(ents), local_tag, &indices[0], &offsets[0],
+                   &new_verts[0]);
 
   // take care of copy/expand sets
-  if (!updatedCELists) {
-    err = update_ce_lists();
-    ERRORR(" ", err);
-  }
+  if (!updatedCELists)
+    update_ce_lists();
 
   // set the target sets for expand sets to be themselves
   std::set<iBase_EntitySetHandle>::iterator set;
   for (set = expandSets.begin(); set != expandSets.end(); ++set) {
     iMesh_setEntSetEHData(imeshImpl, *set, local_tag,
                           reinterpret_cast<iBase_EntityHandle>(*set), &err);
+    check_error(imeshImpl, err);
   }
 
-  err = process_ce_sets(imeshImpl, copySets, local_tag);
-  ERRORR("Failed to update copy/expand sets.", iBase_FAILURE);
-  
-  err = process_ce_sets(imeshImpl, expandSets, local_tag);
-  ERRORR("Failed to update expand/expand sets.", iBase_FAILURE);
+  process_ce_sets(imeshImpl, copySets, local_tag);
+  process_ce_sets(imeshImpl, expandSets, local_tag);
 
   // set the copy tag on all copied sets
   for (set = copySets.begin(); set != copySets.end(); ++set) {
@@ -570,42 +524,38 @@ int CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
     iMesh_getEntSetEHData(imeshImpl, *set, local_tag, &eh, &err);
     if (iBase_SUCCESS == err) {
       iMesh_setEntSetEHData(imeshImpl, *set, copyTag, eh, &err);
-      ERRORR("Failed to tag copied set with copyTag.", iBase_FAILURE);
+      check_error(imeshImpl, err);
     }
   }
 
   std::vector<tag_data>::iterator tag;
-  for(tag = copyTags.begin(); tag != copyTags.end(); ++tag) {
-    err = tag_copy_sets(imeshImpl, copyTag, copySets, tag->tag, tag->value);
-    ERRORR("Failed to tag copied sets.", iBase_FAILURE);
-  }
+  for(tag = copyTags.begin(); tag != copyTags.end(); ++tag)
+    tag_copy_sets(imeshImpl, copyTag, copySets, tag->tag, tag->value);
 
   // get all the copies
   if (new_ents) {
     iMesh_getEHArrData(imeshImpl, ARRAY_IN(ents), local_tag, 
                        new_ents, new_ents_allocated, new_ents_size, &err);
-    ERRORR("Failed to get copies from local tag.", iBase_FAILURE);
+    check_error(imeshImpl, err);
   }
-
-  return iBase_SUCCESS;
 }
 
-int CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
-                               iBase_TagHandle local_tag,
-                               int *indices, int *offsets,
-                               iBase_EntityHandle *verts)
+void CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
+                                iBase_TagHandle local_tag,
+                                int *indices, int *offsets,
+                                iBase_EntityHandle *verts)
 {
   int err;
 
   SimpleArray<int> topos;
   iMesh_getEntArrTopo(imeshImpl, ents, ents_size, ARRAY_INOUT(topos), &err);
-  ERRORR("Failed to get topos of all ents.", err);
+  check_error(imeshImpl, err);
   
   // scan forward to first non-vertex
   int pos = 0;
   while (iMesh_POINT == topos[pos] && pos < topos.size())
     pos++;
-  if (pos == topos.size()) return iBase_SUCCESS;
+  if (pos == topos.size()) return;
 
   // for each run of same size & type
   std::vector<iBase_EntityHandle> connect, new_ents;
@@ -647,7 +597,7 @@ int CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
       iMesh_createEntArr(imeshImpl, topo, &connect[0], connect.size(),
                          &new_ents_ptr, &new_ents_alloc, &new_ents_size,
                          &status_ptr, &status_alloc, &status_size, &err);
-      ERRORR("Couldn't create new entities.", iBase_FAILURE);
+      check_error(imeshImpl, err);
     }
     else {
       // use single-entity function in this case, entity might have higher-order
@@ -656,42 +606,35 @@ int CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
         int status;
         iMesh_createEnt(imeshImpl, topo, &connect[i*vtx_per_ent],
                         vtx_per_ent, &new_ents[i], &status, &err);
-        ERRORR("Couldn't create new entities.", iBase_FAILURE);
+        check_error(imeshImpl, err);
       }
     }
 
     // set the local copy tags
     iMesh_setEHArrData(imeshImpl, &ents[begin], num_ents, local_tag, 
                        &new_ents[0], num_ents, &err);
-    ERRORR("Error setting local copy tag data on old ents.", iBase_FAILURE);
+    check_error(imeshImpl, err);
   }
-
-  return iBase_SUCCESS;
 }
 
-int CopyMesh::update_ce_lists() 
+void CopyMesh::update_ce_lists() 
 {
   if (updatedCELists) reset_ce_lists();
 
   int err;
   iBase_EntitySetHandle root_set;
   iMesh_getRootSet(imeshImpl, &root_set, &err);
-  ERRORR("Trouble getting root set", iBase_FAILURE);
+  check_error(imeshImpl, err);
   
-  err = update_tagged_sets(root_set, copyTags, copySets);
-  ERRORR("Trouble updating tagged copy sets", iBase_FAILURE);
-
-  err = update_tagged_sets(root_set, expandTags, expandSets);
-  ERRORR("Trouble updating tagged expand sets", iBase_FAILURE);
+  update_tagged_sets(root_set, copyTags, copySets);
+  update_tagged_sets(root_set, expandTags, expandSets);
 
   updatedCELists = true;
-  
-  return iBase_SUCCESS;
 }
 
-int CopyMesh::update_tagged_sets(iBase_EntitySetHandle from_set,
-                                 const std::vector<CopyMesh::tag_data> &tags,
-                                 std::set<iBase_EntitySetHandle> &tagged_sets)
+void CopyMesh::update_tagged_sets(iBase_EntitySetHandle from_set,
+                                  const std::vector<CopyMesh::tag_data> &tags,
+                                  std::set<iBase_EntitySetHandle> &tagged_sets)
 {
   int err;
   std::vector<tag_data>::const_iterator tag;
@@ -700,15 +643,13 @@ int CopyMesh::update_tagged_sets(iBase_EntitySetHandle from_set,
     iMesh_getEntSetsByTagsRec(imeshImpl, from_set, &tag->tag,
                               (tag->value ? &tag->value : NULL), 1, false,
                               ARRAY_INOUT(tmp_sets), &err);
-    ERRORR("Couldn't get tagged sets.", iBase_FAILURE);
+    check_error(imeshImpl, err);
     tagged_sets.insert(tmp_sets.begin(), tmp_sets.end());
   }
-
-  return iBase_SUCCESS;
 }
 
-int CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,
-                              const int num_tags) 
+void CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,
+                               const int num_tags) 
 {
   int err;
   
@@ -716,43 +657,53 @@ int CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,
     iBase_TagHandle tag;
     iMesh_getTagHandle(imeshImpl, tag_names[t], &tag, &err,
                        strlen(tag_names[t]));
-    ERRORR("Failed to get tag handle.", err);
+    check_error(imeshImpl, err);
 
-    err = tag_copy_sets(imeshImpl, copyTag, copySets, tag,
-                        tag_vals ? tag_vals[t] : NULL);
-    ERRORR("Failed to tag copied set.", err);
+    tag_copy_sets(imeshImpl, copyTag, copySets, tag,
+                  tag_vals ? tag_vals[t] : NULL);
   }
-
-  return iBase_SUCCESS;
 }
 
-int CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
+void CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
                               const int num_tags) 
 {
-  int err;
-  
-  for (int t = 0; t < num_tags; t++) {
-    err = tag_copy_sets(imeshImpl, copyTag, copySets, tags[t],
-                        tag_vals ? tag_vals[t] : NULL);
-    ERRORR("Failed to tag copied set.", err);
-  }
-  
-  return iBase_SUCCESS;
+  for (int t = 0; t < num_tags; t++)
+    tag_copy_sets(imeshImpl, copyTag, copySets, tags[t],
+                  tag_vals ? tag_vals[t] : NULL);
 }
 
 #ifdef TEST
 
 #include <cfloat>
+#include <iostream>
 #include "MergeMesh.hpp"
 
 iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
 
+#define CHECK_ERR(str) do {                       \
+    if (err != iBase_SUCCESS) {                   \
+      std::cerr << (str) << std::endl;            \
+      return 1;                                   \
+    }                                             \
+  } while(false)
+
+#define CHECK_THROW(expr) do {                    \
+    try {                                         \
+      expr;                                       \
+    }                                             \
+    catch(const std::exception &e) {              \
+      std::cerr << e.what() << std::endl;         \
+      return 1;                                   \
+    }                                             \
+  } while(false)
+
+
 int check_num_ents(int ent_type, int expected) 
 {
   int num_type, err;
   iMesh_getNumOfType(impl, root_set, ent_type, &num_type, &err);
-  ERRORR("Failed to get # entities", 1);
+  CHECK_ERR("Failed to get # entities");
   if (num_type != expected) {
     std::cerr << "Didn't get right # entities of dimension " << ent_type
               << "; got " << num_type
@@ -781,7 +732,7 @@ int main(int argc, char **argv)
   // make a mesh instance
   int err;
   iMesh_newMesh("MOAB", &impl, &err, 4);
-  ERRORR("Failed to create instance.", 1);
+  CHECK_ERR("Failed to create instance.");
   
   iMesh_getRootSet(impl, &root_set, &err);
 
@@ -789,13 +740,14 @@ int main(int argc, char **argv)
   MergeMesh *mm = new MergeMesh(impl);
 
   // some entity tag types are always copy or expand
-  cm->add_expand_tag("MATERIAL_SET");
-  cm->add_expand_tag("DIRICHLET_SET");
-  cm->add_expand_tag("NEUMANN_SET");
+  CHECK_THROW( cm->add_expand_tag("MATERIAL_SET") );
+  CHECK_THROW( cm->add_expand_tag("DIRICHLET_SET") );
+  CHECK_THROW( cm->add_expand_tag("NEUMANN_SET") );
   
   if (1 == argc) {
     int tag_val = 3;
-    cm->add_copy_tag(std::string("GEOM_DIMENSION"), (const char*) &tag_val);
+    CHECK_THROW( cm->add_copy_tag(std::string("GEOM_DIMENSION"),
+                                  (const char*) &tag_val) );
 
     // create vertices
     iBase_EntityHandle *ents = NULL, *verts = NULL;
@@ -804,31 +756,28 @@ int main(int argc, char **argv)
 
     err = make_ents(cm, ents, ents_alloc, ents_size, 
                     verts, verts_alloc, verts_size);
-    ERRORR("Making entities failed.", err);
+    CHECK_ERR("Making entities failed.");
     
     double dx[] = {1.0,0.0,0.0};
     iBase_EntityHandle *new_ents = ents + ents_size;
     new_ents_alloc = ents_size;
     
-  
-    err = cm->copy_move_entities(ents, ents_size, dx,
-                                 &new_ents, &new_ents_alloc, &new_ents_size, 
-                                 false);
-    ERRORR("Failed to copy_move entities.", 1);
+    CHECK_THROW( cm->copy_move_entities(ents, ents_size, dx, &new_ents,
+                                        &new_ents_alloc, &new_ents_size,
+                                        false) );
 
     // check # entities
     if (check_num_ents(iBase_VERTEX, 32)) return 1;
     if (check_num_ents(iBase_REGION, 6)) return 1;
   
-    err = mm->merge_entities(ents, ents_size+new_ents_size, 1.0e-8);
-    ERRORR("Failed to merge entities.", 1);
+    CHECK_THROW( mm->merge_entities(ents, ents_size+new_ents_size, 1.0e-8) );
 
     // now get all vertices, put in new verts array
     iBase_EntityHandle *nverts = NULL;
     int nverts_alloc = 0, nverts_size;
     iMesh_getEntities(impl, root_set, iBase_VERTEX, iMesh_ALL_TOPOLOGIES, 
                       &nverts, &nverts_alloc, &nverts_size, &err);
-    ERRORR("Didn't get all vertices.", 1);
+    CHECK_ERR("Didn't get all vertices.");
 
     // and their coords
     double *vert_coords = NULL;
@@ -837,7 +786,7 @@ int main(int argc, char **argv)
     iMesh_getVtxArrCoords (impl, nverts, nverts_size, sorder, 
                            &vert_coords, &vert_coords_alloc, &vert_coords_size,
                            &err);
-    ERRORR("Didn't get vtx coords.", 1);
+    CHECK_ERR("Didn't get vtx coords.");
 
     double xmin[3] = {DBL_MAX, DBL_MAX, DBL_MAX};
     double xmax[3] = {DBL_MIN, DBL_MIN, DBL_MIN};
@@ -880,48 +829,46 @@ int main(int argc, char **argv)
                       ctags, etags, utags,
                       cvals, evals);
     if (-1 == err) return err;
-    ERRORR("Couldn't parse input, exiting.", err);
+    CHECK_ERR("Couldn't parse input, exiting.");
     
     // read the file
     iMesh_load(impl, 0, infile.c_str(), NULL, &err, infile.length(), 0);
-    ERRORR("Couldn't read mesh file.", err);
+    CHECK_ERR("Couldn't read mesh file.");
     
     // set copy/expand/unique tags
     for (unsigned int i = 0; i < ctags.size(); i++)
-      cm->add_copy_tag(ctags[i], cvals[i]);
+      CHECK_THROW( cm->add_copy_tag(ctags[i], cvals[i]) );
     for (unsigned int i = 0; i < etags.size(); i++)
-      cm->add_expand_tag(etags[i], evals[i]);
+      CHECK_THROW( cm->add_expand_tag(etags[i], evals[i]) );
     for (unsigned int i = 0; i < utags.size(); i++)
-      cm->add_unique_tag(utags[i]);
+      CHECK_THROW( cm->add_unique_tag(utags[i]) );
       
     // copy
     iBase_EntityHandle* new_ents = NULL;
     int new_ents_alloc = 0;
     int new_ents_size = 0;
-    err = cm->copy_move_entities(root_set, dx, &new_ents,
-				 &new_ents_alloc, &new_ents_size,
-                                 false);
-    ERRORR("Failed to copy_move entities.", 1);
+    CHECK_THROW( cm->copy_move_entities(root_set, dx, &new_ents,
+                                        &new_ents_alloc, &new_ents_size,
+                                        false) );
     //getting elements for merge mesh   
     iBase_EntityHandle *ents = NULL;
     int ents_alloc = 0, ents_size;
     iMesh_getEntitiesRec(impl, root_set, 
 			 iBase_ALL_TYPES, iMesh_HEXAHEDRON, true,
 			 &ents, &ents_alloc, &ents_size, &err);
-    ERRORR("Failed to get entities from set recursively.", err);
+    CHECK_ERR("Failed to get entities from set recursively.");
     // merge 
     const double merge_tol =  1.0e-8;
     const int do_merge = 0;
     const int update_sets= 0;
     iBase_TagHandle merge_tag = NULL;
-    err = mm->merge_entities(ents, ents_size, merge_tol,
-			     do_merge, update_sets, merge_tag);
-    ERRORR("Failed to merge entities.", 1);
+    CHECK_THROW( mm->merge_entities(ents, ents_size, merge_tol,
+                                    do_merge, update_sets, merge_tag) );
 
     // export
     iMesh_save(impl, root_set, outfile.c_str(), NULL, &err, 
                outfile.length(), 0);
-    ERRORR("Failed to save mesh.", 1);
+    CHECK_ERR("Failed to save mesh.");
     std::cout << "Wrote " << outfile << std::endl;
   }
 
@@ -929,7 +876,7 @@ int main(int argc, char **argv)
   delete mm;
   
   iMesh_dtor(impl, &err);
-  ERRORR("Destructor failed.", 1);
+  CHECK_ERR("Destructor failed.");
   
   return 0;
 }
@@ -1050,13 +997,13 @@ int make_ents(CopyMesh *cm, iBase_EntityHandle *&ents,
 
   // set the adjacency table to request faces
   iMesh_setAdjTable(cm->impl(), adj_table, 16, &err);
-  ERRORR("Failed to set adj table.", err);
+  CHECK_ERR("Failed to set adj table.");
 	
   // create vertices
   verts = NULL; verts_alloc = 0;
   iMesh_createVtxArr(cm->impl(), 16, iBase_INTERLEAVED, vert_pos, 48,
                      &verts, &verts_alloc, &verts_size, &err);
-  ERRORR("Failed to create 16 vertices.", 1);
+  CHECK_ERR("Failed to create 16 vertices.");
 	
   // pre-allocate ents space
   ents = (iBase_EntityHandle*) malloc(6*sizeof(iBase_EntityHandle));
@@ -1072,13 +1019,13 @@ int make_ents(CopyMesh *cm, iBase_EntityHandle *&ents,
   iMesh_createEntArr(impl,  iMesh_HEXAHEDRON, connect, 24,
                      &ents, &ents_alloc, &ents_size,
                      &status, &status_alloc, &status_size, &err);
-  ERRORR("Failed to create 3 hexes.", 1);
+  CHECK_ERR("Failed to create 3 hexes.");
 
   // create entity sets and add things to it
   iBase_EntitySetHandle esets[7];
   for (int i = 0; i < 7; i++) {
     iMesh_createEntSet(cm->impl(), false, esets+i, &err);
-    ERRORR("Failed to create entity set.", err);
+    CHECK_ERR("Failed to create entity set.");
   }
   
   iBase_TagHandle gtag, mtag, ntag, dtag;
@@ -1086,82 +1033,80 @@ int make_ents(CopyMesh *cm, iBase_EntityHandle *&ents,
   if (iBase_TAG_NOT_FOUND == err) {
     iMesh_createTag(cm->impl(), "GEOM_DIMENSION", 1, iBase_INTEGER,
                     &gtag, &err, 14);
-    ERRORR("Failed to create tag handle for geom dimension.", err);
+    CHECK_ERR("Failed to create tag handle for geom dimension.");
   }
   
   iMesh_getTagHandle(cm->impl(), "MATERIAL_SET", &mtag, &err, 12);
   if (iBase_TAG_NOT_FOUND == err) {
     iMesh_createTag(cm->impl(), "MATERIAL_SET", 1, iBase_INTEGER,
                     &mtag, &err, 12);
-    ERRORR("Failed to create tag handle for material set.", err);
+    CHECK_ERR("Failed to create tag handle for material set.");
   }
   
   iMesh_getTagHandle(cm->impl(), "NEUMANN_SET", &ntag, &err, 11);
   if (iBase_TAG_NOT_FOUND == err) {
     iMesh_createTag(cm->impl(), "NEUMANN_SET", 1, iBase_INTEGER,
                     &ntag, &err, 11);
-    ERRORR("Failed to create tag handle for neumann set.", err);
+    CHECK_ERR("Failed to create tag handle for neumann set.");
   }
   
   iMesh_getTagHandle(cm->impl(), "DIRICHLET_SET", &dtag, &err, 13);
   if (iBase_TAG_NOT_FOUND == err) {
     iMesh_createTag(cm->impl(), "DIRICHLET_SET", 1, iBase_INTEGER,
                     &dtag, &err, 13);
-    ERRORR("Failed to create tag handle for dirichlet set.", err);
+    CHECK_ERR("Failed to create tag handle for dirichlet set.");
   }
   
   // ES1: geom dim = 3, hexes 1-3, C
   iMesh_addEntArrToSet(cm->impl(), ents, 3, *esets, &err);
-  ERRORR("Failed to add ents to set 1.", err);
+  CHECK_ERR("Failed to add ents to set 1.");
   int dum = 3;
   iMesh_setEntSetIntData(cm->impl(),esets[0], gtag, dum, &err);
-  ERRORR("Failed to set geom set tag on set 1.", err);
+  CHECK_ERR("Failed to set geom set tag on set 1.");
   
   // ES2: geom dim = 2, faces all, -
   iBase_EntityHandle *faces = NULL;
   int faces_alloc = 0, faces_size;
   iMesh_getEntities(cm->impl(), root_set, iBase_FACE, iMesh_ALL_TOPOLOGIES,
                     &faces, &faces_alloc, &faces_size, &err);
-  ERRORR("Failed to get faces.", err);
+  CHECK_ERR("Failed to get faces.");
   iMesh_addEntArrToSet(cm->impl(), faces, faces_size, *(esets+1), &err);
-  ERRORR("Failed to add ents to set 2.", err);
+  CHECK_ERR("Failed to add ents to set 2.");
   dum = 2;
   iMesh_setEntSetIntData(cm->impl(), esets[1], gtag, dum, &err);
-  ERRORR("Failed to set geom set tag on set 2.", err);
+  CHECK_ERR("Failed to set geom set tag on set 2.");
   free(faces);
 
   // ES3: - , skin nodes, E
   iMesh_addEntArrToSet(cm->impl(), verts, verts_size, *(esets+2), &err);
-  ERRORR("Failed to add ents to set 3.", err);
-  err = cm->add_copy_expand_list(esets+2, 1, CopyMesh::EXPAND);
-  ERRORR("Failed to add set 3 to expand list.", err);
+  CHECK_ERR("Failed to add ents to set 3.");
+  cm->add_copy_expand_list(esets+2, 1, CopyMesh::EXPAND);
 
   // ES4: mat set, set 1, E
   iMesh_addEntSet(cm->impl(), esets[0],*(esets+3), &err);
-  ERRORR("Failed to add set to set 4.", err);
+  CHECK_ERR("Failed to add set to set 4.");
   dum = 100;
   iMesh_setEntSetIntData(cm->impl(), esets[3], mtag, dum, &err);
-  ERRORR("Failed to set mat set tag on set 4.", err);
+  CHECK_ERR("Failed to set mat set tag on set 4.");
 
   // ES5: neu set, set 2, E
   iMesh_addEntSet(cm->impl(), esets[1],*(esets+4), &err);
-  ERRORR("Failed to add set to set 5.", err);
+  CHECK_ERR("Failed to add set to set 5.");
   dum = 101;
   iMesh_setEntSetIntData(cm->impl(), esets[4], ntag, dum, &err);
-  ERRORR("Failed to set neu set tag on set 5.", err);
+  CHECK_ERR("Failed to set neu set tag on set 5.");
 
   // ES6: dir set, set 3, E
   iMesh_addEntSet(cm->impl(), esets[2],*(esets+5), &err);
-  ERRORR("Failed to add set to set 6.", err);
+  CHECK_ERR("Failed to add set to set 6.");
   dum = 102;
   iMesh_setEntSetIntData(cm->impl(), esets[5], dtag, dum, &err);
-  ERRORR("Failed to set dir set tag on set 6.", err);
+  CHECK_ERR("Failed to set dir set tag on set 6.");
 
   // ES7: -, set 4, C
   iMesh_addEntSet(cm->impl(), esets[3],*(esets+6), &err);
-  ERRORR("Failed to add set to set 7.", err);
-  err = cm->add_copy_expand_list(esets+6, 1, CopyMesh::COPY);
-  ERRORR("Failed to add set 7 to copy list.", err);
+  CHECK_ERR("Failed to add set to set 7.");
+  cm->add_copy_expand_list(esets+6, 1, CopyMesh::COPY);
 	
   // check # entities
   if (check_num_ents(iBase_VERTEX, 16)) return 1;

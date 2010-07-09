@@ -1,4 +1,5 @@
 #include "MergeMesh.hpp"
+#include "MKException.hpp"
 
 #ifdef MOAB
 #include "MBSkinner.hpp"
@@ -8,39 +9,45 @@
 #endif
 
 #include <algorithm>
+#include <string>
+#include <vector>
+#include <cassert>
+#include <iostream>
 
-int MergeMesh::merge_entities(iBase_EntityHandle *elems,
-                              int elems_size,
-                              const double merge_tol,
-                              const int do_merge,
-                              const int update_sets,
-                              iBase_TagHandle merge_tag)  
+void MergeMesh::merge_entities(iBase_EntityHandle *elems,
+                               int elems_size,
+                               const double merge_tol,
+                               const int do_merge,
+                               const int update_sets,
+                               iBase_TagHandle merge_tag)  
 {
   mergeTol = merge_tol;
   mergeTolSq = merge_tol*merge_tol;
   
 #ifdef MOAB  
   MBRange tmp_elems;
-  tmp_elems.insert( (MBEntityHandle*)elems, (MBEntityHandle*)elems + elems_size );
-  MBErrorCode result = merge_entities(tmp_elems, do_merge, update_sets, (MBTag) merge_tag);
-  return (MB_SUCCESS == result ? iBase_SUCCESS : iBase_FAILURE);
+  tmp_elems.insert((MBEntityHandle*)elems, (MBEntityHandle*)elems + elems_size);
+  MBErrorCode result = merge_entities(tmp_elems, do_merge, update_sets,
+                                      (MBTag)merge_tag);
+  if (result != MB_SUCCESS)
+    throw MKException(iBase_FAILURE, "");
 #else
-  return iBase_NOT_SUPPORTED;
+  throw MKException(iBase_NOT_SUPPORTED, "");
 #endif
 
 }
 
-int MergeMesh::perform_merge(iBase_TagHandle merge_tag) 
+void MergeMesh::perform_merge(iBase_TagHandle merge_tag) 
 {
 #ifdef MOAB
   // put into a range
-  return perform_merge((MBTag) merge_tag);
+  MBErrorCode result = perform_merge((MBTag) merge_tag);
+  if (result != MB_SUCCESS)
+    throw MKException(iBase_FAILURE, "");
 #else
-  return iBase_NOT_SUPPORTED;
+  throw MKException(iBase_NOT_SUPPORTED, "");
 #endif
 }
-
-
 
 #ifdef MOAB
 MBErrorCode MergeMesh::merge_entities(MBRange &elems,

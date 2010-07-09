@@ -621,8 +621,7 @@ int CCrgen::get_copy_expand_sets(CopyMesh *cm,
                               &tmp_sets, &tmp_alloc, &tmp_size, &err);
     ERRORR("Failure getting sets by tags.", err);
     if (0 != tmp_size) {
-      err = cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
-      ERRORR("Failed to add copy/expand lists.", iBase_FAILURE);
+      cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
     }
     free(tmp_sets);
   }
@@ -646,8 +645,7 @@ int CCrgen::extend_expand_sets(CopyMesh *cm)
     iMesh_getEntSets(impl, *sit, 1, &sets, &sets_alloc, &sets_size, &err);
     ERRORR("Failed to get contained sets.", err);
     if (sets_size) {
-      err = cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
-      ERRORR("Failed to add copy sets for expand extension.", err);
+      cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
     }
     free(sets);
   }
@@ -686,9 +684,8 @@ int CCrgen::merge_nodes()
   ERRORR("Trouble getting number of entities before merge.", err);
 
   // merge now
-  err = mm->merge_entities(ents, ents_size, merge_tol,
-			   do_merge, update_sets,merge_tag);
-  ERRORR("Trouble merging entities.", err);
+  mm->merge_entities(ents, ents_size, merge_tol, do_merge, update_sets,
+                     merge_tag);
   
   iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num2, &err);
   ERRORR("Trouble getting number of entities after merge.", err);

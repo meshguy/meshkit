@@ -245,19 +245,16 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
 
-	  err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew, 
+	  cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew, 
 						   &new_ents, &new_ents_alloc, &new_ents_size,
 						   false);
-	  ERRORR("Failed to copy_move entities.", 1);
 	  std::cout << "Copy/moved A: " << assm_index 
 		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 	  free(new_ents);
 	  free(orig_ents);
 	  i++;
 
-	  err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	  ERRORR("Failed to tag copied sets.", iBase_FAILURE);
-      
+	  cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
 	}
 	else{
 	  i++;
@@ -311,18 +308,16 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 			    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	  err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew, 
+	  cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew, 
 						   &new_ents, &new_ents_alloc, &new_ents_size,
 						   false);
-	  ERRORR("Failed to copy_move entities.", 1);
 	  std::cout << "Copy/moved A: " << assm_index 
 		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 	  free(new_ents);
 	  free(orig_ents);
 	  i++;
 
-	  err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	  ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+	  cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
 	}
 	else{
 	  i++;
@@ -470,10 +465,9 @@ int CCrgen::copy_move_one_twelfth_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew,
+	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew,
 						 &new_ents, &new_ents_alloc, &new_ents_size,
 						 false);
-	ERRORR("Failed to copy_move entities.", 1);
 	std::cout << "Copy/moved A: " << assm_index 
 		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 
@@ -482,8 +476,7 @@ int CCrgen::copy_move_one_twelfth_assys(CopyMesh **cm,
 	i++;
 	dxnew[0] = 0.0;
 	dxnew[1] = 0.0;
-	err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+	cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
       }
       else{
 	i++;
@@ -606,10 +599,9 @@ int CCrgen::copy_move_hex_flat_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx,
+	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx,
 						 &new_ents, &new_ents_alloc, &new_ents_size,
 						 false);
-	ERRORR("Failed to copy_move entities.", 1);
 	std::cout << "Copy/moved A: " << assm_index 
 		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 
@@ -617,8 +609,7 @@ int CCrgen::copy_move_hex_flat_assys(CopyMesh **cm,
 	free(orig_ents);
 	i++;
     
-	err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+	cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
       }
       else{
 	i++;
@@ -761,10 +752,9 @@ int CCrgen::copy_move_hex_full_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx,
+	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx,
 						 &new_ents, &new_ents_alloc, &new_ents_size,
 						 false);
-	ERRORR("Failed to copy_move entities.", 1);
 	std::cout << "Copy/moved A: " << assm_index 
 		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 
@@ -772,8 +762,7 @@ int CCrgen::copy_move_hex_full_assys(CopyMesh **cm,
 	free(orig_ents);
 	i++;
     
-	err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+	cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
       }
       else{
 	i++;
@@ -886,17 +875,15 @@ int CCrgen::copy_move_sq_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	err = cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx, 
+	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx, 
 						 &new_ents, &new_ents_alloc, &new_ents_size,
 						 false);
-	ERRORR("Failed to copy_move entities.", 1);
 	std::cout << "Copy/moved A: " << assm_index 
 		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 	free(new_ents);
 	i++;
     
-	err = cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+	cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
       }
       else{
 	i++;

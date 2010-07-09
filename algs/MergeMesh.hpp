@@ -8,14 +8,6 @@
 #include "MBRange.hpp"
 #endif
 
-#include <string>
-#include <vector>
-#include <assert.h>
-#include <iostream>
-
-#define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
-#define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
-
 class MergeMesh 
 {
 public:
@@ -29,20 +21,17 @@ public:
 
     /* \brief Merge vertices in elements passed in
      */
-  int merge_entities(iBase_EntityHandle *elems,
-                     int elems_size,
-                     const double merge_tol,
-                     const int do_merge = true,
-                     const int update_sets = false,
-                     iBase_TagHandle merge_tag = 0);
+  void merge_entities(iBase_EntityHandle *elems,
+                      int elems_size,
+                      const double merge_tol,
+                      const int do_merge = true,
+                      const int update_sets = false,
+                      iBase_TagHandle merge_tag = 0);
   
     /* \brief Perform the actual merge between entities
      */
-  int perform_merge(iBase_TagHandle merged_to);
-  
-  
+  void perform_merge(iBase_TagHandle merged_to);
 private:
-
   iMesh_Instance imeshImpl;
 
   double mergeTol, mergeTolSq;

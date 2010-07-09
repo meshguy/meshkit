@@ -8,6 +8,7 @@ template <typename T>
 class SimpleArray
 {
 private:
+  // TODO: make SimpleArrays copyable
   SimpleArray(const SimpleArray &);
   SimpleArray & operator = (const SimpleArray &);
 
@@ -22,7 +23,8 @@ public:
     resize(s);
   }
     
-  ~SimpleArray() {
+  ~SimpleArray()
+  {
     clear();
   }
 
