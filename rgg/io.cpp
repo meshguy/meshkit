@@ -13,9 +13,6 @@ file with input o/p funtions
 #include <string.h>
 #include <stdlib.h>
 
-#define ARRAY_INOUT( A ) A.ptr(), &A.capacity(), &A.size()
-#define ARRAY_IN( A ) &A[0], A.size()
-
 #define DEFAULT_TEST_FILE "assygen_default"
 
 // NRGEN CLASS FUNCIONS:
