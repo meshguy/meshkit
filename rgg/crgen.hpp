@@ -20,9 +20,7 @@ CCrgen class declaration
 #include <sstream>
 #include <string>
 #include "matrixtemplate.hpp"
-
-#define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
-#define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
+#include "utils.hpp"
 
 class CCrgen
 {
@@ -41,12 +39,6 @@ public:
   int assign_gids();
   int save();
   int move_verts(iBase_EntitySetHandle set, const double *dx);
-  int get_copy_expand_sets(CopyMesh *cm,
-			   iBase_EntitySetHandle orig_set, 
-			   const char **tag_names, const char **tag_vals, 
-			   int num_tags, int copy_or_expand);
-
-  int extend_expand_sets(CopyMesh *cm);
 
   int copy_move_hex_flat_assys(CopyMesh **cm,
 			       const int nrings, const int pack_type,

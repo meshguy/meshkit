@@ -26,80 +26,27 @@ static double * vtx_diff(double *res, iMesh_Instance mesh, iBase_EntityHandle a,
 
 ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh)
   : impl_(mesh), copy_(mesh), updated_set_(false),
-    extrude_tag_(mesh, "__ExtrudeMeshTag")
+    extrude_tag_(mesh, "__ExtrudeMeshTag"), extrude_sets_(mesh)
 {}
 
 ExtrudeMesh::~ExtrudeMesh()
-{
-  std::vector<tag_data>::iterator i;
-  for(i = extrude_tags_.begin(); i != extrude_tags_.end(); ++i)
-    free(i->value);
-}
-
-void ExtrudeMesh::add_extrude_tag(const std::string &tag_name,
-                                  const char *tag_val)
-{
-  iBase_TagHandle tag_handle = 0;
-  int err;
-  iMesh_getTagHandle(impl_, tag_name.c_str(), &tag_handle, &err,
-                     tag_name.length());
-  check_error(impl_, err);
-
-  add_extrude_tag(tag_handle, tag_val);
-}
-
-void ExtrudeMesh::add_extrude_tag(iBase_TagHandle tag_handle,
-                                  const char *tag_val)
-{
-  char *tmp = NULL;
-
-  if(tag_val) {
-    int err;
-    int tag_size;
-    iMesh_getTagSizeBytes(impl_, tag_handle, &tag_size, &err);
-    check_error(impl_, err);
-
-    tmp = static_cast<char*>(malloc(tag_size));
-    memcpy(tmp, tag_val, tag_size);
-  }
-
-  extrude_tags_.push_back(tag_data(tag_handle, tmp));
-}
+{}
 
 void ExtrudeMesh::update_sets()
 {
-  if(updated_set_)
+//  if(updated_set_)
     reset_sets();
   copy_.update_ce_lists();
+  extrude_sets_.update_tagged_sets();
 
-  int err;
-  iBase_EntitySetHandle root;
-  iMesh_getRootSet(impl_, &root, &err);
-  check_error(impl_, err);
-  
-  if(!extrude_tags_.empty())
-  {
-    int err;
-    for(std::vector<tag_data>::iterator i=extrude_tags_.begin();
-        i!=extrude_tags_.end(); ++i) {
-      SimpleArray<iBase_EntitySetHandle> tmp_sets;
-      iMesh_getEntSetsByTagsRec(impl_, root, &i->tag,
-                                (i->value ? &i->value:NULL), 1, 0,
-                                ARRAY_INOUT(tmp_sets), &err);
-      check_error(impl_, err);
-
-      extrude_sets_.insert(tmp_sets.begin(), tmp_sets.end());
-    }
-  }
-
-  updated_set_ = true;
+//  updated_set_ = true;
 }
 
 void ExtrudeMesh::reset_sets()
 {
   copy_.reset_ce_lists();
   extrude_sets_.clear();
-  updated_set_ = false;
+//  updated_set_ = false;
 }
 
 void ExtrudeMesh::translate(iBase_EntityHandle *src, int size, int steps,
@@ -221,7 +168,7 @@ void ExtrudeMesh::extrude(iBase_EntitySetHandle src, int steps,
   if(copy_faces) {
     int err;
 
-    copy_.add_copy_expand_list(&src, 1, CopyMesh::COPY);
+    copy_.copy_sets().add_set(src);
     copy_.copy_transform_entities(src, trans, 0, 0, 0);
 
     iBase_EntitySetHandle dest;
@@ -270,7 +217,7 @@ void ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
 {
   assert(new_rows > 0 || use_dest);
 
-  if(!updated_set_)
+//  if(!updated_set_)
     update_sets();
 
   int err;
@@ -342,7 +289,7 @@ void ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
 
   // set the extrude tag on all extruded sets
   std::set<iBase_EntitySetHandle>::iterator set;
-  for(set = extrude_sets_.begin(); set != extrude_sets_.end(); ++set) {
+  for(set = extrude_sets_.sets().begin(); set != extrude_sets_.sets().end(); ++set) {
     iBase_EntityHandle eh;
     iMesh_getEntSetEHData(impl_, *set, local_tag, &eh, &err);
     if(err == iBase_SUCCESS) {
@@ -351,9 +298,9 @@ void ExtrudeMesh::do_extrusion(iBase_EntitySetHandle src,
     }
   }
 
-  std::vector<tag_data>::iterator tag;
-  for(tag = extrude_tags_.begin(); tag != extrude_tags_.end(); ++tag)
-    tag_copy_sets(impl_, extrude_tag_, extrude_sets_, tag->tag,
+  std::vector<CESets::tag_data>::iterator tag;
+  for(tag = extrude_sets_.tags().begin(); tag != extrude_sets_.tags().end(); ++tag)
+    tag_copy_sets(impl_, extrude_tag_, extrude_sets_.sets(), tag->tag,
                   tag->value);
 }
 
@@ -444,7 +391,7 @@ void ExtrudeMesh::connect_the_dots(
     delete[] nodes;
   }
 
-  process_ce_sets(impl_, extrude_sets_, local_tag);
+  process_ce_sets(impl_, extrude_sets_.sets(), local_tag);
 }
 
 #ifdef TEST
@@ -753,7 +700,7 @@ int test4()
   CHECK_ERR("Couldn't create tag");
   iMesh_setEntSetData(mesh, set, tag, "x", 1, &err);
   CHECK_ERR("Couldn't set tag data on set.");
-  CHECK_THROW( ext->add_extrude_tag(tag, "x") );
+  CHECK_THROW( ext->extrude_sets().add_tag(tag, "x") );
 
   int steps = 200;
   double origin[] = { 0, -3, 0 };

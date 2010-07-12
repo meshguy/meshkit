@@ -1,25 +1,16 @@
 #include <cfloat>
 #include <cmath>
-#include <iostream>
 #include "MKUtils.hpp"
 #include "MergeMesh.hpp"
 #include "CopyMesh.hpp"
 #include "ExtrudeMesh.hpp"
+#include "utils.hpp"
+
 #define DEFAULT_TEST_FILE "pin1.cub"
 #define DEFAULT_OUTPUT_FILE "pin217-out.h5m"
 
 iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
-
-#define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
-#define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
-
-int get_copy_expand_sets(CopyMesh *cm,
-                         iBase_EntitySetHandle orig_set, 
-                         const char **tag_names, const char **tag_vals, 
-                         int num_tags, int copy_or_expand);
-
-int extend_expand_sets(CopyMesh *cm);
 
 int main(int argc, char **argv) 
 {
@@ -107,9 +98,9 @@ int main(int argc, char **argv)
   const char *etag_vals[] = {NULL, NULL, NULL};
   const char *ctag_names[] = {"GEOM_DIMENSION"};
   const char *ctag_vals[]={(const char*)&set_DIM};
-  err = get_copy_expand_sets(cm, orig_set, etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+  err = get_expand_sets(cm, orig_set, etag_names, etag_vals, num_etags);
   ERRORR("Failed to add expand lists.", iBase_FAILURE);
-  err = get_copy_expand_sets(cm, orig_set, ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+  err = get_copy_sets(cm, orig_set, ctag_names, ctag_vals, num_ctags);
   ERRORR("Failed to add expand lists.", iBase_FAILURE);
   err = extend_expand_sets(cm);
   ERRORR("Failed to extend expand lists.", iBase_FAILURE);
@@ -198,54 +189,3 @@ int main(int argc, char **argv)
   
   return 0;
 }
-
-int get_copy_expand_sets(CopyMesh *cm,
-                         iBase_EntitySetHandle orig_set, 
-                         const char **tag_names, const char **tag_vals, 
-                         int num_tags, int copy_or_expand) 
-{
-  int err = iBase_SUCCESS;
-
-  for (int i = 0; i < num_tags; i++) {
-    iBase_TagHandle tmp_tag;
-    iMesh_getTagHandle(impl, tag_names[i], &tmp_tag, &err, strlen(tag_names[i]));
-    ERRORR("Failed to get tag handle.", iBase_FAILURE);
-    iBase_EntitySetHandle *tmp_sets = NULL;
-    int tmp_alloc = 0, tmp_size;
-    iMesh_getEntSetsByTagsRec(impl, orig_set, &tmp_tag, &tag_vals[i], 1, 0,
-                              &tmp_sets, &tmp_alloc, &tmp_size, &err);
-    ERRORR("Failure getting sets by tags.", err);
-       std::cout << " (tmp_size)"<< tmp_size << std::endl;   
-  
-    if (0 != tmp_size) {
-      cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
-    }
-    free(tmp_sets);
-  }
-
-  return err;
-}
-
-int extend_expand_sets(CopyMesh *cm) 
-{
-    // check expand sets for any contained sets which aren't already copy sets, 
-    // and add them to the list
-  int err;
-  
-  for (std::set<iBase_EntitySetHandle>::iterator sit = cm->expand_sets().begin();
-       sit != cm->expand_sets().end(); sit++) {
-    iBase_EntitySetHandle *sets = NULL;
-    int sets_alloc = 0, sets_size;
-    iMesh_getEntSets(impl, *sit, 1, &sets, &sets_alloc, &sets_size, &err);
-    ERRORR("Failed to get contained sets.", err);
-    std::cout << " (sets_size)"<< sets_size << std::endl;
-    if (sets_size) {
-      cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
-    }
-    free(sets);
-  }
-  
-  return iBase_SUCCESS;
-}
-
-

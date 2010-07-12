@@ -25,7 +25,8 @@ libMKalgs_la_SOURCES = \
 	EBMesh.cpp \
 	ProjectShell.cpp \
 	EdgeMesher.cpp \
-	OneToOneSwept.cpp
+	OneToOneSwept.cpp \
+	CESets.cpp
 
 # The list of header files which are to be installed
 libMKalgs_la_include_HEADERS = \
@@ -36,7 +37,8 @@ libMKalgs_la_include_HEADERS = \
 	EBMesh.hpp \
 	ProjectShell.hpp \
 	EdgeMesher.hpp \
-	OneToOneSwept.hpp
+	OneToOneSwept.hpp \
+	CESets.hpp
 
 # Tests and such
 check_PROGRAMS = CopyMesh_test ExtrudeMesh_test EBMesh_test \

@@ -16,13 +16,14 @@ libMKrgg_la_includedir = $(includedir)
 # The list of source files, and any header files that do not need to be installed
 libMKrgg_la_SOURCES = \
 	nrgen.cpp \
-	io.cpp\
+	io.cpp \
 	clock.cpp \
 	parser.cpp \
 	pincell.cpp  \
 	cylinder.cpp \
 	crgen.cpp \
-	copymove.cpp 
+	copymove.cpp \
+	utils.cpp
 
 # The list of header files which are to be installed
 libMKrgg_la_include_HEADERS = \
@@ -32,7 +33,8 @@ libMKrgg_la_include_HEADERS = \
 	cylinder.hpp \
 	vectortemplate.hpp \
 	matrixtemplate.hpp \
-	crgen.hpp 
+	crgen.hpp \
+	utils.hpp 
 
 # Tests and such
 check_PROGRAMS = assygen coregen pin217 
@@ -48,7 +50,7 @@ coregen_DEPENDENCIES = ../algs/CopyMesh.hpp ../algs/MergeMesh.hpp libMKrgg.la ..
 coregen_CXXFLAGS = -DTEST $(CXXFLAGS)
 coregen_LDADD = libMKrgg.la ../algs/libMKalgs.la ../utils/libMKutils.la $(IGEOM_LIBS) $(IMESH_LIBS)
 
-pin217_SOURCES = pin217.cpp
+pin217_SOURCES = pin217.cpp utils.cpp
 pin217_DEPENDENCIES = ../algs/CopyMesh.hpp ../algs/MergeMesh.hpp ../algs/libMKalgs.la 
 pin217_CXXFLAGS = -DTEST $(CXXFLAGS)
 pin217_LDADD = ../algs/libMKalgs.la ../utils/libMKutils.la $(IMESH_LIBS)

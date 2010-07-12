@@ -5,6 +5,7 @@
 #include "CopyVerts.hpp"
 #include "CopyMesh.hpp"
 #include "LocalTag.hpp"
+#include "CESets.hpp"
 
 class ExtrudeMesh
 {
@@ -19,10 +20,7 @@ public:
 
   iBase_TagHandle extrude_tag();
 
-  void add_extrude_tag(const std::string &tag_name, const char *tag_val = NULL);
-  void add_extrude_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
-
-  std::set<iBase_EntitySetHandle> & extrude_sets();
+  CESets & extrude_sets();
 
   void update_sets();
   void reset_sets();
@@ -58,18 +56,12 @@ public:
 
   // Forwards from CopyMesh
   iBase_TagHandle copy_tag();
-  void add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
-                            int copy_or_expand);
-  void reset_ce_lists();
-  void add_copy_tag  (const std::string &tag_name, const char *tag_val = NULL);
-  void add_copy_tag  (iBase_TagHandle tag_handle,  const char *tag_val = NULL);
-  void add_expand_tag(const std::string &tag_name, const char *tag_val = NULL);
-  void add_expand_tag(iBase_TagHandle tag_handle,  const char *tag_val = NULL);
+
   void add_unique_tag(const std::string &tag_name);
   void add_unique_tag(iBase_TagHandle tag_handle);
 
-  std::set<iBase_EntitySetHandle> & copy_sets();
-  std::set<iBase_EntitySetHandle> & expand_sets();
+  CESets & copy_sets();
+  CESets & expand_sets();
   std::set<iBase_EntitySetHandle> & unique_sets();
 private:
   void do_extrusion(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
@@ -86,20 +78,9 @@ private:
   iMesh_Instance impl_;
   CopyMesh copy_;
 
-  struct tag_data
-  {
-    tag_data(iBase_TagHandle tag, char *value)
-      : tag(tag), value(value)
-    {}
-
-    iBase_TagHandle tag;
-    char *value;
-  };
-
   bool updated_set_;
   LocalTag extrude_tag_;
-  std::vector<tag_data> extrude_tags_;
-  std::set<iBase_EntitySetHandle> extrude_sets_;
+  CESets extrude_sets_;
 };
 
 inline iBase_TagHandle
@@ -115,43 +96,6 @@ ExtrudeMesh::copy_tag()
 }
 
 inline void
-ExtrudeMesh::add_copy_expand_list(iBase_EntitySetHandle *ce_sets, 
-                                  int num_ce_sets, int copy_or_expand)
-{
-  copy_.add_copy_expand_list(ce_sets, num_ce_sets, copy_or_expand);
-}
-
-inline void
-ExtrudeMesh::reset_ce_lists()
-{
-  copy_.reset_ce_lists();
-}
-
-inline void
-ExtrudeMesh::add_copy_tag(const std::string &tag_name, const char *tag_val)
-{
-  copy_.add_copy_tag(tag_name, tag_val);
-}
-
-inline void
-ExtrudeMesh::add_copy_tag(iBase_TagHandle tag_handle, const char *tag_val)
-{
-  copy_.add_copy_tag(tag_handle, tag_val);
-}
-
-inline void
-ExtrudeMesh::add_expand_tag(const std::string &tag_name, const char *tag_val)
-{
-  copy_.add_expand_tag(tag_name, tag_val);
-}
-
-inline void
-ExtrudeMesh::add_expand_tag(iBase_TagHandle tag_handle, const char *tag_val)
-{
-  copy_.add_expand_tag(tag_handle, tag_val);
-}
-
-inline void
 ExtrudeMesh::add_unique_tag(const std::string &tag_name)
 {
   copy_.add_unique_tag(tag_name);
@@ -163,13 +107,19 @@ ExtrudeMesh::add_unique_tag(iBase_TagHandle tag_handle)
   copy_.add_unique_tag(tag_handle);
 }
 
-inline std::set<iBase_EntitySetHandle> &
+inline CESets &
+ExtrudeMesh::extrude_sets()
+{
+  return extrude_sets_;
+}
+
+inline CESets &
 ExtrudeMesh::copy_sets()
 {
   return copy_.copy_sets();
 }
 
-inline std::set<iBase_EntitySetHandle> &
+inline CESets &
 ExtrudeMesh::expand_sets()
 {
   return copy_.expand_sets();

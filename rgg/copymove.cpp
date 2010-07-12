@@ -197,9 +197,9 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 
   for (unsigned int i = 0; i < files.size(); i++) {
     flags[i]=0;
-    err = get_copy_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+    err = get_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
-    err = get_copy_expand_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+    err = get_copy_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
     err = extend_expand_sets(cm[i]);
     ERRORR("Failed to extend expand lists.", iBase_FAILURE);
@@ -417,9 +417,9 @@ int CCrgen::copy_move_one_twelfth_assys(CopyMesh **cm,
  
   for (unsigned int i = 0; i < files.size(); i++) {
     flags[i]=0;
-    err = get_copy_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+    err = get_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
-    err = get_copy_expand_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+    err = get_copy_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
     err = extend_expand_sets(cm[i]);
     ERRORR("Failed to extend expand lists.", iBase_FAILURE);
@@ -562,9 +562,9 @@ int CCrgen::copy_move_hex_flat_assys(CopyMesh **cm,
 
   for (unsigned int i = 0; i < files.size(); i++) {
     flags[i]=0;
-    err = get_copy_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+    err = get_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
-    err = get_copy_expand_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+    err = get_copy_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
     err = extend_expand_sets(cm[i]);
     ERRORR("Failed to extend expand lists.", iBase_FAILURE);
@@ -703,9 +703,9 @@ int CCrgen::copy_move_hex_full_assys(CopyMesh **cm,
 
   for (unsigned int i = 0; i < files.size(); i++) {
     flags[i]=0;
-    err = get_copy_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+    err = get_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
-    err = get_copy_expand_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+    err = get_copy_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
     err = extend_expand_sets(cm[i]);
     ERRORR("Failed to extend expand lists.", iBase_FAILURE);
@@ -843,9 +843,9 @@ int CCrgen::copy_move_sq_assys(CopyMesh **cm,
 
   for (unsigned int i = 0; i < files.size(); i++) {
     flags[i]=0;
-    err = get_copy_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags, CopyMesh::EXPAND);
+    err = get_expand_sets(cm[i],assys[i], etag_names, etag_vals, num_etags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
-    err = get_copy_expand_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags, CopyMesh::COPY);
+    err = get_copy_sets(cm[i],assys[i], ctag_names, ctag_vals, num_ctags);
     ERRORR("Failed to add expand lists.", iBase_FAILURE);
     err = extend_expand_sets(cm[i]);
     ERRORR("Failed to extend expand lists.", iBase_FAILURE);

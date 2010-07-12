@@ -4,41 +4,13 @@
 #include "iMesh_extensions.h"
 #include "CopyVerts.hpp"
 #include "LocalTag.hpp"
+#include "CESets.hpp"
 #include "MKException.hpp"
 
 #include <cassert>
 #include <string>
 #include <vector>
 #include <set>
-
-/**\brief Add newly-created entities/sets to a collection of sets
- *
- * Given a collection of copy, expand, or extrude source sets and a tag, create 
- * a destination (copy) set unless one already exists. Fill this set with any
- * new entities/sets created from those in the source set.
- * \param imeshImpl the iMesh instance handle
- * \param cesets a collection of source sets
- * \param local_tag the tag relating source and target entities/sets
- */
-void process_ce_sets(iMesh_Instance imeshImpl,
-                     const std::set<iBase_EntitySetHandle> &cesets,
-                     iBase_TagHandle local_tag);
-
-/**\brief Tag a collection of copied sets
- *
- * Given a collection of source sets and a tag |copyTag| relating sources to
- * destinations, apply a tag |tag| to the destination sets if the tag exists on
- * the corresponding source.
- * \param imeshImpl the iMesh instance handle
- * \param copyTag the tag relating sources and destinations
- * \param cesets a collection of source sets
- * \param tag the tag to set on the destinations
- * \param tag_val if non-NULL, only set |tag| on the destination if the source's
- *                tag matches this value
- */
-void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
-                   const std::set<iBase_EntitySetHandle> &copySets,
-                   iBase_TagHandle tag, const char *tag_val);
 
 /**\brief Get the entities and unique adjacent vertices of a set
  *
@@ -91,30 +63,9 @@ public:
    */
   iBase_TagHandle copy_tag() {return copyTag;}
   
-  /* \brief Set the copy or expand set list
-   */
-  void add_copy_expand_list(iBase_EntitySetHandle *ce_sets, int num_ce_sets,
-                            int copy_or_expand);
-  
   /* \brief Reset the copy and expand set lists
    */
   void reset_ce_lists();
-
-  /* \brief Add tag indicating sets to copy w/ new entities
-   */
-  void add_copy_tag(const std::string &tag_name, const char *tag_val = NULL);
-  
-  /* \brief Add tag indicating sets to copy w/ new entities
-   */
-  void add_copy_tag(iBase_TagHandle tag_handle, const char *tag_val = NULL);
-  
-  /* \brief Add tag indicating sets to expand w/ new entities
-   */
-  void add_expand_tag(const std::string &tag_name, const char *tag_val = NULL);
-
-  /* \brief Add tag indicating sets to expand w/ new entities
-   */
-  void add_expand_tag(iBase_TagHandle tag_handle, const char *tag_val = NULL);
 
   /* \brief Add tag which should have unique values
    */
@@ -126,11 +77,11 @@ public:
   
   /* \brief Return reference to copy sets 
    */
-  std::set<iBase_EntitySetHandle> &copy_sets();
+  CESets &copy_sets();
   
   /* \brief Return reference to expand sets 
    */
-  std::set<iBase_EntitySetHandle> &expand_sets();
+  CESets &expand_sets();
   
   /* \brief Return reference to unique sets 
    */
@@ -216,19 +167,7 @@ public:
   void tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
                        const int num_tags);
   
-  enum {COPY = 0, EXPAND, UNIQUE};
-  
 private:
-  struct tag_data
-  {
-    tag_data(iBase_TagHandle tag, char *value)
-      : tag(tag), value(value)
-    {}
-
-    iBase_TagHandle tag;
-    char *value;
-  };
-
   void connect_the_dots(iBase_EntityHandle *ents, int size,
                         iBase_TagHandle local_tag, int *indices, int *offsets,
                         iBase_EntityHandle *verts);
@@ -247,51 +186,20 @@ private:
                        iBase_EntitySetHandle *&tagged_sets,
                        int &num_tagged_sets);
   
-  void update_tagged_sets(iBase_EntitySetHandle from_set,
-                          const std::vector<tag_data> &tags,
-                          std::set<iBase_EntitySetHandle> &tagged_sets);
-
   iMesh_Instance imeshImpl;
 
-  std::vector<tag_data> expandTags;
-  std::set<iBase_EntitySetHandle> expandSets;
+  // flag denoting whether copy/expand sets lists have been updated
+  bool updatedCELists;  
 
-  std::vector<tag_data> copyTags;
-  std::set<iBase_EntitySetHandle> copySets;
+  // tag storing copy-to tag
+  LocalTag copyTag;
+
+  CESets copySets;
+  CESets expandSets;
 
   std::vector<iBase_TagHandle> uniqueTags;
   std::set<iBase_EntitySetHandle> uniqueSets;
-
-  // flag denoting whether copy/expand sets lists have been updated
-  bool updatedCELists;
-  
-  // tag storing copy-to tag
-  LocalTag copyTag;
 };
-
-inline void CopyMesh::add_copy_tag(const std::string &tag_name,
-                                   const char *tag_val) 
-{
-  iBase_TagHandle tag_handle;
-  int err;
-  iMesh_getTagHandle(imeshImpl, tag_name.c_str(), &tag_handle, &err,
-                     tag_name.size());
-  check_error(imeshImpl, err);
-
-  add_copy_tag(tag_handle, tag_val);
-}
-
-inline void CopyMesh::add_expand_tag(const std::string &tag_name,
-                                    const char *tag_val)
-{
-  iBase_TagHandle tag_handle;
-  int err;
-  iMesh_getTagHandle(imeshImpl, tag_name.c_str(), &tag_handle, &err,
-                     tag_name.size());
-  check_error(imeshImpl, err);
-
-  add_expand_tag(tag_handle, tag_val);
-}
 
 inline void CopyMesh::add_unique_tag(const std::string &tag_name) 
 {
@@ -312,24 +220,17 @@ inline void CopyMesh::add_unique_tag(iBase_TagHandle tag_handle)
 
 inline void CopyMesh::reset_ce_lists()
 {
-  std::vector<tag_data>::iterator i;
-  for (i = copyTags.begin(); i != copyTags.end(); ++i)
-    free(i->value);
-
-  for (i = expandTags.begin(); i != expandTags.end(); ++i)
-    free(i->value);
-
   copySets.clear();
   expandSets.clear();
-  updatedCELists = false;
+//  updatedCELists = false;
 }
 
-inline std::set<iBase_EntitySetHandle> &CopyMesh::copy_sets()
+inline CESets &CopyMesh::copy_sets()
 {
   return copySets;
 }
   
-inline std::set<iBase_EntitySetHandle> &CopyMesh::expand_sets()
+inline CESets &CopyMesh::expand_sets()
 {
   return expandSets;
 }

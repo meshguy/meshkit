@@ -601,59 +601,6 @@ int CCrgen::move_verts(iBase_EntitySetHandle set, const double *dx)
 }
 
 
-int CCrgen::get_copy_expand_sets(CopyMesh *cm,
-				 iBase_EntitySetHandle orig_set, 
-				 const char **tag_names, const char **tag_vals, 
-				 int num_tags, int copy_or_expand) 
-// ---------------------------------------------------------------------------
-// Function: populate the copy and expand sets in copymesh
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
-  for (int i = 0; i < num_tags; i++) {
-    iBase_TagHandle tmp_tag;
-    iMesh_getTagHandle(impl, tag_names[i], &tmp_tag, &err, strlen(tag_names[i]));
-    ERRORR("Failed to get tag handle.", iBase_FAILURE);
-    iBase_EntitySetHandle *tmp_sets = NULL;
-    int tmp_alloc = 0, tmp_size;
-    iMesh_getEntSetsByTagsRec(impl, orig_set, &tmp_tag, &tag_vals[i], 1, 0,
-                              &tmp_sets, &tmp_alloc, &tmp_size, &err);
-    ERRORR("Failure getting sets by tags.", err);
-    if (0 != tmp_size) {
-      cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
-    }
-    free(tmp_sets);
-  }
-  return err;
-}
-
-int CCrgen::extend_expand_sets(CopyMesh *cm) 
-// -------------------------------------------------------------------------------------------
-// Function: After populating the copy and expand sets, extend them to include  individual ents
-// Input:    none
-// Output:   none
-// -------------------------------------------------------------------------------------------
-{
-  // check expand sets for any contained sets which aren't already copy sets, 
-  // and add them to the list
-  
-  for (std::set<iBase_EntitySetHandle>::iterator sit = cm->expand_sets().begin();
-       sit != cm->expand_sets().end(); sit++) {
-    iBase_EntitySetHandle *sets = NULL;
-    int sets_alloc = 0, sets_size;
-    iMesh_getEntSets(impl, *sit, 1, &sets, &sets_alloc, &sets_size, &err);
-    ERRORR("Failed to get contained sets.", err);
-    if (sets_size) {
-      cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
-    }
-    free(sets);
-  }
-  
-  return iBase_SUCCESS;
-}
-
-
 int CCrgen::merge_nodes()
 // -------------------------------------------------------------------------------------------
 // Function: merge the nodes within a set tolerance in the model
