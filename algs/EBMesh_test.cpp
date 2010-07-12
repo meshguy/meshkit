@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     input_filename = argv[1];
     input_geom = atoi(argv[2]);
     size = atof(argv[3]);
-    if (argc == 5) output_filename = argv[4];
+    if (argc > 4) output_filename = argv[4];
     if (argc == 6) vol_frac_res = atoi(argv[5]);
   }
   else {
