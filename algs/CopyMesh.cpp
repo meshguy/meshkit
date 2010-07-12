@@ -10,10 +10,6 @@
 #include <cstring>
 #include <functional>
 
-/*
- * - call update_ce_lists to update copySets or expandSets
- */
-
 void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
                         iBase_EntityHandle **ents,
                         int *ents_allocated,
@@ -96,7 +92,7 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
 }
 
 CopyMesh::CopyMesh(iMesh_Instance impl) 
-  : imeshImpl(impl), updatedCELists(false), copyTag(impl, "__CopyMeshTag"),
+  : imeshImpl(impl), copyTag(impl, "__CopyMeshTag"),
     copySets(impl), expandSets(impl)
 {}
 
@@ -275,8 +271,7 @@ void CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
                    &new_verts[0]);
 
   // take care of copy/expand sets
-//  if (!updatedCELists)
-    update_ce_lists();
+  update_sets();
 
   // set the target sets for expand sets to be themselves
   std::set<iBase_EntitySetHandle>::iterator set;
@@ -388,14 +383,10 @@ void CopyMesh::connect_the_dots(iBase_EntityHandle *ents, int ents_size,
   }
 }
 
-void CopyMesh::update_ce_lists() 
+void CopyMesh::update_sets()
 {
-//  if (updatedCELists)
-    reset_ce_lists();
-
   copySets.update_tagged_sets();
   expandSets.update_tagged_sets();
-//  updatedCELists = true;
 }
 
 void CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,

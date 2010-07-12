@@ -78,7 +78,6 @@ private:
   iMesh_Instance impl_;
   CopyMesh copy_;
 
-  bool updated_set_;
   LocalTag extrude_tag_;
   CESets extrude_sets_;
 };

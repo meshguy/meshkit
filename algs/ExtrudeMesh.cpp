@@ -25,8 +25,8 @@ static double * vtx_diff(double *res, iMesh_Instance mesh, iBase_EntityHandle a,
 
 
 ExtrudeMesh::ExtrudeMesh(iMesh_Instance mesh)
-  : impl_(mesh), copy_(mesh), updated_set_(false),
-    extrude_tag_(mesh, "__ExtrudeMeshTag"), extrude_sets_(mesh)
+  : impl_(mesh), copy_(mesh), extrude_tag_(mesh, "__ExtrudeMeshTag"),
+    extrude_sets_(mesh)
 {}
 
 ExtrudeMesh::~ExtrudeMesh()
@@ -34,19 +34,14 @@ ExtrudeMesh::~ExtrudeMesh()
 
 void ExtrudeMesh::update_sets()
 {
-//  if(updated_set_)
-    reset_sets();
-  copy_.update_ce_lists();
+  copy_.update_sets();
   extrude_sets_.update_tagged_sets();
-
-//  updated_set_ = true;
 }
 
 void ExtrudeMesh::reset_sets()
 {
-  copy_.reset_ce_lists();
+  copy_.reset_sets();
   extrude_sets_.clear();
-//  updated_set_ = false;
 }
 
 void ExtrudeMesh::translate(iBase_EntityHandle *src, int size, int steps,

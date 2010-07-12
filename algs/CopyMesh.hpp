@@ -62,10 +62,12 @@ public:
   /* \brief Return the copyTag used to indicate set copies
    */
   iBase_TagHandle copy_tag() {return copyTag;}
-  
+
+  void update_sets();
+
   /* \brief Reset the copy and expand set lists
    */
-  void reset_ce_lists();
+  void reset_sets();
 
   /* \brief Add tag which should have unique values
    */
@@ -155,8 +157,6 @@ public:
                                int *new_ents_size = 0,
                                bool do_merge = true);
 
-  void update_ce_lists();
-  
   /* \brief Tag copied sets with indicated tag from original set
    */
   void tag_copied_sets(const char **tag_names, const char **tag_vals,
@@ -188,9 +188,6 @@ private:
   
   iMesh_Instance imeshImpl;
 
-  // flag denoting whether copy/expand sets lists have been updated
-  bool updatedCELists;  
-
   // tag storing copy-to tag
   LocalTag copyTag;
 
@@ -218,11 +215,10 @@ inline void CopyMesh::add_unique_tag(iBase_TagHandle tag_handle)
   uniqueTags.push_back(tag_handle);
 }
 
-inline void CopyMesh::reset_ce_lists()
+inline void CopyMesh::reset_sets()
 {
   copySets.clear();
   expandSets.clear();
-//  updatedCELists = false;
 }
 
 inline CESets &CopyMesh::copy_sets()
