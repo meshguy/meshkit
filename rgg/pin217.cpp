@@ -1,5 +1,6 @@
 #include <cfloat>
-#include <math.h>
+#include <cmath>
+#include <iostream>
 #include "MKUtils.hpp"
 #include "MergeMesh.hpp"
 #include "CopyMesh.hpp"
@@ -9,6 +10,9 @@
 
 iMesh_Instance impl;
 iBase_EntitySetHandle root_set;
+
+#define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
+#define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 
 int get_copy_expand_sets(CopyMesh *cm,
                          iBase_EntitySetHandle orig_set, 
@@ -121,15 +125,13 @@ int main(int argc, char **argv)
       new_ents = NULL;
       new_ents_alloc = 0;
       
-      err = cm->copy_move_entities(orig_ents, orig_ents_size, dx, 
-                                   &new_ents, &new_ents_alloc, &new_ents_size,
-                                   false);
-      ERRORR("Failed to copy_move entities.", 1);
+      cm->copy_move_entities(orig_ents, orig_ents_size, dx, 
+                             &new_ents, &new_ents_alloc, &new_ents_size,
+                             false);
       std::cout << "Copy/moved irow=" << irow << ", icol=" << icol << std::endl;
       free(new_ents);
       
-      err = cm->tag_copied_sets(ctag_names, ctag_vals, 1);
-      ERRORR("Failed to tag copied sets.", iBase_FAILURE);
+      cm->tag_copied_sets(ctag_names, ctag_vals, 1);
     }
   }
        //getting hexahedron elements for merge_entities   
@@ -158,9 +160,8 @@ int main(int argc, char **argv)
     iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num1, &err);
     ERRORR("Trouble getting number of entities after merge.", err);
 
-    err = mm->merge_entities(ents, ents_size, merge_tol,
-			     do_merge, update_sets, merge_tag);
-    ERRORR("Failed to merge entities.", 1);   
+    mm->merge_entities(ents, ents_size, merge_tol,
+                       do_merge, update_sets, merge_tag);
     
     iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num2, &err);
     ERRORR("Trouble getting number of entities after merge.", err);
@@ -217,8 +218,7 @@ int get_copy_expand_sets(CopyMesh *cm,
        std::cout << " (tmp_size)"<< tmp_size << std::endl;   
   
     if (0 != tmp_size) {
-      err = cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
-      ERRORR("Failed to add copy/expand lists.", iBase_FAILURE);
+      cm->add_copy_expand_list(tmp_sets, tmp_size, copy_or_expand);
     }
     free(tmp_sets);
   }
@@ -240,8 +240,7 @@ int extend_expand_sets(CopyMesh *cm)
     ERRORR("Failed to get contained sets.", err);
     std::cout << " (sets_size)"<< sets_size << std::endl;
     if (sets_size) {
-      err = cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
-      ERRORR("Failed to add copy sets for expand extension.", err);
+      cm->add_copy_expand_list(sets, sets_size, CopyMesh::COPY);
     }
     free(sets);
   }
