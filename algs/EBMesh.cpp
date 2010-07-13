@@ -957,8 +957,7 @@ bool EBMesh::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
     cutFrac = iter->second;
     if (cutFrac.fraction[0].size() > 0) dFrac[0] = cutFrac.fraction[0][0];
     else dFrac[0] = -1.;
-    dFrac[3] = cutFrac.fraction[2][0];
-    if (cutFrac.fraction[2].size() > 0) dFrac[3] = cutFrac.fraction[2][0];
+    if (cutFrac.fraction[1].size() > 0) dFrac[3] = cutFrac.fraction[1][0];
     else dFrac[3] = -1.;
     dFrac[1] = get_edge_fraction(iHex + 1, 2);
     dFrac[2] = get_edge_fraction(iHex + m_nDiv[0]*m_nDiv[1], 0);
@@ -978,7 +977,6 @@ bool EBMesh::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
     cutFrac = iter->second;
     if (cutFrac.fraction[0].size() > 0) dFrac[0] = cutFrac.fraction[0][0];
     else dFrac[0] = -1.;
-    dFrac[3] = cutFrac.fraction[1][0];
     if (cutFrac.fraction[1].size() > 0) dFrac[3] = cutFrac.fraction[1][0];
     else dFrac[3] = -1.;
     dFrac[1] = get_edge_fraction(iHex + 1, 1);
