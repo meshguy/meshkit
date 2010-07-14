@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <cstring>
+#include <string>
 #include <iMesh.h>
 #include <iGeom.h>
 
