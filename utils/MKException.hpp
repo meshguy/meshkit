@@ -2,7 +2,6 @@
 #define MKEXCEPTION_HPP
 
 #include <exception>
-#include <cstring>
 #include <string>
 #include <iMesh.h>
 #include <iGeom.h>
@@ -26,10 +25,8 @@ inline void check_error(iMesh_Instance instance, int err)
     char descr[120];
     int descr_err;
     iMesh_getDescription(instance, descr, &descr_err, sizeof(descr)-1);
-    if (descr_err)
-      strncpy(descr, "Unable to retrieve error description", sizeof(descr));
-
-    throw MKException(err, descr);
+    throw MKException(err, descr_err ? "Unable to retrieve error description" :
+                      descr);
   }
 }
 
@@ -39,10 +36,8 @@ inline void check_error(iGeom_Instance instance, int err)
     char descr[120];
     int descr_err;
     iGeom_getDescription(instance, descr, &descr_err, sizeof(descr)-1);
-    if (descr_err)
-      strncpy(descr, "Unable to retrieve error description", sizeof(descr));
-
-    throw MKException(err, descr);
+    throw MKException(err, descr_err ? "Unable to retrieve error description" :
+                      descr);
   }
 }
 
