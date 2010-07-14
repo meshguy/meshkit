@@ -1311,7 +1311,7 @@ double EBMesh::get_edge_fraction(int idHex, int dir)
 {
   std::map<int, CutFraction>::iterator end_iter = m_mdCutFraction.end();
   std::map<int, CutFraction>::iterator iter = m_mdCutFraction.find(idHex);
-  if (iter != end_iter) return iter->second.fraction[dir][0];
+  if (iter != end_iter && iter->second.fraction[dir].size() > 0) return iter->second.fraction[dir][0];
   else return -1.;
 }
 #endif
