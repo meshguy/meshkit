@@ -2,7 +2,7 @@
 #define MKEXCEPTION_HPP
 
 #include <exception>
-#include <string>
+#include <cstring>
 #include <iMesh.h>
 #include <iGeom.h>
 
