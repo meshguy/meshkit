@@ -102,7 +102,7 @@ int EBMesh::do_mesh()
   // 2. set division
   err = set_division();
   ERRORR("Couldn't set division.", err);
-  
+
   // 3. make hex vertices
   err = make_scd_hexes();
   ERRORR("Couldn't make scd hexes.", err);
@@ -286,8 +286,19 @@ int EBMesh::write_mesh(const char* file_name, int type,
   ss << file_name;
   ss >> out_name;
   
+  // test
+  std::cout << "output file name=" << out_name.c_str() << std::endl;
+
   rval = moab_instance()->write_mesh(out_name.c_str(),
 				     (const MBEntityHandle*) &set, 1);
+
+  // test
+  if (rval != MB_SUCCESS) {
+    std::string info;
+    moab_instance()->get_last_error(info);
+    std::cout << "MOAB last error=" << info.c_str() << std::endl;
+  }
+
   MBERRORR("Failed to write hex mesh.", iBase_ERROR_MAP[rval]);
   
   std::cout << "Elements are exported." << std::endl;
