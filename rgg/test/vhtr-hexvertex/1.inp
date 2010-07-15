@@ -38,4 +38,6 @@ Center
 Rotate Z 30
 Section X 0
 Rotate Z -30
+MaterialSet_StartId 100
+NeumannSet_StartId 100
 END ! This is a must

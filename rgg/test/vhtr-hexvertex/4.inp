@@ -1,5 +1,5 @@
 ! #############################################################################################################
-! Hexagonal VHTR Control Rod Assembly with no Fuel Pins
+! Full Hexagonal Control Block With Coolant On Bottom Center
 ! #############################################################################################################
 !
 Geometry Volume
@@ -38,4 +38,6 @@ Assembly 11
 RadialMeshSize 0.3
 AxialMeshSize 50
 Center
+MaterialSet_StartId 400
+NeumannSet_StartId 400
 END ! This is a must

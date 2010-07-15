@@ -482,9 +482,8 @@ int CNrgen::ReadAndCreate()
       if(strcmp (outfile.c_str(), "surface") == 0 || szFormatString.fail())
 	m_nPlanar=1;
     }   
-    if (szInputString.substr(0,9) == "materials"){
-
-      std::cout << "getting assembly material data" << std::endl;
+    if ((szInputString.substr(0,9) == "materials") && (szInputString.substr(0,19) != "materialset_startid")){
+      
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_nAssemblyMat;
       if(szFormatString.fail())
@@ -666,6 +665,24 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
+    // Handle mesh size inputs
+    if (szInputString.substr(0,18) == "neumannset_startid"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_nNeumannSetId;
+      if(m_nNeumannSetId < 0 || szFormatString.fail())
+	IOErrorHandler(ENEGATIVE);
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
+    // Handle mesh size inputs
+    if (szInputString.substr(0,19) == "materialset_startid"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_nMaterialSetId;
+      if(m_nMaterialSetId < 0 || szFormatString.fail())
+	IOErrorHandler(ENEGATIVE);
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
     if (szInputString.substr(0,3) == "end"){
  
       // impring merge before saving
@@ -693,7 +710,7 @@ int CNrgen::CreateCubitJournal()
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
                           "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
 			  "gold", "orange", "brown", "pink", "khakhi", "black", "aquamurine", "mediumslateblue"};
-  int nSideset=0, i, j;
+  int nSideset=m_nNeumannSetId, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
   if(m_nDimensions > 0){
@@ -701,7 +718,7 @@ int CNrgen::CreateCubitJournal()
     dMid = (m_Centered ? 0.0 : m_dVZAssm(1) + dHeight/2.0);
   }
 
-  // writing to schemes .jou 
+  // writing to template.jou 
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
   m_SchemesFile << "##Schemes " << std::endl  ;
   m_SchemesFile << "#{CIRCLE =\"circle interval 1 fraction 0.8\"}" << std::endl;
@@ -764,8 +781,8 @@ int CNrgen::CreateCubitJournal()
   // top surface sidesets
   m_FileOutput << "#Creating top surface sidesets" << std::endl; 
   for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szSurfTop = m_szAssmMat(p)+"_top";
     ++nSideset;
+    szSurfTop = m_szAssmMat(p)+"_top";
     m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
     m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
   }
@@ -803,11 +820,11 @@ int CNrgen::CreateCubitJournal()
 
     // block creation dumps
     m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    for(int p=1; p <= m_szAssmMatAlias.GetSize();p++){
       szBlock = "b_"+ m_szAssmMat(p);
       szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " << p << " surface in " << szGrp  << std::endl;
-      m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     m_FileOutput << "#" << std::endl;
   }
@@ -820,6 +837,7 @@ int CNrgen::CreateCubitJournal()
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szSurfTop = m_szAssmMat(p)+"_bot";
       szSurfSide = m_szAssmMat(p)+"_side";  
+
 
       m_FileOutput << "#" << std::endl;
 
@@ -843,11 +861,11 @@ int CNrgen::CreateCubitJournal()
 
     // block creation dumps
     m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
       szBlock = "b_"+ m_szAssmMat(p);
       szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " << p << " body in " << szGrp  << std::endl;
-      m_FileOutput << "block " << p << " name \"" << szBlock <<"\""<< std::endl;
+      m_FileOutput << "block " <<  m_nMaterialSetId + p << " body in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     m_FileOutput << "#" << std::endl;
 

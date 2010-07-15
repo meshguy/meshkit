@@ -35,4 +35,6 @@ Assembly 11
 RadialMeshSize 0.3
 AxialMeshSize 50
 Center
+MaterialSet_StartId 1
+NeumannSet_StartId 1
 END ! This is a must

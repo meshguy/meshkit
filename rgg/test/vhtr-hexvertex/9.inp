@@ -1,6 +1,6 @@
-! ######################################################################################################
-! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins
-! ######################################################################################################
+! ########################################################################################################################
+! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins (No CR; Section X 0)
+! ########################################################################################################################
 !
 Geometry Volume
 GeometryType Hexagonal  
@@ -53,4 +53,6 @@ Center
 Rotate Z 30
 Section X 0
 Rotate Z -30
+MaterialSet_StartId 900
+NeumannSet_StartId 900
 END ! This is a must

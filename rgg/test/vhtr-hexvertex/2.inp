@@ -1,5 +1,5 @@
 ! #############################################################################################################
-! Hexagonal VHTR Control Fuel Block Assembly Definition without CellMaterials (Prism) around individual Pins
+! Hexagonal Block (Section Y 0)
 ! #############################################################################################################
 !
 Geometry Volume
@@ -36,4 +36,6 @@ RadialMeshSize 0.3
 AxialMeshSize 50
 Center
 Section Y 0
+MaterialSet_StartId 200
+NeumannSet_StartId 200
 END ! This is a must

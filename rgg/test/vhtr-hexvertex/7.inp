@@ -1,6 +1,6 @@
-! ######################################################################################################
-! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins
-! ######################################################################################################
+! #############################################################################################################
+! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins (No CR)
+! ##############################################################################################################
 !
 Geometry Volume
 GeometryType Hexagonal  
@@ -50,4 +50,6 @@ Assembly 11
 RadialMeshSize 0.3
 AxialMeshSize 50
 Center
+MaterialSet_StartId 700
+NeumannSet_StartId 700
 END ! This is a must

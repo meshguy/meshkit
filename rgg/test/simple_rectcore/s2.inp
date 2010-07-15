@@ -19,6 +19,8 @@ Assembly 1 1
 RF
 Center
 RadialMeshSize 2.0
+MaterialSet_StartId 100
+NeumannSet_StartId 100
 END     ! This is a must                  
                                                                                          
 
