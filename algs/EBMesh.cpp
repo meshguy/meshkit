@@ -613,12 +613,34 @@ static inline double axis_len( const double* axis )
 
 int EBMesh::set_division()
 {
-  double box_center[3], box_axis1[3], box_axis2[3], box_axis3[3];
-  MBErrorCode rval = m_hObbTree->box(m_hTreeRoot, box_center, box_axis1, box_axis2, box_axis3);
+  int i, j;
+  MBCartVect box_center, box_axis1, box_axis2, box_axis3,
+    min_cart_box(HUGE_VAL, HUGE_VAL, HUGE_VAL),
+    max_cart_box(0., 0., 0.);
+  
+  MBErrorCode rval = m_hObbTree->box(m_hTreeRoot, box_center.array(),
+				     box_axis1.array(), box_axis2.array(),
+				     box_axis3.array());
   MBERRORR("Error getting box information for tree root set.", iBase_ERROR_MAP[rval]);
 
-  double lengths[3] = { axis_len(box_axis1), axis_len(box_axis2),
-			axis_len(box_axis3) };
+  // cartesian box corners
+  MBCartVect corners[8] = {box_center + box_axis1 + box_axis2 + box_axis3,
+			   box_center + box_axis1 + box_axis2 - box_axis3,
+			   box_center + box_axis1 - box_axis2 + box_axis3,
+			   box_center + box_axis1 - box_axis2 - box_axis3,
+			   box_center - box_axis1 + box_axis2 + box_axis3,
+			   box_center - box_axis1 + box_axis2 - box_axis3,
+			   box_center - box_axis1 - box_axis2 + box_axis3,
+			   box_center - box_axis1 - box_axis2 - box_axis3};
+
+  // get the max, min cartesian box corners
+  for (i = 0; i < 8; i++) {
+    for (j = 0; j < 3; j++) {
+      if (corners[i][j] < min_cart_box[j]) min_cart_box[j] = corners[i][j];
+      if (corners[i][j] > max_cart_box[j]) max_cart_box[j] = corners[i][j];
+    }
+  }
+  MBCartVect length = max_cart_box - min_cart_box;
   
   // default value is adjusted to large geometry file
   // interval_size_estimate : 2*L*sqrt(2*PI*sqrt(2)/# of tris)
@@ -629,15 +651,13 @@ int EBMesh::set_division()
 				       2, n_tri);
     MBERRORR("Failed to get number of triangles.", iBase_ERROR_MAP[rval]);
     
-    double box_length_ave = 2./3.*(lengths[0] + lengths[1] + lengths[2]);
+    double box_length_ave = (length[0] + length[1] + length[2])/3.;
     m_dInputSize = 2.*box_length_ave*sqrt(8.886/n_tri);
   }
 
-  for (int i = 0; i < 3; i++) {
-    m_nDiv[i] = 2.*lengths[i]/m_dInputSize;
-    
-    // make 5 elements larger than bounding box
-    if (m_nDiv[i] < 5) m_nDiv[i] = 5;
+  for (i = 0; i < 3; i++) {
+    m_nDiv[i] = length[i]/m_dInputSize;
+    if (m_nDiv[i] < 5) m_nDiv[i] = 5; // make 5 elements larger than bounding box
     m_dIntervalSize[i] = m_dInputSize;
     if (m_nDiv[i]*.07 > 5) m_nDiv[i] += m_nDiv[i]*.07;
     else m_nDiv[i] += 5;
@@ -730,7 +750,7 @@ int EBMesh::fire_rays(int dir)
 	m_dFirstP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
 	m_dSecondP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
 	m_prevPnt = startPnt[dir];
-	
+
 	for (; k < m_nNode[dir] - 1; k++) {
 	  m_curPnt = startPnt[dir] + (k + 1)*m_dIntervalSize[dir];
 	  m_nStatus = get_edge_status(m_curPnt);
