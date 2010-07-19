@@ -1,5 +1,6 @@
 #include "utils.hpp"
 #include "SimpleArray.hpp"
+#include <cstring>
 
 static int get_ce_sets(CESets &ce_sets, iBase_EntitySetHandle orig_set,
                        const char **tag_names, const char **tag_vals,

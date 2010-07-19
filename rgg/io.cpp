@@ -1002,6 +1002,7 @@ int CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
       dY+= dPY/2.0;
       // check if it's dummy
       if((m_Assembly(m-1,n)=="x")||(m_Assembly(m-1,n)=="xx")){
+	dY+= dPY/2.0;
       }
       else{
 	for(int c=1; c<=m_nPincells; c++){
@@ -1466,12 +1467,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
       if(szFormatString1.fail())
 	IOErrorHandler (INVALIDINPUT);
 
-      // if dummy pincell skip and continue
-      if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-	m_Pincell(1).GetPitch(dPX, dPY, dPZ);
-	dX+=dPX;
-	continue;
-      }	      
+    
       // loop thro' all pins to get the type of pin
       for(int b=1; b<=m_nPincells; b++){
 	m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
@@ -1482,6 +1478,12 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
       //now compute the location where the pin needs to be placed
       err = ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
       ERRORR("Error in function ComputePinCentroid", err);
+
+      // if dummy pincell skip and continue
+      if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+	m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+	continue;
+      }	  
 
       // now create the pincell in the location found
       std::cout << "\n--------------------------------------------------"<<std::endl;
