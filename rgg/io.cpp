@@ -33,6 +33,7 @@ void CNrgen::Banner (std::ostream& OF)
   std::cout << "\nsee README file for using the program and details on various cards.\n"<< std::endl;
 }
 
+
 int CNrgen::PrepareIO (int argc, char *argv[])
 // ---------------------------------------------------------------------------
 // Function: Obtains file names and opens input/output files
@@ -40,26 +41,12 @@ int CNrgen::PrepareIO (int argc, char *argv[])
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  //set geometry engine 
-  std::string engine;
-  //ACIS ENGINE
-  engine = "ACIS";
-  iGeom_newGeom( 0, &geom, &err, 0 ); // this is default way of specifying ACIS engine
-
-  // OCC ENGINE
-  // engine = "OCC;
-  //  iGeom_newGeom( ";engine=OCC", &geom, &err, 12 );
-
   // set and open input output files
   bool bDone = false;
   do{
     if (2 == argc) {
       m_szFile = argv[1];
       m_szInFile=m_szFile+".inp";
-      m_szGeomFile = m_szFile+".sat";
-      if(engine =="OCC"){
-	m_szGeomFile = m_szFile+".brep";
-      }
       m_szJouFile = m_szFile+".jou";
       m_szSchFile = m_szFile+".template.jou";
     }
@@ -70,14 +57,10 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       m_szJouFile = (char *)DEFAULT_TEST_FILE;
       m_szFile =  (char *)DEFAULT_TEST_FILE;
       m_szInFile+=".inp";
-      m_szGeomFile+=".sat";
-      if(engine =="OCC"){
-	m_szGeomFile = m_szFile+".brep";
-      }
       m_szJouFile+=".jou";
       m_szSchFile = m_szFile+".template.jou";
       std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
-		<< "  " << m_szGeomFile << "  " << m_szJouFile << std::endl;
+		<< "  " << m_szJouFile << std::endl;
     }
     // open the file
     m_FileInput.open (m_szInFile.c_str(), std::ios::in); 
@@ -116,12 +99,12 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       bDone = true; // file opened successfully
   } while (!bDone);
 
-  std::cout<<"o/p geometry file name: "<<m_szGeomFile << "\no/p Cubit journal file name: "<< m_szJouFile    
-	   << "\nInfo: o/p file extension must correspond to geometry engine used to build cgm " << std::endl;
+  std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile    
+	   << std::endl;
   return 0;
 }
 
-int CNrgen::CountPinCylinders ()
+int CNrgen::ReadInputPhase1 ()
 // -------------------------------------------------------------------------------------------
 // Function: reads the input file to count the no. of cyl in a pincell, before the actual read
 // Input:    none
@@ -136,6 +119,14 @@ int CNrgen::CountPinCylinders ()
     if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
 			     MAXCHARS, szComment))
       IOErrorHandler (INVALIDINPUT);
+
+    if (szInputString.substr(0,10) == "geomengine"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_szEngine;
+      if( (strcmp (m_szEngine.c_str(), "acis") != 0) &&
+	  (strcmp (m_szEngine.c_str(), "occ") != 0) || szFormatString.fail())
+	IOErrorHandler(EGEOMENGINE);
+    }
     if (szInputString.substr(0,8) == "pincells"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_nPincells;
@@ -188,6 +179,22 @@ int CNrgen::CountPinCylinders ()
       break;
     }
   }
+
+  //ACIS ENGINE set as default
+  if(m_szEngine == "acis"){
+    iGeom_newGeom( 0, &geom, &err, 0 ); // this is default way of specifying ACIS engine
+    CHECK("Failed to set geometry engine.");
+    m_szGeomFile = m_szFile+".sat";
+  }
+
+  //  OCC ENGINE
+  if (m_szEngine == "occ"){
+    iGeom_newGeom( ";engine=OCC", &geom, &err, 12 );
+    CHECK("Failed to set geometry engine.");
+    m_szGeomFile = m_szFile+".brep";
+  }
+  std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
+
   return 0;
 }
 
@@ -279,7 +286,7 @@ int CNrgen::ReadPinCellData (int i)
 	dVCylRadii.SetSize(nRadii);
 	szVCylMat.SetSize(nRadii);
 	dVCylZPos.SetSize(2);
-       	m_Pincell(i).SetCylSizes(nCyl, nRadii);
+	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 
 	// reading ZCoords
 	for(int k=1; k<=2; k++){
@@ -475,6 +482,7 @@ int CNrgen::ReadAndCreate()
 	IOErrorHandler(EGEOMTYPE);
     }
 
+
     if (szInputString.substr(0,8) == "geometry"){
       std::string outfile;
       std::istringstream szFormatString (szInputString);
@@ -493,7 +501,7 @@ int CNrgen::ReadAndCreate()
 	szFormatString >> m_szAssmMat(j) >> m_szAssmMatAlias(j);
 	if( (strcmp (m_szAssmMat(j).c_str(), "") == 0) ||
 	    (strcmp (m_szAssmMatAlias(j).c_str(), "") == 0)){
-   	  IOErrorHandler(EMAT);
+	  IOErrorHandler(EMAT);
 	}
       }
     }   
@@ -708,8 +716,8 @@ int CNrgen::CreateCubitJournal()
   // variables
   int nColor;
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
-                          "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
-			  "gold", "orange", "brown", "pink", "khakhi", "black", "aquamurine", "mediumslateblue"};
+			   "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
+			   "gold", "orange", "brown", "pink", "khakhi", "black", "aquamurine", "mediumslateblue"};
   int nSideset=m_nNeumannSetId, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
@@ -915,8 +923,8 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
       " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
     m_FileOutput << "mesh vol all" << std::endl;
-  // color now
-     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    // color now
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       if(p>20)
 	nColor = 1;
@@ -926,8 +934,8 @@ int CNrgen::CreateCubitJournal()
     }
   }
   else{ //surfaces
-   // color now
-     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    // color now
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       if(p>20)
 	nColor = 1;
@@ -1036,6 +1044,8 @@ void CNrgen::IOErrorHandler (ErrorStates ECode) const
     std::cerr << "Invalid Material Data.";
   else if (ECode == EGEOMTYPE) // invalid input
     std::cerr << "Invalid GeomType Data.";
+  else if (ECode == EGEOMENGINE) // invalid input
+    std::cerr << "Invalid Geometry Engine.";
   else if (ECode == EALIAS) // invalid input
     std::cerr << "Error Reading Aliases.";
   else if (ECode == ENEGATIVE) // invalid input
@@ -2243,11 +2253,11 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	err = Name_Faces(sMatName, tmp_new, this_tag);
 	ERRORR("Error in function Name_Faces", err);
 
- 	for (int b=nRadii; b>1; b--){  
+	for (int b=nRadii; b>1; b--){  
 
- 	  iGeom_copyEnt(geom, intersec_main[b-2], &tmp_intersec, &err);
- 	  CHECK("Couldn't copy inner duct wall prism."); 
- 	  //subtract tmp vol from the outer most
+	  iGeom_copyEnt(geom, intersec_main[b-2], &tmp_intersec, &err);
+	  CHECK("Couldn't copy inner duct wall prism."); 
+	  //subtract tmp vol from the outer most
 	  iGeom_subtractEnts(geom, intersec_main[b-1], tmp_intersec, &tmp_new, &err);
 	  CHECK("Subtract of inner from outer failed.");
 
@@ -2292,7 +2302,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
       if(m_szGeomType =="hexagonal"){
 	
 	m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
- 	double dSide = dP/(sqrt(3));
+	double dSide = dP/(sqrt(3));
 
 	iGeom_createPrism(geom, dHeight, 6, 
 			  dSide, dSide,
@@ -2373,11 +2383,11 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
 
 	// other cyl annulus after substraction
- 	for (int b=nRadii; b>1; b--){  
+	for (int b=nRadii; b>1; b--){  
 
- 	  iGeom_copyEnt(geom, intersec_main[b-2], &tmp_intersec, &err);
- 	  CHECK("Couldn't copy inner duct wall prism."); 
- 	  //subtract tmp vol from the outer most
+	  iGeom_copyEnt(geom, intersec_main[b-2], &tmp_intersec, &err);
+	  CHECK("Couldn't copy inner duct wall prism."); 
+	  //subtract tmp vol from the outer most
 	  iGeom_subtractEnts(geom, intersec_main[b-1], tmp_intersec, &tmp_new, &err);
 	  CHECK("Subtract of inner from outer failed.");
 

@@ -30,8 +30,8 @@ int main (int argc, char *argv[])
   ERRORR("Error in function PrepareIO", err);
  
   //count pin cylinders and cell material, needed for setting array size before actual read
-  err = TheNR.CountPinCylinders ();
-  ERRORR("Error in function CountPinCylinders", err);
+  err = TheNR.ReadInputPhase1 ();
+  ERRORR("Error in function ReadInputPhase1", err);
 
   // read the problem size and create pincell
   TheNR.ReadAndCreate ();

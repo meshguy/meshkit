@@ -28,12 +28,11 @@ class CNrgen
 public:
   CNrgen ();    // ctor
   ~CNrgen ();   // dtor
-  enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE,
-		    ENEGATIVE, EALIAS, EPIN};
+  enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE, EGEOMENGINE, ENEGATIVE, EALIAS, EPIN};
 
   void Banner (std::ostream& OF);
   int PrepareIO (int argc, char *argv[]);
-  int CountPinCylinders ();
+  int ReadInputPhase1 ();
   int ReadAndCreate ();
   int Name_Faces(const std::string sMatName, const iBase_EntityHandle body, 
 		   iBase_TagHandle this_tag);
@@ -85,7 +84,8 @@ private:
   // vector holding a pincell
   CVector<CPincell> m_Pincell; 
 
-  // string for geomtype
+  // string for geomtype, engine
+  std::string m_szEngine;
   std::string m_szGeomType;       
 
   // integers for vectors sizes, err etc
