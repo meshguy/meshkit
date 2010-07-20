@@ -31,7 +31,7 @@ CNrgen::CNrgen ()
   m_nDimensions = 0;
   m_nMaterialSetId = 1;
   m_nNeumannSetId = 1;
-  m_szEngine = "ACIS";
+  m_szEngine = "acis";
 }
 
 CNrgen::~CNrgen ()
