@@ -2,7 +2,7 @@
 ! Example Assembly fuel.inp
 ! #############################################################################################################
 !
-Geometry Surface
+Geometry Volume
 GeometryType Hexagonal  
 !                                     
 Materials 2 Mat_Fuel F1 Mat_Coolant C1   

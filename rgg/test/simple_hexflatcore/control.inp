@@ -2,7 +2,7 @@
 ! Example Assembly control.inp
 ! #############################################################################################################
 !
-Geometry Surface
+Geometry Volume
 GeometryType Hexagonal  
 !                                     
 Materials 2 Mat_Control G1 Mat_Coolant C1

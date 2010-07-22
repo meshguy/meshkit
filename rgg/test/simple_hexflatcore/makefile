@@ -6,9 +6,9 @@
 
 CUBIT = cubit -nographics
 
-COREGEN = coregen
+COREGEN = ../../coregen
 
-ASSYGEN = assygen
+ASSYGEN = ../../assygen
 
 MESH_FILES = fuel.cub  control.cub  
 
