@@ -8,17 +8,28 @@
 #ifndef SMOOTHCURVEEVAL_HPP_
 #define SMOOTHCURVEEVAL_HPP_
 
+#include "MBInterface.hpp"
 #include "CMLCurveEval.hpp"
-#include "RefEdge.hpp"
+#include "SmoothBase.hpp"
+//#include "RefEdge.hpp"
+#include "SmoothFaceEval.hpp"
 
-class SmoothMeshEval;
+#include <map>
+#include <vector>
+
+class SmoothFaceEval;
+class SmoothVertex;
+
+class CMLEdgeMesher;
 // evaluator for Camal Edge Mesher
 // this is really copying what Cubit is doing
 
-class SmoothCurveEval : public CMLCurveEval
+class SmoothCurveEval : public CMLCurveEval, public SmoothBase
 {
 public:
-	SmoothCurveEval(RefEdge * edge, SmoothMeshEval * smoothFaceEval, int loopIndex);
+	//SmoothCurveEval(RefEdge * edge, SmoothFaceEval * smoothFaceEval, int loopIndex);
+	SmoothCurveEval(MBInterface * mb, MBEntityHandle curve, MBInterface * mbo); // the new constructor, which will use
+	// sense entities to establish the control points on feature edges (geo edges, sets of mesh edges)
 	virtual ~SmoothCurveEval();
 
 	virtual double arc_length() ;
@@ -100,10 +111,49 @@ public:
 	    //! \param z The z coordinate of the start point
 	  virtual void end_coordinates(double& x, double& y, double& z) ;
 
+	  // this will recompute the 2 tangents for each edge, considering the geo edge they are into
+	  void compute_tangents_for_each_edge();
+
+	  void compute_control_points_on_boundary_edges(double min_dot,
+			  std::map<MBEntityHandle, SmoothFaceEval*> & mapSurfaces,
+			  MBTag controlPointsTag, MBTag markTag);// min_dot is not used now,
+	  // the edges that are computed will be marked with the marker tag, so after that only the interior edges
+	  // will be left for control points evaluation
+
+	  // make this public, as we may need it when we call meshing from driver
+	  CMLEdgeMesher * _cmlEdgeMesher;
+
+	  void estimate_mesh_count(double curve_mesh_size, int & num_points_out); // this is based on initial settings
+
+	  int get_mesh_count()
+		  {return mesh_count;}
+
+	  void set_mesh_count(int iMeshCount)
+		  { mesh_count=iMeshCount;}
+
+	  MBErrorCode evaluate_smooth_edge(MBEntityHandle eh, double &tt,
+	  		MBCartVect & outv) ;
+
+	  void create_mesh_edges(std::map<MBEntityHandle, SmoothVertex*>  & mapVertices);
+
 private:
-	  RefEdge * _ref_edge;
-	  SmoothMeshEval * _smoothFaceEval; // just store the face pointer here,
+	  //RefEdge * _ref_edge;
+	  //SmoothFaceEval * _smoothFaceEval; // just store the face pointer here,
 	  int _loopIndex;
+
+	  int mesh_count;// how many mesh edges will be created on this geo edge set?
+
+	  std::vector<MBEntityHandle> _entities;// the mesh edges are stored here for fast access
+	  MBEntityHandle startNode, endNode;// those handles are for the nodes in _mb
+	  double _leng;
+	  std::vector<double> _fractions;// they are increasing from 0. to 1., do we need these?
+	  // this will be decided apriori, and eventually reset for paver
+	  // fractions will be from 0.0.. to 1.0, they will be decided upon the length of the geo edge
+
+	  MBTag _edgeTag;
+
+
+
 };
 
 #endif /* SMOOTHCURVEEVAL_HPP_ */

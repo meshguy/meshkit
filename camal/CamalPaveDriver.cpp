@@ -1,7 +1,7 @@
 /**
  this file will prepare the paver call; basically, create the
  smooth surface, and pass it to the Pave routine call
- SmoothMeshEval will be derived from CAMAL eval, and will call the smooth faceter that I will 
+ SmoothFaceEval will be derived from CAMAL eval, and will call the smooth faceter that I will
  extract from CGM. The arithmetic is explained in Face-Based Surfaces
    for 3D Mesh generation
  // input
@@ -11,8 +11,10 @@
 //
 #include "CamalPaveDriver.hpp"
 
-#include "SmoothMeshEval.hpp"
+#include "MBTagConventions.hpp"
+#include "moab/GeomTopoTool.hpp"
 
+#ifdef USE_CGM
 // copy from facets.cpp
 #include "AppUtil.hpp"
 #include "CGMApp.hpp"
@@ -29,6 +31,9 @@
 #include "RefFace.hpp"
 #include "RefEdge.hpp"
 #include "RefVertex.hpp"
+#include "Loop.hpp"
+
+#endif
 
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
@@ -36,8 +41,10 @@
 //#include "camal_interface.hpp"
 
 // camal edge mesher: need to mesh with even numbers
-#include "CMLEdgeMesher.hpp"
+//#include "CMLEdgeMesher.hpp"
 #include "SmoothCurveEval.hpp"
+#include "SmoothFaceEval.hpp"
+#include "SmoothVertex.hpp"
 
 // these are needed by CAMAL evaluator; 
 #include "CAMALGeomEval.hpp"
@@ -54,39 +61,236 @@
 #include <fstream>
 #include <algorithm>
 #include <set>
+//#include <map>
 #include <assert.h>
 #include <string.h>
 
 const bool debugLocal = false;
+extern bool debug_surf_eval;
 
-CamalPaveDriver::CamalPaveDriver(iMesh_Instance mesh,
-		iBase_EntitySetHandle set, iMesh_Instance omesh) {
-	_meshIface = mesh;
-	_meshOutface = omesh;
+CamalPaveDriver::CamalPaveDriver( MBInterface * mb, MBEntityHandle set,
+        MBInterface * out, double angle) {
+	_mb = mb;
+	_mbo = out;
 	_set = set;
+	_angle = angle;
+	_smthFace= NULL;
+	_smthCurve=NULL;
+	_smthVertex=NULL;
 }
 
+CamalPaveDriver::~CamalPaveDriver()
+{
+	delete [] _smthFace;
+	delete [] _smthCurve;
+	delete [] _smthVertex;
+	_smthFace= NULL;
+	_smthCurve=NULL;
+	_smthVertex=NULL;
+}
 bool CamalPaveDriver::remesh(double mesh_size, int mesh_intervals,
 		const bool force_intervals) {
 
-	SmoothMeshEval geom_eval(_meshIface, _set);
-	// initialize the smooth mesh evaluator
-	// compute the loops first, then construct the data structure needed for evaluation
-	geom_eval.Initialize();
-	std::vector<int> loops, loop_sizes;
-	std::vector<iBase_EntityHandle> bdy_verts;
-	std::vector<double> bdy_coords;
-	std::vector<int> connect;
-	bool success = true;
-	int new_points;
-	iMesh_EntityTopology etop = iMesh_ALL_TOPOLOGIES;
-	// create the facetted shell
+	_mesh_size = mesh_size;
+	_mesh_intervals = mesh_intervals;
+	_force_intervals = force_intervals;
 
-	// start copy from facets
+	initializeSmoothing();
+#ifdef USE_CGM
+	// now, redo the part about cgm, using moab, not iMesh
+	prepareCGMEvaluator();// this might be commented out, actually
+#endif
+	mesh_vertices();
+
+	MBErrorCode rval = find_face_loops();
+	// here, we need to establish the mesh count on each curve,
+	// the constraints are related to even count on faces
+	establish_mesh_curve_count();
+
+	mesh_curves();
+
+	mesh_surfaces();
+
+	return true;
+}
+
+bool CamalPaveDriver::initializeSmoothing()
+{
+	//
+	// first of all, we need to retrieve all the surfaces from the (root) set
+	// in icesheet_test we use iGeom, but maybe that is a stretch
+	// get directly the sets with geom dim 2, and from there create the SmoothFaceEval
+	MBTag geom_tag, gid_tag;
+	MBErrorCode rval = _mb->tag_get_handle(GEOM_DIMENSION_TAG_NAME, geom_tag);
+	rval = _mb->tag_get_handle(GLOBAL_ID_TAG_NAME, gid_tag);
+
+		// traverse the model, dimension 2, 1, 0
+	MBRange csets, fsets, vsets;
+	//std::vector<moab::EntityHandle> sense_ents;
+	//std::vector<int> senses, pgids;
+	int dim=2;
+	void *dim_ptr = &dim;
+	//bool sense;
+
+	moab::GeomTopoTool * my_geomTopoTool = new moab::GeomTopoTool(_mb);
+
+	rval = my_geomTopoTool->construct_obb_trees();
+	assert(MB_SUCCESS==rval);
+
+
+	fsets.clear();
+	rval = _mb->get_entities_by_type_and_tag(0, MBENTITYSET,
+												&geom_tag, &dim_ptr, 1,
+												fsets, 1, false);
+	int numSurfaces = fsets.size();
+	//SmoothFaceEval ** smthFace = new SmoothFaceEval *[numSurfaces];
+	_smthFace = new SmoothFaceEval *[numSurfaces];
+	// there should also be a map from surfaces to evaluators
+	//std::map<MBEntityHandle, SmoothFaceEval*> mapSurfaces;
+
+	int i=0;
+	MBRange::iterator it;
+	for ( it = fsets.begin(); it!=fsets.end(); it++, i++)
+	{
+		MBEntityHandle face= *it;
+		_smthFace[i]= new SmoothFaceEval(_mb, face, _mbo, my_geomTopoTool);// geom topo tool will be used for searching,
+		// among other things; also for senses in edge sets...
+		_mapSurfaces[face] = _smthFace[i];
+	}
+
+	csets.clear();
+	dim = 1; // get now the curves
+	rval = _mb->get_entities_by_type_and_tag(0, MBENTITYSET,
+												&geom_tag, &dim_ptr, 1,
+												csets, 1, false);
+	int numCurves = csets.size();
+	//SmoothCurveEval ** smthCurve = new SmoothCurveEval *[numCurves];
+	_smthCurve = new SmoothCurveEval *[numCurves];
+	// there should also be a map from surfaces to evaluators
+	//std::map<MBEntityHandle, SmoothCurveEval*> mapCurves;
+
+	i=0;
+	for ( it = csets.begin(); it!=csets.end(); it++, i++)
+	{
+		MBEntityHandle curve= *it;
+		_smthCurve[i]= new SmoothCurveEval(_mb, curve, _mbo);
+		_mapCurves[curve] = _smthCurve[i];
+	}
+
+	// create another mapping for vertices (sets of dimension 0)
+	vsets.clear();
+	dim = 0; // get now the vertice sets (dimension 0)
+	rval = _mb->get_entities_by_type_and_tag(0, MBENTITYSET,
+												&geom_tag, &dim_ptr, 1,
+												vsets, 1, false);
+	int numGeoVertices = vsets.size();
+	//SmoothVertex ** smthVertex = new SmoothVertex *[numGeoVertices];
+	_smthVertex = new SmoothVertex *[numGeoVertices];
+	// there should also be a map from original vertex sets to new vertex sets (or just new vertex??)
+	//std::map<MBEntityHandle, SmoothVertex*> mapVertices;
+
+	i=0;
+	for ( it = vsets.begin(); it!=vsets.end(); it++, i++)
+	{
+		MBEntityHandle vertex= *it;
+		_smthVertex[i]= new SmoothVertex(_mb, vertex, _mbo);
+		_mapVertices[vertex] = _smthVertex[i];
+	}
+
+	// _mb, mapSurfaces, mapCurves, mapVertices are characterizing the geometry/topology of the initial mesh
+
+	//SmoothFaceEval geom_eval(_mb, _set);
+	// initialize the smooth mesh evaluator
+	//
+	//geom_eval.Initialize(): it is decomposed in initializing first the gradients
+	for (i=0; i<numSurfaces; i++)
+	{
+		_smthFace[i]->init_gradient();// this will also retrieve the triangles in each surface
+		_smthFace[i]->compute_tangents_for_each_edge();// this one will consider all edges internal, so the
+		// tangents are all in the direction of the edge; a little bit of waste, as we store
+		// one tangent for each edge node , even though they are equal here...
+		// no loops are considered
+	}
+
+	// this will be used to mark boundary edges, so for them the control points are computed earlier
+	unsigned char value = 0; // default value is "not used"=0 for the tag
+	// unsigned char def_data_bit = 1;// valid by default
+	// rval = mb->tag_create("valid", 1, MB_TAG_BIT, validTag, &def_data_bit);
+	MBTag markTag;
+	rval = _mb->tag_create("MARKER", 1, MB_TAG_BIT, markTag, &value); // default value : 0 = not computed yet
+	// each feature edge will need to have a way to retrieve at every moment the surfaces it belongs to
+	// from edge sets, using the sense tag, we can get faces, and from each face, using the map, we can get
+	// the SmoothFaceEval (surface evaluator), that has everything, including the normals!!!
+	assert(rval==MB_SUCCESS);
+
+	// create the tag also for control points on the edges
+	double defCtrlPoints[9] = { 0., 0., 0., 0., 0., 0., 0., 0., 0. };
+	MBTag edgeCtrlTag;
+	rval = _mb->tag_create("CONTROLEDGE", 9 * sizeof(double),
+			MB_TAG_DENSE, edgeCtrlTag, &defCtrlPoints);
+	if (MB_SUCCESS != rval)
+		return MB_FAILURE;
+
+	MBTag facetCtrlTag;
+	double defControls[18] = { 0. };
+	rval = _mb->tag_create("CONTROLFACE", 18 * sizeof(double),
+			MB_TAG_DENSE, facetCtrlTag, &defControls);
+	assert(rval == MB_SUCCESS);
+
+	MBTag facetEdgeCtrlTag;
+	double defControls2[27] = { 0. }; // corresponding to 9 control points on edges, in order from edge 0, 1, 2 ( 1-2, 2-0, 0-1 )
+	rval = _mb->tag_create("CONTROLEDGEFACE", 27 * sizeof(double),
+			MB_TAG_DENSE, facetEdgeCtrlTag, &defControls2);
+	assert(rval == MB_SUCCESS);
+	// if the
+	double min_dot= -1.0; // depends on _angle, but now we ignore it, for the time being
+	for (i=0; i<numCurves; i++)
+	{
+		_smthCurve[i]->compute_tangents_for_each_edge();// do we need surfaces now? or just the chains?
+		// the computed edges will be marked accordingly; later one, only internal edges to surfaces are left
+		_smthCurve[i]->compute_control_points_on_boundary_edges( min_dot,  _mapSurfaces, edgeCtrlTag, markTag);
+	}
+
+	// when done with boundary edges, compute the control points on all edges in the surfaces
+
+	for (i=0;i<numSurfaces; i++)
+	{
+		// also pass the tags for
+		_smthFace[i]->compute_control_points_on_edges(min_dot, edgeCtrlTag, markTag);
+	}
+
+	// now we should be able to compute the control points for the facets
+
+	for (i=0;i<numSurfaces; i++)
+	{
+		// also pass the tags for edge and facet control points
+		_smthFace[i]->compute_internal_control_points_on_facets(min_dot, facetCtrlTag, facetEdgeCtrlTag);
+	}
+	// we will need to compute the tangents for all edges in the model
+	// they will be needed for control points for each edge
+	// the boundary edges and the feature edges are more complicated
+	// the boundary edges need to consider their loops, but feature edges need to consider loops and the normals
+	// on each connected surface
+
+	// some control points
+	if (debug_surf_eval)
+		for (i=0;i<numSurfaces; i++)
+				_smthFace[i]->DumpModelControlPoints();
+
+	return true;
+}
+#if 0
+bool CamalPaveDriver::prepareCGMEvaluator()
+{
+	//
+	// we will have to mesh every geo edge separately, and we have to ensure that the number of mesh edges
+	// for a face is even.
+	// pretty tough to do. Initially, we have to decide loops, number of edges on each face, etc
 	// first build
-	int err;
-	// get the triangles and the vertices in one shot
-	iBase_EntityHandle *triangles = NULL;
+	//int err;
+	// get the triangles and the vertices from moab set
+
+	/*iBase_EntityHandle *triangles = NULL;
 	int triangles_alloc = 0;
 	iBase_EntityHandle *vert_adj = NULL;
 	int vert_adj_alloc = 0, vert_adj_size;
@@ -98,17 +302,24 @@ bool CamalPaveDriver::remesh(double mesh_size, int mesh_intervals,
 			&vert_adj, &vert_adj_alloc, &vert_adj_size, &indices,
 			&indices_alloc, &indices_size, &offsets, &offsets_alloc,
 			&offsets_size, &err);
-	ERRORR("Couldn't get connectivity for triangles.", 1);
+	ERRORR("Couldn't get connectivity for triangles.", 1);*/
+
+	MBRange triangles;
+	MBErrorCode rval = _mb->get_entities_by_type( 0 /* root set, as above, we know */,
+											   MBTRI, triangles);
+	// get all the nodes
+	MBRange vertices;
+	rval = _mb->get_adjacencies(triangles, 0, false, vertices, MBInterface::UNION);
 
 	// first, create CubitPointData list, from the coordinates in one array
 	/* get the coordinates in one array */
 
-	int vert_coords_alloc = 0, vertex_coord_size;
+	/*int vert_coords_alloc = 0, vertex_coord_size;
 	double * xyz = NULL;
 	iMesh_getVtxArrCoords(_meshIface, vert_adj, vert_adj_size,
 			iBase_INTERLEAVED, &xyz, &vert_coords_alloc, &vertex_coord_size,
 			&err);
-	ERRORR("Couldn't get coordinates for vertices.", 1);
+	ERRORR("Couldn't get coordinates for vertices.", 1);*/
 
 	// here, we use Cholla from CGM
 	// we need to replace it with something equivalent, but simpler
@@ -122,21 +333,34 @@ bool CamalPaveDriver::remesh(double mesh_size, int mesh_intervals,
 	GeometryQueryTool *gqt = GeometryQueryTool::instance();
 	FacetModifyEngine *fme = FacetModifyEngine::instance();
 
+	int vert_adj_size =  vertices.size();
+	int numTriangles = triangles.size();
 	DLIList<CubitFacet*> f_list(numTriangles);
 	DLIList<CubitPoint*> p_list(vert_adj_size);
-	for (int i = 0; i < vert_adj_size; i++) {
+	double * xyz = new double [3*vert_adj_size];
+	rval = _mb->  get_coords(vertices, xyz);
+	//std::map<MBEntityHandle, CubitPoint *> mapPoints;
+	//MBRange::iterator it = vertices.begin();
+	for (int i = 0; i < vert_adj_size; i++/*, it++*/) {
 		double * pCoord = &xyz[3 * i];
 		CubitPointData * newPoint = new CubitPointData(pCoord[0], pCoord[1],
 				pCoord[2]);
 		p_list.append(newPoint);
+		//mapPoints[*it] = newPoint;// or maybe we should use finding the index in MBRange??
 	}
 
+	// yes
 	// define all the triangles, to see what we have
-	for (int j = 0; j < numTriangles; j++) {
+	for (MBRange::iterator it = triangles.begin(); it!=triangles.end(); it++) {
+		MBEntityHandle tri = *it;
+		int nnodes;
+		const MBEntityHandle * conn3;//
+		_mb->get_connectivity(tri, conn3, nnodes);
+		assert(nnodes == 3);
 		int vtri[3];// indices for triangles
 		int ii = 0;
 		for (ii = 0; ii < 3; ii++)
-			vtri[ii] = indices[offsets[j] + ii];
+			vtri[ii] = vertices.index(conn3[ii]); // vtri[ii] = indices[offsets[j] + ii];
 		CubitFacetData * triangle = new CubitFacetData(p_list[vtri[0]],
 				p_list[vtri[1]], p_list[vtri[2]]);
 		f_list.append(triangle);
@@ -146,8 +370,8 @@ bool CamalPaveDriver::remesh(double mesh_size, int mesh_intervals,
 
 	DLIList<Surface*> surf_list;
 	CubitStatus result;
-	double angle = 0.01;// very small, negligible
-	result = fme->build_facet_surface(NULL, f_list, p_list, angle, 4, true,
+	//double angle = 0.01;// very small, negligible; is this radians or degrees?
+	result = fme->build_facet_surface(NULL, f_list, p_list, _angle, 4, true,
 			false, surf_list);
 
 	if (surf_list.size() == 0 || result != CUBIT_SUCCESS) {
@@ -204,243 +428,132 @@ bool CamalPaveDriver::remesh(double mesh_size, int mesh_intervals,
 	// print vertex positions
 	DLIList<RefVertex*> verts;
 	gqt->ref_vertices(verts);
+
 	int i;
-	for (i = verts.size(); i > 0; i--) {
-		CubitVector coords = verts.get_and_step()->coordinates();
-		PRINT_INFO("Vertex %d: %4.2f, %4.2f, %4.2f.\n", 8 - i, coords.x(),
+	for (i = 0; i < verts.size(); i++) {
+		RefVertex * vert = verts[i];
+		CubitVector coords = vert->coordinates();
+		PRINT_INFO("Vertex %d: %4.2f, %4.2f, %4.2f.\n", vert->id(), coords.x(),
 				coords.y(), coords.z());
 	}
+	// print edges and faces
 
-	RefFace *face = gqt->get_first_ref_face();
+	DLIList<RefEdge*> refEdges;
+	gqt->ref_edges(refEdges);
 
-	RefEdge *edge = gqt->get_first_ref_edge();
+	for (i = 0; i < refEdges.size(); i++) {
+		RefEdge * edg = refEdges[i];
+		PRINT_INFO("Edge %d: %d %d\n", edg->id(), edg->start_vertex()->id(), edg->end_vertex ()->id() );
+	}
 
-	DLIList<RefEdge*> ref_edges;
-	gqt->ref_edges(ref_edges);
+	DLIList<RefFace*> refFaces;
+	gqt->ref_faces(refFaces);
 
-#if CAMAL_VERSION > 500
-	CAMALSizeEval size_eval(mesh_size);
-#endif
-	// we should have only one edge and one vertex
-	// mesh it "uniformly" along parametric direction
-	for (i = ref_edges.size(); i > 0; i--) {
-		RefEdge * edgeC = ref_edges.get_and_step();
-		if (!edgeC)
-			continue;
-		double mass = edgeC->measure();
-		int numMeshEdges = (int) mass / mesh_size;
-		numMeshEdges = 2 * (numMeshEdges / 2 + 1); // to make it odd// at least 2
-		PRINT_INFO("Edge %d: length: %f .\n", i + 1, mass);
-		// how to divide the length
-		// now do a meshing on the curve, just to see how we are doing.
-		// replicate mesh_curve in camel..
-		// we will have to set it to run; we need the boundary coordinates,
-		double  start_param, end_param;
-		CubitBoolean res = edgeC->get_param_range(  start_param, end_param );
-		// at some point we will eliminate ref edge and cgm
-		SmoothCurveEval smthCrvEval(edgeC, &geom_eval, i-1);// loop index is 0 in general
-		CMLEdgeMesher cmlEdgeMesher(&smthCrvEval, CML::STANDARD);
-		cmlEdgeMesher.set_sizing_function(CML::LINEAR_SIZING);
-		int num_points_out = 0;
-		//! \note The number of points computed will be one more than the number
-		//! of edge segments in the mesh.  For closed curves, the first and last
-		//! points will be identical.
-		double curve_mesh_size = mesh_size;
+	for (i = 0; i < refFaces.size(); i++) {
+		RefFace * face = refFaces[i];
+		DLIList<  Loop * >  loop_list  ;
+		face->ordered_loops (loop_list ) ;
+		DLIList<  RefEdge  * > ordered_edge_list;
+		loop_list[0]->ordered_ref_edges  (ordered_edge_list);
 
-		CAMALSizeEval size_eval2(curve_mesh_size);
-		cmlEdgeMesher.generate_mesh_sizing(&size_eval2, num_points_out);
-		if (2 * (num_points_out / 2) == num_points_out) // we want it even nb seg, odd num_points_out
+		//DLIList<  RefVertex* >  *listV = ref_vert_loop_list[0];
+		PRINT_INFO("face %d: loop 0 size %d\n", face->id(),  ordered_edge_list.size() );
+		for (int j=0; j<ordered_edge_list.size(); j++)
 		{
-
-			// now, the number of intervals will be set to num_points_out (even)
-			int num_intervals = num_points_out;
-			cmlEdgeMesher.generate_mesh_uniform(num_intervals, num_points_out);
-			//curve_mesh_size = curve_mesh_size*((3*num_points_out-1.0)/3.0/num_points_out);
+			PRINT_INFO("  %d", ordered_edge_list[j]->id() );
 		}
-
-		// we are now settled on an odd number of edge segments;
-		// get them, and put them in the bdy_loops...
-		bdy_coords.resize(num_points_out * 3);// we allocate more, but we will use one les
-		bool stat = cmlEdgeMesher.get_mesh(num_points_out, &bdy_coords[0]);
-		// create the loops and id
-		loops.resize(num_points_out - 1);
-		loop_sizes.resize(1);
-		loop_sizes[0] = num_points_out - 1;
-		loops.resize(num_points_out - 1);
-		for (int j = 0; j < num_points_out - 1; j++)
-			loops[j] = j;// simple connectivity for the loop
-		// do something else;  use position from u
-		/*
-		double delta_u = (end_param-start_param)/(num_points_out - 1);
-		CubitVector output_position;
-		for (int i=0; i<num_points_out-1; i++)
-		{
-			double u_value = start_param + i*delta_u;
-			edgeC->position_from_u ( u_value,
-					output_position);
-			output_position.get_xyz( &bdy_coords[i*3]);
-		}*/
-
+		PRINT_INFO("\n");
 	}
-
-	// end copy from facets
-	// so at this moment we have the edge, and the face;
-	// we need to mesh the ref edges first
-#if 0
-	success = CAMAL_bdy_loops_coords(cmel, gentity, loops, loop_sizes,
-			bdy_verts, bdy_coords);
-#endif 
-
-	if (!success) {
-		std::cerr << "Couldn't get bounding mesh for surface." << std::endl;
-		return success;
-	}
-
-	if (mesh_size < 0.) {
-		double tot_length = 0.;
-		unsigned int start_current_loop = 0;
-		for (unsigned int k = 0; k < loop_sizes.size(); k++) {
-			// for each loop, compute the edge lengths individually
-			int current_loop_size = loop_sizes[k];
-			for (unsigned int i = 0; i < current_loop_size; i++) {
-				unsigned int i1 = loops[start_current_loop + i];
-				unsigned int i2 = loops[start_current_loop + (i + 1)
-						% current_loop_size];
-				tot_length += sqrt((bdy_coords[3 * i1] - bdy_coords[3 * i2])
-						* (bdy_coords[3 * i1] - bdy_coords[3 * i2])
-						+ (bdy_coords[3 * i1 + 1] - bdy_coords[3 * i2 + 1])
-								* (bdy_coords[3 * i1 + 1] - bdy_coords[3 * i2
-										+ 1]) + (bdy_coords[3 * i1 + 2]
-						- bdy_coords[3 * i2 + 2]) * (bdy_coords[3 * i1 + 2]
-						- bdy_coords[3 * i2 + 2]));
-			}
-			start_current_loop += current_loop_size;
-		}
-		mesh_size = tot_length / start_current_loop;
-		geom_eval.set_mesh_size(mesh_size);
-	}
-
-	if (debugLocal) {
-		std::ofstream oFile("points.Point3D", std::ios::out);
-		if (!oFile)
-			return false;
-		oFile.precision(12);
-		std::cout << "Surface " << " " // cmel->get_gentity_id(gentity)
-				<< ", mesh_size = " << mesh_size << ", boundary mesh: "
-				<< std::endl;
-		oFile<< "# x y z" << std::endl;
-		std::cout << bdy_coords.size() / 3 - 1 << "  " << loop_sizes.size()
-				<< std::endl;
-		for (unsigned int i = 0; i < bdy_coords.size() / 3 - 1; i++)
-		{
-			std::cout << bdy_coords[3 * i] << "  " << bdy_coords[3 * i + 1]
-					<< "  " << bdy_coords[3 * i + 2] << std::endl;
-			oFile << bdy_coords[3 * i] << "  " << bdy_coords[3 * i + 1]
-								<< "  " << bdy_coords[3 * i + 2] << std::endl;
-		}
-		//oFile
-		for (std::vector<int>::iterator vit = loop_sizes.begin(); vit
-				!= loop_sizes.end(); vit++)
-			std::cout << *vit << "  ";
-
-		std::cout << std::endl;
-		for (std::vector<int>::iterator vit = loops.begin(); vit != loops.end(); vit++)
-			std::cout << *vit << std::endl;
-	}
-
-	// pass to CAMAL
-	geom_eval.set_ref_face(face);
-	CMLPaver pave_mesher(&geom_eval, &size_eval);
-
-	// set only num_points_out -1 , because the last one is repeated
-	success = pave_mesher.set_boundary_mesh(bdy_coords.size() / 3 - 1,
-			&bdy_coords[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
-	if (!success) {
-		std::cerr << "Failed setting boundary mesh" << std::endl;
-		return success;
-	}
-
-	pave_mesher.set_sizing_function(CML::LINEAR_SIZING);
-
-	// generate the mesh
-	int num_quads;
-	success = pave_mesher.generate_mesh(new_points, num_quads);
-	if (!success) {
-		std::cerr << "Failed generating mesh" << std::endl;
-		//return success;
-	}
-
-	std::cout << "Meshed surface with " << new_points << " new vertices and "
-			<< num_quads << " quadrilaterals." << std::endl;
-
-	// get the generated mesh
-	//bdy_coords.resize(3*(bdy_verts.size() + new_points));
-	std::vector<double> new_coords;
-	new_coords.resize(3 * new_points);
-	connect.resize(4 * num_quads);
-	success = pave_mesher.get_mesh(new_points, &new_coords[0], num_quads,
-			&connect[0]);
-	if (!success) {
-		std::cerr << "Failed get generated mesh" << std::endl;
-		//return success;
-	}
-
-	// we assume that the first points from pave mesher are the boundary vertices
-	// (we should verify that, actually)
-	// maybe for the time being, create the whole set again?
-	// should we worry about the boundary when we do not know if it fails or not?
-
-	//etop = iMesh_QUADRILATERAL;
-	// add to a new set the elements created, anyway, just to see them in visit?
-	std::vector<iBase_EntityHandle> qverts;
-	qverts.resize (new_points);
-	iBase_EntityHandle *verts_ptr = &qverts[0];
-	int new_verts_size = new_points, new_verts_alloc =
-			new_verts_size;
-
-	// we recreate all the vertices, just because; the original ones will not be used, but this is
-	// life; maybe later we will just create the truly new vertices only, and assume that they are
-	// exactly at the beginning of the
-	iMesh_createVtxArr(_meshOutface, new_verts_size, iBase_INTERLEAVED,
-			&new_coords[0], 3 * new_verts_alloc, &verts_ptr,
-			&new_verts_alloc, &new_verts_size, &err);
-	ERRORR("Couldn't create new vertices.",false);
-	iBase_EntitySetHandle outset2;
-	iMesh_createEntSet(_meshOutface, false, &outset2, &err);
-	iMesh_addEntArrToSet(_meshOutface, &qverts[0], qverts.size(), outset2,
-			&err);
-	// create the quads
-	// start copy
-	  // create them
-	 // assemble connectivity of new elements
-	  std::vector<iBase_EntityHandle> new_connect(connect.size());
-	  //int old_verts = bdy_verts.size();
-	  for (unsigned int i = 0; i < connect.size(); i++)
-	  //{
-	    //if (connect[i] >= old_verts)
-	      new_connect[i] = qverts[connect[i]];
-	    //else
-	    //  new_connect[i] = bdy_verts[connect[i]];
-	  //}
-	  int *status = NULL;
-	  int status_size = 0, status_alloc = 0;
-	  iBase_EntityHandle *new_ments = NULL;
-	  int new_ments_size = 0, new_ments_alloc = 0;
-	  iMesh_createEntArr(_meshOutface, iMesh_QUADRILATERAL, &new_connect[0], connect.size(),
-	                     &new_ments, &new_ments_alloc, &new_ments_size,
-	                     &status, &status_alloc, &status_size,
-	                     &err);
-	  ERRORR("Couldn't create new elements.", false);
-
-	    // put them into the new_entities vector
-	  //new_entities.resize(new_ments_size);
-	  //std::copy(new_ments, new_ments+new_ments_size, &new_entities[0]);
-
-	    // add elements to the geometric owner's set
-	  iMesh_addEntArrToSet(_meshOutface, new_ments, new_ments_size,
-			  outset2, &err);
-	// end copy
-
 	return true;
 }
+#endif
 
+void CamalPaveDriver::mesh_vertices()
+{
+	//
+	int numVertices = _mapVertices.size();
+	for (int i=0; i<numVertices; i++)
+	{
+		/*if (_smthVertex[i]->isMeshed())
+			continue;*/
+		_smthVertex[i]-> create_mesh_vertex();
+	}
+	return;
+} //CamalPaveDriver::mesh_vertices()
+
+void CamalPaveDriver::mesh_curves()
+{
+	// hmmm
+	// at this point, mesh counts are established;
+	// we need to call meshers for each edge
+	int numCurves = _mapCurves.size();
+	int num_points;
+	for (int i=0; i<numCurves; i++)
+		_smthCurve[i]->create_mesh_edges(_mapVertices);
+	return;
+}// CamalPaveDriver::mesh_curves()
+
+void CamalPaveDriver::mesh_surfaces()
+{
+	int numSurfaces = _mapSurfaces.size();
+	for (int i=0; i<numSurfaces; i++)
+	{
+		_smthFace[i]->mesh( _mesh_size, _mapCurves);
+	}
+	return ;
+}// CamalPaveDriver::mesh_surfaces()
+
+void CamalPaveDriver::establish_mesh_curve_count()
+{
+	// hmmm
+	// where do we start?
+	// probably get the Edge Mesher from Camal
+	// determine edge loops in the faces
+
+	// first, estimate mesh count on every edge
+	int numCurves = _mapCurves.size();
+	int num_points;
+	for (int i=0; i<numCurves; i++)
+		_smthCurve[i]->estimate_mesh_count(this->_mesh_size, num_points);
+
+	// check if the total mesh count is even for each face
+	int numSurfaces = _mapSurfaces.size();
+	int problem = 0;
+	for (int i=0; i<numSurfaces; i++)
+	{
+		int mesh_count = 0;
+
+		MBErrorCode rval = _smthFace[i]->mesh_count_total(_mapCurves, mesh_count);
+		std::cout<<"face " << i << " boundary mesh count " << mesh_count<< std::endl;
+		if (mesh_count%2 !=0)
+		{
+			// problem, redistribute mesh count on
+
+			problem = 1;
+			std::cout<<"        problem !!! odd boundary"<< std::endl;
+		}
+	}
+	if (problem)
+	{
+		// need to do something, maybe even set everything to even
+		std::cout<<"Set all to even \n";
+		for (int i=0; i<numSurfaces; i++)
+			_smthFace[i]->evenify(_mapCurves);
+		return;
+	}
+	return;
+
+}//establish_mesh_curve_count();
+
+MBErrorCode CamalPaveDriver::find_face_loops()
+{
+	//
+	int numSurfaces = _mapSurfaces.size();
+	for (int i=0; i<numSurfaces; i++)
+	{
+		MBErrorCode rval = this->_smthFace[i]->find_loops();
+		if (MB_SUCCESS!=rval)
+			return rval;
+	}
+	return MB_SUCCESS;
+}

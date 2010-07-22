@@ -1,15 +1,29 @@
 #include <iostream>
-#include "SmoothMeshEval.hpp"
+#include <fstream>
+#include "SmoothFaceEval.hpp"
+#ifdef USE_CGM
 #include "RefFace.hpp"
+#endif
+#include "SmoothCurveEval.hpp"
+
+#include "CMLPaver.hpp"
+#include "CAMALSizeEval.hpp"
+
 //#include "moab/GeomTopoTool.hpp"
 
 #include <algorithm>
 #include <iomanip>
 
+#include "assert.h"
 // included in the header now
 // #include "MBRange.hpp"
 // #include "MBCartVect.hpp"
 
+// some defines from CUBIT
+#define GEOMETRY_RESABS 1.e-6
+#define CUBIT_DBL_MAX 1.e+30
+//#define DBL_EPSILON  1.e-8
+#include <float.h>
 
 bool within_tolerance(MBCartVect & p1, MBCartVect & p2,
 		const double & tolerance) {
@@ -31,39 +45,54 @@ int numAdjTriInSet(MBInterface * mb, MBEntityHandle startEdge,
 	}
 	return nbInSet;
 }
+
+MBErrorCode getFaceSenseFromList(MBEntityHandle face, std::vector<
+		MBEntityHandle> & faces, std::vector<int> & senses, int & sense) {
+	for (int i = 0; i < faces.size(); i++) {
+		if (face == faces[i]) {
+			sense = senses[i];
+			return MB_SUCCESS;
+		}
+	}
+	return MB_FAILURE;// face not found in list
+}
 extern bool debug_surf_eval;
 extern bool use_cgm;
 
-void SmoothMeshEval::set_mesh_size(double tmp_size) {
+void SmoothFaceEval::set_mesh_size(double tmp_size) {
 	if (debug_surf_eval) {
 		std::cout << "set_mesh_size called." << std::endl;
 	}
 	meshSize = tmp_size;
 }
 
-double SmoothMeshEval::get_mesh_size() {
+double SmoothFaceEval::get_mesh_size() {
 	if (debug_surf_eval) {
 		std::cout << "get_mesh_size called." << std::endl;
 	}
 	return meshSize;
 }
 
-void SmoothMeshEval::set_ref_face(RefFace * refFace) {
+/*void SmoothFaceEval::set_ref_face(RefFace * refFace) {
 	_smooth_face = refFace;
-}
-SmoothMeshEval::SmoothMeshEval(iMesh_Instance meshIface,
-		iBase_EntitySetHandle surface_set) :
-	_meshIface(meshIface), _surf_set(surface_set) {
-	_smooth_face = NULL;
+}*/
+SmoothFaceEval::SmoothFaceEval(MBInterface * mb, MBEntityHandle surface_set,
+		MBInterface * mbo, moab::GeomTopoTool * gTool) :
+	SmoothBase(mb, surface_set, mbo), _my_geomTopoTool(gTool) {
+	//_smooth_face = NULL;
+	_mbOut->create_meshset(MESHSET_SET, _oSet); //will contain the
+	// get also the obb_root
+	if (_my_geomTopoTool)
+		_my_geomTopoTool->get_root(this->_set, _obb_root);
 }
 
-SmoothMeshEval::~SmoothMeshEval() {
+SmoothFaceEval::~SmoothFaceEval() {
 }
 
-double SmoothMeshEval::area() {
+double SmoothFaceEval::area() {
 	// find the area of this entity
-	assert(_smooth_face);
-	double area1 = _smooth_face->area();
+	//assert(_smooth_face);
+	//double area1 = _smooth_face->area();
 	double totArea = 0.;
 	for (MBRange::iterator it = _triangles.begin(); it != _triangles.end(); it++) {
 		MBEntityHandle tria = *it;
@@ -87,13 +116,8 @@ double SmoothMeshEval::area() {
 	return totArea;
 }
 
-void SmoothMeshEval::bounding_box(double box_min[3], double box_max[3]) {
-	assert(_smooth_face);
-	CubitBox box = _smooth_face->bounding_box();
-	CubitVector Minim = box.minimum();
-	CubitVector Maxim = box.maximum();
-	Minim.get_xyz(box_min);
-	Maxim.get_xyz(box_max);
+void SmoothFaceEval::bounding_box(double box_min[3], double box_max[3]) {
+
 	for (int i = 0; i < 3; i++) {
 		box_min[i] = _minim[i];
 		box_max[i] = _maxim[i];
@@ -101,58 +125,33 @@ void SmoothMeshEval::bounding_box(double box_min[3], double box_max[3]) {
 	// _minim, _maxim
 }
 
-void SmoothMeshEval::move_to_surface(double& x, double& y, double& z) {
-	assert(_smooth_face);
-	CubitVector location(x, y, z);
+void SmoothFaceEval::move_to_surface(double& x, double& y, double& z) {
+
 	MBCartVect loc2(x, y, z);
 	bool trim = false;// is it needed?
 	bool outside = true;
 	MBCartVect closestPoint;
-	if (use_cgm) {
-		_smooth_face->move_to_surface(location);
-		location.get_xyz(x, y, z);
-	} else {
-		// try our luck
-		// not interested in normal
+
 		MBErrorCode rval = project_to_facets_main(loc2, trim, outside,
 				&closestPoint, NULL);
 		x = closestPoint[0];
 		y = closestPoint[1];
 		z = closestPoint[2];
-	}
-#if 0
 
-	int result;
-	double ori[3] = {x, y, z};
-	iGeom_getEntClosestPt(geomIface, myEnt, x, y, z, &x, &y, &z, &result);
-	if (iBase_SUCCESS != result) {
-		std::cerr << "Trouble getting closest point on gentity." << std::endl;
-	}
-	if (debug_surf_eval) {
-		std::cout << "myEnt=" << myEnt << " is moved from "
-		<< ori[0] << "," << ori[1] << "," << ori[2] << " to "
-		<< x << "," << y << "," << z << std::endl;
-	}
-#endif
 }
 
-void SmoothMeshEval::move_to_surface(double& x, double& y, double& z,
+void SmoothFaceEval::move_to_surface(double& x, double& y, double& z,
 		double& u_guess, double& v_guess) {
 	if (debug_surf_eval) {
 		std::cout << "move_to_surface called." << std::endl;
 	}
 }
 
-bool SmoothMeshEval::normal_at(double x, double y, double z, double& nx,
+bool SmoothFaceEval::normal_at(double x, double y, double z, double& nx,
 		double& ny, double& nz) {
-	// normal at
-	assert(_smooth_face);
-	CubitVector location(x, y, z);
+
 	MBCartVect loc2(x, y, z);
-	if (use_cgm) {
-		CubitVector v = _smooth_face->normal_at(location);
-		v.get_xyz(nx, ny, nz);
-	} else { // try our luck
+
 		bool trim = false;// is it needed?
 		bool outside = true;
 		//MBCartVect closestPoint;// not needed
@@ -163,12 +162,11 @@ bool SmoothMeshEval::normal_at(double x, double y, double z, double& nx,
 		nx = normal[0];
 		ny = normal[1];
 		nz = normal[2];
-	}
-	// compare now the normals
+
 	return true;
 }
 
-bool SmoothMeshEval::normal_at(double x, double y, double z, double& u_guess,
+bool SmoothFaceEval::normal_at(double x, double y, double z, double& u_guess,
 		double& v_guess, double& nx, double& ny, double& nz) {
 	if (debug_surf_eval) {
 		std::cout << "normal_at called." << std::endl;
@@ -176,44 +174,44 @@ bool SmoothMeshEval::normal_at(double x, double y, double z, double& u_guess,
 	return true;
 }
 
-bool SmoothMeshEval::is_planar() {
+bool SmoothFaceEval::is_planar() {
 	if (debug_surf_eval) {
 		std::cout << "is_planar called." << std::endl;
 	}
 	return false;
 }
 
-bool SmoothMeshEval::is_parametric() {
+bool SmoothFaceEval::is_parametric() {
 	if (debug_surf_eval) {
 		std::cout << "is_parametric called." << std::endl;
 	}
 	return false;
 }
 
-bool SmoothMeshEval::is_periodic_in_u(double& u_period) {
+bool SmoothFaceEval::is_periodic_in_u(double& u_period) {
 	if (debug_surf_eval) {
 		std::cout << "is_periodic_in_u called." << std::endl;
 	}
 	return false;
 }
 
-bool SmoothMeshEval::is_periodic_in_v(double& v_period) {
+bool SmoothFaceEval::is_periodic_in_v(double& v_period) {
 	if (debug_surf_eval) {
 		std::cout << "is_periodic_in_v called." << std::endl;
 	}
 	return false;
 }
 
-void SmoothMeshEval::get_param_range_u(double& u_low, double& u_high) {
+void SmoothFaceEval::get_param_range_u(double& u_low, double& u_high) {
 	if (debug_surf_eval) {
 		std::cout << "is_param_range_u called." << std::endl;
 	}
 }
 
-void SmoothMeshEval::get_param_range_v(double& v_low, double& v_high) {
+void SmoothFaceEval::get_param_range_v(double& v_low, double& v_high) {
 }
 
-bool SmoothMeshEval::uv_from_position(double x, double y, double z, double& u,
+bool SmoothFaceEval::uv_from_position(double x, double y, double z, double& u,
 		double& v)
 
 {
@@ -223,7 +221,7 @@ bool SmoothMeshEval::uv_from_position(double x, double y, double z, double& u,
 	return true;
 }
 
-bool SmoothMeshEval::uv_from_position(double x, double y, double z, double& u,
+bool SmoothFaceEval::uv_from_position(double x, double y, double z, double& u,
 		double& v, double& cx, double& cy, double& cz) {
 	if (debug_surf_eval) {
 		std::cout << "uv_from_position." << std::endl;
@@ -231,210 +229,21 @@ bool SmoothMeshEval::uv_from_position(double x, double y, double z, double& u,
 	return true;
 }
 
-void SmoothMeshEval::position_from_uv(double u, double v, double& x, double& y,
+void SmoothFaceEval::position_from_uv(double u, double v, double& x, double& y,
 		double& z) {
 	if (debug_surf_eval) {
 		std::cout << "position_from_uv." << std::endl;
 	}
 }
 
-void SmoothMeshEval::distortion_at_uv(double u, double v, double du[3],
+void SmoothFaceEval::distortion_at_uv(double u, double v, double du[3],
 		double dv[3]) {
 	if (debug_surf_eval) {
 		std::cout << "distortion_at_uv." << std::endl;
 	}
 }
 
-int SmoothMeshEval::Initialize() {
-	// first get the MOAB set, create the loops, etc.
-	// first, we need to delete all the edges in MOAB, and create new ones only for
-	// the set we are interested in; in this way, the orientation of the edges will be fine,
-	// counterclockwise; also, check for
-	_mb = (MBInterface *) _meshIface;
-	_mbset = (MBEntityHandle) this->_surf_set;
-	// get all the edges from this subset
-	if (NULL == _mb)
-		return 1; //fail
-	_triangles.clear();
-	MBErrorCode rval = _mb->get_entities_by_type(_mbset, MBTRI, _triangles);
-	if (MB_SUCCESS != rval)
-		return 1;
-	// get a new range of edges, and decide the loops from here
-	_edges.clear();
-	rval = _mb-> get_adjacencies(_triangles, 1, true, _edges,
-			MBInterface::UNION);
-
-	rval = _mb->get_adjacencies(_triangles, 0, false, _nodes,
-			MBInterface::UNION);
-
-	// mark all edges as unused yet, for the loop creation
-	// tag_create( "my_tag", sizeof(double), MB_TAG_DENSE, tag_handle, &value );
-	unsigned char value = 0; // default value is "not used"=0 for the tag
-	// unsigned char def_data_bit = 1;// valid by default
-	// rval = mb->tag_create("valid", 1, MB_TAG_BIT, validTag, &def_data_bit);
-	rval = _mb->tag_create("MARKER", 1, MB_TAG_BIT, _markTag, &value);
-	// now loop over the edges and create boundary loops (maybe one only)
-	// how do we make sure that the loops are ccw?
-	// we don't; we just assume that the edges on the boundary will be created in ccw manner
-	// by MOAB
-
-	int currentLoopIndex = -1;
-	//_loopEnds.push_back(0);// the first loop (current), starts at 0
-	for (MBRange::iterator it = _edges.begin(); it != _edges.end(); it++) {
-		//
-		MBEntityHandle currentEdge = *it;
-		unsigned char tagVal = 0;
-		_mb->tag_get_data(_markTag, &currentEdge, 1, &tagVal);
-		if (tagVal)
-			continue; // already used
-		// see if it was not marked already
-		// determine number of triangles that are part of the set
-		// if there is only one triangle, it is a boundary edge
-		int nbAdj = numAdjTriInSet(_mb, currentEdge, _mbset);
-		if (nbAdj == 1) {
-			// start a loop at this edge because it was not marked already
-			unsigned char used = 1;
-			_mb->tag_set_data(_markTag, &currentEdge, 1, &used);// so it will not be part of
-			// other loops in this face
-			currentLoopIndex++; // the first time it will be 0;
-			_loopEnds.push_back(currentLoopIndex);
-			_loopLengths.push_back(0);
-			_loopEnds[currentLoopIndex]++;
-			_loops.push_back(currentEdge);
-			_senses.push_back(1); // forward
-			const MBEntityHandle * conn2;
-			int nnodes;
-			_mb->get_connectivity(currentEdge, conn2, nnodes);
-			MBEntityHandle startNode = conn2[0];
-			MBEntityHandle currentNode = conn2[1];
-			MBCartVect vN[2];
-			_mb->get_coords(conn2, 2, (double*) &vN[0]);
-			MBCartVect P01(vN[1] - vN[0]);
-			double len1 = P01.length();
-			_loopLengths[currentLoopIndex] = len1;
-			_fractions.push_back(len1);
-			int i = _loopEnds[currentLoopIndex] - 1;// the index in the loop
-
-			while (currentNode != startNode) {
-				// find the next edge in the loop, with adjacency 1
-				std::vector<MBEntityHandle> edgesAdj;
-				rval = _mb->get_adjacencies(&currentNode, 1, 1, false,
-						edgesAdj, MBInterface::UNION);
-				for (int j = 0; j < edgesAdj.size(); j++) {
-					MBEntityHandle edg = edgesAdj[j];
-					_mb->tag_get_data(_markTag, &edg, 1, &tagVal);
-					if (tagVal)
-						continue; // the edge was already marked, although
-					// it could be only the current edge
-					if (edg == currentEdge)
-						continue; // we should get rid of the tag maybe
-
-					int nb = numAdjTriInSet(_mb, edg, _mbset);
-					if (nb > 1)
-						continue;
-					// if we get here, this is what we want
-					_mb->get_connectivity(edg, conn2, nnodes);
-					char senseC = 0;
-					if (conn2[0] == currentNode) {
-						currentNode = conn2[1]; // next node
-						senseC = 1; // forward
-					} else {
-						currentNode = conn2[0]; // next node
-						senseC = 2; // reverse
-					}
-					_loops.push_back(edg);
-					_loopEnds[currentLoopIndex]++;
-					_mb->get_coords(conn2, 2, (double*) &vN[0]);
-					MBCartVect P01(vN[1] - vN[0]);
-					len1 = P01.length();
-					// increase the total length
-					_loopLengths[currentLoopIndex] += len1;
-					double lastLength = _fractions[i];
-					_fractions.push_back(lastLength + len1);
-					i++; // increment the index in the loop for next accumulated length
-					_senses.push_back(senseC);
-					currentEdge = edg;
-					_mb->tag_set_data(_markTag, &currentEdge, 1, &used);// so it will not be part of
-					// other loops in this face
-					break; // we should advance from the for{} to another point
-				}
-				// connected to current vertex, unmarked
-			}
-			// now we need to modify _fractions, to divide by the length of the loop
-			int startCurrentLoop = (currentLoopIndex == 0) ? 0
-					: _loopEnds[currentLoopIndex - 1];
-			int endCurrentLoop = _loopEnds[currentLoopIndex];
-			assert(_loopLengths[currentLoopIndex] > 0);
-			for (int j = startCurrentLoop; j < endCurrentLoop; j++) {
-				_fractions[j] /= _loopLengths[currentLoopIndex];
-			}
-		}
-
-	}
-	// print the loops size and some other stuff
-	if (debug_surf_eval) {
-		std::cout << " _loops.size() " << _loops.size() << std::endl;
-		int startLoop = 0;
-		for (int i = 0; i < _loopEnds.size(); i++) {
-			int endLoop = _loopEnds[i];
-			std::cout << "loop no " << i << "  start loop " << startLoop
-					<< " end loop " << endLoop << std::endl;
-			for (int j = startLoop; j < endLoop; j++) {
-				MBEntityHandle edgeH = _loops[j];
-				const MBEntityHandle * conn2;
-				int nnodes;
-				_mb->get_connectivity(edgeH, conn2, nnodes);
-				std::cout << " index " << j << " Edge id "
-						<< _mb->id_from_handle(edgeH) << " sense "
-						<< (int) _senses[j] << " nodes: "
-						<< _mb->id_from_handle(conn2[0]) << " "
-						<< _mb->id_from_handle(conn2[1]) << std::endl;
-			}
-			startLoop = endLoop;
-		}
-	}
-	// so we have now the boundary edges in order.
-	// need to set the smooth facets; start with boundary edges
-	// start with initialization of the gradient (normal field)
-
-	init_gradient();
-
-	// all the tags on the boundary have now _markTag 1
-	// we will use that information when we compute the tangents for each edge
-
-	// init edge control points
-	// some are on the boundary, some are interior, with 2 faces adjacent
-	// setup first the boundary edges, and establish their control points
-
-	// we have the loops, and we know that there is only one boundary
-
-	// at some point we should put this back into the game
-	double min_dot = -1.; // very small for the time being , allow every angle
-	compute_tangents_for_each_edge();
-
-	compute_control_points_on_edges(min_dot);
-
-	// initialize bounding box limits
-	MBCartVect vert1;
-	MBEntityHandle v1 = *(_nodes.begin());// first vertex
-	_mb->get_coords(&v1, 1, (double*) &vert1);
-	_minim = vert1;
-	_maxim = vert1;
-	// compute the internal control points on each facet, from
-	// edge control points
-
-	// also adjust the bounding box minim and maxim
-	compute_internal_control_points_on_facets(min_dot);
-
-	// initialize geom topo tool, and construct obb tree
-	initialize_geom_topo_tool();
-
-	if (debug_surf_eval) {
-		DumpModelControlPoints();
-	}
-	return 0; // success
-}
-MBErrorCode SmoothMeshEval::initialize_geom_topo_tool() {
+MBErrorCode SmoothFaceEval::initialize_geom_topo_tool() {
 	_my_geomTopoTool = new moab::GeomTopoTool(_mb);
 	// construct the obb tree!!
 	MBErrorCode rval = _my_geomTopoTool->find_geomsets(_gsets);
@@ -449,30 +258,75 @@ MBErrorCode SmoothMeshEval::initialize_geom_topo_tool() {
 	return MB_SUCCESS;
 }
 
-MBErrorCode SmoothMeshEval::compute_control_points_on_edges(double min_dot) {
-	double defCtrlPoints[9] = { 0., 0., 0., 0., 0., 0., 0., 0., 0. };
-	MBErrorCode rval = _mb->tag_create("CONTROLEDGE", 9 * sizeof(double),
-			MB_TAG_DENSE, _edgeCtrlTag, &defCtrlPoints);
-	if (MB_SUCCESS != rval)
-		return MB_FAILURE;
-	// now, compute control points for all edges
+MBErrorCode SmoothFaceEval::compute_control_points_on_edges(double min_dot,
+		MBTag edgeCtrlTag, MBTag markTag) {
+	// this will be done
+	/*double defCtrlPoints[9] = { 0., 0., 0., 0., 0., 0., 0., 0., 0. };
+	 MBErrorCode rval = _mb->tag_create("CONTROLEDGE", 9 * sizeof(double),
+	 MB_TAG_DENSE, _edgeCtrlTag, &defCtrlPoints);
+	 if (MB_SUCCESS != rval)
+	 return MB_FAILURE;*/
+	// those tags are now created in driver, but the local tag is still saved ; a little bit of waste
+	_edgeCtrlTag = edgeCtrlTag;
+	_markTag = markTag;
+
+	// now, compute control points for all edges that are not marked already (they are no on the boundary!)
 	for (MBRange::iterator it = _edges.begin(); it != _edges.end(); it++) {
 		MBEntityHandle edg = *it;
+		// is the edge marked? already computed
+		unsigned char tagVal = 0;
+		_mb->tag_get_data(_markTag, &edg, 1, &tagVal);
+		if (tagVal)
+			continue;
 		//double min_dot;
 		init_bezier_edge(edg, min_dot);
-
+		tagVal = 1;
+		_mb->tag_set_data(_markTag, &edg, 1, &tagVal);
 	}
 	return MB_SUCCESS;
 }
 
-int SmoothMeshEval::init_gradient() {
+int SmoothFaceEval::init_gradient() {
 	// first, create a Tag for gradient (or normal)
 	// loop over all triangles in set, and modify the normals according to the angle as weight
+	// get all the edges from this subset
+	if (NULL == _mb)
+		return 1; //fail
+	_triangles.clear();
+	MBErrorCode rval = _mb->get_entities_by_type(_set, MBTRI, _triangles);
+	if (MB_SUCCESS != rval)
+		return 1;
+	// get a new range of edges, and decide the loops from here
+	_edges.clear();
+	rval = _mb-> get_adjacencies(_triangles, 1, true, _edges,
+			MBInterface::UNION);
+	assert(rval == MB_SUCCESS);
+
+	rval = _mb->get_adjacencies(_triangles, 0, false, _nodes,
+			MBInterface::UNION);
+	assert(rval == MB_SUCCESS);
+
+	// initialize bounding box limits
+	MBCartVect vert1;
+	MBEntityHandle v1 = _nodes[0];// first vertex
+	_mb->get_coords(&v1, 1, (double*) &vert1);
+	_minim = vert1;
+	_maxim = vert1;
+
 	double defNormal[] = { 0., 0., 0. };
-	MBErrorCode rval = _mb->tag_create("GRADIENT", 3 * sizeof(double),
-			MB_TAG_DENSE, _gradientTag, &defNormal);
+	// look for a tag name here that is definitely unique. We do not want the tags to interfere with each other
+	// this normal will be for each node in a face
+	// some nodes have multiple normals, if they are at the feature edges
+	unsigned long setId = _mb->id_from_handle(_set);
+	char name[50] = { 0 };
+	sprintf(name, "GRADIENT%ld", setId);// name should be something like GRADIENT29, where 29 is the set ID of the face
+	rval = _mb->tag_create(name, 3 * sizeof(double), MB_TAG_DENSE,
+			_gradientTag, &defNormal);
 
 	double defPlane[4] = { 0., 0., 1., 0. };
+	// also define a plane tag ; this will be for each triangle
+	char namePlaneTag[50] = { 0 };
+	sprintf(namePlaneTag, "PLANE%ld", setId);
 	rval = _mb->tag_create("PLANE", 4 * sizeof(double), MB_TAG_DENSE,
 			_planeTag, &defPlane);
 	// the fourth double is for weight, accumulated at each vertex so far
@@ -529,16 +383,17 @@ int SmoothMeshEval::init_gradient() {
 
 	}
 	// normalize the gradients at each node; maybe not needed here?
-	// no we will do it, it is important
+	// no, we will do it, it is important
 	int numNodes = _nodes.size();
 	double * normalVal = new double[3 * numNodes];
-	_mb->tag_get_data(_gradientTag, _nodes, normalVal);
+	_mb->tag_get_data(_gradientTag, _nodes, normalVal);// get all the normal values at the _nodes
 	for (int i = 0; i < numNodes; i++) {
 		MBCartVect p1(&normalVal[3 * i]);
 		p1.normalize();
 		p1.get(&normalVal[3 * i]);
 	}
 
+	// reset the normal values after normalization
 	_mb->tag_set_data(_gradientTag, _nodes, normalVal);
 	// print the loops size and some other stuff
 	if (debug_surf_eval) {
@@ -550,8 +405,10 @@ int SmoothMeshEval::init_gradient() {
 					<< normalVal[3 * i] << " " << normalVal[3 * i + 1] << " "
 					<< normalVal[3 * i + 2] << std::endl;
 		}
-		delete[] normalVal; // free this memory
 	}
+
+	delete[] normalVal;
+
 	return 0;
 }
 
@@ -563,25 +420,12 @@ int SmoothMeshEval::init_gradient() {
 //Member Type:  PRIVATE
 //Description:  compute the control points for an edge
 //===========================================================================
-MBErrorCode SmoothMeshEval::init_bezier_edge(MBEntityHandle edge,
+MBErrorCode SmoothFaceEval::init_bezier_edge(MBEntityHandle edge,
 		double min_dot) {
 	// min dot was used for angle here
 	//int stat = 0; // CUBIT_SUCCESS;
 	// all boundaries will be simple, initially
 	// we may complicate them afterwards
-#if 0
-	TDFacetBoundaryEdge *td_bfe =
-	TDFacetBoundaryEdge::get_facet_boundary_edge( edge );
-	if (td_bfe)
-	{
-		stat = td_bfe->init_control_points( min_dot );
-		if (stat != CUBIT_SUCCESS)
-		return stat;
-		stat = td_bfe->merge_control_points();
-	}
-	else
-	{
-#endif
 
 	MBCartVect ctrl_pts[3];
 	int nnodes;
@@ -604,15 +448,9 @@ MBErrorCode SmoothMeshEval::init_bezier_edge(MBEntityHandle edge,
 	rval = _mb->tag_get_data(_gradientTag, conn2, 2, (double*) &N[0]);
 	assert(rval == MB_SUCCESS);
 
-	//MBCartVect N0(&normalVec[0]);
-	//MBCartVect N3(&normalVec[3]);
+
 	MBCartVect T[2]; // T0, T3
-	//if (edge->num_adj_facets() <= 1) {
-	//stat = compute_curve_tangent(edge, min_dot, T0, T3);
-	//  if (stat != CUBIT_SUCCESS)
-	//	return stat;
-	//} else {
-	//}
+
 	rval = _mb->tag_get_data(_tangentsTag, &edge, 1, &T[0]);
 	assert(rval == MB_SUCCESS);
 
@@ -620,8 +458,6 @@ MBErrorCode SmoothMeshEval::init_bezier_edge(MBEntityHandle edge,
 			ctrl_pts);
 	assert(rval == MB_SUCCESS);
 
-	// set  a tag with control points on the edge
-	//edge->control_points(ctrl_pts, 4);
 	rval = _mb->tag_set_data(_edgeCtrlTag, &edge, 1, &ctrl_pts[0]);
 	assert(rval == MB_SUCCESS);
 
@@ -636,113 +472,32 @@ MBErrorCode SmoothMeshEval::init_bezier_edge(MBEntityHandle edge,
 
 	return MB_SUCCESS;
 }
-// end copy
 
-MBErrorCode SmoothMeshEval::compute_tangents_for_each_edge()
+MBErrorCode SmoothFaceEval::compute_tangents_for_each_edge()
 // they will be used for control points
 {
 	double defTangents[6] = { 0., 0., 0., 0., 0., 0. };
 	MBErrorCode rval = _mb->tag_create("TANGENTS", 6 * sizeof(double),
 			MB_TAG_DENSE, _tangentsTag, &defTangents);
-	if (MB_SUCCESS != rval)
+	if (MB_SUCCESS != rval && rval != MB_ALREADY_ALLOCATED)
 		return MB_FAILURE;
-	// for each edge that is marked
-	// first, edges in a loop, they are marked also
-	int startLoop = 0;
-	for (int i = 0; i < _loopEnds.size(); i++) {
-		int endLoop = _loopEnds[i];
-		std::cout << "loop no " << i << "  start loop " << startLoop
-				<< " end loop " << endLoop << std::endl;
-		// we will look at next 2 edges (past the end too)
-		// we also assume that the senses are the same in the edges, along the boundary
-		int sizeLoop = (i == 0) ? endLoop : (_loopEnds[i] - _loopEnds[i - 1]);
-		for (int j = startLoop; j < endLoop; j++) {
-			int index1 = (j + 1) % sizeLoop;
-			int index2 = (j + 2) % sizeLoop;
-			MBEntityHandle prevEdge = _loops[j];
-			MBEntityHandle currentEdge = _loops[index1];
-			MBEntityHandle nextEdge = _loops[index2];
-			assert(_senses[j] == _senses[index1]);
-			assert(_senses[j] == _senses[index2]);
 
-			const MBEntityHandle * conn2;// we are truly interested in 4 points position, for each edge
-			int nnodes;
-			_mb->get_connectivity(prevEdge, conn2, nnodes);
-			assert(nnodes == 2);
-			const MBEntityHandle * conn4;//
-			_mb->get_connectivity(nextEdge, conn4, nnodes);
-			assert(nnodes == 2);
-			// this
-			/*std::cout << " index " << j << " Edge id "
-			 << _mb->id_from_handle(edgeH) << " sense "
-			 << (int) _senses[j] << " nodes: "
-			 << _mb->id_from_handle(conn2[0]) << " "
-			 << _mb->id_from_handle(conn2[1]) << std::endl;*/
-			//start copy
-
-			MBCartVect PP[4]; // store the coordinates for the nodes
-			rval = _mb->get_coords(conn2, 2, (double*) &PP[0]); // populate with vertex 0 and 1
-			assert(MB_SUCCESS == rval);
-			rval = _mb->get_coords(conn4, 2, (double*) &PP[2]);// the nodes for next edge
-			assert(MB_SUCCESS == rval);
-
-			MBCartVect T[2]; // we will set the tangents tag for it
-			T[0] = PP[2] - PP[0];
-			T[0].normalize();
-			T[1] = PP[3] - PP[1];
-			T[1].normalize();
-			// if the senses are reversed, the tangents are negative
-			if (2 == (int) _senses[j]) {
-				T[0] = -T[0];
-				T[1] = -T[1];
-			}
-			// set those values
-			_mb->tag_set_data(_tangentsTag, &currentEdge, 1, &T[0]);
-			/*CubitPoint *p0 = edge->point( 0 );
-			 CubitPoint *p1 = edge->point( 1 );
-			 CubitFacetEdge *prev_edge = next_boundary_edge( edge, p0 );
-
-			 CubitPoint *p2 = prev_edge->other_point( p0 );
-			 CubitVector e0 = p0->coordinates() - p2->coordinates();
-			 CubitVector e1 = p1->coordinates() - p0->coordinates();
-			 e0.normalize();
-			 e1.normalize();
-			 if (e0 % e1 >= min_dot)
-			 {
-			 T0 = (p0->coordinates() - p2->coordinates()) +
-			 (p1->coordinates() - p0->coordinates());
-			 T0.normalize();
-			 }
-			 else
-			 {
-			 T0 = e1;
-			 }*/
-			// end copy
-		}
-		startLoop = endLoop;
-	}
 	// now, compute Tangents for all edges that are not on boundary, so they are not marked
 	for (MBRange::iterator it = _edges.begin(); it != _edges.end(); it++) {
 		MBEntityHandle edg = *it;
-		unsigned char tagVal = 0;
-		_mb->tag_get_data(_markTag, &edg, 1, &tagVal);
-		if (tagVal)
-			continue; // it must be on the boundary, the tangents must have been already computed
 
 		int nnodes;
 		const MBEntityHandle * conn2;//
 		_mb->get_connectivity(edg, conn2, nnodes);
 		assert(nnodes == 2);
-		double coords[6]; // store the coordinates for the nodes
-		MBErrorCode rval = _mb->get_coords(conn2, 2, coords);
-		MBCartVect P0(coords);
-		MBCartVect P1(&coords[3]);
+		MBCartVect P[2]; // store the coordinates for the nodes
+		MBErrorCode rval = _mb->get_coords(conn2, 2, (double *) &P[0]);
+
 		MBCartVect T[2];
-		T[0] = P1 - P0;
+		T[0] = P[1] - P[0];
 		T[0].normalize();
 		T[1] = T[0]; //
-		_mb->tag_set_data(_tangentsTag, &edg, 1, &T[0]);// set the tangents computed at every edge
-
+		_mb->tag_set_data(_tangentsTag, &edg, 1, (double*) &T[0]);// set the tangents computed at every edge
 	}
 	return MB_SUCCESS;
 }
@@ -753,7 +508,7 @@ MBErrorCode SmoothMeshEval::compute_tangents_for_each_edge()
 //Member Type:  PRIVATE
 //Description:  compute the control points for an edge
 //===========================================================================
-MBErrorCode SmoothMeshEval::init_edge_control_points(MBCartVect &P0,
+MBErrorCode SmoothFaceEval::init_edge_control_points(MBCartVect &P0,
 		MBCartVect &P3, MBCartVect &N0, MBCartVect &N3, MBCartVect &T0,
 		MBCartVect &T3, MBCartVect * Pi) {
 	MBCartVect Vi[4];
@@ -785,86 +540,8 @@ MBErrorCode SmoothMeshEval::init_edge_control_points(MBCartVect &P0,
 
 	return MB_SUCCESS;
 }
-// end copy
-#if 0
-//
 
-for (i = 0; i < myPointList.size(); i++)
-{
-	CubitPoint* point = myPointList.get_and_step();
-
-	DLIList<CubitFacet*> adj_facet_list;
-	point->facets(adj_facet_list);
-	if (adj_facet_list.size() > 0) {
-		CubitVector avg_normal(0.0e0, 0.0e0, 0.0e0);
-		double totangle = 0.0e0;
-
-		// weight the normal by the spanning angle at the point
-
-		for (j = 0; j < adj_facet_list.size(); j++)
-		{
-			CubitFacet* facet = adj_facet_list.get_and_step();
-			double angle = facet->angle( point );
-			facet->weight( angle );
-			totangle += angle;
-		}
-		for (j = 0; j < adj_facet_list.size(); j++)
-		{
-			CubitFacet* facet = adj_facet_list.get_and_step();
-			CubitVector normal = facet->normal();
-			normal.normalize();
-			avg_normal += (facet->weight() / totangle) * normal;
-		}
-		avg_normal.normalize();
-		point->normal(avg_normal);
-		double coefd = -(point->coordinates()%avg_normal);
-		point->d_coef( coefd );
-	}
-}
-#endif
-#if 0
-CubitStatus FacetEvalTool::init_gradient()
-{
-	int i,j;
-
-	// retrieve all faces attached to the points in point_list
-
-	for (i = 0; i < myPointList.size(); i++)
-	{
-		CubitPoint* point = myPointList.get_and_step();
-
-		DLIList<CubitFacet*> adj_facet_list;
-		point->facets(adj_facet_list);
-		if (adj_facet_list.size() > 0) {
-			CubitVector avg_normal(0.0e0, 0.0e0, 0.0e0);
-			double totangle = 0.0e0;
-
-			// weight the normal by the spanning angle at the point
-
-			for (j = 0; j < adj_facet_list.size(); j++)
-			{
-				CubitFacet* facet = adj_facet_list.get_and_step();
-				double angle = facet->angle( point );
-				facet->weight( angle );
-				totangle += angle;
-			}
-			for (j = 0; j < adj_facet_list.size(); j++)
-			{
-				CubitFacet* facet = adj_facet_list.get_and_step();
-				CubitVector normal = facet->normal();
-				normal.normalize();
-				avg_normal += (facet->weight() / totangle) * normal;
-			}
-			avg_normal.normalize();
-			point->normal(avg_normal);
-			double coefd = -(point->coordinates()%avg_normal);
-			point->d_coef( coefd );
-		}
-	}
-	return CUBIT_SUCCESS;
-}
-#endif
-MBErrorCode SmoothMeshEval::find_edges_orientations(MBEntityHandle edges[3],
+MBErrorCode SmoothFaceEval::find_edges_orientations(MBEntityHandle edges[3],
 		const MBEntityHandle * conn3, int orient[3])// maybe we will set it?
 {
 	// find the edge that is adjacent to 2 vertices at a time
@@ -895,19 +572,13 @@ MBErrorCode SmoothMeshEval::find_edges_orientations(MBEntityHandle edges[3],
 	}
 	return MB_SUCCESS;
 }
-MBErrorCode SmoothMeshEval::compute_internal_control_points_on_facets(
-		double min_dot) {
+MBErrorCode SmoothFaceEval::compute_internal_control_points_on_facets(
+		double min_dot, MBTag facetCtrlTag, MBTag facetEdgeCtrlTag) {
 	// collect from each triangle the control points in order
 	//
-	double defControls[18] = { 0. };
-	MBErrorCode rval = _mb->tag_create("CONTROLFACE", 18 * sizeof(double),
-			MB_TAG_DENSE, _facetCtrlTag, &defControls);
-	assert(rval == MB_SUCCESS);
 
-	double defControls2[27] = { 0. }; // corresponding to 9 control points on edges, in order from edge 0, 1, 2 ( 1-2, 2-0, 0-1 )
-	rval = _mb->tag_create("CONTROLEDGEFACE", 27 * sizeof(double),
-			MB_TAG_DENSE, _facetEdgeCtrlTag, &defControls2);
-	assert(rval == MB_SUCCESS);
+	_facetCtrlTag = facetCtrlTag;
+	_facetEdgeCtrlTag = facetEdgeCtrlTag;
 
 	for (MBRange::iterator it = _triangles.begin(); it != _triangles.end(); it++) {
 		MBEntityHandle tri = *it;
@@ -915,17 +586,10 @@ MBErrorCode SmoothMeshEval::compute_internal_control_points_on_facets(
 		// we need a fast method to retrieve the adjacent edges to each triangle
 		const MBEntityHandle * conn3;
 		int nnodes;
-		rval = _mb->get_connectivity(tri, conn3, nnodes);
+		MBErrorCode rval = _mb->get_connectivity(tri, conn3, nnodes);
 		assert(MB_SUCCESS == rval);
 		assert(3 == nnodes);
-		/*double coords[9]; // get the coordinates for the nodes
-		 _mb->get_coords(conn3, 3, coords);
 
-		 // position of nodes
-		 MBCartVect vN[3];
-		 int i=0;
-		 for (i=0; i<3; i++)
-		 vN[i] = MBCartVect(&coords[3*i]);*/
 		// would it be easier to do
 		MBCartVect vNode[3];// position at nodes
 		rval = _mb->get_coords(conn3, 3, (double*) &vNode[0]);
@@ -995,7 +659,7 @@ MBErrorCode SmoothMeshEval::compute_internal_control_points_on_facets(
 	}
 	return MB_SUCCESS;
 }
-void SmoothMeshEval::adjust_bounding_box(MBCartVect & vect) {
+void SmoothFaceEval::adjust_bounding_box(MBCartVect & vect) {
 	// _minim, _maxim
 	for (int j = 0; j < 3; j++) {
 		if (_minim[j] > vect[j])
@@ -1010,7 +674,7 @@ void SmoothMeshEval::adjust_bounding_box(MBCartVect & vect) {
 ////Member Type:  PRIVATE
 ////Descriptoin:  compute the control points for a facet
 ////===============================================================
-MBErrorCode SmoothMeshEval::init_facet_control_points(MBCartVect N[6], // vertex normals (per edge)
+MBErrorCode SmoothFaceEval::init_facet_control_points(MBCartVect N[6], // vertex normals (per edge)
 		MBCartVect P[3][5], // edge control points
 		MBCartVect G[6]) // return internal control points
 {
@@ -1053,73 +717,72 @@ MBErrorCode SmoothMeshEval::init_facet_control_points(MBCartVect N[6], // vertex
 	return rval;
 }
 
-void SmoothMeshEval::DumpModelControlPoints()
-{
+void SmoothFaceEval::DumpModelControlPoints() {
 	// here, we will dump all control points from edges and facets (6 control points for each facet)
 	// we may also create some edges; maybe later...
 	// create a point3D file
 	// output a Point3D file (special visit format)
+	unsigned long setId = _mb->id_from_handle(_set);
+	char name[50] = { 0 };
+	sprintf(name, "%ldcontrol.Point3D", setId);// name should be something 2control.Point3D
 	std::ofstream point3DFile;
-	point3DFile.open("control.Point3D");
+	point3DFile.open(name);//("control.Point3D");
 	point3DFile << "# x y z \n";
 	std::ofstream point3DEdgeFile;
-	point3DEdgeFile.open("controlEdge.Point3D");
+	sprintf(name, "%ldcontrolEdge.Point3D", setId);//
+	point3DEdgeFile.open(name);//("controlEdge.Point3D");
 	point3DEdgeFile << "# x y z \n";
 	std::ofstream smoothPoints;
-	smoothPoints.open("smooth.Point3D");
+	sprintf(name, "%ldsmooth.Point3D", setId);//
+	smoothPoints.open(name);//("smooth.Point3D");
 	smoothPoints << "# x y z \n";
 	MBCartVect controlPoints[3]; // edge control points
-	for (MBRange::iterator it = _edges.begin(); it!=_edges.end(); it++)
-	{
-		MBEntityHandle edge=*it;
+	for (MBRange::iterator it = _edges.begin(); it != _edges.end(); it++) {
+		MBEntityHandle edge = *it;
 
 		_mb->tag_get_data(_edgeCtrlTag, &edge, 1, (double*) &controlPoints[0]);
-		for (int i=0; i<3; i++)
-		{
+		for (int i = 0; i < 3; i++) {
 			MBCartVect & c = controlPoints[i];
-			point3DEdgeFile <<std::setprecision(11)<< c[0]<< " " << c[1]<< " "
-						<< c[2]<<" \n";
+			point3DEdgeFile << std::setprecision(11) << c[0] << " " << c[1]
+					<< " " << c[2] << " \n";
 		}
 	}
 	MBCartVect controlTriPoints[6]; // triangle control points
 	MBCartVect P_facet[3];// result in 3 "mid" control points
-	for (MBRange::iterator it2 = _triangles.begin(); it2!=_triangles.end(); it2++)
-	{
-		MBEntityHandle tri=*it2;
+	for (MBRange::iterator it2 = _triangles.begin(); it2 != _triangles.end(); it2++) {
+		MBEntityHandle tri = *it2;
 
-		_mb->tag_get_data(_facetCtrlTag, &tri, 1, (double*) &controlTriPoints[0]);
+		_mb->tag_get_data(_facetCtrlTag, &tri, 1,
+				(double*) &controlTriPoints[0]);
 
 		// draw a line of points between pairs of control points
 		int numPoints = 7;
-		for (int n=0; n<numPoints; n++)
-		{
-			double a = 1.*n/(numPoints-1);
-			double b = 1.0-a;
+		for (int n = 0; n < numPoints; n++) {
+			double a = 1. * n / (numPoints - 1);
+			double b = 1.0 - a;
 
 			P_facet[0] = a * controlTriPoints[3] + b * controlTriPoints[4];
 			//1,2,1
 			P_facet[1] = a * controlTriPoints[0] + b * controlTriPoints[5];
 			//1,1,2
 			P_facet[2] = a * controlTriPoints[1] + b * controlTriPoints[2];
-			for (int i=0; i<3; i++)
-			{
+			for (int i = 0; i < 3; i++) {
 				MBCartVect & c = P_facet[i];
-				point3DFile <<std::setprecision(11)<< c[0]<< " " << c[1]<< " " << c[2]<<" \n";
+				point3DFile << std::setprecision(11) << c[0] << " " << c[1]
+						<< " " << c[2] << " \n";
 			}
 		}
 
 		// evaluate for each triangle a lattice of points
-		int N=40;
-		for (int k=0; k<=N; k++)
-		{
-			for (int m=0; m<=N-k; m++)
-			{
-				int n= N-m-k;
-				MBCartVect areacoord(1.*k/N, 1.*m/N, 1.*n/N);
+		int N = 40;
+		for (int k = 0; k <= N; k++) {
+			for (int m = 0; m <= N - k; m++) {
+				int n = N - m - k;
+				MBCartVect areacoord(1. * k / N, 1. * m / N, 1. * n / N);
 				MBCartVect pt;
-				eval_bezier_patch( tri, areacoord, pt);
-				smoothPoints <<std::setprecision(11)<< pt[0]<< " " << pt[1]<< " "
-										<< pt[2]<<" \n";
+				eval_bezier_patch(tri, areacoord, pt);
+				smoothPoints << std::setprecision(11) << pt[0] << " " << pt[1]
+						<< " " << pt[2] << " \n";
 
 			}
 		}
@@ -1137,7 +800,7 @@ void SmoothMeshEval::DumpModelControlPoints()
 // by camal edge mesher!!!)
 //Note:         t is a value from 0 to 1, for us
 //===========================================================================
-MBErrorCode SmoothMeshEval::evaluate_smooth_edge(MBEntityHandle eh, double &tt,
+MBErrorCode SmoothFaceEval::evaluate_smooth_edge(MBEntityHandle eh, double &tt,
 		MBCartVect & outv) {
 	MBCartVect P[2]; // P0 and P1
 	MBCartVect controlPoints[3]; // edge control points
@@ -1178,12 +841,12 @@ MBErrorCode SmoothMeshEval::evaluate_smooth_edge(MBEntityHandle eh, double &tt,
 }
 
 //this is the
-double SmoothMeshEval::get_length_loop(int loopIndex) {
+double SmoothFaceEval::get_length_loop(int loopIndex) {
 	assert(0 <= loopIndex && loopIndex < _loopLengths.size());
 	return _loopLengths[loopIndex];
 }
 
-MBErrorCode SmoothMeshEval::evaluate_loop_at_u(int loopIndex, double u,
+MBErrorCode SmoothFaceEval::evaluate_loop_at_u(int loopIndex, double u,
 		MBCartVect & position) {
 	// first
 	assert(loopIndex < _loopLengths.size());
@@ -1216,7 +879,7 @@ MBErrorCode SmoothMeshEval::evaluate_loop_at_u(int loopIndex, double u,
 
 }
 
-MBErrorCode SmoothMeshEval::eval_bezier_patch(MBEntityHandle tri,
+MBErrorCode SmoothFaceEval::eval_bezier_patch(MBEntityHandle tri,
 		MBCartVect &areacoord, MBCartVect &pt) {
 	//
 	// interpolate internal control points
@@ -1367,7 +1030,7 @@ MBErrorCode SmoothMeshEval::eval_bezier_patch(MBEntityHandle tri,
 //Member Type:  PUBLIC
 //Descriptoin:  Project a point to the plane of a facet
 //===========================================================================
-void SmoothMeshEval::project_to_facet_plane(MBEntityHandle tri, MBCartVect &pt,
+void SmoothFaceEval::project_to_facet_plane(MBEntityHandle tri, MBCartVect &pt,
 		MBCartVect &point_on_plane, double &dist_to_plane) {
 	double plane[4];
 
@@ -1399,7 +1062,7 @@ void SmoothMeshEval::project_to_facet_plane(MBEntityHandle tri, MBCartVect &pt,
 //Descriptoin:  Determine the area coordinates of a point on the plane
 //              of a facet
 //===========================================================================
-void SmoothMeshEval::facet_area_coordinate(MBEntityHandle facet,
+void SmoothFaceEval::facet_area_coordinate(MBEntityHandle facet,
 		MBCartVect & pt_on_plane, MBCartVect & areacoord) {
 
 	const MBEntityHandle * conn3;
@@ -1551,7 +1214,7 @@ void SmoothMeshEval::facet_area_coordinate(MBEntityHandle facet,
 	}
 }
 
-MBErrorCode SmoothMeshEval::project_to_facets_main(MBCartVect &this_point,
+MBErrorCode SmoothFaceEval::project_to_facets_main(MBCartVect &this_point,
 		bool trim, bool & outside, MBCartVect * closest_point_ptr,
 		MBCartVect * normal_ptr) {
 
@@ -1572,7 +1235,7 @@ MBErrorCode SmoothMeshEval::project_to_facets_main(MBCartVect &this_point,
 
 	return rval;
 }
-MBErrorCode SmoothMeshEval::project_to_facets(
+MBErrorCode SmoothFaceEval::project_to_facets(
 		std::vector<MBEntityHandle> & facet_list, MBEntityHandle & lastFacet,
 		int interpOrder, double compareTol, MBCartVect &this_point, bool trim,
 		bool & outside, MBCartVect *closest_point_ptr, MBCartVect * normal_ptr) {
@@ -1658,278 +1321,6 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 	outside = best_outside_facet;
 	lastFacet = best_facet;
 
-#if 0
-	// big loop here;
-	// start copy
-	int ncheck, ii, nincr = 0;
-	static int calls = 0;
-	static int nncheck = 0;
-	static int ntol = 0;
-	static int mydebug = 0;
-	CubitBoolean outside_facet, best_outside_facet;
-	CubitVector close_point, best_point, best_areacoord;
-	CubitFacet *best_facet = NULL;
-	CubitFacet *facet;
-	assert(facet_list.size() > 0);
-	double big_dist = compare_tol * 1.0e3;
-
-	// set the first facet to be checked as the last one located
-
-	if (last_facet) {
-		if (!facet_list.move_to(last_facet)) {
-			facet_list.reset();
-		}
-	} else {
-		facet_list.reset();
-	}
-
-	// so we don't evaluate a facet more than once - mark the facets
-	// as we evaluate them.  Put the evaluated facets on a used_facet_list
-	// so we clear the marks off when we are done.  Note: this assumes
-	// theat marks are initially cleared.
-
-	DLIList<CubitFacet *> used_facet_list;
-	for (ii = 0; ii < facet_list.size(); ii++)
-	facet_list.get_and_step()->marked(0);
-
-	int nfacets = facet_list.size();
-	int nevald = 0;
-	double tol = compare_tol * 10;
-	const double atol = 0.001;
-	double mindist = CUBIT_DBL_MAX;
-	CubitBoolean eval_all = CUBIT_FALSE;
-	CubitBoolean done = CUBIT_FALSE;
-	best_outside_facet = CUBIT_TRUE;
-
-	while (!done) {
-
-		// define a bounding box around the point
-
-		double ptmin_x = this_point.x() - tol;
-		double ptmin_y = this_point.y() - tol;
-		double ptmin_z = this_point.z() - tol;
-		double ptmax_x = this_point.x() + tol;
-		double ptmax_y = this_point.y() + tol;
-		double ptmax_z = this_point.z() + tol;
-
-		ncheck = 0;
-		for (ii = facet_list.size(); ii > 0 && !done; ii--) {
-			facet = facet_list.get_and_step();
-			if (facet->marked())
-			continue;
-
-			// Try to trivially reject this facet with a bounding box test
-			// (Does the bounding box of the facet intersect with the
-			// bounding box of the point)
-
-			if (!eval_all) {
-				const CubitBox &bbox = facet->bounding_box();
-				if (ptmax_x < bbox.min_x() || ptmin_x > bbox.max_x()) {
-					continue;
-				}
-				if (ptmax_y < bbox.min_y() || ptmin_y > bbox.max_y()) {
-					continue;
-				}
-				if (ptmax_z < bbox.min_z() || ptmin_z > bbox.max_z()) {
-					continue;
-				}
-			}
-
-			// Only facets that pass the bounding box test will get past here!
-
-			// Project point to plane of the facet and determine its area coordinates
-
-			ncheck++;
-			nevald++;
-			CubitVector pt_on_plane;
-			double dist_to_plane;
-			project_to_facet_plane(facet, this_point, pt_on_plane,
-					dist_to_plane);
-
-			CubitVector areacoord;
-			facet_area_coordinate(facet, pt_on_plane, areacoord);
-			if (interp_order != 0) {
-
-				// modify the areacoord - project to the bezier patch- snaps to the
-				// edge of the patch if necessary
-
-				if (project_to_facet(facet, this_point, areacoord, close_point,
-								outside_facet, compare_tol) != CUBIT_SUCCESS) {
-					return CUBIT_FAILURE;
-				}
-			} else {
-
-				// If sign of areacoords are all positive then its inside the triangle
-				// and we are done - go interpolate the point. (use an absolute
-				// tolerance since the coordinates arenormalized)
-				if (areacoord.x() > -atol && areacoord.y() > -atol
-						&& areacoord.z() > -atol) {
-					if (dist_to_plane < compare_tol) {
-						close_point = this_point;
-					} else {
-						close_point = pt_on_plane;
-					}
-					outside_facet = CUBIT_FALSE;
-				}
-
-				// otherwise find the closest vertex or edge to the projected point
-
-				else if (areacoord.x() < atol) {
-					outside_facet = CUBIT_TRUE;
-					if (areacoord.y() < atol) {
-						if (eval_point(facet, 2, close_point) != CUBIT_SUCCESS) {
-							return CUBIT_FAILURE;
-						}
-					} else if (areacoord.z() < atol) {
-						if (eval_point(facet, 1, close_point) != CUBIT_SUCCESS) {
-							return CUBIT_FAILURE;
-						}
-					} else {
-						if (project_to_facetedge(facet, 1, 2, this_point,
-										pt_on_plane, close_point, outside_facet, trim)
-								!= CUBIT_SUCCESS) {
-							return CUBIT_FAILURE;
-						}
-					}
-				} else if (areacoord.y() < atol) {
-					outside_facet = CUBIT_TRUE;
-					if (areacoord.z() < atol) {
-						if (eval_point(facet, 0, close_point) != CUBIT_SUCCESS) {
-							return CUBIT_FAILURE;
-						}
-					} else {
-						if (project_to_facetedge(facet, 2, 0, this_point,
-										pt_on_plane, close_point, outside_facet, trim)
-								!= CUBIT_SUCCESS) {
-							return CUBIT_FAILURE;
-						}
-					}
-				} else {
-					outside_facet = CUBIT_TRUE;
-					if (project_to_facetedge(facet, 0, 1, this_point,
-									pt_on_plane, close_point, outside_facet, trim)
-							!= CUBIT_SUCCESS) {
-						return CUBIT_FAILURE;
-					}
-				}
-			}
-
-			// keep track of the minimum distance
-
-			double dist = close_point.distance_between(this_point);
-			if ((best_outside_facet == outside_facet && dist < mindist)
-					|| (best_outside_facet && !outside_facet && (dist
-									< big_dist || !best_facet))) {
-				mindist = dist;
-				best_point = close_point;
-				best_facet = facet;
-				best_areacoord = areacoord;
-				best_outside_facet = outside_facet;
-
-				if (dist < compare_tol) {
-					done = CUBIT_TRUE;
-				}
-				big_dist = 10.0 * mindist;
-			}
-			facet->marked(1);
-			used_facet_list.append(facet);
-		}
-
-		// We are done if we found at least one triangle.  Otherwise
-		// increase the tolerance and try again
-
-		if (!done) {
-			if (nevald == nfacets) {
-				done = CUBIT_TRUE;
-			} else {
-				nincr++;
-				if (ncheck > 0) {
-					if (best_outside_facet) {
-						if (nincr < 10) {
-							tol *= 2.0;
-							ntol++;
-						} else
-						// getting here means that the compare_tol probably is too small
-						// just try all the remaining facets
-						{
-							eval_all = CUBIT_TRUE;
-						}
-					} else {
-						done = CUBIT_TRUE;
-					}
-				} else {
-					if (nincr >= 10) {
-						eval_all = CUBIT_TRUE;
-					} else {
-						tol *= 2.0e0;
-						ntol++;
-					}
-				}
-			}
-		}
-	} // while(!done)
-	if (best_facet == NULL) {
-		PRINT_ERROR("Unable to determine facet correctly.\n");
-		return CUBIT_FAILURE;
-	}
-	// make sure we actually got something
-	assert(best_facet != NULL);
-
-	// if the closest point is outside of a facet, then evaluate the point
-	// on the facet using its area coordinates (otherwise it would be
-	// trimmed to an edge or point)
-
-
-	if (!trim && best_outside_facet && interp_order != 4) {
-		if (project_to_facet(best_facet, this_point, best_areacoord,
-						best_point, best_outside_facet, compare_tol) != CUBIT_SUCCESS) {
-			return CUBIT_FAILURE;
-		}
-
-		// see if its really outside (it could just be on an edge where the
-		// curvature is convex)
-
-		best_outside_facet = is_outside(best_facet, best_areacoord);
-	}
-
-	// evaluate the normal if required
-
-	if (normal_ptr) {
-		CubitVector normal;
-		if (eval_facet_normal(best_facet, best_areacoord, normal)
-				!= CUBIT_SUCCESS) {
-			return CUBIT_FAILURE;
-		}
-		*normal_ptr = normal;
-	}
-
-	if (closest_point_ptr) {
-		*closest_point_ptr = best_point;
-	}
-
-	*outside = best_outside_facet;
-	last_facet = best_facet;
-
-	// clear the marks from the used facets
-
-	for (ii = 0; ii < used_facet_list.size(); ii++) {
-		facet = used_facet_list.get_and_step();
-		facet->marked(0);
-	}
-
-	if (mydebug) {
-		nncheck += ncheck;
-		calls++;
-		if (calls % 100 == 0) {
-			char message[100];
-			sprintf(message, "calls = %d, ckecks = %d, ntol = %d\n", calls,
-					nncheck, ntol);
-			PRINT_INFO(message);
-		}
-	}
-
-	return CUBIT_SUCCESS;
-#endif
 	return MB_SUCCESS;
 	//end copy
 }
@@ -1943,7 +1334,7 @@ MBErrorCode SmoothMeshEval::project_to_facets(
 //              assumes that the point is contained within the patch -
 //              if not, it will project to one of its edges.
 //===========================================================================
-MBErrorCode SmoothMeshEval::project_to_patch(MBEntityHandle facet, // (IN) the facet where the patch is defined
+MBErrorCode SmoothFaceEval::project_to_patch(MBEntityHandle facet, // (IN) the facet where the patch is defined
 		MBCartVect &ac, // (IN) area coordinate initial guess (from linear facet)
 		MBCartVect &pt, // (IN) point we are projecting to patch
 		MBCartVect &eval_pt, // (OUT) The projected point
@@ -2218,7 +1609,7 @@ MBErrorCode SmoothMeshEval::project_to_patch(MBEntityHandle facet, // (IN) the f
 //Member Type:  PRIVATE
 //Description:  determine the area coordinate of the facet at the edge
 //===========================================================================
-void SmoothMeshEval::ac_at_edge(MBCartVect &fac, // facet area coordinate
+void SmoothFaceEval::ac_at_edge(MBCartVect &fac, // facet area coordinate
 		MBCartVect &eac, // edge area coordinate
 		int edge_id) // id of edge
 {
@@ -2255,7 +1646,7 @@ void SmoothMeshEval::ac_at_edge(MBCartVect &fac, // facet area coordinate
 //Description:  project to a single facet.  Uses the input areacoord as
 //              a starting guess.
 //===========================================================================
-MBErrorCode SmoothMeshEval::project_to_facet(MBEntityHandle facet,
+MBErrorCode SmoothFaceEval::project_to_facet(MBEntityHandle facet,
 		MBCartVect &pt, MBCartVect &areacoord, MBCartVect &close_point,
 		bool &outside_facet, double compare_tol) {
 
@@ -2268,36 +1659,7 @@ MBErrorCode SmoothMeshEval::project_to_facet(MBEntityHandle facet,
 	//_mb->get_coords(conn3, 3, coords);
 	MBCartVect p[3];
 	_mb->get_coords(conn3, 3, (double*) &p[0]);
-	/*CubitPoint *pt0 = facet->point(0);
-	 CubitPoint *pt1 = facet->point(1);
-	 CubitPoint *pt2 = facet->point(2);
 
-	 int interp_order = facet->eval_order();
-	 if (facet->is_flat())
-	 {
-	 interp_order = 0;
-	 }
-
-	 switch(interp_order) {
-	 case 0:
-	 close_point.x( areacoord.x() * pt0->x() +
-	 areacoord.y() * pt1->x() +
-	 areacoord.z() * pt2->x() );
-	 close_point.y( areacoord.x() * pt0->y() +
-	 areacoord.y() * pt1->y() +
-	 areacoord.z() * pt2->y() );
-	 close_point.z( areacoord.x() * pt0->z() +
-	 areacoord.y() * pt1->z() +
-	 areacoord.z() * pt2->z() );
-	 outside_facet = CUBIT_FALSE;
-	 break;
-	 case 1:
-	 case 2:
-	 case 3:
-	 assert(0);  // not available from this function
-	 break;
-	 case 4:
-	 {*/
 	int edge_id = -1;
 	stat = project_to_patch(facet, areacoord, pt, close_point, NULL,
 			outside_facet, compare_tol, edge_id);
@@ -2314,7 +1676,7 @@ MBErrorCode SmoothMeshEval::project_to_facet(MBEntityHandle facet,
 //Member Type:  PRIVATE
 //Description:  determine if the point is at one of the facet's vertices
 //===========================================================================
-bool SmoothMeshEval::is_at_vertex(MBEntityHandle facet, // (IN) facet we are evaluating
+bool SmoothFaceEval::is_at_vertex(MBEntityHandle facet, // (IN) facet we are evaluating
 		MBCartVect &pt, // (IN) the point
 		MBCartVect &ac, // (IN) the ac of the point on the facet plane
 		double compare_tol, // (IN) return TRUE of closer than this
@@ -2383,7 +1745,7 @@ bool SmoothMeshEval::is_at_vertex(MBEntityHandle facet, // (IN) facet we are eva
 //              patch if any of its components are < 0
 //              Return if the ac was modified.
 //===========================================================================
-bool SmoothMeshEval::move_ac_inside(MBCartVect &ac, double tol) {
+bool SmoothFaceEval::move_ac_inside(MBCartVect &ac, double tol) {
 	int nout = 0;
 	if (ac[0] < -tol) {
 		ac[0] = 0.0;
@@ -2435,7 +1797,7 @@ bool SmoothMeshEval::move_ac_inside(MBCartVect &ac, double tol) {
 //Member Type:  PRIVATE
 //Descriptoin:  evaluate the bezier patch defined at a facet
 //===========================================================================
-MBErrorCode SmoothMeshEval::eval_bezier_patch_normal(MBEntityHandle facet,
+MBErrorCode SmoothFaceEval::eval_bezier_patch_normal(MBEntityHandle facet,
 		MBCartVect &areacoord, MBCartVect &normal) {
 	// interpolate internal control points
 
@@ -2618,4 +1980,337 @@ MBErrorCode SmoothMeshEval::eval_bezier_patch_normal(MBEntityHandle facet,
 	normal.normalize();
 
 	return MB_SUCCESS;
+}
+
+MBErrorCode SmoothFaceEval::get_normals_for_vertices(
+		const MBEntityHandle * conn2, MBCartVect N[2])
+// this method will be called to retrieve the normals needed in the calculation of control edge points..
+{
+	//MBCartVect N[2];
+	//_mb->tag_get_data(_gradientTag, conn2, 2, normalVec);
+	MBErrorCode rval = _mb->tag_get_data(_gradientTag, conn2, 2,
+			(double*) &N[0]);
+	return rval;
+}
+
+// this will create the loops of geo set edges, based on connectivity
+// one external loop and possibly internal loops
+MBErrorCode SmoothFaceEval::find_loops() {
+	// this is purely a mesh/topology operation, probably should be part of GeomTopoTool()
+	// the logic is to get all the sets of geo tag 1, children of the face set, and arrange them in loops
+	/* std::vector<MBEntityHandle> _loops; // set1, set 3, set 5, ...
+	 std::vector<char> senses; // 0 forward, 1 backward: 0, 0, 1, ...
+	 std::vector<int> _loopEnds;// the first loop starts at 0 always;
+	 */
+	// first, get all the sets of dimension 1 from the _mb
+	MBTag geom_tag;
+	MBErrorCode rval = _mb->tag_get_handle(GEOM_DIMENSION_TAG_NAME, geom_tag);
+
+	if (MB_SUCCESS != rval)
+		return rval;
+	// dimension 1 are curves
+	MBRange csets;
+	/*int dim=1;
+	 void *dim_ptr = &dim;
+	 csets.clear();
+
+	 rval = _mb->get_entities_by_type_and_tag(_set, MBENTITYSET,
+	 &geom_tag, &dim_ptr, 1,
+	 csets, 1, false);*/
+	rval = _mb->get_child_meshsets(_set, csets);// num_hops =1
+	if (csets.empty())
+		return MB_FAILURE;
+
+	int totalNumEdges = csets.size();
+
+	// now, that csets are all sets of dimension 1, try to hook them in a loop
+	// get the first one, and see where does it belong, does it have sense 0, 1 within the face
+
+	//int numEdgesInLoops = 0;// we start with zero , and we keep adding to the _loops and _senses arrays
+	// _loops will contain edge sets; size of _loopEnds will be the number of loops (one external and several internal)
+	// also, size of _loops will be size of csets, otherwise we have a problem (one edge cannot be part of 2 loops)
+
+	_loops.empty();
+	_senses.empty();
+	_loopEnds.empty();//
+
+	// will look at the senses for each edge, and decide the start and end nodes
+	std::vector<MBEntityHandle> startV, endV;// these will consider senses for edges
+	std::vector<int> sensesAll;
+	MBRange::iterator it = csets.begin();
+	int sense;
+	for (int i = 0; i < totalNumEdges; i++, it++) {
+		MBEntityHandle edge = *it;
+		std::vector<MBEntityHandle> faces;
+		std::vector<int> senses;
+		rval = _my_geomTopoTool->get_senses(edge, faces, senses);
+		if (MB_SUCCESS != rval)
+			return MB_FAILURE;
+		rval = getFaceSenseFromList(_set, faces, senses, sense);
+		if (MB_SUCCESS != rval)
+			return MB_FAILURE;
+		// get the first and last node of the edge
+		// for that, get the mesh edges from the set, and then the connectivity of the first and last mesh edge
+		// edge is an ordered set of mesh edges
+		std::vector<MBEntityHandle> entities;
+		rval = _mb->get_entities_by_type(edge, MBEDGE, entities);
+		if (MB_SUCCESS != rval || entities.size() < 1)
+			return MB_FAILURE;
+		const MBEntityHandle * conn2;
+		int nnodes = 2;
+		rval = _mb->get_connectivity(entities[0], conn2, nnodes);
+		if (MB_SUCCESS != rval)
+			return MB_FAILURE;
+		MBEntityHandle lastEdge = entities[entities.size() - 1];// last edge in the chain of edges
+		const MBEntityHandle * conn21;
+		rval = _mb->get_connectivity(lastEdge, conn21, nnodes);
+		if (MB_SUCCESS != rval)
+			return MB_FAILURE;
+		if (sense == 0) // forward
+		{
+			startV.push_back(conn2[0]);// the first node of the first edge
+			endV.push_back(conn21[1]); // the second node of the last edge in chain
+		} else if (sense == 1) // backward
+		{
+			startV.push_back(conn21[1]);
+			endV.push_back(conn2[0]);
+		} else
+			return MB_FAILURE; // the senses should be 0 or 1!
+		sensesAll.push_back(sense);
+	}
+
+	// put the first edge in the first loop
+	_loops.push_back(csets[0]);
+	_senses.push_back(sensesAll[0]);
+	_loopEnds.push_back(1); // the first loop starts at _loops[0], and is of length 1, at least
+	int indexLoop = 0; // one loop started so far
+	MBEntityHandle startVert = startV[0];
+	//MBEntityHandle currentEdge = firstEdge;
+	MBEntityHandle currentVert = endV[0];
+	//numEdgesInLoops++;// one edge is parked now in the loops
+	std::vector<int> marker;// marks for edges already part of the loops
+	marker.push_back(1); // the first edge is marked as used; the rest are marked with 0
+	for (int j = 1; j < totalNumEdges; j++)
+		marker.push_back(0);
+	while (_loops.size() < totalNumEdges) {
+		// find the edge that starts at the currentVertex, to continue the loop
+		// we assume that the loops are disjoint, always
+		int found = 0;
+		for (int i = 1; i < totalNumEdges; i++) {
+			if (marker[i])
+				continue; // the edge was already inserted in a loop
+			if (currentVert == startV[i]) {
+				// found the next edge; add it to _loops
+				MBEntityHandle nextEdge = csets[i];//
+				_loops.push_back(nextEdge);
+				_senses.push_back(sensesAll[i]);
+				currentVert = endV[i]; // current vertex is the end of this edge
+				_loopEnds[indexLoop]++;
+				marker[i] = 1;// the edge cannot be part of another loop
+				found = 1;
+				break;
+			}
+		}
+		if (startVert == currentVert) {
+			if (_loops.size() >= totalNumEdges)
+				break; // out of while loop, we finished all edges
+			// if not, set the first unused edge as a starting edge in a loop
+			found = 0;
+			for (int i = 1; i < totalNumEdges; i++) {
+				if (marker[i])
+					continue;
+				found = i;
+
+			}
+			if (0 == found)
+				return MB_FAILURE; // there should be a least one more edge left
+			// the edge that is found is the start for the next loop
+
+			_loopEnds.push_back(_loopEnds[indexLoop] + 1);
+			indexLoop++;
+			_loops.push_back(csets[found]);
+			startVert = startV[found];
+			currentVert = endV[found];
+			_senses.push_back(sensesAll[found]);
+			marker[found] = 1;
+		}
+	}
+	if (startVert != currentVert)
+		return MB_FAILURE;
+	if (debug_surf_eval) {
+		// print the loops found so far
+		std::cout << "number of loops" << _loopEnds.size() << std::endl;
+		for (int i = 0; i < _loopEnds.size(); i++) {
+
+			int startLoop = (i == 0) ? 0 : _loopEnds[i - 1];
+			int endLoop = _loopEnds[i];
+
+			std::cout << "loop " << i << " " << " length: " << endLoop
+					- startLoop << std::endl;
+			for (int j = startLoop; j < endLoop; j++) {
+				std::cout << "   " << j << " e: " << _mb->id_from_handle(
+						_loops[j]) << " sense " << (int) _senses[j]
+						<< std::endl;
+			}
+
+		}
+	}
+	return MB_SUCCESS;
+}
+
+MBErrorCode SmoothFaceEval::mesh_count_total(std::map<MBEntityHandle,
+		SmoothCurveEval*> & mapCurves, int & mesh_count) {
+	// go along each edge and sum up
+	int numEdges = _loops.size();
+	mesh_count = 0;
+	for (int i = 0; i < numEdges; i++) {
+		SmoothCurveEval * cEval = NULL;
+		cEval = mapCurves[_loops[i]];
+		mesh_count += cEval->get_mesh_count();
+
+	}
+	return MB_SUCCESS;
+}
+void SmoothFaceEval::evenify(
+		std::map<MBEntityHandle, SmoothCurveEval*> & mapCurves) {
+	int numEdges = _loops.size();
+
+	for (int i = 0; i < numEdges; i++) {
+		SmoothCurveEval * cEval = NULL;
+		cEval = mapCurves[_loops[i]];
+		int edge_mesh_count = cEval->get_mesh_count();
+		if (edge_mesh_count % 2 == 1) {
+			cEval->set_mesh_count(edge_mesh_count + 1);
+		}
+	}
+	return;
+}
+
+void SmoothFaceEval::mesh(double iMeshSize, std::map<MBEntityHandle,
+		SmoothCurveEval*> & mapCurves) {
+	// pass to CAMAL
+	//	geom_eval.set_ref_face(face);
+	CAMALSizeEval size_eval(iMeshSize);
+	CMLPaver pave_mesher(this, &size_eval);
+	// the loops are established, get the mesh sets from each edge, and create the boundary loops arrays
+	// mesh faces;
+	std::vector<int> loops, loop_sizes;
+	std::vector<MBEntityHandle> bdy_verts;
+
+	std::vector<double> bdy_coords;
+	std::vector<int> connect;
+	bool success = true;
+	int new_points;
+	/*// each loop will be actually a vector of MBEntityHandle, paired with a vector of senses
+	 // number of loops is decided by the size of _loopEnds
+	 std::vector<MBEntityHandle> _loops; // set1, set 3, set 5, ...
+	 std::vector<char> _senses; // 0 forward, 1 backward: 0, 0, 1, ...
+	 std::vector<int> _loopEnds;// the first loop starts at 0 always;*/
+
+	// for each loop
+	int i = 0;
+	int index = 0; // this is the "order"
+	for (i = 0; i < _loopEnds.size(); i++) {
+		int sizeLoop = _loopEnds[i];
+		int start = 0;
+		if (i > 0) {
+			start = _loopEnds[i - 1];
+			sizeLoop -= _loopEnds[i - 1];
+		}
+		loop_sizes.push_back(0);// the size is 0 originally
+		// we are increasing it one by one
+		for (int j = 0; j < sizeLoop; j++) {
+			MBEntityHandle edgeSet = _loops[start + j];
+			SmoothCurveEval * cEval = mapCurves[edgeSet];
+			MBEntityHandle newEdgeSet = cEval->out_set();
+			int sense = _senses[start + j];
+			std::vector<MBEntityHandle> meshEdges;
+			_mbOut->get_entities_by_type(newEdgeSet, MBEDGE, meshEdges);
+			// get nodes and, based on sense, first or last
+			int numMeshEdgesInSet = meshEdges.size();
+			MBEntityHandle currentEdge;
+			for (int k = 0; k < numMeshEdgesInSet; k++) {
+				if (sense == 0)
+					currentEdge = meshEdges[k];
+				else
+					currentEdge = meshEdges[numMeshEdgesInSet - k - 1];
+				int nnodes;
+				const MBEntityHandle * conn2;
+				_mbOut->get_connectivity(currentEdge, conn2, nnodes);
+				MBCartVect P[2];
+				_mbOut->get_coords(conn2, 2, (double*) &P[0]);
+
+				loops.push_back(index);
+				index++;
+				MBCartVect pos = P[sense]; // 0 is forward, 1 is reverse
+				loop_sizes[i]++;
+				for (int i1 = 0; i1 < 3; i1++)
+					bdy_coords.push_back(pos[i1]); // add all 3 coords
+				bdy_verts.push_back(conn2[sense]);//
+			}
+
+		}
+	}
+	// set only num_points_out -1 , because the last one is repeated
+	success = pave_mesher.set_boundary_mesh(bdy_coords.size() / 3,
+			&bdy_coords[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
+	if (!success) {
+		std::cerr << "Failed setting boundary mesh" << std::endl;
+		return;
+	}
+
+	pave_mesher.set_sizing_function(CML::LINEAR_SIZING);
+
+	// generate the mesh
+	int num_quads;
+	success = pave_mesher.generate_mesh(new_points, num_quads);
+	if (!success) {
+		std::cerr << "Failed generating mesh" << std::endl;
+		//return success;
+	}
+
+	std::cout << "Meshed surface with " << new_points << " new vertices and "
+			<< num_quads << " quadrilaterals." << std::endl;
+
+	// get the generated mesh
+	//bdy_coords.resize(3*(bdy_verts.size() + new_points));
+	std::vector<double> new_coords;
+	new_coords.resize(3 * new_points);
+	connect.resize(4 * num_quads);
+	success = pave_mesher.get_mesh(new_points, &new_coords[0], num_quads,
+			&connect[0]);
+	if (!success) {
+		std::cerr << "Failed to get generated mesh" << std::endl;
+		//return success;
+	}
+
+	// we assume that the first points from pave mesher are the boundary vertices
+	// (we should verify that, actually)
+
+
+	// we create interior vertices; first are boundary vertices in the 
+	// coords array
+	int numBoundVert = bdy_verts.size();
+	int nInteriorNodes = new_points - numBoundVert;
+	MBRange interNodeHandles;
+	_mbOut-> create_vertices(&new_coords[3 * numBoundVert], nInteriorNodes,
+			interNodeHandles);
+	for (int k = 0; k < num_quads; k++) {
+		MBEntityHandle conn4[4];
+		int indexC = 4 * k;
+		for (int j = 0; j < 4; j++) {
+			int index1 = connect[indexC + j];
+			if (index1 < numBoundVert)
+				conn4[j] = bdy_verts[index1];
+			else
+				conn4[j] = interNodeHandles[index1 - numBoundVert]; // this is indexing in the new range created
+
+		}
+		MBEntityHandle newQuad;
+		_mbOut -> create_element(MBQUAD, conn4, 4, newQuad);
+		_mbOut -> add_entities(_oSet, &newQuad, 1);
+
+	}
+	return;
+
 }

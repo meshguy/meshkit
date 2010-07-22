@@ -1,11 +1,12 @@
-#ifndef SMOOTH_MESH_EVAL_HPP
-#define SMOOTH_MESH_EVAL_HPP
+#ifndef SMOOTH_FACE_EVAL_HPP
+#define SMOOTH_FACE_EVAL_HPP
 
 // do we really need iMesh here; maybe go directly to MOAB
-#include "iMesh.h"
+//#include "iMesh.h"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #include "MBCartVect.hpp"
+#include "MBTagConventions.hpp"
 
 #define determ3(p1,q1,p2,q2,p3,q3) ((q3)*((p2)-(p1)) + (q2)*((p1)-(p3)) + (q1)*((p3)-(p2)))
 #define sqr(a) ((a)*(a))
@@ -14,6 +15,7 @@
 #define blend(x) (-2.0*(x)*(x)*(x) + 3.0*(x)*(x))
 
 #include <vector>
+#include <map>
 //#include "MBEntityHandle.hpp"
 
 // work only with CAMAL > = 500
@@ -25,14 +27,17 @@ class RefFace;
 #include "moab/GeomTopoTool.hpp"
 
 #include "CMLSurfEval.hpp"
+#include "SmoothBase.hpp"
+class SmoothCurveEval;// it is derived from SmoothBase, maybe just need
 
 //! Implement CAMAL geometry callbacks using smooth iMesh 
-class SmoothMeshEval : public CMLSurfEval
+class SmoothFaceEval : public CMLSurfEval, public SmoothBase
 {
 public:
-  SmoothMeshEval(iMesh_Instance meshIface, iBase_EntitySetHandle surface_set); // entity or entity set
+  SmoothFaceEval(MBInterface * mb, MBEntityHandle surface_set, MBInterface * mbo,
+		  moab::GeomTopoTool * gTool); // entity or entity set
 
-  virtual ~SmoothMeshEval();
+  virtual ~SmoothFaceEval();
   
   virtual double area();
 
@@ -79,13 +84,13 @@ public:
   void set_mesh_size(double tmp_size);
   double get_mesh_size();
   
-  void set_ref_face(RefFace * refFace);// used to set the ref face from Cholla (or our face)
+  //void set_ref_face(RefFace * refFace);// used to set the ref face from Cholla (or our face)
 
   //int get_dimension() const { return myDimension; } it should be 2 always
 
   // this is the setup for all the computation that we need to do
   //
-  int Initialize();
+  //int Initialize();
 
   // initialize normals// they will be stored as tags on nodes
   int init_gradient();
@@ -156,6 +161,35 @@ public:
   MBErrorCode eval_bezier_patch_normal( MBEntityHandle facet,
   		MBCartVect &areacoord,
   		MBCartVect &normal );
+
+  // this will be called now from driver...
+  MBErrorCode compute_tangents_for_each_edge();// they will be used for control points
+
+  MBErrorCode get_normals_for_vertices(const MBEntityHandle * conn2, MBCartVect N[2]);// here we need the gradient tag
+
+  // make this one public, will be called during initialization !!!
+  MBErrorCode init_edge_control_points(MBCartVect &P0, MBCartVect &P3,
+    		MBCartVect &N0, MBCartVect &N3, MBCartVect &T0, MBCartVect &T3,
+    		MBCartVect * Pi);
+
+  // moved from private, because will be called from PaveDriver
+  MBErrorCode compute_control_points_on_edges(double min_dot, MBTag edgeCtrlTag, MBTag markTag);
+
+  MBErrorCode compute_internal_control_points_on_facets(
+  			double min_dot,  MBTag facetCtrlTag, MBTag facetEdgeCtrlTag);
+
+  // move from private too
+  void DumpModelControlPoints();
+
+  //
+  MBErrorCode find_loops();
+
+  MBErrorCode mesh_count_total(std::map<MBEntityHandle, SmoothCurveEval*> & mapCurves, int & mesh_count);
+
+  void  evenify(std::map<MBEntityHandle, SmoothCurveEval*> & mapCurves);
+
+  void  mesh(double iMeshSize, std::map<MBEntityHandle, SmoothCurveEval*> & mapCurves);
+
 private:
 
   //===========================================================================
@@ -180,16 +214,7 @@ private:
 
   // some local functions that do not need to be public
   MBErrorCode init_bezier_edge(MBEntityHandle edge, double min_dot);
-
-  MBErrorCode init_edge_control_points(MBCartVect &P0, MBCartVect &P3,
-  		MBCartVect &N0, MBCartVect &N3, MBCartVect &T0, MBCartVect &T3,
-  		MBCartVect * Pi);
-
-  MBErrorCode compute_tangents_for_each_edge();// they will be used for control points
-
-  MBErrorCode compute_control_points_on_edges(double min_dot); //
-  
-  MBErrorCode compute_internal_control_points_on_facets(double min_dot);
+ //
 
   MBErrorCode find_edges_orientations( MBEntityHandle edges[3],
   		const MBEntityHandle * conn3, int orient[3]); // maybe we will set it?
@@ -199,13 +224,9 @@ private:
     MBCartVect  P[3][5],  // edge control points
     MBCartVect  G[6] ) ;   // return internal control points
 
-  void DumpModelControlPoints();
 
-  iMesh_Instance _meshIface;
-  iBase_EntitySetHandle _surf_set;
-
-  MBInterface * _mb;
-  MBEntityHandle _mbset;
+  //iMesh_Instance _meshIface;
+  //iBase_EntitySetHandle _surf_set;
 
   moab::GeomTopoTool * _my_geomTopoTool;
   MBRange _gsets[4];// redundant here
@@ -220,16 +241,19 @@ private:
   MBRange _triangles;
   MBRange _edges;
   MBRange _nodes;
-  std::vector<MBEntityHandle> _loops;
-  std::vector<double> _fractions;// they are increasing from 0. to 1.,
-  // corresponding to the u parameter on the boundary curves
-  // it makes sense for one loop only
-  std::vector<char> _senses;
-  std::vector<int> _loopEnds;// the first loop starts at 0 always
+
+  std::vector<double> _fractions;// they are increasing from 0. to 1., do we need these?
   std::vector<double> _loopLengths;
+
+  // each loop will be actually a vector of MBEntityHandle, paired with a vector of senses
+  // number of loops is decided by the size of _loopEnds
+  std::vector<MBEntityHandle> _loops; // set1, set 3, set 5, ...
+  std::vector<char> _senses; // 0 forward, 1 backward: 0, 0, 1, ...
+  std::vector<int> _loopEnds;// the first loop starts at 0 always;
+
   // number of loops is decided by the size of _loopEnds.size()
   // this ref face will be gone, we will replace it with a new call
-  RefFace * _smooth_face;
+  //RefFace * _smooth_face;
   //int myDimension;
   double meshSize;
 
@@ -279,4 +303,4 @@ private:
 };
 // #endif
 
-#endif /* SMOOTH_MESH_EVAL_HPP*/
+#endif /* SMOOTH_FACE_EVAL_HPP*/

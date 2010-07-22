@@ -31,21 +31,25 @@ libMKcamal_la_include_HEADERS = \
 
 # The list of source files, and any header files that do not need to be installed
 libSmooth_la_SOURCES = \
-	SmoothMeshEval.cpp \
+	SmoothFaceEval.cpp \
 	CamalPaveDriver.cpp \
 	CAMALSizeEval.cpp \
-	SmoothCurveEval.cpp
+	SmoothCurveEval.cpp \
+	SmoothVertex.cpp  \
+	SmoothBase.cpp
 
 # The list of header files which are to be installed
 libSmooth_la_include_HEADERS = \
-	SmoothMeshEval.hpp \
+	SmoothFaceEval.hpp \
 	CamalPaveDriver.hpp \
 	CAMALSizeEval.hpp \
-	SmoothCurveEval.hpp
+	SmoothCurveEval.hpp \
+	SmoothVertex.hpp \
+	SmoothBase.hpp
 	
 
 # Tests
-check_PROGRAMS = Camal_test IceSheet_test SmoothIceSheet_test addGeoSets
+check_PROGRAMS = Camal_test IceSheet_test SmoothIceSheet_test addGeoSets Create2FaceShell
 
 if HAVE_CAMAL
 TESTS = $(check_PROGRAMS)
@@ -70,6 +74,11 @@ addGeoSets_SOURCES = Geometrize.cpp
 addGeoSets_DEPENDENCIES = libSmooth.la
 addGeoSets_CXXFLAGS = -DTEST $(CXXFLAGS)
 addGeoSets_LDADD = libSmooth.la $(IMESH_LIBS) 
+
+Create2FaceShell_SOURCES = CreateShell.cpp
+Create2FaceShell_DEPENDENCIES =  
+Create2FaceShell_CXXFLAGS = -DTEST $(CXXFLAGS)
+Create2FaceShell_LDADD = $(IMESH_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
