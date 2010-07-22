@@ -4,12 +4,19 @@
  * \brief add geometry sets to a bland surface mesh file, so it can be 
  *  imported easily into cubit; the preffered out is exo
  *
+ *  typical scenario: geometrize an smf file, add boundary edges, and geometry sets
+ *   ( surface, one periodic boundary and one vertex)
+ *
  */
 
-#include "iMesh.h"
+//#include "iMesh.h"
 
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
+#include "MBInterface.hpp"
+#include "MBCore.hpp"
+#include "MBTagConventions.hpp"
+
 #include "moab/GeomTopoTool.hpp"
 
 #include <iostream>
@@ -24,144 +31,151 @@ bool debug = false;
 #define ERRORR(a) {if (iBase_SUCCESS != err) {printf(a); return 1;}}
 #define MBERRORR(a) {if (MB_SUCCESS != rval) {std::cerr << a << std::endl; return 1;}}
 
-int main( int argc, char *argv[] )
-{
-  // Check command line arg
-  std::string input_filename, output_filename;
+int main(int argc, char *argv[]) {
+	// Check command line arg
+	std::string input_filename, output_filename;
 
-  if (argc < 3) {
-    std::cout << "Usage: " << argv[0] << " <input_mesh_filename> <output_mesh_filename> "
-              << std::endl;
-    return 0;
-  }
-  else {
-    input_filename = argv[1];
-    output_filename = argv[2];
-  }
-  
-  // initialize the mesh interface instances
-  int i, err;
-  iMesh_Instance mesh = NULL;
-  iMesh_newMesh(0, &mesh, &err, 0);
-  assert(iBase_SUCCESS == err);
+	if (argc < 3) {
+		std::cout << "Usage: " << argv[0]
+				<< " <input_mesh_filename> <output_mesh_filename> "
+				<< std::endl;
+		return 0;
+	} else {
+		input_filename = argv[1];
+		output_filename = argv[2];
+	}
 
-  iBase_EntitySetHandle mesh_root_set;
-  iMesh_getRootSet(mesh, &mesh_root_set, &err);
-  if (iBase_SUCCESS != err) {
-    printf("Failed to return a root set.\n");
-    return 1;
-  }
+	MBCore moab;
+	MBInterface * MBI = &moab;
 
-  // read surface mesh
-  iMesh_load(mesh, mesh_root_set, input_filename.c_str(), NULL, &err, input_filename.size(), 0);
-  ERRORR("ERROR : can not load input mesh from file");
+	MBErrorCode rval = MBI->load_mesh(input_filename.c_str(), NULL, 0);
+	if (rval != MB_SUCCESS)
+		return 1;
+	MBRange surface_ents, edge_ents, loop_range;
 
-  // get surfaces, edges and verticies
-  iBase_EntityHandle *triangles = NULL;
-  int triangles_size, triangles_alloc = 0;
-  iMesh_getEntities(mesh, mesh_root_set, iBase_ALL_TYPES,
-		    iMesh_TRIANGLE, &triangles, &triangles_alloc, 
-		    &triangles_size, &err);
-  ERRORR("Failed to get triangles.\n");
+	rval = MBI->get_entities_by_type(0, MBTRI, surface_ents);
 
-  MBRange surface_ents, edge_ents, loop_range;
-  for (i = 0; i < triangles_size; i++) {
-    surface_ents.insert(reinterpret_cast<MBEntityHandle> (triangles[i]));
-  }
+	// mb
+	// get surface sets
+	MBTag geom_tag;
+	rval = MBI->tag_create(GEOM_DIMENSION_TAG_NAME, sizeof(int), MB_TAG_DENSE,
+			MB_TYPE_INTEGER, geom_tag, 0, true);
+	assert(MB_SUCCESS==rval);
 
-  MBSkinner tool(reinterpret_cast<MBInterface*> (mesh));
-  MBErrorCode rval = tool.find_skin(surface_ents, 1, edge_ents);
-  MBERRORR("Skinner failure.");
+	MBTag gid_tag;
+	rval = MBI->tag_create(GLOBAL_ID_TAG_NAME, sizeof(int), MB_TAG_DENSE,
+			MB_TYPE_INTEGER, gid_tag, 0, true);
+	assert(MB_SUCCESS==rval);
 
-  iBase_EntityHandle* edge_entities = (iBase_EntityHandle*)malloc(edge_ents.size()*sizeof(iBase_EntityHandle));
-  MBEntityHandle *tmp_ptr = reinterpret_cast<MBEntityHandle*>(edge_entities);
-  std::copy(edge_ents.begin(), edge_ents.end(), tmp_ptr);
+	MBEntityHandle face ;
+	rval = MBI->create_meshset(MESHSET_SET, face);
+	assert(MB_SUCCESS==rval);
+	// set some tags on face
+	int dimension = 2;
+	rval = MBI->tag_set_data(geom_tag, &face, 1, &dimension);
+	assert(MB_SUCCESS==rval);
 
-  iBase_EntityHandle* verts = NULL;
-  int verts_alloc = 0, verts_size;
-  iMesh_getEntAdj(mesh, edge_entities[0], iBase_VERTEX,
-		  &verts, &verts_alloc, &verts_size, &err);
-  ERRORR("Problem getting edge vertex.\n");
+	int gid = 1;
+	rval = MBI->tag_set_data(gid_tag, &face, 1, &gid);
 
-  // make all geometry mesh sets and add entities
-  iBase_EntitySetHandle sets[3];
-  for (i = 0; i < 3; i++) {
-    iMesh_createEntSet(mesh, false, &sets[i], &err);
-    ERRORR("Problem creating geometry entityset.\n");
-  }
-  iMesh_addEntArrToSet(mesh, verts, 1, sets[0], &err);
-  ERRORR("Failed to add vertex in entity set\n");
-  iMesh_addEntArrToSet(mesh, edge_entities, edge_ents.size(), sets[1], &err);
-  ERRORR("Failed to add edges in entity set.\n");
-  iMesh_addEntArrToSet(mesh, triangles, triangles_size, sets[2], &err);
-  ERRORR("Failed to add triangles in entity set.\n");
-  iMesh_addPrntChld(mesh, sets[2], sets[1], &err);
-  ERRORR("Problem add parent in entity_sets_test.\n");
-  iMesh_addPrntChld(mesh, sets[1], sets[0], &err);
-  ERRORR("Problem add parent in entity_sets_test.\n");
+	// create an edge set
+	MBEntityHandle edge;
+	rval = MBI->create_meshset(MESHSET_ORDERED, edge);
+	assert(MB_SUCCESS==rval);
+	dimension =1;
+	rval = MBI->tag_set_data(geom_tag, &edge, 1, &dimension);
+	assert(MB_SUCCESS==rval);
+	gid = 1;
+	rval = MBI->tag_set_data(gid_tag, &edge, 1, &gid);
+	assert(MB_SUCCESS==rval);
 
-  if (debug) {
-    iMesh_save(mesh, sets[1], "boundary_edges.vtk", 0, &err, 18, 0);
-    if (iBase_SUCCESS != err) {
-      std::cerr << "ERROR saving mesh to boundary_edges.vtk" << std::endl;
-      return 1;
-    }
-  }
+	// create a vertex set
+	MBEntityHandle vertex;
+	rval = MBI->create_meshset(MESHSET_SET, vertex);
+	assert(MB_SUCCESS==rval);
+	dimension =0;
+	rval = MBI->tag_set_data(geom_tag, &vertex, 1, &dimension);
+	assert(MB_SUCCESS==rval);
+	gid = 1;
+	rval = MBI->tag_set_data(gid_tag, &edge, 1, &gid);
+	assert(MB_SUCCESS==rval);
 
-  // set geometry tag to geometry sets
-  iBase_TagHandle geom_tag_handle;
-  const char* geom_tag_name = "GEOM_DIMENSION";
-  iBase_TagHandle id_tag_handle;
-  const char* id_tag_name = "GLOBAL_ID";
-  iMesh_getTagHandle(mesh, geom_tag_name, &geom_tag_handle, &err, 14);
-  ERRORR("Couldn't get geometry tag handle.\n");
-  iMesh_getTagHandle(mesh, id_tag_name, &id_tag_handle, &err, 9);
-  ERRORR("Couldn't get geometry tag handle.\n");
-  for (i = 0; i < 3; i++) {
-    iMesh_setEntSetIntData(mesh, sets[i], geom_tag_handle, i, &err);
-    ERRORR("Failed to set geom tag values.\n");
-    iMesh_setEntSetIntData(mesh, sets[i], id_tag_handle, 1, &err);
-    ERRORR("Failed to set geom tag values.\n");
-  }
+	// add triangles to the face
 
-  if (debug) {
-    iBase_EntityHandle *entities;
-    int entities_alloc, entities_size;
-    for (i = 0; i < iMesh_ALL_TOPOLOGIES; i++) {
-      entities = NULL;
-      entities_alloc = 0;
-      iMesh_getEntities(mesh, mesh_root_set, iBase_ALL_TYPES,
-			i, &entities, &entities_alloc, 
-			&entities_size, &err);
-      ERRORR("Failed to get entities\n");
-      std::cout << "type=" << i << ", number=" << entities_size << std::endl;
-    }
-    
-    iBase_EntitySetHandle *esets = NULL;
-    int esets_alloc = 0, esets_size;
-    iMesh_getEntSets(mesh, mesh_root_set, 1, &esets, &esets_alloc, &esets_size, &err);
-    ERRORR("Failed to get entity sets\n");
-    std::cout << "entity set number=" << esets_size << std::endl;
-  }
+	rval = MBI->add_entities(face, surface_ents);
+	assert(MB_SUCCESS==rval);
 
-  // add the sense tags to the edges on the boundary
-  // get the GeomTopoTool on the mesh
-  MBInterface * mb =  reinterpret_cast<MBInterface*> (mesh);
-  moab::GeomTopoTool geomTool(mb);
-  int sense = 1 ;// CUBIT_SENSE = enum { CUBIT_UNKNOWN, CUBIT_FORWARD, CUBIT_REVERSE }
-  std::vector<int>  senses;
-  senses.push_back(sense);
-  std::vector<MBEntityHandle> sets1;
-  MBEntityHandle setFace( (MBEntityHandle)sets[2]);
-  sets1.push_back(setFace);
-  MBEntityHandle setCurve( (MBEntityHandle)sets[1]);
-  // GeomTopoTool::set_senses(EntityHandle edge,  std::vector<EntityHandle> &faces,  std::vector<int> &senses)
-  geomTool.set_senses(setCurve, sets1, senses);// only one set of dimension 1
-  // write the mesh as an h5m file, because it can save the sets too, and their relationship
-  // then look at it with mbsize -ll
+	MBSkinner tool(MBI);
+	rval = tool.find_skin(surface_ents, 1, edge_ents);
+	MBERRORR("Skinner failure.");
 
-  iMesh_save(mesh, mesh_root_set, output_filename.c_str(), NULL, &err, output_filename.size(), 0);
-  ERRORR("Couldn't write geometrized mesh file\n");
+	// arrange edges according to loops; one edge per loop
+	//
+	rval = MBI ->add_parent_child( face, edge);
+	assert(MB_SUCCESS==rval);
+	rval = MBI ->add_parent_child( edge, vertex);
+	assert(MB_SUCCESS==rval);
 
-  return 0;
+	// need to arrange the edges; first node in the edge list is vertex1
+	std::vector<MBEntityHandle> firstV;
+	std::vector<MBEntityHandle> endV;
+	std::vector<MBEntityHandle> loops; // edge loops, edges need to be chained in loops
+
+	std::vector<int> marks;
+	for (MBRange::iterator it =edge_ents.begin(); it!=edge_ents.end(); it++ )
+	{
+		MBEntityHandle e = *it;
+		int nnodes ;
+		const MBEntityHandle * conn2;
+		rval = MBI->get_connectivity(e, conn2, nnodes);
+		assert (nnodes==2);
+		firstV.push_back(conn2[0]);
+		endV.push_back(conn2[1]);
+		marks.push_back(0);
+	}
+	// add an edge, one at a time, until all exhausted
+	// first node is added to the vertex set
+	MBI->add_entities(vertex, &firstV[0], 1);
+	loops.push_back(edge_ents[0]);// first edge
+	marks[0] = 1; // marked already
+	MBEntityHandle curVert = endV[0];
+	int numEdges = firstV.size();
+	while (curVert!=firstV[0])
+	{
+		for (int i=1; i<numEdges; i++)
+		{
+			if (marks[i])
+				continue;
+			if (curVert == firstV[i])
+			{
+				loops.push_back(edge_ents[i]);
+				curVert = endV[i];
+				break;// from for loop
+				marks[i] = 1;// to not
+			}
+		}
+	}
+
+	// add loops edges to the edge set
+	MBI->add_entities(edge, &loops[0], loops.size());// only one edge
+	// add the sense tags to the edges on the boundary
+	// get the GeomTopoTool on the mesh
+
+	moab::GeomTopoTool geomTool(MBI);
+	int sense = 0;//
+	std::vector<int> senses;
+	senses.push_back(sense);
+	std::vector<MBEntityHandle> sets1;
+	//MBEntityHandle setFace((MBEntityHandle) sets[2]);
+	sets1.push_back(face);
+	//MBEntityHandle setCurve((MBEntityHandle) sets[1]);
+	// GeomTopoTool::set_senses(EntityHandle edge,  std::vector<EntityHandle> &faces,  std::vector<int> &senses)
+	geomTool.set_senses(edge, sets1, senses);// only one set of dimension 1
+	// write the mesh as an h5m file, because it can save the sets too, and their relationship
+	// then look at it with mbsize -ll
+
+	rval = MBI-> write_mesh(output_filename.c_str());
+	MBERRORR("Couldn't write geometrized mesh file\n");
+
+	return 0;
 }

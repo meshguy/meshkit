@@ -53,7 +53,14 @@ bool SmoothCurveEval::is_periodic(double& period)
 {
 	//assert(_ref_edge);
 	//return _ref_edge->is_periodic(   period);
-	return false;// maybe true sometimes
+	MBRange vsets;
+	MBErrorCode rval = _mb->get_child_meshsets(_set, vsets);// num_hops =1
+	if (vsets.size() == 1)
+	{
+		period = _leng;
+		return true;//  true , especially for ice sheet data
+	}
+	return false;
 }
 
     //! \brief Get the parameter range of the curve.
@@ -419,8 +426,9 @@ void SmoothCurveEval::create_mesh_edges(std::map<MBEntityHandle, SmoothVertex*> 
 	// mesh_set
 	MBRange vsets;
 	MBErrorCode rval = _mb->get_child_meshsets(_set, vsets);// num_hops =1
-	if (vsets.size()!=2)
-		return;
+	int numVertexSets = vsets.size();
+	if (numVertexSets!=2 && numVertexSets!=1)
+		return;// error
 	// there should be exactly 2 children sets to each edge
 	MBEntityHandle startVert, endVert; // those are node handles for _mb
 	const MBEntityHandle * conn2;
@@ -446,7 +454,11 @@ void SmoothCurveEval::create_mesh_edges(std::map<MBEntityHandle, SmoothVertex*> 
 	//MBEntityHandle newNodeStart, newNodeEnd;
 
 	SmoothVertex * smV0 = mapVertices[vsets[0]];
-	SmoothVertex * smV1 = mapVertices[vsets[1]];
+	SmoothVertex * smV1 = NULL;
+	if (numVertexSets==1)
+		smV1 = smV0; // periodic
+	else
+		smV1 = mapVertices[vsets[1]];
 
 	MBEntityHandle newNode1, newNode2;// node handles on new mesh instance
 	if (nodes[0]==startVert)
@@ -478,6 +490,7 @@ void SmoothCurveEval::create_mesh_edges(std::map<MBEntityHandle, SmoothVertex*> 
 	bool stat = _cmlEdgeMesher->get_mesh(num_points_out, &coords[0]);
 	// now we can create new nodes in _mbOut, for the new internal nodes
 	int numInteriorNodes = num_points_out-2; // exclude the extreme nodes
+
 	MBRange newNodes;
 	newNodes.clear();
 	if (numInteriorNodes > 0)
