@@ -20,4 +20,6 @@ Assembly 2
 RadialMeshSize 0.5
 Rotate Z 30
 Center
+MaterialSet_StartId 1
+NeumannSet_StartId 1
 END ! This is a must

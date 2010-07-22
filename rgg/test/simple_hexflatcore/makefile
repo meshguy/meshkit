@@ -4,11 +4,11 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit
+CUBIT = cubit -nographics
 
-COREGEN = ../../coregen
+COREGEN = coregen
 
-ASSYGEN = ../../assygen
+ASSYGEN = assygen
 
 MESH_FILES = fuel.cub  control.cub  
 
@@ -33,4 +33,7 @@ control.cub : control.sat  control.jou  control.template.jou
 
 control.sat control.jou control.template.jou : control.inp
 	${ASSYGEN} control
+
+clean:
+	rm *.sat *.jou *.ccm *.h5m *.cub
 
