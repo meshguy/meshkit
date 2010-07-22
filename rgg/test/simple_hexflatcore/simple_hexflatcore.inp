@@ -2,7 +2,7 @@
 ! Example Simple HexFlat Generation With 3 Rings
 ! #############################################################################################################
 !
-Geometry Surface				 ! 'Geometry' card defines if the meshes are volume or surface
+Geometry Volume				 ! 'Geometry' card defines if the meshes are volume or surface
 Symmetry 1 					 ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType HexFlat				 ! 'GeometryType' card can take values Hexagonal Rectangular
 Assemblies 2 10.0				 ! 'Assemblies' card defines the number of assembly mesh files and their pitch

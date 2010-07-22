@@ -2,7 +2,7 @@
 ! Example Assembly 1
 ! #############################################################################################################
 !
-Geometry Surface
+Geometry Volume
 GeometryType Hexagonal  
 !                                     
 Materials 2 Mat_Fuel F1 Mat_Coolant C1   
@@ -17,7 +17,9 @@ Assembly 2
 	P1 P1                     
        P1 P1 P1
 	P1 P1
-RadialMeshSize 0.3
+RadialMeshSize 0.2
+MaterialSet_StartId 100
+NeumannSet_StartId 100
 Center
 Rotate Z -30
 Section Y 0

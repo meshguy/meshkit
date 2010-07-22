@@ -2,7 +2,7 @@
 ! 1/12 Core generation from example assemblies s1.inp to s2.inp 
 ! #############################################################################################################
 !
-Geometry Surface         	 ! 'Geometry' card defines if the meshes are volume or surface
+Geometry Volume        	 ! 'Geometry' card defines if the meshes are volume or surface
 !
 Symmetry 12			 ! 'Symmetry' card defines the desired symmetry in the model
 !

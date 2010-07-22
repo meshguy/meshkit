@@ -2,7 +2,7 @@
 ! Core generation from example assemblies a1.inp to a4.inp
 ! #############################################################################################################
 !
-Geometry Surface         	 ! 'Geometry' card defines if the meshes are volume or surface
+Geometry Volume         	 ! 'Geometry' card defines if the meshes are volume or surface
 !
 Symmetry 6                       ! 'Symmetry' card defines the desired symmetry in the model
 !

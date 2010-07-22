@@ -2,7 +2,7 @@
 ! Example Assembly 3
 ! #############################################################################################################
 !
-Geometry Surface
+Geometry Volume
 GeometryType Hexagonal  
 !                                     
 Materials 2 Mat_Fuel F1 Mat_Coolant C1   
@@ -16,6 +16,8 @@ Cylinder  1  0.0 0.0   0.0 10.0  0.8 F1
 Assembly 1                                                 
 P1 
 RadialMeshSize 0.3
+MaterialSet_StartId 300
+NeumannSet_StartId 300
 Center
 Section X 0
 Rotate Z -30 
