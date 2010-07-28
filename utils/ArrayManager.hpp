@@ -1,6 +1,8 @@
 #ifndef ARRAYMANAGER_HPP
 #define ARRAYMANAGER_HPP
 
+#include <cstdlib>
+
 // Check the array size, and allocate the array if necessary.
 // Free the array upon leaving scope unless KEEP_ARRAY
 // is invoked.

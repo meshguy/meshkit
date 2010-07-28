@@ -26,7 +26,9 @@ libMKalgs_la_SOURCES = \
 	ProjectShell.cpp \
 	EdgeMesher.cpp \
 	OneToOneSwept.cpp \
-	CESets.cpp
+	CESets.cpp \
+	CopyUtils.cpp \
+	CopyUtils.hpp
 
 # The list of header files which are to be installed
 libMKalgs_la_include_HEADERS = \
