@@ -2,7 +2,7 @@
 #define EXTRUDEMESH_HPP
 
 #include "iMesh_extensions.h"
-#include "CopyVerts.hpp"
+#include "Transform.hpp"
 #include "LocalTag.hpp"
 #include "CESets.hpp"
 
@@ -52,14 +52,14 @@ public:
               const double *origin, const double *z, double angle);
 
 
-  void extrude(iBase_EntityHandle *src, int size, int steps,
-               const CopyVerts &trans, bool copy_faces = false);
-  void extrude(iBase_EntitySetHandle src, int steps, const CopyVerts &trans,
-               bool copy_faces = false);
-  void extrude(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
-               int steps, const CopyVerts &trans);
-  void extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest, int steps,
-               const CopyVerts &trans);
+  void extrude(iBase_EntityHandle *src, int size,
+               const extrude::Transform &trans, bool copy_faces = false);
+  void extrude(iBase_EntitySetHandle src,
+               const extrude::Transform &trans, bool copy_faces = false);
+  void extrude(iBase_EntityHandle *src, iBase_EntityHandle *dest,
+               int steps, const extrude::Transform &trans);
+  void extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
+               const extrude::Transform &trans);
 private:
   void tag_all_sets(iBase_TagHandle local_tag);
 

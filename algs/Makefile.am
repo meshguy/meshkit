@@ -17,7 +17,7 @@ libMKalgs_la_includedir = $(includedir)
 # The list of source files, and any header files that do not need to be installed
 libMKalgs_la_SOURCES = \
 	CopyMesh.cpp \
-	CopyVerts.cpp \
+	Transform.cpp \
 	ExtrudeMesh.cpp \
 	MergeMesh.cpp \
 	vec_utils.cpp \
@@ -33,7 +33,7 @@ libMKalgs_la_SOURCES = \
 # The list of header files which are to be installed
 libMKalgs_la_include_HEADERS = \
 	CopyMesh.hpp \
-	CopyVerts.hpp \
+	Transform.hpp \
 	ExtrudeMesh.hpp \
 	MergeMesh.hpp \
 	EBMesh.hpp \

@@ -1,7 +1,6 @@
 #include "CopyMesh.hpp"
 
 #include "CopyUtils.hpp"
-#include "CopyVerts.hpp"
 #include "LocalSet.hpp"
 #include "SimpleArray.hpp"
 
@@ -84,8 +83,7 @@ void CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
   double zero[3] = {0,0,0};
   if(dx == NULL)
     dx = zero;
-  copy_transform_entities(ent_handles, num_ents,
-                          CopyMoveVerts(imeshImpl, dx),
+  copy_transform_entities(ent_handles, num_ents, copy::Translate(dx),
                           new_ents, new_ents_alloc, new_ents_size,
                           do_merge);
 }
@@ -126,8 +124,7 @@ void CopyMesh::copy_rotate_entities(iBase_EntityHandle *ent_handles,
                                     int *new_ents_size,
                                     bool do_merge) 
 {
-  copy_transform_entities(ent_handles, num_ents,
-                          CopyRotateVerts(imeshImpl, origin, z, theta),
+  copy_transform_entities(ent_handles, num_ents, copy::Rotate(origin, z, theta),
                           new_ents, new_ents_alloc, new_ents_size,
                           do_merge);
 }
@@ -135,7 +132,7 @@ void CopyMesh::copy_rotate_entities(iBase_EntityHandle *ent_handles,
 
 void CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
                                        int num_ents,
-                                       const CopyVerts &trans,
+                                       const copy::Transform &trans,
                                        iBase_EntityHandle **new_ents,
                                        int *new_ents_allocated,
                                        int *new_ents_size,
@@ -149,11 +146,11 @@ void CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
   check_error(imeshImpl, err);
 
   copy_transform_entities(set, trans, new_ents, new_ents_allocated,
-                                    new_ents_size, do_merge);
+                          new_ents_size, do_merge);
 }
 
 void CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
-                                       const CopyVerts &trans,
+                                       const copy::Transform &trans,
                                        iBase_EntityHandle **new_ents,
                                        int *new_ents_allocated,
                                        int *new_ents_size,
@@ -174,7 +171,7 @@ void CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
 
   // copy the vertices
   SimpleArray<iBase_EntityHandle> new_verts;
-  trans(ARRAY_IN(verts), ARRAY_INOUT(new_verts));
+  trans(imeshImpl, ARRAY_IN(verts), ARRAY_INOUT(new_verts));
   assert(new_verts.size() == verts.size());
 
   // set the local copy tags on vertices

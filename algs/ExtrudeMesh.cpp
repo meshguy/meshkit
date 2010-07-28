@@ -51,13 +51,13 @@ void ExtrudeMesh::reset_sets()
 void ExtrudeMesh::translate(iBase_EntityHandle *src, int size, int steps,
                             const double *dx, bool copy_faces)
 {
-  extrude(src, size, steps, CopyMoveVerts(impl_, dx, steps), copy_faces);
+  extrude(src, size, extrude::Translate(dx, steps), copy_faces);
 }
 
 void ExtrudeMesh::translate(iBase_EntitySetHandle src, int steps,
                             const double *dx, bool copy_faces)
 {
-  extrude(src, steps, CopyMoveVerts(impl_, dx, steps), copy_faces);
+  extrude(src, extrude::Translate(dx, steps), copy_faces);
 }
 
 void ExtrudeMesh::translate(iBase_EntityHandle *src, iBase_EntityHandle *dest,
@@ -113,44 +113,41 @@ void ExtrudeMesh::translate(iBase_EntitySetHandle src,
   }
 
   for(int i=0; i<3; i++)
-    dx[i] = (coords[1][i]-coords[0][i]) / steps;
+    dx[i] = (coords[1][i]-coords[0][i]);
 
-  extrude(src, dest, steps, CopyMoveVerts(impl_, dx));
+  extrude(src, dest, extrude::Translate(dx, steps));
 }
 
 void ExtrudeMesh::rotate(iBase_EntityHandle *src, int size, int steps,
                          const double *origin, const double *z, double angle,
                          bool copy_faces)
 {
-  extrude(src, size, steps, CopyRotateVerts(impl_, origin, z, angle, steps),
-          copy_faces);
+  extrude(src, size, extrude::Rotate(origin, z, angle, steps), copy_faces);
 }
 
 void ExtrudeMesh::rotate(iBase_EntitySetHandle src, int steps,
                          const double *origin, const double *z, double angle,
                          bool copy_faces)
 {
-  extrude(src, steps, CopyRotateVerts(impl_, origin, z, angle, steps),
-          copy_faces);
+  extrude(src, extrude::Rotate(origin, z, angle, steps), copy_faces);
 }
 
 void ExtrudeMesh::rotate(iBase_EntityHandle *src, iBase_EntityHandle *dest,
                          int size, int steps, const double *origin,
                          const double *z, double angle)
 {
-  extrude(src, dest, size, steps, CopyRotateVerts(impl_, origin, z, angle,
-                                                  steps));
+  extrude(src, dest, size, extrude::Rotate(origin, z, angle, steps));
 }
 
 void ExtrudeMesh::rotate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
                          int steps, const double *origin, const double *z,
                          double angle)
 {
-  extrude(src, dest, steps, CopyRotateVerts(impl_, origin, z, angle, steps));
+  extrude(src, dest, extrude::Rotate(origin, z, angle, steps));
 }
 
-void ExtrudeMesh::extrude(iBase_EntityHandle *src, int size, int steps,
-                          const CopyVerts &trans, bool copy_faces)
+void ExtrudeMesh::extrude(iBase_EntityHandle *src, int size, 
+                          const extrude::Transform &trans, bool copy_faces)
 {
   int err;
   LocalSet set(impl_);
@@ -158,11 +155,11 @@ void ExtrudeMesh::extrude(iBase_EntityHandle *src, int size, int steps,
   iMesh_addEntArrToSet(impl_, src, size, set, &err);
   check_error(impl_, err);
 
-  extrude(set, steps, trans, copy_faces);
+  extrude(set, trans, copy_faces);
 }
 
 void ExtrudeMesh::extrude(iBase_EntityHandle *src, iBase_EntityHandle *dest,
-                          int size, int steps, const CopyVerts &trans)
+                          int size, const extrude::Transform &trans)
 {
   int err;
   LocalSet src_set(impl_), dest_set(impl_);
@@ -172,13 +169,13 @@ void ExtrudeMesh::extrude(iBase_EntityHandle *src, iBase_EntityHandle *dest,
   iMesh_addEntArrToSet(impl_, dest, size, dest_set, &err);
   check_error(impl_, err);
 
-  extrude(src_set, dest_set, steps, trans);
+  extrude(src_set, dest_set, trans);
 }
 
-void ExtrudeMesh::extrude(iBase_EntitySetHandle src, int steps,
-                          const CopyVerts &trans, bool copy_faces)
+void ExtrudeMesh::extrude(iBase_EntitySetHandle src,
+                          const extrude::Transform &trans, bool copy_faces)
 {
-  assert(steps > 0);
+  assert(trans.steps() > 0);
 
   update_sets();
 
@@ -202,7 +199,7 @@ void ExtrudeMesh::extrude(iBase_EntitySetHandle src, int steps,
 
   curr.resize(adj.size());
   next.resize(adj.size());
-  trans(1, ARRAY_IN(adj), ARRAY_INOUT(next));
+  trans(1, impl_, ARRAY_IN(adj), ARRAY_INOUT(next));
 
   vtx_diff(dx, impl_, next[0], adj[0]);
   normals = get_normals(&adj[0], &indices[0], &offsets[0], ents.size(), dx);
@@ -212,9 +209,9 @@ void ExtrudeMesh::extrude(iBase_EntitySetHandle src, int steps,
                   &offsets[0], &adj[0], &next[0]);
 
   // Now do the rest
-  for (int i=2; i<=steps; i++) {
+  for (int i=2; i<=trans.steps(); i++) {
     std::swap(curr, next);
-    trans(i, ARRAY_IN(adj), ARRAY_INOUT(next));
+    trans(i, impl_, ARRAY_IN(adj), ARRAY_INOUT(next));
     connect_up_dots(ARRAY_IN(ents), local_tag, &normals[0], &indices[0],
                     &offsets[0], &curr[0], &next[0]);
   }
@@ -228,9 +225,9 @@ void ExtrudeMesh::extrude(iBase_EntitySetHandle src, int steps,
 }
 
 void ExtrudeMesh::extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
-                          int steps, const CopyVerts &trans)
+                          const extrude::Transform &trans)
 {
-  assert(steps > 0);
+  assert(trans.steps() > 0);
 
   update_sets();
 
@@ -261,14 +258,14 @@ void ExtrudeMesh::extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
 
   LocalTag local_tag(impl_);
 
-  if (steps == 0) {
+  if (trans.steps() == 0) {
     next.resize(adj.size());
     std::copy(adj.begin(), adj.end(), next.begin());
   }
   else {
     curr.resize(adj.size());
     next.resize(adj.size());
-    trans(1, ARRAY_IN(adj), ARRAY_INOUT(next));
+    trans(1, impl_, ARRAY_IN(adj), ARRAY_INOUT(next));
 
     vtx_diff(dx, impl_, next[0], adj[0]);
     normals = get_normals(&adj[0], &indices[0], &offsets[0], ents.size(), dx);
@@ -278,9 +275,9 @@ void ExtrudeMesh::extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
                     &offsets[0], &adj[0], &next[0]);
 
     // Make the inner volumes
-    for(int i=2; i<steps; i++) {
+    for(int i=2; i<trans.steps(); i++) {
       std::swap(curr, next);
-      trans(i, ARRAY_IN(adj), ARRAY_INOUT(next));
+      trans(i, impl_, ARRAY_IN(adj), ARRAY_INOUT(next));
       connect_up_dots(ARRAY_IN(ents), local_tag, &normals[0], &indices[0],
                       &offsets[0], &curr[0], &next[0]);
     }

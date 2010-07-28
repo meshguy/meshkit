@@ -2,7 +2,7 @@
 #define COPYMESH_HPP
 
 #include "iMesh_extensions.h"
-#include "CopyVerts.hpp"
+#include "Transform.hpp"
 #include "LocalTag.hpp"
 #include "CESets.hpp"
 #include "MKException.hpp"
@@ -114,7 +114,7 @@ public:
                             bool do_merge = true);
 
   void copy_transform_entities(iBase_EntitySetHandle set_handle,
-                               const CopyVerts &trans,
+                               const copy::Transform &trans,
                                iBase_EntityHandle **new_ents = NULL,
                                int *new_ents_allocated = 0,
                                int *new_ents_size = 0,
@@ -122,7 +122,7 @@ public:
 
   void copy_transform_entities(iBase_EntityHandle *ent_handles,
                                int num_ents,
-                               const CopyVerts &trans,
+                               const copy::Transform &trans,
                                iBase_EntityHandle **new_ents = NULL,
                                int *new_ents_allocated = 0,
                                int *new_ents_size = 0,
