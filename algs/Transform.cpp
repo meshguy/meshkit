@@ -22,8 +22,14 @@ void copy::Transform::operator ()(iMesh_Instance impl, iBase_EntityHandle *src,
   for (int i=0; i<src_size; i++)
     transform(&coords[i*3]);
 
-  iMesh_createVtxArr(impl, src_size, iBase_INTERLEAVED, ARRAY_IN(coords),
-                     dest, dest_alloc, dest_size, &err);
+  if (dest && src == *dest) {
+    iMesh_setVtxArrCoords(impl, src, src_size, iBase_INTERLEAVED,
+                          ARRAY_IN(coords), &err);
+  }
+  else {
+    iMesh_createVtxArr(impl, src_size, iBase_INTERLEAVED, ARRAY_IN(coords),
+                       dest, dest_alloc, dest_size, &err);
+  }
   check_error(impl, err);
 
   assert(*dest_size == src_size); // Sanity check
