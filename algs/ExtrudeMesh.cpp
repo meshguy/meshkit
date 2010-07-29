@@ -444,10 +444,20 @@ void ExtrudeMesh::tag_all_sets(iBase_TagHandle local_tag)
 #include <cmath>
 #include <iostream>
 
+#define ERROR(str) do {                           \
+    std::cerr << (str) << std::endl;              \
+    return 1;                                     \
+  } while(false)
+
+#define CHECK_TRUE(expr, str) do {                \
+    if (!(expr)) {                                \
+      ERROR(str);                                 \
+    }                                             \
+  } while(false)
+
 #define CHECK_ERR(str) do {                       \
     if (err != iBase_SUCCESS) {                   \
-      std::cerr << (str) << std::endl;            \
-      return 1;                                   \
+      ERROR(str);                                 \
     }                                             \
   } while(false)
 
@@ -456,8 +466,7 @@ void ExtrudeMesh::tag_all_sets(iBase_TagHandle local_tag)
       expr;                                       \
     }                                             \
     catch(const std::exception &e) {              \
-      std::cerr << e.what() << std::endl;         \
-      return 1;                                   \
+      ERROR(e.what());                            \
     }                                             \
   } while(false)
 
@@ -524,18 +533,15 @@ int test_translate_ents()
   int count;
   iMesh_getNumOfType(mesh, 0, iBase_VERTEX, &count, &err);
   CHECK_ERR("Couldn't get number of vertices.");
-  if(count != 5*(steps+1)+1)
-    return 1;
+  CHECK_TRUE(count == 5*(steps+1)+1, "Invalid number of vertices.");
 
   iMesh_getNumOfType(mesh, 0, iBase_FACE, &count, &err);
   CHECK_ERR("Couldn't get number of faces.");
-  if(count != 2+1*steps)
-    return 1;
+  CHECK_TRUE(count == 2+1*steps, "Invalid number of faces.");
 
   iMesh_getNumOfType(mesh, 0, iBase_REGION, &count, &err);
   CHECK_ERR("Couldn't get number of regions.");
-  if(count != steps*2)
-    return 1;
+  CHECK_TRUE(count == steps*2, "Invalid number of regions.");
 
 #ifdef TESTSAVE
   // VisIt doesn't like 1-d objects in pseudocolor volume graphs
@@ -616,18 +622,15 @@ int test_translate_ents_to_dest()
   int count;
   iMesh_getNumOfType(mesh, 0, iBase_VERTEX, &count, &err);
   CHECK_ERR("Couldn't get number of vertices.");
-  if(count != 5*(steps+1)+1)
-    return 1;
+  CHECK_TRUE(count == 5*(steps+1)+1, "Invalid number of vertices.");
 
   iMesh_getNumOfType(mesh, 0, iBase_FACE, &count, &err);
   CHECK_ERR("Couldn't get number of faces.");
-  if(count != 4)
-    return 1;
+  CHECK_TRUE(count == 4, "Invalid number of faces.");
 
   iMesh_getNumOfType(mesh, 0, iBase_REGION, &count, &err);
   CHECK_ERR("Couldn't get number of regions.");
-  if(count != steps*2)
-    return 1;
+  CHECK_TRUE(count == steps*2, "Invalid number of regions.");
 
 #ifdef TESTSAVE
   const char *file = "test2.vtk";
@@ -683,18 +686,15 @@ int test_translate_set()
   int count;
   iMesh_getNumOfType(mesh, 0, iBase_VERTEX, &count, &err);
   CHECK_ERR("Couldn't get number of vertices.");
-  if(count != 4*(steps+1))
-    return 1;
+  CHECK_TRUE(count == 4*(steps+1), "Invalid number of vertices.");
 
   iMesh_getNumOfType(mesh, 0, iBase_FACE, &count, &err);
   CHECK_ERR("Couldn't get number of faces.");
-  if(count != 1)
-    return 1;
+  CHECK_TRUE(count == 1, "Invalid number of faces.");
 
   iMesh_getNumOfType(mesh, 0, iBase_REGION, &count, &err);
   CHECK_ERR("Couldn't get number of regions.");
-  if(count != steps)
-    return 1;
+  CHECK_TRUE(count == steps, "Invalid number of regions.");
 
 #ifdef TESTSAVE
   const char *file = "test3.vtk";
@@ -767,23 +767,19 @@ int test_rotate_set()
   int count;
   iMesh_getNumOfType(mesh, 0, iBase_VERTEX, &count, &err);
   CHECK_ERR("Couldn't get number of vertices.");
-  if(count != 4*(steps+1))
-    return 1;
+  CHECK_TRUE(count == 4*(steps+1), "Invalid number of vertices.");
 
   iMesh_getNumOfType(mesh, 0, iBase_FACE, &count, &err);
   CHECK_ERR("Couldn't get number of faces.");
-  if(count != 1)
-    return 1;
+  CHECK_TRUE(count == 1, "Invalid number of faces.");
 
   iMesh_getNumOfType(mesh, 0, iBase_REGION, &count, &err);
   CHECK_ERR("Couldn't get number of regions.");
-  if(count != steps)
-    return 1;
+  CHECK_TRUE(count == steps, "Invalid number of regions.");
 
   iMesh_getNumEntSets(mesh, root_set, 0, &count, &err);
   CHECK_ERR("Couldn't get number of entity sets.");
-  if(count != 2)
-    return 1;
+  CHECK_TRUE(count == 2, "Invalid number of entity sets.");
 
 #ifdef TESTSAVE
   const char *file = "test4.vtk";
