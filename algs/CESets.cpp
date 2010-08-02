@@ -59,6 +59,17 @@ void CESets::update_tagged_sets()
   }
 }
 
+void link_expand_sets(const CESets &ce_sets, iBase_TagHandle local_tag)
+{
+  int err;
+  std::set<iBase_EntitySetHandle>::iterator set;
+  for (set = ce_sets.sbegin(); set != ce_sets.send(); ++set) {
+    iMesh_setEntSetEHData(ce_sets.impl(), *set, local_tag,
+                          reinterpret_cast<iBase_EntityHandle>(*set), &err);
+    check_error(ce_sets.impl(), err);
+  }
+}
+
 /**\brief Get the entities copied from a set
  *
  * Given a set and a tag, return the values of the tag set on entities from that
@@ -188,8 +199,8 @@ void process_ce_sets(iMesh_Instance imeshImpl,
 }
 
 void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
-                  const std::set<iBase_EntitySetHandle> &copySets,
-                  iBase_TagHandle tag, const char *tag_val)
+                   const std::set<iBase_EntitySetHandle> &copySets,
+                   iBase_TagHandle tag, const char *tag_val)
 {
   int err;
 
@@ -230,5 +241,28 @@ void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
       iMesh_setEntSetData(imeshImpl, copy_set, tag, value_ptr, tag_size, &err);
       check_error(imeshImpl, err);
     }
+  }
+}
+
+void tag_copy_sets(const CESets &ce_sets, iBase_TagHandle local_tag,
+                   iBase_TagHandle copy_tag)
+{
+  // set the copy tag on all copied sets
+  for (CESets::const_set_iterator set = ce_sets.sbegin(); set != ce_sets.send();
+       ++set) {
+    int err;
+    iBase_EntityHandle eh;
+    iMesh_getEntSetEHData(ce_sets.impl(), *set, local_tag, &eh, &err);
+    if (err == iBase_SUCCESS) {
+      iMesh_setEntSetEHData(ce_sets.impl(), *set, copy_tag, eh, &err);
+      check_error(ce_sets.impl(), err);
+    }
+  }
+
+  // tag the newly-created sets
+  for (CESets::const_tag_iterator tag = ce_sets.tbegin();
+       tag != ce_sets.tend(); ++tag) {
+    tag_copy_sets(ce_sets.impl(), copy_tag, ce_sets.sets(), tag->tag,
+                  tag->value);
   }
 }

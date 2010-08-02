@@ -502,11 +502,12 @@ AC_CONFIG_FILES([Makefile
                  meshkit.make 
                  testdir.h
                  algs/Makefile
-                 algs/Qslim/Makefile
-				 rgg/Makefile
+                 algs/test/Makefile
+                 algs/Qslim/Makefile 
+                 rgg/Makefile
                  utils/Makefile
-				 camal/Makefile
-				 plibs/Makefile
+                 camal/Makefile
+                 plibs/Makefile
                  ])
 
 AC_OUTPUT

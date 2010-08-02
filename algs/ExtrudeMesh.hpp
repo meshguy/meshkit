@@ -61,8 +61,6 @@ public:
   void extrude(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
                const extrude::Transform &trans);
 private:
-  void tag_all_sets(iBase_TagHandle local_tag);
-
   std::vector<int> get_normals(iBase_EntityHandle *verts, int *indices,
                                int *offsets, int size, double *dv);
 

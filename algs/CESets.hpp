@@ -22,12 +22,19 @@ public:
     char *value;
   };
 
+  typedef std::vector<tag_data> tag_type;
+  typedef std::set<iBase_EntitySetHandle> set_type;
+  typedef tag_type::iterator       tag_iterator;
+  typedef tag_type::const_iterator const_tag_iterator;
+  typedef set_type::iterator       set_iterator;
+  typedef set_type::const_iterator const_set_iterator;
+
   CESets(iMesh_Instance impl) : impl_(impl)
   {}
 
   ~CESets();
 
-  iMesh_Instance impl() { return impl_; }
+  iMesh_Instance impl() const { return impl_; }
 
   void add_set(iBase_EntitySetHandle set)
   {
@@ -49,20 +56,29 @@ public:
     sets_.clear();
   }
 
-  std::vector<tag_data> & tags()
-  {
-    return tags_;
-  }
+  tag_type & tags()             { return tags_; }
+  const tag_type & tags() const { return tags_; }
+  set_type & sets()             { return sets_; }
+  const set_type & sets() const { return sets_; }
 
-  std::set<iBase_EntitySetHandle> & sets()
-  {
-    return sets_;
-  }
+  tag_iterator tbegin()             { return tags_.begin(); }
+  const_tag_iterator tbegin() const { return tags_.begin(); }
+  tag_iterator tend()               { return tags_.end(); }
+  const_tag_iterator tend() const   { return tags_.end(); }
+  set_iterator sbegin()             { return sets_.begin(); }
+  const_set_iterator sbegin() const { return sets_.begin(); }
+  set_iterator send()               { return sets_.end(); }
+  const_set_iterator send() const   { return sets_.end(); }
+
 private:
   iMesh_Instance impl_;
-  std::vector<tag_data> tags_;
-  std::set<iBase_EntitySetHandle> sets_;
+  tag_type tags_;
+  set_type sets_;
 };
+
+/**\brief Set the target sets for expand sets to be themselves
+ */
+void link_expand_sets(const CESets &ce_sets, iBase_TagHandle local_tag);
 
 /**\brief Add newly-created entities/sets to a collection of sets
  *
@@ -92,5 +108,8 @@ void process_ce_sets(iMesh_Instance imeshImpl,
 void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
                    const std::set<iBase_EntitySetHandle> &copySets,
                    iBase_TagHandle tag, const char *tag_val);
+
+void tag_copy_sets(const CESets &ce_sets, iBase_TagHandle local_tag,
+                   iBase_TagHandle copy_tag);
 
 #endif
