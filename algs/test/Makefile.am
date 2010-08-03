@@ -6,29 +6,19 @@ AUTOMAKE_OPTIONS = foreign
 @IREL_CONFIG_OPTIONS@
 
 # Tests and such
-check_PROGRAMS = CopyMesh_test ExtrudeMesh_test EBMesh_test \
-		 ProjectShell_test 
+check_PROGRAMS = \
+	CopyMesh_test \
+	EBMesh_test \
+	ExtrudeMesh_test \
+	ProjectShell_test 
 TESTS = $(check_PROGRAMS)
 
-CopyMesh_test_SOURCES = CopyMesh.cpp
-CopyMesh_test_DEPENDENCIES = ../CopyMesh.hpp ../libMKalgs.la
-CopyMesh_test_CXXFLAGS = $(CXXFLAGS)
-CopyMesh_test_LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
-ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp
-ExtrudeMesh_test_DEPENDENCIES = ../ExtrudeMesh.hpp ../libMKalgs.la
-ExtrudeMesh_test_CXXFLAGS = $(CXXFLAGS)
-ExtrudeMesh_test_LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
-
-EBMesh_test_SOURCES = EBMesh.cpp
-EBMesh_test_DEPENDENCIES = ../EBMesh.hpp ../libMKalgs.la
-EBMesh_test_CXXFLAGS = $(CXXFLAGS)
-EBMesh_test_LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
-
-ProjectShell_test_SOURCES = ProjectShell.cpp
-ProjectShell_test_DEPENDENCIES = ../ProjectShell.hpp ../libMKalgs.la
-ProjectShell_test_CXXFLAGS = $(CXXFLAGS)
-ProjectShell_test_LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+CopyMesh_test_SOURCES = CopyMesh.cpp TestFramework.hpp
+EBMesh_test_SOURCES = EBMesh.cpp TestFramework.hpp
+ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp TestFramework.hpp
+ProjectShell_test_SOURCES = ProjectShell.cpp TestFramework.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
