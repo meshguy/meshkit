@@ -179,18 +179,16 @@ int CNrgen::ReadInputPhase1 ()
       break;
     }
   }
+  iGeom_newGeom( 0, &geom, &err, 0 ); // this is default way of specifying engine used in configure line
+  CHECK("Failed to set geometry engine.");
 
-  //ACIS ENGINE set as default
+  //ACIS ENGINE
   if(m_szEngine == "acis"){
-    iGeom_newGeom( 0, &geom, &err, 0 ); // this is default way of specifying ACIS engine
-    CHECK("Failed to set geometry engine.");
     m_szGeomFile = m_szFile+".sat";
   }
 
   //  OCC ENGINE
   if (m_szEngine == "occ"){
-    iGeom_newGeom( ";engine=OCC", &geom, &err, 12 );
-    CHECK("Failed to set geometry engine.");
     m_szGeomFile = m_szFile+".brep";
   }
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
