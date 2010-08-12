@@ -2,40 +2,24 @@
 ! Default input file used in make check for assygen program
 ! #############################################################################################################
 !
+GeomEngine ACIS
 GeometryType Rectangular 
 !
-Materials 4 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3 CTRL_ROD  CR	
+Materials 3 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3 
 !
 Duct 2   0.0 0.0    0 40.0    18.0 18.0   23.5 23.5    G1 C1 
 !
-Pincells 5
+Pincells 1
 !                                                                                          
 ! reflector
 PWR_RF_01 RF 2
 Pitch  4.0 4.0 40.0 
 Cylinder 1 0.0 0.0  0.0 40.0   1.6 M3  
-! control rod
-CTRL_ROD_PX_PY Q1 2 INTERSECT
-Pitch  4.0 4.0 40.0 
-Cylinder 2 2.0 2.0  0.0 40.0   1.0 1.6 CR C1
-! control rod
-CTRL_ROD_NX_PY Q2 2 INTERSECT
-Pitch  4.0 4.0 40.0 
-Cylinder 2 -2.0 2.0  0.0 40.0   1.0 1.6 CR C1
-! control rod
-CTRL_ROD_NX_NY Q3 2 INTERSECT
-Pitch  4.0 4.0 40.0 
-Cylinder 2 -2.0 -2.0  0.0 40.0   1.0 1.6 CR C1
-! control rod
-CTRL_ROD_PX_NY Q4 2 INTERSECT
-Pitch  4.0 4.0 40.0 
-Cylinder 2 2.0 -2.0  0.0 40.0   1.0 1.6 CR C1
-!
+
 Assembly 4 4 
 RF RF RF RF
-RF Q1 Q2 RF
-RF Q4 Q3 RF
+XX XX XX XX
+XX XX XX XX
 RF RF RF RF
-Center
 END     ! This is a must  
 
