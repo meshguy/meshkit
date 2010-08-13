@@ -10,37 +10,34 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = .
 if ENABLE_utils
   SUBDIRS += utils
-  INCLUDES += -I$(top_srcdir)/utils
+  AM_CPPFLAGS += -I$(top_srcdir)/utils
 endif
 if ENABLE_algs
   SUBDIRS += algs
-  INCLUDES += -I$(top_srcdir)/algs
+  AM_CPPFLAGS += -I$(top_srcdir)/algs
 endif
 if ENABLE_rgg
   SUBDIRS += rgg
-  INCLUDES += -I$(top_srcdir)/rgg
+  AM_CPPFLAGS += -I$(top_srcdir)/rgg
 endif
 if HAVE_CAMAL
   SUBDIRS += camal
-  INCLUDES += -I$(top_srcdir)/camal
+  AM_CPPFLAGS += -I$(top_srcdir)/camal
 endif
 
 # Some variables
-DEFS = $(DEFINES) 
-INCLUDES += -I$(top_builddir) -I$(top_srcdir)
+AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
 
 check_PROGRAMS =  
 TESTS = $(check_PROGRAMS)
 
 if HAVE_IGEOM
-INCLUDES += $(iGeom_INCLUDES)
-CPPFLAGS += $(iGeom_CPPFLAGS)
+AM_CPPFLAGS += $(iGeom_INCLUDES) $(iGeom_CPPFLAGS)
 LIBS += $(IGEOM_LIBS)
 endif
 
 if HAVE_IMESH
-INCLUDES += $(IMESH_INCLUDES)
-CPPFLAGS += $(IMESH_CPPFLAGS)
+AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
 LIBS += $(IMESH_LIBS)
 #CXXFLAGS += $(IMESH_CXXFLAGS)
 #CFLAGS += $(IMESH_CFLAGS)
@@ -48,7 +45,7 @@ LIBS += $(IMESH_LIBS)
 endif
 
 if HAVE_MOAB
-CPPFLAGS += -DMOAB
+AM_CPPFLAGS += -DMOAB
 endif
 
 # Automake doesn't seem to have a directory defined for

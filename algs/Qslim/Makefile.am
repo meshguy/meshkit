@@ -33,26 +33,23 @@ Qslim_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 Qslim_test_LDADD = libAlgsQslim.la $(IMESH_LIBS) $(IGEOM_LIBS) 
 
 # Boilerplate stuff that doesn't depend on what the targets are
-DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils
+AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
+              -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils
 
 if HAVE_IGEOM
-INCLUDES += $(IGEOM_INCLUDES)
-CPPFLAGS += $(IGEOM_CPPFLAGS) -DCGM
+AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS) -DCGM
 endif
 
 if HAVE_IMESH
-INCLUDES += $(IMESH_INCLUDES)
-CPPFLAGS += $(IMESH_CPPFLAGS)
+AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
 endif
 
 if HAVE_IREL
-INCLUDES += $(IREL_INCLUDES)
-CPPFLAGS += $(IREL_CPPFLAGS)
+AM_CPPFLAGS += $(IREL_INCLUDES)  $(IREL_CPPFLAGS)
 endif
 
 if HAVE_MOAB
-CPPFLAGS += -DMOAB
+AM_CPPFLAGS += -DMOAB
 endif
 
 

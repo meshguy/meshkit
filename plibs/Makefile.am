@@ -38,22 +38,18 @@ TetGen_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 TetGen_test_LDADD = libMKplibs.la $(TETGEN_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
-DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
-INCLUDES += -I$(top_srcdir) -I$(top_builddir)
+AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)
 
 if HAVE_IGEOM
-INCLUDES += $(IGEOM_INCLUDES)
-CPPFLAGS += $(IGEOM_CPPFLAGS)
+AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
 endif
 
 if HAVE_IMESH
-INCLUDES += $(IMESH_INCLUDES)
-CPPFLAGS += $(IMESH_CPPFLAGS)
+AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
 endif
 
 if HAVE_IREL
-INCLUDES += $(IREL_INCLUDES)
-CPPFLAGS += $(IREL_CPPFLAGS)
+AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
 endif
 
 if HAVE_TETGEN

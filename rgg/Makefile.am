@@ -56,20 +56,21 @@ pin217_CXXFLAGS = -DTEST $(CXXFLAGS)
 pin217_LDADD = ../algs/libMKalgs.la ../utils/libMKutils.la $(IMESH_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
-DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/algs -I$(top_srcdir)/utils
+AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
+               -I$(top_srcdir) \
+               -I$(top_builddir) \
+               -I$(top_srcdir)/algs \
+               -I$(top_srcdir)/utils
 
 if HAVE_IGEOM
-INCLUDES += $(IGEOM_INCLUDES)
-CPPFLAGS += $(IGEOM_CPPFLAGS)
+AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
 endif
 
 if HAVE_IMESH
-INCLUDES += $(IMESH_INCLUDES)
-CPPFLAGS += $(IMESH_CPPFLAGS)
+AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
 endif
 
 if HAVE_MOAB
-CPPFLAGS += -DMOAB
+AM_CPPFLAGS += -DMOAB
 endif
 

@@ -34,19 +34,13 @@ MKUtils_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 MKUtils_test_LDADD = libMKutils.la $(IMESH_LIBS) $(IGEOM_LIBS) 
 
 # Boilerplate stuff that doesn't depend on what the targets are
-DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
-INCLUDES += -I$(top_srcdir) -I$(top_builddir)
+AM_CPPFLAGS = $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)
 
 if HAVE_IGEOM
-INCLUDES += $(iGeom_INCLUDES)
-CPPFLAGS += $(iGeom_CPPFLAGS)
+AM_CPPFLAGS += $(iGeom_INCLUDES) $(iGeom_CPPFLAGS)
 endif
 
 if HAVE_IMESH
-INCLUDES += $(IMESH_INCLUDES)
-CPPFLAGS += $(IMESH_CPPFLAGS)
-#CXXFLAGS += $(IMESH_CXXFLAGS)
-#CFLAGS += $(IMESH_CFLAGS)
-#LDFLAGS += $(IMESH_LDFLAGS)
+AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
 endif
 

@@ -4,9 +4,15 @@
 AC_INIT(MESHKIT, 3.99)
 AC_CANONICAL_SYSTEM
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wall])
 
-MK_CHECK_COMPILERS
+dnl Original MK_CHECK_COMPILERS did not look for Fortran.  We
+dnl ask FATHOM_CHECK_COMPILERS to also skip the check for FC:
+dnl FATHOM_CHECK_COMPILERS([yes],[yes],[no])
+dnl However, there is a call to AC_FC_WRAPPERS below, so presumably
+dnl we should be checking for FC. - j.kraftcheck 2010-8-13
+EXTRA_GNU_FLAGS=-pipe
+FATHOM_CHECK_COMPILERS
 AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
 LIBS="-lm"
 
@@ -24,8 +30,9 @@ fi
 AC_SUBST([ZCAT])
 AM_CONDITIONAL([HAVE_ZCAT],[test "x" = "x$ZCAT"])
 
-MK_TEMPLATE_SPECIALIZATION
-DEFINES="$DEFINES $TEMPLATE_SPECIALIZATION"
+dnl This doesn't appear to be defined anywhere. - j.kraftcheck 2010-8-13
+dnl MK_TEMPLATE_SPECIALIZATION
+dnl DEFINES="$DEFINES $TEMPLATE_SPECIALIZATION"
 
 if test "x" != "x$FC"; then
   AC_FC_WRAPPERS
@@ -70,8 +77,7 @@ if test "x$WITH_MPI" != "xno"; then
   DEFINES="$DEFINES -DUSE_MPI"
   AC_CHECK_HEADER([mpi.h],[],[AC_MSG_ERROR([mpi.h not found or not working])])
   AC_MSG_CHECKING([If -DMPICH_IGNORE_CXX_SEEK is necessary])
-  AC_LANG_SAVE
-  AC_LANG_CPLUSPLUS
+  AC_LANG_PUSH([C++])
   AC_PREPROC_IFELSE([AC_LANG_PROGRAM( [[#include <stdio.h>
      #include <mpi.h>]],[])],
     [AC_MSG_RESULT([no])],
@@ -82,7 +88,7 @@ if test "x$WITH_MPI" != "xno"; then
          [AC_MSG_RESULT([yes]); AM_CPPFLAGS="$AM_CPPLFLAGS -DMPICH_IGNORE_CXX_SEEK" ],
          [AC_MSG_ERROR([mpi.h is not usable])]),
      CPPFLAGS="$save_CPPFLAGS"])
-  AC_LANG_RESTORE
+  AC_LANG_POP([C++])
 fi
 AM_CONDITIONAL(USE_MPI, [test "xno" != "x$WITH_MPI"])
 
@@ -386,13 +392,13 @@ AC_SUBST([HAVE_CAMAL_SWEEP])
 AC_SUBST([HAVE_CAMAL_TET])
 AC_SUBST([HAVE_CAMAL_EDGE])
 
-AM_CONDITIONAL( HAVE_CAMAL,        [test $HAVE_CAMAL        = yes] )
-AM_CONDITIONAL( HAVE_CAMAL_TRIADV, [test $HAVE_CAMAL_TRIADV = yes] )
-AM_CONDITIONAL( HAVE_CAMAL_TRIDEL, [test $HAVE_CAMAL_TRIDEL = yes] )
-AM_CONDITIONAL( HAVE_CAMAL_PAVER,  [test $HAVE_CAMAL_PAVER  = yes] )
-AM_CONDITIONAL( HAVE_CAMAL_SWEEP,  [test $HAVE_CAMAL_SWEEP  = yes] )
-AM_CONDITIONAL( HAVE_CAMAL_TET,    [test $HAVE_CAMAL_TET    = yes] )
-AM_CONDITIONAL( HAVE_CAMAL_EDGE,   [test $HAVE_CAMAL_EDGE   = yes] )
+AM_CONDITIONAL( HAVE_CAMAL,        [test "x$HAVE_CAMAL"        = "xyes"] )
+AM_CONDITIONAL( HAVE_CAMAL_TRIADV, [test "x$HAVE_CAMAL_TRIADV" = "xyes"] )
+AM_CONDITIONAL( HAVE_CAMAL_TRIDEL, [test "x$HAVE_CAMAL_TRIDEL" = "xyes"] )
+AM_CONDITIONAL( HAVE_CAMAL_PAVER,  [test "x$HAVE_CAMAL_PAVER"  = "xyes"] )
+AM_CONDITIONAL( HAVE_CAMAL_SWEEP,  [test "x$HAVE_CAMAL_SWEEP"  = "xyes"] )
+AM_CONDITIONAL( HAVE_CAMAL_TET,    [test "x$HAVE_CAMAL_TET"    = "xyes"] )
+AM_CONDITIONAL( HAVE_CAMAL_EDGE,   [test "x$HAVE_CAMAL_EDGE"   = "xyes"] )
 
 
 ################################################################################
@@ -488,7 +494,6 @@ AM_CONDITIONAL(HAVE_TETGEN, [test "x$HAVE_TETGEN" = "xyes"])
 ################################################################################
 #                           Output Files
 ################################################################################
-AC_SUBST([INCLUDES])
 AC_SUBST([DEFINES])
 AC_SUBST([AM_CPPFLAGS])
 AC_SUBST([AM_LDFLAGS])
