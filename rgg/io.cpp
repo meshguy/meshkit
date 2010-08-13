@@ -692,7 +692,7 @@ int CNrgen::ReadAndCreate()
     if (szInputString.substr(0,3) == "end"){
  
       // impring merge before saving
-      Imprint_Merge();
+      // Imprint_Merge();
  
       // save .sat file
       iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
@@ -1672,14 +1672,16 @@ int CNrgen::Subtract_Pins()
       for (int i=0; i<in_pins.size();i++){
 	iGeom_copyEnt(geom, in_pins[i], &copy_inpins[i], &err);
 	CHECK("Couldn't copy inner duct wall prism.");		  
-      }					
+      //}					
       // unite all pins
-      iGeom_uniteEnts(geom,ARRAY_IN(in_pins), &unite, &err);
-      CHECK( "uniteEnts failed!" );	  
+      // iGeom_uniteEnts(geom,ARRAY_IN(in_pins), &unite, &err);
+      // CHECK( "uniteEnts failed!" );	  
 
       // subtract inner covering with united pins
-      iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
+      iGeom_subtractEnts(geom, tmp_vol,in_pins[i], &tmp_new1, &err);
       CHECK("Couldn't subtract pins from block.");
+      tmp_vol = tmp_new1;
+      }
     }
     else{ // only one pin in in_pins
       iGeom_copyEnt(geom, in_pins[0], &copy_inpins[0], &err);
