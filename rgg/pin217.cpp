@@ -116,9 +116,8 @@ int main(int argc, char **argv)
       new_ents = NULL;
       new_ents_alloc = 0;
       
-      cm->copy_move_entities(orig_ents, orig_ents_size, dx, 
-                             &new_ents, &new_ents_alloc, &new_ents_size,
-                             false);
+      cm->copy(orig_ents, orig_ents_size, copy::Translate(dx), 
+               &new_ents, &new_ents_alloc, &new_ents_size, false);
       std::cout << "Copy/moved irow=" << irow << ", icol=" << icol << std::endl;
       free(new_ents);
       

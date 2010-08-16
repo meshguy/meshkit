@@ -15,6 +15,14 @@ namespace copy {
     virtual void transform(double *coords) const = 0;
   };
 
+  class Identity : public Transform
+  {
+  public:
+    Identity();
+  protected:
+    virtual void transform(double *coords) const;
+  };
+
   class Translate : public Transform
   {
   public:

@@ -48,18 +48,6 @@ void ExtrudeMesh::reset_sets()
   extrude_sets_.clear();
 }
 
-void ExtrudeMesh::translate(iBase_EntityHandle *src, int size, int steps,
-                            const double *dx, bool copy_faces)
-{
-  extrude(src, size, extrude::Translate(dx, steps), copy_faces);
-}
-
-void ExtrudeMesh::translate(iBase_EntitySetHandle src, int steps,
-                            const double *dx, bool copy_faces)
-{
-  extrude(src, extrude::Translate(dx, steps), copy_faces);
-}
-
 void ExtrudeMesh::translate(iBase_EntityHandle *src, iBase_EntityHandle *dest,
                             int size, int steps)
 {
@@ -74,6 +62,7 @@ void ExtrudeMesh::translate(iBase_EntityHandle *src, iBase_EntityHandle *dest,
   translate(src_set, dest_set, steps);
 }
 
+// TODO: figure out how to roll this into the regular extrude function
 void ExtrudeMesh::translate(iBase_EntitySetHandle src, 
                             iBase_EntitySetHandle dest, int steps)
 {
@@ -116,34 +105,6 @@ void ExtrudeMesh::translate(iBase_EntitySetHandle src,
     dx[i] = (coords[1][i]-coords[0][i]);
 
   extrude(src, dest, extrude::Translate(dx, steps));
-}
-
-void ExtrudeMesh::rotate(iBase_EntityHandle *src, int size, int steps,
-                         const double *origin, const double *z, double angle,
-                         bool copy_faces)
-{
-  extrude(src, size, extrude::Rotate(origin, z, angle, steps), copy_faces);
-}
-
-void ExtrudeMesh::rotate(iBase_EntitySetHandle src, int steps,
-                         const double *origin, const double *z, double angle,
-                         bool copy_faces)
-{
-  extrude(src, extrude::Rotate(origin, z, angle, steps), copy_faces);
-}
-
-void ExtrudeMesh::rotate(iBase_EntityHandle *src, iBase_EntityHandle *dest,
-                         int size, int steps, const double *origin,
-                         const double *z, double angle)
-{
-  extrude(src, dest, size, extrude::Rotate(origin, z, angle, steps));
-}
-
-void ExtrudeMesh::rotate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
-                         int steps, const double *origin, const double *z,
-                         double angle)
-{
-  extrude(src, dest, extrude::Rotate(origin, z, angle, steps));
 }
 
 void ExtrudeMesh::extrude(iBase_EntityHandle *src, int size, 

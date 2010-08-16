@@ -245,9 +245,8 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
 
-	  cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew, 
-						   &new_ents, &new_ents_alloc, &new_ents_size,
-						   false);
+	  cm[assm_index]->copy(orig_ents,orig_ents_size, copy::Translate(dxnew), 
+	                       &new_ents, &new_ents_alloc, &new_ents_size, false);
 	  std::cout << "Copy/moved A: " << assm_index 
 		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 	  free(new_ents);
@@ -308,9 +307,8 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 			    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	  cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew, 
-						   &new_ents, &new_ents_alloc, &new_ents_size,
-						   false);
+	  cm[assm_index]->copy(orig_ents,orig_ents_size, copy::Translate(dxnew), 
+	                       &new_ents, &new_ents_alloc, &new_ents_size, false);
 	  std::cout << "Copy/moved A: " << assm_index 
 		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 	  free(new_ents);
@@ -465,9 +463,8 @@ int CCrgen::copy_move_one_twelfth_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dxnew,
-						 &new_ents, &new_ents_alloc, &new_ents_size,
-						 false);
+	cm[assm_index]->copy(orig_ents,orig_ents_size, copy::Translate(dxnew),
+	                     &new_ents, &new_ents_alloc, &new_ents_size, false);
 	std::cout << "Copy/moved A: " << assm_index 
 		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
 
@@ -599,9 +596,8 @@ int CCrgen::copy_move_hex_flat_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx,
-						 &new_ents, &new_ents_alloc, &new_ents_size,
-						 false);
+	cm[assm_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx),
+	                     &new_ents, &new_ents_alloc, &new_ents_size, false);
 	std::cout << "Copy/moved A: " << assm_index 
 		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 
@@ -752,9 +748,8 @@ int CCrgen::copy_move_hex_full_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx,
-						 &new_ents, &new_ents_alloc, &new_ents_size,
-						 false);
+	cm[assm_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx),
+	                     &new_ents, &new_ents_alloc, &new_ents_size, false);
 	std::cout << "Copy/moved A: " << assm_index 
 		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 
@@ -875,9 +870,8 @@ int CCrgen::copy_move_sq_assys(CopyMesh **cm,
 			  &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	cm[assm_index]->copy_move_entities(orig_ents,orig_ents_size, dx, 
-						 &new_ents, &new_ents_alloc, &new_ents_size,
-						 false);
+	cm[assm_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx), 
+	                     &new_ents, &new_ents_alloc, &new_ents_size, false);
 	std::cout << "Copy/moved A: " << assm_index 
 		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 	free(new_ents);

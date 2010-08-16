@@ -69,9 +69,8 @@ int main(int argc, char **argv)
     iBase_EntityHandle *new_ents = ents + ents_size;
     new_ents_alloc = ents_size;
     
-    CHECK_THROW( cm->copy_move_entities(ents, ents_size, dx, &new_ents,
-                                        &new_ents_alloc, &new_ents_size,
-                                        false) );
+    CHECK_THROW( cm->copy(ents, ents_size, copy::Translate(dx), &new_ents,
+                          &new_ents_alloc, &new_ents_size, false) );
 
     // check # entities
     if (check_num_ents(iBase_VERTEX, 32)) return 1;
@@ -154,9 +153,9 @@ int main(int argc, char **argv)
     iBase_EntityHandle* new_ents = NULL;
     int new_ents_alloc = 0;
     int new_ents_size = 0;
-    CHECK_THROW( cm->copy_move_entities(root_set, dx, &new_ents,
-                                        &new_ents_alloc, &new_ents_size,
-                                        false) );
+    CHECK_THROW( cm->copy(root_set, copy::Translate(dx), &new_ents,
+                          &new_ents_alloc, &new_ents_size,
+                          false) );
     //getting elements for merge mesh   
     iBase_EntityHandle *ents = NULL;
     int ents_alloc = 0, ents_size;

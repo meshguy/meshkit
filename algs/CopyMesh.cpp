@@ -17,126 +17,13 @@ CopyMesh::CopyMesh(iMesh_Instance impl)
 CopyMesh::~CopyMesh()
 {}
 
-/* \brief Copy all the entities in the set
- */
-void CopyMesh::copy_entities(iBase_EntitySetHandle set_handle,
-                             iBase_EntityHandle **new_ents,
-                             int *new_ents_allocated,
-                             int *new_ents_size) 
-{
-  int err;
-
-  SimpleArray<iBase_EntityHandle> ents;
-  iMesh_getEntities(imeshImpl, set_handle, iBase_ALL_TYPES,
-                    iMesh_ALL_TOPOLOGIES, ARRAY_INOUT(ents), &err);
-  check_error(imeshImpl, err);
-  
-  copy_move_entities(ARRAY_IN(ents), NULL, new_ents, new_ents_allocated,
-                     new_ents_size);
-}
-
-  
-/* \brief Copy all the entities
- */
-void CopyMesh::copy_entities(iBase_EntityHandle *ent_handles,
-                             int num_ents,
-                             iBase_EntityHandle **new_ents,
-                             int *new_ents_allocated,
-                             int *new_ents_size) 
-{
-  copy_move_entities(ent_handles, num_ents, NULL,
-                     new_ents, new_ents_allocated, new_ents_size);;
-}
-
-/* \brief Copy and move all the entities
- */
-void CopyMesh::copy_move_entities(iBase_EntitySetHandle set_handle,
-                                  const double *dx,
-                                  iBase_EntityHandle **new_ents,
-                                  int *new_ents_alloc,
-                                  int *new_ents_size,
-                                  bool do_merge) 
-{
-  int err;
-
-  SimpleArray<iBase_EntityHandle> ents;
-  iMesh_getEntitiesRec(imeshImpl, set_handle, 
-                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
-                       ARRAY_INOUT(ents), &err);
-  check_error(imeshImpl, err);
-  
-  copy_move_entities(ARRAY_IN(ents), dx, new_ents, new_ents_alloc,
-                     new_ents_size, do_merge);
-}
-
-
-/* \brief Copy and move all the entities
- */
-void CopyMesh::copy_move_entities(iBase_EntityHandle *ent_handles,
-                                  int num_ents,
-                                  const double *dx,
-                                  iBase_EntityHandle **new_ents,
-                                  int *new_ents_alloc,
-                                  int *new_ents_size,
-                                  bool do_merge) 
-{
-  double zero[3] = {0,0,0};
-  if(dx == NULL)
-    dx = zero;
-  copy_transform_entities(ent_handles, num_ents, copy::Translate(dx),
-                          new_ents, new_ents_alloc, new_ents_size,
-                          do_merge);
-}
-
-/* \brief Copy and rotate all the entities
- */
-void CopyMesh::copy_rotate_entities(iBase_EntitySetHandle set_handle,
-                                    const double *origin,
-                                    const double *z,
-                                    double theta,
-                                    iBase_EntityHandle **new_ents,
-                                    int *new_ents_alloc,
-                                    int *new_ents_size,
-                                    bool do_merge)
-{
-  int err;
-
-  SimpleArray<iBase_EntityHandle> ents;
-  iMesh_getEntitiesRec(imeshImpl, set_handle, 
-                       iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, true,
-                       ARRAY_INOUT(ents), &err);
-  check_error(imeshImpl, err);
-  
-  copy_rotate_entities(ARRAY_IN(ents), origin, z, theta, new_ents,
-                       new_ents_alloc, new_ents_size, do_merge);
-}
-
-
-/* \brief Copy and rotate all the entities
- */
-void CopyMesh::copy_rotate_entities(iBase_EntityHandle *ent_handles,
-                                    int num_ents,
-                                    const double *origin,
-                                    const double *z,
-                                    double theta,
-                                    iBase_EntityHandle **new_ents,
-                                    int *new_ents_alloc,
-                                    int *new_ents_size,
-                                    bool do_merge) 
-{
-  copy_transform_entities(ent_handles, num_ents, copy::Rotate(origin, z, theta),
-                          new_ents, new_ents_alloc, new_ents_size,
-                          do_merge);
-}
-
-
-void CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
-                                       int num_ents,
-                                       const copy::Transform &trans,
-                                       iBase_EntityHandle **new_ents,
-                                       int *new_ents_allocated,
-                                       int *new_ents_size,
-                                       bool do_merge)
+void CopyMesh::copy(iBase_EntityHandle *ent_handles,
+                    int num_ents,
+                    const copy::Transform &trans,
+                    iBase_EntityHandle **new_ents,
+                    int *new_ents_allocated,
+                    int *new_ents_size,
+                    bool do_merge)
 {
   int err;
 
@@ -145,16 +32,15 @@ void CopyMesh::copy_transform_entities(iBase_EntityHandle *ent_handles,
   iMesh_addEntArrToSet(imeshImpl, ent_handles, num_ents, set, &err);
   check_error(imeshImpl, err);
 
-  copy_transform_entities(set, trans, new_ents, new_ents_allocated,
-                          new_ents_size, do_merge);
+  copy(set, trans, new_ents, new_ents_allocated, new_ents_size, do_merge);
 }
 
-void CopyMesh::copy_transform_entities(iBase_EntitySetHandle set_handle,
-                                       const copy::Transform &trans,
-                                       iBase_EntityHandle **new_ents,
-                                       int *new_ents_allocated,
-                                       int *new_ents_size,
-                                       bool do_merge)
+void CopyMesh::copy(iBase_EntitySetHandle set_handle,
+                    const copy::Transform &trans,
+                    iBase_EntityHandle **new_ents,
+                    int *new_ents_allocated,
+                    int *new_ents_size,
+                    bool do_merge)
 {
   int err;
   LocalTag local_tag(imeshImpl);

@@ -49,7 +49,7 @@ int test_translate_ents()
   iBase_EntityHandle faces[] = {quad, tri, line};
   double v[] = { 0, 0, 5 };
   int steps = 50;
-  CHECK_THROW( ext->translate(faces, 3, steps, v) );
+  CHECK_THROW( ext->extrude(faces, 3, extrude::Translate(v, steps)) );
 
   int count;
   iMesh_getNumOfType(mesh, 0, iBase_VERTEX, &count, &err);
@@ -202,7 +202,7 @@ int test_translate_set()
   iBase_EntityHandle faces[] = { quad };
   double v[] = { 0, 0, 5 };
   int steps = 5;
-  CHECK_THROW( ext->translate(faces, 1, steps, v) );
+  CHECK_THROW( ext->extrude(faces, 1, extrude::Translate(v, steps)) );
 
   int count;
   iMesh_getNumOfType(mesh, 0, iBase_VERTEX, &count, &err);
@@ -283,7 +283,7 @@ int test_rotate_set()
   double origin[] = { 0, -3, 0 };
   double z[] = { 1, 1, 1 };
   double angle = 2*3.14159;
-  CHECK_THROW( ext->rotate(set, steps, origin, z, angle) );
+  CHECK_THROW( ext->extrude(set, extrude::Rotate(origin, z, angle, steps)) );
 
   int count;
   iMesh_getNumOfType(mesh, 0, iBase_VERTEX, &count, &err);

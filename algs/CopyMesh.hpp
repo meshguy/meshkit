@@ -60,73 +60,20 @@ public:
    */
   std::set<iBase_EntitySetHandle> &unique_sets();
   
-  /* \brief Copy all the entities in the set
-   */
-  void copy_entities(iBase_EntitySetHandle set_handle,
-                     iBase_EntityHandle **new_ents = NULL,
-                     int *new_ents_allocated = 0,
-                     int *new_ents_size = 0);
-  
-  /* \brief Copy all the entities
-   */
-  void copy_entities(iBase_EntityHandle *ent_handles,
-                     int num_ents,
-                     iBase_EntityHandle **new_ents = NULL,
-                     int *new_ents_allocated = 0,
-                     int *new_ents_size = 0);
-  
-  /* \brief Copy/move all entities in a set
-   */
-  void copy_move_entities(iBase_EntitySetHandle set_handle,
-                          const double *dx,
-                          iBase_EntityHandle **new_ents = NULL,
-                          int *new_ents_alloc = 0,
-                          int *new_ents_size = 0,
-                          bool do_merge = true);
-  
-  /* \brief Copy and move all the entities
-   */
-  void copy_move_entities(iBase_EntityHandle *ent_handles,
-                          int num_ents,
-                          const double dx[3],
-                          iBase_EntityHandle **new_ents = NULL,
-                          int *new_ents_allocated = 0,
-                          int *new_ents_size = 0,
-                          bool do_merge = true);
+  void copy(iBase_EntitySetHandle set_handle,
+            const copy::Transform &trans = copy::Identity(),
+            iBase_EntityHandle **new_ents = NULL,
+            int *new_ents_allocated = 0,
+            int *new_ents_size = 0,
+            bool do_merge = true);
 
-  void copy_rotate_entities(iBase_EntitySetHandle set_handle,
-                            const double *origin,
-                            const double *z,
-                            double theta,
-                            iBase_EntityHandle **new_ents = NULL,
-                            int *new_ents_allocated = 0,
-                            int *new_ents_size = 0,
-                            bool do_merge = true);
-
-  void copy_rotate_entities(iBase_EntityHandle *ent_handles,
-                            int num_ents,
-                            const double *origin,
-                            const double *z,
-                            double theta,
-                            iBase_EntityHandle **new_ents = NULL,
-                            int *new_ents_allocated = 0,
-                            int *new_ents_size = 0,
-                            bool do_merge = true);
-
-  void copy_transform_entities(iBase_EntitySetHandle set_handle,
-                               const copy::Transform &trans,
-                               iBase_EntityHandle **new_ents = NULL,
-                               int *new_ents_allocated = 0,
-                               int *new_ents_size = 0,
-                               bool do_merge = true);
-
-  void copy_transform_entities(iBase_EntityHandle *ent_handles,
-                               int num_ents,
-                               const copy::Transform &trans,
-                               iBase_EntityHandle **new_ents = NULL,
-                               int *new_ents_allocated = 0,
-                               int *new_ents_size = 0,
-                               bool do_merge = true);
+  void copy(iBase_EntityHandle *ent_handles,
+            int num_ents,
+            const copy::Transform &trans = copy::Identity(),
+            iBase_EntityHandle **new_ents = NULL,
+            int *new_ents_allocated = 0,
+            int *new_ents_size = 0, 
+            bool do_merge = true);
 
   /* \brief Tag copied sets with indicated tag from original set
    */

@@ -32,25 +32,10 @@ public:
   void update_sets();
   void reset_sets();
 
-  void translate(iBase_EntityHandle *src, int size, int steps, const double *dx,
-                 bool copy_faces = false);
-  void translate(iBase_EntitySetHandle src, int steps, const double *dx,
-                 bool copy_faces = false);
   void translate(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
                  int steps);
   void translate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest,
                  int steps);
-
-  void rotate(iBase_EntityHandle *src, int size, int steps,
-              const double *origin, const double *z, double angle,
-              bool copy_faces = false);
-  void rotate(iBase_EntitySetHandle src, int steps, const double *origin,
-              const double *z, double angle, bool copy_faces = false);
-  void rotate(iBase_EntityHandle *src, iBase_EntityHandle *dest, int size,
-              int steps, const double *origin, const double *z, double angle);
-  void rotate(iBase_EntitySetHandle src, iBase_EntitySetHandle dest, int steps,
-              const double *origin, const double *z, double angle);
-
 
   void extrude(iBase_EntityHandle *src, int size,
                const extrude::Transform &trans, bool copy_faces = false);

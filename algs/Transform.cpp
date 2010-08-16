@@ -60,6 +60,12 @@ void extrude::Transform::operator ()(int step, iMesh_Instance impl,
   assert(*dest_size == src_size); // Sanity check
 }
 
+copy::Identity::Identity()
+{}
+
+void copy::Identity::transform(double *coords) const
+{}
+
 copy::Translate::Translate(const double *dv)
 {
   memcpy(dv_, dv, sizeof(dv_));
