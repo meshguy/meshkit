@@ -174,11 +174,18 @@ int CCrgen::read_inputs_phase1 (){
       }
     }
 
+    // geom engine
+    if (input_string.substr(0,10) == "geomengine"){
+      std::istringstream formatString (input_string);
+      formatString >> card >> geom_engine;    
+    }
+
     // symmetry
     if (input_string.substr(0,8) == "symmetry"){
       std::istringstream formatString (input_string);
       formatString >> card >> symm;    
     }
+
     // breaking condition
     if(input_string.substr(0,3) == "end"){
       std::istringstream formatstring (input_string);
@@ -518,7 +525,10 @@ int CCrgen::write_makefile()
   
   make_file << "\n\nGEOM_FILES = ";
   for(unsigned int i=0; i<files.size(); i++){
-    name = f_no_ext[i] + ".sat";
+    if(geom_engine == "occ")
+      name = f_no_ext[i] + ".brep";
+    else
+      name = f_no_ext[i] + ".sat";
     f_sat.push_back(name);
     make_file << name << "  ";
     name = "";

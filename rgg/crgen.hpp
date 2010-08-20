@@ -135,7 +135,7 @@ private:
   // file related
   std::ifstream file_input;    // File Input
   std::ofstream make_file;    // File Output
-  std::string iname, ifile, mfile, geometry, back_meshfile; 
+  std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine; 
   int linenumber;
   std::string card,geom_type, meshfile, mf_alias, temp_alias;
   std::vector<std::string> assm_alias;
