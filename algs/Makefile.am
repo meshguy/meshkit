@@ -25,6 +25,7 @@ libMKalgs_la_SOURCES = \
 	vec_utils.hpp \
 	EBMesh.cpp \
 	ProjectShell.cpp \
+	IntersectMesh.cpp \
 	EdgeMesher.cpp \
 	OneToOneSwept.cpp \
 	CESets.cpp \
@@ -40,6 +41,7 @@ libMKalgs_la_include_HEADERS = \
 	Transform.hpp \
 	EBMesh.hpp \
 	ProjectShell.hpp \
+	IntersectMesh.hpp \
 	EdgeMesher.hpp \
 	OneToOneSwept.hpp \
 	CESets.hpp
