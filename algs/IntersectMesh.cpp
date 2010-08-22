@@ -459,9 +459,6 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 		for (j = 0; j < 3 && !found; j++) {
 			//int node = redTri.v[j];
 			double d2 = dist2(pp, &redCoords[2*j]);
-			if (dbg && i == 0)
-				std::cout << "  red node " << j << " " << mb2->id_from_handle(redConn[j]) << " " << redCoords[2*j] <<
-				redCoords[2*j+1]    << " d2:" << d2 << " \n";
 			if (d2 < epsilon) {
 				// suspect is redConn[j] corresponding in mbOut
 
@@ -474,15 +471,16 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 				}
 				foundIds[i] = outNode; // no new node
 				found = 1;
+			        if (dbg )
+			        	std::cout << "  red node " << j << " " << mb2->id_from_handle(redConn[j]) << " new node " << 
+                                           mbOut->id_from_handle(outNode) << " " <<  redCoords[2*j] << "  " << 
+				           redCoords[2*j+1]    << " d2: " << d2 << " \n";
 			}
 		}
 		// PSTriangle2D & blueTri = m_blueMesh[blue];
 		for (j = 0; j < 3 && !found; j++) {
 			//int node = blueTri.v[j];
 			double d2 = dist2(pp, &blueCoords[2*j]);
-			if (dbg && i == 0)
-				std::cout << "  blue node " << j << " " << mb1->id_from_handle(blueConn[j]) << " " << blueCoords[2*j] <<
-				blueCoords[2*j+1]    << " d2:" << d2 << " \n";
 			if (d2 < epsilon) {
 				// suspect is blueConn[j] corresponding in mbOut
 
@@ -495,6 +493,9 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 				}
 				foundIds[i] = outNode; // no new node
 				found = 1;
+			        if (dbg )
+				      std::cout << "  blue node " << j << " " << mb1->id_from_handle(blueConn[j]) << " new node " <<mbOut->id_from_handle(outNode) <<  " " <<  blueCoords[2*j] <<
+				blueCoords[2*j+1]    << " d2:" << d2 << " \n";
 			}
 
 		}
@@ -504,9 +505,9 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 			for (j = 0; j < 3; j++) {
 				int j1 = (j+1)%3;
 				double area = area2D(&redCoords[2*j], &redCoords[2*j1], pp);
-				/*if (dbg)
-					std::cout << "   edge " << j << ": " << edge << " " << v1
-							<< " " << v2 << "  area : " << area << "\n";*/
+				if (dbg)
+					std::cout << "   edge " << j << ": " << mb2->id_from_handle(redEdges[j]) << " " << redConn[j]  
+							<< " " << redConn[j1]  << "  area : " << area << "\n";
 				if (fabs(area) < epsilon * epsilon) {
 					// found the edge; now find if there is a point in the list here
 					std::vector<MBEntityHandle> * expts = extraNodesMap[redEdges[j]];
@@ -523,6 +524,8 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 						if (d2 < epsilon) {
 							found = 1;
 							foundIds[i] = (*expts)[k];
+                                                        if (dbg)
+                                                          std::cout<<" found node:" << foundIds[i] << std::endl;
 						}
 					}
 					if (!found) {
@@ -535,6 +538,8 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 						(*expts).push_back(outNode);
 						foundIds[i] = outNode;
 						found = 1;
+                                                if (dbg)
+                                                   std::cout<<" new node: " << outNode << std::endl;
 					}
 					delete [] coords1;
 				}
@@ -563,7 +568,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 				std::cout << " triangle " << mbOut->id_from_handle(triNew) << "  nodes: " <<
 						mbOut->id_from_handle(connTri[0]) << " "
 						<< mbOut->id_from_handle(connTri[1]) << " " <<
-						mbOut->id_from_handle(connTri[3])  << "\n";
+						mbOut->id_from_handle(connTri[2])  << "\n";
 			}
 		}
 	}
@@ -612,7 +617,19 @@ int IntersectMesh::compute(iBase_EntityHandle t1, iBase_EntityHandle t2,
 		//	    	  redFlag[k] = 0;
 		//	      redFlag[m_numPos] = 1; // to guard for the boundary
 		// all reds that were tagged, are now cleared
-		rval = mb2->tag_set_data(RedFlagTag, toResetReds, &unused);
+		for (MBRange::iterator itr = toResetReds.begin(); itr!=toResetReds.end(); itr++)
+		{
+			MBEntityHandle ttt=*itr;
+			rval = mb2->tag_set_data(RedFlagTag, &ttt, 1, &unused);
+		}
+		//rval = mb2->tag_set_data(RedFlagTag, toResetReds, &unused);
+		if (dbg)
+		{
+			std::cout<<"reset reds: " ;
+			for (MBRange::iterator itr = toResetReds.begin(); itr!=toResetReds.end(); itr++)
+				std::cout<< mb2->id_from_handle(*itr) << " " ;
+			std::cout << std::endl;
+		}
 		MBEntityHandle currentRed = redQueue.front(); // where do we check for redQueue????
 		// red and blue queues are parallel
 		redQueue.pop();// mark the current red
@@ -635,11 +652,8 @@ int IntersectMesh::compute(iBase_EntityHandle t1, iBase_EntityHandle t2,
 					nP, area, nc);
 			if (nP > 0) {
 				// intersection found: output P and original triangles if nP > 2
-				if (dbg && area > 0) {
-					//std::cout << "area: " << area<< " nP:"<<nP << " sources:" << redT+1 << ":" << m_redMesh[redT].oldId <<
-					//  " " << currentBlue+1<< ":" << m_blueMesh[currentBlue].oldId << std::endl;
-				}
 				if (dbg) {
+					std::cout << "area: " << area<< " nP:"<<nP << std::endl;
 					mout << "pa=[\n";
 
 					for (k = 0; k < nP; k++) {
@@ -659,6 +673,17 @@ int IntersectMesh::compute(iBase_EntityHandle t1, iBase_EntityHandle t2,
 				MBEntityHandle neighbors[3];
 				rval = GetOrderedNeighbors(mb2, redT, neighbors);
 
+				if (dbg) {
+					std::cout << " neighbors for redT " ;
+					for (int kk=0; kk<3; kk++)
+					{
+						if (neighbors[kk] > 0)
+							std::cout << mb2->id_from_handle(neighbors[kk]) << " " ;
+						else
+							std::cout << 0 << " ";
+					}
+					std::cout << std::endl;
+				}
 				// add neighbors to the localRed queue, if they are not marked
 				for (int nn = 0; nn < 3; nn++) {
 					MBEntityHandle neighbor = neighbors[nn];
@@ -685,6 +710,17 @@ int IntersectMesh::compute(iBase_EntityHandle t1, iBase_EntityHandle t2,
 
 		MBEntityHandle blueNeighbors[3];
 		rval = GetOrderedNeighbors(mb1, currentBlue, blueNeighbors);
+		if (dbg) {
+			std::cout << " neighbors for blue T " ;
+			for (int kk=0; kk<3; kk++)
+			{
+				if (blueNeighbors[kk] > 0)
+					std::cout << mb1->id_from_handle(blueNeighbors[kk]) << " " ;
+				else
+					std::cout << 0 << " ";
+			}
+			std::cout << std::endl;
+		}
 		for (int j = 0; j < 3; j++) {
 			MBEntityHandle blueNeigh = blueNeighbors[j];
 			unsigned char status = 1;
