@@ -25,18 +25,17 @@
 
 class IntersectMesh {
 public:
-	IntersectMesh( iMesh_Instance mesh1,  iBase_EntitySetHandle set1,
-			iMesh_Instance mesh2,  iBase_EntitySetHandle set2);
-	virtual ~IntersectMesh();
+   IntersectMesh(iMesh_Instance mesh1, iBase_EntitySetHandle set1,
+         iMesh_Instance mesh2, iBase_EntitySetHandle set2);
+   virtual ~IntersectMesh();
 
-	// from a seed, compute the triangles from intersection
-	int compute(iBase_EntityHandle t1, iBase_EntityHandle t2 ,
-			iMesh_Instance outMesh, iBase_EntitySetHandle set);
+   // from a seed, compute the triangles from intersection
+   int compute(iMesh_Instance outMesh, iBase_EntitySetHandle set);
 private:
-	iMesh_Instance _mesh1;
-	iBase_EntitySetHandle _set1;
-	iMesh_Instance _mesh2;
-	iBase_EntitySetHandle _set2;
+   iMesh_Instance _mesh1;
+   iBase_EntitySetHandle _set1;
+   iMesh_Instance _mesh2;
+   iBase_EntitySetHandle _set2;
 };
 
 #endif /* INTERSECTMESH_HPP_ */

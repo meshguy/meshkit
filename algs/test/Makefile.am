@@ -20,7 +20,7 @@ CopyMesh_test_SOURCES = CopyMesh.cpp TestFramework.hpp
 EBMesh_test_SOURCES = EBMesh.cpp TestFramework.hpp
 ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp TestFramework.hpp
 ProjectShell_test_SOURCES = ProjectShell.cpp TestFramework.hpp
-IntersectMesh_test_SOURCES = IntersectMesh_test.cpp
+IntersectMesh_test_SOURCES = IntersectMesh_test.cpp TestFramework.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir)\
