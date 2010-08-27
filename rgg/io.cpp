@@ -1105,7 +1105,7 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
 // ---------------------------------------------------------------------------
 {
   // get the surface with max z
-  double dTol=1.0e-3, dZTemp;
+  double dTol=1.0e-6, dZTemp;
   int flag = 0, locTemp;
   iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
   SimpleArray<iBase_EntityHandle> surfs;
@@ -1125,7 +1125,7 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
   CHECK( "Problems getting max surf for rotation." );
   for (int i = 0; i < surfs.size(); ++i){
     // first find the max z-coordinate
-    if( (abs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
+    if( (fabs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
       if(flag == 0){
 	dZTemp = min_corn[3*i+2];
 	locTemp = i;
@@ -1164,7 +1164,7 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
     }
   }
   for (int i = 0; i < surfs.size(); ++i){
-    if( (abs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
+    if( (fabs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
       continue; // its a max of min surface
     }
     else{ // its a side surface
