@@ -9,7 +9,7 @@
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #include <queue>
-#include <map>
+//#include <map>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -39,8 +39,10 @@ MBTag BlueNodeTag; // value will be the node handle in mbOut mb1; it will
 // be used to mark the corresponding node in mbOut
 
 MBRange RedEdges;//
-
-std::map<MBEntityHandle, std::vector<MBEntityHandle> *> extraNodesMap;
+// for each red edge, we keep a vector of extra nodes, coming from intersections
+// use the index in RedEdges range, instead of a map, as before
+// std::map<MBEntityHandle, std::vector<MBEntityHandle> *> extraNodesMap;
+std::vector< std::vector<MBEntityHandle> *> extraNodesVec;
 
 // red parent and blue parent tags
 // these will be on the out mesh
@@ -139,9 +141,14 @@ void createTags(MBInterface * m1, MBInterface * m2, MBInterface * m3) {
 
    // now, create a map from each edge to a list of potential new nodes on a red edge
    // this memory has to be cleaned up
-   for (MBRange::iterator eit = RedEdges.begin(); eit != RedEdges.end(); eit++) {
-      MBEntityHandle edge = *eit;
-      extraNodesMap[edge] = new std::vector<MBEntityHandle>;
+   // change it to a vector, and use the index in range of red edges
+   int indx = 0;
+   extraNodesVec.reserve(RedEdges.size());
+   for (MBRange::iterator eit = RedEdges.begin(); eit != RedEdges.end(); eit++, indx++) {
+      //MBEntityHandle edge = *eit;
+      //extraNodesMap[edge] = new std::vector<MBEntityHandle>;
+      std::vector<MBEntityHandle> * nv = new std::vector<MBEntityHandle>;
+      extraNodesVec.push_back(nv);
    }
    //MBTag redParentTag;
    //MBTag blueParentTag;
@@ -156,11 +163,14 @@ void createTags(MBInterface * m1, MBInterface * m2, MBInterface * m3) {
 // clean some memory allocated
 void clean() {
    //
-   for (MBRange::iterator eit = RedEdges.begin(); eit != RedEdges.end(); eit++) {
-      MBEntityHandle edge = *eit;
-      delete extraNodesMap[edge];
+   int indx=0;
+   for (MBRange::iterator eit = RedEdges.begin(); eit != RedEdges.end(); eit++, indx++) {
+      //MBEntityHandle edge = *eit;
+      //delete extraNodesMap[edge];
+      delete extraNodesVec[indx];
    }
-   extraNodesMap.clear();
+   //extraNodesMap.clear();
+   extraNodesVec.clear();
 }
 // this method computed intersection between 2 triangles: will output n points, area, affected sides
 // this is a local method
@@ -534,7 +544,10 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
                      << "  area : " << area << "\n";
             if (fabs(area) < epsilon * epsilon) {
                // found the edge; now find if there is a point in the list here
-               std::vector<MBEntityHandle> * expts = extraNodesMap[redEdges[j]];
+               //std::vector<MBEntityHandle> * expts = extraNodesMap[redEdges[j]];
+               int indx =-1;
+               indx = RedEdges.index(redEdges[j]);
+               std::vector<MBEntityHandle> * expts = extraNodesVec[indx];
                // if the points pp is between extra points, then just give that id
                // if not, create a new point, (check the id)
                // get the coordinates of the extra points so far
