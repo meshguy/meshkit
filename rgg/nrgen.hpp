@@ -76,10 +76,11 @@ private:
   CMatrix<std::string> m_Assembly; 
 
   // vector for duct specification 
-  CVector<double> m_dVAssmPitch, m_dVAssmPitchX, m_dVAssmPitchY, m_dVXYAssm, m_dVZAssm, m_dAssmSize;
+  CMatrix<double> m_dMAssmPitch, m_dMAssmPitchX, m_dMAssmPitchY, m_dMXYAssm, m_dMZAssm, m_MAssmSize;
   
   // vector for material names
-  CVector<std::string> m_szAssmMat, m_szAssmMatAlias, m_szMAlias;  
+  CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
+  CMatrix<std::string> m_szMMAlias;  
 
   // vector holding a pincell
   CVector<CPincell> m_Pincell; 
@@ -89,7 +90,7 @@ private:
   std::string m_szGeomType;       
 
   // integers for vectors sizes, err etc
-  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, m_nNeumannSetId, m_nMaterialSetId; 
+  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum; 
 
   // doubles for pincell pitch, pi and mesh sizes resp.
   double m_dPitch, pi, m_dRadialSize, m_dAxialSize;      

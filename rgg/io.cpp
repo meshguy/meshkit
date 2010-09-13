@@ -127,6 +127,9 @@ int CNrgen::ReadInputPhase1 ()
 	  (strcmp (m_szEngine.c_str(), "occ") != 0) || szFormatString.fail())
 	IOErrorHandler(EGEOMENGINE);
     }
+    if (szInputString.substr(0,4) == "duct" || szInputString.substr(0,10) == "dimensions"){
+      ++m_nDuct;
+    }
     if (szInputString.substr(0,8) == "pincells"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_nPincells;
@@ -505,56 +508,58 @@ int CNrgen::ReadAndCreate()
     }   
     if( (szInputString.substr(0,10) == "dimensions") || 
 	(szInputString.substr(0,4) == "duct") ){
+   
+      ++m_nDuctNum;
+      std::cout << "getting assembly dimensions " << m_nDuct << std::endl;
 
-      std::cout << "getting assembly dimensions" << std::endl;
       if(m_szGeomType =="hexagonal"){
 	std::istringstream szFormatString (szInputString);
-	m_dVXYAssm.SetSize(2); m_dVZAssm.SetSize(2);
+	m_dMXYAssm.SetSize(m_nDuct, 2); m_dMZAssm.SetSize(m_nDuct, 2);
 
 	szFormatString >> card >> m_nDimensions 
-		       >> m_dVXYAssm(1) >> m_dVXYAssm(2)
-		       >> m_dVZAssm(1) >> m_dVZAssm(2);
+		       >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
+		       >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
 
-	m_dVAssmPitch.SetSize(m_nDimensions); m_szMAlias.SetSize(m_nDimensions);
+	m_dMAssmPitch.SetSize(m_nDuct, m_nDimensions); m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
 
-	assms.resize(m_nDimensions); // setup while reading the problem size
+	assms.resize(m_nDimensions*m_nDuct); // setup while reading the problem size
 
 
 	for (int i=1; i<=m_nDimensions; i++){
-	  szFormatString >> m_dVAssmPitch(i);
-	  if( m_dVAssmPitch(i) < 0 )
+	  szFormatString >> m_dMAssmPitch(m_nDuctNum, i);
+	  if( m_dMAssmPitch(m_nDuctNum, i) < 0 )
 	    IOErrorHandler(ENEGATIVE);
 	}
 
 	for (int i=1; i<=m_nDimensions; i++){
-	  szFormatString >> m_szMAlias(i);
-	  if(strcmp (m_szMAlias(i).c_str(), "") == 0)  
+	  szFormatString >> m_szMMAlias(m_nDuctNum, i);
+	  if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0)  
 	    IOErrorHandler(EALIAS);
 	}
       }   
       if(m_szGeomType =="rectangular"){
 	std::istringstream szFormatString (szInputString);
-	m_dVXYAssm.SetSize(2); 
-	m_dVZAssm.SetSize(2);
+	m_dMXYAssm.SetSize(m_nDuct, 2); 
+	m_dMZAssm.SetSize(m_nDuct, 2);
 	szFormatString >> card >> m_nDimensions 
-		       >> m_dVXYAssm(1) >> m_dVXYAssm(2)
-		       >> m_dVZAssm(1) >> m_dVZAssm(2);
+		       >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
+		       >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
 	if (szFormatString.fail())
 	  IOErrorHandler(INVALIDINPUT);	  
-	m_dVAssmPitchX.SetSize(m_nDimensions);
-	m_dVAssmPitchY.SetSize(m_nDimensions);
-	m_szMAlias.SetSize(m_nDimensions);
-	assms.resize(m_nDimensions); 
+	m_dMAssmPitchX.SetSize(m_nDuct, m_nDimensions);
+	m_dMAssmPitchY.SetSize(m_nDuct, m_nDimensions);
+	m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
+	assms.resize(m_nDimensions*m_nDuct); 
 
 	for (int i=1; i<=m_nDimensions; i++){
-	  szFormatString >> m_dVAssmPitchX(i) >> m_dVAssmPitchY(i);
-	  if( m_dVAssmPitchX(i) < 0 || m_dVAssmPitchY(i) < 0 || szFormatString.fail())
+	  szFormatString >> m_dMAssmPitchX(m_nDuctNum, i) >> m_dMAssmPitchY(m_nDuctNum, i);
+	  if( m_dMAssmPitchX(m_nDuctNum, i) < 0 || m_dMAssmPitchY(m_nDuctNum, i) < 0 || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
 
 	for (int i=1; i<=m_nDimensions; i++){
-	  szFormatString >> m_szMAlias(i);
-	  if(strcmp (m_szMAlias(i).c_str(), "") == 0 || szFormatString.fail())  
+	  szFormatString >> m_szMMAlias(m_nDuctNum, i);
+	  if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0 || szFormatString.fail())  
 	    IOErrorHandler(EALIAS);
 	}
       }  
@@ -569,8 +574,9 @@ int CNrgen::ReadAndCreate()
       // this is an option if a user wants to specify pitch here
       double dTotalHeight = 0.0;
       //get the number of cylinder in each pincell
+      int nTemp = 1;
       if(m_nDimensions > 0){
-	dTotalHeight = m_dVZAssm(2)-m_dVZAssm(1);
+	dTotalHeight = m_dMZAssm(nTemp, 2)-m_dMZAssm(nTemp, 1);
       }
       else{
 	dTotalHeight = 0; // nothing specified only pincells in the model
@@ -719,9 +725,10 @@ int CNrgen::CreateCubitJournal()
   int nSideset=m_nNeumannSetId, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
+  int nTemp = 1;
   if(m_nDimensions > 0){
-    dHeight=  m_dVZAssm(2)-m_dVZAssm(1);
-    dMid = (m_Centered ? 0.0 : m_dVZAssm(1) + dHeight/2.0);
+    dHeight=  m_dMZAssm(nTemp, 2)-m_dMZAssm(nTemp, 1);
+    dMid = (m_Centered ? 0.0 : m_dMZAssm(nTemp, 1) + dHeight/2.0);
   }
 
   // writing to template.jou 
@@ -735,13 +742,13 @@ int CNrgen::CreateCubitJournal()
   m_SchemesFile << "## Dimensions" << std::endl;
   if(m_szGeomType == "hexagonal"){
     if(m_nDimensions > 0){
-      m_SchemesFile << "#{PITCH =" << m_dVAssmPitch(m_nDimensions) << "}" << std::endl;
+      m_SchemesFile << "#{PITCH =" << m_dMAssmPitch(nTemp, m_nDimensions) << "}" << std::endl;
     }
   }
   else if(m_szGeomType == "rectangular"){
     if(m_nDimensions > 0){    
-      m_SchemesFile << "#{PITCHX =" << m_dVAssmPitchX(m_nDimensions)<< "}" << std::endl;
-      m_SchemesFile << "#{PITCHY =" << m_dVAssmPitchY(m_nDimensions) << "}" << std::endl;
+      m_SchemesFile << "#{PITCHX =" << m_dMAssmPitchX(nTemp, m_nDimensions)<< "}" << std::endl;
+      m_SchemesFile << "#{PITCHY =" << m_dMAssmPitchY(nTemp, m_nDimensions) << "}" << std::endl;
     }
   }
   if( m_nPlanar ==0){
@@ -1410,38 +1417,40 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
   // get all the entities (in pins)defined so far, in an entity set - for subtraction later
   iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
   CHECK( "ERROR : getRootSet failed!" );
+  //      int nTemp = 1;
+  for (int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
+    if(m_nDimensions >0){
 
-  if(m_nDimensions >0){
+      // create outermost hexes
+      std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
+      for(int n=1;n<=m_nDimensions; n++){
+	dSide = m_dMAssmPitch(nTemp, n)/(sqrt(3));
+	dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
 
-    // create outermost hexes
-    std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
-    for(int n=1;n<=m_nDimensions; n++){
-      dSide = m_dVAssmPitch(n)/(sqrt(3));
-      dHeight = m_dVZAssm(2) - m_dVZAssm(1);
-
-      // creating coverings
-      iGeom_createPrism(geom, dHeight, 6, 
-			dSide, dSide,
-			&assm, &err); 
-      CHECK("Prism creation failed.");
+	// creating coverings
+	iGeom_createPrism(geom, dHeight, 6, 
+			  dSide, dSide,
+			  &assm, &err); 
+	CHECK("Prism creation failed.");
 	  
-      // rotate the prism to match the pins
-      iGeom_rotateEnt (geom, assm, 30, 0, 0, 1, &err);
-      CHECK("Rotation failed failed.");
+	// rotate the prism to match the pins
+	iGeom_rotateEnt (geom, assm, 30, 0, 0, 1, &err);
+	CHECK("Rotation failed failed.");
 
-      m_Pincell(1).GetPitch(dP, dH);
-      dX = m_nPin*dP;
-      dY = (m_nPin-1)*dP*sqrt(3.0)/2.0;
-      dZ = (m_dVZAssm(2) + m_dVZAssm(1))/2.0;
+	m_Pincell(1).GetPitch(dP, dH);
+	dX = m_nPin*dP;
+	dY = (m_nPin-1)*dP*sqrt(3.0)/2.0;
+	dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
 
-      // position the prism
-      iGeom_moveEnt(geom, assm, dX,dY,dZ, &err);
-      CHECK("Move failed failed.");  
+	// position the prism
+	iGeom_moveEnt(geom, assm, dX,dY,dZ, &err);
+	CHECK("Move failed failed.");  
       
-      // populate the coverings array
-      assms[n-1]=assm;
+	// populate the coverings array
+	assms[nTemp*n-1]=assm;
+      }
     }
-  } 
+  }
   return 0;
 }
 
@@ -1526,22 +1535,26 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
 	
     // create outermost rectangular blocks
     std::cout << "\nCreating surrounding outer blocks .." << std::endl;
-    for(int n=1;n<=m_nDimensions; n++){
-      dHeight = m_dVZAssm(2) - m_dVZAssm(1);
-      iGeom_createBrick(geom, m_dVAssmPitchX(n),  m_dVAssmPitchY(n),dHeight, 
-			&assm, &err); 
-      CHECK("Prism creation failed.");	  
+    int nCount = -1;
+    for(int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
+      for(int n=1;n<=m_nDimensions; n++){
+	++nCount;
+	dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
+	iGeom_createBrick(geom, m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight, 
+			  &assm, &err); 
+	CHECK("Prism creation failed.");	  
       
-      // position the outer block to match the pins	  
-      dX = m_dVAssmPitchX(n)/4.0;
-      dY =  m_dVAssmPitchY(n)/4.0;
-      dZ = (m_dVZAssm(2) + m_dVZAssm(1))/2.0;
-      std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
-      iGeom_moveEnt(geom, assm, dMoveX,dMoveY,dZ, &err);
-      CHECK("Move failed failed.");  
+	// position the outer block to match the pins	  
+	dX = m_dMAssmPitchX(nTemp, n)/4.0;
+	dY =  m_dMAssmPitchY(nTemp, n)/4.0;
+	dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
+	std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
+	iGeom_moveEnt(geom, assm, dMoveX,dMoveY,dZ, &err);
+	CHECK("Move failed failed.");  
 
-      // populate the outer covering array squares
-      assms[n-1]=assm;
+	// populate the outer covering array squares
+	assms[nCount]=assm;
+      }
     }
   } 
   return 0;
@@ -1567,88 +1580,94 @@ int CNrgen::CreateOuterCovering ()
   iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
 
   // name the innermost outer covering common for both rectangular and hexagonal assembliees   
-  if(m_nDimensions >0){
-    int tag_no;
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-      if(strcmp ( m_szMAlias(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	sMatName =  m_szAssmMat(p);
-	tag_no=p;
-      }
-    }
-    std::cout << "\ncreated innermost block: " << sMatName << std::endl;
-	
-    tmp_vol = assms[0];
-    iGeom_setData(geom, tmp_vol, this_tag,
-		  sMatName.c_str(), sMatName.size(), &err);
-    CHECK("setData failed");
-
-    err = Name_Faces(sMatName, tmp_vol, this_tag);
-    ERRORR("Error in function Name_Faces", err);
-
-    //  Naming outermost block edges - sidesets in cubit journal file
-    std::cout << "Naming outermost block edges" << std::endl;	
-    SimpleArray<iBase_EntityHandle> edges;
-    iGeom_getEntAdj( geom, assms[m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
-		     &err );
-    CHECK( "ERROR : getEntAdj failed!" );
-
-    // get the top corner edges of the outer most covering
-    int count =0;//index for edge names
-    std::ostringstream os;
-    for (int i = 0; i < edges.size(); ++i){   
-      iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
-			   &xmax,&ymax,&zmax, &err);
-      CHECK("getEntBoundBox failed."); 
-      if(zmax==zmin){
-	if(zmax==m_dVZAssm(2)){
-
-	  //we have a corner edge - name it
-	  sMatName="side_edge";
-	  ++count;
-	  os << sMatName << count;
-	  sMatName=os.str();
-	  tmp_vol=edges[i];
-	  iGeom_setData(geom, tmp_vol, this_tag,
-			sMatName.c_str(), sMatName.size(), &err);
-	  CHECK("setData failed"); 
-	  std::cout << "created: " << sMatName << std::endl;  
-	  os.str("");
-	  sMatName="";
-	}
-      }
- 
-    }
-
-    // now subtract the outermost hexes and name them
-    for(int n=m_nDimensions; n>1 ; n--){
-      if(n>1){ 
-
-	// copy cyl before subtract 
-	iGeom_copyEnt(geom, assms[n-2], &tmp_vol, &err);
-	CHECK("Couldn't copy inner duct wall prism.");
-	    
-	// subtract outer most cyl from brick
-	iGeom_subtractEnts(geom, assms[n-1], tmp_vol, &tmp_new, &err);
-	CHECK("Subtract of inner from outer failed.");	  
-	    
-	assms[n-1]=tmp_new;
-	    
-	// name the vols by searching for the full name of the abbreviated Cell Mat
+  //  int nTemp = 1;
+  for (int nTemp = 1; nTemp <=m_nDuct; nTemp++){
+    if(m_nDimensions >0){
+      int tag_no;
+      for (int nTemp1 = 1; nTemp1 <=m_nDuct; nTemp1++){
 	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	  if(strcmp ( m_szMAlias(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+	  if(strcmp ( m_szMMAlias(nTemp1, 1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
 	    sMatName =  m_szAssmMat(p);
+	    tag_no=p;
 	  }
 	}
-	std::cout << "created: " << sMatName << std::endl;
-	    
-	iGeom_setData(geom, tmp_new, this_tag,
-		      sMatName.c_str(), sMatName.size(), &err);
-	CHECK("setData failed");
-	err = Name_Faces(sMatName, tmp_new, this_tag);
+      }
+      std::cout << "\ncreated innermost block: " << sMatName << std::endl;
+	
+      tmp_vol = assms[0];
+      iGeom_setData(geom, tmp_vol, this_tag,
+		    sMatName.c_str(), sMatName.size(), &err);
+      CHECK("setData failed");
+
+      err = Name_Faces(sMatName, tmp_vol, this_tag);
+      ERRORR("Error in function Name_Faces", err);
+
+      //  Naming outermost block edges - sidesets in cubit journal file
+      std::cout << "Naming outermost block edges" << std::endl;	
+      SimpleArray<iBase_EntityHandle> edges;
+      iGeom_getEntAdj( geom, assms[nTemp*m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
+		       &err );
+      CHECK( "ERROR : getEntAdj failed!" );
+
+      // get the top corner edges of the outer most covering
+      int count =0;//index for edge names
+      std::ostringstream os;
+      for (int i = 0; i < edges.size(); ++i){   
+	iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
+			     &xmax,&ymax,&zmax, &err);
+	CHECK("getEntBoundBox failed."); 
+	if(zmax==zmin){
+	  if(zmax==m_dMZAssm(nTemp, 2)){
+
+	    //we have a corner edge - name it
+	    sMatName="side_edge";
+	    ++count;
+	    os << sMatName << count;
+	    sMatName=os.str();
+	    tmp_vol=edges[i];
+	    iGeom_setData(geom, tmp_vol, this_tag,
+			  sMatName.c_str(), sMatName.size(), &err);
+	    CHECK("setData failed"); 
+	    std::cout << "created: " << sMatName << std::endl;  
+	    os.str("");
+	    sMatName="";
+	  }
+	}
       }
     }
+    // now subtract the outermost hexes and name them
+    int nCount = 0;
+    for(int nTemp=1; nTemp<=m_nDuct; nTemp++){
+      for(int n=m_nDimensions; n>1 ; n--){
+	if(n>1){ 
+	  ++nCount;
+	  // copy cyl before subtract 
+	  iGeom_copyEnt(geom, assms[nTemp*n-2], &tmp_vol, &err);
+	  CHECK("Couldn't copy inner duct wall prism.");
+	    
+	  // subtract outer most cyl from brick
+	  iGeom_subtractEnts(geom, assms[nTemp*n-1], tmp_vol, &tmp_new, &err);
+	  CHECK("Subtract of inner from outer failed.");	  
+	    
+	  assms[nTemp*n-1]=tmp_new;
+	    
+	  // name the vols by searching for the full name of the abbreviated Cell Mat
+	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	    if(strcmp ( m_szMMAlias(nTemp, n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+	      sMatName =  m_szAssmMat(p);
+	    }
+	  }
+	  std::cout << "created: " << sMatName << std::endl;
+	    
+	  iGeom_setData(geom, tmp_new, this_tag,
+			sMatName.c_str(), sMatName.size(), &err);
+	  CHECK("setData failed");
+	  err = Name_Faces(sMatName, tmp_new, this_tag);
+	}
+      }
+    }
+    std::cout << "\n--------------------------------------------------"<<std::endl;
   }
-  std::cout << "\n--------------------------------------------------"<<std::endl;
   return 0;
 }
 
@@ -1660,35 +1679,40 @@ int CNrgen::Subtract_Pins()
 // ---------------------------------------------------------------------------
 {
   if (m_nDimensions >0 && in_pins.size()>0){
-    iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
     SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
-    tmp_vol = assms[0];
-
-    // subtract the innermost hex from the pins
-    std::cout << "Subtracting all pins from assembly .. " << std::endl;
-
-    // make a copy of the pins
-    if(in_pins.size() > 1){
+    CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, in_pins.size());
+    for (int k=1; k<=m_nDuct; k++){
       for (int i=0; i<in_pins.size();i++){
-	iGeom_copyEnt(geom, in_pins[i], &copy_inpins[i], &err);
-	CHECK("Couldn't copy inner duct wall prism.");		  
-      //}					
-      // unite all pins
-      // iGeom_uniteEnts(geom,ARRAY_IN(in_pins), &unite, &err);
-      // CHECK( "uniteEnts failed!" );	  
-
-      // subtract inner covering with united pins
-      iGeom_subtractEnts(geom, tmp_vol,in_pins[i], &tmp_new1, &err);
-      CHECK("Couldn't subtract pins from block.");
-      tmp_vol = tmp_new1;
+	iGeom_copyEnt(geom, in_pins[i], &cp_inpins(k,i+1), &err);
+	CHECK("Couldn't copy inner duct wall prism.");	
       }
     }
-    else{ // only one pin in in_pins
-      iGeom_copyEnt(geom, in_pins[0], &copy_inpins[0], &err);
-      iGeom_subtractEnts(geom, tmp_vol, in_pins[0], &tmp_new1, &err);
+	
+    for (int k=1; k<=m_nDuct; k++){
+      iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL, pin = NULL;
+      tmp_vol = assms[(k-1)*m_nDimensions];
+
+      // subtract the innermost hex from the pins
+      std::cout <<in_pins.size()<< " Subtracting all pins from assembly .. " << std::endl;
+
+      // // make a copy of the pins
+      if(in_pins.size() > 1){
+	for (int i=0; i<in_pins.size();i++){
+	  pin = cp_inpins(k, i+1);
+	  // subtract inner covering with united pins
+	  iGeom_subtractEnts(geom, tmp_vol,pin, &tmp_new1, &err);
+	  CHECK("Couldn't subtract pins from block.");
+	  tmp_vol = tmp_new1;
+	}
+      }
+      else{ // only one pin in in_pins
+	iGeom_copyEnt(geom, in_pins[0], &copy_inpins[0], &err);
+	iGeom_subtractEnts(geom, tmp_vol, in_pins[0], &tmp_new1, &err);
+      }
+  
     }
+    std::cout << "\n--------------------------------------------------"<<std::endl;
   }
-  std::cout << "\n--------------------------------------------------"<<std::endl;
   return 0;
 }
 
@@ -1751,7 +1775,8 @@ int CNrgen::Create2DSurf ()
   CHECK( "Problems getting max surf for rotation." );
 
   // find the number of surfaces 't' for array allocation
-  double dtol = m_dVZAssm(2);
+  int nTemp = 1;
+  double dtol = m_dMZAssm(nTemp, 2);
   for (int i = 0; i < surfs.size(); ++i){ 
     if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol))
       t++;
@@ -1785,7 +1810,7 @@ int CNrgen::Create2DSurf ()
   }
   // position the final assembly at the center
   // get the assembly on z=0 plane
-  double zcenter = m_dVZAssm(2)/2.0;//move up
+  double zcenter = m_dMZAssm(nTemp, 2)/2.0;//move up
   SimpleArray<iBase_EntityHandle> all;
   iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
   CHECK("Failed to get all entities");

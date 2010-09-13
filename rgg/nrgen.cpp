@@ -32,6 +32,8 @@ CNrgen::CNrgen ()
   m_nMaterialSetId = 1;
   m_nNeumannSetId = 1;
   m_szEngine = "acis";
+  m_nDuct = 0;
+  m_nDuctNum = 0;
 }
 
 CNrgen::~CNrgen ()
