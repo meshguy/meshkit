@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 bool debug = false;
 
@@ -92,12 +93,14 @@ int main(int argc, char *argv[]) {
 	MBCore mbOut;
 	MBInterface * MBO = &mbOut;
 
+   clock_t start_time = clock();
 	// read initial mesh (triangular surface of one ice sheet)
 
 	error = MBI->load_mesh(mesh_filename.c_str(), NULL, 0);
 	if (error != MB_SUCCESS)
 	    return 1;
 
+	clock_t load_time = clock();
 	// get the root set of the initial mesh, to pass it along; in general, it "could" be just a set
 
 	MBEntityHandle rootSet = MBI->get_root_set(); // 0;// in MOAB this is the root set
@@ -109,7 +112,19 @@ int main(int argc, char *argv[]) {
 		std::cerr << "Problems meshing." << std::endl;
 
 
+	clock_t mesh_time = clock();
 	MBO->write_mesh(out_mesh_filename.c_str());
+
+	clock_t out_time = clock();
+	std::cout << "Total time is "
+	       << (double) (out_time - start_time)/CLOCKS_PER_SEC
+	       << " s\n  load time : "
+	       << (double) (load_time - start_time)/CLOCKS_PER_SEC
+	       << " s\n  mesh time : "
+	       << (double) (mesh_time - load_time)/CLOCKS_PER_SEC
+	       << " s\n  write time : "
+	       << (double) (out_time - mesh_time)/CLOCKS_PER_SEC
+	       << std::endl;
 
 	return !success;
 }

@@ -95,7 +95,10 @@ bool CamalPaveDriver::remesh(double mesh_size, int mesh_intervals,
 	_mesh_intervals = mesh_intervals;
 	_force_intervals = force_intervals;
 
+	clock_t start_time = clock();
 	initializeSmoothing();
+	clock_t init_time = clock();
+
 #ifdef USE_CGM
 	// now, redo the part about cgm, using moab, not iMesh
 	prepareCGMEvaluator();// this might be commented out, actually
@@ -108,8 +111,18 @@ bool CamalPaveDriver::remesh(double mesh_size, int mesh_intervals,
 	establish_mesh_curve_count();
 
 	mesh_curves();
+	clock_t meshCurves_time = clock();
 
 	mesh_surfaces();
+
+	clock_t mesh_surfaces_time = clock();
+
+	std::cout << "    Initialization time: "
+	       << (double) (init_time - start_time)/CLOCKS_PER_SEC
+	      << " s\n    Mesh Curves time: "
+	       << (double) (meshCurves_time - init_time)/CLOCKS_PER_SEC
+	       << "s\n    Mesh Surfaces time: "
+	       << (double) (mesh_surfaces_time - meshCurves_time)/CLOCKS_PER_SEC  << " s\n ";
 
 	return true;
 }
@@ -496,10 +509,16 @@ void CamalPaveDriver::mesh_curves()
 void CamalPaveDriver::mesh_surfaces()
 {
 	int numSurfaces = _mapSurfaces.size();
-	for (int i=0; i<numSurfaces; i++)
+	int i=0;
+	for (i=0; i<numSurfaces; i++)
 	{
 		_smthFace[i]->mesh( _mesh_size, _mapCurves);
 	}
+	for (i=0; i<numSurfaces; i++)
+   {
+      std::cout << " number of evaluations for surface index " << i <<
+            ": "<<_smthFace[i]->eval_counter() << "\n";
+   }
 	return ;
 }// CamalPaveDriver::mesh_surfaces()
 

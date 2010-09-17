@@ -190,6 +190,7 @@ public:
 
   void  mesh(double iMeshSize, std::map<MBEntityHandle, SmoothCurveEval*> & mapCurves);
 
+  int eval_counter() { return _evaluationsCounter;}
 private:
 
   //===========================================================================
@@ -297,9 +298,8 @@ private:
         	// MB_TAG_DENSE, _planeTag, &defPlane);
   MBTag _planeTag;
 
-  // some tags on triangles:
-  //
-
+  // counter for calls
+  long  _evaluationsCounter;
 };
 // #endif
 

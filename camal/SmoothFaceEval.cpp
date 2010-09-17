@@ -78,7 +78,8 @@ double SmoothFaceEval::get_mesh_size() {
 }*/
 SmoothFaceEval::SmoothFaceEval(MBInterface * mb, MBEntityHandle surface_set,
 		MBInterface * mbo, moab::GeomTopoTool * gTool) :
-	SmoothBase(mb, surface_set, mbo), _my_geomTopoTool(gTool) {
+	SmoothBase(mb, surface_set, mbo), _my_geomTopoTool(gTool),
+	_evaluationsCounter(0) {
 	//_smooth_face = NULL;
 	_mbOut->create_meshset(MESHSET_SET, _oSet); //will contain the
 	// get also the obb_root
@@ -1221,6 +1222,7 @@ MBErrorCode SmoothFaceEval::project_to_facets_main(MBCartVect &this_point,
 	// if there are a lot of facets on this surface - use the OBB search first
 	// to narrow the selection
 
+   _evaluationsCounter++;
 	double tolerance = 1.e-5;
 	std::vector<MBEntityHandle> facets_out;
 	// we will start with a list of facets anyway, the best among them wins
