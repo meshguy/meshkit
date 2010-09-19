@@ -510,20 +510,22 @@ int CNrgen::ReadAndCreate()
 	(szInputString.substr(0,4) == "duct") ){
    
       ++m_nDuctNum;
-      std::cout << "getting assembly dimensions " << m_nDuct << std::endl;
+      std::cout << "getting assembly dimensions " << m_nDuctNum << std::endl;
 
       if(m_szGeomType =="hexagonal"){
 	std::istringstream szFormatString (szInputString);
-	m_dMXYAssm.SetSize(m_nDuct, 2); m_dMZAssm.SetSize(m_nDuct, 2);
 
+	if(m_nDuctNum == 1){
+	  m_dMXYAssm.SetSize(m_nDuct, 2); m_dMZAssm.SetSize(m_nDuct, 2);
+	}
 	szFormatString >> card >> m_nDimensions 
 		       >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
 		       >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
+	if(m_nDuctNum == 1){
+	  m_dMAssmPitch.SetSize(m_nDuct, m_nDimensions); m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
 
-	m_dMAssmPitch.SetSize(m_nDuct, m_nDimensions); m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
-
-	assms.resize(m_nDimensions*m_nDuct); // setup while reading the problem size
-
+	  assms.resize(m_nDimensions*m_nDuct); // setup while reading the problem size
+	}
 
 	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_dMAssmPitch(m_nDuctNum, i);
@@ -539,18 +541,21 @@ int CNrgen::ReadAndCreate()
       }   
       if(m_szGeomType =="rectangular"){
 	std::istringstream szFormatString (szInputString);
-	m_dMXYAssm.SetSize(m_nDuct, 2); 
-	m_dMZAssm.SetSize(m_nDuct, 2);
+	if(m_nDuctNum == 1){
+	  m_dMXYAssm.SetSize(m_nDuct, 2); 
+	  m_dMZAssm.SetSize(m_nDuct, 2);
+	}
 	szFormatString >> card >> m_nDimensions 
 		       >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
 		       >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
 	if (szFormatString.fail())
 	  IOErrorHandler(INVALIDINPUT);	  
-	m_dMAssmPitchX.SetSize(m_nDuct, m_nDimensions);
-	m_dMAssmPitchY.SetSize(m_nDuct, m_nDimensions);
-	m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
-	assms.resize(m_nDimensions*m_nDuct); 
-
+	if(m_nDuctNum == 1){
+	  m_dMAssmPitchX.SetSize(m_nDuct, m_nDimensions);
+	  m_dMAssmPitchY.SetSize(m_nDuct, m_nDimensions);
+	  m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
+	  assms.resize(m_nDimensions*m_nDuct); 
+	}
 	for (int i=1; i<=m_nDimensions; i++){
 	  szFormatString >> m_dMAssmPitchX(m_nDuctNum, i) >> m_dMAssmPitchY(m_nDuctNum, i);
 	  if( m_dMAssmPitchX(m_nDuctNum, i) < 0 || m_dMAssmPitchY(m_nDuctNum, i) < 0 || szFormatString.fail())
@@ -562,7 +567,7 @@ int CNrgen::ReadAndCreate()
 	  if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0 || szFormatString.fail())  
 	    IOErrorHandler(EALIAS);
 	}
-      }  
+      }
     }
     if (szInputString.substr(0,8) == "pincells"){
       std::istringstream szFormatString (szInputString);
@@ -573,6 +578,7 @@ int CNrgen::ReadAndCreate()
 
       // this is an option if a user wants to specify pitch here
       double dTotalHeight = 0.0;
+
       //get the number of cylinder in each pincell
       int nTemp = 1;
       if(m_nDimensions > 0){
@@ -1417,12 +1423,12 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
   // get all the entities (in pins)defined so far, in an entity set - for subtraction later
   iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
   CHECK( "ERROR : getRootSet failed!" );
-  //      int nTemp = 1;
+  std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
+
   for (int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
     if(m_nDimensions >0){
 
       // create outermost hexes
-      std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
       for(int n=1;n<=m_nDimensions; n++){
 	dSide = m_dMAssmPitch(nTemp, n)/(sqrt(3));
 	dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
@@ -1580,28 +1586,27 @@ int CNrgen::CreateOuterCovering ()
   iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
 
   // name the innermost outer covering common for both rectangular and hexagonal assembliees   
-  //  int nTemp = 1;
-  for (int nTemp = 1; nTemp <=m_nDuct; nTemp++){
-    if(m_nDimensions >0){
-      int tag_no;
-      for (int nTemp1 = 1; nTemp1 <=m_nDuct; nTemp1++){
-	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	  if(strcmp ( m_szMMAlias(nTemp1, 1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	    sMatName =  m_szAssmMat(p);
-	    tag_no=p;
-	  }
+  if(m_nDimensions >0){
+    int tag_no;
+    for (int nTemp1 = 1; nTemp1 <=m_nDuct; nTemp1++){
+      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	if(strcmp ( m_szMMAlias(nTemp1, 1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+	  sMatName =  m_szAssmMat(p);
+	  tag_no=p;
 	}
       }
+
       std::cout << "\ncreated innermost block: " << sMatName << std::endl;
 	
-      tmp_vol = assms[0];
+      tmp_vol = assms[(nTemp1 - 1)*m_nDimensions];
       iGeom_setData(geom, tmp_vol, this_tag,
 		    sMatName.c_str(), sMatName.size(), &err);
       CHECK("setData failed");
-
+      
       err = Name_Faces(sMatName, tmp_vol, this_tag);
       ERRORR("Error in function Name_Faces", err);
-
+    }
+    for (int nTemp = 1; nTemp <= m_nDuct; nTemp++){
       //  Naming outermost block edges - sidesets in cubit journal file
       std::cout << "Naming outermost block edges" << std::endl;	
       SimpleArray<iBase_EntityHandle> edges;
@@ -1636,6 +1641,7 @@ int CNrgen::CreateOuterCovering ()
       }
     }
     // now subtract the outermost hexes and name them
+    std::cout << "Subtract outermost hexes and naming them" << std::endl;
     int nCount = 0;
     for(int nTemp=1; nTemp<=m_nDuct; nTemp++){
       for(int n=m_nDimensions; n>1 ; n--){
@@ -1650,7 +1656,7 @@ int CNrgen::CreateOuterCovering ()
 	  CHECK("Subtract of inner from outer failed.");	  
 	    
 	  assms[nTemp*n-1]=tmp_new;
-	    
+
 	  // name the vols by searching for the full name of the abbreviated Cell Mat
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	    if(strcmp ( m_szMMAlias(nTemp, n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
