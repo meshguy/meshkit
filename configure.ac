@@ -510,6 +510,7 @@ AC_CONFIG_FILES([Makefile
                  algs/Makefile
                  algs/test/Makefile
                  algs/Qslim/Makefile 
+		 algs/make_watertight/Makefile
                  rgg/Makefile
                  utils/Makefile
                  camal/Makefile

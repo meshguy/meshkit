@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS = Qslim test
+SUBDIRS = Qslim test make_watertight
 
 @IGEOM_CONFIG_OPTIONS@
 @IMESH_CONFIG_OPTIONS@
@@ -10,6 +10,8 @@ SUBDIRS = Qslim test
 
 # Things to build
 lib_LTLIBRARIES = libMKalgs.la
+
+#libMKalgs_la_LIBADD = make_watertight/libMakeWatertight.la
 
 # The directory in which to install headers
 libMKalgs_la_includedir = $(includedir)
