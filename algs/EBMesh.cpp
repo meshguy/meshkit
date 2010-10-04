@@ -808,7 +808,9 @@ bool EBMesh::fire_ray(int& nIntersect, double startPnt[3],
 					  -1, startPnt, rayDir[dir], &rayLength);
   }
   else { // facet input
-    rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, m_hTreeRoot, tol,
+    std::vector<MBEntityHandle> dum_facets_out;
+    rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, dum_facets_out,
+					       m_hTreeRoot, tol,
 					       startPnt, rayDir[dir], &rayLength);
   }
   
@@ -1401,7 +1403,9 @@ bool EBMesh::move_ray(int& nIntersect, double* startPnt, double* endPnt,
 					    -1, startPnt, ray.array(), &rayLength);
     }
     else { // facet input
-      rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, m_hTreeRoot, tol,
+      std::vector<MBEntityHandle> dum_facets_out;
+      rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, dum_facets_out,
+						 m_hTreeRoot, tol,
 						 startPnt, ray.array(), &rayLength);
       m_vhInterSurf.resize(temp_intersects.size());
     }
