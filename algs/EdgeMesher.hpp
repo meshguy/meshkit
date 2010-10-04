@@ -37,7 +37,7 @@ public:
 
 	
 public:
-	EdgeMesher(iGeom_Instance &geom, iBase_EntityHandle *EdgeHandle, iMesh_Instance &Mesh, iRel_Instance &association, iRel_RelationHandle *irel);
+	EdgeMesher(iGeom_Instance &geom, iBase_EntityHandle *EdgeHandle, iMesh_Instance &Mesh, iRel_Instance &association, iRel_PairHandle *irel);
 	~EdgeMesher();
 	double getLength() const;
 	double getLength(double ustart, double uend) const;
@@ -55,7 +55,7 @@ private:
 	iGeom_Instance geometry;
 	iMesh_Instance mesh;
 	iRel_Instance assoc;
-	iRel_RelationHandle rel;
+	iRel_PairHandle rel;
 	
 	//int SchemeOption;
 	int NumEdges;

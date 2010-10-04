@@ -26,7 +26,7 @@ class OneToOneSwept
 {	
 public:
 	//public function
-	OneToOneSwept(iGeom_Instance &geometry, iMesh_Instance &Mesh, iRel_Instance &association, iRel_RelationHandle &irel);
+	OneToOneSwept(iGeom_Instance &geometry, iMesh_Instance &Mesh, iRel_Instance &association, iRel_PairHandle &irel);
 	~OneToOneSwept();
 	void SurfaceSpecifying();
 	void Execute();
@@ -78,7 +78,7 @@ private:
 	iGeom_Instance geom;
 	iMesh_Instance mesh;
 	iRel_Instance assoc;
-	iRel_RelationHandle rel;
+	iRel_PairHandle rel;
 	iBase_TagHandle  geom_id_tag, mesh_id_tag;
 	iBase_EntityHandle sourceSurface;
 	iBase_EntityHandle targetSurface;
@@ -106,7 +106,7 @@ private:
 
 private:
 	//private functions
-	void buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh, iRel_Instance &assoc, iRel_RelationHandle &rel);
+	void buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh, iRel_Instance &assoc, iRel_PairHandle &rel);
 	int TargetSurfProjection();
 	int InnerLayerMeshing();
 	int LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList);
