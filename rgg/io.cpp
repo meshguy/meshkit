@@ -192,7 +192,7 @@ int CNrgen::ReadInputPhase1 ()
 
   //  OCC ENGINE
   if (m_szEngine == "occ"){
-    m_szGeomFile = m_szFile+".brep";
+    m_szGeomFile = m_szFile+".stp";
   }
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
@@ -790,6 +790,11 @@ int CNrgen::CreateCubitJournal()
   // import the geometry file
   m_FileOutput << "# Import geometry file " << std::endl;
   m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
+  m_FileOutput << "#" << std::endl;
+
+  // imprint
+  m_FileOutput << "#imprint geometry" << std::endl; 
+  m_FileOutput << "imprint all" << std::endl;
   m_FileOutput << "#" << std::endl;
 
   // merge
@@ -1687,35 +1692,38 @@ int CNrgen::Subtract_Pins()
   if (m_nDimensions >0 && in_pins.size()>0){
     SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
     CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, in_pins.size());
+
     for (int k=1; k<=m_nDuct; k++){
+
+      // put all the in pins in a matrix of size duct for subtraction with ducts
       for (int i=0; i<in_pins.size();i++){
 	iGeom_copyEnt(geom, in_pins[i], &cp_inpins(k,i+1), &err);
 	CHECK("Couldn't copy inner duct wall prism.");	
       }
-    }
-	
-    for (int k=1; k<=m_nDuct; k++){
-      iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL, pin = NULL;
+    
+      iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
       tmp_vol = assms[(k-1)*m_nDimensions];
 
       // subtract the innermost hex from the pins
       std::cout <<in_pins.size()<< " Subtracting all pins from assembly .. " << std::endl;
 
-      // // make a copy of the pins
+      // if there is only one in pin
       if(in_pins.size() > 1){
-	for (int i=0; i<in_pins.size();i++){
-	  pin = cp_inpins(k, i+1);
-	  // subtract inner covering with united pins
-	  iGeom_subtractEnts(geom, tmp_vol,pin, &tmp_new1, &err);
-	  CHECK("Couldn't subtract pins from block.");
-	  tmp_vol = tmp_new1;
-	}
+
+	iGeom_uniteEnts(geom, &cp_inpins(k,1), in_pins.size(), &unite, &err); 
+	CHECK( "uniteEnts failed!" ); 
+
+	iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
+	CHECK("Couldn't subtract pins from block.");
+	
+	tmp_vol = tmp_new1;
+	unite = NULL;
+	tmp_new1=NULL;
       }
       else{ // only one pin in in_pins
 	iGeom_copyEnt(geom, in_pins[0], &copy_inpins[0], &err);
 	iGeom_subtractEnts(geom, tmp_vol, in_pins[0], &tmp_new1, &err);
       }
-  
     }
     std::cout << "\n--------------------------------------------------"<<std::endl;
   }
@@ -1873,7 +1881,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 
     for(int n=1;n<=nCells; n++){
 
-      dHeight = dVEndZ(n) - dVStartZ(n);  
+      dHeight = fabs(dVEndZ(n) - dVStartZ(n));  
 
       if(m_szGeomType =="hexagonal"){
 	
