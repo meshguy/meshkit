@@ -508,7 +508,7 @@ int CCrgen::write_makefile()
   make_file << "##" << std::endl;
   make_file << "## Check your coregen, assygen and cubit location" << std::endl;
   make_file << "##" << std::endl;
-  make_file << "\nCUBIT = cubit\n" << std::endl;
+  make_file << "\nCUBIT = cubit -batch\n" << std::endl;
   make_file << "COREGEN = ../../coregen\n" << std::endl;
   make_file << "ASSYGEN = ../../assygen\n" << std::endl;
 

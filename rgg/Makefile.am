@@ -1,6 +1,8 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
+INPUTDIR = $(top_srcdir)/rgg
+
 # Subdirectories to build
 SUBDIRS = 
 
