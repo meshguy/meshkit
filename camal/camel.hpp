@@ -27,18 +27,22 @@ public:
         iRel_RelationHandle relation = 0 );
   
   bool mesh_geometry(double mesh_size, int mesh_intervals,
-                     const bool force_intervals);
+                     const bool force_intervals,
+                     const bool quadMesh = false);
   
   bool mesh_entities(iBase_EntityHandle *gentities, const int num_geom_entities, 
-                     double mesh_size, int mesh_intervals, const bool force_intervals);
+                     double mesh_size, int mesh_intervals, const bool force_intervals,
+                     const bool quadMesh = false);
   
   bool mesh_entity(iBase_EntityHandle gentity, double mesh_size,
                    int mesh_intervals, const bool force_intervals,
-                   std::vector<iBase_EntityHandle> &new_entities);
+                   std::vector<iBase_EntityHandle> &new_entities,
+                   const bool quadMesh = false);
   
   bool mesh_boundary(iBase_EntityHandle gentity, 
                      double mesh_size, int mesh_intervals, const bool force_intervals,
-                     iBase_EntityHandle **bounding_ents = NULL, int *bounding_ent_size = NULL);
+                     iBase_EntityHandle **bounding_ents = NULL, int *bounding_ent_size = NULL,
+                     const bool quadMesh = false);
   
   bool mesh_vertex(iBase_EntityHandle gentity, 
                    std::vector<iBase_EntityHandle> &new_entities);

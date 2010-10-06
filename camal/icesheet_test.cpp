@@ -25,6 +25,7 @@
 #include "MBSkinner.hpp"
 
 #include <iostream>
+#include <stdio.h>
 #include <sstream>
 #include <math.h>
 #include <map>

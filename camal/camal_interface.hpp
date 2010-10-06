@@ -17,6 +17,7 @@
 bool CAMAL_mesh_entity(CMEL *cmel,
                        iBase_EntityHandle gentity, double mesh_size,
                        int mesh_intervals, const bool force_intervals,
-                       std::vector<iBase_EntityHandle> &new_entities);
+                       std::vector<iBase_EntityHandle> &new_entities,
+                       const bool quadMesh = false);
 
 #endif

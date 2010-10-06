@@ -49,7 +49,8 @@ CMEL::CMEL( iGeom_Instance geom,
     relationHandle = rel;
 }
 
-bool CMEL::mesh_geometry(double mesh_size, int mesh_intervals, const bool force_intervals) 
+bool CMEL::mesh_geometry(double mesh_size, int mesh_intervals, const bool force_intervals,
+      const bool quadMesh)
 {
     // get the maximal-dimension entities
   std::vector<iBase_EntityHandle> new_entities;
@@ -68,7 +69,7 @@ bool CMEL::mesh_geometry(double mesh_size, int mesh_intervals, const bool force_
   
     if (0 != these_gents_size)
       return mesh_entities(these_gents, these_gents_size, mesh_size, 
-                           mesh_intervals, force_intervals);
+                           mesh_intervals, force_intervals, quadMesh);
   }
 
     // if we got here, we didn't mesh anything
@@ -78,14 +79,15 @@ bool CMEL::mesh_geometry(double mesh_size, int mesh_intervals, const bool force_
 bool CMEL::mesh_entities(iBase_EntityHandle *gentities, 
                          const int num_geom_entities, 
                          double mesh_size, int mesh_intervals,
-                         const bool force_intervals) 
+                         const bool force_intervals,
+                         const bool quadMesh)
 {
   bool result = true;
   std::vector<iBase_EntityHandle> new_entities;
   for (int i = 0; i < num_geom_entities; i++) {
     new_entities.clear();
     bool tmp_result = mesh_entity(gentities[i], mesh_size, mesh_intervals,
-                                  force_intervals, new_entities);
+                                  force_intervals, new_entities, quadMesh);
     if (!tmp_result) result = tmp_result;
   }
   
@@ -94,7 +96,8 @@ bool CMEL::mesh_entities(iBase_EntityHandle *gentities,
 
 bool CMEL::mesh_boundary(iBase_EntityHandle gentity, 
                          double mesh_size, int mesh_intervals, const bool force_intervals,
-                         iBase_EntityHandle **bounding_ents, int *bounding_ent_size) 
+                         iBase_EntityHandle **bounding_ents, int *bounding_ent_size,
+                         const bool quadMesh)
 {
     // get dimension
   int dim = -1;
@@ -127,7 +130,7 @@ bool CMEL::mesh_boundary(iBase_EntityHandle gentity,
 
     if (!is_meshed((*adj_gents)[g])) {
       bool tmp_success = mesh_entity((*adj_gents)[g], mesh_size, 
-                                     mesh_intervals, force_intervals, ments_vec);
+                   mesh_intervals, force_intervals, ments_vec, quadMesh);
       if (!tmp_success) {
         success = tmp_success;
         continue;
@@ -143,12 +146,13 @@ bool CMEL::mesh_boundary(iBase_EntityHandle gentity,
 bool CMEL::mesh_entity(iBase_EntityHandle gentity, 
                        double mesh_size, int mesh_intervals, 
                        const bool force_intervals,
-                       std::vector<iBase_EntityHandle> &new_entities) 
+                       std::vector<iBase_EntityHandle> &new_entities,
+                       const bool quadMesh)
 {
     // check to make sure this entity isn't meshed
   if (is_meshed(gentity)) return true;
 
-  bool success = mesh_boundary(gentity, mesh_size, mesh_intervals, force_intervals);
+  bool success = mesh_boundary(gentity, mesh_size, mesh_intervals, force_intervals, NULL, NULL, quadMesh);
 
     // get the size or interval #
   if (!force_intervals) {
@@ -162,7 +166,7 @@ bool CMEL::mesh_entity(iBase_EntityHandle gentity,
   }
 
   success = CAMAL_mesh_entity(this, gentity, mesh_size, mesh_intervals, 
-                              force_intervals, new_entities);
+                              force_intervals, new_entities, quadMesh);
   assert(!success || is_meshed(gentity));
   
   return success;

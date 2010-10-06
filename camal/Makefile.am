@@ -49,7 +49,8 @@ libSmooth_la_include_HEADERS = \
 	
 
 # Tests
-check_PROGRAMS = Camal_test IceSheet_test SmoothIceSheet_test addGeoSets Create2FaceShell
+check_PROGRAMS = Camal_test IceSheet_test SmoothIceSheet_test addGeoSets Create2FaceShell \
+					NewSmooth_test
 
 if HAVE_CAMAL
 TESTS = $(check_PROGRAMS)
@@ -68,7 +69,7 @@ IceSheet_test_LDADD = libMKcamal.la $(CAMAL_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(
 SmoothIceSheet_test_SOURCES = smooth_test.cpp
 SmoothIceSheet_test_DEPENDENCIES = libSmooth.la
 SmoothIceSheet_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-SmoothIceSheet_test_LDADD = libSmooth.la $(CAMAL_LIBS) $(IMESH_LIBS) 
+SmoothIceSheet_test_LDADD = libSmooth.la $(CAMAL_LIBS) $(IMESH_LIBS)
 
 addGeoSets_SOURCES = Geometrize.cpp
 addGeoSets_DEPENDENCIES = libSmooth.la
@@ -79,6 +80,11 @@ Create2FaceShell_SOURCES = CreateShell.cpp
 Create2FaceShell_DEPENDENCIES =  
 Create2FaceShell_CXXFLAGS = -DTEST $(CXXFLAGS)
 Create2FaceShell_LDADD = $(IMESH_LIBS)
+
+NewSmooth_test_SOURCES = newSmoothTest.cpp
+NewSmooth_test_DEPENDENCIES = libMKcamal.la
+NewSmooth_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+NewSmooth_test_LDADD = libMKcamal.la $(CAMAL_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)

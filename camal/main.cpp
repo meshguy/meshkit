@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cstdio>
 #include <math.h>
 #include <assert.h>
 #include <string.h>

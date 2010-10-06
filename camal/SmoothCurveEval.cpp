@@ -7,7 +7,6 @@
 
 #include "SmoothCurveEval.hpp"
 #include "SmoothVertex.hpp"
-#include "CubitVector.hpp"
 #include "SmoothFaceEval.hpp"
 #include "CAMALSizeEval.hpp"
 
@@ -15,6 +14,7 @@
 #include "CMLEdgeMesher.hpp"
 
 #include "moab/GeomTopoTool.hpp"
+#include "assert.h"
 
 
 SmoothCurveEval::SmoothCurveEval(MBInterface * mb, MBEntityHandle curve, MBInterface * mbo) :
