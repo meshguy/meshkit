@@ -85,8 +85,11 @@ public:
                                    std::vector<int> &group_sizes);
   
   bool bdy_elements_senses(iBase_EntityHandle gentity,
-                           std::vector<iBase_EntityHandle> &elements,
-                           std::vector<int> &element_senses);
+                                std::vector<iBase_EntityHandle> & elements,
+                                std::vector<int> & element_senses);
+
+  bool bdy_nodes(iBase_EntityHandle gentity,
+                                 std::vector<iBase_EntityHandle> &end_nodes);
   
     // assign a temporary indexing to the vertices in bdy_verts; pass back the tag handle
     // for that indexing

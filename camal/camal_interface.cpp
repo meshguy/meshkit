@@ -6,7 +6,8 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at boundary
+ *  option) any later version.
  * 
  */
 #include "camal_interface.hpp"
@@ -32,7 +33,7 @@
 #include "CMLTetMesher.hpp"
 #endif
 
-const bool debug = false;
+bool debug = false;
 iBase_TagHandle index_tag;
 
 bool CAMAL_bdy_loops_coords(CMEL *cmel, iBase_EntityHandle gentity,
@@ -47,6 +48,14 @@ bool CAMAL_bdy_loops_coords(CMEL *cmel, iBase_EntityHandle gentity,
    if (!success)
       return success;
    assert(loop_ents.size() == loop_senses.size());
+   if (debug)
+   {
+      std::cout<<" Surface: " <<cmel->get_gentity_id(gentity)<<
+            " loop_ents size: " << loop_ents.size() << std::endl;
+      for (unsigned int i=0; i<loop_ents.size(); i++)
+         std::cout<< std::hex<< loop_ents[i]<< " " << std::dec
+           << " sense: " << loop_senses[i] << std::endl;
+   }
 
    // get all vertices used in all elements
    int result;

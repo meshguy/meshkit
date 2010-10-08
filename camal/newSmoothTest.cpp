@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <time.h>
 
-bool debug = false;
+extern bool debug ;
 
 //bool debug_surf_eval = false;
 

@@ -29,7 +29,7 @@
 #include <assert.h>
 #include <string.h>
 
-bool debug = false;
+extern bool debug;
 
 int main( int argc, char *argv[] )
 {

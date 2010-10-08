@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <string.h>
 
-const bool debug = false;
+extern bool debug ;
 
 CMEL::CMEL( iGeom_Instance geom, 
             iMesh_Instance mesh, 
@@ -456,9 +456,8 @@ bool CMEL::mesh_curve(iBase_EntityHandle gentity,
                       std::vector<iBase_EntityHandle> &new_entities) 
 {
   std::vector<iBase_EntityHandle> bdy_mesh;
-  std::vector<int> bdy_orientations;
 
-  bool success = bdy_elements_senses(gentity, bdy_mesh, bdy_orientations);
+  bool success = bdy_nodes(gentity, bdy_mesh);
   if (!success) 
     return success;
   
@@ -535,6 +534,24 @@ bool CMEL::mesh_curve(iBase_EntityHandle gentity,
     for (std::vector<double>::iterator vit = vert_xyzs.begin(); vit != vert_xyzs.end(); vit+=3)
       std::cout << *vit << ", " << *(vit+1) << ", " << *(vit+2) << std::endl;
     std::cout << std::endl;
+    iBase_EntityHandle* adjacentEntityHandles = NULL;
+    int adj_entity_handles_size = 0;
+    int  adjacentEntityHandles_allocated = 0;
+    int* offset = NULL;
+    int offset_allocated = 0, offset_size=0;
+
+    iMesh_getEntArrAdj(meshIface, &new_entities[0], new_entities.size(),
+          iMesh_POINT, &adjacentEntityHandles,
+                              /*inout*/ &adjacentEntityHandles_allocated,
+                              /*out*/ &adj_entity_handles_size,
+                              /*inout*/ &offset,
+                              /*inout*/ &offset_allocated,
+                              /*out*/ &offset_size,
+                              /*out*/ &result);
+    for (unsigned int i=0; i<new_entities.size(); i++)
+       std::cout<<" edge:" << std::hex<< new_entities[i] <<" v:" << std::dec<<
+          adjacentEntityHandles[2*i] << " " <<  adjacentEntityHandles[2*i+1] << std::endl;
+
   }
   
   return success;
@@ -579,7 +596,10 @@ bool CMEL::get_mesh_set(iBase_EntityHandle gentity, iBase_EntitySetHandle &mesh_
     assert(iBase_VERTEX <= this_type && iBase_REGION >= this_type);
     
       // create the set
-    iMesh_createEntSet(meshIface, false, &mesh_set, &result);
+    bool isList = false;
+    if (this_type == iBase_EDGE)
+       isList = true;
+    iMesh_createEntSet(meshIface, isList, &mesh_set, &result);
     if (iBase_SUCCESS != result) return false;
 
       // set tags for global id and telling that it's a geom topo set
@@ -663,8 +683,8 @@ bool CMEL::create_vertices_elements(iBase_EntityHandle gentity,
     return false;
   }
 
-if (debug)
-  print_meshed_entity( gentity, ent_type, num_points, connect.size() );
+  if (debug)
+    print_meshed_entity( gentity, ent_type, num_points, connect.size() );
   
     // create new vertices
   std::vector<iBase_EntityHandle> new_verts(num_points);
@@ -1067,16 +1087,93 @@ iBase_EntityHandle CMEL::next_winding(iBase_EntityHandle this_edge,
   return other;
 }
   
-bool CMEL::bdy_elements_senses(iBase_EntityHandle gentity,
-                               std::vector<iBase_EntityHandle> &elements,
-                               std::vector<int> &element_senses) 
+// this will return the nodes that are at the ends of the curve
+// one node means periodic edge
+bool CMEL::bdy_nodes(iBase_EntityHandle gentity,
+                               std::vector<iBase_EntityHandle> &end_nodes)
 {
 
   std::vector<int> group_sizes;
  
-  return bdy_elements_senses_grouped(gentity, elements, element_senses, group_sizes);
+  // get bounding geometry groups; each size is 1
+  // these are vertex sets
+  std::vector<iBase_EntityHandle> gent_groups;
+  std::vector<int> gent_group_sizes;
+  bool success = bdy_geom_grouped(gentity, gent_groups, gent_group_sizes);
+  if (!success) return success;
+  // if we have only one group, it is fine, just get the mesh set , and a vertex
+  std::vector<iBase_EntitySetHandle> mesh_sets;
+  for (unsigned int i=0; i<gent_groups.size(); i++)
+  {
+     iBase_EntitySetHandle mesh_set;
+     get_mesh_set(gent_groups[i], mesh_set, false);// do not create if missing
+     mesh_sets.push_back(mesh_set);
+  }
+  // we should have only one node at each vertex, so in each set
+  // get the nodes from the first, and possibly, unique mesh set
+  iBase_EntityHandle *ments = NULL;
+  int result;
+  int ments_size = 0, ments_alloc = 0;
+
+    // get just the 0-dimensional entities from the first mesh set
+  iMesh_getEntities(meshIface, mesh_sets[0],
+                    0,
+                    iMesh_ALL_TOPOLOGIES,
+                    &ments, &ments_alloc, &ments_size,
+                    &result);
+  if (iBase_SUCCESS != result || ments_size!=1) return false;
+  if (gent_groups.size()==1)
+  {
+     end_nodes.push_back(ments[0]); // really, just one node in the boundary
+     free(ments);
+     return true;
+  }
+  // else, we have to see which one is the first vertex, and which one the second
+  assert(gent_groups.size()==2);
+  //
+  // get the second set of nodes from vertices
+  iBase_EntityHandle *ments2 = NULL;
+  int ments_size2 = 0, ments_alloc2 = 0;
+
+      // get just the 0-dimensional entities from the first mesh set
+  iMesh_getEntities(meshIface, mesh_sets[1],
+                      0,
+                      iMesh_ALL_TOPOLOGIES,
+                      &ments2, &ments_alloc2, &ments_size2,
+                      &result);
+  if (iBase_SUCCESS != result || ments_size2!=1) return false;
+
+  int sense_out=1;
+  iGeom_getEgVtxSense( geomIface, gentity, gent_groups[0],gent_groups[1],
+                              &sense_out, &result);
+  if (sense_out ==-1)
+  {
+     // start with second set
+     end_nodes.push_back(ments2[0]);
+     end_nodes.push_back(ments[0]); // exactly 2 nodes
+  }
+  else // assert(sense_out == 1);
+  {
+     end_nodes.push_back(ments[0]);
+     end_nodes.push_back(ments2[0]); // exactly 2 nodes
+  }
+
+  //
+  free(ments);
+  free(ments2);
+
+  return true;
+
 }
-  
+
+bool CMEL::bdy_elements_senses(iBase_EntityHandle gentity,
+                               std::vector<iBase_EntityHandle> &elements,
+                              std::vector<int> &element_senses)
+{
+   std::vector<int> group_sizes;
+   return bdy_elements_senses_grouped(gentity, elements, element_senses, group_sizes);
+}
+
 bool CMEL::bdy_elements_senses_grouped(iBase_EntityHandle gentity,
                                        std::vector<iBase_EntityHandle> &elements,
                                        std::vector<int> &element_senses,
@@ -1199,6 +1296,12 @@ bool CMEL::assign_tmp_indices(std::vector<iBase_EntityHandle> &bdy_verts,
   int idx = offset;
   for (unsigned int i = 0; i < bdy_verts.size(); i++) 
     indices[i] = idx++;
+  if (debug)
+  {
+     std::cout<<"assign tmp indices:" << std::endl;
+     for (unsigned int i =0; i<bdy_verts.size(); i++)
+        std::cout<< "bvert: "<< (unsigned long int)bdy_verts[i]<< " indx:" << indices[i]<< std::endl ;
+  }
 
   int result;
   iMesh_createTag(meshIface, "CMEL_index", 1, iBase_INTEGER,

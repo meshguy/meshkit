@@ -32,7 +32,7 @@
 #include <assert.h>
 #include <string.h>
 
-bool debug = false;
+extern bool debug;
 
 #define ERRORR(a) {if (iBase_SUCCESS != err) {printf(a); return 1;}}
 #define MBERRORR(a) {if (MB_SUCCESS != rval) {std::cerr << a << std::endl; return 1;}}
