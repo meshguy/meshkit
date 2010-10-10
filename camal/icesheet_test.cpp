@@ -23,6 +23,7 @@
 #include "camel.hpp"
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
+#include "moab/GeomTopoTool.hpp"
 
 #include <iostream>
 #include <stdio.h>
@@ -96,7 +97,7 @@ int main( int argc, char *argv[] )
   assert(iBase_SUCCESS == err);
   
   iRel_Instance relate;
-  iRel_newAssoc(0, &relate, &err, 0);
+  iRel_newRel(0, &relate, &err, 0);
   assert(iBase_SUCCESS == err);
 
   iBase_EntitySetHandle mesh_root_set;
@@ -107,8 +108,8 @@ int main( int argc, char *argv[] )
   }
 
   // create an association pair
-  iRel_RelationHandle classification;
-  iRel_createAssociation(relate, geom, 0, iRel_IGEOM_IFACE,
+  iRel_PairHandle classification;
+  iRel_createPair(relate, geom, 0, iRel_IGEOM_IFACE,
 			 out_mesh, 1, iRel_IMESH_IFACE,
 			 &classification, &err );
   ERRORR("ERROR : can not create an assoc pair.");
@@ -190,6 +191,7 @@ int main( int argc, char *argv[] )
     iMesh_setEntSetIntData(mesh, sets[i], id_tag_handle, 1, &err);
     ERRORR("Failed to set geom tag values.\n");
   }
+  // set some senses
 
   if (debug) {
     iBase_EntityHandle *entities;
@@ -210,6 +212,16 @@ int main( int argc, char *argv[] )
     ERRORR("Failed to get entity sets\n");
     std::cout << "entity set number=" << esets_size << std::endl;
   }
+  moab::GeomTopoTool geomTool(reinterpret_cast<MBInterface*> (mesh));
+  int sense = 0;//
+  std::vector<int> senses;
+  senses.push_back(sense);
+  std::vector<MBEntityHandle> setFaces;
+  //MBEntityHandle setFace((MBEntityHandle) sets[2]);
+  setFaces.push_back( (MBEntityHandle)sets[2] );
+  //MBEntityHandle setCurve((MBEntityHandle) sets[1]);
+  // GeomTopoTool::set_senses(EntityHandle edge,  std::vector<EntityHandle, std::vector<int> &senses)
+  geomTool.set_senses((MBEntityHandle)sets[1], setFaces, senses);// only one set of dimension 1
 
   // write the mesh
   iMesh_save(mesh, mesh_root_set, "surface_geom.h5m", 0, &err, 16, 0);

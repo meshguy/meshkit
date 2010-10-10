@@ -87,12 +87,12 @@ int main( int argc, char *argv[] )
   assert(iBase_SUCCESS == err);
   
   iRel_Instance relate;
-  iRel_newAssoc(0, &relate, &err, 0);
+  iRel_newRel(0, &relate, &err, 0);
   assert(iBase_SUCCESS == err);
 
     // create an association pair
-  iRel_RelationHandle classification;
-  iRel_createAssociation( relate, geom, 0, iRel_IGEOM_IFACE,
+  iRel_PairHandle classification;
+  iRel_createPair( relate, geom, 0, iRel_IGEOM_IFACE,
                                   mesh, 1, iRel_IMESH_IFACE,
                                   &classification, &err );
   if (iBase_SUCCESS != err) {

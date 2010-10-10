@@ -24,7 +24,7 @@ public:
   CMEL( iGeom_Instance geom_ptr, 
         iMesh_Instance mesh_ptr = 0, 
         iRel_Instance relate_ptr = 0,
-        iRel_RelationHandle relation = 0 );
+        iRel_PairHandle relation = 0 );
   
   bool mesh_geometry(double mesh_size, int mesh_intervals,
                      const bool force_intervals,
@@ -124,7 +124,7 @@ public:
   iGeom_Instance geomIface;
   iMesh_Instance meshIface;
   iRel_Instance relateIface;
-  iRel_RelationHandle relationHandle;
+  iRel_PairHandle pairHandle;
 
 private:
 

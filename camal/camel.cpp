@@ -31,22 +31,22 @@ extern bool debug ;
 CMEL::CMEL( iGeom_Instance geom, 
             iMesh_Instance mesh, 
             iRel_Instance relate,
-            iRel_RelationHandle rel ) 
+            iRel_PairHandle rel ) 
 {
   int err;
   geomIface = geom;
   if (NULL == mesh) iMesh_newMesh(NULL, &meshIface, &err, 0);
   else meshIface = mesh;
   
-  if (NULL == relate) iRel_newAssoc(NULL, &relateIface, &err, 0);
+  if (NULL == relate) iRel_newRel(NULL, &relateIface, &err, 0);
   else relateIface =  relate; 
   
   if (NULL == relate || NULL == rel)
-    iRel_createAssociation( relateIface, geom, 1, iRel_IGEOM_IFACE,
+    iRel_createPair( relateIface, geom, 1, iRel_IGEOM_IFACE,
                                          mesh, 1, iRel_IMESH_IFACE,
-                                         &relationHandle, &err );
+                                         &pairHandle, &err );
   else
-    relationHandle = rel;
+    pairHandle = rel;
 }
 
 bool CMEL::mesh_geometry(double mesh_size, int mesh_intervals, const bool force_intervals,
@@ -185,12 +185,14 @@ bool CMEL::is_meshed(iBase_EntityHandle gentity)
 
   iBase_EntityHandle *ments = NULL;
   int ments_size = 0, ments_alloc = 0;
-  iRel_getEntEntArrAssociation(relateIface, relationHandle, 
+  iRel_getEntEntArrRelation(relateIface, pairHandle, 
                                gentity, false, 
                                &ments, &ments_alloc, &ments_size, &result);
   if (result != iBase_TAG_NOT_FOUND && iBase_SUCCESS != result) {
+    char descr[100];
+    iRel_getDescription ( relateIface, descr, &result, 99);
     std::cerr << "is_meshed: returned error, message: "
-              << iRel_LAST_ERROR.description << std::endl;
+              << descr << std::endl;
     assert(false);
   }
   
@@ -560,7 +562,7 @@ bool CMEL::mesh_curve(iBase_EntityHandle gentity,
 bool CMEL::assign_mesh(iBase_EntityHandle gentity, std::vector<iBase_EntityHandle> &mesh) 
 {
   int result;
-  iRel_setEntEntArrAssociation(relateIface, relationHandle, gentity, false,
+  iRel_setEntEntArrRelation(relateIface, pairHandle, gentity, false,
                                &mesh[0], mesh.size(), &result);
   if (iBase_SUCCESS != result) {
     std::cerr << "Couldn't set classification." << std::endl;
@@ -584,8 +586,8 @@ bool CMEL::get_mesh_set(iBase_EntityHandle gentity, iBase_EntitySetHandle &mesh_
                         bool create_if_missing) 
 {
   int result;
-  iRel_getEntSetAssociation(relateIface,
-                            relationHandle,
+  iRel_getEntSetRelation(relateIface,
+                            pairHandle,
                             gentity, false, 
                             &mesh_set, &result);
   if (iBase_SUCCESS != result && create_if_missing) {
@@ -623,8 +625,8 @@ bool CMEL::get_mesh_set(iBase_EntityHandle gentity, iBase_EntitySetHandle &mesh_
     if (iBase_SUCCESS != result) return false;
 
       // now associate it with gentity
-    iRel_setEntSetAssociation(relateIface,
-                               relationHandle,
+    iRel_setEntSetRelation(relateIface,
+                               pairHandle,
                                gentity, 
                                mesh_set,
                                &result);
@@ -1207,7 +1209,7 @@ bool CMEL::bdy_elements_senses_grouped(iBase_EntityHandle gentity,
       int result;
       int ments_size = 0, ments_alloc = 0;
       iBase_EntitySetHandle this_set = 0;
-      iRel_getEntSetAssociation(relateIface, relationHandle, this_gent,
+      iRel_getEntSetRelation(relateIface, pairHandle, this_gent,
                                 false, &this_set, &result);
       if (iBase_SUCCESS != result) return false;
 
