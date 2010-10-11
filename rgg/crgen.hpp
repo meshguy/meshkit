@@ -13,6 +13,7 @@ CCrgen class declaration
 #include <math.h>
 #include "MKUtils.hpp"
 #include "MergeMesh.hpp"
+#include "ExtrudeMesh.hpp"
 #include "CopyMesh.hpp"
 #include "parser.hpp"
 #include "fileio.hpp"
@@ -38,6 +39,7 @@ public:
   int merge_nodes();
   int assign_gids();
   int save();
+  int extrude();
   int move_verts(iBase_EntitySetHandle set, const double *dx);
 
   int copy_move_hex_flat_assys(CopyMesh **cm,
@@ -131,6 +133,8 @@ private:
   int tot_assys; // total no. of assms forming core
   int set_DIM; // default is 3D
   double PI;
+  double z_height;    // z_height for extruding surfaces mesh
+  int z_divisions; // z_divisions for extruding surface mesh
 
   // file related
   std::ifstream file_input;    // File Input

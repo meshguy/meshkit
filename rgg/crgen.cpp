@@ -23,12 +23,14 @@ CCrgen::CCrgen ()
   UNITCELL_DUCT = 0;
   ASSY_TYPES = 1;
   pack_type = 1; symm = 1;
+  z_height = 1;
+  z_divisions = 2;
   set_DIM = 3; // default is 3D
   PI = acos(-1.0);
   comment = "!";
   MAXCHARS = 300;
   global_ids = true;
-  merge_tol =  1.0e-8;
+  merge_tol =  1.0e-3;
   do_merge = 1;
   update_sets= 0;
   merge_tag = NULL;
@@ -444,6 +446,17 @@ int CCrgen::read_inputs_phase2 ()
       files.push_back(back_meshfile);      
       back_mesh = true;
     }
+    // z-height
+    if (input_string.substr(0,8) == "z-height"){
+      std::istringstream formatString (input_string);
+      formatString >> card >> z_height;
+    }
+
+    // z-divisions
+    if (input_string.substr(0,11) == "z-divisions"){
+      std::istringstream formatString (input_string);
+      formatString >> card >> z_divisions;
+    }
     // breaking condition
     if(input_string.substr(0,3) == "end"){
       std::istringstream formatstring (input_string);
@@ -508,7 +521,7 @@ int CCrgen::write_makefile()
   make_file << "##" << std::endl;
   make_file << "## Check your coregen, assygen and cubit location" << std::endl;
   make_file << "##" << std::endl;
-  make_file << "\nCUBIT = cubit -batch\n" << std::endl;
+  make_file << "\nCUBIT = cubit\n" << std::endl;
   make_file << "COREGEN = ../../coregen\n" << std::endl;
   make_file << "ASSYGEN = ../../assygen\n" << std::endl;
 
@@ -562,7 +575,7 @@ int CCrgen::write_makefile()
   make_file << "\t" << "${COREGEN} " << iname << std::endl;
   for(unsigned int i=0; i<files.size(); i++){
     make_file << files[i] << " : " << f_sat[i] << "  " << f_jou[i] << "  " << f_injou[i] << std::endl;
-    make_file << "\t" << "${CUBIT} " << f_jou[i] <<"\n" << std::endl;
+    make_file << "\t" << "${CUBIT} -batch" << f_jou[i] <<"\n" << std::endl;
 
     make_file << f_sat[i] << " " << f_jou[i] << " " << f_injou[i] << " : " << f_inp[i] << std::endl;
     make_file << "\t" << "${ASSYGEN} " << f_no_ext[i] << "\n" << std::endl;
@@ -673,5 +686,34 @@ int CCrgen::save()
   ERRORR("Trouble writing output mesh.", err);
   std::cout << "Saved: "<< outfile.c_str() <<std::endl;
 
+  return iBase_SUCCESS;
+}
+
+
+
+int CCrgen::extrude()
+{
+  // extrude if this is a surface mesh
+  if(set_DIM ==2){ // if surface geometry specified
+    std::cout << "Extruding surface mesh." << std::endl;
+
+    //get entities for merging
+    iBase_EntityHandle *ents = NULL; 
+    int ents_alloc = 0, ents_size;
+    int err = 0;
+
+
+    iMesh_getEntities(impl, root_set,
+		      iBase_FACE, iMesh_ALL_TOPOLOGIES,
+		      &ents, &ents_alloc, &ents_size, &err);
+    ERRORR("Trouble getting face mesh.", err);
+
+    double v[] = { 0, 0, z_height };
+    int steps = z_divisions;
+
+    ExtrudeMesh *ext = new ExtrudeMesh(impl);
+    ext->extrude(ents, ents_size, extrude::Translate(v, steps));
+    ERRORR("Trouble extruding mesh.", err);
+  }
   return iBase_SUCCESS;
 }

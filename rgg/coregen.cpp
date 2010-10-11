@@ -40,6 +40,9 @@ int main (int argc, char *argv[])
   err = TheCore.merge_nodes ();
   ERRORR("Failed in merging nodes.", 1);
 
+  err = TheCore.extrude();
+  ERRORR("Failed in copy moving meshes.", 1);
+
   err = TheCore.assign_gids ();
   ERRORR("Failed in assigning global ids.", 1);
 
