@@ -13,6 +13,7 @@ as specified in the input file
 int main (int argc, char *argv[])
 {
   int err = 0;
+  int run_flag = 1; 
 
   // the one and only Core!
   CCrgen TheCore; 
@@ -26,28 +27,39 @@ int main (int argc, char *argv[])
   Timer.GetDateTime (szDateTime);
   std::cout << "\nStarting out at : " << szDateTime << "\n";
   
-  // read inputs, create and write makefile 
+  // read inputs and create makefile
   err = TheCore.prepareIO (argc, argv);
   ERRORR("Failed in preparing i/o.", 1);
 
-  // read inputs and open makefile for writing 
-  err = TheCore.load_meshes ();
-  ERRORR("Failed in loading meshes.", 1);
+  if (argc > 1){
+    if(argv[1][0] == '-' && argv[1][1] == 'm'){
+      run_flag = 0;
+    }
+  }
 
-  err = TheCore.copy_move ();
-  ERRORR("Failed in copy moving meshes.", 1);
+  // copy, move, merge, extrude, assign gids, save and close
+  if (run_flag == 1){
+    err = TheCore.load_meshes ();
+    ERRORR("Failed to load meshes.", 1);
 
-  err = TheCore.merge_nodes ();
-  ERRORR("Failed in merging nodes.", 1);
+    err = TheCore.copy_move ();
+    ERRORR("Failed in copy move routine.", 1);
 
-  err = TheCore.extrude();
-  ERRORR("Failed in copy moving meshes.", 1);
+    err = TheCore.merge_nodes ();
+    ERRORR("Failed to merge nodes.", 1);
 
-  err = TheCore.assign_gids ();
-  ERRORR("Failed in assigning global ids.", 1);
+    err = TheCore.extrude();
+    ERRORR("Failed to extrude.", 1);
 
-  err = TheCore.save ();
-  ERRORR("Failed in saving file.", 1);
+    err = TheCore.assign_gids ();
+    ERRORR("Failed to assign global ids.", 1);
+
+    err = TheCore.save ();
+    ERRORR("Failed to save o/p file.", 1);
+    
+    err = TheCore.close ();
+    ERRORR("Failed to dellocate.", 1);
+  }
 
   // get the current date and time
   Timer.GetDateTime (szDateTime);

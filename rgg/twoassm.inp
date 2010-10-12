@@ -16,5 +16,6 @@ Lattice 2           	         ! 'Lattice' card defines core had 2 rings next def
 A1 &
 A1 A1 	        	         ! Assembly arrangement must be in one line, Note the usage of '&' sign, it signals continuation of input in the next line
 !
-background test_sodium_all.cub	
+Background test_sodium_all.cub	
+OutputFileName twoassm_out.h5m
 END                              ! 'END' card is a MUST marks the end of file for the file reader

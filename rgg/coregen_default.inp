@@ -7,5 +7,6 @@ assygen_default.cub S1                  ! Meshfile name followed by alias
 Lattice 2 2 
 S1 S1 &
 S1 S1 
+OutputFileName cgd.vtk
 end					! 'END' card is a MUST; Marks the end of file for the file reader
 

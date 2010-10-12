@@ -44,13 +44,26 @@ CCrgen::~CCrgen ()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
+}
+
+int CCrgen::close ()
+// ---------------------------------------------------------------------------
+// Function: dellocating 
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
   // deallocate ... deallocate ... deallocate
   for (unsigned int i = 0; i < files.size(); i++) {
     delete cm[i];
   } 
- 
+
   iMesh_dtor(impl, &err);
+  ERRORR("Failed in call iMesh_dtor", err);
+
+  return 0;
 }
+
 
 
 int CCrgen::prepareIO (int argc, char *argv[])
@@ -68,6 +81,23 @@ int CCrgen::prepareIO (int argc, char *argv[])
       outfile = iname+".h5m";
       mfile = iname + ".makefile";
     }
+    else if (3 == argc) {
+      int i=1;// will loop through arguments, and process them
+      for (i=1; i<argc-1 ; i++) {
+	if (argv[i][0]=='-') {
+	  switch (argv[i][1]) {
+	  case 'm': {
+	    std::cout << "Creating Makfile Only" << std::endl;
+	    // only makefile creation specified
+	    iname = argv[2];
+	    ifile = iname+".inp";
+	    outfile = iname+".h5m";
+	    mfile = iname + ".makefile";
+	  }
+	  }
+	}
+      }
+    }    
     else { //default case
       std::cerr << "Usage: " << argv[0] << " <input file> WITHOUT EXTENSION"<< std::endl;   
       iname = DEFAULT_TEST_FILE;
@@ -457,6 +487,13 @@ int CCrgen::read_inputs_phase2 ()
       std::istringstream formatString (input_string);
       formatString >> card >> z_divisions;
     }
+
+    // OutputFileName
+    if (input_string.substr(0,14) == "outputfilename"){
+      std::istringstream formatString (input_string);
+      formatString >> card >> outfile;
+    }
+
     // breaking condition
     if(input_string.substr(0,3) == "end"){
       std::istringstream formatstring (input_string);

@@ -39,6 +39,7 @@ public:
   int merge_nodes();
   int assign_gids();
   int save();
+  int close();
   int extrude();
   int move_verts(iBase_EntitySetHandle set, const double *dx);
 
