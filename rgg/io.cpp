@@ -1458,7 +1458,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 	CHECK("Move failed failed.");  
       
 	// populate the coverings array
-	assms[nTemp*n-1]=assm;
+	assms[(nTemp-1)*m_nDimensions + n -1]=assm;
       }
     }
   }
@@ -1653,14 +1653,14 @@ int CNrgen::CreateOuterCovering ()
 	if(n>1){ 
 	  ++nCount;
 	  // copy cyl before subtract 
-	  iGeom_copyEnt(geom, assms[nTemp*n-2], &tmp_vol, &err);
+	  iGeom_copyEnt(geom, assms[(nTemp-1)*m_nDimensions + n-2], &tmp_vol, &err);
 	  CHECK("Couldn't copy inner duct wall prism.");
 	    
 	  // subtract outer most cyl from brick
-	  iGeom_subtractEnts(geom, assms[nTemp*n-1], tmp_vol, &tmp_new, &err);
+	  iGeom_subtractEnts(geom, assms[(nTemp-1)*m_nDimensions + n-1], tmp_vol, &tmp_new, &err);
 	  CHECK("Subtract of inner from outer failed.");	  
 	    
-	  assms[nTemp*n-1]=tmp_new;
+	  assms[(nTemp-1)*m_nDimensions + n-1]=tmp_new;
 
 	  // name the vols by searching for the full name of the abbreviated Cell Mat
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
