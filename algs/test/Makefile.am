@@ -11,7 +11,8 @@ check_PROGRAMS = \
 	EBMesh_test \
 	ExtrudeMesh_test \
 	ProjectShell_test \
-        IntersectMesh_test 
+        IntersectMesh_test\
+        AddZTag
 TESTS = $(check_PROGRAMS)
 
 LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
@@ -21,6 +22,7 @@ EBMesh_test_SOURCES = EBMesh.cpp TestFramework.hpp
 ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp TestFramework.hpp
 ProjectShell_test_SOURCES = ProjectShell.cpp TestFramework.hpp
 IntersectMesh_test_SOURCES = IntersectMesh_test.cpp TestFramework.hpp
+AddZTag_SOURCES = AddZTag_test.cpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir)\
@@ -43,4 +45,11 @@ endif
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
+endif
+
+if HAVE_TRIANGLE
+BedJako_SOURCES = BedJako.cpp TestFramework.hpp
+check_PROGRAMS += BedJako
+AM_CPPFLAGS += $(TRIANGLE_CPPFLAGS)
+LDADD += $(TRIANGLE_LIBS)
 endif

@@ -492,6 +492,67 @@ AC_SUBST([HAVE_TETGEN])
 
 AM_CONDITIONAL(HAVE_TETGEN, [test "x$HAVE_TETGEN" = "xyes"])
 
+
+################################################################################
+#                           Triangle
+################################################################################
+AC_ARG_WITH(triangle, 
+[AC_HELP_STRING([--with-triangle=DIR], [Specify location of Triangle library.])],
+[TRIANGLE_VAL=$withval
+ DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-triangle=\"${withval}\""
+ ], [TRIANGLE_VAL=no])
+
+TRIANGLE_CPPFLAGS=
+TRIANGLE_LIBS=
+
+# Check for TRIANGLE headers and libraries
+if test "xno" = "x$TRIANGLE_VAL"; then
+  HAVE_TRIANGLE=no
+else
+  TRIANGLE_DIR="$TRIANGLE_VAL"
+
+  if test "x" = "x$TRIANGLE_VAL"; then
+    TRIANGLE_DIR=yes
+  fi
+
+  if test "xyes" != "x$TRIANGLE_DIR"; then
+    if ! test -d "$TRIANGLE_DIR"; then
+      AC_MSG_ERROR([$TRIANGLE_DIR: not a directory])
+    fi
+    TRIANGLE_CPPFLAGS="-I$TRIANGLE_DIR" 
+    
+  fi
+  old_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $TRIANGLE_CPPFLAGS"
+  AC_LANG_PUSH([C++])
+
+  AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([
+        [#define REAL double]
+        [#include "triangle.h"]
+        ],
+        [triangulateio dummy])],
+    [TRIANGLE_LIBS="$TRIANGLE_DIR/triangle.o"] [HAVE_TRIANGLE=yes],
+    [AC_MSG_WARN([triangle.o is not installed.])])
+
+  AC_LANG_POP([C++])
+  LDFLAGS="$old_LDFLAGS"
+  CPPFLAGS="$old_CPPFLAGS"
+
+fi
+
+if test "x$HAVE_TRIANGLE" = "xyes"; then
+  AC_MSG_RESULT([Triangle is found.])
+elif test "x$TRIANGLE_VAL" != "xno"; then
+  AC_MSG_ERROR([Triangle not found or not usable.])
+fi
+
+AC_SUBST([TRIANGLE_CPPFLAGS])
+AC_SUBST([TRIANGLE_LIBS])
+AC_SUBST([HAVE_TRIANGLE])
+
+AM_CONDITIONAL(HAVE_TRIANGLE, [test "x$HAVE_TRIANGLE" = "xyes"])
+
 ################################################################################
 #                           Output Files
 ################################################################################

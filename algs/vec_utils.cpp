@@ -19,6 +19,14 @@ double dist(const double *a)
   return std::sqrt(dot(a,a));
 }
 
+double distP(const double *a, const double *b)
+{
+  double c[3];
+  for (int k=0; k<3; k++)
+	c[k] = b[k] - a[k];
+  return dist(c);
+}
+
 double * normalize(double *res, const double *a)
 {
   double d = dist(a);
@@ -39,4 +47,18 @@ double area2D(const double * a, const double * b, const double *c) // could be n
 {
   double area = (b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
   return area/2;
+}
+
+double normal3D(double * normal, const double *a, const double *b, const double *c)
+{
+   double ab[3], ac[3];
+   for (int i=0; i<3; i++)
+   {
+      ab[i] = b[i] - a[i];
+      ac[i] = c[i] - a[i]; 
+   }
+   double norm1[3];
+   cross(norm1, ab, ac);
+   
+   normalize (normal, norm1); 
 }
