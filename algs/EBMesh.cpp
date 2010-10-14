@@ -39,10 +39,10 @@ inline bool equal_intersect(const IntersectDist d1, const IntersectDist d2) {
 }
 
 EBMesh::EBMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set,
-			 double size, bool use_geom)
-  : m_mesh(mesh), m_hRootSet(root_set), m_dInputSize(size)
+	       double size, bool use_geom, int add_layer)
+  : m_mesh(mesh), m_hRootSet(root_set), m_dInputSize(size),
+    m_bUseGeom(use_geom), m_nAddLayer(add_layer)
 {
-  m_bUseGeom = use_geom;
   m_nStatus = OUTSIDE;
   m_iStartHex = 0;
   //m_nFraction = 0;
@@ -204,19 +204,19 @@ bool EBMesh::export_mesh(const char* file_name, bool separate)
       if (hex_status[i] == 0) {
 	n_inside_hex++;
 	hex_stat = 0;
-      insideHex.push_back(hex_handles[i]);
+	insideHex.push_back(hex_handles[i]);
       }
       else if (hex_status[i] == 1) {
 	n_outside_hex++;
 	hex_stat = 1;
 	outsideHex.push_back(hex_handles[i]);
       }
-    else if (hex_status[i] == 2) {
-      n_boundary_hex++;
-      hex_stat = 2;
-      bndrHex.push_back(hex_handles[i]);
-    }
-    else ERRORRF("Hex element status should be inside/outside/boundary.\n");
+      else if (hex_status[i] == 2) {
+	n_boundary_hex++;
+	hex_stat = 2;
+	bndrHex.push_back(hex_handles[i]);
+      }
+      else ERRORRF("Hex element status should be inside/outside/boundary.\n");
     }
     
     std::cout << "# of exported inside hex:" << n_inside_hex
@@ -233,17 +233,15 @@ bool EBMesh::export_mesh(const char* file_name, bool separate)
       err = write_mesh(file_name, 0, &insideHex[0], n_inside_hex);
       ERRORRF("Couldn't write inside mesh.");
     }
-    
-    if (n_outside_hex > 0) {
-      err = write_mesh(file_name, 1, &outsideHex[0], n_outside_hex);
-      ERRORRF("Couldn't write outside mesh.");
-    }
-    
     if (n_boundary_hex > 0) {
       err = write_mesh(file_name, 2, &bndrHex[0], n_boundary_hex);
       ERRORRF("Couldn't write boundary mesh.");
     }
-    
+    if (n_outside_hex > 0) {
+      err = write_mesh(file_name, 1, &outsideHex[0], n_outside_hex);
+      ERRORRF("Couldn't write outside mesh.");
+    }
+
     if (debug) {
       std::cout << "hex_handle_get_time: "
 		<< (double) (time2 - time1)/CLOCKS_PER_SEC
@@ -304,11 +302,12 @@ int EBMesh::write_mesh(const char* file_name, int type,
   return iBase_SUCCESS;
 }
 
-EdgeStatus EBMesh::get_edge_status(const double dP)
+EdgeStatus EBMesh::get_edge_status(const double dP, int& iSkip)
 {
   if (m_nStatus == INSIDE) { // previous inside
     if (dP < m_dSecondP) {
       m_nMove = 0;
+      iSkip = m_iSecondP;
       return INSIDE;
     }
     else {
@@ -344,13 +343,17 @@ EdgeStatus EBMesh::get_edge_status(const double dP)
   else if (m_nStatus == BOUNDARY) { // previous boundary
     if (dP < m_dFirstP) {
       m_nMove = 0;
+      iSkip = m_iFirstP;
       return OUTSIDE;
     }
     else {
       if (dP < m_dSecondP) {
 	m_nMove = 0;
 	if (m_prevPnt < m_dFirstP) return BOUNDARY;
-	else return INSIDE;
+	else {
+	  iSkip = m_iSecondP;
+	  return INSIDE;
+	}
       }
       else {
 	if (is_shared_overlapped_surf(m_iInter - 1)) m_nMove = 1;
@@ -434,12 +437,12 @@ bool EBMesh::set_edge_status(int dir)
 {
   // set boundary cut information to edge
   std::vector<double> vdCutFraction;
-  if (m_nMove == 0) vdCutFraction.push_back(1. - (m_curPnt - m_dFirstP)/m_dIntervalSize[dir]);
+  if (m_nMove == 0) vdCutFraction.push_back((m_curPnt - m_dFirstP)/m_dIntervalSize[dir] - 1.);
   else if (m_nMove == 1) vdCutFraction.push_back(1. - (m_curPnt - m_dSecondP)/m_dIntervalSize[dir]);
   else if (m_nMove == 2) {
     vdCutFraction.push_back(1. - (m_curPnt - m_dSecondP)/m_dIntervalSize[dir]);
     if (m_dFirstP < m_curPnt) {
-      vdCutFraction.push_back(1. - (m_curPnt - m_dFirstP)/m_dIntervalSize[dir]);
+      vdCutFraction.push_back((m_curPnt - m_dFirstP)/m_dIntervalSize[dir] - 1.);
     }
   }
 
@@ -657,10 +660,11 @@ int EBMesh::set_division()
 
   for (i = 0; i < 3; i++) {
     m_nDiv[i] = length[i]/m_dInputSize;
-    if (m_nDiv[i] < 5) m_nDiv[i] = 5; // make 5 elements larger than bounding box
+    if (m_nDiv[i] < m_nAddLayer) m_nDiv[i] = m_nAddLayer; // make "m_nAddLayer" elements larger than bounding box
     m_dIntervalSize[i] = m_dInputSize;
-    if (m_nDiv[i]*.07 > 5) m_nDiv[i] += m_nDiv[i]*.07;
-    else m_nDiv[i] += 5;
+    //if (m_nDiv[i]*.07 > m_nAddLayer) m_nDiv[i] += m_nDiv[i]*.07;
+    //else m_nDiv[i] += m_nAddLayer;
+    m_nDiv[i] += m_nAddLayer;
     m_nNode[i] = m_nDiv[i] + 1;
     m_origin_coords[i] = box_center[i] - .5*m_nDiv[i]*m_dIntervalSize[i];
   }
@@ -676,11 +680,13 @@ int EBMesh::set_division()
 int EBMesh::find_intersections()
 {
   int i, err;
-  m_vnHexStatus.resize(m_nHex, 1); // initialize all hex as outside
+  //m_vnHexStatus.resize(m_nHex, 1); // initialize all hex as outside
+  m_vnHexStatus.resize(m_nHex, 0); // initialize all hex as inside
 
   // fire rays to 3 directions
   for (i = 0; i < 3; i++) {
-    m_vnEdgeStatus[i].resize(m_nDiv[i]*m_nDiv[(i + 1)%3]*m_nDiv[(i + 2)%3], OUTSIDE);
+    //m_vnEdgeStatus[i].resize(m_nDiv[i]*m_nDiv[(i + 1)%3]*m_nDiv[(i + 2)%3], OUTSIDE);
+    m_vnEdgeStatus[i].resize(m_nDiv[i]*m_nDiv[(i + 1)%3]*m_nDiv[(i + 2)%3], INSIDE);
     err = fire_rays(i);
     if (err != iBase_SUCCESS) return err;
   }
@@ -739,23 +745,34 @@ int EBMesh::fire_rays(int dir)
 	  endPnt[l] = startPnt[l];
 	}
       }
-      
+
       k = 0;
       m_iInter = 0;
       if (!fire_ray(nIntersect, startPnt, endPnt,
 		    tolerance, dir, rayLength)) return iBase_FAILURE;
-      
-      if (nIntersect > 0) {
-	m_nStatus = OUTSIDE;
-	m_dFirstP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
-	m_dSecondP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
-	m_prevPnt = startPnt[dir];
 
-	for (; k < m_nNode[dir] - 1; k++) {
-	  m_curPnt = startPnt[dir] + (k + 1)*m_dIntervalSize[dir];
-	  m_nStatus = get_edge_status(m_curPnt);
-	  m_vnEdgeStatus[dir][i*m_nDiv[dir] + j*m_nDiv[dir]*m_nDiv[otherDir1] + k] = m_nStatus;
+      if (nIntersect > 0) {
+	m_iFirstP = m_vIntersection[m_iInter].distance/m_dIntervalSize[dir];
+	m_dFirstP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
+	m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[dir];
+	m_dSecondP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
+
+	// set outside before the first hit
+	for (k = 0; k < m_iFirstP; k++) {
+	  m_nStatus = OUTSIDE;
 	  
+	  if (!set_neighbor_hex_status(dir, i, j, k)) {
+	    return iBase_FAILURE;
+	  }
+	}
+	
+	for (; k < m_nNode[dir] - 1;) {
+	  int i_skip = 0;
+	  m_curPnt = startPnt[dir] + (k + 1)*m_dIntervalSize[dir];
+	  EdgeStatus preStat = m_nStatus;
+	  m_nStatus = get_edge_status(m_curPnt, i_skip);
+	  m_vnEdgeStatus[dir][i*m_nDiv[dir] + j*m_nDiv[dir]*m_nDiv[otherDir1] + k] = m_nStatus;
+
 	  // set status of all hexes sharing the edge
 	  if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
 	  
@@ -771,19 +788,30 @@ int EBMesh::fire_rays(int dir)
 	    }
 	  }
 	  else if (m_nStatus == BOUNDARY && !set_edge_status(dir)) return iBase_FAILURE;
+	  else if (m_nStatus == OUTSIDE && preStat == BOUNDARY) { // set outside until next hit
+	    k++;
+	    for (; k < i_skip; k++) {
+	      m_nStatus = OUTSIDE;
+	      if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
+	    }
+	  }
 	  
 	  // set cut-cell edge status
-	  m_prevPnt = m_curPnt;
+	  if (i_skip > 0) {
+	    m_prevPnt = startPnt[dir] + i_skip*m_dIntervalSize[dir];
+	    k = i_skip;
+	  }
+	  else {
+	    m_prevPnt = m_curPnt;
+	    k++;
+	  }
 	}
       }
-      
+	
       // the rest are all outside
       for (; k < m_nNode[dir] - 1; k++) {
 	m_nStatus = OUTSIDE;
-	
-	if (!set_neighbor_hex_status(dir, i, j, k)) {
-	  return iBase_FAILURE;
-	}
+	if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
       }
     }
   }
@@ -810,7 +838,7 @@ bool EBMesh::fire_ray(int& nIntersect, double startPnt[3],
   else { // facet input
     std::vector<MBEntityHandle> dum_facets_out;
     rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, dum_facets_out,
-					       m_hTreeRoot, tol,
+                                               m_hTreeRoot, tol,
 					       startPnt, rayDir[dir], &rayLength);
   }
   
@@ -852,19 +880,26 @@ bool EBMesh::move_intersections(int n_dir, int n_inter, double start_pnt[3])
       if (m_nMove == 1) {
 	do {
 	  if (m_nStatus == BOUNDARY && !set_edge_status(n_dir)) return false;
+	  m_iFirstP = m_iSecondP;
 	  m_dFirstP = m_dSecondP;
+	  m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
 	  m_dSecondP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
 	}
 	while (m_dSecondP < m_curPnt && m_iInter < n_inter);
       }
       else if (m_nMove == 2) {
 	do {
+	  m_iFirstP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
 	  m_dFirstP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
 	  if (m_nStatus == BOUNDARY && !set_edge_status(n_dir)) return false;
 	  if (m_iInter < n_inter) {
+	    m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
 	    m_dSecondP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
 	  }
-	  else m_dSecondP = m_dFirstP;
+	  else {
+	    m_iSecondP = m_iFirstP;
+	    m_dSecondP = m_dFirstP;
+	  }
 	}
 	while (m_dSecondP < m_curPnt && m_iInter < n_inter);
       }
@@ -893,8 +928,8 @@ bool EBMesh::is_shared_overlapped_surf(int index)
 }
 
 bool EBMesh::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
-					   std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge,
-					   std::vector<int>& rvnInsideCell, bool isCornerExterior)
+				      std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge,
+				      std::vector<int>& rvnInsideCell, bool isCornerExterior)
 {
   int i, j, err, ii, jj, kk, iHex;
   for (i = 0; i < 3; i++) {
@@ -957,9 +992,15 @@ bool EBMesh::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
 
     // surface 1
     CutFraction cutFrac = iter->second;
-    if (cutFrac.fraction[1].size() > 0) dFrac[0] = cutFrac.fraction[1][0];
+    if (cutFrac.fraction[1].size() > 0) {
+      dFrac[0] = cutFrac.fraction[1][0];
+      if (dFrac[0] < 0.) dFrac[0] *= -1.;
+    }
     else dFrac[0] = -1.;
-    if (cutFrac.fraction[2].size() > 0) dFrac[3] = cutFrac.fraction[2][0];
+    if (cutFrac.fraction[2].size() > 0) {
+      dFrac[3] = cutFrac.fraction[2][0];
+      if (dFrac[3] < 0.) dFrac[3] *= -1.;
+    }
     else dFrac[3] = -1.;
     dFrac[1] = get_edge_fraction(iHex + m_nDiv[0], 2);
     dFrac[2] = get_edge_fraction(iHex + m_nDiv[0]*m_nDiv[1], 1);
@@ -977,9 +1018,15 @@ bool EBMesh::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
 
     // surface 2
     cutFrac = iter->second;
-    if (cutFrac.fraction[0].size() > 0) dFrac[0] = cutFrac.fraction[0][0];
+    if (cutFrac.fraction[0].size() > 0) {
+      dFrac[0] = cutFrac.fraction[0][0];
+      if (dFrac[0] < 0.) dFrac[0] *= -1.;
+    }
     else dFrac[0] = -1.;
-    if (cutFrac.fraction[1].size() > 0) dFrac[3] = cutFrac.fraction[1][0];
+    if (cutFrac.fraction[1].size() > 0) {
+      dFrac[3] = cutFrac.fraction[1][0];
+      if (dFrac[3] < 0.) dFrac[3] *= -1.;
+    }
     else dFrac[3] = -1.;
     dFrac[1] = get_edge_fraction(iHex + 1, 2);
     dFrac[2] = get_edge_fraction(iHex + m_nDiv[0]*m_nDiv[1], 0);
@@ -997,9 +1044,15 @@ bool EBMesh::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
     
     // surface 3
     cutFrac = iter->second;
-    if (cutFrac.fraction[0].size() > 0) dFrac[0] = cutFrac.fraction[0][0];
+    if (cutFrac.fraction[0].size() > 0) {
+      dFrac[0] = cutFrac.fraction[0][0];
+      if (dFrac[0] < 0.) dFrac[0] *= -1.;
+    }
     else dFrac[0] = -1.;
-    if (cutFrac.fraction[1].size() > 0) dFrac[3] = cutFrac.fraction[1][0];
+    if (cutFrac.fraction[1].size() > 0) {
+      dFrac[3] = cutFrac.fraction[1][0];
+      if (dFrac[3] < 0.) dFrac[3] *= -1.;
+    }
     else dFrac[3] = -1.;
     dFrac[1] = get_edge_fraction(iHex + 1, 1);
     dFrac[2] = get_edge_fraction(iHex + m_nDiv[0], 0);
@@ -1333,7 +1386,10 @@ double EBMesh::get_edge_fraction(int idHex, int dir)
 {
   std::map<int, CutFraction>::iterator end_iter = m_mdCutFraction.end();
   std::map<int, CutFraction>::iterator iter = m_mdCutFraction.find(idHex);
-  if (iter != end_iter && iter->second.fraction[dir].size() > 0) return iter->second.fraction[dir][0];
+  if (iter != end_iter && iter->second.fraction[dir].size() > 0) {
+    double frac = iter->second.fraction[dir][0];
+    if (frac < 0.) frac *= -1.;
+  }
   else return -1.;
 }
 #endif
@@ -1363,7 +1419,7 @@ double EBMesh::get_uncut_edge_fraction(int i, int j, int k, int dir)
 }
 
 bool EBMesh::move_ray(int& nIntersect, double* startPnt, double* endPnt,
-			   double tol, int dir, bool bSpecialCase)
+		      double tol, int dir, bool bSpecialCase)
 {
   //int i, nIteration;
   int i;
@@ -1378,7 +1434,9 @@ bool EBMesh::move_ray(int& nIntersect, double* startPnt, double* endPnt,
 	m_mhOverlappedSurf[m_iOverlap] = 0;
 	m_mhOverlappedSurf[m_iOverlap + 1] = 0;
       }
-      else return false;             // error
+      else {
+	return false;
+      }
     }
 
     for (i = 0; i < 3; i++) {
@@ -1463,8 +1521,13 @@ bool EBMesh::is_ray_move_and_set_overlap_surf(bool& bSpecialCase)
 	  return true;
 	}
 	else { // overlapped surfaces
-	  m_nIteration = 0;
-	  m_iOverlap++;
+	  //bSpecialCase = false;
+	  //m_nIteration = 0;
+	  //m_iOverlap++;
+	  m_vIntersection.erase(m_vIntersection.begin() + m_iOverlap + 1);
+	  nInter = m_vIntersection.size();
+	  m_vhInterSurf.resize(nInter);
+	  //m_nIteration = 0;
 	}
       }
     }

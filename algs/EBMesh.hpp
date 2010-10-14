@@ -119,7 +119,8 @@ class EBMesh
 public:
 
   EBMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set,
-	 double size = -1., bool use_geom = true);
+	 double size = -1., bool use_geom = true,
+	 int add_layer = 3);
   
   ~EBMesh();
 
@@ -149,8 +150,9 @@ private:
   iMesh_Instance m_mesh;
   iBase_EntitySetHandle m_hRootSet;
   std::vector<IntersectDist> m_vIntersection;
-  int m_nTri, m_nHex, m_iInter, m_nFraction, m_iStartHex, m_nMove,
-    m_nIteration, m_iOverlap, m_iElem, m_nNode[3], m_nDiv[3], m_nVolFracDiv;
+  int m_nTri, m_nHex, m_iInter, m_nFraction, m_iStartHex, m_nMove, m_nAddLayer,
+    m_nIteration, m_iOverlap, m_iElem, m_nNode[3], m_nDiv[3], m_nVolFracDiv,
+    m_iFirstP, m_iSecondP;
   double m_dFirstP, m_dSecondP, m_curPnt, m_prevPnt,
     m_dIntervalSize[3], m_origin_coords[3], m_dInputSize;
   EdgeStatus m_nStatus;
@@ -159,9 +161,9 @@ private:
   std::vector<int> m_vnHexStatus;
   std::map<int, CutFraction> m_mdCutFraction;
   std::vector<EdgeStatus> m_vnEdgeStatus[3];
-  std::vector<double> m_vdCutFraction;
+  //std::vector<double> m_vdCutFraction;
   
-  EdgeStatus get_edge_status(const double dZ);
+  EdgeStatus get_edge_status(const double dZ, int& iSkip);
   bool set_neighbor_hex_status(int dir, int i, int j, int k);
   bool set_hex_status(int index, EdgeStatus value, int dir);
   bool set_edge_status(int dir);

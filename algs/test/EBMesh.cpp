@@ -23,21 +23,24 @@ int main(int argc, char* argv[])
   const char *output_filename = NULL;
   int input_geom = 1; // if input file is geometry format
   double size = -1.;
+  int add_layer = 3;
   int vol_frac_res = 0;
 
-  if (argc > 3 && argc < 7) {
+  if (argc > 2 && argc < 8) {
     input_filename = argv[1];
     input_geom = atoi(argv[2]);
-    size = atof(argv[3]);
+    if (argc > 3) size = atof(argv[3]);
     if (argc > 4) output_filename = argv[4];
-    if (argc == 6) vol_frac_res = atoi(argv[5]);
+    if (argc > 5) add_layer = atoi(argv[5]);
+    if (argc > 6) vol_frac_res = atoi(argv[6]);
   }
   else {
-    std::cout << "Usage: " << argv[0] << "<input_geom_filename> <input_solid> <interval_size> {output_mesh_filename} {vol_frac_res}" << std::endl;
+    std::cout << "Usage: " << argv[0] << "<input_geom_filename> <input_solid> {interval_size} {output_mesh_filename} {#_add_layer} {vol_frac_res}" << std::endl;
     std::cout << "<input_geom_filename> : input geometry file name" << std::endl;
     std::cout << "<input_solid> : if the input file is solid model geometry file, 1(solid model geometry) or 0(facet based geometry)" << std::endl;
-    std::cout << "<interval_size> : interval size, if it is set to -1, EBMesh find a interval size from # of facet triangles." << std::endl;
-    std::cout << "{output_mesh_filename} : optional argument, can output mesh file (e.g. output.vtk." << std::endl;
+    std::cout << "{interval_size} : optional argument, interval size, if it is not set, EBMesh find a interval size from # of facet triangles." << std::endl;
+    std::cout << "{output_mesh_filename} : optional argument, can output mesh file (e.g. output.vtk.)" << std::endl;
+    std::cout << "{#_add_layer} : optional argument, # of additional outside layers, should be > 3, default (3)" << std::endl;
     std::cout << "{vol_frac_res} : optional argument, volume fraction resolution of boundary cells for each material, you can specify it as # of divisions (e.g. 4)." << std::endl;
     std::cout << std::endl;
     if (argc != 1) return 1;
