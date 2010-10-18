@@ -1227,7 +1227,7 @@ int CNrgen::Center_Assm ()
   // moving all geom entities to center      
   double xcenter = (xmin+xmax)/2.0;
   double ycenter = (ymin+ymax)/2.0;
-  double zcenter = (zmin+zmax)/2.0;
+  double zcenter = 0;//(zmin+zmax)/2.0;
   SimpleArray<iBase_EntityHandle> all;
   iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
   CHECK("Failed to get all entities");
@@ -1691,13 +1691,16 @@ int CNrgen::Subtract_Pins()
 {
   if (m_nDimensions >0 && in_pins.size()>0){
     SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
-    CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, in_pins.size());
+    std::cout << in_pins.size()/m_nDuct << " - num inPINS " << std::endl;
+
+    int num_inpins = in_pins.size()/m_nDuct;
+    CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, num_inpins);
 
     for (int k=1; k<=m_nDuct; k++){
 
       // put all the in pins in a matrix of size duct for subtraction with ducts
-      for (int i=0; i<in_pins.size();i++){
-	iGeom_copyEnt(geom, in_pins[i], &cp_inpins(k,i+1), &err);
+      for (int i=0; i<num_inpins;i++){
+	iGeom_copyEnt(geom, in_pins[ k - 1 + m_nDuct*i], &cp_inpins(k,i+1), &err);
 	CHECK("Couldn't copy inner duct wall prism.");	
       }
     
@@ -1705,12 +1708,12 @@ int CNrgen::Subtract_Pins()
       tmp_vol = assms[(k-1)*m_nDimensions];
 
       // subtract the innermost hex from the pins
-      std::cout <<in_pins.size()<< " Subtracting all pins from assembly .. " << std::endl;
+      std::cout << "Duct: " << k << " Pins: " << in_pins.size()<< " Subtracting all pins from assembly .. " << std::endl;
 
       // if there is only one in pin
       if(in_pins.size() > 1){
 
-	iGeom_uniteEnts(geom, &cp_inpins(k,1), in_pins.size(), &unite, &err); 
+	iGeom_uniteEnts(geom, &cp_inpins(k,1), num_inpins, &unite, &err); 
 	CHECK( "uniteEnts failed!" ); 
 
 	iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
