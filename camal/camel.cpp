@@ -16,11 +16,14 @@
 
 #include "camal_interface.hpp"
 
+/*
 #include "iRel.h"
 #include "iMesh.h"
 #include "iGeom.h"
 #include <math.h>
+*/
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <set>
 #include <assert.h>
@@ -152,6 +155,23 @@ bool CMEL::mesh_entity(iBase_EntityHandle gentity,
     // check to make sure this entity isn't meshed
   if (is_meshed(gentity)) return true;
 
+  // if gentity is surface (one surface) and we have some new boundary established, mesh
+  // using a new method (rather quirky design)
+
+   int gtype, result;
+   iGeom_getEntType(geomIface, gentity, &gtype, &result);
+   if (iBase_SUCCESS != result) {
+      std::cerr << "Trouble getting dimension of gentity." << std::endl;
+      return false;
+   }
+
+   if (iBase_FACE == gtype && this->newBoundary.size() > 0)
+   {
+      return CAMAL_mesh_trimmed_surface(this, gentity,
+             mesh_size,  new_entities,
+             newBoundary,  quadMesh  );
+   }
+  //
   bool success = mesh_boundary(gentity, mesh_size, mesh_intervals, force_intervals, NULL, NULL, quadMesh);
 
     // get the size or interval #
@@ -1017,7 +1037,7 @@ iBase_EntityHandle CMEL::next_winding(iBase_EntityHandle this_edge,
   if (iBase_SUCCESS != result) return 0;
 
   double v21[] = {v1[0]-v2[0], v1[1]-v2[1], v1[2]-v2[2]};
-#define DOT(a, b) (a[0]*b[0] + a[1]*b[1] + a[2]*b[2])
+/*#define DOT(a, b) (a[0]*b[0] + a[1]*b[1] + a[2]*b[2])
 #define LENGTH_SQ(a) (a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
 #define NORMALIZE(a) {double lsq = LENGTH_SQ(a); \
                       if (lsq == 0.0) return 0; \
@@ -1027,7 +1047,7 @@ iBase_EntityHandle CMEL::next_winding(iBase_EntityHandle this_edge,
                         c[1] = a[2]*b[0] - a[0]*b[2]; \
                         c[2] = a[0]*b[1] - a[1]*b[0];}
   const double PI = acos(-1.0);
-  const double TWO_PI = 2.0 * PI;
+  const double TWO_PI = 2.0 * PI*/;
   
   NORMALIZE(v21);
 
@@ -1315,6 +1335,196 @@ bool CMEL::assign_tmp_indices(std::vector<iBase_EntityHandle> &bdy_verts,
   if (iBase_SUCCESS != result) return false;
 
   return true;
+}
+bool CMEL::trimSurface(const char * polygon_filename, int len)
+{
+   
+   // read the file with the polygon user data
+   std::ifstream datafile(polygon_filename, std::ifstream::in);
+   if (!datafile) {
+      std::cout << "can't read file\n";
+      return 1;
+   }
+   //
+   char temp[100];
+   double direction[3];// normalized
+   double gridSize;
+   datafile.getline(temp, 100);// first line 
+
+   // get direction and mesh size along polygon segments, from file
+   sscanf(temp, " %lf %lf %lf %lf ", direction, direction+1, direction+2, &gridSize);
+   NORMALIZE(direction);// just to be sure
+
+   std::vector<double> xs, ys, zs;
+   while (!datafile.eof()) {
+      datafile.getline(temp, 100);
+      //int id = 0;
+      double x, y, z;
+      int nr = sscanf(temp, "%lf %lf %lf", &x, &y, &z);
+      if (nr==3)
+      {
+         xs.push_back(x);
+         ys.push_back(y);
+         zs.push_back(z);
+      }
+   }
+   int sizePolygon = xs.size() ;
+   if (sizePolygon < 3)
+   {
+      std::cerr<< " Not enough points in the polygon" << std::endl;
+      return false;
+   }
+   // now advance in the direction of the polygon edge, with gridSize, and compute points
+   // on the surface (it should be first surface); those points will form a new boundary on the
+   // (first) surface, which will be used for camal;
+   //int startPolygon = 0;
+   double currentPosition[3] = {xs[0], ys[0], zs[0]};
+   double currentDirection[3] = {xs[1] - xs[0], ys[1] - ys[0], zs[1] - zs[0]};
+   int nextPolygonPt = 1;
+   double nextPolyCoord[3] = {xs[1], ys[1], zs[1]};
+   double currentLengthLeft = sqrt(LENGTH_SQ(currentDirection));
+   NORMALIZE(currentDirection);
+
+   int reachedEnd = 0;
+   int err;
+   while (!reachedEnd)
+   {
+      // march along given direction  ; it should be at most size / 3?
+
+      iBase_EntityHandle * intersect_entity_handles = NULL;
+      int intersect_entity_handles_allocated = 0, intersect_entity_handles_size = 0;
+      double * intersect_coords = NULL;
+      int intersect_coords_allocated =0 ,  intersect_coords_size = 0;
+       double * param_coords = NULL;
+      int param_coords_allocated = 0, param_coords_size =0;
+      iGeom_getPntRayIntsct( geomIface,
+            currentPosition[0], currentPosition[1], currentPosition[2],
+            direction[0], direction[1], direction[2],
+            &intersect_entity_handles, &intersect_entity_handles_allocated,
+            &intersect_entity_handles_size, iBase_INTERLEAVED,
+            &intersect_coords, &intersect_coords_allocated, &intersect_coords_size,
+            &param_coords, &param_coords_allocated, &param_coords_size,
+            &err );
+      // get the first coordinate
+      if (err != 0 || intersect_entity_handles_size ==0)
+         return false;
+      // consider only the first intersection point
+      for (int j=0; j<3; j++)
+         newBoundary.push_back( intersect_coords[j]);
+      if (newBoundary.size()%10==0)
+          std::cout<<intersect_coords[0] << " " 
+                   <<intersect_coords[1] << " " 
+                   <<intersect_coords[2] << "\n "; 
+      free(intersect_entity_handles);
+      free(intersect_coords);
+      free(param_coords);
+      // decide a new starting point for the ray
+      currentLengthLeft -= gridSize;
+      if (currentLengthLeft > 0)
+      {
+         for (int i=0; i<3; i++)
+            currentPosition[i] += gridSize*currentDirection[i];
+      }
+      else
+      {
+         double point[3];
+         while (currentLengthLeft < 0)
+         {
+            nextPolygonPt++;
+            nextPolygonPt = nextPolygonPt%sizePolygon;
+            if (nextPolygonPt==1)
+            {
+               reachedEnd = 1;
+               break;
+            }
+            point[0] = xs[nextPolygonPt];
+            point[1] = ys[nextPolygonPt];
+            point[2] = zs[nextPolygonPt];
+            for (int i=0; i<3; i++)
+               currentDirection[i] = point[i] - nextPolyCoord[i];
+            double length = sqrt(LENGTH_SQ(currentDirection));
+            currentLengthLeft = currentLengthLeft+length;
+            NORMALIZE(currentDirection);
+            for (int j=0; j<3; j++)
+               nextPolyCoord[j] = point[j];
+         }
+         // compute current position from nextPolygonPt
+         for (int i=0; i<3; i++)
+            currentPosition[i] = nextPolyCoord[i] - currentLengthLeft*currentDirection[i];
+
+      }
+
+   }// end while
+
+   // newBoundary has the double coordinates; create a set in the mesh file with these
+   // coordinates, and add those edge segments
+   int newNodes = newBoundary.size()/3; // interleaved for vertex creation
+
+   iBase_EntityHandle * new_verts_ptr = NULL;
+   int new_verts_alloc = 0, new_verts_size = 0;
+   iMesh_createVtxArr(meshIface, newNodes, iBase_INTERLEAVED,
+                        &newBoundary[0], 3*newNodes,
+                        &new_verts_ptr, &new_verts_alloc, &new_verts_size,
+                        &err);
+   if (iBase_SUCCESS != err) {
+      std::cerr << "Couldn't create new vertices." << std::endl;
+      return false;
+   }
+
+   iBase_EntitySetHandle entity_set;
+   iMesh_createEntSet(meshIface,  /*in const int isList */ 1,
+                                  /*out*/ &entity_set,
+                                  &err);
+   // add vertices to the set
+   iMesh_addEntArrToSet(meshIface, new_verts_ptr, newNodes, entity_set, &err);
+   if (iBase_SUCCESS != err) {
+      std::cerr << "Couldn't add new vertices to set."
+            << std::endl;
+      return false;
+   }
+
+   // create connectivity for edges
+   std::vector<iBase_EntityHandle> connect(2*newNodes);
+   for (int i=0; i<newNodes; i++)
+   {
+      int nextNodeIndex = (i+1)%newNodes;
+      connect[2*i] = new_verts_ptr[i];
+      connect[2*i+1] = new_verts_ptr[nextNodeIndex];
+   }
+   iBase_EntityHandle * new_elem_ptr = NULL;
+   int new_entity_handles_allocated = 0, new_entity_handles_size =0;
+   int * status = NULL;
+   int status_allocated = 0, status_size =0;
+   iMesh_createEntArr(meshIface, iMesh_LINE_SEGMENT,
+                             &connect[0], 2*newNodes,
+                             &new_elem_ptr,
+                             &new_entity_handles_allocated,
+                             &new_entity_handles_size,
+                             &status,
+                             &status_allocated,
+                             &status_size,
+                             &err);
+   // add segments to the set
+   iMesh_addEntArrToSet(meshIface, new_elem_ptr, new_entity_handles_size, entity_set, &err);
+   if (iBase_SUCCESS != err) {
+      std::cerr << "Couldn't add new segments to set."
+            << std::endl;
+      return false;
+      }
+   // temp file
+   const char * name = "newBound.vtk";
+   iMesh_save(meshIface,
+         /*in*/ entity_set,
+         /*in*/  name,
+         /*in*/ NULL,
+         /*out*/ &err,
+         /*in*/ 12,
+         /*in*/ 0);
+
+   free(new_elem_ptr);
+   free(new_verts_ptr);
+   // maybe delete some entity arrays
+   return true;
 }
 
 #ifdef TEST_CAMEL

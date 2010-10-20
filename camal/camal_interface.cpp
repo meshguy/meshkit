@@ -445,3 +445,135 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
 
    return success;
 }
+
+bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
+      double mesh_size, std::vector<iBase_EntityHandle> &new_entities,
+      std::vector<double> trimmingBoundary, const bool quadMesh)
+{
+   std::vector<iBase_EntityHandle> bdy_verts;// these should be empty now
+   std::vector<double> bdy_coords;
+   std::vector<int> connect;
+   bool success = true; // have a positive attitude
+   int new_points;
+   iMesh_EntityTopology etop = iMesh_ALL_TOPOLOGIES;
+   std::vector<double> coords;
+
+   CAMALGeomEval geom_eval(cmel->geomIface, surface);
+   geom_eval.set_mesh_size(mesh_size);
+#if CAMAL_VERSION > 500
+   CAMALSizeEval size_eval(mesh_size);
+#endif
+   // boundary is in a loop
+   int numBoundPoints = trimmingBoundary.size()/3;
+   // the new boundary will be decided based on mesh size
+   double totalLength = 0;
+   std::vector<double> lengs;
+   lengs.push_back(0);// start with 0
+   for (int i=0; i<numBoundPoints; i++)
+   {
+      int nextIndex = (i+1) % numBoundPoints;
+      double lenSeg = DIST2( (&trimmingBoundary[3*i]), (&trimmingBoundary[3*nextIndex]) );
+      totalLength+=lenSeg;
+      lengs.push_back(totalLength);
+   }
+   int numSegs = (int)(totalLength/mesh_size);
+   if (quadMesh)
+   {
+      // make it even
+      if (numSegs%2 == 1)
+         numSegs++;
+   }
+   double newMeshSize = totalLength/numSegs;
+   // generate new points on the segments (in natural parametric space)
+   // use a sort of bsearch to get the index in lengs
+   // create some vertices /edges  in the mesh, which will be used for quad generation
+   // we will not create them at the "boundary mesh" stage
+   // although it would be easier to just have another gentity with a new edge as boundary
+   // how to do that in igeom?
+
+   // first node is the first one on trimming boundary (for sure on our surface)
+   // std::vector <double> bdy_coords;
+   int i=0;
+   for ( i=0; i<3; i++)
+      bdy_coords.push_back(trimmingBoundary[i]);
+   // find a new point in the param space of the boundary curve
+   for (int k=1; k<numSegs; k++)
+   {
+      double parPosition = k*newMeshSize;
+      double * pos =   std::lower_bound(&lengs[0], &lengs[numBoundPoints], parPosition);
+      if (pos == &lengs[0])
+         return false;
+      pos = pos-1; // get the previous position, it cannot be 0
+      double extraLen = parPosition - *pos;
+      int index = pos - &lengs[0];
+      int nextV = (index+1)%numBoundPoints;
+      double direction[3]={trimmingBoundary[3*nextV] - trimmingBoundary[3*index],
+            trimmingBoundary[3*nextV+1] - trimmingBoundary[3*index+1],
+            trimmingBoundary[3*nextV+2] - trimmingBoundary[3*index+2]};
+      NORMALIZE(direction);
+      double pp[3];
+      for (i=0; i<3; i++)
+      {
+         pp[i] = trimmingBoundary[3*index+i]+direction[i]*extraLen;
+      }
+      // now see if this is closer than what we want it to be
+      geom_eval.move_to_surface(pp[0], pp[1], pp[2]);
+      for (i=0; i<3; i++)
+         bdy_coords.push_back(pp[i]);
+   }
+   std::vector<int> loops;
+   std::vector<int> loop_sizes;
+   for (i=0; i<numSegs; i++)
+      loops.push_back(i);
+   loop_sizes.push_back(numSegs);// one loop , external ....
+   if (quadMesh) {
+   // start copy
+      //CAMALSizeEval size_eval(mesh_size);
+      CMLPaver pave_mesher(&geom_eval, &size_eval);
+         // the loops are established, get the mesh sets from each edge, and create the boundary loops arrays
+         // mesh faces;
+
+         // set only num_points_out -1 , because the last one is repeated
+      success = pave_mesher.set_boundary_mesh(bdy_coords.size() / 3,
+            &bdy_coords[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
+      if (!success) {
+         std::cerr << "Failed setting boundary mesh" << std::endl;
+         return false;
+      }
+
+      pave_mesher.set_sizing_function(CML::LINEAR_SIZING);
+
+      // generate the mesh
+      int num_quads;
+      success = pave_mesher.generate_mesh(new_points, num_quads);
+      if (!success) {
+         std::cerr << "Failed generating mesh" << std::endl;
+         //return success;
+      }
+
+      std::cout << "Meshed surface with " << new_points << " new vertices and "
+            << num_quads << " quadrilaterals." << std::endl;
+
+      // get the generated mesh
+      //std::vector<double> coords;
+      coords.resize(3*new_points);
+      //std::vector<double> new_coords;
+      //new_coords.resize(3 * new_points);
+      connect.resize(4 * num_quads);
+      success = pave_mesher.get_mesh(new_points, &coords[0], num_quads,
+            &connect[0]);
+      if (!success) {
+         std::cerr << "Failed to get generated mesh" << std::endl;
+            //return success;
+      }
+      etop = iMesh_QUADRILATERAL;
+   }
+   else
+   {  // these are for triangular mesh; dont worry yet
+
+   }
+   // put new mesh back into interface
+   success = cmel->create_vertices_elements(surface, bdy_verts, &coords[0], new_points,
+          connect, etop, new_entities);
+   return true;
+}

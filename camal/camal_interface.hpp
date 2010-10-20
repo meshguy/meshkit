@@ -20,4 +20,8 @@ bool CAMAL_mesh_entity(CMEL *cmel,
                        std::vector<iBase_EntityHandle> &new_entities,
                        const bool quadMesh = false);
 
+bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
+      double mesh_size, std::vector<iBase_EntityHandle> &new_entities,
+      std::vector<double> trimmingBoundary, const bool quadMesh = false);
+
 #endif

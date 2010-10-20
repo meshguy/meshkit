@@ -17,6 +17,22 @@
 #include "iGeom.h"
 #include "iMesh.h"
 #include "iRel.h"
+#include <math.h>
+
+
+#define DOT(a, b) (a[0]*b[0] + a[1]*b[1] + a[2]*b[2])
+#define LENGTH_SQ(a) (a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+#define DIST2(a, b) sqrt((b[0]-a[0])*(b[0]-a[0]) + (b[1]-a[1])*(b[1]-a[1]) \
+      + (b[2]-a[2])*(b[2]-a[2]))
+#define NORMALIZE(a) {double lsq = LENGTH_SQ(a); \
+                      if (lsq == 0.0) return 0; \
+                      lsq = 1.0 / sqrt(lsq); \
+                      for (int i = 0; i < 3; i++) a[i] *= lsq;}
+#define CROSS(a, b, c) {c[0] = a[1]*b[2] - a[2]*b[1]; \
+                        c[1] = a[2]*b[0] - a[0]*b[2]; \
+                        c[2] = a[0]*b[1] - a[1]*b[0];}
+const double PI = acos(-1.0);
+const double TWO_PI = 2.0 * PI;
 
 class CMEL 
 {
@@ -121,6 +137,8 @@ public:
                             int this_sense, 
                             std::vector<iBase_EntityHandle> &tmp_adjs);
   
+  bool trimSurface(const char * polygon_filename, int len);
+
   iGeom_Instance geomIface;
   iMesh_Instance meshIface;
   iRel_Instance relateIface;
@@ -145,6 +163,8 @@ private:
                       iBase_EntityHandle other_gent,
                       bool prec_ent, int &this_sense);
   
+  std::vector<double> newBoundary;
+
 };
 
 #endif
