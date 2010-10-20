@@ -70,11 +70,14 @@ int main(int argc, char* argv[]) {
       datafile.getline(temp, 100);
       int id = 0;
       double latit, longit, bed, thickness, surfdata;
-      sscanf(temp, "%lf %lf %lf", &latit, &longit, &bed);
+      int nr = sscanf(temp, "%lf %lf %lf", &latit, &longit, &bed);
 
-      lats.push_back(latit);
-      longits.push_back(longit);
-      beds.push_back(bed);
+      if (3==nr){
+         lats.push_back(latit);
+         longits.push_back(longit);
+         beds.push_back(bed);
+      }
+
    }
    datafile.close();
    int numNodes = lats.size();
