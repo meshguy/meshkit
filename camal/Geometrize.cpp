@@ -150,8 +150,8 @@ int main(int argc, char *argv[]) {
 			{
 				loops.push_back(edge_ents[i]);
 				curVert = endV[i];
+				marks[i] = 1;// to not add it again
 				break;// from for loop
-				marks[i] = 1;// to not
 			}
 		}
 	}
