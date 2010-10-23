@@ -27,7 +27,6 @@ CNrgen::CNrgen ()
   pi = M_PI;
   m_dRadialSize = -1.0;
   m_dAxialSize = -1.0;
-  m_Centered = false;
   m_nDimensions = 0;
   m_nMaterialSetId = 1;
   m_nNeumannSetId = 1;

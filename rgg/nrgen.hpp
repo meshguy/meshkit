@@ -36,7 +36,7 @@ public:
   int ReadAndCreate ();
   int Name_Faces(const std::string sMatName, const iBase_EntityHandle body, 
 		   iBase_TagHandle this_tag);
-  int Center_Assm();
+  int Center_Assm(char&);
   int Section_Assm (char&, double&, const std::string);
   int Rotate_Assm (char&, double&);
   int Move_Assm (double&,double&,double&);
@@ -95,9 +95,6 @@ private:
   // doubles for pincell pitch, pi and mesh sizes resp.
   double m_dPitch, pi, m_dRadialSize, m_dAxialSize;      
  
-  // bool for checking if assembly is centered
-  bool m_Centered;
-
   // igeom related
   SimpleArray<iBase_EntityHandle> assms, in_pins;
   iGeom_Instance geom;

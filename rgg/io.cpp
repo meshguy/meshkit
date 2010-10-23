@@ -645,10 +645,16 @@ int CNrgen::ReadAndCreate()
     }
     // ceter the assembly 
     if (szInputString.substr(0,6) == "center"){
-      std::cout << "Positioning assembly to center" << std::endl;
-      err = Center_Assm();
+
+      char rDir = 'q';
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> rDir;    
+      if (rDir != 'q')
+	std::cout << "Positioning assembly to "<< rDir << " center" << std::endl;
+      else
+	std::cout << "Positioning assembly to xy center" << std::endl;
+      err = Center_Assm(rDir);
       ERRORR("Error in Center_Assm", err);
-      m_Centered = true;
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
     // rotate the assembly if rotate card is specified
@@ -728,13 +734,19 @@ int CNrgen::CreateCubitJournal()
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
 			   "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
 			   "gold", "orange", "brown", "pink", "khakhi", "black", "aquamurine", "mediumslateblue"};
+
+  // get the max and min coordinates of the geometry
+  double x1, y1, z1, x2, y2, z2;
+  iGeom_getBoundBox( geom, &x1, &y1, &z1, &x2, &y2, &z2, &err );
+  CHECK( "Problems getting bouding box." );
+
   int nSideset=m_nNeumannSetId, i, j;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
   int nTemp = 1;
   if(m_nDimensions > 0){
-    dHeight=  m_dMZAssm(nTemp, 2)-m_dMZAssm(nTemp, 1);
-    dMid = (m_Centered ? 0.0 : m_dMZAssm(nTemp, 1) + dHeight/2.0);
+    dHeight= fabs(z2 - z1);
+    dMid = z2 - dHeight/2.0;
   }
 
   // writing to template.jou 
@@ -765,11 +777,23 @@ int CNrgen::CreateCubitJournal()
   m_SchemesFile << "##Set Mesh Sizes" << std::endl;
 
   // volume only
-  if(m_nPlanar == 0){
-    if (-1.0 == m_dAxialSize)
+  if(m_nPlanar == 0 ){
+    if (-1.0 == m_dAxialSize){
       m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
-    else
+    }
+    else {
       m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_dAxialSize << "}" << std::endl;
+    }
+    
+    // create templates for specifying block z intervals
+    if (m_nDuct > 1){
+      m_SchemesFile << "## Set interval along Z direction ## " << std::endl;
+
+      for( int p=1; p<= m_nDuct; p++){
+	m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE}" << std::endl;
+      }
+      m_SchemesFile << "##" << std::endl;
+    }
   }
 
   if (-1.0 == m_dRadialSize) {
@@ -815,23 +839,23 @@ int CNrgen::CreateCubitJournal()
   //surface only
   if(m_nPlanar ==1){ 
 
-    // sideset curves on top surface creation dumps
-    m_FileOutput << "#Creating side curve sidesets" << std::endl; 
-    if(m_szGeomType =="hexagonal"){
-      for(i=1; i<=6; i++){
-	++nSideset;
-	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << i  << "\"" << std::endl;
-	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;    
-      }
-    }
-    if(m_szGeomType =="rectangular"){
-      for(j=1; j<=4; j++){
-	++nSideset;
-	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
-	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;
-      }
-      m_FileOutput << "#" << std::endl;
-    }
+    // // sideset curves on top surface creation dumps
+    // m_FileOutput << "#Creating side curve sidesets" << std::endl; 
+    // if(m_szGeomType =="hexagonal"){
+    //   for(i=1; i<=6; i++){
+    // 	++nSideset;
+    // 	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << i  << "\"" << std::endl;
+    // 	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;    
+    //   }
+    // }
+    // if(m_szGeomType =="rectangular"){
+    //   for(j=1; j<=4; j++){
+    // 	++nSideset;
+    // 	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
+    // 	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;
+    //   }
+    //   m_FileOutput << "#" << std::endl;
+    // }
 
     // group creation dumps. each material surface  has a group
     m_FileOutput << "#Creating groups" << std::endl;  
@@ -904,10 +928,6 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfBot  << "\"" << std::endl;
       m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
 
-      //       m_FileOutput << "vol in body in " << szGrp << " size  {"  << szSize <<"}" << std::endl;
-      //       m_FileOutput << "vol in body in " << szGrp << " scheme {" << "SWEEP}"  << std::endl;
-      //       m_FileOutput << "mesh vol in body in " << szGrp << "\n#" << std::endl;   
-
       // dumping these sizes schemes.jou also
       m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
     }  
@@ -931,15 +951,42 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "#" << std::endl;
 
   // mesh all command after meshing surface
-  m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
-  m_FileOutput << "mesh tmpgrp" << std::endl;
-  m_FileOutput << "#" << std::endl;
+  if (m_nDuct <= 1 ){
+    m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
+    m_FileOutput << "mesh tmpgrp" << std::endl;
+  }
+  else {
+    m_FileOutput << "# Meshing top surface" << std::endl;
+    m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+  }
    
   if(m_nPlanar == 0){ // volumes only
-    m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
-      " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
-    m_FileOutput << "mesh vol all" << std::endl;
-    // color now
+    if (m_nDuct == 1){
+      m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
+	" and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
+      m_FileOutput << "mesh vol all" << std::endl;
+    }
+    else if (m_nDuct > 1)
+      m_FileOutput << "###  Setting Z intervals on ducts and meshing along Z " << std::endl;
+    for( int p=m_nDuct; p>= 1; p--){
+      if(dMid == 0){ // z - centered
+	m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
+		     << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
+	m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
+		     << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << std::endl;
+      }
+      else{
+	m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1)
+		     << " and z_coord < " << m_dMZAssm(p, 2) << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
+	m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1)
+		     << " and z_coord < " << m_dMZAssm(p, 2) << std::endl;
+
+	m_FileOutput << "##" << std::endl;
+      }
+    }
+  }
+  // color now
+  if(m_nPlanar == 0){ // volumes only
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       if(p>20)
@@ -1211,23 +1258,37 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
 } 
 
 
-int CNrgen::Center_Assm ()
+int CNrgen::Center_Assm (char &rDir)
 // ---------------------------------------------------------------------------
 // Function: centers all the entities along x and y axis
 // Input:    none
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  double xmin, xmax, ymin, ymax, zmin, zmax;
+  double xmin, xmax, ymin, ymax, zmin, zmax, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;
   // position the assembly such that origin is at the center before sa
   iGeom_getBoundBox(geom,&xmin,&ymin,&zmin,
 		    &xmax,&ymax,&zmax, &err);
   CHECK("Failed getting bounding box");
 
-  // moving all geom entities to center      
-  double xcenter = (xmin+xmax)/2.0;
-  double ycenter = (ymin+ymax)/2.0;
-  double zcenter = 0;//(zmin+zmax)/2.0;
+  // moving all geom entities to center  
+
+
+  if( rDir =='x'){
+    xcenter = (xmin+xmax)/2.0;
+  }
+  else if( rDir =='y'){
+    ycenter = (ymin+ymax)/2.0;
+  }
+  else if ( rDir =='z'){
+    zcenter = (zmin+zmax)/2.0;
+  }
+  else{
+    // assume that it is centered along x and y and not z direction
+    xcenter = (xmin+xmax)/2.0;
+    ycenter = (ymin+ymax)/2.0;
+  }
+
   SimpleArray<iBase_EntityHandle> all;
   iGeom_getEntities( geom, root_set, iBase_REGION,ARRAY_INOUT(all),&err );
   CHECK("Failed to get all entities");
@@ -1559,7 +1620,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
 	dX = m_dMAssmPitchX(nTemp, n)/4.0;
 	dY =  m_dMAssmPitchY(nTemp, n)/4.0;
 	dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
-	std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
+	//	std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
 	iGeom_moveEnt(geom, assm, dMoveX,dMoveY,dZ, &err);
 	CHECK("Move failed failed.");  
 
@@ -1691,7 +1752,7 @@ int CNrgen::Subtract_Pins()
 {
   if (m_nDimensions >0 && in_pins.size()>0){
     SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
-    std::cout << in_pins.size()/m_nDuct << " - num inPINS " << std::endl;
+    std::cout <<"Total number of pins in the model = " <<  in_pins.size()/m_nDuct << std::endl;
 
     int num_inpins = in_pins.size()/m_nDuct;
     CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, num_inpins);
@@ -1708,7 +1769,7 @@ int CNrgen::Subtract_Pins()
       tmp_vol = assms[(k-1)*m_nDimensions];
 
       // subtract the innermost hex from the pins
-      std::cout << "Duct: " << k << " Pins: " << in_pins.size()<< " Subtracting all pins from assembly .. " << std::endl;
+      std::cout << "Duct no.: " << k << " subtracting " << num_inpins << " pins from the duct .. " << std::endl;
 
       // if there is only one in pin
       if(in_pins.size() > 1){
