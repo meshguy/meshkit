@@ -87,8 +87,8 @@ NewSmooth_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 NewSmooth_test_LDADD = libMKcamal.la $(CAMAL_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 ComputeThickness_SOURCES = ComputeThickness.cpp
-ShadeVolume_DEPENDENCIES =  
-ShadeVolume_CXXFLAGS = $(CXXFLAGS)
+ComputeThickness_DEPENDENCIES =  
+ComputeThickness_CXXFLAGS = $(CXXFLAGS)
 ComputeThickness_LDADD =  $(CAMAL_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
