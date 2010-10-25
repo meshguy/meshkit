@@ -30,7 +30,7 @@ CCrgen::CCrgen ()
   comment = "!";
   MAXCHARS = 300;
   global_ids = true;
-  merge_tol =  1.0e-3;
+  merge_tol =  1.0e-9;
   do_merge = 1;
   update_sets= 0;
   merge_tag = NULL;
@@ -218,6 +218,11 @@ int CCrgen::read_inputs_phase1 (){
       formatString >> card >> symm;    
     }
 
+    // merge tolerance
+    if (input_string.substr(0,14) == "mergetolerance"){
+      std::istringstream formatString (input_string);
+      formatString >> card >> merge_tol;    
+    }
     // breaking condition
     if(input_string.substr(0,3) == "end"){
       std::istringstream formatstring (input_string);
