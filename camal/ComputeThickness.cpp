@@ -235,11 +235,13 @@ int main(int argc, char *argv[]) {
    double * dArr = new double[numNodes];
    // then, go to shoot rays
    iBase_TagHandle situation_tag_handle;
-   const char * tagName2 = "Situation"; // < 0 not intersected 
-   // 1 less than 200
-   // 2 more than 200, but floating 
+   const char * tagName2 = "Situation";
+   // 0 not intersected, not computed
+   // 1 less than 200m thickness, above sea level
+   // 2 less than 200m thickness ice, about sea level on top/bottom
+   // 3 more than 200m thickness, but floating
    // floating if ztop/thickness < 1 - roIce/roWater
-   // 3 more than 200, ground
+   // 4 more than 200m thickness, ground
    iMesh_createTag(mesh1, tagName2,
    /*  size ? */1, iBase_DOUBLE, &situation_tag_handle, &err, strlen(tagName2));
    ERRORR("failed to create second tag.", 1);
@@ -273,23 +275,31 @@ int main(int argc, char *argv[]) {
       // get the first coordinate
       if (err != 0 || intersect_entity_handles_size ==0 || param_coords == NULL)
          continue;
+      double zTop = intersect_coords[2]; // the z of the top, intersection computation
       numRaysIntersected++;
       // consider only the first intersection point
       dArr[j] = param_coords[0] - 1000; // the first intersection only
       // this is the thickness
       // intersect point has z = intersect_coords[0]
+      double z = xyz[3*j+2];
       if (dArr[j] < 200 ) 
+      {
          dArr2[j] = 1; // computed but less than 200
+         if (z<0)
+         {
+            dArr2[j] = 2;
+         }
+      }
       else
       {
-         dArr2[j] = 3; // ground
+         dArr2[j] = 4; // ground
          // decide if it is floating  
-         double z = xyz[3*j+2];
+
          if (z<0) // below sea level, could float
          {
             double floating = dArr[j]*910+z*1026;
             if (floating < 0)
-               dArr2[j] = 2;
+               dArr2[j] = 3;
          }
       }
          
