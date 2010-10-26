@@ -1411,10 +1411,6 @@ bool CMEL::trimSurface(const char * polygon_filename, int len)
       // consider only the first intersection point
       for (int j=0; j<3; j++)
          newBoundary.push_back( intersect_coords[j]);
-      if (newBoundary.size()%10==0)
-          std::cout<<intersect_coords[0] << " " 
-                   <<intersect_coords[1] << " " 
-                   <<intersect_coords[2] << "\n "; 
       free(intersect_entity_handles);
       free(intersect_coords);
       free(param_coords);

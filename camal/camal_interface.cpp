@@ -48,13 +48,12 @@ bool CAMAL_bdy_loops_coords(CMEL *cmel, iBase_EntityHandle gentity,
    if (!success)
       return success;
    assert(loop_ents.size() == loop_senses.size());
-   if (debug)
-   {
-      std::cout<<" Surface: " <<cmel->get_gentity_id(gentity)<<
-            " loop_ents size: " << loop_ents.size() << std::endl;
-      for (unsigned int i=0; i<loop_ents.size(); i++)
-         std::cout<< std::hex<< loop_ents[i]<< " " << std::dec
-           << " sense: " << loop_senses[i] << std::endl;
+   if (debug) {
+      std::cout << " Surface: " << cmel->get_gentity_id(gentity)
+            << " loop_ents size: " << loop_ents.size() << std::endl;
+      for (unsigned int i = 0; i < loop_ents.size(); i++)
+         std::cout << std::hex << loop_ents[i] << " " << std::dec << " sense: "
+               << loop_senses[i] << std::endl;
    }
 
    // get all vertices used in all elements
@@ -295,15 +294,16 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
       }
 
       if (quadMesh) {
-// start copy
+         // start copy
          //CAMALSizeEval size_eval(mesh_size);
          CMLPaver pave_mesher(&geom_eval, &size_eval);
-            // the loops are established, get the mesh sets from each edge, and create the boundary loops arrays
-            // mesh faces;
+         // the loops are established, get the mesh sets from each edge, and create the boundary loops arrays
+         // mesh faces;
 
-            // set only num_points_out -1 , because the last one is repeated
+         // set only num_points_out -1 , because the last one is repeated
          success = pave_mesher.set_boundary_mesh(bdy_coords.size() / 3,
-               &bdy_coords[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
+               &bdy_coords[0], (int) loop_sizes.size(), &loop_sizes[0],
+               &loops[0]);
          if (!success) {
             std::cerr << "Failed setting boundary mesh" << std::endl;
             return false;
@@ -319,11 +319,12 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
             //return success;
          }
 
-         std::cout << "Meshed surface with " << new_points << " new vertices and "
-               << num_quads << " quadrilaterals." << std::endl;
+         std::cout << "Meshed surface with " << new_points
+               << " new vertices and " << num_quads << " quadrilaterals."
+               << std::endl;
 
          // get the generated mesh
-         bdy_coords.resize(3*new_points);
+         bdy_coords.resize(3 * new_points);
          //std::vector<double> new_coords;
          //new_coords.resize(3 * new_points);
          connect.resize(4 * num_quads);
@@ -331,7 +332,7 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
                &connect[0]);
          if (!success) {
             std::cerr << "Failed to get generated mesh" << std::endl;
-               //return success;
+            //return success;
          }
          // end copy
          etop = iMesh_QUADRILATERAL;
@@ -448,8 +449,7 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
 
 bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
       double mesh_size, std::vector<iBase_EntityHandle> &new_entities,
-      std::vector<double> trimmingBoundary, const bool quadMesh)
-{
+      std::vector<double> trimmingBoundary, const bool quadMesh) {
    std::vector<iBase_EntityHandle> bdy_verts;// these should be empty now
    std::vector<double> bdy_coords;
    std::vector<int> connect;
@@ -464,26 +464,22 @@ bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
    CAMALSizeEval size_eval(mesh_size);
 #endif
    // boundary is in a loop
-   int numBoundPoints = trimmingBoundary.size()/3;
+   int numBoundPoints = trimmingBoundary.size() / 3;
    // the new boundary will be decided based on mesh size
    double totalLength = 0;
    std::vector<double> lengs;
    lengs.push_back(0);// start with 0
-   for (int i=0; i<numBoundPoints; i++)
-   {
-      int nextIndex = (i+1) % numBoundPoints;
-      double lenSeg = DIST2( (&trimmingBoundary[3*i]), (&trimmingBoundary[3*nextIndex]) );
-      totalLength+=lenSeg;
+   for (int i = 0; i < numBoundPoints; i++) {
+      int nextIndex = (i + 1) % numBoundPoints;
+      double
+            lenSeg =
+                  DIST2( (&trimmingBoundary[3*i]), (&trimmingBoundary[3*nextIndex]) );
+      totalLength += lenSeg;
       lengs.push_back(totalLength);
    }
-   int numSegs = (int)(totalLength/mesh_size);
-   if (quadMesh)
-   {
-      // make it even
-      if (numSegs%2 == 1)
-         numSegs++;
-   }
-   double newMeshSize = totalLength/numSegs;
+   int numSegs = (int) (totalLength / mesh_size);
+
+   double newMeshSize = totalLength / numSegs;
    // generate new points on the segments (in natural parametric space)
    // use a sort of bsearch to get the index in lengs
    // create some vertices /edges  in the mesh, which will be used for quad generation
@@ -493,47 +489,93 @@ bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
 
    // first node is the first one on trimming boundary (for sure on our surface)
    // std::vector <double> bdy_coords;
-   int i=0;
-   for ( i=0; i<3; i++)
+   int i = 0;
+   for (i = 0; i < 3; i++)
       bdy_coords.push_back(trimmingBoundary[i]);
    // find a new point in the param space of the boundary curve
-   for (int k=1; k<numSegs; k++)
-   {
-      double parPosition = k*newMeshSize;
-      double * pos =   std::lower_bound(&lengs[0], &lengs[numBoundPoints], parPosition);
+   double param = 0; // current parameter
+   double sizeLocal = mesh_size;
+   int ix = 0;
+   while (param < totalLength - 3 * sizeLocal) {
+      // latest point pushed is at index ix
+      size_eval.size_at_point(bdy_coords[3 * ix], bdy_coords[3 * ix + 1],
+            bdy_coords[3 * ix + 2], sizeLocal, 0);
+      param += sizeLocal;
+      // this is the par position of the next point, in natural coordinate
+      double * pos = std::lower_bound(&lengs[0], &lengs[numBoundPoints], param);
       if (pos == &lengs[0])
          return false;
-      pos = pos-1; // get the previous position, it cannot be 0
-      double extraLen = parPosition - *pos;
+      pos = pos - 1; // get the previous position, it cannot be 0
+      double extraLen = param - *pos;
       int index = pos - &lengs[0];
-      int nextV = (index+1)%numBoundPoints;
-      double direction[3]={trimmingBoundary[3*nextV] - trimmingBoundary[3*index],
-            trimmingBoundary[3*nextV+1] - trimmingBoundary[3*index+1],
-            trimmingBoundary[3*nextV+2] - trimmingBoundary[3*index+2]};
+      int nextV = (index + 1) % numBoundPoints; // it can't be here, but hey...
+      double direction[3] = { trimmingBoundary[3 * nextV] - trimmingBoundary[3
+            * index], trimmingBoundary[3 * nextV + 1] - trimmingBoundary[3
+            * index + 1], trimmingBoundary[3 * nextV + 2] - trimmingBoundary[3
+            * index + 2] };
       NORMALIZE(direction);
       double pp[3];
-      for (i=0; i<3; i++)
-      {
-         pp[i] = trimmingBoundary[3*index+i]+direction[i]*extraLen;
+      for (i = 0; i < 3; i++) {
+         pp[i] = trimmingBoundary[3 * index + i] + direction[i] * extraLen;
       }
       // now see if this is closer than what we want it to be
       geom_eval.move_to_surface(pp[0], pp[1], pp[2]);
-      for (i=0; i<3; i++)
+      for (i = 0; i < 3; i++)
+         bdy_coords.push_back(pp[i]);
+      ix++;
+
+   }
+   // the current index must be odd or even, less than 3, 4 segments left
+   // to generate; it will be a little different
+   int segRemain = (int) (totalLength - param) / sizeLocal;
+   if ((bdy_coords.size() / 3 + segRemain) % 2 == 0 && quadMesh) {
+      segRemain++;// make total number even
+      std::cout << "nb segs so far: " << bdy_coords.size() / 3
+            << " local size: " << sizeLocal << "\n";
+      std::cout << "remains increased to " << segRemain << "\n";
+      std::cout << "localSize reduced to " << sizeLocal << " \n";
+      // 
+   }
+   sizeLocal = (totalLength - param) / segRemain;// this should be 3 or 4...
+   for (int k = 1; k < segRemain; k++) {
+      double parPosition = param + k * sizeLocal;
+      double * pos = std::lower_bound(&lengs[0], &lengs[numBoundPoints],
+            parPosition);
+      if (pos == &lengs[0])
+         return false;
+      pos = pos - 1; // get the previous position, it cannot be 0
+      double extraLen = parPosition - *pos;
+      int index = pos - &lengs[0];
+      int nextV = (index + 1) % numBoundPoints;
+      double direction[3] = { trimmingBoundary[3 * nextV] - trimmingBoundary[3
+            * index], trimmingBoundary[3 * nextV + 1] - trimmingBoundary[3
+            * index + 1], trimmingBoundary[3 * nextV + 2] - trimmingBoundary[3
+            * index + 2] };
+      NORMALIZE(direction);
+      double pp[3];
+      for (i = 0; i < 3; i++) {
+         pp[i] = trimmingBoundary[3 * index + i] + direction[i] * extraLen;
+      }
+      // now see if this is closer than what we want it to be
+      geom_eval.move_to_surface(pp[0], pp[1], pp[2]);
+      for (i = 0; i < 3; i++)
          bdy_coords.push_back(pp[i]);
    }
+   std::cout << " boundary has " << bdy_coords.size() / 3 << " nodes\n";
    std::vector<int> loops;
    std::vector<int> loop_sizes;
-   for (i=0; i<numSegs; i++)
+   numSegs = bdy_coords.size() / 3;
+   for (i = 0; i < numSegs; i++)
       loops.push_back(i);
    loop_sizes.push_back(numSegs);// one loop , external ....
    if (quadMesh) {
-   // start copy
+      // start copy
       //CAMALSizeEval size_eval(mesh_size);
       CMLPaver pave_mesher(&geom_eval, &size_eval);
-         // the loops are established, get the mesh sets from each edge, and create the boundary loops arrays
-         // mesh faces;
+      // the loops are established, get the mesh sets from each edge, and create the boundary loops arrays
+      // mesh faces;
 
-         // set only num_points_out -1 , because the last one is repeated
+      // set only num_points_out -1 , because the last one is repeated
       success = pave_mesher.set_boundary_mesh(bdy_coords.size() / 3,
             &bdy_coords[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
       if (!success) {
@@ -556,7 +598,7 @@ bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
 
       // get the generated mesh
       //std::vector<double> coords;
-      coords.resize(3*new_points);
+      coords.resize(3 * new_points);
       //std::vector<double> new_coords;
       //new_coords.resize(3 * new_points);
       connect.resize(4 * num_quads);
@@ -564,16 +606,54 @@ bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
             &connect[0]);
       if (!success) {
          std::cerr << "Failed to get generated mesh" << std::endl;
-            //return success;
+         //return success;
       }
       etop = iMesh_QUADRILATERAL;
-   }
-   else
-   {  // these are for triangular mesh; dont worry yet
+   } else {
+#if CAMAL_VERSION > 500
+      CMLTriAdvance tri_mesher(&geom_eval);
+#else
+      CMLTriMesher tri_mesher(&geom_eval);
+#endif
 
+      success = tri_mesher.set_boundary_mesh(bdy_coords.size() / 3,
+            &bdy_coords[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
+      if (!success) {
+         std::cerr << "Failed setting boundary mesh" << std::endl;
+         return success;
+      }
+
+#if CAMAL_VERSION > 500
+      tri_mesher.set_sizing_function(CML::LINEAR_SIZING);
+#endif
+
+      // generate the mesh
+      int num_tris;
+      success = tri_mesher.generate_mesh(new_points, num_tris);
+      if (!success) {
+         std::cerr << "Failed generating mesh" << std::endl;
+         return success;
+      }
+
+      std::cout << "Meshed surface "
+            << " with " << new_points << " new vertices and " << num_tris
+            << " triangles." << std::endl;
+
+      // get the generated mesh
+      //bdy_coords.resize(3*(bdy_verts.size() + new_points));
+      coords.resize(3 * new_points);
+      connect.resize(3 * num_tris);
+      success = tri_mesher.get_mesh(new_points, &coords[0], num_tris,
+            &connect[0]);
+      if (!success) {
+         std::cerr << "Failed get generated mesh" << std::endl;
+         return success;
+      }
+
+      etop = iMesh_TRIANGLE;
    }
    // put new mesh back into interface
-   success = cmel->create_vertices_elements(surface, bdy_verts, &coords[0], new_points,
-          connect, etop, new_entities);
-   return true;
+   success = cmel->create_vertices_elements(surface, bdy_verts, &coords[0],
+         new_points, connect, etop, new_entities);
+   return success;
 }

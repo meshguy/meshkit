@@ -50,7 +50,8 @@ libSmooth_la_include_HEADERS = \
 
 # Tests
 check_PROGRAMS = Camal_test IceSheet_test SmoothIceSheet_test addGeoSets Create2FaceShell \
-					NewSmooth_test ComputeThickness 
+					NewSmooth_test ComputeThickness \
+                                         extrudeQuads
 
 if HAVE_CAMAL
 TESTS = $(check_PROGRAMS)
@@ -89,7 +90,13 @@ NewSmooth_test_LDADD = libMKcamal.la $(CAMAL_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $
 ComputeThickness_SOURCES = ComputeThickness.cpp
 ComputeThickness_DEPENDENCIES =  
 ComputeThickness_CXXFLAGS = $(CXXFLAGS)
-ComputeThickness_LDADD =  $(CAMAL_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+ComputeThickness_LDADD =  $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+
+extrudeQuads_SOURCES = extrudeQuads.cpp
+extrudeQuads_DEPENDENCIES =  
+extrudeQuads_CXXFLAGS = $(CXXFLAGS)
+extrudeQuads_LDADD =  $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)

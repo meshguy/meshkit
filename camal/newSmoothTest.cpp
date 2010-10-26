@@ -41,10 +41,8 @@ int main(int argc, char *argv[]) {
             << std::endl
             << "  -f = force these size/interval settings even if geometry has interval settings"
             << std::endl << "  -d = print debugging info" << std::endl
-            << "  -a <angle> = feature angle decider"
+            << "  -a <angle> = feature angle decider" << std::endl
             << "  -t <trim_polygon_xy_file> = file with 2d trimming polygon, oriented ccw "
-            << std::endl
-
       << std::endl;
 
       return 0;
