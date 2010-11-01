@@ -3,8 +3,7 @@
 !
 Geometry Surface         	 ! 'Geometry' card defines if the meshes are volume or surface
 !
-Z-Height  50                     !  For extrusion in Z-direction
-Z-Divisions 10                   !  Meshing interval for extrusion
+Extrude 50 10                    !  'Extrude card for extrusion in Z-direction 'height' followed by 'meshing interval for extrusion'
 !
 Symmetry 6			 ! 'Symmetry' card defines the desired symmetry in the model
 !
@@ -22,5 +21,6 @@ MergeTolerance 1e-3              ! Default value of merge tolerance is 1e-9
 Background test_sodium_all.cub	 ! Background mesh file 
 !
 OutputFileName twoassm_out.h5m   ! twoassm_out.h5m is the desired o/p file name 
+!
 !
 END                              ! 'END' card is a MUST marks the end of file for the file reader

@@ -1,12 +1,15 @@
 ! To run this test file: MeshKit> coregen coregen_default; this file uses .cub file from geometry of assygen default case
-Geometry Volume  			! 'Geometry' card defines if the meshes are volume or surface
+Geometry Volume		   		! 'Geometry' card defines if the meshes are volume or surface
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
 Assemblies 1 23.5 23.5			! 'Assemblies' card defines the number of assembly mesh files and pitch
-assygen_default.cub S1                  ! Meshfile name followed by alias 
+assygen_default.cub S1                  !  Meshfile name followed by alias 
 Lattice 2 2 
 S1 S1 &
 S1 S1 
-OutputFileName cgd.vtk
+NeumannSet Top  100                     ! 'NeumannSet' card followed by 'location of NeumannSet'  'Id of NeumannSet'
+NeumannSet Bot  101                     !  Values 'top', 'bot' and 'side' are acceptable for second parameter. 
+NeumannSet Side 102                     !  'NeumannSet'  for 'side' surface with set id of '102'
+OutputFileName cgd.exo                  !  cgd.exo is the desired o/p file name 
 end					! 'END' card is a MUST; Marks the end of file for the file reader
 

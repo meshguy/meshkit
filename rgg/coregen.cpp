@@ -54,6 +54,9 @@ int main (int argc, char *argv[])
     err = TheCore.assign_gids ();
     ERRORR("Failed to assign global ids.", 1);
 
+    err = TheCore.create_neumannset ();
+    ERRORR("Failed to create neumann set.", 1);
+
     err = TheCore.save ();
     ERRORR("Failed to save o/p file.", 1);
     

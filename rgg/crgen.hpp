@@ -23,6 +23,12 @@ CCrgen class declaration
 #include "matrixtemplate.hpp"
 #include "utils.hpp"
 
+#ifdef MOAB
+#include "MBInterface.hpp"
+#include "MBRange.hpp"
+#include "MBSkinner.hpp"
+#endif
+
 class CCrgen
 {
 public:
@@ -42,7 +48,7 @@ public:
   int close();
   int extrude();
   int move_verts(iBase_EntitySetHandle set, const double *dx);
-
+  int create_neumannset();
   int copy_move_hex_flat_assys(CopyMesh **cm,
 			       const int nrings, const int pack_type,
 			       const double pitch,
@@ -117,6 +123,7 @@ public:
 private:
 
   iMesh_Instance impl;
+  MBInterface *mbImpl;
   CopyMesh **cm;
   MergeMesh *mm;
   iBase_EntitySetHandle root_set;
@@ -127,7 +134,7 @@ private:
   int UNITCELL_DUCT, ASSY_TYPES ;
   int nrings, nringsx, nringsy, pack_type, symm;
   double pitch, pitchx, pitchy;
-  bool global_ids, back_mesh;
+  bool global_ids, back_mesh, extrude_flag, nst_flag, nsb_flag, nss_flag;
   std::vector<std::string> files;
   std::string outfile;
   int nassys; // the number of mesh files
@@ -136,11 +143,12 @@ private:
   double PI;
   double z_height;    // z_height for extruding surfaces mesh
   int z_divisions; // z_divisions for extruding surface mesh
-
+  int nst_Id, nsb_Id, nss_Id;
+  
   // file related
   std::ifstream file_input;    // File Input
   std::ofstream make_file;    // File Output
-  std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine; 
+  std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc; 
   int linenumber;
   std::string card,geom_type, meshfile, mf_alias, temp_alias;
   std::vector<std::string> assm_alias;
