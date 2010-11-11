@@ -2,6 +2,7 @@
 ! Default input file used in make check for assygen program
 ! #############################################################################################################
 !
+MeshType Tet	
 GeomEngine ACIS
 GeometryType Rectangular 
 !
@@ -25,6 +26,7 @@ XX XX XX XX
 RF RF RF RF
 Center Z
 Center Y
-AxialMeshSize 3
+Center X
+TetMeshSize 1.0
 END     ! This is a must  
 

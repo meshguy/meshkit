@@ -35,7 +35,7 @@ public:
   int ReadInputPhase1 ();
   int ReadAndCreate ();
   int Name_Faces(const std::string sMatName, const iBase_EntityHandle body, 
-		   iBase_TagHandle this_tag);
+		 iBase_TagHandle this_tag);
   int Center_Assm(char&);
   int Section_Assm (char&, double&, const std::string);
   int Rotate_Assm (char&, double&);
@@ -48,21 +48,24 @@ public:
   int Create2DSurf();
   int ReadPinCellData(int i);
   int CreatePinCell_Intersect(int i, double dX,
-		    double dY, double dZ);
+			      double dY, double dZ);
   int CreatePinCell(int i, double dX,
 		    double dY, double dZ);  
   int CreateCubitJournal();
   int ComputePinCentroid(int, CMatrix<std::string>, int, int,
 			 double&, double&, double&);
   bool Print_Error(const char* desc, 
-			 int err,
-			 iGeom_Instance geom,
-			 const char* file,
-			 int line );
+		   int err,
+		   iGeom_Instance geom,
+		   const char* file,
+		   int line );
   int TerminateProgram ();
 
 private:
-
+  
+  // number of sides in the geometry
+  int m_nSides;
+  
   // file Input
   std::ifstream m_FileInput;  
     
@@ -75,8 +78,11 @@ private:
   // matrix for holding pincell arrangement
   CMatrix<std::string> m_Assembly; 
 
+  // matrix for holding verts coordinates used in tet-meshing
+  CMatrix<double> m_dMTopSurfCoords; 
+
   // vector for duct specification 
-  CMatrix<double> m_dMAssmPitch, m_dMAssmPitchX, m_dMAssmPitchY, m_dMXYAssm, m_dMZAssm, m_MAssmSize;
+  CMatrix<double> m_dMAssmPitch, m_dMAssmPitchX, m_dMAssmPitchY, m_dMXYAssm, m_dMZAssm;
   
   // vector for material names
   CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
@@ -85,15 +91,16 @@ private:
   // vector holding a pincell
   CVector<CPincell> m_Pincell; 
 
-  // string for geomtype, engine
+  // string for geomtype, engine, meshtype
   std::string m_szEngine;
   std::string m_szGeomType;       
-
+  std::string m_szMeshType;
+  
   // integers for vectors sizes, err etc
   int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum; 
 
   // doubles for pincell pitch, pi and mesh sizes resp.
-  double m_dPitch, pi, m_dRadialSize, m_dAxialSize;      
+  double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize;      
  
   // igeom related
   SimpleArray<iBase_EntityHandle> assms, in_pins;
@@ -104,7 +111,7 @@ private:
   std::string szInputString;
   std::string szComment;
   int MAXCHARS;
-
+  
   // error handlers
   void IOErrorHandler (ErrorStates) const;
   friend class CPincell;

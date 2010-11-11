@@ -10,6 +10,6 @@ S1 S1
 NeumannSet Top  100                     ! 'NeumannSet' card followed by 'location of NeumannSet'  'Id of NeumannSet'
 NeumannSet Bot  101                     !  Values 'top', 'bot' and 'side' are acceptable for second parameter. 
 NeumannSet Side 102                     !  'NeumannSet'  for 'side' surface with set id of '102'
-OutputFileName cgd.exo                  !  cgd.exo is the desired o/p file name 
+OutputFileName cgd.h5m                  !  cgd.h5m is the desired o/p file name 
 end					! 'END' card is a MUST; Marks the end of file for the file reader
 

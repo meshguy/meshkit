@@ -27,10 +27,12 @@ CNrgen::CNrgen ()
   pi = M_PI;
   m_dRadialSize = -1.0;
   m_dAxialSize = -1.0;
+  m_dTetMeshSize = -1.0;
   m_nDimensions = 0;
   m_nMaterialSetId = 1;
   m_nNeumannSetId = 1;
   m_szEngine = "acis";
+  m_szMeshType = "hex";
   m_nDuct = 0;
   m_nDuctNum = 0;
 }

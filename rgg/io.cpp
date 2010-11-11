@@ -127,6 +127,13 @@ int CNrgen::ReadInputPhase1 ()
 	  (strcmp (m_szEngine.c_str(), "occ") != 0) || szFormatString.fail())
 	IOErrorHandler(EGEOMENGINE);
     }
+    if (szInputString.substr(0,8) == "meshtype"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_szMeshType;
+      if( (strcmp (m_szMeshType.c_str(), "hex") != 0) &&
+	  (strcmp (m_szMeshType.c_str(), "tet") != 0) || szFormatString.fail())
+	IOErrorHandler(INVALIDINPUT);
+    }
     if (szInputString.substr(0,4) == "duct" || szInputString.substr(0,10) == "dimensions"){
       ++m_nDuct;
     }
@@ -481,6 +488,12 @@ int CNrgen::ReadAndCreate()
       if( (strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
 	  (strcmp (m_szGeomType.c_str(), "rectangular") != 0) || szFormatString.fail())
 	IOErrorHandler(EGEOMTYPE);
+
+      // set the number of sides in the geometry
+      if(m_szGeomType == "hexagonal")
+	m_nSides = 6;
+      else  if(m_szGeomType == "rectangular")
+	m_nSides = 4;
     }
 
 
@@ -681,6 +694,15 @@ int CNrgen::ReadAndCreate()
 
     }
     // Handle mesh size inputs
+    if (szInputString.substr(0,11) == "tetmeshsize"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_dTetMeshSize;
+      if(m_dTetMeshSize < 0 || szFormatString.fail())
+	IOErrorHandler(ENEGATIVE);     
+      std::cout <<"--------------------------------------------------"<<std::endl;
+
+    }
+    // Handle mesh size inputs
     if (szInputString.substr(0,13) == "axialmeshsize"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_dAxialSize;
@@ -733,7 +755,7 @@ int CNrgen::CreateCubitJournal()
   int nColor;
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
 			   "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
-			   "gold", "orange", "brown", "pink", "khakhi", "black", "aquamurine", "mediumslateblue"};
+			   "gold", "orange", "brown", "pink", "khaki", "black", "aquamurine", "mediumslateblue"};
 
   // get the max and min coordinates of the geometry
   double x1, y1, z1, x2, y2, z2;
@@ -756,7 +778,8 @@ int CNrgen::CreateCubitJournal()
   m_SchemesFile << "#{HOLE = \"hole rad_interval 2 bias 0.0\"}" << std::endl;
   m_SchemesFile << "#{PAVE = \"pave\"}" << std::endl;
   m_SchemesFile << "#{MAP = \"map\"}" << std::endl;
-  m_SchemesFile << "#{SWEEP = \"sweep\"}" << std::endl;  
+  m_SchemesFile << "#{SWEEP = \"sweep\"}" << std::endl; 
+  m_SchemesFile << "#{TET = \"tetmesh\"}" << std::endl;
   m_SchemesFile << "## Dimensions" << std::endl;
   if(m_szGeomType == "hexagonal"){
     if(m_nDimensions > 0){
@@ -776,34 +799,48 @@ int CNrgen::CreateCubitJournal()
   }
   m_SchemesFile << "##Set Mesh Sizes" << std::endl;
 
-  // volume only
-  if(m_nPlanar == 0 ){
-    if (-1.0 == m_dAxialSize){
-      m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
+  if (m_szMeshType == "hex"){
+    // volume only
+    if(m_nPlanar == 0 ){
+      if (-1.0 == m_dAxialSize){
+	m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
+      }
+      else {
+	m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_dAxialSize << "}" << std::endl;
+      }
+    
+      // create templates for specifying block z intervals
+      if (m_nDuct > 1){
+	m_SchemesFile << "## Set interval along Z direction ## " << std::endl;
+
+	for( int p=1; p<= m_nDuct; p++){
+	  m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE}" << std::endl;
+	}
+	m_SchemesFile << "##" << std::endl;
+      }
+    }
+    if (-1.0 == m_dRadialSize) {
+      if (m_szGeomType == "hexagonal")
+	m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
+      else
+	m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.02*0.5*(PITCHX+PITCHY)}" << std::endl;
+    }
+    else
+      m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_dRadialSize << "}" << std::endl;
+  }
+  else if (m_szMeshType == "tet"){
+    if (-1.0 == m_dTetMeshSize) {
+      if (m_szGeomType == "hexagonal")
+	m_SchemesFile << "#{TET_MESH_SIZE = 0.1*PITCH}" << std::endl;
+      else
+	m_SchemesFile << "#{TET_MESH_SIZE = 0.02*0.5*(PITCHX+PITCHY)}" << std::endl;
     }
     else {
-      m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_dAxialSize << "}" << std::endl;
+      m_SchemesFile << "#{TET_MESH_SIZE = " << m_dTetMeshSize  << "}" << std::endl;
     }
-    
-    // create templates for specifying block z intervals
-    if (m_nDuct > 1){
-      m_SchemesFile << "## Set interval along Z direction ## " << std::endl;
+  }   
+  // writing schemes .jou file ends, now write the main journal file.
 
-      for( int p=1; p<= m_nDuct; p++){
-	m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE}" << std::endl;
-      }
-      m_SchemesFile << "##" << std::endl;
-    }
-  }
-
-  if (-1.0 == m_dRadialSize) {
-    if (m_szGeomType == "hexagonal")
-      m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
-    else
-      m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.02*0.5*(PITCHX+PITCHY)}" << std::endl;
-  }
-  else
-    m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_dRadialSize << "}" << std::endl;
 
   // stuff common to both surface and volume
   m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
@@ -816,15 +853,17 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
   m_FileOutput << "#" << std::endl;
 
-  // imprint
-  m_FileOutput << "#imprint geometry" << std::endl; 
-  m_FileOutput << "imprint all" << std::endl;
-  m_FileOutput << "#" << std::endl;
+  if(m_szMeshType == "hex"){
+    // imprint
+    m_FileOutput << "#Imprint geometry" << std::endl; 
+    m_FileOutput << "imprint all" << std::endl;
+    m_FileOutput << "#" << std::endl;
 
-  // merge
-  m_FileOutput << "#merge geometry" << std::endl; 
-  m_FileOutput << "merge all" << std::endl;
-  m_FileOutput << "#" << std::endl;
+    // merge
+    m_FileOutput << "#Merge geometry" << std::endl; 
+    m_FileOutput << "merge all" << std::endl;
+    m_FileOutput << "#" << std::endl;
+  }
 
   // top surface sidesets
   m_FileOutput << "#Creating top surface sidesets" << std::endl; 
@@ -835,6 +874,7 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
   }
   m_FileOutput << "#" << std::endl;
+
 
   //surface only
   if(m_nPlanar ==1){ 
@@ -917,75 +957,232 @@ int CNrgen::CreateCubitJournal()
     }
     m_FileOutput << "#" << std::endl;
 
-    //now set the sizes
-    m_FileOutput << "#Set Meshing Scheme and Sizes, use template.jou to specify sizes" << std::endl; 
+    if(m_szMeshType == "hex"){
 
+      //now set the sizes
+      m_FileOutput << "#Set Meshing Scheme and Sizes, use template.jou to specify sizes" << std::endl; 
+
+      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	szGrp = "g_"+ m_szAssmMat(p);
+	szSize =  m_szAssmMat(p) + "_size";
+	szSurfBot = m_szAssmMat(p) + "_bot";
+	szSize =  m_szAssmMat(p) + "_surf_size";
+	m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfBot  << "\"" << std::endl;
+	m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
+      }  
+      m_FileOutput << "#" << std::endl;
+    }
+  }
+
+  if(m_szMeshType == "hex"){
+    // some more common stuff meshing top surfaces set the sizes and mesh
+    m_FileOutput << "#Surfaces mesh, use template.jou to specify sizes" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szSurfTop = m_szAssmMat(p) + "_top";
       szGrp = "g_"+ m_szAssmMat(p);
-      szSize =  m_szAssmMat(p) + "_size";
-      szSurfBot = m_szAssmMat(p) + "_bot";
       szSize =  m_szAssmMat(p) + "_surf_size";
-      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfBot  << "\"" << std::endl;
+      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
       m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
+      m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
+      //    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
 
       // dumping these sizes schemes.jou also
       m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
     }  
     m_FileOutput << "#" << std::endl;
+
+    // mesh all command after meshing surface
+    if (m_nDuct <= 1 ){
+      m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
+      m_FileOutput << "mesh tmpgrp" << std::endl;
+    }
+    else {
+      m_FileOutput << "#Meshing top surface" << std::endl;
+      m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+    }
+   
+    if(m_nPlanar == 0){ // volumes only
+      if (m_nDuct == 1){
+	m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
+	  " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
+	m_FileOutput << "mesh vol all" << std::endl;
+      }
+      else if (m_nDuct > 1)
+	m_FileOutput << "### Setting Z intervals on ducts and meshing along Z " << std::endl;
+      for( int p=m_nDuct; p>= 1; p--){
+	if(dMid == 0){ // z - centered
+	  m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
+		       << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
+	  m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
+		       << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << std::endl;
+	}
+	else{
+	  m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1)
+		       << " and z_coord < " << m_dMZAssm(p, 2) << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
+	  m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1)
+		       << " and z_coord < " << m_dMZAssm(p, 2) << std::endl;
+
+	  m_FileOutput << "##" << std::endl;
+	}
+      }
+    }
+  }
+  else if(m_szMeshType == "tet"){ 
+    m_FileOutput << "##"<< std::endl;
+    m_FileOutput << "# groupings for creating vertex groups"<< std::endl;	  
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+	m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge" 
+		     << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
+
+	m_FileOutput << "group 'vt" <<  (m_nSides*(p-1) + q )  <<"' equals vertex with z_max == z_min in curve in edge" 
+		     <<  (m_nSides*(p-1) + q ) << std::endl;
+
+      }
+    }
   }
 
-  // some more common stuff meshing top surfaces set the sizes and mesh
-  m_FileOutput << "#surfaces mesh, use template.jou to specify sizes" << std::endl; 
-  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szSurfTop = m_szAssmMat(p) + "_top";
-    szGrp = "g_"+ m_szAssmMat(p);
-    szSize =  m_szAssmMat(p) + "_surf_size";
-    m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-    m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
-    m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
-    //    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
+  // creating groups for vertices on the top surface of the duct
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
 
-    // dumping these sizes schemes.jou also
-    m_SchemesFile << "#{"  << szSize <<" = RADIAL_MESH_SIZE}" << std::endl;
-  }  
+      if(q != m_nSides){
+	m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+		     << " with group vt" <<  (m_nSides*(p-1) + q + 1 )  << std::endl;	  
+      }
+      else {
+	m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+		     << " with group vt" <<  (m_nSides*(p-1) + 1 )  << std::endl;	  
+      }
+
+    }
+  }
+
+  // creating temp surfaces groups
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
+      m_FileOutput << "group 'st" << (m_nSides*(p-1) + q ) <<"' equals surface with z_max <> z_min in vert in v" 
+		   << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
+    }
+  }	
+
+  // creating side curve and surface groups
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
+
+      m_FileOutput << "group 'c" <<  (m_nSides*(p-1) + q )  <<"' equals curve with z_max <> z_min in vert in v" 
+		   <<  (m_nSides*(p-1) + q ) << std::endl;
+
+      if(q != 1){
+	m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st"  << (m_nSides*(p-1) + q ) 
+		     << " with group st" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
+      }
+      else {
+	m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st" << (m_nSides*(p-1) + q ) 
+		     << " with group st" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
+      }
+    }
+  }	
+
+  // renaming the side surfaces for getting the split surfaces later
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
+      m_FileOutput << "surface in group s" <<  (m_nSides*(p-1) + q ) << " rename 'side_surface"  
+		   <<  (m_nSides*(p-1) + q ) << "'" << std::endl;
+
+    }
+  }	
+
+  // splitting the surfaces 
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
+
+      m_FileOutput << "split surface in group s" <<  (m_nSides*(p-1) + q )  <<" direction curve in group c" 
+		   <<  (m_nSides*(p-1) + q ) << std::endl;
+    }
+  }	
+
+  // get all the split surfaces in individual groups
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
+
+      m_FileOutput << "group 'sname" << (m_nSides*(p-1) + q ) <<  "' equals surface with name 'side_surface" 
+		   <<  (m_nSides*(p-1) + q ) << "'"<< std::endl;
+      m_FileOutput << "group 'svert" << (m_nSides*(p-1) + q ) <<  "' equals surface in vert in v" 
+		   <<  (m_nSides*(p-1) + q ) << std::endl;
+      m_FileOutput << "group 'ssplit" << (m_nSides*(p-1) + q ) <<  "' intersect group sname" <<  (m_nSides*(p-1) + q ) 
+		   << " with group svert" << (m_nSides*(p-1) + q ) << std::endl;	
+    }
+  }	
+  
+  // get all the split surfaces in individual groups
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
+
+      if(q != 1){
+	m_FileOutput << "group 'ssplit_" << (m_nSides*(p-1) + q ) <<"' intersect group sname"  << (m_nSides*(p-1) + q ) 
+		     << " with group svert" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
+      }
+      else {
+	m_FileOutput << "group 'ssplit_" <<  (m_nSides*(p-1) + q ) <<"' intersect group sname" << (m_nSides*(p-1) + q ) 
+		     << " with group svert" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
+      }
+    }
+  }	
+  // imprint
+  m_FileOutput << "#Imprint geometry" << std::endl; 
+  m_FileOutput << "imprint all" << std::endl;
   m_FileOutput << "#" << std::endl;
 
-  // mesh all command after meshing surface
-  if (m_nDuct <= 1 ){
-    m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
-    m_FileOutput << "mesh tmpgrp" << std::endl;
+  // merge
+  m_FileOutput << "#Merge geometry" << std::endl; 
+  m_FileOutput << "merge all" << std::endl;
+  m_FileOutput << "#" << std::endl;
+
+  m_FileOutput << "#Set mesh scheme and size" << std::endl;
+  m_FileOutput << "volume all scheme {TET} size {TET_MESH_SIZE}" << std::endl;
+
+  // mesh one side of each duct, such that one is flipped mesh of the other
+  for (int p=1; p<=m_nDuct; p++){
+
+    m_FileOutput << "mesh surface in group ssplit" <<  (m_nSides*(p-1) + 1) << std::endl;	
+
+    m_FileOutput << "surface in group ssplit_" << (m_nSides*(p-1) + 1) << " scheme copy source surface in group ssplit" 
+		 <<  (m_nSides*(p-1) + 1) 
+		 << " source curve in group c" <<  (m_nSides*(p-1) + 1 ) << " target curve in group c" <<  (m_nSides*(p-1) + m_nSides )
+		 << " source vertex in group v" <<  (m_nSides*(p-1) + 1) << " target vertex in group v"  <<  (m_nSides*(p-1) + m_nSides )
+		 << " nosmoothing" << std::endl;	  
+
+    m_FileOutput << "mesh surface in group  ssplit_" << (m_nSides*(p-1) + 1) << std::endl;	
   }
-  else {
-    m_FileOutput << "# Meshing top surface" << std::endl;
-    m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
-  }
-   
-  if(m_nPlanar == 0){ // volumes only
-    if (m_nDuct == 1){
-      m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
-	" and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
-      m_FileOutput << "mesh vol all" << std::endl;
-    }
-    else if (m_nDuct > 1)
-      m_FileOutput << "###  Setting Z intervals on ducts and meshing along Z " << std::endl;
-    for( int p=m_nDuct; p>= 1; p--){
-      if(dMid == 0){ // z - centered
-	m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
-		     << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
-	m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
-		     << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << std::endl;
+
+  // setting the copy mesh commands on the above pair of split surfaces to have all surfaces symmetrical
+  for (int p=1; p<=m_nDuct; p++){
+    for(int q=1;q<=m_nSides; q++){
+      if(q != m_nSides){
+	m_FileOutput << "copy mesh surface in ssplit" <<  (m_nSides*(p-1) + 1) 
+		     << " onto surface in ssplit" << (m_nSides*(p-1) + q + 1 ) 
+		     << " source vertex in group v" << (m_nSides*(p-1) + 1) 
+		     << " target vertex in group v" <<  (m_nSides*(p-1) + q + 1) <<  std::endl;
+
+	m_FileOutput << "copy mesh surface in ssplit_" << (m_nSides*(p-1) + 1 ) 
+		     << " onto surface in ssplit_" << (m_nSides*(p-1) + q +1 ) 
+		     << " source vertex in group v" << (m_nSides*p) 
+		     << " target vertex in group v" <<  (m_nSides*(p-1) + q) <<  std::endl;
+	  
       }
       else{
-	m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1)
-		     << " and z_coord < " << m_dMZAssm(p, 2) << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
-	m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1)
-		     << " and z_coord < " << m_dMZAssm(p, 2) << std::endl;
-
-	m_FileOutput << "##" << std::endl;
+	// do nothing
       }
+
+
     }
   }
+  m_FileOutput << "# Mesh all volumes now" << std::endl;
+  m_FileOutput << "mesh vol all" << std::endl;
+
   // color now
+  m_FileOutput << "#Set color for different parts" << std::endl; 
   if(m_nPlanar == 0){ // volumes only
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
@@ -1672,24 +1869,26 @@ int CNrgen::CreateOuterCovering ()
       err = Name_Faces(sMatName, tmp_vol, this_tag);
       ERRORR("Error in function Name_Faces", err);
     }
+
+    int count =0;//index for edge names
     for (int nTemp = 1; nTemp <= m_nDuct; nTemp++){
       //  Naming outermost block edges - sidesets in cubit journal file
       std::cout << "Naming outermost block edges" << std::endl;	
       SimpleArray<iBase_EntityHandle> edges;
+
       iGeom_getEntAdj( geom, assms[nTemp*m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
 		       &err );
       CHECK( "ERROR : getEntAdj failed!" );
 
-      // get the top corner edges of the outer most covering
-      int count =0;//index for edge names
+       // get the top corner edges of the outer most covering
       std::ostringstream os;
       for (int i = 0; i < edges.size(); ++i){   
 	iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
 			     &xmax,&ymax,&zmax, &err);
 	CHECK("getEntBoundBox failed."); 
-	if(zmax==zmin){
-	  if(zmax==m_dMZAssm(nTemp, 2)){
 
+	if(zmax==m_dMZAssm(nTemp, 2)){
+	  if(zmax==zmin){
 	    //we have a corner edge - name it
 	    sMatName="side_edge";
 	    ++count;
