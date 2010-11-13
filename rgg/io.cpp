@@ -651,6 +651,8 @@ int CNrgen::ReadAndCreate()
       double dX, dY, dZ;
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> dX >> dY >> dZ;
+      if(szFormatString.fail())
+	IOErrorHandler(INVALIDINPUT);
       err = Move_Assm(dX, dY, dZ);
       ERRORR("Error in Move_Assm", err);
       std::cout <<"--------------------------------------------------"<<std::endl;
@@ -1594,7 +1596,7 @@ int CNrgen::Rotate_Assm (char &cDir, double &dAngle)
 
 int CNrgen::Move_Assm (double &dX,double &dY, double &dZ)
 // ---------------------------------------------------------------------------
-// Function: rotates the whole assembly
+// Function: move's the model by dX, dY and dZ
 // Input:    none
 // Output:   none
 // ---------------------------------------------------------------------------

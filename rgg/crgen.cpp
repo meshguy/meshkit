@@ -93,7 +93,7 @@ int CCrgen::prepareIO (int argc, char *argv[])
 	if (argv[i][0]=='-') {
 	  switch (argv[i][1]) {
 	  case 'm': {
-	    std::cout << "Creating Makfile Only" << std::endl;
+	    std::cout << "Creating Makefile Only" << std::endl;
 	    // only makefile creation specified
 	    iname = argv[2];
 	    ifile = iname+".inp";
@@ -610,7 +610,7 @@ int CCrgen::write_makefile()
   make_file << "\n\nGEOM_FILES = ";
   for(unsigned int i=0; i<files.size(); i++){
     if(geom_engine == "occ")
-      name = f_no_ext[i] + ".brep";
+      name = f_no_ext[i] + ".stp";
     else
       name = f_no_ext[i] + ".sat";
     f_sat.push_back(name);
