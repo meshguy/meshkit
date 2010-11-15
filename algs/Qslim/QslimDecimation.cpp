@@ -24,6 +24,9 @@ MBInterface * mb;
 MBTag uniqIDtag; // this will be used to mark vertices MBEntityHandles
 MBTag validTag;
 
+MBTag costTag; // simplification induces an error cost at each vertex
+// try to keep adding the cost, to see if it is spreading nicely
+
 // this will be used to store plane data for each triangle, as 4 doubles
 // will be updated only if needed ( -m option == opts.will_preserve_mesh_quality)
 MBTag planeDataTag;
@@ -408,6 +411,8 @@ void do_contract(pair_info *pair) {
 
 	MBEntityHandle v0 = pair->v0;
 	MBEntityHandle v1 = pair->v1;
+	// cost of contraction is accumulated at v0
+	double costToContract = pair->cost;
 	vert_info& v0_info = vertex_info(v0);
 	vert_info& v1_info = vertex_info(v1);
 	Vec3 vnew = pair->candidate;
@@ -491,6 +496,14 @@ void do_contract(pair_info *pair) {
 	// maybe we will delete at the end all that are invalid ??
 	int invalid = 0;
 	MBErrorCode rval = mb->tag_set_data(validTag, &v1, 1, &invalid);
+
+	if (opts.plotCost)
+	{
+      double cost_at_v0=0; // maybe it is already set before
+      rval = mb->tag_get_data(costTag, &v0, 1, &cost_at_v0);
+      cost_at_v0+=costToContract;
+      rval = mb->tag_set_data(costTag, &v0, 1, &cost_at_v0);
+	}
 
 	v1_info.pairs.reset(); // safety precaution
 	recomputeChangedPairsCost(changed, v0);
@@ -727,6 +740,16 @@ int QslimDecimation::Init() {
 	rval = mb->tag_create("valid", 1, MB_TAG_BIT, validTag, &def_data_bit);
 	if (MB_SUCCESS != rval)
 		return 1;
+
+	if (opts.plotCost)
+	{
+      double cost_default = 0.;
+
+      rval = mb->tag_create("costTAG", sizeof(double), MB_TAG_SPARSE, MB_TYPE_DOUBLE, costTag,
+            &cost_default);
+      if (MB_SUCCESS != rval)
+         return 1;
+	}
 
 	// set tag for each vertex; this will not be changed during simplification
 	i = 0; // for index

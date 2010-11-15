@@ -43,6 +43,7 @@ public:
 	int     will_weight_by_area;
 	int     height_fields;
 	int     timingIntervals;
+	int     plotCost;
 
 	int useDelayedDeletion;
 

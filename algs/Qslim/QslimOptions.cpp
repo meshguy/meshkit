@@ -34,6 +34,7 @@ QslimOptions::QslimOptions() {
 	pair_selection_tolerance = 0.0;
 	logfile = 0;
 	selected_output = 0;
+	plotCost = 0;
 
 
 }

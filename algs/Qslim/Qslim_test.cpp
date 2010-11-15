@@ -27,6 +27,7 @@ std::string usage_string =
 "-p 	        Height fields positivity. Used for height fields, assume \n"
 "                   triangles are originally positively oriented. \n"
 "-d 	        Use delayed deletion, as opposed to merging \n"
+"-c           keep costs in a (sparse!!!!) tag \n"
 "\n";
 
 std::string logging_usage_string =
@@ -222,6 +223,11 @@ int main(int argc, char* argv[])
 				  {
 					  options.useDelayedDeletion = true;
 					  break;
+				  }
+				  case 'c':
+				  {
+				     options.plotCost = 1;
+				     break;
 				  }
 
 				  default :
