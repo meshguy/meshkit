@@ -745,7 +745,7 @@ int QslimDecimation::Init() {
 	{
       double cost_default = 0.;
 
-      rval = mb->tag_create("costTAG", sizeof(double), MB_TAG_SPARSE, MB_TYPE_DOUBLE, costTag,
+      rval = mb->tag_create("costTAG", sizeof(double), MB_TAG_DENSE, MB_TYPE_DOUBLE, costTag,
             &cost_default);
       if (MB_SUCCESS != rval)
          return 1;
