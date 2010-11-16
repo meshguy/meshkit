@@ -731,7 +731,7 @@ int QslimDecimation::Init() {
 	//  this will be used instead of v->uniqID in the vinfo array
 	int def_data = -1;
 
-	rval = mb->tag_create("uniqID", sizeof(int), MB_TAG_DENSE, uniqIDtag,
+	rval = mb->tag_create("uniqID", sizeof(int), MB_TAG_DENSE, MB_TYPE_INTEGER, uniqIDtag,
 			&def_data);
 	if (MB_SUCCESS != rval)
 		return 1;
