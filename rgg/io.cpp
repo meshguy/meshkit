@@ -1972,7 +1972,7 @@ int CNrgen::Subtract_Pins()
       // subtract the innermost hex from the pins
       std::cout << "Duct no.: " << k << " subtracting " << num_inpins << " pins from the duct .. " << std::endl;
 
-      // if there is only one in pin
+      // if there are more than one pins
       if(in_pins.size() > 1){
 
 	iGeom_uniteEnts(geom, &cp_inpins(k,1), num_inpins, &unite, &err); 
@@ -1986,12 +1986,14 @@ int CNrgen::Subtract_Pins()
 	tmp_new1=NULL;
       }
       else{ // only one pin in in_pins
-	iGeom_copyEnt(geom, in_pins[0], &copy_inpins[0], &err);
 	iGeom_subtractEnts(geom, tmp_vol, in_pins[0], &tmp_new1, &err);
+	CHECK("Couldn't subtract pins from block.");	
       }
     }
     std::cout << "\n--------------------------------------------------"<<std::endl;
   }
+  else{
+    std::cout <<"Nothing to subtract" << std::endl;
   return 0;
 }
 
