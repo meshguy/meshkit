@@ -1165,12 +1165,12 @@ int CNrgen::CreateCubitJournal()
 	m_FileOutput << "copy mesh surface in ssplit" <<  (m_nSides*(p-1) + 1) 
 		     << " onto surface in ssplit" << (m_nSides*(p-1) + q + 1 ) 
 		     << " source vertex in group v" << (m_nSides*(p-1) + 1) 
-		     << " target vertex in group v" <<  (m_nSides*(p-1) + q + 1) <<  std::endl;
+		     << " target vertex in group v" <<  (m_nSides*(p-1) + q + 1) << " nosmoothing" <<  std::endl;
 
 	m_FileOutput << "copy mesh surface in ssplit_" << (m_nSides*(p-1) + 1 ) 
 		     << " onto surface in ssplit_" << (m_nSides*(p-1) + q +1 ) 
 		     << " source vertex in group v" << (m_nSides*p) 
-		     << " target vertex in group v" <<  (m_nSides*(p-1) + q) <<  std::endl;
+		     << " target vertex in group v" <<  (m_nSides*(p-1) + q) << " nosmoothing" << std::endl;
 	  
       }
       else{
