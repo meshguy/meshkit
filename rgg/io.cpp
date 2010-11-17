@@ -1994,6 +1994,7 @@ int CNrgen::Subtract_Pins()
   }
   else{
     std::cout <<"Nothing to subtract" << std::endl;
+  }
   return 0;
 }
 

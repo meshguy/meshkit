@@ -30,6 +30,7 @@ CCrgen::CCrgen ()
   comment = "!";
   MAXCHARS = 300;
   extrude_flag = false;
+  mem_tflag = false;
   global_ids = true;
   merge_tol =  1.0e-9;
   do_merge = 1;
@@ -99,6 +100,13 @@ int CCrgen::prepareIO (int argc, char *argv[])
 	    ifile = iname+".inp";
 	    outfile = iname+".h5m";
 	    mfile = iname + ".makefile";
+	  }	
+	  case 't': {
+	    mem_tflag = true;
+	    iname = argv[2];
+	    ifile = iname+".inp";
+	    outfile = iname+".h5m";
+	    mfile = iname + ".makefile";
 	  }
 	  }
 	}
@@ -163,10 +171,6 @@ int CCrgen::load_meshes()
   // make a mesh instance
   iMesh_newMesh("MOAB", &impl, &err, 4);
   ERRORR("Failed to create instance.", 1);
-
-#ifdef MOAB
-  mbImpl = (MBInterface*) impl;
-#endif
 
   iMesh_getRootSet(impl, &root_set, &err);
   ERRORR("Couldn't get the root set", err);
@@ -782,8 +786,26 @@ int CCrgen::extrude()
     double v[] = { 0, 0, z_height };
     int steps = z_divisions;
 
+    const char *tag_neumann1 = "NEUMANN_SET";
+iBase_TagHandle ntag1;    
+  iMesh_getTagHandle(impl, tag_neumann1, &ntag1, &err, 12);
+  
+iBase_EntitySetHandle set;
+
+iMesh_createEntSet(impl, false, &set , &err);
+
+ 
+iMesh_addEntArrToSet(impl, ents, ents_size, set, &err);
+
+ 
+   
     ExtrudeMesh *ext = new ExtrudeMesh(impl);
-    ext->extrude(ents, ents_size, extrude::Translate(v, steps));
+
+iMesh_setEntSetData(impl, set, ntag1, "x", 1, &err);
+
+//   ext->extrude_set().add_tag( ntag1, "x");
+
+  ext->extrude(set, extrude::Translate(v, steps));
     ERRORR("Trouble extruding mesh.", err);
   }
   return iBase_SUCCESS;
@@ -839,7 +861,7 @@ int CCrgen::create_neumannset()
     tmp_elems.insert((MBEntityHandle*)ents, (MBEntityHandle*)ents + ents_size);
 
     // get the skin of the entities
-    MBSkinner skinner(mbImpl);
+    MBSkinner skinner(mbImpl());
     MBRange skin_range;
     MBErrorCode result; 
     MBRange::iterator rit;

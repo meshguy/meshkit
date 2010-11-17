@@ -120,10 +120,20 @@ public:
 				     const int symm,
 				     std::vector<std::string> &core_alias,
 				     std::vector<iBase_EntitySetHandle> &assys);
-private:
+
 
   iMesh_Instance impl;
-  MBInterface *mbImpl;
+  //  MBInterface *mbImpl;
+
+#ifdef MOAB
+  MBInterface* mbImpl() {return reinterpret_cast<MBInterface*> (impl);};
+#endif
+
+  bool extrude_flag;
+  bool mem_tflag;
+
+private:
+
   CopyMesh **cm;
   MergeMesh *mm;
   iBase_EntitySetHandle root_set;
@@ -134,7 +144,7 @@ private:
   int UNITCELL_DUCT, ASSY_TYPES ;
   int nrings, nringsx, nringsy, pack_type, symm;
   double pitch, pitchx, pitchy;
-  bool global_ids, back_mesh, extrude_flag, nst_flag, nsb_flag, nss_flag;
+  bool global_ids, back_mesh, nst_flag, nsb_flag, nss_flag;
   std::vector<std::string> files;
   std::string outfile;
   int nassys; // the number of mesh files

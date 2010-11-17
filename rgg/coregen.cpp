@@ -12,8 +12,13 @@ as specified in the input file
 
 int main (int argc, char *argv[])
 {
+  double ld_t = 0;
   int err = 0;
   int run_flag = 1; 
+  unsigned long mem1, mem2, mem3, mem4, mem5, mem6, mem7;
+  // start program timer 
+  CClock Timer;
+  std::string szDateTime;
 
   // the one and only Core!
   CCrgen TheCore; 
@@ -21,9 +26,7 @@ int main (int argc, char *argv[])
   err = TheCore.banner ();
   ERRORR("Failed in creating banner", 1);
 
-  // start the timer 
-  CClock Timer;
-  std::string szDateTime;
+
   Timer.GetDateTime (szDateTime);
   std::cout << "\nStarting out at : " << szDateTime << "\n";
   
@@ -39,27 +42,100 @@ int main (int argc, char *argv[])
 
   // copy, move, merge, extrude, assign gids, save and close
   if (run_flag == 1){
+
+    // load mesh files
+    CClock ld_time;
     err = TheCore.load_meshes ();
     ERRORR("Failed to load meshes.", 1);
 
+    if(TheCore.mem_tflag == true){
+      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem1);
+  
+      ld_t = ld_time.DiffTime();
+      std::cout << "\n**Time taken to load mesh files = " << ld_t << " seconds" << std::endl;
+      std::cout << "***Memory used: " << mem1 << " kb\n"<< std::endl;
+    }
+
+    // copy move
+    CClock ld_cm;
     err = TheCore.copy_move ();
     ERRORR("Failed in copy move routine.", 1);
 
+    if(TheCore.mem_tflag == true){
+      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
+  
+      ld_t = ld_cm.DiffTime();
+      std::cout << "\n**Time taken to copy/move mesh files = " << ld_t << " seconds" << std::endl;
+      std::cout << "***Memory used: " << mem2 << " kb\n" << std::endl;
+    }
+
+    // merge 
+    CClock ld_mm;
     err = TheCore.merge_nodes ();
     ERRORR("Failed to merge nodes.", 1);
 
-    err = TheCore.extrude();
-    ERRORR("Failed to extrude.", 1);
+    if(TheCore.mem_tflag == true){
+      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem3);
+  
+      ld_t = ld_mm.DiffTime();
+      std::cout << "\n**Time taken to merge nodes = " << ld_t << " seconds" << std::endl;
+      std::cout << "***Memory used: " << mem3 << " kb\n"<< std::endl;
+    }
 
+    // extrude
+    if(TheCore.extrude_flag == true){
+      CClock ld_em;
+      err = TheCore.extrude();
+      ERRORR("Failed to extrude.", 1);
+
+      if(TheCore.mem_tflag == true){
+	TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem4);
+  
+	ld_t = ld_em.DiffTime();
+	std::cout << "\n**Time taken to extrude = " << ld_t << " seconds" << std::endl;
+	std::cout << "***Memory used: " << mem4 << " kb\n"<< std::endl;
+      }
+    }
+
+    // assign gids
+    CClock ld_gid;
     err = TheCore.assign_gids ();
     ERRORR("Failed to assign global ids.", 1);
 
+    if(TheCore.mem_tflag == true){
+      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem5);
+  
+      ld_t = ld_gid.DiffTime();
+      std::cout << "\n**Time taken to assign gids = " << ld_t << " seconds" << std::endl;
+      std::cout << "***Memory used: " << mem5 << " kb\n"<< std::endl;
+    }
+
+    // create neumann sets on the core model
+    CClock ld_ns;
     err = TheCore.create_neumannset ();
     ERRORR("Failed to create neumann set.", 1);
 
+    if(TheCore.mem_tflag == true){
+      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem6);
+  
+      ld_t = ld_ns.DiffTime();
+      std::cout << "\n**Time taken to create neumann sets = " << ld_t << " seconds" << std::endl;
+      std::cout << "***Memory used: " << mem6 << " kb\n"<< std::endl;
+    }
+    
+    // save 
+    CClock ld_sv;
     err = TheCore.save ();
     ERRORR("Failed to save o/p file.", 1);
     
+    if(TheCore.mem_tflag == true){
+      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem7);
+  
+      ld_t = ld_sv.DiffTime();
+      std::cout << "\n**Time taken to save = " << ld_t << " seconds" << std::endl;
+      std::cout << "***Memory used: " << mem7 << " kb\n"<< std::endl;
+    }
+
     err = TheCore.close ();
     ERRORR("Failed to dellocate.", 1);
   }
