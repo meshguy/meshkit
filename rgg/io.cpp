@@ -1042,147 +1042,148 @@ int CNrgen::CreateCubitJournal()
 
       }
     }
-  }
-
-  // creating groups for vertices on the top surface of the duct
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
-
-      if(q != m_nSides){
-	m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
-		     << " with group vt" <<  (m_nSides*(p-1) + q + 1 )  << std::endl;	  
-      }
-      else {
-	m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
-		     << " with group vt" <<  (m_nSides*(p-1) + 1 )  << std::endl;	  
-      }
-
-    }
-  }
-
-  // creating temp surfaces groups
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
-      m_FileOutput << "group 'st" << (m_nSides*(p-1) + q ) <<"' equals surface with z_max <> z_min in vert in v" 
-		   << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
-    }
-  }	
-
-  // creating side curve and surface groups
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
-
-      m_FileOutput << "group 'c" <<  (m_nSides*(p-1) + q )  <<"' equals curve with z_max <> z_min in vert in v" 
-		   <<  (m_nSides*(p-1) + q ) << std::endl;
-
-      if(q != 1){
-	m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st"  << (m_nSides*(p-1) + q ) 
-		     << " with group st" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
-      }
-      else {
-	m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st" << (m_nSides*(p-1) + q ) 
-		     << " with group st" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
-      }
-    }
-  }	
-
-  // renaming the side surfaces for getting the split surfaces later
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
-      m_FileOutput << "surface in group s" <<  (m_nSides*(p-1) + q ) << " rename 'side_surface"  
-		   <<  (m_nSides*(p-1) + q ) << "'" << std::endl;
-
-    }
-  }	
-
-  // splitting the surfaces 
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
-
-      m_FileOutput << "split surface in group s" <<  (m_nSides*(p-1) + q )  <<" direction curve in group c" 
-		   <<  (m_nSides*(p-1) + q ) << std::endl;
-    }
-  }	
-
-  // get all the split surfaces in individual groups
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
-
-      m_FileOutput << "group 'sname" << (m_nSides*(p-1) + q ) <<  "' equals surface with name 'side_surface" 
-		   <<  (m_nSides*(p-1) + q ) << "'"<< std::endl;
-      m_FileOutput << "group 'svert" << (m_nSides*(p-1) + q ) <<  "' equals surface in vert in v" 
-		   <<  (m_nSides*(p-1) + q ) << std::endl;
-      m_FileOutput << "group 'ssplit" << (m_nSides*(p-1) + q ) <<  "' intersect group sname" <<  (m_nSides*(p-1) + q ) 
-		   << " with group svert" << (m_nSides*(p-1) + q ) << std::endl;	
-    }
-  }	
   
-  // get all the split surfaces in individual groups
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
 
-      if(q != 1){
-	m_FileOutput << "group 'ssplit_" << (m_nSides*(p-1) + q ) <<"' intersect group sname"  << (m_nSides*(p-1) + q ) 
-		     << " with group svert" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
-      }
-      else {
-	m_FileOutput << "group 'ssplit_" <<  (m_nSides*(p-1) + q ) <<"' intersect group sname" << (m_nSides*(p-1) + q ) 
-		     << " with group svert" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
+    // creating groups for vertices on the top surface of the duct
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+
+	if(q != m_nSides){
+	  m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+		       << " with group vt" <<  (m_nSides*(p-1) + q + 1 )  << std::endl;	  
+	}
+	else {
+	  m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+		       << " with group vt" <<  (m_nSides*(p-1) + 1 )  << std::endl;	  
+	}
+
       }
     }
-  }	
-  // imprint
-  m_FileOutput << "#Imprint geometry" << std::endl; 
-  m_FileOutput << "imprint all" << std::endl;
-  m_FileOutput << "#" << std::endl;
 
-  // merge
-  m_FileOutput << "#Merge geometry" << std::endl; 
-  m_FileOutput << "merge all" << std::endl;
-  m_FileOutput << "#" << std::endl;
+    // creating temp surfaces groups
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+	m_FileOutput << "group 'st" << (m_nSides*(p-1) + q ) <<"' equals surface with z_max <> z_min in vert in v" 
+		     << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
+      }
+    }	
 
-  m_FileOutput << "#Set mesh scheme and size" << std::endl;
-  m_FileOutput << "volume all scheme {TET} size {TET_MESH_SIZE}" << std::endl;
+    // creating side curve and surface groups
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
 
-  // mesh one side of each duct, such that one is flipped mesh of the other
-  for (int p=1; p<=m_nDuct; p++){
+	m_FileOutput << "group 'c" <<  (m_nSides*(p-1) + q )  <<"' equals curve with z_max <> z_min in vert in v" 
+		     <<  (m_nSides*(p-1) + q ) << std::endl;
 
-    m_FileOutput << "mesh surface in group ssplit" <<  (m_nSides*(p-1) + 1) << std::endl;	
+	if(q != 1){
+	  m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st"  << (m_nSides*(p-1) + q ) 
+		       << " with group st" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
+	}
+	else {
+	  m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st" << (m_nSides*(p-1) + q ) 
+		       << " with group st" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
+	}
+      }
+    }	
 
-    m_FileOutput << "surface in group ssplit_" << (m_nSides*(p-1) + 1) << " scheme copy source surface in group ssplit" 
-		 <<  (m_nSides*(p-1) + 1) 
-		 << " source curve in group c" <<  (m_nSides*(p-1) + 1 ) << " target curve in group c" <<  (m_nSides*(p-1) + m_nSides )
-		 << " source vertex in group v" <<  (m_nSides*(p-1) + 1) << " target vertex in group v"  <<  (m_nSides*(p-1) + m_nSides )
-		 << " nosmoothing" << std::endl;	  
+    // renaming the side surfaces for getting the split surfaces later
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+	m_FileOutput << "surface in group s" <<  (m_nSides*(p-1) + q ) << " rename 'side_surface"  
+		     <<  (m_nSides*(p-1) + q ) << "'" << std::endl;
 
-    m_FileOutput << "mesh surface in group  ssplit_" << (m_nSides*(p-1) + 1) << std::endl;	
-  }
+      }
+    }	
 
-  // setting the copy mesh commands on the above pair of split surfaces to have all surfaces symmetrical
-  for (int p=1; p<=m_nDuct; p++){
-    for(int q=1;q<=m_nSides; q++){
-      if(q != m_nSides){
-	m_FileOutput << "copy mesh surface in ssplit" <<  (m_nSides*(p-1) + 1) 
-		     << " onto surface in ssplit" << (m_nSides*(p-1) + q + 1 ) 
-		     << " source vertex in group v" << (m_nSides*(p-1) + 1) 
-		     << " target vertex in group v" <<  (m_nSides*(p-1) + q + 1) << " nosmoothing" <<  std::endl;
+    // splitting the surfaces 
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
 
-	m_FileOutput << "copy mesh surface in ssplit_" << (m_nSides*(p-1) + 1 ) 
-		     << " onto surface in ssplit_" << (m_nSides*(p-1) + q +1 ) 
-		     << " source vertex in group v" << (m_nSides*p) 
-		     << " target vertex in group v" <<  (m_nSides*(p-1) + q) << " nosmoothing" << std::endl;
+	m_FileOutput << "split surface in group s" <<  (m_nSides*(p-1) + q )  <<" direction curve in group c" 
+		     <<  (m_nSides*(p-1) + q ) << std::endl;
+      }
+    }	
+
+    // get all the split surfaces in individual groups
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+
+	m_FileOutput << "group 'sname" << (m_nSides*(p-1) + q ) <<  "' equals surface with name 'side_surface" 
+		     <<  (m_nSides*(p-1) + q ) << "'"<< std::endl;
+	m_FileOutput << "group 'svert" << (m_nSides*(p-1) + q ) <<  "' equals surface in vert in v" 
+		     <<  (m_nSides*(p-1) + q ) << std::endl;
+	m_FileOutput << "group 'ssplit" << (m_nSides*(p-1) + q ) <<  "' intersect group sname" <<  (m_nSides*(p-1) + q ) 
+		     << " with group svert" << (m_nSides*(p-1) + q ) << std::endl;	
+      }
+    }	
+  
+    // get all the split surfaces in individual groups
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+
+	if(q != 1){
+	  m_FileOutput << "group 'ssplit_" << (m_nSides*(p-1) + q ) <<"' intersect group sname"  << (m_nSides*(p-1) + q ) 
+		       << " with group svert" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
+	}
+	else {
+	  m_FileOutput << "group 'ssplit_" <<  (m_nSides*(p-1) + q ) <<"' intersect group sname" << (m_nSides*(p-1) + q ) 
+		       << " with group svert" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
+	}
+      }
+    }	
+    // imprint
+    m_FileOutput << "#Imprint geometry" << std::endl; 
+    m_FileOutput << "imprint all" << std::endl;
+    m_FileOutput << "#" << std::endl;
+
+    // merge
+    m_FileOutput << "#Merge geometry" << std::endl; 
+    m_FileOutput << "merge all" << std::endl;
+    m_FileOutput << "#" << std::endl;
+
+    m_FileOutput << "#Set mesh scheme and size" << std::endl;
+    m_FileOutput << "volume all scheme {TET} size {TET_MESH_SIZE}" << std::endl;
+
+    // mesh one side of each duct, such that one is flipped mesh of the other
+    for (int p=1; p<=m_nDuct; p++){
+
+      m_FileOutput << "mesh surface in group ssplit" <<  (m_nSides*(p-1) + 1) << std::endl;	
+
+      m_FileOutput << "surface in group ssplit_" << (m_nSides*(p-1) + 1) << " scheme copy source surface in group ssplit" 
+		   <<  (m_nSides*(p-1) + 1) 
+		   << " source curve in group c" <<  (m_nSides*(p-1) + 1 ) << " target curve in group c" <<  (m_nSides*(p-1) + m_nSides )
+		   << " source vertex in group v" <<  (m_nSides*(p-1) + 1) << " target vertex in group v"  <<  (m_nSides*(p-1) + m_nSides )
+		   << " nosmoothing" << std::endl;	  
+
+      m_FileOutput << "mesh surface in group  ssplit_" << (m_nSides*(p-1) + 1) << std::endl;	
+    }
+
+    // setting the copy mesh commands on the above pair of split surfaces to have all surfaces symmetrical
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+	if(q != m_nSides){
+	  m_FileOutput << "copy mesh surface in ssplit" <<  (m_nSides*(p-1) + 1) 
+		       << " onto surface in ssplit" << (m_nSides*(p-1) + q + 1 ) 
+		       << " source vertex in group v" << (m_nSides*(p-1) + 1) 
+		       << " target vertex in group v" <<  (m_nSides*(p-1) + q + 1) << " nosmoothing" <<  std::endl;
+
+	  m_FileOutput << "copy mesh surface in ssplit_" << (m_nSides*(p-1) + 1 ) 
+		       << " onto surface in ssplit_" << (m_nSides*(p-1) + q +1 ) 
+		       << " source vertex in group v" << (m_nSides*p) 
+		       << " target vertex in group v" <<  (m_nSides*(p-1) + q) << " nosmoothing" << std::endl;
 	  
-      }
-      else{
-	// do nothing
-      }
+	}
+	else{
+	  // do nothing
+	}
 
 
+      }
     }
+  
+    m_FileOutput << "# Mesh all volumes now" << std::endl;
+    m_FileOutput << "mesh vol all" << std::endl;
   }
-  m_FileOutput << "# Mesh all volumes now" << std::endl;
-  m_FileOutput << "mesh vol all" << std::endl;
-
   // color now
   m_FileOutput << "#Set color for different parts" << std::endl; 
   if(m_nPlanar == 0){ // volumes only
@@ -1882,7 +1883,7 @@ int CNrgen::CreateOuterCovering ()
 		       &err );
       CHECK( "ERROR : getEntAdj failed!" );
 
-       // get the top corner edges of the outer most covering
+      // get the top corner edges of the outer most covering
       std::ostringstream os;
       for (int i = 0; i < edges.size(); ++i){   
 	iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,

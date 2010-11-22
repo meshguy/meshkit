@@ -2,6 +2,7 @@
 ! Example Assembly control.inp
 ! #############################################################################################################
 !
+MeshType Hex
 Geometry Volume
 GeometryType Hexagonal  
 !                                     
@@ -16,6 +17,7 @@ Cylinder  1  0.0 0.0   0.0 10.0   2.0  G1
 Assembly 1
 P1
 RadialMeshSize 0.5
+AxialMeshSize 2.0
 Rotate Z 30
 Center
 MaterialSet_StartId 100

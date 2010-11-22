@@ -1,8 +1,9 @@
 ## script to create a cylinder around the entire core, set pitch, rings, radius, and height values.
+{include("fuel.template.jou")}
 #{pitch = 10}
 #{rings = 3}
-#{rd = 40}
-#{ht = 100}
+#{rd = 30}
+#{ht = 10}
 create cylinder height {ht} radius {rd}
 section vol 1 with xplane reverse
 section vol 1 with yplane 
@@ -51,4 +52,16 @@ rotate vol 6 angle 120 about z
 rotate vol 7 angle -60 about z
 rotate vol 8 angle -120 about z
 rotate vol 9 angle 180 about z
-save as 'outer_cylinder.cub'
+#{xmove = rings*pitch}
+vol all move x {xmove} y {y0} z 5
+surface with z_coord > {Z_MID -.1*Z_HEIGHT} and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}
+unite vol all
+## the intervals can be parametrized based on radius and the radial mesh size in the assembly files.
+curve with z_coord == {ht} and length < {pitch} interval 12
+curve with z_coord == {ht} and length > {pitch} interval 240
+mesh vol all
+block 9999 vol all
+sideset 9997 surface 31
+sideset 9998 surface 32
+sideset 9999 surface 15
+save as 'outer_cylinder.cub' over

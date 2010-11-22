@@ -4,23 +4,25 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit -nographics
+CUBIT = cubit
 
 COREGEN = ../../coregen
 
 ASSYGEN = ../../assygen
 
-MESH_FILES = fuel.cub  control.cub  
+MESH_FILES = fuel.cub  control.cub  outer_covering.cub
 
 GEOM_FILES = fuel.sat  control.sat  
 
-JOU_FILES = fuel.jou  control.jou  
+JOU_FILES = fuel.jou  control.jou  cylinderical_covering.jou
 
 INJOU_FILES = fuel.template.jou  control.template.jou  
 
 ASSYGEN_FILES = fuel.inp  control.inp  
 
-simple_hexflatcore.h5m : ${MESH_FILES} simple_hexflatcore.inp
+
+
+simple_hexflatcore.exo : ${MESH_FILES} simple_hexflatcore.inp
 	${COREGEN} simple_hexflatcore
 fuel.cub : fuel.sat  fuel.jou  fuel.template.jou
 	${CUBIT} fuel.jou
@@ -34,6 +36,9 @@ control.cub : control.sat  control.jou  control.template.jou
 control.sat control.jou control.template.jou : control.inp
 	${ASSYGEN} control
 
+outer_covering.cub : 
+	${CUBIT} cylinderical_covering.jou
+
 clean:
-	rm *.sat *.jou *.ccm *.h5m *.cub
+	rm *.sat *.cub
 
