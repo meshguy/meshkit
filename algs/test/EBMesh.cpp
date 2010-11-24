@@ -62,7 +62,7 @@ int load_and_mesh(const char *input_filename,
   // initialize the Mesh
   int err;
   bool result;
-  clock_t start_time, load_time, mesh_time, vol_frac_time,
+  time_t start_time, load_time, mesh_time, vol_frac_time,
     export_time, query_time_techX, query_time;
   iMesh_Instance mesh;
   iMesh_newMesh("", &mesh, &err, 0);
@@ -73,11 +73,11 @@ int load_and_mesh(const char *input_filename,
   ERRORR("Couldn't get root set.", 1);
 
   // read geometry and establish facet mesh
-  start_time = clock();
+  time(&start_time);
   iMesh_load(mesh, root_set, input_filename, NULL,
 	     &err, strlen(input_filename), 0);
   ERRORR("Couldn't load mesh file.", 1);
-  load_time = clock();
+  time(&load_time);
 
   // make EB mesher
   EBMesh *ebm = new EBMesh(mesh, root_set, size, input_geom);
@@ -85,7 +85,7 @@ int load_and_mesh(const char *input_filename,
   // do mesh
   err = ebm->do_mesh();
   ERRORR("Couldn't EB mesh.", 1);
-  mesh_time = clock();
+  time(&mesh_time);
 
   // caculate volume fraction, only for geometry input
   if (vol_frac_res > 0 && input_geom) {
@@ -95,7 +95,7 @@ int load_and_mesh(const char *input_filename,
       return 1;
     }
   }
-  vol_frac_time = clock();
+  time(&vol_frac_time);
 
   // export mesh
   if (output_filename != NULL) {
@@ -105,7 +105,7 @@ int load_and_mesh(const char *input_filename,
       return 1;
     }
   }
-  export_time = clock();
+  time(&export_time);
 
   // techX query function test
   double boxMin[3], boxMax[3];
@@ -119,7 +119,7 @@ int load_and_mesh(const char *input_filename,
     std::cerr << "Couldn't get  mesh information for TechX." << std::endl;
     return 1;
   }
-  query_time_techX = clock();
+  time(&query_time_techX);
 
   // multiple intersection fraction query test
   std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan > mdCutCellEdge;
@@ -130,23 +130,23 @@ int load_and_mesh(const char *input_filename,
     std::cerr << "Couldn't get mesh information." << std::endl;
     return 1;
   }
-  query_time = clock();
+  time(&query_time);
 
   std::cout << "EBMesh is succesfully finished." << std::endl;
   std::cout << "# of TechX cut-cell surfaces: " << mdCutCellSurfEdge.size() 
 	    << ", # of nInsideCell: " << vnInsideCell.size()/3 << std::endl;
   std::cout << "Time including loading: "
-	    << (double) (mesh_time - start_time)/CLOCKS_PER_SEC
+	    << difftime(mesh_time, start_time)
 	    << " secs, Time excluding loading: "
-	    << (double) (mesh_time - load_time)/CLOCKS_PER_SEC
+	    << difftime(mesh_time, load_time)
 	    << " secs, Time volume fraction: "
-	    << (double) (vol_frac_time - mesh_time)/CLOCKS_PER_SEC
+	    << difftime(vol_frac_time, mesh_time)
 	    << " secs, Time export mesh: "
-	    << (double) (export_time - vol_frac_time)/CLOCKS_PER_SEC
+	    << difftime(export_time, vol_frac_time)
 	    << " secs, TechX query time: "
-	    << (double) (query_time_techX - export_time)/CLOCKS_PER_SEC
+	    << difftime(query_time_techX, export_time)
 	    << " secs, normal query time(elems, edge-cut fractions): "
-	    << (double) (query_time - query_time_techX)/CLOCKS_PER_SEC
+	    << difftime(query_time, query_time_techX)
 	    << " secs." << std::endl;
 
   delete ebm;

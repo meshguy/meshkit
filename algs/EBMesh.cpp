@@ -57,11 +57,15 @@ EBMesh::EBMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set,
   int length = 1;
   const void *leng = &length;
   m_edgeCutFracLengthTag = get_tag("EDGE_CUT_FRAC_LENGTH_TAG", // # of fractions
-				   3*sizeof(int), MB_TAG_SPARSE,
+				   3*sizeof(int),
+				   //MB_TAG_SPARSE,
+				   MB_TAG_DENSE,
 				   MB_TYPE_INTEGER, leng);
 
   m_edgeCutFracTag = get_various_length_tag("EDGE_CUT_FRAC_TAG",
-					    MB_TAG_SPARSE, MB_TYPE_DOUBLE);
+					    //MB_TAG_SPARSE,
+					    MB_TAG_DENSE,
+					    MB_TYPE_DOUBLE);
 
   int m_id = 1;
   const void *id = &m_id;
@@ -83,7 +87,8 @@ EBMesh::~EBMesh()
 int EBMesh::do_mesh()
 {
  #ifdef MOAB
-  clock_t time1 = clock();
+  time_t time1, time2, time3, time4, time5, time6;
+  time(&time1);
   unsigned long mem1, mem2, mem3, mem4, mem5;
   moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
   MBErrorCode rval;
@@ -96,7 +101,7 @@ int EBMesh::do_mesh()
   // 1. construct obb tree for all surfaces and volumes
   int err = construct_obb_tree();
   ERRORR("Couldn't construct obb tree.", err);
-  clock_t time2 = clock();
+  time(&time2);
   moab_instance()->estimated_memory_use(0, 0, 0, &mem2);
 
   // 2. set division
@@ -106,31 +111,31 @@ int EBMesh::do_mesh()
   // 3. make hex vertices
   err = make_scd_hexes();
   ERRORR("Couldn't make scd hexes.", err);
-  clock_t time3 = clock();
+  time(&time3);
   moab_instance()->estimated_memory_use(0, 0, 0, &mem3);
 
   // 4. find intersected geometry surfaces by rays
   err = find_intersections();
   ERRORR("Couldn't find intersected surfaces.", err);
-  clock_t time4 = clock();
+  time(&time4);
   moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
   
   // 5. set hex status and boundary hex cut fraction info
   err = set_tag_info();
   ERRORR("Couldn't set tag infor.", err);
-  clock_t time5 = clock();
+  time(&time5);
   moab_instance()->estimated_memory_use(0, 0, 0, &mem5);
 #endif
 
   if (debug) {
     std::cout << "OBB_tree_construct_time: "
-	      << (double) (time2 - time1)/CLOCKS_PER_SEC
+	      << difftime(time2, time1)
 	      << ", scd_hex_construct_time: "
-	      << (double) (time3 - time2)/CLOCKS_PER_SEC
+	      << difftime(time3, time2)
 	      << ", intersection_time: "
-	      << (double) (time4 - time3)/CLOCKS_PER_SEC
+	      << difftime(time4, time3)
 	      << ", set_info_time: "
-	      << (double) (time5 - time4)/CLOCKS_PER_SEC
+	      << difftime(time5, time4)
 	      << std::endl;
 
     std::cout << "start_memory: " << mem1
@@ -173,7 +178,8 @@ int EBMesh::construct_obb_tree()
 bool EBMesh::export_mesh(const char* file_name, bool separate)
 { 
   // get all hexes
-  clock_t time1 = clock();
+  time_t time1, time2, time3;
+  time(&time1);
   int i, err;
   iBase_EntityHandle* hex_handles = NULL;
   int hex_allocated = 0;
@@ -191,8 +197,7 @@ bool EBMesh::export_mesh(const char* file_name, bool separate)
 		      &hex_status, &hex_status_alloc,
 		      &hex_status_size, &err);
   ERRORRF("Failed to get hex status.\n");
-  clock_t time2 = clock();
-  clock_t time3;
+  time(&time2);
 
   if (separate) {
     int n_inside_hex = 0;
@@ -226,7 +231,7 @@ bool EBMesh::export_mesh(const char* file_name, bool separate)
 	      << n_inside_hex*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
 	      << ", vox vol:" << hex_size*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
 	      << std::endl;
-    time3 = clock();
+    time(&time3);
 
     // save inside/outside/boundary elements separately
     if (n_inside_hex > 0) {
@@ -244,9 +249,9 @@ bool EBMesh::export_mesh(const char* file_name, bool separate)
 
     if (debug) {
       std::cout << "hex_handle_get_time: "
-		<< (double) (time2 - time1)/CLOCKS_PER_SEC
+		<< difftime(time2, time1)
 		<< ", separate_write_time: "
-		<< (double) (time3 - time2)/CLOCKS_PER_SEC
+		<< difftime(time3, time2)
 		<< std::endl;
     }
   }
@@ -264,7 +269,8 @@ bool EBMesh::export_mesh(const char* file_name, bool separate)
 int EBMesh::write_mesh(const char* file_name, int type,
 			    iBase_EntityHandle* handles, int& n_elem)
 {
-  clock_t time1 = clock();
+  time_t time1, time2, time3;
+  time(&time1);
   int is_list = 1, err;
   MBErrorCode rval;
   iBase_EntitySetHandle set;
@@ -274,7 +280,7 @@ int EBMesh::write_mesh(const char* file_name, int type,
 
   iMesh_addEntArrToSet(m_mesh, handles, n_elem, set, &err);
   ERRORR("Couldn't add hexes to set.\n", err);
-  clock_t time2 = clock();
+  time(&time2);
 
   std::string out_name;
   std::stringstream ss;
@@ -289,13 +295,13 @@ int EBMesh::write_mesh(const char* file_name, int type,
   MBERRORR("Failed to write hex mesh.", iBase_ERROR_MAP[rval]);
   
   std::cout << "Elements are exported." << std::endl;
-  clock_t time3 = clock();
+  time(&time3);
 
   if (debug) {
     std::cout << "set_creation_time: "
-	      << (double) (time2 - time1)/CLOCKS_PER_SEC
+	      << difftime(time2, time1)
 	      << ", write_time: "
-	      << (double) (time3 - time2)/CLOCKS_PER_SEC
+	      << difftime(time3, time2)
 	      << std::endl;
   }
 
@@ -510,6 +516,78 @@ int EBMesh::make_scd_hexes()
   return iBase_SUCCESS;
 }
 
+int EBMesh::make_uscd_hexes() // unstructured mesh
+{
+  int nNode = m_nNode[0]*m_nNode[1]*m_nNode[2];
+  double* vertexCoords = new double[3*nNode];
+
+  // make vertices of division
+  int iNode;
+  for (int k = 0; k < m_nNode[2]; k++) {
+    for (int j = 0; j < m_nNode[1]; j++) {
+      for (int i = 0; i < m_nNode[0]; i++) {
+	iNode = 3*(k*m_nNode[0]*m_nNode[1] + j*m_nNode[0] + i);
+	vertexCoords[iNode++] = m_origin_coords[0] + i*m_dIntervalSize[0];
+	vertexCoords[iNode++] = m_origin_coords[1] + j*m_dIntervalSize[1];
+	vertexCoords[iNode] = m_origin_coords[2] + k*m_dIntervalSize[2];
+      }
+    }
+  }
+
+  int err;
+  int vertex_alloc = sizeof(iBase_EntityHandle)*nNode;
+  int vertex_size = nNode;
+  m_vhVertex.resize(nNode, NULL);
+  iBase_EntityHandle* pVertexHandle = &m_vhVertex[0];
+
+  iMesh_createVtxArr(m_mesh, nNode,
+		     iBase_INTERLEAVED, vertexCoords, 3*nNode,
+		     &pVertexHandle,
+		     &vertex_alloc, &vertex_size, &err);
+  delete [] vertexCoords;
+  ERRORR("Failed to create vertices.\n", err);
+
+  // get hex connectivity
+  int iDiv;
+  int nConn = 8*m_nHex;
+  std::vector<iBase_EntityHandle> conn;
+  conn.resize(nConn);
+
+  for (int k = 0; k < m_nDiv[2]; k++) {
+    for (int j = 0; j < m_nDiv[1]; j++) {
+      iDiv = k*m_nDiv[0]*m_nDiv[1] + j*m_nDiv[0];
+      for (int i = 0; i < m_nDiv[0]; i++) {
+	conn[8*(iDiv + i)] = m_vhVertex[k*m_nNode[0]*m_nNode[1] + j*m_nNode[0] + i];
+	conn[8*(iDiv + i) + 1] = m_vhVertex[k*m_nNode[0]*m_nNode[1] + j*m_nNode[0] + i + 1];
+	conn[8*(iDiv + i) + 2] = m_vhVertex[k*m_nNode[0]*m_nNode[1] + (j + 1)*m_nNode[0] + i + 1];
+	conn[8*(iDiv + i) + 3] = m_vhVertex[k*m_nNode[0]*m_nNode[1] + (j + 1)*m_nNode[0] + i];
+	conn[8*(iDiv + i) + 4] = m_vhVertex[(k + 1)*m_nNode[0]*m_nNode[1] + j*m_nNode[0] + i];
+	conn[8*(iDiv + i) + 5] = m_vhVertex[(k + 1)*m_nNode[0]*m_nNode[1] + j*m_nNode[0] + i + 1];
+	conn[8*(iDiv + i) + 6] = m_vhVertex[(k + 1)*m_nNode[0]*m_nNode[1] + (j + 1)*m_nNode[0] + i + 1];
+	conn[8*(iDiv + i) + 7] = m_vhVertex[(k + 1)*m_nNode[0]*m_nNode[1] + (j + 1)*m_nNode[0] + i];
+      }
+    }
+  }
+
+  // create hexes
+  iBase_EntityHandle* hex_handles = NULL;
+  int* status = NULL;
+  int hex_allocated = 0;
+  int hex_size = 0;
+  int status_allocated = 0;
+  int status_size = 0;
+  iMesh_createEntArr(m_mesh, iMesh_HEXAHEDRON, &conn[0], nConn,
+		     &hex_handles, &hex_allocated, &hex_size,
+		     &status, &status_allocated, &status_size, &err);
+  ERRORR("Failed to create elements.", err);
+
+  m_iStartHex = moab_instance()->id_from_handle(reinterpret_cast<MBEntityHandle>(hex_handles[0]));
+  free(hex_handles);
+  free(status);
+
+  return iBase_SUCCESS;
+}
+
 iBase_TagHandle EBMesh::get_tag(const char* name, int size,
 				     MBTagType store, MBDataType type,
 				     const void* def_value,
@@ -673,6 +751,11 @@ int EBMesh::set_division()
 
   std::cout << "# of hex: " << m_nHex << ", interval size: "
 	    << m_dInputSize << std::endl;
+
+  if (true) {
+    std::cout << "# of division: " << m_nDiv[0] << ","
+	      << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
+  }
 
   return iBase_SUCCESS;
 }

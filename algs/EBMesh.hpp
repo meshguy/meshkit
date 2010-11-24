@@ -188,6 +188,7 @@ private:
   iBase_TagHandle get_various_length_tag(const char* name,
 					 MBTagType store, MBDataType type);
   int make_scd_hexes(); // make structured hexes
+  int make_uscd_hexes(); // make unstructured hexes
   int construct_obb_tree();
   int set_division();
   int find_intersections();
