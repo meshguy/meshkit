@@ -139,6 +139,8 @@ public:
   
   bool trimSurface(const char * polygon_filename, int len);
 
+  bool grounding_line(const char * polygon_filename, int len, double width);
+
   iGeom_Instance geomIface;
   iMesh_Instance meshIface;
   iRel_Instance relateIface;
@@ -164,6 +166,14 @@ private:
                       bool prec_ent, int &this_sense);
   
   std::vector<double> newBoundary;
+
+  // this would correspond to the grounding line; it will be meshed separately, and it will
+  // divide the surface in 2 faces. it will have to be broken in an even number of edges, conforming
+  // the internal boundary will start and end at the closest points to the new boundary. Or maybe the
+  // new boundary will conform to the grounding line?
+  // yes, maybe start from the grounding line.
+
+  std::vector<double> internalBoundary;
 
 };
 

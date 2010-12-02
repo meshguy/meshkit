@@ -27,10 +27,17 @@ int main(int argc, char *argv[]) {
    std::string geom_filename;
    std::string out_mesh_filename;
    std::string polygon_filename;
+   std::string grounding_line_filename;
    double mesh_size = -1.0;
    double angle = 135.; // feature decider
    int mesh_intervals = -1;
    bool force_intervals = false;
+   std::cout<<"Command line:\n";
+   for (int argi=0; argi<argc; argi++)
+      std::cout<< argv[argi] << " ";
+   std::cout<<"\n";
+
+   double width = -1; // grounding line
 
    if (argc < 4) {
       std::cout << "Usage: " << argv[0]
@@ -42,7 +49,10 @@ int main(int argc, char *argv[]) {
             << "  -f = force these size/interval settings even if geometry has interval settings"
             << std::endl << "  -d = print debugging info" << std::endl
             << "  -a <angle> = feature angle decider" << std::endl
-            << "  -t <trim_polygon_xy_file> = file with 2d trimming polygon, oriented ccw "
+            << "  -t <trim_polygon_xy_file> = file with 2d trimming polygon, oriented ccw " << std::endl 
+            << "  -g <grounding_line_file> = file with 2d line \n"
+            << " -w <length> = width of the corridor along the grounding line \n"
+
       << std::endl;
 
       return 0;
@@ -69,16 +79,21 @@ int main(int argc, char *argv[]) {
          } else if (!strcmp(argv[argno], "-d")) {
             argno++;
             debug = true;
-#ifdef USE_CGM
-         } else if (!strcmp(argv[argno], "-cgm")) {
-            argno++;
-            use_cgm = true;
-#endif
          } else if (!strcmp(argv[argno], "-t")) {
             argno++;
             polygon_filename = argv[argno];
             argno++;
-         } else {
+         } else if (!strcmp(argv[argno], "-g")) {
+            argno++;
+            grounding_line_filename = argv[argno];
+            argno++;
+
+         } else if (!strcmp(argv[argno], "-w")) {
+            argno++;
+            sscanf(argv[argno], "%lf", &width);
+            argno++;
+
+         }else {
             std::cerr << "Unrecognized option: " << argv[argno] << std::endl;
             return 1;
          }
@@ -143,6 +158,16 @@ int main(int argc, char *argv[]) {
             polygon_filename.size());
       if (!success)
          std::cerr << "Problems trimming the surface." << std::endl;
+      if (!grounding_line_filename.empty())
+      {
+         // we will try to respect the grounding line, as an interior 
+         // line to the trimmed surface; this will add another boundary,
+         // interior to the trimmed surface
+         success = cmel.grounding_line(grounding_line_filename.c_str(),
+            grounding_line_filename.size(), width);
+         if (!success)
+            std::cerr<< " problems adding new interior boundaries for grounding line \n";
+      }
    }
    success = cmel.mesh_geometry(mesh_size, mesh_intervals, force_intervals,
          true);

@@ -447,6 +447,140 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
    return success;
 }
 
+bool mesh_line_on_surface(CAMALGeomEval & geom_eval,
+                          CAMALSizeEval & size_eval,
+                          double mesh_size,
+                          std::vector<double> & points,
+                          bool periodic,
+                          int force_evenify, // 0 no action, 1 force odd
+                                             //  2 force even
+                          std::vector<double> & mesh_points)
+{
+
+   int szLine = points.size()/3;
+   double * point1 = &points[0];
+   double * point2 = &points[3*(szLine-1)];
+
+   if (periodic)
+        point2 = point1;
+   int numPoints = points.size() / 3;
+
+   // first, mesh the grounding line
+   double lineLength = 0;
+   std::vector<double> lengsLine;
+   lengsLine.push_back(0);// start with 0
+   int i=0;
+   for (i = 0; i < numPoints-1; i++) {
+
+      double
+            lenSeg =
+                  DIST2( (&points[3*i]), (&points[3*(i+1)]) );
+      lineLength += lenSeg;
+      lengsLine.push_back(lineLength);
+   }
+   if (periodic)
+   {
+      double lenSeg = DIST2((&points[0]), (&points[3*numPoints-3]) );
+      lineLength += lenSeg;
+      lengsLine.push_back(lineLength);
+   }
+   int numSegsLine = (int) (lineLength / mesh_size);
+
+   double newMeshSizeLine = lineLength / numSegsLine;
+   // generate new points on the segments (in natural parametric space
+   //                           on grounding line, between index 1 and 2)
+   // use a sort of bsearch to get the index in lengsLine
+   // create some vertices /edges  in the mesh, which will be used for quad generation
+   // first node is the first one on line (for sure on our surface)
+   // std::vector <double> bdy_coords;
+   for (i = 0; i < 3; i++)
+      mesh_points.push_back(point1[i]);
+   // find a new point in the param space of the boundary curve
+   double param = 0; // current parameter
+   double sizeLocal = mesh_size;
+   int ix = 0;
+   while (param < lineLength - 3 * sizeLocal) {
+      // latest point pushed is at index ix
+      size_eval.size_at_point(mesh_points[3 * ix], mesh_points[3 * ix + 1],
+            mesh_points[3 * ix + 2], sizeLocal, 0);
+      param += sizeLocal;
+      // this is the par position of the next point, in natural coordinate
+      double * pos = std::lower_bound(&lengsLine[0], &lengsLine[szLine], param);
+      if (pos == &lengsLine[0])
+         return false;
+      pos = pos - 1; // get the previous position, it cannot be 0
+      double extraLen = param - *pos;
+      int index = pos - &lengsLine[0];
+      int nextV = (index + 1) ; // it can't be here, but hey...
+      double direction[3] = { points[3 * nextV] - points[3 * index],
+            points[3 * nextV + 1] - points[3 * index + 1],
+            points[3 * nextV + 2] - points[3 * index + 2] };
+      NORMALIZE(direction);
+      double pp[3];
+      for (i = 0; i < 3; i++) {
+         pp[i] = points[3 * index + i] + direction[i] * extraLen;
+      }
+      // now see if this is closer than what we want it to be
+      geom_eval.move_to_surface(pp[0], pp[1], pp[2]);
+      for (i = 0; i < 3; i++)
+         mesh_points.push_back(pp[i]);
+      ix++;
+   }
+   // to generate; it will be a little different
+   int segRemainLine = (int) (lineLength - param) / sizeLocal;
+   int numSegSoFar = mesh_points.size()/3 -1;
+   int resultSeg= (segRemainLine + numSegSoFar)%2;
+   if (force_evenify)
+   {
+      if(1==force_evenify && 0==resultSeg) // force odd
+         segRemainLine++;
+      if (2==force_evenify && 1==resultSeg) // force even
+         segRemainLine++;
+   }
+   sizeLocal = (lineLength - param) / segRemainLine;// this should be 3 or 4...
+   for (int k = 1; k < segRemainLine; k++) {
+      double parPosition = param + k * sizeLocal;
+      double * pos = std::lower_bound(&lengsLine[0], &lengsLine[szLine],
+            parPosition);
+      if (pos == &lengsLine[0])
+         return false;
+      pos = pos - 1; // get the previous position, it cannot be 0
+      double extraLen = parPosition - *pos;
+      int index = pos - &lengsLine[0];
+      int nextV = (index + 1) ;
+      double direction[3] = { points[3 * nextV] - points[3 * index],
+            points[3 * nextV + 1] - points[3 * index + 1],
+            points[3 * nextV + 2] - points[3 * index + 2] };
+
+      NORMALIZE(direction);
+      double pp[3];
+      for (i = 0; i < 3; i++) {
+         pp[i] = points[3 * index + i] + direction[i] * extraLen;
+      }
+      // now see if this is closer than what we want it to be
+      geom_eval.move_to_surface(pp[0], pp[1], pp[2]);
+      for (i = 0; i < 3; i++)
+         mesh_points.push_back(pp[i]);
+   }
+// also, add the last point of the line, point 2, if not periodic
+   if (!periodic)
+     for (i=0; i<3; i++)
+        mesh_points.push_back(point2[i]);
+   std::cout << " line has " << mesh_points.size() / 3 << " nodes\n";
+
+   if (debug)
+   {
+      for (int i=0; i<mesh_points.size()/3; i++)
+      {
+         int i3 = i*3;
+         std::cout<< i<< " " <<  mesh_points[i3]<< " " << mesh_points[i3+1]
+               << " " << mesh_points[i3+2] << "\n";
+      }
+   }
+   return true;// success
+
+}
+
 bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
       double mesh_size, std::vector<iBase_EntityHandle> &new_entities,
       std::vector<double> trimmingBoundary, const bool quadMesh) {
@@ -463,108 +597,21 @@ bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
 #if CAMAL_VERSION > 500
    CAMALSizeEval size_eval(mesh_size);
 #endif
-   // boundary is in a loop
-   int numBoundPoints = trimmingBoundary.size() / 3;
-   // the new boundary will be decided based on mesh size
-   double totalLength = 0;
-   std::vector<double> lengs;
-   lengs.push_back(0);// start with 0
-   for (int i = 0; i < numBoundPoints; i++) {
-      int nextIndex = (i + 1) % numBoundPoints;
-      double
-            lenSeg =
-                  DIST2( (&trimmingBoundary[3*i]), (&trimmingBoundary[3*nextIndex]) );
-      totalLength += lenSeg;
-      lengs.push_back(totalLength);
-   }
-   int numSegs = (int) (totalLength / mesh_size);
 
-   double newMeshSize = totalLength / numSegs;
-   // generate new points on the segments (in natural parametric space)
-   // use a sort of bsearch to get the index in lengs
-   // create some vertices /edges  in the mesh, which will be used for quad generation
-   // we will not create them at the "boundary mesh" stage
-   // although it would be easier to just have another gentity with a new edge as boundary
-   // how to do that in igeom?
+   success =  mesh_line_on_surface( geom_eval,
+                              size_eval,
+                              mesh_size,
+                              trimmingBoundary,
+                             /*bool periodic*/ true,
+                            /* int force_evenify*/ 2 , // 0 no action, 1 force odd
+                                                //  2 force even
+                            bdy_coords);
 
-   // first node is the first one on trimming boundary (for sure on our surface)
-   // std::vector <double> bdy_coords;
-   int i = 0;
-   for (i = 0; i < 3; i++)
-      bdy_coords.push_back(trimmingBoundary[i]);
-   // find a new point in the param space of the boundary curve
-   double param = 0; // current parameter
-   double sizeLocal = mesh_size;
-   int ix = 0;
-   while (param < totalLength - 3 * sizeLocal) {
-      // latest point pushed is at index ix
-      size_eval.size_at_point(bdy_coords[3 * ix], bdy_coords[3 * ix + 1],
-            bdy_coords[3 * ix + 2], sizeLocal, 0);
-      param += sizeLocal;
-      // this is the par position of the next point, in natural coordinate
-      double * pos = std::lower_bound(&lengs[0], &lengs[numBoundPoints], param);
-      if (pos == &lengs[0])
-         return false;
-      pos = pos - 1; // get the previous position, it cannot be 0
-      double extraLen = param - *pos;
-      int index = pos - &lengs[0];
-      int nextV = (index + 1) % numBoundPoints; // it can't be here, but hey...
-      double direction[3] = { trimmingBoundary[3 * nextV] - trimmingBoundary[3
-            * index], trimmingBoundary[3 * nextV + 1] - trimmingBoundary[3
-            * index + 1], trimmingBoundary[3 * nextV + 2] - trimmingBoundary[3
-            * index + 2] };
-      NORMALIZE(direction);
-      double pp[3];
-      for (i = 0; i < 3; i++) {
-         pp[i] = trimmingBoundary[3 * index + i] + direction[i] * extraLen;
-      }
-      // now see if this is closer than what we want it to be
-      geom_eval.move_to_surface(pp[0], pp[1], pp[2]);
-      for (i = 0; i < 3; i++)
-         bdy_coords.push_back(pp[i]);
-      ix++;
-
-   }
-   // the current index must be odd or even, less than 3, 4 segments left
-   // to generate; it will be a little different
-   int segRemain = (int) (totalLength - param) / sizeLocal;
-   if ((bdy_coords.size() / 3 + segRemain) % 2 == 0 && quadMesh) {
-      segRemain++;// make total number even
-      std::cout << "nb segs so far: " << bdy_coords.size() / 3
-            << " local size: " << sizeLocal << "\n";
-      std::cout << "remains increased to " << segRemain << "\n";
-      std::cout << "localSize reduced to " << sizeLocal << " \n";
-      // 
-   }
-   sizeLocal = (totalLength - param) / segRemain;// this should be 3 or 4...
-   for (int k = 1; k < segRemain; k++) {
-      double parPosition = param + k * sizeLocal;
-      double * pos = std::lower_bound(&lengs[0], &lengs[numBoundPoints],
-            parPosition);
-      if (pos == &lengs[0])
-         return false;
-      pos = pos - 1; // get the previous position, it cannot be 0
-      double extraLen = parPosition - *pos;
-      int index = pos - &lengs[0];
-      int nextV = (index + 1) % numBoundPoints;
-      double direction[3] = { trimmingBoundary[3 * nextV] - trimmingBoundary[3
-            * index], trimmingBoundary[3 * nextV + 1] - trimmingBoundary[3
-            * index + 1], trimmingBoundary[3 * nextV + 2] - trimmingBoundary[3
-            * index + 2] };
-      NORMALIZE(direction);
-      double pp[3];
-      for (i = 0; i < 3; i++) {
-         pp[i] = trimmingBoundary[3 * index + i] + direction[i] * extraLen;
-      }
-      // now see if this is closer than what we want it to be
-      geom_eval.move_to_surface(pp[0], pp[1], pp[2]);
-      for (i = 0; i < 3; i++)
-         bdy_coords.push_back(pp[i]);
-   }
    std::cout << " boundary has " << bdy_coords.size() / 3 << " nodes\n";
    std::vector<int> loops;
    std::vector<int> loop_sizes;
-   numSegs = bdy_coords.size() / 3;
+   int numSegs = bdy_coords.size() / 3;
+   int i=0;
    for (i = 0; i < numSegs; i++)
       loops.push_back(i);
    loop_sizes.push_back(numSegs);// one loop , external ....
@@ -656,4 +703,326 @@ bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
    success = cmel->create_vertices_elements(surface, bdy_verts, &coords[0],
          new_points, connect, etop, new_entities);
    return success;
+}
+// this will create 2 loops, separated by the internalBoundary (grounding line)
+// each will be meshed separately, but, of course, we start with the common line,
+// the grounding line
+
+bool CAMAL_mesh_trimmed_surface_with_grounding_line(CMEL * cmel, iBase_EntityHandle surface,
+      double mesh_size, std::vector<iBase_EntityHandle> &new_entities,
+      std::vector<double> trimmingBoundary, std::vector<double> internalBoundary,
+      const bool quadMesh )
+{
+   int i = 0;
+   std::vector<iBase_EntityHandle> bdy_verts;// these should be empty now
+   std::vector<double> bdy_coords;
+   std::vector<int> connect;
+   bool success = true; // have a positive attitude
+   int new_points;
+   iMesh_EntityTopology etop = iMesh_ALL_TOPOLOGIES;
+   std::vector<double> coords;
+
+   CAMALGeomEval geom_eval(cmel->geomIface, surface);
+   geom_eval.set_mesh_size(mesh_size);
+#if CAMAL_VERSION > 500
+   CAMALSizeEval size_eval(mesh_size);
+#endif
+   // boundary is in a loop
+   // create 2 loops from one loop and one internal boundary
+   // first, find the index in the loop of the start and end of internal boundary
+   int szLine = internalBoundary.size()/3;
+   double * point1 = &internalBoundary[0];
+   double * point2 = &internalBoundary[3*(szLine-1)];
+
+   int numBoundPoints = trimmingBoundary.size() / 3;
+
+   int index1=-1, index2=-1;
+   for (i=0; i<numBoundPoints; i++)
+   {
+      double * currentPoint = &(trimmingBoundary[3*i]);
+      double dist1 = DIST2(point1, currentPoint);
+      double dist2 = DIST2(point2, currentPoint);
+      if (dist1<1.e-2)
+         index1= i;
+      if(dist2<1.e-2)
+         index2=i;
+   }
+   if (index1<0 || index2<0)
+   {
+      // the grounding line is not what we want, we cannot separate
+      std::cerr<<"can't use defined grounding line; it must connect outer boundary points\n";
+      return false;
+   }
+   std::vector<double> gr_line_mesh;
+   success =  mesh_line_on_surface( geom_eval,
+                           size_eval,
+                           mesh_size,
+                           internalBoundary,
+                          /*bool periodic*/ false,
+                         /* int force_evenify*/ 0 , // 0 no action, 1 force odd
+                                             //  2 force even
+                          gr_line_mesh);
+   if (!success)
+      return success;
+   int num_seg_ground_line = gr_line_mesh.size()/3 -1;
+   int oddGroundLine = num_seg_ground_line%2; // 1 means odd, 0 means even
+
+   /* if index1<index2, loop 1 will be grounding line, index2 to end, 0 - index1
+                     loop 2 will be  reverse grounding line, index1, index2
+
+
+    *   if index1>index2, then loop1 will be grounding line, index2, index1
+    *                          loop2 will be reverse grounding line, index1, end, 0, index2
+    *
+
+    so, break the external loop in 2, from small index to large index
+
+    */
+
+   int largerIndex = (index1>index2)? index1 : index2;
+   int smallerIndex = (index1<index2) ? index1 : index2;
+   // first loop is smallerIndex to largerIndex
+   // second loop is largerIndex, end, 0 to smallerIndex
+   std::vector<double> boundary1;
+
+   for (i=smallerIndex; i<=largerIndex; i++)
+   {
+      int i3=i*3;
+      for (int j=0; j<3; j++)
+      {
+         boundary1.push_back(trimmingBoundary[i3+j]);
+      }
+   }
+   // the other loop goes over end
+   std::vector<double> boundary2;
+   for (i=largerIndex; i<numBoundPoints; i++)
+   {
+      int i3=i*3;
+      for (int j=0; j<3; j++)
+      {
+         boundary2.push_back(trimmingBoundary[i3+j]);
+      }
+   }
+   for (i=0; i<=smallerIndex; i++)
+   {
+      int i3=i*3;
+      for (int j=0; j<3; j++)
+      {
+         boundary2.push_back(trimmingBoundary[i3+j]);
+      }
+   }
+   // now mesh them
+   std::vector<double> mesh_points1;
+   // if odd ground, force odd, if even, force even: 2-oddGroundLine
+   success =  mesh_line_on_surface( geom_eval,
+                              size_eval,
+                              mesh_size,
+                              boundary1,
+                             /*bool periodic*/ false,
+                            /* int force_evenify*/ 2-oddGroundLine, // 0 no action, 1 force odd
+                                                //  2 force even
+                            mesh_points1);
+   if (!success)
+       return success;
+
+   std::vector<double> mesh_points2;
+   success =  mesh_line_on_surface( geom_eval,
+                                 size_eval,
+                                 mesh_size,
+                                 boundary2,
+                                /*bool periodic*/ false,
+                               /* int force_evenify*/ 2-oddGroundLine, // 0 no action, 1 force odd
+                                                   //  2 force even
+                               mesh_points2);
+   if (!success)
+       return success;
+   // now, we have 2 faces, separated by the grounding line
+   // each face has 2 edges, grounding line and a boundary edge
+   // together, they form the boundary for camal paver.
+   std::vector<double> bdy_coords1;
+   std::vector<double> bdy_coords2; // reverse ground line
+   for (i=0; i<num_seg_ground_line+1; i++)
+   {
+      int i3=i*3;
+      int irev3= 3*(num_seg_ground_line-i);
+      for (int j=0; j<3; j++)
+      {
+         bdy_coords1.push_back(gr_line_mesh[i3+j]);
+         bdy_coords2.push_back(gr_line_mesh[irev3+j]);
+      }
+   }
+   int sz1 = (int) mesh_points1.size()/3;
+   int sz2 = (int) mesh_points2.size()/3;
+   if (index1<index2)
+   {
+      // add the boundary 2 to loop1, and boundary 2 to loop 1 (without start and end points)
+      for (i=1; i<sz2-1; i++)
+      {
+         int i3 = i*3;
+         for (int j=0; j<3; j++)
+         {
+            bdy_coords1.push_back(mesh_points2[i3+j]);
+         }
+      }
+      for (i=1; i<sz1-1; i++)
+      {
+         int i3 = i*3;
+         for (int j=0; j<3; j++)
+         {
+            bdy_coords2.push_back(mesh_points1[i3+j]);
+         }
+      }
+
+   }
+   else
+   {
+      // add the boundary 2 to loop2, and boundary 1 to loop 1 (without start and end points)
+      for (i=1; i<sz1-1; i++)
+      {
+         int i3 = i*3;
+         for (int j=0; j<3; j++)
+         {
+            bdy_coords1.push_back(mesh_points1[i3+j]);
+         }
+      }
+      for (i=1; i<sz2-1; i++)
+      {
+         int i3 = i*3;
+         for (int j=0; j<3; j++)
+         {
+            bdy_coords2.push_back(mesh_points2[i3+j]);
+         }
+      }
+   }
+
+
+   std::cout << " boundary 1 has " << bdy_coords1.size() / 3 << " nodes\n";
+   std::vector<int> loops;
+   std::vector<int> loop_sizes;
+   int numSegs = bdy_coords1.size() / 3;
+   for (i = 0; i < numSegs; i++)
+      loops.push_back(i);
+   loop_sizes.push_back(numSegs);// one loop , external ....
+   // only quad mesh
+
+   CMLPaver * pave_mesher = new CMLPaver(&geom_eval, &size_eval);
+      // the loops are established, get the mesh sets from each edge, and create the boundary loops arrays
+      // mesh faces;
+
+      // set only num_points_out -1 , because the last one is repeated
+   success = pave_mesher->set_boundary_mesh(bdy_coords1.size() / 3,
+            &bdy_coords1[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
+   if (!success) {
+      std::cerr << "Failed setting boundary mesh" << std::endl;
+      return false;
+   }
+
+   pave_mesher->set_sizing_function(CML::LINEAR_SIZING);
+
+   // generate the mesh
+   int num_quads;
+   success = pave_mesher->generate_mesh(new_points, num_quads);
+   if (!success) {
+      std::cerr << "Failed generating mesh" << std::endl;
+      //return success;
+   }
+
+   std::cout << "Meshed surface 1 with " << new_points << " new vertices and "
+         << num_quads << " quadrilaterals." << std::endl;
+
+   // get the generated mesh
+   //std::vector<double> coords;
+   coords.resize(3 * new_points);
+   //std::vector<double> new_coords;
+   //new_coords.resize(3 * new_points);
+   connect.resize(4 * num_quads);
+   success = pave_mesher->get_mesh(new_points, &coords[0], num_quads,
+         &connect[0]);
+   if (!success) {
+      std::cerr << "Failed to get generated mesh" << std::endl;
+      //return success;
+   }
+   std::cout << " boundary 2 has " << bdy_coords2.size() / 3 << " nodes\n";
+   loops.clear();
+   loop_sizes.clear();
+   numSegs = bdy_coords2.size() / 3;
+   for (i = 0; i < numSegs; i++)
+      loops.push_back(i);
+   loop_sizes.push_back(numSegs);// one loop , external ....
+   // only quad mesh
+
+   delete pave_mesher;
+   pave_mesher= new CMLPaver(&geom_eval, &size_eval);
+   success = pave_mesher->set_boundary_mesh(bdy_coords2.size() / 3,
+            &bdy_coords2[0], (int) loop_sizes.size(), &loop_sizes[0], &loops[0]);
+   if (!success) {
+      std::cerr << "Failed setting boundary mesh" << std::endl;
+      return false;
+   }
+
+   pave_mesher->set_sizing_function(CML::LINEAR_SIZING);
+
+   // generate the mesh
+   int num_quads2;
+   int new_points2=0;
+   success = pave_mesher->generate_mesh(new_points2, num_quads2);
+   if (!success) {
+      std::cerr << "Failed generating mesh" << std::endl;
+      //return success;
+   }
+
+   // the first new points were the points
+   std::cout << "Meshed surface 2 with " << new_points2 << " vertices and "
+         << num_quads2 << " quadrilaterals." << std::endl;
+
+   // get the generated mesh
+   // now, everything will be on one surface, but it should be in 2 sets, eventually
+   std::vector<double> coords2;
+   coords2.resize(3 * new_points2);
+   //std::vector<double> new_coords;
+   //new_coords.resize(3 * new_points);
+   std::vector<int> connect2;
+   connect2.resize(4 * num_quads2);
+   success = pave_mesher->get_mesh(new_points2, &coords2[0], num_quads2,
+         &connect2[0]);
+   if (!success) {
+      std::cerr << "Failed to get generated mesh" << std::endl;
+      //return success;
+   }
+
+   delete pave_mesher;
+
+   etop = iMesh_QUADRILATERAL;
+   // put all arrays together
+   // the first nodes are repeated in the second list, but reversed
+   // there are num_seg_ground_line+1 nodes on the grounding line
+   //    0, 1, 2, ..., num_seg_ground_line, ..., num_points-1
+   // second node array
+   //  num_seg_ground_line, ..., 1, 0, [----------------------], ..., num_points2-1,
+   int num_points = new_points+new_points2-num_seg_ground_line-1;
+   coords.resize(3*(new_points+new_points2-num_seg_ground_line-1));
+   for (i=3*(num_seg_ground_line+1); i<new_points2*3; i++)
+   {
+      coords[3*new_points+i-3*(num_seg_ground_line+1)]=coords2[i];
+   }
+   connect.resize( (num_quads+num_quads2)*4);
+   // the connectivity of the second mesher is affected to the first nodes
+   for (i=0; i<num_quads2*4; i++)
+   {
+      int indexInArr2 = connect2[i];
+      int indexInBiggerArray = 0;
+      if (indexInArr2<num_seg_ground_line+1)
+         indexInBiggerArray = num_seg_ground_line-indexInArr2;
+      else
+         // else we just translate
+         indexInBiggerArray = new_points-num_seg_ground_line-1+indexInArr2;
+      connect[4*num_quads+i]=indexInBiggerArray;
+   }
+
+
+   // put new mesh back into interface
+   success = cmel->create_vertices_elements(surface, bdy_verts, &coords[0],
+         num_points, connect, etop, new_entities);
+   return success;
+
 }

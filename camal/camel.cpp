@@ -167,9 +167,14 @@ bool CMEL::mesh_entity(iBase_EntityHandle gentity,
 
    if (iBase_FACE == gtype && this->newBoundary.size() > 0)
    {
-      return CAMAL_mesh_trimmed_surface(this, gentity,
+      if(internalBoundary.empty())
+         return CAMAL_mesh_trimmed_surface(this, gentity,
              mesh_size,  new_entities,
-             newBoundary,  quadMesh  );
+             newBoundary, quadMesh  );
+      else
+         return CAMAL_mesh_trimmed_surface_with_grounding_line(this, gentity,
+             mesh_size,  new_entities,
+             newBoundary, internalBoundary, quadMesh  );
    }
   //
   bool success = mesh_boundary(gentity, mesh_size, mesh_intervals, force_intervals, NULL, NULL, quadMesh);
@@ -1424,105 +1429,257 @@ bool CMEL::trimSurface(const char * polygon_filename, int len)
       else
       {
          double point[3];
-         while (currentLengthLeft < 0)
+         // make sure that the points of the polygon will appear in the new boundary
+         // current position becomes the polygon point that was overshoot.
+
+         nextPolygonPt++;
+         nextPolygonPt = nextPolygonPt%sizePolygon;
+         if (nextPolygonPt==1)
          {
-            nextPolygonPt++;
-            nextPolygonPt = nextPolygonPt%sizePolygon;
-            if (nextPolygonPt==1)
-            {
-               reachedEnd = 1;
-               break;
-            }
-            point[0] = xs[nextPolygonPt];
-            point[1] = ys[nextPolygonPt];
-            point[2] = zs[nextPolygonPt];
-            for (int i=0; i<3; i++)
-               currentDirection[i] = point[i] - nextPolyCoord[i];
-            double length = sqrt(LENGTH_SQ(currentDirection));
-            currentLengthLeft = currentLengthLeft+length;
-            NORMALIZE(currentDirection);
-            for (int j=0; j<3; j++)
-               nextPolyCoord[j] = point[j];
+            reachedEnd = 1;
+            break;
          }
-         // compute current position from nextPolygonPt
          for (int i=0; i<3; i++)
-            currentPosition[i] = nextPolyCoord[i] - currentLengthLeft*currentDirection[i];
+            currentPosition[i] = nextPolyCoord[i];
+         point[0] = xs[nextPolygonPt];
+         point[1] = ys[nextPolygonPt];
+         point[2] = zs[nextPolygonPt];
+         for (int i=0; i<3; i++)
+            currentDirection[i] = point[i] - nextPolyCoord[i];
+
+         currentLengthLeft = sqrt(LENGTH_SQ(currentDirection));
+         NORMALIZE(currentDirection);
+         for (int j=0; j<3; j++)
+            nextPolyCoord[j] = point[j];
 
       }
 
    }// end while
 
-   // newBoundary has the double coordinates; create a set in the mesh file with these
-   // coordinates, and add those edge segments
-   int newNodes = newBoundary.size()/3; // interleaved for vertex creation
-
-   iBase_EntityHandle * new_verts_ptr = NULL;
-   int new_verts_alloc = 0, new_verts_size = 0;
-   iMesh_createVtxArr(meshIface, newNodes, iBase_INTERLEAVED,
-                        &newBoundary[0], 3*newNodes,
-                        &new_verts_ptr, &new_verts_alloc, &new_verts_size,
-                        &err);
-   if (iBase_SUCCESS != err) {
-      std::cerr << "Couldn't create new vertices." << std::endl;
-      return false;
-   }
-
-   iBase_EntitySetHandle entity_set;
-   iMesh_createEntSet(meshIface,  /*in const int isList */ 1,
-                                  /*out*/ &entity_set,
-                                  &err);
-   // add vertices to the set
-   iMesh_addEntArrToSet(meshIface, new_verts_ptr, newNodes, entity_set, &err);
-   if (iBase_SUCCESS != err) {
-      std::cerr << "Couldn't add new vertices to set."
-            << std::endl;
-      return false;
-   }
-
-   // create connectivity for edges
-   std::vector<iBase_EntityHandle> connect(2*newNodes);
-   for (int i=0; i<newNodes; i++)
+   if (debug)
    {
-      int nextNodeIndex = (i+1)%newNodes;
-      connect[2*i] = new_verts_ptr[i];
-      connect[2*i+1] = new_verts_ptr[nextNodeIndex];
-   }
-   iBase_EntityHandle * new_elem_ptr = NULL;
-   int new_entity_handles_allocated = 0, new_entity_handles_size =0;
-   int * status = NULL;
-   int status_allocated = 0, status_size =0;
-   iMesh_createEntArr(meshIface, iMesh_LINE_SEGMENT,
-                             &connect[0], 2*newNodes,
-                             &new_elem_ptr,
-                             &new_entity_handles_allocated,
-                             &new_entity_handles_size,
-                             &status,
-                             &status_allocated,
-                             &status_size,
-                             &err);
-   // add segments to the set
-   iMesh_addEntArrToSet(meshIface, new_elem_ptr, new_entity_handles_size, entity_set, &err);
-   if (iBase_SUCCESS != err) {
-      std::cerr << "Couldn't add new segments to set."
-            << std::endl;
-      return false;
+      std::cout<< "boundary line:\n";
+      for (int i=0; i<newBoundary.size()/3; i++)
+      {
+         int i3 = i*3;
+         std::cout << i<< " " <<  newBoundary[i3]<< " " << newBoundary[i3+1]
+               << " " << newBoundary[i3+2] << "\n";
       }
-   // temp file
-   const char * name = "newBound.vtk";
-   iMesh_save(meshIface,
-         /*in*/ entity_set,
-         /*in*/  name,
-         /*in*/ NULL,
-         /*out*/ &err,
-         /*in*/ 12,
-         /*in*/ 0);
+      // newBoundary has the double coordinates; create a set in the mesh file with these
+      // coordinates, and add those edge segments
+      int newNodes = newBoundary.size()/3; // interleaved for vertex creation
 
-   free(new_elem_ptr);
-   free(new_verts_ptr);
-   // maybe delete some entity arrays
+      iBase_EntityHandle * new_verts_ptr = NULL;
+      int new_verts_alloc = 0, new_verts_size = 0;
+      iMesh_createVtxArr(meshIface, newNodes, iBase_INTERLEAVED,
+                           &newBoundary[0], 3*newNodes,
+                           &new_verts_ptr, &new_verts_alloc, &new_verts_size,
+                           &err);
+      if (iBase_SUCCESS != err) {
+         std::cerr << "Couldn't create new vertices." << std::endl;
+         return false;
+      }
+
+      iBase_EntitySetHandle entity_set;
+      iMesh_createEntSet(meshIface,  /*in const int isList */ 1,
+                                     /*out*/ &entity_set,
+                                     &err);
+      // add vertices to the set
+      iMesh_addEntArrToSet(meshIface, new_verts_ptr, newNodes, entity_set, &err);
+      if (iBase_SUCCESS != err) {
+         std::cerr << "Couldn't add new vertices to set."
+               << std::endl;
+         return false;
+      }
+
+      // create connectivity for edges
+      std::vector<iBase_EntityHandle> connect(2*newNodes);
+      for (int i=0; i<newNodes; i++)
+      {
+         int nextNodeIndex = (i+1)%newNodes;
+         connect[2*i] = new_verts_ptr[i];
+         connect[2*i+1] = new_verts_ptr[nextNodeIndex];
+      }
+      iBase_EntityHandle * new_elem_ptr = NULL;
+      int new_entity_handles_allocated = 0, new_entity_handles_size =0;
+      int * status = NULL;
+      int status_allocated = 0, status_size =0;
+      iMesh_createEntArr(meshIface, iMesh_LINE_SEGMENT,
+                                &connect[0], 2*newNodes,
+                                &new_elem_ptr,
+                                &new_entity_handles_allocated,
+                                &new_entity_handles_size,
+                                &status,
+                                &status_allocated,
+                                &status_size,
+                                &err);
+      // add segments to the set
+      iMesh_addEntArrToSet(meshIface, new_elem_ptr, new_entity_handles_size, entity_set, &err);
+      if (iBase_SUCCESS != err) {
+         std::cerr << "Couldn't add new segments to set."
+               << std::endl;
+         return false;
+         }
+      // temp file
+      const char * name = "newBound.vtk";
+      iMesh_save(meshIface,
+            /*in*/ entity_set,
+            /*in*/  name,
+            /*in*/ NULL,
+            /*out*/ &err,
+            /*in*/ 12,
+            /*in*/ 0);
+
+      free(new_elem_ptr);
+      free(new_verts_ptr);
+      // maybe delete some entity arrays
+
+   }
+
    return true;
 }
+// this will have the effect of adding other lines, interior to the bottom surface
+//  (from the grounding line, approx. width
+bool CMEL::grounding_line(const char * grounding_filename, int len, double width)
+{
+   
+   // read the file with the grounding line in xy coordinates
+   std::ifstream datafile(grounding_filename, std::ifstream::in);
+   if (!datafile) {
+      std::cout << "can't read file\n";
+      return 1;
+   }
+   //
+   char temp[100];
+   double direction[3];// normalized
+   double gridSize;
+   datafile.getline(temp, 100);// first line 
 
+   // get direction and mesh size along polygon segments, from file
+   sscanf(temp, " %lf %lf %lf %lf ", direction, direction+1, direction+2, &gridSize);
+   NORMALIZE(direction);// just to be sure
+
+   std::vector<double> xs, ys, zs;
+   while (!datafile.eof()) {
+      datafile.getline(temp, 100);
+      //int id = 0;
+      double x, y, z;
+      int nr = sscanf(temp, "%lf %lf %lf", &x, &y, &z);
+      if (nr==3)
+      {
+         xs.push_back(x);
+         ys.push_back(y);
+         zs.push_back(z);
+      }
+   }
+   // what to do with the grounding line?
+   // first imprint it on the bed, and decide how to mesh around, width must be
+   // considered too
+   // maybe just add it as an internal boundary in the camal meshing
+   // what we will do, we will break the newBoundary array in 2, such that the
+   // grounding line will separate in 2 faces the trimmed face
+   // of course, it will be the only common boundary to those 2 faces
+
+   int lineSize = xs.size();
+   if (lineSize<2)
+   {
+      std::cerr<< " Not enough points in the line" << std::endl;
+      return false; // we need at least 2 points for the grounding line
+   }
+   // now advance in the direction of the grounding line, with gridSize, and compute points
+      // on the surface (it should be first surface); those points will form a new
+      // internal boundary on the
+      // (first) surface, which will be used for camal;
+      //int startPolygon = 0;
+   double currentPosition[3] = {xs[0], ys[0], zs[0]};
+   double currentDirection[3] = {xs[1] - xs[0], ys[1] - ys[0], zs[1] - zs[0]};
+   int nextPolygonPt = 1;
+   double nextPolyCoord[3] = {xs[1], ys[1], zs[1]};
+   double currentLengthLeft = sqrt(LENGTH_SQ(currentDirection));
+   NORMALIZE(currentDirection);
+
+   int reachedEnd = 0;
+   int err;
+   while (1)
+   {
+      // march along given direction  ; it should be at most size / 3?
+
+      iBase_EntityHandle * intersect_entity_handles = NULL;
+      int intersect_entity_handles_allocated = 0, intersect_entity_handles_size = 0;
+      double * intersect_coords = NULL;
+      int intersect_coords_allocated =0 ,  intersect_coords_size = 0;
+      double * param_coords = NULL;
+      int param_coords_allocated = 0, param_coords_size =0;
+      iGeom_getPntRayIntsct( geomIface,
+            currentPosition[0], currentPosition[1], currentPosition[2],
+            direction[0], direction[1], direction[2],
+            &intersect_entity_handles, &intersect_entity_handles_allocated,
+            &intersect_entity_handles_size, iBase_INTERLEAVED,
+            &intersect_coords, &intersect_coords_allocated, &intersect_coords_size,
+            &param_coords, &param_coords_allocated, &param_coords_size,
+            &err );
+      // get the first coordinate
+      if (err != 0 || intersect_entity_handles_size ==0)
+         return false;
+      // consider only the first intersection point
+      for (int j=0; j<3; j++)
+         internalBoundary.push_back( intersect_coords[j]);
+      free(intersect_entity_handles);
+      free(intersect_coords);
+      free(param_coords);
+      if (reachedEnd)
+         break;// break of the while , finally
+      // decide a new starting point for the ray
+      currentLengthLeft -= gridSize;
+      if (currentLengthLeft > 0)
+      {
+         for (int i=0; i<3; i++)
+            currentPosition[i] += gridSize*currentDirection[i];
+      }
+      else
+      {
+         double point[3];
+         // make sure that the points of the line will appear in the internal  boundary
+         // current position becomes the line point that was overshoot.
+         //nextPolygonPt = nextPolygonPt%sizePolygon;
+
+         for (int i=0; i<3; i++)
+            currentPosition[i] = nextPolyCoord[i];
+         nextPolygonPt++;
+         if (nextPolygonPt==lineSize)
+         {
+            reachedEnd = 1;
+            // the last point is the last polygon point;
+            continue; // go to top of while
+         }
+         point[0] = xs[nextPolygonPt];
+         point[1] = ys[nextPolygonPt];
+         point[2] = zs[nextPolygonPt];
+         for (int i=0; i<3; i++)
+            currentDirection[i] = point[i] - nextPolyCoord[i];
+
+         currentLengthLeft = sqrt(LENGTH_SQ(currentDirection));
+         NORMALIZE(currentDirection);
+         for (int j=0; j<3; j++)
+            nextPolyCoord[j] = point[j];
+
+      }
+
+   }// end while; the internal boundary points will be here, for the grounding line
+
+   if (debug)
+   {
+      std::cout<< "grounding line:\n";
+      for (int i=0; i<internalBoundary.size()/3; i++)
+      {
+         int i3 = i*3;
+         std::cout<< i<< " " <<  internalBoundary[i3]<< " " << internalBoundary[i3+1]
+               << " " << internalBoundary[i3+2] << "\n";
+      }
+   }
+   //
+   return true;
+}
 #ifdef TEST_CAMEL
 
 bool test_bdy_geom_grouped(CMEL *cmel) 
