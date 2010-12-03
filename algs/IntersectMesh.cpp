@@ -49,9 +49,9 @@ std::vector< std::vector<MBEntityHandle> *> extraNodesVec;
 MBTag redParentTag;
 MBTag blueParentTag;
 
-int dbg = 0;
-std::ofstream mout;// some debug file
-double epsilon = 1.e-5; // cm, for coincident points in P, the intersection area
+int dbg_1 = 0;
+std::ofstream mout_1;// some debug file
+double epsilon_1 = 1.e-5; // cm, for coincident points in P, the intersection area
 
 
 IntersectMesh::IntersectMesh(iMesh_Instance mesh1, iBase_EntitySetHandle set1,
@@ -331,10 +331,10 @@ int SortAndRemoveDoubles2(double * P, int & nP) {
 
    int i = 0, j = 1; // the next one; j may advance faster than i
    // check the unit
-   // double epsilon = 1.e-5; // these are cm; 2 points are the same if the distance is less than 1.e-5 cm
+   // double epsilon_1 = 1.e-5; // these are cm; 2 points are the same if the distance is less than 1.e-5 cm
    while (j < nP) {
       double d2 = dist2(&P[2 * i], &P[2 * j]);
-      if (d2 > epsilon) {
+      if (d2 > epsilon_1) {
          i++;
          P[2 * i] = P[2 * j];
          P[2 * i + 1] = P[2 * j + 1];
@@ -344,7 +344,7 @@ int SortAndRemoveDoubles2(double * P, int & nP) {
    // test also the last point with the first one (index 0)
 
    double d2 = dist2(P, &P[2 * i]); // check the first and last points (ordered from -pi to +pi)
-   if (d2 > epsilon) {
+   if (d2 > epsilon_1) {
       nP = i + 1;
    } else
       nP = i; // effectively delete the last point (that would have been the same with first)
@@ -450,7 +450,7 @@ void CreateANewNode(double * coord, MBEntityHandle & outNode) {
 int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
    // first of all, check against red and blue vertices
    //
-   if (dbg) {
+   if (dbg_1) {
       std::cout << "red, blue, nP, P " << mb2->id_from_handle(red) << " "
             << mb1->id_from_handle(blue) << " " << nP << "\n";
       for (int n = 0; n < nP; n++)
@@ -491,7 +491,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
       for (j = 0; j < 3 && !found; j++) {
          //int node = redTri.v[j];
          double d2 = dist2(pp, &redCoords[2 * j]);
-         if (d2 < epsilon) {
+         if (d2 < epsilon_1) {
             // suspect is redConn[j] corresponding in mbOut
 
             mb2->tag_get_data(RedNodeTag, &redConn[j], 1, &outNode);
@@ -502,7 +502,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
             }
             foundIds[i] = outNode; // no new node
             found = 1;
-            if (dbg)
+            if (dbg_1)
                std::cout << "  red node " << j << " " << mb2->id_from_handle(
                      redConn[j]) << " new node " << mbOut->id_from_handle(
                      outNode) << " " << redCoords[2 * j] << "  " << redCoords[2
@@ -513,7 +513,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
       for (j = 0; j < 3 && !found; j++) {
          //int node = blueTri.v[j];
          double d2 = dist2(pp, &blueCoords[2 * j]);
-         if (d2 < epsilon) {
+         if (d2 < epsilon_1) {
             // suspect is blueConn[j] corresponding in mbOut
 
             mb1->tag_get_data(BlueNodeTag, &blueConn[j], 1, &outNode);
@@ -524,7 +524,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
             }
             foundIds[i] = outNode; // no new node
             found = 1;
-            if (dbg)
+            if (dbg_1)
                std::cout << "  blue node " << j << " " << mb1->id_from_handle(
                      blueConn[j]) << " new node " << mbOut->id_from_handle(
                      outNode) << " " << blueCoords[2 * j] << blueCoords[2 * j
@@ -538,11 +538,11 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
          for (j = 0; j < 3; j++) {
             int j1 = (j + 1) % 3;
             double area = area2D(&redCoords[2 * j], &redCoords[2 * j1], pp);
-            if (dbg)
+            if (dbg_1)
                std::cout << "   edge " << j << ": " << mb2->id_from_handle(
                      redEdges[j]) << " " << redConn[j] << " " << redConn[j1]
                      << "  area : " << area << "\n";
-            if (fabs(area) < epsilon * epsilon) {
+            if (fabs(area) < epsilon_1 * epsilon_1) {
                // found the edge; now find if there is a point in the list here
                //std::vector<MBEntityHandle> * expts = extraNodesMap[redEdges[j]];
                int indx =-1;
@@ -558,10 +558,10 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
                for (int k = 0; k < nbExtraNodesSoFar && !found; k++) {
                   //int pnt = *it;
                   double d2 = dist2(pp, &coords1[3 * k]);
-                  if (d2 < epsilon) {
+                  if (d2 < epsilon_1) {
                      found = 1;
                      foundIds[i] = (*expts)[k];
-                     if (dbg)
+                     if (dbg_1)
                         std::cout << " found node:" << foundIds[i] << std::endl;
                   }
                }
@@ -575,7 +575,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
                   (*expts).push_back(outNode);
                   foundIds[i] = outNode;
                   found = 1;
-                  if (dbg)
+                  if (dbg_1)
                      std::cout << " new node: " << outNode << std::endl;
                }
                delete[] coords1;
@@ -602,7 +602,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
          MBEntityHandle triNew;
          MBErrorCode rval = mbOut->create_element(MBTRI, connTri, 3, triNew);
          mbOut->add_entities(mbSetOut, &triNew, 1);
-         if (dbg) {
+         if (dbg_1) {
             std::cout << " triangle " << mbOut->id_from_handle(triNew)
                   << "  nodes: " << mbOut->id_from_handle(connTri[0]) << " "
                   << mbOut->id_from_handle(connTri[1]) << " "
@@ -674,8 +674,8 @@ int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
    // processed
    int k;
 
-   if (dbg)
-      mout.open("patches.m");
+   if (dbg_1)
+      mout_1.open("patches.m");
    unsigned char used = 1;
    unsigned char unused = 0; // for red flags
    MBErrorCode rval;
@@ -697,7 +697,7 @@ int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
          rval = mb2->tag_set_data(RedFlagTag, &ttt, 1, &unused);
       }
       //rval = mb2->tag_set_data(RedFlagTag, toResetReds, &unused);
-      if (dbg) {
+      if (dbg_1) {
          std::cout << "reset reds: ";
          for (MBRange::iterator itr = toResetReds.begin(); itr
                != toResetReds.end(); itr++)
@@ -726,28 +726,28 @@ int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
                nP, area, nc);
          if (nP > 0) {
             // intersection found: output P and original triangles if nP > 2
-            if (dbg) {
+            if (dbg_1) {
                std::cout << "area: " << area << " nP:" << nP << std::endl;
-               mout << "pa=[\n";
+               mout_1 << "pa=[\n";
 
                for (k = 0; k < nP; k++) {
 
-                  mout << P[2 * k] << "\t ";
+                  mout_1 << P[2 * k] << "\t ";
                }
 
-               mout << "\n";
+               mout_1 << "\n";
                for (k = 0; k < nP; k++) {
 
-                  mout << P[2 * k + 1] << "\t ";
+                  mout_1 << P[2 * k + 1] << "\t ";
                }
 
-               mout << " ]; \n";
-               mout << " patch(pa(1,:),pa(2,:),'m');       \n";
+               mout_1 << " ]; \n";
+               mout_1 << " patch(pa(1,:),pa(2,:),'m');       \n";
             }
             MBEntityHandle neighbors[3];
             rval = GetOrderedNeighbors(mb2, mbs2, redT, neighbors);
 
-            if (dbg) {
+            if (dbg_1) {
                std::cout << " neighbors for redT ";
                for (int kk = 0; kk < 3; kk++) {
                   if (neighbors[kk] > 0)
@@ -782,7 +782,7 @@ int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
 
       MBEntityHandle blueNeighbors[3];
       rval = GetOrderedNeighbors(mb1, mbs1, currentBlue, blueNeighbors);
-      if (dbg) {
+      if (dbg_1) {
          std::cout << " neighbors for blue T ";
          for (int kk = 0; kk < 3; kk++) {
             if (blueNeighbors[kk] > 0)
@@ -803,7 +803,7 @@ int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
             // we identified triangle n[j] as intersecting with neighbor j of the blue triangle
             blueQueue.push(blueNeigh);
             redQueue.push(n[j]);
-            if (dbg)
+            if (dbg_1)
                std::cout << "new triangles pushed: blue, red:"
                      << mb1->id_from_handle(blueNeigh) << " "
                      << mb1->id_from_handle(n[j]) << std::endl;
@@ -813,8 +813,8 @@ int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
 
    }
 
-   if (dbg)
-      mout.close();
+   if (dbg_1)
+      mout_1.close();
    //
    clean();
    return 0;
