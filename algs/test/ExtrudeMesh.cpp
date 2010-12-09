@@ -1,6 +1,10 @@
 #include "ExtrudeMesh.hpp"
 #include "TestFramework.hpp"
 #include <cmath>
+#include <string.h>
+#include <assert.h>
+#define TESTSAVE true
+
 
 int test_translate_ents()
 {
@@ -69,7 +73,7 @@ int test_translate_ents()
   iMesh_deleteEnt(mesh, line, &err);
   assert(err == 0);
 
-  const char *file = "test1.vtk";
+  const char *file = "t1.h5m";
   iMesh_save(mesh, root_set, file, "", &err, strlen(file), 0);
   assert(err == 0);
 #endif
@@ -154,10 +158,10 @@ int test_translate_ents_to_dest()
   CHECK_TRUE(count == steps*2, "Invalid number of regions.");
 
 #ifdef TESTSAVE
-  const char *file = "test2.vtk";
+  const char *file = "t2.h5m";
   iMesh_save(mesh, root_set, file, "", &err, strlen(file), 0);
   assert(err == 0);
-  #endif
+#endif
 
   delete ext;
   iMesh_dtor(mesh, &err);
@@ -218,7 +222,7 @@ int test_translate_set()
   CHECK_TRUE(count == steps, "Invalid number of regions.");
 
 #ifdef TESTSAVE
-  const char *file = "test3.vtk";
+  const char *file = "t3.h5m";
   iMesh_save(mesh, root_set, file, "", &err, strlen(file), 0);
   assert(err == 0);
 #endif
@@ -303,7 +307,92 @@ int test_rotate_set()
   CHECK_TRUE(count == 2, "Invalid number of entity sets.");
 
 #ifdef TESTSAVE
-  const char *file = "test4.vtk";
+  const char *file = "t4.h5m";
+  iMesh_save(mesh, root_set, file, "", &err, strlen(file), 0);
+  assert(err == 0);
+#endif
+
+  delete ext;
+  iMesh_dtor(mesh, &err);
+  CHECK_ERR("Couldn't destroy mesh.");
+
+  return 0;
+}
+
+int test_2Dmesh_file()
+{
+  int err;
+  iMesh_Instance mesh;
+  iMesh_newMesh("", &mesh, &err, 0);
+  CHECK_ERR("Couldn't create mesh.");
+
+  iBase_EntitySetHandle root_set;
+  iMesh_getRootSet(mesh, &root_set, &err);
+  CHECK_ERR("Couldn't get root set.");
+
+  iMesh_load(mesh, root_set, "assygen_default.cub", NULL, &err, 19, 0);
+  CHECK_ERR("Couldn't load mesh file.");
+
+  ExtrudeMesh *ext = new ExtrudeMesh(mesh);
+
+  //get entities for extrusion
+  iBase_EntityHandle *ents = NULL; 
+  int ents_alloc = 0, ents_size;
+  iMesh_getEntities(mesh, root_set,
+		    iBase_FACE, iMesh_ALL_TOPOLOGIES,
+		    &ents, &ents_alloc, &ents_size, &err);
+  CHECK_ERR("Trouble getting face mesh.");
+
+  // add entities for extrusion to a set
+  iBase_EntitySetHandle set;
+  iMesh_createEntSet(mesh, false, &set , &err);
+  CHECK_ERR("Trouble getting face mesh.");
+
+  iMesh_addEntArrToSet(mesh, ents, ents_size, set, &err);
+  CHECK_ERR("Trouble getting face mesh.");
+
+  // get the copy/expand sets
+  int num_etags = 3;
+  const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
+  const char *etag_vals[] = {NULL, NULL, NULL};
+
+  CESets cpexs(mesh);
+
+  for (int i = 0; i < num_etags; i++) {
+    iBase_TagHandle tmp_tag;
+    iMesh_getTagHandle(cpexs.impl(), etag_names[i], &tmp_tag, &err,
+		       strlen(etag_names[i]));
+    CHECK_ERR("Failed to get tag handle.");
+    SimpleArray<iBase_EntitySetHandle> tmp_sets;
+    iMesh_getEntSetsByTagsRec(cpexs.impl(), root_set, &tmp_tag, &etag_vals[i],
+			      1, 0, ARRAY_INOUT(tmp_sets), &err);
+    CHECK_ERR("Failure getting sets by tags.");
+   
+    // adding the expand sets as extrude sets
+    if (tmp_sets.size() != 0){
+      ext->extrude_sets().add_sets(tmp_sets.begin(), tmp_sets.end());
+    }
+  }
+  
+  // This tag needs to be set to the newly created extrude sets
+  const char *tag_g1 = "GEOM_DIMENSION";
+  iBase_TagHandle gtag;    
+  iMesh_getTagHandle(mesh, tag_g1, &gtag, &err, 16);
+  CHECK_ERR("Trouble getting face mesh.");
+
+  int dim = 3;
+  iMesh_setEntSetData(mesh, set, gtag, reinterpret_cast<char*>(&dim), 1, &err);
+  CHECK_ERR("Trouble getting face mesh.");
+  ext->extrude_sets().add_tag( gtag, reinterpret_cast<char*>(&gtag));
+  CHECK_ERR("Trouble getting face mesh.");
+
+  // now extrude
+  double v[] = { 0, 0, 5 };
+  int steps = 5;
+  CHECK_THROW( ext->extrude(set, extrude::Translate(v, steps)) );
+
+#ifdef TESTSAVE
+  const char *file = "t5.h5m";
   iMesh_save(mesh, root_set, file, "", &err, strlen(file), 0);
   assert(err == 0);
 #endif
@@ -323,6 +412,6 @@ int main()
   RUN_TEST(test_translate_ents_to_dest);
   RUN_TEST(test_translate_set);
   RUN_TEST(test_rotate_set);
-
+  RUN_TEST(test_2Dmesh_file);
   return result;
 }
