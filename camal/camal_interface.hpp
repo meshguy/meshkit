@@ -27,7 +27,7 @@ bool CAMAL_mesh_trimmed_surface(CMEL * cmel, iBase_EntityHandle surface,
 bool CAMAL_mesh_trimmed_surface_with_grounding_line(CMEL * cmel, iBase_EntityHandle surface,
       double mesh_size, std::vector<iBase_EntityHandle> &new_entities,
       std::vector<double> trimmingBoundary, std::vector<double> internalBoundary,
-      const bool quadMesh = false);
+      double widthLeft, double widthRight, const bool quadMesh = false);
 
 
 #endif

@@ -174,7 +174,7 @@ bool CMEL::mesh_entity(iBase_EntityHandle gentity,
       else
          return CAMAL_mesh_trimmed_surface_with_grounding_line(this, gentity,
              mesh_size,  new_entities,
-             newBoundary, internalBoundary, quadMesh  );
+             newBoundary, internalBoundary, _widthLeft, _widthRight, quadMesh  );
    }
   //
   bool success = mesh_boundary(gentity, mesh_size, mesh_intervals, force_intervals, NULL, NULL, quadMesh);
@@ -1540,7 +1540,8 @@ bool CMEL::trimSurface(const char * polygon_filename, int len)
 }
 // this will have the effect of adding other lines, interior to the bottom surface
 //  (from the grounding line, approx. width
-bool CMEL::grounding_line(const char * grounding_filename, int len, double width)
+bool CMEL::grounding_line(const char * grounding_filename, int len, double widthLeft,
+      double widthRight)
 {
    
    // read the file with the grounding line in xy coordinates
@@ -1667,6 +1668,11 @@ bool CMEL::grounding_line(const char * grounding_filename, int len, double width
 
    }// end while; the internal boundary points will be here, for the grounding line
 
+   // now, based on the width, create 2 more boundary lines, which are again approximate
+   // intersections between some rays shot from below to the bed surface of interest.
+   // then use mapper in camal to get a rectangular mesh.
+   _widthLeft = widthLeft;
+   _widthRight = widthRight;
    if (debug)
    {
       std::cout<< "grounding line:\n";

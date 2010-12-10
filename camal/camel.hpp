@@ -139,7 +139,8 @@ public:
   
   bool trimSurface(const char * polygon_filename, int len);
 
-  bool grounding_line(const char * polygon_filename, int len, double width);
+  bool grounding_line(const char * polygon_filename, int len, double widthLeft,
+        double widthRight);
 
   iGeom_Instance geomIface;
   iMesh_Instance meshIface;
@@ -174,6 +175,8 @@ private:
   // yes, maybe start from the grounding line.
 
   std::vector<double> internalBoundary;
+
+  double _widthLeft, _widthRight; // width of the grounding line, left and right of grounding line
 
 };
 

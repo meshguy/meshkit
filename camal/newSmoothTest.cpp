@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
       std::cout<< argv[argi] << " ";
    std::cout<<"\n";
 
-   double width = -1; // grounding line
+   double widthLeft = -1, widthRight = -1; // grounding line
 
    if (argc < 4) {
       std::cout << "Usage: " << argv[0]
@@ -51,7 +51,8 @@ int main(int argc, char *argv[]) {
             << "  -a <angle> = feature angle decider" << std::endl
             << "  -t <trim_polygon_xy_file> = file with 2d trimming polygon, oriented ccw " << std::endl 
             << "  -g <grounding_line_file> = file with 2d line \n"
-            << " -w <length> = width of the corridor along the grounding line \n"
+            << " -wl <length> = width of the corridor along the left of grounding line \n"
+            << " -wr <length> = width of the corridor along the right of grounding line \n"
 
       << std::endl;
 
@@ -88,9 +89,14 @@ int main(int argc, char *argv[]) {
             grounding_line_filename = argv[argno];
             argno++;
 
-         } else if (!strcmp(argv[argno], "-w")) {
+         } else if (!strcmp(argv[argno], "-wl")) {
             argno++;
-            sscanf(argv[argno], "%lf", &width);
+            sscanf(argv[argno], "%lf", &widthLeft);
+            argno++;
+
+         }else if (!strcmp(argv[argno], "-wr")) {
+            argno++;
+            sscanf(argv[argno], "%lf", &widthRight);
             argno++;
 
          }else {
@@ -164,7 +170,7 @@ int main(int argc, char *argv[]) {
          // line to the trimmed surface; this will add another boundary,
          // interior to the trimmed surface
          success = cmel.grounding_line(grounding_line_filename.c_str(),
-            grounding_line_filename.size(), width);
+            grounding_line_filename.size(), widthLeft, widthRight);
          if (!success)
             std::cerr<< " problems adding new interior boundaries for grounding line \n";
       }
