@@ -1011,9 +1011,9 @@ bool trim_boundary_width(CAMALGeomEval & geom_eval,
       double x1 = A[0]*x+A[1]*y;
       double y1 = A[2]*x+A[3]*y;
       // an approx point would be on surface
-      double z1 = z;
+      double z1 = z-2000;// just to be sure it is below surface, then the first intersection will be fine
       // maybe here we want an actual intersection with a ray piercing
-      geom_eval.move_to_surface(x1, y1, z1);
+      geom_eval.pierce_surface_with_ray(x1, y1, z1, 0, 0, 1);
       internalEdge.push_back(x1);
       internalEdge.push_back(y1);
       internalEdge.push_back(z1);

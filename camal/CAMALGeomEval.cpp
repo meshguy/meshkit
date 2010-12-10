@@ -11,6 +11,7 @@
  */
 #include <iostream>
 #include "CAMALGeomEval.hpp"
+#include "stdlib.h"  // include it just for free()
 
 #if CAMAL_VERSION < 500
 void CAMALGeomEval::set_mesh_size(double tmp_size) 
@@ -303,5 +304,62 @@ void CAMALGeomEval::distortion_at_uv(double u, double v,
   if (debug_surf_eval) {
     std::cout << "distortion_at_uv." << std::endl;
   }
+}
+
+bool CAMALGeomEval::pierce_surface_with_ray(double & x, double & y, double & z, double dir_x,
+         double dir_y, double dir_z)
+{
+   // will use the iGeom stuff
+   /* iGeom_getPntRayIntsct( iGeom_Instance,
+                                 double x,
+                                 double y,
+                                 double z,
+                                 double dir_x,
+                                 double dir_y,
+                                 double dir_z,
+                                 iBase_EntityHandle** intersect_entity_handles,
+                                 int* intersect_entity_handles_allocated,
+                                 int* intersect_entity_hangles_size,
+                                 int storage_order,
+                                 double** intersect_coords,
+                                 int* intersect_coords_allocated,
+                                 int* intersect_coords_size,
+                                 double** param_coords,
+                                 int* param_coords_allocated,
+                                 int* param_coords_size,
+                                 int* err ); */
+   /*
+    * // march along given direction  ; it should be at most size / 3?
+  */
+   iBase_EntityHandle * intersect_entity_handles = NULL;
+   int intersect_entity_handles_allocated = 0, intersect_entity_handles_size = 0;
+   double * intersect_coords = NULL;
+   int intersect_coords_allocated =0 ,  intersect_coords_size = 0;
+   double * param_coords = NULL;
+   int param_coords_allocated = 0, param_coords_size =0;
+   int err=0;
+   iGeom_getPntRayIntsct( geomIface,
+            x, y, z,
+            dir_x, dir_y, dir_z,
+            &intersect_entity_handles, &intersect_entity_handles_allocated,
+            &intersect_entity_handles_size, iBase_INTERLEAVED,
+            &intersect_coords, &intersect_coords_allocated, &intersect_coords_size,
+            &param_coords, &param_coords_allocated, &param_coords_size,
+            &err );
+   // get the first coordinate
+   if (iBase_SUCCESS != err || intersect_entity_handles_size ==0)
+   {
+      std::cerr << "Trouble getting intersection of a ray with geometry" << std::endl;
+             return false;
+   }
+   // consider only the first intersection point
+   x=intersect_coords[0];
+   y=intersect_coords[1];
+   z=intersect_coords[2];
+
+   free(intersect_entity_handles);
+   free(intersect_coords);
+   free(param_coords);
+   return true;
 }
 #endif
