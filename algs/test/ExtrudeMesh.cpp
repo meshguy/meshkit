@@ -3,7 +3,7 @@
 #include <cmath>
 #include <string.h>
 #include <assert.h>
-#define TESTSAVE true
+#define TESTSAVE false
 
 
 int test_translate_ents()
@@ -351,45 +351,62 @@ int test_2Dmesh_file()
   iMesh_addEntArrToSet(mesh, ents, ents_size, set, &err);
   CHECK_ERR("Trouble getting face mesh.");
 
-  // get the copy/expand sets
-  int num_etags = 3;
-  const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
-  const char *etag_vals[] = {NULL, NULL, NULL};
-
-  CESets cpexs(mesh);
-
-  for (int i = 0; i < num_etags; i++) {
-    iBase_TagHandle tmp_tag;
-    iMesh_getTagHandle(cpexs.impl(), etag_names[i], &tmp_tag, &err,
-		       strlen(etag_names[i]));
-    CHECK_ERR("Failed to get tag handle.");
-    SimpleArray<iBase_EntitySetHandle> tmp_sets;
-    iMesh_getEntSetsByTagsRec(cpexs.impl(), root_set, &tmp_tag, &etag_vals[i],
-			      1, 0, ARRAY_INOUT(tmp_sets), &err);
-    CHECK_ERR("Failure getting sets by tags.");
-   
-    // adding the expand sets as extrude sets
-    if (tmp_sets.size() != 0){
-      ext->extrude_sets().add_sets(tmp_sets.begin(), tmp_sets.end());
-    }
-  }
-  
   // This tag needs to be set to the newly created extrude sets
   const char *tag_g1 = "GEOM_DIMENSION";
   iBase_TagHandle gtag;    
-  iMesh_getTagHandle(mesh, tag_g1, &gtag, &err, 16);
-  CHECK_ERR("Trouble getting face mesh.");
+  iMesh_getTagHandle(mesh, tag_g1, &gtag, &err, 14);
+  CHECK_ERR("Trouble getting geom dimension set.");
 
-  int dim = 3;
-  iMesh_setEntSetData(mesh, set, gtag, reinterpret_cast<char*>(&dim), 1, &err);
-  CHECK_ERR("Trouble getting face mesh.");
-  ext->extrude_sets().add_tag( gtag, reinterpret_cast<char*>(&gtag));
+
+  // This tag needs to be set to the newly created extrude sets
+  const char *tag_m1 = "MATERIAL_SET";
+  iBase_TagHandle mtag;    
+  iMesh_getTagHandle(mesh, tag_m1, &mtag, &err, 12);
+  CHECK_ERR("Trouble getting material set.");
+
+
+  // This tag needs to be set to the newly created extrude sets
+  const char *tag_n1 = "NEUMANN_SET";
+  iBase_TagHandle ntag;    
+  iMesh_getTagHandle(mesh, tag_n1, &ntag, &err, 11);
+  CHECK_ERR("Trouble getting neumann set.");
+
+  // add only material set tag as extrude set
+  ext->extrude_sets().add_tag( mtag, NULL);
   CHECK_ERR("Trouble getting face mesh.");
 
   // now extrude
   double v[] = { 0, 0, 5 };
   int steps = 5;
   CHECK_THROW( ext->extrude(set, extrude::Translate(v, steps)) );
+
+  iMesh_destroyEntSet(mesh, set, &err);
+  CHECK_ERR("Error in destroying ent set of faces after extrusion is done.");
+
+  // Do things to get the metadata right after extrusion
+  // Step 1: get all the material sets, remove old one's and add GD=3 on the new one's.
+
+  SimpleArray<iBase_EntitySetHandle> msets;
+  iMesh_getEntSetsByTagsRec(mesh,  root_set, &mtag, NULL,
+			    1, 0, ARRAY_INOUT(msets), &err);
+  CHECK_ERR("Trouble getting entity set.");
+
+  for (int i = 0; i < msets.size(); i++) {
+    int num =0;
+    SimpleArray<iBase_EntitySetHandle> in_msets;
+
+    iMesh_getNumOfType(mesh, msets[i], iBase_REGION, &num, &err);
+    CHECK_ERR("Trouble getting num entities.");
+    if(num ==0){
+      iMesh_destroyEntSet(mesh, msets[i], &err); 
+      CHECK_ERR("Trouble destroying set.");
+    }
+    else{
+      const int gd = 3;
+      iMesh_setEntSetIntData(mesh, msets[i], gtag, gd, &err);
+      CHECK_ERR("Trouble setting tag data.");
+    }
+  }
 
 #ifdef TESTSAVE
   const char *file = "t5.h5m";
@@ -400,7 +417,6 @@ int test_2Dmesh_file()
   delete ext;
   iMesh_dtor(mesh, &err);
   CHECK_ERR("Couldn't destroy mesh.");
-
   return 0;
 }
 
