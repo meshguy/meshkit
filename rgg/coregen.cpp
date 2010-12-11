@@ -84,6 +84,10 @@ int main (int argc, char *argv[])
 
     // extrude
     if(TheCore.extrude_flag == true){
+
+      // assign global ids after copy/move step
+      err = TheCore.assign_gids ();
+
       CClock ld_em;
       err = TheCore.extrude();
       ERRORR("Failed to extrude.", 1);

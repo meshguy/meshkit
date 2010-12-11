@@ -7,7 +7,7 @@ CCrgen class definition.
 *********************************************/
 #define DEFAULT_TEST_FILE "twoassm"
 #include "crgen.hpp"
-
+#include "utils.hpp"
 /* ==================================================================
    ======================= CCrgen class =============================
    ================================================================== */
@@ -579,7 +579,6 @@ int CCrgen::banner ()
   std::cout << "\t\t\t\t\t        2009-2010         " << '\n';
   std::cout << "\t\t--------------------------------------------------------------------" << '\n';
   return iBase_SUCCESS;
-
 }
 
 int CCrgen::write_makefile()
@@ -772,41 +771,79 @@ int CCrgen::extrude()
   if(set_DIM == 2 && extrude_flag == true){ // if surface geometry and extrude
     std::cout << "Extruding surface mesh." << std::endl;
 
-    //get entities for merging
+    ExtrudeMesh *ext = new ExtrudeMesh(impl);
+ 
+    //get entities for extrusion
     iBase_EntityHandle *ents = NULL; 
     int ents_alloc = 0, ents_size;
-    int err = 0;
-
-
     iMesh_getEntities(impl, root_set,
 		      iBase_FACE, iMesh_ALL_TOPOLOGIES,
 		      &ents, &ents_alloc, &ents_size, &err);
     ERRORR("Trouble getting face mesh.", err);
 
+    // add entities for extrusion to a set
+    iBase_EntitySetHandle set;
+    iMesh_createEntSet(impl, false, &set , &err);
+    ERRORR("Trouble getting face mesh.", err);
+
+    iMesh_addEntArrToSet(impl, ents, ents_size, set, &err);
+    ERRORR("Trouble getting face mesh.", err);
+
+    // This tag needs to be set to the newly created extrude sets
+    const char *tag_g1 = "GEOM_DIMENSION";
+    iBase_TagHandle gtag;    
+    iMesh_getTagHandle(impl, tag_g1, &gtag, &err, 14);
+    ERRORR("Trouble getting geom dimension set.", err);
+
+    // This tag needs to be set to the newly created extrude sets
+    const char *tag_m1 = "MATERIAL_SET";
+    iBase_TagHandle mtag;    
+    iMesh_getTagHandle(impl, tag_m1, &mtag, &err, 12);
+    ERRORR("Trouble getting material set.", err);
+
+    // This tag needs to be set to the newly created extrude sets
+    const char *tag_n1 = "NEUMANN_SET";
+    iBase_TagHandle ntag;    
+    iMesh_getTagHandle(impl, tag_n1, &ntag, &err, 11);
+    ERRORR("Trouble getting neumann set.", err);
+
+    // add only material set tag as extrude set
+    ext->extrude_sets().add_tag( mtag, NULL);
+    ERRORR("Trouble getting face mesh.", err);
+    
     double v[] = { 0, 0, z_height };
     int steps = z_divisions;
 
-    const char *tag_neumann1 = "NEUMANN_SET";
-iBase_TagHandle ntag1;    
-  iMesh_getTagHandle(impl, tag_neumann1, &ntag1, &err, 12);
-  
-iBase_EntitySetHandle set;
+    // now extrude
+    ext->extrude(set, extrude::Translate(v, steps));
 
-iMesh_createEntSet(impl, false, &set , &err);
+    iMesh_destroyEntSet(impl, set, &err);
+    ERRORR("Error in destroying ent set of faces after extrusion is done.", err);
 
- 
-iMesh_addEntArrToSet(impl, ents, ents_size, set, &err);
+    // Do things to get the metadata right after extrusion
+    // Step 1: get all the material sets, remove old one's and add GD=3 on the new one's.
 
- 
-   
-    ExtrudeMesh *ext = new ExtrudeMesh(impl);
+    SimpleArray<iBase_EntitySetHandle> msets;
+    iMesh_getEntSetsByTagsRec(impl,  root_set, &mtag, NULL,
+			      1, 0, ARRAY_INOUT(msets), &err);
+    ERRORR("Trouble getting entity set.", err);
 
-iMesh_setEntSetData(impl, set, ntag1, "x", 1, &err);
+    for (int i = 0; i < msets.size(); i++) {
+      int num =0;
+      SimpleArray<iBase_EntitySetHandle> in_msets;
 
-//   ext->extrude_set().add_tag( ntag1, "x");
-
-  ext->extrude(set, extrude::Translate(v, steps));
-    ERRORR("Trouble extruding mesh.", err);
+      iMesh_getNumOfType(impl, msets[i], iBase_REGION, &num, &err);
+      ERRORR("Trouble getting num entities.", err);
+      if(num ==0){
+	iMesh_destroyEntSet(impl, msets[i], &err); 
+	ERRORR("Trouble destroying set.", err);
+      }
+      else{
+	const int gd = 3;
+	iMesh_setEntSetIntData(impl, msets[i], gtag, gd, &err);
+	ERRORR("Trouble setting tag data.", err);
+      }
+    }
   }
   return iBase_SUCCESS;
 }
@@ -815,6 +852,9 @@ int CCrgen::create_neumannset()
 {
   if (nss_flag == true || nsb_flag == true || nst_flag == true){  
     std::cout << "Creating NeumannSet." << std::endl;
+
+    if(extrude_flag == true)
+      set_DIM = 3;
 
 #ifdef MOAB  
     int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
@@ -864,8 +904,9 @@ int CCrgen::create_neumannset()
     MBSkinner skinner(mbImpl());
     MBRange skin_range;
     MBErrorCode result; 
-    MBRange::iterator rit;
-    result = skinner.find_skin(tmp_elems, set_DIM -1, skin_range);
+    MBRange::iterator rit;    
+ 
+    result = skinner.find_skin(tmp_elems, set_DIM-1, skin_range);
     if (MB_SUCCESS != result) return result;
 
     for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {
@@ -923,7 +964,7 @@ int CCrgen::create_neumannset()
     iMesh_setEntSetIntData( impl, set, gtag1, nss_Id, &err);
     ERRORR("Trouble getting handle.", err);
 
-    if (set_DIM == 3 || extrude_flag == true){
+    if (set_DIM == 3){
       if (nst_flag == true || nsb_flag == true){
         
 	iMesh_setEntSetIntData( impl, set_z1, ntag1, nst_Id, &err);

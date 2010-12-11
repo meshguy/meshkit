@@ -924,6 +924,67 @@ int CNrgen::CreateCubitJournal()
 
     // bottom surface sidesets
     m_FileOutput << "#Creating bot and side surface sidesets" << std::endl; 
+    
+    // rename the skin surfaces, so that they don't appear as sidesets
+
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+	m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge" 
+		     << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
+
+	m_FileOutput << "group 'vt" <<  (m_nSides*(p-1) + q )  <<"' equals vertex with z_max == z_min in curve in edge" 
+		     <<  (m_nSides*(p-1) + q ) << std::endl;
+
+      }
+    }
+  
+
+    // creating groups for vertices on the top surface of the duct
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+
+	if(q != m_nSides){
+	  m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+		       << " with group vt" <<  (m_nSides*(p-1) + q + 1 )  << std::endl;	  
+	}
+	else {
+	  m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+		       << " with group vt" <<  (m_nSides*(p-1) + 1 )  << std::endl;	  
+	}
+      }
+    }
+    // creating temp surfaces groups
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+	m_FileOutput << "group 'st" << (m_nSides*(p-1) + q ) <<"' equals surface with z_max <> z_min in vert in v" 
+		     << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
+      }
+    }	
+
+    // creating surface groups for obtaining surfaces
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+    	if(q != 1){
+    	  m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st"  << (m_nSides*(p-1) + q ) 
+    		       << " with group st" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
+    	}
+    	else {
+    	  m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st" << (m_nSides*(p-1) + q ) 
+    		       << " with group st" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
+    	}
+      }
+    }	
+
+    // renaming the skin side surfaces 
+    for (int p=1; p<=m_nDuct; p++){
+      for(int q=1;q<=m_nSides; q++){
+    	m_FileOutput << "surface in group s" <<  (m_nSides*(p-1) + q ) << " rename 'side_surface"  
+    		     <<  (m_nSides*(p-1) + q ) << "'" << std::endl;
+
+      }
+    }	
+
+    // now create top and bot sideset
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szSurfTop = m_szAssmMat(p)+"_bot";
       szSurfSide = m_szAssmMat(p)+"_side";  
@@ -1056,7 +1117,6 @@ int CNrgen::CreateCubitJournal()
 	  m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
 		       << " with group vt" <<  (m_nSides*(p-1) + 1 )  << std::endl;	  
 	}
-
       }
     }
 
@@ -1091,7 +1151,6 @@ int CNrgen::CreateCubitJournal()
       for(int q=1;q<=m_nSides; q++){
 	m_FileOutput << "surface in group s" <<  (m_nSides*(p-1) + q ) << " rename 'side_surface"  
 		     <<  (m_nSides*(p-1) + q ) << "'" << std::endl;
-
       }
     }	
 
