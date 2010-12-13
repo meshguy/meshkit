@@ -558,7 +558,7 @@ bool mesh_line_on_surface_with_meshcount(CAMALGeomEval & geom_eval,
    for (int ix=0; ix<meshCount-1; ix++)
    {
       // latest point pushed is at index ix
-      sizeLocal = lenStart*(1 + ix/(meshCount-1)*(ratio-1));
+      sizeLocal = lenStart*(1 + (ratio-1)*ix/(meshCount-1));
       param+=sizeLocal;
       // this is the par position of the mesh point, in natural coordinate
       double pp[3];
