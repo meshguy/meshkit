@@ -534,8 +534,10 @@ bool mesh_line_on_surface_with_meshcount(CAMALGeomEval & geom_eval,
    // this could be very different from mesh size
 
    //
-   std::cout<<"Mesh size at start of line: " << lenStart << ", compared to field one:" <<
-         startMeshSize << "\n";
+   std::cout<<"Mesh sizes: " << startMeshSize<< " " << endMeshSize << " ratio:" << ratio << " \n";
+   std::cout<<"Meshcount : " << meshCount << "  num points:" << numPoints<< "\n";
+   std::cout<<"Mesh size at start of line: " << lenStart << " line length: " <<
+         lineLength << "\n";
    // each mesh length is increased linearly, with the formula
    //     meshCurrentLength = lenStart*(1 + index/(meshCount-1)*(ratio-1))
    // so the if index is meshCount -1, length is 1+ratio-1 = ratio (*lenStart)
@@ -1003,7 +1005,7 @@ bool trim_boundary_width(CAMALGeomEval & geom_eval,
    // for corresponding point is A*b = c
 
    // compute some new z, from intersection?
-   double z = (baseLine[2]+baseLine[numPtsInternal+3-1])/2;
+   double z = (baseLine[2]+baseLine[numPtsInternal*3-1])/2;
    for (i=1; i<numPtsInternal-1; i++)
    {
       double x = baseLine[3*i];
