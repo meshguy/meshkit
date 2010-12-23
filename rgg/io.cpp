@@ -50,8 +50,46 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       m_szJouFile = m_szFile+".jou";
       m_szSchFile = m_szFile+".template.jou";
     }
-    else {
-      std::cerr << "Usage: " << argv[0] << " <input file> WITHOUT EXTENSION"<< std::endl;   
+    else if (3 == argc) {
+      int i=1;// will loop through arguments, and process them
+      for (i=1; i<argc-1 ; i++) {
+	if (argv[i][0]=='-') {
+	  switch (argv[i][1]) 
+	    {
+	    case 'j': 
+	      {
+		m_nJouFlag = 1;
+		std::cout << "Creating journal file only.\n Geometry file must exist in the same directory." << std::endl;
+		m_szFile = argv[2];
+		m_szInFile=m_szFile+".inp";
+		m_szJouFile = m_szFile+".jou";
+		m_szSchFile = m_szFile+".template.jou";
+		break;
+	      }	
+	    case 'h': 
+	      {
+		std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
+		std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl; 
+		std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;     
+		std::cout << "        -j create journal file only" << std::endl; 
+		std::cout << "        -h print help" << std::endl; 
+
+		exit(0);
+		break;
+	      }
+	    }
+	}
+      }
+    }    
+    else if (1 == argc){
+      std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
+      std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl; 
+      std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;     
+      std::cout << "        -t print timing and memory usage info in each step" << std::endl;
+      std::cout << "        -j create journal file only" << std::endl; 
+      std::cout << "        -h print help" << std::endl; 
+      std::cout << "\nRunning default case:\n" << std::endl;
+
       m_szInFile = (char *)DEFAULT_TEST_FILE;
       m_szGeomFile = (char *)DEFAULT_TEST_FILE;
       m_szJouFile = (char *)DEFAULT_TEST_FILE;
@@ -189,6 +227,7 @@ int CNrgen::ReadInputPhase1 ()
       break;
     }
   }
+  
   iGeom_newGeom( 0, &geom, &err, 0 ); // this is default way of specifying engine used in configure line
   CHECK("Failed to set geometry engine.");
 
@@ -622,19 +661,21 @@ int CNrgen::ReadAndCreate()
 	err = Create_CartAssm(szInputString);
 	ERRORR("Error in Create_CartAssm", err);
       }
-      err = CreateOuterCovering();
-      ERRORR("Error in CreateOuterCovering", err);
+      if (m_nJouFlag == 0){
+	err = CreateOuterCovering();
+	ERRORR("Error in CreateOuterCovering", err);
 
-      // subtract pins before save
-      Subtract_Pins();   
-      if(m_nPlanar ==1){
-	err = Create2DSurf();
-	ERRORR("Error in Create2DSurf", err);
+	// subtract pins before save
+	Subtract_Pins();   
+	if(m_nPlanar ==1){
+	  err = Create2DSurf();
+	  ERRORR("Error in Create2DSurf", err);
+	}
       }
     }
 
     // section the assembly as described in section card
-    if (szInputString.substr(0,7) == "section"){
+    if (szInputString.substr(0,7) == "section" && m_nJouFlag == 0){
       std::cout << "Sectioning geometry .." << std::endl;
       char cDir;
       double dOffset;
@@ -646,7 +687,7 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
-    if (szInputString.substr(0,4) == "move"){
+    if (szInputString.substr(0,4) == "move" && m_nJouFlag == 0){
       std::cout << "Moving geometry .." << std::endl;
       double dX, dY, dZ;
       std::istringstream szFormatString (szInputString);
@@ -659,7 +700,7 @@ int CNrgen::ReadAndCreate()
 
     }
     // ceter the assembly 
-    if (szInputString.substr(0,6) == "center"){
+    if (szInputString.substr(0,6) == "center" && m_nJouFlag == 0){
 
       char rDir = 'q';
       std::istringstream szFormatString (szInputString);
@@ -673,7 +714,7 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
     // rotate the assembly if rotate card is specified
-    if (szInputString.substr(0,6) == "rotate"){
+    if (szInputString.substr(0,6) == "rotate" && m_nJouFlag == 0){
       char cDir;
       double dAngle;
       std::cout << "Rotating geometry .." << std::endl;
@@ -733,13 +774,16 @@ int CNrgen::ReadAndCreate()
     }
     if (szInputString.substr(0,3) == "end"){
  
-      // impring merge before saving
-      // Imprint_Merge();
+      
+      if ( m_nJouFlag == 0){
+	// impring merge before saving
+	// Imprint_Merge();
  
-      // save .sat file
-      iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
-      CHECK("Save to file failed.");
-      std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
+	// save .sat file
+	iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
+	CHECK("Save to file failed.");
+	std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
+      }
       break;
     }
   }
@@ -758,6 +802,12 @@ int CNrgen::CreateCubitJournal()
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
 			   "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
 			   "gold", "orange", "brown", "pink", "khaki", "black", "aquamurine", "mediumslateblue"};
+
+  // if creating only journal file load the geometry file
+  if(m_nJouFlag == 1){
+    iGeom_load(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
+    CHECK("Failed to load geometry.");
+  }
 
   // get the max and min coordinates of the geometry
   double x1, y1, z1, x2, y2, z2;
@@ -880,24 +930,13 @@ int CNrgen::CreateCubitJournal()
 
   //surface only
   if(m_nPlanar ==1){ 
-
-    // // sideset curves on top surface creation dumps
-    // m_FileOutput << "#Creating side curve sidesets" << std::endl; 
-    // if(m_szGeomType =="hexagonal"){
-    //   for(i=1; i<=6; i++){
-    // 	++nSideset;
-    // 	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << i  << "\"" << std::endl;
-    // 	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;    
-    //   }
-    // }
-    // if(m_szGeomType =="rectangular"){
-    //   for(j=1; j<=4; j++){
-    // 	++nSideset;
-    // 	m_FileOutput << "group 'tmpgrp' equals curve name \"side_edge"  << j  << "\"" << std::endl;
-    // 	m_FileOutput << "sideset " << nSideset << " curve in tmpgrp" << std::endl;
-    //   }
-    //   m_FileOutput << "#" << std::endl;
-    // }
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      ++nSideset;
+      szSurfTop = m_szAssmMat(p)+"_top";
+      m_FileOutput <<  "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+      m_FileOutput <<"group 'tmp1' equals curve in surface in tmpgrp" << std::endl;  
+      m_FileOutput << "sideset " << nSideset << " surface in tmp1" << std::endl;  
+    }
 
     // group creation dumps. each material surface  has a group
     m_FileOutput << "#Creating groups" << std::endl;  
@@ -1697,6 +1736,8 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 
   // creating a square array of size width
   m_Assembly.SetSize(nWidth, nWidth);
+  if (m_nJouFlag == 1)
+    return 0;
 
   for(int m=1; m<=nWidth; m++){
     if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
@@ -1801,6 +1842,9 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
   std::istringstream szFormatString (szInputString);
   szFormatString >> card >> m_nPinX >> m_nPinY;
   m_Assembly.SetSize(m_nPinX,m_nPinY);
+
+  if (m_nJouFlag == 1)
+    return 0;
 
   //read the next line to get assembly info &store assembly info
   for(int m=1; m<=m_nPinY; m++){

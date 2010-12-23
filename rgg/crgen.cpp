@@ -83,6 +83,18 @@ int CCrgen::prepareIO (int argc, char *argv[])
   bool bDone = false;
   do{
     if (2 == argc) {
+      if (argv[1][0]=='-') {
+	if (argv[1][1]=='h') {
+	  std::cout << "Usage: coregen [-t -m -h] <coregen input file>" << std::endl;
+	  std::cout << "        -t print timing and memory usage info in each step" << std::endl;
+	  std::cout << "        -m create makefile only" << std::endl; 
+	  std::cout << "        -h print help" << std::endl; 
+	  std::cout << "\nInstruction on writing coregen input file can be found at: " << std::endl;
+	  std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl; 
+	  exit(0);
+	}
+      }
+
       iname = argv[1];
       ifile = iname+".inp";
       outfile = iname+".h5m";
@@ -92,23 +104,39 @@ int CCrgen::prepareIO (int argc, char *argv[])
       int i=1;// will loop through arguments, and process them
       for (i=1; i<argc-1 ; i++) {
 	if (argv[i][0]=='-') {
-	  switch (argv[i][1]) {
-	  case 'm': {
-	    std::cout << "Creating Makefile Only" << std::endl;
-	    // only makefile creation specified
-	    iname = argv[2];
-	    ifile = iname+".inp";
-	    outfile = iname+".h5m";
-	    mfile = iname + ".makefile";
-	  }	
-	  case 't': {
-	    mem_tflag = true;
-	    iname = argv[2];
-	    ifile = iname+".inp";
-	    outfile = iname+".h5m";
-	    mfile = iname + ".makefile";
-	  }
-	  }
+	  switch (argv[i][1]) 
+	    {
+	    case 'm': 
+	      {
+		std::cout << "Creating Makefile Only" << std::endl;
+		// only makefile creation specified
+		iname = argv[2];
+		ifile = iname+".inp";
+		outfile = iname+".h5m";
+		mfile = iname + ".makefile";
+		break;
+	      }	
+	    case 't': 
+	      {
+		mem_tflag = true;
+		iname = argv[2];
+		ifile = iname+".inp";
+		outfile = iname+".h5m";
+		mfile = iname + ".makefile";
+		break;
+	      }
+	    case 'h': 
+	      {
+		std::cout << "Usage: coregen [-t -m -h] <coregen input file>" << std::endl;
+		std::cout << "        -t print timing and memory usage info in each step" << std::endl;
+		std::cout << "        -m create makefile only" << std::endl; 
+		std::cout << "        -h print help" << std::endl; 
+		std::cout << "\nInstruction on writing coregen input file can also be found at: " << std::endl;
+		std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl; 
+		exit(0);
+		break;
+	      }
+	    }
 	}
       }
     }    
@@ -810,7 +838,7 @@ int CCrgen::extrude()
     // add only material set tag as extrude set
     ext->extrude_sets().add_tag( mtag, NULL);
     ERRORR("Trouble getting face mesh.", err);
-    
+
     double v[] = { 0, 0, z_height };
     int steps = z_divisions;
 

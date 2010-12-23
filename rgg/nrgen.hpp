@@ -97,7 +97,8 @@ private:
   std::string m_szMeshType;
   
   // integers for vectors sizes, err etc
-  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum; 
+  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
+    m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag; 
 
   // doubles for pincell pitch, pi and mesh sizes resp.
   double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize;      

@@ -35,6 +35,7 @@ CNrgen::CNrgen ()
   m_szMeshType = "hex";
   m_nDuct = 0;
   m_nDuctNum = 0;
+  m_nJouFlag = 0;
 }
 
 CNrgen::~CNrgen ()
