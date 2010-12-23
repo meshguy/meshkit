@@ -8,6 +8,7 @@ SUBDIRS =
 
 @IGEOM_CONFIG_OPTIONS@
 @IMESH_CONFIG_OPTIONS@
+@IREL_CONFIG_OPTIONS@
 
 # Things to build
 lib_LTLIBRARIES = libMKrgg.la
@@ -43,19 +44,19 @@ check_PROGRAMS = assygen coregen pin217
 TESTS = $(check_PROGRAMS)
 
 assygen_SOURCES = assygen.cpp
-assygen_DEPENDENCIES = libMKrgg.la
+assygen_DEPENDENCIES = libMKrgg.la  
 assygen_CXXFLAGS = -DTEST $(CXXFLAGS)
-assygen_LDADD = libMKrgg.la $(IGEOM_LIBS) 
+assygen_LDADD = libMKrgg.la ../algs/libMKalgs.la ../utils/libMKutils.la $(IGEOM_LIBS)  $(IMESH_LIBS)  $(IREL_LIBS)
 
 coregen_SOURCES = coregen.cpp 
 coregen_DEPENDENCIES = ../algs/CopyMesh.hpp ../algs/MergeMesh.hpp libMKrgg.la ../algs/libMKalgs.la 
 coregen_CXXFLAGS = -DTEST $(CXXFLAGS)
-coregen_LDADD = libMKrgg.la ../algs/libMKalgs.la ../utils/libMKutils.la $(IGEOM_LIBS) $(IMESH_LIBS)
+coregen_LDADD = libMKrgg.la ../algs/libMKalgs.la ../utils/libMKutils.la $(IGEOM_LIBS) $(IMESH_LIBS)  $(IREL_LIBS)
 
 pin217_SOURCES = pin217.cpp utils.cpp
 pin217_DEPENDENCIES = ../algs/CopyMesh.hpp ../algs/MergeMesh.hpp ../algs/libMKalgs.la 
 pin217_CXXFLAGS = -DTEST $(CXXFLAGS)
-pin217_LDADD = ../algs/libMKalgs.la ../utils/libMKutils.la $(IMESH_LIBS)
+pin217_LDADD = ../algs/libMKalgs.la ../utils/libMKutils.la  $(IGEOM_LIBS)  $(IMESH_LIBS)  $(IREL_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -70,6 +71,10 @@ endif
 
 if HAVE_IMESH
 AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
+endif
+
+if HAVE_IREL
+AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
 endif
 
 if HAVE_MOAB
