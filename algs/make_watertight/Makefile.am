@@ -35,33 +35,33 @@ make_watertight_SOURCES = make_watertight.cpp
 make_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
 make_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
 
-# Boilerplate stuff that doesn't depend on what the targets are
-DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
-INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils
-
-if HAVE_IGEOM
-INCLUDES += $(IGEOM_INCLUDES)
-CPPFLAGS += $(IGEOM_CPPFLAGS) -DCGM
-endif
-
-if HAVE_IMESH
-INCLUDES += $(IMESH_INCLUDES)
-CPPFLAGS += $(IMESH_CPPFLAGS)
-endif
-
-if HAVE_IREL
-INCLUDES += $(IREL_INCLUDES)
-CPPFLAGS += $(IREL_CPPFLAGS)
-endif
-
-if HAVE_MOAB
-CPPFLAGS += -DMOAB
-endif
-
 libMakeWatertight_la_LIBADD = $(IMESH_LIBDIR)/libdagmc.la 
 libMakeWatertight_la_DEPENDENCIES = 
 
 dumtest:
 	cat $(IMESH_LIBDIR)/libdagmc.la
 	echo $(IMESH_INCLUDES)
+
+# Boilerplate stuff that doesn't depend on what the targets are
+AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
+               -I$(top_srcdir) \
+               -I$(top_builddir) \
+               -I$(top_srcdir)/algs \
+               -I$(top_srcdir)/utils
+
+if HAVE_IGEOM
+AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
+endif
+
+if HAVE_IMESH
+AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
+endif
+
+if HAVE_IREL
+AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
+endif
+
+if HAVE_MOAB
+AM_CPPFLAGS += -DMOAB
+endif
 

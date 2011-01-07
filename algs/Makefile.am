@@ -1,7 +1,6 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
-# Subdirectories to build
 SUBDIRS = Qslim test make_watertight
 
 @IGEOM_CONFIG_OPTIONS@
@@ -47,6 +46,36 @@ libMKalgs_la_include_HEADERS = \
 	EdgeMesher.hpp \
 	OneToOneSwept.hpp \
 	CESets.hpp
+
+# Tests and such
+check_PROGRAMS = CopyMesh_test ExtrudeMesh_test EBMesh_test \
+		 ProjectShell_test matching
+TESTS = $(check_PROGRAMS)
+
+matching_SOURCES = QuadMesh/matching.cc
+matching_DEPENDENCIES = libMKalgs.la
+matching_CXXFLAGS = $(CXXFLAGS)
+matching_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS)
+
+CopyMesh_test_SOURCES = CopyMesh.cpp
+CopyMesh_test_DEPENDENCIES = CopyMesh.hpp libMKalgs.la
+CopyMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+CopyMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+
+ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp
+ExtrudeMesh_test_DEPENDENCIES = ExtrudeMesh.hpp libMKalgs.la
+ExtrudeMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+ExtrudeMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+
+EBMesh_test_SOURCES = EBMesh_test.cpp
+EBMesh_test_DEPENDENCIES = EBMesh.hpp libMKalgs.la
+EBMesh_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+EBMesh_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
+
+ProjectShell_test_SOURCES = ProjectShell_test.cpp
+ProjectShell_test_DEPENDENCIES = ProjectShell.hpp libMKalgs.la
+ProjectShell_test_CXXFLAGS = -DTEST $(CXXFLAGS)
+ProjectShell_test_LDADD = libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

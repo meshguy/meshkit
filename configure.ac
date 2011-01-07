@@ -35,9 +35,21 @@ dnl This doesn't appear to be defined anywhere. - j.kraftcheck 2010-8-13
 dnl MK_TEMPLATE_SPECIALIZATION
 dnl DEFINES="$DEFINES $TEMPLATE_SPECIALIZATION"
 
-if test "x" != "x$FC"; then
+if test "xyes" = "x$ENABLE_FORTRAN" && test "x" != "x$FC"; then
   AC_FC_WRAPPERS
 fi
+
+################################################################################
+#                           Basic Portability Stuff
+################################################################################
+AC_CHECK_FUNC([vsnprintf],[AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_VSNPRINTF"])
+
+# Use 64-bit off_t value for file offsets.  W/out this, the stat/fseek calls
+# in serial_open_file and other places will fail on 32-bit systems if the file 
+# is larger that 2GB.
+AM_CPPFLAGS="$AM_CPPFLAGS -D_FILE_OFFSET_BITS=64"
+
+
 
 ################################################################################
 #                              Version Stuff
@@ -214,6 +226,7 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
 MK_OPTIONAL_TOOL([algs],    [yes])
 MK_OPTIONAL_TOOL([rgg],    [yes])
 MK_OPTIONAL_TOOL([utils],    [yes])
+MK_OPTIONAL_TOOL([src],    [no])
 
 
 ################################################################################
@@ -260,10 +273,11 @@ fi
 
 if test "xno" = "x$CAMAL_VAL"; then
   HAVE_CAMAL=no
+  HAVE_CAMAL_EDGE=no
   HAVE_CAMAL_PAVER=no
   HAVE_CAMAL_SURFMAPPER=no
   HAVE_CAMAL_TRIADV=no
-  HAVE_CAMAL_TRIDELAUNAY=no
+  HAVE_CAMAL_TRIDEL=no
   HAVE_CAMAL_SWEEP=no
   HAVE_CAMAL_TET=no
 else
@@ -578,10 +592,12 @@ AC_CONFIG_FILES([Makefile
                  algs/test/Makefile
                  algs/Qslim/Makefile 
 		 algs/make_watertight/Makefile
-                 rgg/Makefile
-                 utils/Makefile
                  camal/Makefile
-                 plibs/Makefile
+		 plibs/Makefile
+                 rgg/Makefile
+		 src/Makefile
+		 src/core/Makefile
+                 utils/Makefile
                  ])
 
 AC_OUTPUT

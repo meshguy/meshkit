@@ -1112,7 +1112,7 @@ iGeom::getArrBoundBox( const EntityHandle* entities,
 {
   int err, alloc = 3*entities_size, size = 0, order_int = order;
   iGeom_getArrBoundBox( mInstance, entities, entities_size,
-                        &order_int,
+                        order_int,
                         &min_corners, &alloc, &size,
                         &max_corners, &alloc, &size, 
                         &err );
@@ -1182,7 +1182,7 @@ iGeom::getPntRayIntsct( double x, double y, double z,
       params_ptr = &  params_out[0];
     iGeom_getPntRayIntsct( mInstance, x, y, z, i, j, k, 
                      &entities_ptr, &entities_alloc, &entities_size,
-                     &order_int,
+                     order,
                      &points_ptr, &points_alloc, &points_size,
                      &params_ptr, &params_alloc, &params_size,
                      &err );

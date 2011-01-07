@@ -5,7 +5,8 @@ HDF5_DIR  = $(EXT_SOFT)/Database/HDF5
 #CUBIT_DIR  = $(EXT_SOFT)/Mesh/Cubit10.2
 #CUBIT_LIBS   = -L$(CUBIT_DIR)/bin -lcubiti19 -lgtcAttrib
 #BOOST_DIR  =  $(EXT_SOFT)/Boost
-MESQUITE_DIR=$(EXT_SOFT)/Mesh/ITAPS/Mesquite
+#MESQUITE_DIR=$(EXT_SOFT)/Mesh/ITAPS/Mesquite
+MESQUITE_DIR=$(HOME)/ITAPS/mesquite-2.99
 
 CPPFLAGS = -O3  -DUSE_MOAB -DUSE_MESQUITE -I$(MESQUITE_DIR)/include -I$(MOAB_DIR)/include -I$(HDF5_DIR)/include -I$(NETCDF_DIR)/include -I$(BOOST_DIR)/include 
 

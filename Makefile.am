@@ -7,7 +7,7 @@ ACLOCAL_AMFLAGS = -I m4
 @IMESH_CONFIG_OPTIONS@
 
 # Subdirectories to build
-SUBDIRS = .
+SUBDIRS = . 
 if ENABLE_utils
   SUBDIRS += utils
   AM_CPPFLAGS += -I$(top_srcdir)/utils
@@ -19,6 +19,10 @@ endif
 if ENABLE_rgg
   SUBDIRS += rgg
   AM_CPPFLAGS += -I$(top_srcdir)/rgg
+endif
+if ENABLE_src
+  SUBDIRS += src
+  AM_CPPFLAGS += -I$(top_srcdir)/src
 endif
 if HAVE_CAMAL
   SUBDIRS += camal
@@ -32,7 +36,7 @@ check_PROGRAMS =
 TESTS = $(check_PROGRAMS)
 
 if HAVE_IGEOM
-AM_CPPFLAGS += $(iGeom_INCLUDES) $(iGeom_CPPFLAGS)
+AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
 LIBS += $(IGEOM_LIBS)
 endif
 
@@ -42,6 +46,11 @@ LIBS += $(IMESH_LIBS)
 #CXXFLAGS += $(IMESH_CXXFLAGS)
 #CFLAGS += $(IMESH_CFLAGS)
 #LDFLAGS += $(IMESH_LDFLAGS)
+endif
+
+if HAVE_IREL
+AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
+LIBS += $(IREL_LIBS)
 endif
 
 if HAVE_MOAB

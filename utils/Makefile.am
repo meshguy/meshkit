@@ -37,7 +37,7 @@ MKUtils_test_LDADD = libMKutils.la $(IMESH_LIBS) $(IGEOM_LIBS)
 AM_CPPFLAGS = $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)
 
 if HAVE_IGEOM
-AM_CPPFLAGS += $(iGeom_INCLUDES) $(iGeom_CPPFLAGS)
+AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
 endif
 
 if HAVE_IMESH
