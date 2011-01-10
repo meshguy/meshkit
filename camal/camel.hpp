@@ -142,6 +142,9 @@ public:
   bool grounding_line(const char * polygon_filename, int len, double widthLeft,
         double widthRight);
 
+  bool create_a_set_with_tag_value(iBase_EntityHandle * ents, int num_ents, char * tag_name,
+        int size_name_tag, int value);
+
   iGeom_Instance geomIface;
   iMesh_Instance meshIface;
   iRel_Instance relateIface;

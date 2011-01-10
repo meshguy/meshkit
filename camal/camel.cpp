@@ -1686,6 +1686,35 @@ bool CMEL::grounding_line(const char * grounding_filename, int len, double width
    //
    return true;
 }
+bool CMEL::create_a_set_with_tag_value(iBase_EntityHandle * ents, int num_ents, char * tag_name,
+      int size_name_tag, int value)
+{
+   // will first create a new entity set in the mesh; will add the
+   // entities;
+   // will associate the tag with the given value (create the tag if not existent yet)
+   // NEUMANN_SET
+   int result = iBase_SUCCESS;
+
+   bool isList = false;
+   iBase_EntitySetHandle mesh_set;
+
+   iMesh_createEntSet(meshIface, isList, &mesh_set, &result);
+   if (iBase_SUCCESS != result) return false;
+
+   iBase_TagHandle tag_handle;
+   iMesh_getTagHandle(meshIface, tag_name, &tag_handle, &result, size_name_tag);
+   assert (0 != tag_handle);
+   iMesh_setEntSetIntData(meshIface, mesh_set, tag_handle, value, &result);
+   if (iBase_SUCCESS != result) return false;
+   // add the entities to the set
+   //
+   iMesh_addEntArrToSet(meshIface, ents, num_ents,
+                          mesh_set, &result);
+   if (iBase_SUCCESS != result) return false;
+
+   return true;
+
+}
 #ifdef TEST_CAMEL
 
 bool test_bdy_geom_grouped(CMEL *cmel) 

@@ -1549,6 +1549,19 @@ bool CAMAL_mesh_trimmed_surface_with_grounding_line(CMEL * cmel, iBase_EntityHan
    int num_points = new_points+new_points2+numPM1+numPM2;
    success = cmel->create_vertices_elements(surface, bdy_verts, &coords[0],
          num_points, connect, etop, new_entities);
+   // now create some sets with our beloved quads, for each surface
+   // surface 1 is to the left,
+   success=cmel->create_a_set_with_tag_value(&(new_entities[0]), num_quads, "NEUMANN_SET",
+         11, 1);// 1 is value 1 for first NEUMANN set
+   int startIndex = num_quads;
+   success=cmel->create_a_set_with_tag_value(&(new_entities[startIndex]), num_quads2, "NEUMANN_SET",
+         11, 2);//  value 2 for second NEUMANN set...
+   startIndex+=num_quads2;
+   success=cmel->create_a_set_with_tag_value(&(new_entities[startIndex]), numQM1, "NEUMANN_SET",
+         11, 3);
+   startIndex+=numQM1;
+   success=cmel->create_a_set_with_tag_value(&(new_entities[startIndex]), numQM2, "NEUMANN_SET",
+         11, 4);
    return success;
 
 }
