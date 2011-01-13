@@ -95,7 +95,7 @@ private:
   std::string m_szEngine;
   std::string m_szGeomType;       
   std::string m_szMeshType;
-  
+  std::string m_szSideset; 
   // integers for vectors sizes, err etc
   int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
     m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag; 

@@ -728,6 +728,12 @@ int CNrgen::ReadAndCreate()
 
     }
     // Handle mesh size inputs
+    if (szInputString.substr(0,13) == "createsideset"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_szSideset;
+      std::cout <<"--------------------------------------------------"<<std::endl;
+    }
+    // Handle mesh size inputs
     if (szInputString.substr(0,14) == "radialmeshsize"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_dRadialSize;
@@ -916,28 +922,30 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "merge all" << std::endl;
     m_FileOutput << "#" << std::endl;
   }
-
-  // top surface sidesets
-  m_FileOutput << "#Creating top surface sidesets" << std::endl; 
-  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    ++nSideset;
-    szSurfTop = m_szAssmMat(p)+"_top";
-    m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
-  }
-  m_FileOutput << "#" << std::endl;
-
-
-  //surface only
-  if(m_nPlanar ==1){ 
+  std::cout << m_szSideset << std::endl;
+  if(m_szSideset == "yes"){
+    // top surface sidesets
+    m_FileOutput << "#Creating top surface sidesets" << std::endl; 
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       ++nSideset;
       szSurfTop = m_szAssmMat(p)+"_top";
-      m_FileOutput <<  "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-      m_FileOutput <<"group 'tmp1' equals curve in surface in tmpgrp" << std::endl;  
-      m_FileOutput << "sideset " << nSideset << " surface in tmp1" << std::endl;  
+      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+      m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
     }
+    m_FileOutput << "#" << std::endl;
+  }
 
+  //surface only
+  if(m_nPlanar ==1){ 
+    if(m_szSideset == "yes"){
+      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	++nSideset;
+	szSurfTop = m_szAssmMat(p)+"_top";
+	m_FileOutput <<  "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+	m_FileOutput <<"group 'tmp1' equals curve in surface in tmpgrp" << std::endl;  
+	m_FileOutput << "sideset " << nSideset << " surface in tmp1" << std::endl;  
+      }
+    }
     // group creation dumps. each material surface  has a group
     m_FileOutput << "#Creating groups" << std::endl;  
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -960,87 +968,88 @@ int CNrgen::CreateCubitJournal()
 
   // volume only
   else{ 
-
-    // bottom surface sidesets
-    m_FileOutput << "#Creating bot and side surface sidesets" << std::endl; 
+    if(m_szSideset == "yes"){
+      // bottom surface sidesets
+      m_FileOutput << "#Creating bot and side surface sidesets" << std::endl; 
     
-    // rename the skin surfaces, so that they don't appear as sidesets
+      // rename the skin surfaces, so that they don't appear as sidesets
 
-    for (int p=1; p<=m_nDuct; p++){
-      for(int q=1;q<=m_nSides; q++){
-	m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge" 
-		     << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
+      for (int p=1; p<=m_nDuct; p++){
+	for(int q=1;q<=m_nSides; q++){
+	  m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge" 
+		       << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
 
-	m_FileOutput << "group 'vt" <<  (m_nSides*(p-1) + q )  <<"' equals vertex with z_max == z_min in curve in edge" 
-		     <<  (m_nSides*(p-1) + q ) << std::endl;
+	  m_FileOutput << "group 'vt" <<  (m_nSides*(p-1) + q )  <<"' equals vertex with z_max == z_min in curve in edge" 
+		       <<  (m_nSides*(p-1) + q ) << std::endl;
 
+	}
       }
-    }
   
 
-    // creating groups for vertices on the top surface of the duct
-    for (int p=1; p<=m_nDuct; p++){
-      for(int q=1;q<=m_nSides; q++){
+      // creating groups for vertices on the top surface of the duct
+      for (int p=1; p<=m_nDuct; p++){
+	for(int q=1;q<=m_nSides; q++){
 
-	if(q != m_nSides){
-	  m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
-		       << " with group vt" <<  (m_nSides*(p-1) + q + 1 )  << std::endl;	  
+	  if(q != m_nSides){
+	    m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+			 << " with group vt" <<  (m_nSides*(p-1) + q + 1 )  << std::endl;	  
+	  }
+	  else {
+	    m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
+			 << " with group vt" <<  (m_nSides*(p-1) + 1 )  << std::endl;	  
+	  }
 	}
-	else {
-	  m_FileOutput << "group 'v" << (m_nSides*(p-1) + q ) <<"' intersect group vt" << (m_nSides*(p-1) + q ) 
-		       << " with group vt" <<  (m_nSides*(p-1) + 1 )  << std::endl;	  
+      }
+      // creating temp surfaces groups
+      for (int p=1; p<=m_nDuct; p++){
+	for(int q=1;q<=m_nSides; q++){
+	  m_FileOutput << "group 'st" << (m_nSides*(p-1) + q ) <<"' equals surface with z_max <> z_min in vert in v" 
+		       << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
 	}
+      }	
+
+      // creating surface groups for obtaining surfaces
+      for (int p=1; p<=m_nDuct; p++){
+	for(int q=1;q<=m_nSides; q++){
+	  if(q != 1){
+	    m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st"  << (m_nSides*(p-1) + q ) 
+			 << " with group st" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
+	  }
+	  else {
+	    m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st" << (m_nSides*(p-1) + q ) 
+			 << " with group st" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
+	  }
+	}
+      }	
+
+      // renaming the skin side surfaces 
+      for (int p=1; p<=m_nDuct; p++){
+	for(int q=1;q<=m_nSides; q++){
+	  m_FileOutput << "surface in group s" <<  (m_nSides*(p-1) + q ) << " rename 'side_surface"  
+		       <<  (m_nSides*(p-1) + q ) << "'" << std::endl;
+
+	}
+      }	
+      if(m_szSideset == "yes"){
+	// now create top and bot sideset
+	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	  szSurfTop = m_szAssmMat(p)+"_bot";
+	  szSurfSide = m_szAssmMat(p)+"_side";  
+
+
+	  m_FileOutput << "#" << std::endl;
+
+	  ++nSideset;
+	  m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+	  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
+
+	  ++nSideset;
+	  m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfSide  << "\"" << std::endl;
+	  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
+	}
+	m_FileOutput << "#" << std::endl;
       }
     }
-    // creating temp surfaces groups
-    for (int p=1; p<=m_nDuct; p++){
-      for(int q=1;q<=m_nSides; q++){
-	m_FileOutput << "group 'st" << (m_nSides*(p-1) + q ) <<"' equals surface with z_max <> z_min in vert in v" 
-		     << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
-      }
-    }	
-
-    // creating surface groups for obtaining surfaces
-    for (int p=1; p<=m_nDuct; p++){
-      for(int q=1;q<=m_nSides; q++){
-    	if(q != 1){
-    	  m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st"  << (m_nSides*(p-1) + q ) 
-    		       << " with group st" <<  (m_nSides*(p-1) + q - 1 )  << std::endl;	
-    	}
-    	else {
-    	  m_FileOutput << "group 's" << (m_nSides*(p-1) + q ) <<"' intersect group st" << (m_nSides*(p-1) + q ) 
-    		       << " with group st" <<  (m_nSides*(p-1) + m_nSides )  << std::endl;	  
-    	}
-      }
-    }	
-
-    // renaming the skin side surfaces 
-    for (int p=1; p<=m_nDuct; p++){
-      for(int q=1;q<=m_nSides; q++){
-    	m_FileOutput << "surface in group s" <<  (m_nSides*(p-1) + q ) << " rename 'side_surface"  
-    		     <<  (m_nSides*(p-1) + q ) << "'" << std::endl;
-
-      }
-    }	
-
-    // now create top and bot sideset
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-      szSurfTop = m_szAssmMat(p)+"_bot";
-      szSurfSide = m_szAssmMat(p)+"_side";  
-
-
-      m_FileOutput << "#" << std::endl;
-
-      ++nSideset;
-      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-      m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
-
-      ++nSideset;
-      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfSide  << "\"" << std::endl;
-      m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
-    }
-    m_FileOutput << "#" << std::endl;
-
     // group creation dumps. each material surface  has a group
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
@@ -1992,9 +2001,11 @@ int CNrgen::CreateOuterCovering ()
 	iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
 			     &xmax,&ymax,&zmax, &err);
 	CHECK("getEntBoundBox failed."); 
+	double dTol = 1e-2; // tolerance for comparing coordinates
+	double p = abs(zmax - m_dMZAssm(nTemp, 2));
+	if(abs(zmax - m_dMZAssm(nTemp, 2)) <  dTol){ 
+	  if(abs(zmax-zmin) < dTol){
 
-	if(zmax==m_dMZAssm(nTemp, 2)){
-	  if(zmax==zmin){
 	    //we have a corner edge - name it
 	    sMatName="side_edge";
 	    ++count;

@@ -272,7 +272,7 @@ int test_rotate_set()
   iBase_EntitySetHandle set;
   iMesh_createEntSet(mesh, false, &set, &err);
   CHECK_ERR("Couldn't create entity set");
-  
+
   iMesh_addEntArrToSet(mesh, faces, 1, set, &err);
   CHECK_ERR("Couldn't add entities to set");
 
@@ -336,16 +336,16 @@ int test_2Dmesh_file()
   ExtrudeMesh *ext = new ExtrudeMesh(mesh);
 
   //get entities for extrusion
-  iBase_EntityHandle *ents = NULL; 
+  iBase_EntityHandle *ents = NULL;
   int ents_alloc = 0, ents_size;
-  iMesh_getEntities(mesh, root_set,
-		    iBase_FACE, iMesh_ALL_TOPOLOGIES,
+  iMesh_getEntities(mesh, root_set, 
+		    iBase_FACE, iMesh_ALL_TOPOLOGIES, 
 		    &ents, &ents_alloc, &ents_size, &err);
   CHECK_ERR("Trouble getting face mesh.");
 
   // add entities for extrusion to a set
   iBase_EntitySetHandle set;
-  iMesh_createEntSet(mesh, false, &set , &err);
+  iMesh_createEntSet(mesh, false, &set, &err);
   CHECK_ERR("Trouble getting face mesh.");
 
   iMesh_addEntArrToSet(mesh, ents, ents_size, set, &err);
@@ -353,32 +353,38 @@ int test_2Dmesh_file()
 
   // This tag needs to be set to the newly created extrude sets
   const char *tag_g1 = "GEOM_DIMENSION";
-  iBase_TagHandle gtag;    
+  iBase_TagHandle gtag;
   iMesh_getTagHandle(mesh, tag_g1, &gtag, &err, 14);
   CHECK_ERR("Trouble getting geom dimension set.");
 
-
   // This tag needs to be set to the newly created extrude sets
   const char *tag_m1 = "MATERIAL_SET";
-  iBase_TagHandle mtag;    
+  iBase_TagHandle mtag;
   iMesh_getTagHandle(mesh, tag_m1, &mtag, &err, 12);
   CHECK_ERR("Trouble getting material set.");
 
-
   // This tag needs to be set to the newly created extrude sets
   const char *tag_n1 = "NEUMANN_SET";
-  iBase_TagHandle ntag;    
+  iBase_TagHandle ntag;
   iMesh_getTagHandle(mesh, tag_n1, &ntag, &err, 11);
   CHECK_ERR("Trouble getting neumann set.");
 
   // add only material set tag as extrude set
-  ext->extrude_sets().add_tag( mtag, NULL);
+  ext->extrude_sets().add_tag(mtag, NULL);
+  CHECK_ERR("Trouble getting face mesh.");
+
+  // add 2d neumann set tag as copy tag to create-
+  // -new neumann set for destination surfaces formed by extrusion
+  ext->copy_sets().add_tag(ntag, NULL);
   CHECK_ERR("Trouble getting face mesh.");
 
   // now extrude
   double v[] = { 0, 0, 5 };
   int steps = 5;
-  CHECK_THROW( ext->extrude(set, extrude::Translate(v, steps)) );
+  CHECK_THROW( ext->extrude(set, extrude::Translate(v, steps),true) );
+
+  // update the copy sets, this creates the ent set for destination 2D quads.
+  ext->copy_sets().update_tagged_sets();
 
   iMesh_destroyEntSet(mesh, set, &err);
   CHECK_ERR("Error in destroying ent set of faces after extrusion is done.");
@@ -387,24 +393,64 @@ int test_2Dmesh_file()
   // Step 1: get all the material sets, remove old one's and add GD=3 on the new one's.
 
   SimpleArray<iBase_EntitySetHandle> msets;
-  iMesh_getEntSetsByTagsRec(mesh,  root_set, &mtag, NULL,
+  iMesh_getEntSetsByTagsRec(mesh, root_set, &mtag, NULL, 
 			    1, 0, ARRAY_INOUT(msets), &err);
   CHECK_ERR("Trouble getting entity set.");
 
   for (int i = 0; i < msets.size(); i++) {
     int num =0;
-    SimpleArray<iBase_EntitySetHandle> in_msets;
 
     iMesh_getNumOfType(mesh, msets[i], iBase_REGION, &num, &err);
     CHECK_ERR("Trouble getting num entities.");
-    if(num ==0){
-      iMesh_destroyEntSet(mesh, msets[i], &err); 
+    if(num == 0) {
+      iMesh_destroyEntSet(mesh, msets[i], &err);
       CHECK_ERR("Trouble destroying set.");
     }
-    else{
+    else {
       const int gd = 3;
       iMesh_setEntSetIntData(mesh, msets[i], gtag, gd, &err);
-      CHECK_ERR("Trouble setting tag data.");
+      CHECK_ERR("Trouble getting tag data.");
+    }
+  }
+
+  // Step 2: get all max. value of neumann sets, then, for newly created NS set a new value and GD =2 tag.
+
+  iBase_EntityHandle *ents1 = NULL;
+  int ents_alloc1 = 0, ents_size1;
+
+  SimpleArray<iBase_EntitySetHandle> nsets;
+  iMesh_getEntSetsByTagsRec(mesh, root_set, &ntag, NULL,
+			    1, 0, ARRAY_INOUT(nsets), &err);
+  CHECK_ERR("Trouble getting entity set.");
+
+  int max_nset_value = 0;
+  for (int i = 0; i < nsets.size(); i++) {
+    int num =0;
+    int nvalue;
+    iMesh_getEntSetIntData(mesh, nsets[i], ntag, &nvalue, &err);
+    CHECK_ERR("Trouble getting entity set.");
+    if (nvalue > max_nset_value)
+      max_nset_value = nvalue;
+  }
+
+  for (int i = 0; i < nsets.size(); i++) {
+    int num =0;
+
+    iMesh_getEntities(mesh, nsets[i],
+		      iBase_FACE, iMesh_ALL_TOPOLOGIES,
+		      &ents1, &ents_alloc1, &ents_size1, &err);
+    CHECK_ERR("Trouble getting face mesh.");
+
+    if(ents_size1 > 0) {
+      // set GEOM_DIMENSION tag = 2 and renumber the neumann set
+      const int gd = 2;
+      const int nvalue = max_nset_value + i;
+
+      iMesh_setEntSetIntData(mesh, nsets[i], ntag, nvalue, &err);
+      CHECK_ERR("Trouble getting entity set.");
+
+      iMesh_setEntSetIntData(mesh,nsets[i], gtag, gd, &err);
+      CHECK_ERR("Trouble getting entity set.");
     }
   }
 
