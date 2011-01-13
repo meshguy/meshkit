@@ -42,4 +42,5 @@ Section Y 0
 Rotate Z 240
 MaterialSet_StartId 1100
 NeumannSet_StartId 1100
+CreateSideset No
 END ! This is a must

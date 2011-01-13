@@ -20,7 +20,7 @@ INJOU_FILES = 0.template.jou  1.template.jou  2.template.jou  3.template.jou  4.
 
 ASSYGEN_FILES = 0.inp  1.inp  2.inp  3.inp  4.inp  5.inp  6.inp  7.inp  8.inp  9.inp  10.inp  11.inp  
 
-vhtr-hexvertex.h5m : ${MESH_FILES} vhtr-hexvertex.inp
+extruded_vhtr_assmebly.h5m : ${MESH_FILES} vhtr-hexvertex.inp
 	${COREGEN} vhtr-hexvertex
 0.cub : 0.sat  0.jou  0.template.jou
 	${CUBIT} -batch 0.jou

@@ -40,4 +40,5 @@ AxialMeshSize 50
 Center
 MaterialSet_StartId 400
 NeumannSet_StartId 400
+CreateSideset No
 END ! This is a must

@@ -677,7 +677,7 @@ int CCrgen::write_makefile()
   make_file << "\t" << "${COREGEN} " << iname << std::endl;
   for(unsigned int i=0; i<files.size(); i++){
     make_file << files[i] << " : " << f_sat[i] << "  " << f_jou[i] << "  " << f_injou[i] << std::endl;
-    make_file << "\t" << "${CUBIT} -batch" << f_jou[i] <<"\n" << std::endl;
+    make_file << "\t" << "${CUBIT} -batch " << f_jou[i] <<"\n" << std::endl;
 
     make_file << f_sat[i] << " " << f_jou[i] << " " << f_injou[i] << " : " << f_inp[i] << std::endl;
     make_file << "\t" << "${ASSYGEN} " << f_no_ext[i] << "\n" << std::endl;

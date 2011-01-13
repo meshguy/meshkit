@@ -1,8 +1,8 @@
-! ########################################################################################################################
-! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins (No CR; Section X 0)
-! ########################################################################################################################
+! #############################################################################################################
+! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins (No CR)
+! ##############################################################################################################
 !
-Geometry Volume
+Geometry Surface
 GeometryType Hexagonal  
 !                                     
 Materials 6 Mat_OCoolant C1Out Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_FHH H1       
@@ -12,7 +12,7 @@ Duct 2 0.0 0.0    0.0 793.0    36.0 37.3     G1 C1Out
 Pincells 5 1.87960 
 ! 1
 Cell_Fuel       FC 1
-Cylinder  1 0.0 0.0    0.0 793.0   0.6225  F1 
+Cylinder  1 0.0 0.0    0.0 793.0   0.6225 F1
 ! 2
 Cell_BurnPoison BP 1
 Cylinder  1 0.0 0.0    0.0 793.0   0.6225 P1
@@ -50,10 +50,7 @@ Assembly 11
 RadialMeshSize 0.3
 AxialMeshSize 50
 Center
-Rotate Z 30
-Section X 0
-Rotate Z -30
-MaterialSet_StartId 900
-NeumannSet_StartId 900
+MaterialSet_StartId 700
+NeumannSet_StartId 700
 CreateSideset No
 END ! This is a must

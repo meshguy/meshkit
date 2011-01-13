@@ -46,4 +46,5 @@ Section X 0
 Rotate Z -30
 MaterialSet_StartId 500
 NeumannSet_StartId 500
+CreateSideset No
 END ! This is a must

@@ -38,4 +38,5 @@ Center
 Section Y 0
 MaterialSet_StartId 200
 NeumannSet_StartId 200
+CreateSideset No
 END ! This is a must

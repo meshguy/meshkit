@@ -1,21 +1,24 @@
-! #################################################################################################################
-! Hexagonal VHTR Control Fuel Block Assembly Definition without CellMaterials (Prism) and Pins, sectioned about X 
-! #################################################################################################################
+! #############################################################################################################
+! Full Hexagonal Control Block With Coolant On Bottom Left
+! #############################################################################################################
 !
-Geometry Volume
+Geometry Surface
 GeometryType Hexagonal  
 !                                     
-Materials 2 Mat_OCoolant C1Out  Mat_Block G1 
+Materials 5 Mat_C2Coolant C02 Mat_C1Coolant C01 Mat_OCoolant C1Out Mat_Block G1  Mat_Control R1      
 !
 Duct 2 0.0 0.0    0.0 793.0    36.0 37.3     G1 C1Out 
 !
-Pincells 0 1.87960 
+Pincells 1 1.87960 
+! 1
+Cell_Control CR 1                                         
+Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C01 R1 C02
 Assembly 11                                                 
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
-             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  CR  XX  XX  XX  XX  XX  XX  XX
            XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
          XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
        XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
@@ -35,10 +38,9 @@ Assembly 11
 RadialMeshSize 0.3
 AxialMeshSize 50
 Center
-Rotate Z 30
-Section X 0
-Rotate Z -30
-MaterialSet_StartId 100
-NeumannSet_StartId 100
+Rotate Z -60
+Center
+MaterialSet_StartId 300
+NeumannSet_StartId 300
 CreateSideset No
 END ! This is a must

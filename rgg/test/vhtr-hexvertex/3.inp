@@ -42,4 +42,5 @@ Rotate Z -60
 Center
 MaterialSet_StartId 300
 NeumannSet_StartId 300
+CreateSideset No
 END ! This is a must
