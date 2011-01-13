@@ -28,5 +28,7 @@ Center Z
 Center Y
 Center X
 TetMeshSize 1.0
+CreateSideset No
+MergeTolerance 1e-6
 END     ! This is a must  
 

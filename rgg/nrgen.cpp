@@ -37,6 +37,7 @@ CNrgen::CNrgen ()
   m_nDuctNum = 0;
   m_nJouFlag = 0;
   m_szSideset = "yes";
+  m_dMergeTol = 1e-4;
 }
 
 CNrgen::~CNrgen ()

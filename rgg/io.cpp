@@ -727,13 +727,18 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
-    // Handle mesh size inputs
+    // 'yes' or 'no' for creating sidesets
     if (szInputString.substr(0,13) == "createsideset"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_szSideset;
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
-    // Handle mesh size inputs
+    // specify a merge tolerance value for cubit journal file
+    if (szInputString.substr(0,14) == "mergetolerance"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_dMergeTol;
+      std::cout <<"--------------------------------------------------"<<std::endl;
+    }  // Handle mesh size inputs
     if (szInputString.substr(0,14) == "radialmeshsize"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_dRadialSize;
@@ -913,6 +918,8 @@ int CNrgen::CreateCubitJournal()
 
   if(m_szMeshType == "hex"){
     // imprint
+    m_FileOutput << "Merge Tolerance " << m_dMergeTol << std::endl;
+    m_FileOutput << "#" << std::endl;      
     m_FileOutput << "#Imprint geometry" << std::endl; 
     m_FileOutput << "imprint all" << std::endl;
     m_FileOutput << "#" << std::endl;
@@ -922,7 +929,7 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "merge all" << std::endl;
     m_FileOutput << "#" << std::endl;
   }
-  std::cout << m_szSideset << std::endl;
+
   if(m_szSideset == "yes"){
     // top surface sidesets
     m_FileOutput << "#Creating top surface sidesets" << std::endl; 
@@ -1239,6 +1246,8 @@ int CNrgen::CreateCubitJournal()
       }
     }	
     // imprint
+    m_FileOutput << "Merge Tolerance " << m_dMergeTol << std::endl;
+    m_FileOutput << "#" << std::endl;      
     m_FileOutput << "#Imprint geometry" << std::endl; 
     m_FileOutput << "imprint all" << std::endl;
     m_FileOutput << "#" << std::endl;
@@ -1283,8 +1292,6 @@ int CNrgen::CreateCubitJournal()
 	else{
 	  // do nothing
 	}
-
-
       }
     }
   

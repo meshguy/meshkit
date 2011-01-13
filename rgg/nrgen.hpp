@@ -96,12 +96,13 @@ private:
   std::string m_szGeomType;       
   std::string m_szMeshType;
   std::string m_szSideset; 
+
   // integers for vectors sizes, err etc
   int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
     m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag; 
 
   // doubles for pincell pitch, pi and mesh sizes resp.
-  double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize;      
+  double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize, m_dMergeTol;      
  
   // igeom related
   SimpleArray<iBase_EntityHandle> assms, in_pins;
