@@ -4,11 +4,16 @@
 /** \file MKCore.hpp
  */
 #include "meshkit/Error.hpp"
-#include "meshkit/MeshOp.hpp"
+#include "meshkit/GraphNode.hpp"
+#include "meshkit/ModelEnt.hpp"
 #include "iGeom.hh"
 #include "moab/Interface.hpp"
+#include "iMesh.hh"
 #include "iRel.hh"
 #include <vector>
+
+// outside the namespace 'cuz it just is
+class MBiMesh;
 
 namespace MeshKit {
 
@@ -27,88 +32,163 @@ namespace MeshKit {
  * and/or iCreatedIrel flags in this class.
  */
 
-class MKCore : public MeshOp
+class MKCore : public GraphNode
 {
 public:
 
     /** \brief Constructor
      * \param igeom iGeom instance
      * \param moab MOAB instance
+     * \param mbi MBiMesh instance; if non-NULL, should use/point to moab parameter
      * \param irel iRel instance
      * \param construct_missing_ifaces If true, constructs the interfaces whose handles are passed in NULL
      */
   MKCore(iGeom *igeom = NULL, 
          moab::Interface *moab = NULL, 
+         MBiMesh *mbi = NULL, 
          iRel *irel = NULL,
-         bool construct_missing_ifaces = true) throw(Error);
+         bool construct_missing_ifaces = true);
   
     //! destructor
-  ~MKCore() throw(Error);
+  ~MKCore();
 
     //! initialize, creating missing geom/mesh/rel interfaces if requested
-  void init(bool construct_missing_ifaces) throw(Error);
+  void init(bool construct_missing_ifaces);
+  
+    //! Return whether I'm the root/leaf of the graph
+  virtual bool is_root();
   
     /** \brief Load a geometry model from a file
      * \param filename The file to load
      * \param options File options to be passed to the load function
      */
-  void load_geometry(const char *filename, const char *options = NULL) throw(Error);
+  void load_geometry(const char *filename, const char *options = NULL);
 
     /** \brief Load a mesh model from a file
      * \param filename The file to load
      * \param options File options to be passed to the load function
      */
-  void load_mesh(const char *filename, const char *options = NULL) throw(Error);
+  void load_mesh(const char *filename, const char *options = NULL);
 
     /** \brief Save a geometry model to a file
      * \param filename The file to save
      * \param options File options to be passed to the save function
      */
-  void save_geometry(const char *filename, const char *options = NULL) throw(Error);
+  void save_geometry(const char *filename, const char *options = NULL);
 
     /** \brief Save a mesh model to a file
      * \param filename The file to save
      * \param options File options to be passed to the save function
      */
-  void save_mesh(const char *filename, const char *options = NULL) throw(Error);
+  void save_mesh(const char *filename, const char *options = NULL);
 
-    /** \brief populate mesh/relations data for geometric entities
+    /** \brief Populate mesh/relations data for geometric entities
      */
-  void populate_mesh() throw(Error);
+  void populate_mesh();
 
     /** \brief Get model entities of a given dimension
      * \param dim Dimension of entities to get
      * \param model_ents The list these entities get appended to
      */
-  void get_entities_by_dimension(int dim, MEVector &model_ents) throw(Error);
+  void get_entities_by_dimension(int dim, MEVector &model_ents);
 
     /** \brief Get all model entities
      * \param model_ents The list these entities get appended to
      */
-  void get_entities_by_handle(MEVector &model_ents) throw(Error);
+  void get_entities_by_handle(MEVector &model_ents);
 
+    /** \brief Return the iGeom instance pointer
+     */
+  iGeom *igeom_instance();
+  
+    /** \brief Return the MOAB instance pointer
+     */
+  moab::Interface *moab_instance();
+  
+    /** \brief Return the iMesh instance pointer
+     */
+  MBiMesh *mb_imesh();
+  
+    /** \brief Return the iRel instance pointer
+     */
+  iRel *irel_instance();
+
+    /** \brief Return the iRel pair handle used to relate geometry/mesh entities
+     */
+  iRel::PairHandle *irel_pair();
+  
+    /** \brief Return the (iGeom) tag used to relate geometry entities to mesh entities
+     */
+  iGeom::TagHandle igeom_model_tag();
+  
+    /** \brief Return the (MOAB) tag used to relate mesh entities to model entities
+     */
+  moab::Tag moab_model_tag();
+
+private:
     //! Geometry api instance
   iGeom *iGeomInstance;
   
-    //! Mesh api instance
+    //! MOAB instance
   moab::Interface *moabInstance;
+  
+    //! iMesh api instance, for use in iRel
+  MBiMesh *mbImesh;
   
     //! IREL api instance
   iRel *iRelInstance;
+
+    //! iRel pair handle used to relate geometry/mesh entities
+  iRel::PairHandle *iRelPair;
   
     //! Tag used to associate geometry entities with model entities
-  iGeom::TagHandle igeomModelTag;
+  iGeom::TagHandle iGeomModelTag;
   
     //! Tag used to associate mesh entities with model entities
-  moab::Tag imeshModelTag;
+  moab::Tag moabModelTag;
 
-private:
-  bool iCreatedIgeom, iCreatedMoab, iCreatedIrel;
+    //! If true, the corresponding interfaces will get deleted from the destructor
+  bool iCreatedIgeom, iCreatedMoab, iCreatedMbimesh, iCreatedIrel;
 
     //! Model entity sets, in array by topological dimension
   moab::Range modelEnts[4];
   
 };
+
+inline iGeom *MKCore::igeom_instance() 
+{
+  return iGeomInstance;
+}
+
+inline moab::Interface *MKCore::moab_instance()
+{
+  return moabInstance;
+}
+
+inline MBiMesh *MKCore::mb_imesh()
+{
+  return mbImesh;
+}
+
+inline iRel *MKCore::irel_instance()
+{
+  return iRelInstance;
+}
+
+inline iRel::PairHandle *MKCore::irel_pair()
+{
+  return iRelPair;
+}
+
+inline iGeom::TagHandle MKCore::igeom_model_tag()
+{
+  return iGeomModelTag;
+}
+
+inline moab::Tag MKCore::moab_model_tag()
+{
+  return moabModelTag;
+}
 
 }
 

@@ -2,11 +2,11 @@
 lib_LTLIBRARIES = libMeshKit.la 
 
 # Subdirectories to build
-SUBDIRS = core
+SUBDIRS = core algs
 
 # Some variables
-libMeshKit_la_LIBADD = core/libMeshKitcore.la
-AM_CPPFLAGS += -I$(srcdir)/core
+libMeshKit_la_LIBADD = core/libMeshKitcore.la algs/libMeshKitalgs.la
+AM_CPPFLAGS += -I$(srcdir)/core -I(srcdir)/algs
 
 # The directory in which to install headers
 libMeshKit_la_includedir = $(includedir)

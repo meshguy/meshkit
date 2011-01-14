@@ -6,16 +6,17 @@
 namespace MeshKit {
 
     class MeshOp;
-    class ModelEnt;
     
     enum Firmness {SOFT, LIMP, HARD};
 
-    enum {MK_SUCCESS, MK_FAILURE};
-    
-    typedef std::vector<MeshOp*> MOVector;
-
-    typedef std::vector<ModelEnt*> MEVector;
-    typedef std::set<ModelEnt*> MESet;
+    enum MeshedState {
+        NO_MESH = 0,
+        BOUNDARY_MESH,
+        SOME_MESH,
+        COMPLETE_MESH,
+        REFINED_MESH,
+        POST_MESH
+    };
     
 } // namespace MeshKit
 

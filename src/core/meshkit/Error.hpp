@@ -6,13 +6,26 @@
 #include <string>
 #include <typeinfo>
 
-typedef int ErrorCode;
-
-#define MKERRCHK(err, descr) \
-    {if (MK_SUCCESS != err) throw Error(err, descr);}
-    
 namespace MeshKit {
 
+#define MKERRCHK(err, descr) \
+    {if (MK_SUCCESS != err.error_code()) throw err;}
+    
+#define MBERRCHK(err, descr) \
+    {if (moab::MB_SUCCESS != err) throw Error(err, descr);}
+    
+#define IBERRCHK(err, descr) \
+    {if (iBase_SUCCESS != err) throw Error(err, descr);}
+    
+    enum ErrorCode {
+        MK_SUCCESS = 0, 
+        MK_FAILURE,
+        MK_NOT_FOUND,
+        MK_NOT_IMPLEMENTED,
+        MK_WRONG_DIMENSION,
+        MK_ALREADY_DEFINED
+    };
+    
 /** \class Error Error.hpp "meshkit/Error.hpp"
  * \brief The Error object returned from or thrown by many MeshKit functions    
  *
@@ -30,6 +43,8 @@ public:
 
     //! Copy constructor
   Error(const Error &err);
+
+  Error() {};
 
     //! Operator=
   Error &operator=(const Error &err);
@@ -51,7 +66,7 @@ private:
   std::string errDescription;
 };
 
-inline Error::Error(int err, const char *descr) : errorCode(err), errDescription(descr) {}
+inline Error::Error(int err, const char *descr) : errorCode((ErrorCode)err), errDescription(descr) {}
 
 inline Error::Error(const Error &err) : errorCode(err.error_code()), errDescription(err.what()) {}
 

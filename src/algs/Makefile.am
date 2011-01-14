@@ -6,33 +6,23 @@ AUTOMAKE_OPTIONS = foreign
 @IREL_CONFIG_OPTIONS@
 
 # Things to build
-noinst_LTLIBRARIES = libMeshKitcore.la
+noinst_LTLIBRARIES = libMeshKitalgs.la
          
-# Some variables
-AM_CPPFLAGS += -DSRCDIR=$(srcdir)
 
 # The directory in which to install headers
-libMeshKitcore_la_includedir = $(includedir)
+libMeshKitalgs_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-libMeshKitcore_la_SOURCES = \
-	MeshOp.cpp \
-	MeshOpFactory.cpp \
-	MeshScheme.cpp \
-	MKCore.cpp \
-	ModelEnt.cpp
+libMeshKitalgs_la_SOURCES = \
+	VertexMesher.cpp
 
 # The list of header files which are to be installed
-nobase_libMeshKitcore_la_include_HEADERS = \
-	meshkit/Error.hpp \
-	meshkit/MeshOp.hpp \
-	meshkit/MeshOpFactory.hpp \
-	meshkit/MeshScheme.hpp \
-	meshkit/ModelEnt.hpp
+nobase_libMeshKitalgs_la_include_HEADERS = \
+	meshkit/VertexMesher.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils
+              -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils
 
 if HAVE_IGEOM
 AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS) -DCGM

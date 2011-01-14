@@ -1,13 +1,30 @@
 #ifndef MODELENT
 #define MODELENT
 
+#include "iGeom.hh"
 #include "meshkit/Types.h"
 #include "meshkit/SizingFunction.hpp"
-#include "iGeom.h"
 #include "moab/Interface.hpp"
 #include <vector>
+#include <set>
+#include <map>
 
 namespace MeshKit {
+
+    class ModelEnt;
+
+      /** \brief Type used to store a vector of ModelEnt*'s
+       */
+    typedef std::vector<ModelEnt*> MEVector;
+
+      /** \brief Type used to store a set of ModelEnt*'s
+       */
+    typedef std::set<ModelEnt*> MESet;
+
+      /** \brief Type used to store pairs of ModelEnt* and moab::Range, used to associate partial meshes
+       * with the ModelEnt's they resolve
+       */
+    typedef std::map<ModelEnt*, moab::Range> MESelection;
 
 /** \class ModelEnt ModelEnt.hpp "meshkit/ModelEnt.hpp"
  * \brief The class used in MeshKit for referring to model entities and mesh associated with them.
@@ -36,13 +53,14 @@ public:
      * \param mesh_ent Mesh entity set corresponding to this ModelEntity
      * \param mesh_size Sizing function to be used to mesh this entity
      */
-  virtual ModelEnt(MKCore *mk,
-                   iGeom::EntityHandle &geom_ent,
-                   moab::EntityHandle &mesh_ent = 0,
-                   const SizingFunction &mesh_size = SizingFunction(1.0)) throw(Error);
+  ModelEnt(MKCore *mk,
+           iGeom::EntityHandle geom_ent,
+           moab::EntityHandle mesh_ent = NULL,
+           const SizingFunction &mesh_size = SizingFunction(NULL, 1.0));
+
     /** \brief Destructor
      */
-  virtual ~ModelEnt() throw(Error);
+  virtual ~ModelEnt();
 
     /**@}*/
 
@@ -54,58 +72,58 @@ public:
      *
      * \param parent_ents Parent entities returned
      */
-  void parents(MEVector &parent_ents) const throw(Error);
+  void parents(MEVector &parent_ents) const;
 
     /** \brief Return parents as mesh entity sets
      *
      * \param parent_ents Parent entities returned
      */
-  void parents(std::vector<moab::EntityHandle> &parent_ents) const throw(Error);
+  void parents(std::vector<moab::EntityHandle> &parent_ents) const;
 
     /** \brief Return parents as GeomEnts
      *
      * \param parent_ents Parent entities returned
      */
-  void parents(std::vector<iGeom::EntityHandle> &parent_ents) const throw(Error);
+  void parents(std::vector<iGeom::EntityHandle> &parent_ents) const;
   
     /** \brief Return children as ModelEnts
      *
      * \param child_ents Child entities returned
      */
-  void children(MEVector &child_ents) const throw(Error);
+  void children(MEVector &child_ents) const;
 
     /** \brief Return children as mesh entity sets
      *
      * \param child_ents Child entities returned
      */
-  void children(std::vector<moab::EntityHandle> &child_ents) const throw(Error);
+  void children(std::vector<moab::EntityHandle> &child_ents) const;
 
     /** \brief Return children as GeomEnts
      *
      * \param child_ents Child entities returned
      */
-  void children(std::vector<iGeom::EntityHandle> &child_ents) const throw(Error);
+  void children(std::vector<iGeom::EntityHandle> &child_ents) const;
   
     /** \brief Return children as vectors of vectors, e.g. for loops or shells
      *
      * No ordered flag, since that's implied by definition
      * \param child_ents Child entities returned
      */
-  void children(std::vector<MEVector> &child_ents) const throw(Error);
+  void children(std::vector<MEVector> &child_ents) const;
 
     /** \brief Return children as vectors of vectors, e.g. for loops or shells
      *
      * No ordered flag, since that's implied by definition
      * \param child_ents Child entities returned
      */
-  void children(std::vector<std::vector<moab::EntityHandle> > &child_ents) const throw(Error);
+  void children(std::vector<std::vector<moab::EntityHandle> > &child_ents) const;
 
     /** \brief Return children as vectors of vectors, e.g. for loops or shells
      *
      * No ordered flag, since that's implied by definition
      * \param child_ents Child entities returned
      */
-  void children(std::vector<std::vector<iGeom::EntityHandle> > &child_ents) const throw(Error);
+  void children(std::vector<std::vector<iGeom::EntityHandle> > &child_ents) const;
 
     /** \brief Return adjacencies to this model entity of the input dimension 
      *
@@ -113,7 +131,7 @@ public:
      * \param dim Dimension of entities requested; if -1, all adjacent entities are returned
      * \param adjs Adjacent entities 
      */
-  void get_adjacencies(int dim = -1, MEVector &adjs) const throw(Error);
+  void get_adjacencies(int dim, MEVector &adjs) const;
 
     /** \brief Return adjacencies to this model entity of the input dimension 
      *
@@ -121,7 +139,7 @@ public:
      * \param dim Dimension of entities requested; if -1, all adjacent entities are returned
      * \param adjs Adjacent entities 
      */
-  void get_adjacencies(int dim = -1, std::vector<iGeom::EntityHandle> &adjs) const throw(Error);
+  void get_adjacencies(int dim, std::vector<iGeom::EntityHandle> &adjs) const;
 
     /** \brief Return adjacencies to this model entity of the input dimension 
      *
@@ -129,7 +147,7 @@ public:
      * \param dim Dimension of entities requested; if -1, all adjacent entities are returned
      * \param adjs Adjacent entities 
      */
-  void get_adjacencies(int dim = -1, std::vector<moab::EntityHandle> &adjs) const throw(Error);
+  void get_adjacencies(int dim, std::vector<moab::EntityHandle> &adjs) const;
 
     /** \brief Return adjacencies to this model entity of the input dimension 
      *
@@ -137,7 +155,7 @@ public:
      * \param dim Dimension of entities requested; if -1, all adjacent entities are returned
      * \param adjs Adjacent entities 
      */
-  void get_adjacencies(int dim = -1, moab::Range &adjs) const throw(Error);
+  void get_adjacencies(int dim, moab::Range &adjs) const;
 
     /**@}*/
 
@@ -146,19 +164,19 @@ public:
     /**@{*/
 
     //! Return the topological dimension of this model entity
-  int dimension() const throw(Error);
+  int dimension() const;
   
     //! Measure of this entity, -DBL_MAX for vertices, or length, area, or volume
-  double measure() const throw(Error);
+  double measure() const;
   
     //! Similar as measure, but based on mesh 
-  double measure_discrete() const throw(Error);
+  double measure_discrete() const;
   
     //! Closest point to input
-  unit_vector closest(double x, double y, double z) const throw(Error);
+  void closest(double x, double y, double z, double *close) const;
 
     //! Similar to closest_point, but based on mesh
-  unit_vector closest_discrete(double x, double y, double z) const throw(Error);
+  void closest_discrete(double x, double y, double z, double *close) const;
 
     /**@}*/
 
@@ -177,7 +195,7 @@ public:
      * flag = -1: check dimension of iGeomEnt; if 1, vector-based set, otherwise set-based set
      * \param flag Ordered flag
      */
-  void create_mesh_set(int flag = -1) throw(Error);
+  void create_mesh_set(int flag = -1);
 
     /** \brief Commit mesh to a model entity
      *
@@ -185,8 +203,10 @@ public:
      * and (if both-type relation on the mesh side) sets the relations to the corresponding
      * geometry entity.
      * \param mesh_ents Mesh entities being assigned to this model entity
+     * \param mstate The meshed state after this mesh is added
      */
-  void commit_mesh(moab::Range &mesh_ents) throw(Error);
+  void commit_mesh(moab::Range &mesh_ents,
+                   MeshedState mstate);
   
     /** \brief Commit mesh to a model entity
      *
@@ -194,8 +214,10 @@ public:
      * and (if both-type relation on the mesh side) sets the relations to the corresponding
      * geometry entity.
      * \param mesh_ents Mesh entities being assigned to this model entity
+     * \param mstate The meshed state after this mesh is added
      */
-  void commit_mesh(std::vector<moab::EntityHandle> &mesh_ents) throw(Error);
+  void commit_mesh(std::vector<moab::EntityHandle> &mesh_ents,
+                   MeshedState mstate);
   
     /** \brief Return mesh bounding this model entity
      *
@@ -204,7 +226,7 @@ public:
      * \param dim Dimension of requested boundary entities
      * \param mesh_ents Ordered list of boundary entities returned
      */
-  void boundary(int dim, std::vector<moab::EntityHandle> &mesh_ents) const throw(Error);
+  void boundary(int dim, std::vector<moab::EntityHandle> &mesh_ents) const;
 
     /** \brief Return mesh bounding this model entity, distinguished by orientation
      *
@@ -217,7 +239,7 @@ public:
      */
   void boundary(int dim, 
                 std::vector<moab::EntityHandle> &forward_ents,
-                std::vector<moab::EntityHandle> &reverse_ents) const throw(Error);
+                std::vector<moab::EntityHandle> &reverse_ents) const;
 
     /** \brief Return mesh bounding this model entity in a Range (unordered wrt model entity)
      *
@@ -228,28 +250,29 @@ public:
      * \param ents Boundary entities requested
      */
   void boundary(int dim, 
-                moab::Range &ents) const throw(Error);
+                moab::Range &ents) const;
 
     /**@}*/
 
     /** \name Member get/set
      */
 
+    /**@{*/
+
     //! Get the MKCore object
   MKCore *mk_core() const;
   
-    /**@{*/
     //! Get geometry entity handle
   iGeom::EntityHandle geom_handle() const;
 
-    //! Get (const) geometry entity handle
-  const iGeom::EntityHandle geom_handle() const;
+    //! Get geometry entity handle for a given mesh entity set
+  iGeom::EntityHandle geom_handle(moab::EntityHandle ment) const;
 
     //! Get mesh entity set handle
   moab::EntityHandle mesh_handle() const;
 
-    //! Get (const) mesh entity set handle
-  const moab::EntityHandle mesh_handle() const;
+    //! Get mesh entity set handle for a given geometry entity
+  moab::EntityHandle mesh_handle(iGeom::EntityHandle gent) const;
 
     //! Get sizing function
   const SizingFunction &sizing_function() const;
@@ -268,7 +291,11 @@ public:
 
     //! Set firmness
   void interval_firmness(Firmness firm);
-  
+
+    //! Meshed state
+  MeshedState get_meshed_state();
+  void set_meshed_state(MeshedState mstate);
+
     /**@}*/
 
 private:
@@ -289,6 +316,10 @@ private:
   
     //! Mesh interval firmness for this model entity
   Firmness intervalFirmness;
+
+    //! Meshed state of this entity
+  MeshedState meshedState;
+  
 };
 
 inline MKCore *ModelEnt::mk_core() const
@@ -301,17 +332,7 @@ inline iGeom::EntityHandle ModelEnt::geom_handle() const
   return iGeomEnt;
 }
 
-inline const iGeom::EntityHandle ModelEnt::geom_handle() const
-{
-  return iGeomEnt;
-}
-
 inline moab::EntityHandle ModelEnt::mesh_handle() const
-{
-  return moabEntSet;
-}
-
-inline const moab::EntityHandle ModelEnt::mesh_handle() const
 {
   return moabEntSet;
 }
@@ -349,4 +370,17 @@ inline void ModelEnt::interval_firmness(Firmness firm)
   intervalFirmness = firm;
 }
 
+inline MeshedState ModelEnt::get_meshed_state() 
+{
+  return meshedState;
+}
+
+inline void ModelEnt::set_meshed_state(MeshedState mstate) 
+{
+  meshedState = mstate;
+}
+
 } // namespace meshkit
+
+
+#endif

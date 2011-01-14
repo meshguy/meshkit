@@ -18,16 +18,19 @@ class SizingFunction
 public:
 
     //! Copy constructor
-  SizingFunction(const SizingFunction &sf) throw(Error);
+  SizingFunction(const SizingFunction &sf);
   
     //! Bare constructor
-  SizingFunction(MKCore *mkcore) throw(Error);
+  SizingFunction(MKCore *mkcore);
 
     //! Constructor
-  SizingFunction(MKCore *mkcore, int num_int) throw(Error);
+  SizingFunction(MKCore *mkcore, int num_int);
+
+    //! Constructor
+  SizingFunction(MKCore *mkcore, double int_size);
 
     //! Destructor
-  virtual ~SizingFunction() throw(Error);
+  virtual ~SizingFunction();
 
     //! Get core instance
   MKCore *mk_core() const;
@@ -56,22 +59,27 @@ private:
 };
 
   //! Copy constructor
-SizingFunction::SizingFunction(const SizingFunction &sf) throw(Error) 
+SizingFunction::SizingFunction(const SizingFunction &sf) 
         : mkCore(sf.mk_core()), thisInterval(sf.intervals()), thisSize(sf.size())
 {}
 
   //! Bare constructor
-SizingFunction::SizingFunction(MKCore *mkcore) throw(Error) 
+SizingFunction::SizingFunction(MKCore *mkcore) 
         : mkCore(mkcore), thisInterval(-1), thisSize(-DBL_MAX) 
 {}
 
   //! Constructor
-SizingFunction::SizingFunction(MKCore *mkcore, int num_int) throw(Error) 
+SizingFunction::SizingFunction(MKCore *mkcore, int num_int) 
         : mkCore(mkcore), thisInterval(num_int), thisSize(-DBL_MAX)
 {}
     
+  //! Constructor
+SizingFunction::SizingFunction(MKCore *mkcore, double int_size) 
+        : mkCore(mkcore), thisInterval(-1), thisSize(int_size)
+{}
+    
   //! Destructor
-SizingFunction::~SizingFunction() throw(Error) 
+SizingFunction::~SizingFunction() 
 {}
   
   //! Get core instance
@@ -97,6 +105,8 @@ void SizingFunction::intervals(int num_int)
 {
   thisInterval = num_int;
 }
+
+} // namespace MeshKit
 
 #endif
 
