@@ -17,6 +17,8 @@
 #include <vec_utils.hpp>
 
 // local variables in this file
+#include "MBiMesh.hpp"
+
 MBInterface * mb1;
 MBInterface * mb2;
 // we should really work only with triangles in their sets;
@@ -622,14 +624,14 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
 }
 int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
    // first, get MOAB involved
-   mb1 = reinterpret_cast<MBInterface *> (_mesh1);
-   mb2 = reinterpret_cast<MBInterface *> (_mesh2);
+   mb1 = reinterpret_cast<MBiMesh *> (_mesh1)->mbImpl;//reinterpret_cast<MBInterface *> (_mesh1);
+   mb2 = reinterpret_cast<MBiMesh *> (_mesh2)->mbImpl;//reinterpret_cast<MBInterface *> (_mesh2);
    mbs1 = (MBEntityHandle) _set1;
    mbs2 = (MBEntityHandle) _set2;
    // get the xy coordinates of a triangle, ordered nicely
    // start with first triangle in mb1, and first triangle in mb2
 
-   mbOut = reinterpret_cast<MBInterface *> (outMesh);
+   mbOut = reinterpret_cast<MBiMesh *> (outMesh)->mbImpl;//reinterpret_cast<MBInterface *> (outMesh);
    mbSetOut = (MBEntityHandle) set;
 
    // really, should be something from t1 and t2; blue is 1, red is 2

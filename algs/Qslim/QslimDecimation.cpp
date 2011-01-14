@@ -19,6 +19,7 @@
 // those are used in model navigation/simplification
 #include "primitives.h"
 
+#include "MBiMesh.hpp"
 // this is the global thing, that everybody will use
 MBInterface * mb;
 MBTag uniqIDtag; // this will be used to mark vertices MBEntityHandles
@@ -613,7 +614,8 @@ QslimDecimation::~QslimDecimation() {
 int QslimDecimation::decimate(QslimOptions & iOpts) {
 	// opts is external
 	opts = iOpts;
-	mb = reinterpret_cast<MBInterface *> (m_mesh);
+
+	mb = (reinterpret_cast<MBiMesh *> (m_mesh))->mbImpl;
 	// need to get all the triangles from the set
 	// also all the edges, and all vertices
 	//
@@ -803,6 +805,9 @@ int QslimDecimation::Init() {
 			}
 		}
 	}
+	// just define (one uniqTag for a triangle, see what is happening)
+	MBEntityHandle tr1 = triangles[0];
+	rval = mb->tag_set_data(uniqIDtag, &tr1, 1, &i);// just some value
 
 	if (opts.will_constrain_boundaries) {
 		std::cout << "  Decimate:  Accumulating discontinuity constraints."
