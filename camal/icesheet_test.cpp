@@ -24,6 +24,7 @@
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
 #include "moab/GeomTopoTool.hpp"
+#include "MBiMesh.hpp"
 
 #include <iostream>
 #include <stdio.h>
@@ -131,7 +132,7 @@ int main( int argc, char *argv[] )
     surface_ents.insert(reinterpret_cast<MBEntityHandle> (triangles[i]));
   }
 
-  MBSkinner tool(reinterpret_cast<MBInterface*> (mesh));
+  MBSkinner tool(reinterpret_cast<MBiMesh*> (mesh)->mbImpl);
   MBErrorCode rval = tool.find_skin(surface_ents, 1, edge_ents);
   MBERRORR("Skinner failure.");
 
@@ -212,7 +213,7 @@ int main( int argc, char *argv[] )
     ERRORR("Failed to get entity sets\n");
     std::cout << "entity set number=" << esets_size << std::endl;
   }
-  moab::GeomTopoTool geomTool(reinterpret_cast<MBInterface*> (mesh));
+  moab::GeomTopoTool geomTool(reinterpret_cast<MBiMesh*> (mesh)->mbImpl);
   int sense = 0;//
   std::vector<int> senses;
   senses.push_back(sense);

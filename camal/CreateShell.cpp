@@ -8,6 +8,7 @@
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #include "MBTagConventions.hpp"
+#include "MBiMesh.hpp"
 
 #include "moab/GeomTopoTool.hpp"
 
@@ -21,7 +22,7 @@ int main (int argc, char * argv[])
 	iMesh_Instance mesh;
 	iMesh_newMesh(0, &mesh, &err, 0);
 	assert(iBase_SUCCESS == err);
-	MBInterface * mb = (MBInterface *) mesh;
+	MBInterface * mb = reinterpret_cast<MBiMesh*> (mesh)->mbImpl;
 		//_mbset = (MBEntityHandle) this->_surf_set;
 	MBEntityHandle root = mb->get_root_set();
 	// create some vertices
