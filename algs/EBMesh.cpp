@@ -74,8 +74,7 @@ EBMesh::EBMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set,
 
   m_volFracTag = get_various_length_tag("VOL_FRAC_TAG",
 					MB_TAG_SPARSE, MB_TYPE_DOUBLE);
-
-  m_GeomTopoTool = new GeomTopoTool(reinterpret_cast<MBInterface*>(mesh));
+  m_GeomTopoTool = new GeomTopoTool( moab_instance() );
 #endif
 }
 
@@ -167,7 +166,7 @@ int EBMesh::construct_obb_tree()
     MBERRORR("Failed to get triangles.", iBase_ERROR_MAP[rval]);
     
     // make tree
-    m_hObbTree = new MBOrientedBoxTreeTool(reinterpret_cast<MBInterface*> (m_mesh));
+    m_hObbTree = new MBOrientedBoxTreeTool( moab_instance() );
     rval = m_hObbTree->build(tris, m_hTreeRoot);
     MBERRORR("Failed to build tree.", iBase_ERROR_MAP[rval]);
   }

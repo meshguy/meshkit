@@ -20,6 +20,7 @@
 #include "moab/GeomTopoTool.hpp"
 #include "MBCartVect.hpp"
 #include "MBOrientedBoxTreeTool.hpp"
+#include "MBiMesh.hpp"
 #endif
 
 using moab::GeomTopoTool;
@@ -182,7 +183,7 @@ private:
   bool make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles);
 
 #ifdef MOAB
-  MBInterface* moab_instance() {return reinterpret_cast<MBInterface*> (m_mesh);}
+  MBInterface* moab_instance() {return reinterpret_cast<MBiMesh*> (m_mesh)->mbImpl;}
   iBase_TagHandle get_tag(const char* name, int size, MBTagType store, MBDataType type,
 			  const void* def_value = NULL, bool create_if_missing = true);
   iBase_TagHandle get_various_length_tag(const char* name,
