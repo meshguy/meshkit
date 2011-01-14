@@ -2,6 +2,7 @@
 #define MERGEMESH_HPP
 
 #include "iMesh.h"
+#include "MBiMesh.hpp"
 
 #ifdef MOAB
 #include "MBInterface.hpp"
@@ -67,7 +68,7 @@ inline MergeMesh::MergeMesh(iMesh_Instance impl)
         : imeshImpl(impl)
 {
 #ifdef MOAB
-  mbImpl = (MBInterface*) impl;
+  mbImpl = (reinterpret_cast<MBiMesh *> (impl))->mbImpl;
 #endif
 }
 
