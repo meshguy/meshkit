@@ -17,15 +17,16 @@ MeshOpFactory *MeshOpFactory::instance_ = NULL;
 bool MeshOpFactory::register_meshop(const char *op_name, moab::EntityType tp, 
                                     meshop_factory_t meshop, meshop_canmesh_t canmesh) 
 {
-  OpInfoMap::iterator oit = registeredOps.find(std::string(op_name));
-  if (oit != registeredOps.end()) 
+  OpNameMap::iterator oit = opNameMap.find(std::string(op_name));
+  if (oit != opNameMap.end()) 
     throw Error(MK_ALREADY_DEFINED, "A MeshOp with this name has already been registered.");
   
-  OpInfo &oi = registeredOps[std::string(op_name)];
-  oi.opName = std::string(op_name);
-  oi.opEntTypes.push_back(tp);
-  oi.opFactory = meshop;
-  oi.opCanMesh = canmesh;
+  OpInfo oi = {std::string(op_name), registeredOps.size(), std::vector<moab::EntityType>(1, tp),
+               meshop, canmesh};
+  opsByDim[moab::CN::Dimension(tp)].push_back(registeredOps.size());
+  opNameMap[oi.opName] = registeredOps.size();
+  
+  registeredOps.push_back(oi);
 
   return true;
 }
@@ -40,15 +41,17 @@ bool MeshOpFactory::register_meshop(const char *op_name, moab::EntityType tp,
 bool MeshOpFactory::register_meshop(const char *op_name, moab::EntityType *tps, int num_tps,
                                     meshop_factory_t meshop, meshop_canmesh_t canmesh)
 {
-  OpInfoMap::iterator oit = registeredOps.find(std::string(op_name));
-  if (oit != registeredOps.end()) 
+  OpNameMap::iterator oit = opNameMap.find(std::string(op_name));
+  if (oit != opNameMap.end()) 
     throw Error(MK_ALREADY_DEFINED, "A MeshOp with this name has already been registered.");
   
-  OpInfo &oi = registeredOps[std::string(op_name)];
-  oi.opName = std::string(op_name);
-  std::copy(tps, tps+num_tps, oi.opEntTypes.begin());
-  oi.opFactory = meshop;
-  oi.opCanMesh = canmesh;
+  OpInfo oi = {std::string(op_name), registeredOps.size(), std::vector<moab::EntityType>(tps, tps+num_tps),
+               meshop, canmesh};
+  for (int i = 0; i < num_tps; i++)
+    opsByDim[moab::CN::Dimension(tps[i])].push_back(registeredOps.size());
+  opNameMap[oi.opName] = registeredOps.size();
+  
+  registeredOps.push_back(oi);
 
   return true;
 }
@@ -68,23 +71,90 @@ MeshOpFactory::~MeshOpFactory()
 
     /** \brief Return the MeshOp type with the given name
      * \param op_name Operation name requested
+     * \return OpInfo for the corresponding MeshOp type
      */
 MeshOpFactory::OpInfo MeshOpFactory::meshop_info(const char *op_name) 
 {
-  OpInfoMap::iterator oit = registeredOps.find(op_name);
-  if (oit != registeredOps.end()) return oit->second;
+  OpNameMap::iterator oit = opNameMap.find(op_name);
+  if (oit != opNameMap.end()) {
+    assert(registeredOps.size() > oit->second);
+    return registeredOps[oit->second];
+  }
   else throw Error(MK_NOT_FOUND, "A MeshOp with that name was not found.");
 }
   
-/** \brief Return MeshOp types that can operate on the specified entity type
+    /** \brief Return the MeshOp type with the given name
+     * \param op_name Operation name requested
+     * \return OpInfo index for the corresponding MeshOp type
+     */
+unsigned int MeshOpFactory::meshop_index(const char *op_name) 
+{
+  OpNameMap::iterator oit = opNameMap.find(op_name);
+  if (oit != opNameMap.end()) {
+    assert(registeredOps.size() > oit->second);
+    return oit->second;
+  }
+  else throw Error(MK_NOT_FOUND, "A MeshOp with that name was not found.");
+}
+  
+  /** \brief Make the specified MeshOp name the default for the given dimension(s)
+   * 
+   * If the specified MeshOp cannot produce entities of the specified dimension, an error is
+   * thrown with type MK_BAD_INPUT.
+   * \param op_name MeshOp name being set
+   * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
+   */
+void MeshOpFactory::set_default_meshop(const char *op_name, unsigned short dims) 
+{
+    // get the meshop index
+  OpNameMap::iterator oit = opNameMap.find(op_name);
+  if (oit == opNameMap.end()) throw Error(MK_NOT_FOUND, "A MeshOp with that name was not found.");
+
+  set_default_meshop(oit->second, dims);
+}
+    
+  /** \brief Make the specified MeshOp name the default for the given dimension(s)
+   * 
+   * If the specified MeshOp cannot produce entities of the specified dimension, an error is
+   * thrown with type MK_BAD_INPUT.
+   * \param op_index MeshOp index being set
+   * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
+   */
+void MeshOpFactory::set_default_meshop(unsigned short op_index, unsigned short dims) 
+{
+    // check the specified dimension(s) against the types the meshop can mesh
+  std::vector<unsigned short> good_dims;
+  for (unsigned short i = 0; i < 4; i++) {
+    if (dims & (1u << i)) {
+        // verify this op can generate elements with dimension i; just check for the index in the vector
+      if (std::find(opsByDim[i].begin(), opsByDim[i].end(), op_index) == opsByDim[i].end())
+        throw Error(MK_BAD_INPUT, "Specified MeshOp type cannot generate elements of specified dimension.");
+      else good_dims.push_back(i);
+    }
+  }
+  
+    // if we're here, need to move specified op to front of list for all good_dims
+  for (std::vector<unsigned short>::iterator vit = good_dims.begin(); vit != good_dims.end(); vit++) {
+    std::vector<unsigned short>::iterator vit2 = std::find(opsByDim[*vit].begin(), opsByDim[*vit].end(), op_index);
+    assert(vit2 != opsByDim[*vit].end());
+      // don't need to do anything if it's already the default for this dim
+    if (vit2 == opsByDim[*vit].begin()) continue;
+    
+      // else switch with 1st element
+    *vit2 = *opsByDim[*vit].begin();
+    *opsByDim[*vit].begin() = op_index;
+  }
+}
+
+/* \brief Return MeshOp types that can operate on the specified entity type
  * \param tp Entity type requested
  * \param ops MeshOp types returned
  */
 void MeshOpFactory::meshop_by_type(moab::EntityType tp, std::vector<OpInfo> &ops) 
 {
-  for (OpInfoMap::iterator oi = registeredOps.begin(); oi != registeredOps.end(); oi++) {
-    if (std::find(oi->second.opEntTypes.begin(), oi->second.opEntTypes.end(), tp) != oi->second.opEntTypes.end())
-      ops.push_back(oi->second);
+  for (std::vector<OpInfo>::iterator oi = registeredOps.begin(); oi != registeredOps.end(); oi++) {
+    if (std::find(oi->opEntTypes.begin(), oi->opEntTypes.end(), tp) != oi->opEntTypes.end())
+      ops.push_back(*oi);
   }
 }
     
@@ -94,13 +164,9 @@ void MeshOpFactory::meshop_by_type(moab::EntityType tp, std::vector<OpInfo> &ops
    */
 void MeshOpFactory::meshop_by_dimension(int dim, std::vector<OpInfo> &ops) 
 {
-  for (OpInfoMap::iterator oit = registeredOps.begin(); oit != registeredOps.end(); oit++) {
-    for (std::vector<moab::EntityType>::iterator vit = oit->second.opEntTypes.begin();
-         vit != oit->second.opEntTypes.end(); vit++) {
-      if (moab::CN::Dimension(*vit) == dim)
-        ops.push_back(oit->second);
-    }
-  }
+  for (std::vector<unsigned short>::iterator vit = opsByDim[dim].begin(); vit != opsByDim[dim].end();
+       vit++)
+    ops.push_back(registeredOps[*vit]);
 }
     
     /** \brief Return MeshOp types that can mesh the specified ModelEnt
@@ -109,9 +175,9 @@ void MeshOpFactory::meshop_by_dimension(int dim, std::vector<OpInfo> &ops)
      */
 void MeshOpFactory::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops) 
 {
-  for (OpInfoMap::iterator oit = registeredOps.begin(); oit != registeredOps.end(); oit++) {
-    if (oit->second.opCanMesh && oit->second.opCanMesh(ent))
-      ops.push_back(oit->second);
+  for (std::vector<OpInfo>::iterator oit = registeredOps.begin(); oit != registeredOps.end(); oit++) {
+    if (oit->opCanMesh && oit->opCanMesh(ent))
+      ops.push_back(*oit);
   }
 }
     
@@ -122,17 +188,8 @@ void MeshOpFactory::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo>
  */
 MeshOp *MeshOpFactory::construct_meshop(std::string op_name, const MEVector &me_vec) 
 {
-  OpInfoMap::iterator oit = registeredOps.find(op_name);
-  if (oit != registeredOps.end()) return oit->second.opFactory(mkCore, me_vec);
-}
-
-/** \brief Find an existing MeshOp in the graph, starting from the root
- * \param op_name MeshOp name being requested
- * \return Pointer to MeshOp found, NULL if not found
- */
-MeshOp *MeshOpFactory::find_meshop(std::string op_name) 
-{
-  return NULL;
+  OpNameMap::iterator oit = opNameMap.find(op_name);
+  if (oit != opNameMap.end()) return registeredOps[oit->second].opFactory(mkCore, me_vec);
 }
 
 void MeshOpFactory::destroy_instance(bool dont_destroy_core) 

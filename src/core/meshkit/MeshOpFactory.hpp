@@ -95,19 +95,45 @@ public:
   struct OpInfo
   {
     std::string opName;
+    unsigned int opIndex;
     std::vector<moab::EntityType> opEntTypes;
     meshop_factory_t opFactory;
     meshop_canmesh_t opCanMesh;
   };
 
-    /** \brief A map of OpInfos arranged by name
+    /** \brief A map from MeshOp name to index in the OpInfos vector
      */
-  typedef std::map<std::string, OpInfo> OpInfoMap;
+  typedef std::map<std::string, unsigned int> OpNameMap;
   
     /** \brief Return the MeshOp type with the given name
      * \param op_name Operation name requested
+     * \return OpInfo for the corresponding MeshOp type
      */
   OpInfo meshop_info(const char *op_name);
+  
+    /** \brief Return the MeshOp index given the name
+     * \param op_name Operation name requested
+     * \return OpInfo index for the corresponding MeshOp type
+     */
+  unsigned int meshop_index(const char *op_name);
+
+    /** \brief Make the specified MeshOp name the default for the given dimension(s)
+     * 
+     * If the specified MeshOp cannot produce entities of the specified dimension, an error is
+     * thrown with type MK_BAD_INPUT.
+     * \param op_name MeshOp name being set
+     * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
+     */
+  void set_default_meshop(const char *op_name, unsigned short dims);
+  
+    /** \brief Make the specified MeshOp name the default for the given dimension(s)
+     * 
+     * If the specified MeshOp cannot produce entities of the specified dimension, an error is
+     * thrown with type MK_BAD_INPUT.
+     * \param op_index MeshOp index being set
+     * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
+     */
+  void set_default_meshop(unsigned short op_index, unsigned short dims);
   
     /** \brief Return MeshOp types that can operate on the specified entity type
      * \param tp Entity type requested
@@ -134,12 +160,13 @@ public:
      */
   MeshOp *construct_meshop(std::string op_name, const MEVector &me_vec = MEVector());
     
-    /** \brief Find an existing MeshOp in the graph, starting from the root
-     * \param op_name MeshOp name being requested
-     * \return Pointer to MeshOp found, NULL if not found
+    /** \brief Construct the default type of MeshOp for the specified dimension
+     * \param dim Dimension requested
+     * \param me_vec MEVector of entities the operation applies to
+     * \return Pointer to new MeshOp constructed
      */
-  MeshOp *find_meshop(std::string op_name);
-
+  MeshOp *construct_meshop(int dim, const MEVector &me_vec = MEVector());
+    
     //! Return the MKCore
   MKCore *mk_core();
     
@@ -163,8 +190,16 @@ private:
     //! Keep track of whether I created the core or not
   bool iCreatedCore;
 
-    //! MeshOp types registered already
-  OpInfoMap registeredOps;
+    /** \brief Master vector of OpInfo's
+     */
+  std::vector<OpInfo> registeredOps;
+
+    //! Map from MeshOp name to OpInfo
+  OpNameMap opNameMap;
+
+    //! OpInfo's by dimension they can produce; first for a given dimension is the default
+  std::vector<unsigned short> opsByDim[4];
+  
 };
 
 inline MeshOpFactory *MeshOpFactory::instance(MKCore *mk_core, bool create_if_missing) 

@@ -146,6 +146,12 @@ public:
     //! Get the MeshOp corresponding to the target node of this arc
   MeshOp *target(lemon::ListDigraph::Arc arc);
 
+    /** \brief Find an existing MeshOp in the graph, starting from the root
+     * \param op_name MeshOp name being requested
+     * \return Pointer to MeshOp found, NULL if not found
+     */
+  MeshOp *find_meshop(std::string op_name);
+
     /** \brief Get sizing function by index
      * If the requested index is outside the range of SizingFunction's currently registered,
      * throws an Error.

@@ -38,6 +38,11 @@ public:
   inline void execute_this() 
       {std::cout << "myScheme (execute), node " << opName << std::endl;
       }
+
+  inline void mesh_types(std::vector<moab::EntityType> &tps) 
+      {
+      }
+  
 };
 
 inline MyScheme::MyScheme(MKCore *mk_core, const MEVector & me_vec) 

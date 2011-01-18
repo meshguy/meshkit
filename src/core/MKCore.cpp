@@ -104,6 +104,24 @@ void MKCore::init(bool construct_missing_ifaces)
   meshopGraph.addArc(rootNode, leafNode);
 }
 
+/** \brief Find an existing MeshOp in the graph, starting from the root
+ * \param op_name MeshOp name being requested
+ * \return Pointer to MeshOp found, NULL if not found
+ */
+MeshOp *MKCore::find_meshop(std::string op_name) 
+{
+    // run BFS on forward graph
+  lemon::Bfs<lemon::ListDigraph> bfs(meshopGraph);
+  bfs.init();
+  bfs.addSource(rootNode);
+  while (!bfs.emptyQueue()) {
+    lemon::ListDigraph::Node nd = bfs.processNextNode();
+    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode || nd == rootNode)));
+    if (nodeMap[nd] && nodeMap[nd]->get_name() == op_name) return nodeMap[nd];
+  }
+  return NULL;
+}
+
 void MKCore::populate_mesh() 
 {
     // populate mesh entity sets for geometric entities, relate them through iRel, and construct 

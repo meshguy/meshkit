@@ -39,11 +39,6 @@ public:
     //! Destructor
   virtual ~MeshScheme();
 
-    /** \brief Return what types of mesh entities this algorithm generates; pure virtual so every scheme must define them
-     * \param mesh_types Types handled by this meshop
-     */
-  virtual void mesh_types(std::vector<moab::EntityType> &mesh_types)=0;
-  
     //! Setup function, called in reverse order before execute
   virtual void setup();
 
