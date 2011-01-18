@@ -7,7 +7,7 @@ ACLOCAL_AMFLAGS = -I m4
 @IMESH_CONFIG_OPTIONS@
 
 # Subdirectories to build
-SUBDIRS = . 
+SUBDIRS = . test
 if ENABLE_utils
   SUBDIRS += utils
   AM_CPPFLAGS += -I$(top_srcdir)/utils
@@ -22,7 +22,7 @@ if ENABLE_rgg
 endif
 if ENABLE_src
   SUBDIRS += src
-  AM_CPPFLAGS += -I$(top_srcdir)/src
+  AM_CPPFLAGS += -I$(top_srcdir)/src 
 endif
 if HAVE_CAMAL
   SUBDIRS += camal

@@ -1,6 +1,9 @@
 #ifndef ITAPS_GEOM_HH
 #define ITAPS_GEOM_HH
 
+/** \file iGeom.hh
+ */
+
 #include "iGeom.h"
 #include <string.h>
 #include <stdlib.h>
@@ -11,6 +14,19 @@
 #define ITAPS_PREFIX iGeom
 #include "iBase.hh"
 #undef ITAPS_PREFIX
+
+/** \class iGeom
+ * \brief C++ interface to ITAPS iGeom interface
+ *
+ * This class is a simple wrapper for the ITAPS iGeom interface.  The primary benefit to using this class
+ * instead of iGeom directly is that lists of handles are passed as std::vectors instead of pointers to
+ * handle arrays.  This file includes both declaration and definition of all iGeom class functions, i.e.
+ * all functions are inlined.  The class can be constructed and destructed in the standard C++ way; the
+ * implementation of those functions call into the standard iGeom C functions newGeom and dtor.
+ *
+ * For complete documentation of these functions, see the iGeom header in the CGM source
+ * (http://trac.mcs.anl.gov/projects/ITAPS/browser/cgm/trunk/itaps/iGeom.h for now).
+ */
 
 class iGeom : public iGeomBase {
   public:
@@ -411,10 +427,13 @@ class iGeom : public iGeomBase {
     inline Error mergeEnts( const EntityHandle* entities, int entities_size, double tolerance );
 
     
+/** \class EntArrIter iGeom.hh "iGeom.hh"
+ * \brief Class for iterating over %iGeom entity arrays.
+ */
     class EntArrIter {
       private:
         friend class iGeom;
-        iGeom_EntityArrIterator mHandle;
+        iBase_EntityArrIterator mHandle;
         iGeom_Instance mInstance;
         int mSize;
       public:
@@ -426,10 +445,13 @@ class iGeom : public iGeomBase {
         inline Error reset();
     };
     
+/** \class EntIter iGeom.hh "iGeom.hh"
+ * \brief Class for iterating over %iGeom entities.
+ */
     class EntIter {
       private:
         friend class iGeom;
-        iGeom_EntityIterator mHandle;
+        iBase_EntityIterator mHandle;
         iGeom_Instance mInstance;
       public:
         EntIter() : mHandle(0), mInstance(0) {}

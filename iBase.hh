@@ -1,4 +1,20 @@
 
+#ifndef IBSH
+#define IBSH(h) reinterpret_cast<iBase_EntitySetHandle>(h)
+#endif    
+
+#ifndef IBSHR
+#define IBSHR(h) reinterpret_cast<iBase_EntitySetHandle&>(h)
+#endif    
+
+#ifndef IBEH
+#define IBEH(h) reinterpret_cast<iBase_EntityHandle>(h)
+#endif    
+
+#ifndef IBEHR
+#define IBEHR(h) reinterpret_cast<iBase_EntityHandle&>(h)
+#endif    
+
 #define PFX__(A,B) A ## B
 #define PFX_(A,B) PFX__(A,B)
 #define PFX(B) PFX_( ITAPS_PREFIX, B )
@@ -16,6 +32,7 @@ class PFX(Base) {
     typedef iBase_StorageOrder StorageOrder;
     typedef iBase_TagValueType TagValueType;
 
+    inline PFX(_Instance) instance();
     
     inline Error getErrorType();
     
@@ -180,6 +197,11 @@ class PFX(Base) {
 };
 
 
+inline PFX(_Instance) PFX(Base)::instance() 
+{
+  return mInstance;
+}
+    
 inline PFX(Base)::Error 
 PFX(Base)::getErrorType() 
 {

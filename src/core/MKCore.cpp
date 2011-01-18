@@ -4,6 +4,10 @@
 #include "MBiMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
+#include "meshkit/ModelEnt.hpp"
+#include "meshkit/SizingFunction.hpp"
+#include "lemon/bfs.h"
+#include "lemon/adaptors.h"
 
 namespace MeshKit 
 {
@@ -12,53 +16,34 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
                bool construct_missing_ifaces) 
         : iGeomInstance(igeom), moabInstance(moab), mbImesh(mbi), iRelInstance(irel),
           iRelPair(NULL), iGeomModelTag(0), moabModelTag(0),
-          iCreatedIgeom(false), iCreatedMoab(false), iCreatedMbimesh(false), iCreatedIrel(false)
+          iCreatedIgeom(false), iCreatedMoab(false), iCreatedMbimesh(false), iCreatedIrel(false),
+          nodeMap(meshopGraph, NULL)
 
 {
   init(construct_missing_ifaces);
-
-    // add myself as the first parent and first child
-  add_child(this);
 }
 
 MKCore::~MKCore() 
 {
   int err;
-  if (iCreatedIgeom)
-    delete iGeomInstance;
-  
-  if (iCreatedMoab)
-    delete moabInstance;
-  
   if (iCreatedIrel)
     delete iRelInstance;
 
+  if (iCreatedIgeom)
+    delete iGeomInstance;
+  
   if (iCreatedMbimesh)
     delete mbImesh;
-  
-    // be careful about how parent/child ops are handled, to avoid infinite loop
-  if (!nodeParents.empty()) {
-      // remove in reverse order so iterator isn't invalidated
-    for (std::vector<GraphNode*>::reverse_iterator vit = nodeParents.rbegin(); vit != nodeParents.rend(); vit++) {
-      if (*vit == this) continue;
-      else (*vit)->remove_child(this);
-    }
-  }
-  
-  if (!nodeChildren.empty()) {
-      // remove in reverse order so iterator isn't invalidated
-    for (std::vector<GraphNode*>::reverse_iterator vit = nodeChildren.rbegin(); vit != nodeChildren.rend(); vit++) {
-      if (*vit == this) continue;
-      else remove_child(*vit);
-    }
-  }
 
-  assert(nodeParents.size() == 1 && nodeParents[0] == this &&
-         nodeChildren.size() == 1 && nodeChildren[0] == this);
+  if (iCreatedMoab)
+    delete moabInstance;
+  
+  for (lemon::ListDigraph::NodeIt nit(meshopGraph); nit != lemon::INVALID; ++nit)
+    if (nodeMap[nit]) delete nodeMap[nit];
 
-    // now clear them so we don't try to remove them in the parent class dtor
-  nodeParents.clear();
-  nodeChildren.clear();
+  for (std::vector<SizingFunction*>::iterator vit = sizingFunctions.begin(); vit != sizingFunctions.end(); vit++)
+    if (*vit) delete *vit;
+  sizingFunctions.clear();
 }
 
 void MKCore::init(bool construct_missing_ifaces) 
@@ -111,6 +96,12 @@ void MKCore::init(bool construct_missing_ifaces)
                                                   moab::MB_TYPE_OPAQUE, moabModelTag, &null_me);
   if (moab::MB_SUCCESS != rval) 
     IBERRCHK(iBase_FAILURE, "Failure to create MKModelEnt tag in iMesh.");
+
+    // make the leaf/root nodes, link them with an edge; don't need to initialize map to MeshOp, since
+    // by default that's NULL
+  rootNode = meshopGraph.addNode();
+  leafNode = meshopGraph.addNode();
+  meshopGraph.addArc(rootNode, leafNode);
 }
 
 void MKCore::populate_mesh() 
@@ -194,9 +185,47 @@ void MKCore::get_entities_by_handle(MEVector &model_ents)
   get_entities_by_dimension(iBase_ALL_TYPES, model_ents);
 }
 
-bool MKCore::is_root() 
+//! Run setup on the graph
+void MKCore::setup() 
 {
-  return true;
+    // run BFS on reversed graph
+  lemon::ReverseDigraph<lemon::ListDigraph> rg(meshopGraph);
+  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs(rg);
+  rbfs.init();
+  rbfs.addSource(leafNode);
+  while (!rbfs.emptyQueue()) {
+    lemon::ListDigraph::Node nd = rbfs.processNextNode();
+    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode || nd == rootNode)));
+    if (nodeMap[nd]) nodeMap[nd]->setup_this();
+  }
+}
+
+//! Run execute on the graph
+void MKCore::execute() 
+{
+    // run BFS on forward graph
+  lemon::Bfs<lemon::ListDigraph> bfs(meshopGraph);
+  bfs.init();
+  bfs.addSource(rootNode);
+  while (!bfs.emptyQueue()) {
+    lemon::ListDigraph::Node nd = bfs.processNextNode();
+    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode || nd == rootNode)));
+    if (nodeMap[nd]) nodeMap[nd]->execute_this();
+  }
+}
+
+int MKCore::add_sizing_function(SizingFunction *sf) 
+{
+  sizingFunctions.push_back(sf);
+  return sizingFunctions.size()-1;
+}
+
+void MKCore::remove_sizing_function(int index) 
+{
+  if (index >= (int)sizingFunctions.size() || !sizingFunctions[index]) 
+    throw Error(MK_BAD_INPUT, "No sizing function with that index.");
+
+  sizingFunctions[index] = NULL;
 }
 
 } // namespace meshkit

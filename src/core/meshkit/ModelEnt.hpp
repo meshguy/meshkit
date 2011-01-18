@@ -1,9 +1,8 @@
-#ifndef MODELENT
-#define MODELENT
+#ifndef MODELENT_HPP
+#define MODELENT_HPP
 
 #include "iGeom.hh"
 #include "meshkit/Types.h"
-#include "meshkit/SizingFunction.hpp"
 #include "moab/Interface.hpp"
 #include <vector>
 #include <set>
@@ -11,20 +10,8 @@
 
 namespace MeshKit {
 
-    class ModelEnt;
-
-      /** \brief Type used to store a vector of ModelEnt*'s
-       */
-    typedef std::vector<ModelEnt*> MEVector;
-
-      /** \brief Type used to store a set of ModelEnt*'s
-       */
-    typedef std::set<ModelEnt*> MESet;
-
-      /** \brief Type used to store pairs of ModelEnt* and moab::Range, used to associate partial meshes
-       * with the ModelEnt's they resolve
-       */
-    typedef std::map<ModelEnt*, moab::Range> MESelection;
+class ModelEnt;
+class MKCore;
 
 /** \class ModelEnt ModelEnt.hpp "meshkit/ModelEnt.hpp"
  * \brief The class used in MeshKit for referring to model entities and mesh associated with them.
@@ -51,12 +38,12 @@ public:
      * \param mk MeshKit instance
      * \param geom_ent Geometry entity corresponding to this ModelEntity
      * \param mesh_ent Mesh entity set corresponding to this ModelEntity
-     * \param mesh_size Sizing function to be used to mesh this entity
+     * \param sizing_index Sizing function index (from MBCore) to be used to mesh this entity
      */
   ModelEnt(MKCore *mk,
            iGeom::EntityHandle geom_ent,
            moab::EntityHandle mesh_ent = NULL,
-           const SizingFunction &mesh_size = SizingFunction(NULL, 1.0));
+           int sizing_index = -1);
 
     /** \brief Destructor
      */
@@ -274,11 +261,10 @@ public:
     //! Get mesh entity set handle for a given geometry entity
   moab::EntityHandle mesh_handle(iGeom::EntityHandle gent) const;
 
-    //! Get sizing function
-  const SizingFunction &sizing_function() const;
-
-    //! Set sizing function
-  void sizing_function(const SizingFunction &sizing);
+    /** \brief Get sizing function index
+     * \return Returns -1 if it has not been set for this entity
+     */
+  int sizing_function_index() const;
 
     //! Get intervals
   int mesh_intervals() const;
@@ -309,7 +295,7 @@ private:
   moab::EntityHandle moabEntSet;
   
     //! Sizing function associated with this model entity
-  SizingFunction sizingFunction;
+  int sizingFunctionIndex;
   
     //! Mesh intervals for this model entity
   int meshIntervals;
@@ -337,15 +323,11 @@ inline moab::EntityHandle ModelEnt::mesh_handle() const
   return moabEntSet;
 }
 
-inline const SizingFunction &ModelEnt::sizing_function() const 
+inline int ModelEnt::sizing_function_index() const 
 {
-  return sizingFunction;
+  return sizingFunctionIndex;
 }
-
-inline void ModelEnt::sizing_function(const SizingFunction &sizing) 
-{
-  sizingFunction = sizing;
-}
+    
     //! Get intervals
 inline int ModelEnt::mesh_intervals() const 
 {

@@ -9,8 +9,8 @@ namespace MeshKit
 ModelEnt::ModelEnt(MKCore *mk,
                    iGeom::EntityHandle geom_ent,
                    moab::EntityHandle mesh_ent,
-                   const SizingFunction &mesh_size) 
-        : mkCore(mk), iGeomEnt(geom_ent), moabEntSet(mesh_ent), sizingFunction(mesh_size),
+                   int sizing_index) 
+        : mkCore(mk), iGeomEnt(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
           meshIntervals(-1), intervalFirmness(SOFT), meshedState(NO_MESH) 
 {}
 
@@ -176,7 +176,7 @@ iGeom::EntityHandle ModelEnt::geom_handle(moab::EntityHandle ment) const
   return gent;
 }
 
-moab::EntityHandle ModelEnt::mesh_handle(iBase_EntityHandle gent) const 
+moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const 
 {
     // use iRel to get this information
   moab::EntityHandle ment = 0;

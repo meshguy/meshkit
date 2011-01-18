@@ -1,4 +1,5 @@
 #include "meshkit/MeshOpFactory.hpp"
+#include "meshkit/MKCore.hpp"
 #include "moab/CN.hpp"
 #include "moab/Interface.hpp"
 
@@ -52,9 +53,14 @@ bool MeshOpFactory::register_meshop(const char *op_name, moab::EntityType *tps, 
   return true;
 }
   
-MeshOpFactory::MeshOpFactory(MKCore *mk_core) 
-        : mkCore(mk_core)
-{}
+MeshOpFactory::MeshOpFactory(MKCore *mk_core, bool create_if_missing) 
+        : mkCore(mk_core), iCreatedCore(false)
+{
+  if (!mk_core && create_if_missing) {
+    mkCore = new MKCore();
+    iCreatedCore = true;
+  }
+}
 
     //! Destructor; virtual because applications may want to substitute their own factory
 MeshOpFactory::~MeshOpFactory() 
@@ -111,14 +117,34 @@ void MeshOpFactory::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo>
     
 /** \brief Construct a new MeshOp of the specified name
  * \param op_name MeshOp name being requested
+ * \param me_vec Model entity vector to which this operation applies
  * \return Pointer to new MeshOp constructed
  */
-MeshOp *MeshOpFactory::get_meshop(std::string op_name, const MEVector &me_vec) 
+MeshOp *MeshOpFactory::construct_meshop(std::string op_name, const MEVector &me_vec) 
 {
   OpInfoMap::iterator oit = registeredOps.find(op_name);
   if (oit != registeredOps.end()) return oit->second.opFactory(mkCore, me_vec);
 }
 
+/** \brief Find an existing MeshOp in the graph, starting from the root
+ * \param op_name MeshOp name being requested
+ * \return Pointer to MeshOp found, NULL if not found
+ */
+MeshOp *MeshOpFactory::find_meshop(std::string op_name) 
+{
+  return NULL;
+}
+
+void MeshOpFactory::destroy_instance(bool dont_destroy_core) 
+{
+  if (!dont_destroy_core && iCreatedCore && mkCore) 
+    delete mkCore;
+  
+  delete this;
+}
+    
+  
+    
 } // namespace MeshKit
 
 

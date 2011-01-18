@@ -38,6 +38,30 @@ class MeshOpFactory
 {
 public:
 
+    /** \brief Singleton access function
+     *
+     * If an MKCore object is passed and the MeshOpFactory has already been instantiated,
+     * that argument is compared against the registered one, and an Error thrown if they
+     * don't match.
+     * \param mk_core MeshKit instance
+     * \param create_if_missing If true, an instance will always be returned from this function
+     * \return A pointer to the singleton instance
+     */
+  static MeshOpFactory *instance(MKCore *mk_core = NULL, bool create_if_missing = true);
+
+    /** \brief Destroy the factory instance, and the core if I created it
+     * \param dont_destroy_core If true, don't destroy the MKCore, even if I created it
+     */
+  void destroy_instance(bool dont_destroy_core = false);
+  
+    /** \brief Change the MKCore instance pointed to by the current factory
+     *
+     * This function should be used rarely, but is needed to allow multiple MKCore objects
+     * to interact with the (singleton) MeshOpFactory.
+     * \param mk_core New MKCore for this MeshOpFactory
+     */
+  void change_core(MKCore *mk_core);
+  
     //! Function for constructing MeshOp instances, provided by registrants
   typedef MeshOp* (*meshop_factory_t)(MKCore *, const MEVector &vec);
 
@@ -65,28 +89,6 @@ public:
   bool register_meshop(const char *op_name, moab::EntityType *tps, int num_tps,
                        meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
   
-    /** \brief Singleton access function
-     *
-     * If an MKCore object is passed and the MeshOpFactory has already been instantiated,
-     * that argument is compared against the registered one, and an Error thrown if they
-     * don't match.
-     * \param mk_core MeshKit instance
-     * \param create_if_missing If true, an instance will always be returned from this function
-     * \return A pointer to the singleton instance
-     */
-  static MeshOpFactory *instance(MKCore *mk_core = NULL, bool create_if_missing = true);
-
-    /** \brief Change the MKCore instance pointed to by the current factory
-     *
-     * This function should be used rarely, but is needed to allow multiple MKCore objects
-     * to interact with the (singleton) MeshOpFactory.
-     * \param mk_core New MKCore for this MeshOpFactory
-     */
-  void change_core(MKCore *mk_core);
-  
-    //! Destructor; virtual because applications may want to substitute their own factory
-  virtual ~MeshOpFactory();
-
     /** \struct OpInfo MeshOpFactory.hpp "meshkit/MeshOpFactory.hpp"
      * \brief Struct used to store information about each MeshOp type registered with MeshOpFactory
      */
@@ -127,21 +129,39 @@ public:
     
     /** \brief Construct a new MeshOp of the specified name
      * \param op_name MeshOp name being requested
+     * \param me_vec MEVector of entities the operation applies to
      * \return Pointer to new MeshOp constructed
      */
-  MeshOp *get_meshop(std::string op_name, const MEVector &op_vec = MEVector());
+  MeshOp *construct_meshop(std::string op_name, const MEVector &me_vec = MEVector());
+    
+    /** \brief Find an existing MeshOp in the graph, starting from the root
+     * \param op_name MeshOp name being requested
+     * \return Pointer to MeshOp found, NULL if not found
+     */
+  MeshOp *find_meshop(std::string op_name);
+
+    //! Return the MKCore
+  MKCore *mk_core();
     
 private:
     /** \brief Constructor, private because this class is a singleton
      * \param mk_core MKCore instance this factory works with
+     * \param create_if_missing If true and mk_core is NULL, will construct a core instance
      */
-  MeshOpFactory(MKCore *mk_core);
+  MeshOpFactory(MKCore *mk_core, bool create_if_missing);
   
+    //! Destructor is private; applications should use destroy_instance() member function;
+    //! virtual because applications may want to substitute their own factory
+  virtual ~MeshOpFactory();
+
     //! Static instance
   static MeshOpFactory *instance_;
 
     //! MKCore instance
   MKCore *mkCore;
+
+    //! Keep track of whether I created the core or not
+  bool iCreatedCore;
 
     //! MeshOp types registered already
   OpInfoMap registeredOps;
@@ -150,7 +170,10 @@ private:
 inline MeshOpFactory *MeshOpFactory::instance(MKCore *mk_core, bool create_if_missing) 
 {
   if (!instance_ && create_if_missing) 
-    instance_ = new MeshOpFactory(mk_core);
+    instance_ = new MeshOpFactory(mk_core, create_if_missing);
+
+  else if (instance_ && mk_core && mk_core != instance_->mkCore)
+    throw Error(MK_BAD_INPUT, "MKCore passed to MeshOpFactory::instance doesn't match instance's mkCore.");
   
   return instance_;
 }
@@ -160,7 +183,11 @@ inline void MeshOpFactory::change_core(MKCore *mk_core)
   mkCore = mkCore;
 }
     
-    
+inline MKCore *MeshOpFactory::mk_core() 
+{
+  return mkCore;
+}
+
 } // namespace MeshKit
 
 #endif

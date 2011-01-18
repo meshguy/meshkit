@@ -4,12 +4,11 @@
 /** \file MeshScheme.hpp
  */
 #include "meshkit/Types.h"
-#include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
-#include "meshkit/ModelEnt.hpp"
-#include "meshkit/SizingFunction.hpp"
 
 namespace MeshKit {
+
+class MKCore;
     
 /** \class MeshScheme MeshScheme.hpp "meshkit/MeshScheme.hpp"
  * \brief A class that generates mesh.
@@ -23,70 +22,65 @@ public:
     /** \brief Full constructor
      * \param mkcore MKCore instance to which this scheme instance is associated
      * \param me_vec MEVector of model entities
-     * \param mesh_size SizingFunction instance to be used by this meshing algorithm
      */
   MeshScheme(MKCore *mkcore,
-             const MEVector &me_vec = MEVector(),
-             const SizingFunction &mesh_size = SizingFunction(NULL, 1.0));
+             const MEVector &me_vec = MEVector());
   
-    //! Copy constructor
+    /** \brief Copy constructor
+     * \param mesh_scheme Object being copied
+     */
   MeshScheme(const MeshScheme &mesh_scheme);
   
-    //! Copy constructor
+    /** \brief operator=
+     * \param mesh_scheme Object being copied
+     */
   virtual MeshScheme &operator=(const MeshScheme &mesh_scheme);
   
     //! Destructor
   virtual ~MeshScheme();
 
-    //! Get a reference to this scheme's sizing function
-  virtual const SizingFunction &size() const;
-  
-    //! Set a reference to this scheme's sizing function
-  virtual void size(const SizingFunction &mesh_size);
-  
-    //! Return what types of mesh entities this algorithm generates; pure virtual so every scheme must define them
+    /** \brief Return what types of mesh entities this algorithm generates; pure virtual so every scheme must define them
+     * \param mesh_types Types handled by this meshop
+     */
   virtual void mesh_types(std::vector<moab::EntityType> &mesh_types)=0;
   
-private:
+    //! Setup function, called in reverse order before execute
+  virtual void setup();
 
-    //! Sizing function
-  SizingFunction meshSize;
+    //! Execute function, called in forward order after setup
+  virtual void execute();
+
+    //! This function is pure virtual, all derived classes must define
+  virtual void setup_this()=0;
+
+    //! This function is pure virtual, all derived classes must define
+  virtual void execute_this()=0;
+
+private:
   
 };
 
 inline MeshScheme::MeshScheme(MKCore *mkcore,
-                              const MEVector &me_vec,
-                              const SizingFunction &mesh_size)
-        : MeshOp(mkcore, me_vec), meshSize(mesh_size)
+                              const MEVector &me_vec)
+        : MeshOp(mkcore, me_vec)
 {}
 
   //! Copy constructor
 inline MeshScheme::MeshScheme(const MeshScheme &mesh_scheme)
-        : MeshOp(mesh_scheme), meshSize(mesh_scheme.size())
+        : MeshOp(mesh_scheme)
 {}
 
-  //! Copy constructor
+  //! operator=
 inline MeshScheme &MeshScheme::operator=(const MeshScheme &mesh_scheme)
 {
   mkCore = mesh_scheme.mk_core();
-  opName = mesh_scheme.name();
+  opName = mesh_scheme.get_name();
   meSelection = mesh_scheme.me_selection();
-  meshSize = mesh_scheme.size();
   return *this;
 }
 
 inline MeshScheme::~MeshScheme()
 {}
-
-inline const SizingFunction &MeshScheme::size() const
-{
-  return meshSize;
-}
-
-inline void MeshScheme::size(const SizingFunction &mesh_size)
-{
-  meshSize = mesh_size;
-}
 
 } // namespace MeshKit
 

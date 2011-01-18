@@ -1,17 +1,19 @@
-#ifndef SIZINGFUNCTION
-#define SIZINGFUNCTION
-
-#include <cfloat>
+#ifndef SIZINGFUNCTION_HPP
+#define SIZINGFUNCTION_HPP
 
 #include "meshkit/Types.h"
+#include "meshkit/MKCore.hpp"
 
 namespace MeshKit {
 
 class MKCore;
     
-
 /** \class SizingFunction SizingFunction.hpp "meshkit/SizingFunction.hpp"
  * \brief A sizing function used with meshing algorithms
+ *
+ * SizingFunction stores a \em requested size or # intervals; the actual # intervals, computed or
+ * just requested, is stored on the ModelEnt.  The Firmness is also stored on the ModelEnt.
+ * This class manages its own adding to MBCore, so no need for caller to do that.
  */
 class SizingFunction
 {
@@ -20,14 +22,8 @@ public:
     //! Copy constructor
   SizingFunction(const SizingFunction &sf);
   
-    //! Bare constructor
-  SizingFunction(MKCore *mkcore);
-
     //! Constructor
-  SizingFunction(MKCore *mkcore, int num_int);
-
-    //! Constructor
-  SizingFunction(MKCore *mkcore, double int_size);
+  SizingFunction(MKCore *mkcore, int num_int = -1, double int_size = -1.0);
 
     //! Destructor
   virtual ~SizingFunction();
@@ -35,14 +31,22 @@ public:
     //! Get core instance
   MKCore *mk_core() const;
   
-    //! Get size with optional location
+    /** \brief Get size with optional location
+     * \param xyz Location where size is requested
+     * \return Size at requested location
+     */
   virtual double size(double *xyz = NULL) const;
   
     //! Get the number of intervals (assuming they were set somehow somewhere else)
   virtual int intervals() const;
   
-    //! Set the number of intervals
+    /** \brief Set the number of intervals
+     * \param num_int Intervals to be set
+     */
   virtual void intervals(int num_int);  
+
+    //! Return index of this sf in MKCore
+  virtual unsigned int core_index() const;
   
 protected:
     //! MKCore associated with this SizingFunction
@@ -53,57 +57,62 @@ protected:
 
     //! Size setting
   double thisSize;
+
+    //! This SizingFunction's index in MKCore
+  unsigned int coreIndex;
   
 private:
 
 };
 
   //! Copy constructor
-SizingFunction::SizingFunction(const SizingFunction &sf) 
+inline SizingFunction::SizingFunction(const SizingFunction &sf) 
         : mkCore(sf.mk_core()), thisInterval(sf.intervals()), thisSize(sf.size())
-{}
-
-  //! Bare constructor
-SizingFunction::SizingFunction(MKCore *mkcore) 
-        : mkCore(mkcore), thisInterval(-1), thisSize(-DBL_MAX) 
-{}
+{
+  coreIndex = mkCore->add_sizing_function(this);
+}
 
   //! Constructor
-SizingFunction::SizingFunction(MKCore *mkcore, int num_int) 
-        : mkCore(mkcore), thisInterval(num_int), thisSize(-DBL_MAX)
-{}
-    
-  //! Constructor
-SizingFunction::SizingFunction(MKCore *mkcore, double int_size) 
-        : mkCore(mkcore), thisInterval(-1), thisSize(int_size)
-{}
+inline SizingFunction::SizingFunction(MKCore *mkcore, int num_int, double int_size) 
+        : mkCore(mkcore), thisInterval(num_int), thisSize(int_size)
+{
+  coreIndex = mkCore->add_sizing_function(this);
+}
     
   //! Destructor
-SizingFunction::~SizingFunction() 
-{}
+inline SizingFunction::~SizingFunction() 
+{
+  mkCore->remove_sizing_function(coreIndex);
+}
   
   //! Get core instance
-MKCore *SizingFunction::mk_core() const 
+inline MKCore *SizingFunction::mk_core() const 
 {
   return mkCore;
 }
   
   //! Get size with optional location
-double SizingFunction::size(double *) const
+inline double SizingFunction::size(double *) const
 {
   return thisSize;
 }
 
   //! Get the number of intervals (assuming they were set somehow somewhere else)
-int SizingFunction::intervals() const
+inline int SizingFunction::intervals() const
 {
   return thisInterval;
 }
 
   //! Set the number of intervals
-void SizingFunction::intervals(int num_int) 
+inline void SizingFunction::intervals(int num_int) 
 {
   thisInterval = num_int;
+}
+
+    //! Return index of this sf in MKCore
+inline unsigned int SizingFunction::core_index() const 
+{
+  return coreIndex;
 }
 
 } // namespace MeshKit

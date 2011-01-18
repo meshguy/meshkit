@@ -1,21 +1,24 @@
-#ifndef MKCORE
-#define MKCORE
+#ifndef MKCORE_HPP
+#define MKCORE_HPP
 
 /** \file MKCore.hpp
  */
+#include "meshkit/Types.h"
 #include "meshkit/Error.hpp"
-#include "meshkit/GraphNode.hpp"
-#include "meshkit/ModelEnt.hpp"
 #include "iGeom.hh"
 #include "moab/Interface.hpp"
 #include "iMesh.hh"
 #include "iRel.hh"
+#include "lemon/list_graph.h"
 #include <vector>
 
 // outside the namespace 'cuz it just is
 class MBiMesh;
 
 namespace MeshKit {
+
+      //! Forward declare since we store a vector of these
+class SizingFunction;
 
 /** \class MKCore MKCore.hpp "meshkit/MKCore.hpp"
  * \brief The core MeshKit instance
@@ -32,7 +35,7 @@ namespace MeshKit {
  * and/or iCreatedIrel flags in this class.
  */
 
-class MKCore : public GraphNode
+class MKCore
 {
 public:
 
@@ -54,10 +57,7 @@ public:
 
     //! initialize, creating missing geom/mesh/rel interfaces if requested
   void init(bool construct_missing_ifaces);
-  
-    //! Return whether I'm the root/leaf of the graph
-  virtual bool is_root();
-  
+
     /** \brief Load a geometry model from a file
      * \param filename The file to load
      * \param options File options to be passed to the load function
@@ -116,7 +116,7 @@ public:
     /** \brief Return the iRel pair handle used to relate geometry/mesh entities
      */
   iRel::PairHandle *irel_pair();
-  
+
     /** \brief Return the (iGeom) tag used to relate geometry entities to mesh entities
      */
   iGeom::TagHandle igeom_model_tag();
@@ -125,6 +125,60 @@ public:
      */
   moab::Tag moab_model_tag();
 
+    //! Get the graph
+  lemon::ListDigraph &meshop_graph();
+
+    //! Get root node
+  lemon::ListDigraph::Node root_node();
+  
+    //! Get leaf node
+  lemon::ListDigraph::Node leaf_node();
+
+    //! Get access to the node map
+  lemon::ListDigraph::NodeMap<MeshOp*> &node_map();
+
+    //! Get the MeshOp corresponding to a graph node
+  MeshOp *get_meshop(lemon::ListDigraph::Node node);
+  
+    //! Get the MeshOp corresponding to the source node of this arc
+  MeshOp *source(lemon::ListDigraph::Arc arc);
+  
+    //! Get the MeshOp corresponding to the target node of this arc
+  MeshOp *target(lemon::ListDigraph::Arc arc);
+
+    /** \brief Get sizing function by index
+     * If the requested index is outside the range of SizingFunction's currently registered,
+     * throws an Error.
+     * \param index Index of sizing function requested
+     * \return SizingFunction* to requested sizing function, NULL of no SizingFunction with that index
+     */
+  SizingFunction *sizing_function(int index);
+  
+    /** \brief Add sizing function to those managed by MeshKit
+     *
+     * The argument to this function is a SizingFunction*; once added, it is MKCore's
+     * responsibility to delete this SizingFunction.  Applications can tell MKCore to delete
+     * a given SizingFunction (e.g. if it requires lots of memory) by calling delete_sizing_function.
+     * \param sf SizingFunction* to be added
+     * \return Index of sizing function in MKCore's list of SizingFunction's
+     */
+  int add_sizing_function(SizingFunction *sf);
+
+    /** \brief Delete sizing function
+     *
+     * This function removes the referenced sizing function from MKCore's list (setting the
+     * corresponding SizingFunction* to NULL, to keep others at the same index position).  
+     * Throws an Error if requested sizing function is NULL.
+     * \param index Index of SizingFunction to be removed
+     */
+  void remove_sizing_function(int index);
+  
+    //! Run setup on the graph
+  void setup();
+
+    //! Run execute on the graph
+  void execute();
+  
 private:
     //! Geometry api instance
   iGeom *iGeomInstance;
@@ -152,7 +206,18 @@ private:
 
     //! Model entity sets, in array by topological dimension
   moab::Range modelEnts[4];
-  
+
+    //! The MeshOp graph
+  lemon::ListDigraph meshopGraph;
+
+    //! Root and leaf nodes of graph
+  lemon::ListDigraph::Node rootNode, leafNode;
+
+    //! Map from graph nodes to MeshOps
+  lemon::ListDigraph::NodeMap<MeshOp*> nodeMap;
+
+    //! SizingFunction vector
+  std::vector<SizingFunction*> sizingFunctions;
 };
 
 inline iGeom *MKCore::igeom_instance() 
@@ -190,7 +255,56 @@ inline moab::Tag MKCore::moab_model_tag()
   return moabModelTag;
 }
 
+    //! Get root node
+inline lemon::ListDigraph &MKCore::meshop_graph() 
+{
+  return meshopGraph;
 }
+
+    //! Get root node
+inline lemon::ListDigraph::Node MKCore::root_node() 
+{
+  return rootNode;
+}
+
+    //! Get leaf node
+inline lemon::ListDigraph::Node MKCore::leaf_node() 
+{
+  return leafNode;
+}
+  
+    //! Get access to the node map
+inline lemon::ListDigraph::NodeMap<MeshOp*> &MKCore::node_map() 
+{
+  return nodeMap;
+}
+  
+    //! Get the MeshOp corresponding to a graph node
+inline MeshOp *MKCore::get_meshop(lemon::ListDigraph::Node node) 
+{
+  return nodeMap[node];
+}
+  
+inline MeshOp *MKCore::source(lemon::ListDigraph::Arc arc)
+{
+  return get_meshop(meshopGraph.source(arc));
+}
+
+inline MeshOp *MKCore::target(lemon::ListDigraph::Arc arc)
+{
+  return get_meshop(meshopGraph.target(arc));
+}
+
+inline SizingFunction *MKCore::sizing_function(int index) 
+{
+    // don't check for NULL here 'cuz sometimes we just want to know there isn't one
+    // with that index
+  if (index >= (int)sizingFunctions.size())
+    throw Error(MK_BAD_INPUT, "Sizing function index outside range of valid indices.");
+  return sizingFunctions[index];
+}
+  
+} // namespace MeshKit
 
 #endif
 

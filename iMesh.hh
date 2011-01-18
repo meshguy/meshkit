@@ -1,6 +1,9 @@
 #ifndef ITAPS_MESH_HH
 #define ITAPS_MESH_HH
 
+/** \file iMesh.hh
+ */
+
 #include "iMesh.h"
 #include <string.h>
 #include <stdlib.h>
@@ -12,6 +15,17 @@
 #include "iBase.hh"
 #undef ITAPS_PREFIX
 
+/** \class iMesh
+ * \brief C++ interface to ITAPS iMesh interface
+ *
+ * This class is a simple wrapper for the ITAPS iGeom interface.  The primary benefit to using this class
+ * instead of iMesh directly is that lists of handles are passed as std::vectors instead of pointers to
+ * handle arrays.  This file includes both declaration and definition of all iGeom class functions, i.e.
+ * all functions are inlined.  The class can be constructed and destructed in the standard C++ way; the
+ * implementation of those functions call into the standard iMesh C functions newMesh and dtor.
+ *
+ * For complete documentation of these functions, see http://www.itaps.org/software/iMesh_html/index.html.
+ */
 class iMesh : public iMeshBase {
   public:
   
@@ -93,10 +107,13 @@ class iMesh : public iMeshBase {
                                  std::vector<EntityHandle>& adj_entity_handles,
                                  std::vector<int>& offset );
     
+/** \class EntArrIter iMesh.hh "iMesh.hh"
+ * \brief Class for iterating over %iMesh entity arrays.
+ */
     class EntArrIter {
       private:
         friend class iMesh;
-        iMesh_EntityArrIterator mHandle;
+        iBase_EntityArrIterator mHandle;
         iMesh_Instance mInstance;
         int mSize;
       public:
@@ -108,10 +125,13 @@ class iMesh : public iMeshBase {
         inline Error reset();
     };
     
+/** \class EntIter iMesh.hh "iMesh.hh"
+ * \brief Class for iterating over %iMesh entities.
+ */
     class EntIter {
       private:
         friend class iMesh;
-        iMesh_EntityIterator mHandle;
+        iBase_EntityIterator mHandle;
         iMesh_Instance mInstance;
       public:
         EntIter() : mHandle(0), mInstance(0) {}
@@ -279,7 +299,7 @@ iMesh::getDfltStorage()
 {
   int err, order;
   iMesh_getDfltStorage( mInstance, &order, &err );
-  return (iBase_SUCCESS == err) ? (StorageOrder)order : iBase_UNDETERMINED;
+  return (iBase_SUCCESS == err) ? (StorageOrder)order : iBase_BLOCKED;
 }
 
 inline const iMesh::AdjTableType

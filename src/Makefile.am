@@ -2,11 +2,11 @@
 lib_LTLIBRARIES = libMeshKit.la 
 
 # Subdirectories to build
-SUBDIRS = core algs
+SUBDIRS = core algs lemon
 
 # Some variables
-libMeshKit_la_LIBADD = core/libMeshKitcore.la algs/libMeshKitalgs.la
-AM_CPPFLAGS += -I$(srcdir)/core -I(srcdir)/algs
+libMeshKit_la_LIBADD = core/libMeshKitcore.la algs/libMeshKitalgs.la lemon/libemon.la
+AM_CPPFLAGS += -I$(srcdir)/core -I(srcdir)/algs -I(srcdir)/lemon -I(srcdir)/lemon/concepts -I(srcdir)/lemon/bits
 
 # The directory in which to install headers
 libMeshKit_la_includedir = $(includedir)

@@ -597,6 +597,10 @@ AC_CONFIG_FILES([Makefile
                  rgg/Makefile
 		 src/Makefile
 		 src/core/Makefile
+		 src/algs/Makefile
+		 src/lemon/Makefile
+		 test/Makefile
+		 test/core/Makefile
                  utils/Makefile
                  ])
 

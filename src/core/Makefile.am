@@ -20,7 +20,8 @@ libMeshKitcore_la_SOURCES = \
 	MeshOpFactory.cpp \
 	MeshScheme.cpp \
 	MKCore.cpp \
-	ModelEnt.cpp
+	ModelEnt.cpp \
+	SizingFunction.cpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitcore_la_include_HEADERS = \
@@ -28,7 +29,8 @@ nobase_libMeshKitcore_la_include_HEADERS = \
 	meshkit/MeshOp.hpp \
 	meshkit/MeshOpFactory.hpp \
 	meshkit/MeshScheme.hpp \
-	meshkit/ModelEnt.hpp
+	meshkit/ModelEnt.hpp \
+	meshkit/SizingFunction.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

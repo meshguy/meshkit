@@ -56,6 +56,9 @@ public:
      */
   virtual bool add_modelent(ModelEnt *model_ent);
 
+    //! Setup is a no-op, but must be provided since it's pure virtual
+  virtual void setup_this();
+
     //! The only setup/execute function we need, since meshing vertices is trivial
   virtual void execute_this();
 
@@ -72,6 +75,10 @@ private:
 
 inline VertexMesher::VertexMesher(MKCore *mkcore, const MEVector &me_vec) 
         : MeshScheme(mkcore, me_vec) 
+{}
+
+    //! Setup is a no-op, but must be provided since it's pure virtual
+inline void VertexMesher::setup_this() 
 {}
     
 }

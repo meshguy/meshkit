@@ -23,7 +23,8 @@ namespace MeshKit {
         MK_NOT_FOUND,
         MK_NOT_IMPLEMENTED,
         MK_WRONG_DIMENSION,
-        MK_ALREADY_DEFINED
+        MK_ALREADY_DEFINED,
+        MK_BAD_INPUT
     };
     
 /** \class Error Error.hpp "meshkit/Error.hpp"

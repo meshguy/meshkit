@@ -1,20 +1,18 @@
-#ifndef MESHOP
-#define MESHOP
+#ifndef MESHOP_HPP
+#define MESHOP_HPP
 
 #include "meshkit/Types.h"
 #include "meshkit/Error.hpp"
-#include "meshkit/ModelEnt.hpp"
-#include "meshkit/GraphNode.hpp"
 #include "iGeom.h"
 #include "moab/Interface.hpp"
+#include "lemon/list_graph.h"
 #include <vector>
 
 namespace MeshKit {
 
 class MKCore;
+class ModelEnt;
     
-typedef std::vector<MeshOp*> MOVector;
-
 /** \class MeshOp MeshOp.hpp "meshkit/MeshOp.hpp"
  * \brief An operation that operates on mesh data
  *
@@ -22,7 +20,7 @@ typedef std::vector<MeshOp*> MOVector;
  * an operation graph.  Once the graph has been created, it can be executed by calling
  * the execute() member function.
  */
-class MeshOp : public GraphNode
+class MeshOp
 {
 public:
 
@@ -36,7 +34,10 @@ public:
   virtual ~MeshOp();
   
     //! Get operation name
-  virtual std::string name() const;
+  virtual std::string get_name() const;
+
+    //! Get operation name
+  virtual void set_name(std::string new_name);
 
     /** \brief Add a ModelEnt to this operation's MESelection
      * The MESelection is a map, and can only have a given entity once.
@@ -60,6 +61,39 @@ public:
     //! Get the associated MKCore object
   MKCore *mk_core() const;
 
+    //! Get the graph node corresponding to this MeshOp
+  lemon::ListDigraph::Node op_node() const;
+
+    //! Return an iterator over incoming graph edges
+  lemon::ListDigraph::InArcIt in_arcs();
+  
+    //! Return an iterator over outgoing graph edges
+  lemon::ListDigraph::OutArcIt out_arcs();
+
+    /** \brief Return the MeshOp at the start of a graph edge
+     * \param arc Edge being queried
+     * \return MeshOp corresponding to graph node at start of edge
+     */
+  MeshOp *source(lemon::ListDigraph::Arc arc);
+
+    /** \brief Return the MeshOp at the end of a graph edge
+     * \param arc Edge being queried
+     * \return MeshOp corresponding to graph node at end of edge
+     */
+  MeshOp *target(lemon::ListDigraph::Arc arc);
+  
+    //! Setup function, called in reverse order before execute
+  virtual void setup();
+
+    //! Execute function, called in forward order after setup
+  virtual void execute();
+  
+    //! Pure virtual, derived class must define
+  virtual void setup_this()=0;
+
+    //! Pure virtual, derived class must define
+  virtual void execute_this()=0;
+
 protected:
     //! Local name for this operation
   std::string opName;
@@ -69,7 +103,10 @@ protected:
   
     //! MKCore associated with this MeshOp
   MKCore *mkCore;
-  
+
+    //! The graph node associated with this MeshOP
+  lemon::ListDigraph::Node opNode;
+
 private:
 
 };
@@ -87,6 +124,22 @@ inline MESelection &MeshOp::me_selection()
 inline MKCore *MeshOp::mk_core() const
 {
   return mkCore;
+}
+
+    //! Get the graph node corresponding to this MeshOp
+inline lemon::ListDigraph::Node MeshOp::op_node() const
+{
+  return opNode;
+}
+
+inline std::string MeshOp::get_name() const
+{
+  return opName;
+}
+
+inline void MeshOp::set_name(std::string new_name)
+{
+  opName = new_name;
 }
 
 }
