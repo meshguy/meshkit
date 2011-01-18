@@ -45,7 +45,7 @@ namespace lemon {
     typename V,
     bool has_inf = std::numeric_limits<V>::has_infinity>
   struct BellmanFordDefaultOperationTraits {
-    /// \e
+    /// \e 
     typedef V Value;
     /// \brief Gives back the zero value of the type.
     static Value zero() {

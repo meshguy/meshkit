@@ -367,9 +367,9 @@ namespace lemon {
       const ArgParser &_parser;
       std::string _name;
     public:
-      ///\e
+      ///\e 
       RefType(const ArgParser &p,const std::string &n) :_parser(p),_name(n) {}
-      ///\e
+      ///\e 
       operator bool()
       {
         Opts::const_iterator i = _parser._opts.find(_name);
@@ -379,7 +379,7 @@ namespace lemon {
                      std::string()+"'"+_name+"' is a bool option");
         return *(i->second.bool_p);
       }
-      ///\e
+      ///\e 
       operator std::string()
       {
         Opts::const_iterator i = _parser._opts.find(_name);
@@ -389,7 +389,7 @@ namespace lemon {
                      std::string()+"'"+_name+"' is a string option");
         return *(i->second.string_p);
       }
-      ///\e
+      ///\e 
       operator double()
       {
         Opts::const_iterator i = _parser._opts.find(_name);
