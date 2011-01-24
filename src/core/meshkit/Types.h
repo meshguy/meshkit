@@ -29,7 +29,7 @@ namespace MeshKit {
        */
     typedef std::vector<MeshOp*> MOVector;
 
-    enum Firmness {SOFT, LIMP, HARD};
+    enum Firmness {DEFAULT, SOFT, HARD};
 
     enum MeshedState {
         NO_MESH = 0,
@@ -38,6 +38,10 @@ namespace MeshKit {
         COMPLETE_MESH,
         REFINED_MESH,
         POST_MESH
+    };
+
+    enum BooleanType {
+        INTERSECT, UNION
     };
     
 } // namespace MeshKit

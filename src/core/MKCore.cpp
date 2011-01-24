@@ -16,10 +16,17 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
                bool construct_missing_ifaces) 
         : iGeomInstance(igeom), moabInstance(moab), mbImesh(mbi), iRelInstance(irel),
           iRelPair(NULL), iGeomModelTag(0), moabModelTag(0),
-          iCreatedIgeom(false), iCreatedMoab(false), iCreatedMbimesh(false), iCreatedIrel(false),
-          nodeMap(meshopGraph, NULL)
+          iCreatedIgeom(false), iCreatedMoab(false), iCreatedMbimesh(false), iCreatedIrel(false)
 
 {
+    // leave initialization of root/leaf nodes to hear (and not in MKGraph), so that we have an MKCore
+    // to pass to MeshOp's constructor
+    // make the leaf/root nodes, link them with an edge; don't need to initialize map to MeshOp, since
+    // by default that's NULL
+  rootNode = new MeshOp(this);
+  leafNode = new MeshOp(this);
+  mkGraph.addArc(rootNode->get_node(), leafNode->get_node());
+
   init(construct_missing_ifaces);
 }
 
@@ -38,9 +45,6 @@ MKCore::~MKCore()
   if (iCreatedMoab)
     delete moabInstance;
   
-  for (lemon::ListDigraph::NodeIt nit(meshopGraph); nit != lemon::INVALID; ++nit)
-    if (nodeMap[nit]) delete nodeMap[nit];
-
   for (std::vector<SizingFunction*>::iterator vit = sizingFunctions.begin(); vit != sizingFunctions.end(); vit++)
     if (*vit) delete *vit;
   sizingFunctions.clear();
@@ -97,29 +101,6 @@ void MKCore::init(bool construct_missing_ifaces)
   if (moab::MB_SUCCESS != rval) 
     IBERRCHK(iBase_FAILURE, "Failure to create MKModelEnt tag in iMesh.");
 
-    // make the leaf/root nodes, link them with an edge; don't need to initialize map to MeshOp, since
-    // by default that's NULL
-  rootNode = meshopGraph.addNode();
-  leafNode = meshopGraph.addNode();
-  meshopGraph.addArc(rootNode, leafNode);
-}
-
-/** \brief Find an existing MeshOp in the graph, starting from the root
- * \param op_name MeshOp name being requested
- * \return Pointer to MeshOp found, NULL if not found
- */
-MeshOp *MKCore::find_meshop(std::string op_name) 
-{
-    // run BFS on forward graph
-  lemon::Bfs<lemon::ListDigraph> bfs(meshopGraph);
-  bfs.init();
-  bfs.addSource(rootNode);
-  while (!bfs.emptyQueue()) {
-    lemon::ListDigraph::Node nd = bfs.processNextNode();
-    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode || nd == rootNode)));
-    if (nodeMap[nd] && nodeMap[nd]->get_name() == op_name) return nodeMap[nd];
-  }
-  return NULL;
 }
 
 void MKCore::populate_mesh() 
@@ -128,6 +109,7 @@ void MKCore::populate_mesh()
     // ModelEnts for them
 
   std::vector<iGeom::EntityHandle> ents;
+  std::vector<ModelEnt*> new_ents;
   iBase_ErrorType err;
   ModelEnt *this_me;
   
@@ -149,12 +131,18 @@ void MKCore::populate_mesh()
       }
       
         // check for a mesh ent, and populate one if there is none
-      if (!this_me->mesh_handle()) this_me->create_mesh_set();
+      if (!this_me->mesh_handle()) {
+        this_me->create_mesh_set();
+        new_ents.push_back(this_me);
+      }
 
         // save the mesh set handle here
-      modelEnts[dim].insert(this_me->mesh_handle());
+      modelEnts[dim].push_back(this_me);
     }
   }
+  
+  for (std::vector<ModelEnt*>::iterator vit = new_ents.begin(); vit != new_ents.end(); vit++) 
+    (*vit)->set_senses();
 }
 
 void MKCore::load_geometry(const char *filename, const char *options) 
@@ -191,45 +179,13 @@ void MKCore::get_entities_by_dimension(int dim, MEVector &model_ents)
   
   std::vector<ModelEnt*> tmp_ents;
   for (dim = start; dim <= end; dim++) {
-    tmp_ents.resize(modelEnts[dim].size());
-    moab::ErrorCode rval = moabInstance->tag_get_data(moabModelTag, modelEnts[dim], &tmp_ents[0]);
-    MBERRCHK(rval, "Failed to get ModelEnt tag.");
-    std::copy(tmp_ents.begin(), tmp_ents.end(), model_ents.end());
+    std::copy(modelEnts[dim].begin(), modelEnts[dim].end(), model_ents.end());
   }
 }
 
 void MKCore::get_entities_by_handle(MEVector &model_ents) 
 {
   get_entities_by_dimension(iBase_ALL_TYPES, model_ents);
-}
-
-//! Run setup on the graph
-void MKCore::setup() 
-{
-    // run BFS on reversed graph
-  lemon::ReverseDigraph<lemon::ListDigraph> rg(meshopGraph);
-  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs(rg);
-  rbfs.init();
-  rbfs.addSource(leafNode);
-  while (!rbfs.emptyQueue()) {
-    lemon::ListDigraph::Node nd = rbfs.processNextNode();
-    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode || nd == rootNode)));
-    if (nodeMap[nd]) nodeMap[nd]->setup_this();
-  }
-}
-
-//! Run execute on the graph
-void MKCore::execute() 
-{
-    // run BFS on forward graph
-  lemon::Bfs<lemon::ListDigraph> bfs(meshopGraph);
-  bfs.init();
-  bfs.addSource(rootNode);
-  while (!bfs.emptyQueue()) {
-    lemon::ListDigraph::Node nd = bfs.processNextNode();
-    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode || nd == rootNode)));
-    if (nodeMap[nd]) nodeMap[nd]->execute_this();
-  }
 }
 
 int MKCore::add_sizing_function(SizingFunction *sf) 

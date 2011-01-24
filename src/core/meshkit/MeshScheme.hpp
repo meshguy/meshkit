@@ -31,11 +31,6 @@ public:
      */
   MeshScheme(const MeshScheme &mesh_scheme);
   
-    /** \brief operator=
-     * \param mesh_scheme Object being copied
-     */
-  virtual MeshScheme &operator=(const MeshScheme &mesh_scheme);
-  
     //! Destructor
   virtual ~MeshScheme();
 
@@ -64,15 +59,6 @@ inline MeshScheme::MeshScheme(MKCore *mkcore,
 inline MeshScheme::MeshScheme(const MeshScheme &mesh_scheme)
         : MeshOp(mesh_scheme)
 {}
-
-  //! operator=
-inline MeshScheme &MeshScheme::operator=(const MeshScheme &mesh_scheme)
-{
-  mkCore = mesh_scheme.mk_core();
-  opName = mesh_scheme.get_name();
-  meSelection = mesh_scheme.me_selection();
-  return *this;
-}
 
 inline MeshScheme::~MeshScheme()
 {}

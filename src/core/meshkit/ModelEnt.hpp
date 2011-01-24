@@ -1,6 +1,7 @@
 #ifndef MODELENT_HPP
 #define MODELENT_HPP
 
+#include "assert.h"
 #include "iGeom.hh"
 #include "meshkit/Types.h"
 #include "moab/Interface.hpp"
@@ -55,42 +56,6 @@ public:
      */
     /**@{*/
 
-    /** \brief Return parents as ModelEnts
-     *
-     * \param parent_ents Parent entities returned
-     */
-  void parents(MEVector &parent_ents) const;
-
-    /** \brief Return parents as mesh entity sets
-     *
-     * \param parent_ents Parent entities returned
-     */
-  void parents(std::vector<moab::EntityHandle> &parent_ents) const;
-
-    /** \brief Return parents as GeomEnts
-     *
-     * \param parent_ents Parent entities returned
-     */
-  void parents(std::vector<iGeom::EntityHandle> &parent_ents) const;
-  
-    /** \brief Return children as ModelEnts
-     *
-     * \param child_ents Child entities returned
-     */
-  void children(MEVector &child_ents) const;
-
-    /** \brief Return children as mesh entity sets
-     *
-     * \param child_ents Child entities returned
-     */
-  void children(std::vector<moab::EntityHandle> &child_ents) const;
-
-    /** \brief Return children as GeomEnts
-     *
-     * \param child_ents Child entities returned
-     */
-  void children(std::vector<iGeom::EntityHandle> &child_ents) const;
-  
     /** \brief Return children as vectors of vectors, e.g. for loops or shells
      *
      * No ordered flag, since that's implied by definition
@@ -184,6 +149,14 @@ public:
      */
   void create_mesh_set(int flag = -1);
 
+    /** \brief Set the senses tag on moabEntSet
+     *
+     * Called after all mesh entity sets have been created for the model.  Gets adjacencies/senses
+     * through iGeom, then sets senses on corresponding mesh sets.  After this function is called,
+     * all adjacency and sense information can be retrieved through the mesh sets.
+     */
+  void set_senses();
+  
     /** \brief Commit mesh to a model entity
      *
      * Takes the input mesh entities, adds them to the entity set for this model entity,
@@ -205,28 +178,30 @@ public:
      */
   void commit_mesh(std::vector<moab::EntityHandle> &mesh_ents,
                    MeshedState mstate);
-  
-    /** \brief Return mesh bounding this model entity
-     *
-     * This function returns boundary entities in a list, ordered consistently with
-     * the underlying geometry entity's natual direction.
-     * \param dim Dimension of requested boundary entities
-     * \param mesh_ents Ordered list of boundary entities returned
-     */
-  void boundary(int dim, std::vector<moab::EntityHandle> &mesh_ents) const;
 
-    /** \brief Return mesh bounding this model entity, distinguished by orientation
+    /** \brief Return the mesh bounding this entity, their senses, and optionally the loops/shells
      *
-     * This function returns boundary entities in two lists, the first with entities oriented
-     * consistently with the underlying model entity, and the other with entities oriented opposite
-     * the model entity.
-     * \param dim Dimension of requested boundary entities
-     * \param forward_ents Boundary entities with order consistent with model entity
-     * \param reverse_ents Boundary entities with order opposite that of model entity
+     * In the case where vertices are requested (dim=0), vertices on end of loops are *not* repeated
+     * \param dim Dimension of boundary entities requested
+     * \param bdy Boundary entities
+     * \param senses Senses of boundary entities
+     * \param group_sizes If non-NULL, pointer to vector where group sizes will be returned
      */
-  void boundary(int dim, 
-                std::vector<moab::EntityHandle> &forward_ents,
-                std::vector<moab::EntityHandle> &reverse_ents) const;
+  void boundary(int dim,
+                std::vector<moab::EntityHandle> &bdy,
+                std::vector<int> *senses = NULL,
+                std::vector<int> *group_sizes = NULL);
+
+    /** \brief Return the model entities bounding this entity, their senses, and optionally the loops/shells
+     * \param dim Dimension of boundary entities requested
+     * \param bdy Boundary entities
+     * \param senses Senses of boundary entities
+     * \param group_sizes If non-NULL, pointer to vector where group sizes will be returned
+     */
+  void boundary(int dim,
+                MEVector &elements,
+                std::vector<int> *senses,
+                std::vector<int> *group_sizes = NULL);
 
     /** \brief Return mesh bounding this model entity in a Range (unordered wrt model entity)
      *
@@ -266,6 +241,11 @@ public:
      */
   int sizing_function_index() const;
 
+    /** \brief Set sizing function index
+     * \param index Sizing function index being set
+     */
+  void sizing_function_index(int index);
+
     //! Get intervals
   int mesh_intervals() const;
 
@@ -278,13 +258,69 @@ public:
     //! Set firmness
   void interval_firmness(Firmness firm);
 
-    //! Meshed state
+    /** \brief Get meshed state
+     * \return Meshed state
+     */
   MeshedState get_meshed_state();
+
+    /* \brief Set the meshed state
+     * \param mstate
+     */
   void set_meshed_state(MeshedState mstate);
+
+    /* \brief Add a MeshOp that points to this ModelEnt
+     * \param meshop MeshOp to add
+     */
+  void add_meshop(MeshOp *meshop);
+  
+    /* \brief Remove a MeshOp that pointed to this ModelEnt
+     * \param meshop MeshOp to remove
+     */
+  void remove_meshop(MeshOp *meshop);
+  
+    /* \brief Get MeshOps pointing to this ModelEnt
+     * \param meshops MeshOps returned
+     */
+  void get_meshops(std::vector<MeshOp*> &meshops);
 
     /**@}*/
 
+    /** \brief Return a shared entity of specified dimension
+     *
+     * If no shared entities are found, NULL is returned.  If more than one are found,
+     * an Error is thrown with MK_MULTIPLE_FOUND as the code.
+     * \param ent2 Other entity
+     * \param to_dim Dimension of shared entity
+     * \return Shared entity
+     */
+  ModelEnt *shared_entity(ModelEnt *ent2, int to_dim);
+  
+    /** \brief Get adjacent entities, with specified boolean on results
+     * \param from_ents Entities whose adjacencies are being queried
+     * \param to_dim Dimension of adjacencies requested
+     * \param to_ents Adjacent entities
+     * \param op_type Boolean type, intersect or union
+     */
+  void get_adjs_bool(MEVector &from_ents,
+                     int to_dim,
+                     MEVector &to_ents,
+                     BooleanType op_type);
+  
+    /** \brief Return the next entity in the loop, using winding number
+     * \param this_edge Edge next to one being requested
+     * \param this_sense Sense of this_edge
+     * \param tmp_adjs Optional vector of candidates
+     * \return Next edge in loop
+     */
+  ModelEnt *next_winding(ModelEnt *this_edge, 
+                            int this_sense, 
+                            MEVector &tmp_adjs);
+  
 private:
+
+    //! Set senses tag on moabEntSet; only called for dim=1 entities
+  void set_upward_senses();
+  
     //! MeshKit instance to which this model entity is associated
   MKCore *mkCore;
 
@@ -305,7 +341,9 @@ private:
 
     //! Meshed state of this entity
   MeshedState meshedState;
-  
+
+    //! MeshOps pointing to this entity
+  std::vector<MeshOp*> meshOps;
 };
 
 inline MKCore *ModelEnt::mk_core() const
@@ -321,6 +359,37 @@ inline iGeom::EntityHandle ModelEnt::geom_handle() const
 inline moab::EntityHandle ModelEnt::mesh_handle() const
 {
   return moabEntSet;
+}
+
+inline void ModelEnt::children(std::vector<std::vector<moab::EntityHandle> > &child_ents) const 
+{
+  std::vector<MEVector> tmp_vec;
+  children(tmp_vec);
+  std::vector<moab::EntityHandle> tmp_vec2;
+  for (std::vector<MEVector>::iterator vit1 = tmp_vec.begin(); vit1 != tmp_vec.end(); vit1++) {
+    tmp_vec2.clear();
+    for (MEVector::iterator vit2 = (*vit1).begin(); vit2 != (*vit1).end(); vit2++)
+      tmp_vec2.push_back((*vit2)->mesh_handle());
+    child_ents.push_back(tmp_vec2);
+  }
+}
+
+    /** \brief Return children as vectors of vectors, e.g. for loops or shells
+     *
+     * No ordered flag, since that's implied by definition
+     * \param child_ents Child entities returned
+     */
+inline void ModelEnt::children(std::vector<std::vector<iGeom::EntityHandle> > &child_ents) const
+{
+  std::vector<MEVector> tmp_vec;
+  children(tmp_vec);
+  std::vector<iGeom::EntityHandle> tmp_vec2;
+  for (std::vector<MEVector>::iterator vit1 = tmp_vec.begin(); vit1 != tmp_vec.end(); vit1++) {
+    tmp_vec2.clear();
+    for (MEVector::iterator vit2 = (*vit1).begin(); vit2 != (*vit1).end(); vit2++)
+      tmp_vec2.push_back((*vit2)->geom_handle());
+    child_ents.push_back(tmp_vec2);
+  }
 }
 
 inline int ModelEnt::sizing_function_index() const 
@@ -362,7 +431,32 @@ inline void ModelEnt::set_meshed_state(MeshedState mstate)
   meshedState = mstate;
 }
 
-} // namespace meshkit
+    /* \brief Add a MeshOp that points to this ModelEnt
+     * \param meshop MeshOp to add
+     */
+inline void ModelEnt::add_meshop(MeshOp *meshop) 
+{
+  assert(std::find(meshOps.begin(), meshOps.end(), meshop) == meshOps.end());
+  meshOps.push_back(meshop);
+}
+  
+    /* \brief Remove a MeshOp that pointed to this ModelEnt
+     * \param meshop MeshOp to remove
+     */
+inline void ModelEnt::remove_meshop(MeshOp *meshop)
+{
+  assert(std::find(meshOps.begin(), meshOps.end(), meshop) != meshOps.end());
+  meshOps.erase(std::remove(meshOps.begin(), meshOps.end(), meshop), meshOps.end());
+}
+  
+    /* \brief Get MeshOps pointing to this ModelEnt
+     * \param meshop MeshOps returned
+     */
+inline void ModelEnt::get_meshops(std::vector<MeshOp*> &meshops) 
+{
+  std::copy(meshOps.begin(), meshOps.end(), meshops.end());
+}
 
+} // namespace meshkit
 
 #endif

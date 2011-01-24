@@ -8,13 +8,25 @@ namespace MeshKit
 {
 
 // static registration of this  mesh scheme
-int success = MeshOpFactory::instance()->register_meshop("VertexMesher", moab::MBVERTEX, VertexMesher::factory, NULL);
+int success = MeshOpFactory::instance()->register_meshop("VertexMesher", moab::MBVERTEX, 
+                                                         VertexMesher::factory, VertexMesher::can_mesh);
     
 MeshOp *VertexMesher::factory(MKCore *mkcore, const MEVector &me_vec) 
 {
-  return new VertexMesher(mkcore, me_vec);
+  if (mkcore->vertex_mesher()) return mkcore->vertex_mesher();
+  else {
+    VertexMesher *mesher = new VertexMesher(mkcore, me_vec);
+    mkcore->vertex_mesher(mesher);
+    return mesher;
+  }
 }
 
+bool VertexMesher::can_mesh(ModelEnt *me) 
+{
+  if (me->dimension() == 0) return true;
+  else return false;
+}
+  
 void VertexMesher::mesh_types(std::vector<moab::EntityType> &tps) 
 {
   tps.push_back(moab::MBVERTEX);
@@ -42,7 +54,7 @@ void VertexMesher::execute_this()
     (*sit).first->closest(pos[0], pos[0], pos[0], pos);
     moab::EntityHandle new_vert;
       // create the vertex
-    moab::ErrorCode rval = mkCore->moab_instance()->create_vertex(pos, new_vert);
+    moab::ErrorCode rval = mk_core()->moab_instance()->create_vertex(pos, new_vert);
     MBERRCHK(rval, "Trouble creating new vertex.");
       // add to meselection
     (*sit).second.insert(new_vert);

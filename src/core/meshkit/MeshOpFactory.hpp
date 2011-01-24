@@ -47,7 +47,7 @@ public:
      * \param create_if_missing If true, an instance will always be returned from this function
      * \return A pointer to the singleton instance
      */
-  static MeshOpFactory *instance(MKCore *mk_core = NULL, bool create_if_missing = true);
+  static MeshOpFactory *instance(MKCore *mk_core = NULL, bool create_if_missing = false);
 
     /** \brief Destroy the factory instance, and the core if I created it
      * \param dont_destroy_core If true, don't destroy the MKCore, even if I created it
@@ -204,7 +204,7 @@ private:
 
 inline MeshOpFactory *MeshOpFactory::instance(MKCore *mk_core, bool create_if_missing) 
 {
-  if (!instance_ && create_if_missing) 
+  if (!instance_ && (create_if_missing || !mk_core)) 
     instance_ = new MeshOpFactory(mk_core, create_if_missing);
 
   else if (instance_ && mk_core && mk_core != instance_->mkCore)

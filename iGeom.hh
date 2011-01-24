@@ -213,7 +213,9 @@ class iGeom : public iGeomBase {
                                    const EntityHandle* vertices1, int vertices1_size,
                                    const EntityHandle* vertices2, int vertices2_size,
                                    int* senses_out );
-
+  inline Error getSense(EntityHandle ent, EntityHandle wrt_ent, int &sense);
+  inline Error getArrSense(const EntityHandle *ent, int num_ents, EntityHandle wrt_ent, int *sense);
+  
     inline Error measure( const EntityHandle* entities,
                           int entities_size,
                           double* measures );
@@ -1234,6 +1236,53 @@ iGeom::getPntArrClsf( StorageOrder order,
   return (Error)err;
 }
 
+inline iGeom::Error iGeom::getSense(EntityHandle ent, EntityHandle wrt_ent, int &sense) 
+{
+  EntityType tp_wrt, tp_ent;
+  Error err = getEntType(wrt_ent, tp_wrt);
+  if (iBase_SUCCESS != err) return err;
+  err = getEntType(ent, tp_ent);
+  if (iBase_SUCCESS != err) return err;
+  if (tp_wrt-tp_ent != 1) return iBase_FAILURE;
+  switch (tp_wrt) {
+    case iBase_REGION:
+        return getEntNrmlSense(ent, wrt_ent, sense);
+        break;
+    case iBase_FACE:
+        return getEgFcSense(ent, wrt_ent, sense);
+    case iBase_EDGE:
+        return getEgVtxSense(wrt_ent, ent, ent, sense);
+    case iBase_VERTEX:
+        return iBase_FAILURE;
+  }
+  return iBase_FAILURE;
+}
+  
+inline iGeom::Error iGeom::getArrSense(const EntityHandle *ent, int num_ents, EntityHandle wrt_ent, int *sense) 
+{
+  EntityType tp_wrt, tp_ent;
+  Error err = getEntType(wrt_ent, tp_wrt);
+  if (iBase_SUCCESS != err) return err;
+  err = getEntType(ent[0], tp_ent);
+  if (iBase_SUCCESS != err) return err;
+  if (tp_wrt-tp_ent != 1) return iBase_FAILURE;
+  std::vector<EntityHandle> dum_wrts(num_ents, wrt_ent);
+  switch (tp_wrt) {
+    case iBase_REGION:
+        return getArrNrmlSense(ent, num_ents, &dum_wrts[0], num_ents, sense);
+        break;
+    case iBase_FACE:
+        return getEgFcArrSense(ent, num_ents, &dum_wrts[0], num_ents, sense);
+        break;
+    case iBase_EDGE:
+        return getEgVtxArrSense(&dum_wrts[0], num_ents, ent, num_ents, ent, num_ents, sense);
+        break;
+    case iBase_VERTEX:
+        return iBase_FAILURE;
+        break;
+  }
+  return iBase_FAILURE;
+}
     
 inline iGeom::Error
 iGeom::getEntNrmlSense( EntityHandle face, EntityHandle region, int& sense )

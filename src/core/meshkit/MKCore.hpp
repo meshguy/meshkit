@@ -5,6 +5,7 @@
  */
 #include "meshkit/Types.h"
 #include "meshkit/Error.hpp"
+#include "meshkit/MKGraph.hpp"
 #include "iGeom.hh"
 #include "moab/Interface.hpp"
 #include "iMesh.hh"
@@ -19,6 +20,9 @@ namespace MeshKit {
 
       //! Forward declare since we store a vector of these
 class SizingFunction;
+
+      //! MKCore keeps a single instance of this
+class VertexMesher;
 
 /** \class MKCore MKCore.hpp "meshkit/MKCore.hpp"
  * \brief The core MeshKit instance
@@ -35,7 +39,7 @@ class SizingFunction;
  * and/or iCreatedIrel flags in this class.
  */
 
-class MKCore
+class MKCore : public MKGraph
 {
 public:
 
@@ -117,40 +121,23 @@ public:
      */
   iRel::PairHandle *irel_pair();
 
-    /** \brief Return the (iGeom) tag used to relate geometry entities to mesh entities
+    /** \brief Return the (iGeom) tag used to relate geometry entities to ModelEnts
      */
   iGeom::TagHandle igeom_model_tag();
   
-    /** \brief Return the (MOAB) tag used to relate mesh entities to model entities
+    /** \brief Return the (MOAB) tag used to relate mesh entities to ModelEnts
      */
   moab::Tag moab_model_tag();
 
-    //! Get the graph
-  lemon::ListDigraph &meshop_graph();
-
-    //! Get root node
-  lemon::ListDigraph::Node root_node();
-  
-    //! Get leaf node
-  lemon::ListDigraph::Node leaf_node();
-
-    //! Get access to the node map
-  lemon::ListDigraph::NodeMap<MeshOp*> &node_map();
-
-    //! Get the MeshOp corresponding to a graph node
-  MeshOp *get_meshop(lemon::ListDigraph::Node node);
-  
-    //! Get the MeshOp corresponding to the source node of this arc
-  MeshOp *source(lemon::ListDigraph::Arc arc);
-  
-    //! Get the MeshOp corresponding to the target node of this arc
-  MeshOp *target(lemon::ListDigraph::Arc arc);
-
-    /** \brief Find an existing MeshOp in the graph, starting from the root
-     * \param op_name MeshOp name being requested
-     * \return Pointer to MeshOp found, NULL if not found
+    /** \brief Get the (single) VertexMesher instance
+     * \return VertexMesher for this MKCore
      */
-  MeshOp *find_meshop(std::string op_name);
+  VertexMesher *vertex_mesher() const;
+  
+    /** \brief Set the (single) VertexMesher instance
+     * \param vm VertexMesher for this MKCore
+     */
+  void vertex_mesher(VertexMesher *vm);
 
     /** \brief Get sizing function by index
      * If the requested index is outside the range of SizingFunction's currently registered,
@@ -179,12 +166,6 @@ public:
      */
   void remove_sizing_function(int index);
   
-    //! Run setup on the graph
-  void setup();
-
-    //! Run execute on the graph
-  void execute();
-  
 private:
     //! Geometry api instance
   iGeom *iGeomInstance;
@@ -210,18 +191,12 @@ private:
     //! If true, the corresponding interfaces will get deleted from the destructor
   bool iCreatedIgeom, iCreatedMoab, iCreatedMbimesh, iCreatedIrel;
 
-    //! Model entity sets, in array by topological dimension
-  moab::Range modelEnts[4];
+    //! Model entities, in array by topological dimension
+  MEVector modelEnts[4];
 
-    //! The MeshOp graph
-  lemon::ListDigraph meshopGraph;
-
-    //! Root and leaf nodes of graph
-  lemon::ListDigraph::Node rootNode, leafNode;
-
-    //! Map from graph nodes to MeshOps
-  lemon::ListDigraph::NodeMap<MeshOp*> nodeMap;
-
+    //! (Single) VertexMesher scheme for this MKCore
+  VertexMesher *vertexMesher;
+  
     //! SizingFunction vector
   std::vector<SizingFunction*> sizingFunctions;
 };
@@ -261,44 +236,14 @@ inline moab::Tag MKCore::moab_model_tag()
   return moabModelTag;
 }
 
-    //! Get root node
-inline lemon::ListDigraph &MKCore::meshop_graph() 
+inline VertexMesher *MKCore::vertex_mesher() const 
 {
-  return meshopGraph;
+  return vertexMesher;
 }
 
-    //! Get root node
-inline lemon::ListDigraph::Node MKCore::root_node() 
+inline void MKCore::vertex_mesher(VertexMesher *vm) 
 {
-  return rootNode;
-}
-
-    //! Get leaf node
-inline lemon::ListDigraph::Node MKCore::leaf_node() 
-{
-  return leafNode;
-}
-  
-    //! Get access to the node map
-inline lemon::ListDigraph::NodeMap<MeshOp*> &MKCore::node_map() 
-{
-  return nodeMap;
-}
-  
-    //! Get the MeshOp corresponding to a graph node
-inline MeshOp *MKCore::get_meshop(lemon::ListDigraph::Node node) 
-{
-  return nodeMap[node];
-}
-  
-inline MeshOp *MKCore::source(lemon::ListDigraph::Arc arc)
-{
-  return get_meshop(meshopGraph.source(arc));
-}
-
-inline MeshOp *MKCore::target(lemon::ListDigraph::Arc arc)
-{
-  return get_meshop(meshopGraph.target(arc));
+  vertexMesher = vm;
 }
 
 inline SizingFunction *MKCore::sizing_function(int index) 

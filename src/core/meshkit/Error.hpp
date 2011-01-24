@@ -21,10 +21,13 @@ namespace MeshKit {
         MK_SUCCESS = 0, 
         MK_FAILURE,
         MK_NOT_FOUND,
+        MK_MULTIPLE_FOUND,
         MK_NOT_IMPLEMENTED,
         MK_WRONG_DIMENSION,
         MK_ALREADY_DEFINED,
-        MK_BAD_INPUT
+        MK_BAD_INPUT,
+        MK_BAD_GEOMETRIC_EVALUATION,
+        MK_INCOMPLETE_MESH_SPECIFICATION
     };
     
 /** \class Error Error.hpp "meshkit/Error.hpp"

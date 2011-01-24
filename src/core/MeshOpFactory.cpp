@@ -59,7 +59,7 @@ bool MeshOpFactory::register_meshop(const char *op_name, moab::EntityType *tps, 
 MeshOpFactory::MeshOpFactory(MKCore *mk_core, bool create_if_missing) 
         : mkCore(mk_core), iCreatedCore(false)
 {
-  if (!mk_core && create_if_missing) {
+  if (!mk_core) {
     mkCore = new MKCore();
     iCreatedCore = true;
   }

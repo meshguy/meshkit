@@ -32,11 +32,11 @@ public:
   MyScheme(MKCore*, const MEVector &);
   
   inline void setup_this() 
-      {std::cout << "myScheme (setup), node " << opName << std::endl;
+      {std::cout << "myScheme (setup), node " << get_name() << std::endl;
       }
   
   inline void execute_this() 
-      {std::cout << "myScheme (execute), node " << opName << std::endl;
+      {std::cout << "myScheme (execute), node " << get_name() << std::endl;
       }
 
   inline void mesh_types(std::vector<moab::EntityType> &tps) 
@@ -72,13 +72,13 @@ int main(int argc, char **argv)
   D->set_name("D");
   
     // put them in the graph
-  mk->meshop_graph().addArc(mk->root_node(), A->op_node());
-  mk->meshop_graph().addArc(mk->root_node(), B->op_node());
-  mk->meshop_graph().addArc(A->op_node(), C->op_node());
-  mk->meshop_graph().addArc(A->op_node(), D->op_node());
-  mk->meshop_graph().addArc(B->op_node(), mk->leaf_node());
-  mk->meshop_graph().addArc(C->op_node(), mk->leaf_node());
-  mk->meshop_graph().addArc(D->op_node(), mk->leaf_node());
+  mk->get_graph().addArc(mk->root_node()->get_node(), A->get_node());
+  mk->get_graph().addArc(mk->root_node()->get_node(), B->get_node());
+  mk->get_graph().addArc(A->get_node(), C->get_node());
+  mk->get_graph().addArc(A->get_node(), D->get_node());
+  mk->get_graph().addArc(B->get_node(), mk->leaf_node()->get_node());
+  mk->get_graph().addArc(C->get_node(), mk->leaf_node()->get_node());
+  mk->get_graph().addArc(D->get_node(), mk->leaf_node()->get_node());
   
     // now traverse
   mk->setup();
