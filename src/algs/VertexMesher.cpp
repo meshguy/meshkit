@@ -8,7 +8,7 @@ namespace MeshKit
 {
 
 // static registration of this  mesh scheme
-int success = MeshOpFactory::instance()->register_meshop("VertexMesher", moab::MBVERTEX, 
+static int success = MeshOpFactory::instance()->register_meshop("VertexMesher", moab::MBVERTEX, 
                                                          VertexMesher::factory, VertexMesher::can_mesh);
     
 MeshOp *VertexMesher::factory(MKCore *mkcore, const MEVector &me_vec) 

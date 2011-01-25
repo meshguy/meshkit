@@ -12,7 +12,7 @@ namespace MeshKit
 // static registration of this  mesh scheme
 moab::EntityType tps[] = {moab::MBVERTEX, moab::MBEDGE};
     
-int success = MeshOpFactory::instance()->register_meshop("EdgeMesher", tps, 2, EdgeMesher::factory, NULL);
+static int success = MeshOpFactory::instance()->register_meshop("EdgeMesher", tps, 2, EdgeMesher::factory, NULL);
     
 MeshOp *EdgeMesher::factory(MKCore *mkcore, const MEVector &me_vec) 
 {
