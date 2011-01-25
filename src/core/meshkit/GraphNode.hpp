@@ -98,6 +98,7 @@ inline GraphNode::GraphNode(const GraphNode &node)
 }
     
 inline GraphNode::GraphNode(MKGraph *graph) 
+        : mkGraph(graph)
 {
     // create a Lemon node 
   graphNode = graph->get_graph().addNode();

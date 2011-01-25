@@ -17,7 +17,6 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
         : iGeomInstance(igeom), moabInstance(moab), mbImesh(mbi), iRelInstance(irel),
           iRelPair(NULL), iGeomModelTag(0), moabModelTag(0),
           iCreatedIgeom(false), iCreatedMoab(false), iCreatedMbimesh(false), iCreatedIrel(false)
-
 {
     // leave initialization of root/leaf nodes to hear (and not in MKGraph), so that we have an MKCore
     // to pass to MeshOp's constructor

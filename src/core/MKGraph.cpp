@@ -6,7 +6,7 @@ namespace MeshKit
 {
     
 MKGraph::MKGraph() 
-        : mkGraph(), nodeMap(mkGraph, NULL) 
+        : mkGraph(), nodeMap(mkGraph, NULL), rootNode(NULL), leafNode(NULL)
 {
 }
     
