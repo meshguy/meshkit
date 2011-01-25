@@ -1,6 +1,7 @@
 #include "meshkit/MKGraph.hpp"
 #include "meshkit/MeshOp.hpp"
 #include "lemon/adaptors.h"
+#include "lemon/connectivity.h"
 
 namespace MeshKit 
 {
@@ -105,15 +106,24 @@ void MKGraph::setup()
 //! Run execute on the graph
 void MKGraph::execute() 
 {
-    // run BFS on forward graph
-  lemon::Bfs<lemon::ListDigraph> bfs(mkGraph);
-  bfs.init();
-  bfs.addSource(rootNode->get_node());
-  while (!bfs.emptyQueue()) {
-    lemon::ListDigraph::Node nd = bfs.processNextNode();
-    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
-    if (nodeMap[nd]) nodeMap[nd]->execute_this();
+
+  typedef lemon::IterableIntMap<lemon::ListDigraph, lemon::ListDigraph::Node> topomap;
+
+  // Run execute_this on all nodes in topological order
+  topomap topo_levels( mkGraph ); 
+  lemon::topologicalSort( mkGraph, topo_levels );
+
+  for( unsigned int i = 0; i<topo_levels.size(); ++i){
+
+    for( topomap::ItemIt j(topo_levels, i); j != lemon::INVALID; ++j ){
+
+      GraphNode* gn = nodeMap[ j ];
+      assert( gn );
+      gn->execute_this();
+
+    }
   }
+
 }
 
 } // namespace MeshKit
