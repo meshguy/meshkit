@@ -181,7 +181,7 @@ fi
 if test "xyes" = "x$HAVE_$2"; then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2 ${$2_INCLUDES}"
   AM_LDFLAGS="$AM_LDFLAGS ${$2_LDFLAGS}"
-  LIBS="$LIBS ${$2_LIBS}"
+  LIBS="${$2_LIBS} $LIBS"
 elif test "xyes" = "x$warn"; then
   AC_MSG_WARN([$itaps_pfx not found: $5])
 else
@@ -599,7 +599,7 @@ AC_HELP_STRING([--without-mesquite], [Configure w/out support for Mesquite libra
 # mesquite object in specified lib.  Arguments are 1) class name, 2) library name,
 # 3) actions if success and 4) actions if not found.
 AC_DEFUN([MESQUITE_LINK_DESTRUCTOR],[
-    old_LIBS="$LIBS"
+    msq_link_dest_old_LIBS="$LIBS"
     LIBS="-l$2 $LIBS"
     AC_MSG_CHECKING([for $1 in -l$2])
     AC_LINK_IFELSE( [AC_LANG_PROGRAM(
@@ -609,10 +609,11 @@ AC_DEFUN([MESQUITE_LINK_DESTRUCTOR],[
                        }],
                       [MESQUITE_NS::$1 *i; i->~$1()])],
                      [AC_MSG_RESULT([yes])
+                      LIBS="$msq_link_dest_old_LIBS"
                       $3],
                      [AC_MSG_RESULT([no])
+                      LIBS="$msq_link_dest_old_LIBS"
                       $4] )
-    LIBS="$old_LIBS"
 ])
 
 
