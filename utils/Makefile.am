@@ -4,9 +4,6 @@ AUTOMAKE_OPTIONS = foreign
 # Subdirectories to build
 SUBDIRS = 
 
-@IGEOM_CONFIG_OPTIONS@
-@IMESH_CONFIG_OPTIONS@
-
 # Things to build
 lib_LTLIBRARIES = libMKutils.la
 
@@ -34,13 +31,5 @@ MKUtils_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 MKUtils_test_LDADD = libMKutils.la $(IMESH_LIBS) $(IGEOM_LIBS) 
 
 # Boilerplate stuff that doesn't depend on what the targets are
-AM_CPPFLAGS = $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)
-
-if HAVE_IGEOM
-AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
-endif
-
-if HAVE_IMESH
-AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
-endif
+AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)
 

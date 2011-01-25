@@ -3,9 +3,6 @@ AUTOMAKE_OPTIONS = foreign
 # Don't loose the autoconf include path
 ACLOCAL_AMFLAGS = -I m4
 
-@IGEOM_CONFIG_OPTIONS@
-@IMESH_CONFIG_OPTIONS@
-
 # Subdirectories to build
 SUBDIRS = . test
 if ENABLE_utils
@@ -34,24 +31,6 @@ AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
 
 check_PROGRAMS =  
 TESTS = $(check_PROGRAMS)
-
-if HAVE_IGEOM
-AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
-LIBS += $(IGEOM_LIBS)
-endif
-
-if HAVE_IMESH
-AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
-LIBS += $(IMESH_LIBS)
-#CXXFLAGS += $(IMESH_CXXFLAGS)
-#CFLAGS += $(IMESH_CFLAGS)
-#LDFLAGS += $(IMESH_LDFLAGS)
-endif
-
-if HAVE_IREL
-AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
-LIBS += $(IREL_LIBS)
-endif
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB

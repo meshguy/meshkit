@@ -31,9 +31,9 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = x86_64-unknown-linux-gnu
-host_triplet = x86_64-unknown-linux-gnu
-target_triplet = x86_64-unknown-linux-gnu
+build_triplet = i686-pc-linux-gnu
+host_triplet = i686-pc-linux-gnu
+target_triplet = i686-pc-linux-gnu
 subdir = src/lemon/doc
 DIST_COMMON = $(srcdir)/Doxyfile.in $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -41,7 +41,8 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/compiler.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/makevar.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -51,16 +52,16 @@ CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/tautges/code/MKdesign/missing --run aclocal-1.11
-AMTAR = ${SHELL} /home/tautges/code/MKdesign/missing --run tar
+ACLOCAL = ${SHELL} /home/jason/meshkit/meshkit/missing --run aclocal-1.11
+AMTAR = ${SHELL} /home/jason/meshkit/meshkit/missing --run tar
 AM_CFLAGS = 
-AM_CPPFLAGS =  -DHAVE_VSNPRINTF -D_FILE_OFFSET_BITS=64 -DHAVE_IGEOM -DHAVE_IMESH -DHAVE_IREL
+AM_CPPFLAGS =  -DHAVE_VSNPRINTF -D_FILE_OFFSET_BITS=64 -DHAVE_IGEOM -I/home/jason/meshkit/include -DHAVE_IMESH -I/home/jason/meshkit/include  -DHAVE_IREL -I/home/jason/meshkit/include
 AM_CXXFLAGS = 
-AM_LDFLAGS = 
+AM_LDFLAGS =  -L/home/jason/meshkit/lib  -L/opt/acis16/bin/linux_so_debug -L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../.. -L/usr/lib/i686-linux-gnu -L/home/jason/meshkit/lib  -L/opt/acis16/bin/linux_so_debug 
 AR = ar
-AUTOCONF = ${SHELL} /home/tautges/code/MKdesign/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/tautges/code/MKdesign/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/tautges/code/MKdesign/missing --run automake-1.11
+AUTOCONF = ${SHELL} /home/jason/meshkit/meshkit/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/jason/meshkit/meshkit/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/jason/meshkit/meshkit/missing --run automake-1.11
 AWK = gawk
 CAMAL_CPPFLAGS = 
 CAMAL_LDFLAGS = 
@@ -70,16 +71,16 @@ CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS =  -pipe -g
 CPP = gcc -E
-CPPFLAGS =  -DVALGRIND
+CPPFLAGS = 
 CXX = g++
 CXXCPP = g++ -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -I/home/tautges/scratch/lemon-1.2.1/include -pipe -g
+CXXFLAGS =  -pipe -g
 CYGPATH_W = echo
 DEFINES = 
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
-DISTCHECK_CONFIGURE_FLAGS =  --with-igeom=/home/tautges/code/CGMcubit --with-imesh=/home/tautges/code/MOABdbg --with-irel=/home/tautges/code/Lassoclean --enable-src="yes"
+DISTCHECK_CONFIGURE_FLAGS =  --with-itaps=/home/jason/meshkit --enable-src="yes"
 DSYMUTIL = 
 DUMPBIN = 
 ECHO_C = 
@@ -104,23 +105,23 @@ HAVE_CAMAL_TRIDEL = no
 HAVE_MOAB = 
 HAVE_TETGEN = no
 HAVE_TRIANGLE = no
-IGEOM_CONFIG_OPTIONS = include /home/tautges/code/CGMcubit/lib/iGeom-Defs.inc
-IMESH_CONFIG_OPTIONS = include /home/tautges/code/MOABdbg/lib/iMesh-Defs.inc
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-IREL_CONFIG_OPTIONS = include /home/tautges/code/Lassoclean/lib/iRel-Defs.inc
-LD = /usr/bin/ld -m elf_x86_64
+LD = /usr/bin/ld
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lm
+LIBS = -lmesquite -lmesquite -lmesquite -lm -L/home/jason/meshkit/lib  -L/opt/acis16/bin/linux_so_debug -L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../.. -L/usr/lib/i686-linux-gnu -liGeom -lcgm    -lSpaAVis -lSpaAWarp -lSpaASurf -lSpaALops -lSpaABlend -lSpaACIS -lSpaBase -lstdc++ -lm -lgcc_s -lc -lgcc_s -L/home/jason/meshkit/lib  -L/opt/acis16/bin/linux_so_debug -L/home/jason/meshkit/lib -L/home/jason/meshkit/lib -liMesh -lMOAB -lnetcdf -lhdf5  -lm -L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../.. -L/usr/lib/i686-linux-gnu -lstdc++ -L/home/jason/meshkit/lib  -L/opt/acis16/bin/linux_so_debug -lcgm    -lSpaAVis -lSpaAWarp -lSpaASurf -lSpaALops -lSpaABlend -lSpaACIS -lSpaBase   -L/home/jason/meshkit/lib -liRel  -lm
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/tautges/code/MKdesign/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/jason/meshkit/meshkit/missing --run makeinfo
+MESQUITE_CPPFLAGS = -I/home/jason/meshkit/include
+MESQUITE_DEFINES =  -DMSQIGEOM
+MESQUITE_LDFLAGS = -L/home/jason/meshkit/lib
 MKDIR_P = /bin/mkdir -p
 NM = /usr/bin/nm -B
 NMEDIT = 
@@ -148,10 +149,10 @@ TRIANGLE_CPPFLAGS =
 TRIANGLE_LIBS = 
 VERSION = 3.99
 ZCAT = gunzip -c
-abs_builddir = /home/tautges/code/MKdesign/src/lemon/doc
-abs_srcdir = /home/tautges/code/MKdesign/src/lemon/doc
-abs_top_builddir = /home/tautges/code/MKdesign
-abs_top_srcdir = /home/tautges/code/MKdesign
+abs_builddir = /home/jason/meshkit/meshkit/src/lemon/doc
+abs_srcdir = /home/jason/meshkit/meshkit/src/lemon/doc
+abs_top_builddir = /home/jason/meshkit/meshkit
+abs_top_srcdir = /home/jason/meshkit/meshkit
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 ac_ct_DUMPBIN = 
@@ -163,26 +164,26 @@ am__quote =
 am__tar = ${AMTAR} chof - "$$tardir"
 am__untar = ${AMTAR} xf -
 bindir = ${exec_prefix}/bin
-build = x86_64-unknown-linux-gnu
+build = i686-pc-linux-gnu
 build_alias = 
-build_cpu = x86_64
+build_cpu = i686
 build_os = linux-gnu
-build_vendor = unknown
+build_vendor = pc
 builddir = .
 datadir = ${datarootdir}
 datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-host = x86_64-unknown-linux-gnu
+host = i686-pc-linux-gnu
 host_alias = 
-host_cpu = x86_64
+host_cpu = i686
 host_os = linux-gnu
-host_vendor = unknown
+host_vendor = pc
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/tautges/code/MKdesign/install-sh
+install_sh = ${SHELL} /home/jason/meshkit/meshkit/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -192,18 +193,18 @@ mandir = ${datarootdir}/man
 mkdir_p = /bin/mkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/tautges/code/MKdesign
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
 sysconfdir = ${prefix}/etc
-target = x86_64-unknown-linux-gnu
+target = i686-pc-linux-gnu
 target_alias = 
-target_cpu = x86_64
+target_cpu = i686
 target_os = linux-gnu
-target_vendor = unknown
+target_vendor = pc
 top_build_prefix = ../../../
 top_builddir = ../../..
 top_srcdir = ../../..
@@ -438,7 +439,7 @@ $(DOC_EPS_IMAGES27:%.eps=gen-images/%.png): gen-images/%.png: images/%.eps
 	$(GS_COMMAND) -sDEVICE=pngalpha -r27 -sOutputFile=$@ $<;
 
 references.dox: references.bib
-	  python /home/tautges/code/MKdesign/scripts/bib2dox.py /home/tautges/code/MKdesign/$< >$@;
+	  python /home/jason/meshkit/meshkit/scripts/bib2dox.py /home/jason/meshkit/meshkit/$< >$@;
 
 html-local: $(DOC_PNG_IMAGES) 
 	  doxygen Doxyfile;

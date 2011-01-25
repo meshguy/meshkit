@@ -15,8 +15,8 @@ ABBREVIATE_BRIEF       =
 ALWAYS_DETAILED_SEC    = NO
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
-STRIP_FROM_PATH        = "/home/tautges/code/MKdesign"
-STRIP_FROM_INC_PATH    = "/home/tautges/code/MKdesign"
+STRIP_FROM_PATH        = "/home/jason/meshkit/meshkit"
+STRIP_FROM_INC_PATH    = "/home/jason/meshkit/meshkit"
 SHORT_NAMES            = YES
 JAVADOC_AUTOBRIEF      = NO
 QT_AUTOBRIEF           = NO
@@ -84,12 +84,12 @@ WARN_LOGFILE           = doxygen.log
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = "/home/tautges/code/MKdesign/src/lemon/doc" \
-                         "/home/tautges/code/MKdesign/src/lemon" \
-                         "/home/tautges/code/MKdesign/src/lemon/lemon" \
-                         "/home/tautges/code/MKdesign/src/lemon/lemon/bits" \
-                         "/home/tautges/code/MKdesign/src/lemon/lemon/concepts" \
-                         "/home/tautges/code/MKdesign/src/lemon/doc/references.dox"
+INPUT                  = "/home/jason/meshkit/meshkit/src/lemon/doc" \
+                         "/home/jason/meshkit/meshkit/src/lemon" \
+                         "/home/jason/meshkit/meshkit/src/lemon/lemon" \
+                         "/home/jason/meshkit/meshkit/src/lemon/lemon/bits" \
+                         "/home/jason/meshkit/meshkit/src/lemon/lemon/concepts" \
+                         "/home/jason/meshkit/meshkit/src/lemon/doc/references.dox"
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.h \
                          *.cc \
@@ -99,12 +99,12 @@ EXCLUDE                =
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
 EXCLUDE_SYMBOLS        = 
-EXAMPLE_PATH           = "/home/tautges/code/MKdesign/src/lemon/LICENSE" \
-                         "/home/tautges/code/MKdesign/src/lemon/doc"
+EXAMPLE_PATH           = "/home/jason/meshkit/meshkit/src/lemon/LICENSE" \
+                         "/home/jason/meshkit/meshkit/src/lemon/doc"
 EXAMPLE_PATTERNS       = 
 EXAMPLE_RECURSIVE      = NO
-IMAGE_PATH             = "/home/tautges/code/MKdesign/src/lemon/doc/images" \
-                         "/home/tautges/code/MKdesign/src/lemon/doc/gen-images"
+IMAGE_PATH             = "/home/jason/meshkit/meshkit/src/lemon/doc/images" \
+                         "/home/jason/meshkit/meshkit/src/lemon/doc/gen-images"
 INPUT_FILTER           = 
 FILTER_PATTERNS        = 
 FILTER_SOURCE_FILES    = NO
@@ -222,7 +222,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Options related to the search engine   
 #---------------------------------------------------------------------------
-TAGFILES               = "/home/tautges/code/MKdesign/src/lemon/doc/libstdc++.tag = http://gcc.gnu.org/onlinedocs/libstdc++/latest-doxygen/  "
+TAGFILES               = "/home/jason/meshkit/meshkit/src/lemon/doc/libstdc++.tag = http://gcc.gnu.org/onlinedocs/libstdc++/latest-doxygen/  "
 GENERATE_TAGFILE       = html/lemon.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO

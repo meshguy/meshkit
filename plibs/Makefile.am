@@ -4,10 +4,6 @@ AUTOMAKE_OPTIONS = foreign
 # Subdirectories to build
 SUBDIRS = 
 
-@IGEOM_CONFIG_OPTIONS@
-@IMESH_CONFIG_OPTIONS@
-@IREL_CONFIG_OPTIONS@
-
 # Things to build
 lib_LTLIBRARIES = libMKplibs.la
 
@@ -39,18 +35,6 @@ TetGen_test_LDADD = libMKplibs.la $(TETGEN_LIBS) $(IMESH_LIBS) $(IGEOM_LIBS) $(I
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) -I$(top_srcdir) -I$(top_builddir)
-
-if HAVE_IGEOM
-AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
-endif
-
-if HAVE_IMESH
-AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
-endif
-
-if HAVE_IREL
-AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
-endif
 
 if HAVE_TETGEN
 CPPFLAGS += $(TETGEN_CPPFLAGS) -DTETLIBRARY

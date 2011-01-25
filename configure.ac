@@ -162,16 +162,26 @@ case "x$itaps_dir" in
     fi
     HAVE_$2=yes
     AC_CHECK_FILE([$itaps_dir/lib/${itaps_pfx}-Defs.inc],
-     [$2_CONFIG_OPTIONS="include $itaps_dir/lib/${itaps_pfx}-Defs.inc"],
+     [$2_CONFIG_OPTIONS="$itaps_dir/lib/${itaps_pfx}-Defs.inc"],
      [AC_CHECK_FILE([$itaps_dir/${itaps_pfx}-Defs.inc],
-       [$2_CONFIG_OPTIONS="include $itaps_dir/${itaps_pfx}-Defs.inc"],
+       [$2_CONFIG_OPTIONS="$itaps_dir/${itaps_pfx}-Defs.inc"],
        [HAVE_$2=no])])
     ;;
 esac
 
-AC_SUBST([$2_CONFIG_OPTIONS])
+if test "xyes" = "x$HAVE_$2"; then
+  FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_INCLUDES],[$2_INCLUDES="$make_val"],
+                      [AC_MSG_ERROR([$2_INCLUDES not found in $2_CONFIG_OPTIONS])])
+  FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LDFLAGS],[$2_LDFLAGS="$make_val"],
+                      [AC_MSG_ERROR([$2_LDFLAGS not found in $2_CONFIG_OPTIONS])])
+  FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LIBS],[$2_LIBS="$make_val"],
+                      [AC_MSG_ERROR([$2_LIBS not found in $2_CONFIG_OPTIONS])])
+fi
+
 if test "xyes" = "x$HAVE_$2"; then 
-  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2"
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2 ${$2_INCLUDES}"
+  AM_LDFLAGS="$AM_LDFLAGS ${$2_LDFLAGS}"
+  LIBS="$LIBS ${$2_LIBS}"
 elif test "xyes" = "x$warn"; then
   AC_MSG_WARN([$itaps_pfx not found: $5])
 else
@@ -572,6 +582,121 @@ AC_SUBST([TRIANGLE_LIBS])
 AC_SUBST([HAVE_TRIANGLE])
 
 AM_CONDITIONAL(HAVE_TRIANGLE, [test "x$HAVE_TRIANGLE" = "xyes"])
+
+
+################################################################################
+#                           Mesquite
+################################################################################
+
+AC_ARG_WITH([mesquite],
+            [AC_HELP_STRING([--with-mesquite@<:@=DIR@:>@], [Specify where to find Mesquite library])
+AC_HELP_STRING([--without-mesquite], [Configure w/out support for Mesquite library])],
+            [WITH_MESQUITE=$withval],
+            [WITH_MESQUITE=])
+
+
+# define function that tries to find a no-arg constructor for a 
+# mesquite object in specified lib.  Arguments are 1) class name, 2) library name,
+# 3) actions if success and 4) actions if not found.
+AC_DEFUN([MESQUITE_LINK_DESTRUCTOR],[
+    old_LIBS="$LIBS"
+    LIBS="-l$2 $LIBS"
+    AC_MSG_CHECKING([for $1 in -l$2])
+    AC_LINK_IFELSE( [AC_LANG_PROGRAM(
+                      [#include "Mesquite.hpp"
+                       namespace MESQUITE_NS {
+                       class $1 { public: ~$1 (); };
+                       }],
+                      [MESQUITE_NS::$1 *i; i->~$1()])],
+                     [AC_MSG_RESULT([yes])
+                      $3],
+                     [AC_MSG_RESULT([no])
+                      $4] )
+    LIBS="$old_LIBS"
+])
+
+
+if test "x$WITH_MESQUITE" != "xno"; then
+  AC_LANG_PUSH([C++])
+
+  MESQUITE_LDFLAGS=
+  MESQUITE_CPPFLAGS=
+  MESQUITE_LIBS=
+  HAVE_MESQUITE=yes
+  MESQUITE_HAS_IMESH=no
+  MESQUITE_HAS_IGEOM=no
+  MESQUITE_HAS_IREL=no
+  if test "x$WITH_MESQUITE" != "xyes"; then
+    if test "x$WITH_MESQUITE" != "x"; then
+      MESQUITE_LDFLAGS=-L$WITH_MESQUITE/lib
+      MESQUITE_CPPFLAGS=-I$WITH_MESQUITE/include
+    fi
+  fi
+  
+  old_LIBS="$LIBS"
+  old_LDFLAGS="$LD_FLAGS"
+  old_CPPFLAGS="$old_CPPFLAGS"
+  LDFLAGS="$LDFLAGS $MESQUITE_LDFLAGS"
+  CPPFLAGS="$CPPFLAGS $MESQUITE_CPPFLAGS"
+  
+  AC_MSG_CHECKING([for Mesquite.hpp])
+  AC_CHECK_HEADER([Mesquite.hpp], ,[HAVE_MESQUITE=no])
+  
+  if test $HAVE_MESQUITE = yes; then
+    MESQUITE_LINK_DESTRUCTOR([PatchData],[mesquite],[LIBS="-lmesquite $LIBS"
+                            MESQUITE_LIBS="-lmesquite"],[HAVE_MESQUITE=no])
+  fi
+  if test $HAVE_MESQUITE = yes; then
+    
+    MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[mesquite],[MESQUITE_HAS_IMESH=yes],
+      [MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[msqimesh], 
+        [MESQUITE_HAS_IMESH=yes 
+         MESQUITE_LIBS="-lmsqimesh $MESQUITE_LIBS"
+         LIBS="-lmsqimesh $LIBS"],[MESQUITE_HAS_IMESH=no])])
+    MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[mesquite],[MESQUITE_HAS_IGEOM=yes],
+      [MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[msqigeom], 
+        [MESQUITE_HAS_IGEOM=yes 
+         MESQUITE_LIBS="-lmsqigeom $MESQUITE_LIBS"
+         LIBS="-lmsqigeom $LIBS"],[MESQUITE_HAS_IGEOM=no])])
+    MESQUITE_LINK_DESTRUCTOR([MsqIRel],[mesquite],[MESQUITE_HAS_IREL=yes],
+      [MESQUITE_LINK_DESTRUCTOR([MsqIRel],[msqirel], 
+        [MESQUITE_HAS_IREL=yes 
+         MESQUITE_LIBS="-lmsqirel $MESQUITE_LIBS"
+         LIBS="-lmsqirel $LIBS"],[MESQUITE_HAS_IREL=no])])
+  
+  fi
+  
+  LIBS="$old_LIBS"
+  CPPFLAGS="$old_CPPFLAGS"
+  LDFLAGS="$old_LDFLAGS"
+  AC_LANG_POP([C++])
+  
+  if test "xyes" = "x$HAVE_MESQUITE"; then
+    if test "xno" = "x$MESQUITE_HAS_IMESH"; then
+      AC_MSG_WARN([Mesquite library does not have iMesh support])
+      HAVE_MESQUITE=no
+    fi
+  fi
+  
+  if test "xno" = "x$HAVE_MESQUITE"; then
+    if test "x" != "x$WITH_MESQUITE"; then
+      AC_MSG_ERROR([Mesquite not found or not usable])
+    fi
+  fi
+
+  MESQUITE_DEFINES=
+  test $MESQUITE_HAS_IMESH = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIMESH"
+  test $MESQUITE_HAS_IMESH = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIMESH"
+  test $MESQUITE_HAS_IGEOM = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIGEOM"
+  test $MESQUITE_HAS_IREL  = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIREL"
+  AC_SUBST([MESQUITE_DEFINES])
+  AC_SUBST([MESQUITE_LDFLAGS])
+  AC_SUBST([MESQUITE_CPPFLAGS])
+  AM_CONDITIONAL(HAVE_MESQUITE, [test $HAVE_MESQUITE = yes])
+fi
+
+
+
 
 ################################################################################
 #                           Output Files

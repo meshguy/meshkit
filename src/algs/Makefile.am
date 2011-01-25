@@ -1,10 +1,6 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
-@IGEOM_CONFIG_OPTIONS@
-@IMESH_CONFIG_OPTIONS@
-@IREL_CONFIG_OPTIONS@
-
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
          
@@ -26,18 +22,6 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils \
               -I$(srcdir)/../lemon
-
-if HAVE_IGEOM
-AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS) -DCGM
-endif
-
-if HAVE_IMESH
-AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
-endif
-
-if HAVE_IREL
-AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
-endif
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB

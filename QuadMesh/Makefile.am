@@ -4,9 +4,6 @@ AUTOMAKE_OPTIONS = foreign
 # Subdirectories to build
 SUBDIRS = 
 
-@IGEOM_CONFIG_OPTIONS@
-@IMESH_CONFIG_OPTIONS@
-
 # Things to build
 lib_LTLIBRARIES = libQuadMesh.la
 
@@ -37,19 +34,6 @@ libQuadMesh_la_include_HEADERS = \
 # Boilerplate stuff that doesn't depend on what the targets are
 DEFS = $(DEFINES) -DSRCDIR=$(srcdir)
 INCLUDES += -I$(top_srcdir) -I$(top_builddir)
-
-if HAVE_IGEOM
-INCLUDES += $(IGEOM_INCLUDES)
-CPPFLAGS += $(IGEOM_CPPFLAGS)
-endif
-
-if HAVE_IMESH
-INCLUDES += $(IMESH_INCLUDES)
-CPPFLAGS += $(IMESH_CPPFLAGS)
-#CXXFLAGS += $(IMESH_CXXFLAGS)
-#CFLAGS += $(IMESH_CFLAGS)
-#LDFLAGS += $(IMESH_LDFLAGS)
-endif
 
 if HAVE_MOAB
 CXXFLAGS += -DMOAB
