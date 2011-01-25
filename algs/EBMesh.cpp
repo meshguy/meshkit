@@ -12,14 +12,15 @@
 #include "MKDefines.h"
 #include "EBMesh.hpp"
 
-#ifdef MOAB
+#ifdef HAVE_MOAB
 #include "moab/Core.hpp"
 #include "MBRange.hpp"
 #include "MBCartVect.hpp"
 #include "moab/HomXform.hpp"
+#include "moab/GeomTopoTool.hpp"
 #endif
 
-#ifdef CGM
+#ifdef HAVE_CGM
 #include "CubitDefines.h"
 #include "GeometryQueryTool.hpp"
 #include "RefFace.hpp"
@@ -47,7 +48,7 @@ EBMesh::EBMesh(iMesh_Instance mesh, iBase_EntitySetHandle root_set,
   m_iStartHex = 0;
   //m_nFraction = 0;
 
-#ifdef MOAB
+#ifdef HAVE_MOAB
   // create tags with MOAB for dense tags
   int outside = 1;
   const void *out = &outside;
@@ -85,7 +86,7 @@ EBMesh::~EBMesh()
 
 int EBMesh::do_mesh()
 {
- #ifdef MOAB
+ #ifdef HAVE_MOAB
   time_t time1, time2, time3, time4, time5, time6;
   time(&time1);
   unsigned long mem1, mem2, mem3, mem4, mem5;
@@ -465,7 +466,7 @@ bool EBMesh::set_edge_status(int dir)
   return true;
 }
 
-#ifdef MOAB
+#ifdef HAVE_MOAB
 int EBMesh::make_scd_hexes()
 {
   // create vertex and hex sequences

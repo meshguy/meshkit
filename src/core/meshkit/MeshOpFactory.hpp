@@ -80,6 +80,16 @@ public:
   
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
+     * \param tp The MOAB entity type operated on by this MeshOp
+     * \param meshop The (static) factory function producing instances of this MeshOp type
+     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \return Returns true if successful, false otherwise
+     */
+  bool register_meshop(const char *op_name, iMesh::EntityTopology tp, 
+                       meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+  
+    /** \brief Register a new MeshOp factory
+     * \param op_name The name by which this type of MeshOp can be requested
      * \param tps The MOAB entity types operated on by this MeshOp
      * \param num_tps Number of entity types in tps
      * \param meshop The (static) factory function producing instances of this MeshOp type
@@ -88,6 +98,9 @@ public:
      */
   bool register_meshop(const char *op_name, moab::EntityType *tps, int num_tps,
                        meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+  
+  bool register_meshop(const char *op_name, iMesh::EntityTopology *tps, int num_tps,
+                       meshop_factory_t meshop, meshop_canmesh_t canmesh);
   
     /** \struct OpInfo MeshOpFactory.hpp "meshkit/MeshOpFactory.hpp"
      * \brief Struct used to store information about each MeshOp type registered with MeshOpFactory
@@ -223,6 +236,33 @@ inline MKCore *MeshOpFactory::mk_core()
   return mkCore;
 }
 
+/** \brief Register a new MeshOp factory
+ * \param op_name The name by which this type of MeshOp can be requested
+ * \param tp The MOAB entity type operated on by this MeshOp
+ * \param meshop The (static) factory function producing instances of this MeshOp type
+ * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+ */
+inline bool MeshOpFactory::register_meshop(const char *op_name, iMesh::EntityTopology tp, 
+                                           meshop_factory_t meshop, meshop_canmesh_t canmesh) 
+{
+  return register_meshop(op_name, iMesh::mb_topology_table[tp], meshop, canmesh);
+}
+  
+/** \brief Register a new MeshOp factory
+ * \param op_name The name by which this type of MeshOp can be requested
+ * \param tps The MOAB entity types operated on by this MeshOp
+ * \param num_tps Number of entity types in tps
+ * \param meshop The (static) factory function producing instances of this MeshOp type
+ * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+ */
+inline bool MeshOpFactory::register_meshop(const char *op_name, iMesh::EntityTopology *tps, int num_tps,
+                                           meshop_factory_t meshop, meshop_canmesh_t canmesh)
+{
+  std::vector<moab::EntityType> tmp_tps(num_tps);
+  for (int i = 0; i < num_tps; i++) tmp_tps[i] = iMesh::mb_topology_table[tps[i]];
+  return register_meshop(op_name, &tmp_tps[0], num_tps, meshop, canmesh);
+}
+  
 } // namespace MeshKit
 
 #endif

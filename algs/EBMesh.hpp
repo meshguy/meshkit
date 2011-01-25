@@ -15,7 +15,7 @@
 
 #include "iMesh.h"
 
-#ifdef MOAB
+#ifdef HAVE_MOAB
 #include "MBInterface.hpp"
 #include "moab/GeomTopoTool.hpp"
 #include "MBCartVect.hpp"
@@ -182,7 +182,7 @@ private:
   bool export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& mdCutCellEdge);
   bool make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles);
 
-#ifdef MOAB
+#ifdef HAVE_MOAB
   MBInterface* moab_instance() {return reinterpret_cast<MBiMesh*> (m_mesh)->mbImpl;}
   iBase_TagHandle get_tag(const char* name, int size, MBTagType store, MBDataType type,
 			  const void* def_value = NULL, bool create_if_missing = true);

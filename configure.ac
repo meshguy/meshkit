@@ -194,13 +194,41 @@ CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may f
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabled] )
 
-
 ################################################################################
 #                           MOAB
 ################################################################################
-AC_CHECK_FILE([$IMESH_DIR/lib/libMOAB.a], [have_moab=yes])
-AM_CONDITIONAL(HAVE_MOAB, [test "xyes" = "x$have_moab"])
+old_LIBS="$LIBS"
+old_LDFLAGS="$LDFLAGS"
+old_CPPFLAGS="$CPPFLAGS"
+LDFLAGS="$LDFLAGS $IMESH_LDFLAGS"
+AC_LANG_PUSH([C++])
+AC_CHECK_LIB( [MOAB], [main], [HAVE_MOAB=yes],[HAVE_MOAB=no] )
+AM_CONDITIONAL( HAVE_MOAB, [test "xyes" == "x$HAVE_$2"] )
 AC_SUBST([HAVE_MOAB])
+if test "xyes" = "x$HAVE_MOAB"; then 
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_MOAB"
+fi
+LIBS="$old_LIBS"
+LDFLAGS="$old_LDFLAGS"
+CPPFLAGS="$old_CPPFLAGS"
+
+################################################################################
+#                           CGM
+################################################################################
+old_LIBS="$LIBS"
+old_LDFLAGS="$LDFLAGS"
+old_CPPFLAGS="$CPPFLAGS"
+LDFLAGS="$LDFLAGS $IGEOM_LDFLAGS"
+AC_LANG_PUSH([C++])
+AC_CHECK_LIB( [cgm], [main], [HAVE_CGM=yes],[HAVE_CGM=no] )
+AM_CONDITIONAL( HAVE_CGM, [test "xyes" == "x$HAVE_$2"] )
+AC_SUBST([HAVE_CGM])
+if test "xyes" = "x$HAVE_CGM"; then 
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CGM"
+fi
+LIBS="$old_LIBS"
+LDFLAGS="$old_LDFLAGS"
+CPPFLAGS="$old_CPPFLAGS"
 
 ###############################################################################
 #                           Optional Tools
