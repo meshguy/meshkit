@@ -24,7 +24,8 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils
+              -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils \
+              -I$(srcdir)/../lemon
 
 if HAVE_IGEOM
 AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS) -DCGM
