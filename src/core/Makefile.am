@@ -31,6 +31,7 @@ nobase_libMeshKitcore_la_include_HEADERS = \
 	meshkit/MKCore.hpp \
 	meshkit/MKGraph.hpp \
 	meshkit/ModelEnt.hpp \
+	meshkit/NoOp.hpp \
 	meshkit/SizingFunction.hpp \
 	meshkit/VecUtil.hpp
 

@@ -65,10 +65,10 @@ public:
   virtual void execute();
   
     //! Pure virtual, derived class must define
-  virtual void setup_this();
+  virtual void setup_this() = 0;
 
     //! Pure virtual, derived class must define
-  virtual void execute_this();
+  virtual void execute_this() = 0;
 
 protected:
     //! MKGraph associated with this GraphNode
@@ -171,14 +171,6 @@ inline void GraphNode::execute()
   for (lemon::ListDigraph::OutArcIt ait = out_arcs(); ait != lemon::INVALID; ++ait) 
     mkGraph->target(ait)->execute();
 }
-
-    //! Pure virtual, derived class must define
-inline void GraphNode::setup_this() 
-{}
-
-    //! Pure virtual, derived class must define
-inline void GraphNode::execute_this() 
-{}
 
 } // namespace MeshKit
 

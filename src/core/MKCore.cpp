@@ -3,7 +3,7 @@
 #include "moab/Core.hpp"
 #include "MBiMesh.hpp"
 #include "meshkit/MKCore.hpp"
-#include "meshkit/MeshOp.hpp"
+#include "meshkit/NoOp.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "lemon/bfs.h"
@@ -22,8 +22,8 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
     // to pass to MeshOp's constructor
     // make the leaf/root nodes, link them with an edge; don't need to initialize map to MeshOp, since
     // by default that's NULL
-  rootNode = new MeshOp(this);
-  leafNode = new MeshOp(this);
+  rootNode = new NoOp(this);
+  leafNode = new NoOp(this);
   mkGraph.addArc(rootNode->get_node(), leafNode->get_node());
 
   init(construct_missing_ifaces);
