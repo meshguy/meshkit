@@ -44,15 +44,15 @@ public:
      * \param err %Error code to which this Error should be initialized
      * \param descr String describing the type of error represented by this object
      */
-  Error(int err, const char *descr = NULL);
-
-    //! Copy constructor
-  Error(const Error &err);
+  Error(int err);
+  
+  Error(int err, const char* format, ...)
+#ifdef __GNUC__
+    __attribute__((format(printf,3,4)))
+#endif
+    ;
 
   Error() {};
-
-    //! Operator=
-  Error &operator=(const Error &err);
 
     //! Destructor
   virtual ~Error() throw();
@@ -71,18 +71,9 @@ private:
   std::string errDescription;
 };
 
-inline Error::Error(int err, const char *descr) : errorCode((ErrorCode)err), errDescription(descr) {}
-
-inline Error::Error(const Error &err) : errorCode(err.error_code()), errDescription(err.what()) {}
+inline Error::Error(int err) : errorCode((ErrorCode)err) {}
 
 inline Error::~Error() throw () {}
-    
-inline Error &Error::operator=(const Error &err) 
-{
-  errorCode = err.error_code();
-  errDescription.assign(err.what());
-  return *this;
-}
 
 inline ErrorCode Error::error_code() const
 {
