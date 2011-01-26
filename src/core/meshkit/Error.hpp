@@ -22,6 +22,7 @@ namespace MeshKit {
         MK_FAILURE,
         MK_NOT_FOUND,
         MK_MULTIPLE_FOUND,
+        MK_MESHOP_NOT_FOUND,
         MK_NOT_IMPLEMENTED,
         MK_WRONG_DIMENSION,
         MK_ALREADY_DEFINED,

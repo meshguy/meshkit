@@ -58,6 +58,13 @@ public:
      */
   virtual void mesh_types(std::vector<moab::EntityType> &mesh_types);
   
+    /** \brief Check that bounding entities have an assigned MeshOp, and create them for ones that don't
+     *
+     * Uses default MeshOp for a given dimension from MeshOpFactory.  If there isn't a registered MeshOp for
+     * the dimension requested, this function throws an exception with mode MK_MESHOP_NOT_FOUND.
+     */
+  void setup_boundary();
+  
 protected:
     //! MESelection that stores what this operation generated or otherwise worked on
   MESelection meSelection;
