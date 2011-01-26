@@ -99,7 +99,15 @@ void MKGraph::setup()
   while (!rbfs.emptyQueue()) {
     lemon::ListDigraph::Node nd = rbfs.processNextNode();
     assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
-    if (nodeMap[nd]) nodeMap[nd]->setup_this();
+    if (nodeMap[nd]) nodeMap[nd]->setup_called(false);
+  }
+  while (!rbfs.emptyQueue()) {
+    lemon::ListDigraph::Node nd = rbfs.processNextNode();
+    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
+    if (nodeMap[nd] && !nodeMap[nd]->setup_called()) {
+      nodeMap[nd]->setup_this();
+      nodeMap[nd]->setup_called(true);
+    }
   }
 }
 
@@ -114,13 +122,23 @@ void MKGraph::execute()
   lemon::topologicalSort( mkGraph, topo_levels );
 
   for( unsigned int i = 0; i<topo_levels.size(); ++i){
+    for( topomap::ItemIt j(topo_levels, i); j != lemon::INVALID; ++j ){
+      GraphNode* gn = nodeMap[ j ];
+      assert( gn );
+      gn->execute_called(false);
+    }
+  }
+  
+  for( unsigned int i = 0; i<topo_levels.size(); ++i){
 
     for( topomap::ItemIt j(topo_levels, i); j != lemon::INVALID; ++j ){
 
       GraphNode* gn = nodeMap[ j ];
       assert( gn );
-      gn->execute_this();
-
+      if (!gn->execute_called()) {
+        gn->execute_this();
+        gn->execute_called(true);
+      }
     }
   }
 

@@ -70,6 +70,26 @@ public:
     //! Pure virtual, derived class must define
   virtual void execute_this() = 0;
 
+    /** \brief Get flag denoting whether setup_this has been called for this node
+     * \return Value of executeCalled
+     */
+  bool setup_called();
+  
+    /** \brief Set flag denoting whether setup_this has been called for this node
+     * \param flag New value for setupCalled
+     */
+  void setup_called(bool flag);
+  
+    /** \brief Get flag denoting whether execute_this has been called for this node
+     * \return Value of executeCalled
+     */
+  bool execute_called();
+  
+    /** \brief Set flag denoting whether execute_this has been called for this node
+     * \param flag New value for setupCalled
+     */
+  void execute_called(bool flag);
+  
 protected:
     //! MKGraph associated with this GraphNode
   MKGraph *mkGraph;
@@ -80,6 +100,12 @@ protected:
     //! Local name for this node
   std::string nodeName;
 
+    //! Flag denoting whether setup_this has been called for this node
+  bool setupCalled;
+  
+    //! Flag denoting whether execute_this has been called for this node
+  bool executeCalled;
+  
 private:
 };
 
@@ -170,6 +196,28 @@ inline void GraphNode::execute()
 
   for (lemon::ListDigraph::OutArcIt ait = out_arcs(); ait != lemon::INVALID; ++ait) 
     mkGraph->target(ait)->execute();
+}
+
+    //! Get flag denoting whether setup_this has been called for this node
+inline bool GraphNode::setup_called() 
+{
+  return setupCalled;
+}
+
+    //! Set flag denoting whether setup_this has been called for this node
+inline void GraphNode::setup_called(bool flag) {
+  setupCalled = flag;
+}
+
+    //! Get flag denoting whether execute_this has been called for this node
+inline bool GraphNode::execute_called() 
+{
+  return executeCalled;
+}
+
+    //! Set flag denoting whether execute_this has been called for this node
+inline void GraphNode::execute_called(bool flag) {
+  executeCalled = flag;
 }
 
 } // namespace MeshKit

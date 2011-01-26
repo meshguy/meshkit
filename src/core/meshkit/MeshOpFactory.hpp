@@ -108,7 +108,7 @@ public:
   struct OpInfo
   {
     std::string opName;
-    unsigned int opIndex;
+    unsigned short opIndex;
     std::vector<moab::EntityType> opEntTypes;
     meshop_factory_t opFactory;
     meshop_canmesh_t opCanMesh;
@@ -116,7 +116,7 @@ public:
 
     /** \brief A map from MeshOp name to index in the OpInfos vector
      */
-  typedef std::map<std::string, unsigned int> OpNameMap;
+  typedef std::map<std::string, unsigned short> OpNameMap;
   
     /** \brief Return the MeshOp type with the given name
      * \param op_name Operation name requested
@@ -166,6 +166,13 @@ public:
      */
   void meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops);
     
+    /** \brief Construct a new MeshOp of the specified OpInfo type
+     * \param op_info OpInfo for the MeshOp being requested
+     * \param me_vec MEVector of entities the operation applies to
+     * \return Pointer to new MeshOp constructed
+     */
+  MeshOp *construct_meshop(OpInfo &op_info, const MEVector &me_vec = MEVector());
+    
     /** \brief Construct a new MeshOp of the specified name
      * \param op_name MeshOp name being requested
      * \param me_vec MEVector of entities the operation applies to
@@ -178,7 +185,7 @@ public:
      * \param me_vec MEVector of entities the operation applies to
      * \return Pointer to new MeshOp constructed
      */
-  MeshOp *construct_meshop(int dim, const MEVector &me_vec = MEVector());
+  MeshOp *construct_meshop(unsigned int dim, const MEVector &me_vec = MEVector());
     
     //! Return the MKCore
   MKCore *mk_core();

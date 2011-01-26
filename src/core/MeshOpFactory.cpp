@@ -192,6 +192,22 @@ MeshOp *MeshOpFactory::construct_meshop(std::string op_name, const MEVector &me_
   if (oit != opNameMap.end()) return registeredOps[oit->second].opFactory(mkCore, me_vec);
 }
 
+/** \brief Construct a new MeshOp of the specified name
+ * \param op_name MeshOp name being requested
+ * \param me_vec Model entity vector to which this operation applies
+ * \return Pointer to new MeshOp constructed
+ */
+MeshOp *MeshOpFactory::construct_meshop(unsigned int dim, const MEVector &me_vec) 
+{
+  if (opsByDim[dim].empty()) throw Error(MK_MESHOP_NOT_FOUND, "No default MeshOp for that dimension.");
+  else return construct_meshop(registeredOps[opsByDim[dim][0]], me_vec);
+}
+
+MeshOp *MeshOpFactory::construct_meshop(OpInfo &info, const MEVector &me_vec) 
+{
+  return registeredOps[info.opIndex].opFactory(mkCore, me_vec);
+}
+
 void MeshOpFactory::destroy_instance(bool dont_destroy_core) 
 {
   if (!dont_destroy_core && iCreatedCore && mkCore) 
