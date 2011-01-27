@@ -85,7 +85,7 @@ void ModelEnt::create_mesh_set(int flag)
 
 void ModelEnt::set_senses() 
 {
-  MEVector adjs;
+  MEntVector adjs;
   int dim = dimension();
   moab::ErrorCode rval;
   iGeom::Error err;
@@ -95,7 +95,7 @@ void ModelEnt::set_senses()
   if (1 < dim) {
     get_adjacencies(dim-1, adjs);
     
-    for (MEVector::iterator vit = adjs.begin(); vit != adjs.end(); vit++) {
+    for (MEntVector::iterator vit = adjs.begin(); vit != adjs.end(); vit++) {
       int dum_sense;
       if (2 == dim) (*vit)->set_upward_senses();
       else {
@@ -119,7 +119,7 @@ void ModelEnt::set_senses()
     std::vector<moab::EntityHandle> ments;
     std::vector<int> senses;
     
-    for (MEVector::iterator vit = adjs.begin(); vit != adjs.end(); vit++) {
+    for (MEntVector::iterator vit = adjs.begin(); vit != adjs.end(); vit++) {
       int dum_sense;
       err = mkCore->igeom_instance()->getEntNrmlSense(iGeomEnt, (*vit)->geom_handle(), dum_sense);
       IBERRCHK(err, "Problem getting senses.");
@@ -183,7 +183,7 @@ void ModelEnt::commit_mesh(std::vector<moab::EntityHandle> &mesh_ents,
   meshedState = mstate;
 }
   
-void ModelEnt::get_adjacencies(int dim, MEVector &adjs) const 
+void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const 
 {
   std::vector<iGeom::EntityHandle> gents;
   iGeom::Error err = mkCore->igeom_instance()->getEntAdj(geom_handle(), (iBase_EntityType)dim, gents);
@@ -230,7 +230,7 @@ void ModelEnt::closest_discrete(double x, double y, double z, double *close) con
 }
 
 void ModelEnt::boundary(int dim,
-                        MEVector &entities,
+                        MEntVector &entities,
                         std::vector<int> *senses,
                         std::vector<int> *group_sizes)
 {
@@ -243,7 +243,7 @@ void ModelEnt::boundary(int dim,
   if (this_dim == iBase_VERTEX) throw Error(MK_BAD_INPUT, "Shouldn't call this for a vertex.");;
   
     // get adj ents & senses
-  MEVector tmp_ents;
+  MEntVector tmp_ents;
   get_adjacencies(dim, tmp_ents);
   
     // special handling for edges and entities with single bounding entity - 
@@ -256,18 +256,18 @@ void ModelEnt::boundary(int dim,
     return;
   }
   
-  MEVector intersected_ents(tmp_ents.size());
+  MEntVector intersected_ents(tmp_ents.size());
 
     // get adjacent entities into a sorted, mutable list
-  MEVector b_ents;
-  MESet dbl_curves, sgl_curves;
+  MEntVector b_ents;
+  MEntSet dbl_curves, sgl_curves;
   b_ents = tmp_ents;
   std::sort(b_ents.begin(), b_ents.end());
 
   while (!b_ents.empty()) {
       // get 1st in group
     
-    MEVector group_stack, this_group;
+    MEntVector group_stack, this_group;
     group_stack.push_back(b_ents.front());
     
       // while there are still entities on the stack
@@ -287,7 +287,7 @@ void ModelEnt::boundary(int dim,
         continue;
 
         // either way we need the d-2 entities
-      MEVector bridges;
+      MEntVector bridges;
       get_adjacencies(dim-2, bridges);
       
         // only remove from the list of candidates if it's not dual-sensed
@@ -321,7 +321,7 @@ void ModelEnt::boundary(int dim,
         // it's in the group; put on group & remove from untreated ones
       this_group.push_back(this_entity);
       if (senses) senses->push_back(this_sense);
-      MEVector tmp_from, tmp_adjs;
+      MEntVector tmp_from, tmp_adjs;
 
         // if we're on a face and we're the first in a group, check sense of this first
         // edge; make sure "next" in loop sense is last on list
@@ -337,7 +337,7 @@ void ModelEnt::boundary(int dim,
       }
       else {
         std::copy(bridges.begin(), bridges.end(), std::back_inserter(tmp_from));
-        MEVector tmp_adjs2;
+        MEntVector tmp_adjs2;
         get_adjs_bool(tmp_from, dim-1, tmp_adjs2, UNION);
         std::sort(tmp_adjs2.begin(), tmp_adjs2.end());
         tmp_adjs.resize(tmp_adjs2.size());
@@ -365,7 +365,7 @@ void ModelEnt::boundary(int dim,
 ModelEnt *ModelEnt::shared_entity(ModelEnt *ent2, int to_dim) 
 {
     // find the shared entity between the two entities of the prescribed dimension
-  MEVector from_ents(2), to_ents;
+  MEntVector from_ents(2), to_ents;
   from_ents[0] = this;
   from_ents[1] = ent2;
   try {
@@ -380,9 +380,9 @@ ModelEnt *ModelEnt::shared_entity(ModelEnt *ent2, int to_dim)
   return to_ents[0];
 }
 
-void ModelEnt::get_adjs_bool(MEVector &from_ents,
+void ModelEnt::get_adjs_bool(MEntVector &from_ents,
                              int to_dim,
-                             MEVector &to_ents,
+                             MEntVector &to_ents,
                              BooleanType op_type) 
 {
   if (from_ents.empty()) {
@@ -391,9 +391,9 @@ void ModelEnt::get_adjs_bool(MEVector &from_ents,
   }
 
   int result;
-  MEVector bridges;
+  MEntVector bridges;
 
-  MEVector::iterator from_it = from_ents.begin();
+  MEntVector::iterator from_it = from_ents.begin();
   if (to_ents.empty() && op_type == INTERSECT) {
     from_ents.front()->get_adjacencies(to_dim, bridges);
     std::copy(bridges.begin(), bridges.end(), std::back_inserter(to_ents));
@@ -401,7 +401,7 @@ void ModelEnt::get_adjs_bool(MEVector &from_ents,
   }
 
   std::sort(to_ents.begin(), to_ents.end());
-  MEVector result_ents(to_ents.size());
+  MEntVector result_ents(to_ents.size());
   for (; from_it != from_ents.end(); from_it++) {
     bridges.clear();
     (*from_it)->get_adjacencies(to_dim, bridges);
@@ -426,14 +426,14 @@ void ModelEnt::get_adjs_bool(MEVector &from_ents,
 
 ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge, 
                                  int this_sense, 
-                                 MEVector &tmp_adjs) 
+                                 MEntVector &tmp_adjs) 
 {
     // given this_entity, a d-1 entity bounding gentity, and optional "next"
     // entities in tmp_adjs, find the next one based on windings around the shared
     // vertex
   
     // first, get the shared vertex 
-  MEVector verts;
+  MEntVector verts;
   this_edge->get_adjacencies(0, verts);
 
   ModelEnt *shared_vert = verts[0];
@@ -460,7 +460,7 @@ ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge,
   ModelEnt *other = NULL;
   double angle = VecUtil::TWO_PI;
   bool is_adj;
-  for (MEVector::iterator vit = tmp_adjs.begin(); vit != tmp_adjs.end(); vit++) {
+  for (MEntVector::iterator vit = tmp_adjs.begin(); vit != tmp_adjs.end(); vit++) {
       // if we're here, we have multiple candidates, therefore don't choose the same one
     if (*vit == this_edge)
       continue;

@@ -8,10 +8,10 @@ namespace MeshKit
 {
 
 // static registration of this  mesh scheme
-static int success = MeshOpFactory::instance()->register_meshop("VertexMesher", moab::MBVERTEX, 
-                                                         VertexMesher::factory, VertexMesher::can_mesh);
+static int success = MKCore::register_meshop("VertexMesher", moab::MBVERTEX, 
+                                             VertexMesher::factory, VertexMesher::can_mesh);
     
-MeshOp *VertexMesher::factory(MKCore *mkcore, const MEVector &me_vec) 
+MeshOp *VertexMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
 {
   if (mkcore->vertex_mesher()) return mkcore->vertex_mesher();
   else {
@@ -43,12 +43,12 @@ bool VertexMesher::add_modelent(ModelEnt *model_ent)
 
 void VertexMesher::execute_this() 
 {
-  if (meSelection.empty()) return;
+  if (mentSelection.empty()) return;
   
     // generate vertices for each vertex
   unsigned int i;
-  MESelection::iterator sit;
-  for (sit = meSelection.begin(); sit != meSelection.end(); sit++) {
+  MEntSelection::iterator sit;
+  for (sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
     double pos[3];
       // get the position
     (*sit).first->closest(pos[0], pos[0], pos[0], pos);

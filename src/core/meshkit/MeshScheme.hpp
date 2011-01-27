@@ -21,10 +21,10 @@ public:
 
     /** \brief Full constructor
      * \param mkcore MKCore instance to which this scheme instance is associated
-     * \param me_vec MEVector of model entities
+     * \param me_vec MEntVector of model entities
      */
   MeshScheme(MKCore *mkcore,
-             const MEVector &me_vec = MEVector());
+             const MEntVector &me_vec = MEntVector());
   
     /** \brief Copy constructor
      * \param mesh_scheme Object being copied
@@ -51,7 +51,7 @@ private:
 };
 
 inline MeshScheme::MeshScheme(MKCore *mkcore,
-                              const MEVector &me_vec)
+                              const MEntVector &me_vec)
         : MeshOp(mkcore, me_vec)
 {}
 

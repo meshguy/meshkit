@@ -62,11 +62,149 @@ public:
     //! initialize, creating missing geom/mesh/rel interfaces if requested
   void init(bool construct_missing_ifaces);
 
-    /** \brief Load a geometry model from a file
+    //! Function for constructing MeshOp instances, provided by registrants
+  typedef MeshOp* (*meshop_factory_t)(MKCore *, const MEntVector &vec);
+
+    //! Function returning whether a given MeshOp can mesh the specified ModelEnt
+  typedef bool (*meshop_canmesh_t)(ModelEnt *);
+
+    /** \struct OpInfo MeshOpFactory.hpp "meshkit/MeshOpFactory.hpp"
+     * \brief Struct used to store information about each MeshOp type registered with MeshOpFactory
+     */
+  struct OpInfo
+  {
+    std::string opName;
+    unsigned short opIndex;
+    std::vector<moab::EntityType> opEntTypes;
+    meshop_factory_t opFactory;
+    meshop_canmesh_t opCanMesh;
+  };
+
+    //! Initialize the opsByDim array
+  void init_opsbydim();
+
+    /** \brief Register a new MeshOp factory
+     * \param op_name The name by which this type of MeshOp can be requested
+     * \param tp The MOAB entity type operated on by this MeshOp
+     * \param meshop The (static) factory function producing instances of this MeshOp type
+     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \return Returns true if successful, false otherwise
+     */
+  static bool register_meshop(const char *op_name, moab::EntityType tp, 
+                              meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+  
+    /** \brief Register a new MeshOp factory
+     * \param op_name The name by which this type of MeshOp can be requested
+     * \param tp The MOAB entity type operated on by this MeshOp
+     * \param meshop The (static) factory function producing instances of this MeshOp type
+     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \return Returns true if successful, false otherwise
+     */
+  static bool register_meshop(const char *op_name, iMesh::EntityTopology tp, 
+                              meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+  
+    /** \brief Register a new MeshOp factory
+     * \param op_name The name by which this type of MeshOp can be requested
+     * \param tps The MOAB entity types operated on by this MeshOp
+     * \param num_tps Number of entity types in tps
+     * \param meshop The (static) factory function producing instances of this MeshOp type
+     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \return Returns true if successful, false otherwise
+     */
+  static bool register_meshop(const char *op_name, moab::EntityType *tps, int num_tps,
+                              meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+  
+    /** \brief Register a new MeshOp factory
+     * \param op_name The name by which this type of MeshOp can be requested
+     * \param tps The iMesh entity types operated on by this MeshOp
+     * \param num_tps Number of entity types in tps
+     * \param meshop The (static) factory function producing instances of this MeshOp type
+     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \return Returns true if successful, false otherwise
+     */
+  static bool register_meshop(const char *op_name, iMesh::EntityTopology *tps, int num_tps,
+                              meshop_factory_t meshop, meshop_canmesh_t canmesh);
+  
+    /** \brief A map from MeshOp name to index in the OpInfos vector
+     */
+  typedef std::map<std::string, unsigned short> OpNameMap;
+  
+    /** \brief Return the MeshOp type with the given name
+     * \param op_name Operation name requested
+     * \return OpInfo for the corresponding MeshOp type
+     */
+  static OpInfo meshop_info(const char *op_name);
+  
+    /** \brief Return the MeshOp index given the name
+     * \param op_name Operation name requested
+     * \return OpInfo index for the corresponding MeshOp type
+     */
+  static unsigned int meshop_index(const char *op_name);
+
+    /** \brief Make the specified MeshOp name the default for the given dimension(s)
+     * 
+     * If the specified MeshOp cannot produce entities of the specified dimension, an error is
+     * thrown with type MK_BAD_INPUT.
+     * \param op_name MeshOp name being set
+     * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
+     */
+  void set_default_meshop(const char *op_name, unsigned short dims);
+  
+    /** \brief Make the specified MeshOp name the default for the given dimension(s)
+     * 
+     * If the specified MeshOp cannot produce entities of the specified dimension, an error is
+     * thrown with type MK_BAD_INPUT.
+     * \param op_index MeshOp index being set
+     * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
+     */
+  void set_default_meshop(unsigned short op_index, unsigned short dims);
+  
+    /** \brief Return MeshOp types that can operate on the specified entity type
+     * \param tp Entity type requested
+     * \param ops MeshOp types returned
+     */
+  void meshop_by_type(moab::EntityType tp, std::vector<OpInfo> &ops);
+    
+    /** \brief Return MeshOp types that can operate on mesh of specified dimension
+     * \param dim Entity dimension requested
+     * \param ops MeshOp types returned
+     */
+  void meshop_by_dimension(int dim, std::vector<OpInfo> &ops);
+    
+    /** \brief Return MeshOp types that can mesh the specified ModelEnt
+     * \param ent ModelEnt* requested
+     * \param ops MeshOp types returned
+     */
+  void meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops);
+    
+    /** \brief Construct a new MeshOp of the specified OpInfo type
+     * \param op_info OpInfo for the MeshOp being requested
+     * \param me_vec MEntVector of entities the operation applies to
+     * \return Pointer to new MeshOp constructed
+     */
+  MeshOp *construct_meshop(OpInfo &op_info, const MEntVector &me_vec = MEntVector());
+    
+    /** \brief Construct a new MeshOp of the specified name
+     * \param op_name MeshOp name being requested
+     * \param me_vec MEntVector of entities the operation applies to
+     * \return Pointer to new MeshOp constructed
+     */
+  MeshOp *construct_meshop(std::string op_name, const MEntVector &me_vec = MEntVector());
+    
+    /** \brief Construct the default type of MeshOp for the specified dimension
+     * \param dim Dimension requested
+     * \param me_vec MEntVector of entities the operation applies to
+     * \return Pointer to new MeshOp constructed
+     */
+  MeshOp *construct_meshop(unsigned int dim, const MEntVector &me_vec = MEntVector());
+    
+    /** \brief Load a geometry model from a file, and populate mesh entity sets
      * \param filename The file to load
      * \param options File options to be passed to the load function
+     * \param populate_too If true, calls populate_mesh after load
      */
-  void load_geometry(const char *filename, const char *options = NULL);
+  void load_geometry(const char *filename, const char *options = NULL, 
+                     bool populate_too = true);
 
     /** \brief Load a mesh model from a file
      * \param filename The file to load
@@ -94,12 +232,12 @@ public:
      * \param dim Dimension of entities to get
      * \param model_ents The list these entities get appended to
      */
-  void get_entities_by_dimension(int dim, MEVector &model_ents);
+  void get_entities_by_dimension(int dim, MEntVector &model_ents);
 
     /** \brief Get all model entities
      * \param model_ents The list these entities get appended to
      */
-  void get_entities_by_handle(MEVector &model_ents);
+  void get_entities_by_handle(MEntVector &model_ents);
 
     /** \brief Return the iGeom instance pointer
      */
@@ -192,8 +330,21 @@ private:
   bool iCreatedIgeom, iCreatedMoab, iCreatedMbimesh, iCreatedIrel;
 
     //! Model entities, in array by topological dimension
-  MEVector modelEnts[4];
+  MEntVector modelEnts[4];
 
+    /** \brief Master vector of OpInfo's
+     */
+  static std::vector<OpInfo> registeredOps;
+
+    //! Map from MeshOp name to OpInfo
+  static OpNameMap opNameMap;
+
+    //! OpInfo's by dimension they can produce; first for a given dimension is the default
+  std::vector<unsigned short> *opsByDim;
+
+    //! Number of ops checked, cached to avoid redundant checking of registered ops
+  unsigned int numOpsByDim;
+  
     //! (Single) VertexMesher scheme for this MKCore
   VertexMesher *vertexMesher;
   
@@ -234,6 +385,33 @@ inline iGeom::TagHandle MKCore::igeom_model_tag()
 inline moab::Tag MKCore::moab_model_tag()
 {
   return moabModelTag;
+}
+
+/** \brief Register a new MeshOp factory
+ * \param op_name The name by which this type of MeshOp can be requested
+ * \param tp The MOAB entity type operated on by this MeshOp
+ * \param meshop The (static) factory function producing instances of this MeshOp type
+ * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+ */
+inline bool MKCore::register_meshop(const char *op_name, iMesh::EntityTopology tp, 
+                                    meshop_factory_t meshop, meshop_canmesh_t canmesh) 
+{
+  return register_meshop(op_name, iMesh::mb_topology_table[tp], meshop, canmesh);
+}
+  
+/** \brief Register a new MeshOp factory
+ * \param op_name The name by which this type of MeshOp can be requested
+ * \param tps The MOAB entity types operated on by this MeshOp
+ * \param num_tps Number of entity types in tps
+ * \param meshop The (static) factory function producing instances of this MeshOp type
+ * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+ */
+inline bool MKCore::register_meshop(const char *op_name, iMesh::EntityTopology *tps, int num_tps,
+                                    meshop_factory_t meshop, meshop_canmesh_t canmesh)
+{
+  std::vector<moab::EntityType> tmp_tps(num_tps);
+  for (int i = 0; i < num_tps; i++) tmp_tps[i] = iMesh::mb_topology_table[tps[i]];
+  return register_meshop(op_name, &tmp_tps[0], num_tps, meshop, canmesh);
 }
 
 inline VertexMesher *MKCore::vertex_mesher() const 

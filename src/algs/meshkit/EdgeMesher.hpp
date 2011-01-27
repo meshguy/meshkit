@@ -22,11 +22,11 @@ public:
   enum EdgeSchemeType {equalMesh=0, biasMesh, dualMesh, curvatureMesh};
 	
 public:
-  EdgeMesher(MKCore *mk_core, const MEVector &me_vec);
+  EdgeMesher(MKCore *mk_core, const MEntVector &me_vec);
 
   virtual ~EdgeMesher();
 
-  static MeshOp *factory(MKCore *mkcore, const MEVector &me_vec);
+  static MeshOp *factory(MKCore *mkcore, const MEntVector &me_vec);
   
   void mesh_types(std::vector<moab::EntityType> &tps);
 
@@ -51,7 +51,7 @@ private:
   EdgeSchemeType schemeType;
 };
 
-inline EdgeMesher::EdgeMesher(MKCore *mk_core, const MEVector &me_vec) 
+inline EdgeMesher::EdgeMesher(MKCore *mk_core, const MEntVector &me_vec) 
         : MeshScheme(mk_core, me_vec)
 {
 }

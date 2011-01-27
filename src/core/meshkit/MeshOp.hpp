@@ -26,29 +26,29 @@ public:
   MeshOp(const MeshOp &mesh_op);
   
     //! Bare constructor
-  MeshOp(MKCore *mkcore, const MEVector &me_vec = MEVector());
+  MeshOp(MKCore *mkcore, const MEntVector &me_vec = MEntVector());
 
     //! Destructor
   virtual ~MeshOp();
   
-    /** \brief Add a ModelEnt to this operation's MESelection
-     * The MESelection is a map, and can only have a given entity once.
+    /** \brief Add a ModelEnt to this operation's MEntSelection
+     * The MEntSelection is a map, and can only have a given entity once.
      * \param model_ent ModelEnt being added
      * \return Returns true if model_ent was actually added, false otherwise
      */
   virtual bool add_modelent(ModelEnt *model_ent);
 
-    /** \brief Removes a ModelEnt from this operation's MESelection
+    /** \brief Removes a ModelEnt from this operation's MEntSelection
      * \param model_ent ModelEnt being removed
      * \return Returns true if model_ent was in the map and was actually removed, false if model_ent wasn't in the map
      */
   virtual bool remove_modelent(ModelEnt *model_ent);
 
-    //! Return a reference to the MESelection list
-  virtual MESelection &me_selection();
+    //! Return a reference to the MEntSelection list
+  virtual MEntSelection &me_selection();
 
-    //! Return a const reference to the MESelection list
-  virtual const MESelection &me_selection() const;
+    //! Return a const reference to the MEntSelection list
+  virtual const MEntSelection &me_selection() const;
 
     //! Get the associated MKCore object; this applies a dynamic_cast to the parent's MKGraph member
   MKCore *mk_core() const;
@@ -66,21 +66,21 @@ public:
   void setup_boundary();
   
 protected:
-    //! MESelection that stores what this operation generated or otherwise worked on
-  MESelection meSelection;
+    //! MEntSelection that stores what this operation generated or otherwise worked on
+  MEntSelection mentSelection;
   
 private:
 
 };
 
-inline const MESelection &MeshOp::me_selection() const
+inline const MEntSelection &MeshOp::me_selection() const
 {
-  return meSelection;
+  return mentSelection;
 }
 
-inline MESelection &MeshOp::me_selection() 
+inline MEntSelection &MeshOp::me_selection() 
 {
-  return meSelection;
+  return mentSelection;
 }
 
 inline MKCore *MeshOp::mk_core() const

@@ -28,14 +28,14 @@ class MKCore;
  * It will also be inserted into the meshing graph during the setup phase of most edge meshers.
  *
  * The single instance of this class stores all the ModelEnt's representing geometric vertices,
- * and after execution, an MESelection entry for each geometric vertex and mesh vertex pair.
+ * and after execution, an MEntSelection entry for each geometric vertex and mesh vertex pair.
  */
 class VertexMesher : public MeshScheme
 {
 public:
 
     //! Bare constructor
-  VertexMesher(MKCore *mkcore, const MEVector &me_vec = MEVector());
+  VertexMesher(MKCore *mkcore, const MEntVector &me_vec = MEntVector());
 
     //! Destructor
   virtual ~VertexMesher();
@@ -44,7 +44,7 @@ public:
      * \param mkcore MKCore instance for the factory
      * \param me_vec ModelEnts to which this scheme will be applied
      */
-  static MeshOp *factory(MKCore *mkcore, const MEVector &me_vec);
+  static MeshOp *factory(MKCore *mkcore, const MEntVector &me_vec);
   
     /** \brief Function returning whether this scheme can mesh the specified entity
      * 
@@ -81,7 +81,7 @@ private:
   VertexMesher &operator=(const VertexMesher &);
 };
 
-inline VertexMesher::VertexMesher(MKCore *mkcore, const MEVector &me_vec) 
+inline VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec) 
         : MeshScheme(mkcore, me_vec) 
 {}
 

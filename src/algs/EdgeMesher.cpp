@@ -12,9 +12,9 @@ namespace MeshKit
 // static registration of this  mesh scheme
 moab::EntityType tps[] = {moab::MBVERTEX, moab::MBEDGE};
     
-static int success = MeshOpFactory::instance()->register_meshop("EdgeMesher", tps, 2, EdgeMesher::factory, NULL);
+static int success = MKCore::register_meshop("EdgeMesher", tps, 2, EdgeMesher::factory, NULL);
     
-MeshOp *EdgeMesher::factory(MKCore *mkcore, const MEVector &me_vec) 
+MeshOp *EdgeMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
 {
   return new EdgeMesher(mkcore, me_vec);
 }
@@ -43,7 +43,7 @@ void EdgeMesher::setup_this()
 {
     // compute the number of intervals for the associated ModelEnts, from the size set on them,
     // the sizing function they point to, or a default sizing function
-  for (MESelection::iterator mit = meSelection.begin(); mit != meSelection.end(); mit++) {
+  for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
     ModelEnt *me = mit->first;
 
       // first check to see whether entity is meshed
@@ -78,7 +78,7 @@ void EdgeMesher::execute_this()
   std::vector<double> coords;
   std::vector<moab::EntityHandle> nodes, edges;
 
-  for (MESelection::iterator mit = meSelection.begin(); mit != meSelection.end(); mit++) {
+  for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
     ModelEnt *me = mit->first;
 
       // resize the coords based on the interval setting
@@ -116,7 +116,7 @@ void EdgeMesher::execute_this()
     rval = iface->get_element_connect(num_edges, 2, moab::MBEDGE, 1, starth, connect);
     MBERRCHK(rval, "Couldn't create edge elements.");
     
-      // add edges to range for the MESelection
+      // add edges to range for the MEntSelection
     mit->second.insert(starth, starth+num_edges-1);
     
       // now set the connectivity array from the nodes

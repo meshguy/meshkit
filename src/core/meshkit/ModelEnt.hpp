@@ -61,7 +61,7 @@ public:
      * No ordered flag, since that's implied by definition
      * \param child_ents Child entities returned
      */
-  void children(std::vector<MEVector> &child_ents) const;
+  void children(std::vector<MEntVector> &child_ents) const;
 
     /** \brief Return children as vectors of vectors, e.g. for loops or shells
      *
@@ -83,7 +83,7 @@ public:
      * \param dim Dimension of entities requested; if -1, all adjacent entities are returned
      * \param adjs Adjacent entities 
      */
-  void get_adjacencies(int dim, MEVector &adjs) const;
+  void get_adjacencies(int dim, MEntVector &adjs) const;
 
     /** \brief Return adjacencies to this model entity of the input dimension 
      *
@@ -199,7 +199,7 @@ public:
      * \param group_sizes If non-NULL, pointer to vector where group sizes will be returned
      */
   void boundary(int dim,
-                MEVector &elements,
+                MEntVector &elements,
                 std::vector<int> *senses,
                 std::vector<int> *group_sizes = NULL);
 
@@ -301,9 +301,9 @@ public:
      * \param to_ents Adjacent entities
      * \param op_type Boolean type, intersect or union
      */
-  void get_adjs_bool(MEVector &from_ents,
+  void get_adjs_bool(MEntVector &from_ents,
                      int to_dim,
-                     MEVector &to_ents,
+                     MEntVector &to_ents,
                      BooleanType op_type);
   
     /** \brief Return the next entity in the loop, using winding number
@@ -314,7 +314,7 @@ public:
      */
   ModelEnt *next_winding(ModelEnt *this_edge, 
                             int this_sense, 
-                            MEVector &tmp_adjs);
+                            MEntVector &tmp_adjs);
   
 private:
 
@@ -363,12 +363,12 @@ inline moab::EntityHandle ModelEnt::mesh_handle() const
 
 inline void ModelEnt::children(std::vector<std::vector<moab::EntityHandle> > &child_ents) const 
 {
-  std::vector<MEVector> tmp_vec;
+  std::vector<MEntVector> tmp_vec;
   children(tmp_vec);
   std::vector<moab::EntityHandle> tmp_vec2;
-  for (std::vector<MEVector>::iterator vit1 = tmp_vec.begin(); vit1 != tmp_vec.end(); vit1++) {
+  for (std::vector<MEntVector>::iterator vit1 = tmp_vec.begin(); vit1 != tmp_vec.end(); vit1++) {
     tmp_vec2.clear();
-    for (MEVector::iterator vit2 = (*vit1).begin(); vit2 != (*vit1).end(); vit2++)
+    for (MEntVector::iterator vit2 = (*vit1).begin(); vit2 != (*vit1).end(); vit2++)
       tmp_vec2.push_back((*vit2)->mesh_handle());
     child_ents.push_back(tmp_vec2);
   }
@@ -381,12 +381,12 @@ inline void ModelEnt::children(std::vector<std::vector<moab::EntityHandle> > &ch
      */
 inline void ModelEnt::children(std::vector<std::vector<iGeom::EntityHandle> > &child_ents) const
 {
-  std::vector<MEVector> tmp_vec;
+  std::vector<MEntVector> tmp_vec;
   children(tmp_vec);
   std::vector<iGeom::EntityHandle> tmp_vec2;
-  for (std::vector<MEVector>::iterator vit1 = tmp_vec.begin(); vit1 != tmp_vec.end(); vit1++) {
+  for (std::vector<MEntVector>::iterator vit1 = tmp_vec.begin(); vit1 != tmp_vec.end(); vit1++) {
     tmp_vec2.clear();
-    for (MEVector::iterator vit2 = (*vit1).begin(); vit2 != (*vit1).end(); vit2++)
+    for (MEntVector::iterator vit2 = (*vit1).begin(); vit2 != (*vit1).end(); vit2++)
       tmp_vec2.push_back((*vit2)->geom_handle());
     child_ents.push_back(tmp_vec2);
   }
