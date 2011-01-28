@@ -1,6 +1,5 @@
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/MKCore.hpp"
-#include "meshkit/MeshOpFactory.hpp"
 #include "moab/EntityType.hpp"
 #include "iGeom.hh"
 

@@ -1,6 +1,6 @@
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/MKCore.hpp"
-#include "meshkit/MeshOpFactory.hpp"
+#include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "moab/ReadUtilIface.hpp"
 #include <vector>

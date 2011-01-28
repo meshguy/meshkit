@@ -259,6 +259,10 @@ public:
      */
   iRel::PairHandle *irel_pair();
 
+    /** \brief Return the iRel pair handle used to relate geometry sets to mesh entity sets
+     */
+  iRel::PairHandle *group_set_pair();
+
     /** \brief Return the (iGeom) tag used to relate geometry entities to ModelEnts
      */
   iGeom::TagHandle igeom_model_tag();
@@ -320,6 +324,9 @@ private:
     //! iRel pair handle used to relate geometry/mesh entities
   iRel::PairHandle *iRelPair;
   
+    //! iRel pair handle used to relate geometry groups to mesh entity sets
+  iRel::PairHandle *groupSetPair;
+  
     //! Tag used to associate geometry entities with model entities
   iGeom::TagHandle iGeomModelTag;
   
@@ -330,7 +337,7 @@ private:
   bool iCreatedIgeom, iCreatedMoab, iCreatedMbimesh, iCreatedIrel;
 
     //! Model entities, in array by topological dimension
-  MEntVector modelEnts[4];
+  MEntVector modelEnts[5];
 
     /** \brief Master vector of OpInfo's
      */
@@ -375,6 +382,11 @@ inline iRel *MKCore::irel_instance()
 inline iRel::PairHandle *MKCore::irel_pair()
 {
   return iRelPair;
+}
+
+inline iRel::PairHandle *MKCore::group_set_pair()
+{
+  return groupSetPair;
 }
 
 inline iGeom::TagHandle MKCore::igeom_model_tag()

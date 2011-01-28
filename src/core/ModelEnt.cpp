@@ -13,7 +13,15 @@ ModelEnt::ModelEnt(MKCore *mk,
                    iGeom::EntityHandle geom_ent,
                    moab::EntityHandle mesh_ent,
                    int sizing_index) 
-        : mkCore(mk), iGeomEnt(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
+        : mkCore(mk), iGeomEnt(geom_ent), iGeomSet(NULL), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
+          meshIntervals(-1), intervalFirmness(SOFT), meshedState(NO_MESH) 
+{}
+
+ModelEnt::ModelEnt(MKCore *mk,
+                   iGeom::EntitySetHandle geom_ent,
+                   moab::EntityHandle mesh_ent,
+                   int sizing_index) 
+        : mkCore(mk), iGeomEnt(NULL), iGeomSet(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
           meshIntervals(-1), intervalFirmness(SOFT), meshedState(NO_MESH) 
 {}
 
@@ -24,7 +32,8 @@ void ModelEnt::create_mesh_set(int flag)
 {
   if (moabEntSet) return;
 
-  if (!iGeomEnt) throw Error(MK_FAILURE, "Tried to create ModelEnt missing a geometry entity.");
+  if (!iGeomEnt && !iGeomSet) 
+    throw Error(MK_FAILURE, "Tried to create ModelEnt missing a geometry entity or set.");
   
     // need dimension, to tell whether to create a list or set
   if (-1 > flag || 1 < flag) throw Error(MK_FAILURE, "Invalid value for ordered flag.");
@@ -32,10 +41,13 @@ void ModelEnt::create_mesh_set(int flag)
   moab::EntitySetProperty ordered = moab::MESHSET_SET;
     // need type for later
   iBase_EntityType this_tp;
-  iGeom::Error err = mkCore->igeom_instance()->getEntType(iGeomEnt, this_tp);
-  IBERRCHK(err, "Trouble getting entity type.");
-  if (1 == flag || (-1 == flag && iBase_EDGE == this_tp)) 
-    ordered = moab::MESHSET_ORDERED;
+  iGeom::Error err;
+  if (iGeomEnt) {
+    err = mkCore->igeom_instance()->getEntType(iGeomEnt, this_tp);
+    IBERRCHK(err, "Trouble getting entity type.");
+    if (1 == flag || (-1 == flag && iBase_EDGE == this_tp)) 
+      ordered = moab::MESHSET_ORDERED;
+  }
   
     // create the set
   moab::ErrorCode rval = mkCore->moab_instance()->create_meshset(ordered, moabEntSet);
@@ -47,8 +59,17 @@ void ModelEnt::create_mesh_set(int flag)
   MBERRCHK(rval, "Failed to set iMesh ModelEnt tag.");
 
     // relate the mesh to the geom
-  Error merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
+  Error merr;
+  if (iGeomEnt) {
+    merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
+  }
+  else {
+    merr = mkCore->group_set_pair()->setSetSetRelation(iGeomSet, IBSH(moabEntSet));
+  }
   MKERRCHK(merr, "Failed to set iRel relation for a mesh set.");
+
+    // if this is a group, we're done
+  if (iGeomSet) return;
 
     // get parents and children, and link to corresponding sets; don't do this for any missing mesh sets, 
     // will get done when those sets get created

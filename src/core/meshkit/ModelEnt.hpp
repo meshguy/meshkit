@@ -46,6 +46,18 @@ public:
            moab::EntityHandle mesh_ent = NULL,
            int sizing_index = -1);
 
+    /** \brief Constructor; mesh entity can be missing, in which case it's retrieved or created
+     *
+     * \param mk MeshKit instance
+     * \param geom_set Geometry entity set corresponding to this ModelEntity
+     * \param mesh_ent Mesh entity set corresponding to this ModelEntity
+     * \param sizing_index Sizing function index (from MBCore) to be used to mesh this entity
+     */
+  ModelEnt(MKCore *mk,
+           iGeom::EntitySetHandle geom_set,
+           moab::EntityHandle mesh_ent = NULL,
+           int sizing_index = -1);
+
     /** \brief Destructor
      */
   virtual ~ModelEnt();
@@ -326,6 +338,9 @@ private:
 
     //! Geometry entity for this model entity
   iGeom::EntityHandle iGeomEnt;
+  
+    //! Geometry set for this model entity
+  iGeom::EntitySetHandle iGeomSet;
   
     //! Mesh entity set for this model entity
   moab::EntityHandle moabEntSet;

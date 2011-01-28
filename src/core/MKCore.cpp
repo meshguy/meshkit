@@ -19,7 +19,7 @@ MKCore::OpNameMap MKCore::opNameMap;
 MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
                bool construct_missing_ifaces) 
         : iGeomInstance(igeom), moabInstance(moab), mbImesh(mbi), iRelInstance(irel),
-          iRelPair(NULL), iGeomModelTag(0), moabModelTag(0),
+          iRelPair(NULL), groupSetPair(0), iGeomModelTag(0), moabModelTag(0),
           iCreatedIgeom(false), iCreatedMoab(false), iCreatedMbimesh(false), iCreatedIrel(false),
           opsByDim(NULL), numOpsByDim(0)
 {
@@ -86,13 +86,19 @@ void MKCore::init(bool construct_missing_ifaces)
 
   if (!iRelPair) {
     err = iRelInstance->createPair(iGeomInstance->instance(), iRel::ENTITY, iRel::IGEOM_IFACE,
-                                   mbImesh, iRel::ENTITY, iRel::IMESH_IFACE, iRelPair);
+                                   mbImesh, iRel::SET, iRel::IMESH_IFACE, iRelPair);
     IBERRCHK(err, "Failure to create relation pair.");
       // don't need to keep track of whether I created the pair, since it'll be deleted anyway when
       // the iRel instance is deleted.
 
       // FIXME: need a better scheme for finding any existing relation pairs or inferring them from 
       // imported model(s)
+  }
+  
+  if (!groupSetPair) {
+    err = iRelInstance->createPair(iGeomInstance->instance(), iRel::SET, iRel::IGEOM_IFACE,
+                                   mbImesh, iRel::SET, iRel::IMESH_IFACE, groupSetPair);
+    IBERRCHK(err, "Failure to create relation pair.");
   }
   
   err = iGeomInstance->createTag("__MKModelEntity", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
@@ -110,7 +116,7 @@ void MKCore::init(bool construct_missing_ifaces)
 void MKCore::populate_mesh() 
 {
     // populate mesh entity sets for geometric entities, relate them through iRel, and construct 
-    // ModelEnts for them
+    // ModelEnts for them; also handle geometry groups
 
   std::vector<iGeom::EntityHandle> ents;
   std::vector<ModelEnt*> new_ents;
@@ -147,6 +153,26 @@ void MKCore::populate_mesh()
   
   for (std::vector<ModelEnt*>::iterator vit = new_ents.begin(); vit != new_ents.end(); vit++) 
     (*vit)->set_senses();
+
+  std::vector<iGeom::EntitySetHandle> gsets;
+  err = iGeomInstance->getEntSets(iGeomInstance->getRootSet(), -1, gsets);
+  IBERRCHK(err, "Failed to get entity sets from iGeom.");
+  for (std::vector<iGeom::EntitySetHandle>::iterator vit = gsets.begin();
+       vit != gsets.end(); vit++) {
+    this_me = NULL;
+    err = iGeomInstance->getEntSetData(*vit, iGeomModelTag, &this_me);
+    if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
+        // construct a new ModelEnt and set the geom ent to point to it
+      this_me = new ModelEnt(this, *vit);
+      err = iGeomInstance->setEntSetData(*vit, iGeomModelTag, &this_me);
+      IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
+    }
+      
+      // check for a mesh ent, and populate one if there is none
+    if (!this_me->mesh_handle()) {
+      this_me->create_mesh_set();
+    }
+  }
 }
 
 void MKCore::load_geometry(const char *filename, const char *options, bool populate_too) 
