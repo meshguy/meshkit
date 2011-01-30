@@ -15,6 +15,7 @@ CCrgen class declaration
 #include "MergeMesh.hpp"
 #include "ExtrudeMesh.hpp"
 #include "CopyMesh.hpp"
+#include "CopyGeom.hpp"
 #include "parser.hpp"
 #include "fileio.hpp"
 #include "clock.hpp"
@@ -24,6 +25,7 @@ CCrgen class declaration
 #include "utils.hpp"
 
 #ifdef MOAB
+#include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
@@ -36,6 +38,7 @@ public:
   ~CCrgen ();   // dtor
   int prepareIO (int argc, char *argv[]);
   int load_meshes();
+  int load_geometries();
   int read_inputs_phase1 ();
   int read_inputs_phase2 ();
   int write_makefile ();
@@ -44,10 +47,12 @@ public:
   int copy_move(); 
   int merge_nodes();
   int assign_gids();
-  int save();
+  int save_mesh();
+  int save_geometry();
   int close();
   int extrude();
   int move_verts(iBase_EntitySetHandle set, const double *dx);
+  int move_geoms(iBase_EntitySetHandle set, const double *dx);
   int create_neumannset();
   int copy_move_hex_flat_assys(CopyMesh **cm,
 			       const int nrings, const int pack_type,
@@ -121,21 +126,96 @@ public:
 				     std::vector<std::string> &core_alias,
 				     std::vector<iBase_EntitySetHandle> &assys);
 
+// function for geometries
+  int copy_move_hex_flat_assys(CopyGeom **cg,
+			       const int nrings, const int pack_type,
+			       const double pitch,
+			       const int symm,
+			       std::vector<std::string> &core_alias,
+			       std::vector<iBase_EntitySetHandle> &assys);
+
+  int copy_move_sq_assys(CopyGeom **cg,
+			 const int nrings, const int pack_type,
+			 const double pitch,
+			 const int symm,
+			 std::vector<std::string> &core_alias,
+			 std::vector<iBase_EntitySetHandle> &assys);
+
+  int copy_move_hex_full_assys(CopyGeom **cg,
+			       const int nrings, const int pack_type,
+			       const double pitch,
+			       const int symm,
+			       std::vector<std::string> &core_alias,
+			       std::vector<iBase_EntitySetHandle> &assys);
+
+  int copy_move_hex_vertex_assys(CopyGeom **cg,
+				 const int nrings, const int pack_type,
+				 const double pitch,
+				 const int symm,
+				 std::vector<std::string> &core_alias,
+				 std::vector<iBase_EntitySetHandle> &assys);
+
+
+  int copy_move_one_twelfth_assys(CopyGeom **cg,
+				  const int nrings, const int pack_type,
+				  const double pitch,
+				  const int symm,
+				  std::vector<std::string> &core_alias,
+				  std::vector<iBase_EntitySetHandle> &assys);
+
+  // phase 1's
+  int copy_move_hex_vertex_assys_p1(CopyGeom **cg,
+				    const int nrings, const int pack_type,
+				    const double pitch,
+				    const int symm,
+				    std::vector<std::string> &core_alias,
+				    std::vector<iBase_EntitySetHandle> &assys);
+
+  int copy_move_hex_flat_assys_p1(CopyGeom **cg,
+				  const int nrings, const int pack_type,
+				  const double pitch,
+				  const int symm,
+				  std::vector<std::string> &core_alias,
+				  std::vector<iBase_EntitySetHandle> &assys);
+
+  int copy_move_sq_assys_p1(CopyGeom **cg,
+			    const int nrings, const int pack_type,
+			    const double pitch,
+			    const int symm,
+			    std::vector<std::string> &core_alias,
+			    std::vector<iBase_EntitySetHandle> &assys);
+
+  int copy_move_hex_full_assys_p1(CopyGeom **cg,
+				  const int nrings, const int pack_type,
+				  const double pitch,
+				  const int symm,
+				  std::vector<std::string> &core_alias,
+				  std::vector<iBase_EntitySetHandle> &assys);
+
+  int copy_move_one_twelfth_assys_p1(CopyGeom **cg,
+				     const int nrings, const int pack_type,
+				     const double pitch,
+				     const int symm,
+				     std::vector<std::string> &core_alias,
+				     std::vector<iBase_EntitySetHandle> &assys);
+
 
   iMesh_Instance impl;
-  //  MBInterface *mbImpl;
-
-#ifdef MOAB
-  MBInterface* mbImpl() {return reinterpret_cast<MBInterface*> (impl);};
+  iGeom_Instance geom;
+  
+#ifdef HAVE_MOAB
+  MBInterface* mbImpl() {return reinterpret_cast<MBiMesh*> (impl)->mbImpl;};
 #endif
 
   bool extrude_flag;
   bool mem_tflag;
+  std::string prob_type;
 
 private:
 
   CopyMesh **cm;
   MergeMesh *mm;
+  CopyGeom **cg;
   iBase_EntitySetHandle root_set;
   std::vector<iBase_EntitySetHandle> assys;
 
@@ -158,7 +238,7 @@ private:
   // file related
   std::ifstream file_input;    // File Input
   std::ofstream make_file;    // File Output
-  std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc; 
+  std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc;
   int linenumber;
   std::string card,geom_type, meshfile, mf_alias, temp_alias;
   std::vector<std::string> assm_alias;
