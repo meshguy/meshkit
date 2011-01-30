@@ -13,8 +13,13 @@
 namespace MeshKit 
 {
     
-std::vector<MKCore::OpInfo> MKCore::registeredOps;
-MKCore::OpNameMap MKCore::opNameMap;
+MKCore::MeshOpFactory *MKCore::opFactory = NULL;
+
+MKCore::MeshOpFactory *MKCore::op_factory()
+{ 
+  if (!opFactory) opFactory = new MeshOpFactory;
+  return opFactory;
+}
 
 MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
                bool construct_missing_ifaces) 
@@ -243,15 +248,15 @@ void MKCore::remove_sizing_function(int index)
 bool MKCore::register_meshop(const char *op_name, moab::EntityType tp, 
                                     meshop_factory_t meshop, meshop_canmesh_t canmesh) 
 {
-  OpNameMap::iterator oit = opNameMap.find(std::string(op_name));
-  if (oit != opNameMap.end()) 
+  OpNameMap::iterator oit = op_factory()->opNameMap.find(std::string(op_name));
+  if (oit != op_factory()->opNameMap.end()) 
     throw Error(MK_ALREADY_DEFINED, "A MeshOp with this name has already been registered.");
   
-  OpInfo oi = {std::string(op_name), registeredOps.size(), std::vector<moab::EntityType>(1, tp),
+  OpInfo oi = {std::string(op_name), op_factory()->registeredOps.size(), std::vector<moab::EntityType>(1, tp),
                meshop, canmesh};
-  opNameMap[oi.opName] = registeredOps.size();
+  op_factory()->opNameMap[oi.opName] = op_factory()->registeredOps.size();
   
-  registeredOps.push_back(oi);
+  op_factory()->registeredOps.push_back(oi);
 
   return true;
 }
@@ -266,15 +271,15 @@ bool MKCore::register_meshop(const char *op_name, moab::EntityType tp,
 bool MKCore::register_meshop(const char *op_name, moab::EntityType *tps, int num_tps,
                                     meshop_factory_t meshop, meshop_canmesh_t canmesh)
 {
-  OpNameMap::iterator oit = opNameMap.find(std::string(op_name));
-  if (oit != opNameMap.end()) 
+  OpNameMap::iterator oit = op_factory()->opNameMap.find(std::string(op_name));
+  if (oit != op_factory()->opNameMap.end()) 
     throw Error(MK_ALREADY_DEFINED, "A MeshOp with this name has already been registered.");
   
-  OpInfo oi = {std::string(op_name), registeredOps.size(), std::vector<moab::EntityType>(tps, tps+num_tps),
+  OpInfo oi = {std::string(op_name), op_factory()->registeredOps.size(), std::vector<moab::EntityType>(tps, tps+num_tps),
                meshop, canmesh};
-  opNameMap[oi.opName] = registeredOps.size();
+  op_factory()->opNameMap[oi.opName] = op_factory()->registeredOps.size();
   
-  registeredOps.push_back(oi);
+  op_factory()->registeredOps.push_back(oi);
 
   return true;
 }
@@ -285,10 +290,10 @@ bool MKCore::register_meshop(const char *op_name, moab::EntityType *tps, int num
      */
 MKCore::OpInfo MKCore::meshop_info(const char *op_name) 
 {
-  OpNameMap::iterator oit = opNameMap.find(op_name);
-  if (oit != opNameMap.end()) {
-    assert(registeredOps.size() > oit->second);
-    return registeredOps[oit->second];
+  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
+  if (oit != op_factory()->opNameMap.end()) {
+    assert(op_factory()->registeredOps.size() > oit->second);
+    return op_factory()->registeredOps[oit->second];
   }
   else throw Error(MK_NOT_FOUND, "A MeshOp with that name was not found.");
 }
@@ -299,9 +304,9 @@ MKCore::OpInfo MKCore::meshop_info(const char *op_name)
      */
 unsigned int MKCore::meshop_index(const char *op_name) 
 {
-  OpNameMap::iterator oit = opNameMap.find(op_name);
-  if (oit != opNameMap.end()) {
-    assert(registeredOps.size() > oit->second);
+  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
+  if (oit != op_factory()->opNameMap.end()) {
+    assert(op_factory()->registeredOps.size() > oit->second);
     return oit->second;
   }
   else throw Error(MK_NOT_FOUND, "A MeshOp with that name was not found.");
@@ -317,18 +322,18 @@ unsigned int MKCore::meshop_index(const char *op_name)
 void MKCore::set_default_meshop(const char *op_name, unsigned short dims) 
 {
     // get the meshop index
-  OpNameMap::iterator oit = opNameMap.find(op_name);
-  if (oit == opNameMap.end()) throw Error(MK_NOT_FOUND, "A MeshOp with that name was not found.");
+  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
+  if (oit == op_factory()->opNameMap.end()) throw Error(MK_NOT_FOUND, "A MeshOp with that name was not found.");
 
   set_default_meshop(oit->second, dims);
 }
 
-  /** \brief Initialize the opsByDim vectors from (static) registeredOps
+  /** \brief Initialize the opsByDim vectors from (static) op_factory()->registeredOps
    */
 void MKCore::init_opsbydim() 
 {
     // compare cached size to registered size, return if it hasn't changed since we last checked
-  if (opsByDim && numOpsByDim == registeredOps.size()) return;
+  if (opsByDim && numOpsByDim == op_factory()->registeredOps.size()) return;
   
   if (!opsByDim) opsByDim = new std::vector<unsigned short>[4];
   
@@ -336,7 +341,7 @@ void MKCore::init_opsbydim()
   opsByDim = 0;
 
     // check each registered op
-  for (std::vector<OpInfo>::iterator vit = registeredOps.begin(); vit != registeredOps.end(); vit++) {
+  for (std::vector<OpInfo>::iterator vit = op_factory()->registeredOps.begin(); vit != op_factory()->registeredOps.end(); vit++) {
       // cache dimension so we don't check the same dim twice
     int last_dim = -1;
     opsByDim++;
@@ -391,7 +396,7 @@ void MKCore::set_default_meshop(unsigned short op_index, unsigned short dims)
  */
 void MKCore::meshop_by_type(moab::EntityType tp, std::vector<OpInfo> &ops) 
 {
-  for (std::vector<OpInfo>::iterator oi = registeredOps.begin(); oi != registeredOps.end(); oi++) {
+  for (std::vector<OpInfo>::iterator oi = op_factory()->registeredOps.begin(); oi != op_factory()->registeredOps.end(); oi++) {
     if (std::find(oi->opEntTypes.begin(), oi->opEntTypes.end(), tp) != oi->opEntTypes.end())
       ops.push_back(*oi);
   }
@@ -407,7 +412,7 @@ void MKCore::meshop_by_dimension(int dim, std::vector<OpInfo> &ops)
 
   for (std::vector<unsigned short>::iterator vit = opsByDim[dim].begin(); vit != opsByDim[dim].end();
        vit++)
-    ops.push_back(registeredOps[*vit]);
+    ops.push_back(op_factory()->registeredOps[*vit]);
 }
     
     /** \brief Return MeshOp types that can mesh the specified ModelEnt
@@ -416,7 +421,7 @@ void MKCore::meshop_by_dimension(int dim, std::vector<OpInfo> &ops)
      */
 void MKCore::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops) 
 {
-  for (std::vector<OpInfo>::iterator oit = registeredOps.begin(); oit != registeredOps.end(); oit++) {
+  for (std::vector<OpInfo>::iterator oit = op_factory()->registeredOps.begin(); oit != op_factory()->registeredOps.end(); oit++) {
     if (oit->opCanMesh && oit->opCanMesh(ent))
       ops.push_back(*oit);
   }
@@ -429,8 +434,8 @@ void MKCore::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops)
  */
 MeshOp *MKCore::construct_meshop(std::string op_name, const MEntVector &me_vec) 
 {
-  OpNameMap::iterator oit = opNameMap.find(op_name);
-  if (oit != opNameMap.end()) return registeredOps[oit->second].opFactory(this, me_vec);
+  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
+  if (oit != op_factory()->opNameMap.end()) return op_factory()->registeredOps[oit->second].opFactory(this, me_vec);
 }
 
 /** \brief Construct a new MeshOp of the specified name
@@ -443,12 +448,12 @@ MeshOp *MKCore::construct_meshop(unsigned int dim, const MEntVector &me_vec)
   if (!opsByDim) init_opsbydim();
   
   if (opsByDim[dim].empty()) throw Error(MK_MESHOP_NOT_FOUND, "No default MeshOp for that dimension.");
-  else return construct_meshop(registeredOps[opsByDim[dim][0]], me_vec);
+  else return construct_meshop(op_factory()->registeredOps[opsByDim[dim][0]], me_vec);
 }
 
 MeshOp *MKCore::construct_meshop(OpInfo &info, const MEntVector &me_vec) 
 {
-  return registeredOps[info.opIndex].opFactory(this, me_vec);
+  return op_factory()->registeredOps[info.opIndex].opFactory(this, me_vec);
 }
 
 } // namespace meshkit

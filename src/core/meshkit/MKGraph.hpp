@@ -100,6 +100,9 @@ public:
     //! Run execute on the graph
   virtual void execute();
 
+    //! Run both setup and execute on the graph
+  virtual void setup_and_execute();
+
 protected:
     //! The GraphNode graph
   lemon::ListDigraph mkGraph;
@@ -172,6 +175,14 @@ inline GraphNode *MKGraph::target(lemon::ListDigraph::Arc arc) const
   return nodeMap[mkGraph.target(arc)];
 }
   
+    //! Run both setup and execute on the graph
+inline void MKGraph::setup_and_execute() 
+{
+  setup();
+  
+  execute();
+}
+
 } // namespace MeshKit
 
 #endif

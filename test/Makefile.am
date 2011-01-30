@@ -1,4 +1,4 @@
-SUBDIRS = core
+SUBDIRS = core algs
 
 build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check

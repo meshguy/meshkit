@@ -191,6 +191,24 @@ public:
   void commit_mesh(std::vector<moab::EntityHandle> &mesh_ents,
                    MeshedState mstate);
 
+    /** \brief Return the mesh on this entity, of the specified dimension or (if dim=-1) all dimensions
+     *
+     * This function will return the mesh entities on bounding entities too, if requested.  This is useful
+     * for example for assembling the nodes bounding a surface, as some of those nodes are on model
+     * vertices.  If interior edges or faces are requested for model faces or regions, resp, passing
+     * create_if_missing=true will cause these entities to be created, and added to the model sets too.
+     * If requesting mesh on a periodic edge, end vertex will appear only at the beginning of the returned
+     * vector.
+     * \param dim Dimension of entities requested
+     * \param ments Entities
+     * \param bdy_too If true, returns (dim)-dimensional entities from bounding entities too
+     * \param create_if_missing If true, will create aentities if they don't exist yet
+     */
+  void get_mesh(int dim,
+                std::vector<moab::EntityHandle> &ments,
+                bool bdy_too = false,
+                bool create_if_missing=false);
+
     /** \brief Return the mesh bounding this entity, their senses, and optionally the loops/shells
      *
      * In the case where vertices are requested (dim=0), vertices on end of loops are *not* repeated

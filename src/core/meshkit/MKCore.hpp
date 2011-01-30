@@ -80,6 +80,19 @@ public:
     meshop_canmesh_t opCanMesh;
   };
 
+    /** \brief A map from MeshOp name to index in the OpInfos vector
+     */
+  typedef std::map<std::string, unsigned short> OpNameMap;
+  
+  class MeshOpFactory 
+  {
+   public:
+    std::vector<OpInfo> registeredOps;
+    OpNameMap opNameMap;
+  };
+
+  static MeshOpFactory *op_factory();
+
     //! Initialize the opsByDim array
   void init_opsbydim();
 
@@ -124,10 +137,6 @@ public:
      */
   static bool register_meshop(const char *op_name, iMesh::EntityTopology *tps, int num_tps,
                               meshop_factory_t meshop, meshop_canmesh_t canmesh);
-  
-    /** \brief A map from MeshOp name to index in the OpInfos vector
-     */
-  typedef std::map<std::string, unsigned short> OpNameMap;
   
     /** \brief Return the MeshOp type with the given name
      * \param op_name Operation name requested
@@ -339,12 +348,7 @@ private:
     //! Model entities, in array by topological dimension
   MEntVector modelEnts[5];
 
-    /** \brief Master vector of OpInfo's
-     */
-  static std::vector<OpInfo> registeredOps;
-
-    //! Map from MeshOp name to OpInfo
-  static OpNameMap opNameMap;
+  static MeshOpFactory *opFactory;
 
     //! OpInfo's by dimension they can produce; first for a given dimension is the default
   std::vector<unsigned short> *opsByDim;

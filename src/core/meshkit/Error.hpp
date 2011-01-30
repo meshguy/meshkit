@@ -54,14 +54,27 @@ public:
 
   Error() {};
 
-    //! Destructor
+    /** \brief Destructor
+     *
+     * Must have throw() to match std::exception.
+     */
   virtual ~Error() throw();
 
     //! Return the error code
   virtual ErrorCode error_code() const;
   
-    //! Standard function for retrieving a description of this Error
+    /** \brief Standard function for retrieving a description of this Error
+     *
+     * Must have throw() to match std::exception.
+     * \return Text description of error.
+     */
   virtual const char *what() const throw();
+
+    /** \brief Return an error string for the specified code
+     * \param err Error code whose string is being queried
+     * \return String corresponding to the error code
+     */
+  static const char* error_str(ErrorCode err);
 
 private:
     //! Locally-stored error code, from ErrorCode enumeration
@@ -85,6 +98,23 @@ inline const char *Error::what() const throw ()
   return errDescription.c_str();
 }
       
+inline const char* Error::error_str(ErrorCode err)
+{
+  switch (err) {
+    case MK_SUCCESS: return "Success";
+    case MK_FAILURE: return "Failure";
+    case MK_NOT_FOUND: return "Not found";
+    case MK_MULTIPLE_FOUND: return "Multiple entities found";
+    case MK_MESHOP_NOT_FOUND: return "MeshOp not found";
+    case MK_NOT_IMPLEMENTED: return "Not implemented";
+    case MK_WRONG_DIMENSION: return "Wrong dimension";
+    case MK_ALREADY_DEFINED: return "Already defined";
+    case MK_BAD_INPUT: return "Bad input";
+    case MK_BAD_GEOMETRIC_EVALUATION: return "Bad geometric evaluation";
+    case MK_INCOMPLETE_MESH_SPECIFICATION: return "Incomplete mesh specification";
+  };
 }
+
+} // namespace MeshKit
 
 #endif

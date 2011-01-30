@@ -58,12 +58,6 @@ public:
     //! Set node name
   virtual void set_name(std::string new_name);
 
-    //! Setup function, called in reverse order before execute
-  virtual void setup();
-
-    //! Execute function, called in forward order after setup
-  virtual void execute();
-  
     //! Pure virtual, derived class must define
   virtual void setup_this() = 0;
 
@@ -178,24 +172,6 @@ inline lemon::ListDigraph::Node GraphNode::get_node() const
 inline GraphNode *GraphNode::other_node(lemon::ListDigraph::Arc arc)
 {
   return get_graph()->other_node(arc, this);
-}
-
-    //! Setup function, called in reverse order before execute
-inline void GraphNode::setup() 
-{
-  setup_this();
-
-  for (lemon::ListDigraph::InArcIt ait = in_arcs(); ait != lemon::INVALID; ++ait) 
-    mkGraph->source(ait)->setup();
-}
-  
-    //! Execute function, called in forward order after setup
-inline void GraphNode::execute() 
-{
-  execute_this();
-
-  for (lemon::ListDigraph::OutArcIt ait = out_arcs(); ait != lemon::INVALID; ++ait) 
-    mkGraph->target(ait)->execute();
 }
 
     //! Get flag denoting whether setup_this has been called for this node

@@ -1,53 +1,89 @@
 1900 0 1 0           
-10 Cubit 12.2 17 ACIS 19.0.2 Linux 24 Thu Jan 27 19:56:40 2011 
+10 Cubit 12.2 17 ACIS 19.0.2 Linux 24 Thu Jan 27 20:17:52 2011 
 1 9.9999999999999995e-07 1e-10 
 body $1 -1 -1 $-1 $2 $-1 $3 T -2 -2 0.5 2 2 0.5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $0 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
-lump $4 -1 -1 $-1 $-1 $5 $0 T -2 -2 0.5 2 2 0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $4 $-1 $0 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
+lump $5 -1 -1 $-1 $-1 $6 $0 T -2 -2 0.5 2 2 0.5 #
 transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
-shell $-1 -1 -1 $-1 $-1 $-1 $6 $-1 $2 T -2 -2 0.5 2 2 0.5 #
-face $7 -1 -1 $-1 $-1 $8 $5 $-1 $9 forward double out T -2 -2 0.5 2 2 0.5 F #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $6 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 8 #
-loop $-1 -1 -1 $-1 $10 $11 $6 T -0.24999999999999997 0.25 0.5 0.25000000000000006 0.75 0.5 hole $9 F #
+simple-snl-attrib $-1 -1 $-1 $1 $0 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 2 -2147483648 -1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $7 $-1 $2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
+shell $-1 -1 -1 $-1 $-1 $-1 $8 $-1 $2 T -2 -2 0.5 2 2 0.5 #
+simple-snl-attrib $-1 -1 $9 $5 $2 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 2 -2147483648 -1 #
+face $10 -1 -1 $-1 $-1 $11 $6 $-1 $12 forward double out T -2 -2 0.5 2 2 0.5 F #
+simple-snl-attrib $-1 -1 $-1 $7 $2 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 7 @16 GRAPHICS_OPTIONS @14 geometry color @10 mesh color @19 geometry visibility @15 mesh visibility @11 render mode @11 transparent 0 6 5 5 1 1 0 0 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $13 $-1 $8 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 8 #
+loop $-1 -1 -1 $-1 $14 $15 $8 T -0.24999999999999997 0.25 0.5 0.25000000000000006 0.75 0.5 hole $12 F #
 plane-surface $-1 -1 -1 $-1 0 0 0.5 0 0 1 1 0 0 forward_v I I I I #
-loop $-1 -1 -1 $-1 $12 $13 $6 T -0.25000000000000006 -0.75 0.5 0.24999999999999997 -0.25 0.5 hole $9 F #
-coedge $-1 -1 -1 $-1 $11 $11 $-1 $14 forward $8 $-1 #
-loop $-1 -1 -1 $-1 $15 $16 $6 T 0.25 -0.25 0.5 0.75 0.25 0.5 hole $9 F #
-coedge $-1 -1 -1 $-1 $13 $13 $-1 $17 forward $10 $-1 #
-edge $18 -1 -1 $-1 $19 -3.1415926535897931 $19 3.1415926535897931 $11 $20 forward @7 unknown T -0.24999999999999997 0.25 0.5 0.25000000000000006 0.75 0.5 #
-loop $-1 -1 -1 $-1 $21 $22 $6 T -0.75 -0.25 0.5 -0.25 0.25 0.5 hole $9 F #
-coedge $-1 -1 -1 $-1 $16 $16 $-1 $23 forward $12 $-1 #
-edge $24 -1 -1 $-1 $25 -3.1415926535897931 $25 3.1415926535897931 $13 $26 forward @7 unknown T -0.25000000000000006 -0.75 0.5 0.24999999999999997 -0.25 0.5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $14 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 11 #
-vertex $27 -1 -1 $-1 $14 $28 #
+simple-snl-attrib $-1 -1 $16 $10 $8 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 8 -2147483648 -1 #
+loop $-1 -1 -1 $-1 $17 $18 $8 T -0.25000000000000006 -0.75 0.5 0.24999999999999997 -0.25 0.5 hole $12 F #
+coedge $-1 -1 -1 $-1 $15 $15 $-1 $19 forward $11 $-1 #
+simple-snl-attrib $-1 -1 $-1 $13 $8 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
+loop $-1 -1 -1 $-1 $20 $21 $8 T -0.75 -0.25 0.5 -0.25 0.25 0.5 hole $12 F #
+coedge $-1 -1 -1 $-1 $18 $18 $-1 $22 forward $14 $-1 #
+edge $23 -1 -1 $-1 $24 -3.1415926535897931 $24 3.1415926535897931 $15 $25 forward @7 unknown T -0.24999999999999997 0.25 0.5 0.25000000000000006 0.75 0.5 #
+loop $-1 -1 -1 $-1 $-1 $26 $8 T -2 -2 0.5 2 2 0.5 periphery $12 F #
+coedge $-1 -1 -1 $-1 $21 $21 $-1 $27 forward $17 $-1 #
+edge $28 -1 -1 $-1 $29 -3.1415926535897931 $29 3.1415926535897931 $18 $30 forward @7 unknown T -0.25000000000000006 -0.75 0.5 0.24999999999999997 -0.25 0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $31 $-1 $19 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
+vertex $32 -1 -1 $-1 $19 $33 #
 ellipse-curve $-1 -1 -1 $-1 3.0616169978683824e-17 0.5 0.5 -0 -0 -1 1.5308084989341912e-17 0.25 0 1 I I #
-loop $-1 -1 -1 $-1 $-1 $29 $6 T -2 -2 0.5 2 2 0.5 periphery $9 F #
-coedge $-1 -1 -1 $-1 $22 $22 $-1 $30 forward $15 $-1 #
-edge $31 -1 -1 $-1 $32 -3.1415926535897931 $32 3.1415926535897931 $16 $33 forward @7 unknown T 0.25 -0.25 0.5 0.75 0.25 0.5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $17 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 12 #
-vertex $34 -1 -1 $-1 $17 $35 #
+coedge $-1 -1 -1 $-1 $34 $35 $-1 $36 forward $20 $-1 #
+edge $37 -1 -1 $-1 $38 -3.1415926535897931 $38 3.1415926535897931 $21 $39 forward @7 unknown T -0.75 -0.25 0.5 -0.25 0.25 0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $40 $-1 $22 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
+vertex $41 -1 -1 $-1 $22 $42 #
 ellipse-curve $-1 -1 -1 $-1 -3.0616169978683824e-17 -0.5 0.5 -0 -0 -1 1.5308084989341912e-17 0.25 0 1 I I #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $19 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 11 #
+simple-snl-attrib $-1 -1 $43 $23 $19 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 14 -2147483648 -1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $44 $-1 $24 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
 point $-1 -1 -1 $-1 -1.5308084989341912e-17 0.25 0.5 #
-coedge $-1 -1 -1 $-1 $29 $29 $-1 $36 forward $21 $-1 #
-edge $37 -1 -1 $-1 $38 -3.1415926535897931 $38 3.1415926535897931 $22 $39 forward @7 unknown T -0.75 -0.25 0.5 -0.25 0.25 0.5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $23 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 13 #
-vertex $40 -1 -1 $-1 $23 $41 #
-ellipse-curve $-1 -1 -1 $-1 0.5 0 0.5 -0 -0 -1 0.25 0 0 1 I I #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $25 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 12 #
-point $-1 -1 -1 $-1 -7.6540424946709566e-17 -0.75 0.5 #
-edge $42 -1 -1 $-1 $43 0 $43 6.2831853071795862 $29 $44 forward @7 unknown T -2 -2 0.5 2 2 0.5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $30 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
-vertex $45 -1 -1 $-1 $30 $46 #
+coedge $-1 -1 -1 $-1 $45 $26 $35 $46 forward $20 $-1 #
+coedge $-1 -1 -1 $-1 $26 $47 $34 $46 reversed $20 $-1 #
+edge $48 -1 -1 $-1 $49 0 $49 6.2831853071795862 $26 $50 forward @7 unknown T -2 -2 0.5 2 2 0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $51 $-1 $27 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 16 #
+vertex $52 -1 -1 $-1 $27 $53 #
 ellipse-curve $-1 -1 -1 $-1 -0.5 0 0.5 -0 -0 -1 0.25 0 0 1 I I #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $32 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 13 #
-point $-1 -1 -1 $-1 0.25 3.0616169978683824e-17 0.5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $36 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
-vertex $47 -1 -1 $-1 $36 $48 #
+simple-snl-attrib $-1 -1 $54 $28 $22 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 15 -2147483648 -1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $55 $-1 $29 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
+point $-1 -1 -1 $-1 -7.6540424946709566e-17 -0.75 0.5 #
+simple-snl-attrib $-1 -1 $-1 $31 $19 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @5 GROUP @5 holes 0 7 1 2 418909005 4 0 0 0 #
+simple-snl-attrib $-1 -1 $-1 $32 $24 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 14 -2147483648 -1 #
+coedge $-1 -1 -1 $-1 $47 $34 $-1 $56 forward $20 $-1 #
+edge $57 -1 -1 $-1 $49 -1.5 $58 -0.25 $34 $59 forward @7 unknown T 0.75 0 0.5 2 0 0.5 #
+coedge $-1 -1 -1 $-1 $35 $45 $-1 $60 forward $20 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $61 $-1 $36 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 17 #
+vertex $62 -1 -1 $-1 $36 $63 #
 ellipse-curve $-1 -1 -1 $-1 0 0 0.5 0 0 1 2 0 0 1 I I #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $38 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
+simple-snl-attrib $-1 -1 $64 $37 $27 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 16 -2147483648 -1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $65 $-1 $38 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 16 #
 point $-1 -1 -1 $-1 -0.75 3.0616169978683824e-17 0.5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $43 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
+simple-snl-attrib $-1 -1 $-1 $40 $22 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @5 GROUP @5 holes 0 7 1 2 418909005 1 0 0 0 #
+simple-snl-attrib $-1 -1 $-1 $41 $29 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 15 -2147483648 -1 #
+edge $66 -1 -1 $-1 $58 0 $67 3.1415926535897931 $45 $68 forward @7 unknown T 0.25 -0.25 0.5 0.75 3.0616169978683824e-17 0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $69 $-1 $46 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 18 #
+vertex $70 -1 -1 $-1 $56 $71 #
+straight-curve $-1 -1 -1 $-1 0.5 0 0.5 -1 -0 -0 F -2 F -0 #
+edge $72 -1 -1 $-1 $67 -3.1415926535897931 $58 0 $47 $68 forward @7 unknown T 0.25 0 0.5 0.75 0.25 0.5 #
+simple-snl-attrib $-1 -1 $-1 $48 $36 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 17 -2147483648 -1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $73 $-1 $49 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 17 #
 point $-1 -1 -1 $-1 2 0 0.5 #
+simple-snl-attrib $-1 -1 $-1 $51 $27 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @5 GROUP @5 holes 0 7 1 2 418909005 0 0 0 0 #
+simple-snl-attrib $-1 -1 $-1 $52 $38 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 16 -2147483648 -1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $74 $-1 $56 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 19 #
+vertex $75 -1 -1 $-1 $56 $76 #
+ellipse-curve $-1 -1 -1 $-1 0.5 0 0.5 -0 -0 -1 0.25 0 0 1 I I #
+simple-snl-attrib $-1 -1 $77 $57 $46 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @14 SOURCE_FEATURE @7 IMPRINT 0 0 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $78 $-1 $58 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 18 #
+point $-1 -1 -1 $-1 0.75 0 0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $79 $-1 $60 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 20 #
+simple-snl-attrib $-1 -1 $-1 $62 $49 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 17 -2147483648 -1 #
+simple-snl-attrib $-1 -1 $80 $66 $56 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @14 SOURCE_FEATURE @7 IMPRINT 0 0 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $81 $-1 $67 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 19 #
+point $-1 -1 -1 $-1 0.25 3.0616169978683824e-17 0.5 #
+simple-snl-attrib $-1 -1 $-1 $69 $46 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 18 -2147483648 -1 #
+simple-snl-attrib $-1 -1 $-1 $70 $58 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 18 -2147483648 -1 #
+simple-snl-attrib $-1 -1 $82 $72 $60 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @14 SOURCE_FEATURE @7 IMPRINT 0 0 #
+simple-snl-attrib $-1 -1 $83 $74 $56 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 19 -2147483648 -1 #
+simple-snl-attrib $-1 -1 $-1 $75 $67 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 19 -2147483648 -1 #
+simple-snl-attrib $-1 -1 $84 $79 $60 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 20 -2147483648 -1 #
+simple-snl-attrib $-1 -1 $-1 $80 $56 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @5 GROUP @5 holes 0 7 1 2 418909005 2 0 0 0 #
+simple-snl-attrib $-1 -1 $-1 $82 $60 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @5 GROUP @5 holes 0 7 1 2 418909005 3 0 0 0 #
 End-of-ACIS-data 

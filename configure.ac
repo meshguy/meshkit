@@ -757,6 +757,7 @@ AC_CONFIG_FILES([Makefile
 		 src/lemon/doc/Doxyfile
 		 test/Makefile
 		 test/core/Makefile
+		 test/algs/Makefile
                  utils/Makefile
                  ])
 

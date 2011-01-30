@@ -250,6 +250,93 @@ void ModelEnt::closest_discrete(double x, double y, double z, double *close) con
   return closest(x, y, z, close);
 }
 
+void ModelEnt::get_mesh(int dim,
+                        std::vector<moab::EntityHandle> &ments,
+                        bool bdy_too,
+                        bool create_if_missing)
+{
+  assert(!create_if_missing);
+  if (dim > dimension()) throw Error(MK_BAD_INPUT, "Called get_mesh for dimension ", dim, " on a ", 
+                                     dimension(), "-dimensional entity.");
+  
+  if (0 == dim && 1 != dimension() && bdy_too) {
+      // just get the maximum-dimension entities, then adjacenct vertices from those, in a range, since
+      // order won't matter
+    moab::Range tmp_range, tmp_verts;
+    moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), tmp_range);
+    MBERRCHK(rval, "Trouble getting mesh entities.");
+    rval = mk_core()->moab_instance()->get_adjacencies(tmp_range, 0, false, tmp_verts, moab::Interface::UNION);
+    MBERRCHK(rval, "Trouble getting adjacent vertices.");
+    std::copy(tmp_verts.begin(), tmp_verts.end(), std::back_inserter(ments));
+    return;
+  }
+  else if (!bdy_too) {
+      // just owned entities, which will be in the set
+    moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), ments);
+    MBERRCHK(rval, "Trouble getting mesh entities.");
+    return;
+  }
+  else if (0 == dim && 1 == dimension() && bdy_too) {
+      // ordered vertices; get internal verts first, then bdy verts, then pack into returned vector
+    std::vector<moab::EntityHandle> tmp_edgevs, tmp_vvs;
+    moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, 0, tmp_edgevs);
+    MBERRCHK(rval, "Trouble getting owned vertices.");
+    boundary(0, tmp_vvs);
+    if (tmp_vvs.empty()) throw Error(MK_NOT_FOUND, "No mesh on bounding entity.");
+    ments.push_back(tmp_vvs[0]);
+    std::copy(tmp_edgevs.begin(), tmp_edgevs.end(), std::back_inserter(ments));
+    if (2 == tmp_vvs.size()) ments.push_back(tmp_vvs[1]);
+    return;
+  }
+  else {
+    throw Error(MK_FAILURE, "Bad combination of dim=", dim, ", bdy_too=", false, " in get_mesh");
+  }
+}
+    
+void ModelEnt::boundary(int dim,
+                        std::vector<moab::EntityHandle> &bdy,
+                        std::vector<int> *senses,
+                        std::vector<int> *group_sizes) 
+{
+  MEntVector me_loop;
+  std::vector<int> me_senses, me_group_sizes;
+  boundary(dim, me_loop, &me_senses, &me_group_sizes);
+  
+  MEntVector::iterator vit = me_loop.begin();
+  std::vector<int>::iterator sense_it = me_senses.begin(), grpsize_it = me_group_sizes.begin();
+  int gents_ctr = 0, first_ment = 0;
+
+    // packing into a single list, but need to keep track of loop/shell sizes; don't increment
+    // grpsize_it here, just when we've done all the mes in this group
+  for (vit = me_loop.begin(); vit != me_loop.end(); vit++, sense_it++) {
+    std::vector<moab::EntityHandle> tmp_ments;
+    (*vit)->get_mesh(dim, tmp_ments, true);
+    if (*sense_it == SENSE_REVERSE) {
+      std::reverse(tmp_ments.begin(), tmp_ments.end());
+      std::copy(tmp_ments.begin(), tmp_ments.end(), std::back_inserter(bdy));
+      if (senses) {
+        for (unsigned int i = 0; i < tmp_ments.size(); i++) senses->push_back(SENSE_REVERSE);
+      }
+    }
+    else {
+      std::copy(tmp_ments.begin(), tmp_ments.end(), std::back_inserter(bdy));
+      if (senses) {
+        for (unsigned int i = 0; i < tmp_ments.size(); i++) senses->push_back(SENSE_FORWARD);
+      }
+    }
+    if (group_sizes) {
+      gents_ctr++;
+      if (gents_ctr == *grpsize_it) {
+        group_sizes->push_back(bdy.size()-first_ment);
+          // first_ment will be the first element in the next group
+        first_ment = bdy.size();
+        gents_ctr = 0;
+        grpsize_it++;
+      }
+    }
+  }
+}
+    
 void ModelEnt::boundary(int dim,
                         MEntVector &entities,
                         std::vector<int> *senses,

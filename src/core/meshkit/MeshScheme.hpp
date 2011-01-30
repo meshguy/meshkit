@@ -34,12 +34,6 @@ public:
     //! Destructor
   virtual ~MeshScheme();
 
-    //! Setup function, called in reverse order before execute
-  virtual void setup();
-
-    //! Execute function, called in forward order after setup
-  virtual void execute();
-
     //! This function is pure virtual, all derived classes must define
   virtual void setup_this()=0;
 

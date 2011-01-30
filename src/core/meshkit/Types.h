@@ -40,6 +40,12 @@ namespace MeshKit {
         POST_MESH
     };
 
+    enum Sense {
+        SENSE_FORWARD=1,
+        SENSE_REVERSE=-1,
+        SENSE_BOTH=0
+    };
+
     enum BooleanType {
         INTERSECT, UNION
     };
