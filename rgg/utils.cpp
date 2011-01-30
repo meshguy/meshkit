@@ -57,3 +57,43 @@ int extend_expand_sets(CopyMesh *cm)
   
   return iBase_SUCCESS;
 }
+
+//
+// Geometry Version
+//
+
+int get_copy_sets(CopyGeom *cg, iBase_EntitySetHandle orig_set,
+                  const char **tag_names, const char **tag_vals,
+                  int num_tags)
+{
+  //  return get_ce_sets(cg->copy_sets(), orig_set, tag_names, tag_vals, num_tags);
+  return 0;
+}
+
+int get_expand_sets(CopyGeom *cg, iBase_EntitySetHandle orig_set,
+                    const char **tag_names, const char **tag_vals,
+                    int num_tags)
+{
+  //  return get_ce_sets(cg->expand_sets(), orig_set, tag_names, tag_vals,
+  //                     num_tags);
+  return 0;
+}
+
+int extend_expand_sets(CopyGeom *cg) 
+{
+  //   // check expand sets for any contained sets which aren't already copy sets, 
+  //   // and add them to the list
+  // std::set<iBase_EntitySetHandle>::iterator sit;
+  // for (sit = cg->expand_sets().sets().begin();
+  //      sit != cg->expand_sets().sets().end(); ++sit) {
+  //   int err;
+  //   SimpleArray<iBase_EntitySetHandle> sets;
+  //   iMesh_getEntSets(cg->impl(), *sit, 1, ARRAY_INOUT(sets), &err);
+  //   ERRORR("Failed to get contained sets.", err);
+
+  //   if (sets.size() != 0)
+  //     cg->copy_sets().add_sets(sets.begin(), sets.end());
+  // }
+  
+  return iBase_SUCCESS;
+}
