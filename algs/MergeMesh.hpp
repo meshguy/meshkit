@@ -2,9 +2,9 @@
 #define MERGEMESH_HPP
 
 #include "iMesh.h"
-#include "MBiMesh.hpp"
 
-#ifdef MOAB
+#ifdef HAVE_MOAB
+#include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #endif
@@ -39,7 +39,7 @@ private:
 
   iBase_TagHandle mergeTag;
   
-#ifdef MOAB
+#ifdef HAVE_MOAB
 
     //- given a kdtree, set tag on vertices in leaf nodes with vertices
     //- to which they should be merged
@@ -67,14 +67,14 @@ private:
 inline MergeMesh::MergeMesh(iMesh_Instance impl) 
         : imeshImpl(impl)
 {
-#ifdef MOAB
-  mbImpl = (reinterpret_cast<MBiMesh *> (impl))->mbImpl;
+#ifdef HAVE_MOAB
+  mbImpl = (reinterpret_cast<MBiMesh*> (impl))->mbImpl;
 #endif
 }
 
 inline MergeMesh::~MergeMesh() 
 {
-#ifdef MOAB
+#ifdef HAVE_MOAB
   if (mbMergeTag) mbImpl->tag_delete(mbMergeTag);
 #endif
 }

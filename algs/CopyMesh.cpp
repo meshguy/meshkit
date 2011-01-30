@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <functional>
+#include <string>
 
 CopyMesh::CopyMesh(iMesh_Instance impl) 
   : imeshImpl(impl), copyTag(impl, "__CopyMeshTag"),

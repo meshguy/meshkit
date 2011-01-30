@@ -8,7 +8,7 @@
 #include "MKException.hpp"
 
 #include <cassert>
-#include <string>
+#include <string.h>
 #include <vector>
 #include <set>
 
