@@ -82,7 +82,12 @@ void ModelEnt::create_mesh_set(int flag)
     err = mkCore->igeom_instance()->getEntAdj(iGeomEnt, (iBase_EntityType)(this_tp+1), geom_ents);
     IBERRCHK(err, "Trouble finding parent entities.");
     for (vit = geom_ents.begin(); vit != geom_ents.end(); vit++) {
-      seth = mesh_handle(*vit);
+      try {seth = mesh_handle(*vit);
+      }
+      catch (Error err) {
+            // just continue, will get this when parent gets created later
+          continue;
+        }
       if (seth) {
         rval = mkCore->moab_instance()->add_parent_child(seth, moabEntSet);
         MBERRCHK(rval, "Trouble adding parent/child relation.");
@@ -342,7 +347,7 @@ void ModelEnt::boundary(int dim,
                         std::vector<int> *senses,
                         std::vector<int> *group_sizes)
 {
-    // for a given surface, return the bounding edges in the form of edge groups,
+    // for a given entity, return the bounding edges in the form of edge groups,
     // oriented ccw around surface
   int result, ent_type;
   int this_dim;
@@ -356,7 +361,7 @@ void ModelEnt::boundary(int dim,
   
     // special handling for edges and entities with single bounding entity - 
     // will just have 1 or 2 adj entities, set those directly and return
-  if (1 == dim || 1 == tmp_ents.size()) {
+  if (1 == dimension() || 1 == tmp_ents.size()) {
     for (unsigned int i = 0; i < tmp_ents.size(); i++) {
       entities.push_back(tmp_ents[i]);
       if (group_sizes) group_sizes->push_back(1);
@@ -396,7 +401,7 @@ void ModelEnt::boundary(int dim,
 
         // either way we need the d-2 entities
       MEntVector bridges;
-      get_adjacencies(dim-2, bridges);
+      get_adjacencies(dimension()-2, bridges);
       
         // only remove from the list of candidates if it's not dual-sensed
       if (0 != this_sense) 
@@ -433,7 +438,7 @@ void ModelEnt::boundary(int dim,
 
         // if we're on a face and we're the first in a group, check sense of this first
         // edge; make sure "next" in loop sense is last on list
-      if (2 == dim && this_group.size() == 1) {
+      if (2 == dimension() && this_group.size() == 1) {
 
           // get vertex which we know is shared by the "right" next edge; first get the vertices
           // if sense of current edge is forward, it's the 2nd vertex we want,
@@ -441,12 +446,12 @@ void ModelEnt::boundary(int dim,
         if (1 == this_sense && bridges.size() > 1) tmp_from.push_back(bridges[1]);
         else tmp_from.push_back(bridges[0]);
         tmp_adjs = b_ents;
-        get_adjs_bool(tmp_from, dim-1, tmp_adjs, INTERSECT);
+        get_adjs_bool(tmp_from, dimension()-1, tmp_adjs, INTERSECT);
       }
       else {
         std::copy(bridges.begin(), bridges.end(), std::back_inserter(tmp_from));
         MEntVector tmp_adjs2;
-        get_adjs_bool(tmp_from, dim-1, tmp_adjs2, UNION);
+        get_adjs_bool(tmp_from, dimension()-1, tmp_adjs2, UNION);
         std::sort(tmp_adjs2.begin(), tmp_adjs2.end());
         tmp_adjs.resize(tmp_adjs2.size());
         tmp_adjs.erase(std::set_intersection(b_ents.begin(), b_ents.end(),
@@ -454,7 +459,7 @@ void ModelEnt::boundary(int dim,
                                              tmp_adjs.begin()), tmp_adjs.end());
       }
 
-      if (2 == dim && tmp_adjs.size() > 1) {
+      if (2 == dimension() && tmp_adjs.size() > 1) {
           // more than one adjacent edge - need to evaluate winding angle to find right one
         ModelEnt *next_ent = next_winding(this_entity, this_sense, tmp_adjs);
         if (NULL == next_ent) return;

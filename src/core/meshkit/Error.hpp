@@ -9,13 +9,14 @@
 namespace MeshKit {
 
 #define MKERRCHK(err, descr) \
-    {if (MK_SUCCESS != err.error_code()) throw err;}
+    {if (MK_SUCCESS != err.error_code()) {Error tmp_err(0, "%s, line %d: %s", __FILE__, __LINE__, err.what()); err.set_string(tmp_err.what()); throw err;}}
+
     
 #define MBERRCHK(err, descr) \
-    {if (moab::MB_SUCCESS != err) throw Error(err, descr);}
+    {if (moab::MB_SUCCESS != err) {throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);}}
     
 #define IBERRCHK(err, descr) \
-    {if (iBase_SUCCESS != err) throw Error(err, descr);}
+    {if (iBase_SUCCESS != err) {throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);}}
     
     enum ErrorCode {
         MK_SUCCESS = 0, 
@@ -70,6 +71,11 @@ public:
      */
   virtual const char *what() const throw();
 
+    /** \brief Set the error string
+     * \param str String to set
+     */
+  virtual void set_string(const char *str);
+  
     /** \brief Return an error string for the specified code
      * \param err Error code whose string is being queried
      * \return String corresponding to the error code
@@ -113,6 +119,11 @@ inline const char* Error::error_str(ErrorCode err)
     case MK_BAD_GEOMETRIC_EVALUATION: return "Bad geometric evaluation";
     case MK_INCOMPLETE_MESH_SPECIFICATION: return "Incomplete mesh specification";
   };
+}
+
+inline void Error::set_string(const char *str) 
+{
+  errDescription = str;
 }
 
 } // namespace MeshKit

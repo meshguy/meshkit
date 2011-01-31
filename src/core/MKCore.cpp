@@ -216,7 +216,7 @@ void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents)
   
   std::vector<ModelEnt*> tmp_ents;
   for (dim = start; dim <= end; dim++) {
-    std::copy(modelEnts[dim].begin(), modelEnts[dim].end(), model_ents.end());
+    std::copy(modelEnts[dim].begin(), modelEnts[dim].end(), std::back_inserter(model_ents));
   }
 }
 

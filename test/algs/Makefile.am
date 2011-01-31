@@ -2,6 +2,10 @@ SUBDIRS = .
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
+DATADIR = $(top_srcdir)/data
+
+AM_CPPFLAGS += -DDATADIR=$(DATADIR)
+
 AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src \
                -I$(top_srcdir)/utils \
