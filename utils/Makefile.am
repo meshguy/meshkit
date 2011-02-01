@@ -19,7 +19,6 @@ libMKutils_la_SOURCES = \
 libMKutils_la_include_HEADERS = \
 	ArrayManager.hpp \
 	iMesh.hh \
-	ArrayManager.hpp \
 	SimpleArray.hpp \
 	MKUtils.hpp 
 
