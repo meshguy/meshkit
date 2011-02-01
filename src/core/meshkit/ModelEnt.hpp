@@ -80,6 +80,13 @@ public:
      * No ordered flag, since that's implied by definition
      * \param child_ents Child entities returned
      */
+  void children(std::vector<MEntVector> &child_ents);
+
+    /** \brief Return children as vectors of vectors, e.g. for loops or shells
+     *
+     * No ordered flag, since that's implied by definition
+     * \param child_ents Child entities returned
+     */
   void children(std::vector<std::vector<moab::EntityHandle> > &child_ents) const;
 
     /** \brief Return children as vectors of vectors, e.g. for loops or shells
@@ -142,6 +149,9 @@ public:
     //! Similar to closest_point, but based on mesh
   void closest_discrete(double x, double y, double z, double *close) const;
 
+    //! Get the id of the geometry/mesh entity, if any 
+  int id() const;
+  
     /**@}*/
 
     /** \name Mesh
@@ -202,12 +212,10 @@ public:
      * \param dim Dimension of entities requested
      * \param ments Entities
      * \param bdy_too If true, returns (dim)-dimensional entities from bounding entities too
-     * \param create_if_missing If true, will create aentities if they don't exist yet
      */
   void get_mesh(int dim,
                 std::vector<moab::EntityHandle> &ments,
-                bool bdy_too = false,
-                bool create_if_missing=false);
+                bool bdy_too = false);
 
     /** \brief Return the mesh bounding this entity, their senses, and optionally the loops/shells
      *
@@ -274,7 +282,7 @@ public:
     /** \brief Set sizing function index
      * \param index Sizing function index being set
      */
-  void sizing_function_index(int index);
+  void sizing_function_index(int index, bool children_too = true);
 
     //! Get intervals
   int mesh_intervals() const;

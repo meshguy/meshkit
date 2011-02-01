@@ -34,12 +34,6 @@ public:
     //! Destructor
   virtual ~MeshScheme();
 
-    //! This function is pure virtual, all derived classes must define
-  virtual void setup_this()=0;
-
-    //! This function is pure virtual, all derived classes must define
-  virtual void execute_this()=0;
-
 private:
   
 };

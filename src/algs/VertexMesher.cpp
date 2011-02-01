@@ -7,9 +7,18 @@ namespace MeshKit
 {
 
 // static registration of this  mesh scheme
-static int success = MKCore::register_meshop("VertexMesher", moab::MBVERTEX, 
-                                             VertexMesher::factory, VertexMesher::can_mesh);
+moab::EntityType VertexMesher_mtps[] = {moab::MBVERTEX};
+iBase_EntityType VertexMesher_mtp = iBase_VERTEX;
+static int initd = MKCore::register_meshop("VertexMesher", &VertexMesher_mtp, 1, VertexMesher_mtps, 1,
+                                           VertexMesher::factory, MeshOp::canmesh_vertex);
     
+VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec) 
+        : MeshScheme(mkcore, me_vec) 
+{}
+
+VertexMesher::~VertexMesher() 
+{}
+
 MeshOp *VertexMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
 {
   if (mkcore->vertex_mesher()) return mkcore->vertex_mesher();
@@ -20,12 +29,6 @@ MeshOp *VertexMesher::factory(MKCore *mkcore, const MEntVector &me_vec)
   }
 }
 
-bool VertexMesher::can_mesh(ModelEnt *me) 
-{
-  if (me->dimension() == 0) return true;
-  else return false;
-}
-  
 void VertexMesher::mesh_types(std::vector<moab::EntityType> &tps) 
 {
   tps.push_back(moab::MBVERTEX);
@@ -40,6 +43,10 @@ bool VertexMesher::add_modelent(ModelEnt *model_ent)
   return MeshOp::add_modelent(model_ent);
 }
 
+    //! Setup is a no-op, but must be provided since it's pure virtual
+void VertexMesher::setup_this() 
+{}
+    
 void VertexMesher::execute_this() 
 {
   if (mentSelection.empty()) return;

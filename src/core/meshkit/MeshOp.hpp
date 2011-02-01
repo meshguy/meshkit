@@ -64,7 +64,31 @@ public:
      * the dimension requested, this function throws an exception with mode MK_MESHOP_NOT_FOUND.
      */
   void setup_boundary();
+
+    /** \brief Helper function for meshop registration, returns true if specified ModelEnt is a vertex
+     * \param model_ent Model entity being evaluated
+     * \return True if model_ent has dimension() == 0
+     */
+  static bool canmesh_vertex(ModelEnt *model_ent);
   
+    /** \brief Helper function for meshop registration, returns true if specified ModelEnt is an edge
+     * \param model_ent Model entity being evaluated
+     * \return True if model_ent has dimension() == 1
+     */
+  static bool canmesh_edge(ModelEnt *model_ent);
+  
+    /** \brief Helper function for meshop registration, returns true if specified ModelEnt is a face
+     * \param model_ent Model entity being evaluated
+     * \return True if model_ent has dimension() == 2
+     */
+  static bool canmesh_face(ModelEnt *model_ent);
+  
+    /** \brief Helper function for meshop registration, returns true if specified ModelEnt is a region
+     * \param model_ent Model entity being evaluated
+     * \return True if model_ent has dimension() == 3
+     */
+  static bool canmesh_region(ModelEnt *model_ent);
+
 protected:
     //! MEntSelection that stores what this operation generated or otherwise worked on
   MEntSelection mentSelection;

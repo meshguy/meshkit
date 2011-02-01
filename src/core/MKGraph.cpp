@@ -93,16 +93,19 @@ void MKGraph::setup()
 {
     // run BFS on reversed graph
   lemon::ReverseDigraph<lemon::ListDigraph> rg(mkGraph);
-  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs(rg);
-  rbfs.init();
-  rbfs.addSource(leafNode->get_node());
-  while (!rbfs.emptyQueue()) {
-    lemon::ListDigraph::Node nd = rbfs.processNextNode();
+  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs1(rg);
+  rbfs1.init();
+  rbfs1.addSource(leafNode->get_node());
+  while (!rbfs1.emptyQueue()) {
+    lemon::ListDigraph::Node nd = rbfs1.processNextNode();
     assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
     if (nodeMap[nd]) nodeMap[nd]->setup_called(false);
   }
-  while (!rbfs.emptyQueue()) {
-    lemon::ListDigraph::Node nd = rbfs.processNextNode();
+  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs2(rg);
+  rbfs2.init();
+  rbfs2.addSource(leafNode->get_node());
+  while (!rbfs2.emptyQueue()) {
+    lemon::ListDigraph::Node nd = rbfs2.processNextNode();
     assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
     if (nodeMap[nd] && !nodeMap[nd]->setup_called()) {
       nodeMap[nd]->setup_this();

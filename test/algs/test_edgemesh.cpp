@@ -6,6 +6,9 @@
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/EdgeMesher.hpp"
+// for now, need to #include a vertexmesher so that its statics get initialized (namely, the mesher
+// gets registered)
+#include "meshkit/VertexMesher.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/ModelEnt.hpp"
 
@@ -15,10 +18,13 @@ using namespace MeshKit;
 
 int main(int argc, char **argv) 
 {
+  
     // start up MK and load the geometry
   MKCore mk;
   std::string file_name = TestDir + "/holysurf.sat";
   mk.load_geometry(file_name.c_str());
+
+  MeshKit::MKCore::meshop_factory_t thisop = VertexMesher::factory;
 
     // get the surface
   MEntVector surfs, curves, loops;
@@ -39,11 +45,19 @@ int main(int argc, char **argv)
   mk.get_entities_by_dimension(1, curves);
   EdgeMesher *em = (EdgeMesher*) mk.construct_meshop("EdgeMesher", curves);
 
-    // make a sizing function
+    // make a sizing function and set it on the surface
   SizingFunction esize(&mk, -1, 0.25);
+  surfs[0]->sizing_function_index(esize.core_index());
   
     // mesh the edges, by calling execute
   mk.setup_and_execute();
+
+    // make sure we got the right number of edges
+  moab::Range edges;
+  moab::ErrorCode rval = mk.moab_instance()->get_entities_by_dimension(0, 1, edges);
+  CHECK_EQUAL(moab::MB_SUCCESS, rval);
+  CHECK_EQUAL(79, (int)edges.size());
+  
 }
 
   

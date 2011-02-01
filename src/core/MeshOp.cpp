@@ -56,6 +56,26 @@ void MeshOp::setup_boundary()
   }
 }
 
+bool MeshOp::canmesh_vertex(ModelEnt *model_ent) 
+{
+  return (model_ent->dimension() == 0);
+}
+
+bool MeshOp::canmesh_edge(ModelEnt *model_ent)
+{
+  return (model_ent->dimension() == 1);
+}
+
+bool MeshOp::canmesh_face(ModelEnt *model_ent)
+{
+  return (model_ent->dimension() == 2);
+}
+
+bool MeshOp::canmesh_region(ModelEnt *model_ent)
+{
+  return (model_ent->dimension() == 3);
+}
+
 bool MeshOp::add_modelent(ModelEnt *model_ent) 
 {
   MEntSelection::iterator sit = mentSelection.find(model_ent);

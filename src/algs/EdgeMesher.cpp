@@ -10,9 +10,11 @@ namespace MeshKit
 {
     
 // static registration of this  mesh scheme
-moab::EntityType tps[] = {moab::MBVERTEX, moab::MBEDGE};
+moab::EntityType EdgeMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE};
+iBase_EntityType EdgeMesher_mtp = iBase_EDGE;
     
-static int success = MKCore::register_meshop("EdgeMesher", tps, 2, EdgeMesher::factory, NULL);
+static int success = MKCore::register_meshop("EdgeMesher", &EdgeMesher_mtp, 1, EdgeMesher_tps, 2, 
+                                             EdgeMesher::factory, MeshOp::canmesh_edge);
     
 MeshOp *EdgeMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
 {
@@ -71,6 +73,9 @@ void EdgeMesher::setup_this()
                     "Sizing function for edge had neither positive size nor positive intervals.");
     }
   }
+
+    // now call the generic setup_boundary to make sure vertices get meshed
+  setup_boundary();
 }
 
 void EdgeMesher::execute_this()
@@ -83,19 +88,22 @@ void EdgeMesher::execute_this()
 
       // resize the coords based on the interval setting
     int num_edges = me->mesh_intervals();
-    coords.resize(3*(num_edges+1));
-    nodes.resize(num_edges+1);
     edges.resize(num_edges);
 
       // get bounding mesh entities, use 1st 2 entries of nodes list temporarily
     me->boundary(0, nodes);
 
       // get coords in list, then move one tuple to last position
-    moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], 2, &coords[0]);
+    coords.resize(3*nodes.size());
+    moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], nodes.size(), &coords[0]);
     MBERRCHK(rval, "Trouble getting bounding vertex positions.");
-    for (int i = 0; i < 3; i++) coords[3*num_edges+i] = coords[3+i];
-    nodes[num_edges] = nodes[1];
+    int nnm1 = nodes.size() - 1;
+    coords.resize(3*(num_edges+1));
+    for (int i = 0; i < 3; i++) coords[3*num_edges+i] = coords[3*nnm1+i];
+    nodes.resize(num_edges+1);
+    nodes[num_edges] = nodes[nnm1];
 
+    coords.resize(3*(num_edges+1));
     equal_meshing(me, num_edges, coords);
       	
     rval = mk_core()->moab_instance()->create_vertices(&coords[3], num_edges-1, mit->second);

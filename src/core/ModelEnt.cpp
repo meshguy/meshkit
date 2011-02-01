@@ -14,7 +14,7 @@ ModelEnt::ModelEnt(MKCore *mk,
                    moab::EntityHandle mesh_ent,
                    int sizing_index) 
         : mkCore(mk), iGeomEnt(geom_ent), iGeomSet(NULL), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(SOFT), meshedState(NO_MESH) 
+          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH) 
 {}
 
 ModelEnt::ModelEnt(MKCore *mk,
@@ -22,12 +22,25 @@ ModelEnt::ModelEnt(MKCore *mk,
                    moab::EntityHandle mesh_ent,
                    int sizing_index) 
         : mkCore(mk), iGeomEnt(NULL), iGeomSet(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(SOFT), meshedState(NO_MESH) 
+          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH) 
 {}
 
 ModelEnt::~ModelEnt() 
 {}
 
+void ModelEnt::sizing_function_index(int ind, bool children_too)
+{
+  sizingFunctionIndex = ind;
+
+    // set on children too, if requested
+  if (children_too && dimension() > 1) {
+    MEntVector childrn;
+    get_adjacencies(dimension()-1, childrn);
+    for (MEntVector::iterator vit = childrn.begin(); vit != childrn.end(); vit++) 
+      (*vit)->sizing_function_index(ind, children_too);
+  }
+}
+    
 void ModelEnt::create_mesh_set(int flag)
 {
   if (moabEntSet) return;
@@ -186,7 +199,7 @@ void ModelEnt::set_upward_senses()
 void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate) 
 {
   std::vector<moab::EntityHandle> ent_vec;
-  std::copy(mesh_ents.begin(), mesh_ents.end(), ent_vec.begin());
+  std::copy(mesh_ents.begin(), mesh_ents.end(), std::back_inserter(ent_vec));
   commit_mesh(ent_vec, mstate);
 }
 
@@ -201,11 +214,18 @@ void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate)
 void ModelEnt::commit_mesh(std::vector<moab::EntityHandle> &mesh_ents,
                            MeshedState mstate) 
 {
-  iRel::Error err =
-      mkCore->irel_pair()->setEntEntArrRelation(geom_handle(), false,
-                                                (iBase_EntityHandle*)&mesh_ents[0], mesh_ents.size());
-  IBERRCHK(err, "Trouble committing mesh.");
+    // if it's BOTH, set the relation through iRel
+  if (mkCore->irel_pair()->get_rel_type(1) == iRel::BOTH) {
+    iRel::Error err =
+        mkCore->irel_pair()->setEntEntArrRelation(geom_handle(), false,
+                                                  (iBase_EntityHandle*)&mesh_ents[0], mesh_ents.size());
+    IBERRCHK(err, "Trouble committing mesh.");
+  }
 
+    // either way, add them to the set
+  moab::ErrorCode rval = mkCore->moab_instance()->add_entities(moabEntSet, &mesh_ents[0], mesh_ents.size());
+  MBERRCHK(rval, "Trouble adding entities to set.");
+  
   meshedState = mstate;
 }
   
@@ -255,34 +275,50 @@ void ModelEnt::closest_discrete(double x, double y, double z, double *close) con
   return closest(x, y, z, close);
 }
 
+int ModelEnt::id() const
+{
+    // get a global id for this entity, if there is one
+  if (geom_handle()) {
+    iGeom::TagHandle gid_tag;
+    iGeom::Error err = mk_core()->igeom_instance()->getTagHandle("GLOBAL_ID", gid_tag);
+    if (iBase_SUCCESS == err) {
+      int gid;
+      err = mk_core()->igeom_instance()->getIntData(geom_handle(), gid_tag, gid);
+      if (iBase_SUCCESS == err) return gid;
+    }
+  }
+  
+  if (mesh_handle()) {
+    moab::Tag gid_tag;
+    moab::ErrorCode err = mk_core()->moab_instance()->tag_get_handle("GLOBAL_ID", sizeof(int), moab::MB_TAG_SPARSE, 
+                                                                     moab::MB_TYPE_INTEGER, gid_tag);
+    if (moab::MB_SUCCESS == err) {
+      int gid;
+      moab::EntityHandle this_mesh = mesh_handle();
+      err = mk_core()->moab_instance()->tag_get_data(gid_tag, &this_mesh, 1, &gid);
+      if (moab::MB_SUCCESS == err) return gid;
+    }
+  }
+  
+  return -1;
+}
+
 void ModelEnt::get_mesh(int dim,
                         std::vector<moab::EntityHandle> &ments,
-                        bool bdy_too,
-                        bool create_if_missing)
+                        bool bdy_too)
 {
-  assert(!create_if_missing);
   if (dim > dimension()) throw Error(MK_BAD_INPUT, "Called get_mesh for dimension ", dim, " on a ", 
                                      dimension(), "-dimensional entity.");
-  
-  if (0 == dim && 1 != dimension() && bdy_too) {
-      // just get the maximum-dimension entities, then adjacenct vertices from those, in a range, since
-      // order won't matter
-    moab::Range tmp_range, tmp_verts;
-    moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), tmp_range);
-    MBERRCHK(rval, "Trouble getting mesh entities.");
-    rval = mk_core()->moab_instance()->get_adjacencies(tmp_range, 0, false, tmp_verts, moab::Interface::UNION);
-    MBERRCHK(rval, "Trouble getting adjacent vertices.");
-    std::copy(tmp_verts.begin(), tmp_verts.end(), std::back_inserter(ments));
-    return;
-  }
-  else if (!bdy_too) {
+
+  if (!bdy_too || dim == dimension()) {
       // just owned entities, which will be in the set
     moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), ments);
     MBERRCHK(rval, "Trouble getting mesh entities.");
     return;
   }
-  else if (0 == dim && 1 == dimension() && bdy_too) {
-      // ordered vertices; get internal verts first, then bdy verts, then pack into returned vector
+
+    // filter out the cases where order matters and boundary is requested too
+  else if (1 == dimension() && 0 == dim) {
     std::vector<moab::EntityHandle> tmp_edgevs, tmp_vvs;
     moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, 0, tmp_edgevs);
     MBERRCHK(rval, "Trouble getting owned vertices.");
@@ -294,7 +330,14 @@ void ModelEnt::get_mesh(int dim,
     return;
   }
   else {
-    throw Error(MK_FAILURE, "Bad combination of dim=", dim, ", bdy_too=", false, " in get_mesh");
+      // remaining case is bdy_too=true and dim < dimension()
+      // first, get dimension()-dimensional entities, then get dim-dimensional neighbors of those
+    std::vector<moab::EntityHandle> tmp_ments;
+    moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), tmp_ments);
+    MBERRCHK(rval, "Trouble getting owned entities.");
+    rval = mk_core()->moab_instance()->get_adjacencies(&tmp_ments[0], tmp_ments.size(), dim, false, ments, 
+                                                       moab::Interface::UNION);
+    MBERRCHK(rval, "Trouble getting adjacent entities.");
   }
 }
     
@@ -350,31 +393,29 @@ void ModelEnt::boundary(int dim,
     // for a given entity, return the bounding edges in the form of edge groups,
     // oriented ccw around surface
   int result, ent_type;
-  int this_dim;
+  int this_dim = dimension();
 
     // shouldn't be calling this function if we're a vertex
-  if (this_dim == iBase_VERTEX) throw Error(MK_BAD_INPUT, "Shouldn't call this for a vertex.");;
+  if (this_dim == iBase_VERTEX) throw Error(MK_BAD_INPUT, "Shouldn't call this for a vertex.");
+  else if (dim >= this_dim) throw Error(MK_BAD_INPUT, "Calling for boundary entities of equal or greater dimension.");;
   
-    // get adj ents & senses
+    // get (d-1)-adj ents & senses
   MEntVector tmp_ents;
-  get_adjacencies(dim, tmp_ents);
-  
-    // special handling for edges and entities with single bounding entity - 
-    // will just have 1 or 2 adj entities, set those directly and return
-  if (1 == dimension() || 1 == tmp_ents.size()) {
+  get_adjacencies(this_dim-1, tmp_ents);
+
+    // get out here if we're a curve
+  if (1 == this_dim) {
     for (unsigned int i = 0; i < tmp_ents.size(); i++) {
       entities.push_back(tmp_ents[i]);
-      if (group_sizes) group_sizes->push_back(1);
+      if (senses) senses->push_back(SENSE_FORWARD);
     }
     return;
   }
   
-  MEntVector intersected_ents(tmp_ents.size());
-
     // get adjacent entities into a sorted, mutable list
-  MEntVector b_ents;
+  MEntVector b_ents = tmp_ents;
   MEntSet dbl_curves, sgl_curves;
-  b_ents = tmp_ents;
+  
   std::sort(b_ents.begin(), b_ents.end());
 
   while (!b_ents.empty()) {
@@ -401,21 +442,22 @@ void ModelEnt::boundary(int dim,
 
         // either way we need the d-2 entities
       MEntVector bridges;
-      get_adjacencies(dimension()-2, bridges);
+      this_entity->get_adjacencies(dimension()-2, bridges);
       
         // only remove from the list of candidates if it's not dual-sensed
       if (0 != this_sense) 
         b_ents.erase(std::remove(b_ents.begin(), b_ents.end(), this_entity), b_ents.end());
 
         // if it's double-sensed and this is the first time we're seeing it, find the right sense
-      if (0 == this_sense) {
+      else {
+        assert(dimension() == 2);
         if (std::find(sgl_curves.begin(), sgl_curves.end(), this_entity) == sgl_curves.end()) {
           sgl_curves.insert(this_entity);
           if (!this_group.empty()) {
             ModelEnt *common_v = this_entity->shared_entity(this_group.back(), 0);
             if (common_v == bridges[0]) this_sense = 1;
             else if (common_v == bridges[1]) this_sense = -1;
-            else return;
+            else assert(false);
           }
             // else, if this is the first one in the loop, just choose a sense
           else {
@@ -428,6 +470,13 @@ void ModelEnt::boundary(int dim,
           dbl_curves.insert(this_entity);
           sgl_curves.erase(this_entity);
           b_ents.erase(std::remove(b_ents.begin(), b_ents.end(), this_entity), b_ents.end());
+          if (senses) {
+              // need to get the sense of the first appearance in list
+            MEntVector::iterator vit = std::find(this_group.begin(), this_group.end(), this_entity);
+            assert(vit != this_group.end());
+            int other_sense = (*senses)[vit-this_group.begin()];
+            this_sense = SENSE_REVERSE*other_sense;
+          }
         }
       }
           

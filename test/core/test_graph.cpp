@@ -57,7 +57,7 @@ inline MeshOp *MyScheme::factory(MKCore *mk_core, const MEntVector &me_vec)
 int main(int argc, char **argv) 
 {
     // start up MK and register my scheme with it
-  MKCore::register_meshop("MyScheme", moab::MBMAXTYPE, MyScheme::factory);
+  MKCore::register_meshop("MyScheme", iBase_REGION, moab::MBMAXTYPE, MyScheme::factory);
   MKCore mk;
 
     // create the scheme objects

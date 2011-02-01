@@ -75,7 +75,8 @@ public:
   {
     std::string opName;
     unsigned short opIndex;
-    std::vector<moab::EntityType> opEntTypes;
+    std::vector<iBase_EntityType> modelEntTypes;
+    std::vector<moab::EntityType> meshEntTypes;
     meshop_factory_t opFactory;
     meshop_canmesh_t opCanMesh;
   };
@@ -98,44 +99,56 @@ public:
 
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
-     * \param tp The MOAB entity type operated on by this MeshOp
+     * \param model_tp The iBase_EntityType (or dimension) operated on by this MeshOp type
+     * \param tp The MOAB entity type produced by this MeshOp
      * \param meshop The (static) factory function producing instances of this MeshOp type
      * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
      * \return Returns true if successful, false otherwise
      */
-  static bool register_meshop(const char *op_name, moab::EntityType tp, 
+  static bool register_meshop(const char *op_name, 
+                              iBase_EntityType model_tp, moab::EntityType tp, 
                               meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
   
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
-     * \param tp The MOAB entity type operated on by this MeshOp
+     * \param model_tp The iBase_EntityType (or dimension) operated on by this MeshOp type
+     * \param tp The iMesh entity topology produced by this MeshOp
      * \param meshop The (static) factory function producing instances of this MeshOp type
      * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
      * \return Returns true if successful, false otherwise
      */
-  static bool register_meshop(const char *op_name, iMesh::EntityTopology tp, 
+  static bool register_meshop(const char *op_name, 
+                              iBase_EntityType model_tp, iMesh::EntityTopology tp, 
                               meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
   
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
+     * \param model_tps The iBase_EntityType's (or dimensions) operated on by this MeshOp type
+     * \param num_mtps Number of model entity types in model_tps
      * \param tps The MOAB entity types operated on by this MeshOp
      * \param num_tps Number of entity types in tps
      * \param meshop The (static) factory function producing instances of this MeshOp type
      * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
      * \return Returns true if successful, false otherwise
      */
-  static bool register_meshop(const char *op_name, moab::EntityType *tps, int num_tps,
+  static bool register_meshop(const char *op_name, 
+                              iBase_EntityType *model_tps, int num_mtps,
+                              moab::EntityType *tps, int num_tps,
                               meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
   
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
+     * \param model_tps The iBase_EntityType's (or dimensions) operated on by this MeshOp type
+     * \param num_mtps Number of model entity types in model_tps
      * \param tps The iMesh entity types operated on by this MeshOp
      * \param num_tps Number of entity types in tps
      * \param meshop The (static) factory function producing instances of this MeshOp type
      * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
      * \return Returns true if successful, false otherwise
      */
-  static bool register_meshop(const char *op_name, iMesh::EntityTopology *tps, int num_tps,
+  static bool register_meshop(const char *op_name, 
+                              iBase_EntityType *model_tps, int num_mtps,
+                              iMesh::EntityTopology *tps, int num_tps,
                               meshop_factory_t meshop, meshop_canmesh_t canmesh);
   
     /** \brief Return the MeshOp type with the given name
@@ -172,7 +185,7 @@ public:
      * \param tp Entity type requested
      * \param ops MeshOp types returned
      */
-  void meshop_by_type(moab::EntityType tp, std::vector<OpInfo> &ops);
+  void meshop_by_mesh_type(moab::EntityType tp, std::vector<OpInfo> &ops);
     
     /** \brief Return MeshOp types that can operate on mesh of specified dimension
      * \param dim Entity dimension requested
@@ -409,10 +422,11 @@ inline moab::Tag MKCore::moab_model_tag()
  * \param meshop The (static) factory function producing instances of this MeshOp type
  * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
  */
-inline bool MKCore::register_meshop(const char *op_name, iMesh::EntityTopology tp, 
+inline bool MKCore::register_meshop(const char *op_name, 
+                                    iBase_EntityType model_tp, iMesh::EntityTopology tp, 
                                     meshop_factory_t meshop, meshop_canmesh_t canmesh) 
 {
-  return register_meshop(op_name, iMesh::mb_topology_table[tp], meshop, canmesh);
+  return register_meshop(op_name, model_tp, iMesh::mb_topology_table[tp], meshop, canmesh);
 }
   
 /** \brief Register a new MeshOp factory
@@ -422,12 +436,14 @@ inline bool MKCore::register_meshop(const char *op_name, iMesh::EntityTopology t
  * \param meshop The (static) factory function producing instances of this MeshOp type
  * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
  */
-inline bool MKCore::register_meshop(const char *op_name, iMesh::EntityTopology *tps, int num_tps,
+inline bool MKCore::register_meshop(const char *op_name, 
+                                    iBase_EntityType *model_tps, int num_mtps,
+                                    iMesh::EntityTopology *tps, int num_tps,
                                     meshop_factory_t meshop, meshop_canmesh_t canmesh)
 {
   std::vector<moab::EntityType> tmp_tps(num_tps);
   for (int i = 0; i < num_tps; i++) tmp_tps[i] = iMesh::mb_topology_table[tps[i]];
-  return register_meshop(op_name, &tmp_tps[0], num_tps, meshop, canmesh);
+  return register_meshop(op_name, model_tps, num_mtps, &tmp_tps[0], num_tps, meshop, canmesh);
 }
 
 inline VertexMesher *MKCore::vertex_mesher() const 
@@ -446,6 +462,9 @@ inline SizingFunction *MKCore::sizing_function(int index)
     // with that index
   if (index >= (int)sizingFunctions.size())
     throw Error(MK_BAD_INPUT, "Sizing function index outside range of valid indices.");
+  else if (index == -1)
+    return NULL;
+
   return sizingFunctions[index];
 }
   
