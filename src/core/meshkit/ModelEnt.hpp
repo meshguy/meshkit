@@ -171,6 +171,8 @@ public:
      */
   void create_mesh_set(int flag = -1);
 
+  bool exist_mesh_set();
+
     /** \brief Set the senses tag on moabEntSet
      *
      * Called after all mesh entity sets have been created for the model.  Gets adjacencies/senses

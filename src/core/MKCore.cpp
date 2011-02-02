@@ -3,6 +3,7 @@
 #include "moab/Core.hpp"
 #include "moab/CN.hpp"
 #include "MBiMesh.hpp"
+#include "MBTagConventions.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/NoOp.hpp"
 #include "meshkit/ModelEnt.hpp"
@@ -116,6 +117,18 @@ void MKCore::init(bool construct_missing_ifaces)
   if (moab::MB_SUCCESS != rval) 
     IBERRCHK(iBase_FAILURE, "Failure to create MKModelEnt tag in iMesh.");
 
+  // moab geometry dimension tag
+  rval = moabInstance->tag_create(GEOM_DIMENSION_TAG_NAME, sizeof(int), moab::MB_TAG_SPARSE,
+				  moab::MB_TYPE_INTEGER, moabGeomDimTag, 0, true);
+  if (moab::MB_SUCCESS != rval) 
+    IBERRCHK(iBase_FAILURE, "Failure to create geometry dimension tag in iMesh.");
+
+  // moab global id tag
+  rval = moabInstance->tag_create(GLOBAL_ID_TAG_NAME, sizeof(int), moab::MB_TAG_DENSE,
+				  moab::MB_TYPE_INTEGER, moabIDTag, 0, true);
+  if (moab::MB_SUCCESS != rval) 
+    IBERRCHK(iBase_FAILURE, "Failure to create global id tag in iMesh.");
+
 }
 
 void MKCore::populate_mesh() 
@@ -147,11 +160,13 @@ void MKCore::populate_mesh()
       
         // check for a mesh ent, and populate one if there is none
       if (!this_me->mesh_handle()) {
-        this_me->create_mesh_set();
-        new_ents.push_back(this_me);
+	if (!this_me->exist_mesh_set()) {
+	  this_me->create_mesh_set();
+	}
+	new_ents.push_back(this_me);
       }
 
-        // save the mesh set handle here
+        // save the model entity here
       modelEnts[dim].push_back(this_me);
     }
   }

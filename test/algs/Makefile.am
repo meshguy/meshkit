@@ -13,7 +13,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir)
 
-TESTS = test_edgemesh
+TESTS = test_edgemesh test_ebmesh
 
 check_PROGRAMS = $(TESTS)
 
@@ -23,6 +23,10 @@ MOSTLYCLEANFILES =
 
 test_edgemesh_SOURCES = test_edgemesh.cpp
 test_edgemesh_DEPENDENCIES = \
+	$(LDADD)
+
+test_ebmesh_SOURCES = test_ebmesh.cpp
+test_ebmesh_DEPENDENCIES = \
 	$(LDADD)
 
 # Utility target: build but don't run tests

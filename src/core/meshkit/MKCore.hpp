@@ -24,6 +24,8 @@ class SizingFunction;
       //! MKCore keeps a single instance of this
 class VertexMesher;
 
+class EBMesher;
+
 /** \class MKCore MKCore.hpp "meshkit/MKCore.hpp"
  * \brief The core MeshKit instance
  *
@@ -288,10 +290,18 @@ public:
     /** \brief Return the (iGeom) tag used to relate geometry entities to ModelEnts
      */
   iGeom::TagHandle igeom_model_tag();
-  
+
     /** \brief Return the (MOAB) tag used to relate mesh entities to ModelEnts
      */
   moab::Tag moab_model_tag();
+
+    /** \brief Return the (MOAB) geometry dimension tag
+     */
+  moab::Tag moab_geom_dim_tag();
+
+    /** \brief Return the (MOAB) global id tag
+     */
+  moab::Tag moab_global_id_tag();
 
     /** \brief Get the (single) VertexMesher instance
      * \return VertexMesher for this MKCore
@@ -302,6 +312,16 @@ public:
      * \param vm VertexMesher for this MKCore
      */
   void vertex_mesher(VertexMesher *vm);
+
+    /** \brief Get the (single) EBMesher instance
+     * \return EBMesher for this MKCore
+     */
+  EBMesher *eb_mesher() const;
+  
+    /** \brief Set the (single) EBMesher instance
+     * \param vm EBMesher for this MKCore
+     */
+  void eb_mesher(EBMesher *ebm);
 
     /** \brief Get sizing function by index
      * If the requested index is outside the range of SizingFunction's currently registered,
@@ -355,6 +375,12 @@ private:
     //! Tag used to associate mesh entities with model entities
   moab::Tag moabModelTag;
 
+    //! Tag used to associate existing mesh entities with model entities
+  moab::Tag moabGeomDimTag;
+
+    //! Tag used to associate existing mesh entities with model entities
+  moab::Tag moabIDTag;
+
     //! If true, the corresponding interfaces will get deleted from the destructor
   bool iCreatedIgeom, iCreatedMoab, iCreatedMbimesh, iCreatedIrel;
 
@@ -371,6 +397,9 @@ private:
   
     //! (Single) VertexMesher scheme for this MKCore
   VertexMesher *vertexMesher;
+
+      //! (Single) EBMesher scheme for this MKCore
+  EBMesher *ebMesher;
   
     //! SizingFunction vector
   std::vector<SizingFunction*> sizingFunctions;
@@ -416,6 +445,17 @@ inline moab::Tag MKCore::moab_model_tag()
   return moabModelTag;
 }
 
+inline moab::Tag MKCore::moab_geom_dim_tag()
+{
+  return moabGeomDimTag;
+}
+
+inline moab::Tag MKCore::moab_global_id_tag()
+{
+  return moabIDTag;
+}
+
+
 /** \brief Register a new MeshOp factory
  * \param op_name The name by which this type of MeshOp can be requested
  * \param tp The MOAB entity type operated on by this MeshOp
@@ -454,6 +494,16 @@ inline VertexMesher *MKCore::vertex_mesher() const
 inline void MKCore::vertex_mesher(VertexMesher *vm) 
 {
   vertexMesher = vm;
+}
+
+inline EBMesher *MKCore::eb_mesher() const 
+{
+  return ebMesher;
+}
+
+inline void MKCore::eb_mesher(EBMesher *ebm) 
+{
+  ebMesher = ebm;
 }
 
 inline SizingFunction *MKCore::sizing_function(int index) 

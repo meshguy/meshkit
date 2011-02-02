@@ -11,12 +11,14 @@ libMeshKitalgs_la_includedir = $(includedir)
 # The list of source files, and any header files that do not need to be installed
 libMeshKitalgs_la_SOURCES = \
 	EdgeMesher.cpp \
-	VertexMesher.cpp
+	VertexMesher.cpp \
+	EBMesher.cpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EdgeMesher.hpp \
-	meshkit/VertexMesher.hpp
+	meshkit/VertexMesher.hpp \
+	meshkit/EBMesher.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

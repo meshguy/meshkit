@@ -5,6 +5,7 @@
 #include "meshkit/Types.h"
 #include "meshkit/VecUtil.hpp"
 #include "moab/GeomTopoTool.hpp"
+#include "RefEntity.hpp"
 
 namespace MeshKit
 {
@@ -120,6 +121,46 @@ void ModelEnt::create_mesh_set(int flag)
       }
     }
   }
+}
+
+// find any existing set to relate
+bool ModelEnt::exist_mesh_set()
+{
+  if (!iGeomEnt) return false;
+
+  int dim = dimension();
+  int id = reinterpret_cast<RefEntity*> (iGeomEnt)->id();
+  const void* dims[] = {&dim};
+
+  moab::Range ents;
+  moab::Tag geom_dim_tag = mkCore->moab_geom_dim_tag();
+  moab::ErrorCode rval = mkCore->moab_instance()->
+    get_entities_by_type_and_tag(0, moab::MBENTITYSET, &geom_dim_tag,
+				 dims, 1, ents);
+  MBERRCHK(rval, "Failed to get geometry dimension tag.");
+
+  moab::EntityHandle meshset;
+  rval = mkCore->moab_instance()->create_meshset(moab::MESHSET_ORDERED, meshset);
+  MBERRCHK(rval, "Failed to create meshset.");
+
+  rval = mkCore->moab_instance()->add_entities(meshset, ents);
+  MBERRCHK(rval, "Failed to add dim entities to meshset.");
+
+  const void* ids[] = {&id};
+  ents.clear();
+  moab::Tag id_tag = mkCore->moab_global_id_tag();
+  rval = mkCore->moab_instance()->
+    get_entities_by_type_and_tag(meshset, moab::MBENTITYSET, &id_tag,
+				 ids, 1, ents);
+  MBERRCHK(rval, "Failed to set iMesh ModelEnt tag.");
+
+  if (!ents.size()) return false;
+
+  moabEntSet = ents[0];
+  Error merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
+  MKERRCHK(merr, "Failed to set iRel relation for a mesh set.");
+
+  return true;
 }
 
 void ModelEnt::set_senses() 
