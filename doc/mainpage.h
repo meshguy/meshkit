@@ -15,6 +15,7 @@
 - User's Guide
   - \ref datamodel
   - \ref thegraph
+    - \ref graphexamples
   - \ref interfaces
   - \ref usingmeshkit
   - \ref api
