@@ -4,6 +4,7 @@ AUTOMAKE_OPTIONS = foreign
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
          
+SUBDIRS = 
 
 # The directory in which to install headers
 libMeshKitalgs_la_includedir = $(includedir)
