@@ -13,11 +13,11 @@
 
  This manual is divided into the following sections:
 - User's Guide
-  - \ref datamodel "The MeshKit Data Model"
-  - \ref thegraph "A Graph-Based Model for Mesh Generation"
-  - \ref interfaces "Geometry, Mesh, Relations Interfaces"
-  - \ref usingmeshkit "Using MeshKit"
-  - \ref api "The MeshKit API"
+  - \ref datamodel
+  - \ref thegraph
+  - \ref interfaces
+  - \ref usingmeshkit
+  - \ref api
 - Developer's Guide
-
+  - \ref faq
  */
