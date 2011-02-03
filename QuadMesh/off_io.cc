@@ -36,7 +36,7 @@ int Mesh ::read_off_format_data(const string &fname)
   double  x, y, z;
 
   Vertex* vertex;
-  vector<Vertex*> vnodes, connect(3);
+  NodeSequence vnodes, connect(3);
   string str;
 
   infile >> str;
@@ -87,7 +87,7 @@ int Mesh ::read_off_format_data(const string &fname)
        face->setNodes( connect );
        addFace(face);
    }  
-   cout << " Reading Off file finished " << endl;
+   cout << "Reading Off file complete " << endl;
    return 0;
 }
 

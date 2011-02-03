@@ -32,6 +32,7 @@
 #include "Mesh.h"
 #include "DualGraph.h"
 #include "BinaryTree.h"
+#include "cycle.h"         // performance counter. 
 
 BEGIN_JAAL_NAMESPACE
 
@@ -42,8 +43,7 @@ public:
   const static int ALL_QUADS = 0;
   const static int QUAD_DOMINATED = 1;
 
-  static int collapse_matched_triangles(Mesh *mesh, vector<FacePair> &matching,
-      int replace = 0, Mesh *qmesh = NULL);
+  static Mesh* collapse_matched_triangles(Mesh *mesh, vector<FacePair> &matching, int replace = 0);
 
   Tri2Quads()
   {
@@ -53,27 +53,27 @@ public:
     required_topology = ALL_QUADS;
   }
 
-  vector<FacePair> getMaximumDualMatching();
+  const vector<FacePair> &getMaximumDualMatching();
 
-#ifdef USE_MOAB
-  int getQuadMesh( iMesh_Instance tmesh, iBase_EntitySetHandle eset = 0,
-      bool replace = 0,
-      iBase_EntitySetHandle qmesh = 0, int topo = ALL_QUADS );
-#endif
+  Mesh* getQuadMesh(Mesh *tmesh, int replace = 0, int topo = ALL_QUADS);
 
-  int getQuadMesh(Mesh *tmesh, bool replace = 0, Mesh *qmesh = NULL, int topo =
-      ALL_QUADS);
-
-  vector<Vertex*> getSteinerNodes() const;
-  vector<Face*> getInsertedFaces() const;
-  vector<Face*> getModifiedFaces() const;
+  NodeSequence getSteinerNodes()  const;
+  FaceSequence getInsertedFaces() const;
+  FaceSequence getModifiedFaces() const;
 
 private:
   Mesh *trimesh; // Input mesh.
-  Mesh *quadmesh;
 
-  vector<Face*> steinerFaces, modifiedFaces;
-  vector<Vertex*> steinerNodes;
+  struct LVertex : public Vertex
+  {
+      LVertex( Vertex *v ) { vertex = v; }
+      Vertex *vertex;
+      Vertex  *mate;
+      Face    *dual;
+  };
+
+  FaceSequence steinerFaces, modifiedFaces;
+  NodeSequence steinerNodes;
 
   BinaryTree *btree;
 
@@ -86,7 +86,7 @@ private:
   void splitParent(Face *parent, Face *child1, Face *child2);
   void splitParent(BinaryNode *p, BinaryNode *c1, BinaryNode *c2);
 
-  int quadrangulate_boundary_triangle(Face *face);
+  int refine_boundary_triangle(Face *face);
 
   void percolateup();
 
@@ -94,10 +94,10 @@ private:
   void matchnodes(BinaryNode *child, BinaryNode *parent);
   void matchnodes(Vertex *child, Vertex *parent);
 
-  BinaryNode* getChildofDegreeNParent(list<BinaryNode*> &levelnodes, int nd);
+  BinaryNode* getChildofDegreeNParent(BNodeList &levelnodes, int nd);
 
-  BinaryNode *getNextNode(list<BinaryNode*> &levelnodes);
-  void prunelevel(list<BinaryNode*> &levelnodes);
+  BinaryNode *getNextNode(BNodeList &levelnodes);
+  void prunelevel(BNodeList &levelnodes);
   void maximum_tree_matching();
 
   void match_tree_walk(BinaryTree *tree, BinaryNode *u);

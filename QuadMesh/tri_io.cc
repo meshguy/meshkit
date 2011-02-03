@@ -157,6 +157,7 @@ void Mesh::readFaces( const string &fname)
 	   faces[i] = newface;
        }
   }
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,6 +166,7 @@ void Mesh::readData( const string &fname)
    readNodes( fname );
    readEdges( fname );
    readFaces( fname );
+   enumerate(2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@ using namespace Jaal;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void DualGraph::addEdge(const NodeType v1, const NodeType v2)
+void DualGraph::addEdge(const PNode v1, const PNode v2)
 {
   v1->addRelation0(v2);
   v2->addRelation0(v1);
@@ -38,9 +38,9 @@ int DualGraph::build(Mesh *m)
     nodes[iface] = dualvtx;
   }
 
-  NodeType v0, v1, dv0, dv1;
+  PNode v0, v1, dv0, dv1;
 
-  vector<FaceType> neighs;
+  FaceSequence neighs;
   for (size_t iface = 0; iface < numfaces; iface++)
   {
     face = mesh->getFaceAt(iface);
@@ -65,7 +65,6 @@ int DualGraph::build(Mesh *m)
 
   if (!relexist)
     mesh->clear_relations(0, 2);
-
 
   adjTable[0][0] = 1;
   mesh->setDual(1);
@@ -97,7 +96,7 @@ void DualGraph::node_node_adjacency_rep()
 
 void DualGraph::edge_rep()
 {
-  vector<NodeType> vneighs, eConnect(2);
+  NodeSequence vneighs, eConnect(2);
 
   assert( adjTable[0][0]);
 

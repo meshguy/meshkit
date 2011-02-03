@@ -13,17 +13,28 @@
 
 #include "Mesh.h"
 #include "DualGraph.h"
+#include "ObjectPool.h"
 
 #ifdef USE_HASHMAP
 #include <tr1/unordered_map>
 #endif
 
+//#include <ext/slist>
+//typedef __gnu_cxx::slist<BinaryNode*> BNodeList;
+
 BEGIN_JAAL_NAMESPACE
+
+class BinaryNode;
+
+typedef std::list<BinaryNode*> BNodeList;
 
 class BinaryNode
 {
 public:
-  BinaryNode(NodeType n)
+  BinaryNode()
+  {}
+
+  BinaryNode(PNode n)
   {
     dualNode = n;
     levelID = -1;
@@ -45,9 +56,9 @@ public:
     return dualNode->isRemoved();
   }
 
-  void setMatchMark(bool r)
+  void setMatchMark(char r)
   {
-    dualNode->setRemoveMark(r);
+    dualNode->setStatus(r);
   }
 
   bool isRoot() const
@@ -192,7 +203,7 @@ private:
     BinaryNode *node;
   };
   int levelID;
-  NodeType dualNode;
+  PNode dualNode;
   BinaryNode* parent;
 
   vector<ActiveNode> children;
@@ -203,7 +214,7 @@ class BinaryTree
 public:
 
   const static int BREADTH_FIRST_TREE = 0;
-  const static int DEPTH_FIRST_TREE = 1;
+  const static int DEPTH_FIRST_TREE   = 1;
 
   BinaryTree(DualGraph *g)
   {
@@ -265,7 +276,7 @@ public:
   }
 
   // Give nodes at a given level. Root is at level = 0,
-  list<BinaryNode*> getLevelNodes(int l) const;
+  const BNodeList &getLevelNodes(int l) const;
 
   // Total Height of the tree...
   int getHeight() const;
@@ -283,8 +294,11 @@ public:
 
 private:
   DualGraph *dgraph;
-  int treetype;
   BinaryNode *root;
+  BNodeList emptylist;
+  ObjectPool<BinaryNode> pool;
+
+  int treetype;
 
 #ifdef USE_HASHMAP
   typedef std::tr1::unordered_map<Vertex*, BinaryNode*>  TNodeMap;
@@ -293,13 +307,13 @@ private:
 #endif
   TNodeMap  tnodemap;
 
-  std::map<int, list<BinaryNode*> > levelnodes;
+  std::map<int, BNodeList> levelnodes;
 
-  void bfs_traverse(BinaryNode *parent, list<BinaryNode*> &nextnodes);
+  void bfs_traverse(BinaryNode *parent, BNodeList &nextnodes);
   void bfs_traverse(BinaryNode *parent);
 
   void dfs_traverse(BinaryNode *parent);
-  void dfs_traverse(BinaryNode *parent, list<BinaryNode*> &nextnodes);
+  void dfs_traverse(BinaryNode *parent, BNodeList &nextnodes);
 };
 
 END_JAAL_NAMESPACE

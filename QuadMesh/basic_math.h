@@ -2,6 +2,7 @@
 #define BASIC_MATH_H
 
 #include <math.h>
+#include <assert.h>
 #include <values.h>
 #include <iostream>
 using namespace std;
@@ -22,11 +23,11 @@ template<class DataType, int n>
 class Array
 {
 public:
-  double &operator[](int i)
+  DataType &operator[](int i)
   {
     return data[i];
   }
-  double operator[](int i) const
+  const DataType &operator[](int i) const
   {
     return data[i];
   }
@@ -34,11 +35,15 @@ private:
   DataType  data[n];
 };
 
+typedef Array<double,2> Point2D;
 typedef Array<double,3> Point3D;
 typedef Array<double,4> Array4D;
-
 typedef Array<double,3> Vec3D;
 
+typedef Array<float,2> Point2F;
+typedef Array<float,3> Point3F;
+typedef Array<float,4> Array4F;
+typedef Array<float,3> Vec3F;
 
 namespace Math
 {
@@ -100,9 +105,21 @@ inline Vec3D normal( const Point3D &p0, const Point3D &p1, const Point3D &p2)
   return normal;
 }
 
+inline Vec3D unit_vector( const Point3D &head, const Point3D &tail)
+{
+   Vec3D uvec = create_vector( head, tail);
+   double dl  = magnitude(uvec);
+
+   uvec[0]  /=  dl;
+   uvec[1]  /=  dl;
+   uvec[2]  /=  dl;
+
+   return uvec;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
-inline double getVectorAngle( const Vec3D &A, const Vec3D &B)
+inline double getVectorAngle( const Vec3D &A, const Vec3D &B, int measure)
 {
   double AB = dot_product(A,B);
   double Am = magnitude(A);
@@ -115,7 +132,8 @@ inline double getVectorAngle( const Vec3D &A, const Vec3D &B)
   if( x > 1.0) x = 1.0;
   if( x < -1.0) x = -1.0;
 
-  return 180*acos(x)/M_PI;
+  if( measure == ANGLE_IN_DEGREES ) return 180*acos(x)/M_PI;
+  return acos(x);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -158,9 +176,39 @@ const Array<T, n> &pc, int unit_measure = 0)
       return getAngle(VecA, VecB, unit_measure);
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
+inline Point3D getAngles(const Point3D &pa, const Point3D &pb, const Point3D &pc)
+{
+   double a2   =  length2( pb, pc );
+   double b2   =  length2( pc, pa );
+   double c2   =  length2( pa, pb );
+   double cosA =  (b2 + c2 - a2)/(2*sqrt(b2*c2) );   
+   double cosB =  (a2 + c2 - b2)/(2*sqrt(a2*c2) );   
+   double cosC =  (a2 + b2 - c2)/(2*sqrt(a2*b2) );   
+
+  Array<double,3> angles;
+  if( cosA >  1.0) cosA =  1.0;
+  if( cosA < -1.0) cosA = -1.0;
+  angles[0] = 180*acos(cosA)/M_PI;
+
+  if( cosB >  1.0) cosB =  1.0;
+  if( cosB < -1.0) cosB = -1.0;
+  angles[1] = 180*acos(cosB)/M_PI;
+
+  if( cosC >  1.0) cosC =  1.0;
+  if( cosC < -1.0) cosC = -1.0;
+  angles[2] = 180*acos(cosC)/M_PI;
+
+  double sum = angles[0] + angles[1] + angles[2];
+  assert( fabs( sum - 180.0) < 1.0E-10);
+  return angles;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+}
+
+#include "FastArea.h"
 
 #endif
 

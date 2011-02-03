@@ -3,7 +3,7 @@
 
 #include <bitset>
 #include "Mesh.h"
-#include "EdgeFlip.h"
+#include "SwapTriEdge.h"
 
 #include "basic_math.h"
 
@@ -84,8 +84,8 @@ class MeshRefine2D
 
   void setBoundarySplitFlag( bool f ) { boundary_split_flag = f; }
 
-  vector<Vertex*> getNewNodes() const { return insertedNodes; }
-  vector<Face*>   getNewFaces() const { return insertedFaces; }
+  NodeSequence getNewNodes() const { return insertedNodes; }
+  FaceSequence getNewFaces() const { return insertedFaces; }
 
   size_t  getNumFacesRefined() const { return numfacesRefined; }
 
@@ -119,9 +119,9 @@ class MeshRefine2D
         bool  boundary_split_flag;                
 
 	// Get All the inserted vertices on the edges..
-	vector<Vertex*>  getInsertedNodes() const
+	NodeSequence getInsertedNodes() const
 	{
-	    vector<Vertex*> result;
+	    NodeSequence result;
             std::map<Vertex*, vector<RefinedEdge> >::const_iterator it;
 	    for( it = refined_edges.begin(); it != refined_edges.end(); ++it) 
 	    {
@@ -144,8 +144,8 @@ class MeshRefine2D
 
     RefinedEdgeMap *edgemap;
 
-    vector<Face*>    insertedFaces;
-    vector<Vertex*>  hangingVertex, insertedNodes;
+    FaceSequence  insertedFaces;
+    NodeSequence  hangingVertex, insertedNodes;
     
     int     numIterations;
     bool    boundary_split_flag;                
@@ -163,7 +163,7 @@ class MeshRefine2D
     Face* append_new_quad(Vertex *v0, Vertex *v1, Vertex *v2, Vertex *v3);
 
     void remove_it( Face *face) {
-         face->setRemoveMark(1);
+         face->setStatus( MeshEntity::REMOVE);
     }
 
 };
@@ -172,6 +172,9 @@ class MeshRefine2D
 
 struct Sqrt3Refine2D : public MeshRefine2D
 {
+   Sqrt3Refine2D() {}
+   Sqrt3Refine2D(Mesh *m) { setMesh(m); }
+
    int execute();
 };
 
@@ -237,7 +240,7 @@ class ConsistencyRefine2D : public MeshRefine2D
      void  refineEdge1(const Face *f);
      void  refineEdge2(const Face *f);
 
-     void  subDivideQuad2Tri( const vector<Vertex*>  &qnodes);
+     void  subDivideQuad2Tri( const NodeSequence &qnodes);
      void  makeConsistent1( Face *f );
      void  makeConsistent2( Face *f );
      void  makeConsistent3( Face *f );

@@ -30,7 +30,7 @@ void BinaryTree::relinkAll()
 
 int BinaryTree::getHeight() const
 {
-  map<int, list<BinaryNode*> >::const_iterator it;
+  map<int, BNodeList>::const_iterator it;
 
   int h = 0;
   for (it = levelnodes.begin(); it != levelnodes.end(); ++it)
@@ -43,7 +43,7 @@ int BinaryTree::getHeight() const
 
 size_t BinaryTree::getSize() const
 {
-  map<int, list<BinaryNode*> >::const_iterator it;
+  map<int, BNodeList>::const_iterator it;
 
   int numnodes = 0;
   for (it = levelnodes.begin(); it != levelnodes.end(); ++it)
@@ -53,14 +53,14 @@ size_t BinaryTree::getSize() const
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-void BinaryTree::bfs_traverse(BinaryNode *parent, list<BinaryNode*> &nextnodes)
+void BinaryTree::bfs_traverse(BinaryNode *parent, BNodeList &nextnodes)
 {
-  NodeType dualnode = parent->getDualNode();
+  PNode dualnode = parent->getDualNode();
 
   if (dualnode->isVisited())
     return;
 
-  vector<NodeType> neighs = dualnode->getRelations0();
+  NodeSequence neighs = dualnode->getRelations0();
 
   int nextlevel = parent->getLevelID() + 1;
 
@@ -87,14 +87,14 @@ void BinaryTree::bfs_traverse(BinaryNode *parent, list<BinaryNode*> &nextnodes)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void BinaryTree::dfs_traverse(BinaryNode *parent, list<BinaryNode*> &nextnodes)
+void BinaryTree::dfs_traverse(BinaryNode *parent, BNodeList &nextnodes)
 {
-  NodeType dualnode = parent->getDualNode();
+  PNode dualnode = parent->getDualNode();
 
   if (dualnode->isVisited())
     return;
 
-  vector<NodeType> neighs = dualnode->getRelations0();
+  NodeSequence neighs = dualnode->getRelations0();
 
   int nextlevel = parent->getLevelID() + 1;
 
@@ -128,7 +128,7 @@ void BinaryTree::dfs_traverse(BinaryNode *parent, list<BinaryNode*> &nextnodes)
 
 void BinaryTree::dfs_traverse(BinaryNode *parent)
 {
-  list<BinaryNode*> listnodes;
+  BNodeList listnodes;
   listnodes.push_back(parent);
 
   while (!listnodes.empty())
@@ -141,10 +141,10 @@ void BinaryTree::dfs_traverse(BinaryNode *parent)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void BinaryTree::bfs_traverse(BinaryNode *root)
+void BinaryTree::bfs_traverse(BinaryNode *parent)
 {
-  list<BinaryNode*> listnodes;
-  listnodes.push_back(root);
+  BNodeList listnodes;
+  listnodes.push_back(parent);
 
   while (!listnodes.empty())
   {
@@ -156,10 +156,9 @@ void BinaryTree::bfs_traverse(BinaryNode *root)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-list<BinaryNode*> BinaryTree::getLevelNodes(int level) const
+const BNodeList &BinaryTree::getLevelNodes(int level) const
 {
-  list<BinaryNode*> emptylist;
-  map<int, list<BinaryNode*> >::const_iterator it;
+  map<int, BNodeList>::const_iterator it;
 
   it = levelnodes.find(level);
   if (it == levelnodes.end())
@@ -176,6 +175,7 @@ void BinaryTree::build(BinaryNode *r)
   dgraph->setAdjTable(0, 0);
 
   int numnodes = dgraph->getSize(0);
+
   for (int i = 0; i < numnodes; i++)
   {
     Vertex *dualnode = dgraph->getNode(i);
@@ -192,7 +192,7 @@ void BinaryTree::build(BinaryNode *r)
     for (int i = 0; i < numnodes; i++)
     {
       Vertex *dualnode = dgraph->getNode(i);
-      int degree = dualnode->getDegree();
+      int degree = dualnode->getNumOfRelations(0);
       if (degree < mindegree)
       {
         mindegree = degree;
@@ -210,6 +210,7 @@ void BinaryTree::build(BinaryNode *r)
 
   if (treetype == BREADTH_FIRST_TREE)
     bfs_traverse( root);
+
   if (treetype == DEPTH_FIRST_TREE)
     dfs_traverse( root);
 

@@ -64,12 +64,12 @@ public:
 
   int build(Mesh *m);
 
-  NodeType getNode(int i)
+  const PNode &getNode(int i) const
   {
     return nodes[i];
   }
 
-  EdgeType getEdge(int i) const
+  const PEdge &getEdge(int i) const
   {
     assert(adjTable[1][0]);
     return edges[i];
@@ -100,10 +100,10 @@ private:
   void node_node_adjacency_rep();
   void edge_rep();
 
-  vector<NodeType> nodes;
-  vector<EdgeType> edges;
+  NodeSequence  nodes;
+  EdgeSequence  edges;
 
-  void addEdge(const NodeType n1, const NodeType n2);
+  void addEdge(const PNode n1, const PNode n2);
   void getCentroid(int faceid, Point3D &p);
   void writeNodes(const string &s);
   void writeEdges(const string &s);

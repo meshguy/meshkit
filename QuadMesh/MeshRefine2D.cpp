@@ -125,7 +125,7 @@ void MeshRefine2D::append_new_node( Vertex *vertex)
 
 Face* MeshRefine2D::append_new_triangle( Vertex *v0, Vertex *v1 , Vertex *v2) 
 {
-  vector<Vertex*> pnodes(3);
+  NodeSequence pnodes(3);
   pnodes[0] = v0;
   pnodes[1] = v1;
   pnodes[2] = v2;
@@ -141,7 +141,7 @@ Face* MeshRefine2D::append_new_triangle( Vertex *v0, Vertex *v1 , Vertex *v2)
 
 Face* MeshRefine2D::append_new_quad( Vertex *v0, Vertex *v1 , Vertex *v2, Vertex *v3) 
 {
-  vector<Vertex*> pnodes(4);
+  NodeSequence pnodes(4);
   pnodes[0] = v0;
   pnodes[1] = v1;
   pnodes[2] = v2;
@@ -159,7 +159,7 @@ Face* MeshRefine2D::append_new_quad( Vertex *v0, Vertex *v1 , Vertex *v2, Vertex
 int Sqrt3Refine2D :: execute()
 {
    CentroidRefine2D refine(mesh);
-   EdgeFlip eflip(mesh);
+   SwapTriEdge eflip(mesh);
 
    for ( int itime = 0; itime < numIterations; itime++) {
        refine.execute();
@@ -246,7 +246,7 @@ int  ConsistencyRefine2D :: execute()
 
 //#############################################################################
 
-void ConsistencyRefine2D :: subDivideQuad2Tri( const vector<Vertex*> &connect)
+void ConsistencyRefine2D :: subDivideQuad2Tri( const NodeSequence &connect)
 {
   int err, status;
   assert( connect.size() == 4 );
@@ -339,7 +339,7 @@ void ConsistencyRefine2D :: refineEdge0(const Face *oldface)
   append_new_triangle(n1, hangingVertex[2], hangingVertex[1] );
 
   // One Quadrilateral is created, divide into 2 triangles.
-  vector<Vertex*> qnodes(4);
+  NodeSequence qnodes(4);
   qnodes[0] =  hangingVertex[2];
   qnodes[1] =  n2;
   qnodes[2] =  hangingVertex[1];
@@ -359,7 +359,7 @@ void ConsistencyRefine2D :: refineEdge1(const Face *oldface)
   append_new_triangle(n2, hangingVertex[0], hangingVertex[2] );
 
   // One Quadrilateral is created, divide into 2 triangles.
-  static vector<Vertex*> qnodes(4);
+  NodeSequence qnodes(4);
   qnodes[0] =  n1;
   qnodes[1] =  hangingVertex[2];
   qnodes[2] =  n3;
@@ -379,7 +379,7 @@ void ConsistencyRefine2D :: refineEdge2(const Face *oldface)
 
   append_new_triangle(n3, hangingVertex[1], hangingVertex[0] );
 
-  static vector<Vertex*> qnodes(4);
+  NodeSequence qnodes(4);
   qnodes[0] =  n1;
   qnodes[1] =  n2;
   qnodes[2] =  hangingVertex[1];
@@ -525,8 +525,6 @@ int  CentroidRefine2D::refine_quad(Face *oldface)
   Vertex *v1 = oldface->getNodeAt( 1 );
   Vertex *v2 = oldface->getNodeAt( 2 );
   Vertex *v3 = oldface->getNodeAt( 3 );
-
-  vector<iBase_EntityHandle> tconn(3);
 
   append_new_triangle( vcenter, v0, v1);
   append_new_triangle( vcenter, v1, v3);
@@ -678,8 +676,6 @@ int Refine2D14:: refine_tri( Face *oldface)
   Vertex *v01 = edgemap->getVertexOnEdge( v0, v1 );
   Vertex *v12 = edgemap->getVertexOnEdge( v1, v2 );
   Vertex *v20 = edgemap->getVertexOnEdge( v2, v0 );
-
-  vector<iBase_EntityHandle> tconn(3);
 
   append_new_triangle( v0, v01, v20);
   append_new_triangle( v01, v1, v12);

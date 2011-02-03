@@ -4,18 +4,13 @@ using namespace Jaal;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int Tri2Quads::collapse_matched_triangles(Mesh *trimesh,
-    vector<FacePair> &matching, int replace, Mesh *quadmesh)
+Mesh* Tri2Quads::collapse_matched_triangles(Mesh *trimesh, vector<FacePair> &matching,
+                                            int replace )
 {
-  Mesh *outmesh = quadmesh;
-
-  if (quadmesh == NULL)
-    outmesh = trimesh;
+  Mesh *quadmesh = new Mesh;
 
   assert(matching.size());
-  //
-  // Checking match ....All the nodes must appear only once in the match.
-  //
+
   vector<size_t> seq;
   seq.resize(2 * matching.size());
   for (size_t i = 0; i < matching.size(); i++)
@@ -38,41 +33,31 @@ int Tri2Quads::collapse_matched_triangles(Mesh *trimesh,
   //end of checking ...
 
   Face *tri1, *tri2, *quad;
-  vector<Face*> faces;
+  FaceSequence faces;
+
+  quadmesh->addNodes( trimesh->getNodes() );
 
   faces.resize(matching.size());
-
   for (size_t i = 0; i < matching.size(); i++)
   {
     size_t f1 = matching[i].first;
     size_t f2 = matching[i].second;
     tri1 = trimesh->getFaceAt(f1);
     tri2 = trimesh->getFaceAt(f2);
-    quad = Face::create_quad(tri1, tri2);
-    outmesh->addFace(quad);
+    quad = Face::create_quad(tri1, tri2, replace);
+    quadmesh->addFace(quad);
+    if( replace ) delete tri2;
   }
 
-  if (replace)
-  {
-    for (size_t i = 0; i < matching.size(); i++)
-    {
-      size_t f1 = matching[i].first;
-      size_t f2 = matching[i].second;
-      tri1 = trimesh->getFaceAt(f1);
-      tri2 = trimesh->getFaceAt(f2);
-      tri1->setRemoveMark(1);
-      tri2->setRemoveMark(1);
-    }
-    trimesh->prune();
-  }
+  if( replace ) trimesh->emptyAll();
 
-  return 0;
+  return quadmesh;
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-int Tri2Quads::quadrangulate_boundary_triangle(Face *face)
+int Tri2Quads::refine_boundary_triangle(Face *tri0)
 {
-  if (face->getSize(0) != 3)
+  if (tri0->getSize(0) != 3)
     return 1;
 
   Vertex *bv0 = NULL;
@@ -81,13 +66,13 @@ int Tri2Quads::quadrangulate_boundary_triangle(Face *face)
 
   for (int i = 0; i < 3; i++)
   {
-    Vertex *ev1 = face->getNodeAt((i + 1) % 3);
-    Vertex *ev2 = face->getNodeAt((i + 2) % 3);
+    Vertex *ev1 = tri0->getNodeAt((i + 1) % 3);
+    Vertex *ev2 = tri0->getNodeAt((i + 2) % 3);
     if (ev1->isBoundary() && ev2->isBoundary())
     {
       bv0 = ev1;
       bv1 = ev2;
-      bv2 = face->getNodeAt(i);
+      bv2 = tri0->getNodeAt(i);
       break;
     }
   }
@@ -100,21 +85,30 @@ int Tri2Quads::quadrangulate_boundary_triangle(Face *face)
   Vertex *bound = Vertex::newObject();
   bound->setXYZCoords(p3d);
 
-  vector<Vertex*> qconnect(4);
-  qconnect[0] = bv0;
-  qconnect[1] = bound;
-  qconnect[2] = bv1;
-  qconnect[3] = bv2;
+  trimesh->addNode(bound);
+
+  NodeSequence tconnect(3);
+  tconnect[0] = bv0;
+  tconnect[1] = bound;
+  tconnect[2] = bv2;
+  tri0->setNodes( tconnect );
+
+  tconnect[0] = bound;
+  tconnect[1] = bv1;
+  tconnect[2] = bv2;
   maxfaceID++;
-  Face *rootQuad = new Face;
-  rootQuad->setID(maxfaceID);
-  rootQuad->setNodes(qconnect);
+  Face *tri1 = Face::newObject();
+  tri1->setID(maxfaceID);
+  tri1->setNodes(tconnect);
+  trimesh->addFace(tri1);
 
-  face->setRemoveMark(1);
-
-  quadmesh->addNode(bound);
-  quadmesh->addFace(rootQuad);
   steinerNodes.push_back(bound);
+
+  FacePair facepair;
+  facepair.first  = tri0->getID();
+  facepair.second = tri1->getID();
+  facematching.push_back(facepair);
+
   return 0;
 }
 
@@ -125,8 +119,8 @@ void Tri2Quads::matchnodes(Vertex *child, Vertex *parent)
   child->setDualMate(parent);
   parent->setDualMate(child);
 
-  child->setRemoveMark(1);
-  parent->setRemoveMark(1);
+  child->setStatus( MeshEntity::REMOVE);
+  parent->setStatus( MeshEntity::REMOVE);
 }
 ///////////////////////////////////////////////////////////////////////////////////
 void Tri2Quads::matchnodes(BinaryNode *child, BinaryNode *parent)
@@ -152,7 +146,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   Face *face1 = child1->getDualNode()->getPrimalFace();
   Face *face2 = child2->getDualNode()->getPrimalFace();
 
-  vector<Vertex*> connect(3);
+  NodeSequence connect(3);
 
   // Remove all existing vertex-face relations;
   Vertex *vertex;
@@ -189,7 +183,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   int edge1, edge2, edge3;
 
   edge1 = edge2 = edge3 = -1;
-  vector<Face*> neighs;
+  FaceSequence neighs;
   for (int i = 0; i < 3; i++)
   {
     Vertex *v0 = parentface->getNodeAt((i + 1) % 3);
@@ -218,7 +212,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   connect[0] = steiner;
   connect[1] = ev0;
   connect[2] = ev1;
-  qface = new Face;
+  qface = Face::newObject();
   qface->setNodes(connect);
   qface->setID(maxfaceID);
   Vertex *dc1 = qface->getNewDualNode();
@@ -239,7 +233,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
   connect[0] = steiner;
   connect[1] = ev0;
   connect[2] = ev1;
-  qface = new Face;
+  qface = Face::newObject();
   qface->setID(maxfaceID);
   qface->setNodes(connect);
   Vertex *dc2 = qface->getNewDualNode();
@@ -323,7 +317,7 @@ void Tri2Quads::matchnode(BinaryNode* v)
     BinaryNode *vsib = v->getSibling();
     Vertex *d0 = v->getDualNode();
     Vertex *d1 = vsib->getDualNode();
-    if (d0->getDegree() < d1->getDegree())
+    if (d0->getNumOfRelations(0) < d1->getNumOfRelations(0) )
     {
       matchnodes(v, parv);
       btree->unlinkNode(vsib);
@@ -342,13 +336,13 @@ bool Jaal::already_matched(const BinaryNode *node)
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-BinaryNode* Tri2Quads::getChildofDegreeNParent(list<BinaryNode*> &levelnodes,
+BinaryNode* Tri2Quads::getChildofDegreeNParent(BNodeList &levelnodes,
     int nd)
 {
   BinaryNode *currnode, *parent, *child;
 
   int ncount;
-  list<BinaryNode*>::const_iterator it;
+  BNodeList::const_iterator it;
 
   for (it = levelnodes.begin(); it != levelnodes.end(); ++it)
   {
@@ -378,14 +372,14 @@ BinaryNode* Tri2Quads::getChildofDegreeNParent(list<BinaryNode*> &levelnodes,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-BinaryNode *Tri2Quads::getNextNode(list<BinaryNode*> &levelnodes)
+BinaryNode *Tri2Quads::getNextNode(BNodeList &levelnodes)
 {
   BinaryNode *currnode = NULL;
 
   if (levelnodes.empty())
     return currnode;
 
-  list<BinaryNode*>::iterator it;
+  BNodeList ::iterator it;
   for (it = levelnodes.begin(); it != levelnodes.end(); ++it)
   {
     currnode = *it;
@@ -413,13 +407,12 @@ BinaryNode *Tri2Quads::getNextNode(list<BinaryNode*> &levelnodes)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Tri2Quads::prunelevel(list<BinaryNode*> &levelnodes)
+void Tri2Quads::prunelevel(BNodeList &levelnodes)
 {
   while (1)
   {
     BinaryNode *currnode = getNextNode(levelnodes);
-    if (currnode == NULL)
-      break;
+    if (currnode == NULL) break;
     matchnode(currnode);
   }
 }
@@ -432,8 +425,8 @@ void Tri2Quads::percolateup()
   steinerFaces.clear();
 
   int height = btree->getHeight();
-  list<BinaryNode*> levelnodes;
-  list<BinaryNode*>::const_iterator it;
+  BNodeList levelnodes;
+  BNodeList ::const_iterator it;
 
   //Reset all the Matching marks to 0;
   for (int i = 0; i < height; i++)
@@ -462,7 +455,7 @@ void Tri2Quads::percolateup()
     Face *face = trimesh->getFaceAt(i);
     Vertex *u = face->getDualNode();
     assert(u);
-    Vertex *v = u->getDualMate();
+    const Vertex *v = u->getDualMate();
     if (v)
     {
       if (v->getID() > u->getID())
@@ -482,13 +475,12 @@ void Tri2Quads::percolateup()
   {
     cout << "Warning: Boundary Triangle modified " << endl;
     Face *rootface = root->getDualNode()->getPrimalFace();
-    quadrangulate_boundary_triangle(rootface);
+    refine_boundary_triangle(rootface);
   }
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
 void Tri2Quads::maximum_tree_matching()
 {
 
@@ -519,9 +511,11 @@ void Tri2Quads::maximum_tree_matching()
   //btree->saveAs( "tree0");
 
   if (verbose)
-    cout << " Graph Matching ... " << endl;
+    cout << " Tree Matching ... " << endl;
 
   percolateup();
+
+  cout << " Percolate up done " << endl;
 
   // Since percolateup algorithm breaks the link from parent to children
   // relink all the nodes to rebuild the tree.
@@ -534,84 +528,37 @@ void Tri2Quads::maximum_tree_matching()
   // relations. 
   trimesh->clear_relations(0, 2);
 
+  btree->clear();
   delete btree;
   delete dgraph;
 }
-///////////////////////////////////////////////////////////////////////////////
-#ifdef USE_MOAB
-int Tri2Quads :: getQuadMesh( iMesh_Instance inmesh,
-    iBase_EntitySetHandle tmeshSet, bool replace,
-    iBase_EntitySetHandle qmeshSet, int topo)
-
-{
-  int err;
-
-  Mesh *tmesh = new Mesh;
-  Mesh *qmesh = NULL;
-
-  tmesh->fromMOAB(inmesh, tmeshSet);
-
-  getQuadMesh(tmesh, replace, qmesh);
-
-  iBase_EntityHandle zero = 0;
-  for (size_t i = 0; i < modifiedFaces.size(); i++)
-  {
-    Face *face = modifiedFaces[i];
-    iBase_EntityHandle handle = face->get_MOAB_Handle();
-    if( handle )
-    {
-      iMesh_deleteEnt(inmesh, handle, &err);
-      face->set_MOAB_Handle(zero);
-    }
-  }
-
-  if (qmeshSet )
-  {
-    assert( tmesh->isHomogeneous() == 3 );
-    tmesh->toMOAB(inmesh, tmeshSet);
-
-    size_t numnodes = tmesh->getSize(0);
-    for (size_t i = 0; i < numnodes; i++)
-    {
-      Vertex *v = tmesh->getNodeAt(i);
-      iBase_EntityHandle newHandle = v->get_MOAB_Handle();
-      assert( newHandle );
-      iMesh_addEntToSet(inmesh, newHandle, qmeshSet, &err);
-      assert(!err);
-    }
-  } else
-  {
-    if( replace )
-    {
-      SimpleArray<iBase_EntityHandle> faceHandles;
-      iMesh_getEntities(inmesh, tmeshSet, iBase_FACE, iMesh_TRIANGLE, ARRAY_INOUT(
-              faceHandles), &err);
-      for (size_t i = 0; i < faceHandles.size(); i++)
-      iMesh_deleteEnt(inmesh, faceHandles[i], &err);
-    }
-    tmesh->toMOAB(inmesh, tmeshSet);
-  }
-
-  delete tmesh;
-
-  return 0;
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int Tri2Quads::getQuadMesh(Mesh *inmesh, bool replace, Mesh *outmesh, int topo)
+Mesh* Tri2Quads::getQuadMesh(Mesh *inmesh, int replace, int topo)
 {
+  // Preprocessing ....
   if (inmesh->isHomogeneous() != 3)
   {
     cout << "Warning: Input mesh is not triangular " << endl;
-    return 1;
+    return NULL;
+  }
+
+  if( !inmesh->isSimple() ) {
+    cout << "Warning: Input mesh is not simple, use edmonds' algorithm " << endl;
+    return NULL;
+  }
+
+  if( inmesh->getNumOfComponents() > 1) {
+    cout << "Warning: There are multiple components in the mesh" << endl; 
+    cout << "         Algorithm works for single component " << endl;
+    return NULL;
   }
 
   trimesh  = inmesh;
-  quadmesh = new Mesh;
 
   required_topology = topo;
+
   trimesh->enumerate(2);
   maxfaceID = trimesh->getSize(2) - 1;
 
@@ -631,38 +578,34 @@ int Tri2Quads::getQuadMesh(Mesh *inmesh, bool replace, Mesh *outmesh, int topo)
   // Roughly we can expect that about 4-5% steiner points are inserted in
   // most of the general cases.
   ///////////////////////////////////////////////////////////////////////////
-  maximum_tree_matching();
+  ticks start_tick =  getticks();
 
-  collapse_matched_triangles(trimesh, facematching, replace, quadmesh);
+  maximum_tree_matching();
+  
+
+  Mesh *quadmesh = collapse_matched_triangles(trimesh, facematching, replace);
+
+  ticks end_tick =  getticks();
+
+  double elapsed_ticks = elapsed(end_tick, start_tick);
+
+  cout << "Info: Tri->Quad Elapsed Performance Counter " << elapsed_ticks << endl;
 
   if( !quadmesh->isSimple() ) 
       cout << "Warning: Quadrilateral Mesh is not simple " << endl;
 
-  if( !quadmesh->isConsistentlyOriented() ) {
+  quadmesh->enumerate(2);
+  if( !quadmesh->is_consistently_oriented() ) {
        cout << "Warning:Trying to make Quadrilateal Mesh consistently oriented " << endl;
-       quadmesh->makeConsistentlyOriented();
-       if( quadmesh->isConsistentlyOriented() )
+       quadmesh->make_consistently_oriented();
+       if( quadmesh->is_consistently_oriented() )
             cout << "Info: Quadrilateral Mesh is now consistently oriented: Very good " << endl;
        else
             cout << "Alas ! Quadrilateral Mesh is still inconsistently oriented: Check manually " << endl;
   }
 
-  if (outmesh == NULL ) {
-    
-    size_t numNodes = quadmesh->getSize(0);
-    for( size_t i = 0; i < numNodes; i++) {
-         Vertex *v = quadmesh->getNodeAt(i);
-	 trimesh->addNode(v);
-    }
-
-    size_t numQuads = quadmesh->getSize(2);
-    for( size_t i = 0; i < numQuads; i++) {
-         Face *q = quadmesh->getFaceAt(i);
-	 trimesh->addFace(q);
-    }
-    quadmesh->emptyAll();
-    delete quadmesh;  quadmesh = NULL;
-  }
+  quadmesh->enumerate(0);
+  quadmesh->enumerate(2);
 
   //////////////////////////////////////////////////////////////////////////
   // Since Steiner points may be inserted in the mesh ( and new triangles).
@@ -672,10 +615,7 @@ int Tri2Quads::getQuadMesh(Mesh *inmesh, bool replace, Mesh *outmesh, int topo)
   trimesh->enumerate(0);
   trimesh->enumerate(2);
 
-  int euler1 = trimesh->getEulerCharacteristic();
-  cout << " Output Euler # : " << euler1 << endl;
-
-  return 0;
+  return quadmesh;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -711,7 +651,7 @@ void Tri2Quads::match_tree_walk(BinaryTree *btree, BinaryNode *parent)
           assert(c2);
           matchnodes(np, c1);
           c2->setDualMate(NULL);
-          c2->setRemoveMark(0);
+          c2->setStatus( MeshEntity::ACTIVE);
           match_tree_walk(btree, child2);
           return;
         }

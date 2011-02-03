@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <iostream>
 #include <fstream>
@@ -118,46 +119,58 @@ void gen_circle_pattern( )
    Circle *circle;
    vector<Shape2D*> shapes;
 
-/*
    circle = new Circle;
-   circle->radius    = 1.2;
+   circle->radius    = 12.0;
    circle->center[0] = 0.0;
    circle->center[1] = 0.0;
-   circle->numSegments = 20;
+   circle->numSegments = 100;
    circle->discretize();
    shapes.push_back(circle);
-*/
+   write_pslg( "circles" , shapes );
+   return;
 
-   int nCount = 8;
-   double radius1 = 10.00, radius2  = 50.0, holeRadius = 2.0;
-   int nRings = 5;
+   int nCount = 0;
+   double radius1 = 15.00, radius2  = 50.0, holeRadius = 5.0;
+   int nRings = 2;
 
-   double dr  = (radius2-radius1)/(double)nRings;
+   double dr = 0.0;
+   if( nRings ) 
+       dr  = (radius2-radius1)/(double)nRings;
 
-   for( int i = 0; i <= nRings; i++) {
+   for( int i = 0; i < nRings; i++) {
       double angle = 0;
       double radius = radius1 + i*dr;
-      cout << radius << endl;
       for( int j = 0; j < nCount; j++) {
            circle = new Circle;
            circle->radius    = holeRadius;
            circle->center[0] = radius*cos(angle);
            circle->center[1] = radius*sin(angle);
 	   angle += 2.0*M_PI/(double)nCount;
-           circle->numSegments = 32;
+           circle->numSegments = 50;
            circle->discretize();
            shapes.push_back(circle);
       }
-      nCount += 6;
+      nCount += 8;
    }
 
+
    circle = new Circle;
-   circle->radius    = radius2 + dr;
+   circle->radius    = radius2;
    circle->center[0] = 0.0;
    circle->center[1] = 0.0;
-   circle->numSegments = 200;
+   circle->numSegments = 100;
    circle->discretize();
    shapes.push_back(circle);
+
+/*
+   circle = new Circle;
+   circle->radius    = dr;
+   circle->center[0] = 0.0;
+   circle->center[1] = 0.0;
+   circle->numSegments = 40;
+   circle->discretize();
+   shapes.push_back(circle);
+*/
 
    write_pslg( "circles" , shapes );
 }
