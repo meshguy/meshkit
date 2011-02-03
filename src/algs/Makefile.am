@@ -13,17 +13,28 @@ libMeshKitalgs_la_includedir = $(includedir)
 libMeshKitalgs_la_SOURCES = \
 	EdgeMesher.cpp \
 	VertexMesher.cpp \
-	EBMesher.cpp
+	EBMesher.cpp \
+	CopyMesh.cpp \
+	utils/CESets.cpp \
+	utils/CESets.hpp \
+	utils/Transform.cpp \
+	utils/Transform.hpp \
+	utils/CopyUtils.cpp \
+	utils/CopyUtils.hpp \
+	utils/vec_utils.cpp \
+	utils/vec_utils.hpp 
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EdgeMesher.hpp \
 	meshkit/VertexMesher.hpp \
-	meshkit/EBMesher.hpp
+	meshkit/EBMesher.hpp \
+	meshkit/CopyMesh.hpp 
+
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils \
+              -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/ -I$(top_srcdir)/utils \
               -I$(srcdir)/../lemon
 
 if HAVE_MOAB
