@@ -13,7 +13,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir)
 
-TESTS = test_edgemesh test_ebmesh test_copymesh
+TESTS = test_edgemesh test_ebmesh test_copymesh test_scdmesh
 
 check_PROGRAMS = $(TESTS)
 
@@ -31,6 +31,10 @@ test_ebmesh_DEPENDENCIES = \
 
 test_copymesh_SOURCES = test_copymesh.cpp
 test_copymesh_DEPENDENCIES = \
+	$(LDADD)
+
+test_scdmesh_SOURCES = test_scdmesh.cpp
+test_scdmesh_DEPENDENCIES = \
 	$(LDADD)
 
 # Utility target: build but don't run tests

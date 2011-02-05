@@ -24,6 +24,9 @@ class SizingFunction;
       //! MKCore keeps a single instance of this
 class VertexMesher;
 
+//! SCDMesh keeps a single instance of this
+class SCDMesh;
+
 class EBMesher;
 
 /** \class MKCore MKCore.hpp "meshkit/MKCore.hpp"
@@ -313,6 +316,16 @@ public:
      */
   void vertex_mesher(VertexMesher *vm);
 
+   /** \brief Get the (single) SCDMesh instance                           
+    * \return SCDMesh for this MKCore                                     
+    */
+  SCDMesh *scd_mesh() const;
+
+   /** \brief Set the (single) SCDMesh instance                           
+    * \param vm SCDMesh for this MKCore                                   
+    */
+  void scd_mesh(SCDMesh *scd);
+
     /** \brief Get the (single) EBMesher instance
      * \return EBMesher for this MKCore
      */
@@ -397,6 +410,9 @@ private:
   
     //! (Single) VertexMesher scheme for this MKCore
   VertexMesher *vertexMesher;
+
+    //! (Single) SCDMesh scheme for this MKCore
+  SCDMesh *scdMesh;
 
       //! (Single) EBMesher scheme for this MKCore
   EBMesher *ebMesher;
@@ -494,6 +510,16 @@ inline VertexMesher *MKCore::vertex_mesher() const
 inline void MKCore::vertex_mesher(VertexMesher *vm) 
 {
   vertexMesher = vm;
+}
+
+inline SCDMesh *MKCore::scd_mesh() const
+{
+  return scdMesh;
+}
+  
+inline void MKCore::scd_mesh(SCDMesh *scd)
+{
+  scdMesh = scd;
 }
 
 inline EBMesher *MKCore::eb_mesher() const 

@@ -13,6 +13,7 @@ libMeshKitalgs_la_includedir = $(includedir)
 libMeshKitalgs_la_SOURCES = \
 	EdgeMesher.cpp \
 	VertexMesher.cpp \
+	SCDMesh.cpp \
 	EBMesher.cpp \
 	CopyMesh.cpp \
 	utils/CESets.cpp \
@@ -28,6 +29,7 @@ libMeshKitalgs_la_SOURCES = \
 nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EdgeMesher.hpp \
 	meshkit/VertexMesher.hpp \
+	meshkit/SCDMesh.hpp \
 	meshkit/EBMesher.hpp \
 	meshkit/CopyMesh.hpp 
 
