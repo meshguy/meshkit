@@ -16,6 +16,7 @@ libMeshKitalgs_la_SOURCES = \
 	SCDMesh.cpp \
 	EBMesher.cpp \
 	CopyMesh.cpp \
+	ProjectShell.cpp
 	utils/CESets.cpp \
 	utils/CESets.hpp \
 	utils/Transform.cpp \
@@ -31,7 +32,8 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/VertexMesher.hpp \
 	meshkit/SCDMesh.hpp \
 	meshkit/EBMesher.hpp \
-	meshkit/CopyMesh.hpp 
+	meshkit/CopyMesh.hpp \
+	meshkit/ProjectShell.hpp
 
 
 # Boilerplate stuff that doesn't depend on what the targets are
