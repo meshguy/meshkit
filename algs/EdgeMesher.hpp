@@ -16,9 +16,15 @@
 #include <iRel.h>
 #include <vector>
 
+#include "meshkit/MeshScheme.hpp"
+
 //#include <boost/array.hpp>
 
 #include "SimpleArray.hpp"
+
+namespace MeshKit
+{
+
 
 struct Point3D
 {
@@ -29,53 +35,35 @@ struct Point3D
 
 using namespace std;
 
-class EdgeMesher
+class EdgeMesher : public MeshScheme
 {
 public:
 	
-	enum SchemeType {equalMesh=0, biasMesh, dualMesh, curvatureMesh};
+	enum EdgeSchemeType={equalMesh=0, biasMesh, dualMesh, curvatureMesh};
 
 	
 public:
-	EdgeMesher(iGeom_Instance &geom, iBase_EntityHandle *EdgeHandle, iMesh_Instance &Mesh, iRel_Instance &association, iRel_PairHandle *irel);
+	//EdgeMesher(iGeom_Instance &geom, iBase_EntityHandle *EdgeHandle, iMesh_Instance &Mesh, iRel_Instance &association, iRel_PairHandle *irel);
+	EdgeMesher(MKCore *mk_core, const MEVector &me_vec);
+	void mesh_types(std::vector<EntityType> &tps);
+	virtual void setup_this();
+	virtual void execute_this();
+	static MeshOp *factory(MKCore *mkcore, const MEVector &me_vec);
+
+
 	~EdgeMesher();
-	double getLength() const;
-	double getLength(double ustart, double uend) const;
-	void SetScheme(int SetOption);
-	void SetStepSize(double StepSize);
-	const char *getSchemeName();
-	double getStepSize();
-	void ShowCoorData();
-	
-	int Execute();
-	int SaveFile(const char *FileName);
 	
 private:
+	EdgeSchemeType schemeType;	
+	
 	//member variables
 	iGeom_Instance geometry;
 	iMesh_Instance mesh;
 	iRel_Instance assoc;
 	iRel_PairHandle rel;
-	
-	//int SchemeOption;
-	int NumEdges;
-	double stepSize;
-	SchemeType SchemeOption;
-	const char *SelectedShemeName;
 
 	iBase_EntityHandle gEdgeHandle;
 
-	double umin, umax;
-	bool periodic;
-	int NumVertex;
-	
-	//private functions
-	void EdgeMesh();
-	vector<double> EqualMeshing();
-	vector<double> BiasMeshing();
-	vector<double> DualBiasMeshing();
-	vector<double> CurvatureMeshing();
-	//void CreateAssociation();
 	Point3D getXYZCoords(double u) const;
 	double getUCoord(double ustart, double dist, double uguess) const;
 	void DivideIntoMore(Point3D p0, Point3D pMid, Point3D p1, double u0, double u1, double uMid, int &index, vector<double> &nodes, vector<double> &URecord);
@@ -85,7 +73,26 @@ private:
 	void GetRelatedEntitySet(iBase_EntityHandle edgeHandle, iBase_EntitySetHandle &entitySet);
 	void get_related_entityset(iBase_EntitySetHandle &mesh_entityset);
 
+
+	void EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> &coords);
+	void BiasMeshing(ModelEnt *ent, int num_edges, std::vector<double> &coords);
+	void DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords);
+	void CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords);
+
+	double measure(iGeom::EntityHandle ent, double ustart, double uend) const;
+
 };
 
+inline void EdgeMesher::set_edge_scheme(EdgeMesher::EdgeSchemeType scheme)
+{
+	schemeType = scheme;
+}
+
+inline EdgeMesher::EdgeSchemeType EdgeMesher::get_edge_scheme() const
+{
+	return schemeType;
+}
+
+}
 
 #endif
