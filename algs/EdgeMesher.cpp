@@ -1,266 +1,355 @@
 #include "EdgeMesher.hpp"
-#include "iBase.hh"
 #include <iostream>
 #include <math.h>
 
-namespace MeshKit
+EdgeMesher::EdgeMesher(iGeom_Instance &geom, iBase_EntityHandle *EdgeHandle, iMesh_Instance &Mesh, iRel_Instance &association, iRel_PairHandle *irel)
 {
+	geometry = geom;
+	gEdgeHandle = *EdgeHandle;
 
-EntityType tps[] = {moab::MBVERTEX, moab::MBEDGE};
+	int err;
+	iGeom_getEntURange(geometry, gEdgeHandle, &umin, &umax, &err);
+	assert(!err);
 
-int success = MeshOpFactory::instance()->register_meshop("EdgeMesher", tps, 2, EdgeMesher::factory, NULL);
+	int in_u, in_v;
+	iGeom_isEntPeriodic(geometry, gEdgeHandle, &in_u, &in_v, &err);
+	assert(!err);
 
-MeshOp *EdgeMesher::factory(MKCore *mkcore, const MEVector &me_vec)
-{
-	return new EdgeMesher(mkcore, me_vec);
-}
+	periodic = in_u;
+	    
+	double x0,y0,z0,x1,y1,z1;
+	iGeom_getEntUtoXYZ(geometry, gEdgeHandle, umin, &x0, &y0, &z0, &err);
+	iGeom_getEntUtoXYZ(geometry, gEdgeHandle, umax, &x1, &y1, &z1, &err);
 
+	double dx = x0 - x1;
+	double dy = y0 - y1;
+	double dz = z0 - z1;
+	double eps = 1.0E-08;
+	if (dx * dx + dy * dy + dz * dz < eps * eps) periodic = 1;    
 
-EdgeMesher::EdgeMesher(MKCore *mk_core, const MEVector &me_vec)
-{
-	//geometry = mk_core()->igeom_instance();
-	//mesh = mk_core()->imesh_instance();
-	//assoc = mk_core()->irel_instance();
-	//rel = mk_core()->irel_pair();
-}
-
-
-void EdgeMesher::mesh_types(std::vector<EntityType> &tps)
-{
-	tps.push_back(iBase_VERTEX);
-	tps.push_back(iBase_EDGE);	
-}
-
-double EdgeMesher::measure(iGeom::EntityHandle ent, double ustart, double uend) const
-{
-	double umin, umax;
-	iGeom::Error err = mk_core()->igeom_instance()->geetEntURange(ent, umin, umax);
-	IBERRCHK(err, "Trouble getting parameter range for edge.");
-
-	if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to same parameter umax and umin.");
-
-	double measure;
-	err = mk_core()->igeom_instance()->measure(&ent, 1. &measure);
-
-	IBERRCHK(err, "Trouble getting edge measure.");
-
-	return measure * (uend - ustart) / (umax - umin);
-}
-
-void EdgeMesher::setup_this()
-{
-	//compute the number of intervals for the associated ModelEnts, from the size set on them
-	//the sizing function they point to, or a default sizing function
-	for (MESelection::iterator mit = meSelection.begin(); mit != meSelection.end(); mit++)
-	{
-		ModelEnt *me = mit->first;
-
-		//first check to see whether entity is meshed
-		if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0)
-			continue;
-		
-		SizingFunction *sf = mk_core() -> sizing_function(me->sizing_function_index());
-		if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT)
-		{
-			//no sizing set, just assume default #intervals as 4
-			me->mesh_intervals(4);
-			me->interval_firmness(DEFAULT);
-		}
-		else
-		{
-			//check # intervals first, then size, and just choose for now
-			if (sf->intervals() > 0)
-			{
-				me -> mesh_intervals(sf->intervals());
-				me -> interval_firmness(HARD);
-			}
-			else if (sf->size()>0)
-			{
-				me->mesh_intervals(me->measure()/sf->size());
-				me->interval_firmness(SOFT);
-			}
-			else
-				throw Error(MK_INCOMPLETE_MESH_SPECIFICATION,  "Sizing function for edge had neither positive size nor positive intervals.");
-		}
-	}
-}
-
-void EdgeMesher::execute_this()
-{
-	std::vector<double> coords;
-	std::vector<moab::EntityHandle> nodes, edges;
-
-	for (MESelection::iterator mit = meSelection.begin(); mit != meSelection.end(); mit++)
-	{
-		ModelEnt *me = mit -> first;
-
-		//resize the coords based on the interval setting
-		int num_edges = me->mesh_intervals();
-		coords.resize(3*(num_edges+1));
-		nodes.resize(num_edges + 1);
-		edges.resize(num_edges);
-
-		//get bounding mesh entities, use 1st 2 entries of nodes list temporarily
-		//pick up the boundary end nodes
-		me->boundary(0, nodes);
-
-		//get coords in list, then move one tuple to the last position
-		moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], 2, &coords[0]);
-		MBERRCHK(rval, "Trouble getting bounding vertex positions.");
-
-		//move the second node to the endmost postion in the node list
-		for (int i = 0; i < 3; i++)
-			coords[3*num_edges+i] = coords[3+i];
-
-
-		//choose the scheme for edge mesher
-		switch(schemeType)
-		{
-			case equalMesh://equal meshing
-				equal_meshing(me, num_edges, coords);
-				break;
-			case biasMesh:
-				BiasMeshing(me, num_edges, coords);
-				break;
-			case dualMesh:
-				DualBiasMeshing(me, num_edges, coords);
-				break;
-			case curvatureMesh:
-				CurvatureMeshing(me, num_edges, coords);
-				break;
-			default:
-				break;			
-		}
-		//the variable nodes should be resized in order to satisfy the requirement
-		nodes.resize(num_edges+1);
-		//move the other nodes to the end of nodes' list
-		nodes[num_edges] = nodes[1];
-
-
-		//create the vertices' entities on the edge
-		rval = mk_core()->moab_instance()->create_vertices(&coords[3], num_edges - 1, mit -> second);
-		MBERRCHK(rval, "Couldn't create nodes");
-
-		//distribute the nodes into vector
-		int j = 1;
-		for (moab::Range::iterator rit = mit -> second.begin(); rit != mit -> second.end(); rit++)
-			nodes[j++] = *rit;
-
-		//get the query interface, which we will use to create the edges directly 
-		moab::ReadUtilIface *iface;
-		rval = mk_core() -> moab_instance() -> query_interface("ReadUtilIface", (void**)&iface);
-		MBERRCHK(rval, "Couldn't get ReadUtilIface.");		
-
-		//create the edges, get a direct ptr to connectivity
-		moab::EntityHandle starth, *connect, *tmp_connect;
-		rval = iface -> get_element_connect(num_edges, 2, moab::MBEDGE, 1, starth, connect);
-		MBERRCHK(rval, "Couldn't create edge elements.");
-
-		//add edges to range for the MESelection
-		mit -> second.insert(starth, starth + num_edges - 1);
-
-		//now set the connectivity array from the nodes
-		tmp_connect = &nodes[0];
-		for (int i = 0; i < num_edges; i++)
-		{
-			connect[0] = tmp_connect[0];
-			connect[1] = tmp_connect[1];
-
-			//increment connectivity ptr by 2 to go to next edge
-			connect += 2;
-			
-			//increment tmp_connect by 1, to go to next node
-			tmp_connect++;
-		}
-
-		//   ok, we are done, commit to ME
-		me->commit_mesh(mit->second, COMPLETE_MESH);	
-	}
-
+	mesh  = Mesh;
+	assoc = association;
+	rel   = *irel;
 	
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 EdgeMesher::~EdgeMesher()
 {
-	//std::cout << "it is over now" << std::endl;
+	std::cout << "it is over now" << std::endl;
 }
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EdgeMesher::EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> &coords)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double EdgeMesher::getLength() const
 {
-	double umin, umax, measure;
-
-	//get the u range for the edge
-	iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
-	IBERRCHK(gerr, "Trouble get parameter range for edge.");
-
-	if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
-
-	//get the arc length
-	measure = ent -> measure();
-
 	int err;
-	double u, du;
-	du = (umax - umin)/(double)num_edges;
+	SimpleArray<double> measure;
+	iGeom_measure(geometry, &gEdgeHandle, 1, ARRAY_INOUT(measure), &err);
+    	return measure[0];
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double EdgeMesher::getLength(double ustart, double uend) const
+{
+	int err;
+	double arclen;
+    	
+	SimpleArray<double> measure;
+	iGeom_measure(geometry, &gEdgeHandle, 1, ARRAY_INOUT(measure), &err);
+	arclen=measure[0]*(uend-ustart)/(umax-umin);
 	
-	u = umin;
-	for (int i = 1; i < num_edges; i++)
+    	return arclen;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EdgeMesher::SetScheme(int SetOption)
+{
+	switch (SetOption)
+	{
+		case 0:
+			SchemeOption=equalMesh;
+			SelectedShemeName="Equal Meshing";
+			break;
+		case 1:
+			SchemeOption=biasMesh;
+			SelectedShemeName="Bias Meshing";
+			break;
+		case 2:
+			SchemeOption=dualMesh;
+			SelectedShemeName="Dual Meshing";
+			break;
+		case 3:
+			SchemeOption=curvatureMesh;
+			SelectedShemeName="Curvature Meshing";
+			break;
+		default:
+			std::cout << "There is an error with scheme option" << std::endl;
+			break;
+	}		
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const char *EdgeMesher::getSchemeName()
+{
+	return SelectedShemeName;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double EdgeMesher::getStepSize()
+{
+	return stepSize;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EdgeMesher::SetStepSize(double StepSize)
+{
+	double len=getLength();
+	assert(StepSize);	
+	int num=int(len/StepSize+0.5);
+	NumEdges=num;
+	stepSize=StepSize;	
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int EdgeMesher::Execute()
+{
+	int Result=0;
+	if ((SchemeOption < 4) && (SchemeOption > -1))
+	{
+		Result=1;		
+		EdgeMesh();
+		
+	}	
+	return Result;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EdgeMesher::EdgeMesh()
+{
+	int err, NumEntitySet;
+	SimpleArray<iBase_EntityHandle> nodeHandles;
+	SimpleArray<iBase_EntityHandle> lineHandles;
+	SimpleArray<iBase_EntityHandle> edgeHandles;
+	SimpleArray<int> status;
+	vector<double> NodeCoordinates;
+			
+	assert(NumEdges);//make sure NumNodes is non-zero integer
+	NodeCoordinates.resize( 3*(NumEdges+1));
+		
+	SimpleArray<iBase_EntityHandle> gNodes;
+	iGeom_getEntAdj(geometry, gEdgeHandle, iBase_VERTEX, ARRAY_INOUT(gNodes), &err);	
+	
+	switch(SchemeOption)
+	{
+		case equalMesh:
+			NodeCoordinates = EqualMeshing();
+			break;			
+		case biasMesh:
+			NodeCoordinates = BiasMeshing();
+			break;
+		case dualMesh:
+			NodeCoordinates = DualBiasMeshing();
+			break;
+		case curvatureMesh:
+			NodeCoordinates = CurvatureMeshing();
+			break;
+		default:
+			std::cout << "The scheme option is set incorrectly!" << std::endl;
+			break;
+	}
+		
+	iMesh_createVtxArr(mesh, (NumEdges+1), iBase_INTERLEAVED, &NodeCoordinates[0], 3*(NumEdges+1), ARRAY_INOUT(nodeHandles), &err);
+	assert(!err);
+	
+	edgeHandles.resize(2*NumEdges);
+	edgeHandles[0]=nodeHandles[0];
+	for (int k=1; k < (NumEdges); k++)
+	{
+		edgeHandles[2*k-1] = nodeHandles[k];
+		edgeHandles[2*k] = nodeHandles[k];		
+	}
+	edgeHandles[2*NumEdges-1]=nodeHandles[NumEdges];
+	
+	iMesh_createEntArr(mesh, iMesh_LINE_SEGMENT, &edgeHandles[0], (2*NumEdges), ARRAY_INOUT(lineHandles), ARRAY_INOUT(status), &err);
+	assert(!err);
+	
+	
+	iBase_EntitySetHandle mesh_entityset;
+	
+	get_related_entityset(mesh_entityset);
+	//set an array of entities to EntitySet	
+	iMesh_addEntArrToSet(mesh, &nodeHandles[0], (NumEdges+1), mesh_entityset, &err);
+	iMesh_addEntArrToSet(mesh, &lineHandles[0], (NumEdges), mesh_entityset, &err);
+	assert(!err);
+			
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+vector<double> EdgeMesher::EqualMeshing()
+{
+	int err;
+	double x, y, z, u, du;
+	vector<double> NodeCoordinates;  //temporarily store the coordinates
+
+	assert(NumEdges);//make sure NumEdges is non-zero integer
+	du = (umax-umin)/(double)NumEdges;	
+
+	u=umin;
+	NodeCoordinates.resize(3*(NumEdges+1));
+	for(int i = 0; i < (NumEdges+1); i++)
 	{
 		u = umin + i*du;
-		gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
-		IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
+		iGeom_getEntUtoXYZ(geometry, gEdgeHandle, u, &x, &y, &z, &err);
+		NodeCoordinates[3*i] = x;
+		NodeCoordinates[3*i+1] = y;
+		NodeCoordinates[3*i+2] = z;	
+	}
+	
+	return NodeCoordinates;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+vector<double> EdgeMesher::BiasMeshing()
+{	
+	int err, i;
+	double x, y, z, ustart, u, du, len, q, L0, dist;
+	vector<double> NodeCoordinates;  //temporarily store the coordinates
+	Point3D tempCoordinate;	
+
+	assert(NumEdges);
+	NodeCoordinates.resize(3*(NumEdges+1));
+	std::cout << "Please input the value for q " << std::endl; 	
+	std::cin >> q;
+	
+	assert(q-1);//make sure q is not equal to 1
+	assert(q>0);//make sure q is positive
+	len = getLength();
+	L0 = len*(1-q)/(1-pow(q,NumEdges));
+	
+	//discretizing the edge
+	tempCoordinate=getXYZCoords(umin);
+	NodeCoordinates[3*0] = tempCoordinate.px;
+	NodeCoordinates[3*0+1] = tempCoordinate.py;
+	NodeCoordinates[3*0+2] = tempCoordinate.pz;
+	ustart = umin;
+	u=ustart+(umax-umin)*L0/len;
+	i=1;
+	
+	while (i < (NumEdges))
+	{
+		
+		dist = L0*pow(q,i);
+		u=getUCoord(ustart, dist, u);
+		tempCoordinate=getXYZCoords(u);
+		NodeCoordinates[3*i] = tempCoordinate.px;
+		NodeCoordinates[3*i+1] = tempCoordinate.py;
+		NodeCoordinates[3*i+2] = tempCoordinate.pz;
+		ustart = u;
+		u=ustart+(umax-umin)*dist/len;
+		i++;
+	}
+	tempCoordinate = getXYZCoords(umax);
+	NodeCoordinates[3*NumEdges] = tempCoordinate.px;
+	NodeCoordinates[3*NumEdges+1] = tempCoordinate.py;
+	NodeCoordinates[3*NumEdges+2] = tempCoordinate.pz;
+
+	return NodeCoordinates;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+vector<double> EdgeMesher::DualBiasMeshing()
+{	
+	int err, i, NumNodes;
+	double x, y, z, ustart, u, du, len, q, L0, dist, ustart0, ustart1;
+	vector<double> NodeCoordinates;  //temporarily store the coordinates
+	Point3D tempCoordinate;
+
+	assert(NumEdges);
+	if ((NumEdges%2)!=0)
+	{
+		NumNodes = NumEdges + 1;
+	}	
+	else
+	{	
+		NumNodes = NumEdges;
+	}	
+	NodeCoordinates.resize(3*(NumNodes+1));
+	std::cout << "Please input the value for q " << std::endl; 	
+	std::cin >> q;
+
+	assert(q-1);//make sure q is not equal to 1
+	assert(q>0);//make sure q is positive
+		
+	len = getLength();
+	L0 = 0.5*len*(1-q)/(1-pow(q,NumNodes/2));
+	
+	//discretizing the edge
+	tempCoordinate = getXYZCoords(umin);
+	NodeCoordinates[0] = tempCoordinate.px;
+	NodeCoordinates[1] = tempCoordinate.py;
+	NodeCoordinates[2] = tempCoordinate.pz;
+
+	ustart0 = umin;
+	ustart1 = umax;
+	tempCoordinate = getXYZCoords(umax);
+	NodeCoordinates[3*NumNodes] = tempCoordinate.px;
+	NodeCoordinates[3*NumNodes+1] = tempCoordinate.py;
+	NodeCoordinates[3*NumNodes+2] = tempCoordinate.pz;
+	i=1;	
+	while (i < ((NumNodes/2)+1))
+	{
+		dist = L0*pow(q,i-1);
+		u=ustart0+(umax-umin)*dist/len;
+		u=getUCoord(ustart0, dist, u);
+		tempCoordinate = getXYZCoords(u);
+		NodeCoordinates[3*i] = tempCoordinate.px;
+		NodeCoordinates[3*i+1] = tempCoordinate.py;
+		NodeCoordinates[3*i+2] = tempCoordinate.pz;
+		ustart0 = u;
+		//NodeCoordinates[NumNodes-i] = NodeCoordinates[i];
+		
+		dist = L0*pow(q,i-1);
+		u=ustart1-(umax-umin)*dist/len;
+		u=getUCoord(ustart1, dist, u);
+		tempCoordinate = getXYZCoords(u);
+		NodeCoordinates[3*(NumNodes-i)] = tempCoordinate.px;
+		NodeCoordinates[3*(NumNodes-i)+1] = tempCoordinate.py;
+		NodeCoordinates[3*(NumNodes-i)+2] = tempCoordinate.pz;		
+		
+		ustart1 = u;	
+		i++;
 	}
 
+	return NodeCoordinates;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int num_edges, std::vector<double> &coords)
+vector<double> EdgeMesher::CurvatureMeshing()
 {
-	double umin, umax, measure;
-	int initial_num_edges = num_edges;
-
-	//get the u range for the edge
-	iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
-	IBERRCHK(gerr, "Trouble get parameter range for edge.");
-
-	if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
-
-	//get the arc length
-	measure = ent -> measure();
-
-	int err, index = 0;
-	double u, du, x, y, z, mMid;
-	du = (umax - umin)/(double)num_edges;
-	
-	std::vector<double> NodeCoordinates;
-	std::vector<double> TempNode;
-	std::vector<double> URecord;		//record the value of U
-
+	int err,index=0;
+	double x, y, z, u, du, uMid;
+	//temporarily store the coordinates
+	vector<double> NodeCoordinates;	
+	vector<double> TempNode;
+	vector<double> URecord;//record the value of U
+		
 	Point3D pts0, pts1, ptsMid;
 
-	NodeCoordinates.resize(3*(num_edges + 1));
+	assert(NumEdges);//make sure NumEdges is a non-zero integer
+	du = (umax-umin)/(double)NumEdges;	
+
+	NodeCoordinates.resize(3*(NumEdges+1));
 
 	TempNode.resize(3*1);
-	URecord.resize(1);	
-
-	gerr = mk_core() -> igeom_instance() -> getEntUtoXYZ(ent->geom_handle(), umin, TempNode[0], TempNode[1], TempNode[2]);
-	IBERRCHK(gerr, "Trouble getting U from XYZ along the edge");
+	URecord.resize(1);
 	
-	NodeCoordinates[3*0] = TempNode[0];
-	NodeCoordinates[3*0+1] = TempNode[1];
-	NodeCoordinates[3*0+2] = TempNode[2];
+	iGeom_getEntUtoXYZ(geometry, gEdgeHandle, umin, &x, &y, &z, &err);
 
+	NodeCoordinates[3*0]=x;
+	NodeCoordinates[3*0+1]=y;
+	NodeCoordinates[3*0+2]=z;
+	TempNode[3*0] = x;
+	TempNode[3*0+1] = y;
+	TempNode[3*0+2] = z;
 	URecord[0] = umin;
-
-	u = umin;
-	for (int i = 1; i < num_edges; i++)
+		
+	for(int i = 1; i < (NumEdges+1); i++)
 	{
 		u = umin + i*du;
-		gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, NodeCoordinates[3*i], NodeCoordinates[3*i+1], NodeCoordinates[3*i+2]);
-		IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
-
+		iGeom_getEntUtoXYZ(geometry, gEdgeHandle, u, &x, &y, &z, &err);
+		
+		NodeCoordinates[3*i] = x;
+		NodeCoordinates[3*i+1] = y;
+		NodeCoordinates[3*i+2] = z;
+		
 		pts0.px = NodeCoordinates[3*(i-1)];
 		pts0.py = NodeCoordinates[3*(i-1)+1];
 		pts0.pz = NodeCoordinates[3*(i-1)+2];
@@ -268,147 +357,37 @@ void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int num_edges, std::vector<doub
 		pts1.px = NodeCoordinates[3*i];
 		pts1.py = NodeCoordinates[3*i+1];
 		pts1.pz = NodeCoordinates[3*i+2];
-
 		uMid = (u-du+u)/2;
-
-		gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uMid, &ptsMid.px, &ptsMid.py, &ptsMid.pz);
-
-		if (!ErrorCalculate(pts0, pts1, ptsMid))
+		iGeom_getEntUtoXYZ(geometry, gEdgeHandle, uMid, &ptsMid.px, &ptsMid.py, &ptsMid.pz, &err);
+		if(!ErrorCalculate(pts0, pts1, ptsMid))
 		{
 			DivideIntoMore(pts0, ptsMid, pts1, u-du, u, uMid, index, TempNode, URecord);
 		}
-		// add the other end node to the array
-		index++;
-		TempNode.resize(3*(index + 1));
-		URecord.resize(index + 1);
-		TempNode[3*index] = pts1.px;
-		TempNode[3*index + 1] = pts1.py;
-		TempNode[3*index + 2] = pts1.pz;
-
-		URecord[index] = u;	
+		// add the other end node to the array		
+		{
+			index++;
+			TempNode.resize(3*(index+1));
+			URecord.resize(index+1);
+			TempNode[3*index]=pts1.px;
+			TempNode[3*index+1]=pts1.py;
+			TempNode[3*index+2]=pts1.pz;
+			URecord[index]=u;
+		}				
 	}
-
+	
 	//sorting the coordinate data based on the value of u
-	assert(TempNode.size()== (3*URecord.size()) );
+	assert(TempNode.size()== (3*URecord.size()));
 	
 	QuickSorting(TempNode, URecord, URecord.size());
 
-	num_edges = URecord.size() - 1;
-	
-	//resize the variable coords
-	coords.resize(3*(num_edges+1));	
-
-	//move the other end node to the endmost of the list
-	for (int i = 0; i < 3; i++)
-		coords[3*num_edges+i] = coords[3*initial_num_edges+i];
-
-	me->mesh_intervals(num_edges);
-	
-	for (int i = 1; i < num_edges; i++)
-	{
-		coords[3*i] = TempNode[3*i];
-		coords[3*i+1] = TempNode[3*i+1];
-		coords[3*i+2] = TempNode[3*i+2];
-	}
-
+	//std::cout << "The maximal size of URecord and TempNode are " << TempNode.size() << "  " << URecord.size() <<std::endl;
+	NumEdges=URecord.size()-1;
+	return TempNode;
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EdgeMesher::DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords)
-{
-	double umin, umax, measure;
-
-	//get the u range for the edge
-	iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
-	IBERRCHK(gerr, "Trouble get parameter range for edge.");
-
-	if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
-
-	//get the arc length
-	measure = ent -> measure();
-
-	int err;
-	double u, L0, dist, u0, u1;
-	
-	if ((num_edges%2)!=0)
-	{
-		num_edges++;
-		me->mesh_intervals(num_edges);
-		coords.resize(3*(num_edges+1));
-		//move the other end node's position because the variable coords has been resized.
-		for (int k = 0; k < 3; k++)
-			coords[3*num_edges + k] = coords[3*num_edges + k - 3];
-	}
-
-	//set up the default bias ratio 1.2 temporarily	
-	double q = 1.2;
-	
-	L0 = 0.5 * measure * (1-q) / (1 - pow(q, num_edges/2));
-		
-	
-	u0 = umin;
-	u1 = umax;
-	for (int i = 1; i < (num_edges/2 + 1); i++)
-	{
-		//calculate one side		
-		dist = L0*pow(q, i-1);
-		u = u0 + (umax - umin) * dist/measure;
-		u = getUCoord(u0, dist, u);
-		u0 = u;
-		gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
-		IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
-
-		//calculate the other side
-		if (i < num_edges/2)
-		{
-			u = u1 - (umax-umin) * dist / measure;
-			u = getUCoord(u1, dist, u);
-			gerr = mk_core()->igeom_instance->getEntUtoXYZ(ent->geom_handle(), u, coords[3*(num_edges-i)], coords[3*(num_edges-i)+1], coords[3*(num_edges-i)+2]);
-			IBERRCHK(gerr, "Trouble getting U from XYZ along the edge");
-		}
-		
-	}
-	
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EdgeMesher::BiasMeshing(ModelEnt *ent, int num_edges, std::vector<double> &coords)
-{
-	double umin, umax, measure;
-
-	//get the u range for the edge
-	iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
-	IBERRCHK(gerr, "Trouble get parameter range for edge.");
-
-	if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
-
-	//get the arc length
-	measure = ent -> measure();
-
-	int err;
-	double x, y, z, u, L0, dist = 0, u0;
-	
-	//set up the default bias ratio 1.2	
-	double q = 1.2;
-	L0 = measure * (1-q) / (1 - pow(q, num_edges));
-		
-	
-	u0 = umin;
-	for (int i = 1; i < num_edges; i++)
-	{
-		dist = L0*pow(q, i-1);
-		u = u0 + (umax - umin)*dist/measure;
-		u = getUCoord(u0, dist, u);
-		u0 = u;
-		gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
-		IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
-	}
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void EdgeMesher::DivideIntoMore(Point3D p0, Point3D pMid, Point3D p1, double u0, double u1, double uMid, int &index, vector<double> &nodes, vector<double> &URecord)
 {
-	//this is a recursive process, the process continues until the error is smaller than what is required.
+	//this is a recursive process
 	double uu0, uu1, uumid;
 	Point3D pts0, pts1, ptsMid;
 	int err;
@@ -427,11 +406,7 @@ void EdgeMesher::DivideIntoMore(Point3D p0, Point3D pMid, Point3D p1, double u0,
 	uumid=(uu0+uu1)/2;
 	pts0=p0;
 	pts1=pMid;
-
-
-	iGeom::Error gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uumid, &ptsMid.px, &ptsMid.py, &ptsMid.pz);
-	IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
-	
+	iGeom_getEntUtoXYZ(geometry, gEdgeHandle, uumid, &ptsMid.px, &ptsMid.py, &ptsMid.pz, &err);
 	if(!ErrorCalculate(pts0, pts1, ptsMid))
 	{
 		DivideIntoMore(pts0, ptsMid, pts1, uu0, uu1, uumid, index, nodes, URecord);
@@ -443,9 +418,7 @@ void EdgeMesher::DivideIntoMore(Point3D p0, Point3D pMid, Point3D p1, double u0,
 	uumid=(uu0+uu1)/2;
 	pts0=pMid;
 	pts1=p1;
-	gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uumid, &ptsMid.px, &ptsMid.py, &ptsMid.pz, &err);
-	IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
-	
+	iGeom_getEntUtoXYZ(geometry, gEdgeHandle, uumid, &ptsMid.px, &ptsMid.py, &ptsMid.pz, &err);
 	if(!ErrorCalculate(pts0, pts1, ptsMid))
 	{
 		DivideIntoMore(pts0, ptsMid, pts1, uu0, uu1, uumid, index, nodes, URecord);
@@ -517,9 +490,7 @@ Point3D EdgeMesher::getXYZCoords(double u) const
 	double x, y, z;
 	
 	int err;
-	
-	iGeom::Error gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, &x, &y, &z);
-	IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");	
+	iGeom_getEntUtoXYZ(geometry, gEdgeHandle, u, &x, &y, &z, &err);
 	assert(!err);
 
 	pts3D.px = x;
@@ -565,10 +536,10 @@ double EdgeMesher::getUCoord(double ustart, double dist, double uguess) const
 		p1 = getXYZCoords(u);
 		
 
-		if (ntrials++ == 100000)
-		{
-		    cout << " Warning: Searching for U failed " << endl;
-		}
+        if (ntrials++ == 100000)
+        {
+            cout << " Warning: Searching for U failed " << endl;
+        }
 	}
 	uguess = u;
 	return uguess;
@@ -600,9 +571,7 @@ bool EdgeMesher::ErrorCalculate(Point3D p0, Point3D p1, Point3D pMid)
 	angle = acos((lengtha*lengtha + lengthb*lengthb - lengthc*lengthc)/(2*lengtha*lengthb));
 	H = fabs(lengtha*sin(angle));
 
-	
-	iGeom::Error gerr = mk_core()->igeom_instance()->getEgCvtrXYZ(ent->geom_handle(), pMid.px, pMid.py, pMid.pz, &cvtr_i, &cvtr_j, &cvtr_k, &err);
-	IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");		
+	iGeom_getEgCvtrXYZ(geometry, gEdgeHandle, pMid.px, pMid.py, pMid.pz, &cvtr_i, &cvtr_j, &cvtr_k, &err);
 	curvature = sqrt(cvtr_i*cvtr_i+cvtr_j*cvtr_j+cvtr_k*cvtr_k);
 	error= H*curvature;
 	
@@ -613,7 +582,68 @@ bool EdgeMesher::ErrorCalculate(Point3D p0, Point3D p1, Point3D pMid)
 		result = true;
 	return result;		
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EdgeMesher::get_related_entityset(iBase_EntitySetHandle &mesh_entityset)
+{
+	int switch_order=0;
+	int ierr;
 
+	iRel_getEntSetRelation(assoc, rel, gEdgeHandle, switch_order, &(mesh_entityset), &ierr);
+	if (ierr)
+	{
+                iMesh_createEntSet(mesh, 1, &mesh_entityset, &ierr);
+                assert(!ierr);
 
+                iBase_TagHandle dim_tag;
+                const char *tag2 = "GEOM_DIMENSION";
+                int namelen = strlen(tag2);
+                iMesh_getTagHandle(mesh, tag2, &dim_tag, &ierr, namelen);
+                assert(!ierr);
+
+                int dim = 1;
+                iMesh_setEntSetIntData(mesh, mesh_entityset, dim_tag, dim, &ierr);
+		assert(!ierr);
+
+                iRel_setEntSetRelation(assoc, rel, gEdgeHandle, mesh_entityset, &ierr);
+		assert(!ierr);
+	}
 }
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EdgeMesher::ShowCoorData()
+{
+	int err;
+	iBase_EntitySetHandle meshSet;
+	SimpleArray<iBase_EntityHandle> VertexArr;
+	SimpleArray<double> CoordinateArr;	
+	
+	iRel_getEntSetRelation(assoc, rel, gEdgeHandle, 0, &meshSet, &err);
+	assert(!err);
+	
+	iMesh_getEntities(mesh, meshSet, iBase_VERTEX, iMesh_POINT, ARRAY_INOUT(VertexArr), &err);
+	assert(!err);
+	
+	double x, y, z;
+	for(int i=0;i<VertexArr.size();i++)
+	{
+		iMesh_getVtxCoord(mesh, VertexArr[i], &x, &y, &z, &err);		
+		std::cout << "coordinates" << (i+1) << " are x: " << x << " y: " <<y << " z:" << z << std::endl;
+	}	
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int EdgeMesher::SaveFile(const char *FileName)
+{
+	int namelen = strlen(FileName), err;
+	iBase_EntitySetHandle mesh_root_set;
+	iMesh_getRootSet(mesh, &mesh_root_set, &err);
+    	assert(!err);
+    	iMesh_save(mesh, mesh_root_set, FileName, NULL, &err, namelen, 0);
+	if(err)
+	{
+		return 1;//fail
+	}
+	else
+	{
+		return 0;//succeed
+	}
+	
+}
