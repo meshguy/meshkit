@@ -8,15 +8,28 @@
 
 namespace MeshKit {
 
-#define MKERRCHK(err, descr) \
-    {if (MK_SUCCESS != err.error_code()) {Error tmp_err(0, "%s, line %d: %s", __FILE__, __LINE__, err.what()); err.set_string(tmp_err.what()); throw err;}}
+#define MKERRCHK(err, descr)                                               \
+  do {                                                                     \
+    if (MK_SUCCESS != err.error_code()) {                                  \
+      Error tmp_err(0, "%s, line %d: %s", __FILE__, __LINE__, err.what()); \
+      err.set_string(tmp_err.what()); throw err;                           \
+    }                                                                      \
+  } while(false)
 
     
-#define MBERRCHK(err, descr) \
-    {if (moab::MB_SUCCESS != err) {throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);}}
+#define MBERRCHK(err, descr)                                               \
+  do {                                                                     \
+    if (moab::MB_SUCCESS != err) {                                         \
+      throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);      \
+    }                                                                      \
+  } while(false)
     
-#define IBERRCHK(err, descr) \
-    {if (iBase_SUCCESS != err) {throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);}}
+#define IBERRCHK(err, descr)                                               \
+  do {                                                                     \
+    if (iBase_SUCCESS != err) {                                            \
+      throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);      \
+    }                                                                      \
+  } while(false)
     
     enum ErrorCode {
         MK_SUCCESS = 0, 

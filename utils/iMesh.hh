@@ -36,7 +36,7 @@ class iMesh : public iMeshBase {
     typedef iMesh_EntityTopology EntityTopology;
     typedef iBase_AdjacencyCost AdjacencyCost;
     
-    inline iMesh( const char* options = 0 );
+    explicit inline iMesh( const char* options = 0 );
     inline iMesh( iMesh_Instance imesh );
     
     inline ~iMesh();

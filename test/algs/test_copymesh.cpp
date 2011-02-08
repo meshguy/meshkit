@@ -81,9 +81,6 @@ int load_and_copymove(const char *input_filename,
   CopyMesh *cm = (CopyMesh*) mk.construct_meshop("CopyMesh", vols);
   cm->set_name("copy_move_mesh");
 
-  // set the location to copy/move
-  cm->set_location(x);
-
   // some entity tag types are always copy or expand
   cm->expand_sets().add_tag("MATERIAL_SET");
   cm->expand_sets().add_tag("DIRICHLET_SET");

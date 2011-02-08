@@ -3,7 +3,6 @@ AUTOMAKE_OPTIONS = foreign
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
-         
 SUBDIRS = 
 
 # The directory in which to install headers
@@ -16,15 +15,11 @@ libMeshKitalgs_la_SOURCES = \
 	SCDMesh.cpp \
 	EBMesher.cpp \
 	CopyMesh.cpp \
+	CESets.cpp \
+	Transform.cpp \
+	CopyUtils.cpp \
+	CopyUtils.hpp
 	ProjectShell.cpp
-	utils/CESets.cpp \
-	utils/CESets.hpp \
-	utils/Transform.cpp \
-	utils/Transform.hpp \
-	utils/CopyUtils.cpp \
-	utils/CopyUtils.hpp \
-	utils/vec_utils.cpp \
-	utils/vec_utils.hpp 
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
@@ -34,11 +29,14 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EBMesher.hpp \
 	meshkit/CopyMesh.hpp \
 	meshkit/ProjectShell.hpp
+	meshkit/CESets.hpp \
+	meshkit/Transform.hpp
 
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/ -I$(top_srcdir)/utils \
+              -I$(srcdir)/../core -I$(srcdir)/../utils -I$(top_srcdir) \
+              -I$(top_builddir) -I$(top_srcdir)/ -I$(top_srcdir)/utils \
               -I$(srcdir)/../lemon
 
 if HAVE_MOAB

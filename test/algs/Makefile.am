@@ -9,6 +9,7 @@ AM_CPPFLAGS += -DDATADIR=$(DATADIR)
 AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src \
                -I$(top_srcdir)/utils \
+               -I$(top_srcdir)/src/utils \
                -I$(top_srcdir)/src/core \
                -I$(top_srcdir)/src/algs \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir)

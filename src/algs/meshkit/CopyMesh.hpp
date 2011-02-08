@@ -14,13 +14,13 @@
 #include "meshkit/Error.hpp"
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "iMesh.hh"
 
+#include "meshkit/CESets.hpp"
+#include "meshkit/LocalTag.hpp"
+#include "meshkit/Transform.hpp"
+
+#include "iMesh.hh"
 #include "iMesh_extensions.h"
-#include "utils/Transform.hpp"
-#include "LocalTag.hpp"
-#include "utils/CESets.hpp"
-#include "MKException.hpp"
 
 
 namespace MeshKit {
@@ -57,10 +57,6 @@ namespace MeshKit {
      * \param mkcore MKCore instance for the factory
      * \param me_vec ModelEnts to which this scheme will be applied
      */
-
-    /* \brief Return the imesh instance
-     */
-    iMesh_Instance impl() const {return imeshImpl;}
 
     static MeshOp *factory(MKCore *mkcore, const MEntVector &me_vec);
   
@@ -105,7 +101,7 @@ namespace MeshKit {
 
     /* \brief Add tag which should have unique values
      */
-    void add_unique_tag(iBase_TagHandle tag_handle);
+    void add_unique_tag(iMesh::TagHandle tag_handle);
 
     /* \brief Return reference to copy sets
      */
@@ -119,76 +115,55 @@ namespace MeshKit {
      */
     std::set<iBase_EntitySetHandle> &unique_sets();
   
-    void copy(iBase_EntitySetHandle set_handle,
-	      const copy::Transform &trans = copy::Identity(),
-	      iBase_EntityHandle **new_ents = NULL,
-	      int *new_ents_allocated = 0,
-	      int *new_ents_size = 0,
-	      bool do_merge = true);
-
-    void copy(iBase_EntityHandle *ent_handles,
-	      int num_ents,
-	      const copy::Transform &trans = copy::Identity(),
-	      iBase_EntityHandle **new_ents = NULL,
-	      int *new_ents_allocated = 0,
-	      int *new_ents_size = 0,
-	      bool do_merge = true);
-
     /* \brief Tag copied sets with indicated tag from original set
      */
     void tag_copied_sets(const char **tag_names, const char **tag_vals,
-			 const int num_tags);
+                         const int num_tags);
 
     /* \brief Tag copied sets with indicated tag from original set
      */
     void tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
-			 const int num_tags);
-
-    /* \brief Set the location to copy move the mesh
-     */
-    void set_location(const double []);
-  
+                         const int num_tags);
   private:
+    void do_copy(iBase_EntitySetHandle set_handle,
+                 const Copy::Transform &trans = Copy::Identity(),
+                 iMesh::EntityHandle **new_ents = NULL,
+                 int *new_ents_allocated = 0,
+                 int *new_ents_size = 0,
+                 bool do_merge = true);
+
     //- get the copy/expand sets based on copy/expand tags
-    void get_copy_expand_sets(iBase_EntitySetHandle *&copy_sets,
-			      int &num_copy_sets,
-			      iBase_EntitySetHandle *&expand_sets,
-			      int &num_expand_sets);
+    void get_copy_expand_sets(iMesh::EntitySetHandle *&copy_sets,
+                              int &num_copy_sets,
+                              iMesh::EntitySetHandle *&expand_sets,
+                              int &num_expand_sets);
 
     //- get the sets tagged with the given vector of tags/values
-    void get_tagged_sets(iBase_EntitySetHandle from_set,
-			 iBase_TagHandle *tag_handles,
-			 const char **tag_vals,
-			 int num_tags,
-			 iBase_EntitySetHandle *&tagged_sets,
-			 int &num_tagged_sets);
+    void get_tagged_sets(iMesh::EntitySetHandle from_set,
+                         iMesh::TagHandle *tag_handles,
+                         const char **tag_vals,
+                         int num_tags,
+                         iMesh::EntitySetHandle *&tagged_sets,
+                         int &num_tagged_sets);
 
-    // mesh instance
-    iMesh_Instance imeshImpl;
-
-    // tag storing copy-to tag
-    LocalTag copyTag;
+    iMesh imeshImpl;     // mesh instance
+    LocalTag copyTag;    // tag storing copy-to tag
 
     CESets copySets;
     CESets expandSets;
 
-    std::vector<iBase_TagHandle> uniqueTags;
-    std::set<iBase_EntitySetHandle> uniqueSets;
-    double m_x[3];
+    std::vector<iMesh::TagHandle> uniqueTags;
+    std::set<iMesh::EntitySetHandle> uniqueSets;
   };
 
   inline void CopyMesh::add_unique_tag(const std::string &tag_name)
   {
-    iBase_TagHandle tag_handle;
-    int err;
-    iMesh_getTagHandle(imeshImpl, tag_name.c_str(), &tag_handle, &err,
-		       tag_name.size());
-    check_error(imeshImpl, err);
-
+    iMesh::TagHandle tag_handle;
+    IBERRCHK(imeshImpl.getTagHandle(tag_name.c_str(), tag_handle), "");
     add_unique_tag(tag_handle);
   }
 
-  inline void CopyMesh::add_unique_tag(iBase_TagHandle tag_handle)
+  inline void CopyMesh::add_unique_tag(iMesh::TagHandle tag_handle)
   {
     assert(tag_handle != NULL);
     uniqueTags.push_back(tag_handle);
@@ -210,11 +185,10 @@ namespace MeshKit {
     return expandSets;
   }
   
-  inline std::set<iBase_EntitySetHandle> &CopyMesh::unique_sets()
+  inline std::set<iMesh::EntitySetHandle> &CopyMesh::unique_sets()
   {
     return uniqueSets;
   }
-
 };
 #endif
 

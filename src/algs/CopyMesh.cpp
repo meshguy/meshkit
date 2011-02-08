@@ -3,8 +3,8 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 
-#include "utils/CopyUtils.hpp"
-#include "LocalSet.hpp"
+#include "CopyUtils.hpp"
+#include "meshkit/LocalSet.hpp"
 #include "SimpleArray.hpp"
 
 namespace MeshKit 
@@ -14,7 +14,7 @@ namespace MeshKit
   //  iBase_EntityType CopyMesh_mtp = iBase_REGION;
   //
   //  static int success = MKCore::register_meshop("CopyMesh", &CopyMesh_mtp, 1, CopyMesh_tps, 3,
-  //					       CopyMesh::factory, MeshOp::canmesh_edge);
+  //                           CopyMesh::factory, MeshOp::canmesh_edge);
 
   MeshOp *CopyMesh::factory(MKCore *mkcore, const MEntVector &me_vec)
   {
@@ -24,20 +24,14 @@ namespace MeshKit
 
   CopyMesh::CopyMesh(MKCore *mkcore, const MEntVector &me_vec)
     : MeshScheme(mkcore, me_vec),
-      imeshImpl(reinterpret_cast<iMesh_Instance> (mkcore->mb_imesh())),
-      copyTag(reinterpret_cast<iMesh_Instance> (mkcore->mb_imesh()), "__CopyMeshTag"),
-      copySets(reinterpret_cast<iMesh_Instance> (mkcore->mb_imesh())),
-      expandSets(reinterpret_cast<iMesh_Instance> (mkcore->mb_imesh()))
-  {
-    m_x[0] = 0.0;
-    m_x[1] = 0.0;
-    m_x[2] = 0.0;
-  }
+      imeshImpl(reinterpret_cast<iMesh_Instance>(mkcore->mb_imesh())),
+      copyTag(mkcore, "__CopyMeshTag"),
+      copySets(reinterpret_cast<iMesh_Instance>(mkcore->mb_imesh())),
+      expandSets(reinterpret_cast<iMesh_Instance>(mkcore->mb_imesh()))
+  {}
 
   CopyMesh::~CopyMesh()
-  {
-
-  }
+  {}
 
 
   bool CopyMesh::can_mesh(ModelEnt *me)
@@ -80,70 +74,40 @@ namespace MeshKit
   */
   void CopyMesh::execute_this()
   {
-    int err = 0, i  = 0;
-    int orig_ents_alloc = 0, orig_ents_size = 0;
-    iBase_EntityHandle *orig_ents = NULL;
+    SimpleArray<iBase_EntityHandle> orig_ents(mentSelection.size());
 
-    iBase_EntityHandle *new_ents;
-    int new_ents_alloc, new_ents_size;
-    new_ents = NULL;
-    new_ents_alloc = 0;
-    new_ents_size = 0;
-
-    for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
+    int i = 0;
+    for (MEntSelection::iterator mit = mentSelection.begin();
+         mit != mentSelection.end(); mit++) {
       ModelEnt *me = mit->first;
-      orig_ents[orig_ents_size] = reinterpret_cast<iBase_EntityHandle> (me->mesh_handle());
-      orig_ents_size++;
+      orig_ents[i++] = reinterpret_cast<iBase_EntityHandle> (me->mesh_handle());
     }
-    std::cout << orig_ents_size << " value of orig_ents_size ? shouldn't be zero!" << std::endl;
-    copy(orig_ents , i, copy::Translate(m_x),
-	 &new_ents, &new_ents_alloc, &new_ents_size, false);
-  }
 
-  void CopyMesh::set_location(const double x[])
-  {
-    m_x[0] = x[0];
-    m_x[1] = x[1];
-    m_x[2] = x[2];
-  }
-
-  void CopyMesh::copy(iBase_EntityHandle *ent_handles,
-		      int num_ents,
-		      const copy::Transform &trans,
-		      iBase_EntityHandle **new_ents,
-		      int *new_ents_allocated,
-		      int *new_ents_size,
-		      bool do_merge)
-  {
-    int err;
-
-    LocalSet set(imeshImpl);
+    LocalSet set(this->mk_core());
   
-    iMesh_addEntArrToSet(imeshImpl, ent_handles, num_ents, set, &err);
-    check_error(imeshImpl, err);
-
-    copy(set, trans, new_ents, new_ents_allocated, new_ents_size, do_merge);
+    IBERRCHK(imeshImpl.addEntArrToSet(ARRAY_IN(orig_ents), set), "FIXME");
+    do_copy(set);
   }
 
-  void CopyMesh::copy(iBase_EntitySetHandle set_handle,
-		      const copy::Transform &trans,
-		      iBase_EntityHandle **new_ents,
-		      int *new_ents_allocated,
-		      int *new_ents_size,
-		      bool do_merge)
+  void CopyMesh::do_copy(iBase_EntitySetHandle set_handle,
+                         const Copy::Transform &trans,
+                         iBase_EntityHandle **new_ents,
+                         int *new_ents_allocated,
+                         int *new_ents_size,
+                         bool do_merge)
   {
     int err;
-    LocalTag local_tag(imeshImpl);
+    LocalTag local_tag(this->mk_core());
 
     SimpleArray<iBase_EntityHandle> ents;
     SimpleArray<iBase_EntityHandle> verts;
     SimpleArray<int> indices;
     SimpleArray<int> offsets;
 
-    iMesh_getStructure(imeshImpl, set_handle, ARRAY_INOUT(ents),
-		       ARRAY_INOUT(verts), ARRAY_INOUT(indices),
-		       ARRAY_INOUT(offsets), &err);
-    check_error(imeshImpl, err);
+    iMesh_getStructure(imeshImpl.instance(), set_handle, ARRAY_INOUT(ents),
+                       ARRAY_INOUT(verts), ARRAY_INOUT(indices),
+                       ARRAY_INOUT(offsets), &err);
+    IBERRCHK(err, "FIXME");
 
     // copy the vertices
     SimpleArray<iBase_EntityHandle> new_verts;
@@ -154,29 +118,30 @@ namespace MeshKit
     // XXX: Should this really happen? Doing so adds more entities to copy sets
     // than explicitly passed into this function. This may be a domain-specific
     // question.
-    iMesh_setEHArrData(imeshImpl, ARRAY_IN(verts), local_tag,
-		       ARRAY_IN(new_verts), &err);
-    check_error(imeshImpl, err);
+    iMesh_setEHArrData(imeshImpl.instance(), ARRAY_IN(verts), local_tag,
+                       ARRAY_IN(new_verts), &err);
+    IBERRCHK(err, "FIXME");
 
     // now connect the new vertices to make the higher-dimension entities
-    connect_the_dots(imeshImpl, ARRAY_IN(ents), local_tag, &indices[0],
-		     &offsets[0], &new_verts[0]);
+    connect_the_dots(imeshImpl.instance(),
+                     ARRAY_IN(ents), local_tag, &indices[0],
+                     &offsets[0], &new_verts[0]);
 
     // take care of copy/expand sets
     update_sets();
 
     link_expand_sets(expandSets, local_tag);
 
-    process_ce_sets(imeshImpl, copySets.sets(), local_tag);
-    process_ce_sets(imeshImpl, expandSets.sets(), local_tag);
+    process_ce_sets(imeshImpl.instance(), copySets.sets(), local_tag);
+    process_ce_sets(imeshImpl.instance(), expandSets.sets(), local_tag);
 
     tag_copy_sets(copySets, local_tag, copyTag);
 
     // get all the copies
     if (new_ents) {
-      iMesh_getEHArrData(imeshImpl, ARRAY_IN(ents), local_tag,
-			 new_ents, new_ents_allocated, new_ents_size, &err);
-      check_error(imeshImpl, err);
+      iMesh_getEHArrData(imeshImpl.instance(), ARRAY_IN(ents), local_tag,
+                         new_ents, new_ents_allocated, new_ents_size, &err);
+      IBERRCHK(err, "FIXME");
     }
   }
 
@@ -187,27 +152,27 @@ namespace MeshKit
   }
 
   void CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,
-				 const int num_tags)
+                                 const int num_tags)
   {
     int err;
   
     for (int t = 0; t < num_tags; t++) {
       iBase_TagHandle tag;
-      iMesh_getTagHandle(imeshImpl, tag_names[t], &tag, &err,
-			 strlen(tag_names[t]));
-      check_error(imeshImpl, err);
+      iMesh_getTagHandle(imeshImpl.instance(), tag_names[t], &tag, &err,
+                         strlen(tag_names[t]));
+      IBERRCHK(err, "FIXME");
 
-      tag_copy_sets(imeshImpl, copyTag, copySets.sets(), tag,
-		    tag_vals ? tag_vals[t] : NULL);
+      tag_copy_sets(imeshImpl.instance(), copyTag, copySets.sets(), tag,
+                    tag_vals ? tag_vals[t] : NULL);
     }
   }
 
   void CopyMesh::tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
-				 const int num_tags)
+                                 const int num_tags)
   {
     for (int t = 0; t < num_tags; t++)
-      tag_copy_sets(imeshImpl, copyTag, copySets.sets(), tags[t],
-		    tag_vals ? tag_vals[t] : NULL);
+      tag_copy_sets(imeshImpl.instance(), copyTag, copySets.sets(), tags[t],
+                    tag_vals ? tag_vals[t] : NULL);
   }
 
 } // namespace MeshKit
