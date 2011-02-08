@@ -57,7 +57,7 @@ void VertexMesher::execute_this()
   for (sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
     double pos[3];
       // get the position
-    (*sit).first->closest(pos[0], pos[0], pos[0], pos);
+    (*sit).first->evaluate(pos[0], pos[0], pos[0], pos);
     moab::EntityHandle new_vert;
       // create the vertex
     moab::ErrorCode rval = mk_core()->moab_instance()->create_vertex(pos, new_vert);

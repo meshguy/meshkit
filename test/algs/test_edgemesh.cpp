@@ -24,7 +24,8 @@ int main(int argc, char **argv)
   std::string file_name = TestDir + "/holysurf.sat";
   mk.load_geometry(file_name.c_str());
 
-  MeshKit::MKCore::meshop_factory_t thisop = VertexMesher::factory;
+  MeshKit::MKCore::meshop_factory_t thisopv = VertexMesher::factory;
+  MeshKit::MKCore::meshop_factory_t thisope = EdgeMesher::factory;
 
     // get the surface
   MEntVector surfs, curves, loops;

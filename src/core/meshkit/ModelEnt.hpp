@@ -143,12 +143,46 @@ public:
     //! Similar as measure, but based on mesh 
   double measure_discrete() const;
   
-    //! Closest point to input
-  void closest(double x, double y, double z, double *close) const;
-
-    //! Similar to closest_point, but based on mesh
-  void closest_discrete(double x, double y, double z, double *close) const;
-
+    /** \brief Evaluate entity at a point
+     *
+     * If any of the evaluation results are not wanted, pass NULL for them.  At least one
+     * must be provided.  This function throws an error if called on a vertex or volume and
+     * non-NULL is passed for direction or curvature.  Direction is the tangent for edges,
+     * normal for surfaces.
+     * \param x Start point x
+     * \param y Start point y
+     * \param z Start point z
+     * \param close Closest point
+     * \param direction Tangent or normal returned for edges or surfaces
+     * \param curvature1 1st curvature for edges or surfaces
+     * \param curvature2 2nd curvature for edges or surfaces
+     */
+  void evaluate(double x, double y, double z, 
+                double *close,
+                double *direction = NULL,
+                double *curvature1 = NULL,
+                double *curvature2 = NULL) const;
+  
+    /** \brief Evaluate entity at a point, based on mesh data
+     *
+     * If any of the evaluation results are not wanted, pass NULL for them.  At least one
+     * must be provided.  This function throws an error if called on a vertex or volume and
+     * non-NULL is passed for direction or curvature.  Direction is the tangent for edges,
+     * normal for surfaces.
+     * \param x Start point x
+     * \param y Start point y
+     * \param z Start point z
+     * \param close Closest point
+     * \param direction Tangent or normal returned for edges or surfaces
+     * \param curvature1 1st curvature for edges or surfaces
+     * \param curvature2 2nd curvature for edges or surfaces
+     */
+  void evaluate_discrete(double x, double y, double z, 
+                         double *close,
+                         double *direction = NULL,
+                         double *curvature1 = NULL,
+                         double *curvature2 = NULL) const;
+  
     //! Get the id of the geometry/mesh entity, if any 
   int id() const;
   
@@ -472,6 +506,15 @@ inline MeshedState ModelEnt::get_meshed_state()
 inline void ModelEnt::set_meshed_state(MeshedState mstate) 
 {
   meshedState = mstate;
+}
+
+inline void ModelEnt::evaluate_discrete(double x, double y, double z, 
+                                        double *close,
+                                        double *direction,
+                                        double *curvature1,
+                                        double *curvature2) const
+{
+  evaluate(x, y, z, close, direction, curvature1, curvature2);
 }
 
     /* \brief Add a MeshOp that points to this ModelEnt

@@ -148,7 +148,7 @@ class iGeom : public iGeomBase {
     inline Error getFcEvalXYZ( EntityHandle face,
                                double x, double y, double z,
                                double& on_x, double& on_y, double& on_z,
-                               double& tngt_i, double& tngt_j, double& tngt_k,
+                               double& nrml_i, double& nrml_j, double& nrml_k,
                                double& cvtr1_i, double& cvtr1_j, double& cvtr1_k,
                                double& cvtr2_i, double& cvtr2_j, double& cvtr2_k );
     inline Error getArrEgEvalXYZ( const EntityHandle* edges,
@@ -165,7 +165,7 @@ class iGeom : public iGeomBase {
                                   const double* near_coords,
                                   int near_coords_size,
                                   double* on_coords,
-                                  double* tangent,
+                                  double* normal,
                                   double* curvature1,
                                   double* curvature2 );
 

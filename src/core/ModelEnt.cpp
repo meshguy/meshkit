@@ -73,14 +73,14 @@ void ModelEnt::create_mesh_set(int flag)
   MBERRCHK(rval, "Failed to set iMesh ModelEnt tag.");
 
     // relate the mesh to the geom
-  Error merr;
+  iRel::Error merr;
   if (iGeomEnt) {
     merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
   }
   else {
     merr = mkCore->group_set_pair()->setSetSetRelation(iGeomSet, IBSH(moabEntSet));
   }
-  MKERRCHK(merr, "Failed to set iRel relation for a mesh set.");
+  IBERRCHK(merr, "Failed to set iRel relation for a mesh set.");
 
     // if this is a group, we're done
   if (iGeomSet) return;
@@ -157,8 +157,8 @@ bool ModelEnt::exist_mesh_set()
   if (!ents.size()) return false;
 
   moabEntSet = ents[0];
-  Error merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
-  MKERRCHK(merr, "Failed to set iRel relation for a mesh set.");
+  iRel::Error merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
+  IBERRCHK(merr, "Failed to set iRel relation for a mesh set.");
 
   return true;
 }
@@ -302,18 +302,54 @@ double ModelEnt::measure_discrete() const
   return measure();
 }
 
-  //- closest point to input
-void ModelEnt::closest(double x, double y, double z, double *close) const
+void ModelEnt::evaluate(double x, double y, double z, 
+                        double *close,
+                        double *direction,
+                        double *curvature1,
+                        double *curvature2) const
 {
-  iGeom::Error err = mkCore->igeom_instance()->getEntClosestPt(iGeomEnt, x, y, z,
-                                                            close[0], close[1], close[2]);
-  IBERRCHK(err, "Couldn't get geom entity closest point.");
-}
+  iGeom::Error err;
+  if (0 == dimension() || 3 == dimension()) {
+    if (direction || curvature1 || curvature2) {
+      MKERRCHK(Error(MK_BAD_INPUT), "Direction or curvature not available for entities of this type.");
+    }
+    else if (!close) {
+      MKERRCHK(Error(MK_BAD_INPUT), "Must pass closest point pointer for output.");
+    }
+  }
 
-  //- similar to closest_point, but based on mesh
-void ModelEnt::closest_discrete(double x, double y, double z, double *close) const
-{
-  return closest(x, y, z, close);
+  if (0 == dimension()) {
+    close[0] = x;
+    close[1] = y;
+    close[2] = z;
+    return;
+  }
+  else if (3 == dimension()) {
+    err = mk_core()->igeom_instance()->getEntClosestPt(geom_handle(), x, y, z, 
+                                                       close[0], close[1], close[2]);
+    IBERRCHK(err, "Problem getting closest point for this model entity.");
+  }
+  else {
+    double cls[3], dir[3], curve1[3], curve2[3];
+    if (!close) close = cls;
+    if (!direction) direction = dir;
+    if (!curvature1) curvature1 = curve1;
+    if (1 == dimension()) 
+      err = mk_core()->igeom_instance()->getEgEvalXYZ(geom_handle(), x, y, z,
+                                                      close[0], close[1], close[2],
+                                                      direction[0], direction[1], direction[2], 
+                                                      curvature1[0], curvature1[1], curvature1[2]);
+    else if (2 == dimension()) {
+      if (!curvature2) curvature2 = curve2;
+      err = mk_core()->igeom_instance()->getFcEvalXYZ(geom_handle(), x, y, z,
+                                                      close[0], close[1], close[2],
+                                                      direction[0], direction[1], direction[2], 
+                                                      curvature1[0], curvature1[1], curvature1[2], 
+                                                      curvature2[0], curvature2[1], curvature2[2]);
+    }
+
+    IBERRCHK(err, "Couldn't evaluate model entity.");
+  }
 }
 
 int ModelEnt::id() const
@@ -723,8 +759,8 @@ moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const
 {
     // use iRel to get this information
   moab::EntityHandle ment = 0;
-  Error err = mkCore->irel_pair()->getEntSetRelation(gent, false, IBSHR(ment));
-  MKERRCHK(err, "Failed to get mesh set handle for geometry entity.");
+  iRel::Error err = mkCore->irel_pair()->getEntSetRelation(gent, false, IBSHR(ment));
+  IBERRCHK(err, "Failed to get mesh set handle for geometry entity.");
   return ment;
 }
 
