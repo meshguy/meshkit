@@ -13,7 +13,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir)
 
-TESTS = test_edgemesh test_ebmesh test_scdmesh
+TESTS = test_edgemesh test_ebmesh
 
 check_PROGRAMS = $(TESTS)
 
