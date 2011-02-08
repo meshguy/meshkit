@@ -630,32 +630,6 @@ bool EdgeMesher::ErrorCalculate(ModelEnt *ent, Point3D p0, Point3D p1, Point3D p
 		result = true;
 	return result;		
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EdgeMesher::get_related_entityset(iBase_EntitySetHandle &mesh_entityset)
-{
-	int switch_order=0;
-	int ierr;
-
-	iRel_getEntSetRelation(assoc, rel, gEdgeHandle, switch_order, &(mesh_entityset), &ierr);
-	if (ierr)
-	{
-                iMesh_createEntSet(mesh, 1, &mesh_entityset, &ierr);
-                assert(!ierr);
-
-                iBase_TagHandle dim_tag;
-                const char *tag2 = "GEOM_DIMENSION";
-                int namelen = strlen(tag2);
-                iMesh_getTagHandle(mesh, tag2, &dim_tag, &ierr, namelen);
-                assert(!ierr);
-
-                int dim = 1;
-                iMesh_setEntSetIntData(mesh, mesh_entityset, dim_tag, dim, &ierr);
-		assert(!ierr);
-
-                iRel_setEntSetRelation(assoc, rel, gEdgeHandle, mesh_entityset, &ierr);
-		assert(!ierr);
-	}
-}
 
 }
 

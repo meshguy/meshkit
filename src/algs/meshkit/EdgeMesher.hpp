@@ -70,8 +70,6 @@ private:
 	bool ErrorCalculate(ModelEnt *ent, Point3D p0, Point3D p1, Point3D pMid);
 	void RapidSorting(vector<double> &nodes, vector<double> &URecord, int left, int right);
 	void QuickSorting(vector<double> &nodes, vector<double> &URecord, int count);
-	void GetRelatedEntitySet(iBase_EntityHandle edgeHandle, iBase_EntitySetHandle &entitySet);
-	void get_related_entityset(iBase_EntitySetHandle &mesh_entityset);
 
 
 	void EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> &coords);
