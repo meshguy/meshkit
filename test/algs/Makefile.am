@@ -14,9 +14,9 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-TESTS = test_edgemesh test_ebmesh
+TESTS = test_edgemesh test_ebmesh test_scdmesh
 
-check_PROGRAMS = $(TESTS) test_copymesh test_scdmesh
+check_PROGRAMS = $(TESTS) test_copymesh
 
 MOSTLYCLEANFILES = 
 
