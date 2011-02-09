@@ -16,7 +16,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
 
 TESTS = test_edgemesh test_ebmesh
 
-check_PROGRAMS = $(TESTS)
+check_PROGRAMS = $(TESTS) test_copymesh test_scdmesh
 
 MOSTLYCLEANFILES = 
 

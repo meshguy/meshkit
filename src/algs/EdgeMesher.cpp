@@ -55,46 +55,49 @@ double EdgeMesher::measure(iGeom::EntityHandle ent, double ustart, double uend) 
 
 void EdgeMesher::setup_this()
 {
-	//compute the number of intervals for the associated ModelEnts, from the size set on them
-	//the sizing function they point to, or a default sizing function
-	for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
-	{
-		ModelEnt *me = mit->first;
+    //compute the number of intervals for the associated ModelEnts, from the size set on them
+    //the sizing function they point to, or a default sizing function
+  for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
+  {
+    ModelEnt *me = mit->first;
 
-		//first check to see whether entity is meshed
-		if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0)
-			continue;
+      //first check to see whether entity is meshed
+    if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0)
+      continue;
 		
-		SizingFunction *sf = mk_core() -> sizing_function(me->sizing_function_index());
-		if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT)
-		{
-			//no sizing set, just assume default #intervals as 4
-			me->mesh_intervals(4);
-			me->interval_firmness(DEFAULT);
-		}
-		else
-		{
-			//check # intervals first, then size, and just choose for now
-			if (sf->intervals() > 0)
-			{
-				me -> mesh_intervals(sf->intervals());
-				me -> interval_firmness(HARD);
-			}
-			else if (sf->size()>0)
-			{
-				me->mesh_intervals(me->measure()/sf->size());
-				me->interval_firmness(SOFT);
-			}
-			else
-				throw Error(MK_INCOMPLETE_MESH_SPECIFICATION,  "Sizing function for edge had neither positive size nor positive intervals.");
-		}
-	}
+    SizingFunction *sf = mk_core() -> sizing_function(me->sizing_function_index());
+    if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT)
+    {
+        //no sizing set, just assume default #intervals as 4
+      me->mesh_intervals(4);
+      me->interval_firmness(DEFAULT);
+    }
+    else
+    {
+        //check # intervals first, then size, and just choose for now
+      if (sf->intervals() > 0)
+      {
+        me -> mesh_intervals(sf->intervals());
+        me -> interval_firmness(HARD);
+      }
+      else if (sf->size()>0)
+      {
+        me->mesh_intervals(me->measure()/sf->size());
+        me->interval_firmness(SOFT);
+      }
+      else
+        throw Error(MK_INCOMPLETE_MESH_SPECIFICATION,  "Sizing function for edge had neither positive size nor positive intervals.");
+    }
+  }
+
+    // now call setup_boundary to treat vertices
+  setup_boundary();
 }
 
 void EdgeMesher::execute_this()
 {
 	std::vector<double> coords;
-	std::vector<moab::EntityHandle> nodes, edges;
+	std::vector<moab::EntityHandle> nodes;
 
 	for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
 	{
@@ -103,8 +106,7 @@ void EdgeMesher::execute_this()
 		//resize the coords based on the interval setting
 		int num_edges = me->mesh_intervals();
 		coords.resize(3*(num_edges+1));
-		nodes.resize(num_edges + 1);
-		edges.resize(num_edges);
+		nodes.reserve(num_edges + 1);
 
 		//get bounding mesh entities, use 1st 2 entries of nodes list temporarily
 		//pick up the boundary end nodes
