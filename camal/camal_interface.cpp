@@ -28,7 +28,7 @@
 // the paver is here:
 #include "CMLPaver.hpp"
 #include "CMLSurfMapper.hpp"
-//  #include "CMLTetMesher.hpp"
+#include "CMLTetMesher.hpp"
 #else
 #include "CMLTriMesher.hpp"
 #include "CMLTetMesher.hpp"
@@ -407,7 +407,6 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
          if (iBase_SUCCESS != result)
             return false;
       }
-#if 0
       CMLTetMesher tet_mesher;
       success = tet_mesher.set_boundary_mesh(bdy_coords.size()/3, &bdy_coords[0],
             bdy_conn.size()/3, &bdy_conn[0]);
@@ -435,7 +434,6 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
       }
 
       etop = iMesh_TETRAHEDRON;
-#endif
    }
 
    // put new mesh back into interface
