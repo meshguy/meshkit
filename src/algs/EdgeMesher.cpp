@@ -113,7 +113,7 @@ void EdgeMesher::execute_this()
 		me->boundary(0, nodes);
 
 		//get coords in list, then move one tuple to the last position
-		moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], 2, &coords[0]);
+		moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], nodes.size(), &coords[0]);
 		MBERRCHK(rval, "Trouble getting bounding vertex positions.");
 
 		//move the second node to the endmost postion in the node list
