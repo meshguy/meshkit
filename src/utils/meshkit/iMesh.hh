@@ -13,7 +13,7 @@
 #include <string>
 
 #define ITAPS_PREFIX iMesh
-#include "iBase.hh"
+#include "meshkit/iBase.hh"
 #undef ITAPS_PREFIX
 
 /** \class iMesh

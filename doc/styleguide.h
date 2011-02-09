@@ -42,6 +42,11 @@ subdirectories in the %MeshKit source code, except when implementing a new algor
      See the %MeshKit core classes for examples of how to format these comments.  As a rule of thumb, your code should run through
      Doxygen without generating any warnings; in fact, Doxygen is sometimes helpful at pointing out inconsistencies in your
      class declaration.
+ - Developers should avoid using #include in header files, as they propagate dependencies more widely than necessary.  The only
+   cases where other includes are needed are to import the declaration for a parent class, and to declare types used as
+   non-pointer and non-reference function arguments.  In most cases, a forward-declaration statement (e.g. 'class MKCore') 
+   will suffice.
+   
 
 \section commits Making Repository Commits
 As a general rule, developers should update frequently, and commit changes often.  However, the repository should always remain

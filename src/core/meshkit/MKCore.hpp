@@ -6,15 +6,12 @@
 #include "meshkit/Types.h"
 #include "meshkit/Error.hpp"
 #include "meshkit/MKGraph.hpp"
-#include "iGeom.hh"
+#include "meshkit/iGeom.hh"
 #include "moab/Interface.hpp"
-#include "iMesh.hh"
-#include "iRel.hh"
+#include "meshkit/iMesh.hh"
+#include "meshkit/iRel.hh"
 #include "lemon/list_graph.h"
 #include <vector>
-
-// outside the namespace 'cuz it just is
-class MBiMesh;
 
 namespace MeshKit {
 
@@ -51,13 +48,13 @@ public:
     /** \brief Constructor
      * \param igeom iGeom instance
      * \param moab MOAB instance
-     * \param mbi MBiMesh instance; if non-NULL, should use/point to moab parameter
+     * \param imesh iMesh instance; if non-NULL, should use/point to moab parameter
      * \param irel iRel instance
      * \param construct_missing_ifaces If true, constructs the interfaces whose handles are passed in NULL
      */
   MKCore(iGeom *igeom = NULL, 
          moab::Interface *moab = NULL, 
-         MBiMesh *mbi = NULL, 
+         iMesh *imesh = NULL, 
          iRel *irel = NULL,
          bool construct_missing_ifaces = true);
   
@@ -231,29 +228,33 @@ public:
      * \param populate_too If true, calls populate_mesh after load
      */
   void load_geometry(const char *filename, const char *options = NULL, 
+                     int index = 0,
                      bool populate_too = true);
 
     /** \brief Load a mesh model from a file
      * \param filename The file to load
      * \param options File options to be passed to the load function
      */
-  void load_mesh(const char *filename, const char *options = NULL);
+  void load_mesh(const char *filename, const char *options = NULL,
+                 int index = 0);
 
     /** \brief Save a geometry model to a file
      * \param filename The file to save
      * \param options File options to be passed to the save function
      */
-  void save_geometry(const char *filename, const char *options = NULL);
+  void save_geometry(const char *filename, const char *options = NULL,
+                     int index = 0);
 
     /** \brief Save a mesh model to a file
      * \param filename The file to save
      * \param options File options to be passed to the save function
      */
-  void save_mesh(const char *filename, const char *options = NULL);
+  void save_mesh(const char *filename, const char *options = NULL,
+                 int index = 0);
 
     /** \brief Populate mesh/relations data for geometric entities
      */
-  void populate_mesh();
+  void populate_mesh(int index = 0);
 
     /** \brief Get model entities of a given dimension
      * \param dim Dimension of entities to get
@@ -267,44 +268,47 @@ public:
   void get_entities_by_handle(MEntVector &model_ents);
 
     /** \brief Return the iGeom instance pointer
+     * \param index Index of desired iGeom, default to first
      */
-  iGeom *igeom_instance();
+  iGeom *igeom_instance(int index = 0);
   
     /** \brief Return the MOAB instance pointer
+     * \param index Index of desired moab instance, default to first
      */
-  moab::Interface *moab_instance();
+  moab::Interface *moab_instance(int index = 0);
   
     /** \brief Return the iMesh instance pointer
+     * \param index Index of desired iMesh, default to first
      */
-  MBiMesh *mb_imesh();
+  iMesh *imesh_instance(int index = 0);
   
     /** \brief Return the iRel instance pointer
      */
-  iRel *irel_instance();
+  iRel *irel_instance(int index = 0);
 
     /** \brief Return the iRel pair handle used to relate geometry/mesh entities
      */
-  iRel::PairHandle *irel_pair();
+  iRel::PairHandle *irel_pair(int index = 0);
 
     /** \brief Return the iRel pair handle used to relate geometry sets to mesh entity sets
      */
-  iRel::PairHandle *group_set_pair();
+  iRel::PairHandle *group_set_pair(int index = 0);
 
     /** \brief Return the (iGeom) tag used to relate geometry entities to ModelEnts
      */
-  iGeom::TagHandle igeom_model_tag();
+  iGeom::TagHandle igeom_model_tag(int index = 0);
 
     /** \brief Return the (MOAB) tag used to relate mesh entities to ModelEnts
      */
-  moab::Tag moab_model_tag();
+  moab::Tag moab_model_tag(int index = 0);
 
     /** \brief Return the (MOAB) geometry dimension tag
      */
-  moab::Tag moab_geom_dim_tag();
+  moab::Tag moab_geom_dim_tag(int index = 0);
 
     /** \brief Return the (MOAB) global id tag
      */
-  moab::Tag moab_global_id_tag();
+  moab::Tag moab_global_id_tag(int index = 0);
 
     /** \brief Get the (single) VertexMesher instance
      * \return VertexMesher for this MKCore
@@ -365,37 +369,37 @@ public:
   
 private:
     //! Geometry api instance
-  iGeom *iGeomInstance;
+  std::vector<iGeom *> iGeomInstances;
   
     //! MOAB instance
-  moab::Interface *moabInstance;
+  std::vector<moab::Interface *> moabInstances;
   
     //! iMesh api instance, for use in iRel
-  MBiMesh *mbImesh;
+  std::vector<iMesh *> iMeshInstances;
   
     //! IREL api instance
-  iRel *iRelInstance;
+  std::vector<iRel *> iRelInstances;
 
     //! iRel pair handle used to relate geometry/mesh entities
-  iRel::PairHandle *iRelPair;
+  std::vector<iRel::PairHandle *> iRelPairs;
   
     //! iRel pair handle used to relate geometry groups to mesh entity sets
-  iRel::PairHandle *groupSetPair;
+  std::vector<iRel::PairHandle *> groupSetPairs;
   
     //! Tag used to associate geometry entities with model entities
-  iGeom::TagHandle iGeomModelTag;
+  std::vector<iGeom::TagHandle> iGeomModelTags;
   
     //! Tag used to associate mesh entities with model entities
-  moab::Tag moabModelTag;
+  std::vector<moab::Tag> moabModelTags;
 
     //! Tag used to associate existing mesh entities with model entities
-  moab::Tag moabGeomDimTag;
+  std::vector<moab::Tag> moabGeomDimTags;
 
     //! Tag used to associate existing mesh entities with model entities
-  moab::Tag moabIDTag;
+  std::vector<moab::Tag> moabIDTags;
 
     //! If true, the corresponding interfaces will get deleted from the destructor
-  bool iCreatedIgeom, iCreatedMoab, iCreatedMbimesh, iCreatedIrel;
+  std::vector<bool> iCreatedIgeoms, iCreatedMoabs, iCreatedImeshs, iCreatedIrels;
 
     //! Model entities, in array by topological dimension
   MEntVector modelEnts[5];
@@ -421,54 +425,84 @@ private:
   std::vector<SizingFunction*> sizingFunctions;
 };
 
-inline iGeom *MKCore::igeom_instance() 
+inline iGeom *MKCore::igeom_instance(int index) 
 {
-  return iGeomInstance;
+  if (iGeomInstances.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No instance of that index.");
+  
+  return iGeomInstances[index];
 }
 
-inline moab::Interface *MKCore::moab_instance()
+inline moab::Interface *MKCore::moab_instance(int index)
 {
-  return moabInstance;
+  if (moabInstances.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No instance of that index.");
+  
+  return moabInstances[index];
 }
 
-inline MBiMesh *MKCore::mb_imesh()
+inline iMesh *MKCore::imesh_instance(int index) 
 {
-  return mbImesh;
+  if (iMeshInstances.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No instance of that index.");
+  
+  return iMeshInstances[index];
 }
 
-inline iRel *MKCore::irel_instance()
+inline iRel *MKCore::irel_instance(int index)
 {
-  return iRelInstance;
+  if (iRelInstances.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No instance of that index.");
+
+  return iRelInstances[index];
 }
 
-inline iRel::PairHandle *MKCore::irel_pair()
+inline iRel::PairHandle *MKCore::irel_pair(int index)
 {
-  return iRelPair;
+  if (iRelPairs.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No pair of that index.");
+
+  return iRelPairs[index];
 }
 
-inline iRel::PairHandle *MKCore::group_set_pair()
+inline iRel::PairHandle *MKCore::group_set_pair(int index)
 {
-  return groupSetPair;
+  if (groupSetPairs.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No pair of that index.");
+
+  return groupSetPairs[index];
 }
 
-inline iGeom::TagHandle MKCore::igeom_model_tag()
+inline iGeom::TagHandle MKCore::igeom_model_tag(int index)
 {
-  return iGeomModelTag;
+  if (iGeomModelTags.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No tag of that index.");
+
+  return iGeomModelTags[index];
 }
 
-inline moab::Tag MKCore::moab_model_tag()
+inline moab::Tag MKCore::moab_model_tag(int index)
 {
-  return moabModelTag;
+  if (moabModelTags.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No tag of that index.");
+
+  return moabModelTags[index];
 }
 
-inline moab::Tag MKCore::moab_geom_dim_tag()
+inline moab::Tag MKCore::moab_geom_dim_tag(int index)
 {
-  return moabGeomDimTag;
+  if (moabGeomDimTags.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No tag of that index.");
+
+  return moabGeomDimTags[index];
 }
 
-inline moab::Tag MKCore::moab_global_id_tag()
+inline moab::Tag MKCore::moab_global_id_tag(int index)
 {
-  return moabIDTag;
+  if (moabIDTags.size()-1 < index)
+    throw Error(MK_BAD_INPUT, "No tag of that index.");
+
+  return moabIDTags[index];
 }
 
 

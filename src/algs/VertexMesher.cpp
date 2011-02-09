@@ -1,7 +1,7 @@
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/MKCore.hpp"
 #include "moab/EntityType.hpp"
-#include "iGeom.hh"
+#include "meshkit/iGeom.hh"
 
 namespace MeshKit 
 {
@@ -9,8 +9,8 @@ namespace MeshKit
 // static registration of this  mesh scheme
 moab::EntityType VertexMesher_mtps[] = {moab::MBVERTEX};
 iBase_EntityType VertexMesher_mtp = iBase_VERTEX;
-static int initd = MKCore::register_meshop("VertexMesher", &VertexMesher_mtp, 1, VertexMesher_mtps, 1,
-                                           VertexMesher::factory, MeshOp::canmesh_vertex);
+int VertexMesher::init = MKCore::register_meshop("VertexMesher", &VertexMesher_mtp, 1, VertexMesher_mtps, 1,
+                                                 VertexMesher::factory, MeshOp::canmesh_vertex);
     
 VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec) 
         : MeshScheme(mkcore, me_vec) 

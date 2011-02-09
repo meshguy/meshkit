@@ -16,7 +16,7 @@ namespace MeshKit
   public:
     explicit LocalTag(MKCore *mkCore, int size = 1,
                        iMesh::TagValueType type = iBase_ENTITY_HANDLE)
-      : imesh_(reinterpret_cast<iMesh_Instance>( mkCore->mb_imesh() ))
+            : imesh_(mkCore->imesh_instance()->instance())
     {
 #ifdef MOAB
       init("", size, type);
@@ -27,7 +27,7 @@ namespace MeshKit
 
     LocalTag(MKCore *mkCore, const std::string &name, int size = 1,
              iMesh::TagValueType type = iBase_ENTITY_HANDLE)
-      : imesh_(reinterpret_cast<iMesh_Instance>( mkCore->mb_imesh() ))
+      : imesh_(mkCore->imesh_instance()->instance())
     {
       init(name, size, type);
     }

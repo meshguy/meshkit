@@ -10,7 +10,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "iGeom.hh"
+#include "meshkit/iGeom.hh"
 #include <set>
 #include <vector>
 
@@ -37,7 +37,7 @@ class EdgeMesher : public MeshScheme
 {
 public:
 	
-	enum EdgeSchemeType {equalMesh=0, biasMesh, dualMesh, curvatureMesh};
+	enum EdgeSchemeType {EQUAL=0, BIAS, DUAL, CURVATURE};
 
 	
 public:

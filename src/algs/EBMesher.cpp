@@ -3,7 +3,7 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "moab/ReadUtilIface.hpp"
-#include "iGeom.hh"
+#include "meshkit/iGeom.hh"
 
 #ifdef HAVE_MOAB
 #include "moab/Core.hpp"
@@ -53,7 +53,7 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   : MeshScheme(mkcore, me_vec), m_dInputSize(size),
     m_bUseGeom(use_geom), m_nAddLayer(add_layer)
 {
-  m_mesh = reinterpret_cast<iMesh_Instance> (mkcore->mb_imesh());
+  m_mesh = mkcore->imesh_instance()->instance();
 
   int err;
   iMesh_getRootSet(m_mesh, &m_hRootSet, &err);

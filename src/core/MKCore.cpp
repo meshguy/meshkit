@@ -1,8 +1,9 @@
-#include "iGeom.hh"
-#include "iRel.hh"
+#include "meshkit/iGeom.hh"
+#include "meshkit/iMesh.hh"
+#include "meshkit/iRel.hh"
 #include "moab/Core.hpp"
-#include "moab/CN.hpp"
 #include "MBiMesh.hpp"
+#include "moab/CN.hpp"
 #include "MBTagConventions.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/NoOp.hpp"
@@ -22,13 +23,31 @@ MKCore::MeshOpFactory *MKCore::op_factory()
   return opFactory;
 }
 
-MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
+MKCore::MKCore(iGeom *igeom, moab::Interface *moab, iMesh *imesh, iRel *irel,
                bool construct_missing_ifaces) 
-        : iGeomInstance(igeom), moabInstance(moab), mbImesh(mbi), iRelInstance(irel),
-          iRelPair(NULL), groupSetPair(0), iGeomModelTag(0), moabModelTag(0),
-          iCreatedIgeom(false), iCreatedMoab(false), iCreatedMbimesh(false), iCreatedIrel(false),
-          opsByDim(NULL), numOpsByDim(0), vertexMesher(NULL)
+        : opsByDim(NULL), numOpsByDim(0), vertexMesher(NULL)
 {
+
+  if (igeom) {
+    iGeomInstances.push_back(igeom);
+    iCreatedIgeoms.push_back(false);
+  }
+  
+  if (moab) {
+    moabInstances.push_back(moab);
+    iCreatedMoabs.push_back(false);
+  }
+  
+  if (imesh) {
+    iMeshInstances.push_back(imesh);
+    iCreatedImeshs.push_back(false);
+  }
+  
+  if (irel) {
+    iRelInstances.push_back(irel);
+    iCreatedIrels.push_back(false);
+  }
+
     // leave initialization of root/leaf nodes to hear (and not in MKGraph), so that we have an MKCore
     // to pass to MeshOp's constructor
     // make the leaf/root nodes, link them with an edge; don't need to initialize map to MeshOp, since
@@ -43,18 +62,18 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, MBiMesh *mbi, iRel *irel,
 MKCore::~MKCore() 
 {
   int err;
-  if (iCreatedIrel)
-    delete iRelInstance;
+  for (unsigned int i = 0; i < iRelInstances.size(); i++) 
+    if (iCreatedIrels[i]) delete iRelInstances[i];
 
-  if (iCreatedIgeom)
-    delete iGeomInstance;
-  
-  if (iCreatedMbimesh)
-    delete mbImesh;
+  for (unsigned int i = 0; i < iGeomInstances.size(); i++) 
+    if (iCreatedIgeoms[i]) delete iGeomInstances[i];
 
-  if (iCreatedMoab)
-    delete moabInstance;
-  
+  for (unsigned int i = 0; i < moabInstances.size(); i++) 
+    if (iCreatedMoabs[i]) delete moabInstances[i];
+
+  for (unsigned int i = 0; i < iMeshInstances.size(); i++) 
+    if (iCreatedImeshs[i]) delete iMeshInstances[i];
+
   for (std::vector<SizingFunction*>::iterator vit = sizingFunctions.begin(); vit != sizingFunctions.end(); vit++)
     if (*vit) delete *vit;
   sizingFunctions.clear();
@@ -64,35 +83,30 @@ void MKCore::init(bool construct_missing_ifaces)
 {
   iBase_ErrorType err;
 
-  if (!iGeomInstance && construct_missing_ifaces) {
-    iGeomInstance = new iGeom();
-    if (!iGeomInstance) 
-      throw Error(MK_FAILURE, "Failure creating iGeom instance.");
-    else iCreatedIgeom = true;
+  if (iGeomInstances.empty() && construct_missing_ifaces) {
+    iGeomInstances.push_back(new iGeom());
+    iCreatedIgeoms.push_back(true);
   }
   
-  if (!moabInstance && construct_missing_ifaces) {
-    moabInstance = new moab::Core();
-    if (!moabInstance) throw Error(MK_FAILURE, "Failure creating MOAB instance.");
-    else iCreatedMoab = true;
+  if (moabInstances.empty() && construct_missing_ifaces) {
+    moabInstances.push_back(new moab::Core());
+    iCreatedMoabs.push_back(true);
   }
   
-  if (!mbImesh && construct_missing_ifaces) {
-    mbImesh = new MBiMesh(moabInstance);
-    if (!mbImesh) throw Error(MK_FAILURE, "Failure creating MBiMesh instance.");
-    else iCreatedMbimesh = true;
+  if (iMeshInstances.empty() && construct_missing_ifaces) {
+    iMeshInstances.push_back(new iMesh((iMesh_Instance)new MBiMesh(moabInstances[0])));
+    iCreatedImeshs.push_back(true);
   }
   
-  if (!iRelInstance && construct_missing_ifaces) {
-    iRelInstance = new iRel();
-    if (!iRelInstance) 
-      throw Error(MK_FAILURE, "Failure creating iRel instance.");
-    else iCreatedIrel = true;
+  if (iRelInstances.empty() && construct_missing_ifaces) {
+    iRelInstances.push_back(new iRel());
+    iCreatedIrels.push_back(true);
   }
 
-  if (!iRelPair) {
-    err = iRelInstance->createPair(iGeomInstance->instance(), iRel::ENTITY, iRel::IGEOM_IFACE,
-                                   mbImesh, iRel::SET, iRel::IMESH_IFACE, iRelPair);
+  if (iRelPairs.empty() && !iRelInstances.empty() && !iGeomInstances.empty() && !iMeshInstances.empty()) {
+    iRelPairs.resize(1);
+    err = iRelInstances[0]->createPair(iGeomInstances[0]->instance(), iRel::ENTITY, iRel::IGEOM_IFACE,
+                                       iMeshInstances[0]->instance(), iRel::SET, iRel::IMESH_IFACE, iRelPairs[0]);
     IBERRCHK(err, "Failure to create relation pair.");
       // don't need to keep track of whether I created the pair, since it'll be deleted anyway when
       // the iRel instance is deleted.
@@ -101,37 +115,50 @@ void MKCore::init(bool construct_missing_ifaces)
       // imported model(s)
   }
   
-  if (!groupSetPair) {
-    err = iRelInstance->createPair(iGeomInstance->instance(), iRel::SET, iRel::IGEOM_IFACE,
-                                   mbImesh, iRel::SET, iRel::IMESH_IFACE, groupSetPair);
+  if (groupSetPairs.empty() && !iRelInstances.empty() && !iGeomInstances.empty() && !iMeshInstances.empty()) {
+    groupSetPairs.resize(1);
+    err = iRelInstances[0]->createPair(iGeomInstances[0]->instance(), iRel::SET, iRel::IGEOM_IFACE,
+                                       iMeshInstances[0]->instance(), iRel::SET, iRel::IMESH_IFACE, groupSetPairs[0]);
     IBERRCHK(err, "Failure to create relation pair.");
   }
+
+  if (iGeomModelTags.empty()) {
+    iGeomModelTags.resize(1);
+    err = iGeomInstances[0]->createTag("__MKModelEntity", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
+                                       iGeomModelTags[0]);
+    IBERRCHK(err, "Failure to create MKModelEnt tag in iGeom.");
+  }
+
+  moab::ErrorCode rval;
+  if (moabModelTags.empty()) {
+    ModelEnt *null_me = NULL;
+    moabModelTags.resize(1);
+    rval = moabInstances[0]->tag_create("__MKModelEntity", sizeof(MeshKit::ModelEnt*), moab::MB_TAG_SPARSE,
+                                        moab::MB_TYPE_OPAQUE, moabModelTags[0], &null_me);
+    if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
+      MBERRCHK(rval, "Failure to create MKModelEnt tag in iMesh.");
+  }
+
+  if (moabGeomDimTags.empty()) {
+      // moab geometry dimension tag
+    moabGeomDimTags.resize(1);
+    rval = moabInstances[0]->tag_create(GEOM_DIMENSION_TAG_NAME, sizeof(int), moab::MB_TAG_SPARSE,
+                                        moab::MB_TYPE_INTEGER, moabGeomDimTags[0], 0, true);
+    if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
+      MBERRCHK(rval, "Failure to create geometry dimension tag in iMesh.");
+  }
   
-  err = iGeomInstance->createTag("__MKModelEntity", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
-                                 iGeomModelTag);
-  IBERRCHK(err, "Failure to create MKModelEnt tag in iGeom.");
-
-  ModelEnt *null_me = NULL;
-  moab::ErrorCode rval = moabInstance->tag_create("__MKModelEntity", sizeof(MeshKit::ModelEnt*), moab::MB_TAG_SPARSE,
-                                                  moab::MB_TYPE_OPAQUE, moabModelTag, &null_me);
-  if (moab::MB_SUCCESS != rval) 
-    IBERRCHK(iBase_FAILURE, "Failure to create MKModelEnt tag in iMesh.");
-
-  // moab geometry dimension tag
-  rval = moabInstance->tag_create(GEOM_DIMENSION_TAG_NAME, sizeof(int), moab::MB_TAG_SPARSE,
-				  moab::MB_TYPE_INTEGER, moabGeomDimTag, 0, true);
-  if (moab::MB_SUCCESS != rval) 
-    IBERRCHK(iBase_FAILURE, "Failure to create geometry dimension tag in iMesh.");
-
   // moab global id tag
-  rval = moabInstance->tag_create(GLOBAL_ID_TAG_NAME, sizeof(int), moab::MB_TAG_DENSE,
-				  moab::MB_TYPE_INTEGER, moabIDTag, 0, true);
-  if (moab::MB_SUCCESS != rval) 
-    IBERRCHK(iBase_FAILURE, "Failure to create global id tag in iMesh.");
-
+  if (moabIDTags.empty()) {
+    moabIDTags.resize(1);
+    rval = moabInstances[0]->tag_create(GLOBAL_ID_TAG_NAME, sizeof(int), moab::MB_TAG_DENSE,
+                                        moab::MB_TYPE_INTEGER, moabIDTags[0], 0, true);
+    if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
+      MBERRCHK(rval, "Failure to create global id tag in iMesh.");
+  }
 }
 
-void MKCore::populate_mesh() 
+void MKCore::populate_mesh(int index) 
 {
     // populate mesh entity sets for geometric entities, relate them through iRel, and construct 
     // ModelEnts for them; also handle geometry groups
@@ -144,17 +171,17 @@ void MKCore::populate_mesh()
   for (int dim = iBase_VERTEX; dim <= iBase_REGION; dim++) {
     // get geometry entities
     ents.clear();
-    err = iGeomInstance->getEntities(iGeomInstance->getRootSet(), (iBase_EntityType)dim, ents);
+    err = igeom_instance(index)->getEntities(igeom_instance(index)->getRootSet(), (iBase_EntityType)dim, ents);
     IBERRCHK(err, "Failed to get entities from iGeom.");
 
     for (std::vector<iGeom::EntityHandle>::iterator eit = ents.begin(); eit != ents.end(); eit++) {
         // get the modelent
       this_me = NULL;
-      err = iGeomInstance->getData(*eit, iGeomModelTag, &this_me);
+      err = igeom_instance(index)->getData(*eit, iGeomModelTags[index], &this_me);
       if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
           // construct a new ModelEnt and set the geom ent to point to it
         this_me = new ModelEnt(this, *eit);
-        err = iGeomInstance->setData(*eit, iGeomModelTag, &this_me);
+        err = igeom_instance(index)->setData(*eit, iGeomModelTags[index], &this_me);
         IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
       }
       
@@ -175,49 +202,49 @@ void MKCore::populate_mesh()
     (*vit)->set_senses();
 
   std::vector<iGeom::EntitySetHandle> gsets;
-  err = iGeomInstance->getEntSets(iGeomInstance->getRootSet(), -1, gsets);
+  err = igeom_instance(index)->getEntSets(igeom_instance(index)->getRootSet(), -1, gsets);
   IBERRCHK(err, "Failed to get entity sets from iGeom.");
   for (std::vector<iGeom::EntitySetHandle>::iterator vit = gsets.begin();
        vit != gsets.end(); vit++) {
     this_me = NULL;
-    err = iGeomInstance->getEntSetData(*vit, iGeomModelTag, &this_me);
+    err = igeom_instance(index)->getEntSetData(*vit, iGeomModelTags[index], &this_me);
     if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
         // construct a new ModelEnt and set the geom ent to point to it
       this_me = new ModelEnt(this, *vit);
-      err = iGeomInstance->setEntSetData(*vit, iGeomModelTag, &this_me);
+      err = igeom_instance(index)->setEntSetData(*vit, iGeomModelTags[index], &this_me);
       IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
     }
       
       // check for a mesh ent, and populate one if there is none
     if (!this_me->mesh_handle()) {
-      this_me->create_mesh_set();
+      this_me->create_mesh_set(index);
     }
   }
 }
 
-void MKCore::load_geometry(const char *filename, const char *options, bool populate_too) 
+    void MKCore::load_geometry(const char *filename, const char *options, int index, bool populate_too) 
 {
-  iBase_ErrorType err = iGeomInstance->load(filename, options);
+  iBase_ErrorType err = igeom_instance(index)->load(filename, options);
   IBERRCHK(err, "Failed to load geometry model.");
 
-  if (populate_too) populate_mesh();
+  if (populate_too) populate_mesh(index);
 }
 
-void MKCore::load_mesh(const char *filename, const char *options) 
+void MKCore::load_mesh(const char *filename, const char *options, int index) 
 {
-  moab::ErrorCode rval = moabInstance->load_file(filename, NULL, options);
+  moab::ErrorCode rval = moabInstances[index]->load_file(filename, NULL, options);
   MBERRCHK(rval, "Failed to load mesh.");
 }
 
-void MKCore::save_geometry(const char *filename, const char *options) 
+void MKCore::save_geometry(const char *filename, const char *options, int index) 
 {
-  iBase_ErrorType err = iGeomInstance->save(filename, options);
+  iBase_ErrorType err = igeom_instance(index)->save(filename, options);
   IBERRCHK(err, "Failed to save geometry model.");
 }
 
-void MKCore::save_mesh(const char *filename, const char *options)
+void MKCore::save_mesh(const char *filename, const char *options, int index)
 {
-  moab::ErrorCode rval = moabInstance->write_file(filename, NULL, options);
+  moab::ErrorCode rval = moab_instance(index)->write_file(filename, NULL, options);
   MBERRCHK(rval, "Failed to save mesh.");
 }
 

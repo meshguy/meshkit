@@ -11,7 +11,7 @@ namespace MeshKit
   {
   public:
     explicit LocalSet(MKCore *mkCore, bool isList = false)
-      : imesh_(reinterpret_cast<iMesh_Instance>( mkCore->mb_imesh() ))
+      : imesh_(mkCore->imesh_instance()->instance())
     {
       IBERRCHK(imesh_.createEntSet(isList, set_), "");
     }

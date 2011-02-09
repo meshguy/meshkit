@@ -19,7 +19,7 @@
 #include "meshkit/LocalTag.hpp"
 #include "meshkit/Transform.hpp"
 
-#include "iMesh.hh"
+#include "meshkit/iMesh.hh"
 #include "iMesh_extensions.h"
 
 

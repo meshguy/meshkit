@@ -12,7 +12,7 @@
 #include <string>
 
 #define ITAPS_PREFIX iGeom
-#include "iBase.hh"
+#include "meshkit/iBase.hh"
 #undef ITAPS_PREFIX
 
 /** \class iGeom

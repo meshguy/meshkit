@@ -2,7 +2,7 @@
 #define TRANSFORM_HPP
 
 #include "meshkit/Error.hpp"
-#include "iMesh.hh"
+#include "meshkit/iMesh.hh"
 #include "src/core/meshkit/Matrix.hpp"
 #include <vector>
 

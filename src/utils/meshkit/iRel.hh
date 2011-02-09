@@ -5,8 +5,8 @@
  */
 
 #include "iRel.h"
-#include "iGeom.hh"
-#include "iMesh.hh"
+#include "meshkit/iGeom.hh"
+#include "meshkit/iMesh.hh"
 #include <string.h>
 #include <stdlib.h>
 #include <vector>

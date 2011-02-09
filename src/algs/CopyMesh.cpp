@@ -24,10 +24,10 @@ namespace MeshKit
 
   CopyMesh::CopyMesh(MKCore *mkcore, const MEntVector &me_vec)
     : MeshScheme(mkcore, me_vec),
-      imeshImpl(reinterpret_cast<iMesh_Instance>(mkcore->mb_imesh())),
+      imeshImpl(mkcore->imesh_instance()->instance()),
       copyTag(mkcore, "__CopyMeshTag"),
-      copySets(reinterpret_cast<iMesh_Instance>(mkcore->mb_imesh())),
-      expandSets(reinterpret_cast<iMesh_Instance>(mkcore->mb_imesh()))
+      copySets(mkcore->imesh_instance()->instance()),
+      expandSets(mkcore->imesh_instance()->instance())
   {}
 
   CopyMesh::~CopyMesh()

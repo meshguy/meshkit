@@ -72,6 +72,8 @@ private:
     //! No operator=, since there's only meant to be one of these
   VertexMesher &operator=(const VertexMesher &);
 
+    //! Static variable, used in registration
+  static int init;
 };
 
 }
