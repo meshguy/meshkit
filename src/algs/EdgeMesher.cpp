@@ -101,6 +101,7 @@ void EdgeMesher::execute_this()
 
 	for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
 	{
+                nodes.clear();
 		ModelEnt *me = mit -> first;
 
 		//resize the coords based on the interval setting
