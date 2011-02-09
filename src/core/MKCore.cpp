@@ -281,6 +281,17 @@ void MKCore::remove_sizing_function(int index)
   sizingFunctions[index] = NULL;
 }
 
+SizingFunction *MKCore::sizing_function(double size, bool create_if_missing) 
+{
+  for (unsigned int i = 0; i < sizingFunctions.size(); i++)
+    if (sizingFunctions[i]->size() == size) return sizingFunctions[i];
+    
+    // if we got here, either create one or return NULL
+  if (!create_if_missing) return NULL;
+  
+  return new SizingFunction(this, -1, size);
+}
+  
 /** \brief Register a new MeshOp factory
  * \param op_name The name by which this type of MeshOp can be requested
  * \param tp The MOAB entity type operated on by this MeshOp

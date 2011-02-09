@@ -348,6 +348,14 @@ public:
      */
   SizingFunction *sizing_function(int index);
   
+    /** \brief Get sizing function by size
+     * If there is no sizing function with that size and create_if_missing is true, one is constructed and registered with MKCore.
+     * \param size Requested size
+     * \param create_if_missing If true and no sizing function exists with the specified size, one is created.
+     * \return SizingFunction* to requested sizing function, NULL if no SizingFunction with that size
+     */
+  SizingFunction *sizing_function(double size, bool create_if_missing = true);
+  
     /** \brief Add sizing function to those managed by MeshKit
      *
      * The argument to this function is a SizingFunction*; once added, it is MKCore's

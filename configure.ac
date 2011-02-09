@@ -755,6 +755,8 @@ AC_CONFIG_FILES([Makefile
 		 src/lemon/Makefile
 		 src/lemon/doc/Makefile
 		 src/lemon/doc/Doxyfile
+		 src/extern/Makefile
+		 src/extern/CAMAL/Makefile
 		 test/Makefile
 		 test/core/Makefile
 		 test/algs/Makefile

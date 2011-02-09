@@ -1,5 +1,6 @@
 #include "meshkit/iGeom.hh"
 #include "meshkit/ModelEnt.hpp"
+#include "meshkit/SizingFunction.hpp"
 #include "meshkit/Error.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/Types.h"
@@ -764,4 +765,20 @@ moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const
   return ment;
 }
 
+    /** \brief Get mesh interval size, if any
+     * Returns -1 if no size set on this entity.  If intervals are set, returns computed size.
+     * \return Interval size for this ModelEnt.
+     */
+double ModelEnt::mesh_interval_size() const 
+{
+  if (-1 != sizing_function_index() && -1 != mk_core()->sizing_function(sizing_function_index())->size())
+    return mk_core()->sizing_function(sizing_function_index())->size();
+  
+  else if (1 == dimension() && -1 != mesh_intervals() && 0 != mesh_intervals())
+    return measure() / mesh_intervals();
+    
+  else return -1;
+}
+
 } // namespace MeshKit
+

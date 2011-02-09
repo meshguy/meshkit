@@ -18,8 +18,6 @@
 
 //#include <boost/array.hpp>
 
-#include "SimpleArray.hpp"
-
 namespace MeshKit
 {
 

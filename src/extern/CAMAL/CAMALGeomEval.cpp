@@ -1,41 +1,33 @@
-/**
- * Copyright 2006 Sandia Corporation.  Under the terms of Contract
- * DE-AC04-94AL85000 with Sandia Coroporation, the U.S. Government
- * retains certain rights in this software.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- */
 #include <iostream>
 #include "CAMALGeomEval.hpp"
-#include "stdlib.h"  // include it just for free()
+#include "meshkit/ModelEnt.hpp"
+#include "meshkit/MKCore.hpp"
+#include "meshkit/SizingFunction.hpp"
 
+namespace MeshKit 
+{
+    
 #if CAMAL_VERSION < 500
 void CAMALGeomEval::set_mesh_size(double tmp_size) 
 {
-  meshSize = tmp_size;
+  assert(false);
+  MKCHKERR(MK_BAD_INPUT, "Shouldn't be setting size on CAMALGeomEval entity, use MeshKit methods.");
 }
 
 double CAMALGeomEval::get_mesh_size() 
 {
-  return meshSize;
+    // check for sizing function from MKCore
+  int ind = modelEnt->sizing_function_index();
+  if (-1 != ind && modelEnt->mk_core()->sizing_function(ind)) 
+    return modelEnt->mk_core()->sizing_function(ind)->size();
+  
+  MKCHKERR(MK_BAD_INPUT, "Sizing function not set yet for %s %d", modelEnt->me_type(), modelEnt->id());
+  return -1.0;
 }
 
-CAMALGeomEval::CAMALGeomEval(iGeom_Instance geom_iface, iBase_EntityHandle gent) 
-  : geomIface( geom_iface ),
-    myEnt( gent ),
-    myDimension( -1 )
+CAMALGeomEval::CAMALGeomEval(ModelEnt *ment) 
+        : modelEnt(ment)
 {
-  int gtype, result;
-  iGeom_getEntType(geomIface, gent, &gtype, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting dimension of gentity." << std::endl;
-  }
-  else 
-    myDimension = gtype;
 }
 
 CAMALGeomEval::~CAMALGeomEval() {}
@@ -43,52 +35,38 @@ CAMALGeomEval::~CAMALGeomEval() {}
 double CAMALGeomEval::area() 
 {
     // find the area of this entity
-  if (myDimension != 2) 
+  if (modelEnt->dimension() != 2)
     return -1.0;
   
-  double measure = -1.0;
-  double *measure_ptr = &measure;
-  int measure_size, measure_alloc = 1;
-  int result;
-  iGeom_measure(geomIface, &myEnt, 1, &measure_ptr, &measure_alloc, &measure_size, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting area of gentity." << std::endl;
-    return -1.0;
-  }
-  
-  return measure;
+  return modelEnt->measure();
 }
 
 void CAMALGeomEval::bounding_box(double box_min[3], double box_max[3]) 
 {
-  int result;
-  iGeom_getEntBoundBox(geomIface, myEnt,  
-                       box_min, box_min+1, box_min+2,
-                       box_max, box_max+1, box_max+2,
-                       &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting bounding box of gentity." << std::endl;
-  }
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->
+      getEntBoundBox(modelEnt->geom_handle(), 
+                     box_min, box_min+1, box_min+2,
+                     box_max, box_max+1, box_max+2);
+  IBCHKERR(err, "Trouble getting bounding box of %s %d", modelEnt->me_type(), modelEnt->id());
 }
 
 void CAMALGeomEval::move_to(double& x, double& y, double& z) 
 {
-  int result;
-  iGeom_getEntClosestPt(geomIface, myEnt, x, y, z, &x, &y, &z, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting closest point on gentity." << std::endl;
-  }
+  double tmp_close[3];
+  modelEnt->evaluate(x, y, z, tmp_close);
+  x = tmp_close[0];
+  y = tmp_close[1];
+  z = tmp_close[2];
 }
 
 bool CAMALGeomEval::normal_at(const double& x, const double& y, const double& z,
                               double& nx, double& ny, double& nz) 
 {
-  int result;
-  iGeom_getEntNrmlXYZ(geomIface, myEnt, x, y, z, &nx, &ny, &nz, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting normal on gentity." << std::endl;
-    return false;
-  }
+  double tmp_norm[3];
+  modelEnt->evaluate(x, y, z, NULL, tmp_norm);
+  nx = tmp_norm[0];
+  ny = tmp_norm[1];
+  nz = tmp_norm[2];
 
   return true;
 }
@@ -99,121 +77,58 @@ bool debug_surf_eval = false;
 
 void CAMALGeomEval::set_mesh_size(double tmp_size) 
 {
-  if (debug_surf_eval) {
-   std::cout << "set_mesh_size called." << std::endl;
-  }
-  meshSize = tmp_size;
+  SizingFunction *sf = modelEnt->mk_core()->sizing_function(tmp_size);
+  modelEnt->sizing_function_index(sf->core_index());
 }
 
 double CAMALGeomEval::get_mesh_size() 
 {
-  if (debug_surf_eval) {
-   std::cout << "get_mesh_size called." << std::endl;
-  }
-  return meshSize;
+  return modelEnt->mesh_interval_size();
 }
 
-CAMALGeomEval::CAMALGeomEval(iGeom_Instance geom_iface, iBase_EntityHandle gent) 
-  : geomIface( geom_iface ),
-    myEnt( gent ),
-    myDimension( -1 )
+CAMALGeomEval::CAMALGeomEval(ModelEnt *me)
+        : modelEnt(me)
 {
-  int gtype, result;
-  iGeom_getEntType(geomIface, gent, &gtype, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting dimension of gentity." << std::endl;
-  }
-  else 
-    myDimension = gtype;
-
-  if (debug_surf_eval) {
-   std::cout << "CAMALGeomEval constructor called." << std::endl;
-  }
 }
 
 CAMALGeomEval::~CAMALGeomEval() {}
 
 double CAMALGeomEval::area() 
 {
-    // find the area of this entity
-  if (myDimension != 2) 
-    return -1.0;
-  
-  double measure = -1.0;
-  double *measure_ptr = &measure;
-  int measure_size, measure_alloc = 1;
-  int result;
-  iGeom_measure(geomIface, &myEnt, 1, &measure_ptr, &measure_alloc, &measure_size, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting area of gentity." << std::endl;
-    return -1.0;
-  }
-
-  if (debug_surf_eval) {
-    std::cout << "myEnt=" << myEnt << ",area=" << measure << std::endl;
-  }
-  
-  return measure;
+  return (modelEnt->dimension() != 2 ? -1.0 : modelEnt->measure());
 }
 
 void CAMALGeomEval::bounding_box(double box_min[3], double box_max[3]) 
 {
-  int result;
-  iGeom_getEntBoundBox(geomIface, myEnt,  
-                       box_min, box_min+1, box_min+2,
-                       box_max, box_max+1, box_max+2,
-                       &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting bounding box of gentity." << std::endl;
-  }
-
-  if (debug_surf_eval) {
-    std::cout << "myEnt=" << myEnt << ",box_min=" << box_min[0]
-	      << "," << box_min[1] << "," << box_min[2] 
-	      << ",box_max=" << box_max[0]
-	      << "," << box_max[1] << "," << box_max[2]<< std::endl;
-  }
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntBoundBox(modelEnt->geom_handle(),
+                                                                           box_min[0], box_min[1], box_min[2], 
+                                                                           box_max[0], box_max[1], box_max[2]);
+  IBERRCHK(err, "Trouble getting entity bounding box.");
 }
 
 void CAMALGeomEval::move_to_surface(double& x, double& y, double& z) 
 {
-  int result;
-  double ori[3] = {x, y, z};
-  iGeom_getEntClosestPt(geomIface, myEnt, x, y, z, &x, &y, &z, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting closest point on gentity." << std::endl;
-  }
-  if (debug_surf_eval) {
-    std::cout << "myEnt=" << myEnt << " is moved from "
-	      << ori[0] << "," << ori[1] << "," << ori[2] << " to "
-	      << x << "," << y << "," << z << std::endl;
-  }
+  double close[3];
+  modelEnt->evaluate(x, y, z, close);
+  x = close[0];
+  y = close[1];
+  z = close[2];
 }
 
 void CAMALGeomEval::move_to_surface(double& x, double& y, double& z,
 		     double& u_guess, double& v_guess)
 {
-  if (debug_surf_eval) {
-   std::cout << "move_to_surface called." << std::endl;
-  }
+  move_to_surface(x, y, z);
 }
 
 bool CAMALGeomEval::normal_at(double x, double y, double z, 
-			      double& nx, double& ny, double& nz) 
+                              double& nx, double& ny, double& nz) 
 {
-  int result;
-  iGeom_getEntNrmlXYZ(geomIface, myEnt, x, y, z, &nx, &ny, &nz, &result);
-  if (iBase_SUCCESS != result) {
-    std::cerr << "Trouble getting normal on gentity." << std::endl;
-    return false;
-  }
-  if (debug_surf_eval) {
-    std::cout << "normal: at "
-	      << x << "," << y << "," << z 
-	      << ",to " << nx << "," << ny << ","
-	      << nz << std::endl;
-  }
-
+  double norm[3];
+  modelEnt->evaluate(x, y, z, NULL, norm);
+  nx = norm[0];
+  ny = norm[1];
+  nz = norm[2];
   return true;
 }
 
@@ -221,145 +136,114 @@ bool CAMALGeomEval::normal_at(double x, double y, double z,
 			      double& u_guess, double& v_guess,
 			      double& nx, double& ny, double& nz)
 {
-  if (debug_surf_eval) {
-   std::cout << "normal_at called." << std::endl;
-  }
+  double norm[3];
+  modelEnt->evaluate(x, y, z, NULL, norm);
+  nx = norm[0];
+  ny = norm[1];
+  nz = norm[2];
   return true;
 }
 
 bool CAMALGeomEval::is_planar()
 {
- if (debug_surf_eval) {
-   std::cout << "is_planar called." << std::endl;
- } 
- return false;
+  std::string surf_type;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getFaceType(modelEnt->geom_handle(), surf_type);
+  IBERRCHK(err, "Trouble getting surface type");
+  return (surf_type == "plane");
 }
 
 bool CAMALGeomEval::is_parametric()
 {
-  if (debug_surf_eval) {
-    std::cout << "is_parametric called." << std::endl;
-  } 
-  return false;
+  bool is_param = false;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->isEntParametric(modelEnt->geom_handle(), is_param);
+  IBERRCHK(err, "Trouble getting whether entity is parametric");
+  return is_param;
 }
 
 bool CAMALGeomEval::is_periodic_in_u(double& u_period)
 {
-  if (debug_surf_eval) {
-    std::cout << "is_periodic_in_u called." << std::endl;
-  }
-  return false;
+  bool per_u = false, per_v = false;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->isEntPeriodic(modelEnt->geom_handle(), per_u, per_v);
+  IBERRCHK(err, "Trouble getting whether entity is periodic");
+  return per_u;
 }
 
 bool CAMALGeomEval::is_periodic_in_v(double& v_period)
 {
-  if (debug_surf_eval) {
-    std::cout << "is_periodic_in_v called." << std::endl;
-  }
-  return false;
+  bool per_u = false, per_v = false;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->isEntPeriodic(modelEnt->geom_handle(), per_u, per_v);
+  IBERRCHK(err, "Trouble getting whether entity is periodic");
+  return per_v;
 }
 
 void CAMALGeomEval::get_param_range_u(double& u_low, double& u_high)
 {
-  if (debug_surf_eval) {
-    std::cout << "is_param_range_u called." << std::endl;
-  }
+  double vmin, vmax;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntUVRange(modelEnt->geom_handle(), u_low, vmin, u_high, vmax);
+  IBERRCHK(err, "Trouble getting entity parameter ranges.");
 }
 
 void CAMALGeomEval::get_param_range_v(double& v_low, double& v_high)
 {
+  double umin, umax;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntUVRange(modelEnt->geom_handle(), umin, v_low, umax, v_high);
+  IBERRCHK(err, "Trouble getting entity parameter ranges.");
 }
 
 bool CAMALGeomEval::uv_from_position(double x, double y, double z, 
 				     double& u, double& v)
   
 {
-  if (debug_surf_eval) {
-    std::cout << "uv_from_position." << std::endl;
-  }
-  return true;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntXYZtoUV(modelEnt->geom_handle(), x, y, z, u, v);
+  IBERRCHK(err, "Trouble getting parameters from position.");
 }
 
 bool CAMALGeomEval::uv_from_position(double x, double y, double z, 
 				     double& u, double& v,
 				     double& cx, double& cy, double& cz)
 {
-  if (debug_surf_eval) {
-    std::cout << "uv_from_position." << std::endl;
-  }
-  return true;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntXYZtoUV(modelEnt->geom_handle(), x, y, z, u, v);
+  IBERRCHK(err, "Trouble getting parameters from position.");
+  err = modelEnt->mk_core()->igeom_instance()->getEntUVtoXYZ(modelEnt->geom_handle(), u, v, cx, cy, cz);
+  IBERRCHK(err, "Trouble getting position from parameters.");
 }
 
 void CAMALGeomEval::position_from_uv(double u, double v, 
 				     double& x, double& y, double& z)
 {
-  if (debug_surf_eval) {
-    std::cout << "position_from_uv." << std::endl;
-  }
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntUVtoXYZ(modelEnt->geom_handle(), u, v, x, y, z);
+  IBERRCHK(err, "Trouble getting position from parameters.");
 }
 
 void CAMALGeomEval::distortion_at_uv(double u, double v, 
 				     double du[3], double dv[3])
 {
-  if (debug_surf_eval) {
-    std::cout << "distortion_at_uv." << std::endl;
-  }
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEnt1stDrvt(modelEnt->geom_handle(), u, v, 
+                                                                          du[0], du[1], du[2], 
+                                                                          dv[0], dv[1], dv[2]);
+  IBERRCHK(err, "Trouble getting 1st derivative from parameters.");
 }
 
 bool CAMALGeomEval::pierce_surface_with_ray(double & x, double & y, double & z, double dir_x,
          double dir_y, double dir_z)
 {
-   // will use the iGeom stuff
-   /* iGeom_getPntRayIntsct( iGeom_Instance,
-                                 double x,
-                                 double y,
-                                 double z,
-                                 double dir_x,
-                                 double dir_y,
-                                 double dir_z,
-                                 iBase_EntityHandle** intersect_entity_handles,
-                                 int* intersect_entity_handles_allocated,
-                                 int* intersect_entity_hangles_size,
-                                 int storage_order,
-                                 double** intersect_coords,
-                                 int* intersect_coords_allocated,
-                                 int* intersect_coords_size,
-                                 double** param_coords,
-                                 int* param_coords_allocated,
-                                 int* param_coords_size,
-                                 int* err ); */
-   /*
-    * // march along given direction  ; it should be at most size / 3?
-  */
-   iBase_EntityHandle * intersect_entity_handles = NULL;
-   int intersect_entity_handles_allocated = 0, intersect_entity_handles_size = 0;
-   double * intersect_coords = NULL;
-   int intersect_coords_allocated =0 ,  intersect_coords_size = 0;
-   double * param_coords = NULL;
-   int param_coords_allocated = 0, param_coords_size =0;
-   int err=0;
-   iGeom_getPntRayIntsct( geomIface,
-            x, y, z,
-            dir_x, dir_y, dir_z,
-            &intersect_entity_handles, &intersect_entity_handles_allocated,
-            &intersect_entity_handles_size, iBase_INTERLEAVED,
-            &intersect_coords, &intersect_coords_allocated, &intersect_coords_size,
-            &param_coords, &param_coords_allocated, &param_coords_size,
-            &err );
-   // get the first coordinate
-   if (iBase_SUCCESS != err || intersect_entity_handles_size ==0)
-   {
-      std::cerr << "Trouble getting intersection of a ray with geometry" << std::endl;
-             return false;
-   }
-   // consider only the first intersection point
-   x=intersect_coords[0];
-   y=intersect_coords[1];
-   z=intersect_coords[2];
+  std::vector<iGeom::EntityHandle> entities;
+  std::vector<double> points, params;
+  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getPntRayIntsct(x, y, z, dir_x, dir_y, dir_z,
+                                                                            iBase_INTERLEAVED,
+                                                                            entities, points, params);
+  IBERRCHK(err, "Trouble getting ray intersection.");
+  if (entities.empty() || points.size() < 3) return false;
+  
+    // intersection found, populate with 1st
+  x = points[0];
+  y = points[1];
+  z = points[2];
 
-   free(intersect_entity_handles);
-   free(intersect_coords);
-   free(param_coords);
-   return true;
+  return true;
 }
+
+int CAMALGeomEval::get_dimension() const { return modelEnt->dimension(); }
+
 #endif
+} // namespace MeshKit

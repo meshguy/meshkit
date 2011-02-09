@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libMeshKit.la 
 
 # Subdirectories to build
-SUBDIRS = core algs lemon
+SUBDIRS = core algs lemon extern
 
 # Some variables
 libMeshKit_la_LIBADD = core/libMeshKitcore.la algs/libMeshKitalgs.la lemon/libemon.la

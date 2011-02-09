@@ -89,7 +89,7 @@ public:
   void set_mesh_size(double tmp_size);
   double get_mesh_size();
   
-  int get_dimension() const { return myDimension; }
+  int get_dimension() const;
 
   // a new method to compute the intersection with a ray
   bool pierce_surface_with_ray(double & x, double & y, double & z, double dir_x,

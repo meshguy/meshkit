@@ -158,7 +158,7 @@ public:
      * \param curvature2 2nd curvature for edges or surfaces
      */
   void evaluate(double x, double y, double z, 
-                double *close,
+                double *close = NULL,
                 double *direction = NULL,
                 double *curvature1 = NULL,
                 double *curvature2 = NULL) const;
@@ -178,7 +178,7 @@ public:
      * \param curvature2 2nd curvature for edges or surfaces
      */
   void evaluate_discrete(double x, double y, double z, 
-                         double *close,
+                         double *close = NULL,
                          double *direction = NULL,
                          double *curvature1 = NULL,
                          double *curvature2 = NULL) const;
@@ -319,6 +319,12 @@ public:
      * \param index Sizing function index being set
      */
   void sizing_function_index(int index, bool children_too = true);
+
+    /** \brief Get mesh interval size, if any
+     * Returns -1 if no size set on this entity.  If intervals are set and this is a model edge, returns computed size.
+     * \return Interval size for this ModelEnt.
+     */
+  double mesh_interval_size() const;
 
     //! Get intervals
   int mesh_intervals() const;
