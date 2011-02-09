@@ -20,5 +20,8 @@
   - \ref usingmeshkit
   - \ref api
 - Developer's Guide
+  - \ref styleguide
+  - \ref devinterfaces
+  - \ref newmeshop
   - \ref faq
  */
