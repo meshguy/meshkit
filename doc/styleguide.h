@@ -25,11 +25,14 @@ subdirectories in the %MeshKit source code, except when implementing a new algor
 
 \section sourcestyle Source Code Style
 %MeshKit code should abide by the following general rules:
- - Class names should be in the CamelBack style, e.g. EdgeMesh or VertexMesher.
- - Class member variables should be camelBack, e.g. EdgeMesh::schemeType; each member variable, e.g. int memberVariable, 
+ - Names:
+   - Class names should be in the CamelBack style, e.g. EdgeMesh or VertexMesher.
+   - Class member variables should be camelBack, e.g. EdgeMesh::schemeType; each member variable, e.g. int memberVariable, 
    should have set/get functions void member_variable(int newval) and int member_variable(), respectively.
+   - Enumeration values should be all captitalized, with underscores avoided if possible (the enumeration name indicates
+     the general purpose of the enumeration, so e.g. we use EQUAL, not EQUAL_MESH)
  - Source code should not contain tabs or MS-DOS newlines; tabs and other indentations should be set to a width of 2 spaces.
-   For general tips on how to set your editor for this, see the %MeshKit-dev discussion links here and here.
+   For general tips on how to set your editor for this, see the %MeshKit-dev discussion starting with <a href="https://lists.mcs.anl.gov/mailman/private/meshkit-dev/2011/000519.html">this message</a>.
  - Each class header should be fully commented; that includes:
    - A \\file comment block at the top of the file; DO NOT include things like Author and Date blocks; this stuff is available
      from subversion if we really need to know.
