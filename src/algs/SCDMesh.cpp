@@ -24,13 +24,9 @@ namespace MeshKit
   moab::EntityType SCDMesh_tps[] = {moab::MBVERTEX, moab::MBHEX};
   iBase_EntityType SCDMesh_mtp = iBase_REGION;
 
-  static int SCD_success= MKCore::register_meshop("SCDMesh",
-                                                  &SCDMesh_mtp,
-                                                  1,
-                                                  SCDMesh_tps,
-                                                  2,
-                                                  SCDMesh::factory,
-                                                  MeshOp::canmesh_region);
+  int SCDMesh::init = MKCore::register_meshop("SCDMesh", &SCDMesh_mtp, 1,
+                                              SCDMesh_tps, 2, SCDMesh::factory,
+                                              MeshOp::canmesh_region);
 
 //---------------------------------------------------------------------------//
 // make an instance of the SCDMesh class
@@ -66,9 +62,6 @@ namespace MeshKit
 
     // not sure yet how to implement the sizing function for this meshop
     // but it will go here
-
-    // call generic setup function to finish
-    setup_boundary();
   }
 
 //---------------------------------------------------------------------------//
@@ -84,11 +77,11 @@ namespace MeshKit
       /* get the bounding box on the geometry */
 
       // bounding box parameters
-      double *xmn, *ymn, *zmn, *xmx, *ymx, *zmx;
+      double xmn, ymn, zmn, xmx, ymx, zmx;
 
       // cartesian case //
       if (axisType == 0) {
-        create_cart_box(me, xmn, ymn, zmn, xmx, ymx, zmx);
+        create_cart_box(me, &xmn, &ymn, &zmn, &xmx, &ymx, &zmx);
       }
 
 

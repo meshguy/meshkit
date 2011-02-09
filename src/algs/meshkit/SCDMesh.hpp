@@ -188,6 +188,9 @@ namespace MeshKit
     //! create full mesh representation
     void create_full_mesh(ModelEnt *ent);
 
+    //! Static variable, used in registration
+  static int init;
+
   }; // end class SCDMesh
 
 

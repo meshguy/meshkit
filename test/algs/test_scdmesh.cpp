@@ -8,6 +8,11 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/ModelEnt.hpp"
+
+// for now, need to #include a vertexmesher so that its statics get initialized (namely, the mesher
+// gets registered)
+#include "meshkit/VertexMesher.hpp"
+#include "meshkit/EdgeMesher.hpp"
 #include <vector>
 
 using namespace MeshKit;
@@ -18,11 +23,14 @@ using namespace MeshKit;
 
 int main(int argc, char **argv)
 {
-
   // Create an instance of the MeshKit core object
   MKCore mk_scdt;
-  std::string scd_geom = TestDir + "/box.sat";
+  std::string scd_geom = TestDir + "/box.stp";
   mk_scdt.load_geometry(scd_geom.c_str());
+
+  MeshKit::MKCore::meshop_factory_t thisopv = VertexMesher::factory;
+  MeshKit::MKCore::meshop_factory_t thisope = EdgeMesher::factory;
+  MeshKit::MKCore::meshop_factory_t thisops = SCDMesh::factory;
 
   // get the volumes
   MEntVector vols;
