@@ -7,19 +7,6 @@
 namespace MeshKit 
 {
     
-bool debug_surf_eval = false;
-
-void CAMALSurfEval::set_mesh_size(double tmp_size) 
-{
-  SizingFunction *sf = modelEnt->mk_core()->sizing_function(tmp_size);
-  modelEnt->sizing_function_index(sf->core_index());
-}
-
-double CAMALSurfEval::get_mesh_size() 
-{
-  return modelEnt->mesh_interval_size();
-}
-
 CAMALSurfEval::CAMALSurfEval(ModelEnt *me)
         : modelEnt(me)
 {
@@ -157,26 +144,5 @@ void CAMALSurfEval::distortion_at_uv(double u, double v,
                                                                           dv[0], dv[1], dv[2]);
   IBERRCHK(err, "Trouble getting 1st derivative from parameters.");
 }
-
-bool CAMALSurfEval::pierce_surface_with_ray(double & x, double & y, double & z, double dir_x,
-         double dir_y, double dir_z)
-{
-  std::vector<iGeom::EntityHandle> entities;
-  std::vector<double> points, params;
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getPntRayIntsct(x, y, z, dir_x, dir_y, dir_z,
-                                                                            iBase_INTERLEAVED,
-                                                                            entities, points, params);
-  IBERRCHK(err, "Trouble getting ray intersection.");
-  if (entities.empty() || points.size() < 3) return false;
-  
-    // intersection found, populate with 1st
-  x = points[0];
-  y = points[1];
-  z = points[2];
-
-  return true;
-}
-
-int CAMALSurfEval::get_dimension() const { return modelEnt->dimension(); }
 
 } // namespace MeshKit
