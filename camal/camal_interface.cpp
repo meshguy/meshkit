@@ -37,7 +37,7 @@
 bool debug = false;
 iBase_TagHandle index_tag;
 
-
+// compute oriented area of a triangle, projected on a normal
 double tArea (double * a, double *b, double *c, double * normal)
 {
     double result =0;
@@ -48,6 +48,12 @@ double tArea (double * a, double *b, double *c, double * normal)
     result += (AB[2]*AC[0]-AB[0]*AC[2])*normal[1];
     result += (AB[0]*AC[1]-AB[1]*AC[0])*normal[2];
 }
+
+// decide if the boundary loops are positively oriented around normal
+// use the normal at the first node on the boundary
+// It should work even if the first node is on an interior loop, not external loop
+// it should work in most cases, except the surface is highly distorted, and the projected area of an internal
+// loop is higher than the projected area of an external loop
 bool  correct_orientation(std::vector<int> & loop_sizes, std::vector<int> & loops, std::vector<double> & bdy_coords, CAMALGeomEval & geom_eval)
 {
     // first, normal at the initial point on the boundary
@@ -60,11 +66,12 @@ bool  correct_orientation(std::vector<int> & loop_sizes, std::vector<int> & loop
     for (unsigned int k = 0; k < loop_sizes.size(); k++) {
       // for each loop, compute the oriented area of each triangle
        int current_loop_size = loop_sizes[k];
+
        for (unsigned int i = 1; i < current_loop_size-1; i++) {
           unsigned int i1 = loops[start_current_loop + i];
           unsigned int i2 = loops[start_current_loop + (i + 1)];
 
-          double oArea = tArea(&bdy_coords[0], &bdy_coords[3*i1],
+          double oArea = tArea(&bdy_coords[3*start_current_loop], &bdy_coords[3*i1],
                   &bdy_coords[3*i2], normal);
           oriented_area+=oArea;
        }
@@ -82,13 +89,7 @@ void reverse_boundary( std::vector<int> & loop_sizes,  std::vector<int> & loops)
     for (unsigned int k = 0; k < loop_sizes.size(); k++) {
       // for each loop, switch index 1 with last, 2, with first before last...
        int current_loop_size = loop_sizes[k];
-       for (unsigned int i = 1; i < current_loop_size/2; i++) {
-          unsigned int i1 = start_current_loop + i;//
-          unsigned int i2 = start_current_loop + current_loop_size - i;//
-          int tmp = loops[i1];
-          loops[i1] = loops[i2];
-          loops[i2] = tmp;
-       }
+       std::reverse(&loops[start_current_loop+1], &loops[start_current_loop+current_loop_size]);
        start_current_loop += current_loop_size;
     }
    return;
@@ -314,7 +315,7 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
       // at the initial point of boundary
       if (!correct_orientation(loop_sizes, loops, bdy_coords, geom_eval))
       {
-          std::cout<< " Wrong orientation on surface \n";
+          std::cout<< " Wrong orientation on surface with id " << cmel->get_gentity_id(gentity) << "\n";
           reverse_boundary(loop_sizes, loops);
       }
 
