@@ -13,7 +13,11 @@ using namespace MeshKit;
 
 #include "TestUtil.hpp"
 
+#ifdef HAVE_ACIS
+#define DEFAULT_TEST_FILE "sphere.sat"
+#elif defined(HAVE_ACIS)
 #define DEFAULT_TEST_FILE "sphere.stp"
+#endif
 
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,

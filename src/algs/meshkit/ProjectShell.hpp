@@ -9,7 +9,7 @@
 #define __PROJECTSHELL_HPP
 
 #include "meshkit/MeshScheme.hpp"
-#include "iGeom.hh"
+#include "meshkit/iGeom.hh"
 #include "iMesh.h"
 
 #include <vector>

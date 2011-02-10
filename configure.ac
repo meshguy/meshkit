@@ -176,6 +176,8 @@ if test "xyes" = "x$HAVE_$2"; then
                       [AC_MSG_ERROR([$2_LDFLAGS not found in $2_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LIBS],[$2_LIBS="$make_val"],
                       [AC_MSG_ERROR([$2_LIBS not found in $2_CONFIG_OPTIONS])])
+  $2_CONFIG_OPTIONS_INCLUDE="include ${$2_CONFIG_OPTIONS}"
+  AC_SUBST($2_CONFIG_OPTIONS_INCLUDE)
 fi
 
 if test "xyes" = "x$HAVE_$2"; then 

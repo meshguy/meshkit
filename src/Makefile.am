@@ -11,25 +11,6 @@ AM_CPPFLAGS += -I$(srcdir)/core -I$(srcdir)/algs -I$(srcdir)/utils -I$(srcdir)/l
 # The directory in which to install headers
 libMeshKit_la_includedir = $(includedir)
 
-if HAVE_IGEOM
-AM_CPPFLAGS += $(IGEOM_INCLUDES) $(IGEOM_CPPFLAGS)
-LIBS += $(IGEOM_LIBS)
-endif
-
-if HAVE_IMESH
-AM_CPPFLAGS += $(IMESH_INCLUDES) $(IMESH_CPPFLAGS)
-LIBS += $(IMESH_LIBS)
-endif
-
-if HAVE_IREL
-AM_CPPFLAGS += $(IREL_INCLUDES) $(IREL_CPPFLAGS)
-LIBS += $(IREL_LIBS)
-endif
-
-if HAVE_MOAB
-AM_CPPFLAGS += -DMOAB
-endif
-
 # The list of source files, and any header files that do not need to be installed
 libMeshKit_la_SOURCES = 
 

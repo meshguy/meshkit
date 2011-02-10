@@ -39,6 +39,3 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/src/utils \
               -I$(top_srcdir)/src/lemon
 
-if HAVE_MOAB
-AM_CPPFLAGS += -DMOAB
-endif
