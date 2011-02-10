@@ -472,6 +472,11 @@ bool CMEL::mesh_vertex(iBase_EntityHandle gentity,
 
   new_entities.clear();
   std::vector<int> connect;
+  if (debug)
+  {
+     std::cout << " node at coordinates: " << coords[0] << " " 
+          << coords[1] << " " << coords[2] << std::endl; 
+  }
   return create_vertices_elements(gentity, new_entities, coords, connect,
                                   iMesh_ALL_TOPOLOGIES,
                                   new_entities);
@@ -803,6 +808,11 @@ bool CMEL::bdy_geom_grouped(iBase_EntityHandle gentity,
   iGeom_getEntType(geomIface, gentity, &ent_type, &result);
   if (iBase_SUCCESS != result) return false;
 
+  if (debug)
+  {
+     int this_id = get_gentity_id(gentity);
+     std::cout<<" bdy_geom_grouped gentity id: "<< this_id << " type" << ent_type << std::endl;
+  }
     // shouldn't be calling this function if we're a vertex
   if (ent_type == iBase_VERTEX) return false;
   
@@ -850,6 +860,12 @@ bool CMEL::bdy_geom_grouped(iBase_EntityHandle gentity,
         iGeom_getEntNrmlSense(geomIface, this_entity, gentity, &this_sense, &result);
       else return false;
 
+      if (debug)
+      {
+        int id = get_gentity_id(gentity);
+        int this_id = get_gentity_id(this_entity);
+        std::cout<<" gentity " << id << " type " << ent_type << " bdy_geom_grouped this_entity id: "<< this_id << " type" << ent_type-1 << " sense:" << this_sense << std::endl;
+      }
         // if we already have this one, continue
       if ((0 != this_sense && 
            std::find(this_group.begin(), this_group.end(), this_entity) != this_group.end()) ||
@@ -867,7 +883,17 @@ bool CMEL::bdy_geom_grouped(iBase_EntityHandle gentity,
       if (0 != this_sense) 
         b_ents.erase(std::remove(b_ents.begin(), b_ents.end(), this_entity), b_ents.end());
 
-        // if it's double-sensed and this is the first time we're seeing it, find the right sense
+      if (debug)
+      {
+         std::cout<< "bridges:\n";
+         for (int j=0; j<bridges_size; j++)
+         {
+            int this_id = get_gentity_id(bridges[j]);
+            std::cout<<"   bridge id: "<< this_id << " type" << ent_type-2 << std::endl;
+
+         }
+      }
+      // if it's double-sensed and this is the first time we're seeing it, find the right sense
       if (0 == this_sense) {
         if (std::find(sgl_curves.begin(), sgl_curves.end(), this_entity) == sgl_curves.end()) {
           sgl_curves.insert(this_entity);
@@ -926,13 +952,39 @@ bool CMEL::bdy_geom_grouped(iBase_EntityHandle gentity,
       }
       else if (!tmp_adjs.empty()) 
         std::copy(tmp_adjs.begin(), tmp_adjs.end(), std::back_inserter(group_stack));
-      
+      if (debug)
+      {
+         std::cout << " tmp_from[0] : "<< get_gentity_id(tmp_from[0]) << "\n"; 
+         std::cout<< "tmp_adjs size=" <<tmp_adjs.size() << "\n";
+         for (int j=0; j<tmp_adjs.size(); j++)
+         {
+            int this_id = get_gentity_id(tmp_adjs[j]);
+            std::cout<<" tmp_adj "<< this_id << std::endl;
+         }
+         std::cout<< "group_stack size=" <<group_stack.size() << "\n";
+         for (int i=0; i<group_stack.size(); i++)
+         {
+            int this_id = get_gentity_id(group_stack[i]);
+            std::cout<< this_id << " ";
+         }
+         std::cout<< "\n";
+      } 
       free(bridges);
     }
     
     // put group in group list
     std::copy(this_group.begin(), this_group.end(), std::back_inserter(groups));
     group_sizes.push_back(this_group.size());
+    if (debug)
+    {
+         std::cout<< "groups size=" <<groups.size() << "\n";
+         for (int i=0; i<groups.size(); i++)
+         {
+            int this_id = get_gentity_id(groups[i]);
+            std::cout<< this_id << " ";
+         }
+         std::cout << "\n"; 
+    }
   }
   
   return true;
@@ -1173,6 +1225,13 @@ bool CMEL::bdy_nodes(iBase_EntityHandle gentity,
   int sense_out=1;
   iGeom_getEgVtxSense( geomIface, gentity, gent_groups[0],gent_groups[1],
                               &sense_out, &result);
+
+  if (debug)
+  {
+     std::cout << " edge id " << get_gentity_id(gentity) << " vertices: "
+       << get_gentity_id(gent_groups[0]) << ", " << get_gentity_id(gent_groups[1]) <<
+         " sense " << sense_out << "\n";
+  }
   if (sense_out ==-1)
   {
      // start with second set

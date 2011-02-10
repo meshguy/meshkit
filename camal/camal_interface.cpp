@@ -37,6 +37,62 @@
 bool debug = false;
 iBase_TagHandle index_tag;
 
+
+double tArea (double * a, double *b, double *c, double * normal)
+{
+    double result =0;
+    // ( ( B-A ) X (C-A) ) * normal
+    double AB[3] = { b[0]-a[0], b[1] - a[1], b[2] - a[2] };
+    double AC[3] = { c[0]-a[0], c[1] - a[1], c[2] - a[2] };
+    result += (AB[1]*AC[2]-AB[2]*AC[1])*normal[0];
+    result += (AB[2]*AC[0]-AB[0]*AC[2])*normal[1];
+    result += (AB[0]*AC[1]-AB[1]*AC[0])*normal[2];
+}
+bool  correct_orientation(std::vector<int> & loop_sizes, std::vector<int> & loops, std::vector<double> & bdy_coords, CAMALGeomEval & geom_eval)
+{
+    // first, normal at the initial point on the boundary
+    double normal[3] = {0, 0, 0};
+    geom_eval.normal_at(bdy_coords[0], bdy_coords[1], bdy_coords[2],
+           normal[0], normal[1], normal[2]);
+    
+    double oriented_area = 0.;
+    unsigned int start_current_loop = 0;
+    for (unsigned int k = 0; k < loop_sizes.size(); k++) {
+      // for each loop, compute the oriented area of each triangle
+       int current_loop_size = loop_sizes[k];
+       for (unsigned int i = 1; i < current_loop_size-1; i++) {
+          unsigned int i1 = loops[start_current_loop + i];
+          unsigned int i2 = loops[start_current_loop + (i + 1)];
+
+          double oArea = tArea(&bdy_coords[0], &bdy_coords[3*i1],
+                  &bdy_coords[3*i2], normal);
+          oriented_area+=oArea;
+       }
+       start_current_loop += current_loop_size;
+    }
+    if (oriented_area < 0.)
+       return false;
+    return true; // correct orientation
+}
+
+void reverse_boundary( std::vector<int> & loop_sizes,  std::vector<int> & loops)
+{
+   
+    unsigned int start_current_loop = 0;
+    for (unsigned int k = 0; k < loop_sizes.size(); k++) {
+      // for each loop, switch index 1 with last, 2, with first before last...
+       int current_loop_size = loop_sizes[k];
+       for (unsigned int i = 1; i < current_loop_size/2; i++) {
+          unsigned int i1 = start_current_loop + i;//
+          unsigned int i2 = start_current_loop + current_loop_size - i;//
+          int tmp = loops[i1];
+          loops[i1] = loops[i2];
+          loops[i2] = tmp;
+       }
+       start_current_loop += current_loop_size;
+    }
+   return;
+}
 bool CAMAL_bdy_loops_coords(CMEL *cmel, iBase_EntityHandle gentity,
       std::vector<int> &loops, std::vector<int> &loop_sizes, std::vector<
             iBase_EntityHandle> &bdy_verts, std::vector<double> &coords) {
@@ -253,6 +309,13 @@ bool CAMAL_mesh_entity(CMEL *cmel, iBase_EntityHandle gentity,
          }
          mesh_size = tot_length / n_bdy_verts;
          geom_eval.set_mesh_size(mesh_size);
+      }
+      // determine the orientation of the boundary, based on normal 
+      // at the initial point of boundary
+      if (!correct_orientation(loop_sizes, loops, bdy_coords, geom_eval))
+      {
+          std::cout<< " Wrong orientation on surface \n";
+          reverse_boundary(loop_sizes, loops);
       }
 
 #if CAMAL_VERSION > 500
