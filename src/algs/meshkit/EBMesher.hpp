@@ -221,6 +221,9 @@ private:
   bool export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& mdCutCellEdge);
   bool make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles);
 
+    //! Static variable, used in registration
+  static int init;
+
 #ifdef HAVE_MOAB
   MBInterface* moab_instance() {return mk_core()->moab_instance();}
   iBase_TagHandle get_tag(const char* name, int size, MBTagType store, MBDataType type,

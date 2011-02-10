@@ -15,7 +15,7 @@ using namespace MeshKit;
 
 #ifdef HAVE_ACIS
 #define DEFAULT_TEST_FILE "sphere.sat"
-#elif defined(HAVE_ACIS)
+#elif defined(HAVE_OCC)
 #define DEFAULT_TEST_FILE "sphere.stp"
 #endif
 
@@ -73,15 +73,6 @@ int load_and_mesh(const char *input_filename,
   bool result;
   time_t start_time, load_time, mesh_time, vol_frac_time,
     export_time, query_time_techX, query_time;
-  
-  // registration of this  mesh scheme
-  // I can't register it with static register function in EBMesher
-  // should be changed.
-  moab::EntityType EBMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBHEX};
-  iBase_EntityType EBMesher_mtp = iBase_REGION;
-  int success = MKCore::register_meshop("EBMesher", &EBMesher_mtp, 1,
-					EBMesher_tps, 3, EBMesher::factory,
-					MeshOp::canmesh_edge);
 
   // start up MK and load the geometry
   MKCore mk;
@@ -165,5 +156,3 @@ int load_and_mesh(const char *input_filename,
 
   return 0;
 }
-
-  

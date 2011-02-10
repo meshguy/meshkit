@@ -35,14 +35,14 @@ inline bool equal_intersect(const IntersectDist d1, const IntersectDist d2) {
 }
 
 namespace MeshKit 
-{/*
+{
 // static registration of this  mesh scheme
-  moab::EntityType EBMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBHEX};
-  iBase_EntityType EBMesher_mtp = iBase_REGION;
+moab::EntityType EBMesher_tps[] = {moab::MBVERTEX, moab::MBHEX};
+iBase_EntityType EBMesher_mtp = iBase_REGION;
   
-  static int success = MKCore::register_meshop("EBMesher", &EBMesher_mtp, 1, EBMesher_tps, 3, 
-					       EBMesher::factory, MeshOp::canmesh_edge);
- */
+int EBMesher::init = MKCore::register_meshop("EBMesher", &EBMesher_mtp, 1, EBMesher_tps, 2, 
+                                             EBMesher::factory, MeshOp::canmesh_region);
+
 MeshOp *EBMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
 {
   return new EBMesher(mkcore, me_vec);
