@@ -19,18 +19,19 @@ using namespace MeshKit;
 
 #include "TestUtil.hpp"
 
+#ifdef HAVE_ACIS
+#define DEFAULT_TEST_FILE "sphere.sat"
+#elif defined(HAVE_OCC)
+#define DEFAULT_TEST_FILE "sphere.stp"
+#endif
 //---------------------------------------------------------------------------//
 
 int main(int argc, char **argv)
 {
   // Create an instance of the MeshKit core object
   MKCore mk_scdt;
-  std::string scd_geom = TestDir + "/box.stp";
+  std::string scd_geom = TestDir + "/" + DEFAULT_TEST_FILE;
   mk_scdt.load_geometry(scd_geom.c_str());
-
-  MeshKit::MKCore::meshop_factory_t thisopv = VertexMesher::factory;
-  MeshKit::MKCore::meshop_factory_t thisope = EdgeMesher::factory;
-  MeshKit::MKCore::meshop_factory_t thisops = SCDMesh::factory;
 
   // get the volumes
   MEntVector vols;
