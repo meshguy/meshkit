@@ -1,49 +1,20 @@
 #ifndef CAMAL_GEOM_EVAL_HPP
 #define CAMAL_GEOM_EVAL_HPP
 
+#include "CMLSurfEval.hpp"
+
 namespace MeshKit 
 {
 
 class ModelEnt;
     
-#if CAMAL_VERSION < 500
-#include "CMLGeomEval.hpp"
-
 //! Implement CAMAL geometry callbacks using iGeom
-class CAMALGeomEval : public CMLGeomEval
+class CAMALSurfEval : public CMLSurfEval
 {
 public:
-  CAMALGeomEval(ModelEnt *ment);
-  virtual ~CAMALGeomEval();
-  
-  virtual double area();
+  CAMALSurfEval(ModelEnt *ment);
 
-  virtual void bounding_box(double box_min[3], double box_max[3]);
-
-  virtual void move_to(double& x, double& y, double& z);
-
-  virtual bool normal_at(const double& x, const double& y, const double& z,
-                         double& nx, double& ny, double& nz);
-
-  void set_mesh_size(double tmp_size);
-  virtual double get_mesh_size();
-  
-  int get_dimension() const { return myDimension; }
-
-private:
-
-  ModelEnt *modelEnt;
-};
-#else
-#include "CMLSurfEval.hpp"
-
-//! Implement CAMAL geometry callbacks using iGeom
-class CAMALGeomEval : public CMLSurfEval
-{
-public:
-  CAMALGeomEval(ModelEnt *ment);
-
-  virtual ~CAMALGeomEval();
+  virtual ~CAMALSurfEval();
   
   virtual double area();
 
@@ -99,7 +70,6 @@ private:
 
   ModelEnt *modelEnt;
 };
-#endif
 
 } // namespace MeshKit
 

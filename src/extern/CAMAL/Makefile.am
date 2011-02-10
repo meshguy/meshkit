@@ -10,8 +10,12 @@ libMeshKitCAMAL_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libMeshKitCAMAL_la_SOURCES = \
-	CAMALGeomEval.cpp \
-	CAMALGeomEval.hpp
+	CAMALCurveEval.cpp \
+	CAMALCurveEval.hpp \
+	CAMALSurfEval.cpp \
+	CAMALSurfEval.hpp \
+	CAMALSizeEval.cpp \
+	CAMALSizeEval.hpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitCAMAL_la_include_HEADERS = 
