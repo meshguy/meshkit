@@ -66,12 +66,12 @@ bool  correct_orientation(std::vector<int> & loop_sizes, std::vector<int> & loop
     for (unsigned int k = 0; k < loop_sizes.size(); k++) {
       // for each loop, compute the oriented area of each triangle
        int current_loop_size = loop_sizes[k];
-
+       unsigned int startIndex = loops[start_current_loop];
        for (unsigned int i = 1; i < current_loop_size-1; i++) {
           unsigned int i1 = loops[start_current_loop + i];
           unsigned int i2 = loops[start_current_loop + (i + 1)];
 
-          double oArea = tArea(&bdy_coords[3*start_current_loop], &bdy_coords[3*i1],
+          double oArea = tArea(&bdy_coords[3*startIndex], &bdy_coords[3*i1],
                   &bdy_coords[3*i2], normal);
           oriented_area+=oArea;
        }
