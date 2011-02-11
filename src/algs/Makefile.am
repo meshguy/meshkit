@@ -1,6 +1,9 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
+# Subdirectories to build
+SUBDIRS = QuadMesher
+
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
 
