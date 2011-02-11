@@ -1,8 +1,8 @@
-#if CAMAL_VERSION > 500
 #include "CAMALSizeEval.hpp"
-#include <iostream>
 
-
+namespace MeshKit 
+{
+    
 CAMALSizeEval::CAMALSizeEval(double size)
   : meshSize(size)
 {
@@ -70,4 +70,4 @@ bool CAMALSizeEval::is_anisotropic()
   return false;
 }
 
-#endif
+} // namespace MeshKit
