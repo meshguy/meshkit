@@ -18,7 +18,9 @@ libMeshKitalgs_la_SOURCES = \
 	Transform.cpp \
 	CopyUtils.cpp \
 	CopyUtils.hpp \
-	ProjectShell.cpp
+	ProjectShell.cpp \
+	vec_utils.cpp \
+	vec_utils.hpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
