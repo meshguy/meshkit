@@ -86,6 +86,13 @@ namespace MeshKit
     // box size increasement ratio, default is 0.0
     double boxIncrease;
 
+    // bounding box min, max coordiantes
+    double minCoord[3], maxCoord[3];
+
+    //! Static variable, used in registration
+    static int init;
+
+
   public:
 
     //! Bare Constructor
@@ -201,12 +208,6 @@ namespace MeshKit
     //! create full mesh representation
     void create_full_mesh();
     
-    // bounding box min, max coordiantes
-    double minCoord[3], maxCoord[3];
-
-    //! Static variable, used in registration
-  static int init;
-
   }; // end class SCDMesh
 
 
@@ -281,18 +282,18 @@ namespace MeshKit
     fine_k = fine_k_;
   }
 
-inline void SCDMesh::set_box_increase_ratio(double box_increase)
-{
-  boxIncrease = box_increase;
-}
-
-inline void SCDMesh::get_box_dimension(double* min, double* max)
-{
-  for (int i = 0; i < 3; i++) {
-    min[i] = minCoord[i];
-    max[i] = maxCoord[i];
+  inline void SCDMesh::set_box_increase_ratio(double box_increase)
+  {
+    boxIncrease = box_increase;
   }
-}
+
+  inline void SCDMesh::get_box_dimension(double* min, double* max)
+  {
+    for (int i = 0; i < 3; i++) {
+      min[i] = minCoord[i];
+      max[i] = maxCoord[i];
+    }
+  }
 
 } // end namespace MeshKit
 

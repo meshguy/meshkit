@@ -20,7 +20,7 @@ using namespace MeshKit;
 #include "TestUtil.hpp"
 
 #ifdef HAVE_ACIS
-#define DEFAULT_TEST_FILE "sphere.sat"
+#define DEFAULT_TEST_FILE "holycyl.sat"
 #elif defined(HAVE_OCC)
 #define DEFAULT_TEST_FILE "sphere.stp"
 #endif
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
   mk_scdt.setup_and_execute();
 
   // write the mesh to a file
-  scdmesh->export_mesh("SCDmesh.vtk");
+  mk_scdt.save_mesh("SCDmesh.h5m");
 
 
 } // end main()
