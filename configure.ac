@@ -747,21 +747,22 @@ AC_CONFIG_FILES([Makefile
                  algs/Makefile
                  algs/test/Makefile
                  algs/Qslim/Makefile 
-		 algs/make_watertight/Makefile
+                 algs/make_watertight/Makefile
                  camal/Makefile
-		 plibs/Makefile
+                 plibs/Makefile
                  rgg/Makefile
-		 src/Makefile
-		 src/core/Makefile
-		 src/algs/Makefile
-		 src/lemon/Makefile
-		 src/lemon/doc/Makefile
-		 src/lemon/doc/Doxyfile
-		 src/extern/Makefile
-		 src/extern/CAMAL/Makefile
-		 test/Makefile
-		 test/core/Makefile
-		 test/algs/Makefile
+                 src/Makefile
+                 src/core/Makefile
+                 src/algs/Makefile
+                 src/utils/Makefile
+                 src/lemon/Makefile
+                 src/lemon/doc/Makefile
+                 src/lemon/doc/Doxyfile
+                 src/extern/Makefile
+                 src/extern/CAMAL/Makefile
+                 test/Makefile
+                 test/core/Makefile
+                 test/algs/Makefile
                  utils/Makefile
                  ])
 

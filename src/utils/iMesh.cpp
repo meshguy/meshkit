@@ -1,4 +1,4 @@
-#include "iMesh.hh"
+#include "meshkit/iMesh.hh"
 
 // map from MB's entity type to TSTT's entity topology
 const moab::EntityType iMesh::mb_topology_table[] =
