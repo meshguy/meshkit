@@ -9,6 +9,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
+#include "meshkit/RegisterMeshOp.hpp"
 
 #include <vector>
 
@@ -23,17 +24,9 @@ namespace MeshKit
 // Static registration of this mesh scheme   
   moab::EntityType SCDMesh_tps[] = {moab::MBVERTEX, moab::MBHEX};
   iBase_EntityType SCDMesh_mtp = iBase_REGION;
-
-  int SCDMesh::init = MKCore::register_meshop("SCDMesh", &SCDMesh_mtp, 1,
-                                              SCDMesh_tps, 2, SCDMesh::factory,
-                                              MeshOp::canmesh_region);
-
-//---------------------------------------------------------------------------//
-// make an instance of the SCDMesh class
-  MeshOp *SCDMesh::factory(MKCore *mkcore, const MEntVector &me_vec)
-  {
-   return new SCDMesh(mkcore, me_vec);
-  }
+  static RegisterMeshOp<SCDMesh,true> INIT("SCDMesh", &SCDMesh_mtp, 1, 
+                                           SCDMesh_tps,
+                                           sizeof(SCDMesh_tps)/sizeof(SCDMesh_tps[0]) );
 
 //---------------------------------------------------------------------------//
 // return the type of entities this mesh creates

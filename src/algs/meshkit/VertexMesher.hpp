@@ -61,6 +61,10 @@ public:
 
     //! The only setup/execute function we need, since meshing vertices is trivial
   virtual void execute_this();
+  
+    //! \c MeshOp::canmesh_vertex
+  static bool can_mesh(ModelEnt *model_ent)
+    { return canmesh_vertex(model_ent); }
 
 protected:
   

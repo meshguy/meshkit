@@ -14,7 +14,11 @@
 
 namespace MeshKit 
 {
-    
+
+bool MKCore::MeshOpProxy::can_mesh( ModelEnt* entity ) const
+  { return true; }
+
+
 MKCore::MeshOpFactory *MKCore::opFactory = NULL;
 
 MKCore::MeshOpFactory *MKCore::op_factory()
@@ -300,7 +304,7 @@ SizingFunction *MKCore::sizing_function(double size, bool create_if_missing)
  */
 bool MKCore::register_meshop(const char *op_name, 
                              iBase_EntityType model_tp, moab::EntityType tp,
-                             meshop_factory_t meshop, meshop_canmesh_t canmesh) 
+                             MeshOpProxy* proxy) 
 {
   OpNameMap::iterator oit = op_factory()->opNameMap.find(std::string(op_name));
   if (oit != op_factory()->opNameMap.end()) 
@@ -309,7 +313,7 @@ bool MKCore::register_meshop(const char *op_name,
   
   OpInfo oi = {std::string(op_name), op_factory()->registeredOps.size(), 
                std::vector<iBase_EntityType>(1, model_tp), std::vector<moab::EntityType>(1, tp),
-               meshop, canmesh};
+               proxy};
   op_factory()->opNameMap[oi.opName] = op_factory()->registeredOps.size();
   
   op_factory()->registeredOps.push_back(oi);
@@ -327,7 +331,7 @@ bool MKCore::register_meshop(const char *op_name,
 bool MKCore::register_meshop(const char *op_name, 
                              iBase_EntityType *model_tps, int num_mtps,
                              moab::EntityType *tps, int num_tps,
-                             meshop_factory_t meshop, meshop_canmesh_t canmesh)
+                             MeshOpProxy* proxy)
 {
   OpNameMap::iterator oit = op_factory()->opNameMap.find(std::string(op_name));
   if (oit != op_factory()->opNameMap.end()) 
@@ -337,7 +341,7 @@ bool MKCore::register_meshop(const char *op_name,
   OpInfo oi = {std::string(op_name), op_factory()->registeredOps.size(), 
                std::vector<iBase_EntityType>(model_tps, model_tps+num_mtps),
                std::vector<moab::EntityType>(tps, tps+num_tps),
-               meshop, canmesh};
+               proxy};
   op_factory()->opNameMap[oi.opName] = op_factory()->registeredOps.size();
   
   op_factory()->registeredOps.push_back(oi);
@@ -482,7 +486,7 @@ void MKCore::meshop_by_dimension(int dim, std::vector<OpInfo> &ops)
 void MKCore::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops) 
 {
   for (std::vector<OpInfo>::iterator oit = op_factory()->registeredOps.begin(); oit != op_factory()->registeredOps.end(); oit++) {
-    if (oit->opCanMesh && oit->opCanMesh(ent))
+    if (oit->opProxy->can_mesh(ent))
       ops.push_back(*oit);
   }
 }
@@ -495,7 +499,7 @@ void MKCore::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops)
 MeshOp *MKCore::construct_meshop(std::string op_name, const MEntVector &me_vec) 
 {
   OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
-  if (oit != op_factory()->opNameMap.end()) return op_factory()->registeredOps[oit->second].opFactory(this, me_vec);
+  if (oit != op_factory()->opNameMap.end()) return op_factory()->registeredOps[oit->second].opProxy->create(this, me_vec);
   else 
     throw Error(MK_MESHOP_NOT_FOUND, "%s, line %d: Didn't find a MeshOp with name \"%s\".", 
                 __FILE__, __LINE__, op_name.c_str());
@@ -517,7 +521,7 @@ MeshOp *MKCore::construct_meshop(unsigned int dim, const MEntVector &me_vec)
 
 MeshOp *MKCore::construct_meshop(OpInfo &info, const MEntVector &me_vec) 
 {
-  return op_factory()->registeredOps[info.opIndex].opFactory(this, me_vec);
+  return op_factory()->registeredOps[info.opIndex].opProxy->create(this, me_vec);
 }
 
 } // namespace meshkit

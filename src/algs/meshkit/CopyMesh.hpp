@@ -52,13 +52,6 @@ namespace MeshKit {
   
     //! Destructor
     virtual ~CopyMesh();
-
-    /** \brief Factory function registered with MeshOpFactory
-     * \param mkcore MKCore instance for the factory
-     * \param me_vec ModelEnts to which this scheme will be applied
-     */
-
-    static MeshOp *factory(MKCore *mkcore, const MEntVector &me_vec);
   
     /** \brief Function returning whether this scheme can mesh the specified entity
      * 

@@ -2,6 +2,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
+#include "meshkit/RegisterMeshOp.hpp"
 #include "moab/ReadUtilIface.hpp"
 #include <vector>
 #include <math.h>
@@ -13,17 +14,9 @@ namespace MeshKit
 //Entity Type initilization for edge meshing
 moab::EntityType EdgeMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE};
 iBase_EntityType EdgeMesher_mtp = iBase_EDGE;
-
-// static registration of this  mesh scheme
-static int success = MKCore::register_meshop("EdgeMesher", &EdgeMesher_mtp, 1, EdgeMesher_tps, 2, 
-                                             EdgeMesher::factory, MeshOp::canmesh_edge);
-
-//---------------------------------------------------------------------------//
-// make an instance of the EdgeMesher class
-MeshOp *EdgeMesher::factory(MKCore *mkcore, const MEntVector &me_vec)
-{
-	return new EdgeMesher(mkcore, me_vec);
-}
+static RegisterMeshOp<EdgeMesher,true> INIT("EdgeMesher", &EdgeMesher_mtp, 1, 
+                                            EdgeMesher_tps,
+                                            sizeof(EdgeMesher_tps)/sizeof(EdgeMesher_tps[0]) );
 
 //---------------------------------------------------------------------------//
 // Construction Function for Edge Mesher

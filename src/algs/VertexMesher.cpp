@@ -2,15 +2,13 @@
 #include "meshkit/MKCore.hpp"
 #include "moab/EntityType.hpp"
 #include "meshkit/iGeom.hh"
+#include "meshkit/RegisterMeshOp.hpp"
 
 namespace MeshKit 
 {
 
 // static registration of this  mesh scheme
-moab::EntityType VertexMesher_mtps[] = {moab::MBVERTEX};
-iBase_EntityType VertexMesher_mtp = iBase_VERTEX;
-int VertexMesher::init = MKCore::register_meshop("VertexMesher", &VertexMesher_mtp, 1, VertexMesher_mtps, 1,
-                                                 VertexMesher::factory, MeshOp::canmesh_vertex);
+static RegisterMeshOp<VertexMesher,true> INIT("VertexMesher", iBase_VERTEX, moab::MBVERTEX);
     
 VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec) 
         : MeshScheme(mkcore, me_vec) 

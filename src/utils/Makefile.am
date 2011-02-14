@@ -16,7 +16,8 @@ libMeshKitutils_la_SOURCES = \
 nobase_libMeshKitutils_la_include_HEADERS = \
 	meshkit/iGeom.hh                 \
 	meshkit/iMesh.hh                 \
-	meshkit/iRel.hh                 
+	meshkit/iRel.hh                  \
+	meshkit/RegisterMeshOp.hpp         
 
 
 # Boilerplate stuff that doesn't depend on what the targets are

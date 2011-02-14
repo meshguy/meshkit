@@ -4,6 +4,7 @@
 #include "meshkit/SizingFunction.hpp"
 #include "moab/ReadUtilIface.hpp"
 #include "meshkit/iGeom.hh"
+#include "meshkit/RegisterMeshOp.hpp"
 
 #ifdef HAVE_MOAB
 #include "moab/Core.hpp"
@@ -39,14 +40,9 @@ namespace MeshKit
 // static registration of this  mesh scheme
 moab::EntityType EBMesher_tps[] = {moab::MBVERTEX, moab::MBHEX};
 iBase_EntityType EBMesher_mtp = iBase_REGION;
-  
-int EBMesher::init = MKCore::register_meshop("EBMesher", &EBMesher_mtp, 1, EBMesher_tps, 2, 
-                                             EBMesher::factory, MeshOp::canmesh_region);
-
-MeshOp *EBMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
-{
-  return new EBMesher(mkcore, me_vec);
-}
+static RegisterMeshOp<EBMesher,true> INIT("EBMesher", &EBMesher_mtp, 1, 
+                                           EBMesher_tps,
+                                           sizeof(EBMesher_tps)/sizeof(EBMesher_tps[0]) );
 
 EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
 		   double size, bool use_geom, int add_layer)

@@ -2,6 +2,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
+#include "meshkit/RegisterMeshOp.hpp"
 
 #include "CopyUtils.hpp"
 #include "meshkit/LocalSet.hpp"
@@ -9,17 +10,13 @@
 
 namespace MeshKit 
 {
-  //// static registration of this  mesh scheme
-  //  moab::EntityType CopyMesh_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBHEX};
-  //  iBase_EntityType CopyMesh_mtp = iBase_REGION;
-  //
-  //  static int success = MKCore::register_meshop("CopyMesh", &CopyMesh_mtp, 1, CopyMesh_tps, 3,
-  //                           CopyMesh::factory, MeshOp::canmesh_edge);
-
-  MeshOp *CopyMesh::factory(MKCore *mkcore, const MEntVector &me_vec)
-  {
-    return new CopyMesh(mkcore, me_vec);
-  }
+ 
+  // static registration of this  mesh scheme
+  moab::EntityType CopyMesh_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBHEX};
+  iBase_EntityType CopyMesh_mtp = iBase_REGION;
+  static RegisterMeshOp<CopyMesh,true> INIT("CopyMesh", &CopyMesh_mtp, 1, 
+                                             CopyMesh_tps,
+                                             sizeof(CopyMesh_tps)/sizeof(CopyMesh_tps[0]) );
 
 
   CopyMesh::CopyMesh(MKCore *mkcore, const MEntVector &me_vec)

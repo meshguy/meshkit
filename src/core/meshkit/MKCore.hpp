@@ -64,11 +64,13 @@ public:
     //! initialize, creating missing geom/mesh/rel interfaces if requested
   void init(bool construct_missing_ifaces);
 
-    //! Function for constructing MeshOp instances, provided by registrants
-  typedef MeshOp* (*meshop_factory_t)(MKCore *, const MEntVector &vec);
+  class MeshOpProxy
+  {
+    public:
+      virtual MeshOp* create( MKCore* core, const MEntVector &vec ) = 0;
+      virtual bool can_mesh( ModelEnt* entity ) const;
+  };
 
-    //! Function returning whether a given MeshOp can mesh the specified ModelEnt
-  typedef bool (*meshop_canmesh_t)(ModelEnt *);
 
     /** \struct OpInfo MeshOpFactory.hpp "meshkit/MeshOpFactory.hpp"
      * \brief Struct used to store information about each MeshOp type registered with MeshOpFactory
@@ -79,8 +81,7 @@ public:
     unsigned short opIndex;
     std::vector<iBase_EntityType> modelEntTypes;
     std::vector<moab::EntityType> meshEntTypes;
-    meshop_factory_t opFactory;
-    meshop_canmesh_t opCanMesh;
+    MeshOpProxy* opProxy;
   };
 
     /** \brief A map from MeshOp name to index in the OpInfos vector
@@ -103,25 +104,25 @@ public:
      * \param op_name The name by which this type of MeshOp can be requested
      * \param model_tp The iBase_EntityType (or dimension) operated on by this MeshOp type
      * \param tp The MOAB entity type produced by this MeshOp
-     * \param meshop The (static) factory function producing instances of this MeshOp type
-     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
      * \return Returns true if successful, false otherwise
      */
   static bool register_meshop(const char *op_name, 
-                              iBase_EntityType model_tp, moab::EntityType tp, 
-                              meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+                              iBase_EntityType model_tp, 
+                              moab::EntityType tp, 
+                              MeshOpProxy* proxy);
   
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
      * \param model_tp The iBase_EntityType (or dimension) operated on by this MeshOp type
      * \param tp The iMesh entity topology produced by this MeshOp
-     * \param meshop The (static) factory function producing instances of this MeshOp type
-     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
      * \return Returns true if successful, false otherwise
      */
   static bool register_meshop(const char *op_name, 
-                              iBase_EntityType model_tp, iMesh::EntityTopology tp, 
-                              meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+                              iBase_EntityType model_tp, 
+                              iMesh::EntityTopology tp, 
+                              MeshOpProxy* proxy);
   
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
@@ -129,14 +130,13 @@ public:
      * \param num_mtps Number of model entity types in model_tps
      * \param tps The MOAB entity types operated on by this MeshOp
      * \param num_tps Number of entity types in tps
-     * \param meshop The (static) factory function producing instances of this MeshOp type
-     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
      * \return Returns true if successful, false otherwise
      */
   static bool register_meshop(const char *op_name, 
                               iBase_EntityType *model_tps, int num_mtps,
                               moab::EntityType *tps, int num_tps,
-                              meshop_factory_t meshop, meshop_canmesh_t canmesh = NULL);
+                              MeshOpProxy* proxy);
   
     /** \brief Register a new MeshOp factory
      * \param op_name The name by which this type of MeshOp can be requested
@@ -144,14 +144,13 @@ public:
      * \param num_mtps Number of model entity types in model_tps
      * \param tps The iMesh entity types operated on by this MeshOp
      * \param num_tps Number of entity types in tps
-     * \param meshop The (static) factory function producing instances of this MeshOp type
-     * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
+     * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
      * \return Returns true if successful, false otherwise
      */
   static bool register_meshop(const char *op_name, 
                               iBase_EntityType *model_tps, int num_mtps,
                               iMesh::EntityTopology *tps, int num_tps,
-                              meshop_factory_t meshop, meshop_canmesh_t canmesh);
+                              MeshOpProxy* proxy);
   
     /** \brief Return the MeshOp type with the given name
      * \param op_name Operation name requested
@@ -522,9 +521,9 @@ inline moab::Tag MKCore::moab_global_id_tag(int index)
  */
 inline bool MKCore::register_meshop(const char *op_name, 
                                     iBase_EntityType model_tp, iMesh::EntityTopology tp, 
-                                    meshop_factory_t meshop, meshop_canmesh_t canmesh) 
+                                    MeshOpProxy* proxy) 
 {
-  return register_meshop(op_name, model_tp, iMesh::mb_topology_table[tp], meshop, canmesh);
+  return register_meshop(op_name, model_tp, iMesh::mb_topology_table[tp], proxy);
 }
   
 /** \brief Register a new MeshOp factory
@@ -537,11 +536,11 @@ inline bool MKCore::register_meshop(const char *op_name,
 inline bool MKCore::register_meshop(const char *op_name, 
                                     iBase_EntityType *model_tps, int num_mtps,
                                     iMesh::EntityTopology *tps, int num_tps,
-                                    meshop_factory_t meshop, meshop_canmesh_t canmesh)
+                                    MeshOpProxy* proxy)
 {
   std::vector<moab::EntityType> tmp_tps(num_tps);
   for (int i = 0; i < num_tps; i++) tmp_tps[i] = iMesh::mb_topology_table[tps[i]];
-  return register_meshop(op_name, model_tps, num_mtps, &tmp_tps[0], num_tps, meshop, canmesh);
+  return register_meshop(op_name, model_tps, num_mtps, &tmp_tps[0], num_tps, proxy);
 }
 
 inline VertexMesher *MKCore::vertex_mesher() const 

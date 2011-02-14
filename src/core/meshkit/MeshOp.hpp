@@ -10,7 +10,7 @@
 namespace MeshKit {
 
 class ModelEnt;
-    
+
 /** \class MeshOp MeshOp.hpp "meshkit/MeshOp.hpp"
  * \brief An operation that operates on mesh data
  *

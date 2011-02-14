@@ -66,10 +66,12 @@ public:
 	virtual void execute_this();
 
 	//make an instance of the EdgeMesher class
-	static MeshOp *factory(MKCore *mkcore, const MEntVector &me_vec);
 	EdgeSchemeType get_edge_scheme() const;
 	 void set_edge_scheme(EdgeSchemeType scheme);
 
+        //! \c MeshOp::canmesh_edge
+        static bool can_mesh(ModelEnt* ent)
+          { return canmesh_edge(ent); }
 
 	~EdgeMesher();
 	
