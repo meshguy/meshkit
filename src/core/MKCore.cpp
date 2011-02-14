@@ -15,7 +15,7 @@
 namespace MeshKit 
 {
 
-bool MKCore::MeshOpProxy::can_mesh( ModelEnt* entity ) const
+bool MeshOpProxy::can_mesh( ModelEnt* entity ) const
   { return true; }
 
 

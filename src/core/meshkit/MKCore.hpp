@@ -41,28 +41,7 @@ class EBMesher;
  * and/or iCreatedIrel flags in this class.
  */
 
-class MKCore : public MKGraph
-{
-public:
-
-    /** \brief Constructor
-     * \param igeom iGeom instance
-     * \param moab MOAB instance
-     * \param imesh iMesh instance; if non-NULL, should use/point to moab parameter
-     * \param irel iRel instance
-     * \param construct_missing_ifaces If true, constructs the interfaces whose handles are passed in NULL
-     */
-  MKCore(iGeom *igeom = NULL, 
-         moab::Interface *moab = NULL, 
-         iMesh *imesh = NULL, 
-         iRel *irel = NULL,
-         bool construct_missing_ifaces = true);
-  
-    //! destructor
-  ~MKCore();
-
-    //! initialize, creating missing geom/mesh/rel interfaces if requested
-  void init(bool construct_missing_ifaces);
+  class MKCore;
 
   class MeshOpProxy
   {
@@ -95,6 +74,38 @@ public:
     OpNameMap opNameMap;
   };
 
+
+class MKCore : public MKGraph
+{
+public:
+
+    /** \brief Constructor
+     * \param igeom iGeom instance
+     * \param moab MOAB instance
+     * \param imesh iMesh instance; if non-NULL, should use/point to moab parameter
+     * \param irel iRel instance
+     * \param construct_missing_ifaces If true, constructs the interfaces whose handles are passed in NULL
+     */
+  MKCore(iGeom *igeom = NULL, 
+         moab::Interface *moab = NULL, 
+         iMesh *imesh = NULL, 
+         iRel *irel = NULL,
+         bool construct_missing_ifaces = true);
+  
+    //! destructor
+  ~MKCore();
+
+    //! initialize, creating missing geom/mesh/rel interfaces if requested
+  void init(bool construct_missing_ifaces);
+
+  typedef ::MeshKit::MeshOpProxy MeshOpProxy;
+  typedef ::MeshKit::OpInfo OpInfo;
+  typedef ::MeshKit::MeshOpFactory MeshOpFactory;
+
+    /** \brief A map from MeshOp name to index in the OpInfos vector
+     */
+  typedef std::map<std::string, unsigned short> OpNameMap;
+  
   static MeshOpFactory *op_factory();
 
     //! Initialize the opsByDim array
