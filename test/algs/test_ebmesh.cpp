@@ -7,6 +7,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
 #include "meshkit/EBMesher.hpp"
+#include "meshkit/SCDMesh.hpp"
 #include "meshkit/ModelEnt.hpp"
 
 using namespace MeshKit;
@@ -21,7 +22,7 @@ using namespace MeshKit;
 
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,
-		  double size, int input_geom,
+		  int* n_intervals, double box_increase,
 		  int vol_frac_res);
 
 int main(int argc, char **argv) 
@@ -30,25 +31,25 @@ int main(int argc, char **argv)
   std::string input_filename;
   const char *output_filename = NULL;
   int input_geom = 1; // if input file is geometry format
-  double size = -1.;
-  int add_layer = 3;
+  int n_interval[3] = {10, 10, 10};
+  double box_increase = .03;
   int vol_frac_res = 0;
 
-  if (argc > 2 && argc < 8) {
+  if (argc > 2 && argc < 9) {
     input_filename += argv[1];
-    input_geom = atoi(argv[2]);
-    if (argc > 3) size = atof(argv[3]);
-    if (argc > 4) output_filename = argv[4];
-    if (argc > 5) add_layer = atoi(argv[5]);
-    if (argc > 6) vol_frac_res = atoi(argv[6]);
+    if (argc > 2) n_interval[0] = atoi(argv[2]);
+    if (argc > 3) n_interval[1] = atoi(argv[3]);
+    if (argc > 4) n_interval[2] = atoi(argv[4]);
+    if (argc > 5) output_filename = argv[5];
+    if (argc > 6) box_increase = atof(argv[6]);
+    if (argc > 7) vol_frac_res = atoi(argv[7]);
   }
   else {
-    std::cout << "Usage: " << argv[0] << "<input_geom_filename> <input_solid> {interval_size} {output_mesh_filename} {#_add_layer} {vol_frac_res}" << std::endl;
+    std::cout << "Usage: " << argv[0] << "<input_geom_filename> {x: # of intervals} {y: # of intervals} {z: # of intervals} {output_mesh_filename} {#_add_layer} {vol_frac_res}" << std::endl;
     std::cout << "<input_geom_filename> : input geometry file name" << std::endl;
-    std::cout << "<input_solid> : if the input file is solid model geometry file, 1(solid model geometry) or 0(facet based geometry)" << std::endl;
-    std::cout << "{interval_size} : optional argument, interval size, if it is not set, EBMesh find a interval size from # of facet triangles." << std::endl;
-    std::cout << "{output_mesh_filename} : optional argument, can output mesh file (e.g. output.vtk.)" << std::endl;
-    std::cout << "{#_add_layer} : optional argument, # of additional outside layers, should be > 3, default (3)" << std::endl;
+    std::cout << "{x/y/z: # ofintervals} : optional argument. # of intervals. if it is not set, set to 10." << std::endl;
+    std::cout << "{output_mesh_filename} : optional argument. if it is not set, dosn't export. can output mesh file (e.g. output.vtk.)" << std::endl;
+    std::cout << "{box size increase} : optional argument. Cartesian mesh box increase form geometry. default 0.03" << std::endl;
     std::cout << "{vol_frac_res} : optional argument, volume fraction resolution of boundary cells for each material, you can specify it as # of divisions (e.g. 4)." << std::endl;
     std::cout << std::endl;
     if (argc != 1) return 1;
@@ -60,14 +61,14 @@ int main(int argc, char **argv)
   }
   
   if (load_and_mesh(input_filename.c_str(), output_filename,
-		    size, input_geom, vol_frac_res)) return 1;
+		    n_interval, box_increase, vol_frac_res)) return 1;
   
   return 0;
 }
 
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,
-		  double size, int input_geom,
+		  int* n_interval, double box_increase,
 		  int vol_frac_res)
 {
   bool result;
@@ -85,23 +86,43 @@ int load_and_mesh(const char *input_filename,
   MEntVector vols;
   mk.get_entities_by_dimension(3, vols);
 
-  // make structured mesher and EB mesher
-  //ScdMesher *sm = (ScdMesher*) mk.construct_meshop("ScdMesher", vols);
-  //sm->set_name("structured_mesh");
+  // make and set input for structured mesher
+  double box_min[3], box_max[3];
+  SCDMesh *sm = (SCDMesh*) mk.construct_meshop("SCDMesh", vols);
+  sm->set_name("structured_mesh");
+  sm->set_interface_scheme(SCDMesh::full);
+  sm->set_grid_scheme(SCDMesh::cfMesh);
+  sm->set_axis_scheme(SCDMesh::cartesian);
+  sm->set_box_increase_ratio(box_increase); // add some extra layer to box
+  sm->set_box_dimension(); // set box dimension
+  sm->get_box_dimension(box_min, box_max); // get box dimension
+
+  // set # of intervals for 3 directions
+  std::vector<int> fine_i (n_interval[0], 1);
+  sm->set_coarse_i_grid(n_interval[0]);
+  sm->set_fine_i_grid(fine_i);
+  std::vector<int> fine_j (n_interval[1], 1);
+  sm->set_coarse_j_grid(n_interval[1]);
+  sm->set_fine_j_grid(fine_j);
+  std::vector<int> fine_k (n_interval[2], 1);
+  sm->set_coarse_k_grid(n_interval[2]);
+  sm->set_fine_k_grid(fine_k);
+
+  // make EBMesher
   EBMesher *ebm = (EBMesher*) mk.construct_meshop("EBMesher", vols);
   ebm->set_name("embedded_boundary_mesh");
+  ebm->set_division(box_min, box_max, n_interval);
 
   // put them in the graph
-  //mk.get_graph().addArc(mk.root_node()->get_node(), sm->get_node());
-  //mk.get_graph().addArc(sm->get_node(), ebm->get_node());
-  mk.get_graph().addArc(mk.root_node()->get_node(), ebm->get_node());
+  mk.get_graph().addArc(mk.root_node()->get_node(), sm->get_node());
+  mk.get_graph().addArc(sm->get_node(), ebm->get_node());
   mk.get_graph().addArc(ebm->get_node(), mk.leaf_node()->get_node());
- 
+
   // mesh embedded boundary mesh, by calling execute
   mk.setup_and_execute();
   
   // caculate volume fraction, only for geometry input
-  if (vol_frac_res > 0 && input_geom) {
+  if (vol_frac_res > 0) {
     result = ebm->get_volume_fraction(vol_frac_res);
     if (!result) {
       std::cerr << "Couldn't get volume fraction." << std::endl;

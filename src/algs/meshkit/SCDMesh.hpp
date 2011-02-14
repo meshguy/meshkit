@@ -83,6 +83,9 @@ namespace MeshKit
     iGeom::Error gerr;
     moab::ErrorCode rval;
 
+    // box size increasement ratio, default is 0.0
+    double boxIncrease;
+
   public:
 
     //! Bare Constructor
@@ -167,6 +170,21 @@ namespace MeshKit
      */
     void set_fine_k_grid(std::vector<int> fine_k_);
 
+     /*!
+     * \brief Set the geometry encompasing box dimensions
+     */
+    void set_box_dimension();
+
+    /*!
+     * \brief Get the geometry encompasing box dimensions
+     */
+    void get_box_dimension(double* min, double* max);
+
+    /*!
+     * \brief Set the geometry encompasing box size increase ratio
+     */
+    void set_box_increase_ratio(double box_increase = .03);
+
     /*! 
      * \brief Setup
      */
@@ -179,14 +197,15 @@ namespace MeshKit
     void export_mesh(const char* file_name);
 
   private:
-
+    
     //! create cartesian bounding box
-    void create_cart_box(ModelEnt *ent, 
-                         double *xmin, double *ymin, double *zmin, 
-                         double *xmax, double *ymax, double *zmax);
+    void create_cart_box();
 
     //! create full mesh representation
-    void create_full_mesh(ModelEnt *ent);
+    void create_full_mesh();
+    
+    // bounding box min, max coordiantes
+    double minCoord[3], maxCoord[3];
 
     //! Static variable, used in registration
   static int init;
@@ -198,6 +217,7 @@ namespace MeshKit
   inline SCDMesh::SCDMesh(MKCore *mk_core, const MEntVector &me_vec)
     : MeshScheme(mk_core, me_vec)
   {
+    boxIncrease = .0;
   }
 
   inline SCDMesh::~SCDMesh()
@@ -263,6 +283,19 @@ namespace MeshKit
   {
     fine_k = fine_k_;
   }
+
+inline void SCDMesh::set_box_increase_ratio(double box_increase)
+{
+  boxIncrease = box_increase;
+}
+
+inline void SCDMesh::get_box_dimension(double* min, double* max)
+{
+  for (int i = 0; i < 3; i++) {
+    min[i] = minCoord[i];
+    max[i] = maxCoord[i];
+  }
+}
 
 } // end namespace MeshKit
 

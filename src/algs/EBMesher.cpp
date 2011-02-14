@@ -129,9 +129,9 @@ void EBMesher::setup_this()
 void EBMesher::execute_this() 
 {
 #ifdef HAVE_MOAB
-  time_t time1, time2, time3, time4, time5, time6;
+  time_t time1, time2, time3, time4;
   time(&time1);
-  unsigned long mem1, mem2, mem3, mem4, mem5, mem6;
+  unsigned long mem1, mem2, mem3, mem4;
   moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
   moab::ErrorCode rval;
 
@@ -146,49 +146,32 @@ void EBMesher::execute_this()
   time(&time2);
   moab_instance()->estimated_memory_use(0, 0, 0, &mem2);
 
-  // 2. set division, will be removed if structured mesher is made
-  err = set_division();
-  IBERRCHK(err, "Couldn't set division.");
-  time(&time3);
-  moab_instance()->estimated_memory_use(0, 0, 0, &mem3);
-
-  // 3. make structured hex, will be removed if structured mesher is made
-  err = make_scd_hexes();
-  time(&time4);
-  moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
-
-  // 4. find intersected geometry surfaces by rays
+  // 2. find intersected geometry surfaces by rays
   err = find_intersections();
   IBERRCHK(err, "Couldn't find intersected surfaces.");
-  time(&time5);
-  moab_instance()->estimated_memory_use(0, 0, 0, &mem5);
+  time(&time3);
+  moab_instance()->estimated_memory_use(0, 0, 0, &mem3);
   
-  // 5. set hex status and boundary hex cut fraction info
+  // 3. set hex status and boundary hex cut fraction info
   err = set_tag_info();
   IBERRCHK(err, "Couldn't set tag infor.");
-  time(&time6);
-  moab_instance()->estimated_memory_use(0, 0, 0, &mem6);
+  time(&time4);
+  moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
 #endif
   
   if (debug) {
     std::cout << "OBB_tree_construct_time: "
 	      << difftime(time2, time1)
-	      << ", set_division_time: "
-	      << difftime(time3, time2)
-	      << ", scd_hex_construct_time: "
-	      << difftime(time4, time3)
 	      << ", intersection_time: "
-	      << difftime(time5, time4)
+	      << difftime(time3, time2)
 	      << ", set_info_time: "
-	      << difftime(time6, time5)
+	      << difftime(time4, time3)
 	      << std::endl;
     
     std::cout << "start_memory: " << mem1
-	      << ", set_division_moemory: " << mem2
-	      << ", OBB_tree_construct_moemory: " << mem3
-	      << ",hex_construct_memory : " << mem4
-	      << ", intersection_memory: " << mem5
-	      << ", set_info_memory: " << mem6
+	      << ", OBB_tree_construct_moemory: " << mem2
+	      << ", intersection_memory: " << mem3
+	      << ", set_info_memory: " << mem4
 	      << std::endl;
   }
 }
@@ -596,6 +579,27 @@ int EBMesher::set_division()
 
   std::cout << "# of hex: " << m_nHex << ", interval size: "
 	    << m_dInputSize << std::endl;
+
+  std::cout << "# of division: " << m_nDiv[0] << ","
+	    << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
+
+  return iBase_SUCCESS;
+}
+
+int EBMesher::set_division(double* min, double* max, int* n_interval)
+{
+  for (int i = 0; i < 3; i++) {
+    m_nDiv[i] = n_interval[i];
+    m_dIntervalSize[i] = (max[i] - min[i])/n_interval[i];
+    m_nNode[i] = m_nDiv[i] + 1;
+    m_origin_coords[i] = min[i];
+  }
+
+  m_nHex = m_nDiv[0]*m_nDiv[1]*m_nDiv[2];
+
+  std::cout << "# of hex: " << m_nHex << ", intervals: "
+	    << n_interval[0] << ", " << n_interval[1] << ", "
+            << n_interval[2] << std::endl;
 
   std::cout << "# of division: " << m_nDiv[0] << ","
 	    << m_nDiv[1] << "," << m_nDiv[2] << std::endl;

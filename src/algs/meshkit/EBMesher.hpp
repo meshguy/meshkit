@@ -154,6 +154,9 @@ public:
   
   virtual bool add_modelent(ModelEnt *model_ent);
 
+  
+  int set_division(double* min, double* max, int* n_interval);
+
     //! Setup is a no-op, but must be provided since it's pure virtual
   virtual void setup_this();
 

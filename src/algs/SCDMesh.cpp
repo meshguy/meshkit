@@ -45,57 +45,36 @@ namespace MeshKit
 
 //---------------------------------------------------------------------------//
 // setup function
-  void SCDMesh::setup_this()
-  {
-    // check the grid entries to make sure they're correct
-    if (gridType == 0) {
-      if (coarse_i != fine_i.size()) {
-        throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse i divisions not equal to the number of fine i divisions.");
-      }
-      if (coarse_j != fine_j.size()) {
-        throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse j divisions not equal to the number of fine j divisions.");
-      }
-      if (coarse_k != fine_k.size()) {
-        throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse k divisions not equal to the number of fine k divisions.");
-      }
+void SCDMesh::setup_this()
+{
+  // check the grid entries to make sure they're correct
+  if (gridType == 0) {
+    if (coarse_i != fine_i.size()) {
+      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse i divisions not equal to the number of fine i divisions.");
     }
-
-    // not sure yet how to implement the sizing function for this meshop
-    // but it will go here
+    if (coarse_j != fine_j.size()) {
+      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse j divisions not equal to the number of fine j divisions.");
+      }
+    if (coarse_k != fine_k.size()) {
+      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse k divisions not equal to the number of fine k divisions.");
+    }
   }
+}
 
 //---------------------------------------------------------------------------//
 // Structured cartesian mesh generation execution
   void SCDMesh::execute_this()
   {
-
-    for (MEntSelection::iterator mit = mentSelection.begin();
-         mit != mentSelection.end(); mit++) {
-
-      ModelEnt *me = mit->first;
-
-      /* get the bounding box on the geometry */
-
-      // bounding box parameters
-      double xmn, ymn, zmn, xmx, ymx, zmx;
-
-      // cartesian case //
       if (axisType == 0) {
-        create_cart_box(me, &xmn, &ymn, &zmn, &xmx, &ymx, &zmx);
+        create_cart_box();
       }
-
 
       /* Generate the mesh */
  
       // full representation case //
       if (interfaceType == 0) {
-        create_full_mesh(me);
+        create_full_mesh();
       }
-
-
-      /* Commit the mesh */
-      me->commit_mesh(mit->second, COMPLETE_MESH);
-    }
   }
 
 //---------------------------------------------------------------------------//
@@ -106,58 +85,62 @@ namespace MeshKit
     MBERRCHK(rval, "ERROR: couldn't write SCDMesh");
   }
 
+
+void SCDMesh::set_box_dimension()
+{
+  gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
+                                                  maxCoord[0], maxCoord[1], maxCoord[2]);
+  IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
+
+  // increase box size for 3 directions
+  for (int i = 0; i < 3; i++) {
+    minCoord[i] -= minCoord[i]*boxIncrease;
+    maxCoord[i] += maxCoord[i]*boxIncrease;
+  }
+}
+
 //---------------------------------------------------------------------------//
 // get the axis cartesian bounding box
 // for now this just assumes that gridType has been set to cfmesh
-  void SCDMesh::create_cart_box(ModelEnt *ent, 
-                                double *xmin, double *ymin, double *zmin,
-                                double *xmax, double *ymax, double *zmax)
-  {
-      gerr = mk_core()->igeom_instance()->getBoundBox(*xmin,
-                                                      *ymin,
-                                                      *zmin,
-                                                      *xmax,
-                                                      *ymax,
-                                                      *zmax);
-      IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
-
-      // generate the vector arrays for cartesian grid.
-      // at some point this should be generalized to make 
-      // the grid for a axis aligned box from and obb tree too
-      i_arr.push_back(*xmin);
-      double icrs_size = (*xmax - *xmin) / coarse_i;
-      double ifn_size;
-      for (int crsi = 0; crsi != coarse_i; crsi++) {
-        ifn_size = icrs_size / fine_i[crsi];
-        for (int fni = 1; fni != fine_i[crsi] + 1; fni++) {
-          i_arr.push_back(*xmin + crsi*icrs_size + fni*ifn_size);
-        }
-      }
-
-      j_arr.push_back(*ymin);
-      double jcrs_size = (*ymax - *ymin) / coarse_j;
-      double jfn_size;
-      for (int crsj = 0; crsj != coarse_j; crsj++) {
-        jfn_size = jcrs_size / fine_j[crsj];
-        for (int fnj = 1; fnj != fine_j[crsj] + 1; fnj++) {
-          j_arr.push_back(*ymin + crsj*jcrs_size + fnj*jfn_size);
-        }
-      }
-
-      k_arr.push_back(*zmin);
-      double kcrs_size = (*zmax - *zmin) / coarse_k;
-      double kfn_size;
-      for (int crsk = 0; crsk != coarse_k; crsk++) {
-        kfn_size = kcrs_size / fine_k[crsk];
-        for (int fnk = 1; fnk != fine_k[crsk] + 1; fnk++) {
-          k_arr.push_back(*zmin + crsk*kcrs_size + fnk*kfn_size);
-        }
-      }
+void SCDMesh::create_cart_box()
+{
+  // generate the vector arrays for cartesian grid.
+  // at some point this should be generalized to make 
+  // the grid for a axis aligned box from and obb tree too
+  i_arr.push_back(minCoord[0]);
+  double icrs_size = (maxCoord[0] - minCoord[0]) / coarse_i;
+  double ifn_size;
+  for (int crsi = 0; crsi != coarse_i; crsi++) {
+    ifn_size = icrs_size / fine_i[crsi];
+    for (int fni = 1; fni != fine_i[crsi] + 1; fni++) {
+      i_arr.push_back(minCoord[0] + crsi*icrs_size + fni*ifn_size);
+    }
   }
+  
+  j_arr.push_back(minCoord[1]);
+  double jcrs_size = (maxCoord[1] - minCoord[1]) / coarse_j;
+  double jfn_size;
+  for (int crsj = 0; crsj != coarse_j; crsj++) {
+    jfn_size = jcrs_size / fine_j[crsj];
+    for (int fnj = 1; fnj != fine_j[crsj] + 1; fnj++) {
+      j_arr.push_back(minCoord[1] + crsj*jcrs_size + fnj*jfn_size);
+    }
+  }
+  
+  k_arr.push_back(minCoord[2]);
+  double kcrs_size = (maxCoord[2] - minCoord[2]) / coarse_k;
+  double kfn_size;
+  for (int crsk = 0; crsk != coarse_k; crsk++) {
+    kfn_size = kcrs_size / fine_k[crsk];
+    for (int fnk = 1; fnk != fine_k[crsk] + 1; fnk++) {
+      k_arr.push_back(minCoord[2] + crsk*kcrs_size + fnk*kfn_size);
+    }
+  }
+}
 
 //---------------------------------------------------------------------------//
 // create the full mesh representaton
-  void SCDMesh::create_full_mesh(ModelEnt *ent)
+  void SCDMesh::create_full_mesh()
   {
     int num_i = i_arr.size();
     int num_j = j_arr.size();
