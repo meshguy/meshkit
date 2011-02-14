@@ -19,6 +19,8 @@ nobase_libMeshKitutils_la_include_HEADERS = \
 	meshkit/iGeom.hh \
 	meshkit/iMesh.hh \
 	meshkit/iRel.hh \
+	meshkit/LocalSet.hpp \
+	meshkit/LocalTag.hpp \
 	meshkit/RegisterMeshOp.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
