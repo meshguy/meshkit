@@ -41,38 +41,38 @@ class EBMesher;
  * and/or iCreatedIrel flags in this class.
  */
 
-  class MKCore;
+class MKCore;
 
-  class MeshOpProxy
-  {
-    public:
-      virtual MeshOp* create( MKCore* core, const MEntVector &vec ) = 0;
-      virtual bool can_mesh( ModelEnt* entity ) const;
-  };
+class MeshOpProxy
+{
+  public:
+    virtual MeshOp* create( MKCore* core, const MEntVector &vec ) = 0;
+    virtual bool can_mesh( ModelEnt* entity ) const;
+};
 
 
-    /** \struct OpInfo MeshOpFactory.hpp "meshkit/MeshOpFactory.hpp"
-     * \brief Struct used to store information about each MeshOp type registered with MeshOpFactory
-     */
-  struct OpInfo
-  {
-    std::string opName;
-    unsigned short opIndex;
-    std::vector<iBase_EntityType> modelEntTypes;
-    std::vector<moab::EntityType> meshEntTypes;
-    MeshOpProxy* opProxy;
-  };
+  /** \struct OpInfo MeshOpFactory.hpp "meshkit/MeshOpFactory.hpp"
+   * \brief Struct used to store information about each MeshOp type registered with MeshOpFactory
+   */
+struct OpInfo
+{
+  std::string opName;
+  unsigned short opIndex;
+  std::vector<iBase_EntityType> modelEntTypes;
+  std::vector<moab::EntityType> meshEntTypes;
+  MeshOpProxy* opProxy;
+};
 
-    /** \brief A map from MeshOp name to index in the OpInfos vector
-     */
-  typedef std::map<std::string, unsigned short> OpNameMap;
-  
-  class MeshOpFactory 
-  {
-   public:
-    std::vector<OpInfo> registeredOps;
-    OpNameMap opNameMap;
-  };
+  /** \brief A map from MeshOp name to index in the OpInfos vector
+   */
+typedef std::map<std::string, unsigned short> OpNameMap;
+
+class MeshOpFactory 
+{
+ public:
+  std::vector<OpInfo> registeredOps;
+  OpNameMap opNameMap;
+};
 
 
 class MKCore : public MKGraph
@@ -98,13 +98,11 @@ public:
     //! initialize, creating missing geom/mesh/rel interfaces if requested
   void init(bool construct_missing_ifaces);
 
+    // Typedefs for backwards compatibility; XXX remove
   typedef ::MeshKit::MeshOpProxy MeshOpProxy;
   typedef ::MeshKit::OpInfo OpInfo;
   typedef ::MeshKit::MeshOpFactory MeshOpFactory;
-
-    /** \brief A map from MeshOp name to index in the OpInfos vector
-     */
-  typedef std::map<std::string, unsigned short> OpNameMap;
+  typedef ::MeshKit::OpNameMap OpNameMap;
   
   static MeshOpFactory *op_factory();
 
