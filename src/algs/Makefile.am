@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS = QuadMesher
+SUBDIRS = 
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la

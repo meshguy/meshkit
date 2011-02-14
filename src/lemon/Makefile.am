@@ -19,8 +19,8 @@ EXTRA_DIST = \
 	cmake/nsis/lemon.ico \
 	cmake/nsis/uninstall.ico
 
-pkgconfigdir = $(srcdir)
-pkgconfig_DATA = lemon.pc
+#pkgconfigdir = $(srcdir)
+#pkgconfig_DATA = lemon.pc
 
 noinst_LTLIBRARIES = libemon.la 
 
