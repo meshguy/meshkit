@@ -47,25 +47,25 @@ libMeshKitalgs_la_SOURCES = \
 	MeshRefine2D.cpp \
 	meshuntangle.cpp \
 	predicates.cpp \
-	QuadQuality.cpp \
+	QuadQuality.cpp 
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
-	meshkit/basic_math.h
-	meshkit/BinaryTree.h
-	meshkit/circumcenter.h
-	meshkit/cycle.h
-	meshkit/DijkstraShortestPath.h
-	meshkit/DualGraph.h
-	meshkit/FastArea.h
-	meshkit/geomPredicates.h
-	meshkit/iMeshRefine2D.h
-	meshkit/Mesh.h
-	meshkit/MeshRefine2D.h
-	meshkit/ObjectPool.h
-	meshkit/QuadCleanUp.h
-	meshkit/SwapTriEdge.h
-	meshkit/tfiblend.h
+	meshkit/basic_math.h \
+	meshkit/BinaryTree.h \
+	meshkit/circumcenter.h \
+	meshkit/cycle.h  \
+	meshkit/DijkstraShortestPath.h \
+	meshkit/DualGraph.h \
+	meshkit/FastArea.h  \
+	meshkit/geomPredicates.h \
+	meshkit/iMeshRefine2D.h  \
+	meshkit/Mesh.h   \
+	meshkit/MeshRefine2D.h \
+	meshkit/ObjectPool.h   \
+	meshkit/QuadCleanUp.h  \
+	meshkit/SwapTriEdge.h  \
+	meshkit/tfiblend.h     \
 	meshkit/Tri2Quad.h
 
 # Boilerplate stuff that doesn't depend on what the targets are
