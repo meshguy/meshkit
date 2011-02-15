@@ -1,6 +1,7 @@
 #include "meshkit/OneToOneSwept.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/iMesh.hh"
+#include "meshkit/RegisterMeshOp.hpp"
 #include <iostream>
 #include <math.h>
 #include <map>
@@ -17,12 +18,13 @@ namespace MeshKit
 
 //---------------------------------------------------------------------------//
 //Entity Type initilization for OneToOneSwept meshing
-moab::EntityType OneToOneSwept_tps[] = {moab::MBVERTEX, moab::MBHEX};
+moab::EntityType OneToOneSwept_tps[] = {moab::MBVERTEX, moab::MBQUAD, moab::MBHEX};
 iBase_EntityType OneToOneSwept_mtp = iBase_REGION;
 
 // static registration of this  mesh scheme
-static int success = MKCore::register_meshop("OneToOneSwept", &OneToOneSwept_mtp, 1, OneToOneSwept_tps, 2, 
-                     OneToOneSwept::factory, MeshOp::canmesh_region);
+static RegisterMeshOp<OneToOneSwept,true> INIT("OneToOneSwept", &OneToOneSwept_mtp, 1, 
+                                            OneToOneSwept_tps,
+                                            sizeof(OneToOneSwept_tps)/sizeof(OneToOneSwept_tps[0]) );
 
 //---------------------------------------------------------------------------//
 // make an instance of the OneToOneSwept class
