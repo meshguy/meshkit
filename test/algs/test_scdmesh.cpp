@@ -7,10 +7,8 @@
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SCDMesh.hpp"
+#include "meshkit/SizingFunction.hpp"
 #include "meshkit/ModelEnt.hpp"
-
-// for now, need to #include a vertexmesher so that its statics get initialized (namely, the mesher
-// gets registered)
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/EdgeMesher.hpp"
 #include <vector>
@@ -20,13 +18,32 @@ using namespace MeshKit;
 #include "TestUtil.hpp"
 
 #ifdef HAVE_ACIS
-#define DEFAULT_TEST_FILE "holycyl.sat"
+#define DEFAULT_TEST_FILE "brick.sat"
 #elif defined(HAVE_OCC)
 #define DEFAULT_TEST_FILE "sphere.stp"
 #endif
-//---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+// brief function definitions
+void scd_test_1();
+
+//---------------------------------------------------------------------------//
+// main function
 int main(int argc, char **argv)
+{
+
+  int scd_fail = 0;
+
+  scd_fail += RUN_TEST(scd_test_1);
+
+}
+
+//---------------------------------------------------------------------------//
+// Test 1:
+// *: full mesh representation
+// *: cartesian bounding box
+// *: coarse/fine grid sizing
+void scd_test_1()
 {
   // Create an instance of the MeshKit core object
   MKCore mk_scdt;
@@ -82,9 +99,7 @@ int main(int argc, char **argv)
 
   // write the mesh to a file
   mk_scdt.save_mesh("SCDmesh.h5m");
-
-
-} // end main()
+}
 
 //---------------------------------------------------------------------------//
 // end test_scdmesh.cpp
