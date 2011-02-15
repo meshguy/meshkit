@@ -14,7 +14,7 @@
 #include "meshkit/Error.hpp"
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 
 #include "moab/Core.hpp"
 #include "moab/Range.hpp"

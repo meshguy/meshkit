@@ -17,7 +17,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include <set>
 #include <vector>
 

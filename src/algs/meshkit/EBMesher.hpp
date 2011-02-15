@@ -15,7 +15,7 @@
 #include "meshkit/Error.hpp"
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "meshkit/iMesh.hh"
+#include "meshkit/iMesh.hpp"
 
 #ifdef HAVE_MOAB
 #include "moab/Interface.hpp"

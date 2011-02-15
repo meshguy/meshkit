@@ -1,7 +1,7 @@
 #ifndef ITAPS_MESH_HH
 #define ITAPS_MESH_HH
 
-/** \file iMesh.hh
+/** \file iMesh.hpp
  */
 
 #include "moab/EntityType.hpp"
@@ -13,7 +13,7 @@
 #include <string>
 
 #define ITAPS_PREFIX iMesh
-#include "meshkit/iBase.hh"
+#include "meshkit/iBase.hpp"
 #undef ITAPS_PREFIX
 
 /** \class iMesh
@@ -111,7 +111,7 @@ class iMesh : public iMeshBase {
                                  std::vector<EntityHandle>& adj_entity_handles,
                                  std::vector<int>& offset );
     
-/** \class EntArrIter iMesh.hh "iMesh.hh"
+/** \class EntArrIter iMesh.hpp "iMesh.hpp"
  * \brief Class for iterating over %iMesh entity arrays.
  */
     class EntArrIter {
@@ -129,7 +129,7 @@ class iMesh : public iMeshBase {
         inline Error reset();
     };
     
-/** \class EntIter iMesh.hh "iMesh.hh"
+/** \class EntIter iMesh.hpp "iMesh.hpp"
  * \brief Class for iterating over %iMesh entities.
  */
     class EntIter {

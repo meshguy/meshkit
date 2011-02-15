@@ -16,9 +16,9 @@ libMeshKitutils_la_SOURCES = \
 
 # The list of header files which are to be installed
 nobase_libMeshKitutils_la_include_HEADERS = \
-	meshkit/iGeom.hh \
-	meshkit/iMesh.hh \
-	meshkit/iRel.hh \
+	meshkit/iGeom.hpp \
+	meshkit/iMesh.hpp \
+	meshkit/iRel.hpp \
 	meshkit/LocalSet.hpp \
 	meshkit/LocalTag.hpp \
 	meshkit/RegisterMeshOp.hpp

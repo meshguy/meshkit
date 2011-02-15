@@ -6,10 +6,10 @@
 #include "meshkit/Types.h"
 #include "meshkit/Error.hpp"
 #include "meshkit/MKGraph.hpp"
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include "moab/Interface.hpp"
-#include "meshkit/iMesh.hh"
-#include "meshkit/iRel.hh"
+#include "meshkit/iMesh.hpp"
+#include "meshkit/iRel.hpp"
 #include "lemon/list_graph.h"
 #include <vector>
 

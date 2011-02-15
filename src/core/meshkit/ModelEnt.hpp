@@ -2,7 +2,7 @@
 #define MODELENT_HPP
 
 #include "assert.h"
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include "meshkit/Types.h"
 #include "moab/Interface.hpp"
 #include <vector>

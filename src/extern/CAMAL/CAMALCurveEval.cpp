@@ -1,7 +1,7 @@
 #include "CAMALCurveEval.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/MKCore.hpp"
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include "meshkit/Error.hpp"
 
 namespace MeshKit 

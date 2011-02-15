@@ -1,4 +1,4 @@
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/Error.hpp"

@@ -1,13 +1,11 @@
 #ifndef LOCALTAG_HPP
 #define LOCALTAG_HPP
 
-#include "iMesh.hh"
+#include "meshkit/iMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/Error.hpp"
 #include <string>
 #include <sstream>
-
-#include "MKException.hpp"
 
 namespace MeshKit
 {

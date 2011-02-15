@@ -1,7 +1,7 @@
 #ifndef LOCALSET_HPP
 #define LOCALSET_HPP
 
-#include "iMesh.hh"
+#include "meshkit/iMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/Error.hpp"
 

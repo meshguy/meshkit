@@ -1,12 +1,12 @@
 #ifndef ITAPS_REL_HH
 #define ITAPS_REL_HH
 
-/** \file iRel.hh
+/** \file iRel.hpp
  */
 
 #include "iRel.h"
-#include "meshkit/iGeom.hh"
-#include "meshkit/iMesh.hh"
+#include "meshkit/iGeom.hpp"
+#include "meshkit/iMesh.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
@@ -53,7 +53,7 @@ public:
    SET, 
    BOTH};
 
-/** \class PairHandle iRel.hh "iRel.hh"
+/** \class PairHandle iRel.hpp "iRel.hpp"
  * \brief Class for storing, querying and modifying relations data.
  *
  * This class encapsulates most of the functions for querying relations in the C++ version of %iRel.

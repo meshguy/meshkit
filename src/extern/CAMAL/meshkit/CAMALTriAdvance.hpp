@@ -1,7 +1,7 @@
 #ifndef __CAMALTRIADV_HPP
 #define __CAMALTRIADV_HPP
 
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include <set>
 #include <vector>
 #include "meshkit/MeshScheme.hpp"

@@ -1,7 +1,7 @@
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/MKCore.hpp"
 #include "moab/EntityType.hpp"
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 
 namespace MeshKit 

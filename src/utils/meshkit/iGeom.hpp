@@ -1,7 +1,7 @@
 #ifndef ITAPS_GEOM_HH
 #define ITAPS_GEOM_HH
 
-/** \file iGeom.hh
+/** \file iGeom.hpp
  */
 
 #include "iGeom.h"
@@ -12,7 +12,7 @@
 #include <string>
 
 #define ITAPS_PREFIX iGeom
-#include "meshkit/iBase.hh"
+#include "meshkit/iBase.hpp"
 #undef ITAPS_PREFIX
 
 /** \class iGeom
@@ -429,7 +429,7 @@ class iGeom : public iGeomBase {
     inline Error mergeEnts( const EntityHandle* entities, int entities_size, double tolerance );
 
     
-/** \class EntArrIter iGeom.hh "iGeom.hh"
+/** \class EntArrIter iGeom.hpp "iGeom.hpp"
  * \brief Class for iterating over %iGeom entity arrays.
  */
     class EntArrIter {
@@ -447,7 +447,7 @@ class iGeom : public iGeomBase {
         inline Error reset();
     };
     
-/** \class EntIter iGeom.hh "iGeom.hh"
+/** \class EntIter iGeom.hpp "iGeom.hpp"
  * \brief Class for iterating over %iGeom entities.
  */
     class EntIter {

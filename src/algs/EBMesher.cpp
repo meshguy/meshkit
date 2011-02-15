@@ -3,7 +3,7 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "moab/ReadUtilIface.hpp"
-#include "meshkit/iGeom.hh"
+#include "meshkit/iGeom.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 
 #ifdef HAVE_MOAB

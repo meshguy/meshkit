@@ -1,6 +1,6 @@
 #include "meshkit/OneToOneSwept.hpp"
 #include "meshkit/MKCore.hpp"
-#include "meshkit/iMesh.hh"
+#include "meshkit/iMesh.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 #include <iostream>
 #include <math.h>
