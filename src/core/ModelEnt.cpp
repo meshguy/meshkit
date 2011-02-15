@@ -3,7 +3,7 @@
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/Error.hpp"
 #include "meshkit/MKCore.hpp"
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 #include "meshkit/VecUtil.hpp"
 #include "moab/GeomTopoTool.hpp"
 #include "RefEntity.hpp"

@@ -3,7 +3,7 @@
 
 /** \file MeshScheme.hpp
  */
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 #include "meshkit/MeshOp.hpp"
 
 namespace MeshKit {

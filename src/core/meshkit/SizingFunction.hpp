@@ -1,7 +1,7 @@
 #ifndef SIZINGFUNCTION_HPP
 #define SIZINGFUNCTION_HPP
 
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 #include "meshkit/MKCore.hpp"
 
 namespace MeshKit {

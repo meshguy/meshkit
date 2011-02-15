@@ -3,7 +3,7 @@
 
 /** \file MKCore.hpp
  */
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
 #include "meshkit/MKGraph.hpp"
 #include "meshkit/iGeom.hpp"

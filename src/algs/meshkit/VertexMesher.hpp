@@ -1,7 +1,7 @@
 #ifndef VERTEXMESHER_HPP
 #define VERTEXMESHER_HPP
 
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"

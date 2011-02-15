@@ -1,10 +1,10 @@
 #ifndef MODELENT_HPP
 #define MODELENT_HPP
 
-#include "assert.h"
 #include "meshkit/iGeom.hpp"
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 #include "moab/Interface.hpp"
+#include <cassert>
 #include <vector>
 #include <set>
 #include <map>

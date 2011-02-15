@@ -1,5 +1,5 @@
 #include "meshkit/MeshScheme.hpp"
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 
 namespace MeshKit 
 {

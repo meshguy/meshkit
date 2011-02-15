@@ -1,7 +1,7 @@
 #ifndef MESHOP_HPP
 #define MESHOP_HPP
 
-#include "meshkit/Types.h"
+#include "meshkit/Types.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/GraphNode.hpp"
 #include "moab/Types.hpp"

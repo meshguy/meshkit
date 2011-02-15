@@ -23,7 +23,7 @@ libMeshKitcore_la_SOURCES = \
 
 # The list of header files which are to be installed
 nobase_libMeshKitcore_la_include_HEADERS = \
-	meshkit/Types.h \
+	meshkit/Types.hpp \
 	meshkit/Error.hpp \
 	meshkit/GraphNode.hpp \
 	meshkit/MeshOp.hpp \
