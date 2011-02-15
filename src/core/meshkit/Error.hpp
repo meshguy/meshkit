@@ -8,19 +8,30 @@
 
 namespace MeshKit {
 
+#define ECERRCHK(err, descr)                                               \
+  do {                                                                     \
+    if (MK_SUCCESS != err) {                                  \
+      Error tmp_err(0, "%s, line %d: %s", __FILE__, __LINE__, descr); \
+      throw tmp_err;                           \
+    }                                                                      \
+  } while(false)
+
+    
 #define MKERRCHK(err, descr)                                               \
   do {                                                                     \
     if (MK_SUCCESS != err.error_code()) {                                  \
-      Error tmp_err(0, "%s, line %d: %s", __FILE__, __LINE__, err.what()); \
+      Error tmp_err(0, "%s, line %d: %s: %s", __FILE__, __LINE__, err.what(), descr); \
       err.set_string(tmp_err.what()); throw err;                           \
     }                                                                      \
   } while(false)
 
     
-#define MBERRCHK(err, descr)                                               \
+#define MBERRCHK(err, mbimpl)                                           \
   do {                                                                     \
     if (moab::MB_SUCCESS != err) {                                         \
-      throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);      \
+      std::string mb_err;                                                 \
+      mbimpl->get_last_error(mb_err); \
+      throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, mb_err.c_str()); \
     }                                                                      \
   } while(false)
     

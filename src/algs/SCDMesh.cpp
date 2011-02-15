@@ -75,7 +75,7 @@ void SCDMesh::setup_this()
   void SCDMesh::export_mesh(const char* file_name)
   {
     rval = mk_core()->moab_instance()->write_mesh(file_name);
-    MBERRCHK(rval, "ERROR: couldn't write SCDMesh");
+    MBERRCHK(rval, mk_core()->moab_instance());
   }
 
 
@@ -156,7 +156,7 @@ void SCDMesh::create_cart_box()
     rval = mk_core()->moab_instance()->create_vertices(&full_coords[0],
                                                        num_verts,
                                                        vtx_range);
-    MBERRCHK(rval, "ERROR: couldn't create mesh nodes");
+    MBERRCHK(rval, mk_core()->moab_instance());
 
     // generate hex entities from the vertices
     std::vector<moab::EntityHandle* > conn;
@@ -186,7 +186,7 @@ void SCDMesh::create_cart_box()
                                                          conn[hx],
                                                          8,
                                                          elements[hx]);
-      MBERRCHK(rval, "ERROR: couldn't create hex elements");
+      MBERRCHK(rval, mk_core()->moab_instance());
     }
   }
 

@@ -15,7 +15,9 @@ VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec)
 {}
 
 VertexMesher::~VertexMesher() 
-{}
+{
+  mk_core()->vertex_mesher(NULL);
+}
 
 MeshOp *VertexMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
 {
@@ -59,7 +61,7 @@ void VertexMesher::execute_this()
     moab::EntityHandle new_vert;
       // create the vertex
     moab::ErrorCode rval = mk_core()->moab_instance()->create_vertex(pos, new_vert);
-    MBERRCHK(rval, "Trouble creating new vertex.");
+    MBERRCHK(rval, mk_core()->moab_instance());
       // add to meselection
     (*sit).second.insert(new_vert);
       // commit to ModelEnt

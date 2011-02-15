@@ -65,6 +65,9 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, iMesh *imesh, iRel *irel,
 
 MKCore::~MKCore() 
 {
+    // delete the graphnodes here, since they point back to me and depend on me being still here
+  delete_graph_meshops();
+  
   int err;
   for (unsigned int i = 0; i < iRelInstances.size(); i++) 
     if (iCreatedIrels[i]) delete iRelInstances[i];
@@ -140,7 +143,7 @@ void MKCore::init(bool construct_missing_ifaces)
     rval = moabInstances[0]->tag_create("__MKModelEntity", sizeof(MeshKit::ModelEnt*), moab::MB_TAG_SPARSE,
                                         moab::MB_TYPE_OPAQUE, moabModelTags[0], &null_me);
     if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
-      MBERRCHK(rval, "Failure to create MKModelEnt tag in iMesh.");
+      MBERRCHK(rval, moab_instance());
   }
 
   if (moabGeomDimTags.empty()) {
@@ -149,7 +152,7 @@ void MKCore::init(bool construct_missing_ifaces)
     rval = moabInstances[0]->tag_create(GEOM_DIMENSION_TAG_NAME, sizeof(int), moab::MB_TAG_SPARSE,
                                         moab::MB_TYPE_INTEGER, moabGeomDimTags[0], 0, true);
     if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
-      MBERRCHK(rval, "Failure to create geometry dimension tag in iMesh.");
+      MBERRCHK(rval, moab_instance());
   }
   
   // moab global id tag
@@ -158,7 +161,7 @@ void MKCore::init(bool construct_missing_ifaces)
     rval = moabInstances[0]->tag_create(GLOBAL_ID_TAG_NAME, sizeof(int), moab::MB_TAG_DENSE,
                                         moab::MB_TYPE_INTEGER, moabIDTags[0], 0, true);
     if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
-      MBERRCHK(rval, "Failure to create global id tag in iMesh.");
+      MBERRCHK(rval, moab_instance());
   }
 }
 
@@ -237,7 +240,7 @@ void MKCore::populate_mesh(int index)
 void MKCore::load_mesh(const char *filename, const char *options, int index) 
 {
   moab::ErrorCode rval = moabInstances[index]->load_file(filename, NULL, options);
-  MBERRCHK(rval, "Failed to load mesh.");
+  MBERRCHK(rval, moab_instance());
 }
 
 void MKCore::save_geometry(const char *filename, const char *options, int index) 
@@ -249,7 +252,7 @@ void MKCore::save_geometry(const char *filename, const char *options, int index)
 void MKCore::save_mesh(const char *filename, const char *options, int index)
 {
   moab::ErrorCode rval = moab_instance(index)->write_file(filename, NULL, options);
-  MBERRCHK(rval, "Failed to save mesh.");
+  MBERRCHK(rval, moab_instance());
 }
 
 void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents) 
@@ -277,11 +280,13 @@ int MKCore::add_sizing_function(SizingFunction *sf)
   return sizingFunctions.size()-1;
 }
 
-void MKCore::remove_sizing_function(int index) 
+void MKCore::remove_sizing_function(int index, bool delete_too) 
 {
   if (index >= (int)sizingFunctions.size() || !sizingFunctions[index]) 
     throw Error(MK_BAD_INPUT, "No sizing function with that index.");
 
+  if (delete_too) delete sizingFunctions[index];
+  
   sizingFunctions[index] = NULL;
 }
 

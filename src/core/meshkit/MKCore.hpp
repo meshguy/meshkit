@@ -362,7 +362,7 @@ public:
      * \param create_if_missing If true and no sizing function exists with the specified size, one is created.
      * \return SizingFunction* to requested sizing function, NULL if no SizingFunction with that size
      */
-  SizingFunction *sizing_function(double size, bool create_if_missing = true);
+  SizingFunction *sizing_function(double size, bool create_if_missing);
   
     /** \brief Add sizing function to those managed by MeshKit
      *
@@ -374,14 +374,15 @@ public:
      */
   int add_sizing_function(SizingFunction *sf);
 
-    /** \brief Delete sizing function
+    /** \brief Remove and, optionally, delete sizing function
      *
      * This function removes the referenced sizing function from MKCore's list (setting the
      * corresponding SizingFunction* to NULL, to keep others at the same index position).  
      * Throws an Error if requested sizing function is NULL.
      * \param index Index of SizingFunction to be removed
+     * \param delete_too If true, deletes the SizingFunction object too
      */
-  void remove_sizing_function(int index);
+  void remove_sizing_function(int index, bool delete_too = true);
   
 private:
     //! Geometry api instance

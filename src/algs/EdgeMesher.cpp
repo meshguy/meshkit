@@ -70,8 +70,12 @@ void EdgeMesher::setup_this()
       //first check to see whether entity is meshed
     if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0)
       continue;
-		
-    SizingFunction *sf = mk_core() -> sizing_function(me->sizing_function_index());
+    
+    SizingFunction *sf = mk_core()->sizing_function(me->sizing_function_index());
+    if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT &&
+        mk_core()->sizing_function(0))
+      sf = mk_core()->sizing_function(0);
+    
     if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT)
     {
         //no sizing set, just assume default #intervals as 4
@@ -123,7 +127,7 @@ void EdgeMesher::execute_this()
 
     //get coords in list, then move one tuple to the last position
     moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], nodes.size(), &coords[0]);
-    MBERRCHK(rval, "Trouble getting bounding vertex positions.");
+    MBERRCHK(rval, mk_core()->moab_instance());
 
     //move the second node to the endmost postion in the node list
     for (int i = 0; i < 3; i++)
@@ -156,9 +160,11 @@ void EdgeMesher::execute_this()
     nodes[num_edges] = nodes[1];
 
     //create the vertices' entities on the edge
-    rval = mk_core()->moab_instance()->create_vertices(&coords[3], num_edges - 1, mit -> second);
-    MBERRCHK(rval, "Couldn't create nodes");
-
+    if (num_edges > 1) {
+      rval = mk_core()->moab_instance()->create_vertices(&coords[3], num_edges - 1, mit -> second);
+      MBERRCHK(rval, mk_core()->moab_instance());
+    }
+    
     //distribute the nodes into vector
     int j = 1;
     for (moab::Range::iterator rit = mit -> second.begin(); rit != mit -> second.end(); rit++)
@@ -167,12 +173,12 @@ void EdgeMesher::execute_this()
       //get the query interface, which we will use to create the edges directly 
     moab::ReadUtilIface *iface;
     rval = mk_core() -> moab_instance() -> query_interface("ReadUtilIface", (void**)&iface);
-    MBERRCHK(rval, "Couldn't get ReadUtilIface.");		
+    MBERRCHK(rval, mk_core()->moab_instance());		
 
       //create the edges, get a direct ptr to connectivity
     moab::EntityHandle starth, *connect, *tmp_connect;
     rval = iface -> get_element_connect(num_edges, 2, moab::MBEDGE, 1, starth, connect);
-    MBERRCHK(rval, "Couldn't create edge elements.");
+    MBERRCHK(rval, mk_core()->moab_instance());
 
       //add edges to range for the MESelection
     mit -> second.insert(starth, starth + num_edges - 1);

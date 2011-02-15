@@ -67,7 +67,7 @@ public:
     /** \brief Get flag denoting whether setup_this has been called for this node
      * \return Value of executeCalled
      */
-  bool setup_called();
+  bool setup_called() const;
   
     /** \brief Set flag denoting whether setup_this has been called for this node
      * \param flag New value for setupCalled
@@ -77,7 +77,7 @@ public:
     /** \brief Get flag denoting whether execute_this has been called for this node
      * \return Value of executeCalled
      */
-  bool execute_called();
+  bool execute_called() const;
   
     /** \brief Set flag denoting whether execute_this has been called for this node
      * \param flag New value for setupCalled
@@ -104,6 +104,8 @@ private:
 };
 
 inline GraphNode::GraphNode(const GraphNode &node) 
+        : mkGraph(node.get_graph()), nodeName(node.get_name()), 
+          setupCalled(node.setup_called()), executeCalled(node.execute_called())
 {
     // create a node for this meshop
   graphNode = get_graph()->get_graph().addNode();
@@ -118,7 +120,7 @@ inline GraphNode::GraphNode(const GraphNode &node)
 }
     
 inline GraphNode::GraphNode(MKGraph *graph) 
-        : mkGraph(graph)
+        : mkGraph(graph), nodeName(), setupCalled(false), executeCalled(false)
 {
     // create a Lemon node 
   graphNode = graph->get_graph().addNode();
@@ -175,7 +177,7 @@ inline GraphNode *GraphNode::other_node(lemon::ListDigraph::Arc arc)
 }
 
     //! Get flag denoting whether setup_this has been called for this node
-inline bool GraphNode::setup_called() 
+inline bool GraphNode::setup_called() const
 {
   return setupCalled;
 }
@@ -186,7 +188,7 @@ inline void GraphNode::setup_called(bool flag) {
 }
 
     //! Get flag denoting whether execute_this has been called for this node
-inline bool GraphNode::execute_called() 
+inline bool GraphNode::execute_called() const
 {
   return executeCalled;
 }

@@ -63,9 +63,9 @@ int load_and_copymove(const char *input_filename,
   // should be changed.
   moab::EntityType CopyMesh_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBHEX};
   iBase_EntityType CopyMesh_mtp = iBase_REGION;
-  int success = MKCore::register_meshop("CopyMesh", &CopyMesh_mtp, 1,
-					CopyMesh_tps, 3, CopyMesh::factory,
-					MeshOp::canmesh_region);
+//  int success = MKCore::register_meshop("CopyMesh", &CopyMesh_mtp, 1,
+//					CopyMesh_tps, 3, CopyMesh::factory,
+//					MeshOp::canmesh_region);
 
   // start up MK and load the geometry
   MKCore mk;

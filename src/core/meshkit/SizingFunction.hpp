@@ -82,7 +82,7 @@ inline SizingFunction::SizingFunction(MKCore *mkcore, int num_int, double int_si
   //! Destructor
 inline SizingFunction::~SizingFunction() 
 {
-  mkCore->remove_sizing_function(coreIndex);
+  mkCore->remove_sizing_function(coreIndex, false);
 }
   
   //! Get core instance

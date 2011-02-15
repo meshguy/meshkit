@@ -15,10 +15,12 @@ libMeshKitCAMAL_la_SOURCES = \
 	CAMALSurfEval.cpp \
 	CAMALSurfEval.hpp \
 	CAMALSizeEval.cpp \
-	CAMALSizeEval.hpp
+	CAMALSizeEval.hpp \
+	CAMALTriAdvance.cpp
 
 # The list of header files which are to be installed
-nobase_libMeshKitCAMAL_la_include_HEADERS = 
+nobase_libMeshKitCAMAL_la_include_HEADERS = \
+	meshkit/CAMALTriAdvance.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

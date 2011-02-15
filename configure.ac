@@ -763,6 +763,8 @@ AC_CONFIG_FILES([Makefile
                  test/Makefile
                  test/core/Makefile
                  test/algs/Makefile
+		 test/extern/Makefile
+		 test/extern/CAMAL/Makefile
                  utils/Makefile
                  ])
 

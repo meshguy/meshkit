@@ -133,7 +133,7 @@ void EBMesher::execute_this()
 
   if (debug) {
     rval = moab_instance()->write_mesh("input.vtk");
-    MBERRCHK(rval, "Couldn't write input mesh.");
+    MBERRCHK(rval, mk_core()->moab_instance());
   }
 
   // 1. construct obb tree for all surfaces and volumes
@@ -177,7 +177,7 @@ int EBMesher::construct_obb_tree()
   if (m_bUseGeom) {
     // construct obb tree for geometry surfaces and volumes by GeomTopoTool
     moab::ErrorCode rval = m_GeomTopoTool->construct_obb_trees(true);
-    MBERRCHK(rval, "Couldn't construct obb tree in GeomTopoTool.");
+    MBERRCHK(rval, mk_core()->moab_instance());
     
     m_hObbTree = m_GeomTopoTool->obb_tree();
     m_hTreeRoot = m_GeomTopoTool->get_one_vol_root();
@@ -187,12 +187,12 @@ int EBMesher::construct_obb_tree()
     MBRange tris;
     moab::ErrorCode rval = moab_instance()->
       get_entities_by_dimension(reinterpret_cast<moab::EntityHandle>(m_hRootSet), 2, tris);
-    MBERRCHK(rval, "Failed to get triangles.");
+    MBERRCHK(rval, mk_core()->moab_instance());
     
     // make tree
     m_hObbTree = new MBOrientedBoxTreeTool( moab_instance() );
     rval = m_hObbTree->build(tris, m_hTreeRoot);
-    MBERRCHK(rval, "Failed to build tree.");
+    MBERRCHK(rval, mk_core()->moab_instance());
   }
 
   return iBase_SUCCESS;
@@ -341,7 +341,7 @@ int EBMesher::write_mesh(const char* file_name, int type,
   
   rval = moab_instance()->write_mesh(out_name.c_str(),
 				     (const moab::EntityHandle*) &set, 1);
-  MBERRCHK(rval, "Failed to write hex mesh.");
+  MBERRCHK(rval, mk_core()->moab_instance());
   
   std::cout << "Elements are exported." << std::endl;
   time(&time3);
@@ -526,7 +526,7 @@ int EBMesher::set_division()
   moab::ErrorCode rval = m_hObbTree->box(m_hTreeRoot, box_center.array(),
 				     box_axis1.array(), box_axis2.array(),
 				     box_axis3.array());
-  MBERRCHK(rval, "Error getting box information for tree root set.");
+  MBERRCHK(rval, mk_core()->moab_instance());
 
   // cartesian box corners
   moab::CartVect corners[8] = {box_center + box_axis1 + box_axis2 + box_axis3,
@@ -554,7 +554,7 @@ int EBMesher::set_division()
     rval = moab_instance()->
       get_number_entities_by_dimension(reinterpret_cast<MBEntityHandle>(m_hRootSet),
 				       2, n_tri);
-    MBERRCHK(rval, "Failed to get number of triangles.");
+    MBERRCHK(rval, mk_core()->moab_instance());
     
     double box_length_ave = (length[0] + length[1] + length[2])/3.;
     m_dInputSize = 2.*box_length_ave*sqrt(8.886/n_tri);
@@ -620,17 +620,17 @@ int EBMesher::make_scd_hexes()
   moab::Core *mbcore = dynamic_cast<moab::Core*>(moab_instance());
 
   moab::ErrorCode rval = mbcore->create_scd_sequence(coord_min, coord_max, MBVERTEX, 1, vs, vertex_seq);
-  MBERRCHK(rval, "Failed to create structured vertices.");
+  MBERRCHK(rval, mk_core()->moab_instance());
   
   mbcore->create_scd_sequence(coord_min, coord_max, MBHEX, 1, cs, cell_seq);
-  MBERRCHK(rval, "Failed to create structured hexes.");
+  MBERRCHK(rval, mk_core()->moab_instance());
 
   moab::HomCoord p2(coord_max.i(), coord_min.j(), coord_min.k());
   moab::HomCoord p3(coord_min.i(), coord_max.j(), coord_min.k()); 
   
   rval = mbcore->add_vsequence(vertex_seq, cell_seq, coord_min, coord_min,
 					p2, p2, p3, p3);
-  MBERRCHK(rval, "Failed to add vertex sequence.");
+  MBERRCHK(rval, mk_core()->moab_instance());
 
   int nTotNode = m_nNode[0]*m_nNode[1]*m_nNode[2];
   int ii, jj, kk;
@@ -644,7 +644,7 @@ int EBMesher::make_scd_hexes()
     dumv[1] = m_origin_coords[1] + jj*m_dIntervalSize[1];
     dumv[2] = m_origin_coords[2] + kk*m_dIntervalSize[2];
     rval = moab_instance()->set_coords(&handle, 1, dumv);
-    MBERRCHK(rval, "Failed to set coords.");
+    MBERRCHK(rval, mk_core()->moab_instance());
   }
 
   m_iStartHex = moab_instance()->id_from_handle(cs);
@@ -743,7 +743,7 @@ int EBMesher::set_tag_info()
   moab::ErrorCode rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_edgeCutFracTag),
 						   reinterpret_cast<moab::EntityHandle*> (&hvBndrHex[0]),
 						   nBndrHex, &frac_data_pointer[0], frac_size);
-  MBERRCHK(rval, "Failed to set cut fraction infor to hex.");
+  MBERRCHK(rval, mk_core()->moab_instance());
   
   delete [] frac_size;
   delete [] frac_leng;
@@ -1359,7 +1359,7 @@ bool EBMesher::export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<d
   
   moab::ErrorCode rval = moab_instance()->write_mesh("edges.vtk",
 						 (const moab::EntityHandle*) &set, 1);
-  MBERRCHK(rval, "Couldn't write edges.");
+  MBERRCHK(rval, mk_core()->moab_instance());
 
   return true;
 }

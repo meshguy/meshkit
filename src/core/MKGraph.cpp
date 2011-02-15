@@ -13,6 +13,10 @@ MKGraph::MKGraph()
     
 MKGraph::~MKGraph() 
 {
+}
+
+void MKGraph::delete_graph_meshops() 
+{
   for (lemon::ListDigraph::NodeIt nit(mkGraph); nit != lemon::INVALID; ++nit)
     if (nodeMap[nit]) delete nodeMap[nit];
 }
@@ -101,17 +105,24 @@ void MKGraph::setup()
     assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
     if (nodeMap[nd]) nodeMap[nd]->setup_called(false);
   }
-  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs2(rg);
-  rbfs2.init();
-  rbfs2.addSource(leafNode->get_node());
-  while (!rbfs2.emptyQueue()) {
-    lemon::ListDigraph::Node nd = rbfs2.processNextNode();
-    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
-    if (nodeMap[nd] && !nodeMap[nd]->setup_called()) {
-      nodeMap[nd]->setup_this();
-      nodeMap[nd]->setup_called(true);
+
+  bool called_one;
+  do {
+    called_one = false;
+    lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs2(rg);
+    rbfs2.init();
+    rbfs2.addSource(leafNode->get_node());
+    while (!rbfs2.emptyQueue()) {
+      lemon::ListDigraph::Node nd = rbfs2.processNextNode();
+      assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
+      if (nodeMap[nd] && !nodeMap[nd]->setup_called()) {
+        nodeMap[nd]->setup_this();
+        nodeMap[nd]->setup_called(true);
+        called_one = true;
+      }
     }
   }
+  while (called_one);
 }
 
 //! Run execute on the graph

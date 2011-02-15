@@ -66,12 +66,12 @@ void ModelEnt::create_mesh_set(int flag)
   
     // create the set
   moab::ErrorCode rval = mkCore->moab_instance()->create_meshset(ordered, moabEntSet);
-  MBERRCHK(rval, "Failed to create mesh set.");
+  MBERRCHK(rval, mkCore->moab_instance());
   
     // tag it with this ModelEnt
   ModelEnt *this_ptr = this;
   rval = mkCore->moab_instance()->tag_set_data(mkCore->moab_model_tag(), &moabEntSet, 1, &this_ptr);
-  MBERRCHK(rval, "Failed to set iMesh ModelEnt tag.");
+  MBERRCHK(rval, mkCore->moab_instance());
 
     // relate the mesh to the geom
   iRel::Error merr;
@@ -105,7 +105,7 @@ void ModelEnt::create_mesh_set(int flag)
         }
       if (seth) {
         rval = mkCore->moab_instance()->add_parent_child(seth, moabEntSet);
-        MBERRCHK(rval, "Trouble adding parent/child relation.");
+        MBERRCHK(rval, mkCore->moab_instance());
       }
     }
   }
@@ -118,7 +118,7 @@ void ModelEnt::create_mesh_set(int flag)
       seth = mesh_handle(*vit);
       if (seth) {
         rval = mkCore->moab_instance()->add_parent_child(moabEntSet, seth);
-        MBERRCHK(rval, "Trouble adding parent/child relation.");
+        MBERRCHK(rval, mkCore->moab_instance());
       }
     }
   }
@@ -138,14 +138,14 @@ bool ModelEnt::exist_mesh_set()
   moab::ErrorCode rval = mkCore->moab_instance()->
     get_entities_by_type_and_tag(0, moab::MBENTITYSET, &geom_dim_tag,
 				 dims, 1, ents);
-  MBERRCHK(rval, "Failed to get geometry dimension tag.");
+  MBERRCHK(rval, mkCore->moab_instance());
 
   moab::EntityHandle meshset;
   rval = mkCore->moab_instance()->create_meshset(moab::MESHSET_ORDERED, meshset);
-  MBERRCHK(rval, "Failed to create meshset.");
+  MBERRCHK(rval, mkCore->moab_instance());
 
   rval = mkCore->moab_instance()->add_entities(meshset, ents);
-  MBERRCHK(rval, "Failed to add dim entities to meshset.");
+  MBERRCHK(rval, mkCore->moab_instance());
 
   const void* ids[] = {&id};
   ents.clear();
@@ -153,7 +153,7 @@ bool ModelEnt::exist_mesh_set()
   rval = mkCore->moab_instance()->
     get_entities_by_type_and_tag(meshset, moab::MBENTITYSET, &id_tag,
 				 ids, 1, ents);
-  MBERRCHK(rval, "Failed to set iMesh ModelEnt tag.");
+  MBERRCHK(rval, mkCore->moab_instance());
 
   if (!ents.size()) return false;
 
@@ -183,7 +183,7 @@ void ModelEnt::set_senses()
         err = mkCore->igeom_instance()->getEntNrmlSense((*vit)->geom_handle(), iGeomEnt, dum_sense);
         IBERRCHK(err, "Problem getting senses.");
         rval = gt.set_sense((*vit)->mesh_handle(), moabEntSet, dum_sense);
-        MBERRCHK(rval, "Problem setting sense.");
+        MBERRCHK(rval, mkCore->moab_instance());
       }
     }
   }
@@ -205,7 +205,7 @@ void ModelEnt::set_senses()
       err = mkCore->igeom_instance()->getEntNrmlSense(iGeomEnt, (*vit)->geom_handle(), dum_sense);
       IBERRCHK(err, "Problem getting senses.");
       rval = gt.set_sense(moabEntSet, (*vit)->mesh_handle(), dum_sense);
-      MBERRCHK(rval, "Problem setting sense.");
+      MBERRCHK(rval, mkCore->moab_instance());
     }
   }
 }
@@ -227,7 +227,7 @@ void ModelEnt::set_upward_senses()
   }
   moab::GeomTopoTool gt(mkCore->moab_instance());
   moab::ErrorCode rval = gt.set_senses(mesh_handle(), ments, senses);
-  MBERRCHK(rval, "Problem setting senses on edge.");
+  MBERRCHK(rval, mkCore->moab_instance());
 }
     
 /** \brief Commit mesh to a model entity
@@ -242,7 +242,7 @@ void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate)
 {
   std::vector<moab::EntityHandle> ent_vec;
   std::copy(mesh_ents.begin(), mesh_ents.end(), std::back_inserter(ent_vec));
-  commit_mesh(ent_vec, mstate);
+  commit_mesh(&ent_vec[0], ent_vec.size(), mstate);
 }
 
 /** \brief Commit mesh to a model entity
@@ -253,20 +253,21 @@ void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate)
  * \param mesh_ents Mesh entities being assigned to this model entity
  * \param mstate The meshed state after this mesh is added
  */
-void ModelEnt::commit_mesh(std::vector<moab::EntityHandle> &mesh_ents,
+void ModelEnt::commit_mesh(moab::EntityHandle *mesh_ents,
+                           int num_ents,
                            MeshedState mstate) 
 {
     // if it's BOTH, set the relation through iRel
   if (mkCore->irel_pair()->get_rel_type(1) == iRel::BOTH) {
     iRel::Error err =
         mkCore->irel_pair()->setEntEntArrRelation(geom_handle(), false,
-                                                  (iBase_EntityHandle*)&mesh_ents[0], mesh_ents.size());
+                                                  (iBase_EntityHandle*)mesh_ents, num_ents);
     IBERRCHK(err, "Trouble committing mesh.");
   }
 
     // either way, add them to the set
-  moab::ErrorCode rval = mkCore->moab_instance()->add_entities(moabEntSet, &mesh_ents[0], mesh_ents.size());
-  MBERRCHK(rval, "Trouble adding entities to set.");
+  moab::ErrorCode rval = mkCore->moab_instance()->add_entities(moabEntSet, mesh_ents, num_ents);
+  MBERRCHK(rval, mkCore->moab_instance());
   
   meshedState = mstate;
 }
@@ -320,9 +321,8 @@ void ModelEnt::evaluate(double x, double y, double z,
   }
 
   if (0 == dimension()) {
-    close[0] = x;
-    close[1] = y;
-    close[2] = z;
+    err = mk_core()->igeom_instance()->getVtxCoord(geom_handle(), close[0], close[1], close[2]);
+    IBERRCHK(err, "Problem getting vertex coordinates.");
     return;
   }
   else if (3 == dimension()) {
@@ -391,7 +391,7 @@ void ModelEnt::get_mesh(int dim,
   if (!bdy_too || dim == dimension()) {
       // just owned entities, which will be in the set
     moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), ments);
-    MBERRCHK(rval, "Trouble getting mesh entities.");
+    MBERRCHK(rval, mkCore->moab_instance());
     return;
   }
 
@@ -399,7 +399,7 @@ void ModelEnt::get_mesh(int dim,
   else if (1 == dimension() && 0 == dim) {
     std::vector<moab::EntityHandle> tmp_edgevs, tmp_vvs;
     moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, 0, tmp_edgevs);
-    MBERRCHK(rval, "Trouble getting owned vertices.");
+    MBERRCHK(rval, mkCore->moab_instance());
     boundary(0, tmp_vvs);
     if (tmp_vvs.empty()) throw Error(MK_NOT_FOUND, "No mesh on bounding entity.");
     ments.push_back(tmp_vvs[0]);
@@ -412,10 +412,10 @@ void ModelEnt::get_mesh(int dim,
       // first, get dimension()-dimensional entities, then get dim-dimensional neighbors of those
     std::vector<moab::EntityHandle> tmp_ments;
     moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), tmp_ments);
-    MBERRCHK(rval, "Trouble getting owned entities.");
+    MBERRCHK(rval, mkCore->moab_instance());
     rval = mk_core()->moab_instance()->get_adjacencies(&tmp_ments[0], tmp_ments.size(), dim, false, ments, 
                                                        moab::Interface::UNION);
-    MBERRCHK(rval, "Trouble getting adjacent entities.");
+    MBERRCHK(rval, mkCore->moab_instance());
   }
 }
     
@@ -437,18 +437,16 @@ void ModelEnt::boundary(int dim,
   for (vit = me_loop.begin(); vit != me_loop.end(); vit++, sense_it++) {
     std::vector<moab::EntityHandle> tmp_ments;
     (*vit)->get_mesh(dim, tmp_ments, true);
-    if (*sense_it == SENSE_REVERSE) {
+    if (*sense_it == SENSE_REVERSE) 
       std::reverse(tmp_ments.begin(), tmp_ments.end());
+    if (2 == dimension() && 0 == dim)
+        // assembling vertices on loops; don't do last, since that'll be the first of the
+        // next edge
+      std::copy(tmp_ments.begin(), tmp_ments.end()-1, std::back_inserter(bdy));
+    else
       std::copy(tmp_ments.begin(), tmp_ments.end(), std::back_inserter(bdy));
-      if (senses) {
-        for (unsigned int i = 0; i < tmp_ments.size(); i++) senses->push_back(SENSE_REVERSE);
-      }
-    }
-    else {
-      std::copy(tmp_ments.begin(), tmp_ments.end(), std::back_inserter(bdy));
-      if (senses) {
-        for (unsigned int i = 0; i < tmp_ments.size(); i++) senses->push_back(SENSE_FORWARD);
-      }
+    if (senses) {
+      for (unsigned int i = 0; i < tmp_ments.size(); i++) senses->push_back(*sense_it);
     }
     if (group_sizes) {
       gents_ctr++;
@@ -458,9 +456,10 @@ void ModelEnt::boundary(int dim,
         first_ment = bdy.size();
         gents_ctr = 0;
         grpsize_it++;
-      }
-    }
-  }
+      } // block at end of a given loop
+    } // block updating group size
+  } // over loop
+  
 }
     
 void ModelEnt::boundary(int dim,
@@ -745,6 +744,45 @@ void ModelEnt::boundary(int dim,
                         moab::Range &ents) const
 {
   throw Error(MK_NOT_IMPLEMENTED, "Not implemented yet.");
+}
+
+void ModelEnt::handles_to_ids(std::vector<moab::EntityHandle> &ents,
+                              std::vector<int> &ents_as_ids,
+                              moab::Tag tagh,
+                              moab::Range *ent_range) 
+{
+    // if we need to, make a tag
+  moab::ErrorCode rval;
+  bool i_created_tag = false;
+  if (0 == tagh) {
+    rval = mk_core()->moab_instance()->tag_create("__ModelEntidtag", sizeof(int), moab::MB_TAG_DENSE, 
+                                                  moab::MB_TYPE_INTEGER, tagh, NULL);
+    MBERRCHK(rval, mkCore->moab_instance());
+    i_created_tag = true;
+  }
+  
+    // put entities into range, after clearing it
+  moab::Range tmp_range;
+  if (!ent_range) ent_range = &tmp_range;
+  ent_range->clear();
+  std::copy(ents.begin(), ents.end(), moab::range_inserter(*ent_range));
+  
+    // resize the ids vector, and temporarily store ids there and set tag (vector will be at least the length of
+    // the range)
+  ents_as_ids.resize(ents.size());
+  for (unsigned int i = 0; i < ent_range->size(); i++) ents_as_ids[i] = i;
+  rval = mk_core()->moab_instance()->tag_set_data(tagh, *ent_range, &ents_as_ids[0]);
+  MBERRCHK(rval, mkCore->moab_instance());
+  
+    // now get the tag values again, this time from the vector, which puts them in order in the int list
+  rval = mk_core()->moab_instance()->tag_get_data(tagh, &ents[0], ents.size(), &ents_as_ids[0]);
+  MBERRCHK(rval, mkCore->moab_instance());
+                                                  
+    // delete the tag if I created it
+  if (i_created_tag) {
+    rval = mk_core()->moab_instance()->tag_delete(tagh);
+    MBERRCHK(rval, mkCore->moab_instance());
+  }
 }
 
 iGeom::EntityHandle ModelEnt::geom_handle(moab::EntityHandle ment) const 

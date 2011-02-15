@@ -231,10 +231,12 @@ public:
      * Takes the input mesh entities, adds them to the entity set for this model entity,
      * and (if both-type relation on the mesh side) sets the relations to the corresponding
      * geometry entity.
-     * \param mesh_ents Mesh entities being assigned to this model entity
+     * \param mesh_ents Pointer to mesh entities being assigned to this model entity
+     * \param num_ents Number of mesh entities in list
      * \param mstate The meshed state after this mesh is added
      */
-  void commit_mesh(std::vector<moab::EntityHandle> &mesh_ents,
+  void commit_mesh(moab::EntityHandle *mesh_ents,
+                   int num_ents,
                    MeshedState mstate);
 
     /** \brief Return the mesh on this entity, of the specified dimension or (if dim=-1) all dimensions
@@ -288,6 +290,22 @@ public:
   void boundary(int dim, 
                 moab::Range &ents) const;
 
+    /** \brief Convert a vector of entity handles to a vector of integer ids
+     *
+     * The entity handles are ordered and made unique, assigned ids, then the id vector is assembled
+     * in the same order as the input handle vector.  Optionally this function returns the moab tag 
+     * used to assign ids, and the moab range used to get unique ids
+     * \param ents Vector of entities whose ids to assign
+     * \param ents_as_ids Vector of ids that get assigned, ordered same as ents
+     * \param tagh Tag handle to use for ids; if zero, local tag is used then deleted
+     * \param ent_range Moab entity range; if non-NULL, populated range is returned; this range is
+     *       cleared in this function
+     */
+  void handles_to_ids(std::vector<moab::EntityHandle> &ents,
+                      std::vector<int> &ents_as_ids,
+                      moab::Tag tagh = 0,
+                      moab::Range *ent_range = NULL);
+  
     /**@}*/
 
     /** \name Member get/set

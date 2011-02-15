@@ -125,10 +125,31 @@ public:
      */
   virtual bool is_anisotropic();
 
+    /** \brief Get the mesh size set on this sizeeval
+     * \return Mesh size
+     */
+  double get_size();
+  
+    /** \brief Set the mesh size set on this sizeeval
+     * \param mesh_size Mesh size being set
+     */
+  void set_size(double mesh_size);
+  
 private:
   double meshSize;
 };
 
+
+inline double CAMALSizeEval::get_size() 
+{
+  return meshSize;
+}
+
+inline void CAMALSizeEval::set_size(double mesh_size)
+{
+  meshSize = mesh_size;
+}
+  
 } // namespace MeshKit
 
 #endif
