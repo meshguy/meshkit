@@ -4,7 +4,9 @@
 AC_INIT(MESHKIT, 3.99)
 AC_CANONICAL_SYSTEM
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([-Wall])
+m4_ifdef([AM_SILENT_RULES],
+ [AM_INIT_AUTOMAKE([-Wall color-tests parallel-tests])],
+ [AM_INIT_AUTOMAKE([-Wall])])
 
 dnl Original MK_CHECK_COMPILERS did not look for Fortran.  We
 dnl ask FATHOM_CHECK_COMPILERS to also skip the check for FC:
@@ -21,6 +23,13 @@ AC_PROG_MAKE_SET
 AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
 FATHOM_COMPILER_FLAGS
+m4_ifdef([AM_SILENT_RULES],[
+if test "x$DEBUG" = "xyes"; then
+  AM_SILENT_RULES(yes)
+else
+  AM_SILENT_RULES(no)
+fi
+])
 
 AC_CHECK_PROG([ZCAT],[gunzip],[gunzip -c],[])
 AC_CHECK_PROG([ZCAT],[gzip],[gzip -cd],[])
