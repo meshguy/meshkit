@@ -23,7 +23,7 @@ If you're designing a new class or other code for %MeshKit and are not sure wher
 and put it there.  Otherwise, email the %MeshKit email list for pointers.  <em> In general, you should not need to create new
 subdirectories in the %MeshKit source code, except when implementing a new algorithm with more than about 2 files.</em>
 
-\section sourcestyle Source Code Style
+\section sourcestyle Source Code Style and Best Practices
 %MeshKit code should abide by the following general rules:
  - Names:
    - Class names should be in the CamelBack style, e.g. EdgeMesh or VertexMesher.
@@ -49,8 +49,33 @@ subdirectories in the %MeshKit source code, except when implementing a new algor
    cases where other includes are needed are to import the declaration for a parent class, and to declare types used as
    non-pointer and non-reference function arguments.  In most cases, a forward-declaration statement (e.g. 'class MKCore') 
    will suffice.
-   
-
+ - Naming classes and other top-level constructs:
+   - No names should be added to the global namespace.  Everything should be
+     in the MeshKit namespace.  An exception can be made for names with a static
+     scope declared in a .cpp file, but class member functions never have a
+     static scope.
+   - Names should be kept as private as possible.  If declaring a struct or 
+     utility class that is used internally by some other class, consider 
+     defining it in the .cpp file of the main class or a separate header 
+     only included in that .cpp file and using (if necessary) only forward
+     delcarations (e.g. \c struct \c Point3D;) in the header file used
+     by other code.  If that is not possible, then consider nesting the
+     definitions such that the scope of the name is limited to that of the
+     class using it. 
+   - Any names introduced into the top-level MeshKit namespace should be
+     sufficiently unique to avoid conflicts with other code.  If you must 
+     introduce a class to the top-level Meshkit namespace, don't choose
+     an overly genereric name like \c Point3D .
+ - Constants and Macros
+   - Don't use a pre-processor macro where a const variable or an inline or
+     template function will suffice.
+     There is absolutely benefit to the former over the later with modern 
+     compilers.  Further, using  macros bypasses typechecking that the compiler
+     would otherwise do for you and if used in headers, introduce names into
+     the global rather than Meshkit namespace.
+   - Don't define constants that are already provided by standard libraries.
+     For example, use \c M_PI as defined in \c math.h rather than defining
+     your own constant.
 \section commits Making Repository Commits
 As a general rule, developers should update frequently, and commit changes often.  However, the repository should always remain
 in a state where the code can be compiled.  Most of the time, the code should also successfully execute "make check" run from the
