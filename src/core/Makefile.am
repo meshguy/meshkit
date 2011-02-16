@@ -14,6 +14,8 @@ libMeshKitcore_la_includedir = $(includedir)
 libMeshKitcore_la_SOURCES = \
 	Error.cpp \
 	MeshOp.cpp \
+	MeshOpSet.cpp \
+	MeshOpSet.hpp \
 	MeshScheme.cpp \
 	MKCore.cpp \
 	MKGraph.cpp \
@@ -27,6 +29,7 @@ nobase_libMeshKitcore_la_include_HEADERS = \
 	meshkit/Error.hpp \
 	meshkit/GraphNode.hpp \
 	meshkit/MeshOp.hpp \
+	meshkit/MeshOpProxy.hpp \
 	meshkit/MeshScheme.hpp \
 	meshkit/MKCore.hpp \
 	meshkit/MKGraph.hpp \

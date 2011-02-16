@@ -17,6 +17,8 @@ using namespace MeshKit;
 
 #include "TestUtil.hpp"
 
+typedef bool (*fptr)(ModelEnt*);
+
 int main(int argc, char **argv) 
 {
   
@@ -25,10 +27,6 @@ int main(int argc, char **argv)
   std::string file_name = TestDir + "/holysurf.sat";
   if (2 <= argc) file_name = argv[1];
   mk.load_geometry(file_name.c_str());
-
-  MeshKit::MKCore::meshop_factory_t thisopv = VertexMesher::factory;
-  MeshKit::MKCore::meshop_factory_t thisope = EdgeMesher::factory;
-  MeshKit::MKCore::meshop_factory_t thisopt = CAMALTriAdvance::factory;
 
     // get the surface
   MEntVector surfs;

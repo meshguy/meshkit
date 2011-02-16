@@ -13,13 +13,7 @@
 namespace MeshKit
 {
 
-moab::EntityType CAMALTriAdvance::meshTps[] = {moab::MBVERTEX, moab::MBTRI};
-iBase_EntityType CAMALTriAdvance::geomTps[] = {iBase_FACE};
-
-//---------------------------------------------------------------------------//
-    static RegisterMeshOp<CAMALTriAdvance,true> INIT("CAMALTriAdvance", CAMALTriAdvance::geomTps, 2,
-                                                     CAMALTriAdvance::meshTps, 2);
-//---------------------------------------------------------------------------//
+moab::EntityType CAMALTriAdvance::meshTps[] = {moab::MBVERTEX, moab::MBTRI, moab::MBMAXTYPE};
 
 CAMALTriAdvance::CAMALTriAdvance(MKCore *mk_core, const MEntVector &me_vec)
         : MeshScheme(mk_core, me_vec)
@@ -28,12 +22,6 @@ CAMALTriAdvance::CAMALTriAdvance(MKCore *mk_core, const MEntVector &me_vec)
 
 CAMALTriAdvance::~CAMALTriAdvance()
 {
-}
-
-void CAMALTriAdvance::mesh_types(std::vector<moab::EntityType> &tps)
-{
-  tps.push_back(moab::MBVERTEX);
-  tps.push_back(moab::MBTRI);
 }
 
 void CAMALTriAdvance::setup_this()
@@ -130,12 +118,6 @@ void CAMALTriAdvance::execute_this()
     new_ents.insert(starth+num_tris-1);
     me->commit_mesh(new_ents, COMPLETE_MESH);
   }
-}
-
-MeshOp *CAMALTriAdvance::factory(MKCore *mkcore, const MEntVector &me_vec)
-{
-    // construct a CAMALTriAdvance and pass it back
-  return new CAMALTriAdvance(mkcore, me_vec);
 }
 
 } // namespace MeshKit

@@ -52,11 +52,16 @@ public:
 
     //! Get the associated MKCore object; this applies a dynamic_cast to the parent's MKGraph member
   MKCore *mk_core() const;
+  
+    /** \brief Return the mesh entity types operated on by this scheme
+     * \return array terminated with \c moab::MBMAXTYPE
+     */
+  virtual const moab::EntityType* mesh_types_arr() const = 0;
 
     /** \brief Return what types of mesh entities this algorithm generates; pure virtual so every scheme must define them
      * \param mesh_types Types handled by this meshop
      */
-  virtual void mesh_types(std::vector<moab::EntityType> &mesh_types);
+  void mesh_types(std::vector<moab::EntityType> &mesh_types);
   
     /** \brief Check that bounding entities have an assigned MeshOp, and create them for ones that don't
      *
@@ -111,9 +116,6 @@ inline MKCore *MeshOp::mk_core() const
 {
   return dynamic_cast<MKCore*>(mkGraph);
 }
-
-inline void MeshOp::mesh_types(std::vector<moab::EntityType> &mesh_types) 
-{}
 
 } // namespace MeshKit
 

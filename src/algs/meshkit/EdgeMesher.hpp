@@ -36,13 +36,6 @@ namespace MeshKit
    */
 //===========================================================================//
 
-struct Point3D
-{
-	double px;
-	double py;
-	double pz;	
-};
-
 using namespace std;
 
 class EdgeMesher : public MeshScheme
@@ -56,9 +49,6 @@ public:
 	//construction function for edge mesher
 	EdgeMesher(MKCore *mk_core, const MEntVector &me_vec);
 
-	//return the type of entities in the created mesh
-	void mesh_types(std::vector<moab::EntityType> &tps);
-	
 	//set up the parameters for edge meshing, e.g. compute the number of intervals
 	virtual void setup_this();
 
@@ -69,14 +59,50 @@ public:
 	EdgeSchemeType get_edge_scheme() const;
 	 void set_edge_scheme(EdgeSchemeType scheme);
 
-        //! \c MeshOp::canmesh_edge
-        static bool can_mesh(ModelEnt* ent)
-          { return canmesh_edge(ent); }
+       /**\brief Get class name */
+       static const char* name() 
+         { return "EdgeMesher"; }
+
+       /**\brief Function returning whether this scheme can mesh entities of t
+        *        the specified dimension.
+        *\param dim entity dimension
+        */
+       static bool can_mesh(iBase_EntityType dim)
+          { return iBase_EDGE == dim; }
+
+       /** \brief Function returning whether this scheme can mesh the specified entity
+        * 
+        * Used by MeshOpFactory to find scheme for an entity.
+        * \param me ModelEnt being queried
+        * \return If true, this scheme can mesh the specified ModelEnt
+        */
+       static bool can_mesh(ModelEnt *me)
+          { return canmesh_edge(me); }
+
+
+       /**\brief Get list of mesh entity types that can be generated.
+        *\return array terminated with \c moab::MBMAXTYPE
+        */
+       static const moab::EntityType* output_types();
+
+       /** \brief Return the mesh entity types operated on by this scheme
+        * \return array terminated with \c moab::MBMAXTYPE
+        */
+       virtual const moab::EntityType* mesh_types_arr() const
+         { return output_types(); }
 
 	~EdgeMesher();
 	
 private:
-	EdgeSchemeType schemeType;
+
+        struct Point3D
+        {
+	        double px;
+	        double py;
+	        double pz;	
+        };
+
+ 	EdgeSchemeType schemeType;
 
 	//return x, y, z coordinates based on the parametric coordinate u on the edge
 	Point3D getXYZCoords(ModelEnt *ent, double u) const;

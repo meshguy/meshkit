@@ -18,20 +18,9 @@ namespace MeshKit
 
 //---------------------------------------------------------------------------//
 //Entity Type initilization for OneToOneSwept meshing
-moab::EntityType OneToOneSwept_tps[] = {moab::MBVERTEX, moab::MBQUAD, moab::MBHEX};
-iBase_EntityType OneToOneSwept_mtp = iBase_REGION;
-
-// static registration of this  mesh scheme
-static RegisterMeshOp<OneToOneSwept,true> INIT("OneToOneSwept", &OneToOneSwept_mtp, 1, 
-                                            OneToOneSwept_tps,
-                                            sizeof(OneToOneSwept_tps)/sizeof(OneToOneSwept_tps[0]) );
-
-//---------------------------------------------------------------------------//
-// make an instance of the OneToOneSwept class
-MeshOp *OneToOneSwept::factory(MKCore *mkcore, const MEntVector &me_vec)
-{
-	return new OneToOneSwept(mkcore, me_vec);
-}
+moab::EntityType OneToOneSwept_tps[] = {moab::MBVERTEX, moab::MBQUAD, moab::MBHEX, moab::MBMAXTYPE};
+const moab::EntityType* OneToOneSwept::output_types()
+  { return OneToOneSwept_tps; }
 
 //---------------------------------------------------------------------------//
 // construction function for OneToOneSwept class
@@ -45,15 +34,6 @@ OneToOneSwept::OneToOneSwept(MKCore *mk_core, const MEntVector &me_vec) : MeshSc
 OneToOneSwept::~OneToOneSwept()
 {
 
-}
-
-
-//---------------------------------------------------------------------------//
-// return the type of entities this mesh creates
-void OneToOneSwept::mesh_types(std::vector<moab::EntityType> &tps)
-{
-    tps.push_back(moab::MBVERTEX);
-    tps.push_back(moab::MBHEX);
 }
 
 //---------------------------------------------------------------------------//

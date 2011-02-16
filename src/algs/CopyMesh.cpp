@@ -12,12 +12,13 @@ namespace MeshKit
 {
  
   // static registration of this  mesh scheme
-  moab::EntityType CopyMesh_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBHEX};
-  iBase_EntityType CopyMesh_mtp = iBase_REGION;
-  static RegisterMeshOp<CopyMesh,true> INIT("CopyMesh", &CopyMesh_mtp, 1, 
-                                             CopyMesh_tps,
-                                             sizeof(CopyMesh_tps)/sizeof(CopyMesh_tps[0]) );
-
+  moab::EntityType CopyMesh_tps[] = { moab::MBVERTEX, 
+                                      moab::MBEDGE,
+                                      moab::MBTRI,
+                                      moab::MBHEX,
+                                      moab::MBMAXTYPE};
+  const moab::EntityType* CopyMesh::output_types() 
+    { return CopyMesh_tps; }
 
   CopyMesh::CopyMesh(MKCore *mkcore, const MEntVector &me_vec)
     : MeshScheme(mkcore, me_vec),
@@ -35,14 +36,6 @@ namespace MeshKit
   {
     if (me->dimension() == 3 || me->dimension() == 2) return true;
     else return false;
-  }
-  
-  void CopyMesh::mesh_types(std::vector<moab::EntityType> &tps)
-  {
-    tps.push_back(moab::MBVERTEX);
-    tps.push_back(moab::MBEDGE);
-    tps.push_back(moab::MBTRI);
-    tps.push_back(moab::MBHEX);
   }
     
   bool CopyMesh::add_modelent(ModelEnt *model_ent)

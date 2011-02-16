@@ -1,4 +1,5 @@
 #include "meshkit/MKCore.hpp"
+#include "meshkit/MeshOpProxy.hpp"
 #include "moab/CN.hpp"
 #include <iostream>
 #include <iomanip>
@@ -6,52 +7,44 @@
 using namespace MeshKit;
 using namespace std;
 
-const char* str( iBase_EntityType t ) 
-{
-  switch (t) {
-    case iBase_REGION: return "Region";
-    case iBase_FACE:   return "Face";
-    case iBase_EDGE:   return "Edge";
-    case iBase_VERTEX: return "Vertex";
-    default:           return "(unknown)";
-  }
-}
-
-const char* str( moab::EntityType t ) 
-{
-  return moab::CN::EntityTypeName(t);
-}
-
 int main()
 {
-  MKCore::MeshOpFactory* f = MKCore::op_factory();
-  std::vector<MKCore::OpInfo>::const_iterator i;
-  std::vector<iBase_EntityType>::const_iterator b;
-  std::vector<moab::EntityType>::const_iterator m;
-  int have_none = 1;
-  for (i = f->registeredOps.begin(); i != f->registeredOps.end(); ++i) {
-    have_none = 0;
+  const unsigned n = MKCore::num_meshops();
+  if (n == 0)
+    return 1; // fail
+  
+  for (unsigned i = 0; i < n; ++i) {
+    MeshOpProxy* p = MKCore::meshop_proxy(i);
     
-    cout << i->opIndex << " " << i->opName << " " << "{ ";
-    if (!i->modelEntTypes.empty()) {
-      b = i->modelEntTypes.begin();
-      cout << str(*b); 
-      for (++b; b != i->modelEntTypes.end(); ++b)
-        cout << ", " << str(*b);
+    cout << i << " " << p->name() << " { ";
+    bool first = true;
+    for (unsigned j = 0; j < 4; ++j) {
+      if (p->can_mesh((iBase_EntityType)j)) {
+        if (first)
+          first = false;
+        else
+          cout << ", ";
+        cout << j;
+      }
     }
+    
     cout << " } { ";
-    if (!i->meshEntTypes.empty()) {
-      m = i->meshEntTypes.begin();
-      cout << str(*m); 
-      for (++m; m != i->meshEntTypes.end(); ++m)
-        cout << ", " << str(*m);
+
+    const moab::EntityType* types = p->output_types();
+    first = true;
+    for (unsigned j = 0; types[j] != moab::MBMAXTYPE; ++j) {
+      if (first)
+        first = false;
+      else 
+        cout << ", ";
+      cout << moab::CN::EntityTypeName(types[j]);
     }
     
     cout << " }" << endl;
     
   }
   
-  return have_none;
+  return 0;
 }
 
   

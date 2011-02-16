@@ -98,10 +98,37 @@ public:
 	virtual void setup_this();
 	virtual void execute_this();
 
-	//make an instance of the EdgeMesher class
-	static MeshOp *factory(MKCore *mkcore, const MEntVector &me_vec);
-	void mesh_types(std::vector<moab::EntityType> &tps);
-	
+ 
+        /**\brief Get class name */
+        static const char* name() 
+          { return "OneToOneSwept"; }
+
+        /**\brief Function returning whether this scheme can mesh entities of t
+         *        the specified dimension.
+         *\param dim entity dimension
+         */
+        static bool can_mesh(iBase_EntityType dim)
+          { return iBase_REGION == dim; }
+
+        /** \brief Function returning whether this scheme can mesh the specified entity
+         * 
+         * Used by MeshOpFactory to find scheme for an entity.
+         * \param me ModelEnt being queried
+         * \return If true, this scheme can mesh the specified ModelEnt
+         */
+        static bool can_mesh(ModelEnt *me)
+          { return canmesh_region(me); }
+
+        /**\brief Get list of mesh entity types that can be generated.
+         *\return array terminated with \c moab::MBMAXTYPE
+         */
+        static const moab::EntityType* output_types();
+
+        /** \brief Return the mesh entity types operated on by this scheme
+         * \return array terminated with \c moab::MBMAXTYPE
+         */
+        virtual const moab::EntityType* mesh_types_arr() const
+          { return output_types(); }
 
 
 private:

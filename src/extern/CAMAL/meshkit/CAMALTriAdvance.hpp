@@ -38,11 +38,6 @@ public:
      */
   ~CAMALTriAdvance();
 
-    /** \brief Return the moab entity types produced by this mesher
-     * \param tps Moab types returned
-     */
-  void mesh_types(std::vector<moab::EntityType> &tps);
-
     /** \brief Setup function for this mesher, simply calls setup_boundary
      */
   virtual void setup_this();
@@ -50,12 +45,6 @@ public:
     /** \brief Execute the mesher (calling CAMAL mesher on this surface)
      */
   virtual void execute_this();
-
-    /** \brief Construct a mesher of this type
-     * \param mkcore MKCore associated with the mesher
-     * \param me_vec ModelEnts to which this mesher will be applied
-     */
-  static MeshOp *factory(MKCore *mkcore, const MEntVector &me_vec);
 	
     /** \brief Static variable for registering this meshop
      */
@@ -68,6 +57,39 @@ public:
     /** \brief Static list of mesh types treated by this scheme
      */
   static moab::EntityType meshTps[];
+  
+  
+  /**\brief Get class name */
+  static const char* name() 
+    { return "CAMALTriAdvance"; }
+
+  /**\brief Function returning whether this scheme can mesh entities of t
+   *        the specified dimension.
+   *\param dim entity dimension
+   */
+  static bool can_mesh(iBase_EntityType dim)
+    { return iBase_FACE == dim; }
+
+  /** \brief Function returning whether this scheme can mesh the specified entity
+   * 
+   * Used by MeshOpFactory to find scheme for an entity.
+   * \param me ModelEnt being queried
+   * \return If true, this scheme can mesh the specified ModelEnt
+   */
+  static bool can_mesh(ModelEnt *me)
+    { return canmesh_face(me); }
+
+  /**\brief Get list of mesh entity types that can be generated.
+   *\return array terminated with \c moab::MBMAXTYPE
+   */
+  static const moab::EntityType* output_types()
+    { return meshTps; }
+
+  /** \brief Return the mesh entity types operated on by this scheme
+   * \return array terminated with \c moab::MBMAXTYPE
+   */
+  virtual const moab::EntityType* mesh_types_arr() const
+    { return output_types(); }
   
 private:
 

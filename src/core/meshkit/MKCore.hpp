@@ -26,6 +26,8 @@ class SCDMesh;
 
 class EBMesher;
 
+class MeshOpProxy;
+
 /** \class MKCore MKCore.hpp "meshkit/MKCore.hpp"
  * \brief The core MeshKit instance
  *
@@ -42,38 +44,6 @@ class EBMesher;
  */
 
 class MKCore;
-
-class MeshOpProxy
-{
-  public:
-    virtual MeshOp* create( MKCore* core, const MEntVector &vec ) = 0;
-    virtual bool can_mesh( ModelEnt* entity ) const;
-};
-
-
-  /** \struct OpInfo MeshOpFactory.hpp "meshkit/MeshOpFactory.hpp"
-   * \brief Struct used to store information about each MeshOp type registered with MeshOpFactory
-   */
-struct OpInfo
-{
-  std::string opName;
-  unsigned short opIndex;
-  std::vector<iBase_EntityType> modelEntTypes;
-  std::vector<moab::EntityType> meshEntTypes;
-  MeshOpProxy* opProxy;
-};
-
-  /** \brief A map from MeshOp name to index in the OpInfos vector
-   */
-typedef std::map<std::string, unsigned short> OpNameMap;
-
-class MeshOpFactory 
-{
- public:
-  std::vector<OpInfo> registeredOps;
-  OpNameMap opNameMap;
-};
-
 
 class MKCore : public MKGraph
 {
@@ -98,74 +68,31 @@ public:
     //! initialize, creating missing geom/mesh/rel interfaces if requested
   void init(bool construct_missing_ifaces);
 
-    // Typedefs for backwards compatibility; XXX remove
-  typedef ::MeshKit::MeshOpProxy MeshOpProxy;
-  typedef ::MeshKit::OpInfo OpInfo;
-  typedef ::MeshKit::MeshOpFactory MeshOpFactory;
-  typedef ::MeshKit::OpNameMap OpNameMap;
-  
-  static MeshOpFactory *op_factory();
-
     //! Initialize the opsByDim array
   void init_opsbydim();
 
     /** \brief Register a new MeshOp factory
-     * \param op_name The name by which this type of MeshOp can be requested
-     * \param model_tp The iBase_EntityType (or dimension) operated on by this MeshOp type
-     * \param tp The MOAB entity type produced by this MeshOp
      * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
-     * \return Returns true if successful, false otherwise
      */
-  static bool register_meshop(const char *op_name, 
-                              iBase_EntityType model_tp, 
-                              moab::EntityType tp, 
-                              MeshOpProxy* proxy);
-  
-    /** \brief Register a new MeshOp factory
-     * \param op_name The name by which this type of MeshOp can be requested
-     * \param model_tp The iBase_EntityType (or dimension) operated on by this MeshOp type
-     * \param tp The iMesh entity topology produced by this MeshOp
-     * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
-     * \return Returns true if successful, false otherwise
-     */
-  static bool register_meshop(const char *op_name, 
-                              iBase_EntityType model_tp, 
-                              iMesh::EntityTopology tp, 
-                              MeshOpProxy* proxy);
-  
-    /** \brief Register a new MeshOp factory
-     * \param op_name The name by which this type of MeshOp can be requested
-     * \param model_tps The iBase_EntityType's (or dimensions) operated on by this MeshOp type
-     * \param num_mtps Number of model entity types in model_tps
-     * \param tps The MOAB entity types operated on by this MeshOp
-     * \param num_tps Number of entity types in tps
-     * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
-     * \return Returns true if successful, false otherwise
-     */
-  static bool register_meshop(const char *op_name, 
-                              iBase_EntityType *model_tps, int num_mtps,
-                              moab::EntityType *tps, int num_tps,
-                              MeshOpProxy* proxy);
-  
-    /** \brief Register a new MeshOp factory
-     * \param op_name The name by which this type of MeshOp can be requested
-     * \param model_tps The iBase_EntityType's (or dimensions) operated on by this MeshOp type
-     * \param num_mtps Number of model entity types in model_tps
-     * \param tps The iMesh entity types operated on by this MeshOp
-     * \param num_tps Number of entity types in tps
-     * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
-     * \return Returns true if successful, false otherwise
-     */
-  static bool register_meshop(const char *op_name, 
-                              iBase_EntityType *model_tps, int num_mtps,
-                              iMesh::EntityTopology *tps, int num_tps,
-                              MeshOpProxy* proxy);
+  static void register_meshop(MeshOpProxy* proxy);
   
     /** \brief Return the MeshOp type with the given name
      * \param op_name Operation name requested
-     * \return OpInfo for the corresponding MeshOp type
+     * \return MeshOpProxy for the corresponding MeshOp type
      */
-  static OpInfo meshop_info(const char *op_name);
+  static MeshOpProxy* meshop_proxy(const char *op_name);
+  
+    /** \brief Return the MeshOp type at the sepcified index
+     * \param index Operation index requested
+     * \return MeshOpProxy for the corresponding MeshOp type
+     */
+  static MeshOpProxy* meshop_proxy(unsigned index);
+  
+    /**\brief Number of registered MeshOps
+     *
+     *\return One more than largest possible MeshOp index
+     */
+  static unsigned num_meshops();
   
     /** \brief Return the MeshOp index given the name
      * \param op_name Operation name requested
@@ -182,39 +109,59 @@ public:
      */
   void set_default_meshop(const char *op_name, unsigned short dims);
   
-    /** \brief Make the specified MeshOp name the default for the given dimension(s)
+    /** \brief Make the specified MeshOp the default for the given dimension(s)
      * 
      * If the specified MeshOp cannot produce entities of the specified dimension, an error is
      * thrown with type MK_BAD_INPUT.
      * \param op_index MeshOp index being set
      * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
      */
-  void set_default_meshop(unsigned short op_index, unsigned short dims);
+  void set_default_meshop(unsigned op_index, unsigned short dims);
+  
+    /** \brief Make the specified MeshOp the default for the given dimension(s)
+     * 
+     * If the specified MeshOp cannot produce entities of the specified dimension, an error is
+     * thrown with type MK_BAD_INPUT.
+     * \param mesh_op MeshOp being set
+     * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
+     */
+  void set_default_meshop(MeshOpProxy* mesh_op, unsigned short dims);
+  
+    /**\brief Get default MeshOp for dimension 
+     *
+     * Get the default meshop for the specified dimension of entity.
+     * Throws excpetion if no there are no registered MeshOps that
+     * can mesh entities of the passed dimension.
+     *
+     *\param dimension Dimension of entity to be meshed.
+     *\return pointer to proxy for MeshOp 
+     */
+  MeshOpProxy* get_default_meshop( unsigned dimension );
   
     /** \brief Return MeshOp types that can operate on the specified entity type
      * \param tp Entity type requested
      * \param ops MeshOp types returned
      */
-  void meshop_by_mesh_type(moab::EntityType tp, std::vector<OpInfo> &ops);
+  void meshop_by_mesh_type(moab::EntityType tp, std::vector<MeshOpProxy*> &ops);
     
     /** \brief Return MeshOp types that can operate on mesh of specified dimension
      * \param dim Entity dimension requested
      * \param ops MeshOp types returned
      */
-  void meshop_by_dimension(int dim, std::vector<OpInfo> &ops);
+  void meshop_by_dimension(int dim, std::vector<MeshOpProxy*> &ops);
     
     /** \brief Return MeshOp types that can mesh the specified ModelEnt
      * \param ent ModelEnt* requested
      * \param ops MeshOp types returned
      */
-  void meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops);
+  void meshop_by_modelent(ModelEnt * const ent, std::vector<MeshOpProxy*> &ops);
     
     /** \brief Construct a new MeshOp of the specified OpInfo type
      * \param op_info OpInfo for the MeshOp being requested
      * \param me_vec MEntVector of entities the operation applies to
      * \return Pointer to new MeshOp constructed
      */
-  MeshOp *construct_meshop(OpInfo &op_info, const MEntVector &me_vec = MEntVector());
+  MeshOp *construct_meshop(MeshOpProxy* op_info, const MEntVector &me_vec = MEntVector());
     
     /** \brief Construct a new MeshOp of the specified name
      * \param op_name MeshOp name being requested
@@ -420,14 +367,6 @@ private:
 
     //! Model entities, in array by topological dimension
   MEntVector modelEnts[5];
-
-  static MeshOpFactory *opFactory;
-
-    //! OpInfo's by dimension they can produce; first for a given dimension is the default
-  std::vector<unsigned short> *opsByDim;
-
-    //! Number of ops checked, cached to avoid redundant checking of registered ops
-  unsigned int numOpsByDim;
   
     //! (Single) VertexMesher scheme for this MKCore
   VertexMesher *vertexMesher;
@@ -437,6 +376,9 @@ private:
 
       //! (Single) EBMesher scheme for this MKCore
   EBMesher *ebMesher;
+  
+    //! Default algorithms for each dimension
+  MeshOpProxy* defaultMeshOps[4];
   
     //! SizingFunction vector
   std::vector<SizingFunction*> sizingFunctions;
@@ -520,37 +462,6 @@ inline moab::Tag MKCore::moab_global_id_tag(int index)
     throw Error(MK_BAD_INPUT, "No tag of that index.");
 
   return moabIDTags[index];
-}
-
-
-/** \brief Register a new MeshOp factory
- * \param op_name The name by which this type of MeshOp can be requested
- * \param tp The MOAB entity type operated on by this MeshOp
- * \param meshop The (static) factory function producing instances of this MeshOp type
- * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
- */
-inline bool MKCore::register_meshop(const char *op_name, 
-                                    iBase_EntityType model_tp, iMesh::EntityTopology tp, 
-                                    MeshOpProxy* proxy) 
-{
-  return register_meshop(op_name, model_tp, iMesh::mb_topology_table[tp], proxy);
-}
-  
-/** \brief Register a new MeshOp factory
- * \param op_name The name by which this type of MeshOp can be requested
- * \param tps The MOAB entity types operated on by this MeshOp
- * \param num_tps Number of entity types in tps
- * \param meshop The (static) factory function producing instances of this MeshOp type
- * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
- */
-inline bool MKCore::register_meshop(const char *op_name, 
-                                    iBase_EntityType *model_tps, int num_mtps,
-                                    iMesh::EntityTopology *tps, int num_tps,
-                                    MeshOpProxy* proxy)
-{
-  std::vector<moab::EntityType> tmp_tps(num_tps);
-  for (int i = 0; i < num_tps; i++) tmp_tps[i] = iMesh::mb_topology_table[tps[i]];
-  return register_meshop(op_name, model_tps, num_mtps, &tmp_tps[0], num_tps, proxy);
 }
 
 inline VertexMesher *MKCore::vertex_mesher() const 

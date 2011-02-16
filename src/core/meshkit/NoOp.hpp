@@ -13,6 +13,11 @@ public:
   NoOp( MKCore* core ) : MeshOp( core ) {}
   void setup_this() { }
   void execute_this() { }
+  virtual const moab::EntityType* mesh_types_arr() const
+    { 
+      static moab::EntityType e = moab::MBMAXTYPE;
+      return &e;
+    }
 private:
   //!\brief no copying
   NoOp( const NoOp& );

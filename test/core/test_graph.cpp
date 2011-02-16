@@ -28,8 +28,6 @@ class MyScheme;
 class MyScheme : public MeshKit::MeshOp 
 {
 public:
-  static MeshOp *factory(MKCore *, const MEntVector &);
-  
   MyScheme(MKCore*, const MEntVector &);
   
   inline void setup_this() 
@@ -43,20 +41,26 @@ public:
   inline void mesh_types(std::vector<moab::EntityType> &tps) 
       {
       }
+      
+  static const char* name() { return "MyScheme"; }
+  static bool can_mesh(iBase_EntityType dim) { return dim == iBase_REGION; }
+  static bool can_mesh(ModelEnt* ent) { return canmesh_region(ent); }
+  static const moab::EntityType* output_types() 
+    { 
+      static moab::EntityType end = moab::MBMAXTYPE;
+      return &end;
+    }
+  const moab::EntityType* mesh_types_arr() const
+    { return output_types(); }
   
 };
 
 inline MyScheme::MyScheme(MKCore *mk_core, const MEntVector & me_vec) 
         : MeshOp(mk_core, me_vec)
 {}
-  
-inline MeshOp *MyScheme::factory(MKCore *mk_core, const MEntVector &me_vec)
-{
-  return new MyScheme(mk_core, me_vec);
-}
 
 //---------------------------------------------------------------------------//
-static RegisterMeshOp<MyScheme,true> INIT("MyScheme", iBase_REGION, moab::MBMAXTYPE);
+RegisterMeshOp<MyScheme> INIT;
 //---------------------------------------------------------------------------//
 
 int main(int argc, char **argv) 

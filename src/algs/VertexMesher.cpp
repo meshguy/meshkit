@@ -6,9 +6,12 @@
 
 namespace MeshKit 
 {
-
+    
+ 
 // static registration of this  mesh scheme
-static RegisterMeshOp<VertexMesher,true> INIT("VertexMesher", iBase_VERTEX, moab::MBVERTEX);
+moab::EntityType types[] = { moab::MBVERTEX, moab::MBMAXTYPE};
+const moab::EntityType* VertexMesher::output_types() 
+  { return types; }
     
 VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec) 
         : MeshScheme(mkcore, me_vec) 
@@ -17,21 +20,6 @@ VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec)
 VertexMesher::~VertexMesher() 
 {
   mk_core()->vertex_mesher(NULL);
-}
-
-MeshOp *VertexMesher::factory(MKCore *mkcore, const MEntVector &me_vec) 
-{
-  if (mkcore->vertex_mesher()) return mkcore->vertex_mesher();
-  else {
-    VertexMesher *mesher = new VertexMesher(mkcore, me_vec);
-    mkcore->vertex_mesher(mesher);
-    return mesher;
-  }
-}
-
-void VertexMesher::mesh_types(std::vector<moab::EntityType> &tps) 
-{
-  tps.push_back(moab::MBVERTEX);
 }
     
 bool VertexMesher::add_modelent(ModelEnt *model_ent) 

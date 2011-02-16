@@ -22,19 +22,9 @@ namespace MeshKit
 {
 //---------------------------------------------------------------------------//
 // Static registration of this mesh scheme   
-  moab::EntityType SCDMesh_tps[] = {moab::MBVERTEX, moab::MBHEX};
-  iBase_EntityType SCDMesh_mtp = iBase_REGION;
-  static RegisterMeshOp<SCDMesh,true> INIT("SCDMesh", &SCDMesh_mtp, 1, 
-                                           SCDMesh_tps,
-                                           sizeof(SCDMesh_tps)/sizeof(SCDMesh_tps[0]) );
-
-//---------------------------------------------------------------------------//
-// return the type of entities this mesh creates
-  void SCDMesh::mesh_types(std::vector<moab::EntityType> &tps)
-  {
-    tps.push_back(moab::MBVERTEX);
-    tps.push_back(moab::MBHEX);
-  }
+  moab::EntityType SCDMesh_tps[] = {moab::MBVERTEX, moab::MBHEX, moab::MBMAXTYPE};
+  const moab::EntityType* SCDMesh::output_types() 
+    { return SCDMesh_tps; }
 
 //---------------------------------------------------------------------------//
 // setup function

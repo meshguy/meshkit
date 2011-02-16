@@ -12,6 +12,7 @@ libMeshKitalgs_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libMeshKitalgs_la_SOURCES = \
+	register_algs.cpp \
 	EdgeMesher.cpp \
 	VertexMesher.cpp \
 	SCDMesh.cpp \

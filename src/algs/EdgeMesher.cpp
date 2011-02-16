@@ -12,11 +12,9 @@ namespace MeshKit
 
 //---------------------------------------------------------------------------//
 //Entity Type initilization for edge meshing
-moab::EntityType EdgeMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE};
-iBase_EntityType EdgeMesher_mtp = iBase_EDGE;
-static RegisterMeshOp<EdgeMesher,true> INIT("EdgeMesher", &EdgeMesher_mtp, 1, 
-                                            EdgeMesher_tps,
-                                            sizeof(EdgeMesher_tps)/sizeof(EdgeMesher_tps[0]) );
+moab::EntityType EdgeMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBMAXTYPE};
+const moab::EntityType* EdgeMesher::output_types()
+  { return EdgeMesher_tps; }
 
 //---------------------------------------------------------------------------//
 // Construction Function for Edge Mesher
@@ -24,14 +22,6 @@ EdgeMesher::EdgeMesher(MKCore *mk_core, const MEntVector &me_vec)
         : MeshScheme(mk_core, me_vec), schemeType(EQUAL)
 {
 
-}
-
-//---------------------------------------------------------------------------//
-// return the type of entities this mesh creates
-void EdgeMesher::mesh_types(std::vector<moab::EntityType> &tps)
-{
-	tps.push_back(moab::MBVERTEX);
-  	tps.push_back(moab::MBEDGE);
 }
 
 //---------------------------------------------------------------------------//
@@ -571,7 +561,7 @@ void EdgeMesher::QuickSorting(vector<double> &nodes, vector<double> &URecord, in
 
 //---------------------------------------------------------------------------//
 // return the x, y, z coordinates from the parametric coordinates
-Point3D EdgeMesher::getXYZCoords(ModelEnt *ent, double u) const
+EdgeMesher::Point3D EdgeMesher::getXYZCoords(ModelEnt *ent, double u) const
 {
   Point3D pts3D;
   double xyz[3];

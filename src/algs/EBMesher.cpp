@@ -38,11 +38,9 @@ inline bool equal_intersect(const IntersectDist d1, const IntersectDist d2) {
 namespace MeshKit 
 {
 // static registration of this  mesh scheme
-moab::EntityType EBMesher_tps[] = {moab::MBVERTEX, moab::MBHEX};
-iBase_EntityType EBMesher_mtp = iBase_REGION;
-static RegisterMeshOp<EBMesher,true> INIT("EBMesher", &EBMesher_mtp, 1, 
-                                           EBMesher_tps,
-                                           sizeof(EBMesher_tps)/sizeof(EBMesher_tps[0]) );
+moab::EntityType EBMesher_tps[] = {moab::MBVERTEX, moab::MBHEX, moab::MBMAXTYPE};
+const moab::EntityType* EBMesher::output_types()
+  { return EBMesher_tps; }
 
 EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
 		   double size, bool use_geom, int add_layer)
@@ -98,14 +96,6 @@ bool EBMesher::can_mesh(ModelEnt *me)
 {
   if (me->dimension() == 3) return true;
   else return false;
-}
-  
-void EBMesher::mesh_types(std::vector<moab::EntityType> &tps) 
-{
-  tps.push_back(moab::MBVERTEX);
-  tps.push_back(moab::MBEDGE);
-  tps.push_back(moab::MBTRI);
-  tps.push_back(moab::MBHEX);
 }
     
 bool EBMesher::add_modelent(ModelEnt *model_ent) 

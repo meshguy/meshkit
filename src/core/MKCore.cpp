@@ -11,26 +11,38 @@
 #include "meshkit/SizingFunction.hpp"
 #include "lemon/bfs.h"
 #include "lemon/adaptors.h"
+#include "MeshOpSet.hpp"
+#include "meshkit/MeshOpProxy.hpp"
 
 namespace MeshKit 
 {
 
+// Declare these here rather than in a common header because 
+// we don't want to introduce any API dependences on anything
+// outside of core/ beyond what is absolutely necessary (these
+// two functions).  And it is unlikely that the signature of 
+// these functions will ever change.
+int register_algs_mesh_ops();
+int register_extern_mesh_ops();
+
+// Call functions to register MeshOp classes.  These two variables
+// are checked in the MKCore constructor soley to ensure that they
+// are not optimized away.
+const int have_algs_mesh_ops = register_algs_mesh_ops();
+const int have_extern_mesh_ops = register_extern_mesh_ops();
+
 bool MeshOpProxy::can_mesh( ModelEnt* entity ) const
   { return true; }
 
-
-MKCore::MeshOpFactory *MKCore::opFactory = NULL;
-
-MKCore::MeshOpFactory *MKCore::op_factory()
-{ 
-  if (!opFactory) opFactory = new MeshOpFactory;
-  return opFactory;
-}
-
 MKCore::MKCore(iGeom *igeom, moab::Interface *moab, iMesh *imesh, iRel *irel,
                bool construct_missing_ifaces) 
-        : opsByDim(NULL), numOpsByDim(0), vertexMesher(NULL)
+        : vertexMesher(NULL)
 {
+    // This error should never happen.  The primary purpose of this
+    // check is to use the variables such that they are not optimized
+    // away, thus ensuring that registration actually happens.
+  if (!have_algs_mesh_ops || !have_extern_mesh_ops)
+    throw Error(MK_MESHOP_NOT_FOUND, "Registration of mesh opts did not happen.");
 
   if (igeom) {
     iGeomInstances.push_back(igeom);
@@ -61,6 +73,9 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, iMesh *imesh, iRel *irel,
   mkGraph.addArc(rootNode->get_node(), leafNode->get_node());
 
   init(construct_missing_ifaces);
+  
+  for (int i = 0; i < 4; ++i)
+    defaultMeshOps[i] = 0;
 }
 
 MKCore::~MKCore() 
@@ -229,7 +244,7 @@ void MKCore::populate_mesh(int index)
   }
 }
 
-    void MKCore::load_geometry(const char *filename, const char *options, int index, bool populate_too) 
+void MKCore::load_geometry(const char *filename, const char *options, int index, bool populate_too) 
 {
   iBase_ErrorType err = igeom_instance(index)->load(filename, options);
   IBERRCHK(err, "Failed to load geometry model.");
@@ -301,232 +316,110 @@ SizingFunction *MKCore::sizing_function(double size, bool create_if_missing)
   return new SizingFunction(this, -1, size);
 }
   
-/** \brief Register a new MeshOp factory
- * \param op_name The name by which this type of MeshOp can be requested
- * \param tp The MOAB entity type operated on by this MeshOp
- * \param meshop The (static) factory function producing instances of this MeshOp type
- * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
- */
-bool MKCore::register_meshop(const char *op_name, 
-                             iBase_EntityType model_tp, moab::EntityType tp,
-                             MeshOpProxy* proxy) 
+void MKCore::register_meshop(MeshOpProxy* proxy) 
 {
-  OpNameMap::iterator oit = op_factory()->opNameMap.find(std::string(op_name));
-  if (oit != op_factory()->opNameMap.end()) 
-    throw Error(MK_ALREADY_DEFINED, "%s, line %d: A MeshOp with the name \"%s\" has already been registered.", 
-                __FILE__, __LINE__, op_name);
+  MeshOpSet::instance().register_mesh_op(proxy);
+}
   
-  OpInfo oi = {std::string(op_name), op_factory()->registeredOps.size(), 
-               std::vector<iBase_EntityType>(1, model_tp), std::vector<moab::EntityType>(1, tp),
-               proxy};
-  op_factory()->opNameMap[oi.opName] = op_factory()->registeredOps.size();
+MeshOpProxy* MKCore::meshop_proxy(const char *op_name) 
+{
+  return MeshOpSet::instance().mesh_op(op_name);
+}
   
-  op_factory()->registeredOps.push_back(oi);
+MeshOpProxy* MKCore::meshop_proxy(unsigned index) 
+{
+  return MeshOpSet::instance().mesh_op(index);
+}
 
-  return true;
-}
-  
-/** \brief Register a new MeshOp factory
- * \param op_name The name by which this type of MeshOp can be requested
- * \param tps The MOAB entity types operated on by this MeshOp
- * \param num_tps Number of entity types in tps
- * \param meshop The (static) factory function producing instances of this MeshOp type
- * \param canmesh If provided, a static function that returns whether the MeshOp can mesh a given ModelEnt
- */
-bool MKCore::register_meshop(const char *op_name, 
-                             iBase_EntityType *model_tps, int num_mtps,
-                             moab::EntityType *tps, int num_tps,
-                             MeshOpProxy* proxy)
+unsigned MKCore::num_meshops()
 {
-  OpNameMap::iterator oit = op_factory()->opNameMap.find(std::string(op_name));
-  if (oit != op_factory()->opNameMap.end()) 
-    throw Error(MK_ALREADY_DEFINED, "%s, line %d: A MeshOp with the name \"%s\" has already been registered.", 
-                __FILE__, __LINE__, op_name);
-  
-  OpInfo oi = {std::string(op_name), op_factory()->registeredOps.size(), 
-               std::vector<iBase_EntityType>(model_tps, model_tps+num_mtps),
-               std::vector<moab::EntityType>(tps, tps+num_tps),
-               proxy};
-  op_factory()->opNameMap[oi.opName] = op_factory()->registeredOps.size();
-  
-  op_factory()->registeredOps.push_back(oi);
-
-  return true;
+  return MeshOpSet::instance().mesh_ops().size();
 }
   
-    /** \brief Return the MeshOp type with the given name
-     * \param op_name Operation name requested
-     * \return OpInfo for the corresponding MeshOp type
-     */
-MKCore::OpInfo MKCore::meshop_info(const char *op_name) 
-{
-  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
-  if (oit != op_factory()->opNameMap.end()) {
-    assert(op_factory()->registeredOps.size() > oit->second);
-    return op_factory()->registeredOps[oit->second];
-  }
-  else throw Error(MK_NOT_FOUND, "%s, line %d: A MeshOp with name %s was not found.", __FILE__, __LINE__, op_name);
-}
-  
-    /** \brief Return the MeshOp type with the given name
-     * \param op_name Operation name requested
-     * \return OpInfo index for the corresponding MeshOp type
-     */
 unsigned int MKCore::meshop_index(const char *op_name) 
 {
-  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
-  if (oit != op_factory()->opNameMap.end()) {
-    assert(op_factory()->registeredOps.size() > oit->second);
-    return oit->second;
-  }
-  else throw Error(MK_NOT_FOUND, "%s, line %d: A MeshOp with name %s was not found.", __FILE__, __LINE__, op_name);
+  return MeshOpSet::instance().index(op_name);
 }
   
-  /** \brief Make the specified MeshOp name the default for the given dimension(s)
-   * 
-   * If the specified MeshOp cannot produce entities of the specified dimension, an error is
-   * thrown with type MK_BAD_INPUT.
-   * \param op_name MeshOp name being set
-   * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
-   */
 void MKCore::set_default_meshop(const char *op_name, unsigned short dims) 
 {
-    // get the meshop index
-  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
-  if (oit == op_factory()->opNameMap.end()) 
-    throw Error(MK_NOT_FOUND, "%s, line %d: A MeshOp with name %s was not found.", __FILE__, __LINE__, op_name);
-
-  set_default_meshop(oit->second, dims);
+  set_default_meshop( meshop_proxy( op_name ), dims );
+}
+  
+void MKCore::set_default_meshop(unsigned index, unsigned short dims) 
+{
+  set_default_meshop( meshop_proxy( index ), dims );
 }
 
-  /** \brief Initialize the opsByDim vectors from (static) op_factory()->registeredOps
-   */
-void MKCore::init_opsbydim() 
+MeshOpProxy* MKCore::get_default_meshop( unsigned dimension )
 {
-    // compare cached size to registered size, return if it hasn't changed since we last checked
-  if (opsByDim && numOpsByDim == op_factory()->registeredOps.size()) return;
-  
-  if (!opsByDim) opsByDim = new std::vector<unsigned short>[4];
-  
-    // reset numOpsByDim, which we'll increment next
-  numOpsByDim = 0;
-
-    // check each registered op
-  for (std::vector<OpInfo>::iterator vit = op_factory()->registeredOps.begin(); vit != op_factory()->registeredOps.end(); vit++) {
-      // cache dimension so we don't check the same dim twice
-    numOpsByDim++;
-    for (std::vector<iBase_EntityType>::iterator vit2 = (*vit).modelEntTypes.begin(); 
-         vit2 != (*vit).modelEntTypes.end(); vit2++) {
-      int this_dim = (int)(*vit2);
-      if (std::find(opsByDim[this_dim].begin(), opsByDim[this_dim].end(), (*vit).opIndex) == 
-          opsByDim[this_dim].end()) opsByDim[this_dim].push_back((*vit).opIndex);
-    }
+    // If default hasn't been explicity set, set it to the first
+    // available algorithm
+  if (!defaultMeshOps[dimension]) {
+    const MeshOpSet::OpList& list = MeshOpSet::instance().mesh_ops( dimension );
+    if (list.empty()) 
+      throw new Error(MK_NOT_FOUND, "No MeshOp available for dimension %u", dimension);
+    defaultMeshOps[dimension] = list.front();
   }
+  
+  return defaultMeshOps[dimension];
 }
     
-  /** \brief Make the specified MeshOp name the default for the given dimension(s)
-   * 
-   * If the specified MeshOp cannot produce entities of the specified dimension, an error is
-   * thrown with type MK_BAD_INPUT.
-   * \param op_index MeshOp index being set
-   * \param dims Bitmask, where 2^x indicates that this MeshOp should be the default for dimension x 
-   */
-void MKCore::set_default_meshop(unsigned short op_index, unsigned short dims) 
+void MKCore::set_default_meshop(MeshOpProxy* mesh_op, unsigned short dims) 
 {
-  if (!opsByDim) init_opsbydim();
-
     // check the specified dimension(s) against the types the meshop can mesh
-  std::vector<unsigned short> good_dims;
-  for (unsigned short i = 0; i < 4; i++) {
-    if (dims & (1u << i)) {
-        // verify this op can generate elements with dimension i; just check for the index in the vector
-      if (std::find(opsByDim[i].begin(), opsByDim[i].end(), op_index) == opsByDim[i].end())
-        throw Error(MK_BAD_INPUT, "Specified MeshOp type cannot generate elements of specified dimension.");
-      else good_dims.push_back(i);
+  for (unsigned i = 0; i < 4; ++i)
+    if ((dims & (1u << i)) && !mesh_op->can_mesh(iBase_EntityType(i)))
+      throw new Error(MK_BAD_INPUT, "Specified MeshOp type cannot generate elements of specified dimension.");
+  
+    // set as default for specified dimensions
+  for (unsigned i = 0; i < 4; ++i)
+    if (dims & (1u << i))
+      defaultMeshOps[i] = mesh_op;
+}
+
+void MKCore::meshop_by_mesh_type(moab::EntityType tp, std::vector<MeshOpProxy*> &ops) 
+{
+  unsigned dim = moab::CN::Dimension(tp);
+  const MeshOpSet::OpList& list = MeshOpSet::instance().mesh_ops( dim );
+  for (MeshOpSet::iterator i = list.begin(); i != list.end(); ++i) {
+    const moab::EntityType* list = (*i)->output_types();
+    for (int j = 0; list[j] != moab::MBMAXTYPE; ++j) {
+      if (list[j] == tp) {
+        ops.push_back(*i);
+        break;
+      }
     }
   }
-  
-    // if we're here, need to move specified op to front of list for all good_dims
-  for (std::vector<unsigned short>::iterator vit = good_dims.begin(); vit != good_dims.end(); vit++) {
-    std::vector<unsigned short>::iterator vit2 = std::find(opsByDim[*vit].begin(), opsByDim[*vit].end(), op_index);
-    assert(vit2 != opsByDim[*vit].end());
-      // don't need to do anything if it's already the default for this dim
-    if (vit2 == opsByDim[*vit].begin()) continue;
-    
-      // else switch with 1st element
-    *vit2 = *opsByDim[*vit].begin();
-    *opsByDim[*vit].begin() = op_index;
-  }
 }
-
-/* \brief Return MeshOp types that can operate on the specified entity type
- * \param tp Entity type requested
- * \param ops MeshOp types returned
- */
-void MKCore::meshop_by_mesh_type(moab::EntityType tp, std::vector<OpInfo> &ops) 
+    
+void MKCore::meshop_by_dimension(int dim, std::vector<MeshOpProxy*> &ops) 
 {
-  for (std::vector<OpInfo>::iterator oi = op_factory()->registeredOps.begin(); oi != op_factory()->registeredOps.end(); oi++) {
-    if (std::find(oi->meshEntTypes.begin(), oi->meshEntTypes.end(), tp) != oi->meshEntTypes.end())
-      ops.push_back(*oi);
-  }
+  const MeshOpSet::OpList& list = MeshOpSet::instance().mesh_ops( dim );
+  std::copy( list.begin(), list.end(), std::back_inserter(ops) );
 }
     
-  /** \brief Return MeshOp types that can operate on mesh of specified dimension
-   * \param dim Entity dimension requested
-   * \param ops MeshOp types returned
-   */
-void MKCore::meshop_by_dimension(int dim, std::vector<OpInfo> &ops) 
+void MKCore::meshop_by_modelent(ModelEnt * const ent, std::vector<MeshOpProxy*> &ops) 
 {
-  if (!opsByDim) init_opsbydim();
-
-  for (std::vector<unsigned short>::iterator vit = opsByDim[dim].begin(); vit != opsByDim[dim].end();
-       vit++)
-    ops.push_back(op_factory()->registeredOps[*vit]);
+  const MeshOpSet::OpList& list = MeshOpSet::instance().mesh_ops( ent->dimension() );
+  for (MeshOpSet::iterator i = list.begin(); i != list.end(); ++i) 
+    if ((*i)->can_mesh(ent))
+      ops.push_back(*i);
 }
     
-    /** \brief Return MeshOp types that can mesh the specified ModelEnt
-     * \param ent ModelEnt* requested
-     * \param ops MeshOp types returned
-     */
-void MKCore::meshop_by_modelent(ModelEnt * const ent, std::vector<OpInfo> &ops) 
-{
-  for (std::vector<OpInfo>::iterator oit = op_factory()->registeredOps.begin(); oit != op_factory()->registeredOps.end(); oit++) {
-    if (oit->opProxy->can_mesh(ent))
-      ops.push_back(*oit);
-  }
-}
-    
-/** \brief Construct a new MeshOp of the specified name
- * \param op_name MeshOp name being requested
- * \param me_vec Model entity vector to which this operation applies
- * \return Pointer to new MeshOp constructed
- */
 MeshOp *MKCore::construct_meshop(std::string op_name, const MEntVector &me_vec) 
 {
-  OpNameMap::iterator oit = op_factory()->opNameMap.find(op_name);
-  if (oit != op_factory()->opNameMap.end()) return op_factory()->registeredOps[oit->second].opProxy->create(this, me_vec);
-  else 
-    throw Error(MK_MESHOP_NOT_FOUND, "%s, line %d: Didn't find a MeshOp with name \"%s\".", 
-                __FILE__, __LINE__, op_name.c_str());
+  return construct_meshop( meshop_proxy(op_name.c_str()), me_vec );
 }
 
-/** \brief Construct a new MeshOp of the specified name
- * \param op_name MeshOp name being requested
- * \param me_vec Model entity vector to which this operation applies
- * \return Pointer to new MeshOp constructed
- */
 MeshOp *MKCore::construct_meshop(unsigned int dim, const MEntVector &me_vec) 
 {
-  if (!opsByDim) init_opsbydim();
-  
-  if (opsByDim[dim].empty()) 
-    throw Error(MK_MESHOP_NOT_FOUND, "%s, line %d: No default MeshOp for dimension %d.", __FILE__, __LINE__, dim);
-  else return construct_meshop(op_factory()->registeredOps[opsByDim[dim][0]], me_vec);
+  return construct_meshop( get_default_meshop(dim), me_vec );
 }
 
-MeshOp *MKCore::construct_meshop(OpInfo &info, const MEntVector &me_vec) 
+MeshOp *MKCore::construct_meshop(MeshOpProxy* proxy, const MEntVector &me_vec) 
 {
-  return op_factory()->registeredOps[info.opIndex].opProxy->create(this, me_vec);
+  return proxy->create( this, me_vec );
 }
 
 } // namespace meshkit

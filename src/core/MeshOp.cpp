@@ -99,6 +99,13 @@ MeshOp::~MeshOp()
 {
 }
 
+void MeshOp::mesh_types(std::vector<moab::EntityType> &mesh_types) 
+{
+  const moab::EntityType* types = mesh_types_arr();
+  for (int i = 0; types[i] != moab::MBMAXTYPE; ++i)
+    mesh_types.push_back(types[i]);
+}
+
 }
 
   
