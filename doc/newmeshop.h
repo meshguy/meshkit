@@ -20,39 +20,47 @@ The following sections describe functions that must be implemented for a new Mes
 
 \section registration Declaration & Registration
 Each new meshing operation should be derived from the MeshOp class (see e.g. VertexMesher for the proper syntax).  The new MeshOp
-should call MKCore::register_meshop during the static initialization of the library (this is most easily accomplished by
-assigning the output of this function to a static variable in the new MeshOp class).  Registering the new mesh operation 
-with MKCore allows the algorithm to be requested
-by name in application code, and in some cases to be automatically invoked for compatible ModelEnt objects.  
-The MKCore::register_meshop function requires the following data passed as arguments:
- - The meshing operation name (used by applications to request this meshing operation).
- - The topological dimension(s) of ModelEnt's this meshing operation can operate on, specified as values in iBase_EntityType
-   (i.e. iBase_VERTEX, iBase_EDGE, iBase_FACE, or iBase_REGION).
- - The MOAB entity type(s) of mesh entities produced or operated on by this meshing operation (see the definition
-   of moab::EntityType for allowed values).
- - A pointer to a factory method on the new MeshOp class that constructs instances of this meshing operation.  This argument
-   should be of type meshop_factory_t (defined in MKCore.hpp), should be static, with the signature 
-   MeshOp* factory(MKCore *mkcore, const MEntVector &me_vec).
- - (Optional) A function pointer argument of type meshop_canmesh_t (defined in MKCore.hpp); this is a pointer to a function 
-   which evaluates whether the operation can operate on a specified ModelEnt.  This function
-   should have the signature bool canmesh(ModelEnt*), and should be static.
+should be registered with MKCore during startup.  The following steps should
+be taken to register a new MeshOp with MKCore:
+ -# For each pure virtual function defined in %MeshOpProxy, a corresponding
+   static function should be defined in the new MeshOp class, with the
+   exception of the \c create method, for which the MeshOp should provide
+   a constructor that accepts the same argument list.  The list of such
+   static functions is currently:
+   - <tt> const char* name() </tt> - The meshing operation name (used by applications to request this meshing operation).
+   - <tt> bool can_mesh(iBase_EntityType dimension) </tt> - Returns true
+      for any topogical dimension(s) of ModelEnt's this meshing operation 
+      can operate on.
+   - <tt> const moab::EntityType* output_types() </tt> - Returns an array
+      of mesh entity types terminated with a value of \c moab::MBMAXTYPE .  
+      This function does not return the size of the array.  The terminating
+      value must be present for calling code to know where the end of the
+      array is.  The values contained in this array (with the exception of the
+      terminating value) are the types of mesh entities produced by the meshing
+      algorithm.
+   - <tt> bool can_mesh(ModelEnt* ent) </tt> - evaluates whether the operation can operate on a specified ModelEnt.
+      The MeshOp class provides several convenience functions that can be used for the canmesh function.  These functions
+      are \c canmesh_vertex, \c canmesh_edge, \c canmesh_surface, \c canmesh_region, and return true if the specified \c ModelEnt has topological
+      dimension 0, 1, 2, or 3, respectively.
+ -# Add a line to either \c algs/register_algs.cpp or \c extern/register_extern.cpp
+   of the form <tt> REGISTER_MESH_OP(classname); </tt>.  If adding a
+   MeshOp in \c extern/, use preprocesor directives as appropriate to ensure
+   that MeshKit builds correctly if configured without support for the 
+   corresponding external libraries.
 
-The MeshOp class provides several convenience functions that can be used for the canmesh function.  These functions
-are canmesh_vertex, canmesh_edge, canmesh_surface, canmesh_region, and return true if the specified ModelEnt has topological
-dimension 0, 1, 2, or 3, respectively.
-
-For example, the registration function for the VertexMesher in %MeshKit looks like:
-
+Classes derived from MeshOp should also provide the mesh_types_arr function used by the MeshOp base class to 
+implement the mesh_types funciton.  This can typically be implemented as:
 \code
-static int VertexMesher::init = MKCore::register_meshop("VertexMesher", &VertexMesher_mtp, 1, VertexMesher_mtps, 1,
-                                                        VertexMesher::factory, MeshOp::canmesh_vertex);
+  virtual const moab::EntityType* mesh_types_arr() const
+    { return output_types(); }
 \endcode
 
-where VertexMesher_mtp and VertexMesher_mtps are constants storing iBase_VERTEX and moab::MBVERTEX, respectively.
-
-Classes derived from MeshOp should also provide the mesh_types(std::vector<moab::EntityType> &) function, which passes back
-the mesh entity types the MeshOp can produce or operate on.  This function is pure virtual, so it must be implemented in the
-new MeshOp class.
+If for some reason the implementation of static methods as decribed above
+or the RegisterMeshOp template used by the REGISTER_MESH_OP macro are inappropriate
+for a given MeshOp, you may alternately implement your own subclass of 
+MeshOpProxy for your MeshOp and explcitly register by calling MeshKit::register_meshop
+from either \c regsiter_algs_mesh_ops() defined in \c algs/regsiter_algs.cpp
+or \c register_extern_mesh_ops() defined in \c extern/register_extern.cpp.
 
 \section setupexecute setup_this and execute_this
 Two functions, setup_this and execute_this, must be implemented to support the graph-based meshing process in %MeshKit.
