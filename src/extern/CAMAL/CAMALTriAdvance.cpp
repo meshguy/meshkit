@@ -15,6 +15,11 @@ namespace MeshKit
 
 moab::EntityType CAMALTriAdvance::meshTps[] = {moab::MBVERTEX, moab::MBTRI, moab::MBMAXTYPE};
 
+//---------------------------------------------------------------------------//
+//    static RegisterMeshOp<CAMALTriAdvance> INIT("CAMALTriAdvance", CAMALTriAdvance::geomTps, 1,
+//                                                CAMALTriAdvance::meshTps, 2);
+//---------------------------------------------------------------------------//
+
 CAMALTriAdvance::CAMALTriAdvance(MKCore *mk_core, const MEntVector &me_vec)
         : MeshScheme(mk_core, me_vec)
 {
@@ -56,9 +61,6 @@ void CAMALTriAdvance::execute_this()
     moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(bdy_vrange, &coords[0]);
     MBERRCHK(rval, mk_core()->moab_instance());
 
-    if (coords.size() != 3*bdy_vrange.size())
-      ECERRCHK(MK_FAILURE, "Trouble getting vertex coordinates.");
-    
       // now construct the CAMAL mesher, and pass it initial conditions
     CMLTriAdvance triadv(&cse, &mesize);
     bool success = triadv.set_boundary_mesh(bdy_vrange.size(), &coords[0], group_sizes.size(), &group_sizes[0], &bdy_ids[0]);
@@ -103,15 +105,14 @@ void CAMALTriAdvance::execute_this()
       ECERRCHK(MK_FAILURE, "Number of new tris returned from TriAdv doesn't agree with previous value output.");
 
       // put vertex handles into an indexible array
-    std::vector<moab::EntityHandle> verts;
-    verts.reserve(bdy_vrange.size() + new_ents.size());
-    std::copy(bdy_vrange.begin(), bdy_vrange.end(), std::back_inserter(verts));
-    std::copy(new_ents.begin(), new_ents.end(), std::back_inserter(verts));
+    std::vector<moab::EntityHandle> bdy_vvec;
+    std::copy(bdy_vrange.begin(), bdy_vrange.end(), std::back_inserter(bdy_vvec));
+    std::copy(new_ents.begin(), new_ents.end(), std::back_inserter(bdy_vvec));
     
       // now convert vertex indices into handles in-place, working from the back
-    for (int i = 3*num_tris-1; i > 0; i--) {
-      assert(connecti[i] >= 0 && connecti[i] < (int)verts.size());
-      connect[i] = verts[connecti[i]];
+    for (int i = 3*num_tris-1; i >= 0; i--) {
+      assert(connecti[i] >= 0 && connecti[i] < (int)bdy_vvec.size());
+      connect[i] = bdy_vvec[connecti[i]];
     }
     
       // put new tris into new entity range, then commit the mesh

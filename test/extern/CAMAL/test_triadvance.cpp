@@ -34,7 +34,7 @@ int main(int argc, char **argv)
   CAMALTriAdvance *tm = (CAMALTriAdvance*) mk.construct_meshop("CAMALTriAdvance", surfs);
 
     // make a sizing function and set it on the surface
-  SizingFunction esize(&mk, -1, 0.5);
+  SizingFunction esize(&mk, -1, 0.25);
   surfs[0]->sizing_function_index(esize.core_index());
   
     // mesh the surface, by calling execute
