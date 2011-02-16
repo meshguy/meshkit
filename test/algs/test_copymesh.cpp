@@ -16,15 +16,15 @@ using namespace MeshKit;
 #define DEFAULT_TEST_FILE "cube.cub"
 
 int load_and_copymove(const char *input_filename,
-		      const char *output_filename,
-		      double *x);
+                      const char *output_filename,
+                      const Vector<3> &dx);
 
 int main(int argc, char **argv) 
 {
   // check command line arg
   std::string input_filename;
   const char *output_filename = NULL;
-  double x[3];
+  Vector<3> x;
 
   if (argc ==6) {
     input_filename = argv[1];
@@ -56,17 +56,8 @@ int main(int argc, char **argv)
 }
 
 int load_and_copymove(const char *input_filename,
-		      const char *output_filename, double *x)
+                      const char *output_filename, const Vector<3> &dx)
 {
-  // registration of this  mesh scheme
-  // I can't register it with static register function in CopyMesh
-  // should be changed.
-  moab::EntityType CopyMesh_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBHEX};
-  iBase_EntityType CopyMesh_mtp = iBase_REGION;
-//  int success = MKCore::register_meshop("CopyMesh", &CopyMesh_mtp, 1,
-//					CopyMesh_tps, 3, CopyMesh::factory,
-//					MeshOp::canmesh_region);
-
   // start up MK and load the geometry
   MKCore mk;
   mk.load_mesh(input_filename);
@@ -85,6 +76,8 @@ int load_and_copymove(const char *input_filename,
   cm->expand_sets().add_tag("MATERIAL_SET");
   cm->expand_sets().add_tag("DIRICHLET_SET");
   cm->expand_sets().add_tag("NEUMANN_SET");
+
+  cm->set_transform(Copy::Translate(dx));
 
   // put them in the graph
   mk.get_graph().addArc(mk.root_node()->get_node(), cm->get_node());

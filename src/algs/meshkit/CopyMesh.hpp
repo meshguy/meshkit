@@ -46,7 +46,6 @@ namespace MeshKit {
   class CopyMesh : public MeshScheme
   {
   public:
-
     //! Bare constructor
     CopyMesh(MKCore *mkcore, const MEntVector &me_vec);
   
@@ -82,6 +81,8 @@ namespace MeshKit {
      */
     iBase_TagHandle copy_tag() {return copyTag;}
 
+    void set_transform(const Copy::AnyTransform &transform);
+
     void update_sets();
 
     /* \brief Reset the copy and expand set lists
@@ -106,7 +107,7 @@ namespace MeshKit {
 
     /* \brief Return reference to unique sets
      */
-    std::set<iBase_EntitySetHandle> &unique_sets();
+    std::set<iMesh::EntitySetHandle> &unique_sets();
   
     /* \brief Tag copied sets with indicated tag from original set
      */
@@ -115,12 +116,11 @@ namespace MeshKit {
 
     /* \brief Tag copied sets with indicated tag from original set
      */
-    void tag_copied_sets(iBase_TagHandle *tags, const char **tag_vals,
+    void tag_copied_sets(iMesh::TagHandle *tags, const char **tag_vals,
                          const int num_tags);
   private:
-    void do_copy(iBase_EntitySetHandle set_handle,
-                 const Copy::Transform &trans = Copy::Identity(),
-                 iMesh::EntityHandle **new_ents = NULL,
+    void do_copy(iMesh::EntitySetHandle set_handle,
+                 iMesh::EntityHandle **new_ents = 0,
                  int *new_ents_allocated = 0,
                  int *new_ents_size = 0,
                  bool do_merge = true);
@@ -139,8 +139,9 @@ namespace MeshKit {
                          iMesh::EntitySetHandle *&tagged_sets,
                          int &num_tagged_sets);
 
-    iMesh imeshImpl;     // mesh instance
-    LocalTag copyTag;    // tag storing copy-to tag
+    iMesh mesh;                   // mesh instance
+    LocalTag copyTag;             // tag storing copy-to tag
+    Copy::AnyTransform transform; // transform function for copy-move
 
     CESets copySets;
     CESets expandSets;
@@ -149,10 +150,15 @@ namespace MeshKit {
     std::set<iMesh::EntitySetHandle> uniqueSets;
   };
 
+  inline void CopyMesh::set_transform(const Copy::AnyTransform &trans)
+  {
+    transform = trans;
+  }
+
   inline void CopyMesh::add_unique_tag(const std::string &tag_name)
   {
     iMesh::TagHandle tag_handle;
-    IBERRCHK(imeshImpl.getTagHandle(tag_name.c_str(), tag_handle), "");
+    IBERRCHK(mesh.getTagHandle(tag_name.c_str(), tag_handle), "");
     add_unique_tag(tag_handle);
   }
 
@@ -182,7 +188,7 @@ namespace MeshKit {
   {
     return uniqueSets;
   }
-};
+} // namespace MeshKit
 #endif
 
   
