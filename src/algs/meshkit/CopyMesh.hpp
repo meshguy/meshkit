@@ -1,14 +1,8 @@
-// Author : Rajeev Jain
-// Feb 01, 2011
-// CopyMesh is an algorithm is used to copy move mesh. 
-// It takes care of the meta-data propagation on the final mesh.
-
 #ifndef COPYMESH_HPP
 #define COPYMESH_HPP
 
 #include <vector>
-#include <map>
-#include <sys/resource.h>
+#include <set>
 
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
@@ -20,13 +14,11 @@
 #include "meshkit/Transform.hpp"
 
 #include "meshkit/iMesh.hpp"
-#include "iMesh_extensions.h"
-
 
 namespace MeshKit {
 
   class MKCore;
-    
+
 
   /** \class CopyMesh CopyMesh.hpp "meshkit/CopyMesh.hpp"
    * \brief A simple class for meshing copy moving meshes
@@ -37,7 +29,7 @@ namespace MeshKit {
    * DEPENDENCIES: (none)
    * CONSTRAINTS: (none)
    *
-   * This class performs the trivial task of copy moving meshes.  There can be 
+   * This class performs the trivial task of copy moving meshes.  There can be
    * multiple instances of this class, and therefore it is pointed to and managed by ....
    *
    * Each instance of this class stores all the ModelEnt's representing the mesh data,
@@ -48,40 +40,37 @@ namespace MeshKit {
   public:
     //! Bare constructor
     CopyMesh(MKCore *mkcore, const MEntVector &me_vec);
-  
+
     //! Destructor
     virtual ~CopyMesh();
-  
+
     /**\brief Get class name */
-    static const char* name() 
-      { return "CopyMesh"; }
-      
+    static const char* name();
+
     /**\brief Function returning whether this scheme can mesh entities of t
      *        the specified dimension.
      *\param dim entity dimension
      */
-    static bool can_mesh(iBase_EntityType dim)
-      { return iBase_REGION == dim || iBase_FACE == dim; }
-  
+    static bool can_mesh(iBase_EntityType dim);
+
     /** \brief Function returning whether this scheme can mesh the specified entity
-     * 
+     *
      * Used by MeshOpFactory to find scheme for an entity.
      * \param me ModelEnt being queried
      * \return If true, this scheme can mesh the specified ModelEnt
      */
     static bool can_mesh(ModelEnt *me);
-    
+
     /**\brief Get list of mesh entity types that can be generated.
      *\return array terminated with \c moab::MBMAXTYPE
      */
     static const moab::EntityType* output_types();
-  
+
     /** \brief Return the mesh entity types operated on by this scheme
      * \return array terminated with \c moab::MBMAXTYPE
      */
-    virtual const moab::EntityType* mesh_types_arr() const
-      { return output_types(); }
-  
+    virtual const moab::EntityType* mesh_types_arr() const;
+
     /** \brief Re-implemented here so we can check topological dimension of model_ent
      * \param model_ent ModelEnt being added
      */
@@ -94,9 +83,10 @@ namespace MeshKit {
     virtual void execute_this();
 
     // CopyMesh function local //////////////////
+
     /* \brief Return the copyTag used to indicate set copies
      */
-    iBase_TagHandle copy_tag() {return copyTag;}
+    iBase_TagHandle copy_tag();
 
     void set_transform(const Copy::AnyTransform &transform);
 
@@ -106,14 +96,6 @@ namespace MeshKit {
      */
     void reset_sets();
 
-    /* \brief Add tag which should have unique values
-     */
-    void add_unique_tag(const std::string &tag_name);
-
-    /* \brief Add tag which should have unique values
-     */
-    void add_unique_tag(iMesh::TagHandle tag_handle);
-
     /* \brief Return reference to copy sets
      */
     CESets &copy_sets();
@@ -122,10 +104,6 @@ namespace MeshKit {
      */
     CESets &expand_sets();
 
-    /* \brief Return reference to unique sets
-     */
-    std::set<iMesh::EntitySetHandle> &unique_sets();
-  
     /* \brief Tag copied sets with indicated tag from original set
      */
     void tag_copied_sets(const char **tag_names, const char **tag_vals,
@@ -162,27 +140,36 @@ namespace MeshKit {
 
     CESets copySets;
     CESets expandSets;
-
-    std::vector<iMesh::TagHandle> uniqueTags;
-    std::set<iMesh::EntitySetHandle> uniqueSets;
   };
+
+  inline const char* CopyMesh::name()
+  {
+    return "CopyMesh";
+  }
+
+  inline bool CopyMesh::can_mesh(iBase_EntityType)
+  {
+    return true;
+  }
+
+  inline bool CopyMesh::can_mesh(ModelEnt *)
+  {
+    return true;
+  }
+
+  inline const moab::EntityType* CopyMesh::mesh_types_arr() const
+  {
+    return output_types();
+  }
 
   inline void CopyMesh::set_transform(const Copy::AnyTransform &trans)
   {
     transform = trans;
   }
 
-  inline void CopyMesh::add_unique_tag(const std::string &tag_name)
+  inline iBase_TagHandle CopyMesh::copy_tag()
   {
-    iMesh::TagHandle tag_handle;
-    IBERRCHK(mesh.getTagHandle(tag_name.c_str(), tag_handle), "");
-    add_unique_tag(tag_handle);
-  }
-
-  inline void CopyMesh::add_unique_tag(iMesh::TagHandle tag_handle)
-  {
-    assert(tag_handle != NULL);
-    uniqueTags.push_back(tag_handle);
+    return copyTag;
   }
 
   inline void CopyMesh::reset_sets()
@@ -195,17 +182,12 @@ namespace MeshKit {
   {
     return copySets;
   }
-  
+
   inline CESets &CopyMesh::expand_sets()
   {
     return expandSets;
   }
-  
-  inline std::set<iMesh::EntitySetHandle> &CopyMesh::unique_sets()
-  {
-    return uniqueSets;
-  }
 } // namespace MeshKit
 #endif
 
-  
+

@@ -82,6 +82,10 @@ namespace MeshKit {
   }
 
   namespace Extrude {
+    typedef std::tr1::function<void(int, iMesh &, iMesh::EntityHandle*, int,
+                                    iMesh::EntityHandle**, int*, int*)>
+            AnyTransform;
+
     class Transform
     {
     public:

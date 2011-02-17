@@ -3,21 +3,23 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
+#include "meshkit/LocalSet.hpp"
 
 #include "CopyUtils.hpp"
-#include "meshkit/LocalSet.hpp"
 #include "SimpleArray.hpp"
 
-namespace MeshKit 
+#include "iMesh_extensions.h"
+
+namespace MeshKit
 {
- 
+
   // static registration of this  mesh scheme
-  moab::EntityType CopyMesh_tps[] = { moab::MBVERTEX, 
+  moab::EntityType CopyMesh_tps[] = { moab::MBVERTEX,
                                       moab::MBEDGE,
                                       moab::MBTRI,
                                       moab::MBHEX,
                                       moab::MBMAXTYPE};
-  const moab::EntityType* CopyMesh::output_types() 
+  const moab::EntityType* CopyMesh::output_types()
     { return CopyMesh_tps; }
 
   CopyMesh::CopyMesh(MKCore *mkcore, const MEntVector &me_vec)
@@ -32,36 +34,14 @@ namespace MeshKit
   {}
 
 
-  bool CopyMesh::can_mesh(ModelEnt *me)
-  {
-    if (me->dimension() == 3 || me->dimension() == 2) return true;
-    else return false;
-  }
-    
   bool CopyMesh::add_modelent(ModelEnt *model_ent)
   {
-    // make sure this represents geometric volumes
-    if (3 != model_ent->dimension() || 2 != model_ent->dimension())
-      throw Error(MK_WRONG_DIMENSION, "Wrong dimension entity added to CopyMesh.");
-
     return MeshOp::add_modelent(model_ent);
   }
-  /*
-    void CopyMesh::setup()
-    {
-    setup_this();
-    }
-  */
+
   void CopyMesh::setup_this()
-  {
-  
-  }
-  /*
-    void CopyMesh::execute()
-    {
-    execute_this();
-    }
-  */
+  {}
+
   void CopyMesh::execute_this()
   {
     SimpleArray<iMesh::EntityHandle> orig_ents(mentSelection.size());
@@ -74,7 +54,7 @@ namespace MeshKit
     }
 
     LocalSet set(this->mk_core());
-  
+
     IBERRCHK(mesh.addEntArrToSet(ARRAY_IN(orig_ents), set), "FIXME");
     do_copy(set);
   }
@@ -144,7 +124,7 @@ namespace MeshKit
                                  const int num_tags)
   {
     int err;
-  
+
     for (int t = 0; t < num_tags; t++) {
       iMesh::TagHandle tag;
       IBERRCHK(mesh.getTagHandle(tag_names[t], tag), "FIXME");

@@ -14,7 +14,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-TESTS = test_edgemesh test_ebmesh test_scdmesh test_copymesh
+TESTS = test_edgemesh test_ebmesh test_scdmesh test_copymesh test_extrudemesh
 
 check_PROGRAMS = $(TESTS)
 
@@ -55,6 +55,10 @@ test_ebmesh_DEPENDENCIES = \
 
 test_copymesh_SOURCES = test_copymesh.cpp
 test_copymesh_DEPENDENCIES = \
+	$(LDADD)
+
+test_extrudemesh_SOURCES = test_extrudemesh.cpp
+test_extrudemesh_DEPENDENCIES = \
 	$(LDADD)
 
 test_scdmesh_SOURCES = test_scdmesh.cpp
