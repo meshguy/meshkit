@@ -133,7 +133,7 @@ public:
 
 private:
 	//Build Association function: try to build the association between the geometry and mesh
-	void buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh, iRel_Instance &assoc, iRel_PairHandle &rel);
+	void buildAssociation();
 
 	//specify the source surface for OneToOneSwept class
 	void SetSourceSurface();
@@ -149,6 +149,23 @@ private:
 	//function for obtaining the x,y,z coordinates from parametric coordinates
 	int getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, double uv[2]);
 
+	//interpolate linearly between x0 and x1
+	double linear_interpolation(double r, double x0, double x1);
+
+	//implement the transfinite interpolation between (pt_0s, pt_1s) and (pt_r0, pt_r1)
+	double parametricTFI2D(double r, double s, double pt_0s, double pt_1s, double pt_r0, double pt_r1);
+
+	//generate the mesh on the linking surface
+	int LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList);
+
+	//generate the all-hex mesh by sweeping in the interior
+	int InnerLayerMeshing();
+
+	//generate the nodes between the Source surface and target surface.
+	int InnerNodesProjection(vector<vector <Vertex> > &linkVertexList);
+
+	//create the hexahedral elements between the source surface and target surface
+	int CreateElements(vector<vector <Vertex> > &linkVertexList);
 private://private member variable
 	iBase_EntityHandle sourceSurface;
 	iBase_EntityHandle targetSurface;
@@ -163,7 +180,12 @@ private://private member variable
 	std::vector<Edge> TEdgeList;
 	std::vector<Face> TFaceList;
 	std::vector<Edge> EdgeList;
-	std::vector<Face> FaceList;	
+	std::vector<Face> FaceList;
+	vector<Edge> gLinkSides;  //geometrical edges for linking sides between source and target
+	int numLayers;
+	iBase_TagHandle  geom_id_tag, mesh_id_tag;
+	iBase_EntityHandle volEntity;
+	iBase_EntitySetHandle volumeSet;	
 
 	
 	
