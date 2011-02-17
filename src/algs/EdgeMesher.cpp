@@ -115,6 +115,8 @@ void EdgeMesher::execute_this()
     //pick up the boundary end nodes
     me->boundary(0, nodes);
 
+    bool periodic = (nodes.size() == 1);
+    
     //get coords in list, then move one tuple to the last position
     moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], nodes.size(), &coords[0]);
     MBERRCHK(rval, mk_core()->moab_instance());
@@ -147,7 +149,8 @@ void EdgeMesher::execute_this()
     nodes.resize(num_edges+1);
     
     //move the other nodes to the end of nodes' list
-    nodes[num_edges] = nodes[1];
+    if (periodic) nodes[num_edges] = nodes[0];
+    else nodes[num_edges] = nodes[1];
 
     //create the vertices' entities on the edge
     if (num_edges > 1) {

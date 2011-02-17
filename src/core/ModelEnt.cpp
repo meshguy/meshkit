@@ -405,6 +405,7 @@ void ModelEnt::get_mesh(int dim,
     ments.push_back(tmp_vvs[0]);
     std::copy(tmp_edgevs.begin(), tmp_edgevs.end(), std::back_inserter(ments));
     if (2 == tmp_vvs.size()) ments.push_back(tmp_vvs[1]);
+    else if (1 == tmp_vvs.size()) ments.push_back(tmp_vvs[0]);
     return;
   }
   else {
