@@ -15,7 +15,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-TESTS = test_triadvance
+TESTS = test_triadvance test_tetmesher
 
 check_PROGRAMS = $(TESTS)
 
@@ -48,6 +48,9 @@ endif
 
 test_triadvance_SOURCES = test_triadvance.cpp
 test_triadvance_DEPENDENCIES = \
+	$(LDADD)
+test_tetmesher_SOURCES = test_tetmesher.cpp
+test_tetmesher_DEPENDENCIES = \
 	$(LDADD)
 
 # Utility target: build but don't run tests

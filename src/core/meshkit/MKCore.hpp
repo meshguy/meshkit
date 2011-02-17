@@ -18,14 +18,16 @@ namespace MeshKit {
       //! Forward declare since we store a vector of these
 class SizingFunction;
 
-      //! MKCore keeps a single instance of this
+      //! Single instance of VertexMesher
 class VertexMesher;
 
-//! SCDMesh keeps a single instance of this
+      //! Single instance of SCDMesh
 class SCDMesh;
 
+      //! Single instance of EBMesher
 class EBMesher;
 
+      //! Returned by some MKCore functions
 class MeshOpProxy;
 
 /** \class MKCore MKCore.hpp "meshkit/MKCore.hpp"
@@ -43,11 +45,13 @@ class MeshOpProxy;
  * and/or iCreatedIrel flags in this class.
  */
 
-class MKCore;
-
 class MKCore : public MKGraph
 {
 public:
+
+    /** \name Constructor/destructor */
+
+    /**@{*/
 
     /** \brief Constructor
      * \param igeom iGeom instance
@@ -65,8 +69,7 @@ public:
     //! destructor
   ~MKCore();
 
-    //! initialize, creating missing geom/mesh/rel interfaces if requested
-  void init(bool construct_missing_ifaces);
+    /**@}*/
 
     /** \brief Register a new MeshOp factory
      * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
@@ -96,6 +99,10 @@ public:
      * \return OpInfo index for the corresponding MeshOp type
      */
   static unsigned int meshop_index(const char *op_name);
+
+    /** \name Non-static MeshOp construction and query */
+
+    /**@{*/
 
     /** \brief Make the specified MeshOp name the default for the given dimension(s)
      * 
@@ -135,13 +142,13 @@ public:
      */
   MeshOpProxy* get_default_meshop( unsigned dimension );
   
-    /** \brief Return MeshOp types that can operate on the specified entity type
+    /** \brief Return MeshOp types that can generate or operate on the specified mesh entity type
      * \param tp Entity type requested
      * \param ops MeshOp types returned
      */
   void meshop_by_mesh_type(moab::EntityType tp, std::vector<MeshOpProxy*> &ops);
     
-    /** \brief Return MeshOp types that can operate on mesh of specified dimension
+    /** \brief Return MeshOp types that can operate on geometric entities of specified dimension
      * \param dim Entity dimension requested
      * \param ops MeshOp types returned
      */
@@ -167,6 +174,10 @@ public:
      */
   MeshOp *construct_meshop(std::string op_name, const MEntVector &me_vec = MEntVector());
     
+    /** \name MeshOp construction and query */
+
+    /**@{*/
+
     /** \brief Construct the default type of MeshOp for the specified dimension
      * \param dim Dimension requested
      * \param me_vec MEntVector of entities the operation applies to
@@ -174,6 +185,12 @@ public:
      */
   MeshOp *construct_meshop(unsigned int dim, const MEntVector &me_vec = MEntVector());
     
+    /**@}*/
+
+    /** \name Loading/saving models */
+
+    /**@{*/
+
     /** \brief Load a geometry model from a file, and populate mesh entity sets
      * \param filename The file to load
      * \param options File options to be passed to the load function
@@ -213,6 +230,12 @@ public:
      */
   void populate_mesh(int index = 0);
 
+    /**@}*/
+
+    /** \name Entity access */
+
+    /**@{*/
+
     /** \brief Get model entities of a given dimension
      * \param dim Dimension of entities to get
      * \param model_ents The list these entities get appended to
@@ -223,6 +246,12 @@ public:
      * \param model_ents The list these entities get appended to
      */
   void get_entities_by_handle(MEntVector &model_ents);
+
+    /**@}*/
+
+    /** \name Interface instances */
+
+    /**@{*/
 
     /** \brief Return the iGeom instance pointer
      * \param index Index of desired iGeom, default to first
@@ -267,6 +296,12 @@ public:
      */
   moab::Tag moab_global_id_tag(int index = 0);
 
+    /**@}*/
+
+    /** \name Singleton MeshOps */
+
+    /**@{*/
+
     /** \brief Get the (single) VertexMesher instance
      * \return VertexMesher for this MKCore
      */
@@ -296,6 +331,12 @@ public:
      * \param ebm EBMesher for this MKCore
      */
   void eb_mesher(EBMesher *ebm);
+
+    /**@}*/
+
+    /** \name Sizing functions */
+
+    /**@{*/
 
     /** \brief Get sizing function by index
      * If the requested index is outside the range of SizingFunction's currently registered,
@@ -333,7 +374,15 @@ public:
      */
   void remove_sizing_function(int index, bool delete_too = true);
   
+    /**@}*/
+
 private:
+    //! initialize, creating missing geom/mesh/rel interfaces if requested
+  void init(bool construct_missing_ifaces);
+
+    //! Initialize the opsByDim array
+  void init_opsbydim();
+
     //! Geometry api instance
   std::vector<iGeom *> iGeomInstances;
   

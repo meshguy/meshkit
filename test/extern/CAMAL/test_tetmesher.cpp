@@ -1,11 +1,11 @@
-/** \file test_triadvance.cpp
+/** \file test_tetmesher.cpp
  *
- * Test the CAMALTriAdvance for a few challenging examples.
+ * Test the CAMALTetMesher for a few challenging examples.
  *
  */
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/CAMALTriAdvance.hpp"
+#include "meshkit/CAMALTetMesher.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/ModelEnt.hpp"
 
@@ -16,9 +16,7 @@ using namespace MeshKit;
 MKCore *mk = NULL;
 bool save_mesh = false;
 
-void holysurf_test();
-void singleholesurf_test();
-void singleholesurfimprinted_test();
+void simpletet_test();
 void mesh_test(std::string filebase);
 
 #ifdef HAVE_ACIS
@@ -36,24 +34,12 @@ int main(int argc, char **argv)
   
   if (argc == 2) save_mesh = true;
   
-  num_fail += RUN_TEST(holysurf_test);
-  num_fail += RUN_TEST(singleholesurf_test);
-  num_fail += RUN_TEST(singleholesurfimprinted_test);
+  num_fail += RUN_TEST(simpletet_test);
 }
 
-void holysurf_test() 
+void simpletet_test() 
 {
-  mesh_test("holysurf");
-}
-
-void singleholesurf_test() 
-{
-  mesh_test("singleholesurf");
-}
-
-void singleholesurfimprinted_test()
-{
-  mesh_test("singleholesurfimprinted");
+  mesh_test("simpletet");
 }
 
 void mesh_test(std::string filebase)
@@ -61,29 +47,29 @@ void mesh_test(std::string filebase)
   std::string file_name = TestDir + "/" + filebase + extension;
   mk->load_geometry(file_name.c_str());
 
-    // get the surface
-  MEntVector dum, surfs;
-  mk->get_entities_by_dimension(2, dum);
-  surfs.push_back(*dum.rbegin());
-  CAMALTriAdvance *tm = (CAMALTriAdvance*) mk->construct_meshop("CAMALTriAdvance", surfs);
+    // get the volume
+  MEntVector dum, vols;
+  mk->get_entities_by_dimension(3, dum);
+  vols.push_back(*dum.rbegin());
+  CAMALTetMesher *tm = (CAMALTetMesher*) mk->construct_meshop("CAMALTetMesher", vols);
 
     // make a sizing function and set it on the surface
   SizingFunction esize(mk, -1, 0.25);
-  surfs[0]->sizing_function_index(esize.core_index());
+  vols[0]->sizing_function_index(esize.core_index());
   
     // mesh the surface, by calling execute
   mk->setup_and_execute();
 
-    // report the number of tris
-  moab::Range tris;
-  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 2, tris);
+    // report the number of tets
+  moab::Range tets;
+  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, tets);
   CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  std::cout << tris.size() << " tris generated." << std::endl;
+  std::cout << tets.size() << " tets generated." << std::endl;
 
   if (save_mesh) {
         // output mesh
     std::string outfile = filebase + std::string(".vtk");
-    moab::EntityHandle out_set = surfs[0]->mesh_handle();
+    moab::EntityHandle out_set = vols[0]->mesh_handle();
     rval = mk->moab_instance()->write_file(outfile.c_str(), NULL, NULL, &out_set, 1);
     MBERRCHK(rval, mk->moab_instance());
   }

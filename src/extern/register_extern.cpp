@@ -1,6 +1,7 @@
 #include "meshkit/RegisterMeshOp.hpp"
 #ifdef HAVE_CAMAL
 #  include "meshkit/CAMALTriAdvance.hpp"
+#  include "meshkit/CAMALTetMesher.hpp"
 #endif
 
 namespace MeshKit {
@@ -16,6 +17,7 @@ extern int register_extern_mesh_ops() { return 1; }
 
 #ifdef HAVE_CAMAL
   REGISTER_MESH_OP(CAMALTriAdvance);
+  REGISTER_MESH_OP(CAMALTetMesher);
 #endif
 
 

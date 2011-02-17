@@ -128,6 +128,26 @@ public:
      */
   void get_adjacencies(int dim, moab::Range &adjs) const;
 
+    /** \brief Return a shared entity of specified dimension
+     *
+     * If no shared entities are found, NULL is returned.  If more than one are found,
+     * an Error is thrown with MK_MULTIPLE_FOUND as the code.
+     * \param ent2 Other entity
+     * \param to_dim Dimension of shared entity
+     * \return Shared entity
+     */
+  ModelEnt *shared_entity(ModelEnt *ent2, int to_dim);
+  
+    /** \brief Get adjacent entities, with specified boolean on results
+     * \param from_ents Entities whose adjacencies are being queried
+     * \param to_dim Dimension of adjacencies requested
+     * \param to_ents Adjacent entities
+     * \param op_type Boolean type, intersect or union
+     */
+  void get_adjs_bool(MEntVector &from_ents,
+                     int to_dim,
+                     MEntVector &to_ents,
+                     BooleanType op_type);
     /**@}*/
 
     /** \name Geometric evaluation
@@ -308,27 +328,22 @@ public:
                                   std::vector<double> &coords,
                                   moab::Range *verts_range = NULL);
   
+    /** \brief Get meshed state
+     * \return Meshed state
+     */
+  MeshedState get_meshed_state();
+
+    /** \brief Set the meshed state
+     * \param mstate
+     */
+  void set_meshed_state(MeshedState mstate);
+
     /**@}*/
 
-    /** \name Member get/set
+    /** \name Mesh intervals, sizing functions
      */
 
     /**@{*/
-
-    //! Get the MKCore object
-  MKCore *mk_core() const;
-  
-    //! Get geometry entity handle
-  iGeom::EntityHandle geom_handle() const;
-
-    //! Get geometry entity handle for a given mesh entity set
-  iGeom::EntityHandle geom_handle(moab::EntityHandle ment) const;
-
-    //! Get mesh entity set handle
-  moab::EntityHandle mesh_handle() const;
-
-    //! Get mesh entity set handle for a given geometry entity
-  moab::EntityHandle mesh_handle(iGeom::EntityHandle gent) const;
 
     /** \brief Get sizing function index
      * \return Returns -1 if it has not been set for this entity
@@ -359,54 +374,57 @@ public:
     //! Set firmness
   void interval_firmness(Firmness firm);
 
-    /** \brief Get meshed state
-     * \return Meshed state
-     */
-  MeshedState get_meshed_state();
+    /**@}*/
 
-    /* \brief Set the meshed state
-     * \param mstate
+    /** \name MeshOps
      */
-  void set_meshed_state(MeshedState mstate);
 
-    /* \brief Add a MeshOp that points to this ModelEnt
+    /**@{*/
+
+    /** \brief Add a MeshOp that points to this ModelEnt
+     *
      * \param meshop MeshOp to add
      */
   void add_meshop(MeshOp *meshop);
   
-    /* \brief Remove a MeshOp that pointed to this ModelEnt
+    /** \brief Remove a MeshOp that pointed to this ModelEnt
+     *
      * \param meshop MeshOp to remove
      */
   void remove_meshop(MeshOp *meshop);
   
-    /* \brief Get MeshOps pointing to this ModelEnt
+    /** \brief Get MeshOps pointing to this ModelEnt
+     *
      * \param meshops MeshOps returned
      */
   void get_meshops(std::vector<MeshOp*> &meshops);
 
     /**@}*/
 
-    /** \brief Return a shared entity of specified dimension
-     *
-     * If no shared entities are found, NULL is returned.  If more than one are found,
-     * an Error is thrown with MK_MULTIPLE_FOUND as the code.
-     * \param ent2 Other entity
-     * \param to_dim Dimension of shared entity
-     * \return Shared entity
+    /** \name Member get/set
      */
-  ModelEnt *shared_entity(ModelEnt *ent2, int to_dim);
+
+    /**@{*/
+
+    //! Get the MKCore object
+  MKCore *mk_core() const;
   
-    /** \brief Get adjacent entities, with specified boolean on results
-     * \param from_ents Entities whose adjacencies are being queried
-     * \param to_dim Dimension of adjacencies requested
-     * \param to_ents Adjacent entities
-     * \param op_type Boolean type, intersect or union
-     */
-  void get_adjs_bool(MEntVector &from_ents,
-                     int to_dim,
-                     MEntVector &to_ents,
-                     BooleanType op_type);
-  
+    //! Get geometry entity handle
+  iGeom::EntityHandle geom_handle() const;
+
+    //! Get geometry entity handle for a given mesh entity set
+  iGeom::EntityHandle geom_handle(moab::EntityHandle ment) const;
+
+    //! Get mesh entity set handle
+  moab::EntityHandle mesh_handle() const;
+
+    //! Get mesh entity set handle for a given geometry entity
+  moab::EntityHandle mesh_handle(iGeom::EntityHandle gent) const;
+
+    /**@}*/
+
+private:
+
     /** \brief Return the next entity in the loop, using winding number
      * \param this_edge Edge next to one being requested
      * \param this_sense Sense of this_edge
@@ -417,8 +435,6 @@ public:
                             int this_sense, 
                             MEntVector &tmp_adjs);
   
-private:
-
     //! Set senses tag on moabEntSet; only called for dim=1 entities
   void set_upward_senses();
   
@@ -544,9 +560,9 @@ inline void ModelEnt::evaluate_discrete(double x, double y, double z,
   evaluate(x, y, z, close, direction, curvature1, curvature2);
 }
 
-    /* \brief Add a MeshOp that points to this ModelEnt
-     * \param meshop MeshOp to add
-     */
+      /** \brief Add a MeshOp that points to this ModelEnt
+       * \param meshop MeshOp to add
+       */
 inline void ModelEnt::add_meshop(MeshOp *meshop) 
 {
   assert(std::find(meshOps.begin(), meshOps.end(), meshop) == meshOps.end());
