@@ -91,6 +91,36 @@ if test "xyes" = "x$enable_debug"; then
   AC_CHECK_HEADER( [valgrind/memcheck.h], [CPPFLAGS="$CPPFLAGS -DVALGRIND"] )
 fi
 
+
+#################################################################################
+#                             Doxygen Documentation
+#################################################################################
+
+# List of source directories to conditionally search.
+# Paths should be relative to top source directory.
+DOXYGEN_SRC_PATH="src/core src/util src/algs src/extern/register_extern.cpp test/core test/algs"
+
+# Old versions of autoconf (automake?) don't define this
+if test "x$htmldir" = "x"; then
+  htmldir="$docdir"
+  AC_SUBST(htmldir)
+fi
+
+AC_ARG_ENABLE([html-docs],
+[AC_HELP_STRING([[--enable-html-docs]],[Generate and install HTML API documentation])
+AC_HELP_STRING([--disable-html-docs],[Do not generate API documentation (default)])],
+                        [ENABLE_DOXYGEN="$enableval"],[ENABLE_DOXYGEN=no] )
+AC_PATH_PROG( [DOXYGEN], [doxygen], [no] )
+if test "x$ENABLE_DOXYGEN" != "xno"; then
+  if test "x$DOXYGEN" = "xno"; then
+    AC_MSG_ERROR("Doxygen executable not found.")
+  fi
+fi
+AC_ARG_VAR([DOXYGEN],[Doxygen source code documentation tool])
+AC_SUBST([DOXYGEN])
+AM_CONDITIONAL([ENABLE_DOXYGEN],[test "x$ENABLE_DOXYGEN" != "xno"])
+
+
 ################################################################################
 #                              MPI OPTIONS
 ################################################################################
@@ -445,6 +475,7 @@ fi
 
 if test $HAVE_CAMAL = yes; then
   AC_MSG_RESULT([Camal version: $CAMAL_VERSION])
+  DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/CAMAL test/extern/CAMAL"
 elif test "x$CAMAL_VAL" != "xno"; then
   AC_MSG_ERROR([Camal not found or not usable.])
 fi
@@ -737,10 +768,19 @@ fi
 
 
 
-
 ################################################################################
 #                           Output Files
 ################################################################################
+
+# Build complete doxygen source path list
+TMP_DOXY_LIST=`echo $DOXYGEN_SRC_PATH | $SED -e "s|[[^[:space:]]]*|../&|g"`
+TMP_DOXY_LIST2=
+if test "x$srcdir" != "x."; then
+  TMP_DOXY_LIST2=`echo $DOXYGEN_SRC_PATH | $SED -e "s|[[^[:space:]]]*|../${srcdir}/&|g"`
+fi
+DOXYGEN_SRC_PATH="$TMP_DOXY_LIST $TMP_DOXY_LIST2"
+AC_SUBST(DOXYGEN_SRC_PATH)
+
 AC_SUBST([DEFINES])
 AC_SUBST([AM_CPPFLAGS])
 AC_SUBST([AM_LDFLAGS])
@@ -775,6 +815,8 @@ AC_CONFIG_FILES([Makefile
 		 test/extern/Makefile
 		 test/extern/CAMAL/Makefile
                  utils/Makefile
+                 doc/Makefile
+                 doc/meshkit.dox
                  ])
 
 AC_OUTPUT

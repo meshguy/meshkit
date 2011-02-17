@@ -30,6 +30,8 @@ if HAVE_CAMAL
   AM_CPPFLAGS += -I$(top_srcdir)/camal
 endif
 
+SUBDIRS += doc
+
 # Some variables
 AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
 
