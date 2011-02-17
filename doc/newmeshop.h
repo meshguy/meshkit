@@ -14,15 +14,19 @@ the new algorithm in a graph-based meshing process.  The meshing operation class
 the algorithm to be requested by name in applications.  The operation can provide a function which evaluates whether
 a given entity can be meshed with that algorithm, providing further automation of the meshing process.  Each meshing operation 
 instance stores a map between ModelEnt objects and moab::Range's operated on by the operation; this can be used as input 
-to the next node in the meshing graph, or to reverse the affect of the MeshOp.
+to the next node in the meshing graph, or to reverse the effect of the MeshOp.
 
 The following sections describe functions that must be implemented for a new MeshOp in order for it to integrate into MeshKit.
 
 \section registration Declaration & Registration
 Each new meshing operation should be derived from the MeshOp class (see e.g. VertexMesher for the proper syntax).  The new MeshOp
-should be registered with MKCore during startup.  The following steps should
-be taken to register a new MeshOp with MKCore:
- -# For each pure virtual function defined in %MeshOpProxy, a corresponding
+should be registered with MKCore at some point before an application requests the new MeshOp.  For MeshOp classes packaged
+with MeshKit, this happens inside a few static functions called during MeshKit startup.  For application-provided MeshOps,
+registration can happen either during static initializaton of the application, or early in the application's execution
+before the new MeshOp is needed.  
+
+The following steps should be taken to register a new MeshOp with MKCore:
+ -# For each pure virtual function defined in MeshOpProxy, a corresponding
    static function should be defined in the new MeshOp class, with the
    exception of the \c create method, for which the MeshOp should provide
    a constructor that accepts the same argument list.  The list of such
@@ -30,18 +34,16 @@ be taken to register a new MeshOp with MKCore:
    - <tt> const char* name() </tt> - The meshing operation name (used by applications to request this meshing operation).
    - <tt> bool can_mesh(iBase_EntityType dimension) </tt> - Returns true
       for any topogical dimension(s) of ModelEnt's this meshing operation 
-      can operate on.
+      can operate on. <em> The behavior of this overloaded variant of <tt> can_mesh </tt> is different from the version
+      taking a ModelEnt* as an argument; see \ref canmesh below.</em>
    - <tt> const moab::EntityType* output_types() </tt> - Returns an array
       of mesh entity types terminated with a value of \c moab::MBMAXTYPE .  
-      This function does not return the size of the array.  The terminating
+      This function does not return the size of the array, so the terminating
       value must be present for calling code to know where the end of the
       array is.  The values contained in this array (with the exception of the
-      terminating value) are the types of mesh entities produced by the meshing
+      terminating value) are the types of mesh entities produced or operated on by the meshing
       algorithm.
    - <tt> bool can_mesh(ModelEnt* ent) </tt> - evaluates whether the operation can operate on a specified ModelEnt.
-      The MeshOp class provides several convenience functions that can be used for the canmesh function.  These functions
-      are \c canmesh_vertex, \c canmesh_edge, \c canmesh_surface, \c canmesh_region, and return true if the specified \c ModelEnt has topological
-      dimension 0, 1, 2, or 3, respectively.
  -# Add a line to either \c algs/register_algs.cpp or \c extern/register_extern.cpp
    of the form <tt> REGISTER_MESH_OP(classname); </tt>.  If adding a
    MeshOp in \c extern/, use preprocesor directives as appropriate to ensure
@@ -60,7 +62,22 @@ or the RegisterMeshOp template used by the REGISTER_MESH_OP macro are inappropri
 for a given MeshOp, you may alternately implement your own subclass of 
 MeshOpProxy for your MeshOp and explcitly register by calling MeshKit::register_meshop
 from either \c regsiter_algs_mesh_ops() defined in \c algs/regsiter_algs.cpp
-or \c register_extern_mesh_ops() defined in \c extern/register_extern.cpp.
+or \c register_extern_mesh_ops() defined in \c extern/register_extern.cpp.  Alternatively, an application can register
+new MeshOps early in application execution, using the same macros used in \c regsiter_algs_mesh_ops().
+
+\section canmesh can_mesh Functions
+
+Two variants of the \c can_mesh function are used in MeshOp registration.  The first variant, 
+ <tt> bool can_mesh(iBase_EntityType dimension) </tt>, returns whether it is <em> possible</em> to mesh ModelEnt's with the specified
+dimension with the MeshOp.  This evaulation is made purely on the basis of topological dimension.  In some cases, there
+may be further constraints on the MeshOp such that, given a concrete ModelEnt, the meshOp will not be able to mesh the
+ModelEnt.  For example, a surface mapping algorithm would return \c true for iBase_EntityType=iBase_FACE, but when passed
+a ModelEnt corresponding to a non-simply-connected surface (a surface with holes) would return \c false.
+
+The MeshOp class provides several convenience functions that can be used in place of a MeshOp-specific \c can_mesh function.  
+These functions are \c canmesh_vertex, \c canmesh_edge, \c canmesh_surface, \c canmesh_region, and return \c true if the 
+specified \c ModelEnt has topological dimension 0, 1, 2, or 3, respectively.  These functions can be passed directly to the 
+registration code, so the new MeshOp need not implement its own \c can_mesh function.
 
 \section setupexecute setup_this and execute_this
 Two functions, setup_this and execute_this, must be implemented to support the graph-based meshing process in %MeshKit.
