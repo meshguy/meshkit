@@ -41,10 +41,7 @@ namespace MeshKit
    * \class OneToOneSwept
    * \brief Generate the all-hexahedral mesh by sweeping
    * 
-   * OneToOneSwept generates the#include "meshkit/MKCore.hpp"
-#include "meshkit/ModelEnt.hpp"
-#include "meshkit/SizingFunction.hpp"
-#include "moab/ReadUtilIface.hpp" all-hexahedral mesh by sweeping the source mesh
+   * OneToOneSwept generates the all-hexahedral mesh by sweeping the source mesh
    * to the target surface
    */
 //===========================================================================//
