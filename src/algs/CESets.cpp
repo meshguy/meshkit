@@ -5,6 +5,11 @@
 #include <cstring>
 #include <iMesh_extensions.h>
 
+#include <meshkit/Error.hpp>
+#include "SimpleArray.hpp"
+
+namespace MeshKit {
+
 CESets::~CESets()
 {
   std::vector<tag_data>::iterator i;
@@ -21,7 +26,7 @@ void CESets::add_tag(iBase_TagHandle tag_handle, const char *value)
     int err;
     int tag_size;
     iMesh_getTagSizeBytes(impl_, tag_handle, &tag_size, &err);
-    check_error(impl_, err);
+    IBERRCHK(err, "FIXME");
 
     tmp = static_cast<char*>(malloc(tag_size));
     memcpy(tmp, value, tag_size);
@@ -36,7 +41,7 @@ void CESets::add_tag(const std::string &tag_name, const char *value)
   int err;
   iMesh_getTagHandle(impl_, tag_name.c_str(), &tag_handle, &err,
                      tag_name.size());
-  check_error(impl_, err);
+  IBERRCHK(err, "FIXME");
 
   add_tag(tag_handle, value);
 }
@@ -46,7 +51,7 @@ void CESets::update_tagged_sets()
   int err;
   iBase_EntitySetHandle root_set;
   iMesh_getRootSet(impl_, &root_set, &err);
-  check_error(impl_, err);
+  IBERRCHK(err, "FIXME");
 
   std::vector<tag_data>::const_iterator tag;
   for (tag = tags_.begin(); tag != tags_.end(); ++tag) {
@@ -54,7 +59,7 @@ void CESets::update_tagged_sets()
     iMesh_getEntSetsByTagsRec(impl_, root_set, &tag->tag,
                               (tag->value ? &tag->value : NULL), 1, false,
                               ARRAY_INOUT(tmp_sets), &err);
-    check_error(impl_, err);
+    IBERRCHK(err, "FIXME");
     sets_.insert(tmp_sets.begin(), tmp_sets.end());
   }
 }
@@ -66,7 +71,7 @@ void link_expand_sets(const CESets &ce_sets, iBase_TagHandle local_tag)
   for (set = ce_sets.sbegin(); set != ce_sets.send(); ++set) {
     iMesh_setEntSetEHData(ce_sets.impl(), *set, local_tag,
                           reinterpret_cast<iBase_EntityHandle>(*set), &err);
-    check_error(ce_sets.impl(), err);
+    IBERRCHK(err, "FIXME");
   }
 }
 
@@ -89,7 +94,7 @@ void get_copied_ents(iMesh_Instance imeshImpl, iBase_EntitySetHandle set,
   SimpleArray<iBase_EntityHandle> tmp_ents;
   iMesh_getEntities(imeshImpl, set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
                     ARRAY_INOUT(tmp_ents), &err);
-  check_error(imeshImpl, err);
+  IBERRCHK(err, "FIXME");
 
   ents.reserve(tmp_ents.size());
 
@@ -124,10 +129,10 @@ void get_dest_set(iMesh_Instance imeshImpl, iBase_TagHandle local_tag,
 
   if (err != iBase_SUCCESS) {
     iMesh_createEntSet(imeshImpl, false, dest, &err);
-    check_error(imeshImpl, err);
+    IBERRCHK(err, "FIXME");
     iMesh_setEntSetEHData(imeshImpl, src, local_tag,
                           reinterpret_cast<iBase_EntityHandle>(*dest), &err);
-    check_error(imeshImpl, err);
+    IBERRCHK(err, "FIXME");
   }
 }
 
@@ -140,6 +145,7 @@ void get_dest_set(iMesh_Instance imeshImpl, iBase_TagHandle local_tag,
  * \param imeshImpl the iMesh instance handle
  * \param src the source set
  * \param current the child set to examine (start with current == src)
+ * \param cesets the copy or expand sets to operate on
  * \param local_tag the tag relating source and target sets
  */
 static
@@ -159,13 +165,13 @@ void process_ce_subsets(iMesh_Instance imeshImpl, iBase_EntitySetHandle src,
     get_dest_set(imeshImpl, local_tag, src, &dest);
     iMesh_addEntArrToSet(imeshImpl, &tmp_tags[0], tmp_tags.size(), dest,
                          &err);
-    check_error(imeshImpl, err);
+    IBERRCHK(err, "FIXME");
   }
 
   // Next, start looking at children.
   SimpleArray<iBase_EntitySetHandle> children;
   iMesh_getEntSets(imeshImpl, current, 1, ARRAY_INOUT(children), &err);
-  check_error(imeshImpl, err);
+  IBERRCHK(err, "FIXME");
 
   for (int i = 0; i < children.size(); i++) {
 
@@ -175,7 +181,7 @@ void process_ce_subsets(iMesh_Instance imeshImpl, iBase_EntitySetHandle src,
       if (src == dest) continue;
 
       iMesh_addEntSet(imeshImpl, children[i], dest, &err);
-      check_error(imeshImpl, err);
+      IBERRCHK(err, "FIXME");
     }
 
     // ... otherwise, add the entities and recurse into the next level of
@@ -206,7 +212,7 @@ void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
 
   int tag_size;
   iMesh_getTagSizeBytes(imeshImpl, tag, &tag_size, &err);
-  check_error(imeshImpl, err);
+  IBERRCHK(err, "FIXME");
 
   // allocate temp space for tag value
   std::vector<char> value;
@@ -222,7 +228,7 @@ void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
                         &value_ptr, &value_alloc, &value_size, &err);
     if (err == iBase_TAG_NOT_FOUND)
       continue;
-    check_error(imeshImpl, err);
+    IBERRCHK(err, "FIXME");
 
     // compare to tag value if necessary
     if (tag_val && strncmp(tag_val, value_ptr, tag_size))
@@ -235,11 +241,11 @@ void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
                           &err);
     if (err == iBase_TAG_NOT_FOUND)
       continue;
-    check_error(imeshImpl, err);
+    IBERRCHK(err, "FIXME");
 
     if (copy_set != *set) {
       iMesh_setEntSetData(imeshImpl, copy_set, tag, value_ptr, tag_size, &err);
-      check_error(imeshImpl, err);
+      IBERRCHK(err, "FIXME");
     }
   }
 }
@@ -255,7 +261,7 @@ void tag_copy_sets(const CESets &ce_sets, iBase_TagHandle local_tag,
     iMesh_getEntSetEHData(ce_sets.impl(), *set, local_tag, &eh, &err);
     if (err == iBase_SUCCESS) {
       iMesh_setEntSetEHData(ce_sets.impl(), *set, copy_tag, eh, &err);
-      check_error(ce_sets.impl(), err);
+      IBERRCHK(err, "FIXME");
     }
   }
 
@@ -266,3 +272,5 @@ void tag_copy_sets(const CESets &ce_sets, iBase_TagHandle local_tag,
                   tag->value);
   }
 }
+
+} // namespace MeshKit

@@ -1,13 +1,14 @@
 #ifndef METADATA_HPP
 #define METADATA_HPP
 
-#include <iBase.h>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "MKException.hpp"
-#include "SimpleArray.hpp"
+#include <iBase.h>
+#include <iMesh.h>
+
+namespace MeshKit {
 
 class CESets
 {
@@ -112,4 +113,5 @@ void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
 void tag_copy_sets(const CESets &ce_sets, iBase_TagHandle local_tag,
                    iBase_TagHandle copy_tag);
 
+} // namespace MeshKit
 #endif

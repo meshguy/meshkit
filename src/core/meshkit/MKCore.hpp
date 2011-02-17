@@ -68,9 +68,6 @@ public:
     //! initialize, creating missing geom/mesh/rel interfaces if requested
   void init(bool construct_missing_ifaces);
 
-    //! Initialize the opsByDim array
-  void init_opsbydim();
-
     /** \brief Register a new MeshOp factory
      * \param proxy class-specific (as opposed to instance-specific) polymorphic methods
      */

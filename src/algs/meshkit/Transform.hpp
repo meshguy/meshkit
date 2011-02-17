@@ -3,7 +3,7 @@
 
 #include "meshkit/Error.hpp"
 #include "meshkit/iMesh.hpp"
-#include "src/core/meshkit/Matrix.hpp"
+#include "meshkit/Matrix.hpp"
 #include <vector>
 #include <tr1/functional>
 
