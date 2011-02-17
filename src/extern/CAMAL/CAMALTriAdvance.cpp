@@ -54,12 +54,8 @@ void CAMALTriAdvance::execute_this()
 
       // convert the handles to integers for input to TriAdv
     moab::Range bdy_vrange;
-    me->handles_to_ids(bdy, bdy_ids, NULL, &bdy_vrange);
-
-      // get the vertex coordinates
-    std::vector<double> coords(3*bdy_vrange.size());
-    moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(bdy_vrange, &coords[0]);
-    MBERRCHK(rval, mk_core()->moab_instance());
+    std::vector<double> coords;
+    me->get_indexed_connect_coords(bdy, NULL, NULL, bdy_ids, coords, &bdy_vrange);
 
       // now construct the CAMAL mesher, and pass it initial conditions
     CMLTriAdvance triadv(&cse, &mesize);
@@ -74,6 +70,7 @@ void CAMALTriAdvance::execute_this()
       ECERRCHK(MK_FAILURE, "Trouble generating tri mesh.");
 
     moab::Range &new_ents = (*sit).second;
+    moab::ErrorCode rval;
 
       // resize the coords array, then get the coords of the new points
     assert(num_pts >= (int)bdy_vrange.size());

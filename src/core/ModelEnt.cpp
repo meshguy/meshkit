@@ -6,6 +6,7 @@
 #include "meshkit/Types.hpp"
 #include "meshkit/VecUtil.hpp"
 #include "moab/GeomTopoTool.hpp"
+#include "moab/CN.hpp"
 #include "RefEntity.hpp"
 
 namespace MeshKit
@@ -747,10 +748,12 @@ void ModelEnt::boundary(int dim,
   throw Error(MK_NOT_IMPLEMENTED, "Not implemented yet.");
 }
 
-void ModelEnt::handles_to_ids(std::vector<moab::EntityHandle> &ents,
-                              std::vector<int> &ents_as_ids,
-                              moab::Tag tagh,
-                              moab::Range *ent_range) 
+void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
+                                          std::vector<int> *senses,
+                                          moab::Tag tagh,
+                                          std::vector<int> &ents_as_ids,
+                                          std::vector<double> &coords,
+                                          moab::Range *verts_range) 
 {
     // if we need to, make a tag
   moab::ErrorCode rval;
@@ -763,22 +766,66 @@ void ModelEnt::handles_to_ids(std::vector<moab::EntityHandle> &ents,
   }
   
     // put entities into range, after clearing it
-  moab::Range tmp_range;
-  if (!ent_range) ent_range = &tmp_range;
-  ent_range->clear();
-  std::copy(ents.begin(), ents.end(), moab::range_inserter(*ent_range));
+  moab::Range tmp_range, ents_range;
+  if (!verts_range) verts_range = &tmp_range;
+  verts_range->clear();
+
+  std::copy(ents.begin(), ents.end(), moab::range_inserter(ents_range));
+  bool all_verts = (mkCore->moab_instance()->type_from_handle(*ents_range.begin()) ==
+                    mkCore->moab_instance()->type_from_handle(*ents_range.begin()) &&
+                    mkCore->moab_instance()->type_from_handle(*ents_range.begin()) == moab::MBVERTEX);
+
+
+    // get connectivity of all ents and store in range
+  if (!all_verts) {
+    rval = mkCore->moab_instance()->get_connectivity(ents_range, *verts_range);
+    MBERRCHK(rval, mkCore->moab_instance());
+  }
+  else *verts_range = ents_range;
+
+    // resize index array, to max number of connectivity entries
+  int max_numconnect = moab::CN::VerticesPerEntity(mkCore->moab_instance()->type_from_handle(*(ents_range.rbegin())));
+  ents_as_ids.resize(ents.size()*max_numconnect);
   
-    // resize the ids vector, and temporarily store ids there and set tag (vector will be at least the length of
-    // the range)
-  ents_as_ids.resize(ents.size());
-  for (unsigned int i = 0; i < ent_range->size(); i++) ents_as_ids[i] = i;
-  rval = mk_core()->moab_instance()->tag_set_data(tagh, *ent_range, &ents_as_ids[0]);
+    // temporarily store ids in ents_as_ids array, and set id tag 
+  assert(ents_as_ids.size() >= verts_range->size());
+  for (unsigned int i = 0; i < verts_range->size(); i++) ents_as_ids[i] = i;
+  rval = mk_core()->moab_instance()->tag_set_data(tagh, *verts_range, &ents_as_ids[0]);
   MBERRCHK(rval, mkCore->moab_instance());
-  
-    // now get the tag values again, this time from the vector, which puts them in order in the int list
-  rval = mk_core()->moab_instance()->tag_get_data(tagh, &ents[0], ents.size(), &ents_as_ids[0]);
-  MBERRCHK(rval, mkCore->moab_instance());
-                                                  
+
+    // get ids into ids vector in connectivity or ents order
+  if (all_verts) {
+    rval = mk_core()->moab_instance()->tag_get_data(tagh, &ents[0], ents.size(), &ents_as_ids[0]);
+    MBERRCHK(rval, mkCore->moab_instance());
+    ents_as_ids.resize(ents.size());
+  }
+  else {
+      // loop over entities
+    std::vector<moab::EntityHandle> storage;
+    const moab::EntityHandle *connect;
+    int num_connect;
+    unsigned int last = 0;
+    for (unsigned int i = 0; i < ents.size(); i++) {
+        // first, get connect vector
+      mk_core()->moab_instance()->get_connectivity(ents[i], connect, num_connect, true, &storage);
+      MBERRCHK(rval, mk_core()->moab_instance());
+      assert(ents_as_ids.size() >= last + num_connect);
+        // next, get ids and put into ids vector
+      rval = mk_core()->moab_instance()->tag_get_data(tagh, connect, num_connect, &ents_as_ids[last]);
+      MBERRCHK(rval, mk_core()->moab_instance());
+        // reverse if necessary
+      assert(!senses || (*senses)[i] != SENSE_BOTH);
+      if (senses && (*senses)[i] == SENSE_REVERSE) std::reverse(&ents_as_ids[last], &ents_as_ids[last+num_connect]);
+        // update last
+      last += num_connect;
+    }
+  }
+
+    // get coords for range-ordered vertices
+  coords.resize(3*verts_range->size());
+  rval = mk_core()->moab_instance()->get_coords(*verts_range, &coords[0]);
+  MBERRCHK(rval, mk_core()->moab_instance());
+
     // delete the tag if I created it
   if (i_created_tag) {
     rval = mk_core()->moab_instance()->tag_delete(tagh);

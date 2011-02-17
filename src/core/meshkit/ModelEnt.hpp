@@ -288,21 +288,25 @@ public:
   void boundary(int dim, 
                 moab::Range &ents) const;
 
-    /** \brief Convert a vector of entity handles to a vector of integer ids
+    /** \brief From a vector of entity handles, return connectivity as integer ids, and coords of vertices if requested
      *
      * The entity handles are ordered and made unique, assigned ids, then the id vector is assembled
      * in the same order as the input handle vector.  Optionally this function returns the moab tag 
      * used to assign ids, and the moab range used to get unique ids
      * \param ents Vector of entities whose ids to assign
-     * \param ents_as_ids Vector of ids that get assigned, ordered same as ents
+     * \param senses Senses of entities in ents; if NULL, assume forward sense, or no sense if ents are vertices
      * \param tagh Tag handle to use for ids; if zero, local tag is used then deleted
-     * \param ent_range Moab entity range; if non-NULL, populated range is returned; this range is
+     * \param ents_as_ids Vector of ids that get assigned, ordered same as connectivity of ents (or ents itself if they're vertices)
+     * \param coords Coordinates of vertices corresponding to ents_as_ids
+     * \param verts_range Vertices in ents, as a range; if non-NULL, populated range is returned; this range is
      *       cleared in this function
      */
-  void handles_to_ids(std::vector<moab::EntityHandle> &ents,
-                      std::vector<int> &ents_as_ids,
-                      moab::Tag tagh = 0,
-                      moab::Range *ent_range = NULL);
+  void get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
+                                  std::vector<int> *senses,
+                                  moab::Tag tagh,
+                                  std::vector<int> &ents_as_ids,
+                                  std::vector<double> &coords,
+                                  moab::Range *verts_range = NULL);
   
     /**@}*/
 
