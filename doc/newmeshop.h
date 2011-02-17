@@ -1,3 +1,5 @@
+namespace MeshKit {
+
 /*!
   \page newmeshop Writing A New MeshOp Class
 %MeshKit is designed to simplify development of new meshing algorithms, by providing support for
@@ -16,7 +18,7 @@ a given entity can be meshed with that algorithm, providing further automation o
 instance stores a map between ModelEnt objects and moab::Range's operated on by the operation; this can be used as input 
 to the next node in the meshing graph, or to reverse the effect of the MeshOp.
 
-The following sections describe functions that must be implemented for a new MeshOp in order for it to integrate into MeshKit.
+The following sections describe functions that must be implemented for a new MeshOp in order for it to integrate into %MeshKit.
 
 \section registration Declaration & Registration
 Each new meshing operation should be derived from the MeshOp class (see e.g. VertexMesher for the proper syntax).  The new MeshOp
@@ -37,17 +39,20 @@ The following steps should be taken to register a new MeshOp with MKCore:
       can operate on. <em> The behavior of this overloaded variant of <tt> can_mesh </tt> is different from the version
       taking a ModelEnt* as an argument; see \ref canmesh below.</em>
    - <tt> const moab::EntityType* output_types() </tt> - Returns an array
-      of mesh entity types terminated with a value of \c moab::MBMAXTYPE .  
+      of mesh entity types terminated with a value of  moab::MBMAXTYPE .  
       This function does not return the size of the array, so the terminating
       value must be present for calling code to know where the end of the
       array is.  The values contained in this array (with the exception of the
       terminating value) are the types of mesh entities produced or operated on by the meshing
       algorithm.
    - <tt> bool can_mesh(ModelEnt* ent) </tt> - evaluates whether the operation can operate on a specified ModelEnt.
- -# Add a line to either \c algs/register_algs.cpp or \c extern/register_extern.cpp
+      The MeshOp class provides several convenience functions that can be used for the canmesh function.  These functions
+      are canmesh_vertex, canmesh_edge, canmesh_surface, canmesh_region, and return true if the specified ModelEnt has topological
+      dimension 0, 1, 2, or 3, respectively.
+ -# Add a line to either algs/register_algs.cpp or extern/register_extern.cpp
    of the form <tt> REGISTER_MESH_OP(classname); </tt>.  If adding a
    MeshOp in \c extern/, use preprocesor directives as appropriate to ensure
-   that MeshKit builds correctly if configured without support for the 
+   that %MeshKit builds correctly if configured without support for the 
    corresponding external libraries.
 
 Classes derived from MeshOp should also provide the mesh_types_arr function used by the MeshOp base class to 
@@ -58,12 +63,12 @@ implement the mesh_types funciton.  This can typically be implemented as:
 \endcode
 
 If for some reason the implementation of static methods as decribed above
-or the RegisterMeshOp template used by the REGISTER_MESH_OP macro are inappropriate
+or the RegisterMeshOp template used by the REGISTER_MESH_OP(classname) macro are inappropriate
 for a given MeshOp, you may alternately implement your own subclass of 
 MeshOpProxy for your MeshOp and explcitly register by calling MeshKit::register_meshop
-from either \c regsiter_algs_mesh_ops() defined in \c algs/regsiter_algs.cpp
+from either \c register_algs_mesh_ops() defined in \c algs/register_algs.cpp
 or \c register_extern_mesh_ops() defined in \c extern/register_extern.cpp.  Alternatively, an application can register
-new MeshOps early in application execution, using the same macros used in \c regsiter_algs_mesh_ops().
+new MeshOps early in application execution, using the same macros used in \c register_algs_mesh_ops().
 
 \section canmesh can_mesh Functions
 
@@ -80,7 +85,7 @@ specified \c ModelEnt has topological dimension 0, 1, 2, or 3, respectively.  Th
 registration code, so the new MeshOp need not implement its own \c can_mesh function.
 
 \section setupexecute setup_this and execute_this
-Two functions, setup_this and execute_this, must be implemented to support the graph-based meshing process in %MeshKit.
+Two functions, MeshOp::setup_this and MeshOp::execute_this, must be implemented to support the graph-based meshing process in %MeshKit.
 
 setup_this performs setup-type tasks for the associated ModelEnt(s), like setting intervals or computing vertex or edge types.  
 When applied to geometric model entities, it is also responsible for coordinating setup of lower-dimensional bounding entities.
@@ -119,3 +124,5 @@ Many other functions are provided to simplify development of meshing operations:
 Top: \ref index Prev: \ref api Next: \ref styleguide
   
  */
+
+}
