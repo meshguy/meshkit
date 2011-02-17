@@ -52,7 +52,9 @@ them easy to detect and avoid.
 - The resulting graphs are much less complex than those representing the BREP, while still capturing the
 relevant dependencies between meshing operations.
 
-\subpage detailedtraversal "A more detailed example of graph traversal"
+A more detailed example of graph traversal is given \subpage detailedtraversal "here".
+
+\page detailedtraversal A more detailed example of graph traversal
 
 In this example, an example of meshing graph traversal is given where graph nodes create other graph nodes
 dynamically during the setup phase.  Consider the generation of a mesh for a surface bounded by two geometric 

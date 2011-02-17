@@ -67,7 +67,6 @@ public:
 
     /** \brief Constructor
      * \param err %Error code to which this Error should be initialized
-     * \param descr String describing the type of error represented by this object
      */
   Error(int err);
   

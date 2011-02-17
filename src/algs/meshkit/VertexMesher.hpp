@@ -66,7 +66,7 @@ public:
   /** \brief Function returning whether this scheme can mesh the specified entity
    * 
    * Used by MeshOpFactory to find scheme for an entity.
-   * \param me ModelEnt being queried
+   * \param model_ent ModelEnt being queried
    * \return If true, this scheme can mesh the specified ModelEnt
    */
   static bool can_mesh(ModelEnt *model_ent)

@@ -268,7 +268,7 @@ public:
 
     /** \brief Return the model entities bounding this entity, their senses, and optionally the loops/shells
      * \param dim Dimension of boundary entities requested
-     * \param bdy Boundary entities
+     * \param elements Boundary entities
      * \param senses Senses of boundary entities
      * \param group_sizes If non-NULL, pointer to vector where group sizes will be returned
      */
@@ -333,6 +333,7 @@ public:
 
     /** \brief Set sizing function index
      * \param index Sizing function index being set
+     * \param children_too If true, sizing function index is propagated to child (bounding) entities
      */
   void sizing_function_index(int index, bool children_too = true);
 

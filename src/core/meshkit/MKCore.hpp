@@ -180,6 +180,7 @@ public:
     /** \brief Load a geometry model from a file, and populate mesh entity sets
      * \param filename The file to load
      * \param options File options to be passed to the load function
+     * \param index Index of geometry instance to use
      * \param populate_too If true, calls populate_mesh after load
      */
   void load_geometry(const char *filename, const char *options = NULL, 
@@ -189,6 +190,7 @@ public:
     /** \brief Load a mesh model from a file
      * \param filename The file to load
      * \param options File options to be passed to the load function
+     * \param index Index of mesh instance to use
      */
   void load_mesh(const char *filename, const char *options = NULL,
                  int index = 0);
@@ -196,6 +198,7 @@ public:
     /** \brief Save a geometry model to a file
      * \param filename The file to save
      * \param options File options to be passed to the save function
+     * \param index Index of geometry instance to use
      */
   void save_geometry(const char *filename, const char *options = NULL,
                      int index = 0);
@@ -203,11 +206,13 @@ public:
     /** \brief Save a mesh model to a file
      * \param filename The file to save
      * \param options File options to be passed to the save function
+     * \param index Index of mesh instance to use
      */
   void save_mesh(const char *filename, const char *options = NULL,
                  int index = 0);
 
     /** \brief Populate mesh/relations data for geometric entities
+     * \param index Index of geometry instance to use
      */
   void populate_mesh(int index = 0);
 
@@ -281,7 +286,7 @@ public:
   SCDMesh *scd_mesh() const;
 
    /** \brief Set the (single) SCDMesh instance                           
-    * \param vm SCDMesh for this MKCore                                   
+    * \param scd SCDMesh for this MKCore                                   
     */
   void scd_mesh(SCDMesh *scd);
 
@@ -291,7 +296,7 @@ public:
   EBMesher *eb_mesher() const;
   
     /** \brief Set the (single) EBMesher instance
-     * \param vm EBMesher for this MKCore
+     * \param ebm EBMesher for this MKCore
      */
   void eb_mesher(EBMesher *ebm);
 
