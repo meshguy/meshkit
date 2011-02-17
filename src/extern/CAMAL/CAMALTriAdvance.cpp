@@ -116,7 +116,7 @@ void CAMALTriAdvance::execute_this()
     }
     
       // put new tris into new entity range, then commit the mesh
-    new_ents.insert(starth+num_tris-1);
+    new_ents.insert(starth, starth+num_tris-1);
     me->commit_mesh(new_ents, COMPLETE_MESH);
   }
 }
