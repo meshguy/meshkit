@@ -26,13 +26,13 @@ namespace MeshKit
 
   ExtrudeMesh::ExtrudeMesh(MKCore *mkcore, const MEntVector &me_vec)
     : MeshScheme(mkcore, me_vec),
-      mesh(mkcore->imesh_instance()->instance()),
+      mesh(mkcore->imesh_instance()),
       copyFaces(false),
       extrudeTag(mkcore, "__ExtrudeMeshTag"),
       copyTag(mkcore, "__CopyMeshTag"),
-      extrudeSets(mkcore->imesh_instance()->instance()),
-      copySets(mkcore->imesh_instance()->instance()),
-      expandSets(mkcore->imesh_instance()->instance())
+      extrudeSets(mkcore),
+      copySets(mkcore),
+      expandSets(mkcore)
   {}
 
   ExtrudeMesh::~ExtrudeMesh()
@@ -60,7 +60,7 @@ namespace MeshKit
 
     LocalSet set(this->mk_core());
 
-    IBERRCHK(mesh.addEntArrToSet(ARRAY_IN(orig_ents), set), "FIXME");
+    IBERRCHK(mesh->addEntArrToSet(ARRAY_IN(orig_ents), set), *mesh);
     do_extrude(set);
   }
 
@@ -83,10 +83,10 @@ namespace MeshKit
     SimpleArray<int> indices;
     SimpleArray<int> offsets;
 
-    iMesh_getStructure(mesh.instance(), src, ARRAY_INOUT(ents),
+    iMesh_getStructure(mesh->instance(), src, ARRAY_INOUT(ents),
                        ARRAY_INOUT(adj), ARRAY_INOUT(indices),
                        ARRAY_INOUT(offsets), &err);
-    IBERRCHK(err, "FIXME");
+    IBERRCHK(err, *mesh);
 
     if (adj.size() == 0) return;
 
@@ -98,12 +98,12 @@ namespace MeshKit
 
     curr.resize(adj.size());
     next.resize(adj.size());
-    transform(1, mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
+    transform(1, *mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
 
     // Get the offset between vertices between steps
     Vector<3> xa, xb, dx;
-    IBERRCHK(mesh.getVtxCoord(next[0], xa[0], xa[1], xa[2]), "FIXME");
-    IBERRCHK(mesh.getVtxCoord(curr[0], xb[0], xb[1], xb[2]), "FIXME");
+    IBERRCHK(mesh->getVtxCoord(next[0], xa[0], xa[1], xa[2]), *mesh);
+    IBERRCHK(mesh->getVtxCoord(curr[0], xb[0], xb[1], xb[2]), *mesh);
     dx = xa-xb;
 
     get_normals(&adj[0], &indices[0], &offsets[0], ents.size(), dx, normals);
@@ -115,7 +115,7 @@ namespace MeshKit
     // Now do the rest
     for (int i=2; i<=steps; i++) { // XXX!!
       std::swap(curr, next);
-      transform(i, mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
+      transform(i, *mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
       connect_up_dots(ARRAY_IN(ents), local_tag, &normals[0], &indices[0],
                       &offsets[0], &curr[0], &next[0]);
     }
@@ -123,13 +123,13 @@ namespace MeshKit
     tag_copy_sets(extrudeSets, local_tag, extrudeTag);
 
     if (copyFaces) {
-      connect_the_dots(mesh.instance(), ARRAY_IN(ents), local_tag, &indices[0],
+      connect_the_dots(mesh->instance(), ARRAY_IN(ents), local_tag, &indices[0],
                        &offsets[0], &next[0]);
 
       link_expand_sets(expandSets, local_tag);
 
-      process_ce_sets(mesh.instance(), copySets.sets(), local_tag);
-      process_ce_sets(mesh.instance(), expandSets.sets(), local_tag);
+      process_ce_sets(mesh, copySets.sets(), local_tag);
+      process_ce_sets(mesh, expandSets.sets(), local_tag);
 
       tag_copy_sets(copySets, local_tag, copyTag);
     }
@@ -153,9 +153,9 @@ namespace MeshKit
           curr_verts[j] = verts[indices[ offsets[i]+j ]];
 
         SimpleArray<double> coords;
-        iMesh_getVtxArrCoords(mesh.instance(), curr_verts, 3, iBase_INTERLEAVED,
+        iMesh_getVtxArrCoords(mesh->instance(), curr_verts, 3, iBase_INTERLEAVED,
                               ARRAY_INOUT(coords), &err);
-        IBERRCHK(err, "FIXME");
+        IBERRCHK(err, *mesh);
 
         for(int j=0; j<3; j++) {
           a[j] = coords[1*3 + j] - coords[0*3 + j];
@@ -200,22 +200,22 @@ namespace MeshKit
 
       iMesh::Error err;
       if(count == 4)      // quad
-        err = mesh.createEnt(iMesh_HEXAHEDRON, nodes, 8, out);
+        err = mesh->createEnt(iMesh_HEXAHEDRON, nodes, 8, out);
       else if(count == 3) // tri
-        err = mesh.createEnt(iMesh_PRISM, nodes, 6, out);
+        err = mesh->createEnt(iMesh_PRISM, nodes, 6, out);
       else if(count == 2) // line
-        err = mesh.createEnt(iMesh_QUADRILATERAL, nodes, 4, out);
+        err = mesh->createEnt(iMesh_QUADRILATERAL, nodes, 4, out);
       else if(count == 1) // vertex
-        err = mesh.createEnt(iMesh_LINE_SEGMENT, nodes, 2, out);
+        err = mesh->createEnt(iMesh_LINE_SEGMENT, nodes, 2, out);
       else
         throw Error(iBase_FAILURE, "Couldn't extrude face; unusual shape.");
 
-      IBERRCHK(err, "FIXME");
+      IBERRCHK(err, *mesh);
       delete[] nodes;
 
-      IBERRCHK(mesh.setEHData(src[i], local_tag, out), "FIXME");
+      IBERRCHK(mesh->setEHData(src[i], local_tag, out), *mesh);
     }
 
-    process_ce_sets(mesh.instance(), extrudeSets.sets(), local_tag);
+    process_ce_sets(mesh, extrudeSets.sets(), local_tag);
   }
 } // namespace MeshKit

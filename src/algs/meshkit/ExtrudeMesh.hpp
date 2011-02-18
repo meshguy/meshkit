@@ -136,7 +136,7 @@ namespace MeshKit {
                          int *post_norms, int *post_inds, int *post_offs,
                          iBase_EntityHandle *post);
 
-    iMesh mesh;                      // mesh instance
+    iMesh *mesh;                     // mesh instance
     LocalTag extrudeTag;             // tag storing extrude-to tag
     LocalTag copyTag;                // tag storing copy-to tag
     Extrude::AnyTransform transform; // transform function for extrusion

@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "meshkit/MKCore.hpp"
+
 #include <iBase.h>
 #include <iMesh.h>
 
@@ -15,29 +17,29 @@ class CESets
 public:
   struct tag_data
   {
-    tag_data(iBase_TagHandle tag, char *value)
+    tag_data(iMesh::TagHandle tag, char *value)
       : tag(tag), value(value)
     {}
 
-    iBase_TagHandle tag;
+    iMesh::TagHandle tag;
     char *value;
   };
 
   typedef std::vector<tag_data> tag_type;
-  typedef std::set<iBase_EntitySetHandle> set_type;
+  typedef std::set<iMesh::EntitySetHandle> set_type;
   typedef tag_type::iterator       tag_iterator;
   typedef tag_type::const_iterator const_tag_iterator;
   typedef set_type::iterator       set_iterator;
   typedef set_type::const_iterator const_set_iterator;
 
-  CESets(iMesh_Instance impl) : impl_(impl)
+  CESets(MKCore *mkcore) : mesh_(mkcore->imesh_instance())
   {}
 
   ~CESets();
 
-  iMesh_Instance impl() const { return impl_; }
+  iMesh * imesh_instance() const { return mesh_; }
 
-  void add_set(iBase_EntitySetHandle set)
+  void add_set(iMesh::EntitySetHandle set)
   {
     sets_.insert(set);
   }
@@ -48,7 +50,7 @@ public:
     sets_.insert(begin, end);
   }
 
-  void add_tag(iBase_TagHandle tag_handle, const char *value = NULL);
+  void add_tag(iMesh::TagHandle tag_handle, const char *value = NULL);
   void add_tag(const std::string &tag_name, const char *value = NULL);
   void update_tagged_sets();
 
@@ -72,27 +74,27 @@ public:
   const_set_iterator send() const   { return sets_.end(); }
 
 private:
-  iMesh_Instance impl_;
+  iMesh *mesh_;
   tag_type tags_;
   set_type sets_;
 };
 
 /**\brief Set the target sets for expand sets to be themselves
  */
-void link_expand_sets(const CESets &ce_sets, iBase_TagHandle local_tag);
+void link_expand_sets(const CESets &ce_sets, iMesh::TagHandle local_tag);
 
 /**\brief Add newly-created entities/sets to a collection of sets
  *
  * Given a collection of copy, expand, or extrude source sets and a tag, create 
  * a destination (copy) set unless one already exists. Fill this set with any
  * new entities/sets created from those in the source set.
- * \param imeshImpl the iMesh instance handle
+ * \param mesh the iMesh instance handle
  * \param cesets a collection of source sets
  * \param local_tag the tag relating source and target entities/sets
  */
-void process_ce_sets(iMesh_Instance imeshImpl,
-                     const std::set<iBase_EntitySetHandle> &cesets,
-                     iBase_TagHandle local_tag);
+void process_ce_sets(iMesh *mesh,
+                     const std::set<iMesh::EntitySetHandle> &cesets,
+                     iMesh::TagHandle local_tag);
 
 /**\brief Tag a collection of copied sets
  *
@@ -106,12 +108,22 @@ void process_ce_sets(iMesh_Instance imeshImpl,
  * \param tag_val if non-NULL, only set |tag| on the destination if the source's
  *                tag matches this value
  */
-void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
-                   const std::set<iBase_EntitySetHandle> &copySets,
-                   iBase_TagHandle tag, const char *tag_val);
+void tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
+                   const std::set<iMesh::EntitySetHandle> &copySets,
+                   iMesh::TagHandle tag, const char *tag_val);
 
-void tag_copy_sets(const CESets &ce_sets, iBase_TagHandle local_tag,
-                   iBase_TagHandle copy_tag);
+/**\brief Tag a collection of copied sets
+ *
+ * Given a CESets instance and a tag |local_tag| relating sources to
+ * destinations, move the contents of the local tag to |copy_tag| and 
+ * apply the tags in CESets to the destination sets if the tag exists on the
+ * corresponding source.
+ * \param ce_sets the CESets to operate on
+ * \param local_tag the local tag relating copied sets with their originals
+ * \param copy_tag the copy tag to receive local_tag's data
+ */
+void tag_copy_sets(const CESets &ce_sets, iMesh::TagHandle local_tag,
+                   iMesh::TagHandle copy_tag);
 
 } // namespace MeshKit
 #endif

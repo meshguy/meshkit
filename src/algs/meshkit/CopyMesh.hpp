@@ -114,11 +114,7 @@ namespace MeshKit {
     void tag_copied_sets(iMesh::TagHandle *tags, const char **tag_vals,
                          const int num_tags);
   private:
-    void do_copy(iMesh::EntitySetHandle set_handle,
-                 iMesh::EntityHandle **new_ents = 0,
-                 int *new_ents_allocated = 0,
-                 int *new_ents_size = 0,
-                 bool do_merge = true);
+    void do_copy(iMesh::EntitySetHandle set_handle);
 
     //- get the copy/expand sets based on copy/expand tags
     void get_copy_expand_sets(iMesh::EntitySetHandle *&copy_sets,
@@ -134,7 +130,7 @@ namespace MeshKit {
                          iMesh::EntitySetHandle *&tagged_sets,
                          int &num_tagged_sets);
 
-    iMesh mesh;                   // mesh instance
+    iMesh *mesh;                  // mesh instance
     LocalTag copyTag;             // tag storing copy-to tag
     Copy::AnyTransform transform; // transform function for copy-move
 
