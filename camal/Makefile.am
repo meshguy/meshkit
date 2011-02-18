@@ -69,9 +69,9 @@ SmoothIceSheet_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 SmoothIceSheet_test_LDADD = libSmooth.la $(CAMAL_LIBS) $(IMESH_LIBS)
 
 addGeoSets_SOURCES = Geometrize.cpp
-addGeoSets_DEPENDENCIES = libSmooth.la
+addGeoSets_DEPENDENCIES = 
 addGeoSets_CXXFLAGS = -DTEST $(CXXFLAGS)
-addGeoSets_LDADD = libSmooth.la $(IMESH_LIBS) 
+addGeoSets_LDADD = $(IMESH_LIBS) 
 
 Create2FaceShell_SOURCES = CreateShell.cpp
 Create2FaceShell_DEPENDENCIES =  
