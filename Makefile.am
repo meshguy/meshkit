@@ -8,7 +8,7 @@ AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I m4
 
 # Subdirectories to build
-SUBDIRS = . test
+SUBDIRS = . 
 if ENABLE_utils
   SUBDIRS += utils
   AM_CPPFLAGS += -I$(top_srcdir)/utils
@@ -30,7 +30,7 @@ if HAVE_CAMAL
   AM_CPPFLAGS += -I$(top_srcdir)/camal
 endif
 
-SUBDIRS += doc
+SUBDIRS += test doc
 
 # Some variables
 AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
