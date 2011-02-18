@@ -38,9 +38,11 @@ void Transform::operator ()(iMesh &impl, iMesh::EntityHandle *src, int src_size,
                                   vec2ptr(coords)), "FIXME");
   }
   else {
-    if (dest)
-      *dest = static_cast<iMesh::EntityHandle*>(
-        malloc(src_size * sizeof(iMesh::EntityHandle)));
+    if (dest) {
+      *dest_size = src_size;
+      *dest_alloc = src_size * sizeof(iMesh::EntityHandle);
+      *dest = static_cast<iMesh::EntityHandle*>(malloc(*dest_alloc));
+    }
 
     IBERRCHK(impl.createVtxArr(src_size, iBase_INTERLEAVED, vec2ptr(coords),
                                *dest), "FIXME");

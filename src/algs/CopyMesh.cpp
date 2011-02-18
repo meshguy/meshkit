@@ -9,6 +9,7 @@
 #include "SimpleArray.hpp"
 
 #include "iMesh_extensions.h"
+#include <cstdio>
 
 namespace MeshKit
 {
@@ -55,7 +56,7 @@ namespace MeshKit
 
     LocalSet set(this->mk_core());
 
-    IBERRCHK(mesh.addEntArrToSet(ARRAY_IN(orig_ents), set), "FIXME");
+    IBERRCHK(mesh.addEntArrToSet(ARRAY_IN(orig_ents), set), mesh);
     do_copy(set);
   }
 
@@ -76,7 +77,7 @@ namespace MeshKit
     iMesh_getStructure(mesh.instance(), set_handle, ARRAY_INOUT(ents),
                        ARRAY_INOUT(verts), ARRAY_INOUT(indices),
                        ARRAY_INOUT(offsets), &err);
-    IBERRCHK(err, "FIXME");
+    IBERRCHK(err, mesh);
 
     // copy the vertices
     SimpleArray<iBase_EntityHandle> new_verts;
@@ -89,7 +90,7 @@ namespace MeshKit
     // question.
     iMesh_setEHArrData(mesh.instance(), ARRAY_IN(verts), local_tag,
                        ARRAY_IN(new_verts), &err);
-    IBERRCHK(err, "FIXME");
+    IBERRCHK(err, mesh);
 
     // now connect the new vertices to make the higher-dimension entities
     connect_the_dots(mesh.instance(),
@@ -110,7 +111,7 @@ namespace MeshKit
     if (new_ents) {
       iMesh_getEHArrData(mesh.instance(), ARRAY_IN(ents), local_tag,
                          new_ents, new_ents_allocated, new_ents_size, &err);
-      IBERRCHK(err, "FIXME");
+      IBERRCHK(err, mesh);
     }
   }
 
@@ -127,7 +128,7 @@ namespace MeshKit
 
     for (int t = 0; t < num_tags; t++) {
       iMesh::TagHandle tag;
-      IBERRCHK(mesh.getTagHandle(tag_names[t], tag), "FIXME");
+      IBERRCHK(mesh.getTagHandle(tag_names[t], tag), mesh);
 
       tag_copy_sets(mesh.instance(), copyTag, copySets.sets(), tag,
                     tag_vals ? tag_vals[t] : NULL);

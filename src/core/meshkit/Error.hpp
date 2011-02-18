@@ -6,6 +6,10 @@
 #include <string>
 #include <typeinfo>
 
+#include <meshkit/iMesh.hpp>
+#include <meshkit/iGeom.hpp>
+#include <meshkit/iRel.hpp>
+
 namespace MeshKit {
 
 #define ECERRCHK(err, descr)                                               \
@@ -34,14 +38,14 @@ namespace MeshKit {
       throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, mb_err.c_str()); \
     }                                                                      \
   } while(false)
-    
-#define IBERRCHK(err, descr)                                               \
-  do {                                                                     \
-    if (iBase_SUCCESS != err) {                                            \
-      throw Error(err, "%s, line %d: %s", __FILE__, __LINE__, descr);      \
-    }                                                                      \
-  } while(false)
-    
+
+#define IBERRCHK(err, x) IBERRCHK_(err, x, __FILE__, __LINE__)
+
+inline void IBERRCHK_(int err, const char *descr);
+inline void IBERRCHK_(int err, iMesh &mesh);
+inline void IBERRCHK_(int err, iGeom &geom);
+inline void IBERRCHK_(int err, iRel &rel);
+
     enum ErrorCode {
         MK_SUCCESS = 0, 
         MK_FAILURE,
@@ -147,6 +151,33 @@ inline const char* Error::error_str(ErrorCode err)
 inline void Error::set_string(const char *str) 
 {
   errDescription = str;
+}
+
+inline void IBERRCHK_(int err, const char *descr, const char *file, int line)
+{
+  if (iBase_SUCCESS != err)
+    throw Error(err, "%s, line %d: %s", file, line, descr);
+}
+
+inline void IBERRCHK_(int err, iMesh &mesh, const char *file, int line)
+{
+  if (iBase_SUCCESS != err)
+    throw Error(err, "%s, line %d: %s", file, line,
+                mesh.getDescription().c_str());
+}
+
+inline void IBERRCHK_(int err, iGeom &geom, const char *file, int line)
+{
+  if (iBase_SUCCESS != err)
+    throw Error(err, "%s, line %d: %s", file, line,
+                geom.getDescription().c_str());
+}
+
+inline void IBERRCHK_(int err, iRel &rel, const char *file, int line)
+{
+  if (iBase_SUCCESS != err)
+    throw Error(err, "%s, line %d: %s", file, line,
+                rel.getDescription().c_str());
 }
 
 } // namespace MeshKit
