@@ -40,6 +40,7 @@ Mesh* tri_quad_conversion (iMesh_Instance imesh)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef MAIN_QUADMESH
 int main(int argc, char **argv)
 {
   if( argc != 3) {
@@ -64,5 +65,6 @@ int main(int argc, char **argv)
   delete quadmesh;
   delete trimesh;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
