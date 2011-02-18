@@ -15,7 +15,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-TESTS = test_triadvance test_tetmesher
+TESTS = 
 
 check_PROGRAMS = $(TESTS)
 
@@ -45,13 +45,19 @@ AM_CPPFLAGS += -DMOAB
 endif
 
 # Tests and such
-
+if HAVE_CAMAL_TRIADV
 test_triadvance_SOURCES = test_triadvance.cpp
 test_triadvance_DEPENDENCIES = \
 	$(LDADD)
+TESTS += test_triadvance 
+endif
+
+if HAVE_CAMAL_TET
 test_tetmesher_SOURCES = test_tetmesher.cpp
 test_tetmesher_DEPENDENCIES = \
 	$(LDADD)
+TESTS += test_tetmesher
+endif
 
 # Utility target: build but don't run tests
 build-check:

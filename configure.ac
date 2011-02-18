@@ -501,6 +501,27 @@ AM_CONDITIONAL( HAVE_CAMAL_SWEEP,  [test "x$HAVE_CAMAL_SWEEP"  = "xyes"] )
 AM_CONDITIONAL( HAVE_CAMAL_TET,    [test "x$HAVE_CAMAL_TET"    = "xyes"] )
 AM_CONDITIONAL( HAVE_CAMAL_EDGE,   [test "x$HAVE_CAMAL_EDGE"   = "xyes"] )
 
+if test "xyes" = "x$HAVE_CAMAL"; then 
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CAMAL"
+  if test "xyes" = "x$HAVE_CAMAL_TRIADV"; then 
+    AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CAMAL_TRIADV"
+  fi
+  if test "xyes" = "x$HAVE_CAMAL_TRIDEL"; then 
+    AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CAMAL_TRIDEL"
+  fi
+  if test "xyes" = "x$HAVE_CAMAL_PAVER"; then 
+    AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CAMAL_PAVER"
+  fi
+  if test "xyes" = "x$HAVE_CAMAL_SWEEP"; then 
+    AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CAMAL_SWEEP"
+  fi
+  if test "xyes" = "x$HAVE_CAMAL_TET"; then 
+    AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CAMAL_TET"
+  fi
+  if test "xyes" = "x$HAVE_CAMAL_EDGE"; then 
+    AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CAMAL_EDGE"
+  fi
+fi
 
 ################################################################################
 #                           TetGen

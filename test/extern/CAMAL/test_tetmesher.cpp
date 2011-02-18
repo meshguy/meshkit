@@ -16,6 +16,7 @@ using namespace MeshKit;
 MKCore *mk = NULL;
 bool save_mesh = false;
 
+void threeholecube_test();
 void simpletet_test();
 void mesh_test(std::string filebase);
 
@@ -35,11 +36,17 @@ int main(int argc, char **argv)
   if (argc == 2) save_mesh = true;
   
   num_fail += RUN_TEST(simpletet_test);
+  num_fail += RUN_TEST(threeholecube_test);
 }
 
 void simpletet_test() 
 {
   mesh_test("simpletet");
+}
+
+void threeholecube_test() 
+{
+  mesh_test("threeholecube");
 }
 
 void mesh_test(std::string filebase)
