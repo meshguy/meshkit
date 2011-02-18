@@ -155,11 +155,10 @@ public:
 				double& x, double& y, double& z);
 
     /** \brief Get the parametric derivative vectors at a point
-     * \param x X point
-     * \param y Y point
-     * \param z Z point
-     * \param du[3] du/d(xyz)
-     * \param dv[3] dv/d(xyz)
+     * \param u U value
+     * \param v V value
+     * \param du du/d(xyz)
+     * \param dv dv/d(xyz)
      */
   virtual void distortion_at_uv(double u, double v, 
                                 double du[3], double dv[3]);
