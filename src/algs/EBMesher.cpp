@@ -162,6 +162,7 @@ void EBMesher::execute_this()
   }
 }
 
+#ifdef HAVE_MOAB
 int EBMesher::construct_obb_tree()
 {
   if (m_bUseGeom) {
@@ -346,6 +347,7 @@ int EBMesher::write_mesh(const char* file_name, int type,
 
   return iBase_SUCCESS;
 }
+#endif
 
 EdgeStatus EBMesher::get_edge_status(const double dP, int& iSkip)
 {
@@ -1464,6 +1466,7 @@ double EBMesher::get_uncut_edge_fraction(int i, int j, int k, int dir)
   else return -1.;
 }
 
+#ifdef HAVE_MOAB
 bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
 		      double tol, int dir, bool bSpecialCase)
 {
@@ -1535,6 +1538,7 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
 
   return true;
 }
+#endif
 
 bool EBMesher::is_ray_move_and_set_overlap_surf(bool& bSpecialCase)
 {
@@ -1874,7 +1878,8 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
 
   return true;
 }
-  
+
+#ifdef HAVE_MOAB
 bool EBMesher::is_same_direct_to_ray(int i, int dir)
 {
   MBCartVect coords[3], normal(0.0), ray_dir(rayDir[dir]);
@@ -1896,5 +1901,5 @@ bool EBMesher::is_same_direct_to_ray(int i, int dir)
 
   return angle(normal, ray_dir) < .5*PI;
 }
-
+#endif
 } // namespace MeshKit

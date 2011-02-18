@@ -326,6 +326,13 @@ private:
    */
   bool get_inside_hex(std::vector<int>& rvnInsideCell);
 
+  /** \brief check if ray is passing shared vertices or edges
+   * \ And, check if the passing surface is overlapped one
+   * \param bMoveOnce if ray is already moved before
+   * \return bool if is working correctly
+   */
+  bool is_ray_move_and_set_overlap_surf(bool& bMoveOnce);
+
   // test function 1 for debugging
   bool export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge);
 
@@ -422,13 +429,6 @@ private:
    */
   bool move_ray(int& nIntersect, double* startPnt, double* endPnt,
 		double tol, int dir, bool bMoveOnce);
-
-  /** \brief check if ray is passing shared vertices or edges
-   * \ And, check if the passing surface is overlapped one
-   * \param bMoveOnce if ray is already moved before
-   * \return bool if is working correctly
-   */
-  bool is_ray_move_and_set_overlap_surf(bool& bMoveOnce);
 
   /** \brief if the facet has the same direction to the ray
    * \param i index in m_vIntersection (intersection vector)
