@@ -153,9 +153,11 @@ namespace MeshKit {
     return "ExtrudeMesh";
   }
 
-  inline bool ExtrudeMesh::can_mesh(iBase_EntityType dim)
+  inline bool ExtrudeMesh::can_mesh(iBase_EntityType)
   {
-    return dim != iBase_REGION;
+    // Given just a dimension, ExtrudeMesh can't do anything since it doesn't
+    // know what to extrude.
+    return false;
   }
 
   inline bool ExtrudeMesh::can_mesh(ModelEnt *me)

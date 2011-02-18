@@ -149,7 +149,9 @@ namespace MeshKit {
 
   inline bool CopyMesh::can_mesh(iBase_EntityType)
   {
-    return true;
+    // Given just a dimension, CopyMesh can't do anything since it doesn't know
+    // what to copy.
+    return false;
   }
 
   inline bool CopyMesh::can_mesh(ModelEnt *)
