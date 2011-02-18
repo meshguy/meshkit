@@ -857,7 +857,8 @@ moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const
      */
 double ModelEnt::mesh_interval_size() const 
 {
-  if (-1 != sizing_function_index() && -1 != mk_core()->sizing_function(sizing_function_index())->size())
+  if (-1 != sizing_function_index() && mk_core()->sizing_function(sizing_function_index()) &&
+      -1 != mk_core()->sizing_function(sizing_function_index())->size())
     return mk_core()->sizing_function(sizing_function_index())->size();
   
   else if (1 == dimension() && -1 != mesh_intervals() && 0 != mesh_intervals())

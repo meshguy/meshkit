@@ -34,7 +34,7 @@ class RegisterMeshOp : public MeshOpProxy
 
     /**\brief Implementation of factory method */
     MeshOp* create( MKCore* core, const MEntVector& vec )
-      { return new TYPE(core, vec); }
+      { TYPE *t = new TYPE(core, vec); t->set_name(name()); return t;}
     
     /**\brief Call TYPE::name() to get name for class */
     const char* name() const

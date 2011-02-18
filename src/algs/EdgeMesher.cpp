@@ -82,7 +82,9 @@ void EdgeMesher::setup_this()
       }
       else if (sf->size()>0)
       {
-        me->mesh_intervals(me->measure()/sf->size());
+        int intervals = me->measure()/sf->size();
+        if (!intervals) intervals++;
+        me->mesh_intervals(intervals);
         me->interval_firmness(SOFT);
       }
       else
@@ -221,6 +223,7 @@ void EdgeMesher::EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> 
 
   int err;
   double u, du;
+  if (!num_edges) throw Error(MK_BAD_INPUT, "Trying to mesh edge with zero edges.");
   du = (umax - umin)/(double)num_edges;
 	
   u = umin;

@@ -137,6 +137,7 @@ inline GraphNode::GraphNode(MKGraph *graph)
 
 inline GraphNode::~GraphNode() 
 {
+  get_graph()->node_map()[graphNode] = NULL;
   get_graph()->get_graph().erase(graphNode);
 }
 

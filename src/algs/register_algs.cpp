@@ -18,13 +18,13 @@ extern int register_algs_mesh_ops() { return 1; }
 #define REGISTER_MESH_OP(NAME) \
   RegisterMeshOp<NAME> NAME ## _GLOBAL_PROXY
 
-REGISTER_MESH_OP(CopyMesh);
-REGISTER_MESH_OP(EBMesher);
+REGISTER_MESH_OP(VertexMesher);
 REGISTER_MESH_OP(EdgeMesher);
-REGISTER_MESH_OP(ExtrudeMesh);
 REGISTER_MESH_OP(OneToOneSwept);
 REGISTER_MESH_OP(SCDMesh);
-REGISTER_MESH_OP(VertexMesher);
+REGISTER_MESH_OP(CopyMesh);
+REGISTER_MESH_OP(ExtrudeMesh);
+REGISTER_MESH_OP(EBMesher);
 
 
 } // namespace MeshKit

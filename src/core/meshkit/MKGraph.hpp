@@ -32,8 +32,11 @@ public:
     //! destructor
   ~MKGraph();
 
-    //! delete GraphNode's/MeshOp's in graph
-  void delete_graph_meshops();
+    //! clear GraphNode's/MeshOp's in graph
+  void clear_graph();
+  
+    //! print the graph
+  void print_graph();
   
     //! Get the graph
   lemon::ListDigraph &get_graph();

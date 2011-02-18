@@ -1,5 +1,6 @@
 #include "meshkit/MKGraph.hpp"
 #include "meshkit/MeshOp.hpp"
+#include "lemon/core.h"
 #include "lemon/adaptors.h"
 #include "lemon/connectivity.h"
 
@@ -15,10 +16,34 @@ MKGraph::~MKGraph()
 {
 }
 
-void MKGraph::delete_graph_meshops() 
+void MKGraph::clear_graph() 
 {
-  for (lemon::ListDigraph::NodeIt nit(mkGraph); nit != lemon::INVALID; ++nit)
-    if (nodeMap[nit]) delete nodeMap[nit];
+    // get all the non-root, non-leaf nodes
+  std::vector<lemon::ListDigraph::Node> nodes;
+  for (lemon::ListDigraph::NodeIt nit(mkGraph); nit != lemon::INVALID; ++nit) 
+    if (nit != rootNode->get_node() && nit != leafNode->get_node())
+      nodes.push_back(nit);
+  
+    // now delete all those nodes
+  for (std::vector<lemon::ListDigraph::Node>::iterator vit = nodes.begin(); vit != nodes.end(); vit++) {
+    if (nodeMap[*vit]) delete nodeMap[*vit];
+    else mkGraph.erase(*vit);
+  }
+  
+    // restore an edge between the root and leaf
+  if (!mkGraph.valid(lemon::ArcLookUp<lemon::ListDigraph>(mkGraph)(rootNode->get_node(), leafNode->get_node())))
+    mkGraph.addArc(rootNode->get_node(), leafNode->get_node());
+}
+
+void MKGraph::print_graph() 
+{
+  for (lemon::ListDigraph::NodeIt nit(mkGraph); nit != lemon::INVALID; ++nit) {
+    std::cout << "Node: ";
+    if (nit == rootNode->get_node()) std::cout << "root node" << std::endl;
+    else if (nit == leafNode->get_node()) std::cout << "leaf node" << std::endl;
+    else if (nodeMap[nit]) std::cout << nodeMap[nit]->get_name() << std::endl;
+    else std::cout << "(no MeshOp)" << std::endl;
+  }
 }
 
     //! Get the MeshOp corresponding to a graph node

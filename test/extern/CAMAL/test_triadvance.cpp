@@ -88,6 +88,6 @@ void mesh_test(std::string filebase)
     MBERRCHK(rval, mk->moab_instance());
   }
 
-  mk->delete_graph_meshops();
+  mk->clear_graph();
 }
 

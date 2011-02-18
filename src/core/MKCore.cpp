@@ -81,7 +81,7 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, iMesh *imesh, iRel *irel,
 MKCore::~MKCore() 
 {
     // delete the graphnodes here, since they point back to me and depend on me being still here
-  delete_graph_meshops();
+  clear_graph();
   
   int err;
   for (unsigned int i = 0; i < iRelInstances.size(); i++) 

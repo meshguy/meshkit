@@ -15,11 +15,6 @@ namespace MeshKit
 
 moab::EntityType CAMALTriAdvance::meshTps[] = {moab::MBVERTEX, moab::MBTRI, moab::MBMAXTYPE};
 
-//---------------------------------------------------------------------------//
-//    static RegisterMeshOp<CAMALTriAdvance> INIT("CAMALTriAdvance", CAMALTriAdvance::geomTps, 1,
-//                                                CAMALTriAdvance::meshTps, 2);
-//---------------------------------------------------------------------------//
-
 CAMALTriAdvance::CAMALTriAdvance(MKCore *mk_core, const MEntVector &me_vec)
         : MeshScheme(mk_core, me_vec)
 {

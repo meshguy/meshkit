@@ -126,8 +126,7 @@ void edgemesh_square()
   double dot = inner_product(unitz, p1);
   CHECK_REAL_EQUAL(1.0, dot, 1.0e-6);
   
-  delete em;
-  delete mk->vertex_mesher();
+  mk->clear_graph();
 }
 
 void edgemesh_brick() 
@@ -171,7 +170,6 @@ void edgemesh_brick()
     CHECK_REAL_EQUAL(1.0, dot, 1.0e-6);
   }
   
-  delete em;
-  delete mk->vertex_mesher();
+  mk->clear_graph();
 }
 
