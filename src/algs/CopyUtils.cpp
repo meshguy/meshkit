@@ -100,7 +100,7 @@ void connect_the_dots(iMesh_Instance imeshImpl, iBase_EntityHandle *ents,
   
   // scan forward to first non-vertex
   int pos = 0;
-  while (iMesh_POINT == topos[pos] && pos < topos.size())
+  while (pos < topos.size() && iMesh_POINT == topos[pos])
     pos++;
   if (pos == topos.size()) return;
 
