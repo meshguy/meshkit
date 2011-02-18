@@ -1,9 +1,3 @@
-// Author : Hong-Jun Kim
-// Nov 16, 09
-// It makes constructs tree structure with  triangles and makes hexes bounding geometry
-// With ray-tracing, find intersections and determine element inside/outside/boundary.
-// Intersection fraction is stored to boundary elements.
-// Element inside/outside/boundary status are stored as tag.
 #ifndef EBMESHER_HPP
 #define EBMESHER_HPP
 
@@ -23,19 +17,14 @@
 #include "MBOrientedBoxTreeTool.hpp"
 #endif
 
+//! edge status
 enum EdgeStatus {
   INSIDE,
   OUTSIDE,
   BOUNDARY
 };
 
-template <int size> struct EHARR
-{ 
-  iBase_EntityHandle h[size];
-  iBase_EntityHandle& operator[](int i){ return h[i]; } 
-  operator iBase_EntityHandle*() { return h; }
-};
-
+//! stores boundary element edge cut fraction
 struct CutFraction {
   std::vector<double> fraction[3];
 
@@ -52,6 +41,8 @@ struct CutFraction {
   }
 };
 
+//! boundary cut-cell surface edge key
+//! made for TechX
 struct CutCellSurfEdgeKey {
   int i, j, k, l;
 
@@ -67,6 +58,7 @@ struct CutCellSurfEdgeKey {
   };
 };
 
+//! stores intersection distances
 struct IntersectDist {
   double distance;
   int index;
@@ -79,6 +71,7 @@ struct IntersectDist {
   };
 };
 
+//! stores volume fractions
 struct VolFrac {
   double vol;
   bool closed;
@@ -119,7 +112,12 @@ class MKCore;
     
 
 /** \class EBMesher EBMesher.hpp "meshkit/EBMesher.hpp"
- * \brief A simple class for meshing geometric vertices
+ * \brief A meshing geometry as Cartesian structured mesh
+ * It makes constructs tree structure with  triangles and
+ * makes hexes bounding geometry
+ * With ray-tracing, find intersections and determine element inside/outside/boundary.
+ * Intersection fraction is stored to boundary elements.
+ * Element inside/outside/boundary status are stored as tag.
  */
 class EBMesher : public MeshScheme
 {
@@ -144,61 +142,89 @@ public:
   static bool can_mesh(iBase_EntityType dim)
     { return iBase_REGION == dim; }
    
-    /** \brief Function returning whether this scheme can mesh the specified entity
-     * 
-     * Used by MeshOpFactory to find scheme for an entity.
-     * \param me ModelEnt being queried
-     * \return If true, this scheme can mesh the specified ModelEnt
-     */
+  /** \brief Function returning whether this scheme can mesh the specified entity
+   * 
+   * Used by MeshOpFactory to find scheme for an entity.
+   * \param me ModelEnt being queried
+   * \return If true, this scheme can mesh the specified ModelEnt
+   */
   static bool can_mesh(ModelEnt *me);
-    
+  
   /**\brief Get list of mesh entity types that can be generated.
    *\return array terminated with \c moab::MBMAXTYPE
    */
   static const moab::EntityType* output_types();
-
+  
   /** \brief Return the mesh entity types operated on by this scheme
    * \return array terminated with \c moab::MBMAXTYPE
    */
   virtual const moab::EntityType* mesh_types_arr() const
-    { return output_types(); }
-
+  { return output_types(); }
+  
   
   virtual bool add_modelent(ModelEnt *model_ent);
-
   
+  /** \brief set # of divisions (x/y/z directions) of Cartesian box to use SCDMesh output
+   * \param min Cartesian box min coordinates
+   * \param max Cartesian box max coordinates
+   * \param n_interval # of divisions returned
+   * \return int if is working correctly
+   */
   int set_division(double* min, double* max, int* n_interval);
-
-    //! Setup is a no-op, but must be provided since it's pure virtual
+  
+  /**\brief Setup is a no-op, but must be provided since it's pure virtual
+   */  
   virtual void setup_this();
-
-    //! The only setup/execute function we need, since meshing vertices is trivial
+  
+  /**\ The only setup/execute function we need, since meshing vertices is trivial
+   */
   virtual void execute_this();
-
-    // query function for techX
+  
+  /** \brief query function for techX
+   * \param boxMin Cartesian box min coordinates returned
+   * \param boxMax Cartesian box max coordinates returned
+   * \param nDiv nDiv(x/yz directions) returned
+   * \param rmdCutCellSurfEdge map of cut-cell surface index and edge cut information returned
+   * \param rvnInsideCell Inside elements returned
+   * \param isCornerExterior if box corner is exterior returned
+   */
   void get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
 				std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge,
 				std::vector<int>& rvnInsideCell, bool isCornerExterior = true);
   
-  // query function to get multiple cut-cell edges
+  /** \brief query function to get multiple cut-cell edges
+   * \param boxMin Cartesian box min coordinates returned
+   * \param boxMax Cartesian box max coordinates returned
+   * \param nDiv nDiv(x/yz directions) returned
+   * \param rmdCutCellEdge map of cut-cell surface index and edge cut information returned
+   * \param rvnInsideCell Inside elements returned
+   * \param isCornerExterior if box corner is exterior returned
+   * \return if this function is working correctly
+   */
   bool get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
 			  std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellEdge,
 			  std::vector<int>& rvnInsideCell, bool isCornerExterior = true);
-
-  // get volume fraction for each material
+  
+  /** \brief get volume fraction for each material
+   * \param vol_frac_div resolution to get volume fraction
+   * \return if this function is working correctly
+   */
   bool get_volume_fraction(int vol_frac_div);
-
-  // export mesh to file
+  
+  /** \brief export mesh to file
+   * \param file_name export file name
+   * \param separate export file separately(inside/outside/boundary)
+   */
   void export_mesh(const char* file_name, bool separate = false);
-
+  
 protected:
   
 private:
 
-    //! No copy constructor, since there's only meant to be one of these
+  //! No copy constructor, since there's only meant to be one of these
   EBMesher(const EBMesher &);
   
-    //! No operator=, since there's only meant to be one of these
+  //! No operator=, since there's only meant to be one of these
   EBMesher &operator=(const EBMesher &);
 
   iBase_TagHandle m_elemStatusTag, m_edgeCutFracLengthTag,
@@ -218,59 +244,215 @@ private:
   std::map<int, CutFraction> m_mdCutFraction;
   std::vector<EdgeStatus> m_vnEdgeStatus[3];
   
+  /** \brief get hex edge status (inside/outside/boundary)
+   * \param dZ edge end coordinate
+   * \param iSkip how many index skipped for next intersection checking
+   * \return EdgeStatus edge status
+   */
   EdgeStatus get_edge_status(const double dZ, int& iSkip);
+
+  /** \brief set hex status for neighboring elements
+   * \param dir current fired ray direction
+   * \param i index for i direction
+   * \param j index for j direction
+   * \param k index for k direction
+   * \return bool if is working correctly
+   */
   bool set_neighbor_hex_status(int dir, int i, int j, int k);
+
+  /** \ brief set hex status by edge status
+   * \param index hex index in m_vnHexStatus vector
+   * \param value edge status
+   * \param dir ray direction
+   * \return bool if is working correctly
+   */
   bool set_hex_status(int index, EdgeStatus value, int dir);
+
+  /** \brief set edge status
+   * \param dir ray direction
+   * \return bool if is working correctly
+   */
   bool set_edge_status(int dir);
+
+  /** \brief set all produced mesh information as tag
+   * \ hex status, edge-cut information.....
+   * \ return int if is working correctly
+   */
   int set_tag_info();
+
+  /** \brief wirte mesh
+   * \param file_name
+   * \param type element type (inside:0, outside:1, boundary:2)
+   * \param handles element handles
+   * \param n_elem # of elements
+   * \return int if is working correctly
+   */
   int write_mesh(const char* file_name, int type,
 		 iBase_EntityHandle* handles, int& n_elem);
-  double get_edge_fraction(int idHex, int dir);
-  double get_uncut_edge_fraction(int i, int j, int k, int dir);
-  bool is_shared_overlapped_surf(int index);
-  bool move_intersections(int n_dir, int n_inter, double start_pnt[3]);
-  bool get_inside_boundary_hex(std::vector<int>& rvnInsideCell);
 
-    // test functions
+  /** \brief get edge fraction information
+   * \param idHex index in m_mdCutFraction
+   * \param dir ray direction
+   * \return double edge fraction
+   */
+  double get_edge_fraction(int idHex, int dir);
+
+  /** \brief get if the edge is fully inside(returns 1) or outside(returns 0)
+   * \param i index for i direction
+   * \param j index for j direction
+   * \param k index for k direction
+   * \param dir ray direction
+   * \return double edge fraction
+   */
+  double get_uncut_edge_fraction(int i, int j, int k, int dir);
+
+  /** \brief check if the intersected surface geometry is shared or overlapped
+   * \param index intersection index in m_vIntersection vector
+   * \return bool if is working correctly
+   */
+  bool is_shared_overlapped_surf(int index);
+
+  /** \brief move intersection pairs to check element status
+   * \param n_dir ray direction
+   * \param n_inter index of intersection points
+   * \param start_pnt ray starting point
+   * \return bool if is working correctly
+   */
+  bool move_intersections(int n_dir, int n_inter, double start_pnt[3]);
+
+  /** \brief get inside status elements
+   * \param rvnInsideCell cell indices (i,j,k triple)
+   * \return bool if is working correctly
+   */
+  bool get_inside_hex(std::vector<int>& rvnInsideCell);
+
+  // test function 1 for debugging
   bool export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge);
+
+  // test functions 2 for debugging
   bool export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& mdCutCellEdge);
+
+  // test functions 3 for debugging
   bool make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles);
 
     //! Static variable, used in registration
   static int init;
 
 #ifdef HAVE_MOAB
+  /** \brief get MOAB instance
+   * \return MOAB instance
+   */
   MBInterface* moab_instance() {return mk_core()->moab_instance();}
+
+  /** \brief get MOAB's Tag
+   * \param name Tag name
+   * \param size Tag size
+   * \param store Tag type
+   * \param type data type stored
+   * \param def_value default value
+   * \param create_if_missing create Tag if it is missed (flag)
+   * \return Tag handle
+   */
   iBase_TagHandle get_tag(const char* name, int size, MBTagType store, MBDataType type,
 			  const void* def_value = NULL, bool create_if_missing = true);
+  
+  /** \brief get MOAB's various length Tag
+   * \param name Tag name
+   * \param store Tag type
+   * \param type data type stored
+   * \return Tag handle
+   */
   iBase_TagHandle get_various_length_tag(const char* name,
 					 MBTagType store, MBDataType type);
-  int make_scd_hexes(); // make structured hexes
-  int make_uscd_hexes(); // make unstructured hexes
+
+  /** \brief construct hexes in MOAB structured mesh format
+   * \return int if is working correctly
+   */
+  int make_scd_hexes();
+
+  /** \brief construct hexes in MOAB unstructured mesh format
+   * \return int if is working correctly
+   */
+  int make_uscd_hexes();
+
+  /** \brief construct OBB tree
+   * \input geometry is faceted which are constructed to OBB tree
+   * \return int if is working correctly
+   */
   int construct_obb_tree();
+
+  /** \brief set # of divisions
+   * \calcalate the best ones from the size of faceted triangles
+   */
   int set_division();
+
+  /** \brief find intersections by firing rays
+   * \return int if is working correctly
+   */
   int find_intersections();
+
+  /** \brief fires rays to 3 directions
+   * \param dir give the ray direction
+   * \it calls fire_ray
+   * \return int if is working correctly
+   */
   int fire_rays(int dir);
+
+  /** \brief fires ray
+   * \param nIntersect # of intersections returned
+   * \param startPnt ray starting point
+   * \param endPnt ray ending point
+   * \param tol tolerance to find intersection
+   * \param dir ray direction
+   * \param rayLength ray length
+   * \return bool if is working correctly
+   */
   bool fire_ray(int& nIntersect, double startPnt[3],
 		double endPnt[3], double tol, int dir,
 		double rayLength);
+
+  /** \brief moves ray which passes any singluar point
+   * \param nIntersect # of intersections returned
+   * \param startPnt ray starting point
+   * \param endPnt ray ending point
+   * \param tol tolerance to find intersection
+   * \param dir ray direction
+   * \param bMoveOnce if ray is already moved before
+   * \return bool if is working correctly
+   */
   bool move_ray(int& nIntersect, double* startPnt, double* endPnt,
 		double tol, int dir, bool bMoveOnce);
+
+  /** \brief check if ray is passing shared vertices or edges
+   * \ And, check if the passing surface is overlapped one
+   * \param bMoveOnce if ray is already moved before
+   * \return bool if is working correctly
+   */
   bool is_ray_move_and_set_overlap_surf(bool& bMoveOnce);
-  MBErrorCode surface_sense(MBEntityHandle volume, 
-			    MBEntityHandle surface,
-			    int& sense_out);
+
+  /** \brief if the facet has the same direction to the ray
+   * \param i index in m_vIntersection (intersection vector)
+   * \param dir ray direction
+   * \return bool if is working correctly
+   */
   bool is_same_direct_to_ray(int i, int dir);
 
-  int m_nSurf;
+  // ! GeomTopoTool instance
   moab::GeomTopoTool* m_GeomTopoTool;
+
+  // ! Tree root
   MBEntityHandle m_hTreeRoot;
-  std::vector<MBEntityHandle> m_vhSurfSet;
+
+  // ! OBB tree tool instance
   MBOrientedBoxTreeTool* m_hObbTree;
-  std::vector<MBEntityHandle> triList, surfList;
-  std::vector<double> distList;
+
+  // ! intersected surface geometry list
   std::vector<MBEntityHandle> m_vhInterSurf;
+
+  // ! intersected facet list
   std::vector<MBEntityHandle> m_vhInterFacet;
+
+  // ! overlapped surface list
   std::map<MBEntityHandle, int> m_mhOverlappedSurf;
 #endif
 };

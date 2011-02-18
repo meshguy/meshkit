@@ -1134,7 +1134,7 @@ bool EBMesher::get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
     nDiv[i] = m_nDiv[i];
   }
   
-  if (!get_inside_boundary_hex(rvnInsideCell)) return false;
+  if (!get_inside_hex(rvnInsideCell)) return false;
 
   // get cut-cell fractions
   std::map<int, CutFraction>::iterator iter = m_mdCutFraction.begin();
@@ -1159,7 +1159,7 @@ bool EBMesher::get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
   return true;
 }
 
-bool EBMesher::get_inside_boundary_hex(std::vector<int>& rvnInsideCell)
+bool EBMesher::get_inside_hex(std::vector<int>& rvnInsideCell)
 {
   int i, err, iHex;
   
