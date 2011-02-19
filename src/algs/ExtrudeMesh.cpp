@@ -72,7 +72,7 @@ namespace MeshKit
 
   void ExtrudeMesh::do_extrude(iBase_EntitySetHandle src)
   {
-    assert(steps > 0);
+    assert(transform->steps() > 0);
 
     update_sets();
 
@@ -98,7 +98,7 @@ namespace MeshKit
 
     curr.resize(adj.size());
     next.resize(adj.size());
-    transform(1, *mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
+    transform->transform(1, mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
 
     // Get the offset between vertices between steps
     Vector<3> xa, xb, dx;
@@ -113,9 +113,9 @@ namespace MeshKit
                     &offsets[0], &adj[0], &next[0]);
 
     // Now do the rest
-    for (int i=2; i<=steps; i++) { // XXX!!
+    for (int i=2; i<=transform->steps(); i++) {
       std::swap(curr, next);
-      transform(i, *mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
+      transform->transform(i, mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
       connect_up_dots(ARRAY_IN(ents), local_tag, &normals[0], &indices[0],
                       &offsets[0], &curr[0], &next[0]);
     }

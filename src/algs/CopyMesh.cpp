@@ -27,12 +27,15 @@ namespace MeshKit
     : MeshScheme(mkcore, me_vec),
       mesh(mkcore->imesh_instance()),
       copyTag(mkcore, "__CopyMeshTag"),
+      transform(0),
       copySets(mkcore),
       expandSets(mkcore)
   {}
 
   CopyMesh::~CopyMesh()
-  {}
+  {
+    delete transform;
+  }
 
 
   bool CopyMesh::add_modelent(ModelEnt *model_ent)
@@ -77,7 +80,7 @@ namespace MeshKit
 
     // copy the vertices
     SimpleArray<iBase_EntityHandle> new_verts;
-    transform(*mesh, ARRAY_IN(verts), ARRAY_INOUT(new_verts));
+    transform->transform(mesh, ARRAY_IN(verts), ARRAY_INOUT(new_verts));
     assert(new_verts.size() == verts.size());
 
     // set the local copy tags on vertices

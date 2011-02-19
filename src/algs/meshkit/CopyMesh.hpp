@@ -88,7 +88,7 @@ namespace MeshKit {
      */
     iBase_TagHandle copy_tag();
 
-    void set_transform(const Copy::AnyTransform &transform);
+    void set_transform(const Copy::Transform &transform);
 
     void update_sets();
 
@@ -130,9 +130,9 @@ namespace MeshKit {
                          iMesh::EntitySetHandle *&tagged_sets,
                          int &num_tagged_sets);
 
-    iMesh *mesh;                  // mesh instance
-    LocalTag copyTag;             // tag storing copy-to tag
-    Copy::AnyTransform transform; // transform function for copy-move
+    iMesh *mesh;                // mesh instance
+    LocalTag copyTag;           // tag storing copy-to tag
+    Copy::Transform *transform; // transform function for copy-move
 
     CESets copySets;
     CESets expandSets;
@@ -160,9 +160,9 @@ namespace MeshKit {
     return output_types();
   }
 
-  inline void CopyMesh::set_transform(const Copy::AnyTransform &trans)
+  inline void CopyMesh::set_transform(const Copy::Transform &trans)
   {
-    transform = trans;
+    transform = trans.clone();
   }
 
   inline iBase_TagHandle CopyMesh::copy_tag()

@@ -73,7 +73,7 @@ int load_and_extrude(const char *input_filename,
   ExtrudeMesh *em = (ExtrudeMesh*) mk.construct_meshop("ExtrudeMesh", faces);
   em->set_name("extrude_mesh");
 
-  em->set_transform(Extrude::Translate(dx, 5), 5);
+  em->set_transform(Extrude::Translate(dx, 5));
 
   // put them in the graph
   mk.get_graph().addArc(mk.root_node()->get_node(), em->get_node());

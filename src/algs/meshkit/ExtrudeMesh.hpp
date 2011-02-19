@@ -95,7 +95,7 @@ namespace MeshKit {
 
     /* \brief Set the transform function for this operation
      */
-    void set_transform(const Extrude::AnyTransform &transform, int steps);
+    void set_transform(const Extrude::Transform &transform);
 
     /* \brief Turn copying of faces on (true) or off (false)
      */
@@ -136,11 +136,10 @@ namespace MeshKit {
                          int *post_norms, int *post_inds, int *post_offs,
                          iBase_EntityHandle *post);
 
-    iMesh *mesh;                     // mesh instance
-    LocalTag extrudeTag;             // tag storing extrude-to tag
-    LocalTag copyTag;                // tag storing copy-to tag
-    Extrude::AnyTransform transform; // transform function for extrusion
-    int steps;                       // XXX: this is a hack!
+    iMesh *mesh;                   // mesh instance
+    LocalTag extrudeTag;           // tag storing extrude-to tag
+    LocalTag copyTag;              // tag storing copy-to tag
+    Extrude::Transform *transform; // transform function for extrusion
     bool copyFaces;
 
     CESets extrudeSets;
@@ -170,11 +169,9 @@ namespace MeshKit {
     return output_types();
   }
 
-  inline void ExtrudeMesh::set_transform(const Extrude::AnyTransform &trans,
-                                         int num_steps)
+  inline void ExtrudeMesh::set_transform(const Extrude::Transform &trans)
   {
-    transform = trans;
-    steps = num_steps;
+    transform = trans.clone();
   }
 
   inline void ExtrudeMesh::copy_faces(bool copy)
