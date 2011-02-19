@@ -26,10 +26,13 @@ using namespace std;
 
 class QuadMesher : public MeshScheme
 {
-
 public:
+        static enum MeshCleanOps = {LOCAL_MESH_CLEANUP, GLOABAL_MESH_CLEANUP };
+
 	//construction function for edge mesher
 	QuadMesher(MKCore *mk_core, const MEntVector &me_vec);
+
+	~QuadMesher();
 
 	//set up the parameters for edge meshing, e.g. compute the number of intervals
 	virtual void setup_this();
@@ -68,11 +71,23 @@ public:
        virtual const moab::EntityType* mesh_types_arr() const
          { return output_types(); }
 
-	~QuadMesher();
-	
+       /**  \brief Should we allow boundary modification. By Default: No.
+ 	*    When boundary is not allowed to modify and if the number of
+        *    segments are not even, "All Quads" not possible. 
+        */
+       void   allow_boundary_steiner_points( bool a = 0 );
+
+       /**   \brief Performs mesh clean to reduce the irreguarity of the
+        *    of the quad mesh 
+        */
+       void   mesh_cleanup( MeshCleanOps mcleanup = GLOBAL_MESH_CLEANUP);
+
 private:
-      void tri2quad_conversion( ModelEnt *me);
-      Jaal::Mesh* QuadMesher :: tri_quad_conversion (Jaal::Mesh *trimesh);
+      // Base: Everythiing must convert to Jaal format for the time being..
+      Jaal::Mesh* tri_quad_conversion (Jaal::Mesh *trimesh);  
+
+      // Interface with iMesh. Internally convert to Jaal format and call the previous function..
+      Jaal::Mesh* tri_quad_conversion (iMesh_Instance imesh);
 };
 
 }
