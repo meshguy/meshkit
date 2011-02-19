@@ -19,7 +19,7 @@ endif
 
 if HAVE_MESQUITE
 SUBDIRS += mesquite
-LIBADD += CAMAL/libMeshKitmesquite.la
+LIBADD += mesquite/libMeshKitmesquite.la
 endif
 
 # The directory in which to install headers
@@ -30,3 +30,6 @@ libMeshKitextern_la_SOURCES = register_extern.cpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitextern_la_include_HEADERS = 
+
+libMeshKitextern_la_LIBADD = $(LIBADD)
+

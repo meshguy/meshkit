@@ -1,7 +1,6 @@
 SUBDIRS = . 
 
-LDADD = $(top_builddir)/src/libMeshKit.la $(top_builddir)/src/extern/libMeshKitextern.la
-
+LDADD = $(top_builddir)/src/libMeshKit.la
 DATADIR = $(top_srcdir)/data
 
 AM_CPPFLAGS += -DDATADIR=$(DATADIR)
