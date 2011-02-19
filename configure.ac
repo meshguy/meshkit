@@ -774,6 +774,7 @@ if test "x$WITH_MESQUITE" != "xno"; then
     if test "x" != "x$WITH_MESQUITE"; then
       AC_MSG_ERROR([Mesquite not found or not usable])
     fi
+    DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/mesquite test/extern/mesquite"
   fi
 
   MESQUITE_DEFINES=
@@ -784,6 +785,7 @@ if test "x$WITH_MESQUITE" != "xno"; then
   AC_SUBST([MESQUITE_DEFINES])
   AC_SUBST([MESQUITE_LDFLAGS])
   AC_SUBST([MESQUITE_CPPFLAGS])
+  AC_SUBST([MESQUITE_LIBS])
   AM_CONDITIONAL(HAVE_MESQUITE, [test $HAVE_MESQUITE = yes])
 fi
 
@@ -830,6 +832,7 @@ AC_CONFIG_FILES([Makefile
                  src/lemon/doc/Doxyfile
                  src/extern/Makefile
                  src/extern/CAMAL/Makefile
+                 src/extern/mesquite/Makefile
                  test/Makefile
                  test/core/Makefile
                  test/algs/Makefile

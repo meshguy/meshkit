@@ -41,6 +41,8 @@ public:
   iRel( iRel_Instance instance );
   
   ~iRel();
+  
+  iRel_Instance instance() { return mInstance; }
     
   enum IfaceType 
   {IGEOM_IFACE = 0, 
@@ -66,6 +68,8 @@ public:
                iBase_Instance iface2 = NULL, RelationType rtype2 = ENTITY, IfaceType itype2 = IREL_IFACE);
     
     PairHandle(iRel *instance, iRel_PairHandle ph);
+    
+    iRel_PairHandle instance() { return irelPair; }
     
     ~PairHandle();
 

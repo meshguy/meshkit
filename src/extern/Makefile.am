@@ -8,12 +8,18 @@ AM_CPPFLAGS += -I$(srcdir)/../core \
                -I$(srcdir)/../utils \
                -I$(srcdir)/../lemon
 
+LIBADD =
 
 if HAVE_CAMAL
 SUBDIRS += CAMAL
-libMeshKitextern_la_LIBADD = CAMAL/libMeshKitCAMAL.la
+LIBADD += CAMAL/libMeshKitCAMAL.la
 AM_CPPFLAGS += -I$(srcdir)/CAMAL $(CAMAL_CPPFLAGS) -DHAVE_CAMAL
 LIBS += $(CAMAL_LIBS)
+endif
+
+if HAVE_MESQUITE
+SUBDIRS += mesquite
+LIBADD += CAMAL/libMeshKitmesquite.la
 endif
 
 # The directory in which to install headers
