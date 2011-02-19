@@ -10,12 +10,13 @@
 
 /* Define these here because they are used by many tests
  * to find the add directory for input files */
+#include <string>
 #define STRINGIFY_(X) #X
 #define STRINGIFY(X) STRINGIFY_(X)
 #ifdef DATADIR
-std::string TestDir( STRINGIFY(DATADIR) );
+const std::string TestDir(STRINGIFY(DATADIR));
 #else
-std::string TestDir( "." );
+const std::string TestDir(".");
 #endif
 
 /** Check that A is MK_SUCCESS */
@@ -353,7 +354,7 @@ void check_equal( float A, float B, float eps, const char* sA, const char* sB, i
 void check_equal( double A, double B, float eps, const char* sA, const char* sB, int line, const char* file )
   {  EQUAL_TEST_IMPL( fabs(A - B) <= eps, f ) }
 
-
+#ifdef MESHKIT_ERROR
 
 // Special case for MBErrorCode, use mb_error_str() to print the 
 // string name of the error code.
@@ -369,6 +370,8 @@ void check_equal( MeshKit::ErrorCode A, MeshKit::ErrorCode B, const char* sA, co
   printf( "\n" ); 
   flag_error(); 
 }
+
+#endif
 
 void check_true( bool cond, const char* str, int line, const char* file )
 {

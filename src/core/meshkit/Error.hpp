@@ -1,5 +1,5 @@
-#ifndef ERROR
-#define ERROR
+#ifndef MESHKIT_ERROR
+#define MESHKIT_ERROR
 
 /** \file Error.hpp
  */
