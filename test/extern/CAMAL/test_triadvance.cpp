@@ -39,6 +39,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(holysurf_test);
   num_fail += RUN_TEST(singleholesurf_test);
   num_fail += RUN_TEST(singleholesurfimprinted_test);
+  return num_fail;
 }
 
 void holysurf_test() 
