@@ -123,9 +123,12 @@ void EdgeMesher::execute_this()
     moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[0], nodes.size(), &coords[0]);
     MBERRCHK(rval, mk_core()->moab_instance());
 
-    //move the second node to the endmost postion in the node list
+    //move the second node to the endmost position in the node list
+    // if periodic, the last node coordinates are also at index 0 in coords array
+    // there is only one node, coords[3+i] are not even initialized
+    int index2 = (periodic) ? 0 : 3;
     for (int i = 0; i < 3; i++)
-      coords[3*num_edges+i] = coords[3+i];
+      coords[3*num_edges+i] = coords[index2+i];
 
 
     //choose the scheme for edge mesher
