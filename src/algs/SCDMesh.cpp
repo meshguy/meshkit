@@ -21,10 +21,18 @@
 namespace MeshKit
 {
 //---------------------------------------------------------------------------//
-// Static registration of this mesh scheme   
+// Initialize the entity types for SCDMesh
   moab::EntityType SCDMesh_tps[] = {moab::MBVERTEX, moab::MBHEX, moab::MBMAXTYPE};
   const moab::EntityType* SCDMesh::output_types() 
     { return SCDMesh_tps; }
+
+//---------------------------------------------------------------------------//
+// Constructor for SCDMesh
+  SCDMesh::SCDMesh(MKCore *mk_core, const MEntVector &me_vec)
+    : MeshScheme(mk_core, me_vec)
+  {
+    boxIncrease = .0;
+  }
 
 //---------------------------------------------------------------------------//
 // setup function
@@ -33,14 +41,29 @@ void SCDMesh::setup_this()
   // check the grid entries to make sure they're correct
   if (gridType == 0) {
     if (coarse_i != fine_i.size()) {
-      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse i divisions not equal to the number of fine i divisions.");
+      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, 
+      "Number of coarse i divisions not equal to the number of fine i divisions.");
     }
     if (coarse_j != fine_j.size()) {
-      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse j divisions not equal to the number of fine j divisions.");
+      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, 
+      "Number of coarse j divisions not equal to the number of fine j divisions.");
       }
     if (coarse_k != fine_k.size()) {
-      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Number of coarse k divisions not equal to the number of fine k divisions.");
+      throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, 
+      "Number of coarse k divisions not equal to the number of fine k divisions.");
     }
+  }
+
+  // do setup for the model entities
+  for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
+    ModelEnt *me = mit->first;
+
+    // check if the entity is already meshed
+    if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0) continue;
+
+    // creating a sizing function based on the mesh specification
+    // im not completely sure yet how sizing functions will interact with SCDMesh
+
   }
 }
 
@@ -48,6 +71,9 @@ void SCDMesh::setup_this()
 // Structured cartesian mesh generation execution
   void SCDMesh::execute_this()
   {
+    for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
+      ModelEnt *me = mit->first;
+
       if (axisType == 0) {
         create_cart_box();
       }
@@ -58,17 +84,11 @@ void SCDMesh::setup_this()
       if (interfaceType == 0) {
         create_full_mesh();
       }
+    }
   }
 
 //---------------------------------------------------------------------------//
-// export the mesh to a file
-  void SCDMesh::export_mesh(const char* file_name)
-  {
-    rval = mk_core()->moab_instance()->write_mesh(file_name);
-    MBERRCHK(rval, mk_core()->moab_instance());
-  }
-
-
+// fix the box dimension for the bounding box
 void SCDMesh::set_box_dimension()
 {
   gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],

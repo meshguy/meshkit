@@ -54,8 +54,8 @@ namespace MeshKit
 
     // 2 different axis scheme types
     // cartesian - i, j, k directions are parallel to the x, y, z axes
-    // axisAligned - i, j, k directions align with the primary geometric axes
-    enum AxisSchemeType { cartesian, axisAligned};
+    // oriented - i, j, k directions oriented with the primary geometric axes
+    enum AxisSchemeType { cartesian, oriented};
 
   private:
 
@@ -100,6 +100,45 @@ namespace MeshKit
 
     //! Destructor
     virtual ~SCDMesh();
+
+    /*! 
+     * \brief Setup
+     */
+    virtual void setup_this();
+
+    //! Generates the SCD Mesh
+    virtual void execute_this();
+
+   /**\brief Get class name */
+    static const char* name() 
+      { return "SCDMesh"; }
+      
+    /**\brief Function returning whether this scheme can mesh entities of
+     *        the specified dimension.
+     *\param dim entity dimension
+     */
+    static bool can_mesh(iBase_EntityType dim)
+      { return iBase_REGION == dim; }
+  
+    /** \brief Function returning whether this scheme can mesh the specified entity
+     * 
+     * Used by MeshOpFactory to find scheme for an entity.
+     * \param me ModelEnt being queried
+     * \return If true, this scheme can mesh the specified ModelEnt
+     */
+    static bool can_mesh(ModelEnt* ent) 
+      { return canmesh_region(ent); }
+    
+    /**\brief Get list of mesh entity types that can be generated.
+     *\return array terminated with \c moab::MBMAXTYPE
+     */
+    static const moab::EntityType* output_types();
+  
+    /** \brief Return the mesh entity types operated on by this scheme
+     * \return array terminated with \c moab::MBMAXTYPE
+     */
+    virtual const moab::EntityType* mesh_types_arr() const
+      { return output_types(); }
 
     /*!
      * \brief Set the interface type to be used
@@ -179,48 +218,6 @@ namespace MeshKit
      */
     void set_box_increase_ratio(double box_increase = .03);
 
-    /*! 
-     * \brief Setup
-     */
-    virtual void setup_this();
-
-    //! Generates the SCD Mesh
-    virtual void execute_this();
-
-    //! Export the mesh to a file
-    void export_mesh(const char* file_name);
-  
-    /**\brief Get class name */
-    static const char* name() 
-      { return "SCDMesh"; }
-      
-    /**\brief Function returning whether this scheme can mesh entities of t
-     *        the specified dimension.
-     *\param dim entity dimension
-     */
-    static bool can_mesh(iBase_EntityType dim)
-      { return iBase_REGION == dim; }
-  
-    /** \brief Function returning whether this scheme can mesh the specified entity
-     * 
-     * Used by MeshOpFactory to find scheme for an entity.
-     * \param me ModelEnt being queried
-     * \return If true, this scheme can mesh the specified ModelEnt
-     */
-    static bool can_mesh(ModelEnt* ent) 
-      { return canmesh_region(ent); }
-    
-    /**\brief Get list of mesh entity types that can be generated.
-     *\return array terminated with \c moab::MBMAXTYPE
-     */
-    static const moab::EntityType* output_types();
-  
-    /** \brief Return the mesh entity types operated on by this scheme
-     * \return array terminated with \c moab::MBMAXTYPE
-     */
-    virtual const moab::EntityType* mesh_types_arr() const
-      { return output_types(); }
-
   private:
     
     //! create cartesian bounding box
@@ -233,11 +230,6 @@ namespace MeshKit
 
 
   /* Inline Functions */
-  inline SCDMesh::SCDMesh(MKCore *mk_core, const MEntVector &me_vec)
-    : MeshScheme(mk_core, me_vec)
-  {
-    boxIncrease = .0;
-  }
 
   inline SCDMesh::~SCDMesh()
   {

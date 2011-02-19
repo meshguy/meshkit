@@ -55,7 +55,7 @@ void scd_test_1()
   mk_scdt.get_entities_by_dimension(3, vols);
   CHECK_EQUAL(1, (int)vols.size());
 
-  // make an SCD mesh instance
+  // make an SCD mesh instance with all volumes as separate model entities
   SCDMesh *scdmesh = (SCDMesh*) mk_scdt.construct_meshop("SCDMesh", vols);
 
   // provide the SCD mesh parameters for a cartesian grid
@@ -98,7 +98,7 @@ void scd_test_1()
   mk_scdt.setup_and_execute();
 
   // write the mesh to a file
-  mk_scdt.save_mesh("SCDmesh.h5m");
+  mk_scdt.save_mesh("SCDmesh.vtk");
 }
 
 //---------------------------------------------------------------------------//
