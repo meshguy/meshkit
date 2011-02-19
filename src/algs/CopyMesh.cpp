@@ -27,7 +27,7 @@ namespace MeshKit
     : MeshScheme(mkcore, me_vec),
       mesh(mkcore->imesh_instance()),
       copyTag(mkcore, "__CopyMeshTag"),
-      transform(0),
+      transform(new Copy::Identity()),
       copySets(mkcore),
       expandSets(mkcore)
   {}
@@ -65,6 +65,8 @@ namespace MeshKit
 
   void CopyMesh::do_copy(iMesh::EntitySetHandle set_handle)
   {
+    assert(transform);
+
     int err;
     LocalTag local_tag(this->mk_core());
 

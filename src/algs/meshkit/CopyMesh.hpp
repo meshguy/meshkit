@@ -162,6 +162,7 @@ namespace MeshKit {
 
   inline void CopyMesh::set_transform(const Copy::Transform &trans)
   {
+    delete transform;
     transform = trans.clone();
   }
 

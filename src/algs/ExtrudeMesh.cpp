@@ -27,6 +27,7 @@ namespace MeshKit
   ExtrudeMesh::ExtrudeMesh(MKCore *mkcore, const MEntVector &me_vec)
     : MeshScheme(mkcore, me_vec),
       mesh(mkcore->imesh_instance()),
+      transform(0),
       copyFaces(false),
       extrudeTag(mkcore, "__ExtrudeMeshTag"),
       copyTag(mkcore, "__CopyMeshTag"),
@@ -72,7 +73,7 @@ namespace MeshKit
 
   void ExtrudeMesh::do_extrude(iBase_EntitySetHandle src)
   {
-    assert(transform->steps() > 0);
+    assert(transform && transform->steps() > 0);
 
     update_sets();
 

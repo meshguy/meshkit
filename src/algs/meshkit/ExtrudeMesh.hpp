@@ -171,6 +171,7 @@ namespace MeshKit {
 
   inline void ExtrudeMesh::set_transform(const Extrude::Transform &trans)
   {
+    delete transform;
     transform = trans.clone();
   }
 
