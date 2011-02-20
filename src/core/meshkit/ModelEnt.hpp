@@ -320,13 +320,15 @@ public:
      * \param coords Coordinates of vertices corresponding to ents_as_ids
      * \param verts_range Vertices in ents, as a range; if non-NULL, populated range is returned; this range is
      *       cleared in this function
+     * \param start_index Starting index for vertex numbering
      */
   void get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
                                   std::vector<int> *senses,
                                   moab::Tag tagh,
                                   std::vector<int> &ents_as_ids,
                                   std::vector<double> &coords,
-                                  moab::Range *verts_range = NULL);
+                                  moab::Range *verts_range = NULL,
+                                  int start_index = 0);
   
     /** \brief Get meshed state
      * \return Meshed state

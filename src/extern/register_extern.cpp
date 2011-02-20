@@ -3,6 +3,9 @@
 #  include "meshkit/CAMALTriAdvance.hpp"
 #  include "meshkit/CAMALTetMesher.hpp"
 #endif
+#ifdef HAVE_NETGEN
+#  include "meshkit/NGTetMesher.hpp"
+#endif
 
 namespace MeshKit {
 
@@ -25,6 +28,10 @@ extern int register_extern_mesh_ops() { return 1; }
 #endif
 
 #endif
+
+#ifdef HAVE_NETGEN
+  REGISTER_MESH_OP(NGTetMesher);
+#endif    
 
 
 } // namespace MeshKit

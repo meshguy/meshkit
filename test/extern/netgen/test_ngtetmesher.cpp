@@ -1,11 +1,11 @@
 /** \file test_tetmesher.cpp
  *
- * Test the CAMALTetMesher for a few challenging examples.
+ * Test the NGTetMesher for a few challenging examples.
  *
  */
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/CAMALTetMesher.hpp"
+#include "meshkit/NGTetMesher.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/ModelEnt.hpp"
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
   
   num_fail += RUN_TEST(simpletet_test);
     //num_fail += RUN_TEST(threeholecube_test);
-
+  
   return num_fail;
 }
 
@@ -60,7 +60,7 @@ void mesh_test(std::string filebase)
   MEntVector dum, vols;
   mk->get_entities_by_dimension(3, dum);
   vols.push_back(*dum.rbegin());
-  CAMALTetMesher *tm = (CAMALTetMesher*) mk->construct_meshop("CAMALTetMesher", vols);
+  NGTetMesher *tm = (NGTetMesher*) mk->construct_meshop("NGTetMesher", vols);
 
     // make a sizing function and set it on the surface
   SizingFunction esize(mk, -1, 0.25);

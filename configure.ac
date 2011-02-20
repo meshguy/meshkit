@@ -615,6 +615,82 @@ AM_CONDITIONAL(HAVE_TETGEN, [test "x$HAVE_TETGEN" = "xyes"])
 
 
 ################################################################################
+#                           NetGen
+################################################################################
+AC_ARG_WITH(netgen, 
+[AC_HELP_STRING([--with-netgen=DIR], [Specify location of Netgen library.])],
+[NETGEN_VAL=$withval
+ DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-netgen=\"${withval}\""
+ ], [NETGEN_VAL=no])
+ 
+NETGEN_CPPFLAGS=
+NETGEN_LDFLAGS=
+NETGEN_LIBS=
+
+# Check for NETGEN headers and libraries
+if test "xno" = "x$NETGEN_VAL"; then
+  HAVE_NETGEN=no
+else
+  NETGEN_DIR="$NETGEN_VAL"
+
+  if test "x" = "x$NETGEN_VAL"; then
+    NETGEN_DIR=yes
+  fi
+
+  if test "xyes" != "x$NETGEN_DIR"; then
+    if ! test -d "$NETGEN_DIR"; then
+      AC_MSG_ERROR([$NETGEN_DIR: not a directory])
+    fi
+    
+    if test -d "$NETGEN_DIR/include"; then
+      NETGEN_CPPFLAGS="-I$NETGEN_DIR/include"
+    else
+      AC_MSG_WARN([$NETGEN_DIR/include: no such directory])
+      NETGEN_CPPFLAGS="-I$NETGEN_DIR"
+    fi
+    
+    if test -d "$NETGEN_DIR/lib"; then
+      NETGEN_LDFLAGS="-L$NETGEN_DIR/lib"
+    else
+      AC_MSG_WARN([$NETGEN_DIR/lib: no such directory])
+      NETGEN_LDFLAGS="-L$NETGEN_DIR"
+    fi
+  fi
+
+  old_LIBS="$LIBS"
+  old_LDFLAGS="$LDFLAGS"
+  old_CPPFLAGS="$CPPFLAGS"
+  LDFLAGS="$LDFLAGS $NETGEN_LDFLAGS -lnglib"
+  CPPFLAGS="$CPPFLAGS $NETGEN_CPPFLAGS"
+  AC_LANG_PUSH([C++])
+
+  AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([#include "nglib.h"],
+        [Ng_Mesh mesh])],
+    [NETGEN_LIBS="$NETGEN_LDFLAGS -lnglib"] [HAVE_NETGEN=yes],
+    [AC_MSG_WARN([libnglib is not installed.])])
+
+  AC_LANG_POP([C++])
+  LIBS="$old_LIBS"
+  LDFLAGS="$old_LDFLAGS"
+  CPPFLAGS="$old_CPPFLAGS"
+fi
+
+if test "x$HAVE_NETGEN" = "xyes"; then
+  AC_MSG_RESULT([Netgen is found.])
+elif test "x$NETGEN_VAL" != "xno"; then
+  AC_MSG_ERROR([Netgen not found or not usable.])
+fi
+
+AC_SUBST([NETGEN_CPPFLAGS])
+AC_SUBST([NETGEN_LDFLAGS])
+AC_SUBST([NETGEN_LIBS])
+AC_SUBST([HAVE_NETGEN])
+
+AM_CONDITIONAL(HAVE_NETGEN, [test "x$HAVE_NETGEN" = "xyes"])
+
+
+################################################################################
 #                           Triangle
 ################################################################################
 AC_ARG_WITH(triangle, 
@@ -832,12 +908,14 @@ AC_CONFIG_FILES([Makefile
                  src/lemon/doc/Doxyfile
                  src/extern/Makefile
                  src/extern/CAMAL/Makefile
+                 src/extern/netgen/Makefile
                  src/extern/mesquite/Makefile
                  test/Makefile
                  test/core/Makefile
                  test/algs/Makefile
 		 test/extern/Makefile
 		 test/extern/CAMAL/Makefile
+		 test/extern/netgen/Makefile
                  utils/Makefile
                  doc/Makefile
                  doc/meshkit.dox

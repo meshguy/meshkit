@@ -69,8 +69,8 @@ bool CAMALSurfEval::is_planar()
 {
   std::string surf_type;
   iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getFaceType(modelEnt->geom_handle(), surf_type);
-  IBERRCHK(err, "Trouble getting surface type");
-  return (surf_type == "plane");
+  if (iBase_SUCCESS != err || (surf_type != "plane")) return false;
+  else return true;
 }
 
 bool CAMALSurfEval::is_parametric()

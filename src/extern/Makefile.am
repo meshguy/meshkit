@@ -17,6 +17,13 @@ AM_CPPFLAGS += -I$(srcdir)/CAMAL $(CAMAL_CPPFLAGS) -DHAVE_CAMAL
 LIBS += $(CAMAL_LIBS)
 endif
 
+if HAVE_NETGEN
+SUBDIRS += netgen
+LIBADD += netgen/libMeshKitnetgen.la
+AM_CPPFLAGS += -I$(srcdir)/netgen $(NETGEN_CPPFLAGS) -DHAVE_NETGEN
+LIBS += $(NETGEN_LIBS)
+endif
+
 if HAVE_MESQUITE
 SUBDIRS += mesquite
 LIBADD += mesquite/libMeshKitmesquite.la

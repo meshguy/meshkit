@@ -753,7 +753,8 @@ void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
                                           moab::Tag tagh,
                                           std::vector<int> &ents_as_ids,
                                           std::vector<double> &coords,
-                                          moab::Range *verts_range) 
+                                          moab::Range *verts_range,
+                                          int start_index) 
 {
     // if we need to, make a tag
   moab::ErrorCode rval;
@@ -789,7 +790,7 @@ void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
   
     // temporarily store ids in ents_as_ids array, and set id tag 
   assert(ents_as_ids.size() >= verts_range->size());
-  for (unsigned int i = 0; i < verts_range->size(); i++) ents_as_ids[i] = i;
+  for (unsigned int i = 0; i < verts_range->size(); i++) ents_as_ids[i] = i+start_index;
   rval = mk_core()->moab_instance()->tag_set_data(tagh, *verts_range, &ents_as_ids[0]);
   MBERRCHK(rval, mkCore->moab_instance());
 
