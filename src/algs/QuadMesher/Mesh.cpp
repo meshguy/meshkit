@@ -56,52 +56,6 @@ MeshEntity::removeAttribute(const string &s)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/*
-PNode
-Vertex::newObject()
-{
-    Vertex *v = new Vertex;
-    assert(v);
-    v->setID(global_id);
-    global_id++;
-    return v;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-PNode
-Vertex::getClone() const
-{
-    Vertex *v = new Vertex;
-    assert(v);
-    v->setID(global_id);
-    v->setXYZCoords(xyz);
-    return v;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-PEdge
-Edge::newObject()
-{
-    Edge *e = new Edge;
-    assert(e);
-    return e;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-PFace
-Face::newObject()
-{
-    Face *f = new Face;
-    assert(f);
-    return f;
-}
-*/
-
-///////////////////////////////////////////////////////////////////////////////
-
 Point3D
 Vertex::mid_point(const Vertex *v0, const Vertex *v1, double alpha)
 {

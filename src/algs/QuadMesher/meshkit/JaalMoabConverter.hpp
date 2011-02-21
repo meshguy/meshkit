@@ -3,9 +3,9 @@
 
 #include <meshkit/Mesh.hpp>
 
-#ifdef USE_MOAB
-//#include <iMesh.h>
-//#include <MBInterface.hpp>
+#ifdef HAVE_IMESH
+#include <iMesh.h>
+#include <MBInterface.hpp>
 #include "../SimpleArray.hpp"
 #endif
 

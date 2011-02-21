@@ -1,9 +1,9 @@
-#include <meshkit/Mesh.h>
-#include <meshkit/MeshRefine2D.h>
+#include <meshkit/Mesh.hpp>
+#include <meshkit/MeshRefine2D.hpp>
+#include <meshkit/QuadCleanUp.hpp>
 
-#include <meshkit/QuadCleanUp.h>
-#include <meshkit/DijkstraShortestPath.h>
-#include <meshkit/ObjectPool.h>
+#include "DijkstraShortestPath.hpp"
+#include "ObjectPool.hpp"
 
 extern int QuadPatches(Jaal::Mesh *mesh);
 

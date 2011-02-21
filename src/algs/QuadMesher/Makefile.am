@@ -2,71 +2,55 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Things to build
-noinst_LTLIBRARIES = libMeshKitalgs.la
+noinst_LTLIBRARIES = libMeshKitJaalQuadMesher.la
          
 SUBDIRS = 
 
 # The directory in which to install headers
-libMeshKitalgs_la_includedir = $(includedir)
+libMeshKitJaalQuadMesher_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-libMeshKitalgs_la_SOURCES = \
-	AdfrontClean.cc  \
-	BinaryTree.cc \
-	Bridges.cc \
-	DijkstraShortestPath.cc \
-	Dimonds.cc \
-	Doublet.cc \
-	DualGraph.cc \
-	edmond_matching.cc \
-	FaceClose.cc \
-	laplace.cc \
-	matching.cc \
-	Mesh2Moab.cc \
-	Mesh.cc \
-	meshclean.cc \
-	mesh_io.cc \
-	MeshOpt.cc \
-	meshViewer.cc \
-	mreport.cc \
-	off_io.cc \
-	OneDefectRemeshing.cc \
-	patterns.cc \
-	QuadCleanUp.cc \
-	QuadPatches.cc \
-	Singlet.cc \
-	SwapQuadEdge.cc \
-	SwapTriEdge.cc \
-	tfiblend.cc \
-	Tri2Quad.cc \
-	tri_io.cc \
-	Tunnels.cc \
-	vtk_io.cc \
+libMeshKitJaalQuadMesher_la_SOURCES = \
+	AdfrontClean.cpp  \
+	BinaryTree.cpp \
+	Bridges.cpp \
+	DijkstraShortestPath.cpp \
+	Doublet.cpp \
+	DualGraph.cpp \
+	FaceClose.cpp \
+	laplace.cpp \
+	matching.cpp \
+	Mesh.cpp \
+	meshclean.cpp \
+	mesh_io.cpp \
+	MeshOpt.cpp \
+	off_io.cpp \
+	OneDefectRemeshing.cpp \
+	QuadCleanUp.cpp \
+	QuadPatches.cpp \
+	Singlet.cpp \
+	SwapQuadEdge.cpp \
+	SwapTriEdge.cpp \
+	tfiblend.cpp \
+	Tri2Quad.cpp \
+	tri_io.cpp \
+	Tunnels.cpp \
 	circumcenter.cpp \
 	geomPredicates.cpp \
 	MeshRefine2D.cpp \
-	meshuntangle.cpp \
 	predicates.cpp \
 	QuadQuality.cpp 
 
 # The list of header files which are to be installed
-nobase_libMeshKitalgs_la_include_HEADERS = \
-	meshkit/basic_math.h \
-	meshkit/BinaryTree.h \
-	meshkit/circumcenter.h \
-	meshkit/cycle.h  \
-	meshkit/DijkstraShortestPath.h \
-	meshkit/DualGraph.h \
-	meshkit/FastArea.h  \
-	meshkit/geomPredicates.h \
-	meshkit/iMeshRefine2D.h  \
-	meshkit/Mesh.h   \
-	meshkit/MeshRefine2D.h \
-	meshkit/ObjectPool.h   \
-	meshkit/QuadCleanUp.h  \
-	meshkit/SwapTriEdge.h  \
-	meshkit/tfiblend.h     \
-	meshkit/Tri2Quad.h
+nobase_libMeshKitJaalQuadMesher_la_include_HEADERS = \
+	meshkit/Mesh.hpp   \
+	meshkit/MeshRefine2D.hpp \
+        meshkit/QuadMesher.hpp \
+	meshkit/JaalMoabConverter.hpp \
+	meshkit/QuadCleanUp.hpp  \
+	meshkit/SwapTriEdge.hpp  \
+	meshkit/Tri2Quad.hpp	\
+	meshkit/triblend.h 
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

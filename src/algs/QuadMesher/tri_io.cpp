@@ -1,10 +1,10 @@
-#include "Mesh.h"
+#include <meshkit/Mesh.hpp>
 
 using namespace Jaal;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Mesh::readNodes( const string &fname)
+void Mesh::readTriNodes( const string &fname)
 {
   string filename = fname + ".node";
 
@@ -67,7 +67,7 @@ void Mesh::readNodes( const string &fname)
   }
 }
 ///////////////////////////////////////////////////////////////////////////////
-void Mesh::readEdges( const string &fname)
+void Mesh::readTriEdges( const string &fname)
 {
 /*
   string filename = fname + ".edge";
@@ -98,7 +98,7 @@ void Mesh::readEdges( const string &fname)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Mesh::readFaces( const string &fname)
+void Mesh::readTriFaces( const string &fname)
 {
   string filename = fname + ".ele";
   ifstream infile( filename.c_str(), ios::in);
@@ -116,7 +116,7 @@ void Mesh::readFaces( const string &fname)
 
   faces.resize( numfaces);
 
-  vector<NodeType> connect(3);
+  vector<PNode> connect(3);
   Face *newface;
   
   if( numelemnodes == 3 ) {
@@ -129,11 +129,11 @@ void Mesh::readFaces( const string &fname)
            n1 = global2local[n1];
            n2 = global2local[n2];
 
-           connect[0] = getNode(n0);
-           connect[1] = getNode(n1);
-           connect[2] = getNode(n2);
+           connect[0] = getNodeAt(n0);
+           connect[1] = getNodeAt(n1);
+           connect[2] = getNodeAt(n2);
 	   newface = new Face;
-	   newface->setConnection(connect);
+	   newface->setNodes(connect);
 	   faces[i] = newface;
        }
   }
@@ -148,12 +148,12 @@ void Mesh::readFaces( const string &fname)
            n1 = global2local[n1];
            n2 = global2local[n2];
            n3 = global2local[n3];
-           connect[0] = getNode(n0);
-           connect[1] = getNode(n1);
-           connect[2] = getNode(n2);
-           connect[3] = getNode(n3);
+           connect[0] = getNodeAt(n0);
+           connect[1] = getNodeAt(n1);
+           connect[2] = getNodeAt(n2);
+           connect[3] = getNodeAt(n3);
 	   newface = new Face;
-	   newface->setConnection(connect);
+	   newface->setNodes(connect);
 	   faces[i] = newface;
        }
   }
@@ -161,15 +161,17 @@ void Mesh::readFaces( const string &fname)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Mesh::readData( const string &fname)
+int Mesh::read_triangle_format_data( const string &fname)
 {
-   readNodes( fname );
-   readEdges( fname );
-   readFaces( fname );
+   readTriNodes( fname );
+   readTriEdges( fname );
+   readTriFaces( fname );
    enumerate(2);
+   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/*
 int Jaal::readMeshData( iMesh_Instance &imesh, const string &fname)
 {
     Mesh *m = new Mesh;
@@ -194,4 +196,5 @@ int Jaal::readMeshData( iMesh_Instance &imesh, const string &fname)
     return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
+*/
 

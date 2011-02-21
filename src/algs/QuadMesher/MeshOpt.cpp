@@ -1,17 +1,15 @@
 #include <meshkit/Mesh.hpp>
 #include <ostream>
 
-#ifdef USE_MESQUITE
+#ifdef HAVE_MESQUITE
 #include "Mesquite_all_headers.hpp"
 using namespace Mesquite;
-#endif 
 
 using namespace Jaal;
 
 int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
 {
 
-#ifdef USE_MESQUITE
     MsqError err;
 
     unsigned long int numnodes = mesh->getSize(0);
@@ -159,7 +157,6 @@ int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
     }
 
     mesh->setCoordsArray(vCoords);
-#endif
     delete optmesh;
 
     return 0;
@@ -169,7 +166,6 @@ int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
 
 int Jaal::MeshOptimization::untangle(Mesh *mesh)
 {
-#ifdef USE_MESQUITE
     MsqError err;
     unsigned long int numnodes = mesh->getSize(0);
     unsigned long int numfaces = mesh->getSize(2);
@@ -282,14 +278,12 @@ int Jaal::MeshOptimization::untangle(Mesh *mesh)
     if (err) return 1;
 
     mesh->setCoordsArray(vCoords);
-#endif
     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifdef USE_MOAB
 using namespace Mesquite;
 using Mesquite::MsqError;
 

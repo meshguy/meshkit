@@ -48,6 +48,12 @@ int main(int argc, char **argv)
       return 1;
   }
 
+  MKCore mk;
+  mk.load_mesh( argv[1] );
+
+  exit(0);
+  
+
   Mesh *trimesh = new Mesh;
   trimesh->readFromFile( argv[1] );
 

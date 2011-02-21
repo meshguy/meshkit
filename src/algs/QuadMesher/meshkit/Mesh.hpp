@@ -32,7 +32,7 @@
 #include "../basic_math.hpp"
 #include "../circumcenter.hpp"
 #include "../ObjectPool.hpp"
-#include <meshkit/tfiblend.hpp>
+#include "../tfiblend.hpp"
 
 #define JAAL_SUCCESS 0
 #define JAAL_GEOMETRIC_FAILURE    1

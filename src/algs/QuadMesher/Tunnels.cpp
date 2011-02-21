@@ -1,4 +1,6 @@
-#include "QuadCleanUp.h"
+#include <meshkit/QuadCleanUp.hpp>
+
+#ifdef NOT_IMPLEMENTED
 
 vector<Edge>
 QuadCleanUp::search_tunnels()
@@ -118,5 +120,7 @@ QuadCleanUp::remove_tunnels()
 }
 
 ////////////////////////////////////////////////////////////////////////////
+
+#endif
 
 

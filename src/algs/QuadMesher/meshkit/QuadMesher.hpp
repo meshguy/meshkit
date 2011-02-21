@@ -32,7 +32,7 @@ public:
 	//construction function for edge mesher
 	QuadMesher(MKCore *mk_core, const MEntVector &me_vec);
 
-	~QuadMesher();
+	~QuadMesher() {}
 
 	//set up the parameters for edge meshing, e.g. compute the number of intervals
 	virtual void setup_this();
@@ -83,6 +83,8 @@ public:
        void   mesh_cleanup( MeshCleanOps mcleanup = GLOBAL_MESH_CLEANUP);
 
 private:
+      iMesh_Instance imesh;
+
       // Base: Everythiing must convert to Jaal format for the time being..
       Jaal::Mesh* tri_quad_conversion (Jaal::Mesh *trimesh);  
 
