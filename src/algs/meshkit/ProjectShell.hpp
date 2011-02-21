@@ -72,8 +72,8 @@ public:
 
   //explicit ProjectShell(iMesh_Instance mesh,
   ProjectShell(iMesh_Instance mesh,
-	      iBase_EntitySetHandle root_set,
-	      double direction[3]);
+               iBase_EntitySetHandle root_set,
+               double direction[3]);
   
   //virtual ~ProjectShell();
   ~ProjectShell();
@@ -97,7 +97,7 @@ private:
 
   // this method computed intersection between 2 triangles: will output n points, area, affected sides
   int computeIntersectionBetweenRedAndBlue(int red, int blue, double * opPoints, int & oNPoints, double & area,
-					   int * opSides); 
+                                           int * opSides); 
   // this method will add extra points (P) for intersection points
   // they will stay on the red edgesi; will create the final triangles (in 2D) and
   //  extra nodes (if needed)
