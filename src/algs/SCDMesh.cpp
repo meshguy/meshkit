@@ -31,7 +31,7 @@ namespace MeshKit
   SCDMesh::SCDMesh(MKCore *mk_core, const MEntVector &me_vec)
     : MeshScheme(mk_core, me_vec)
   {
-    boxIncrease = .0;
+
   }
 
 //---------------------------------------------------------------------------//
@@ -74,16 +74,28 @@ void SCDMesh::setup_this()
     for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
       ModelEnt *me = mit->first;
 
+
+      /* Generate the bounding box */
+
+      // cartesian case
       if (axisType == 0) {
-        create_cart_box();
+        set_box_dimension();
+        create_cart_edges();
       }
+
 
       /* Generate the mesh */
  
-      // full representation case //
+      // full representation case
       if (interfaceType == 0) {
         create_full_mesh();
       }
+
+
+      /* Finish */
+
+      // commit the mesh when finished
+      me->commit_mesh(mit->second, COMPLETE_MESH);
     }
   }
 
@@ -91,25 +103,19 @@ void SCDMesh::setup_this()
 // fix the box dimension for the bounding box
 void SCDMesh::set_box_dimension()
 {
+  // this should be modified to get the bounding box on the geometry
+  // that is only associated with the current model entity instead
+  // of the entire igeom instance
   gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
                                                   maxCoord[0], maxCoord[1], maxCoord[2]);
   IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
-
-  // increase box size for 3 directions
-  for (int i = 0; i < 3; i++) {
-    minCoord[i] -= minCoord[i]*boxIncrease;
-    maxCoord[i] += maxCoord[i]*boxIncrease;
-  }
 }
 
 //---------------------------------------------------------------------------//
-// get the axis cartesian bounding box
-// for now this just assumes that gridType has been set to cfmesh
-void SCDMesh::create_cart_box()
+// get the axis cartesian bounding box edges if cfmesh has been chosen
+void SCDMesh::create_cart_edges()
 {
   // generate the vector arrays for cartesian grid.
-  // at some point this should be generalized to make 
-  // the grid for a axis aligned box from and obb tree too
   i_arr.push_back(minCoord[0]);
   double icrs_size = (maxCoord[0] - minCoord[0]) / coarse_i;
   double ifn_size;
@@ -148,7 +154,7 @@ void SCDMesh::create_cart_box()
     int num_i = i_arr.size();
     int num_j = j_arr.size();
     int num_k = k_arr.size();
-    int num_verts = num_i*num_j*num_k;
+    const int num_verts = num_i*num_j*num_k;
 
     // generate the vertices
     std::vector<double> full_coords;
@@ -169,10 +175,10 @@ void SCDMesh::create_cart_box()
     MBERRCHK(rval, mk_core()->moab_instance());
 
     // generate hex entities from the vertices
-    std::vector<moab::EntityHandle* > conn;
+    std::vector<moab::EntityHandle*> connect;
     moab::EntityHandle local_conn[8];
-    int idx;
-    int num_hex = (num_i - 1)*(num_j - 1)*(num_k - 1);
+    const int num_hex = (num_i - 1)*(num_j - 1)*(num_k - 1);
+    unsigned int idx;
     for (int kv = 0; kv != num_k - 1; kv++) {
       for (int jv = 0; jv != num_j - 1; jv++) {
         for (int iv = 0; iv != num_i - 1; iv++) {
@@ -185,17 +191,17 @@ void SCDMesh::create_cart_box()
           local_conn[5] = vtx_range[ idx + 1 +         num_i*num_j];
           local_conn[6] = vtx_range[ idx + 1 + num_i + num_i*num_j];
           local_conn[7] = vtx_range[ idx +     num_i + num_i*num_j];
-          conn.push_back(local_conn);
+          connect.push_back(local_conn);
         }
       }
     }
 
-    moab::EntityHandle elements[num_hex];
-    for (unsigned hx = 0; hx != num_hex; hx++) {
+    for (int elem = 0; elem != num_hex; elem++) {
+      moab::EntityHandle this_elem;
       rval = mk_core()->moab_instance()->create_element( moab::MBHEX,
-                                                         conn[hx],
+                                                         connect[elem],
                                                          8,
-                                                         elements[hx]);
+                                                         this_elem);
       MBERRCHK(rval, mk_core()->moab_instance());
     }
   }

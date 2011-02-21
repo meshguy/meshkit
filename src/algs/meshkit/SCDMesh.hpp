@@ -83,14 +83,8 @@ namespace MeshKit
     iGeom::Error gerr;
     moab::ErrorCode rval;
 
-    // box size increasement ratio, default is 0.0
-    double boxIncrease;
-
     // bounding box min, max coordiantes
     double minCoord[3], maxCoord[3];
-
-    //! Static variable, used in registration
-    static int init;
 
 
   public:
@@ -213,15 +207,11 @@ namespace MeshKit
      */
     void get_box_dimension(double* min, double* max);
 
-    /*!
-     * \brief Set the geometry encompasing box size increase ratio
-     */
-    void set_box_increase_ratio(double box_increase = .03);
 
   private:
     
     //! create cartesian bounding box
-    void create_cart_box();
+    void create_cart_edges();
 
     //! create full mesh representation
     void create_full_mesh();
@@ -293,11 +283,6 @@ namespace MeshKit
   inline void SCDMesh::set_fine_k_grid(std::vector<int> fine_k_)
   {
     fine_k = fine_k_;
-  }
-
-  inline void SCDMesh::set_box_increase_ratio(double box_increase)
-  {
-    boxIncrease = box_increase;
   }
 
   inline void SCDMesh::get_box_dimension(double* min, double* max)
