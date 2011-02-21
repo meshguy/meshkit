@@ -6,6 +6,7 @@
 #include "MBCN.h"
 #include <iMesh_extensions.h>
 #include <vector>
+#include <algorithm>
 
 void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
                         iBase_EntityHandle **ents,
