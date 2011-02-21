@@ -175,7 +175,6 @@ void SCDMesh::create_cart_edges()
     MBERRCHK(rval, mk_core()->moab_instance());
 
     // generate hex entities from the vertices
-    std::vector<moab::EntityHandle*> connect;
     moab::EntityHandle local_conn[8];
     const int num_hex = (num_i - 1)*(num_j - 1)*(num_k - 1);
     unsigned int idx;
@@ -191,18 +190,15 @@ void SCDMesh::create_cart_edges()
           local_conn[5] = vtx_range[ idx + 1 +         num_i*num_j];
           local_conn[6] = vtx_range[ idx + 1 + num_i + num_i*num_j];
           local_conn[7] = vtx_range[ idx +     num_i + num_i*num_j];
-          connect.push_back(local_conn);
+
+          moab::EntityHandle this_elem;
+          rval = mk_core()->moab_instance()->create_element( moab::MBHEX,
+                                                             local_conn,
+                                                             8,
+                                                             this_elem);
+          MBERRCHK(rval, mk_core()->moab_instance());
         }
       }
-    }
-
-    for (int elem = 0; elem != num_hex; elem++) {
-      moab::EntityHandle this_elem;
-      rval = mk_core()->moab_instance()->create_element( moab::MBHEX,
-                                                         connect[elem],
-                                                         8,
-                                                         this_elem);
-      MBERRCHK(rval, mk_core()->moab_instance());
     }
   }
 
