@@ -9,7 +9,7 @@
 #include "SimpleArray.hpp"
 
 #include "iMesh_extensions.h"
-#include <cstdio>
+#include "MBCN.h"
 
 namespace MeshKit
 {
@@ -93,8 +93,7 @@ namespace MeshKit
              *mesh);
 
     // now connect the new vertices to make the higher-dimension entities
-    connect_the_dots(mesh->instance(),
-                     ARRAY_IN(ents), local_tag, &indices[0],
+    connect_the_dots(mesh, ARRAY_IN(ents), local_tag, &indices[0],
                      &offsets[0], &new_verts[0]);
 
     // take care of copy/expand sets
@@ -134,6 +133,67 @@ namespace MeshKit
     for (int t = 0; t < num_tags; t++)
       tag_copy_sets(mesh, copyTag, copySets.sets(), tags[t],
                     tag_vals ? tag_vals[t] : NULL);
+  }
+
+  void connect_the_dots(iMesh *mesh, iBase_EntityHandle *ents,
+                        int ents_size, iBase_TagHandle local_tag, int *indices,
+                        int *offsets, iBase_EntityHandle *verts)
+  {
+    std::vector<iMesh_EntityTopology> topos(ents_size);
+    IBERRCHK(mesh->getEntArrTopo(ents, ents_size, &topos[0]), *mesh);
+  
+    // scan forward to first non-vertex
+    int pos = 0;
+    while (pos < topos.size() && iMesh_POINT == topos[pos])
+      pos++;
+    if (pos == topos.size()) return;
+
+    // for each run of same size & type
+    std::vector<iBase_EntityHandle> connect, new_ents;
+    int begin, end = pos;
+    while (end < ents_size) {
+      // get next run; end points to start of *next* element,
+      // or ents_size if no elems left
+      begin = end++;
+
+      iMesh_EntityTopology topo = topos[begin];
+      int vtx_per_ent = offsets[end] - offsets[begin];
+      while (end < ents_size &&
+             topos[end] == topo &&
+             offsets[end+1] - offsets[end] == vtx_per_ent)
+        end++;
+      int num_ents = end - begin;
+
+      int mbcn_type;
+      int num_corner_verts;
+      iMesh_MBCNType(topo, &mbcn_type);
+      MBCN_VerticesPerEntity(mbcn_type, &num_corner_verts);
+
+      // build vector of vtx handles
+      connect.resize(vtx_per_ent * num_ents);
+      for (size_t i = 0; i < connect.size(); i++)
+        connect[i] = verts[indices[offsets[begin] + i]];
+
+      // create entities
+      new_ents.resize(num_ents);
+
+      if (num_corner_verts == vtx_per_ent) {
+        IBERRCHK(mesh->createEntArr(topo, &connect[0], connect.size(),
+                                    &new_ents[0]), *mesh);
+      }
+      else {
+        // use single-entity function in this case, entity might have higher-
+        // order nodes (imesh fcn doesn't have argument for # entities)
+        for (int i = 0; i < num_ents; i++) {
+          IBERRCHK(mesh->createEnt(topo, &connect[i*vtx_per_ent],
+                                   vtx_per_ent, new_ents[i]), *mesh);
+        }
+      }
+
+      // set the local copy tags
+      IBERRCHK(mesh->setEHArrData(&ents[begin], num_ents, local_tag,
+                                  &new_ents[0]), *mesh);
+    }
   }
 
 } // namespace MeshKit

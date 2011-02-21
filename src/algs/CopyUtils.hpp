@@ -41,23 +41,4 @@ void iMesh_getStructure(iMesh_Instance instance, iBase_EntitySetHandle set,
                         int *offsets_size,
                         int *err);
 
-/**\brief Create higher-dimension entities on a set of vertices
- *
- * Given an array of vertices and a template to build from, recreate the
- * higher-dimension entities on the array of vertices. This is useful when
- * making copies of a selection.
- *
- * \param instance the iMesh instance handle
- * \param ents the entities for the template
- * \param size the number of entities in |entities|
- * \param local_tag the local copy tag
- * \param indices index buffer into |entities|
- * \param offsets offset array indicating start and end of |indices| for each
-                  entity in |entities|
- * \param verts the array of vertices to build upon
- */
-void connect_the_dots(iMesh_Instance instance, iBase_EntityHandle *ents,
-                      int size, iBase_TagHandle local_tag, int *indices,
-                      int *offsets, iBase_EntityHandle *verts);
-
 #endif

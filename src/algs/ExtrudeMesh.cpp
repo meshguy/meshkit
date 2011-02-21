@@ -1,4 +1,5 @@
 #include "meshkit/ExtrudeMesh.hpp"
+#include "meshkit/CopyMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
@@ -124,7 +125,7 @@ namespace MeshKit
     tag_copy_sets(extrudeSets, local_tag, extrudeTag);
 
     if (copyFaces) {
-      connect_the_dots(mesh->instance(), ARRAY_IN(ents), local_tag, &indices[0],
+      connect_the_dots(mesh, ARRAY_IN(ents), local_tag, &indices[0],
                        &offsets[0], &next[0]);
 
       link_expand_sets(expandSets, local_tag);
