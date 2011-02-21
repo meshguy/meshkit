@@ -2,7 +2,11 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS = 
+#if HAVE_JAALQUADMESHER
+SUBDIRS =  QuadMesher
+LIBS    =  $(QUADMESHER_LIBS)
+AM_CPPFLAGS += -I$(srcdir)/QuadMesher $(JAAL_CPPFLAGS) -DHAVE_JAALQUADMESHER
+#endif
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
