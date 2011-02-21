@@ -902,6 +902,7 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src/core/Makefile
                  src/algs/Makefile
+                 src/algs/QuadMesher/Makefile
                  src/utils/Makefile
                  src/lemon/Makefile
                  src/lemon/doc/Makefile

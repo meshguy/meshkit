@@ -49,8 +49,7 @@ nobase_libMeshKitJaalQuadMesher_la_include_HEADERS = \
 	meshkit/JaalMoabConverter.hpp \
 	meshkit/QuadCleanUp.hpp  \
 	meshkit/SwapTriEdge.hpp  \
-	meshkit/Tri2Quad.hpp	\
-	meshkit/triblend.h 
+	meshkit/Tri2Quad.hpp	
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

@@ -195,7 +195,7 @@ DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
 DISTCHECK_CONFIGURE_FLAGS =  --with-igeom=/home/csverma/Software/Mesh/ITAPS/CGM --with-imesh=/home/csverma/Software/Mesh/ITAPS/MOAB --with-irel=/home/csverma/Software/Mesh/ITAPS/LASSO
 DOXYGEN = /usr/bin/doxygen
-DOXYGEN_SRC_PATH = ../src/core ../src/util ../src/algs ../src/extern/register_extern.cpp ../test/core ../test/algs 
+DOXYGEN_SRC_PATH = ../src/core ../src/util ../src/algs ../src/extern/register_extern.cpp ../test/core ../test/algs ../src/extern/mesquite ../test/extern/mesquite 
 DSYMUTIL = 
 DUMPBIN = 
 ECHO_C = 
@@ -219,6 +219,7 @@ HAVE_CAMAL_TRIADV = no
 HAVE_CAMAL_TRIDEL = no
 HAVE_CGM = yes
 HAVE_MOAB = yes
+HAVE_NETGEN = no
 HAVE_TETGEN = no
 HAVE_TRIANGLE = no
 IGEOM_CONFIG_OPTIONS_INCLUDE = include /home/csverma/Software/Mesh/ITAPS/CGM/lib/iGeom-Defs.inc
@@ -241,7 +242,11 @@ MAKEINFO = ${SHELL} /home/csverma/MeshKit/trunk/missing --run makeinfo
 MESQUITE_CPPFLAGS = 
 MESQUITE_DEFINES = 
 MESQUITE_LDFLAGS = 
+MESQUITE_LIBS = 
 MKDIR_P = /bin/mkdir -p
+NETGEN_CPPFLAGS = 
+NETGEN_LDFLAGS = 
+NETGEN_LIBS = 
 NM = /usr/bin/nm -B
 NMEDIT = 
 OBJDUMP = objdump
@@ -379,7 +384,7 @@ nobase_libMeshKitJaalQuadMesher_la_include_HEADERS = \
 	meshkit/JaalMoabConverter.hpp \
 	meshkit/QuadCleanUp.hpp  \
 	meshkit/SwapTriEdge.hpp  \
-	meshkit/Tri2Quad.hpp
+	meshkit/Tri2Quad.hpp	
 
 all: all-recursive
 
