@@ -13,13 +13,15 @@
 
  This manual is divided into the following sections:
 - User's Guide
+  - \ref usingmeshkit
   - \ref datamodel
   - \ref thegraph
     - \ref detailedtraversal
     - \ref graphexamples
   - \ref interfaces
-  - \ref usingmeshkit
   - \ref api
+  - <a href="../MeshKitAlgorithms.html"> MeshKit Algorithms</a>
+
 - Developer's Guide
   - \ref styleguide
   - \ref devinterfaces
