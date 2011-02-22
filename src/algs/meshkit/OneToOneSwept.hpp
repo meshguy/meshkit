@@ -92,6 +92,7 @@ public:
 
 	OneToOneSwept(MKCore *mk_core, const MEntVector &me_vec);
 	~OneToOneSwept();
+
 	virtual void setup_this();
 	virtual void execute_this();
 

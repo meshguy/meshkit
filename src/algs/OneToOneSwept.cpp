@@ -37,9 +37,54 @@ OneToOneSwept::~OneToOneSwept()
 }
 
 //---------------------------------------------------------------------------//
-// setup function
+// setup function: define the size between the different layers
 void OneToOneSwept::setup_this()
 {
+    //compute the number of intervals for the associated ModelEnts, from the size set on them
+    //the sizing function they point to, or a default sizing function
+  for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
+  {
+    ModelEnt *me = mit->first;
+
+      //first check to see whether entity is meshed
+    if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0)
+      continue;
+    
+    SizingFunction *sf = mk_core()->sizing_function(me->sizing_function_index());
+    if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT &&
+        mk_core()->sizing_function(0))
+      sf = mk_core()->sizing_function(0);
+    
+    if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT)
+    {
+        //no sizing set, just assume default #intervals as 4
+      me->mesh_intervals(4);
+      me->interval_firmness(DEFAULT);
+    }
+    else
+    {
+        //check # intervals first, then size, and just choose for now
+      if (sf->intervals() > 0)
+      {
+        if (me->constrain_even() && sf->intervals()%2)
+          me -> mesh_intervals(sf->intervals()+1);
+        else
+          me -> mesh_intervals(sf->intervals());
+        me -> interval_firmness(HARD);
+      }
+      else if (sf->size()>0)
+      {
+        int intervals = me->measure()/sf->size();
+        if (!intervals) intervals++;
+        if (me->constrain_even() && intervals%2) intervals++;
+        me->mesh_intervals(intervals);
+        me->interval_firmness(SOFT);
+      }
+      else
+        throw Error(MK_INCOMPLETE_MESH_SPECIFICATION,  "Sizing function for edge had neither positive size nor positive intervals.");
+    }
+  }
+
 
 }
 
@@ -50,6 +95,20 @@ void OneToOneSwept::execute_this()
 {
 	std::vector<double> coords;
 	std::vector<moab::EntityHandle> nodes;
+	
+	for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
+  	{
+    		ModelEnt *me = mit -> first;
+
+    		//resize the coords based on the interval setting
+    		numLayers = me->mesh_intervals();
+    		
+		
+
+
+      		//   ok, we are done, commit to ME
+    		me->commit_mesh(mit->second, COMPLETE_MESH);	
+  	}
 
 }
 
