@@ -6,7 +6,6 @@
 #include <iMesh_extensions.h>
 
 #include <meshkit/Error.hpp>
-#include "SimpleArray.hpp"
 
 namespace MeshKit {
 
@@ -47,12 +46,13 @@ void CESets::update_tagged_sets()
 
   std::vector<tag_data>::const_iterator tag;
   for (tag = tags_.begin(); tag != tags_.end(); ++tag) {
-    SimpleArray<iMesh::EntitySetHandle> tmp_sets;
+    iMesh::EntitySetHandle *tmp_sets = NULL;
+    int tmp_sets_alloc = 0, tmp_sets_size;
     iMesh_getEntSetsByTagsRec(mesh_->instance(), root_set, &tag->tag,
                               (tag->value ? &tag->value : NULL), 1, false,
-                              ARRAY_INOUT(tmp_sets), &err);
+                              &tmp_sets, &tmp_sets_alloc, &tmp_sets_size, &err);
     IBERRCHK(err, *mesh_);
-    sets_.insert(tmp_sets.begin(), tmp_sets.end());
+    sets_.insert(tmp_sets, tmp_sets+tmp_sets_size);
   }
 }
 

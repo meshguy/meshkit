@@ -29,8 +29,7 @@
 #include <vector>
 
 #include "meshkit/MeshScheme.hpp"
-
-#include "SimpleArray.hpp"
+#include "meshkit/SimpleArray.hpp"
 
 using namespace std;
 

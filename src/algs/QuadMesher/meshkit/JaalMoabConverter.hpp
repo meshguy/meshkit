@@ -6,7 +6,7 @@
 #ifdef HAVE_IMESH
 #include <iMesh.h>
 #include <MBInterface.hpp>
-#include "../SimpleArray.hpp"
+#include "meshkit/SimpleArray.hpp"
 #endif
 
 using namespace Jaal;

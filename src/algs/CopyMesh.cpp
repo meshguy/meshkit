@@ -6,7 +6,6 @@
 #include "meshkit/LocalSet.hpp"
 
 #include "CopyUtils.hpp"
-#include "SimpleArray.hpp"
 
 #include "iMesh_extensions.h"
 #include "MBCN.h"
@@ -48,7 +47,7 @@ namespace MeshKit
 
   void CopyMesh::execute_this()
   {
-    SimpleArray<iMesh::EntityHandle> orig_ents(mentSelection.size());
+    std::vector<iMesh::EntityHandle> orig_ents(mentSelection.size());
 
     int i = 0;
     for (MEntSelection::iterator mit = mentSelection.begin();
@@ -59,7 +58,7 @@ namespace MeshKit
 
     LocalSet set(this->mk_core());
 
-    IBERRCHK(mesh->addEntArrToSet(ARRAY_IN(orig_ents), set), *mesh);
+    IBERRCHK(mesh->addEntArrToSet(&orig_ents[0], orig_ents.size(), set), *mesh);
     do_copy(set);
   }
 
@@ -67,34 +66,30 @@ namespace MeshKit
   {
     assert(transform);
 
-    int err;
     LocalTag local_tag(this->mk_core());
 
-    SimpleArray<iBase_EntityHandle> ents;
-    SimpleArray<iBase_EntityHandle> verts;
-    SimpleArray<int> indices;
-    SimpleArray<int> offsets;
+    std::vector<iBase_EntityHandle> ents;
+    std::vector<iBase_EntityHandle> verts;
+    std::vector<int> indices;
+    std::vector<int> offsets;
 
-    iMesh_getStructure(mesh->instance(), set_handle, ARRAY_INOUT(ents),
-                       ARRAY_INOUT(verts), ARRAY_INOUT(indices),
-                       ARRAY_INOUT(offsets), &err);
-    IBERRCHK(err, *mesh);
+    IBERRCHK(iMesh_getStructure(mesh->instance(), set_handle, ents, verts,
+                                indices, offsets), *mesh);
 
     // copy the vertices
-    SimpleArray<iBase_EntityHandle> new_verts;
-    transform->transform(mesh, ARRAY_IN(verts), ARRAY_INOUT(new_verts));
+    std::vector<iBase_EntityHandle> new_verts;
+    transform->transform(mesh, verts, new_verts);
     assert(new_verts.size() == verts.size());
 
     // set the local copy tags on vertices
     // XXX: Should this really happen? Doing so adds more entities to copy sets
     // than explicitly passed into this function. This may be a domain-specific
     // question.
-    IBERRCHK(mesh->setEHArrData(ARRAY_IN(verts), local_tag, &new_verts[0]),
-             *mesh);
+    IBERRCHK(mesh->setEHArrData(&verts[0], verts.size(), local_tag,
+                                &new_verts[0]), *mesh);
 
     // now connect the new vertices to make the higher-dimension entities
-    connect_the_dots(mesh, ARRAY_IN(ents), local_tag, &indices[0],
-                     &offsets[0], &new_verts[0]);
+    connect_the_dots(mesh, local_tag, ents, indices, offsets, new_verts);
 
     // take care of copy/expand sets
     update_sets();
@@ -135,12 +130,14 @@ namespace MeshKit
                     tag_vals ? tag_vals[t] : NULL);
   }
 
-  void connect_the_dots(iMesh *mesh, iBase_EntityHandle *ents,
-                        int ents_size, iBase_TagHandle local_tag, int *indices,
-                        int *offsets, iBase_EntityHandle *verts)
+  void connect_the_dots(iMesh *mesh, iBase_TagHandle local_tag,
+                        const std::vector<iBase_EntityHandle> &ents,
+                        const std::vector<int> &indices,
+                        const std::vector<int> &offsets,
+                        const std::vector<iBase_EntityHandle> &verts)
   {
-    std::vector<iMesh_EntityTopology> topos(ents_size);
-    IBERRCHK(mesh->getEntArrTopo(ents, ents_size, &topos[0]), *mesh);
+    std::vector<iMesh_EntityTopology> topos(ents.size());
+    IBERRCHK(mesh->getEntArrTopo(&ents[0], ents.size(), &topos[0]), *mesh);
   
     // scan forward to first non-vertex
     int pos = 0;
@@ -151,14 +148,14 @@ namespace MeshKit
     // for each run of same size & type
     std::vector<iBase_EntityHandle> connect, new_ents;
     int begin, end = pos;
-    while (end < ents_size) {
+    while (end < ents.size()) {
       // get next run; end points to start of *next* element,
       // or ents_size if no elems left
       begin = end++;
 
       iMesh_EntityTopology topo = topos[begin];
       int vtx_per_ent = offsets[end] - offsets[begin];
-      while (end < ents_size &&
+      while (end < ents.size() &&
              topos[end] == topo &&
              offsets[end+1] - offsets[end] == vtx_per_ent)
         end++;

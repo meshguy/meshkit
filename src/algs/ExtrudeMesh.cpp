@@ -7,7 +7,6 @@
 #include "meshkit/LocalSet.hpp"
 
 #include "CopyUtils.hpp"
-#include "SimpleArray.hpp"
 
 #include "iMesh_extensions.h"
 
@@ -50,7 +49,7 @@ namespace MeshKit
 
   void ExtrudeMesh::execute_this()
   {
-    SimpleArray<iMesh::EntityHandle> orig_ents(mentSelection.size());
+    std::vector<iMesh::EntityHandle> orig_ents(mentSelection.size());
 
     int i = 0;
     for (MEntSelection::iterator mit = mentSelection.begin();
@@ -61,7 +60,7 @@ namespace MeshKit
 
     LocalSet set(this->mk_core());
 
-    IBERRCHK(mesh->addEntArrToSet(ARRAY_IN(orig_ents), set), *mesh);
+    IBERRCHK(mesh->addEntArrToSet(&orig_ents[0], orig_ents.size(), set), *mesh);
     do_extrude(set);
   }
 
@@ -77,55 +76,50 @@ namespace MeshKit
 
     update_sets();
 
-    int err;
+    std::vector<iBase_EntityHandle> ents;
+    std::vector<iBase_EntityHandle> verts;
+    std::vector<int> indices;
+    std::vector<int> offsets;
 
-    SimpleArray<iBase_EntityHandle> ents;
-    SimpleArray<iBase_EntityHandle> adj;
-    SimpleArray<int> indices;
-    SimpleArray<int> offsets;
+    IBERRCHK(iMesh_getStructure(mesh->instance(), src, ents, verts,
+                                indices, offsets), *mesh);
 
-    iMesh_getStructure(mesh->instance(), src, ARRAY_INOUT(ents),
-                       ARRAY_INOUT(adj), ARRAY_INOUT(indices),
-                       ARRAY_INOUT(offsets), &err);
-    IBERRCHK(err, *mesh);
+    if (ents.size() == 0) return;
 
-    if (adj.size() == 0) return;
-
-    SimpleArray<iBase_EntityHandle> curr;
-    SimpleArray<iBase_EntityHandle> next;
+    std::vector<iBase_EntityHandle> curr;
+    std::vector<iBase_EntityHandle> next;
     std::vector<int> normals;
 
     LocalTag local_tag(this->mk_core());
 
-    curr.resize(adj.size());
-    next.resize(adj.size());
-    transform->transform(1, mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
+    curr.resize(verts.size());
+    next.resize(verts.size());
+    transform->transform(1, mesh, verts, next);
 
     // Get the offset between vertices between steps
     Vector<3> xa, xb, dx;
-    IBERRCHK(mesh->getVtxCoord(next[0], xa[0], xa[1], xa[2]), *mesh);
-    IBERRCHK(mesh->getVtxCoord(curr[0], xb[0], xb[1], xb[2]), *mesh);
+    IBERRCHK(mesh->getVtxCoord(next[0],  xa[0], xa[1], xa[2]), *mesh);
+    IBERRCHK(mesh->getVtxCoord(verts[0], xb[0], xb[1], xb[2]), *mesh);
     dx = xa-xb;
 
-    get_normals(&adj[0], &indices[0], &offsets[0], ents.size(), dx, normals);
+    get_normals(verts, indices, offsets, dx, normals);
 
     // Make the first set of volumes
-    connect_up_dots(ARRAY_IN(ents), local_tag, &normals[0], &indices[0],
-                    &offsets[0], &adj[0], &next[0]);
+    connect_up_dots(&ents[0], ents.size(), local_tag, &normals[0], &indices[0],
+                    &offsets[0], &verts[0], &next[0]);
 
     // Now do the rest
     for (int i=2; i<=transform->steps(); i++) {
       std::swap(curr, next);
-      transform->transform(i, mesh, ARRAY_IN(adj), ARRAY_INOUT(next));
-      connect_up_dots(ARRAY_IN(ents), local_tag, &normals[0], &indices[0],
-                      &offsets[0], &curr[0], &next[0]);
+      transform->transform(i, mesh, verts, next);
+      connect_up_dots(&ents[0], ents.size(), local_tag, &normals[0],
+                      &indices[0], &offsets[0], &curr[0], &next[0]);
     }
 
     tag_copy_sets(extrudeSets, local_tag, extrudeTag);
 
     if (copyFaces) {
-      connect_the_dots(mesh, ARRAY_IN(ents), local_tag, &indices[0],
-                       &offsets[0], &next[0]);
+      connect_the_dots(mesh, local_tag, ents, indices, offsets, next);
 
       link_expand_sets(expandSets, local_tag);
 
@@ -138,11 +132,12 @@ namespace MeshKit
 
   // calculate the normals for each face (1 = towards v, -1 = away from v)
   // TODO: this can fail with non-convex faces
-  void ExtrudeMesh::get_normals(iBase_EntityHandle *verts, int *indices,
-                                int *offsets, int size, const Vector<3> &dv,
-                                std::vector<int> &normals)
+  void ExtrudeMesh::get_normals(const std::vector<iBase_EntityHandle> &verts,
+                                const std::vector<int> &indices,
+                                const std::vector<int> &offsets,
+                                const Vector<3> &dv, std::vector<int> &normals)
   {
-    int err;
+    size_t size = offsets.size() - 1;
     normals.resize(size);
 
     for(int i=0; i<size; i++) {

@@ -121,8 +121,9 @@ namespace MeshKit {
   private:
     void do_extrude(iMesh::EntitySetHandle set_handle);
 
-    void get_normals(iBase_EntityHandle *verts, int *indices,
-                     int *offsets, int size, const Vector<3> &dv,
+    void get_normals(const std::vector<iBase_EntityHandle> &verts,
+                     const std::vector<int> &indices,
+                     const std::vector<int> &offsets, const Vector<3> &dv,
                      std::vector<int> &normals);
 
     void connect_up_dots(iBase_EntityHandle *src, int size,

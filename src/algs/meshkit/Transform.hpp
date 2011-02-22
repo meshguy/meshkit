@@ -24,20 +24,14 @@ namespace MeshKit {
     class Transform
     {
     public:
-      // TODO: change this to use vectors
-
       /** \brief Transform the selected vertices
        * \param mesh the iMesh implementation holding the vertices
-       * \param src a pointer to an array of the source vertices
-       * \param src_size the number of source vertices
-       * \param dest a pointer to a pointer-to-array of the destination
-       *        vertices
-       * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size the number of destination vertices
+       * \param src an array of the source vertices
+       * \param dest an array of the destination vertices
        */
-      virtual void transform(iMesh *mesh, iMesh::EntityHandle *src,
-                             int src_size, iMesh::EntityHandle **dest,
-                             int *dest_alloc, int *dest_size) const = 0;
+      virtual void transform(iMesh *mesh,
+                             const std::vector<iMesh::EntityHandle> &src,
+                             std::vector<iMesh::EntityHandle> &dest) const = 0;
 
       /** \brief Clone this transform object
        */
@@ -66,42 +60,31 @@ namespace MeshKit {
     class BasicTransform : public Transform
     {
     public:
-      // TODO: change this to use vectors
-
       /** \brief Transform the selected vertices
        * \param mesh the iMesh implementation holding the vertices
-       * \param src a pointer to an array of the source vertices
-       * \param src_size the number of source vertices
-       * \param dest a pointer to a pointer-to-array of the destination
-       *        vertices
-       * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size the number of destination vertices
+       * \param src an array of the source vertices
+       * \param dest an array of the destination vertices
        */
-      virtual void transform(iMesh *mesh, iMesh::EntityHandle *src,
-                             int src_size, iMesh::EntityHandle **dest,
-                             int *dest_alloc, int *dest_size) const
+      virtual void transform(iMesh *mesh,
+                             const std::vector<iMesh::EntityHandle> &src,
+                             std::vector<iMesh::EntityHandle> &dest) const
       {
-        std::vector< Vector<3> > coords(src_size);
-        IBERRCHK(mesh->getVtxArrCoords(src, src_size, iBase_INTERLEAVED,
+        std::vector< Vector<3> > coords(src.size());
+        IBERRCHK(mesh->getVtxArrCoords(&src[0], src.size(), iBase_INTERLEAVED,
                                        vec2ptr(coords)), *mesh);
 
         for (int i=0; i<coords.size(); i++)
           static_cast<const T*>(this)->transform_one(coords[i]);
 
-        if (dest && src == *dest)
+        if (&src == &dest)
         {
-          IBERRCHK(mesh->setVtxArrCoords(src, src_size, iBase_INTERLEAVED,
+          IBERRCHK(mesh->setVtxArrCoords(&src[0], src.size(), iBase_INTERLEAVED,
                                          vec2ptr(coords)), *mesh);
         }
         else {
-          if (dest) {
-            *dest_size = src_size;
-            *dest_alloc = src_size * sizeof(iMesh::EntityHandle);
-            *dest = static_cast<iMesh::EntityHandle*>(malloc(*dest_alloc));
-          }
-
-          IBERRCHK(mesh->createVtxArr(src_size, iBase_INTERLEAVED,
-                                      vec2ptr(coords), *dest), *mesh);
+          dest.resize(src.size());
+          IBERRCHK(mesh->createVtxArr(src.size(), iBase_INTERLEAVED,
+                                      vec2ptr(coords), &dest[0]), *mesh);
         }
       }
 
@@ -177,23 +160,16 @@ namespace MeshKit {
     class Transform
     {
     public:
-      // TODO: change this to use vectors
-
       /** \brief Transform the selected vertices
        * \param step the step number for the extrusion, with 0 being the
        *        already-existing mesh data
-       * \param impl the iMesh implementation holding the vertices
-       * \param src a pointer to an array of the source vertices
-       * \param src_size the number of source vertices
-       * \param dest a pointer to a pointer-to-array of the destination
-       *        vertices
-       * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size the number of destination vertices
+       * \param mesh the iMesh implementation holding the vertices
+       * \param src an array of the source vertices
+       * \param dest an array of the destination vertices
        */
-      virtual void transform(int step, iMesh *impl, iMesh::EntityHandle *src,
-                             int src_size, iMesh::EntityHandle **dest,
-                             int *dest_alloc, int *dest_size) const = 0;
-
+      virtual void transform(int step, iMesh *mesh,
+                             const std::vector<iMesh::EntityHandle> &src,
+                             std::vector<iMesh::EntityHandle> &dest) const = 0;
       
       /** \brief The number of steps in this extrusion
        */
@@ -226,37 +202,27 @@ namespace MeshKit {
     class BasicTransform : public Transform
     {
     public:
-      // TODO: change this to use vectors
-
       /** \brief Transform the selected vertices
        * \param step the step number for the extrusion, with 0 being the
        *        already-existing mesh data
        * \param mesh the iMesh implementation holding the vertices
-       * \param src a pointer to an array of the source vertices
-       * \param src_size the number of source vertices
-       * \param dest a pointer to a pointer-to-array of the destination
-       *        vertices
-       * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size the number of destination vertices
+       * \param src an array of the source vertices
+       * \param dest an array of the destination vertices
        */
-      virtual void transform(int step, iMesh *mesh, iMesh::EntityHandle *src,
-                             int src_size, iMesh::EntityHandle **dest,
-                             int *dest_alloc, int *dest_size) const
+      virtual void transform(int step, iMesh *mesh,
+                             const std::vector<iMesh::EntityHandle> &src,
+                             std::vector<iMesh::EntityHandle> &dest) const
       {
-        std::vector< Vector<3> > coords(src_size);
-        IBERRCHK(mesh->getVtxArrCoords(src, src_size, iBase_INTERLEAVED,
+        std::vector< Vector<3> > coords(src.size());
+        IBERRCHK(mesh->getVtxArrCoords(&src[0], src.size(), iBase_INTERLEAVED,
                                       vec2ptr(coords)), *mesh);
 
         for (int i=0; i<coords.size(); i++)
           static_cast<const T*>(this)->transform_one(step, coords[i]);
 
-        if (dest && !dest) {
-          *dest_size = src_size;
-          *dest_alloc = src_size * sizeof(iMesh::EntityHandle);
-          *dest = static_cast<iMesh::EntityHandle*>(malloc(*dest_alloc));
-        }
-        IBERRCHK(mesh->createVtxArr(src_size, iBase_INTERLEAVED,
-                                    vec2ptr(coords), *dest), *mesh);
+        dest.resize(src.size());
+        IBERRCHK(mesh->createVtxArr(src.size(), iBase_INTERLEAVED,
+                                    vec2ptr(coords), &dest[0]), *mesh);
       }
 
       /** \brief The number of steps in this extrusion
