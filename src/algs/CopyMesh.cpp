@@ -111,8 +111,6 @@ namespace MeshKit
   void CopyMesh::tag_copied_sets(const char **tag_names, const char **tag_vals,
                                  const int num_tags)
   {
-    int err;
-
     for (int t = 0; t < num_tags; t++) {
       iMesh::TagHandle tag;
       IBERRCHK(mesh->getTagHandle(tag_names[t], tag), *mesh);
@@ -140,14 +138,14 @@ namespace MeshKit
     IBERRCHK(mesh->getEntArrTopo(&ents[0], ents.size(), &topos[0]), *mesh);
   
     // scan forward to first non-vertex
-    int pos = 0;
+    size_t pos = 0;
     while (pos < topos.size() && iMesh_POINT == topos[pos])
       pos++;
     if (pos == topos.size()) return;
 
     // for each run of same size & type
     std::vector<iBase_EntityHandle> connect, new_ents;
-    int begin, end = pos;
+    size_t begin, end = pos;
     while (end < ents.size()) {
       // get next run; end points to start of *next* element,
       // or ents_size if no elems left
@@ -159,7 +157,7 @@ namespace MeshKit
              topos[end] == topo &&
              offsets[end+1] - offsets[end] == vtx_per_ent)
         end++;
-      int num_ents = end - begin;
+      size_t num_ents = end - begin;
 
       int mbcn_type;
       int num_corner_verts;
@@ -181,7 +179,7 @@ namespace MeshKit
       else {
         // use single-entity function in this case, entity might have higher-
         // order nodes (imesh fcn doesn't have argument for # entities)
-        for (int i = 0; i < num_ents; i++) {
+        for (size_t i = 0; i < num_ents; i++) {
           IBERRCHK(mesh->createEnt(topo, &connect[i*vtx_per_ent],
                                    vtx_per_ent, new_ents[i]), *mesh);
         }

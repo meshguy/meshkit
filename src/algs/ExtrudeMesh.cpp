@@ -26,10 +26,10 @@ namespace MeshKit
   ExtrudeMesh::ExtrudeMesh(MKCore *mkcore, const MEntVector &me_vec)
     : MeshScheme(mkcore, me_vec),
       mesh(mkcore->imesh_instance()),
-      transform(0),
-      copyFaces(false),
       extrudeTag(mkcore, "__ExtrudeMeshTag"),
       copyTag(mkcore, "__CopyMeshTag"),
+      transform(0),
+      copyFaces(false),
       extrudeSets(mkcore),
       copySets(mkcore),
       expandSets(mkcore)
@@ -140,7 +140,7 @@ namespace MeshKit
     size_t size = offsets.size() - 1;
     normals.resize(size);
 
-    for(int i=0; i<size; i++) {
+    for(size_t i=0; i<size; i++) {
       Vector<3> a, b;
       iBase_EntityHandle curr_verts[3];
 

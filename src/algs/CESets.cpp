@@ -196,10 +196,7 @@ void tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
   IBERRCHK(mesh->getTagSizeBytes(tag, tag_size), *mesh);
 
   // allocate temp space for tag value
-  std::vector<char> value;
-  value.resize(tag_size);
-  char *value_ptr = &value[0];
-  int value_alloc = tag_size, value_size;
+  std::vector<char> value(tag_size);
   
   // for each orig copy set with this tag, copy it to its copy
   std::set<iMesh::EntitySetHandle>::iterator set;
@@ -211,7 +208,7 @@ void tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
     IBERRCHK(err, *mesh);
 
     // compare to tag value if necessary
-    if (tag_val && strncmp(tag_val, value_ptr, tag_size))
+    if (tag_val && strncmp(tag_val, &value[0], tag_size))
       continue;
       
     // if we got here, we should set the tag on the copy; get the copy
@@ -223,7 +220,7 @@ void tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
     IBERRCHK(err, *mesh);
 
     if (copy_set != *set)
-      IBERRCHK(mesh->setEntSetData(copy_set, tag, value_ptr), *mesh);
+      IBERRCHK(mesh->setEntSetData(copy_set, tag, &value[0]), *mesh);
   }
 }
 

@@ -73,7 +73,7 @@ namespace MeshKit {
         IBERRCHK(mesh->getVtxArrCoords(&src[0], src.size(), iBase_INTERLEAVED,
                                        vec2ptr(coords)), *mesh);
 
-        for (int i=0; i<coords.size(); i++)
+        for (size_t i=0; i<coords.size(); i++)
           static_cast<const T*>(this)->transform_one(coords[i]);
 
         if (&src == &dest)
@@ -217,7 +217,7 @@ namespace MeshKit {
         IBERRCHK(mesh->getVtxArrCoords(&src[0], src.size(), iBase_INTERLEAVED,
                                       vec2ptr(coords)), *mesh);
 
-        for (int i=0; i<coords.size(); i++)
+        for (size_t i=0; i<coords.size(); i++)
           static_cast<const T*>(this)->transform_one(step, coords[i]);
 
         dest.resize(src.size());
