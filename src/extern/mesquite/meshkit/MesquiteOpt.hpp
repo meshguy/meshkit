@@ -102,6 +102,8 @@ class MesquiteOpt : public MeshOp
      *\param from_this  Set of ModelEnts in which to search for a group
      *                  of connected ModelEnts.  Connected ModelEnts are
      *                  _removed_ from the passed MEntSet.
+     *\param smooth_ents  List of connected entities that are to be
+     *                  smoothed together.
      *\param result     An iBase_EntitySetHandle corresponding to a set
      *                  that contains all of the mesh entities of all
      *                  of the connected ModelEnts removed from \c from_this
@@ -114,9 +116,19 @@ class MesquiteOpt : public MeshOp
      *                  set is just that of the ModelEnt.
      */
     void get_adjacent_entity_set( MEntSet& from_this,
+                                  MEntVector& smooth_ents,
                                   iBase_EntitySetHandle& result,
                                   iBase_EntityType& dimension,
                                   bool& created_result_set );   
+    
+    /**\brief Change relation on iMesh side to BOTH-type.
+     *
+     * Doing a free smooth of geometry with Mesquite requires
+     * that Mesquite be able to query iRel for a iGeom handle
+     * corresponding to vertex and elemet handles.  This requires
+     * a 'BOTH' relation on the iMesh side.
+     */
+    void set_irel_both_relation();
     
   private:
    

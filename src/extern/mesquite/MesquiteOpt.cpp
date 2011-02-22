@@ -8,9 +8,7 @@
 #ifdef MSQIGEOM
 # include "MsqIGeom.hpp"
 #endif
-#ifdef MSQIREL
-# include "MsqIRel.hpp"
-#endif
+#include "FreeSmoothDomain.hpp"
 
 #include "mesquite_version.h"
 #if MSQ_VERSION_MAJOR > 2 || (MSQ_VERSION_MAJOR == 2 && MSQ_VERSION_MINOR > 1)
@@ -131,7 +129,7 @@ void MesquiteOpt::smooth_with_fixed_boundary()
 
 void MesquiteOpt::smooth_with_free_boundary()
 {
-#ifndef MSQIREL
+#ifndef MSQIGEOM
   throw Error(MK_NOT_IMPLEMENTED,"Cannot do free smooth w/out Mesquite iRel support");
 #else
   fixedBoundary = false;
@@ -218,6 +216,7 @@ bool MesquiteOpt::all_model_ents_have_geom() const
 }
 
 void MesquiteOpt::get_adjacent_entity_set( MEntSet& from_this,
+                                           MEntVector& ents,
                                            iBase_EntitySetHandle& result,
                                            iBase_EntityType& dimension,
                                            bool& created_result_set )
@@ -235,6 +234,7 @@ void MesquiteOpt::get_adjacent_entity_set( MEntSet& from_this,
   while (!front.empty()) {
     ModelEnt* ent = front.back();
     front.pop_back();
+    ents.push_back(ent);
     
     try {
       if (first) {
@@ -338,8 +338,10 @@ void MesquiteOpt::execute_this()
         
         set_fixed_tag( ent, 0 );
         set_fixed_tag_on_skin( ent, 1 );
-        msqmesh.set_active_set( (iBase_EntitySetHandle)ent->mesh_handle(), 
-                                (iBase_EntityType)dim, err );
+        MsqIMesh msqmesh( imesh->instance(), 
+                          (iBase_EntitySetHandle)ent->mesh_handle(),
+                          (iBase_EntityType)dim,
+                          err, &fixedTag );
         MSQERRCHK(err);
         
         if (ent->dimension() == 2 && ent->geom_handle()) {
@@ -360,14 +362,10 @@ void MesquiteOpt::execute_this()
     }
   }
   else {
-#ifndef MSQIREL
-    throw new Error(MK_NOT_IMPLEMENTED,
-              "Mesquite not configured with iRel support.  "
-              "Free boundary/boundary inclusive smooth not possible.");
-#else
-    if (!all_model_ents_have_geom())
-      throw new Error(MK_BAD_GEOMETRIC_EVALUATION,
-            "Cannot do free smooth of entity that doesn't have bounding geometry.");
+    // shouuld be checked by FreeSmoothDomain
+    //if (!all_model_ents_have_geom())
+    //  throw new Error(MK_BAD_GEOMETRIC_EVALUATION,
+    //        "Cannot do free smooth of entity that doesn't have bounding geometry.");
 
     MEntSet remaining;
     for (i = mentSelection.begin(); i != mentSelection.end(); ++i) {
@@ -377,17 +375,17 @@ void MesquiteOpt::execute_this()
         hint = remaining.insert( hint, ent );
     }
     
-    MsqIRel msqgeom( igeom->instance(),
-                     mk_core()->irel_instance()->instance(),
-                     mk_core()->irel_pair()->instance() );
+    MEntVector ents;
     while (!remaining.empty()) {
       iBase_EntitySetHandle set;
       bool free_set = false;
       iBase_EntityType dim;
-      get_adjacent_entity_set( remaining, set, dim, free_set );
+      ents.clear();
+      get_adjacent_entity_set( remaining, ents, set, dim, free_set );
       
       try {
-        msqmesh.set_active_set( set, dim, err );
+        FreeSmoothDomain msqgeom( mk_core(), ents );
+        MsqIMesh msqmesh( imesh->instance(), set, dim, err, &fixedTag );
         MSQERRCHK(err);
         smoother->run_instructions( &msqmesh, &msqgeom, err );
         MSQERRCHK(err);
@@ -398,10 +396,8 @@ void MesquiteOpt::execute_this()
         throw;
       }
     }
-    
-#endif
   }
 }
-  
+
 } // namespace MeshKit
   

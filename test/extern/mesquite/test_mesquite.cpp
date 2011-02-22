@@ -39,14 +39,11 @@ int main(int argc, char* argv[])
 
   int result = 0;
   result += RUN_TEST( test_fixed_smooth_surf );
-  //result += RUN_TEST( test_fixed_smooth_vol );
-//#ifdef MSQIREL
-#if 0
   result += RUN_TEST( test_free_smooth_surf );
-  //result += RUN_TEST( test_free_smooth_vol );
-#endif
   result += RUN_TEST( test_smooth_spherical_surf );
-
+  //result += RUN_TEST( test_fixed_smooth_vol );
+  //result += RUN_TEST( test_free_smooth_vol );
+ 
   return result;
 }
 
@@ -255,14 +252,14 @@ ModelEnt* get_model_ent( iBase_EntityHandle geom )
   return 0;
 }
 
-void check_surf_coords( Vector<3> coords[4][4], moab::EntityHandle verts[4][4] )
+void check_surf_coords( Vector<3> coords[4][4], moab::EntityHandle verts[4][4], double epsilon )
 {
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 4; ++j) {
       Vector<3> new_coords;
       moab::ErrorCode rval = core->moab_instance()->get_coords( &verts[i][j], 1, new_coords.data() );
       CHECK_EQUAL( moab::MB_SUCCESS, rval );
-      CHECK_REAL_EQUAL( 0.0, length(new_coords - coords[i][j]), 1e-3 );
+      CHECK_REAL_EQUAL( 0.0, length(new_coords - coords[i][j]), epsilon );
     }
   }
 }
@@ -296,7 +293,7 @@ void test_fixed_smooth_surf()
     core->moab_instance()->write_file( "test_fixed_smooth_surf-opt.vtk", "VTK", 0, &surf_set, 1 );
   
     // verify that vertices did not move
-  check_surf_coords( coords, vertices );
+  check_surf_coords( coords, vertices, 1e-3 );
   
     // perturb interior vertices
   Vector<3> new_coord;
@@ -319,7 +316,7 @@ void test_fixed_smooth_surf()
   op.execute_this();
   if (write_vtk)
     core->moab_instance()->write_file( "test_fixed_smooth_surf-smooth.vtk", "VTK", 0, &surf_set, 1 );
-  check_surf_coords( coords, vertices );
+  check_surf_coords( coords, vertices, 1e-3 );
   
     // perturb an edge vertex and verify that it did not move
   Vector<3> mid_coord = 0.5*(coords[1][0] + coords[2][0]);
@@ -364,7 +361,7 @@ void test_free_smooth_surf()
     core->moab_instance()->write_file( "test_free_smooth_surf-opt.vtk", "VTK", 0, &surf_set, 1 );
   
     // verify that vertices did not move
-  check_surf_coords( coords, vertices );
+  check_surf_coords( coords, vertices, 1e-3 );
   
     // perturb interior vertices
   Vector<3> new_coord;
@@ -391,7 +388,7 @@ void test_free_smooth_surf()
   op.execute_this();
   if (write_vtk)
     core->moab_instance()->write_file( "test_free_smooth_surf-smooth.vtk", "VTK", 0, &surf_set, 1 );
-  check_surf_coords( coords, vertices );
+  check_surf_coords( coords, vertices, 1e-2 );
 }
 
 void test_smooth_spherical_surf()
