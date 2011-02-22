@@ -26,7 +26,222 @@ const moab::EntityType* OneToOneSwept::output_types()
 // construction function for OneToOneSwept class
 OneToOneSwept::OneToOneSwept(MKCore *mk_core, const MEntVector &me_vec) : MeshScheme(mk_core, me_vec)
 {
+	buildAssociation();
 
+	
+
+	
+
+}
+
+//---------------------------------------------------------------------------//
+// GetList function: find the corner node list, inner node list and edge node list for the mesh on the source surface
+void OneToOneSwept::GetList()
+{
+	int entity_index=0;
+	std::vector<iBase_EntityHandle> Nodes, Edges, Faces;
+	iBase_EntitySetHandle SourceSets;
+	
+	//get the vertex list on the source surface
+	iRel::Error r_err = mk_core()->irel_pair()->getEntSetRelation(sourceSurface, 0, SourceSets);
+	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometry entity handle.");	
+
+	//get inner nodes not boundary nodes
+	iMesh::Error m_err = mk_core()->imesh_instance()->getEntities(SourceSets, iBase_VERTEX, iMesh_POINT, Nodes);
+	IBERRCHK(m_err, "Trouble get the node list from the mesh entity set.");	
+	
+	iBase_TagHandle taghandle=0;
+	m_err = mk_core()->imesh_instance()->createTag("source", 1, iBase_INTEGER, taghandle);
+ 	IBERRCHK(m_err, "Trouble create the tag handle in the mesh instance.");	
+	
+	int testnum;
+	m_err = mk_core()->imesh_instance()->getNumOfType(SourceSets, iBase_FACE, testnum);
+	IBERRCHK(m_err, "Trouble get the number of mesh faces in the mesh entity set.");	
+	
+	NodeList.resize(Nodes.size());
+
+	for (int i=0; i < Nodes.size(); i++)
+	{
+		entity_index++;
+		NodeList[entity_index-1].gVertexHandle = Nodes[i];
+		NodeList[entity_index-1].index = entity_index-1;
+		NodeList[entity_index-1].id = NodeList[entity_index-1].index;
+				
+		m_err = mk_core()->imesh_instance()->getVtxCoord(Nodes[i], NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]);
+		IBERRCHK(m_err, "Trouble get the node coordinates in the mesh.");
+		
+		Point3D pts3={NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]};
+		Point2D pts2;	
+		getUVCoords(sourceSurface, pts3, pts2);
+		NodeList[entity_index-1].uvCoords[0] = pts2.pu;
+		NodeList[entity_index-1].uvCoords[1] = pts2.pv;
+
+		NodeList[entity_index-1].onBoundary = false;
+		NodeList[entity_index-1].onCorner = false;
+		
+		//set the int data to the entity
+		m_err = mk_core()->imesh_instance()->setIntData(Nodes[i], taghandle, NodeList[entity_index-1].id);
+		IBERRCHK(m_err, "Trouble set the int value for nodes in the mesh instance.");
+	}	
+	
+	//loop over the edges and find the boundary nodes	
+	for (int i=0; i < gsEdgeList.size(); i++)
+	{
+		iBase_EntitySetHandle tmpSet;
+		r_err = mk_core()->irel_pair()->getEntSetRelation(gsEdgeList[i].gEdgeHandle, 0, tmpSet);
+		IBERRCHK(r_err, "Trouble get the edge mesh entity set from the geometry edge entity handle .");
+
+		Nodes.clear();
+		m_err = mk_core()->imesh_instance()->getEntities(tmpSet, iBase_VERTEX, iMesh_POINT, Nodes);
+		IBERRCHK(m_err, "Trouble get the nodes' list from the mesh entity set.");
+		
+		NodeList.resize(NodeList.size() + Nodes.size());
+		
+		for (int j=0; j < Nodes.size(); j++)
+		{
+			entity_index++;
+			NodeList[entity_index-1].gVertexHandle = Nodes[j];
+			NodeList[entity_index-1].index = entity_index-1;
+			NodeList[entity_index-1].id = entity_index-1;	
+			m_err = mk_core()->imesh_instance()->getVtxCoord(Nodes[j], NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]);
+			IBERRCHK(m_err, "Trouble get the node coordinates from mesh node entity handle.");
+		
+			Point3D pts3={NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]};
+			Point2D pts2;	
+			getUVCoords(sourceSurface, pts3, pts2);
+			NodeList[entity_index-1].uvCoords[0] = pts2.pu;
+			NodeList[entity_index-1].uvCoords[1] = pts2.pv;
+
+			NodeList[entity_index-1].onBoundary = true;
+			NodeList[entity_index-1].onCorner = false;
+			
+			m_err = mk_core()->imesh_instance()->setIntData(Nodes[j], taghandle, NodeList[entity_index-1].id);
+			IBERRCHK(m_err, "Trouble set the int value for mesh node entity handle.");		
+		}	
+	}	
+	
+	//loop over the corners and find the corner nodes
+	for (int i=0; i < gVertexList.size(); i=i+2)
+	{
+		iBase_EntitySetHandle tmpSet;
+		r_err = mk_core()->irel_pair()->getEntSetRelation(gVertexList[i].gVertexHandle, 0, tmpSet);
+		IBERRCHK(r_err, "Trouble get the entity set from the geometry edge handle.");		
+		
+		Nodes.clear();
+		m_err = mk_core()->imesh_instance()->getEntities(tmpSet, iBase_VERTEX, iMesh_POINT, Nodes);
+		IBERRCHK(m_err, "Trouble get the nodes' list from mesh entity set.");
+		
+		NodeList.resize(NodeList.size()+Nodes.size());
+		
+		for (int j=0; j < Nodes.size(); j++)
+		{
+			entity_index++;
+			NodeList[entity_index-1].gVertexHandle = Nodes[j];
+			NodeList[entity_index-1].index = entity_index-1;
+			NodeList[entity_index-1].id = NodeList[entity_index-1].index;
+			m_err = mk_core()->imesh_instance()->getVtxCoord(Nodes[j], NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]);
+			IBERRCHK(m_err, "Trouble get the nodes' coordinates from node handle.");
+		
+			Point3D pts3={NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]};
+			Point2D pts2;	
+			getUVCoords(sourceSurface, pts3, pts2);
+			NodeList[entity_index-1].uvCoords[0] = pts2.pu;
+			NodeList[entity_index-1].uvCoords[1] = pts2.pv;
+
+			NodeList[entity_index-1].onBoundary = false;
+			NodeList[entity_index-1].onCorner = true;
+			
+			m_err = mk_core()->imesh_instance()->setIntData(Nodes[j], taghandle, NodeList[entity_index-1].id);
+			IBERRCHK(m_err, "Trouble set the int value for nodes.");
+		}		
+	}	
+	
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
+	//get the edge list for the source surf mesh
+	Edges.clear();
+	m_err = mk_core()->imesh_instance()->getEntities(SourceSets, iBase_EDGE, iMesh_LINE_SEGMENT, Edges);
+	IBERRCHK(m_err, "Trouble get the mesh edges from the mesh entity set.");
+	
+	EdgeList.resize(Edges.size());
+	for (int i=0; i < Edges.size(); i++)
+	{
+		EdgeList[i].gEdgeHandle = Edges[i];
+		EdgeList[i].index = i;
+		m_err = mk_core()->imesh_instance()->getIntData(Edges[i], mesh_id_tag, EdgeList[i].EdgeID);
+		IBERRCHK(m_err, "Trouble get the int data from the mesh edges.");
+
+		//get the nodes for the edge[i], use the function iMesh_isEntContained
+		Nodes.clear();
+		m_err = mk_core()->imesh_instance()->getEntAdj(Edges[i], iBase_VERTEX, Nodes);
+		IBERRCHK(m_err, "Trouble get the adjacent nodes from the mesh edges.");
+		
+		//loop over the nodes on the edge elements		
+		for (int j=0; j < Nodes.size(); j++)
+		{
+			int tmpIndex=-1;
+			m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], taghandle, tmpIndex);
+			IBERRCHK(m_err, "Trouble get the int data from the mesh nodes.");
+
+			//find the corresponding nodes on the vertex list
+			EdgeList[i].connect[j] = &NodeList[tmpIndex];
+		}
+
+		//determine whether the edge is a boundary edge element or an inner edge element
+		if (isEdgeBoundary(Edges[i]))
+			EdgeList[i].onBoundary = true;
+		else
+			EdgeList[i].onBoundary = false;
+	}
+	
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	Faces.clear();
+	m_err = mk_core()->imesh_instance()->getEntities(SourceSets, iBase_FACE, iMesh_ALL_TOPOLOGIES, Faces);
+	IBERRCHK(m_err, "Trouble get the mesh face entities from mesh entity set.");
+	
+	FaceList.resize(Faces.size());
+	for (int i=0; i < Faces.size(); i++)
+	{
+		FaceList[i].gFaceHandle = Faces[i];
+		FaceList[i].index = i;
+		m_err = mk_core()->imesh_instance()->getIntData(Faces[i], mesh_id_tag, FaceList[i].FaceID);
+		IBERRCHK(m_err, "Trouble get the int data from mesh face entity.");
+
+		//get the nodes on the face elements
+		Nodes.clear();
+		m_err = mk_core()->imesh_instance()->getEntAdj(Faces[i], iBase_VERTEX, Nodes);
+		IBERRCHK(m_err, "Trouble get the adjacent nodes from mesh face entity.");
+
+		FaceList[i].connect.resize(Nodes.size());
+		for (int j=0; j < Nodes.size(); j++)
+		{			
+			int tmpIndex=-1;
+			m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], taghandle, tmpIndex);
+			IBERRCHK(m_err, "Trouble get the int data from node handle.");
+			
+			FaceList[i].connect[j] = &NodeList[tmpIndex];
+		}
+	}
+	
+	//initialize the mesh size on the target surface
+	TVertexList.resize(NodeList.size());
+	TEdgeList.resize(EdgeList.size());
+	TFaceList.resize(FaceList.size());
+}
+
+//---------------------------------------------------------------------------//
+//determine whether a mesh edge is on the boundary or not
+int OneToOneSwept::isEdgeBoundary(iBase_EntityHandle gEdgeHandle)
+{
+	std::vector<iBase_EntityHandle> Faces;	
+	Faces.clear();
+	
+	iMesh::Error m_err = mk_core()->imesh_instance()->getEntAdj(gEdgeHandle, iBase_FACE, Faces);
+	IBERRCHK(m_err, "Trouble get the adjacent faces from edge handle.");
+
+	if (Faces.size()==1)
+		return 1;
+	else
+		return 0;
 }
 
 //---------------------------------------------------------------------------//
@@ -102,9 +317,15 @@ void OneToOneSwept::execute_this()
 
     		//resize the coords based on the interval setting
     		numLayers = me->mesh_intervals();
-    		
+
 		
 
+		//necessary steps for setting up the source surface and target surfaces
+	
+    		
+		TargetSurfProjection();	
+		InnerLayerMeshing();
+		
 
       		//   ok, we are done, commit to ME
     		me->commit_mesh(mit->second, COMPLETE_MESH);	

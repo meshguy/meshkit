@@ -133,8 +133,15 @@ private:
 	//Build Association function: try to build the association between the geometry and mesh
 	void buildAssociation();
 
+	//determine whether a mesh edge is on the boundary or not
+	int isEdgeBoundary(iBase_EntityHandle gEdgeHandle);	
+
+	//find the corner node list, inner node list and edge node list for the mesh on the source surface
+	void GetList();
+	
 	//specify the source surface for OneToOneSwept class
 	void SetSourceSurface();
+	
 	//specify the target surface for OneToOneSwept class
 	void SetTargetSurface();
 	
