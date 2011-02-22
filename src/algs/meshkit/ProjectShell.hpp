@@ -10,6 +10,7 @@
 
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/iGeom.hpp"
+#include "meshkit/Matrix.hpp"
 #include "iMesh.h"
 
 #include <vector>
@@ -20,7 +21,7 @@
 // These are auxiliary constructs used to check the mesh in 3D
 struct PSNode {
   int id; // from 0, into vert_adj array
-  double xyz[3];
+  MeshKit::Vector<3> xyz;
   std::list<int> edges;
 };
 
@@ -73,7 +74,7 @@ public:
   //explicit ProjectShell(iMesh_Instance mesh,
   ProjectShell(iMesh_Instance mesh,
                iBase_EntitySetHandle root_set,
-               double direction[3]);
+               const MeshKit::Vector<3> &direction);
   
   //virtual ~ProjectShell();
   ~ProjectShell();
@@ -89,26 +90,28 @@ public:
   
 private:
  
-  int  getMeshData(); // read input mesh
-  int  checkMeshValidity();
+  int getMeshData(); // read input mesh
+  int checkMeshValidity();
 
-  int  projectIn2D();
+  int projectIn2D();
   int computeIntersections();
 
   // this method computed intersection between 2 triangles: will output n points, area, affected sides
-  int computeIntersectionBetweenRedAndBlue(int red, int blue, double * opPoints, int & oNPoints, double & area,
+  int computeIntersectionBetweenRedAndBlue(int red, int blue,
+                                           MeshKit::Vector<2> *opPoints,
+                                           int & oNPoints, double & area,
                                            int * opSides); 
   // this method will add extra points (P) for intersection points
   // they will stay on the red edgesi; will create the final triangles (in 2D) and
   //  extra nodes (if needed)
   //
-  int findNodes(int red, int blue, double * iP, int nP);
+  int findNodes(int red, int blue, MeshKit::Vector<2> *iP, int nP);
   iMesh_Instance m_mesh;
   iBase_EntitySetHandle m_hRootSet;
 
-  double m_direction[3];
-  double m_dirX[3];
-  double m_dirY[3];
+  MeshKit::Vector<3> m_direction;
+  MeshKit::Vector<3> m_dirX;
+  MeshKit::Vector<3> m_dirY;
   
   int m_numNodes;
   int m_numTriangles;
@@ -120,7 +123,7 @@ private:
   PSNode * ps_nodes ;
   PS3DTriangle * ps_triangles;
 
-  double * m_xy; // 2d coordinates
+  MeshKit::Vector<3> *m_xy; // 2d coordinates
   PSTriangle2D * m_redMesh;
   PSTriangle2D * m_blueMesh;
   std::vector <FinalTriangle> m_finalMesh;

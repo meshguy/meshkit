@@ -10,7 +10,6 @@
 #include "SimpleArray.hpp"
 
 #include "iMesh_extensions.h"
-#include "vec_utils.hpp"
 
 namespace MeshKit
 {
@@ -147,23 +146,20 @@ namespace MeshKit
     normals.resize(size);
 
     for(int i=0; i<size; i++) {
-      double res[3], a[3], b[3];
+      Vector<3> a, b;
       iBase_EntityHandle curr_verts[3];
 
       if(offsets[i+1] - offsets[i] > 2) { // face
         for(int j=0; j<3; j++)
           curr_verts[j] = verts[indices[ offsets[i]+j ]];
 
-        SimpleArray<double> coords;
-        iMesh_getVtxArrCoords(mesh->instance(), curr_verts, 3, iBase_INTERLEAVED,
-                              ARRAY_INOUT(coords), &err);
-        IBERRCHK(err, *mesh);
+        std::vector< Vector<3> > coords(3);
+        IBERRCHK(mesh->getVtxArrCoords(curr_verts, 3, iBase_INTERLEAVED,
+                                       vec2ptr(coords)), *mesh);
 
-        for(int j=0; j<3; j++) {
-          a[j] = coords[1*3 + j] - coords[0*3 + j];
-          b[j] = coords[2*3 + j] - coords[1*3 + j];
-        }
-        normals[i] = (dot( cross(res,a,b),dv.data() ) > 0) ? 1:-1;
+        a = coords[1] - coords[0];
+        b = coords[2] - coords[1];
+        normals[i] = (vector_product(a, b) % dv) > 0 ? 1:-1;
       }
       else if(offsets[i+1] - offsets[i] == 2) { // line
         normals[i] = 1; // TODO: figure out a way of distinguishing swapped

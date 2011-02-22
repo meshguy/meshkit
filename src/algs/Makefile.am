@@ -28,8 +28,6 @@ libMeshKitalgs_la_SOURCES = \
 	CopyUtils.cpp \
 	CopyUtils.hpp \
 	ProjectShell.cpp \
-	vec_utils.cpp \
-	vec_utils.hpp \
 	OneToOneSwept.cpp
 
 # The list of header files which are to be installed

@@ -1,5 +1,4 @@
 #include "meshkit/ProjectShell.hpp"
-#include "vec_utils.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +24,26 @@ static bool equal_to(double d1, double d2) { return abs(d1 - d2) < 10e-7; }
 int dbg = 0;
 std::ofstream mout;// some debug file
 double epsilon = 1.e-5; // cm, for coincident points in P, the intersection area
+
+// area of a triangle (with sign) - could be negative or 0!
+static inline double area2D(const MeshKit::Vector<3> &a,
+                            const MeshKit::Vector<3> &b,
+                            const MeshKit::Vector<3> &c)
+{
+  double area = (b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+  return area/2;
+}
+static inline double area2D(const MeshKit::Vector<2> &a,
+                            const MeshKit::Vector<2> &b,
+                            const MeshKit::Vector<2> &c)
+{
+  double area = (b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+  return area/2;
+}
+static inline MeshKit::Vector<2>& three_to_two(MeshKit::Vector<3> &v)
+{
+  return reinterpret_cast< MeshKit::Vector<2>& >(v);
+}
 
 
 int getEdge(PSNode & v1, PSNode & v2, int & edgeId, PSEdge * edgesArr, int sizeArr)
@@ -58,8 +77,10 @@ int getEdge(PSNode & v1, PSNode & v2, int & edgeId, PSEdge * edgesArr, int sizeA
   return 0;// did not find any edge between v1 and v2 
   
 }
-ProjectShell::ProjectShell(iMesh_Instance mesh,  iBase_EntitySetHandle root_set, double direction[3])
-  : m_mesh(mesh), m_hRootSet(root_set), 
+ProjectShell::ProjectShell(iMesh_Instance mesh, iBase_EntitySetHandle root_set,
+                           const MeshKit::Vector<3> &direction)
+  : m_mesh(mesh), m_hRootSet(root_set),
+    m_direction(direction),
     m_numNodes(0),
     m_numTriangles(0),
     m_xyz(NULL),  // original coordinates
@@ -71,11 +92,7 @@ ProjectShell::ProjectShell(iMesh_Instance mesh,  iBase_EntitySetHandle root_set,
     m_redMesh(NULL),
     m_blueMesh(NULL),
     m_num2dPoints(0)
-{
-  m_direction[0] = direction[0];
-  m_direction[1] = direction[1];
-  m_direction[2] = direction[2];
-}
+{}
 
 ProjectShell::~ProjectShell()
 {
@@ -91,7 +108,7 @@ ProjectShell::~ProjectShell()
 
 int ProjectShell::project()
 {
-  double dist1= dist(m_direction);
+  double dist1 = length(m_direction);
   if (dist1==0)
   {
     std::cerr << " null direction \n";
@@ -374,34 +391,32 @@ int ProjectShell::projectIn2D()
   // considering the direction, classify each projected triangle as red or blue
   // the red ones are positive (inbound), blue ones are negative
   // first decide the other 2 vectors
-  double vv[3]={0.,-1., 0.};
-  cross(m_dirX, m_direction, vv);
+  MeshKit::Vector<3> vv; vv[0] = 0; vv[1] = -1; vv[2] = 0;
+  m_dirX = vector_product(m_direction, vv);
   
-  double d1 = dist(m_dirX);
+  double d1 = length(m_dirX);
   if (d1<1.e-5)// consider another direction
   {
     vv[1]=0.; vv[2]=-1.;
-    cross(m_dirX, m_direction, vv);
-    d1 = dist(m_dirX);
+    m_dirX = vector_product(m_direction, vv);
+    d1 = length(m_dirX);
     if (d1<1.e-5)
     {
       std::cerr << "cannot find a suitable direction; abort\n";
       return 1;
     }
   }
-  int k=0;
-  for (k=0; k<3; k++)
-    m_dirX[k]/=d1;
-  cross(m_dirY, m_direction, m_dirX);
-  // dirY must be already normalized, but why worry
-  d1 = dist(m_dirY);
+  m_dirX /= d1;
+
+  m_dirY = vector_product(m_direction, m_dirX);
+   // dirY must be already normalized, but why worry
+  d1 = length(m_dirY);
   if (d1==0.)
   {
     std::cerr<< " get out of here, it is hopeless\n";
     return 1;
   }
-  for (k=0; k<3; k++)
-    m_dirY[k]/=d1;
+  m_dirY /= d1;
   
   // now do the projection in 2d
   //   we have 3 vectors, m_dirX, m_dirY, m_direction
@@ -416,7 +431,7 @@ int ProjectShell::projectIn2D()
   //  we start with 2d capacity 3* m_numNodes 
   m_2dcapacity = m_numNodes*3;
   m_num2dPoints = m_numNodes; // directly project 3d nodes in 2d, keep the ids
-  m_xy = new double [3*m_2dcapacity];
+  m_xy = new MeshKit::Vector<3>[m_2dcapacity];
   // this array will be parallel with the original mesh
   // new nodes will appear after intersection computation
   // triangles are characterized by their orientation: negative, positive or 0
@@ -427,39 +442,39 @@ int ProjectShell::projectIn2D()
   // flag them with a high number ()
 
   //m_finalNodes.resize(3*m_numNodes); // the actual size is n_numNodes first
-  for ( k=0; k<m_numNodes; k++)
+  for (int k=0; k<m_numNodes; k++)
   {
     // double xx= dot( ps_nodes[k].xyz, m_dirX);
     // double yy= dot( ps_nodes[k].xyz, m_dirY);
     // _finalNodes[k].x =  dot( ps_nodes[k].xyz, m_dirX);
     // _finalNodes[k].y =  dot( ps_nodes[k].xyz, m_dirY);
-    m_xy[3*k] = dot( ps_nodes[k].xyz, m_dirX);
-    m_xy[3*k+1] = dot( ps_nodes[k].xyz, m_dirY);
+    m_xy[k][0] = ps_nodes[k].xyz % m_dirX;
+    m_xy[k][1] = ps_nodes[k].xyz % m_dirY;
+    m_xy[k][2] = 0;
     //  m_finalNodes[k].x =  m_xy[2*k];
     //  m_finalNodes[k].y =  m_xy[2*k+1];
   }
-  for (k=0; k<m_2dcapacity; k++)
-    m_xy[3*k+2] = 0;// the z ccordinate is always 0 !!
-  // if any edges are collapsed, the corresponding triangles should be collapsed too
-  // we will collapse the triangles first, then the edges
-  // when a triangle is collapsed on an edge, it should break in 2 other triangles
-  // we should really form another triangle array, in 2D 
+  for (int k=m_numNodes-1; k<m_2dcapacity; k++)
+    m_xy[k][2] = 0; // the z ccordinate is always 0 !!
+
+  // If any edges are collapsed, the corresponding triangles should be collapsed
+  // too. We will collapse the triangles first, then the edges. When a triangle
+  // is collapsed on an edge, it should break in 2 other triangles. We should
+  // really form another triangle array, in 2D.
 
   // first, loop over edges and see which are eliminated;
-  
   double *edgeLen2D=new double [m_numEdges];
-  for ( k=0; k<m_numEdges; k++)
+  for (int k=0; k<m_numEdges; k++)
   {
-      
     int v0 = ps_edges[k].v[0];
     int v1 = ps_edges[k].v[1];
-    edgeLen2D[k] = dist2(&m_xy[3*v0], &m_xy[3*v1]); 
+    edgeLen2D[k] = length(m_xy[v1] - m_xy[v0]);
   }
   double *triArea = new double [m_numTriangles];
-  for ( k=0; k<m_numTriangles; k++)
+  for (int k=0; k<m_numTriangles; k++)
   {
-    const int * pV =&( ps_triangles[k].v[0]);
-    triArea[k] = area2D( &m_xy[ 3*pV[0]],  &m_xy[ 3*pV[1]],  &m_xy[ 3*pV[2]]);
+    const int *pV =ps_triangles[k].v;
+    triArea[k] = area2D(m_xy[pV[0]], m_xy[pV[1]], m_xy[pV[2]]);
   }
   // if an edge is length 0, we must collapse the nodes, and 2 triangles
   // first construct a new 2d mesh
@@ -470,7 +485,7 @@ int ProjectShell::projectIn2D()
   int numNeg = 0, numPos = 0, numZero = 0;
   // those that are negative will be reverted in the new array
   int * newTriId = new int [m_numTriangles];
-  for (k=0; k<m_numTriangles ; k++)
+  for (int k=0; k<m_numTriangles ; k++)
   {
     if (triArea[k] > 0)
     {
@@ -505,7 +520,7 @@ int ProjectShell::projectIn2D()
   // do another loop, to really build the 2D mesh we start with
   // we may have potential starting triangles for the marching along, if the sign of one of the neighbors is 
   // different
-  for (k=0; k<m_numTriangles ; k++)
+  for (int k=0; k<m_numTriangles ; k++)
   {
     PS3DTriangle & orgTria = ps_triangles[k];
     if (triArea[k] > 0)
@@ -516,7 +531,6 @@ int ProjectShell::projectIn2D()
       redTria.area = triArea[k];
       for (int j=0; j<3; j++)
       {
-           
         // copy the edge information too
         redTria.e[j] = orgTria.e[j]; 
         // qualify the neighbors
@@ -532,7 +546,6 @@ int ProjectShell::projectIn2D()
           redTria.t[j] = numPos; // marker for boundary
         }
       }
-      
     }
     else if (triArea[k] <0)
     {
@@ -567,7 +580,7 @@ int ProjectShell::projectIn2D()
     }
   }
   // revert the blue triangles, so they become positive oriented too
-  for (k=0; k<numNeg; k++)
+  for (int k=0; k<numNeg; k++)
   {
     // 
     PSTriangle2D & blueTri = m_blueMesh[k];
@@ -646,7 +659,7 @@ int ProjectShell::computeIntersections()
   {
     double area = 0;
     // if area is > 0 , we have intersections
-    double P[24]; // max 6 points, but it may grow bigger; why worry
+    MeshKit::Vector<2> P[12]; // max 6 points, but it may grow bigger; why worry
     int nP = 0;
     int n[3];// sides
     computeIntersectionBetweenRedAndBlue(/* red */0, startBlue, P, nP, area,n);
@@ -739,7 +752,8 @@ int ProjectShell::computeIntersections()
       // 
       int redT = localRed.front();
       localRed.pop();
-      double P[24], area;
+      MeshKit::Vector<2> P[12];
+      double area;
       int nP = 0; // intersection points
       int nc[3]= {0, 0, 0}; // means no intersection on the side (markers)
       computeIntersectionBetweenRedAndBlue(/* red */redT, currentBlue, P, nP, area,nc);
@@ -814,7 +828,8 @@ int ProjectShell::computeIntersections()
 }
 
 // this is a local method
-int EdgeIntersections(double * red, double * blue, int mark[3], double * points, int & nPoints)
+int EdgeIntersections(MeshKit::Vector<2> *red, MeshKit::Vector<2> *blue,
+                      int mark[3], MeshKit::Vector<2> *points, int & nPoints)
 {
   /* EDGEINTERSECTIONS computes edge intersections of two triangles
      [P,n]=EdgeIntersections(X,Y) computes for the two given triangles  * red 
@@ -844,42 +859,36 @@ int EdgeIntersections(double * red, double * blue, int mark[3], double * points,
   {
     for (int j=0; j<3; j++)
     {
-      double b[2];
-      double a[2][2]; // 2*2
+      MeshKit::Vector<2> b;
+      MeshKit::Matrix<2, 2> a;
       int iPlus1 = (i+1)%3;
       int jPlus1 = (j+1)%3;
-      for (int k=0; k<2; k++)
-      {
-        b[k] = blue[2*j+k] - red[2*i+k];
-        // row k of a: a(k, 0), a(k, 1)
-        a[ k ][0]    = red  [ 2*iPlus1 + k] - red [2*i + k];
-        a[ k ][1]    = blue [ 2 * j + k] - blue [2*jPlus1 +k];
-               
-      }
-      double delta = a[0][0]*a[1][1] - a[0][1]*a[1][0];
+
+      b = blue[j] - red[i];
+      a.set_column(0, red[iPlus1] - red[i]);
+      a.set_column(1, blue[j] - blue[jPlus1]);
+
+      double delta = det(a);
       if (delta != 0.)
       {
         // not parallel
-        double alfa = (b[0]*a[1][1]-a[0][1]*b[1])/delta;
-        double beta = (-b[0] * a[1][0] + b[1] * a[0][0])/delta;
+        double alfa = (b[0]*a(1, 1)-a(0, 1)*b[1])/delta;
+        double beta = (-b[0] * a(1, 0) + b[1] * a(0, 0))/delta;
         if (0<= alfa && alfa <=1. && 0<= beta && beta <= 1.)
         {
           // the intersection is good
-          for (int k=0; k<2; k++)
-          {
-            points[2*nPoints+k] = red[2*i+k] + alfa*(red[2*iPlus1+k]-red[2*i+k]);
-          }
+          points[nPoints] = red[i] + alfa*(red[iPlus1]-red[i]);
           mark[i] = 1; // so neighbor number i will be considered too.
           nPoints++;
         }
       }
-        
     }
   }
   return 0;
 }
 
-int borderPointsOfXinY(double * X, double * Y, double * P)
+int borderPointsOfXinY(MeshKit::Vector<2> *X, MeshKit::Vector<2> *Y,
+                       MeshKit::Vector<2> *P)
 {
   // 2 triangles, 3 corners, is the corner of X in Y?
   // Y must have a positive area
@@ -906,19 +915,12 @@ int borderPointsOfXinY(double * X, double * Y, double * P)
   for (int i=0; i<3; i++)
   {
     // compute twice the area of all 3 triangles formed by a side of Y and a corner of X; if one is negative, stop
-    double A[2];
-    for (int k=0; k<2; k++)
-      A[k] = X[2*i+k];
+    MeshKit::Vector<2> A(X[i]);
     int inside=1;
     for (int j=0; j<3; j++)
     {
-      double B[2], C[2];
-      for (int k=0; k<2; k++)
-      {
-        B[k] = Y[2*j+k];
-        int j1 = (j+1)%3;
-        C[k] = Y[2*j1+k];
-      }
+      int j1 = (j+1)%3;
+      MeshKit::Vector<2> B(Y[j]), C(Y[j1]);
 
       double area2 = (B[0]-A[0])*(C[1]-A[1])-(C[0]-A[0])*(B[1]-A[1]);
       if (area2<0.)
@@ -928,8 +930,7 @@ int borderPointsOfXinY(double * X, double * Y, double * P)
     }
     if (inside)
     {
-      P[extraPoint*2  ] = A[0];
-      P[extraPoint*2+1] = A[1];
+      P[extraPoint] = A;
       extraPoint++;
     }
   }
@@ -963,37 +964,28 @@ int borderPointsOfXinY(double * X, double * Y, double * P)
    end;
 */
 
-int swap (double * p , double * q)
-{
-  double tmp = *p;
-  *p = *q;
-  *q = tmp;
-  return 0;
-}
-int SortAndRemoveDoubles(double * P, int & nP)
+int SortAndRemoveDoubles(MeshKit::Vector<2> *P, int & nP)
 {
   if (nP<2)
     return 0; // nothing to do
   // center of gravity for the points
-  double c[2] = {0., 0.};
+  MeshKit::Vector<2> c(0.);
   int k=0;
   for (k=0; k<nP; k++)
-  {
-    c[0]+=P[2*k];
-    c[1]+=P[2*k+1];
-  }
-  c[0]/=nP;
-  c[1]/=nP;
+    c += P[k];
+  c /= nP;
+
   double angle[12]; // could be at most 12 points; much less usually
   for (k=0; k<nP; k++)
   {
-    double x = P[2*k] - c[0], y = P[2*k+1] - c[1] ;
-    if ( x!= 0. || y!=0.)
-      angle[k] = atan2(y, x);
+    MeshKit::Vector<2> xy = P[k] - c;
+    if ( xy[0] != 0. || xy[1] != 0.)
+      angle[k] = atan2(xy[1], xy[0]);
     else
     {
       angle[k] = 0;
-      // this means that the points are on a line, or all coincident // degenerate case
+      // this means that the points are on a line, or all coincident
+      // degenerate case
     }
   } 
   // sort according to angle; also eliminate close points
@@ -1006,9 +998,8 @@ int SortAndRemoveDoubles(double * P, int & nP)
       if (angle[k]>angle[k+1])
       {
         sorted = 0;
-        swap ( angle+k, angle+k+1);
-        swap ( P+(2*k), P+(2*k+2));
-        swap ( P+(2*k+1), P+(2*k+3));
+        std::swap(angle[k], angle[k+1]);
+        std::swap(P[k], P[k+1]);
       }
     }
   }
@@ -1020,18 +1011,18 @@ int SortAndRemoveDoubles(double * P, int & nP)
   // double epsilon = 1.e-5; // these are cm; 2 points are the same if the distance is less than 1.e-5 cm
   while (j<nP)
   {
-    double d2 = dist2 ( &P[2*i], &P[2*j]);
+    double d2 = length(P[j] - P[i]);
     if (d2 > epsilon)
     {
-      i++;  
-      P[2*i] = P[2*j];
-      P[2*i+1] = P[2*j+1]; 
+      i++; 
+      P[i] = P[j];
     }
     j++;
   }
   // test also the last point with the first one (index 0)
   
-  double d2 = dist2(P, &P[2*i]); // check the first and last points (ordered from -pi to +pi)
+  // check the first and last points (ordered from -pi to +pi)
+  double d2 = length(P[i] - P[0]);
   if (d2 > epsilon)
   {
     nP = i+1;
@@ -1042,28 +1033,23 @@ int SortAndRemoveDoubles(double * P, int & nP)
     nP=1; // we should be left with at least one point we already tested if nP is 0 originally
   return 0;
 }
+
 // this method computed intersection between 2 triangles: will output n points, area, affected sides
-int ProjectShell::computeIntersectionBetweenRedAndBlue(int red, int blue, double * P, 
-                                                       int & nP, double & area,  int mark[3])
+int ProjectShell::computeIntersectionBetweenRedAndBlue(
+  int red, int blue, MeshKit::Vector<2> *P, int & nP, double & area, 
+  int mark[3])
 {
   // the points will be at most 9; they will describe a convex patch, after the points will be ordered and 
   // collapsed (eliminate doubles)
   // the area is not really required
   PSTriangle2D & redTri = m_redMesh[red];
   PSTriangle2D & blueTri = m_blueMesh[blue];
-  double redTriangle[6];// column wise
-  double blueTriangle[6];
+  MeshKit::Vector<2> redTriangle[3];
+  MeshKit::Vector<2> blueTriangle[3];
   for (int i=0; i<3; i++)
   {
-    // node i, 2 coordinates
-    for (int k=0; k<2; k++)
-    {
-      int node = redTri.v[i];
-      redTriangle[2*i+k] = m_xy[3*node+k];
-
-      node = blueTri.v[i];
-      blueTriangle[2*i+k] =  m_xy[3*node+k];
-    }
+    redTriangle [i] = three_to_two(m_xy[ redTri .v[i] ]);
+    blueTriangle[i] = three_to_two(m_xy[ blueTri.v[i] ]);
   }
   /* Matlab source code:
      function [P,n,M]=Intersect(X,Y);
@@ -1107,13 +1093,13 @@ int ProjectShell::computeIntersectionBetweenRedAndBlue(int red, int blue, double
   if (ret!=0)
     exit(1);// some unforeseen error
   
-  int extraPoints = borderPointsOfXinY(blueTriangle, redTriangle, &(P[2*nP]));
+  int extraPoints = borderPointsOfXinY(blueTriangle, redTriangle, &P[nP]);
   if (extraPoints>1)
   {
     mark[0] = mark[1] = mark[2]=1;
   }                                
   nP+=extraPoints;
-  extraPoints =  borderPointsOfXinY(redTriangle, blueTriangle, &(P[2*nP]));
+  extraPoints =  borderPointsOfXinY(redTriangle, blueTriangle, &P[nP]);
   nP+=extraPoints;
 
   // now sort and orient the points in P, such that they are forming a convex polygon
@@ -1125,11 +1111,12 @@ int ProjectShell::computeIntersectionBetweenRedAndBlue(int red, int blue, double
   if (nP>=3)
   {
     for (int k=1; k<nP-1; k++)
-      area += area2D(P, &P[2*k], &P[2*k+2]);
+      area += area2D(P[0], P[k], P[k+1]);
   }
   return 0; // no error
 }
-int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
+
+int ProjectShell::findNodes(int red, int blue, MeshKit::Vector<2> *iP, int nP)
 {
   // first of all, check against red and blue vertices
   //
@@ -1137,13 +1124,13 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
   {
     std::cout<< "red, blue, nP, P " << red << " " << blue << " " << nP <<"\n";
     for (int n=0; n<nP; n++)
-      std::cout << " \t" << iP[2*n] << "\t" << iP[2*n+1] << "\n";
+      std::cout << " \t" << iP[n][0] << "\t" << iP[n][1] << "\n";
 
   }
   int * foundIds = new int [nP];
   for (int i=0; i<nP; i++)
   {
-    double * pp = &iP[2*i];// iP+2*i
+    MeshKit::Vector<2> &pp = iP[i];
     int found = 0; 
     // first, are they on vertices from red or blue?
     PSTriangle2D & redTri = m_redMesh[red];
@@ -1151,28 +1138,32 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
     for (j=0; j<3&& !found; j++)
     {
       int node = redTri.v[j];
-      double d2 = dist2( pp, m_xy+(3*node) );   
+      double d2 = length(three_to_two(m_xy[node]) - pp);
       if (dbg && i==0)
-        std::cout<< "  red node " << j << " " << node << " " << m_xy[3*node] << " " << m_xy[3*node+1] << " d2:" << d2 <<  " \n";
+        std::cout << "  red node " << j << " " << node << " " << m_xy[node][0]
+                  << " " << m_xy[node][1] << " d2:" << d2 <<  " \n";
       if (d2<epsilon)
       {
         foundIds[i] = node; // no new node
         found = 1;
       }
     }
+
     PSTriangle2D & blueTri = m_blueMesh[blue];
     for (j=0; j<3 && !found; j++)
     {
       int node = blueTri.v[j];
-      double d2 = dist2( pp, m_xy+(3*node) );   
+      double d2 = length(three_to_two(m_xy[node]) - pp);
       if (dbg && i==0) 
-        std::cout<< "  blu node " << j << " " << node << " " << m_xy[3*node] << " " << m_xy[3*node+1] << " d2:" << d2 <<  " \n";
+        std::cout << "  blu node " << j << " " << node << " " << m_xy[node][0]
+                  << " " << m_xy[node][1] << " d2:" << d2 <<  " \n";
       if (d2<epsilon)
       {
         foundIds[i] = node; // no new node
         found = 1;
       }
     }
+
     if (!found)
     {
       // find the edge it belongs, first
@@ -1183,9 +1174,11 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
         int ae = abs(edge);
         int v1 = ps_edges[ae-1].v[0];
         int v2 = ps_edges[ae-1].v[1];
-        double area = area2D (&m_xy[3*v1], &m_xy[3*v2], pp);
+        double area = area2D(three_to_two(m_xy[v1]), three_to_two(m_xy[v2]),
+                             pp);
         if (dbg)
-          std::cout << "   edge " << j << ": " << edge << " " << v1 << " " << v2 << "  area : " << area << "\n"; 
+          std::cout << "   edge " << j << ": " << edge << " " << v1 << " "
+                    << v2 << "  area : " << area << "\n"; 
         if ( fabs(area) < epsilon*epsilon  )
         {
           // found the edge; now find if there is a point in the list here
@@ -1197,7 +1190,7 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
           for ( it = expts.begin(); it!=expts.end() && !found; it++)
           {
             int pnt = *it;
-            double d2 = dist2(pp, &m_xy[3*pnt]);
+            double d2 = length(three_to_two(m_xy[pnt]) - pp);
             if (d2<epsilon)
             {
               found = 1;
@@ -1215,26 +1208,24 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
               std::cout << " underestimate capacity for 2d array\n";
               // double the capacity of m_xy array
                  
-              double * new_xy = new double [6* m_2dcapacity];
-              int jj=0;
-              for (jj=0; jj<3*m_2dcapacity; jj++)
-              {
+              MeshKit::Vector<3> *new_xy = new MeshKit::Vector<3>[
+                2*m_2dcapacity];
+              for (int jj=0; jj<m_2dcapacity; jj++)
                 new_xy[jj] = m_xy[jj];
-                
-              }
-              for (jj=3*m_2dcapacity-1; jj<6*m_2dcapacity; jj+=3)
-                new_xy[jj] = 0.;
+              for (int jj=m_2dcapacity-1; jj<2*m_2dcapacity; jj++)
+                new_xy[jj][0] = 0.;
               // make 0 the z coordinate
               m_2dcapacity *= 2;
               delete [] m_xy;
               m_xy = new_xy;
             }
-            m_xy[3*m_num2dPoints] = pp[0];
-            m_xy[3*m_num2dPoints+1] = pp[1];
+            m_xy[m_num2dPoints][0] = pp[0];
+            m_xy[m_num2dPoints][1] = pp[1];
             m_num2dPoints++;
             if (dbg)
             {
-              std::cout<< " new 2d " << m_num2dPoints - 1 << " : " << pp[0] << " " << pp[1] <<  "on edge " << ae << "\n";
+              std::cout<< " new 2d " << m_num2dPoints - 1 << " : " << pp[0]
+                       << " " << pp[1] <<  "on edge " << ae << "\n";
             }
             found = 1;
           }
@@ -1243,7 +1234,8 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
     }
     if (!found)
     {
-      std::cout << " a point pp is not on a red triangle " << *pp << " " << pp[1] << " red triangle " << red << " \n";
+      std::cout << " a point pp is not on a red triangle " << pp[0] << " "
+                << pp[1] << " red triangle " << red << " \n";
       exit (1);
     }
   }
@@ -1263,7 +1255,8 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
       m_finalMesh.push_back(ftr);
       if (dbg)
       {
-        std::cout << " triangle " << ftr.v[0] << " " << ftr.v[1] << " " << ftr.v[2] << "\n"; 
+        std::cout << " triangle " << ftr.v[0] << " " << ftr.v[1] << " "
+                  << ftr.v[2] << "\n"; 
       }
     }
   }
@@ -1276,11 +1269,10 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
 int ProjectShell::writeNewMesh(iMesh_Instance mesh)
 {
   // here we will create new vertices, and use the coordinates in 2D
-  //  m_num2dPoints is the number of nodes (some are not used, because they were probably   // collapsed
-  //  we do not specifically merge red and blue nodes, but we are looking first for 
-  //  nodes in red , then blue, then on red edges; some will not appear, according
-  //  to the tolerance
-  //
+  // m_num2dPoints is the number of nodes (some are not used, because they
+  // were probably collapsed. We do not specifically merge red and blue nodes,
+  // but we are looking first for nodes in red , then blue, then on red edges;
+  // some will not appear, according to the tolerance.
   iBase_EntityHandle * newVerts = NULL; // no vertices yet
   // iBase_INTERLEAVED
   int err= 0;
@@ -1288,7 +1280,7 @@ int ProjectShell::writeNewMesh(iMesh_Instance mesh)
   iMesh_createVtxArr(mesh,
                      /*in*/ m_num2dPoints,
                      /*in*/ iBase_INTERLEAVED,
-                     /*in*/ m_xy,
+                     /*in*/ reinterpret_cast<double*>(m_xy),
                      /*in*/ m_num2dPoints*3,
                      /*inout*/ &newVerts,
                      /*inout*/ &size1,
