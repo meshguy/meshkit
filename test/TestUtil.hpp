@@ -365,8 +365,8 @@ void check_equal( MeshKit::ErrorCode A, MeshKit::ErrorCode B, const char* sA, co
   
   printf( "MeshKit::ErrorCode Test Failed: %s == %s\n", sA, sB ); 
   printf( "  at line %d of '%s'\n", line, file ); 
-  printf( "  Expected value: %s (%d)\n", Error::error_str(A), (int)A ); 
-  printf( "  Actual value:   %s (%d)\n", Error::error_str(B), (int)B ); 
+  printf( "  Expected value: %s (%d)\n", MeshKit::Error::error_str(A), (int)A ); 
+  printf( "  Actual value:   %s (%d)\n", MeshKit::Error::error_str(B), (int)B ); 
   printf( "\n" ); 
   flag_error(); 
 }
