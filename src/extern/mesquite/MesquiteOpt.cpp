@@ -310,7 +310,6 @@ void MesquiteOpt::execute_this()
 {
   MEntSelection::iterator i;
   MsqError err;
-  iBase_ErrorType ierr, ierr2;
   iMesh* imesh = mk_core()->imesh_instance();
   iGeom* igeom = mk_core()->igeom_instance();
 
