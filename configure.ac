@@ -13,7 +13,7 @@ dnl ask FATHOM_CHECK_COMPILERS to also skip the check for FC:
 dnl FATHOM_CHECK_COMPILERS([yes],[yes],[no])
 dnl However, there is a call to AC_FC_WRAPPERS below, so presumably
 dnl we should be checking for FC. - j.kraftcheck 2010-8-13
-EXTRA_GNU_FLAGS=-pipe
+EXTRA_GNU_FLAGS="-pipe -Wall"
 FATHOM_CHECK_COMPILERS
 AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
 LIBS="-lm"
