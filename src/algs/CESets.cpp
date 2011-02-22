@@ -53,6 +53,7 @@ void CESets::update_tagged_sets()
                               &tmp_sets, &tmp_sets_alloc, &tmp_sets_size, &err);
     IBERRCHK(err, *mesh_);
     sets_.insert(tmp_sets, tmp_sets+tmp_sets_size);
+    free(tmp_sets);
   }
 }
 
