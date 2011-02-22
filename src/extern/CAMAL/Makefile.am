@@ -25,6 +25,11 @@ libMeshKitCAMAL_la_SOURCES += CAMALTriAdvance.cpp
 nobase_libMeshKitCAMAL_la_include_HEADERS += meshkit/CAMALTriAdvance.hpp
 endif
 
+if HAVE_CAMAL_PAVER
+libMeshKitCAMAL_la_SOURCES += CAMALPaver.cpp
+nobase_libMeshKitCAMAL_la_include_HEADERS += meshkit/CAMALPaver.hpp
+endif
+
 if HAVE_CAMAL_TET
 libMeshKitCAMAL_la_SOURCES += CAMALTetMesher.cpp
 nobase_libMeshKitCAMAL_la_include_HEADERS += meshkit/CAMALTetMesher.hpp

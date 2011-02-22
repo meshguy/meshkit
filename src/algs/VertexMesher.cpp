@@ -15,10 +15,16 @@ const moab::EntityType* VertexMesher::output_types()
     
 VertexMesher::VertexMesher(MKCore *mkcore, const MEntVector &me_vec) 
         : MeshScheme(mkcore, me_vec) 
-{}
+{
+  if (mk_core()->vertex_mesher()) 
+    throw Error(MK_FAILURE, "Should only have a single VertexMesher; use mk_core()->vertex_mesher().");
+  
+  mk_core()->vertex_mesher(this);
+}
 
 VertexMesher::~VertexMesher() 
 {
+  assert (mk_core()->vertex_mesher() == this);
   mk_core()->vertex_mesher(NULL);
 }
     

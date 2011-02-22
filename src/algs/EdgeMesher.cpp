@@ -77,13 +77,17 @@ void EdgeMesher::setup_this()
         //check # intervals first, then size, and just choose for now
       if (sf->intervals() > 0)
       {
-        me -> mesh_intervals(sf->intervals());
+        if (me->constrain_even() && sf->intervals()%2)
+          me -> mesh_intervals(sf->intervals()+1);
+        else
+          me -> mesh_intervals(sf->intervals());
         me -> interval_firmness(HARD);
       }
       else if (sf->size()>0)
       {
         int intervals = me->measure()/sf->size();
         if (!intervals) intervals++;
+        if (me->constrain_even() && intervals%2) intervals++;
         me->mesh_intervals(intervals);
         me->interval_firmness(SOFT);
       }

@@ -1,7 +1,12 @@
 #include "meshkit/RegisterMeshOp.hpp"
-#ifdef HAVE_CAMAL
+#ifdef HAVE_CAMAL_TRIADV
 #  include "meshkit/CAMALTriAdvance.hpp"
+#endif
+#ifdef HAVE_CAMAL_TET
 #  include "meshkit/CAMALTetMesher.hpp"
+#endif
+#ifdef HAVE_CAMAL_PAVER
+#  include "meshkit/CAMALPaver.hpp"
 #endif
 #ifdef HAVE_NETGEN
 #  include "meshkit/NGTetMesher.hpp"
@@ -19,10 +24,13 @@ extern int register_extern_mesh_ops() { return 1; }
   RegisterMeshOp<NAME> NAME ## _GLOBAL_PROXY
 
 #ifdef HAVE_CAMAL
+
 #ifdef HAVE_CAMAL_TRIADV
   REGISTER_MESH_OP(CAMALTriAdvance);
 #endif
-
+#ifdef HAVE_CAMAL_PAVER
+  REGISTER_MESH_OP(CAMALPaver);
+#endif
 #ifdef HAVE_CAMAL_TET
   REGISTER_MESH_OP(CAMALTetMesher);
 #endif

@@ -33,7 +33,7 @@ namespace MeshKit {
        * \param dest a pointer to a pointer-to-array of the destination
        *        vertices
        * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size, the number of destination vertices
+       * \param dest_size the number of destination vertices
        */
       virtual void transform(iMesh *mesh, iMesh::EntityHandle *src,
                              int src_size, iMesh::EntityHandle **dest,
@@ -75,7 +75,7 @@ namespace MeshKit {
        * \param dest a pointer to a pointer-to-array of the destination
        *        vertices
        * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size, the number of destination vertices
+       * \param dest_size the number of destination vertices
        */
       virtual void transform(iMesh *mesh, iMesh::EntityHandle *src,
                              int src_size, iMesh::EntityHandle **dest,
@@ -182,13 +182,13 @@ namespace MeshKit {
       /** \brief Transform the selected vertices
        * \param step the step number for the extrusion, with 0 being the
        *        already-existing mesh data
-       * \param mesh the iMesh implementation holding the vertices
+       * \param impl the iMesh implementation holding the vertices
        * \param src a pointer to an array of the source vertices
        * \param src_size the number of source vertices
        * \param dest a pointer to a pointer-to-array of the destination
        *        vertices
        * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size, the number of destination vertices
+       * \param dest_size the number of destination vertices
        */
       virtual void transform(int step, iMesh *impl, iMesh::EntityHandle *src,
                              int src_size, iMesh::EntityHandle **dest,
@@ -237,7 +237,7 @@ namespace MeshKit {
        * \param dest a pointer to a pointer-to-array of the destination
        *        vertices
        * \param dest_alloc the amount of memory allocated for dest
-       * \param dest_size, the number of destination vertices
+       * \param dest_size the number of destination vertices
        */
       virtual void transform(int step, iMesh *mesh, iMesh::EntityHandle *src,
                              int src_size, iMesh::EntityHandle **dest,

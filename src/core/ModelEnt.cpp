@@ -17,7 +17,7 @@ ModelEnt::ModelEnt(MKCore *mk,
                    moab::EntityHandle mesh_ent,
                    int sizing_index) 
         : mkCore(mk), iGeomEnt(geom_ent), iGeomSet(NULL), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH) 
+          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH), constrainEven(false)
 {}
 
 ModelEnt::ModelEnt(MKCore *mk,
@@ -25,7 +25,7 @@ ModelEnt::ModelEnt(MKCore *mk,
                    moab::EntityHandle mesh_ent,
                    int sizing_index) 
         : mkCore(mk), iGeomEnt(NULL), iGeomSet(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH) 
+          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH), constrainEven(false)
 {}
 
 ModelEnt::~ModelEnt() 

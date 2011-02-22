@@ -101,9 +101,9 @@ void process_ce_sets(iMesh *mesh,
  * Given a collection of source sets and a tag |copyTag| relating sources to
  * destinations, apply a tag |tag| to the destination sets if the tag exists on
  * the corresponding source.
- * \param imeshImpl the iMesh instance handle
+ * \param mesh the iMesh instance handle
  * \param copyTag the tag relating sources and destinations
- * \param cesets a collection of source sets
+ * \param copySets a collection of source sets
  * \param tag the tag to set on the destinations
  * \param tag_val if non-NULL, only set |tag| on the destination if the source's
  *                tag matches this value

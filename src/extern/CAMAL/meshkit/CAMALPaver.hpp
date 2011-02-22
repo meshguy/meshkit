@@ -1,5 +1,5 @@
-#ifndef MESHKIT_CAMAL_TRI_ADV_HPP
-#define MESHKIT_CAMAL_TRI_ADV_HPP
+#ifndef __CAMALPAVER_HPP
+#define __CAMALPAVER_HPP
 
 #include "meshkit/iGeom.hpp"
 #include <set>
@@ -7,7 +7,7 @@
 #include "meshkit/MeshScheme.hpp"
 #include "moab/Interface.hpp"
 
-/** \file CAMALTriAdvance.hpp
+/** \file CAMALPaver.hpp
  */
 
 #include "meshkit/MeshScheme.hpp"
@@ -17,23 +17,23 @@ namespace MeshKit
 
 class MKCore;
     
-/** \class CAMALTriAdvance CAMALTriAdvance.hpp "meshkit/CAMALTriAdvance.hpp"
- * \brief The interface to the CAMAL TriAdvance algorithm
+/** \class CAMALPaver CAMALPaver.hpp "meshkit/CAMALPaver.hpp"
+ * \brief The MeshKit-based surface evaluator for CAMAL meshing algorithms
  *
- * This class implements the interface to CAMAL's TriAdvance advancing front tri mesher algorithm.
+ * This class implements the interface to the CAMAL paver.
  */
-class CAMALTriAdvance : public MeshScheme
+class CAMALPaver : public MeshScheme
 {
 public:
     /** \brief Constructor
      * \param mk_core MKCore instance
      * \param me_vec ModelEnts this mesher will be applied to
      */
-  CAMALTriAdvance(MKCore *mk_core, const MEntVector &me_vec);
+  CAMALPaver(MKCore *mk_core, const MEntVector &me_vec);
 
     /** \brief Destructor
      */
-  ~CAMALTriAdvance();
+  ~CAMALPaver();
 
     /** \brief Setup function for this mesher, simply calls setup_boundary
      */
@@ -58,7 +58,7 @@ public:
   
   /**\brief Get class name */
   static const char* name() 
-    { return "CAMALTriAdvance"; }
+    { return "CAMALPaver"; }
 
   /**\brief Function returning whether this scheme can mesh entities of t
    *        the specified dimension.

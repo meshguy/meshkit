@@ -499,14 +499,14 @@ inline moab::Tag MKCore::moab_global_id_tag(int index)
   return moabIDTags[index];
 }
 
-inline VertexMesher *MKCore::vertex_mesher() const 
-{
-  return vertexMesher;
-}
-
 inline void MKCore::vertex_mesher(VertexMesher *vm) 
 {
   vertexMesher = vm;
+}
+
+inline VertexMesher *MKCore::vertex_mesher() const
+{
+  return vertexMesher;
 }
 
 inline EBMesher *MKCore::eb_mesher() const 

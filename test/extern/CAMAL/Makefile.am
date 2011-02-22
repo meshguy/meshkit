@@ -51,6 +51,13 @@ test_triadvance_DEPENDENCIES = \
 TESTS += test_triadvance 
 endif
 
+if HAVE_CAMAL_PAVER
+test_paver_SOURCES = test_paver.cpp
+test_paver_DEPENDENCIES = \
+	$(LDADD)
+TESTS += test_paver
+endif
+
 if HAVE_CAMAL_TET
 test_tetmesher_SOURCES = test_tetmesher.cpp
 test_tetmesher_DEPENDENCIES = \

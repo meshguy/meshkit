@@ -34,6 +34,9 @@ public:
     //! Destructor
   virtual ~MeshScheme();
 
+    //! Constrain all edges bounding ModelEnts to be even
+  void constrain_even();
+  
 private:
   
 };

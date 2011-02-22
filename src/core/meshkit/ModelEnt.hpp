@@ -367,14 +367,26 @@ public:
     //! Get intervals
   int mesh_intervals() const;
 
-    //! Set intervals
+    /** \brief Set intervals
+     * \param ints Set value
+     */
   void mesh_intervals(int ints);
 
     //! Get firmness
   Firmness interval_firmness() const;
 
-    //! Set firmness
+    /** \brief Set firmness
+     * \param firm Set value
+     */
   void interval_firmness(Firmness firm);
+
+    //! Get constrainEven
+  bool constrain_even() const;
+  
+    /** \brief Set constrainEven
+     * \param flag Set value
+     */
+  void constrain_even(bool flag);
 
     /**@}*/
 
@@ -461,6 +473,9 @@ private:
     //! Mesh interval firmness for this model entity
   Firmness intervalFirmness;
 
+    //! Constrain mesh intervals to be even
+  bool constrainEven;
+  
     //! Meshed state of this entity
   MeshedState meshedState;
 
@@ -541,6 +556,16 @@ inline Firmness ModelEnt::interval_firmness() const
 inline void ModelEnt::interval_firmness(Firmness firm) 
 {
   intervalFirmness = firm;
+}
+
+inline bool ModelEnt::constrain_even() const 
+{
+  return constrainEven;
+}
+
+inline void ModelEnt::constrain_even(bool flag) 
+{
+  constrainEven = flag;
 }
 
 inline MeshedState ModelEnt::get_meshed_state() 
