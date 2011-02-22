@@ -57,7 +57,7 @@ public:
     
 inline double VecUtil::dot(double *a, double *b) {return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];}
 
-inline double VecUtil::length_sq(double *a) {a[0]*a[0] + a[1]*a[1] + a[2]*a[2];}
+inline double VecUtil::length_sq(double *a) {return a[0]*a[0] + a[1]*a[1] + a[2]*a[2];}
     
 inline double VecUtil::dist2(double *a, double *b) 
 {

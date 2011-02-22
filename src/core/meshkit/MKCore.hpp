@@ -253,45 +253,45 @@ public:
     /** \brief Return the iGeom instance pointer
      * \param index Index of desired iGeom, default to first
      */
-  iGeom *igeom_instance(int index = 0);
+  iGeom *igeom_instance(unsigned index = 0);
   
     /** \brief Return the MOAB instance pointer
      * \param index Index of desired moab instance, default to first
      */
-  moab::Interface *moab_instance(int index = 0);
+  moab::Interface *moab_instance(unsigned index = 0);
   
     /** \brief Return the iMesh instance pointer
      * \param index Index of desired iMesh, default to first
      */
-  iMesh *imesh_instance(int index = 0);
+  iMesh *imesh_instance(unsigned index = 0);
   
     /** \brief Return the iRel instance pointer
      */
-  iRel *irel_instance(int index = 0);
+  iRel *irel_instance(unsigned index = 0);
 
     /** \brief Return the iRel pair handle used to relate geometry/mesh entities
      */
-  iRel::PairHandle *irel_pair(int index = 0);
+  iRel::PairHandle *irel_pair(unsigned index = 0);
 
     /** \brief Return the iRel pair handle used to relate geometry sets to mesh entity sets
      */
-  iRel::PairHandle *group_set_pair(int index = 0);
+  iRel::PairHandle *group_set_pair(unsigned index = 0);
 
     /** \brief Return the (iGeom) tag used to relate geometry entities to ModelEnts
      */
-  iGeom::TagHandle igeom_model_tag(int index = 0);
+  iGeom::TagHandle igeom_model_tag(unsigned index = 0);
 
     /** \brief Return the (MOAB) tag used to relate mesh entities to ModelEnts
      */
-  moab::Tag moab_model_tag(int index = 0);
+  moab::Tag moab_model_tag(unsigned index = 0);
 
     /** \brief Return the (MOAB) geometry dimension tag
      */
-  moab::Tag moab_geom_dim_tag(int index = 0);
+  moab::Tag moab_geom_dim_tag(unsigned index = 0);
 
     /** \brief Return the (MOAB) global id tag
      */
-  moab::Tag moab_global_id_tag(int index = 0);
+  moab::Tag moab_global_id_tag(unsigned index = 0);
 
     /**@}*/
 
@@ -419,81 +419,81 @@ private:
   std::vector<SizingFunction*> sizingFunctions;
 };
 
-inline iGeom *MKCore::igeom_instance(int index) 
+inline iGeom *MKCore::igeom_instance(unsigned index) 
 {
-  if (iGeomInstances.size()-1 < index)
+  if (iGeomInstances.size() <= index)
     throw Error(MK_BAD_INPUT, "No instance of that index.");
   
   return iGeomInstances[index];
 }
 
-inline moab::Interface *MKCore::moab_instance(int index)
+inline moab::Interface *MKCore::moab_instance(unsigned index)
 {
-  if (moabInstances.size()-1 < index)
+  if (moabInstances.size() <= index)
     throw Error(MK_BAD_INPUT, "No instance of that index.");
   
   return moabInstances[index];
 }
 
-inline iMesh *MKCore::imesh_instance(int index) 
+inline iMesh *MKCore::imesh_instance(unsigned index) 
 {
-  if (iMeshInstances.size()-1 < index)
+  if (iMeshInstances.size() <= index)
     throw Error(MK_BAD_INPUT, "No instance of that index.");
   
   return iMeshInstances[index];
 }
 
-inline iRel *MKCore::irel_instance(int index)
+inline iRel *MKCore::irel_instance(unsigned index)
 {
-  if (iRelInstances.size()-1 < index)
+  if (iRelInstances.size() <= index)
     throw Error(MK_BAD_INPUT, "No instance of that index.");
 
   return iRelInstances[index];
 }
 
-inline iRel::PairHandle *MKCore::irel_pair(int index)
+inline iRel::PairHandle *MKCore::irel_pair(unsigned index)
 {
-  if (iRelPairs.size()-1 < index)
+  if (iRelPairs.size() <= index)
     throw Error(MK_BAD_INPUT, "No pair of that index.");
 
   return iRelPairs[index];
 }
 
-inline iRel::PairHandle *MKCore::group_set_pair(int index)
+inline iRel::PairHandle *MKCore::group_set_pair(unsigned index)
 {
-  if (groupSetPairs.size()-1 < index)
+  if (groupSetPairs.size() <= index)
     throw Error(MK_BAD_INPUT, "No pair of that index.");
 
   return groupSetPairs[index];
 }
 
-inline iGeom::TagHandle MKCore::igeom_model_tag(int index)
+inline iGeom::TagHandle MKCore::igeom_model_tag(unsigned index)
 {
-  if (iGeomModelTags.size()-1 < index)
+  if (iGeomModelTags.size() <= index)
     throw Error(MK_BAD_INPUT, "No tag of that index.");
 
   return iGeomModelTags[index];
 }
 
-inline moab::Tag MKCore::moab_model_tag(int index)
+inline moab::Tag MKCore::moab_model_tag(unsigned index)
 {
-  if (moabModelTags.size()-1 < index)
+  if (moabModelTags.size() <= index)
     throw Error(MK_BAD_INPUT, "No tag of that index.");
 
   return moabModelTags[index];
 }
 
-inline moab::Tag MKCore::moab_geom_dim_tag(int index)
+inline moab::Tag MKCore::moab_geom_dim_tag(unsigned index)
 {
-  if (moabGeomDimTags.size()-1 < index)
+  if (moabGeomDimTags.size() <= index)
     throw Error(MK_BAD_INPUT, "No tag of that index.");
 
   return moabGeomDimTags[index];
 }
 
-inline moab::Tag MKCore::moab_global_id_tag(int index)
+inline moab::Tag MKCore::moab_global_id_tag(unsigned index)
 {
-  if (moabIDTags.size()-1 < index)
+  if (moabIDTags.size() <= index)
     throw Error(MK_BAD_INPUT, "No tag of that index.");
 
   return moabIDTags[index];

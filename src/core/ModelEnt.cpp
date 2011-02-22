@@ -17,7 +17,7 @@ ModelEnt::ModelEnt(MKCore *mk,
                    moab::EntityHandle mesh_ent,
                    int sizing_index) 
         : mkCore(mk), iGeomEnt(geom_ent), iGeomSet(NULL), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH), constrainEven(false)
+          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH)
 {}
 
 ModelEnt::ModelEnt(MKCore *mk,
@@ -25,7 +25,7 @@ ModelEnt::ModelEnt(MKCore *mk,
                    moab::EntityHandle mesh_ent,
                    int sizing_index) 
         : mkCore(mk), iGeomEnt(NULL), iGeomSet(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), meshedState(NO_MESH), constrainEven(false)
+          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH)
 {}
 
 ModelEnt::~ModelEnt() 
@@ -56,7 +56,7 @@ void ModelEnt::create_mesh_set(int flag)
   
   moab::EntitySetProperty ordered = moab::MESHSET_SET;
     // need type for later
-  iBase_EntityType this_tp;
+  iBase_EntityType this_tp = iBase_ALL_TYPES;
   iGeom::Error err;
   if (iGeomEnt) {
     err = mkCore->igeom_instance()->getEntType(iGeomEnt, this_tp);
@@ -311,7 +311,7 @@ void ModelEnt::evaluate(double x, double y, double z,
                         double *curvature1,
                         double *curvature2) const
 {
-  iGeom::Error err;
+  iGeom::Error err = iBase_SUCCESS;
   if (0 == dimension() || 3 == dimension()) {
     if (direction || curvature1 || curvature2) {
       MKERRCHK(Error(MK_BAD_INPUT), "Direction or curvature not available for entities of this type.");
@@ -386,8 +386,8 @@ void ModelEnt::get_mesh(int dim,
                         std::vector<moab::EntityHandle> &ments,
                         bool bdy_too)
 {
-  if (dim > dimension()) throw Error(MK_BAD_INPUT, "Called get_mesh for dimension ", dim, " on a ", 
-                                     dimension(), "-dimensional entity.");
+  if (dim > dimension()) throw Error(MK_BAD_INPUT, "Called get_mesh for dimension %d on a %d-dimensional entity.", 
+                                     dim, dimension());
 
   if (!bdy_too || dim == dimension()) {
       // just owned entities, which will be in the set
@@ -471,7 +471,6 @@ void ModelEnt::boundary(int dim,
 {
     // for a given entity, return the bounding edges in the form of edge groups,
     // oriented ccw around surface
-  int result, ent_type;
   int this_dim = dimension();
 
     // shouldn't be calling this function if we're a vertex
@@ -512,6 +511,7 @@ void ModelEnt::boundary(int dim,
       int this_sense;
       iGeom::Error err = 
           mkCore->igeom_instance()->getSense(this_entity->geom_handle(), geom_handle(), this_sense);
+      IBERRCHK(err,"Error getting geometry sense");
 
         // if we already have this one, continue
       if ((0 != this_sense && 
@@ -631,7 +631,6 @@ void ModelEnt::get_adjs_bool(MEntVector &from_ents,
     return;
   }
 
-  int result;
   MEntVector bridges;
 
   MEntVector::iterator from_it = from_ents.begin();
@@ -846,10 +845,10 @@ iGeom::EntityHandle ModelEnt::geom_handle(moab::EntityHandle ment) const
 moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const 
 {
     // use iRel to get this information
-  moab::EntityHandle ment = 0;
-  iRel::Error err = mkCore->irel_pair()->getEntSetRelation(gent, false, IBSHR(ment));
+  iBase_EntitySetHandle h;
+  iRel::Error err = mkCore->irel_pair()->getEntSetRelation(gent, false, h);
   IBERRCHK(err, "Failed to get mesh set handle for geometry entity.");
-  return ment;
+  return reinterpret_cast<moab::EntityHandle>(h);
 }
 
     /** \brief Get mesh interval size, if any

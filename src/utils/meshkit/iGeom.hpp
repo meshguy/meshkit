@@ -1253,6 +1253,7 @@ inline iGeom::Error iGeom::getSense(EntityHandle ent, EntityHandle wrt_ent, int 
     case iBase_EDGE:
         return getEgVtxSense(wrt_ent, ent, ent, sense);
     case iBase_VERTEX:
+    case iBase_ALL_TYPES:
         return iBase_FAILURE;
   }
   return iBase_FAILURE;
@@ -1278,6 +1279,7 @@ inline iGeom::Error iGeom::getArrSense(const EntityHandle *ent, int num_ents, En
         return getEgVtxArrSense(&dum_wrts[0], num_ents, ent, num_ents, ent, num_ents, sense);
         break;
     case iBase_VERTEX:
+    case iBase_ALL_TYPES:
         return iBase_FAILURE;
         break;
   }

@@ -8,7 +8,7 @@ namespace MeshKit
 {
     
 MKGraph::MKGraph() 
-        : mkGraph(), nodeMap(mkGraph, NULL), rootNode(NULL), leafNode(NULL)
+        : mkGraph(), rootNode(NULL), leafNode(NULL), nodeMap(mkGraph, NULL)
 {
 }
     
@@ -62,7 +62,7 @@ GraphNode *MKGraph::other_node(lemon::ListDigraph::Arc arc, GraphNode *node) con
 MeshOp *MKGraph::find_meshop(std::string op_name) const
 {
   GraphNode *node = find_node(op_name);
-  if (node) return dynamic_cast<MeshOp*>(node);
+  return node ? dynamic_cast<MeshOp*>(node) : 0;
 }
     
 GraphNode *MKGraph::find_node(std::string op_name) const
@@ -160,7 +160,7 @@ void MKGraph::execute()
   topomap topo_levels( mkGraph ); 
   lemon::topologicalSort( mkGraph, topo_levels );
 
-  for( unsigned int i = 0; i<topo_levels.size(); ++i){
+  for( int i = 0; i<topo_levels.size(); ++i){
     for( topomap::ItemIt j(topo_levels, i); j != lemon::INVALID; ++j ){
       GraphNode* gn = nodeMap[ j ];
       assert( gn );
@@ -168,7 +168,7 @@ void MKGraph::execute()
     }
   }
   
-  for( unsigned int i = 0; i<topo_levels.size(); ++i){
+  for( int i = 0; i<topo_levels.size(); ++i){
 
     for( topomap::ItemIt j(topo_levels, i); j != lemon::INVALID; ++j ){
 

@@ -83,7 +83,6 @@ MKCore::~MKCore()
     // delete the graphnodes here, since they point back to me and depend on me being still here
   clear_graph();
   
-  int err;
   for (unsigned int i = 0; i < iRelInstances.size(); i++) 
     if (iCreatedIrels[i]) delete iRelInstances[i];
 
