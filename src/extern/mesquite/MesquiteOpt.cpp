@@ -1,15 +1,16 @@
 #include "meshkit/MesquiteOpt.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "MsqIMesh.hpp"
 #include "meshkit/iMesh.hpp"
 #include "moab/Skinner.hpp"
+#include "MsqIMesh.hpp"
+#include "QualityAssessor.hpp"
+#include "MsqError.hpp"
 #ifdef MSQIGEOM
 # include "MsqIGeom.hpp"
 #endif
 #ifdef MSQIREL
 # include "MsqIRel.hpp"
 #endif
-#include "MsqError.hpp"
 
 #include "mesquite_version.h"
 #if MSQ_VERSION_MAJOR > 2 || (MSQ_VERSION_MAJOR == 2 && MSQ_VERSION_MINOR > 1)
@@ -39,7 +40,8 @@ MesquiteOpt::MesquiteOpt( MKCore* core, const MEntVector &me_vec )
     msqAlgo(0),
     fixedBoundary(true),
     haveFixedTag(false),
-    createdByteTag(false)
+    createdByteTag(false),
+    verboseOutput(false)
 {}
 
 const moab::EntityType* MesquiteOpt::output_types() 
@@ -113,8 +115,9 @@ void MesquiteOpt::create_byte_tag()
     moab::Tag t;
     unsigned char zero = 0;
     mk_core()->moab_instance()->tag_create( Mesquite::VERTEX_BYTE_TAG_NAME, 
-                                            1, 
+                                            sizeof(int), 
                                             moab::MB_TAG_DENSE,
+                                            moab::MB_TYPE_INTEGER,
                                             t,
                                             &zero );
     createdByteTag = true;
@@ -193,7 +196,7 @@ void MesquiteOpt::set_fixed_tag_on_skin( ModelEnt* ent, int value )
       
       moab::Range verts;
       moab::Skinner tool(mb);
-      moab::ErrorCode err = tool.find_skin_vertices( elems, verts );
+      moab::ErrorCode err = tool.find_skin( elems, 0, verts );
       MBERRCHK(rval,mk_core()->moab_instance());
      
       moab::Tag t = reinterpret_cast<moab::Tag>( get_fixed_tag() );
@@ -313,8 +316,11 @@ void MesquiteOpt::execute_this()
 
   IQInterface* smoother;
   DefaultAlgorithm defaultAlgo;
-  if (msqAlgo == 0)
+  if (msqAlgo == 0) {
     smoother = &defaultAlgo;
+    if (!verboseOutput)
+      defaultAlgo.quality_assessor().disable_printing_results();
+  }
   else
     smoother = msqAlgo;
     
@@ -342,7 +348,7 @@ void MesquiteOpt::execute_this()
               "Mesquite not configured with iGeom support.  "
               "Cannot optimize surface meshes.");
 #else
-          MsqiGeom msqgeom( igeom->instance(), ent->geom_handle() );
+          MsqIGeom msqgeom( igeom->instance(), ent->geom_handle() );
           smoother->run_instructions( &msqmesh, &msqgeom, err );
 #endif
         }
@@ -367,7 +373,7 @@ void MesquiteOpt::execute_this()
     for (i = mentSelection.begin(); i != mentSelection.end(); ++i) {
       ModelEnt* ent = i->first;
       MEntSet::iterator hint = remaining.begin();
-      if (ent->dimension() != 2 || ent->dimension() == 3) 
+      if (ent->dimension() == 2 || ent->dimension() == 3) 
         hint = remaining.insert( hint, ent );
     }
     

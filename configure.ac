@@ -854,10 +854,9 @@ if test "x$WITH_MESQUITE" != "xno"; then
   fi
 
   MESQUITE_DEFINES=
-  test $MESQUITE_HAS_IMESH = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIMESH"
-  test $MESQUITE_HAS_IMESH = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIMESH"
-  test $MESQUITE_HAS_IGEOM = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIGEOM"
-  test $MESQUITE_HAS_IREL  = yes && MESQUITE_DEFINES="$MESQUTE_DEFINES -DMSQIREL"
+  test $MESQUITE_HAS_IMESH = yes && MESQUITE_DEFINES="$MESQUITE_DEFINES -DMSQIMESH"
+  test $MESQUITE_HAS_IGEOM = yes && MESQUITE_DEFINES="$MESQUITE_DEFINES -DMSQIGEOM"
+  test $MESQUITE_HAS_IREL  = yes && MESQUITE_DEFINES="$MESQUITE_DEFINES -DMSQIREL"
   AC_SUBST([MESQUITE_DEFINES])
   AC_SUBST([MESQUITE_LDFLAGS])
   AC_SUBST([MESQUITE_CPPFLAGS])
@@ -916,6 +915,7 @@ AC_CONFIG_FILES([Makefile
                  test/algs/Makefile
 		 test/extern/Makefile
 		 test/extern/CAMAL/Makefile
+		 test/extern/mesquite/Makefile
 		 test/extern/netgen/Makefile
                  utils/Makefile
                  doc/Makefile

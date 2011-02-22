@@ -9,3 +9,6 @@ if HAVE_NETGEN
 SUBDIRS += netgen
 endif
 
+if HAVE_MESQUITE
+SUBDIRS += mesquite
+endif

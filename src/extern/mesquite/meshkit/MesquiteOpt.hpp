@@ -61,6 +61,9 @@ class MesquiteOpt : public MeshOp
     static bool can_mesh( iBase_EntityType dimension );
     static bool can_mesh( ModelEnt* entity );
   
+    void print_quality( bool yesno )
+      { verboseOutput = yesno; }
+  
   protected:
   
     /** Create Mesquite's internal-use tag for it so that we can
@@ -121,6 +124,7 @@ class MesquiteOpt : public MeshOp
     bool fixedBoundary;
     bool haveFixedTag;
     bool createdByteTag;
+    bool verboseOutput;
     iBase_TagHandle fixedTag;
 };
 

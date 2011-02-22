@@ -7,5 +7,5 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/utils \
                $(MESQUITE_DEFINES) \
                $(MESQUITE_CPPFLAGS) 
 AM_LDFLAGS += $(MESQUITE_LDFLAGS)
-LIBADD = $(MESQUITE_LIBS)
+libMeshKitmesquite_la_LIBADD = $(MESQUITE_LIBS)
 
