@@ -1,5 +1,5 @@
-#ifndef __NETGENTETMESHER_HPP
-#define __NETGENTETMESHER_HPP
+#ifndef MESHKIT_NETGEN_TET_MESHER_HPP
+#define MESHKIT_NETGEN_TET_MESHER_HPP
 
 #include "meshkit/iGeom.hpp"
 #include <set>

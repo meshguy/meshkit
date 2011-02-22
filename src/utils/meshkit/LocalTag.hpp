@@ -1,5 +1,5 @@
-#ifndef LOCALTAG_HPP
-#define LOCALTAG_HPP
+#ifndef MESHKIT_LOCAL_TAG_HPP
+#define MESHKIT_LOCAL_TAG_HPP
 
 #include "meshkit/iMesh.hpp"
 #include "meshkit/MKCore.hpp"

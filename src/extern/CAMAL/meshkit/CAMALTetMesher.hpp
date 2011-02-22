@@ -1,5 +1,5 @@
-#ifndef __CAMALTETMESHER_HPP
-#define __CAMALTETMESHER_HPP
+#ifndef MESHKIT_CAMAL_TET_MESHER_HPP
+#define MESHKIT_CAMAL_TET_MESHER_HPP
 
 #include "meshkit/iGeom.hpp"
 #include <set>

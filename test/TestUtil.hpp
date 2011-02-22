@@ -354,7 +354,7 @@ void check_equal( float A, float B, float eps, const char* sA, const char* sB, i
 void check_equal( double A, double B, float eps, const char* sA, const char* sB, int line, const char* file )
   {  EQUAL_TEST_IMPL( fabs(A - B) <= eps, f ) }
 
-#ifdef MESHKIT_ERROR
+#ifdef MESHKIT_ERROR_HPP
 
 // Special case for MBErrorCode, use mb_error_str() to print the 
 // string name of the error code.

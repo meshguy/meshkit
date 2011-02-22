@@ -1,5 +1,5 @@
-#ifndef ARC_HPP
-#define ARC_HPP
+#ifndef MESHKIT_ARC_HPP
+#define MESHKIT_ARC_HPP
 
 #include <vector>
 #include "MBCore.hpp"

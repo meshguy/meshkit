@@ -5,8 +5,8 @@
 //        Bias Meshing, Dual Bias Meshing, Curvature-based meshing 
 //---------------------------------------------------------------------------//
 
-#ifndef __EDGEMESHER_H
-#define __EDGEMESHER_H
+#ifndef MESHKIT_EDGE_MESHER_HPP
+#define MESHKIT_EDGE_MESHER_HPP
 
 #include <stdlib.h>
 #include <stdio.h>

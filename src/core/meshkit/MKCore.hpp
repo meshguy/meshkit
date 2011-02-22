@@ -1,5 +1,5 @@
-#ifndef MKCORE_HPP
-#define MKCORE_HPP
+#ifndef MESHKIT_MKCORE_HPP
+#define MESHKIT_MKCORE_HPP
 
 /** \file MKCore.hpp
  */

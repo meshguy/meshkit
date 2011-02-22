@@ -1,5 +1,5 @@
-#ifndef VECUTIL_HPP
-#define VECUTIL_HPP
+#ifndef MESHKIT_VECUTIL_HPP
+#define MESHKIT_VECUTIL_HPP
 
 #include <math.h>
 

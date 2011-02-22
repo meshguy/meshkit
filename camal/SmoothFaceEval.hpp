@@ -1,5 +1,5 @@
-#ifndef SMOOTH_FACE_EVAL_HPP
-#define SMOOTH_FACE_EVAL_HPP
+#ifndef MESHKIT_SMOOTH_FACE_EVAL_HPP
+#define MESHKIT_SMOOTH_FACE_EVAL_HPP
 
 // do we really need iMesh here; maybe go directly to MOAB
 //#include "iMesh.h"

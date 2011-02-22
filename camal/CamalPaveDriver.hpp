@@ -1,6 +1,6 @@
 
-#ifndef CamalPaveDriver_H
-#define CamalPaveDriver_H
+#ifndef MESHKIT_CAMAL_PAVER_DRIVER_HPP
+#define MESHKIT_CAMAL_PAVER_DRIVER_HPP
 
 #include <vector>
 

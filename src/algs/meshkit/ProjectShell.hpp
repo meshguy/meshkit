@@ -5,8 +5,8 @@
 // or form a two-branched covering of the projection image.  The two branches will intersect,
 // so we refine the mesh to "resolve" the intersections.
 
-#ifndef __PROJECTSHELL_HPP
-#define __PROJECTSHELL_HPP
+#ifndef MESHKIT_PROJECTSHELL_HPP
+#define MESHKIT_PROJECTSHELL_HPP
 
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/iGeom.hpp"

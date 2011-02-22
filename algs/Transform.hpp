@@ -1,5 +1,5 @@
-#ifndef TRANSFORM_HPP
-#define TRANSFORM_HPP
+#ifndef MESHKIT_TRANSFORM_HPP
+#define MESHKIT_TRANSFORM_HPP
 
 #include "iBase.h"
 #include "iMesh.h"

@@ -1,5 +1,5 @@
-#ifndef SIZINGFUNCTION_HPP
-#define SIZINGFUNCTION_HPP
+#ifndef MESHKIT_SIZINGFUNCTION_HPP
+#define MESHKIT_SIZINGFUNCTION_HPP
 
 #include "meshkit/Types.hpp"
 #include "meshkit/MKCore.hpp"

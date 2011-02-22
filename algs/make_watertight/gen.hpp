@@ -1,5 +1,5 @@
-#ifndef GEN_HPP
-#define GEN_HPP
+#ifndef MESHKIT_GEN_HPP
+#define MESHKIT_GEN_HPP
 
 #include <iostream>
 #include <iomanip> // for setprecision

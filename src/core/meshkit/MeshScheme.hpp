@@ -1,5 +1,5 @@
-#ifndef MESHSCHEME
-#define MESHSCHEME
+#ifndef MESHKIT_MESHSCHEME_HPP
+#define MESHKIT_MESHSCHEME_HPP
 
 /** \file MeshScheme.hpp
  */

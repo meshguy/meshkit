@@ -5,8 +5,8 @@
  *      Author: iulian
  */
 
-#ifndef SMOOTHCURVEEVAL_HPP_
-#define SMOOTHCURVEEVAL_HPP_
+#ifndef MESHKIT_SMOOTHCURVEEVAL_HPP
+#define MESHKIT_SMOOTHCURVEEVAL_HPP
 
 #include "MBInterface.hpp"
 #include "CMLCurveEval.hpp"

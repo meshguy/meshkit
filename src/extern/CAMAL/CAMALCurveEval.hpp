@@ -1,5 +1,5 @@
-#ifndef CAMAL_CURVE_EVAL_HPP
-#define CAMAL_CURVE_EVAL_HPP
+#ifndef MESHKIT_CAMAL_CURVE_EVAL_HPP
+#define MESHKIT_CAMAL_CURVE_EVAL_HPP
 
 #include "CMLCurveEval.hpp"
 

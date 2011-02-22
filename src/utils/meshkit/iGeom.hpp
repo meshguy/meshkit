@@ -1,5 +1,5 @@
-#ifndef ITAPS_GEOM_HH
-#define ITAPS_GEOM_HH
+#ifndef MESHKIT_ITAPS_GEOM_HPP
+#define MESHKIT_ITAPS_GEOM_HPP
 
 /** \file iGeom.hpp
  */

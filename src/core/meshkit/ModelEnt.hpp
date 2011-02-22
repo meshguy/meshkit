@@ -1,5 +1,5 @@
-#ifndef MODELENT_HPP
-#define MODELENT_HPP
+#ifndef MESHKIT_MODELENT_HPP
+#define MESHKIT_MODELENT_HPP
 
 #include "meshkit/iGeom.hpp"
 #include "meshkit/Types.hpp"

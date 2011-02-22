@@ -1,5 +1,5 @@
-#ifndef EXTRUDEMESH_HPP
-#define EXTRUDEMESH_HPP
+#ifndef MESHKIT_EXTRUDE_MESH_HPP
+#define MESHKIT_EXTRUDE_MESH_HPP
 
 #include <vector>
 #include <set>

@@ -1,5 +1,5 @@
-#ifndef MKTYPES
-#define MKTYPES
+#ifndef MESHKIT_TYPES_HPP
+#define MESHKIT_TYPES_HPP
 
 #include <vector>
 #include <set>

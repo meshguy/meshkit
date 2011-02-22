@@ -1,5 +1,5 @@
-#ifndef METADATA_HPP
-#define METADATA_HPP
+#ifndef MESHKIT_CE_SETS_HPP
+#define MESHKIT_CE_SETS_HPP
 
 #include <iBase.h>
 #include <set>

@@ -1,5 +1,5 @@
-#ifndef LOCALSET_HPP
-#define LOCALSET_HPP
+#ifndef MESHKIT_LOCAL_SET_HPP
+#define MESHKIT_LOCAL_SET_HPP
 
 #include <iMesh.h>
 

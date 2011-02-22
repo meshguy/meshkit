@@ -8,8 +8,8 @@
 #include "MBInterface.hpp"
 #include "SmoothBase.hpp"
 
-#ifndef SMOOTHVERTEX_HPP_
-#define SMOOTHVERTEX_HPP_
+#ifndef MESHKIT_SMOOTHVERTEX_HPP
+#define MESHKIT_SMOOTHVERTEX_HPP
 
 class SmoothVertex : public SmoothBase
 {

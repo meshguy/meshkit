@@ -1,5 +1,5 @@
-#ifndef GRAPHNODE_HPP
-#define GRAPHNODE_HPP
+#ifndef MESHKIT_GRAPH_NODE_HPP
+#define MESHKIT_GRAPH_NODE_HPP
 
 #include "lemon/list_graph.h"
 #include <string>

@@ -1,5 +1,5 @@
-#ifndef MESHOP_HPP
-#define MESHOP_HPP
+#ifndef MESHKIT_MESHOP_HPP
+#define MESHKIT_MESHOP_HPP
 
 #include "meshkit/Types.hpp"
 #include "meshkit/MKCore.hpp"

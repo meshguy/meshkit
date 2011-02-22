@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERSECTMESH_HPP_
-#define INTERSECTMESH_HPP_
+#ifndef MESHKIT_INTERSECT_MESH_HPP
+#define MESHKIT_INTERSECT_MESH_HPP
 
 #include "iBase.h"
 #include "iMesh.h"

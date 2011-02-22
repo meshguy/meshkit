@@ -9,8 +9,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  * 
  */
-#ifndef CAMEL_H
-#define CAMEL_H
+#ifndef MESHKIT_CAMEL_HPP
+#define MESHKIT_CAMEL_HPP
 
 #include <vector>
 

@@ -1,5 +1,5 @@
-#ifndef MERGEMESH_HPP
-#define MERGEMESH_HPP
+#ifndef MESHKIT_MERGEMESH_HPP
+#define MESHKIT_MERGEMESH_HPP
 
 #include "iMesh.h"
 

@@ -1,5 +1,5 @@
-#ifndef COPYGEOM_HPP
-#define COPYGEOM_HPP
+#ifndef MESHKIT_COPY_GEOM_HPP
+#define MESHKIT_COPY_GEOM_HPP
 
 #include "Transform.hpp"
 #include "LocalTag.hpp"

@@ -1,5 +1,5 @@
-#ifndef __CAMALTRIADV_HPP
-#define __CAMALTRIADV_HPP
+#ifndef MESHKIT_CAMAL_TRI_ADV_HPP
+#define MESHKIT_CAMAL_TRI_ADV_HPP
 
 #include "meshkit/iGeom.hpp"
 #include <set>

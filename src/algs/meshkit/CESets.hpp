@@ -1,5 +1,5 @@
-#ifndef METADATA_HPP
-#define METADATA_HPP
+#ifndef MESHKIT_CD_SETS_HPP
+#define MESHKIT_CD_SETS_HPP
 
 #include <set>
 #include <string>

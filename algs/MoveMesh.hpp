@@ -1,5 +1,5 @@
-#ifndef MOVEMESH_HPP
-#define MOVEMESH_HPP
+#ifndef MESHKIT_MOVEMESH_HPP
+#define MESHKIT_MOVEMESH_HPP
 
 #include "iMesh_extensions.h"
 #include "Transform.hpp"

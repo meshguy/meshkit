@@ -1,5 +1,5 @@
-#ifndef COPYMESH_HPP
-#define COPYMESH_HPP
+#ifndef MESHKIT_COPY_MESH_HPP
+#define MESHKIT_COPY_MESH_HPP
 
 #include <vector>
 #include <set>

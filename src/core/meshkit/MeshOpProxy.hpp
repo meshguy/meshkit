@@ -1,5 +1,5 @@
-#ifndef MESHKIT_MESH_OP_PROXY
-#define MESHKIT_MESH_OP_PROXY
+#ifndef MESHKIT_MESH_OP_PROXY_HPP
+#define MESHKIT_MESH_OP_PROXY_HPP
 
 #include "meshkit/Types.hpp"
 #include "iBase.h"

@@ -6,8 +6,8 @@
 //---------------------------------------------------------------------------//
 
 
-#ifndef __ONETOONESWEPT_H
-#define __ONETOONESWEPT_H
+#ifndef MESHKIT_ONETOONESWEPT_HPP
+#define MESHKIT_ONETOONESWEPT_HPP
 
 #include <stdlib.h>
 #include <stdio.h>

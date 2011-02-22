@@ -1,5 +1,5 @@
-#ifndef EBMESHER_HPP
-#define EBMESHER_HPP
+#ifndef MESHKIT_EB_MESHER_HPP
+#define MESHKIT_EB_MESHER_HPP
 
 #include <vector>
 #include <map>

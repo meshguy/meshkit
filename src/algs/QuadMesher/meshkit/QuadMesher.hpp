@@ -5,8 +5,8 @@
 //        Bias Meshing, Dual Bias Meshing, Curvature-based meshing 
 //---------------------------------------------------------------------------//
 
-#ifndef __QUADMESHER_H
-#define __QUADMESHER_H
+#ifndef MESHKIT_QUADMESHER_HPP
+#define MESHKIT_QUADMESHER_HPP
 
 #include "meshkit/iGeom.hpp"
 #include "meshkit/MeshScheme.hpp"

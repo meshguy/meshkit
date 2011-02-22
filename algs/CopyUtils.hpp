@@ -1,5 +1,5 @@
-#ifndef COPYUTILS_HPP
-#define COPYUTILS_HPP
+#ifndef MESHKIT_COPY_UTILS_HPP
+#define MESHKIT_COPY_UTILS_HPP
 
 #include <iMesh.h>
 

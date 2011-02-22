@@ -6,8 +6,8 @@
 // Intersection fraction is stored to boundary elements.
 // Element inside/outside/boundary status are stored as tag.
 
-#ifndef EBMESH_HPP
-#define EBMESH_HPP
+#ifndef MESHKIT_EB_MESH_HPP
+#define MESHKIT_EB_MESH_HPP
 
 #include <vector>
 #include <map>

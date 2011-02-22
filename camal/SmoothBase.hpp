@@ -5,8 +5,8 @@
  *      Author: iulian
  */
 
-#ifndef SMOOTHBASE_HPP_
-#define SMOOTHBASE_HPP_
+#ifndef MESHKIT_SMOOTHBASE_HPP
+#define MESHKIT_SMOOTHBASE_HPP
 
 #include "MBInterface.hpp"
 

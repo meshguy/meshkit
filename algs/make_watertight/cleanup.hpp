@@ -1,5 +1,5 @@
-#ifndef CLEANUP_HPP
-#define CLEANUP_HPP
+#ifndef MESHKIT_CLEANUP_HPP
+#define MESHKIT_CLEANUP_HPP
 
 #include "MBCore.hpp"
 #include "gen.hpp"

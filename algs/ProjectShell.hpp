@@ -5,8 +5,8 @@
 // projects on a plane perpendicular to the direction
 // computes the intersected mesh
 
-#ifndef PROJECTSHELL_HPP
-#define PROJECTSHELL_HPP
+#ifndef MESHKIT_PROJECTSHELL_HPP
+#define MESHKIT_PROJECTSHELL_HPP
 
 #include <vector>
 #include <map>

@@ -1,5 +1,5 @@
-#ifndef MKUTILS_HPP
-#define MKUTILS_HPP
+#ifndef MESHKIT_MKUTILS_HPP
+#define MESHKIT_MKUTILS_HPP
 
 #include "iMesh.h"
 

@@ -1,5 +1,5 @@
-#ifndef MKGRAPH_HPP
-#define MKGRAPH_HPP
+#ifndef MESHKIT_MKGRAPH_HPP
+#define MESHKIT_MKGRAPH_HPP
 
 /** \file MKGraph.hpp
  */

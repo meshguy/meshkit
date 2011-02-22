@@ -9,8 +9,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  * 
  */
-#ifndef CAMAL_INTERFACE_HPP
-#define CAMAL_INTERFACE_HPP
+#ifndef MESHKIT_CAMAL_INTERFACE_HPP
+#define MESHKIT_CAMAL_INTERFACE_HPP
 
 #include "camel.hpp"
 

@@ -1,5 +1,5 @@
-#ifndef CAMAL_GEOM_EVAL_HPP
-#define CAMAL_GEOM_EVAL_HPP
+#ifndef MESHKIT_CAMAL_GEOM_EVAL_HPP
+#define MESHKIT_CAMAL_GEOM_EVAL_HPP
 
 #include "iGeom.h"
 

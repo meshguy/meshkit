@@ -1,5 +1,5 @@
-#ifndef MKEXCEPTION_HPP
-#define MKEXCEPTION_HPP
+#ifndef MESHKIT_MKEXCEPTION_HPP
+#define MESHKIT_MKEXCEPTION_HPP
 
 #include <exception>
 #include <string>

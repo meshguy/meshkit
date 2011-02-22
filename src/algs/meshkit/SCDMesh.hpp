@@ -5,8 +5,8 @@
 // Brief: SCDMesh class definition 
 //---------------------------------------------------------------------------//
 
-#ifndef __SCDMESH_HPP
-#define __SCDMESH_HPP
+#ifndef MESHKIT_SCDMESH_HPP
+#define MESHKIT_SCDMESH_HPP
 
 #include <vector>
 

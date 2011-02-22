@@ -1,5 +1,5 @@
-#ifndef ITAPS_MESH_HH
-#define ITAPS_MESH_HH
+#ifndef MESHKIT_ITAPS_MESH_HPP
+#define MESHKIT_ITAPS_MESH_HPP
 
 /** \file iMesh.hpp
  */

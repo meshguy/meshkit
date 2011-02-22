@@ -1,5 +1,5 @@
-#ifndef VERTEXMESHER_HPP
-#define VERTEXMESHER_HPP
+#ifndef MESHKIT_VERTEXMESHER_HPP
+#define MESHKIT_VERTEXMESHER_HPP
 
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"

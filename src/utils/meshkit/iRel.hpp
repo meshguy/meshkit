@@ -1,5 +1,5 @@
-#ifndef ITAPS_REL_HH
-#define ITAPS_REL_HH
+#ifndef MESHKIT_ITAPS_REL_HPP
+#define MESHKIT_ITAPS_REL_HPP
 
 /** \file iRel.hpp
  */

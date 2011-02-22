@@ -30,8 +30,8 @@
  *  \author Jason Kraftcheck
  */
 
-#ifndef MATRIX_HPP
-#define MATRIX_HPP
+#ifndef MESHKIT_MATRIX_HPP
+#define MESHKIT_MATRIX_HPP
 
 #include <string>
 #include <istream>
