@@ -2,11 +2,11 @@
 #define MOABMESH_H
 
 #include <meshkit/Mesh.hpp>
+#include <SimpleArray.hpp>
 
 #ifdef HAVE_IMESH
 #include <iMesh.h>
 #include <MBInterface.hpp>
-#include "meshkit/SimpleArray.hpp"
 #endif
 
 using namespace Jaal;
