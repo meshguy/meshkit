@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Things to build
-noinst_LTLIBRARIES = libMeshKitJaalQuadMesher.la
+lib_LTLIBRARIES = libMeshKitJaalQuadMesher.la
          
 SUBDIRS = 
 
