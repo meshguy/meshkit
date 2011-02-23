@@ -369,8 +369,9 @@ int ModelEnt::id() const
   
   if (mesh_handle()) {
     moab::Tag gid_tag;
-    moab::ErrorCode err = mk_core()->moab_instance()->tag_get_handle("GLOBAL_ID", sizeof(int), moab::MB_TAG_SPARSE, 
-                                                                     moab::MB_TYPE_INTEGER, gid_tag);
+    moab::ErrorCode err = mk_core()->moab_instance()->tag_get_handle("GLOBAL_ID", 
+                                                                     1, moab::MB_TYPE_INTEGER, 
+                                                                     gid_tag, moab::MB_TAG_SPARSE);
     if (moab::MB_SUCCESS == err) {
       int gid;
       moab::EntityHandle this_mesh = mesh_handle();
