@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Things to build
-lib_LTLIBRARIES = libMeshKitJaalQuadMesher.la
+noinst_LTLIBRARIES = libMeshKitJaalQuadMesher.la
          
 SUBDIRS = 
 
@@ -53,8 +53,11 @@ nobase_libMeshKitJaalQuadMesher_la_include_HEADERS = \
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(srcdir)/../core -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/ -I$(top_srcdir)/src/utils \
-              -I$(srcdir)/../lemon
+              -I$(srcdir)/../core \
+              -I$(srcdir)/../lemon \
+              -I$(srcdir)/../utils \
+              -I$(top_builddir) \
+              -I$(top_srcdir)/utils 
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
