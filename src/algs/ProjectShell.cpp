@@ -24,6 +24,12 @@
     throw err;                                                     \
   } while(false)
 
+#define ERROR3(fmt, arg1,arg2,arg3)	                                   \
+  do {                                                                     \
+    Error err(0, "%s, line %d: " fmt, __FILE__, __LINE__, arg1,arg2,arg3); \
+    throw err;                                                             \
+  } while(false)
+
 #define ERRORCHK(ierr, descr)			\
   if (!ierr) ERROR(descr);
 
@@ -95,7 +101,7 @@ void ProjectShell::execute_this(){
 
 int ProjectShell::getEdge(ProjectShell::Node & v1, ProjectShell::Node & v2, int & edgeId, ProjectShell::Edge * edgesArr, int sizeArr)
 {
-  // not found return 0 
+  // not found -- return 0 
   std::list<int> & L = v1.edges;
   std::list<int>::iterator i;
   for (i=L.begin(); i!=L.end(); i++)
@@ -184,8 +190,7 @@ int ProjectShell::getMeshData()
 			  &offsets, &offsets_alloc, &offsets_size,
 			  &result );
   if (iBase_SUCCESS != result) {
-    printf("failed to get triangles and vertices.\n");
-    return 1;
+    ERROR("failed to get triangles and vertices.");
   }
   
   
@@ -196,8 +201,7 @@ int ProjectShell::getMeshData()
   iMesh_getVtxArrCoords(m_mesh, vert_adj, vert_adj_size, iBase_INTERLEAVED, 
 			&m_xyz, &vert_coords_alloc, &vertex_coord_size, &result);
   if (iBase_SUCCESS != result || 3*m_numNodes!=vertex_coord_size) {
-    printf("failed to get vertex coordinates of entities in getMeshData.\n");
-    return 1;
+    ERROR("failed to get vertex coordinates of entities in getMeshData.");
   }
   
   
@@ -212,39 +216,37 @@ int ProjectShell::getMeshData()
   
   // first, determine the edges of triangle i
   if (offsets_size - 1 != m_numTriangles)
-    {
-      std::cerr<<"bad indexing\n";
-      return 1;
-    }
+  {
+      ERROR("bad indexing");
+  }
   int i=0;// index used everywhere
   for (i=0; i<m_numTriangles; i++)
+  {
+    if (offsets[i+1]-offsets[i] !=3)
     {
-      if (offsets[i+1]-offsets[i] !=3)
-	{
-	  std::cerr<< "not a triangle\n";
-	  return 1;
-	}
+	  ERROR("Not a triangle");
     }
+  }
   // build edges from triangle information
   ps_edges = new ProjectShell::Edge [m_numTriangles*3];// overestimate; probably only half will be created
   ps_nodes = new ProjectShell::Node [m_numNodes];
   ps_triangles = new ProjectShell::Triangle3D [m_numTriangles];
   //
   for (i=0; i<m_numNodes; i++)
+  {
+    ProjectShell::Node & psn = ps_nodes[i];
+    psn.id = i;// this can be found by address in the array, but why bother
+    for (int j=0; j<3; j++)
     {
-      ProjectShell::Node & psn = ps_nodes[i];
-      psn.id = i;// this can be found by address in the array, but why bother
-      for (int j=0; j<3; j++)
-	{
-	  psn.xyz[j] = m_xyz[3*i+j];
-	}
+      psn.xyz[j] = m_xyz[3*i+j];
     }
+  }
   // index in edge: 
   int edgeIndex = 0;
   int j=0;
   for (j=0; j<m_numTriangles; j++)
-    {
-      ProjectShell::Triangle3D & curTria = ps_triangles[j];
+  {
+    ProjectShell::Triangle3D & curTria = ps_triangles[j];
       int ii=0;
       for (ii=0; ii<3; ii++)
 	curTria.v[ii]=indices[offsets[j]+ii];
@@ -259,31 +261,30 @@ int ProjectShell::getMeshData()
 	  int edgeId;
 	  int exi = getEdge(v1, v2, edgeId, ps_edges, edgeIndex);// will be created if not existing already
 	  if (exi)
-	    {
+	  {
 	      curTria.e[ii] = edgeId;
 	      ProjectShell::Edge & foundEdge = ps_edges[abs(edgeId)-1];
 	      foundEdge.used++;
 	      if(foundEdge.used>2)
-		{
-		  std::cerr<< " bad indexing in ps_edge; exit\n";
-		  exit(1);
-		}
+	      {
+		ERROR("Bad indexing in ps_edge");
+	      }
 	      foundEdge.t[1]=j; // mark the triangle it belongs to
-	    }
+	  }
 	  else
-	    {
-	      int cId = curTria.e[ii]=edgeIndex+1;
-	      ProjectShell::Edge & newEdge = ps_edges[edgeIndex];
-	      newEdge.v[0] = curTria.v[ii];
-	      newEdge.v[1]=curTria.v[nextii];
-	      v1.edges.push_back(cId); // positive means starts at vertex
-	      v2.edges.push_back(-cId);// negative means incident to the vertex
-	      edgeIndex++;
-	      newEdge.used=1;
-	      newEdge.t[0] = j; // index for triangles
-	    }
+	  {
+	    int cId = curTria.e[ii]=edgeIndex+1;
+	    ProjectShell::Edge & newEdge = ps_edges[edgeIndex];
+	    newEdge.v[0] = curTria.v[ii];
+	    newEdge.v[1]=curTria.v[nextii];
+	    v1.edges.push_back(cId); // positive means starts at vertex
+	    v2.edges.push_back(-cId);// negative means incident to the vertex
+	    edgeIndex++;
+	    newEdge.used=1;
+	    newEdge.t[0] = j; // index for triangles
+	  }
 	}
-    }
+  }
   m_numEdges = edgeIndex;
   // fill up now the triangle neighbor information
   for (j=0; j<m_numTriangles; j++)
@@ -309,8 +310,6 @@ int ProjectShell::getMeshData()
   free (offsets);
   
   //free(vert_coords);
-  
-  
   return 0;
 }
 
@@ -323,8 +322,7 @@ int ProjectShell::checkMeshValidity()
       ProjectShell::Edge & edge = ps_edges[i];
       if (edge.used!=2)
 	{
-	  std::cerr << " edge not used exactly 2 times\n";
-	  return 1;
+	  ERROR("Edge not used exactly 2 times");
 	}
       int edgeId = i+1;
       int sum=0;
@@ -343,11 +341,7 @@ int ProjectShell::checkMeshValidity()
 	    }
 	}
       if (sum!=0)
-	{
-	  std::cerr<< " edge " << edgeId << " not used exactly 2 times\n";
-	  return 1;
-	}
-      
+	  ERROR1("Edge %d not used exactly 2 times", edgeId);      
     }
   // check that all triangles have 3 neighbors
   for (i=0; i<m_numTriangles; i++)
@@ -1026,8 +1020,7 @@ int ProjectShell::computeIntersectionBetweenRedAndBlue(int red, int blue, double
   // X corresponds to blue, Y to red
   nP=0; // number of intersection points
   int ret = edgeIntersections(blueTriangle, redTriangle, mark, P, nP);
-  if (ret!=0)
-    exit(1);// some unforeseen error
+  if (ret!=0) ERROR("Something went wrong");
     
   int extraPoints = borderPointsOfXinY(blueTriangle, redTriangle, &(P[2*nP]));
   if (extraPoints>1)
@@ -1089,7 +1082,7 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
 	  int node = blueTri.v[j];
 	  double d2 = length(Vector<2>(pp)-Vector<2>(m_xy+(3*node)));	
 	  if (m_dbg && i==0) 
-	    std::cout<< "  blu node " << j << " " << node << " " << m_xy[3*node] << " " << m_xy[3*node+1] << " d2:" << d2 <<  " \n";
+	    std::cout<< "  blue node " << j << " " << node << " " << m_xy[3*node] << " " << m_xy[3*node+1] << " d2:" << d2 <<  " \n";
 	  if (d2<epsilon)
 	    {
 	      foundIds[i] = node; // no new node
@@ -1136,8 +1129,8 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
 		      expts.push_back(m_num2dPoints);
 		      if (m_2dcapacity < m_num2dPoints+1)
 			{
-			  // exit, underestimate number of intersection points
-			  std::cout << " underestimate capacity for 2d array\n";
+			  // Underestimated the number of intersection points
+			  //std::cout << " underestimated capacity for 2d array\n";
 			  // double the capacity of m_xy array
 			    
 			  double * new_xy = new double [6* m_2dcapacity];
@@ -1168,8 +1161,7 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
 	}
       if (!found)
 	{
-	  std::cout << " a point pp is not on a red triangle " << *pp << " " << pp[1] << " red triangle " << red << " \n";
-	  exit (1);
+	  ERROR3("Point (%g,%g) is not on a red triangle %d", pp[0], pp[1], red);
 	}
     }
   // now we can build the triangles, from P array, with foundIds
