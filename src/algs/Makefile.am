@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = foreign
 # Subdirectories to build
 SUBDIRS =  QuadMesher
 AM_CPPFLAGS += -I$(srcdir)/QuadMesher
-libMeshKitalks_la_LIBADD = QuadMesher/libMeshKitJaalQuadMesher.la
+libMeshKitalgs_la_LIBADD = QuadMesher/libMeshKitJaalQuadMesher.la
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
