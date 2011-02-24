@@ -8,7 +8,6 @@
 #ifndef MESHKIT_QUADMESHER_HPP
 #define MESHKIT_QUADMESHER_HPP
 
-#include "meshkit/iGeom.hpp"
 #include "meshkit/MeshScheme.hpp"
 #include "Tri2Quad.hpp"
 
