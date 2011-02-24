@@ -1,10 +1,10 @@
-#ifndef MOABMESH_H
-#define MOABMESH_H
+#ifndef MOAB_QUADMESH_H
+#define MOAB_QUADMESH_H
 
 #include <meshkit/Mesh.hpp>
-#include <SimpleArray.hpp>
 
 #ifdef HAVE_IMESH
+#include <SimpleArray.hpp>
 #include <iMesh.h>
 #include <MBInterface.hpp>
 #endif
