@@ -38,7 +38,6 @@ libMeshKitJaalQuadMesher_la_SOURCES = \
 	circumcenter.cpp \
 	geomPredicates.cpp \
 	MeshRefine2D.cpp \
-	predicates.cpp \
 	QuadQuality.cpp 
 
 # The list of header files which are to be installed
