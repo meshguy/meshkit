@@ -83,7 +83,7 @@ void ProjectShell::execute_this(){
   for (int k=0; k<3; k++) {
     m_direction[k]/=dist1;
   }
-  int ret = getMeshData();
+  int ret =0 ; //  getMeshData();
   ERRORCHK(ret,"Bad input mesh");
   
   // we have now the 3D mesh
@@ -138,7 +138,7 @@ ProjectShell::~ProjectShell()
   delete [] m_redMesh;
   delete [] m_blueMesh;
 }
-
+#if 0
 int ProjectShell::getMeshData()
 {
     
@@ -312,7 +312,7 @@ int ProjectShell::getMeshData()
   //free(vert_coords);
   return 0;
 }
-
+#endif
 int ProjectShell::checkMeshValidity()
 {
   // basically, see if the edges are all used 2 times, and each is is used in each direction
@@ -1189,7 +1189,7 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
   return 0;
 }
   
-  
+#if 0  
 int ProjectShell::writeNewMesh(iMesh_Instance mesh)
 {
   // here we will create new vertices, and use the coordinates in 2D
@@ -1341,7 +1341,7 @@ int ProjectShell::writeNewMesh(iMesh_Instance mesh)
   delete [] adjacency;
   return 0;
 }
-
+#endif
 int edgeIntersections(double * red, double * blue, int mark[3], double * points, int & nPoints)
 {
   /* EDGEINTERSECTIONS computes edge intersections of two triangles
