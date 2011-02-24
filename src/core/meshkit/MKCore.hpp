@@ -224,6 +224,7 @@ public:
 
     /** \brief Populate mesh/relations data for geometric entities
      * \param index Index of geometry instance to use
+     * \param use_irel flag to create relations or not
      */
   void populate_mesh(int index = 0, bool use_irel = true);
 
