@@ -101,10 +101,12 @@ private:
     // it can be decomposed in at most 4 triangles; we do not care about quality
   };
   
-  
+  int getMesh(){};
+  int getShellMesh();
   int checkMeshValidity();
-  
   int projectIn2D();
+  int commitMesh(){};
+  int commitProjectedMesh();
   int computeIntersections();
   
   int getEdge(Node & v1, Node & v2, int & edgeId, Edge * edgesArr, int sizeArr);

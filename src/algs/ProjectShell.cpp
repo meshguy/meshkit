@@ -24,14 +24,18 @@
     throw err;                                                     \
   } while(false)
 
+#define ERROR2(fmt, arg1,arg2)	                                      \
+  do {                                                                \
+    Error err(0, "%s, line %d: " fmt, __FILE__, __LINE__, arg1,arg2); \
+    throw err;                                                        \
+  } while(false)
+
 #define ERROR3(fmt, arg1,arg2,arg3)	                                   \
   do {                                                                     \
     Error err(0, "%s, line %d: " fmt, __FILE__, __LINE__, arg1,arg2,arg3); \
     throw err;                                                             \
   } while(false)
 
-#define ERRORCHK(ierr, descr)			\
-  if (!ierr) ERROR(descr);
 
 namespace MeshKit {
   
@@ -80,22 +84,23 @@ void ProjectShell::execute_this(){
   double dist1= length(m_direction);
   if (dist1==0.0) ERROR("Null direction of projection");
   // normalize direction
-  for (int k=0; k<3; k++) {
-    m_direction[k]/=dist1;
-  }
-  int ret =0 ; //  getMeshData();
-  ERRORCHK(ret,"Bad input mesh");
+  m_direction/=dist1;
+  int ret = getMesh();
+  if(ret) ERROR("Bad input mesh");
   
   // we have now the 3D mesh
   // verify orientation of the triangles; is it manifold?
   ret =  checkMeshValidity();
-  ERRORCHK(ret, "Bad orientation");
+  if(ret) ERROR("Bad shell");
   
   ret =  projectIn2D();
-  ERRORCHK(ret, "Cannot project in 2D");
+  if(ret) ERROR("Cannot project in 2D");
   
   ret =  computeIntersections();
-  ERRORCHK(ret, "Erroc in computing intersections");
+  if(ret) ERROR("Error in computing intersections");
+
+  ret = commitMesh();
+  if(ret) ERROR("Error in committing the computed shell");
 }
 
 
@@ -139,7 +144,7 @@ ProjectShell::~ProjectShell()
   delete [] m_blueMesh;
 }
 #if 0
-int ProjectShell::getMeshData()
+int ProjectShell::getShellMesh()
 {
     
   // get original coordinates of mesh
@@ -152,6 +157,9 @@ int ProjectShell::getMeshData()
   /* check storage order */
   int result;
   int this_order;
+  iMesh_Instance m_mesh = NULL;
+  iBase_EntitySetHandle m_hRootSet = NULL;
+  
   iMesh_getDfltStorage(m_mesh, &this_order, &result);
   if (iBase_SUCCESS != result) 
     ERROR("failed to get preferred storage order in getMesh");
@@ -1190,7 +1198,7 @@ int ProjectShell::findNodes(int red, int blue, double * iP, int nP)
 }
   
 #if 0  
-int ProjectShell::writeNewMesh(iMesh_Instance mesh)
+int ProjectShell::commitProjectedMesh()
 {
   // here we will create new vertices, and use the coordinates in 2D
   //  m_num2dPoints is the number of nodes (some are not used, because they were probably   // collapsed
@@ -1198,6 +1206,8 @@ int ProjectShell::writeNewMesh(iMesh_Instance mesh)
   //  nodes in red , then blue, then on red edges; some will not appear, according
   //  to the tolerance
   //
+  //iMesh_Instance mesh = this->mk_core()->imesh_instance();
+  iMesh_Instance mesh = NULL;
   iBase_EntityHandle * newVerts = NULL; // no vertices yet
   // iBase_INTERLEAVED
   int err= 0;
