@@ -145,6 +145,7 @@ inline const char* Error::error_str(ErrorCode err)
     case MK_BAD_INPUT: return "Bad input";
     case MK_BAD_GEOMETRIC_EVALUATION: return "Bad geometric evaluation";
     case MK_INCOMPLETE_MESH_SPECIFICATION: return "Incomplete mesh specification";
+    default : return "Unknown Error";
   };
 }
 
