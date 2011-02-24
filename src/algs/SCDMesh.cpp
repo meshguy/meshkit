@@ -31,7 +31,7 @@ namespace MeshKit
   SCDMesh::SCDMesh(MKCore *mk_core, const MEntVector &me_vec)
     : MeshScheme(mk_core, me_vec)
   {
-
+    boxIncrease = .0;
   }
 
 //---------------------------------------------------------------------------//
@@ -109,6 +109,13 @@ void SCDMesh::set_box_dimension()
   gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
                                                   maxCoord[0], maxCoord[1], maxCoord[2]);
   IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
+
+  // increase box size for 3 directions 
+  for (int i = 0; i < 3; i++) {
+    double box_size = maxCoord[i] - minCoord[i];
+    minCoord[i] -= box_size*boxIncrease; 
+    maxCoord[i] += box_size*boxIncrease; 
+  } 
 }
 
 //---------------------------------------------------------------------------//

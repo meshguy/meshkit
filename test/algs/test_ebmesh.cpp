@@ -20,6 +20,8 @@ using namespace MeshKit;
 #define DEFAULT_TEST_FILE "sphere.stp"
 #endif
 
+const bool debug_ebmesher = true;
+
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,
 		  int* n_intervals, double box_increase,
@@ -31,9 +33,8 @@ int main(int argc, char **argv)
   // check command line arg
   std::string input_filename;
   const char *output_filename = NULL;
-  int input_geom = 1; // if input file is geometry format
   int n_interval[3] = {10, 10, 10};
-  double box_increase = .03;
+  double box_increase = .2;
   int vol_frac_res = 0;
 
   if (argc > 2 && argc < 9) {
@@ -78,7 +79,13 @@ int load_and_mesh(const char *input_filename,
 
   // start up MK and load the geometry
   MKCore mk;
+  time(&start_time);
   mk.load_mesh(input_filename);
+  time(&load_time);
+
+  if (debug_ebmesher) {
+    mk.save_mesh("input.vtk");
+  }
 
   // populate mesh to relate geometry entities and mesh sets
   mk.populate_mesh();
@@ -121,7 +128,8 @@ int load_and_mesh(const char *input_filename,
 
   // mesh embedded boundary mesh, by calling execute
   mk.setup_and_execute();
-  
+  time(&mesh_time);
+
   // caculate volume fraction, only for geometry input
   if (vol_frac_res > 0) {
     result = ebm->get_volume_fraction(vol_frac_res);

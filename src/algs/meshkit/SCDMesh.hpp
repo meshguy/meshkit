@@ -86,6 +86,8 @@ namespace MeshKit
     // bounding box min, max coordiantes
     double minCoord[3], maxCoord[3];
 
+    // box size increasement ratio, default is 0.0
+    double boxIncrease;
 
   public:
 
@@ -207,6 +209,11 @@ namespace MeshKit
      */
     void get_box_dimension(double* min, double* max);
 
+    /*! 
+     * \brief Set the geometry encompasing box size increase ratio 
+     */ 
+    void set_box_increase_ratio(double box_increase = .03);
+
 
   private:
     
@@ -291,6 +298,11 @@ namespace MeshKit
       min[i] = minCoord[i];
       max[i] = maxCoord[i];
     }
+  }
+
+  inline void SCDMesh::set_box_increase_ratio(double box_increase) 
+  { 
+    boxIncrease = box_increase; 
   }
 
 } // end namespace MeshKit
