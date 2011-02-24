@@ -24,7 +24,7 @@ void mesh_test(std::string filebase);
 #ifdef HAVE_ACIS
 std::string extension = ".sat";
 #elif HAVE_OCC
-std::string extension = ".brep";
+std::string extension = ".stp";
 #endif
 
 int main(int argc, char **argv) 
