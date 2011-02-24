@@ -23,7 +23,6 @@ libMeshKitalgs_la_SOURCES = \
 	Transform.cpp \
 	CopyUtils.cpp \
 	CopyUtils.hpp \
-	ProjectShell.cpp \
 	OneToOneSwept.cpp
 
 # The list of header files which are to be installed
@@ -34,7 +33,6 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EBMesher.hpp \
 	meshkit/CopyMesh.hpp \
 	meshkit/ExtrudeMesh.hpp \
-	meshkit/ProjectShell.hpp \
 	meshkit/CESets.hpp \
 	meshkit/Transform.hpp \
 	meshkit/OneToOneSwept.hpp
