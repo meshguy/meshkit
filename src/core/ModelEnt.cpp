@@ -14,18 +14,24 @@ namespace MeshKit
 
 ModelEnt::ModelEnt(MKCore *mk,
                    iGeom::EntityHandle geom_ent,
+                   iGeom * igeom,
                    moab::EntityHandle mesh_ent,
-                   int sizing_index) 
+                   int sizing_index)
         : mkCore(mk), iGeomEnt(geom_ent), iGeomSet(NULL), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH)
+          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH),
+          iRelFlag(true), igeomInstance(igeom)
+
 {}
 
 ModelEnt::ModelEnt(MKCore *mk,
                    iGeom::EntitySetHandle geom_ent,
+                   iGeom * igeom,
                    moab::EntityHandle mesh_ent,
-                   int sizing_index) 
+                   int sizing_index)
         : mkCore(mk), iGeomEnt(NULL), iGeomSet(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH)
+          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH),
+          iRelFlag(true), igeomInstance(igeom)
+
 {}
 
 ModelEnt::~ModelEnt() 
@@ -59,7 +65,7 @@ void ModelEnt::create_mesh_set(int flag)
   iBase_EntityType this_tp = iBase_ALL_TYPES;
   iGeom::Error err;
   if (iGeomEnt) {
-    err = mkCore->igeom_instance()->getEntType(iGeomEnt, this_tp);
+    err = igeomInstance->getEntType(iGeomEnt, this_tp);
     IBERRCHK(err, "Trouble getting entity type.");
     if (1 == flag || (-1 == flag && iBase_EDGE == this_tp)) 
       ordered = moab::MESHSET_ORDERED;
@@ -74,15 +80,18 @@ void ModelEnt::create_mesh_set(int flag)
   rval = mkCore->moab_instance()->tag_set_data(mkCore->moab_model_tag(), &moabEntSet, 1, &this_ptr);
   MBERRCHK(rval, mkCore->moab_instance());
 
-    // relate the mesh to the geom
-  iRel::Error merr;
-  if (iGeomEnt) {
-    merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
+    // relate the mesh to the geom, only if iRelFlag is true
+  if (iRelFlag)
+  {
+    iRel::Error merr;
+    if (iGeomEnt) {
+      merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
+    }
+    else {
+      merr = mkCore->group_set_pair()->setSetSetRelation(iGeomSet, IBSH(moabEntSet));
+    }
+    IBERRCHK(merr, "Failed to set iRel relation for a mesh set.");
   }
-  else {
-    merr = mkCore->group_set_pair()->setSetSetRelation(iGeomSet, IBSH(moabEntSet));
-  }
-  IBERRCHK(merr, "Failed to set iRel relation for a mesh set.");
 
     // if this is a group, we're done
   if (iGeomSet) return;
@@ -95,7 +104,7 @@ void ModelEnt::create_mesh_set(int flag)
   moab::EntityHandle seth;
   moab::GeomTopoTool gt(mkCore->moab_instance(), false);
   if (this_tp < iBase_REGION) {
-    err = mkCore->igeom_instance()->getEntAdj(iGeomEnt, (iBase_EntityType)(this_tp+1), geom_ents);
+    err = igeomInstance->getEntAdj(iGeomEnt, (iBase_EntityType)(this_tp+1), geom_ents);
     IBERRCHK(err, "Trouble finding parent entities.");
     for (vit = geom_ents.begin(); vit != geom_ents.end(); vit++) {
       try {seth = mesh_handle(*vit);
@@ -113,7 +122,7 @@ void ModelEnt::create_mesh_set(int flag)
   
   if (this_tp > iBase_VERTEX) {
     geom_ents.clear();
-    err = mkCore->igeom_instance()->getEntAdj(iGeomEnt, (iBase_EntityType)(this_tp-1), geom_ents);
+    err = igeomInstance->getEntAdj(iGeomEnt, (iBase_EntityType)(this_tp-1), geom_ents);
     IBERRCHK(err, "Trouble finding child entities.");
     for (vit = geom_ents.begin(); vit != geom_ents.end(); vit++) {
       seth = mesh_handle(*vit);
@@ -130,8 +139,17 @@ bool ModelEnt::exist_mesh_set()
 {
   if (!iGeomEnt) return false;
 
+  // for now, when no iRel, return false, although we can look at the
+  // model tag of the igeom handle
+  // we use this method only when we populate mesh
+  if (!iRelFlag)
+    return false;
+
   int dim = dimension();
-  int id = reinterpret_cast<RefEntity*> (iGeomEnt)->id();
+  RefEntity * refEnt= reinterpret_cast<RefEntity*> (iGeomEnt);
+
+  int id = refEnt->id();
+
   const void* dims[] = {&dim};
 
   moab::Range ents;
@@ -181,7 +199,7 @@ void ModelEnt::set_senses()
       int dum_sense;
       if (2 == dim) (*vit)->set_upward_senses();
       else {
-        err = mkCore->igeom_instance()->getEntNrmlSense((*vit)->geom_handle(), iGeomEnt, dum_sense);
+        err = igeomInstance->getEntNrmlSense((*vit)->geom_handle(), iGeomEnt, dum_sense);
         IBERRCHK(err, "Problem getting senses.");
         rval = gt.set_sense((*vit)->mesh_handle(), moabEntSet, dum_sense);
         MBERRCHK(rval, mkCore->moab_instance());
@@ -203,7 +221,7 @@ void ModelEnt::set_senses()
     
     for (MEntVector::iterator vit = adjs.begin(); vit != adjs.end(); vit++) {
       int dum_sense;
-      err = mkCore->igeom_instance()->getEntNrmlSense(iGeomEnt, (*vit)->geom_handle(), dum_sense);
+      err = igeomInstance->getEntNrmlSense(iGeomEnt, (*vit)->geom_handle(), dum_sense);
       IBERRCHK(err, "Problem getting senses.");
       rval = gt.set_sense(moabEntSet, (*vit)->mesh_handle(), dum_sense);
       MBERRCHK(rval, mkCore->moab_instance());
@@ -221,7 +239,7 @@ void ModelEnt::set_upward_senses()
   get_adjacencies(2, adjs);
   int dum_sense;
   for (std::vector<ModelEnt*>::iterator vit = adjs.begin(); vit != adjs.end(); vit++) {
-    iGeom::Error err = mkCore->igeom_instance()->getEgFcSense(iGeomEnt, (*vit)->geom_handle(), dum_sense);
+    iGeom::Error err = igeomInstance->getEgFcSense(iGeomEnt, (*vit)->geom_handle(), dum_sense);
     IBERRCHK(err, "Problem getting senses.");
     ments.push_back((*vit)->mesh_handle());
     senses.push_back(dum_sense);
@@ -259,13 +277,15 @@ void ModelEnt::commit_mesh(moab::EntityHandle *mesh_ents,
                            MeshedState mstate) 
 {
     // if it's BOTH, set the relation through iRel
-  if (mkCore->irel_pair()->get_rel_type(1) == iRel::BOTH) {
-    iRel::Error err =
-        mkCore->irel_pair()->setEntEntArrRelation(geom_handle(), false,
-                                                  (iBase_EntityHandle*)mesh_ents, num_ents);
-    IBERRCHK(err, "Trouble committing mesh.");
+  if (iRelFlag)
+  {
+    if (mkCore->irel_pair()->get_rel_type(1) == iRel::BOTH) {
+      iRel::Error err =
+          mkCore->irel_pair()->setEntEntArrRelation(geom_handle(), false,
+                                                    (iBase_EntityHandle*)mesh_ents, num_ents);
+      IBERRCHK(err, "Trouble committing mesh.");
+    }
   }
-
     // either way, add them to the set
   moab::ErrorCode rval = mkCore->moab_instance()->add_entities(moabEntSet, mesh_ents, num_ents);
   MBERRCHK(rval, mkCore->moab_instance());
@@ -276,10 +296,13 @@ void ModelEnt::commit_mesh(moab::EntityHandle *mesh_ents,
 void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const 
 {
   std::vector<iGeom::EntityHandle> gents;
-  iGeom::Error err = mkCore->igeom_instance()->getEntAdj(geom_handle(), (iBase_EntityType)dim, gents);
+  iGeom::Error err = igeomInstance->getEntAdj(geom_handle(), (iBase_EntityType)dim, gents);
   IBERRCHK(err, "Trouble getting geom adjacencies.");
   adjs.resize(gents.size());
-  err = mkCore->igeom_instance()->getArrData(&gents[0], adjs.size(), mkCore->igeom_model_tag(), 
+  iGeom::TagHandle mkmodeltag;
+  err = igeomInstance->getTagHandle("__MKModelEntity", mkmodeltag);
+  IBERRCHK(err, "Failed to get tag handle for model entity.");
+  err = igeomInstance->getArrData(&gents[0], adjs.size(), mkmodeltag,
                                              &adjs[0]);
   IBERRCHK(err, "Trouble getting ModelEnts for geom adjacencies.");
 }
@@ -287,7 +310,7 @@ void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const
 int ModelEnt::dimension() const 
 {
   iBase_EntityType tp;
-  iGeom::Error err = mkCore->igeom_instance()->getEntType(iGeomEnt, tp);
+  iGeom::Error err = igeomInstance->getEntType(iGeomEnt, tp);
   IBERRCHK(err, "Couldn't get geom entity type.");
   return (tp - iBase_VERTEX);
 }
@@ -295,7 +318,7 @@ int ModelEnt::dimension() const
 double ModelEnt::measure() const
 {
   double meas;
-  iGeom::Error err = mkCore->igeom_instance()->measure(&iGeomEnt, 1, &meas);
+  iGeom::Error err = igeomInstance->measure(&iGeomEnt, 1, &meas);
   IBERRCHK(err, "Couldn't get geom entity measure.");
   return meas;
 }
@@ -322,12 +345,12 @@ void ModelEnt::evaluate(double x, double y, double z,
   }
 
   if (0 == dimension()) {
-    err = mk_core()->igeom_instance()->getVtxCoord(geom_handle(), close[0], close[1], close[2]);
+    err = igeomInstance->getVtxCoord(geom_handle(), close[0], close[1], close[2]);
     IBERRCHK(err, "Problem getting vertex coordinates.");
     return;
   }
   else if (3 == dimension()) {
-    err = mk_core()->igeom_instance()->getEntClosestPt(geom_handle(), x, y, z, 
+    err = igeomInstance->getEntClosestPt(geom_handle(), x, y, z,
                                                        close[0], close[1], close[2]);
     IBERRCHK(err, "Problem getting closest point for this model entity.");
   }
@@ -337,17 +360,17 @@ void ModelEnt::evaluate(double x, double y, double z,
     if (!direction) direction = dir;
     if (!curvature1) curvature1 = curve1;
     if (1 == dimension()) 
-      err = mk_core()->igeom_instance()->getEgEvalXYZ(geom_handle(), x, y, z,
-                                                      close[0], close[1], close[2],
-                                                      direction[0], direction[1], direction[2], 
-                                                      curvature1[0], curvature1[1], curvature1[2]);
+      err = igeomInstance->getEgEvalXYZ(geom_handle(), x, y, z,
+          close[0], close[1], close[2],
+          direction[0], direction[1], direction[2],
+          curvature1[0], curvature1[1], curvature1[2]);
     else if (2 == dimension()) {
       if (!curvature2) curvature2 = curve2;
-      err = mk_core()->igeom_instance()->getFcEvalXYZ(geom_handle(), x, y, z,
-                                                      close[0], close[1], close[2],
-                                                      direction[0], direction[1], direction[2], 
-                                                      curvature1[0], curvature1[1], curvature1[2], 
-                                                      curvature2[0], curvature2[1], curvature2[2]);
+      err = igeomInstance->getFcEvalXYZ(geom_handle(), x, y, z,
+        close[0], close[1], close[2],
+        direction[0], direction[1], direction[2],
+        curvature1[0], curvature1[1], curvature1[2],
+        curvature2[0], curvature2[1], curvature2[2]);
     }
 
     IBERRCHK(err, "Couldn't evaluate model entity.");
@@ -359,16 +382,17 @@ int ModelEnt::id() const
     // get a global id for this entity, if there is one
   if (geom_handle()) {
     iGeom::TagHandle gid_tag;
-    iGeom::Error err = mk_core()->igeom_instance()->getTagHandle("GLOBAL_ID", gid_tag);
+    iGeom::Error err = igeomInstance->getTagHandle("GLOBAL_ID", gid_tag);
     if (iBase_SUCCESS == err) {
       int gid;
-      err = mk_core()->igeom_instance()->getIntData(geom_handle(), gid_tag, gid);
+      err = igeomInstance->getIntData(geom_handle(), gid_tag, gid);
       if (iBase_SUCCESS == err) return gid;
     }
   }
   
   if (mesh_handle()) {
     moab::Tag gid_tag;
+
     moab::ErrorCode err = mk_core()->moab_instance()->tag_get_handle("GLOBAL_ID", 
                                                                      1, moab::MB_TYPE_INTEGER, 
                                                                      gid_tag, moab::MB_TAG_SPARSE);
@@ -511,7 +535,7 @@ void ModelEnt::boundary(int dim,
       
       int this_sense;
       iGeom::Error err = 
-          mkCore->igeom_instance()->getSense(this_entity->geom_handle(), geom_handle(), this_sense);
+          igeomInstance->getSense(this_entity->geom_handle(), geom_handle(), this_sense);
       IBERRCHK(err,"Error getting geometry sense");
 
         // if we already have this one, continue
@@ -683,18 +707,18 @@ ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge,
     // get locations just before the vertex, at the vertex, and just after the vertex
   double v1[3], v2[3], v3[3];
   double umin, umax;
-  mkCore->igeom_instance()->getEntURange(this_edge->geom_handle(), umin, umax);
+  igeomInstance->getEntURange(this_edge->geom_handle(), umin, umax);
   double utgt;
   if (1 == this_sense) utgt = umin + 0.9 * (umax - umin);
   else utgt = umin + 0.1 * (umax - umin);
-  mkCore->igeom_instance()->getEntUtoXYZ(this_edge->geom_handle(), utgt, v1[0], v1[1], v1[2]);
-  mkCore->igeom_instance()->getVtxCoord(shared_vert->geom_handle(), v2[0], v2[1], v2[2]);
+  igeomInstance->getEntUtoXYZ(this_edge->geom_handle(), utgt, v1[0], v1[1], v1[2]);
+  igeomInstance->getVtxCoord(shared_vert->geom_handle(), v2[0], v2[1], v2[2]);
   double v21[] = {v1[0]-v2[0], v1[1]-v2[1], v1[2]-v2[2]};
   VecUtil::normalize(v21);
 
     // get the normal vector at the vertex
   double normal[3];
-  mkCore->igeom_instance()->getEntNrmlXYZ(geom_handle(), v2[0], v2[1], v2[2],
+  igeomInstance->getEntNrmlXYZ(geom_handle(), v2[0], v2[1], v2[2],
                                           normal[0], normal[1], normal[2]);
   
     // now loop over candidates, finding magnitude of swept angle
@@ -705,18 +729,18 @@ ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge,
       // if we're here, we have multiple candidates, therefore don't choose the same one
     if (*vit == this_edge)
       continue;
-    mkCore->igeom_instance()->isEntAdj((*vit)->geom_handle(), shared_vert->geom_handle(), is_adj);
+    igeomInstance->isEntAdj((*vit)->geom_handle(), shared_vert->geom_handle(), is_adj);
     if (!is_adj)
       continue;
 
       // get param range
-    mkCore->igeom_instance()->getEntURange((*vit)->geom_handle(), umin, umax);
+    igeomInstance->getEntURange((*vit)->geom_handle(), umin, umax);
       // get sense
     int tmp_sense;
-    mkCore->igeom_instance()->getSense((*vit)->geom_handle(), geom_handle(), tmp_sense);
+    igeomInstance->getSense((*vit)->geom_handle(), geom_handle(), tmp_sense);
     if (1 == tmp_sense) utgt = umin + 0.1 * (umax - umin);
     else utgt = umin + 0.9 * (umax - umin);
-    mkCore->igeom_instance()->getEntUtoXYZ((*vit)->geom_handle(), utgt, v3[0], v3[1], v3[2]);
+    igeomInstance->getEntUtoXYZ((*vit)->geom_handle(), utgt, v3[0], v3[1], v3[2]);
     double v23[] = {v3[0]-v2[0], v3[1]-v2[1], v3[2]-v2[2]};
     VecUtil::normalize(v23);
 
@@ -836,20 +860,55 @@ void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
 
 iGeom::EntityHandle ModelEnt::geom_handle(moab::EntityHandle ment) const 
 {
-    // use iRel to get this information
+  // use iRel to get this information or use model entity tag
   iBase_EntityHandle gent = 0;
-  Error err = mkCore->irel_pair()->getSetEntRelation(IBSH(ment), true, gent);
-  MKERRCHK(err, "Failed to get geometry handle for mesh set.");
-  return gent;
+  if (iRelFlag)
+  {
+    Error err = mkCore->irel_pair()->getSetEntRelation(IBSH(ment), true, gent);
+    MKERRCHK(err, "Failed to get geometry handle for mesh set.");
+    return gent;
+  }
+  else
+  {
+    // use the model entity tag from moab instance... assume only one here
+    //moab::Tag moabModelTag = mkCore->moab_model_tag();
+    ModelEnt *modelEnt = NULL;
+    moab::ErrorCode rval = mkCore->moab_instance()->tag_get_data(mkCore->moab_model_tag(), &ment, 1, &modelEnt);
+    MBERRCHK(rval, mkCore->moab_instance());
+    if (NULL == modelEnt)
+       return gent;// still null
+    return modelEnt->geom_handle();
+  }
 }
 
 moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const 
 {
-    // use iRel to get this information
-  iBase_EntitySetHandle h;
-  iRel::Error err = mkCore->irel_pair()->getEntSetRelation(gent, false, h);
-  IBERRCHK(err, "Failed to get mesh set handle for geometry entity.");
-  return reinterpret_cast<moab::EntityHandle>(h);
+    // use iRel to get this information or use model entity tag
+  moab::EntityHandle ment = 0;
+  if (iRelFlag)
+  {
+    iBase_EntitySetHandle h;
+    iRel::Error err = mkCore->irel_pair()->getEntSetRelation(gent, false, h);
+    IBERRCHK(err, "Failed to get mesh set handle for geometry entity.");
+    return reinterpret_cast<moab::EntityHandle>(h);
+  }
+  else
+  {
+    // if no irel, use the model entity tag from the igeom instance
+    //
+    if (!igeomInstance)
+      return ment;// NULL so far
+    iGeom::TagHandle mkmodeltag;
+    iBase_ErrorType err = igeomInstance->getTagHandle("__MKModelEntity", mkmodeltag);
+    IBERRCHK(err, "Failed to get tag handle for model entity.");
+    // now get the model entity
+    ModelEnt * modelEnt = NULL;
+    err = igeomInstance->getData(gent, mkmodeltag, &modelEnt);
+    if (NULL == modelEnt || iBase_TAG_NOT_FOUND == err)
+       return ment;// still null
+    return modelEnt->mesh_handle();
+  }
+
 }
 
     /** \brief Get mesh interval size, if any

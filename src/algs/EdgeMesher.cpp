@@ -23,7 +23,7 @@ EdgeMesher::EdgeMesher(MKCore *mk_core, const MEntVector &me_vec)
 {
 
 }
-
+#if 0
 //---------------------------------------------------------------------------//
 // measure function: compute the distance between the parametric coordinate 
 // ustart and the parametric coordinate uend
@@ -45,7 +45,7 @@ double EdgeMesher::measure(iGeom::EntityHandle ent, double ustart, double uend) 
 
 	return measure * (uend - ustart) / (umax - umin);
 }
-
+#endif
 //---------------------------------------------------------------------------//
 // setup function: set up the number of intervals for edge meshing through the 
 // sizing function
@@ -220,7 +220,7 @@ void EdgeMesher::EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> 
   double umin, umax, measure;
 
     //get the u range for the edge
-  iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
+  iGeom::Error gerr =  ent->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
   IBERRCHK(gerr, "Trouble get parameter range for edge.");
 
   if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
@@ -238,7 +238,7 @@ void EdgeMesher::EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> 
   for (int i = 1; i < num_edges; i++)
   {
     u = umin + i*du;
-    gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
+    gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
     IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
   }
 
@@ -253,7 +253,7 @@ void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<dou
   int initial_num_edges = num_edges;
 
   //get the u range for the edge
-  iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
+  iGeom::Error gerr = ent->igeom_instance() ->getEntURange(ent->geom_handle(), umin, umax);
   IBERRCHK(gerr, "Trouble get parameter range for edge.");
 
   if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
@@ -277,7 +277,7 @@ void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<dou
   TempNode.resize(3*1);
   URecord.resize(1);	
 
-  gerr = mk_core() -> igeom_instance() -> getEntUtoXYZ(ent->geom_handle(), umin, TempNode[0], TempNode[1], TempNode[2]);
+  gerr = ent -> igeom_instance() -> getEntUtoXYZ(ent->geom_handle(), umin, TempNode[0], TempNode[1], TempNode[2]);
   IBERRCHK(gerr, "Trouble getting U from XYZ along the edge");
 	
   NodeCoordinates[3*0] = TempNode[0];
@@ -292,7 +292,7 @@ void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<dou
   {
     //first distribute the nodes evenly
     u = umin + i*du;
-    gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, NodeCoordinates[3*i], NodeCoordinates[3*i+1], NodeCoordinates[3*i+2]);
+    gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, NodeCoordinates[3*i], NodeCoordinates[3*i+1], NodeCoordinates[3*i+2]);
     IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
 
     //store the two adjacent mesh nodes on the edge
@@ -306,7 +306,7 @@ void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<dou
 
     //get the coordinates for mid point between two adjacent mesh nodes on the edge
     uMid = (u-du+u)/2;
-    gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uMid, tmp[0], tmp[1], tmp[2]);
+    gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uMid, tmp[0], tmp[1], tmp[2]);
     ptsMid.px = tmp[0];
     ptsMid.py = tmp[1];
     ptsMid.pz = tmp[2];
@@ -358,7 +358,7 @@ void EdgeMesher::DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<doub
   double umin, umax, measure;
 
     //get the u range for the edge
-  iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
+  iGeom::Error gerr = ent->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
   IBERRCHK(gerr, "Trouble get parameter range for edge.");
 
   if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
@@ -396,7 +396,7 @@ void EdgeMesher::DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<doub
     u = u0 + (umax - umin) * dist/measure;
     u = getUCoord(ent, u0, dist, u, umin, umax);
     u0 = u;
-    gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
+    gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
     IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
 
     //distribute the mesh nodes on the other side
@@ -404,7 +404,7 @@ void EdgeMesher::DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<doub
     {
       u = u1 - (umax-umin) * dist / measure;
       u = getUCoord(ent, u1, dist, u, umin, umax);
-      gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*(num_edges-i)], coords[3*(num_edges-i)+1], coords[3*(num_edges-i)+2]);
+      gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*(num_edges-i)], coords[3*(num_edges-i)+1], coords[3*(num_edges-i)+2]);
       IBERRCHK(gerr, "Trouble getting U from XYZ along the edge");
     }
 		
@@ -419,7 +419,7 @@ void EdgeMesher::BiasMeshing(ModelEnt *ent, int num_edges, std::vector<double> &
   double umin, umax, measure;
 
   //get the u range for the edge
-  iGeom::Error gerr = mk_core()->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
+  iGeom::Error gerr = ent->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
   IBERRCHK(gerr, "Trouble get parameter range for edge.");
 
   if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
@@ -443,7 +443,7 @@ void EdgeMesher::BiasMeshing(ModelEnt *ent, int num_edges, std::vector<double> &
     u = u0 + (umax - umin)*dist/measure;
     u = getUCoord(ent, u0, dist, u, umin, umax);
     u0 = u;
-    gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
+    gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
     IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
   }
 }
@@ -475,7 +475,7 @@ void EdgeMesher::DivideIntoMore(ModelEnt *ent, Point3D p0, Point3D pMid, Point3D
   pts1=pMid;
 
 
-  iGeom::Error gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uumid, tmp[0], tmp[1], tmp[2]);
+  iGeom::Error gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uumid, tmp[0], tmp[1], tmp[2]);
   IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
   ptsMid.px = tmp[0];
   ptsMid.py = tmp[1];
@@ -495,7 +495,7 @@ void EdgeMesher::DivideIntoMore(ModelEnt *ent, Point3D p0, Point3D pMid, Point3D
   pts0=pMid;
   pts1=p1;
   //get the coorindinates for mid point 
-  gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uumid, tmp[0], tmp[1], tmp[2]);
+  gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), uumid, tmp[0], tmp[1], tmp[2]);
   IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
   ptsMid.px = tmp[0];
   ptsMid.py = tmp[1];
@@ -582,7 +582,7 @@ EdgeMesher::Point3D EdgeMesher::getXYZCoords(ModelEnt *ent, double u) const
   int err;
 
   //get the coordinates in the physical space
-  iGeom::Error gerr = mk_core()->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, xyz[0], xyz[1], xyz[2]);
+  iGeom::Error gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, xyz[0], xyz[1], xyz[2]);
   IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");	
   assert(!err);
 
@@ -673,7 +673,7 @@ bool EdgeMesher::ErrorCalculate(ModelEnt *ent, Point3D p0, Point3D p1, Point3D p
   H = fabs(lengtha*sin(angle));
 
   //calculate the curvature	
-  iGeom::Error gerr = mk_core()->igeom_instance()->getEgCvtrXYZ(ent->geom_handle(), pMid.px, pMid.py, pMid.pz, cvtr_ijk[0], cvtr_ijk[1], cvtr_ijk[2]);
+  iGeom::Error gerr = ent->igeom_instance()->getEgCvtrXYZ(ent->geom_handle(), pMid.px, pMid.py, pMid.pz, cvtr_ijk[0], cvtr_ijk[1], cvtr_ijk[2]);
   IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");		
   curvature = sqrt(cvtr_ijk[0]*cvtr_ijk[0]+cvtr_ijk[1]*cvtr_ijk[1]+cvtr_ijk[2]*cvtr_ijk[2]);
   error= H*curvature;

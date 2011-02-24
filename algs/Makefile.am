@@ -1,7 +1,8 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = Qslim test make_watertight
+SUBDIRS = Qslim test 
+#make_watertight
 
 # Things to build
 lib_LTLIBRARIES = libMKalgs.la

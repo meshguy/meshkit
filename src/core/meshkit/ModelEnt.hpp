@@ -38,11 +38,13 @@ public:
      *
      * \param mk MeshKit instance
      * \param geom_ent Geometry entity corresponding to this ModelEntity
+     * \param igeom iGeom instance
      * \param mesh_ent Mesh entity set corresponding to this ModelEntity
      * \param sizing_index Sizing function index (from MBCore) to be used to mesh this entity
      */
   ModelEnt(MKCore *mk,
            iGeom::EntityHandle geom_ent,
+           iGeom * igeom = NULL,
            moab::EntityHandle mesh_ent = NULL,
            int sizing_index = -1);
 
@@ -50,11 +52,13 @@ public:
      *
      * \param mk MeshKit instance
      * \param geom_set Geometry entity set corresponding to this ModelEntity
+     * \param igeom iGeom instance
      * \param mesh_ent Mesh entity set corresponding to this ModelEntity
      * \param sizing_index Sizing function index (from MBCore) to be used to mesh this entity
      */
   ModelEnt(MKCore *mk,
            iGeom::EntitySetHandle geom_set,
+           iGeom * igeom = NULL,
            moab::EntityHandle mesh_ent = NULL,
            int sizing_index = -1);
 
@@ -352,6 +356,11 @@ public:
      */
   int sizing_function_index() const;
 
+    /** \brief Get iGeom instance
+     * \return Returns 0 by default
+     */
+  iGeom * igeom_instance() const ;
+
     /** \brief Set sizing function index
      * \param index Sizing function index being set
      * \param children_too If true, sizing function index is propagated to child (bounding) entities
@@ -435,6 +444,11 @@ public:
     //! Get mesh entity set handle for a given geometry entity
   moab::EntityHandle mesh_handle(iGeom::EntityHandle gent) const;
 
+    //!  get the flag for iRel use
+  bool get_irel_flag () { return  iRelFlag; }
+
+    //!  set the flag for iRel use
+  void set_irel_flag (bool flag) { iRelFlag = flag; return; }
     /**@}*/
 
 private:
@@ -467,6 +481,9 @@ private:
     //! Sizing function associated with this model entity
   int sizingFunctionIndex;
   
+    //! iGeom instance associated with this model entity
+  iGeom * igeomInstance;
+
     //! Mesh intervals for this model entity
   int meshIntervals;
   
@@ -481,6 +498,9 @@ private:
 
     //! MeshOps pointing to this entity
   std::vector<MeshOp*> meshOps;
+
+    // ! use iRel or not for this model entity
+  bool iRelFlag;
 };
 
 inline MKCore *ModelEnt::mk_core() const
@@ -533,7 +553,12 @@ inline int ModelEnt::sizing_function_index() const
 {
   return sizingFunctionIndex;
 }
-    
+
+inline iGeom * ModelEnt::igeom_instance() const
+{
+  return igeomInstance;
+}
+
     //! Get intervals
 inline int ModelEnt::mesh_intervals() const 
 {

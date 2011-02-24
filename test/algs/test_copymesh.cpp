@@ -97,7 +97,7 @@ void test_copy_quad()
   mesh->createEntSet(true, set);
   mesh->addEntToSet(quad, set);
 
-  ModelEnt me(mk, iBase_EntitySetHandle(0), (moab::EntityHandle)set);
+  ModelEnt me(mk, iBase_EntitySetHandle(0), /*igeom instance*/0, (moab::EntityHandle)set);
   MEntVector selection;
   selection.push_back(&me);
 

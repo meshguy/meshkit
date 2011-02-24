@@ -134,7 +134,7 @@ private:
 	void CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords);
 
 	//compute the distance between the parametric coordinate ustart and parametric coordinate uend.
-	double measure(iGeom::EntityHandle ent, double ustart, double uend) const;
+	//double measure(iGeom::EntityHandle ent, double ustart, double uend) const;
 
 };
 

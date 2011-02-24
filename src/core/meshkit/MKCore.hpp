@@ -225,7 +225,7 @@ public:
     /** \brief Populate mesh/relations data for geometric entities
      * \param index Index of geometry instance to use
      */
-  void populate_mesh(int index = 0);
+  void populate_mesh(int index = 0, bool use_irel = true);
 
     /**@}*/
 
@@ -255,6 +255,11 @@ public:
      */
   iGeom *igeom_instance(unsigned index = 0);
   
+    /** \brief Return the index of iGeom instance added
+     * \param igeom iGeom interface to be added
+     */
+  unsigned int add_igeom_instance(iGeom * igeom);
+
     /** \brief Return the MOAB instance pointer
      * \param index Index of desired moab instance, default to first
      */

@@ -21,7 +21,7 @@ double CAMALSurfEval::area()
 
 void CAMALSurfEval::bounding_box(double box_min[3], double box_max[3]) 
 {
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntBoundBox(modelEnt->geom_handle(),
+  iGeom::Error err = modelEnt->igeom_instance()->getEntBoundBox(modelEnt->geom_handle(),
                                                                            box_min[0], box_min[1], box_min[2], 
                                                                            box_max[0], box_max[1], box_max[2]);
   IBERRCHK(err, "Trouble getting entity bounding box.");
@@ -68,7 +68,7 @@ bool CAMALSurfEval::normal_at(double x, double y, double z,
 bool CAMALSurfEval::is_planar()
 {
   std::string surf_type;
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getFaceType(modelEnt->geom_handle(), surf_type);
+  iGeom::Error err = modelEnt->igeom_instance()->getFaceType(modelEnt->geom_handle(), surf_type);
   if (iBase_SUCCESS != err || (surf_type != "plane")) return false;
   else return true;
 }
@@ -76,7 +76,7 @@ bool CAMALSurfEval::is_planar()
 bool CAMALSurfEval::is_parametric()
 {
   bool is_param = false;
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->isEntParametric(modelEnt->geom_handle(), is_param);
+  iGeom::Error err = modelEnt->igeom_instance()->isEntParametric(modelEnt->geom_handle(), is_param);
   IBERRCHK(err, "Trouble getting whether entity is parametric");
   return is_param;
 }
@@ -84,7 +84,7 @@ bool CAMALSurfEval::is_parametric()
 bool CAMALSurfEval::is_periodic_in_u(double& u_period)
 {
   bool per_u = false, per_v = false;
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->isEntPeriodic(modelEnt->geom_handle(), per_u, per_v);
+  iGeom::Error err = modelEnt->igeom_instance()->isEntPeriodic(modelEnt->geom_handle(), per_u, per_v);
   IBERRCHK(err, "Trouble getting whether entity is periodic");
   return per_u;
 }
@@ -92,7 +92,7 @@ bool CAMALSurfEval::is_periodic_in_u(double& u_period)
 bool CAMALSurfEval::is_periodic_in_v(double& v_period)
 {
   bool per_u = false, per_v = false;
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->isEntPeriodic(modelEnt->geom_handle(), per_u, per_v);
+  iGeom::Error err = modelEnt->igeom_instance()->isEntPeriodic(modelEnt->geom_handle(), per_u, per_v);
   IBERRCHK(err, "Trouble getting whether entity is periodic");
   return per_v;
 }
@@ -100,14 +100,14 @@ bool CAMALSurfEval::is_periodic_in_v(double& v_period)
 void CAMALSurfEval::get_param_range_u(double& u_low, double& u_high)
 {
   double vmin, vmax;
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntUVRange(modelEnt->geom_handle(), u_low, vmin, u_high, vmax);
+  iGeom::Error err = modelEnt->igeom_instance()->getEntUVRange(modelEnt->geom_handle(), u_low, vmin, u_high, vmax);
   IBERRCHK(err, "Trouble getting entity parameter ranges.");
 }
 
 void CAMALSurfEval::get_param_range_v(double& v_low, double& v_high)
 {
   double umin, umax;
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntUVRange(modelEnt->geom_handle(), umin, v_low, umax, v_high);
+  iGeom::Error err = modelEnt->igeom_instance()->getEntUVRange(modelEnt->geom_handle(), umin, v_low, umax, v_high);
   IBERRCHK(err, "Trouble getting entity parameter ranges.");
 }
 
@@ -115,7 +115,7 @@ bool CAMALSurfEval::uv_from_position(double x, double y, double z,
 				     double& u, double& v)
   
 {
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntXYZtoUV(modelEnt->geom_handle(), x, y, z, u, v);
+  iGeom::Error err = modelEnt->igeom_instance()->getEntXYZtoUV(modelEnt->geom_handle(), x, y, z, u, v);
   IBERRCHK(err, "Trouble getting parameters from position.");
 }
 
@@ -123,23 +123,23 @@ bool CAMALSurfEval::uv_from_position(double x, double y, double z,
 				     double& u, double& v,
 				     double& cx, double& cy, double& cz)
 {
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntXYZtoUV(modelEnt->geom_handle(), x, y, z, u, v);
+  iGeom::Error err = modelEnt->igeom_instance()->getEntXYZtoUV(modelEnt->geom_handle(), x, y, z, u, v);
   IBERRCHK(err, "Trouble getting parameters from position.");
-  err = modelEnt->mk_core()->igeom_instance()->getEntUVtoXYZ(modelEnt->geom_handle(), u, v, cx, cy, cz);
+  err = modelEnt->igeom_instance()->getEntUVtoXYZ(modelEnt->geom_handle(), u, v, cx, cy, cz);
   IBERRCHK(err, "Trouble getting position from parameters.");
 }
 
 void CAMALSurfEval::position_from_uv(double u, double v, 
 				     double& x, double& y, double& z)
 {
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEntUVtoXYZ(modelEnt->geom_handle(), u, v, x, y, z);
+  iGeom::Error err = modelEnt->igeom_instance()->getEntUVtoXYZ(modelEnt->geom_handle(), u, v, x, y, z);
   IBERRCHK(err, "Trouble getting position from parameters.");
 }
 
 void CAMALSurfEval::distortion_at_uv(double u, double v, 
 				     double du[3], double dv[3])
 {
-  iGeom::Error err = modelEnt->mk_core()->igeom_instance()->getEnt1stDrvt(modelEnt->geom_handle(), u, v, 
+  iGeom::Error err = modelEnt->igeom_instance()->getEnt1stDrvt(modelEnt->geom_handle(), u, v,
                                                                           du[0], du[1], du[2], 
                                                                           dv[0], dv[1], dv[2]);
   IBERRCHK(err, "Trouble getting 1st derivative from parameters.");

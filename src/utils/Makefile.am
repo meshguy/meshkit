@@ -12,7 +12,7 @@ libMeshKitutils_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libMeshKitutils_la_SOURCES = \
-	iMesh.cpp
+	iMesh.cpp  FBiGeom.cpp iBaseVirtual.cpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitutils_la_include_HEADERS = \

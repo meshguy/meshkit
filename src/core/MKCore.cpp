@@ -179,7 +179,32 @@ void MKCore::init(bool construct_missing_ifaces)
   }
 }
 
-void MKCore::populate_mesh(int index) 
+unsigned int MKCore::add_igeom_instance(iGeom * igeom)
+{
+  iBase_ErrorType err;
+  iGeomInstances.push_back(igeom);
+  unsigned int index = iGeomInstances.size()-1;
+  iGeomModelTags.resize(index+1);
+  // add the iGeomModelTag
+  // it could exist already
+  iGeom::TagHandle mkmodeltag;
+  err = igeom->getTagHandle("__MKModelEntity", mkmodeltag);
+  if (iBase_SUCCESS == err)
+  {
+    iGeomModelTags[index]= mkmodeltag;
+  }
+  else
+  {
+    err = igeom->createTag("__MKModelEntity", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
+                                             iGeomModelTags[index]);
+    IBERRCHK(err, "Failure to create MKModelEnt tag in iGeom.");
+  }
+
+
+  return index;
+}
+
+void MKCore::populate_mesh(int index, bool use_irel)
 {
     // populate mesh entity sets for geometric entities, relate them through iRel, and construct 
     // ModelEnts for them; also handle geometry groups
@@ -201,17 +226,19 @@ void MKCore::populate_mesh(int index)
       err = igeom_instance(index)->getData(*eit, iGeomModelTags[index], &this_me);
       if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
           // construct a new ModelEnt and set the geom ent to point to it
-        this_me = new ModelEnt(this, *eit);
+        this_me = new ModelEnt(this, *eit, igeom_instance(index));
         err = igeom_instance(index)->setData(*eit, iGeomModelTags[index], &this_me);
         IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
+        // set the irel flag
+        this_me -> set_irel_flag(use_irel);
       }
       
         // check for a mesh ent, and populate one if there is none
       if (!this_me->mesh_handle()) {
-	if (!this_me->exist_mesh_set()) {
-	  this_me->create_mesh_set();
-	}
-	new_ents.push_back(this_me);
+        if (!this_me->exist_mesh_set()) {
+          this_me->create_mesh_set();
+        }
+        new_ents.push_back(this_me);
       }
 
         // save the model entity here
@@ -231,9 +258,10 @@ void MKCore::populate_mesh(int index)
     err = igeom_instance(index)->getEntSetData(*vit, iGeomModelTags[index], &this_me);
     if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
         // construct a new ModelEnt and set the geom ent to point to it
-      this_me = new ModelEnt(this, *vit);
+      this_me = new ModelEnt(this, *vit, igeom_instance(index));
       err = igeom_instance(index)->setEntSetData(*vit, iGeomModelTags[index], &this_me);
       IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
+      this_me -> set_irel_flag(use_irel);
     }
       
       // check for a mesh ent, and populate one if there is none

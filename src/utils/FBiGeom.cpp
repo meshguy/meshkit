@@ -1,519 +1,1048 @@
-#ifndef MESHKIT_ITAPS_GEOM_HPP
-#define MESHKIT_ITAPS_GEOM_HPP
 
-/** \file iGeom.hpp
- */
-
-
-#define ITAPS_PREFIX iGeom
-#include "meshkit/iBaseVirtual.hpp"
-#undef ITAPS_PREFIX
-
-/** \class iGeom
- * \brief C++ interface to ITAPS iGeom interface
+/** \file FBiGeom.cpp;
  *
- * This class is a simple wrapper for the ITAPS iGeom interface.  The primary benefit to using this class
- * instead of iGeom directly is that lists of handles are passed as std::vectors instead of pointers to
- * handle arrays.  This file includes both declaration and definition of all iGeom class functions, i.e.
- * all functions are inlined.  The class can be constructed and destructed in the standard C++ way; the
- * implementation of those functions call into the standard iGeom C functions newGeom and dtor.
- *
- * For complete documentation of these functions, see the iGeom header in the CGM source
- * (http://trac.mcs.anl.gov/projects/ITAPS/browser/cgm/trunk/itaps/iGeom.h for now).
  */
 
-class iGeom : public iGeomBase {
-  public:
-    
-    inline iGeom( const char* options = 0 );
-    inline iGeom( iGeom_Instance instance );
-    
-    inline iGeom (bool meshBased);
+#include "meshkit/FBiGeom.hpp"
+#include "meshkit/MKCore.hpp"
 
-    virtual inline ~iGeom();
-    
-    virtual inline Error load( const char* file_name,
-                       const char* options = 0 );
+namespace MeshKit {
 
-    virtual inline Error save( const char* file_name,
-                       const char* options = 0 );
-
-    virtual inline Error getBoundBox( double& min_x, double& min_y, double& min_z,
-                              double& max_x, double& max_y, double& max_z );
-    
-    virtual inline int getParametric();
-    
-    virtual inline Error getNumOfType( EntitySetHandle set, EntityType type, int& count_out  );
-    
-    virtual inline Error getEntities( EntitySetHandle set,
-                              EntityType type,
-                              std::vector<EntityHandle>& entities_out );
-     
-    virtual inline Error getEntType( EntityHandle handle, EntityType& type_out );
-    virtual inline Error getArrType( const EntityHandle* entity_handles,
-                             int entity_handles_Size,
-                             EntityType* types_out );
-    
-    virtual inline Error getEntAdj( EntityHandle handle,
-                            EntityType type_requested,
-                            std::vector<EntityHandle>& adj_entities_out );                   
-    virtual inline Error getArrAdj( const EntityHandle* entity_handles,
-                            int entity_handles_size,
-                            EntityType type_requested,
-                            std::vector<EntityHandle>& adjacent_entity_handles_out,
-                            int* offsets_out );
-    virtual inline Error getEnt2ndAdj( EntityHandle handle,
-                               EntityType bridge_dimension,
-                               EntityType type_requested,
-                               std::vector<EntityHandle>& adj_entities_out );                   
-    virtual inline Error getArr2ndAdj( const EntityHandle* entity_handles,
-                               int entity_handles_size,
-                               EntityType order_adjacent_key,
-                               EntityType type_requested,
-                               std::vector<EntityHandle>& adjacent_entity_handles_out,
-                               int* offsets_out );
-    virtual inline Error isEntAdj( EntityHandle entity1, EntityHandle entity2, bool& adjacent_out );
-    
-    virtual inline Error isArrAdj( const EntityHandle* entities1,
-                           const EntityHandle* entities2,
-                           int num_entity_pairs,
-                           int* is_adj_out );
-
-    virtual inline Error getEntClosestPt( EntityHandle entity,
-                                  double near_x, double near_y, double near_z,
-                                  double& on_x, double& on_y, double& on_z );
-    virtual inline Error getArrClosestPt( const EntityHandle* handles,
-                                  int handles_size,
-                                  StorageOrder order,
-                                  const double* near_coordinates,
-                                  int near_coordinates_size,
-                                  double* on_coordinates );
-    
-    virtual inline Error getEntNrmlXYZ( EntityHandle entity,
-                                double x, double y, double z,
-                                double& i, double& j, double& k );
-    virtual inline Error getArrNrmlXYZ( const EntityHandle* entities,
-                                int entities_size,
-                                StorageOrder order,
-                                const double* xyz,
-                                int xyz_size,
-                                double* ijk );
-    
-    virtual inline Error getEntNrmlPlXYZ( EntityHandle entity,
-                                  double x, double y, double z,
-                                  double& on_x, double& on_y, double& on_z,
-                                  double& i, double& j, double& k );
-    virtual inline Error getArrNrmlPlXYZ( const EntityHandle* entities,
-                                  int entities_size,
-                                  StorageOrder order,
-                                  const double* near_xyz,
-                                  int near_xyz_size,
-                                  double* on_xyz,
-                                  double* nrml_ijk );
-    
-    virtual inline Error getEntTgntXYZ( EntityHandle entity,
-                                double x, double y, double z,
-                                double& i, double& j, double& k );
-    virtual inline Error getArrTgntXYZ( const EntityHandle* entities,
-                                int entities_size,
-                                StorageOrder order,
-                                const double* xyz,
-                                int xyz_size,
-                                double* ijk );
-    
-    virtual inline Error getFcCvtrXYZ( EntityHandle face,
-                               double x, double y, double z,
-                               double& i1, double& j1, double& k1,
-                               double& i2, double& j2, double& k2 );
-    virtual inline Error getEgCvtrXYZ( EntityHandle edge,
-                               double x, double y, double z,
-                               double& i, double& j, double& k );
-    virtual inline Error getEntArrCvtrXYZ( const EntityHandle* entities,
-                                   int entities_size,
-                                   StorageOrder order,
-                                   const double* xyz,
-                                   int xyz_size,
-                                   double* cvtr_1,
-                                   double* cvtr_2 );
-    
-    virtual inline Error getEgEvalXYZ( EntityHandle edge,
-                               double x, double y, double z,
-                               double& on_x, double& on_y, double& on_z,
-                               double& tngt_i, double& tngt_j, double& tngt_k,
-                               double& cvtr_i, double& cvtr_j, double& cvtr_k );
-    virtual inline Error getFcEvalXYZ( EntityHandle face,
-                               double x, double y, double z,
-                               double& on_x, double& on_y, double& on_z,
-                               double& nrml_i, double& nrml_j, double& nrml_k,
-                               double& cvtr1_i, double& cvtr1_j, double& cvtr1_k,
-                               double& cvtr2_i, double& cvtr2_j, double& cvtr2_k );
-    virtual inline Error getArrEgEvalXYZ( const EntityHandle* edges,
-                                  int edges_size,
-                                  StorageOrder order,
-                                  const double* near_coords,
-                                  int near_coords_size,
-                                  double* on_coords,
-                                  double* tangent,
-                                  double* curvature );
-    virtual inline Error getArrFcEvalXYZ( const EntityHandle* faces,
-                                  int faces_size,
-                                  StorageOrder order,
-                                  const double* near_coords,
-                                  int near_coords_size,
-                                  double* on_coords,
-                                  double* normal,
-                                  double* curvature1,
-                                  double* curvature2 );
-
-    virtual inline Error getEntBoundBox( EntityHandle entity,
-                                 double& min_x, double& min_y, double& min_z,
-                                 double& max_x, double& max_y, double& max_z );
-    virtual inline Error getArrBoundBox( const EntityHandle* entities,
-                                 int entities_size,
-                                 StorageOrder order,
-                                 double* min_corners,
-                                 double* max_corners );
-    
-    virtual inline Error getVtxCoord( EntityHandle vertex,
-                              double& x, double& y, double& z );
-    virtual inline Error getVtxArrCoords( const EntityHandle* vertices,
-                                  int vertices_size,
-                                  StorageOrder order,
-                                  double* coords );
-    
-    virtual inline Error getPntRayIntsct( double x, double y, double z,
-                                  double i, double j, double k,
-                                  StorageOrder order,
-                                  std::vector<EntityHandle>& entities_out,
-                                  std::vector<double>& points_out,
-                                  std::vector<double>& params_out );
-    
-    virtual inline Error getPntClsf( double x, double y, double z,
-                             EntityHandle& handle_out ) ;
-    virtual inline Error getPntArrClsf( StorageOrder order,
-                                const double* coords,
-                                int coords_size,
-                                EntityHandle* entities_out );
-    
-    virtual inline Error getEntNrmlSense( EntityHandle face, EntityHandle region, int& sense );
-    virtual inline Error getEgFcSense( EntityHandle edge, EntityHandle face, int& sense );
-    virtual inline Error getEgVtxSense( EntityHandle edge, EntityHandle vtx1, EntityHandle vtx2, int& sense );
-    
-    virtual inline Error getArrNrmlSense( const EntityHandle* faces, int faces_size,
-                                  const EntityHandle* vols,  int vols_size,
-                                  int* senses_out );
-    virtual inline Error getEgFcArrSense( const EntityHandle* edges, int edges_size,
-                                  const EntityHandle* faces, int faces_size,
-                                  int* senses_out );
-    virtual inline Error getEgVtxArrSense( const EntityHandle* edges, int edges_size,
-                                   const EntityHandle* vertices1, int vertices1_size,
-                                   const EntityHandle* vertices2, int vertices2_size,
-                                   int* senses_out );
-  virtual inline Error getSense(EntityHandle ent, EntityHandle wrt_ent, int &sense);
-  virtual inline Error getArrSense(const EntityHandle *ent, int num_ents, EntityHandle wrt_ent, int *sense);
-  
-    virtual inline Error measure( const EntityHandle* entities,
-                          int entities_size,
-                          double* measures );
-    
-    virtual inline Error getFaceType( EntityHandle face, std::string& type );
-    virtual inline Error isEntParametric( EntityHandle entity, bool& parametric );
-    virtual inline Error isArrParametric( const EntityHandle* entities,
-                                  int entities_size,
-                                  int* is_parametric );
-    
-    virtual inline Error getEntUVtoXYZ( EntityHandle face,
-                                double u, double v,
-                                double& x, double& y, double& z );
-    virtual inline Error getEntUtoXYZ( EntityHandle edge, double u,
-                               double& x, double& y, double& z );
-    virtual inline Error getArrUVtoXYZ( const EntityHandle* faces,
-                                int faces_size,
-                                StorageOrder order,
-                                const double* uv,
-                                int uv_size,
-                                double* xyz );
-    virtual inline Error getArrUtoXYZ( const EntityHandle* edges,
-                               int edges_size,
-                               const double* u,
-                               int u_size,
-                               StorageOrder order,
-                               double* xyz );
-    
-    virtual inline Error getEntXYZtoUV( EntityHandle face,
-                                double x, double y, double z,
-                                double& u, double& v );
-    virtual inline Error getEntXYZtoU( EntityHandle edge,
-                               double x, double y, double z,
-                               double& u );
-    virtual inline Error getArrXYZtoUV( const EntityHandle* faces,
-                                int faces_size,
-                                StorageOrder order,
-                                const double* coords,
-                                int coords_size,
-                                double* uv );
-    virtual inline Error getArrXYZtoU( const EntityHandle* edges,
-                               int edges_size,
-                               StorageOrder order,
-                               const double* coords,
-                               int coords_size,
-                               double* u );
-    virtual inline Error getEntXYZtoUVHint( EntityHandle face,
-                                    double x, double y, double z,
-                                    double& u, double& v );
-    virtual inline Error getArrXYZtoUVHint( const EntityHandle* faces,
-                                    int faces_size,
-                                    StorageOrder order,
-                                    const double* coords,
-                                    int coords_size,
-                                    double* uv );
-    
-    virtual inline Error getEntNrmlUV( EntityHandle face,
-                               double u, double v,
-                               double& i, double& j, double& k );
-    virtual inline Error getArrNrmlUV( const EntityHandle* faces,
-                               int faces_size,
-                               StorageOrder order,
-                               const double* uv,
-                               int uv_size,
-                               double* normals );
-    virtual inline Error getEntTgntU( EntityHandle edge,
-                              double u, 
-                              double& i, double& j, double& k );
-    virtual inline Error getArrTgntU( const EntityHandle* edges,
-                              int edges_size,
-                              StorageOrder order,
-                              const double* u,
-                              int u_size,
-                              double* normals );
-
-    virtual inline Error getEnt1stDrvt( EntityHandle handle,
-                                double u, double v,
-                                double& du_i, double& du_j, double& du_k,
-                                double& dv_i, double& dv_j, double& dv_k );
-    virtual inline Error getEnt2ndDrvt( EntityHandle handle,
-                                double u, double v,
-                                double& duu_i, double& duu_j, double& duu_k,
-                                double& dvv_i, double& dvv_j, double& dvv_k,
-                                double& duv_i, double& duv_j, double& duv_k );
-    virtual inline Error getArr1stDrvt( const EntityHandle* entities,
-                                int entities_size,
-                                StorageOrder order,
-                                const double* uv,
-                                int uv_size,
-                                double* dvtr_u,
-                                double* dvtr_v );
-    virtual inline Error getArr2ndDrvt( const EntityHandle* entities,
-                                int entities_size,
-                                StorageOrder order,
-                                const double* uv,
-                                int uv_size,
-                                double* dvtr_uu,
-                                double* dvtr_vv,
-                                double* dvtr_uv );
-    
-
-    virtual inline Error getFcCvtrUV( EntityHandle face, double u, double v,
-                              double& i1, double& j1, double& k1,
-                              double& i2, double& j2, double& k2 );
-    virtual inline Error getFcArrCvtrUV( const EntityHandle* faces, int faces_size,
-                                 StorageOrder order,
-                                 const double* uv, int uv_size,
-                                 double* cvtr1, double* cvtr2 );
-
-    virtual inline Error isEntPeriodic( EntityHandle entity,
-                                bool& in_u, bool& in_v );
-    virtual inline Error isArrPeriodic( const EntityHandle* entities,
-                                int entities_size,
-                                int* in_uv );
-
-    virtual inline Error isFcDegenerate( EntityHandle face, bool& is_degenerate );
-    virtual inline Error isFcArrDegenerate( const EntityHandle* faces,
-                                    int faces_size,
-                                    int* degenerate );
-    
-    virtual inline Error getTolerance( int& type_out, double& tolerance_out );
-    virtual inline Error getEntTolerance( EntityHandle entity, double& tolerance );
-    virtual inline Error getArrTolerance( const EntityHandle* entities,
-                                  int entities_size,
-                                  double* tolerances );
-
-    virtual inline Error getEntUVRange( EntityHandle face,
-                                double& u_min, double& v_min,
-                                double& u_max, double& v_max );
-    virtual inline Error getEntURange( EntityHandle edge,
-                               double& u_min, double& u_max );
-    virtual inline Error getArrUVRange( const EntityHandle* faces,
-                                int faces_size,
-                                StorageOrder order,
-                                double* uv_min,
-                                double* uv_max );
-    virtual inline Error getArrURange( const EntityHandle* edges,
-                               int edges_size,
-                               double* u_min,
-                               double* u_max );
-
-    virtual inline Error getEntUtoUV( EntityHandle edge,
-                              EntityHandle face,
-                              double edge_u,
-                              double& face_u, double& face_v );
-    virtual inline Error getVtxToUV( EntityHandle vertex,
-                             EntityHandle face,
-                             double& u, double& v );
-    virtual inline Error getVtxToU( EntityHandle vertex,
-                            EntityHandle edge,
-                            double& u );
-    virtual inline Error getArrUtoUV( const EntityHandle* edges, int edges_size,
-                              const EntityHandle* faces, int faces_size,
-                              const double* edge_u, int edge_u_size,
-                              StorageOrder order,
-                              double* face_uv );
-    virtual inline Error getVtxArrToUV( const EntityHandle* vertices, int vertices_size,
-                                const EntityHandle* faces, int faces_size,
-                                StorageOrder order,
-                                double* face_uv );
-    virtual inline Error getVtxArrToU( const EntityHandle* vertices, int vertices_size,
-                               const EntityHandle* edges, int edges_size,
-                               double* edge_u );
-    
-    
-    virtual inline Error deleteAll();
-    
-    virtual inline Error deleteEnt( EntityHandle entity );
-
-    virtual inline Error copyEnt( EntityHandle source, EntityHandle& copy );
-    
-    virtual inline Error createSphere( double radius, EntityHandle& sphere );
-    virtual inline Error createPrism( double height, int num_sides,
-                              double maj_radius, double min_radius,
-                              EntityHandle& prism );
-    virtual inline Error createBrick( double x, double y, double z, EntityHandle& brick );
-    virtual inline Error createCylinder( double height, double maj_rad, double min_rad,
-                                 EntityHandle& cylinder );
-    virtual inline Error createTorus( double maj_rad, double min_rad, EntityHandle& torus );
-    
-    virtual inline Error moveEnt( EntityHandle entity, double x, double y, double z );
-    virtual inline Error rotateEnt( EntityHandle entity, double angle,
-                            double axis_x, double axis_y, double axis_z );
-    virtual inline Error reflectEnt( EntityHandle entity,
-                             double norm_x, double norm_y, double norm_z );
-    virtual inline Error scaleEnt( EntityHandle entity,
-                           double x_factor, double y_factor, double z_factor );
-  
-    virtual inline Error uniteEnts( const EntityHandle* entities,
-                            int entities_size,
-                            EntityHandle& result_entity );
-    virtual inline Error subtractEnts( EntityHandle blank, EntityHandle tool,
-                               EntityHandle& result );
-    virtual inline Error intersectEnts( EntityHandle entity1, EntityHandle entity2,
-                                EntityHandle& result );
-    
-    virtual inline Error sectionEnt( EntityHandle entity,
-                             double plane_x, double plane_y, double plane_z,
-                             double offset,
-                             bool reverse,
-                             EntityHandle& result );
-    
-    virtual inline Error sweepEntAboutAxis( EntityHandle entity,
-                                    double angle,
-                                    double axis_x, 
-                                    double axis_y,
-                                    double axis_z,
-                                    EntityHandle& swept_entity );
-    
-    virtual inline Error imprintEnts( const EntityHandle* entities, int entities_size );
-    virtual inline Error mergeEnts( const EntityHandle* entities, int entities_size, double tolerance );
-
-    
-/** \class EntArrIter iGeom.hpp "iGeom.hpp"
- * \brief Class for iterating over %iGeom entity arrays.
- */
-    class EntArrIter {
-      private:
-        friend class iGeom;
-        iBase_EntityArrIterator mHandle;
-        iGeom_Instance mInstance;
-        int mSize;
-      public:
-        EntArrIter() : mHandle(0), mInstance(0), mSize(0) {}
-        inline ~EntArrIter();
-        inline Error getNext( EntityHandle* entity_handles_out,
-                              int& size_out,
-                              bool& has_more_data_out );
-        inline Error reset();
-    };
-    
-/** \class EntIter iGeom.hpp "iGeom.hpp"
- * \brief Class for iterating over %iGeom entities.
- */
-    class EntIter {
-      private:
-        friend class iGeom;
-        iBase_EntityIterator mHandle;
-        iGeom_Instance mInstance;
-      public:
-        EntIter() : mHandle(0), mInstance(0) {}
-        inline ~EntIter();
-        inline Error getNext( EntityHandle& entity_handle_out,
-                              bool& has_more_data_out );
-        inline Error reset();
-    };
-    
-    virtual inline Error initEntIter( EntitySetHandle set,
-                              EntityType requested_type,
-                              EntIter& iter );
-    virtual inline Error initEntArrIter( EntitySetHandle set,
-                                 EntityType requested_type,
-                                 int requested_array_size,
-                                 EntArrIter& iter );
-  private:
-    bool iGeomInstanceOwner;
-    
-      // prohibit copying
-    iGeom( const iGeom& ) {}
-    void operator=(const iGeom&) {}
-};
-
-inline 
-iGeom::iGeom( const char* options )
-  : iGeomInstanceOwner(true)
+FBiGeom::FBiGeom( MKCore * mk, bool smooth):
+    iGeom(true), _fbEngine(NULL), _smooth(smooth) , _mk(mk), _index(0)
 {
-  int err, len = options ? strlen(options) : 0;
-  iGeom_newGeom( options, &mInstance, &err, len );
-  if (iBase_SUCCESS != err) {
-    mInstance = 0;
-    iGeomInstanceOwner = false;
+  // use the first moab instance, as a basis for
+  //_mbImpl = _mk->moabInstances[0];
+  //_index = _mk->add_igeom_instance((iGeom*)this);
+}
+
+FBiGeom::~FBiGeom()
+{
+  if (_fbEngine) {
+    delete _fbEngine;
   }
 }
+iGeom::Error FBiGeom::Init()
+{
+  // what will happen here:
+  // create facet-based engine, smooth option
+  _fbEngine= new moab::FBEngine(_mk->moab_instance(), NULL, true); //
+  if (!_fbEngine)
+    return (Error)1;
+  _index = _mk->add_igeom_instance((iGeom*)this);
 
-inline 
-iGeom::iGeom( iGeom_Instance instance )
-  : iGeomInstanceOwner(false)
-{
-  mInstance = instance;
-}
-inline iGeom::iGeom (bool meshBased)
-{
-  mInstance = 0;
-  iGeomInstanceOwner = false;
-}
-inline iGeom::~iGeom()
-{
-  if (iGeomInstanceOwner) {
-    int err;
-    iGeom_dtor( mInstance, &err );
-  }
+  _fbEngine->Init();// this will trigger the initialization
+  // of smoothing
+  // now, we need to create the ModelEnts, use populate_mesh !!!
+  _mk->populate_mesh( meshkit_index(), false );// no irel !!
+  return (Error)0; // success
 }
 
 inline iGeom::Error
-iGeom::load( const char* file_name,
+FBiGeom::load( const char* file_name,
              const char* options )
 {
-  int err, len = options ? strlen(options) : 0;
-  iGeom_load( mInstance, file_name, options, &err, strlen(file_name), len );
+  //moab::ErrorCode rval = _mbImpl->load_file(file_name, 0, options);
+  // will load the file as a moab database, and populate it as needed
+  moab::ErrorCode rval = _mk->moab_instance()->load_file(file_name, 0, options);
+  if (rval!=moab::MB_SUCCESS)
+    return (Error)1;
+
+  // the file that is loaded in the moab database
+  // right now, assume only one file is read into
+  // for multiple files, we will have to add them to different sets
+  // in the moab database
+  Init();
+  return (Error)0;
+}
+// include here the iBaseVirtual methods that will be overloaded
+// start copy iBaseVirtual
+
+iGeomBase::EntitySetHandle FBiGeom::getRootSet()
+{
+  // the root set in MOAB is always null
+  return 0;
+}
+
+iGeom::Error FBiGeom::getEntType( EntityHandle handle, EntityType& type_out )
+{
+  int type;
+  moab::ErrorCode rval = _fbEngine-> getEntType( (moab::EntityHandle)handle, &type);
+  type_out = (EntityType)type;
+  if (rval == moab::MB_SUCCESS)
+    return (Error)0;
+  return (Error)1;
+}
+
+
+#if 0
+
+PFX(Base)::Error
+PFX(Base)::createEntSet( bool is_list, EntitySetHandle& handle_out )
+{
+  int err;
+  PFX(_createEntSet)( mInstance, is_list, &handle_out, &err );
   return (Error)err;
 }
 
+PFX(Base)::Error
+PFX(Base)::destroyEntSet( EntitySetHandle handle )
+{
+  int err;
+  PFX(_destroyEntSet)( mInstance, handle, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::isList( EntitySetHandle handle, bool& is_list )
+{
+  int err, result;
+  PFX(_isList)( mInstance, handle, &result, &err );
+  is_list = (result != 0);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getNumEntSets( EntitySetHandle set, int num_hops, int& num_sets_out )
+{
+  int err;
+  PFX(_getNumEntSets)( mInstance, set, num_hops, &num_sets_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getEntSets( EntitySetHandle set, int num_hops,
+                   std::vector<EntitySetHandle>& contained_sets_out )
+{
+  int err, count;
+  PFX(_getNumEntSets)( mInstance, set, num_hops, &count, &err );
+  if (iBase_SUCCESS != err)
+    return (Error)err;
+  contained_sets_out.resize(count);
+  int alloc = contained_sets_out.size(), size;
+  EntitySetHandle* ptr = &contained_sets_out[0];
+  PFX(_getEntSets)( mInstance, set, num_hops, &ptr, &alloc, &size, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::addEntToSet( EntityHandle entity, EntitySetHandle set )
+{
+  int err;
+  PFX(_addEntToSet)( mInstance, entity,set, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::rmvEntFromSet( EntityHandle entity, EntitySetHandle set )
+{
+  int err;
+  PFX(_rmvEntFromSet)( mInstance, entity,set, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::addEntArrToSet( const EntityHandle* entity_handles,
+                             int entity_handles_size,
+                             EntitySetHandle entity_set )
+{
+  int err;
+  PFX(_addEntArrToSet)( mInstance, entity_handles, entity_handles_size, entity_set, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::rmvEntArrFromSet( const EntityHandle* entity_handles,
+                               int entity_handles_size,
+                               EntitySetHandle entity_set )
+{
+  int err;
+  PFX(_rmvEntArrFromSet)( mInstance, entity_handles, entity_handles_size, entity_set, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::addEntSet( EntitySetHandle to_add, EntitySetHandle add_to )
+{
+  int err;
+  PFX(_addEntSet)( mInstance, to_add, add_to, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::rmvEntSet( EntitySetHandle to_rmv, EntitySetHandle rmv_from )
+{
+  int err;
+  PFX(_rmvEntSet)( mInstance, to_rmv, rmv_from, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::isEntContained( EntitySetHandle set, EntityHandle ent, bool& contained_out )
+{
+  int err, result;
+  PFX(_isEntContained)( mInstance, set, ent, &result, &err );
+  contained_out = (result != 0);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::isEntArrContained( EntitySetHandle containing_set,
+                                const EntityHandle* entity_handles,
+                                int num_entity_handles,
+                                bool* is_contained_out )
+{
+  int err, *ptr = 0, alloc = 0, size = 0;
+  PFX(_isEntArrContained)( mInstance, containing_set,
+                           entity_handles, num_entity_handles,
+                           &ptr, &alloc, &size, &err );
+  if (iBase_SUCCESS != err)
+    return (Error)err;
+  for (int i = 0; i < num_entity_handles; ++i)
+    is_contained_out[i] = (ptr[i] != 0);
+  free(ptr);
+  return iBase_SUCCESS;
+}
+
+PFX(Base)::Error
+PFX(Base)::isEntSetContained( EntitySetHandle containing_set,
+                          EntitySetHandle contained_set,
+                          bool& contained_out )
+{
+  int err, result;
+  PFX(_isEntSetContained)( mInstance, containing_set, contained_set, &result, &err );
+  contained_out = (result != 0);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::addPrntChld( EntitySetHandle parent, EntitySetHandle child )
+{
+  int err;
+  PFX(_addPrntChld)( mInstance, parent, child, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::rmvPrntChld( EntitySetHandle parent, EntitySetHandle child )
+{
+  int err;
+  PFX(_rmvPrntChld)( mInstance, parent, child, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::isChildOf( EntitySetHandle parent, EntitySetHandle child, bool& is_child_out )
+{
+  int err, result;
+  PFX(_isChildOf)( mInstance, parent, child, &result, &err );
+  is_child_out = (result != 0);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getNumChld( EntitySetHandle parent, int num_hops, int& num_child_out )
+{
+  int err;
+  PFX(_getNumChld)( mInstance, parent, num_hops, &num_child_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getNumPrnt( EntitySetHandle child, int num_hops, int& num_parent_out )
+{
+  int err;
+  PFX(_getNumPrnt)( mInstance, child, num_hops, &num_parent_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getChldn( EntitySetHandle parent, int num_hops,
+                 std::vector<EntitySetHandle>& children_out )
+{
+  int err, count;
+  PFX(_getNumChld)( mInstance, parent, num_hops, &count, &err );
+  if (iBase_SUCCESS != err)
+    return (Error)err;
+  children_out.resize(count);
+  int alloc = children_out.size(), size;
+  EntitySetHandle* ptr = &children_out[0];
+  PFX(_getEntSets)( mInstance, parent, num_hops, &ptr, &alloc, &size, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getPrnts( EntitySetHandle child, int num_hops,
+                 std::vector<EntitySetHandle>& parents_out )
+{
+  int err, count;
+  PFX(_getNumPrnt)( mInstance, child, num_hops, &count, &err );
+  if (iBase_SUCCESS != err)
+    return (Error)err;
+  parents_out.resize(count);
+  int alloc = parents_out.size(), size;
+  EntitySetHandle* ptr = &parents_out[0];
+  PFX(_getEntSets)( mInstance, child, num_hops, &ptr, &alloc, &size, &err );
+  return (Error)err;
+}
+
+
+PFX(Base)::Error
+PFX(Base)::subtract( EntitySetHandle set1, EntitySetHandle set2,
+                 EntitySetHandle& result_set_out )
+{
+  int err;
+  PFX(_subtract)( mInstance, set1, set1, &result_set_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::intersect( EntitySetHandle set1, EntitySetHandle set2,
+                  EntitySetHandle& result_set_out )
+{
+  int err;
+  PFX(_intersect)( mInstance, set1, set1, &result_set_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::unite( EntitySetHandle set1, EntitySetHandle set2,
+              EntitySetHandle& result_set_out )
+{
+  int err;
+  PFX(_unite)( mInstance, set1, set1, &result_set_out, &err );
+  return (Error)err;
+}
+
+
+PFX(Base)::Error
+PFX(Base)::createTag( const char* tag_name,
+                  int tag_num_type_values,
+                  TagValueType tag_type,
+                  TagHandle& tag_handle_out )
+{
+  int err;
+  PFX(_createTag)( mInstance, tag_name, tag_num_type_values, tag_type,
+                   &tag_handle_out, &err, strlen(tag_name) );
+  return (Error)err;
+}
+
+
+PFX(Base)::Error
+PFX(Base)::destroyTag( TagHandle tag_handle, bool forced )
+{
+  int err;
+  PFX(_destroyTag)( mInstance, tag_handle, forced, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getTagName( TagHandle tag_handle, std::string& name_out )
+{
+  int err;
+  char buffer[1024];
+  memset( buffer, 0, sizeof(buffer) );
+  PFX(_getTagName)( mInstance, tag_handle, buffer, &err, sizeof(buffer) );
+  name_out = buffer;
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getTagSizeValues( TagHandle tag_handle, int& size_out )
+{
+  int err;
+  PFX(_getTagSizeValues)( mInstance, tag_handle, &size_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getTagSizeBytes( TagHandle tag_handle, int& size_out )
+{
+  int err;
+  PFX(_getTagSizeBytes)( mInstance, tag_handle, &size_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getTagHandle( const char* name, TagHandle& handle_out )
+{
+  int err;
+  PFX(_getTagHandle)( mInstance, name, &handle_out, &err, strlen(name) );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getTagType( TagHandle tag_handle, TagValueType& type_out )
+{
+  int err, result;
+  PFX(_getTagType)( mInstance, tag_handle, &result, &err );
+  type_out = (TagValueType)result;
+  return (Error)err;
+}
+
+
+PFX(Base)::Error
+PFX(Base)::setEntSetData( EntitySetHandle set_handle,
+                      TagHandle tag_handle,
+                      const void* tag_value )
+{
+  int err, size = 1;
+  PFX(_getTagSizeBytes)( mInstance, tag_handle, &size, &err );
+  PFX(_setEntSetData)( mInstance, set_handle, tag_handle,
+                       (const char*)tag_value, size, &err);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setEntSetIntData( EntitySetHandle set_handle,
+                         TagHandle tag_handle,
+                         int value )
+{
+  int err;
+  PFX(_setEntSetIntData)( mInstance, set_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setEntSetDblData( EntitySetHandle set_handle,
+                         TagHandle tag_handle,
+                         double value )
+{
+  int err;
+  PFX(_setEntSetDblData)( mInstance, set_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setEntSetEHData( EntitySetHandle set_handle,
+                        TagHandle tag_handle,
+                        EntityHandle value )
+
+{
+  int err;
+  PFX(_setEntSetEHData)( mInstance, set_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getEntSetData( EntitySetHandle set_handle,
+                      TagHandle tag_handle,
+                      void* tag_value_out )
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  char* ptr = (char*)tag_value_out;
+  PFX(_getEntSetData)( mInstance, set_handle, tag_handle,
+                      &ptr, &alloc, &size, &err);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getEntSetIntData( EntitySetHandle set_handle,
+                         TagHandle tag_handle,
+                         int& value_out )
+{
+  int err;
+  PFX(_getEntSetIntData)( mInstance, set_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getEntSetDblData( EntitySetHandle set_handle,
+                         TagHandle tag_handle,
+                         double& value_out )
+{
+  int err;
+  PFX(_getEntSetDblData)( mInstance, set_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getEntSetEHData( EntitySetHandle set_handle,
+                        TagHandle tag_handle,
+                        EntityHandle& value_out )
+
+{
+  int err;
+  PFX(_getEntSetEHData)( mInstance, set_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getAllEntSetTags( EntitySetHandle set,
+                         std::vector<TagHandle>& tags_out )
+{
+  if (tags_out.capacity() == 0)
+    tags_out.resize( 32 );
+  else
+    tags_out.resize( tags_out.capacity() );
+
+  int err, alloc = tags_out.size(), size = 0;
+  TagHandle* ptr = &tags_out[0];
+  PFX(_getAllEntSetTags)( mInstance, set, &ptr, &alloc, &size, &err );
+  tags_out.resize(size);
+
+  if (iBase_BAD_ARRAY_DIMENSION == err || iBase_BAD_ARRAY_SIZE == err) {
+    alloc = tags_out.size();
+    ptr = &tags_out[0];
+    PFX(_getAllEntSetTags)( mInstance, set, &ptr, &alloc, &size, &err );
+  }
+
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getAllTags( EntityHandle entity,
+                   std::vector<TagHandle>& tags_out )
+
+{
+  if (tags_out.capacity() == 0)
+    tags_out.resize( 32 );
+  else
+    tags_out.resize( tags_out.capacity() );
+
+  int err, alloc = tags_out.size(), size = 0;
+  TagHandle* ptr = &tags_out[0];
+  PFX(_getAllTags)( mInstance, entity, &ptr, &alloc, &size, &err );
+  tags_out.resize(size);
+
+  if (iBase_BAD_ARRAY_DIMENSION == err || iBase_BAD_ARRAY_SIZE == err) {
+    alloc = tags_out.size();
+    ptr = &tags_out[0];
+    PFX(_getAllTags)( mInstance, entity, &ptr, &alloc, &size, &err );
+  }
+
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::rmvEntSetTag( EntitySetHandle set, TagHandle tag )
+{
+  int err;
+  PFX(_rmvEntSetTag)( mInstance, set, tag, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::rmvTag( EntityHandle entity, TagHandle tag )
+{
+  int err;
+  PFX(_rmvTag)( mInstance, entity, tag, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::rmvArrTag( const EntityHandle* handles, int size, TagHandle tag )
+{
+  int err;
+  PFX(_rmvArrTag)( mInstance, handles, size, tag, &err );
+  return (Error)err;
+}
+
+
+PFX(Base)::Error
+PFX(Base)::getArrData( const EntityHandle* entity_handles,
+                   int entity_handles_size,
+                   TagHandle tag_handle,
+                   void* tag_values_out )
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  char* ptr = (char*)tag_values_out;
+  PFX(_getArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                    &ptr, &alloc, &size, &err);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getIntArrData( const EntityHandle* entity_handles,
+                      int entity_handles_size,
+                      TagHandle tag_handle,
+                      int* tag_values_out )
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  PFX(_getIntArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                       &tag_values_out, &alloc, &size, &err);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getDblArrData( const EntityHandle* entity_handles,
+                      int entity_handles_size,
+                      TagHandle tag_handle,
+                      double* tag_values_out )
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  PFX(_getDblArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                       &tag_values_out, &alloc, &size, &err);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getEHArrData( const EntityHandle* entity_handles,
+                     int entity_handles_size,
+                     TagHandle tag_handle,
+                     EntityHandle* tag_values_out )
+
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  PFX(_getEHArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                      &tag_values_out, &alloc, &size, &err);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setArrData( const EntityHandle* entity_handles,
+                   int entity_handles_size,
+                   TagHandle tag_handle,
+                   const void* tag_values )
+{
+  int err, size = 1;
+  PFX(_getTagSizeBytes)( mInstance, tag_handle, &size, &err );
+  PFX(_setArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                    (const char*)tag_values, size*entity_handles_size,
+                    &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setIntArrData( const EntityHandle* entity_handles,
+                      int entity_handles_size,
+                      TagHandle tag_handle,
+                      const int* tag_values )
+{
+  int err, size = 1;
+  PFX(_getTagSizeValues)( mInstance, tag_handle, &size, &err );
+  PFX(_setIntArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                       tag_values, size*entity_handles_size, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setDblArrData( const EntityHandle* entity_handles,
+                      int entity_handles_size,
+                      TagHandle tag_handle,
+                      const double* tag_values )
+{
+  int err, size = 1;
+  PFX(_getTagSizeValues)( mInstance, tag_handle, &size, &err );
+  PFX(_setDblArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                       tag_values, size*entity_handles_size, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setEHArrData( const EntityHandle* entity_handles,
+                     int entity_handles_size,
+                     TagHandle tag_handle,
+                     const EntityHandle* tag_values )
+{
+  int err, size = 1;
+  PFX(_getTagSizeValues)( mInstance, tag_handle, &size, &err );
+  PFX(_setEHArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                      tag_values, size*entity_handles_size, &err );
+  return (Error)err;
+}
+
+
+
+PFX(Base)::Error
+PFX(Base)::setData( EntityHandle entity_handle,
+                TagHandle tag_handle,
+                const void* tag_value )
+{
+  int err, size = 1;
+  PFX(_getTagSizeBytes)( mInstance, tag_handle, &size, &err );
+  PFX(_setData)( mInstance, entity_handle, tag_handle,
+                 (const char*)tag_value, size, &err);
+  return (Error)err;
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setIntData( EntityHandle entity_handle,
+                   TagHandle tag_handle,
+                   int value )
+{
+  int err;
+  PFX(_setIntData)( mInstance, entity_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setDblData( EntityHandle entity_handle,
+                   TagHandle tag_handle,
+                   double value )
+{
+  int err;
+  PFX(_setDblData)( mInstance, entity_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::setEHData( EntityHandle entity_handle,
+                  TagHandle tag_handle,
+                  EntityHandle value )
+
+{
+  int err;
+  PFX(_setEHData)( mInstance, entity_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getData( EntityHandle entity_handle,
+                TagHandle tag_handle,
+                void* tag_value_out )
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  char* ptr = (char*)tag_value_out;
+  PFX(_getData)( mInstance, entity_handle, tag_handle,
+                &ptr, &alloc, &size, &err);
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getIntData( EntityHandle entity_handle,
+                   TagHandle tag_handle,
+                   int& value_out )
+{
+  int err;
+  PFX(_getIntData)( mInstance, entity_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getDblData( EntityHandle entity_handle,
+                   TagHandle tag_handle,
+                   double& value_out )
+{
+  int err;
+  PFX(_getDblData)( mInstance, entity_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+PFX(Base)::Error
+PFX(Base)::getEHData( EntityHandle entity_handle,
+                  TagHandle tag_handle,
+                  EntityHandle& value_out )
+{
+  int err;
+  PFX(_getEHData)( mInstance, entity_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+#endif
+
+// end copy iBaseVirtual
+
+// no inlining anymore
+iGeom::Error FBiGeom::getEntities( EntitySetHandle set,
+                    EntityType type,
+                    std::vector<EntityHandle>& entities_out )
+{
+  // ErrorCode getEntities(EntityHandle root_set, int ent_type, Range & gentities);
+  moab::Range gentities;
+  moab::ErrorCode rval = _fbEngine->getEntities((moab::EntityHandle)set,  (int) type, gentities);
+  //MBERRCHK(rval, _mk->moab_instance());
+  entities_out.clear();
+  entities_out.resize(gentities.size());
+  moab::Range::iterator it = gentities.begin();
+  for (unsigned int i=0; i<gentities.size(); i++, it++)
+    entities_out[i] = (iGeom::EntityHandle)*it;
+  return (Error)0;
+}
+
+iGeom::Error FBiGeom::getEntAdj( EntityHandle handle,
+                  EntityType type_requested,
+                  std::vector<EntityHandle>& adj_entities_out )
+{
+  moab::Range adjEnts;
+  moab::ErrorCode rval = _fbEngine->getEntAdj((moab::EntityHandle)handle,
+      (int)type_requested, adjEnts  );
+  if (rval==moab::MB_SUCCESS)
+  {
+    adj_entities_out.clear();
+    adj_entities_out.resize(adjEnts.size());
+    moab::Range::iterator it = adjEnts.begin();
+    for (unsigned int i=0; i<adjEnts.size(); i++, it++)
+      adj_entities_out[i] = (iGeom::EntityHandle)*it;
+    return (Error)0;
+  }
+  else
+    return (Error)1;
+}
+iGeom::Error FBiGeom::getEgFcSense( EntityHandle edge, EntityHandle face, int& sense )
+{
+  moab::EntityHandle mbedge = (moab::EntityHandle) edge;
+  moab::EntityHandle mbface = (moab::EntityHandle) face;
+  moab::ErrorCode rval = _fbEngine->getEgFcSense( mbedge, mbface, sense );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::measure( const EntityHandle* entities,
+                              int entities_size,
+                              double* measures )
+{
+  const moab::EntityHandle * moab_entities = ( moab::EntityHandle *) entities;
+
+  moab::ErrorCode rval = _fbEngine->measure(moab_entities, entities_size, measures);
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::getEntNrmlSense( EntityHandle face, EntityHandle region,
+        int& sense )
+{
+  moab::EntityHandle mbregion = (moab::EntityHandle) region;
+  moab::EntityHandle mbface = (moab::EntityHandle) face;
+  moab::ErrorCode rval = _fbEngine->getEgFcSense(  mbface, mbregion, sense );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::getEntNrmlXYZ( EntityHandle entity,
+                                    double x, double y, double z,
+                                    double& i, double& j, double& k )
+{
+  moab::EntityHandle mbentity = (moab::EntityHandle) entity;
+  moab::ErrorCode rval = _fbEngine->getEntNrmlXYZ( mbentity,
+      x,   y,  z,
+       &i,  &j,  &k ); // some inconsistency here, we use pointers, not refs
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::getVtxCoord( EntityHandle vertex,
+                                  double& x, double& y, double& z )
+{
+  moab::EntityHandle mbentity = (moab::EntityHandle) vertex;
+  moab::ErrorCode rval = _fbEngine->getVtxCoord(mbentity, &x, &y, &z);
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::getEntClosestPt( EntityHandle entity,
+                                      double near_x, double near_y, double near_z,
+                                      double& on_x, double& on_y, double& on_z )
+{
+  moab::EntityHandle mbentity = (moab::EntityHandle) entity;
+  moab::ErrorCode rval = _fbEngine->getEntClosestPt(mbentity,
+      near_x,  near_y,   near_z,
+        &on_x,  &on_y, &on_z );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+iGeom::Error FBiGeom::getEgEvalXYZ( EntityHandle edge,
+                                   double x, double y, double z,
+                                   double& on_x, double& on_y, double& on_z,
+                                   double& tngt_i, double& tngt_j, double& tngt_k,
+                                   double& cvtr_i, double& cvtr_j, double& cvtr_k )
+{
+  moab::ErrorCode rval = _fbEngine->getEgEvalXYZ( (moab::EntityHandle) edge,
+                                   x, y, z,
+                                   on_x, on_y, on_z,
+                                   tngt_i, tngt_j, tngt_k,
+                                   cvtr_i,cvtr_j, cvtr_k );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+iGeom::Error FBiGeom::getFcEvalXYZ( EntityHandle face,
+                                   double x, double y, double z,
+                                   double& on_x, double& on_y, double& on_z,
+                                   double& nrml_i, double& nrml_j, double& nrml_k,
+                                   double& cvtr1_i, double& cvtr1_j, double& cvtr1_k,
+                                   double& cvtr2_i, double& cvtr2_j, double& cvtr2_k )
+{
+  /*
+  moab::ErrorCode rval = _fbEngine->getFcEvalXYZ( (moab::EntityHandle) face,
+                            x,  y, z,
+                            on_x, on_y, on_z,
+                            nrml_i, nrml_j, nrml_k,
+                            cvtr1_i, cvtr1_j, cvtr1_k,
+                            cvtr2_i, cvtr2_j,  cvtr2_k );*/
+  // camal really does not use curvatures
+  // the most it is calling for normals and for closest point
+  // return all curvatures = 0 for the time being, because we
+  // know camal is not requesting them
+
+  cvtr1_i=cvtr1_j=cvtr1_k= cvtr2_i= cvtr2_j=  cvtr2_k=0.;
+  // first get closest point, then normal, separately
+  moab::ErrorCode rval = _fbEngine->getEntClosestPt((moab::EntityHandle) face,
+       x, y, z,
+         &on_x,  &on_y, &on_z );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+  rval = _fbEngine->getEntNrmlXYZ( (moab::EntityHandle) face,
+        x,   y,  z,
+        &nrml_i, &nrml_j, &nrml_k ); // some inconsistency here, we use pointers, not refs
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+
+}
+
+iGeom::Error FBiGeom::getEgVtxSense( EntityHandle edge, EntityHandle vtx1, EntityHandle vtx2, int& sense )
+{
+  moab::ErrorCode rval = _fbEngine->getEgVtxSense((moab::EntityHandle) edge,
+      (moab::EntityHandle) vtx1, (moab::EntityHandle) vtx2,  sense);
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::getEntURange( EntityHandle edge,
+                                   double& u_min, double& u_max )
+{
+  moab::ErrorCode rval = _fbEngine->getEntURange((moab::EntityHandle) edge,
+               u_min,  u_max );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+iGeom::Error FBiGeom::getEntUtoXYZ( EntityHandle edge, double u,
+                                   double& x, double& y, double& z )
+{
+  moab::ErrorCode rval = _fbEngine->getEntUtoXYZ( (moab::EntityHandle) edge,   u,
+                                    x,  y,   z );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+iGeom::Error FBiGeom::isEntAdj( EntityHandle entity1, EntityHandle entity2,
+        bool& adjacent_out )
+{
+  moab::ErrorCode rval = _fbEngine->isEntAdj( (moab::EntityHandle) entity1,
+      (moab::EntityHandle) entity2,
+       adjacent_out );
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::getTagHandle( const char* name, TagHandle& handle_out )
+{
+  moab::Tag handle;
+  moab::ErrorCode rval = _fbEngine->moab_instance()->tag_get_handle( name, handle );
+
+  if (rval==moab::MB_SUCCESS)
+  {
+    handle_out = (TagHandle) handle;
+    return (Error)0;
+  }
+  else
+    return (Error)1;
+}
+
+iGeom::Error FBiGeom::createTag( const char* tag_name,
+                  int tag_num_type_values,
+                  TagValueType tag_type,
+                  TagHandle& tag_handle_out )
+{
+  moab::Tag handle;
+  // this is not implemented yet
+  moab::ErrorCode rval = _fbEngine->createTag(tag_name,
+      tag_num_type_values, tag_type, handle );
+  if (rval == moab::MB_SUCCESS)
+  {
+    tag_handle_out = (TagHandle) handle;
+    return (Error)0;
+  }
+  return (Error)1;
+}
+
+iGeom::Error FBiGeom::getData( EntityHandle entity_handle,
+                TagHandle tag_handle,
+                void* tag_value_out )
+{
+  // we know this is really a moab thingy
+  return getArrData(  &entity_handle, 1, tag_handle, tag_value_out );
+
+}
+
+iGeom::Error FBiGeom::getArrData( const EntityHandle* entity_handles,
+                   int entity_handles_size,
+                   TagHandle tag_handle,
+                   void* tag_values_out )
+{
+  moab::Tag tagh=(moab::Tag)tag_handle;
+  const moab::EntityHandle *ents = reinterpret_cast<const moab::EntityHandle *>(entity_handles);
+  moab::ErrorCode rval =  _fbEngine->getArrData( ents,
+      entity_handles_size, tagh, tag_values_out);
+  if (rval == moab::MB_SUCCESS)
+    return (Error)0;
+
+  return (Error)1;
+}
+
+iGeom::Error FBiGeom::setData( EntityHandle entity_handle,
+                TagHandle tag_handle,
+                const void* tag_value )
+{
+  // we know this is really a moab thingy
+  return setArrData(  &entity_handle, 1, tag_handle, tag_value );
+}
+
+iGeom::Error FBiGeom::setArrData( const EntityHandle* entity_handles,
+                   int entity_handles_size,
+                   TagHandle tag_handle,
+                   const void* tag_values )
+{
+  moab::Tag tagh=(moab::Tag)tag_handle;
+  const moab::EntityHandle *ents = reinterpret_cast<const moab::EntityHandle *>(entity_handles);
+  moab::ErrorCode rval =  _fbEngine->setArrData( ents,
+      entity_handles_size, tagh, tag_values);
+  if (rval == moab::MB_SUCCESS)
+    return (Error)0;
+
+  return (Error)1;
+
+}
+
+iGeom::Error FBiGeom::getFaceType( EntityHandle face, std::string& type )
+{
+  type = "nonplanar";
+  return (Error)0;
+}
+
+iGeom::Error FBiGeom::isEntParametric( EntityHandle entity, bool& parametric )
+{
+  parametric = false;
+  return (Error)0;
+}
+
+iGeom::Error FBiGeom::getEntBoundBox( EntityHandle entity,
+                       double& min_x, double& min_y, double& min_z,
+                       double& max_x, double& max_y, double& max_z )
+{
+  moab::ErrorCode rval =  _fbEngine->getEntBoundBox((moab::EntityHandle) entity,
+      &min_x, &min_y, &min_z,
+      &max_x, &max_y, &max_z);
+  if (rval == moab::MB_SUCCESS)
+    return (Error)0;
+
+  return (Error)1;
+}
+#if 0
 
 inline iGeom::Error
 iGeom::save( const char* file_name,
@@ -540,37 +1069,6 @@ iGeom::getNumOfType( EntitySetHandle set, EntityType type, int& count_out  )
   return (Error)err;
 }
 
-inline iGeom::Error
-iGeom::getEntities( EntitySetHandle set,
-                    EntityType type,
-                    std::vector<EntityHandle>& entities_out )
-{
-    // if input vect has no allocated space, allocate some so
-    // we don't accidentally ask the impl to allocate an array
-  if (entities_out.capacity() == 0) {
-    int count;
-    Error err2 = getNumOfType( set, iBase_ALL_TYPES, count );
-    if (err2 != iBase_SUCCESS)
-      return err2;
-    entities_out.resize( count );
-  }
-  
-    // try getting results using whatever space input vector has allocated
-  int err, size = 0, alloc = entities_out.capacity();
-  entities_out.resize( entities_out.capacity() );
-  EntityHandle* ptr = &entities_out[0];
-  iGeom_getEntities( mInstance, set, type,  &ptr, &alloc, &size, &err );
-  entities_out.resize(size);
-  
-    // if input vector was too small, try again with increased size
-  if (iBase_BAD_ARRAY_DIMENSION == err || iBase_BAD_ARRAY_SIZE == err) {
-    alloc = entities_out.size();
-    ptr = &entities_out[0];
-    iGeom_getEntities( mInstance, set, type,  &ptr, &alloc, &size, &err );
-  }
-  
-  return (Error)err;
-}
 
 inline iGeom::Error
 iGeom::deleteEnt( EntityHandle handle )
@@ -1253,7 +1751,6 @@ inline iGeom::Error iGeom::getSense(EntityHandle ent, EntityHandle wrt_ent, int 
     case iBase_EDGE:
         return getEgVtxSense(wrt_ent, ent, ent, sense);
     case iBase_VERTEX:
-    case iBase_ALL_TYPES:
         return iBase_FAILURE;
   }
   return iBase_FAILURE;
@@ -1279,7 +1776,6 @@ inline iGeom::Error iGeom::getArrSense(const EntityHandle *ent, int num_ents, En
         return getEgVtxArrSense(&dum_wrts[0], num_ents, ent, num_ents, ent, num_ents, sense);
         break;
     case iBase_VERTEX:
-    case iBase_ALL_TYPES:
         return iBase_FAILURE;
         break;
   }
@@ -2062,5 +2558,6 @@ iGeom::mergeEnts( const EntityHandle* entities, int entities_size, double tolera
   iGeom_mergeEnts( mInstance, entities, entities_size, tolerance, &err );
   return (Error)err;
 }
-
 #endif
+
+} // end namespace MeshKit

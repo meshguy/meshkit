@@ -48,7 +48,10 @@ if HAVE_CAMAL_TRIADV
 test_triadvance_SOURCES = test_triadvance.cpp
 test_triadvance_DEPENDENCIES = \
 	$(LDADD)
+#test_mbgeom_SOURCES = test_mbgeom.cpp
+#test_mbgeom_DEPENDENCIES = $(LDADD)
 TESTS += test_triadvance 
+#test_mbgeom
 endif
 
 if HAVE_CAMAL_PAVER
