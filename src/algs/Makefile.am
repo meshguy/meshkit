@@ -3,8 +3,6 @@ AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
 SUBDIRS =  QuadMesher
-AM_CPPFLAGS += -I$(srcdir)/QuadMesher
-libMeshKitalgs_la_LIBADD = QuadMesher/libMeshKitJaalQuadMesher.la
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
@@ -26,6 +24,8 @@ libMeshKitalgs_la_SOURCES = \
 	CopyUtils.cpp \
 	CopyUtils.hpp \
 	ProjectShell.cpp \
+	vec_utils.cpp \
+	vec_utils.hpp \
 	OneToOneSwept.cpp
 
 # The list of header files which are to be installed
