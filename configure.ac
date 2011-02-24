@@ -98,7 +98,7 @@ fi
 
 # List of source directories to conditionally search.
 # Paths should be relative to top source directory.
-DOXYGEN_SRC_PATH="src/core src/util src/algs src/extern/register_extern.cpp test/core test/algs"
+DOXYGEN_SRC_PATH="src/core src/utils src/algs src/extern/register_extern.cpp test/core test/algs"
 
 # Old versions of autoconf (automake?) don't define this
 if test "x$htmldir" = "x"; then
