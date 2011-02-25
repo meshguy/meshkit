@@ -12,81 +12,134 @@
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
-
 #define DEFAULT_TEST_FILE "cube.cub"
 
-int load_and_extrude(const char *input_filename,
-                     const char *output_filename,
-                     const Vector<3> &dx);
+MKCore *mk;
+
+void test_load_and_extrude();
+void test_extrude_quad();
 
 int main(int argc, char **argv)
 {
-  // check command line arg
-  std::string input_filename;
-  const char *output_filename = NULL;
-  Vector<3> x;
+  mk = new MKCore();
+  int num_fail = 0;
 
-  if (argc ==6) {
-    input_filename = argv[1];
-    output_filename = argv[5];
-    x[0] = atof(argv[2]);
-    x[1] = atof(argv[3]);
-    x[2] = atof(argv[4]);
-  }
+  num_fail += RUN_TEST(test_load_and_extrude);
+  num_fail += RUN_TEST(test_extrude_quad);
 
-  else {
-    std::cout << "Usage: " << argv[0] << "<input_mesh_filename> {x} {y} {z} <output_mesh_filename>" << std::endl;
-
-    std::cout << std::endl;
-    if (argc != 1) return 1;
-    std::cout << "No file specified.  Defaulting to: " << DEFAULT_TEST_FILE << std::endl;
-    std::string file_name = TestDir + "/" + DEFAULT_TEST_FILE;
-    input_filename += TestDir;
-    input_filename += "/";
-    input_filename += DEFAULT_TEST_FILE;
-    x[0] = 10.0;
-    x[1] = 0.0;
-    x[2] = 0.0;
-  }
-
-  if (load_and_extrude(input_filename.c_str(), output_filename, x))
-    return 1;
-
-  return 0;
+  delete mk;
+  return num_fail;
 }
 
-int load_and_extrude(const char *input_filename,
-                     const char *output_filename,
-                     const Vector<3> &dx)
+void clear_mesh(MKCore *mk)
 {
-  // start up MK and load the geometry
-  MKCore mk;
-  mk.load_mesh(input_filename);
+  iMesh *mesh = mk->imesh_instance();
+  std::vector<iMesh::EntityHandle> ents;
+  mesh->getEntities(mesh->getRootSet(), iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
+                    ents);
+  mesh->deleteEntArr(&ents[0], ents.size());
+}
+
+void test_load_and_extrude()
+{
+  clear_mesh(mk);
+  std::string filename = TestDir + "/" + DEFAULT_TEST_FILE;
+  mk->load_mesh(filename.c_str());
 
   // populate mesh to relate geometry entities and mesh sets
-  mk.populate_mesh();
+  mk->populate_mesh();
 
-  // get the faces
-  MEntVector faces;
-  mk.get_entities_by_dimension(2, faces);
+  // get the hexes
+  MEntVector vols;
+  mk->get_entities_by_dimension(2, vols);
 
-  ExtrudeMesh *em = (ExtrudeMesh*) mk.construct_meshop("ExtrudeMesh", faces);
+  ExtrudeMesh *em = (ExtrudeMesh*) mk->construct_meshop("ExtrudeMesh", vols);
   em->set_name("extrude_mesh");
 
+  // some entity tag types are always copy or expand
+  em->expand_sets().add_tag("MATERIAL_SET");
+  em->expand_sets().add_tag("DIRICHLET_SET");
+  em->expand_sets().add_tag("NEUMANN_SET");
+
+  Vector<3> dx; dx[0] = 10; dx[1] = 0; dx[2] = 0;
   em->set_transform(Extrude::Translate(dx, 5));
 
   // put them in the graph
-  mk.get_graph().addArc(mk.root_node()->get_node(), em->get_node());
-  mk.get_graph().addArc(em->get_node(), mk.leaf_node()->get_node());
+  mk->get_graph().addArc(mk->root_node()->get_node(), em->get_node());
+  mk->get_graph().addArc(em->get_node(), mk->leaf_node()->get_node());
 
   // mesh embedded boundary mesh, by calling execute
-  mk.setup_and_execute();
+  mk->setup_and_execute();
 
-  // save if o/p file specified
-  if(output_filename != NULL){
-    mk.save_mesh(output_filename, NULL);
+  delete em;
+}
+
+
+void test_extrude_quad()
+{
+  clear_mesh(mk);
+
+  iMesh *mesh = mk->imesh_instance();
+
+  double coords[] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 1, 0,
+  };
+
+  iMesh::EntityHandle verts[4];
+  iMesh::EntityHandle quad;
+  iMesh::EntitySetHandle set;
+
+  mesh->createVtxArr(4, iBase_INTERLEAVED, coords, verts);
+  mesh->createEnt(iMesh_QUADRILATERAL, verts, 4, quad);
+  mesh->createEntSet(true, set);
+  mesh->addEntToSet(quad, set);
+
+  ModelEnt me(mk, iBase_EntitySetHandle(0), /*igeom instance*/0,
+              (moab::EntityHandle)set);
+  MEntVector selection;
+  selection.push_back(&me);
+
+  ExtrudeMesh *em = (ExtrudeMesh*) mk->construct_meshop("ExtrudeMesh",
+                                                        selection);
+  em->set_name("extrude_mesh");
+
+  Vector<3> dx; dx[0] = 0; dx[1] = 0; dx[2] = 10;
+  em->set_transform(Extrude::Translate(dx, 10));
+  em->copy_faces(true);
+
+  // put them in the graph
+  mk->get_graph().addArc(mk->root_node()->get_node(), em->get_node());
+  mk->get_graph().addArc(em->get_node(), mk->leaf_node()->get_node());
+
+  em->copy_sets().add_set(set);
+
+  // mesh embedded boundary mesh, by calling execute
+  mk->setup_and_execute();
+
+  std::vector<iMesh::EntityHandle> new_verts;
+  double new_coords[4*3];
+  std::vector<iMesh::EntityHandle> new_quad;
+  iMesh::EntitySetHandle new_set;
+
+  mesh->getEntSetEHData(set, em->copy_tag(), (iMesh::EntityHandle&)new_set);
+
+  mesh->getEntities(new_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, new_quad);
+  CHECK_EQUAL(new_quad.size(), size_t(1));
+
+  mesh->getEntAdj(new_quad[0], iBase_VERTEX, new_verts);
+  CHECK_EQUAL(new_verts.size(), size_t(4));
+
+  mesh->getVtxArrCoords(&new_verts[0], new_verts.size(), iBase_INTERLEAVED,
+                        new_coords);
+
+  for(int i=0; i<4; i++) {
+    CHECK_REAL_EQUAL(coords[i*3+0],    new_coords[i*3+0], 0.00001);
+    CHECK_REAL_EQUAL(coords[i*3+1],    new_coords[i*3+1], 0.00001);
+    CHECK_REAL_EQUAL(coords[i*3+2]+10, new_coords[i*3+2], 0.00001);
   }
 
-  std::cout << "ExtrudeMesh_test is successfully finished." << std::endl;
-  return 0;
+  delete em;
 }

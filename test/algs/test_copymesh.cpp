@@ -113,13 +113,8 @@ void test_copy_quad()
 
   cm->copy_sets().add_set(set);
 
-  int n;
-  mesh->getNumOfType(mesh->getRootSet(), iBase_ALL_TYPES, n);
-
   // mesh embedded boundary mesh, by calling execute
   mk->setup_and_execute();
-
-  mesh->getNumOfType(mesh->getRootSet(), iBase_ALL_TYPES, n);
 
   std::vector<iMesh::EntityHandle> new_verts;
   double new_coords[4*3];

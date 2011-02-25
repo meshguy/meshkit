@@ -119,6 +119,13 @@ namespace MeshKit
     tag_copy_sets(extrudeSets, local_tag, extrudeTag);
 
     if (copyFaces) {
+      // set the local copy tags on vertices
+      // XXX: Should this really happen? Doing so adds more entities to copysets
+      // than explicitly passed into this function. This may be a domain-
+      // specific question.
+      IBERRCHK(mesh->setEHArrData(&verts[0], verts.size(), local_tag,
+                                  &next[0]), *mesh);
+
       connect_the_dots(mesh, local_tag, ents, indices, offsets, next);
 
       link_expand_sets(expandSets, local_tag);

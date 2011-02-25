@@ -39,7 +39,7 @@ namespace MeshKit {
     }                                                                      \
   } while(false)
 
-#define IBERRCHK(err, x) IBERRCHK_(err, x, __FILE__, __LINE__)
+#define IBERRCHK(err, x) IBERRCHK_((err), (x), __FILE__, __LINE__)
 
 inline void IBERRCHK_(int err, const char *descr);
 inline void IBERRCHK_(int err, iMesh &mesh);

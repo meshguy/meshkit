@@ -110,8 +110,6 @@ void get_dest_set(iMesh *mesh, iMesh::TagHandle local_tag,
 {
   iMesh::Error err;
 
-  if (dest == NULL) return;
-
   err = mesh->getEntSetEHData(src, local_tag,
                               reinterpret_cast<iMesh::EntityHandle&>(dest));
 

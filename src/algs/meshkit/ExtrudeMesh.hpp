@@ -181,6 +181,16 @@ namespace MeshKit {
     copyFaces = copy;
   }
 
+  inline iBase_TagHandle ExtrudeMesh::copy_tag()
+  {
+    return copyTag;
+  }
+
+  inline iBase_TagHandle ExtrudeMesh::extrude_tag()
+  {
+    return extrudeTag;
+  }
+
   inline void ExtrudeMesh::reset_sets()
   {
     extrudeSets.clear();
