@@ -2,15 +2,15 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Things to build
-noinst_LTLIBRARIES = libMeshKitJaalQuadMesher.la
+lib_LTLIBRARIES = libJaalQuadMesher.la
          
 SUBDIRS = 
 
 # The directory in which to install headers
-libMeshKitJaalQuadMesher_la_includedir = $(includedir)
+libJaalQuadMesher_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-libMeshKitJaalQuadMesher_la_SOURCES = \
+libJaalQuadMesher_la_SOURCES = \
 	AdfrontClean.cpp  \
 	BinaryTree.cpp \
 	Bridges.cpp \
@@ -41,7 +41,7 @@ libMeshKitJaalQuadMesher_la_SOURCES = \
 	QuadQuality.cpp 
 
 # The list of header files which are to be installed
-nobase_libMeshKitJaalQuadMesher_la_include_HEADERS = \
+nobase_libJaalQuadMesher_la_include_HEADERS = \
 	meshkit/Mesh.hpp   \
 	meshkit/MeshRefine2D.hpp \
         meshkit/QuadMesher.hpp \
