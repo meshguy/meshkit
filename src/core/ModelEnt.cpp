@@ -17,9 +17,11 @@ ModelEnt::ModelEnt(MKCore *mk,
                    iGeom * igeom,
                    moab::EntityHandle mesh_ent,
                    int sizing_index)
-        : mkCore(mk), iGeomEnt(geom_ent), iGeomSet(NULL), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH),
-          iRelFlag(true), igeomInstance(igeom)
+        : mkCore(mk), iGeomEnt(geom_ent), iGeomSet(NULL),
+          moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
+          igeomInstance(igeom),
+          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false),
+          meshedState(NO_MESH), iRelFlag(true)
 
 {}
 
@@ -28,9 +30,11 @@ ModelEnt::ModelEnt(MKCore *mk,
                    iGeom * igeom,
                    moab::EntityHandle mesh_ent,
                    int sizing_index)
-        : mkCore(mk), iGeomEnt(NULL), iGeomSet(geom_ent), moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
-          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false), meshedState(NO_MESH),
-          iRelFlag(true), igeomInstance(igeom)
+        : mkCore(mk), iGeomEnt(NULL), iGeomSet(geom_ent),
+          moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
+          igeomInstance(igeom),
+          meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false),
+          meshedState(NO_MESH), iRelFlag(true)
 
 {}
 
@@ -508,11 +512,44 @@ void ModelEnt::boundary(int dim,
 
     // get out here if we're a curve
   if (1 == this_dim) {
-    for (unsigned int i = 0; i < tmp_ents.size(); i++) {
-      entities.push_back(tmp_ents[i]);
-      if (senses) senses->push_back(SENSE_FORWARD);
+    // it is important to order the vertices, especially for boundary
+    // cases get_adjacency does not say anything about order
+    if (tmp_ents.size() <= 1) // no worry
+    {
+      for (unsigned int i = 0; i < tmp_ents.size(); i++) {
+        entities.push_back(tmp_ents[i]);
+        if (senses) senses->push_back(SENSE_FORWARD);
+      }
     }
-    return;
+    else
+    {
+      // we have at least 2 vertices; if more than 2, this is an error
+      if (tmp_ents.size() > 2)
+        throw Error(MK_FAILURE, " edge with too many vertices ");
+      // we have now exactly 2 vertices; order them according to the
+      // edge they come from
+      int sense = 0;
+      iGeom::Error rg = igeom_instance()->getEgVtxSense( geom_handle(),tmp_ents[0]->geom_handle(),
+          tmp_ents[1]->geom_handle(),  sense );
+      IBERRCHK(rg, "Trouble getting edge sense");
+      if (-1==sense)
+      {
+        // the vertices are reversed in adjacency list
+        entities.push_back(tmp_ents[1]);
+        entities.push_back(tmp_ents[0]);
+      }
+      else
+      {
+        // vertices are fine
+        entities.push_back(tmp_ents[0]);
+        entities.push_back(tmp_ents[1]);
+      }
+      if (senses) {
+        senses->push_back(SENSE_FORWARD);
+        senses->push_back(SENSE_FORWARD);
+      }
+    }
+    return; // we need to get out, we treated a dim 1 entity
   }
   
     // get adjacent entities into a sorted, mutable list

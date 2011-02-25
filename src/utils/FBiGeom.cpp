@@ -741,7 +741,8 @@ iGeom::Error FBiGeom::getEntities( EntitySetHandle set,
   // ErrorCode getEntities(EntityHandle root_set, int ent_type, Range & gentities);
   moab::Range gentities;
   moab::ErrorCode rval = _fbEngine->getEntities((moab::EntityHandle)set,  (int) type, gentities);
-  //MBERRCHK(rval, _mk->moab_instance());
+  if (rval!=moab::MB_SUCCESS)
+    return (Error)1;
   entities_out.clear();
   entities_out.resize(gentities.size());
   moab::Range::iterator it = gentities.begin();
@@ -883,9 +884,7 @@ iGeom::Error FBiGeom::getFcEvalXYZ( EntityHandle face,
   moab::ErrorCode rval = _fbEngine->getEntClosestPt((moab::EntityHandle) face,
        x, y, z,
          &on_x,  &on_y, &on_z );
-  if (rval == moab::MB_SUCCESS)
-    return (Error) 0;
-  else
+  if (rval != moab::MB_SUCCESS)
     return (Error)1;
   rval = _fbEngine->getEntNrmlXYZ( (moab::EntityHandle) face,
         x,   y,  z,
