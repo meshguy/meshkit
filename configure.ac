@@ -217,6 +217,8 @@ if test "xyes" = "x$HAVE_$2"; then
                       [AC_MSG_ERROR([$2_LIBS not found in $2_CONFIG_OPTIONS])])
   $2_CONFIG_OPTIONS_INCLUDE="include ${$2_CONFIG_OPTIONS}"
   AC_SUBST($2_CONFIG_OPTIONS_INCLUDE)
+  $2_DIR=$itaps_dir
+  AC_SUBST($2_DIR)
 fi
 
 if test "xyes" = "x$HAVE_$2"; then 
@@ -302,10 +304,11 @@ AC_HELP_STRING([--enable-tools],[Build all tools by default])
 AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
                          [ENABLE_TOOLS=$enableval],[ENABLE_TOOLS=] )
   # Individual tools
-MK_OPTIONAL_TOOL([algs],    [yes])
+MK_OPTIONAL_TOOL([algs],   [yes])
 MK_OPTIONAL_TOOL([rgg],    [yes])
-MK_OPTIONAL_TOOL([utils],    [yes])
+MK_OPTIONAL_TOOL([utils],  [yes])
 MK_OPTIONAL_TOOL([src],    [no])
+MK_OPTIONAL_TOOL([python], [no])
 
 
 ################################################################################
@@ -897,6 +900,7 @@ AC_CONFIG_FILES([Makefile
                  algs/make_watertight/Makefile
                  camal/Makefile
                  plibs/Makefile
+                 python/setup.py
                  rgg/Makefile
                  src/Makefile
                  src/core/Makefile
@@ -913,10 +917,10 @@ AC_CONFIG_FILES([Makefile
                  test/Makefile
                  test/core/Makefile
                  test/algs/Makefile
-		 test/extern/Makefile
-		 test/extern/CAMAL/Makefile
-		 test/extern/mesquite/Makefile
-		 test/extern/netgen/Makefile
+                 test/extern/Makefile
+                 test/extern/CAMAL/Makefile
+                 test/extern/mesquite/Makefile
+                 test/extern/netgen/Makefile
                  utils/Makefile
                  doc/Makefile
                  doc/meshkit.dox
