@@ -23,8 +23,10 @@ void skip_comments(FILE *f)
 }
 //##############################################################################
 
-int Mesh ::read_off_format_data(const string &fname)
+int MeshImporter ::off_file(const string &fname)
 {
+  if( mesh == NULL ) mesh = new Mesh;
+
   ifstream infile( fname.c_str(), ios::in);
   if( infile.fail() ) {
       cout << "Warning: Cann't open file " << fname << endl;
@@ -53,7 +55,7 @@ int Mesh ::read_off_format_data(const string &fname)
        p3d[2] = z;
        vertex = Vertex::newObject();
        vertex->setXYZCoords(p3d);
-       addNode( vertex );
+       mesh->addNode( vertex );
   } 
 
   for( size_t i = 0; i < numFaces; i++) 
@@ -68,27 +70,94 @@ int Mesh ::read_off_format_data(const string &fname)
        switch( numNodes )
        {
           case 3:
-              connect[0] = getNodeAt(facevtx[0]);
-              connect[1] = getNodeAt(facevtx[1]);
-              connect[2] = getNodeAt(facevtx[2]);
+              connect[0] = mesh->getNodeAt(facevtx[0]);
+              connect[1] = mesh->getNodeAt(facevtx[1]);
+              connect[2] = mesh->getNodeAt(facevtx[2]);
               break;
           case 4:
-              connect[0] = getNodeAt(facevtx[0]);
-              connect[1] = getNodeAt(facevtx[1]);
-              connect[2] = getNodeAt(facevtx[2]);
-              connect[3] = getNodeAt(facevtx[3]);
+              connect[0] = mesh->getNodeAt(facevtx[0]);
+              connect[1] = mesh->getNodeAt(facevtx[1]);
+              connect[2] = mesh->getNodeAt(facevtx[2]);
+              connect[3] = mesh->getNodeAt(facevtx[3]);
               break;
           default:
               for( int j = 0; j < numNodes; j++) 
-                   connect[j] = getNodeAt(facevtx[j]);
+                   connect[j] = mesh->getNodeAt(facevtx[j]);
               break; 
        }
        Face *face = new Face;
        face->setNodes( connect );
-       addFace(face);
+       mesh->addFace(face);
    }  
-   cout << "Reading Off file complete " << endl;
+
    return 0;
 }
 
 //##############################################################################
+
+int 
+MeshExporter ::off_file(Mesh *mesh, const string &s)
+{
+    if (!mesh->isPruned())
+    {
+        mesh->prune();
+        mesh->enumerate(0);
+        mesh->enumerate(2);
+    }
+    string filename = s;
+    ofstream ofile(filename.c_str(), ios::out);
+    if( ofile.fail() ) 
+        return 1;
+
+    if (!mesh->is_consistently_oriented())
+    {
+        cout << "Warning: Mesh is not conistently oriented " << endl;
+    }
+
+    size_t numnodes = mesh->getSize(0);
+    size_t numfaces = mesh->getSize(2);
+
+    size_t nn = numnodes;
+    ofile << "OFF" << endl;
+
+    ofile << nn << " " << numfaces << " 0  " << endl;
+
+    for (size_t i = 0; i < numnodes; i++)
+    {
+        Vertex *v = mesh->getNodeAt(i);
+        const Point3D &p3d = v->getXYZCoords();
+        ofile << p3d[0] << " " << p3d[1] << " " << p3d[2] << endl;
+    }
+
+    NodeSequence oldConnect, newConnect;
+    for (size_t i = 0; i < numfaces; i++)
+    {
+        Face *face = mesh->getFaceAt(i);
+        if (face->getSize(0) == 4)
+        {
+            oldConnect = face->getNodes();
+            Face::quad_tessalate(oldConnect, newConnect); // Because of OpenGL
+        }
+        else
+            newConnect = face->getNodes();
+
+        int nnodes = newConnect.size();
+        ofile << nnodes << " ";
+        for (int j = 0; j < nnodes; j++)
+        {
+            size_t vid = newConnect[j]->getID();
+            if (vid >= numnodes)
+            {
+                assert(!face->isRemoved());
+                assert(!newConnect[j]->isRemoved());
+                cout << face->getID() << endl;
+                cout << face->isRemoved() << endl;
+                cout << "Vertex indexing out of range " << vid << endl;
+                exit(0);
+            }
+            ofile << vid << " ";
+        }
+        ofile << endl;
+    }
+    return 0;
+}

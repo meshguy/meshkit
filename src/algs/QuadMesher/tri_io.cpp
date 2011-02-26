@@ -4,7 +4,7 @@ using namespace Jaal;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Mesh::readTriNodes( const string &fname)
+void MeshImporter ::readTriNodes( const string &fname)
 {
   string filename = fname + ".node";
 
@@ -23,7 +23,7 @@ void Mesh::readTriNodes( const string &fname)
   assert( ndim == 2 );
   assert( numattrib == 0);
 
-  nodes.resize( numnodes );
+  mesh->reserve(numnodes, 0);
 
   double x, y, z = 0.0;
   Point3D xyz;
@@ -35,39 +35,14 @@ void Mesh::readTriNodes( const string &fname)
        xyz[0] = x;
        xyz[1] = y;
        xyz[2] = z;
-       nodes[i] = Vertex::newObject();
-       nodes[i]->setID(i);
-       nodes[i]->setXYZCoords(xyz);
-  }
-
-  double xmin, xmax, ymin, ymax;
-  xyz = nodes[0]->getXYZCoords();
-  xmin = xyz[0];
-  xmax = xyz[0];
-  ymin = xyz[1];
-  ymax = xyz[1];
-
-  for( int i = 0; i < numnodes; i++)  {
-        xyz = nodes[i]->getXYZCoords();
-       xmin = min( xmin, xyz[0] );
-       xmax = max( xmax, xyz[0] );
-       ymin = min( ymin, xyz[1] );
-       ymax = max( ymax, xyz[1] );
-  }
-
-  double xlen  = fabs(xmax-xmin);
-  double ylen  = fabs(ymax-ymin);
-  double scale = max( xlen, ylen );
-
-  for( int i = 0; i < numnodes; i++)  
-  {
-       xyz = nodes[i]->getXYZCoords();
-       xyz[0] /= scale;
-       xyz[1] /= scale;
+       Vertex *v = Vertex::newObject();
+       v->setID(i);
+       v->setXYZCoords(xyz);
+       mesh->addNode( v );
   }
 }
 ///////////////////////////////////////////////////////////////////////////////
-void Mesh::readTriEdges( const string &fname)
+void MeshImporter::readTriEdges( const string &fname)
 {
 /*
   string filename = fname + ".edge";
@@ -98,7 +73,7 @@ void Mesh::readTriEdges( const string &fname)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Mesh::readTriFaces( const string &fname)
+void MeshImporter ::readTriFaces( const string &fname)
 {
   string filename = fname + ".ele";
   ifstream infile( filename.c_str(), ios::in);
@@ -107,14 +82,12 @@ void Mesh::readTriFaces( const string &fname)
       return;
   }
 
-  cout << "Reading face file " << filename << endl;
-
   int id, numfaces, numelemnodes, boundflag, bmark;
   int n0, n1, n2, n3, facetype;
   
   infile >> numfaces >> numelemnodes >> boundflag;
 
-  faces.resize( numfaces);
+  mesh->reserve( numfaces, 2);
 
   vector<PNode> connect(3);
   Face *newface;
@@ -129,12 +102,12 @@ void Mesh::readTriFaces( const string &fname)
            n1 = global2local[n1];
            n2 = global2local[n2];
 
-           connect[0] = getNodeAt(n0);
-           connect[1] = getNodeAt(n1);
-           connect[2] = getNodeAt(n2);
+           connect[0] = mesh->getNodeAt(n0);
+           connect[1] = mesh->getNodeAt(n1);
+           connect[2] = mesh->getNodeAt(n2);
 	   newface = new Face;
 	   newface->setNodes(connect);
-	   faces[i] = newface;
+	   mesh->addFace( newface );
        }
   }
 
@@ -148,25 +121,26 @@ void Mesh::readTriFaces( const string &fname)
            n1 = global2local[n1];
            n2 = global2local[n2];
            n3 = global2local[n3];
-           connect[0] = getNodeAt(n0);
-           connect[1] = getNodeAt(n1);
-           connect[2] = getNodeAt(n2);
-           connect[3] = getNodeAt(n3);
+           connect[0] = mesh->getNodeAt(n0);
+           connect[1] = mesh->getNodeAt(n1);
+           connect[2] = mesh->getNodeAt(n2);
+           connect[3] = mesh->getNodeAt(n3);
 	   newface = new Face;
 	   newface->setNodes(connect);
-	   faces[i] = newface;
+	   mesh->addFace( newface );
        }
   }
   
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-int Mesh::read_triangle_format_data( const string &fname)
+int MeshImporter ::triangle_file( const string &fname)
 {
    readTriNodes( fname );
    readTriEdges( fname );
    readTriFaces( fname );
-   enumerate(2);
+   mesh->enumerate(2);
+   global2local.clear();
    return 0;
 }
 

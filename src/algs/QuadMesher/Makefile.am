@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Things to build
-lib_LTLIBRARIES = libJaalQuadMesher.la
+noinst_LTLIBRARIES = libJaalQuadMesher.la
          
 SUBDIRS = 
 
@@ -38,7 +38,9 @@ libJaalQuadMesher_la_SOURCES = \
 	circumcenter.cpp \
 	geomPredicates.cpp \
 	MeshRefine2D.cpp \
-	QuadQuality.cpp 
+	QuadQuality.cpp  \
+	vtk_io.cpp
+  
 
 # The list of header files which are to be installed
 nobase_libJaalQuadMesher_la_include_HEADERS = \
