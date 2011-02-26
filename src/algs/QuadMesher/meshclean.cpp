@@ -41,7 +41,7 @@ void usage()
 ////////////////////////////////////////////////////////////////////////////////
 void angle_tests()
 {
-#ifdef USE_VERDICT
+#ifdef HAVE_VERDICT
    double xyz[4][3];
 
    xyz[0][0] = -1.0;

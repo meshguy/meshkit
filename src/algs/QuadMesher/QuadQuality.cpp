@@ -10,8 +10,7 @@ void print_histogram( const vector<double> &quality, const string &header )
 
 void plot_all_quad_quality_measure( Mesh *mesh )
 {
-
-#ifdef USE_VERDICT 
+#ifdef HAVE_VERDICT 
 
     VERDICT_REAL  val, coords[4][3];
     Point3D xyz;

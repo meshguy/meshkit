@@ -27,6 +27,7 @@ Mesh* tri_quad_conversion (Mesh *trimesh)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef HAVE_MOAB
 Mesh* tri_quad_conversion (iMesh_Instance imesh)
 {
   JaalMoabConverter meshconverter;
@@ -37,6 +38,7 @@ Mesh* tri_quad_conversion (iMesh_Instance imesh)
   delete trimesh;
   return quadmesh;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +61,7 @@ int main(int argc, char **argv)
 
   Mesh *quadmesh = NULL;
 
-#ifdef USE_MOAB
+#ifdef HAVE_MOAB
   iMesh_Instance imesh  = 0;
   JaalMoabConverter meshconverter;
   meshconverter.toMOAB(trimesh, imesh);

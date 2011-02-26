@@ -4,12 +4,15 @@
 #ifdef HAVE_MESQUITE
 #include "Mesquite_all_headers.hpp"
 using namespace Mesquite;
+using Mesquite::MsqError;
+#endif
 
 using namespace Jaal;
 
 int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
 {
 
+#ifdef HAVE_MESQUITE
     MsqError err;
 
     unsigned long int numnodes = mesh->getSize(0);
@@ -160,12 +163,16 @@ int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
     delete optmesh;
 
     return 0;
+
+#endif
+    return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 int Jaal::MeshOptimization::untangle(Mesh *mesh)
 {
+#ifdef HAVE_MESQUITE
     MsqError err;
     unsigned long int numnodes = mesh->getSize(0);
     unsigned long int numfaces = mesh->getSize(2);
@@ -279,14 +286,15 @@ int Jaal::MeshOptimization::untangle(Mesh *mesh)
 
     mesh->setCoordsArray(vCoords);
     return 0;
+#endif
+    return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
-using namespace Mesquite;
-using Mesquite::MsqError;
 
+#ifdef HAVE_MESQUITE
 int
 run_global_smoother(Mesquite::Mesh* mesh, MsqError& err)
 {
