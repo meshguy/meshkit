@@ -60,7 +60,7 @@ void OneToOneSwept::GetList()
 	
 	NodeList.resize(Nodes.size());
 
-	for (int i=0; i < int(Nodes.size()); i++)
+	for (unsigned int i=0; i < Nodes.size(); i++)
 	{
 		entity_index++;
 		NodeList[entity_index-1].gVertexHandle = Nodes[i];
@@ -85,7 +85,7 @@ void OneToOneSwept::GetList()
 	}	
 	
 	//loop over the edges and find the boundary nodes	
-	for (int i=0; i < int(gsEdgeList.size()); i++)
+	for (unsigned int i=0; i < gsEdgeList.size(); i++)
 	{
 		iBase_EntitySetHandle tmpSet;
 		r_err = mk_core()->irel_pair()->getEntSetRelation(gsEdgeList[i].gEdgeHandle, 0, tmpSet);
@@ -97,7 +97,7 @@ void OneToOneSwept::GetList()
 		
 		NodeList.resize(NodeList.size() + Nodes.size());
 		
-		for (int j=0; j < int(Nodes.size()); j++)
+		for (unsigned int j=0; j < Nodes.size(); j++)
 		{
 			entity_index++;
 			NodeList[entity_index-1].gVertexHandle = Nodes[j];
@@ -121,7 +121,7 @@ void OneToOneSwept::GetList()
 	}	
 	
 	//loop over the corners and find the corner nodes
-	for (int i=0; i < int(gVertexList.size()); i=i+2)
+	for (unsigned int i=0; i < gVertexList.size(); i=i+2)
 	{
 		iBase_EntitySetHandle tmpSet;
 		r_err = mk_core()->irel_pair()->getEntSetRelation(gVertexList[i].gVertexHandle, 0, tmpSet);
@@ -133,7 +133,7 @@ void OneToOneSwept::GetList()
 		
 		NodeList.resize(NodeList.size()+Nodes.size());
 		
-		for (int j=0; j < int(Nodes.size()); j++)
+		for (unsigned int j=0; j < Nodes.size(); j++)
 		{
 			entity_index++;
 			NodeList[entity_index-1].gVertexHandle = Nodes[j];
@@ -163,7 +163,7 @@ void OneToOneSwept::GetList()
 	IBERRCHK(m_err, "Trouble get the mesh edges from the mesh entity set.");
 	
 	EdgeList.resize(Edges.size());
-	for (int i=0; i < int(Edges.size()); i++)
+	for (unsigned int i=0; i < Edges.size(); i++)
 	{
 		EdgeList[i].gEdgeHandle = Edges[i];
 		EdgeList[i].index = i;
@@ -176,7 +176,7 @@ void OneToOneSwept::GetList()
 		IBERRCHK(m_err, "Trouble get the adjacent nodes from the mesh edges.");
 		
 		//loop over the nodes on the edge elements		
-		for (int j=0; j < int(Nodes.size()); j++)
+		for (unsigned int j=0; j < Nodes.size(); j++)
 		{
 			int tmpIndex=-1;
 			m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], taghandle, tmpIndex);
@@ -199,7 +199,7 @@ void OneToOneSwept::GetList()
 	IBERRCHK(m_err, "Trouble get the mesh face entities from mesh entity set.");
 	
 	FaceList.resize(Faces.size());
-	for (int i=0; i < int(Faces.size()); i++)
+	for (unsigned int i=0; i < Faces.size(); i++)
 	{
 		FaceList[i].gFaceHandle = Faces[i];
 		FaceList[i].index = i;
@@ -212,7 +212,7 @@ void OneToOneSwept::GetList()
 		IBERRCHK(m_err, "Trouble get the adjacent nodes from mesh face entity.");
 
 		FaceList[i].connect.resize(Nodes.size());
-		for (int j=0; j < int(Nodes.size()); j++)
+		for (unsigned int j=0; j < Nodes.size(); j++)
 		{			
 			int tmpIndex=-1;
 			m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], taghandle, tmpIndex);
@@ -364,7 +364,7 @@ int OneToOneSwept::InnerLayerMeshing()
 	
 	//create the vertex on the linking surface
 	//determine whether the different linking sides have the same number of layers
-	for (int i=0; i < int(gLinkSides.size()); i++)
+	for (unsigned int i=0; i < gLinkSides.size(); i++)
 	{
 		iBase_EntitySetHandle testset;
 		r_err = mk_core()->irel_pair()->getEntSetRelation(gLinkSides[i].gEdgeHandle, 0, testset);
@@ -423,7 +423,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 	{
 		if (m==0)
 		{
-			for (int i=0; i < int(FaceList.size()); i++)
+			for (unsigned int i=0; i < FaceList.size(); i++)
 			{
 				vector<iBase_EntityHandle> connect(8);
 				
@@ -443,7 +443,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 			IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
 			if (m == (numLayers-2))
 			{
-				for (int i=0; i < int(FaceList.size()); i++)
+				for (unsigned int i=0; i < FaceList.size(); i++)
 				{
 					vector<iBase_EntityHandle> connect(8);
 					
@@ -467,7 +467,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 		else
 		{
 			
-			for (int i=0; i < int(FaceList.size()); i++)
+			for (unsigned int i=0; i < FaceList.size(); i++)
 			{
 				vector<iBase_EntityHandle> connect(8);
 				
@@ -487,7 +487,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 			IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
 			if (m == (numLayers-2))
 			{
-				for (int i=0; i < int(FaceList.size()); i++)
+				for (unsigned int i=0; i < FaceList.size(); i++)
 				{
 					vector<iBase_EntityHandle> connect(8);
 					
@@ -536,7 +536,7 @@ int OneToOneSwept::InnerNodesProjection(vector<vector <Vertex> > &linkVertexList
 		PtsCenter[i].py = 0;
 		PtsCenter[i].pz = 0;
 	}
-	for (int i=0; i < int(NodeList.size()); i++)
+	for (unsigned int i=0; i < NodeList.size(); i++)
 	{
 		if (NodeList[i].onBoundary || NodeList[i].onCorner)
 		{
@@ -769,7 +769,7 @@ int OneToOneSwept::InnerNodesProjection(vector<vector <Vertex> > &linkVertexList
 		tA[2][2] = tInvMatrix[2][0]*tb[2][0] + tInvMatrix[2][1]*tb[2][1] + tInvMatrix[2][2]*tb[2][2];
 		
 		//calculate the inner nodes for different layers
-		for (int j=0; j < int(NodeList.size()); j++)
+		for (unsigned int j=0; j < NodeList.size(); j++)
 		{
 			if (!(NodeList[j].onBoundary || NodeList[j].onCorner))
 			{
@@ -825,13 +825,13 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
 	IBERRCHK(m_err, "Trouble get tag handle of the source surface.");
 
-	for (int i=0; i < int(gLinkSides.size()); i++)
+	for (unsigned int i=0; i < gLinkSides.size(); i++)
 	{
 		int sIndex, stIndex;
 		double u0, u1;
 		std::vector<iBase_EntityHandle> mNodeHandle(numLayers-1);
 		//find the node
-		for (int j=0; j < int(gVertexList.size()); j=j+2)
+		for (unsigned int j=0; j < gVertexList.size(); j=j+2)
 		{
 			if ((gLinkSides[i].connect[0]->id == gVertexList[j].id)||(gLinkSides[i].connect[1]->id == gVertexList[j].id))
 			{
@@ -882,7 +882,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 					isReverse = true;
 			}
 			
-			for (int m=0; m < int(vertices.size()); m++)
+			for (unsigned int m=0; m < vertices.size(); m++)
 			{
 				m_err = mk_core()->imesh_instance()->getVtxCoord(vertices[m], xyz1[0], xyz1[1], xyz1[2]);
 				IBERRCHK(m_err, "Trouble get the x,y,z coordinates of node entity.");
@@ -972,7 +972,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//check whether this linking surf is meshed or not
 	vector<bool> isMeshed(gLinkFaceList.size());
-	for (int i=0; i < int(gLinkFaceList.size()); i++)
+	for (unsigned int i=0; i < gLinkFaceList.size(); i++)
 	{
 		int t1=1, t2=1, t3=1;
 		int sEdgeIndex, gLeftIndex, gRightIndex;
@@ -1298,7 +1298,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			IBERRCHK(m_err, "Trouble get the int data from the node entity.");
 		
 			vector<int> sIndex(mNodes.size());  //sIndex is used to store the index for mesh nodes on the source surface boundary
-			for (int j=0; j < int(mNodes.size()); j++)  //inner node on the edge
+			for (unsigned int j=0; j < mNodes.size(); j++)  //inner node on the edge
 			{
 				int VertexId;
 				double u;//parametric coordinates on the source boundary edge
@@ -1404,7 +1404,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 						connect[1] = nodeHandle[nodehandleIndex-1];
 						m_err = mk_core()->imesh_instance()->createEnt(iMesh_LINE_SEGMENT, &connect[0], 2, lineHandle[LineIndex-1]);
 						IBERRCHK(g_err, "Trouble create the line segments in the mesh");
-						if (j == int(mNodes.size()-1))
+						if (j == (mNodes.size()-1))
 						{
 							LineIndex++;
 							lineHandle.resize(LineIndex);
@@ -1423,7 +1423,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 						connect[1] = linkVertexList[k][sIndex[j]].gVertexHandle;
 						m_err = mk_core()->imesh_instance()->createEnt(iMesh_LINE_SEGMENT, &connect[0], 2, lineHandle[LineIndex-1]);
 						IBERRCHK(m_err, "Trouble create the line segment entity.");
-						if (j == int(mNodes.size()-1))
+						if (j == (mNodes.size()-1))
 						{
 							LineIndex++;
 							lineHandle.resize(LineIndex);
@@ -1534,7 +1534,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 								IBERRCHK(m_err, "Trouble create the quadrilateral element entity.");
 							}
 						}
-						if (j== int(mNodes.size()-1))
+						if (j== (mNodes.size()-1))
 						{
 							if (k==0)
 							{
@@ -1717,7 +1717,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 							}
 					
 						}
-						if (j== int(mNodes.size()-1))
+						if (j== (mNodes.size()-1))
 						{
 							if (k==0)
 							{
@@ -1969,7 +1969,7 @@ int OneToOneSwept::TargetSurfProjection()
 	std::vector<iBase_EntitySetHandle> edgeMeshSets(gsEdgeList.size());
 	//loop over the various edges
 	
-	for (int i=0; i < int(gsEdgeList.size()); i++)
+	for (unsigned int i=0; i < gsEdgeList.size(); i++)
 	{
 		//get the mesh entityset for edge[i]
 		r_err = mk_core()->irel_pair()->getEntSetRelation(gsEdgeList[i].gEdgeHandle, 0, edgeMeshSets[i]);
@@ -2036,7 +2036,7 @@ int OneToOneSwept::TargetSurfProjection()
 					isReverse2 = true;
 				}
 			}
-			for (int j=0; j < int(edgeNodes.size()); j++)
+			for (unsigned int j=0; j < edgeNodes.size(); j++)
 			{
 				int tmpIndex;
 				m_err = mk_core()->imesh_instance()->getIntData(edgeNodes[j], taghandle, tmpIndex);
@@ -2110,7 +2110,7 @@ int OneToOneSwept::TargetSurfProjection()
 		std::vector<iBase_EntityHandle> testNodeHandle;
 
 		//create the boundary node on the edges. This doesn't include the corners.
-		for (int j=0; j < int(edgeNodes.size()); j++)
+		for (unsigned int j=0; j < edgeNodes.size(); j++)
 		{
 			//get the cartesian coordinates for the edge nodes
 			m_err = mk_core()->imesh_instance()->getVtxCoord(edgeNodes[j], pts.px, pts.py, pts.pz);
@@ -2177,7 +2177,7 @@ int OneToOneSwept::TargetSurfProjection()
 		m_err = mk_core()->imesh_instance()->getEntities(edgeMeshSets[i], iBase_EDGE, iMesh_LINE_SEGMENT, sedgeHandle);
 		IBERRCHK(m_err, "Trouble get the mesh line segments.");	
 	
-		for (int j=0; j< int(sedgeHandle.size()); j++)
+		for (unsigned int j=0; j< sedgeHandle.size(); j++)
 		{
 			int nodeindex1, nodeindex2;
 			std::vector<iBase_EntityHandle> connect(2);
@@ -2214,7 +2214,7 @@ int OneToOneSwept::TargetSurfProjection()
 	//Until now, all the nodes have been created on the boundary edge.
 	//get the corner coordinates
 	assert(NodeList.size()==TVertexList.size());
-	for (int i=0; i < int(NodeList.size()); i++)
+	for (unsigned int i=0; i < NodeList.size(); i++)
 	{
 		if (NodeList[i].onCorner||NodeList[i].onBoundary)
 		{
@@ -2300,7 +2300,7 @@ int OneToOneSwept::TargetSurfProjection()
 	}
 
 	//create the inner nodes on the target surface
-	for (int i=0; i < int(NodeList.size()); i++)
+	for (unsigned int i=0; i < NodeList.size(); i++)
 	{
 		if ((!NodeList[i].onBoundary)&&(!NodeList[i].onCorner))//make sure that the node is the inner node
 		{
@@ -2339,7 +2339,7 @@ int OneToOneSwept::TargetSurfProjection()
 	//create the edge elements on the target surface
 	index =0;
 	vector<iBase_EntityHandle> gEdgeHandle(0);
-	for (int i=0; i < int(EdgeList.size()); i++)
+	for (unsigned int i=0; i < EdgeList.size(); i++)
 	{
 		if (!EdgeList[i].onBoundary)
 		{
@@ -2382,7 +2382,7 @@ int OneToOneSwept::TargetSurfProjection()
 
 	//create the quadrilateral elements on the target surface
 	vector<iBase_EntityHandle> mFaceHandle(FaceList.size());
-	for (int i=0; i < int(FaceList.size()); i++)
+	for (unsigned int i=0; i < FaceList.size(); i++)
 	{
 		vector<iBase_EntityHandle> connect(FaceList[i].getNumNodes());
 		
@@ -2474,7 +2474,7 @@ void OneToOneSwept::buildAssociation()
     
     int geom_id;
     std::map<int, iBase_EntityHandle> mapNodes;
-    for (int i=0; i < int(gNodes.size()); i++)
+    for (unsigned int i=0; i < gNodes.size(); i++)
     {
     	g_err = mk_core()->igeom_instance()->getIntData(gNodes[i], geom_id_tag, geom_id);
         IBERRCHK(g_err, "Trouble get the int data of node entities.");
@@ -2489,7 +2489,7 @@ void OneToOneSwept::buildAssociation()
 
     
     std::map<int, iBase_EntityHandle> mapEdges;
-    for (int i = 0; i < int(gEdges.size()); i++)
+    for (unsigned int i = 0; i < gEdges.size(); i++)
     {
         g_err = mk_core()->igeom_instance()->getIntData(gEdges[i], geom_id_tag, geom_id);
         IBERRCHK(g_err, "Trouble get the int data of edge entities.");
@@ -2502,7 +2502,7 @@ void OneToOneSwept::buildAssociation()
     IBERRCHK(g_err, "Trouble get the geometric face entities.");
 
     std::map<int, iBase_EntityHandle> mapFaces;
-    for (int i = 0; i < int(gFaces.size()); i++)
+    for (unsigned int i = 0; i < gFaces.size(); i++)
     {
         g_err = mk_core()->igeom_instance()->getIntData(gFaces[i], geom_id_tag, geom_id);
         IBERRCHK(g_err, "Trouble get the int data of face entities.");
@@ -2515,7 +2515,7 @@ void OneToOneSwept::buildAssociation()
     IBERRCHK(g_err, "Trouble get the geometric cell entities.");
 
     std::map<int, iBase_EntityHandle> mapCells;
-    for (int i = 0; i < int(gCells.size()); i++)
+    for (unsigned int i = 0; i < gCells.size(); i++)
     {
         g_err = mk_core()->igeom_instance()->getIntData(gCells[i], geom_id_tag, geom_id);
         IBERRCHK(g_err, "Trouble get the int data of cell entities.");
@@ -2534,7 +2534,7 @@ void OneToOneSwept::buildAssociation()
     
     int numAssociations = 0;
     
-    for (int i = 0; i < int(entitySets.size()); i++)
+    for (unsigned int i = 0; i < entitySets.size(); i++)
     {
         mNodes.clear();
         m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_VERTEX, iMesh_ALL_TOPOLOGIES, mNodes);
@@ -2624,7 +2624,7 @@ void OneToOneSwept::buildAssociation()
 
     numAssociations = 0;
     ncount = 0;
-    for (int i = 0; i < int(entitySets.size()); i++)
+    for (unsigned int i = 0; i < entitySets.size(); i++)
     {
         mEdges.clear();
         m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_EDGE, iMesh_ALL_TOPOLOGIES, mEdges);
@@ -2704,7 +2704,7 @@ void OneToOneSwept::buildAssociation()
 
     ncount = 0;
     numAssociations = 0;
-    for (int i = 0; i < int(entitySets.size()); i++)
+    for (unsigned int i = 0; i < entitySets.size(); i++)
     {
         mFaces.clear();
         m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_FACE, iMesh_ALL_TOPOLOGIES, mFaces);
@@ -2768,7 +2768,7 @@ void OneToOneSwept::buildAssociation()
     IBERRCHK(m_err, "Trouble get the number of cells.");
 
     ncount = 0; IBERRCHK(m_err, "Trouble set the geom_id for entity set in the face association.");
-    for (int i = 0; i < int(entitySets.size()); i++)
+    for (unsigned int i = 0; i < entitySets.size(); i++)
     {
         mCells.clear();
         m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_REGION, iMesh_ALL_TOPOLOGIES, mCells);
