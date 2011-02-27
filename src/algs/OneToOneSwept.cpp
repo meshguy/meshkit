@@ -974,8 +974,8 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	vector<bool> isMeshed(gLinkFaceList.size());
 	for (int i=0; i < int(gLinkFaceList.size()); i++)
 	{
-		int t1=1, t2=1, t3=1, leftIndex, RightIndex, nodehandleIndex=0;
-		int sEdgeIndex, tEdgeIndex, gLeftIndex, gRightIndex;
+		int t1=1, t2=1, t3=1;
+		int sEdgeIndex, gLeftIndex, gRightIndex;
 		iBase_EntitySetHandle tmpSet;
 		std::vector<iBase_EntityHandle> aEdges, aNodes, aFaces, gEdges;
 		std::vector<iBase_EntityHandle> bNodes1, bNodes2, bNodes3;
@@ -989,13 +989,13 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		g_err = mk_core()->igeom_instance()->getEntAdj(gLinkFaceList[i].gFaceHandle, iBase_EDGE, gEdges);
 		IBERRCHK(g_err, "Trouble get the adjacent edges in a face.");
 		//find the corresponding edge on the linking surface, which is shared by source surface
-		for (int j=0; j< gEdges.size(); j++)
+		for (unsigned int j=0; j< gEdges.size(); j++)
 		{
 			int edgeId;
 			g_err = mk_core()->igeom_instance()->getIntData(gEdges[j], geom_id_tag, edgeId);
 			IBERRCHK(g_err, "Trouble get the int data of edge entity handle.");
 			//actually, the num of linking sides is equal to the num of edges on the source surface
-			for (int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
+			for (unsigned int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
 			{
 				if (edgeId == gsEdgeList[k].EdgeID)
 				{
@@ -1004,7 +1004,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 					break;
 				}
 			}
-			for (int k=0; (k < gLinkSides.size())&&(t2||t3); k++)
+			for (unsigned int k=0; (k < gLinkSides.size())&&(t2||t3); k++)
 			{
 				if ((edgeId == gLinkSides[k].EdgeID)&&(t2))
 				{
@@ -1039,7 +1039,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			m_err = mk_core()->imesh_instance()->getEntities(aEdgeSet, iBase_VERTEX, iMesh_ALL_TOPOLOGIES, aNodes);
 			IBERRCHK(m_err, "Trouble get the entities from the entity set.");
 			
-			for (int mm=0; mm < aNodes.size(); mm++)
+			for (unsigned int mm=0; mm < aNodes.size(); mm++)
 			{
 				int VertexId;
 				m_err = mk_core()->imesh_instance()->getIntData(aNodes[mm], taghandle, VertexId);
@@ -1066,7 +1066,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 					if (m2==0)
 					{
 						tmpIndex = 0;
-						for (int m1=0; m1 < aFaces.size(); m1++)
+						for (unsigned int m1=0; m1 < aFaces.size(); m1++)
 						{
 							bool is_contained;
 							m_err = mk_core()->imesh_instance()->isEntContained(tmpSet, aFaces[m1], is_contained);
@@ -1088,14 +1088,14 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 						m_err = mk_core()->igeom_instance()->getIntData(preNode, mesh_id_tag, preIndex);
 						IBERRCHK(m_err, "Trouble get the int data of node entity.");
 						
-						for (int m1=0; m1 < aFaces.size(); m1++)
+						for (unsigned int m1=0; m1 < aFaces.size(); m1++)
 						{
 							bool found = false;
 							bNodes3.clear();
 							m_err = mk_core()->imesh_instance()->getEntAdj(aFaces[m1], iBase_VERTEX, bNodes3);
 							IBERRCHK(m_err, "Trouble get the int data of node entity.");
 							
-							for (int m3=0; m3 < bNodes3.size(); m3++)
+							for (unsigned int m3=0; m3 < bNodes3.size(); m3++)
 							{
 								int tmp;
 								m_err = mk_core()->imesh_instance()->getIntData(bNodes3[m3], mesh_id_tag, tmp);
@@ -1129,7 +1129,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 					IBERRCHK(m_err, "Trouble get the adjacent nodes.");
 					assert((bNodes1.size()==bNodes1.size())&&(bNodes1.size()==4));
 					
-					for (int m1=0; m1 < bNodes1.size(); m1++)
+					for (unsigned int m1=0; m1 < bNodes1.size(); m1++)
 					{
 						int tmp;
 						m_err = mk_core()->imesh_instance()->getIntData(bNodes1[m1], mesh_id_tag, tmp);
@@ -1148,7 +1148,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 					m_err = mk_core()->imesh_instance()->getIntData(bNodes1[option2], mesh_id_tag, index2);
 					IBERRCHK(m_err, "Trouble get the int data of node entity.");
 	
-					for (int m1 =0; m1 < bNodes2.size(); m1++)
+					for (unsigned int m1 =0; m1 < bNodes2.size(); m1++)
 					{
 						int tmp;
 						m_err = mk_core()->imesh_instance()->getIntData(bNodes2[m1], mesh_id_tag, tmp);
@@ -1194,7 +1194,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	//discretize the linking surface		
-	for (int i=0; i < gLinkFaceList.size(); i++)
+	for (unsigned int i=0; i < gLinkFaceList.size(); i++)
 	{
 		//find the linking sides
 		if (!isMeshed[i])
@@ -1214,13 +1214,13 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			IBERRCHK(m_err, "Trouble get the adjacent edges of a surface.");
 
 			//find the corresponding edge on the linking surface, which is shared by source surface
-			for (int j=0; j< gEdges.size(); j++)
+			for (unsigned int j=0; j< gEdges.size(); j++)
 			{
 				int edgeId;
 				g_err = mk_core()->igeom_instance()->getIntData(gEdges[j], geom_id_tag, edgeId);
 				IBERRCHK(g_err, "Trouble get the int data of edge entity.");
 				//actually, the num of linking sides is equal to the num of edges on the source surface
-				for (int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
+				for (unsigned int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
 				{
 					if (edgeId == gsEdgeList[k].EdgeID)
 					{
@@ -1229,7 +1229,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 						break;
 					}
 				}
-				for (int k=0; (k < int(gLinkSides.size()))&&(t2||t3); k++)
+				for (unsigned int k=0; (k < gLinkSides.size())&&(t2||t3); k++)
 				{
 					if ((edgeId == gLinkSides[k].EdgeID)&&(t2))
 					{
