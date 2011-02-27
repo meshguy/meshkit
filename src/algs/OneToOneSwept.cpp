@@ -1877,8 +1877,12 @@ double OneToOneSwept::linear_interpolation(double r, double x0, double x1)
 	return pt;
 }
 
-//---------------------------------------------------------------------------//
-//function for obtaining the parametric coordinates from x,y,z coordinates
+//****************************************************************************//
+// function   : linear_interpolation 
+// Author     : Shengyong Cai
+// Date       : Feb 15, 2011
+// Description: function for obtaining the parametric coordinates from x,y,z coordinates
+//***************************************************************************//
 int OneToOneSwept::getUVCoords(iBase_EntityHandle gFaceHandle, Point3D pts3, Point2D &pts2)
 {
 	double xmin, ymin, zmin, xmax, ymax, zmax;
@@ -1903,8 +1907,13 @@ int OneToOneSwept::getUVCoords(iBase_EntityHandle gFaceHandle, Point3D pts3, Poi
 	return 1;
 }
 
-//---------------------------------------------------------------------------//
-//function for obtaining the x,y,z coordinates from parametric coordinates
+//****************************************************************************//
+// function   : linear_interpolation 
+// Author     : Shengyong Cai
+// Date       : Feb 15, 2011
+// Description: function for obtaining the x,y,z coordinates from parametric coordinates
+//***************************************************************************//
+
 int OneToOneSwept::getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, double uv[2])
 {
 	double umin, umax, vmin, vmax;
@@ -1920,8 +1929,12 @@ int OneToOneSwept::getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, d
 	return 1;
 }
 
-//---------------------------------------------------------------------------//
-// map the mesh on the source surface to the target surface
+//****************************************************************************//
+// function   : linear_interpolation 
+// Author     : Shengyong Cai
+// Date       : Feb 15, 2011
+// Description: map the mesh on the source surface to the target surface
+//***************************************************************************//
 int OneToOneSwept::TargetSurfProjection()
 {
 	iBase_EntitySetHandle targetSet;
@@ -2120,7 +2133,12 @@ int OneToOneSwept::TargetSurfProjection()
 			IBERRCHK(g_err, "Trouble get the cartesian coordinates x, y, z.");
 
 			//calculate the parametric coordinates on the target surface
-			tu = tLeft + (tRight - tLeft) * (su - sLeft) / (sRight - sLeft);
+			tu = tLeft + (tRight - tLeft) * (su - sLeft) / (sRight - sLe//****************************************************************************//
+// function   : linear_interpolation 
+// Author     : Shengyong Cai
+// Date       : Feb 15, 2011
+// Description: map the mesh on the source surface to the target surface
+//***************************************************************************//ft);
 
 			//transform the parametric coordinates into the cartesian coordinates on the target surface
 			g_err = mk_core()->igeom_instance()->getEntUtoXYZ(gtEdgeList[index_t].gEdgeHandle, tu, pts.px, pts.py, pts.pz);
@@ -2415,7 +2433,12 @@ int OneToOneSwept::TargetSurfProjection()
 	}
 }
 
-
+//****************************************************************************//
+// function   : linear_interpolation 
+// Author     : Shengyong Cai
+// Date       : Feb 15, 2011
+// Description: build the association between the geometry and mesh
+//***************************************************************************//
 void OneToOneSwept::buildAssociation()
 {
 

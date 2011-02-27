@@ -228,7 +228,6 @@ void EdgeMesher::EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> 
   //get the arc length
   measure = ent -> measure();
 
-  int err;
   double u, du;
   if (!num_edges) throw Error(MK_BAD_INPUT, "Trying to mesh edge with zero edges.");
   du = (umax - umin)/(double)num_edges;
@@ -261,8 +260,8 @@ void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<dou
   //get the arc length
   measure = ent -> measure();
 
-  int err, index = 0;
-  double u, du, x, y, z, uMid;
+  int index = 0;
+  double u, du, uMid;
   du = (umax - umin)/(double)num_edges;
 	
   std::vector<double> NodeCoordinates;
@@ -366,7 +365,6 @@ void EdgeMesher::DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<doub
   //get the arc length
   measure = ent -> measure();
 
-  int err;
   double u, L0, dist, u0, u1;
 	
   //if the node # is odd, node # will increase by 1
@@ -427,8 +425,7 @@ void EdgeMesher::BiasMeshing(ModelEnt *ent, int num_edges, std::vector<double> &
   //get the arc length
   measure = ent -> measure();
 
-  int err;
-  double x, y, z, u, L0, dist = 0, u0;
+  double u, L0, dist = 0, u0;
 	
   //set up the default bias ratio 1.2	
   double q = 1.2;
@@ -457,7 +454,6 @@ void EdgeMesher::DivideIntoMore(ModelEnt *ent, Point3D p0, Point3D pMid, Point3D
   //then check the left side and right side whether the error is too big nor not
   double uu0, uu1, uumid, tmp[3];
   Point3D pts0, pts1, ptsMid;
-  int err;
 	
   index++;
   nodes.resize(3*(index+1));
@@ -517,7 +513,7 @@ void EdgeMesher::DivideIntoMore(ModelEnt *ent, Point3D p0, Point3D pMid, Point3D
 void EdgeMesher::RapidSorting(vector<double> &nodes, vector<double> &URecord, int left, int right)
 {
   int i, j;
-  double middle, iTemp, x, y, z;
+  double middle, iTemp;
   Point3D TempData;
 	
   middle=URecord[(left+right)/2];
@@ -578,13 +574,11 @@ EdgeMesher::Point3D EdgeMesher::getXYZCoords(ModelEnt *ent, double u) const
 {
   Point3D pts3D;
   double xyz[3];
-	
-  int err;
+
 
   //get the coordinates in the physical space
   iGeom::Error gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, xyz[0], xyz[1], xyz[2]);
   IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");	
-  assert(!err);
 
   pts3D.px = xyz[0];
   pts3D.py = xyz[1];
@@ -649,7 +643,7 @@ bool EdgeMesher::ErrorCalculate(ModelEnt *ent, Point3D p0, Point3D p1, Point3D p
   double angle, error, tol=1.0E-3, H;
   double cvtr_ijk[3], curvature;
   bool result;
-  int err;
+
   //calculate the distance between the first mesh node and mid point on the edge
   deltax = pMid.px-p0.px;
   deltay = pMid.py-p0.py;
