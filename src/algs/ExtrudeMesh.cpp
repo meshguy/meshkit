@@ -90,7 +90,8 @@ namespace MeshKit
     std::vector<iBase_EntityHandle> next;
     std::vector<int> normals;
 
-    LocalTag local_tag(this->mk_core());
+    LocalTag local_extrude_tag(this->mk_core());
+    LocalTag local_copy_tag(this->mk_core());
 
     curr.resize(verts.size());
     next.resize(verts.size());
@@ -105,35 +106,35 @@ namespace MeshKit
     get_normals(verts, indices, offsets, dx, normals);
 
     // Make the first set of volumes
-    connect_up_dots(&ents[0], ents.size(), local_tag, &normals[0], &indices[0],
-                    &offsets[0], &verts[0], &next[0]);
+    connect_up_dots(&ents[0], ents.size(), local_extrude_tag, &normals[0],
+                    &indices[0], &offsets[0], &verts[0], &next[0]);
 
     // Now do the rest
     for (int i=2; i<=transform->steps(); i++) {
       std::swap(curr, next);
       transform->transform(i, mesh, verts, next);
-      connect_up_dots(&ents[0], ents.size(), local_tag, &normals[0],
+      connect_up_dots(&ents[0], ents.size(), local_extrude_tag, &normals[0],
                       &indices[0], &offsets[0], &curr[0], &next[0]);
     }
 
-    tag_copy_sets(extrudeSets, local_tag, extrudeTag);
+    tag_copy_sets(extrudeSets, local_extrude_tag, extrudeTag);
 
     if (copyFaces) {
       // set the local copy tags on vertices
       // XXX: Should this really happen? Doing so adds more entities to copysets
       // than explicitly passed into this function. This may be a domain-
       // specific question.
-      IBERRCHK(mesh->setEHArrData(&verts[0], verts.size(), local_tag,
+      IBERRCHK(mesh->setEHArrData(&verts[0], verts.size(), local_copy_tag,
                                   &next[0]), *mesh);
 
-      connect_the_dots(mesh, local_tag, ents, indices, offsets, next);
+      connect_the_dots(mesh, local_copy_tag, ents, indices, offsets, next);
 
-      link_expand_sets(expandSets, local_tag);
+      link_expand_sets(expandSets, local_copy_tag);
 
-      process_ce_sets(mesh, copySets.sets(), local_tag);
-      process_ce_sets(mesh, expandSets.sets(), local_tag);
+      process_ce_sets(mesh, copySets.sets(), local_copy_tag);
+      process_ce_sets(mesh, expandSets.sets(), local_copy_tag);
 
-      tag_copy_sets(copySets, local_tag, copyTag);
+      tag_copy_sets(copySets, local_copy_tag, copyTag);
     }
   }
 

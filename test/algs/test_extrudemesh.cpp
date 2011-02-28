@@ -114,6 +114,7 @@ void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
   mk->get_graph().addArc(em->get_node(), mk->leaf_node()->get_node());
 
   em->copy_sets().add_set(set);
+  em->extrude_sets().add_set(set);
 
   // mesh embedded boundary mesh, by calling execute
   mk->setup_and_execute();
@@ -121,11 +122,11 @@ void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
   std::vector<iMesh::EntityHandle> new_verts;
   std::vector<double> new_coords(nverts*3);
   std::vector<iMesh::EntityHandle> new_face;
-  iMesh::EntitySetHandle new_set;
+  iMesh::EntitySetHandle copy_set;
 
-  mesh->getEntSetEHData(set, em->copy_tag(), (iMesh::EntityHandle&)new_set);
+  mesh->getEntSetEHData(set, em->copy_tag(), (iMesh::EntityHandle&)copy_set);
 
-  mesh->getEntities(new_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, new_face);
+  mesh->getEntities(copy_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, new_face);
   CHECK_EQUAL(new_face.size(), size_t(1));
 
   mesh->getEntAdj(new_face[0], iBase_VERTEX, new_verts);
@@ -139,6 +140,14 @@ void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
     CHECK_REAL_EQUAL(coords[i*3+1],    new_coords[i*3+1], 0.00001);
     CHECK_REAL_EQUAL(coords[i*3+2]+10, new_coords[i*3+2], 0.00001);
   }
+
+  iMesh::EntitySetHandle extrude_set;
+  int n;
+  mesh->getEntSetEHData(set, em->extrude_tag(),
+                        (iMesh::EntityHandle&)extrude_set);
+  mesh->getNumOfType(extrude_set, iBase_ALL_TYPES, n);
+  CHECK_EQUAL(n, 10);
+
 
   delete em;
 }

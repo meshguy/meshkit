@@ -208,6 +208,11 @@ namespace MeshKit {
     return expandSets;
   }
 
+  inline CESets &ExtrudeMesh::extrude_sets()
+  {
+    return extrudeSets;
+  }
+
   inline void
   ExtrudeMesh::connect_up_dots(iBase_EntityHandle *src, int size,
                                iBase_TagHandle local_tag, int *norms, int *inds,
