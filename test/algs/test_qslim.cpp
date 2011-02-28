@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
   // in the process, a mesh file is read (instanced) and the
   // set of triangles is passed
   // it could be the root set for the mesh
-  std::string fstr, ostr;
+  std::string fstr;
   if (argc<=1)
   {
 	  std::cout<<usage_string;
@@ -69,8 +69,8 @@ int main(int argc, char* argv[])
 	  options.height_fields = 1;
 	  fstr=TestDir + "/partBed.smf";
 	  filename = fstr.c_str();
-	  ostr = "out.smf";
-	  outfile = ostr.c_str();
+	  // ostr = "out.smf";
+	  // outfile = ostr.c_str();
   }
   else
   {
@@ -251,8 +251,8 @@ int main(int argc, char* argv[])
 
   // put the initial mesh in a moab::EntityHandle initialSet
   moab::EntityHandle initialSet;
-  mk->moab_instance()->create_meshset(moab::MESHSET_SET, initialSet);
-  mk->moab_instance()->load_file(fstr.c_str(), &initialSet);
+  mk->moab_instance()->create_meshset(moab::MESHSET_SET /*| moab::MESHSET_TRACK_OWNER*/, initialSet);
+  mk->moab_instance()->load_file(filename, &initialSet);
 
   ModelEnt me(mk, iBase_EntitySetHandle(0), /*igeom instance*/0, initialSet);
   MEntVector selection;
@@ -268,57 +268,13 @@ int main(int argc, char* argv[])
 
   // mesh embedded boundary mesh, by calling execute
   mk->setup_and_execute();
-#if 0
-  int err;
-  iMesh_Instance mesh;
-  iMesh_newMesh("", &mesh, &err, 0);
-  ERRORR("Couldn't create mesh.", 1);
 
-  iBase_EntitySetHandle root_set;
-  iMesh_getRootSet(mesh, &root_set, &err);
-  ERRORR("Couldn't get root set.", 1);
-
-  // read initial mesh file
-  clock_t start_time = clock();
-  iMesh_load(mesh, root_set, filename, NULL, &err, strlen(filename), 0);
-  ERRORR("Couldn't load mesh file.", 1);
-  clock_t load_time = clock();
-
-
-
-  // do simplification
-  err = qsld->decimate(options);
-  ERRORR("Couldn't decimate mesh.", 1);
-  clock_t decimate_time = clock();
-
-  if (outfile &&  strlen(outfile) > 0)
+  if(outfile)
   {
-     std::cout << "Writing output file " << outfile <<std::endl;
-     // save the output in a new file
-     iMesh_save(mesh, root_set, outfile, NULL, &err, strlen(outfile), 0);
-     ERRORR("Couldn't save result mesh file.", 1);
+    std::cout << "writing output to " << outfile << std::endl;
+    mk->moab_instance()->write_mesh(outfile,
+       &initialSet, 1);
   }
-  else
-     std::cout << " no output file provided. \n";
-  clock_t write_time = clock();
-
-
-   std::cout << "Decimate algorithm successful." << std::endl;
-
-   std::cout << " load time: "
-             << (double) (load_time - start_time)/CLOCKS_PER_SEC
-             << "s \n simplification time: "
-             << (double) (decimate_time - load_time)/CLOCKS_PER_SEC
-             << "s \n write time: "
-             << (double) (write_time - decimate_time )/CLOCKS_PER_SEC
-             << " s." << std::endl;
-
-  delete qsld;
-  iMesh_dtor(mesh, &err);
-  ERRORR("Couldn't destroy mesh.", 1);
-
-//end for  #if 0
-#endif
 
   return 0;
 }
