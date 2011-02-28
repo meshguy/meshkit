@@ -64,10 +64,13 @@ namespace MeshKit
     GridSchemeType gridType;
     AxisSchemeType axisType;
 
+    // for scd - MOAB ScdInterface instance
+    moab::ScdInterface *scdIface;
+
     // number of coarse divisions in each direction
-    int coarse_i;
-    int coarse_j;
-    int coarse_k;
+    unsigned int coarse_i;
+    unsigned int coarse_j;
+    unsigned int coarse_k;
 
     // array of fine divisions in each division
     std::vector<int> fine_i;
@@ -86,8 +89,21 @@ namespace MeshKit
     // bounding box min, max coordiantes
     double minCoord[3], maxCoord[3];
 
+    // number of ijk vertices
+    int num_i;
+    int num_j;
+    int num_k;
+    int num_verts;
+
     // box size increasement ratio, default is 0.0
     double boxIncrease;
+
+    // vertex coordinates
+    std::vector<double> full_coords;
+
+    // vertex range
+    moab::Range vtx_range;
+
 
   public:
 
@@ -111,7 +127,7 @@ namespace MeshKit
       
     /**\brief Function returning whether this scheme can mesh entities of
      *        the specified dimension.
-     *\param dim entity dimension
+     * \param dim entity dimension
      */
     static bool can_mesh(iBase_EntityType dim)
       { return iBase_REGION == dim; }
@@ -126,12 +142,12 @@ namespace MeshKit
       { return canmesh_region(ent); }
     
     /**\brief Get list of mesh entity types that can be generated.
-     *\return array terminated with \c moab::MBMAXTYPE
+     * \return array terminated with \c moab::MBMAXTYPE
      */
     static const moab::EntityType* output_types();
   
     /** \brief Return the mesh entity types operated on by this scheme
-     * \return array terminated with \c moab::MBMAXTYPE
+     *  \return array terminated with \c moab::MBMAXTYPE
      */
     virtual const moab::EntityType* mesh_types_arr() const
       { return output_types(); }
@@ -144,6 +160,7 @@ namespace MeshKit
 
     /*!
      * \brief Get the interface type
+     * \return Interface scheme type
      */
     InterfaceSchemeType get_interface_scheme() const;
 
@@ -155,6 +172,7 @@ namespace MeshKit
 
     /*!
      * \brief Get the grid scheme assigned to the mesh
+     * \return Grid scheme type
      */
     GridSchemeType get_grid_scheme() const;
 
@@ -166,36 +184,43 @@ namespace MeshKit
 
     /*!
      * \brief Get the axis scheme assigned ot the mesh
+     * \return Axis scheme type
      */
     AxisSchemeType get_axis_scheme() const;
 
     /*!
      * \brief Set the i direction number of coarse grid divisions for the cfmesh case
+     * \param coarse_i_ Number of equally sized coarse divisions in the i direction
      */
     void set_coarse_i_grid(int coarse_i_);
 
     /*!
      * \brief Set the j direction number of coarse grid divisions for the cfmesh case
+     * \param coarse_j_ Number of equally sized coarse divisions in the j direction
      */
     void set_coarse_j_grid(int coarse_j_);
 
     /*!
      * \brief Set the k direction number of coarse grid divisions for the cfmesh case
+     * \param coarse_k_ Number of equally sized coarse divisions in the k direction
      */
     void set_coarse_k_grid(int coarse_k_);
 
     /*!
      * \brief Set the i direction fine grid divisions
+     * \param fine_i_ Vector of integers defining the number of equally sized fine divisions in each coarse divisions in the i direction
      */
     void set_fine_i_grid(std::vector<int> fine_i_);
 
     /*!
      * \brief Set the j direction fine grid divisions
+     * \param fine_i_ Vector of integers defining the number of equally sized fine divisions in each coarse divisions in the j direction
      */
     void set_fine_j_grid(std::vector<int> fine_j_);
 
     /*!
      * \brief Set the k direction fine grid divisions
+     * \param fine_i_ Vector of integers defining the number of equally sized fine divisions in each coarse divisions in the k direction
      */
     void set_fine_k_grid(std::vector<int> fine_k_);
 
@@ -220,8 +245,14 @@ namespace MeshKit
     //! create cartesian bounding box
     void create_cart_edges();
 
+    //! create mesh vertices
+    void create_vertices();
+
     //! create full mesh representation
     void create_full_mesh();
+
+    //! create lightweight ScdInterface representation
+    void create_light_mesh();
     
   }; // end class SCDMesh
 

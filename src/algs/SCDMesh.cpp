@@ -38,7 +38,7 @@ namespace MeshKit
 // setup function
 void SCDMesh::setup_this()
 {
-  // check the grid entries to make sure they're correct
+  // if cfMesh chosen, check the grid entries to make sure they're correct
   if (gridType == 0) {
     if (coarse_i != fine_i.size()) {
       throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, 
@@ -60,10 +60,6 @@ void SCDMesh::setup_this()
 
     // check if the entity is already meshed
     if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0) continue;
-
-    // creating a sizing function based on the mesh specification
-    // im not completely sure yet how sizing functions will interact with SCDMesh
-
   }
 }
 
@@ -85,10 +81,18 @@ void SCDMesh::setup_this()
 
 
       /* Generate the mesh */
+
+      // create the mesh vertices
+      create_vertices();
  
       // full representation case
       if (interfaceType == 0) {
         create_full_mesh();
+      }
+
+      // lighweight ScdInterface case
+      if (interfaceType == 1) {
+        create_light_mesh();
       }
 
 
@@ -126,7 +130,8 @@ void SCDMesh::create_cart_edges()
   i_arr.push_back(minCoord[0]);
   double icrs_size = (maxCoord[0] - minCoord[0]) / coarse_i;
   double ifn_size;
-  for (int crsi = 0; crsi != coarse_i; crsi++) {
+  unsigned int crsi;
+  for (crsi = 0; crsi != coarse_i; crsi++) {
     ifn_size = icrs_size / fine_i[crsi];
     for (int fni = 1; fni != fine_i[crsi] + 1; fni++) {
       i_arr.push_back(minCoord[0] + crsi*icrs_size + fni*ifn_size);
@@ -136,7 +141,8 @@ void SCDMesh::create_cart_edges()
   j_arr.push_back(minCoord[1]);
   double jcrs_size = (maxCoord[1] - minCoord[1]) / coarse_j;
   double jfn_size;
-  for (int crsj = 0; crsj != coarse_j; crsj++) {
+  unsigned int crsj;
+  for (crsj = 0; crsj != coarse_j; crsj++) {
     jfn_size = jcrs_size / fine_j[crsj];
     for (int fnj = 1; fnj != fine_j[crsj] + 1; fnj++) {
       j_arr.push_back(minCoord[1] + crsj*jcrs_size + fnj*jfn_size);
@@ -146,7 +152,8 @@ void SCDMesh::create_cart_edges()
   k_arr.push_back(minCoord[2]);
   double kcrs_size = (maxCoord[2] - minCoord[2]) / coarse_k;
   double kfn_size;
-  for (int crsk = 0; crsk != coarse_k; crsk++) {
+  unsigned int crsk;
+  for (crsk = 0; crsk != coarse_k; crsk++) {
     kfn_size = kcrs_size / fine_k[crsk];
     for (int fnk = 1; fnk != fine_k[crsk] + 1; fnk++) {
       k_arr.push_back(minCoord[2] + crsk*kcrs_size + fnk*kfn_size);
@@ -155,16 +162,15 @@ void SCDMesh::create_cart_edges()
 }
 
 //---------------------------------------------------------------------------//
-// create the full mesh representaton
-  void SCDMesh::create_full_mesh()
+// create the mesh vertices
+  void SCDMesh::create_vertices()
   {
-    int num_i = i_arr.size();
-    int num_j = j_arr.size();
-    int num_k = k_arr.size();
-    const int num_verts = num_i*num_j*num_k;
+    num_i = i_arr.size();
+    num_j = j_arr.size();
+    num_k = k_arr.size();
+    num_verts = num_i*num_j*num_k;
 
     // generate the vertices
-    std::vector<double> full_coords;
     for (int kval = 0; kval != num_k; kval++) {
       for (int jval = 0; jval != num_j; jval++) {
         for (int ival = 0; ival != num_i; ival++) {
@@ -175,15 +181,18 @@ void SCDMesh::create_cart_edges()
       }
     }
 
-    moab::Range vtx_range;
     rval = mk_core()->moab_instance()->create_vertices(&full_coords[0],
                                                        num_verts,
                                                        vtx_range);
     MBERRCHK(rval, mk_core()->moab_instance());
+  }
 
+//---------------------------------------------------------------------------//
+// create the full mesh representation
+  void SCDMesh::create_full_mesh()
+  {
     // generate hex entities from the vertices
     moab::EntityHandle local_conn[8];
-    const int num_hex = (num_i - 1)*(num_j - 1)*(num_k - 1);
     unsigned int idx;
     for (int kv = 0; kv != num_k - 1; kv++) {
       for (int jv = 0; jv != num_j - 1; jv++) {
@@ -207,6 +216,31 @@ void SCDMesh::create_cart_edges()
         }
       }
     }
+  }
+
+//---------------------------------------------------------------------------//
+// create mesh using light-weight MOAB ScdInterface
+  void SCDMesh::create_light_mesh()
+  {
+    // create an instance of the ScdInterface
+    rval = mk_core()->moab_instance()->query_interface(scdIface);
+    MBERRCHK(rval, mk_core()->moab_instance());
+
+    // create an instance of the ScdBox class
+    // for now the coordinate indexing starts at 0
+    // this can be changed if necessary
+    moab::ScdBox *scd_box;
+    rval = scdIface->construct_box(moab::HomCoord(0, 0, 0, 1),
+                                   moab::HomCoord(num_i, num_j, num_k, 1),
+                                   &full_coords[0], 
+                                   num_verts,
+                                   scd_box);
+    if (moab::MB_SUCCESS != rval) mk_core()->moab_instance()->release_interface(scdIface);
+    MBERRCHK(rval, mk_core()->moab_instance());
+
+    // get rid of ScdInterface once we are done
+    rval = mk_core()->moab_instance()->release_interface(scdIface);
+    MBERRCHK(rval, mk_core()->moab_instance());
   }
 
 //---------------------------------------------------------------------------//
