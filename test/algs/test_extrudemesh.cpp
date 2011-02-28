@@ -18,6 +18,10 @@ MKCore *mk;
 
 void test_load_and_extrude();
 void test_extrude_quad();
+void test_extrude_tri();
+
+void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
+                            size_t nverts);
 
 int main(int argc, char **argv)
 {
@@ -26,6 +30,7 @@ int main(int argc, char **argv)
 
   num_fail += RUN_TEST(test_load_and_extrude);
   num_fail += RUN_TEST(test_extrude_quad);
+  num_fail += RUN_TEST(test_extrude_tri);
 
   delete mk;
   return num_fail;
@@ -75,27 +80,21 @@ void test_load_and_extrude()
 }
 
 
-void test_extrude_quad()
+void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
+                            size_t nverts)
 {
   clear_mesh(mk);
 
   iMesh *mesh = mk->imesh_instance();
 
-  double coords[] = {
-    0, 0, 0,
-    1, 0, 0,
-    1, 1, 0,
-    0, 1, 0,
-  };
-
-  iMesh::EntityHandle verts[4];
-  iMesh::EntityHandle quad;
+  std::vector<iMesh::EntityHandle> verts(nverts);
+  iMesh::EntityHandle face;
   iMesh::EntitySetHandle set;
 
-  mesh->createVtxArr(4, iBase_INTERLEAVED, coords, verts);
-  mesh->createEnt(iMesh_QUADRILATERAL, verts, 4, quad);
+  mesh->createVtxArr(nverts, iBase_INTERLEAVED, coords, &verts[0]);
+  mesh->createEnt(topo, &verts[0], nverts, face);
   mesh->createEntSet(true, set);
-  mesh->addEntToSet(quad, set);
+  mesh->addEntToSet(face, set);
 
   ModelEnt me(mk, iBase_EntitySetHandle(0), /*igeom instance*/0,
               (moab::EntityHandle)set);
@@ -120,26 +119,49 @@ void test_extrude_quad()
   mk->setup_and_execute();
 
   std::vector<iMesh::EntityHandle> new_verts;
-  double new_coords[4*3];
-  std::vector<iMesh::EntityHandle> new_quad;
+  std::vector<double> new_coords(nverts*3);
+  std::vector<iMesh::EntityHandle> new_face;
   iMesh::EntitySetHandle new_set;
 
   mesh->getEntSetEHData(set, em->copy_tag(), (iMesh::EntityHandle&)new_set);
 
-  mesh->getEntities(new_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, new_quad);
-  CHECK_EQUAL(new_quad.size(), size_t(1));
+  mesh->getEntities(new_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, new_face);
+  CHECK_EQUAL(new_face.size(), size_t(1));
 
-  mesh->getEntAdj(new_quad[0], iBase_VERTEX, new_verts);
-  CHECK_EQUAL(new_verts.size(), size_t(4));
+  mesh->getEntAdj(new_face[0], iBase_VERTEX, new_verts);
+  CHECK_EQUAL(new_verts.size(), nverts);
 
   mesh->getVtxArrCoords(&new_verts[0], new_verts.size(), iBase_INTERLEAVED,
-                        new_coords);
+                        &new_coords[0]);
 
-  for(int i=0; i<4; i++) {
+  for(size_t i=0; i<nverts; i++) {
     CHECK_REAL_EQUAL(coords[i*3+0],    new_coords[i*3+0], 0.00001);
     CHECK_REAL_EQUAL(coords[i*3+1],    new_coords[i*3+1], 0.00001);
     CHECK_REAL_EQUAL(coords[i*3+2]+10, new_coords[i*3+2], 0.00001);
   }
 
   delete em;
+}
+
+void test_extrude_quad()
+{
+  double coords[] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 1, 0
+  };
+
+  help_test_extrude_face(iMesh_QUADRILATERAL, coords, 4);
+}
+
+void test_extrude_tri()
+{
+  double coords[] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0
+  };
+
+  help_test_extrude_face(iMesh_TRIANGLE, coords, 3);
 }
