@@ -6,6 +6,7 @@
 #include "meshkit/OneToOneSwept.hpp"
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/VertexMesher.hpp"
+#include "meshkit/QslimMesher.hpp"
 
 namespace MeshKit {
 
@@ -25,6 +26,7 @@ REGISTER_MESH_OP(SCDMesh);
 REGISTER_MESH_OP(CopyMesh);
 REGISTER_MESH_OP(ExtrudeMesh);
 REGISTER_MESH_OP(EBMesher);
+REGISTER_MESH_OP(QslimMesher);
 
 
 } // namespace MeshKit

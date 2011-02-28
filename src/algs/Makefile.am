@@ -2,10 +2,11 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher
+SUBDIRS =  QuadMesher Qslim
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
+libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la
 
 # The directory in which to install headers
 libMeshKitalgs_la_includedir = $(includedir)
