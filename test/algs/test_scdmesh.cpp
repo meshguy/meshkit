@@ -35,8 +35,8 @@ int main(int argc, char **argv)
 
   int scd_fail = 0;
 
-  scd_fail += RUN_TEST(scd_test_1);
-  //scd_fail += RUN_TEST(scd_test_2);
+  //scd_fail += RUN_TEST(scd_test_1);
+  scd_fail += RUN_TEST(scd_test_2);
 
 }
 

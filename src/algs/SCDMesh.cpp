@@ -82,9 +82,9 @@ void SCDMesh::setup_this()
 
       /* Generate the mesh */
 
-      // create the mesh vertices
+      // create mesh vertices
       create_vertices();
- 
+
       // full representation case
       if (interfaceType == 0) {
         create_full_mesh();
@@ -170,13 +170,17 @@ void SCDMesh::create_cart_edges()
     num_k = k_arr.size();
     num_verts = num_i*num_j*num_k;
 
+    full_coords.resize(3*num_verts);
+    unsigned int idx;
+
     // generate the vertices
     for (int kval = 0; kval != num_k; kval++) {
       for (int jval = 0; jval != num_j; jval++) {
         for (int ival = 0; ival != num_i; ival++) {
-          full_coords.push_back(i_arr[ival]);
-          full_coords.push_back(j_arr[jval]);
-          full_coords.push_back(k_arr[kval]);
+          idx = ival + num_i*jval + num_i*num_j*kval;
+          full_coords[3*idx] = i_arr[ival];
+          full_coords[3*idx + 1] = j_arr[jval];
+          full_coords[3*idx + 2] = k_arr[kval];
         }
       }
     }
@@ -231,7 +235,7 @@ void SCDMesh::create_cart_edges()
     // this can be changed if necessary
     moab::ScdBox *scd_box;
     rval = scdIface->construct_box(moab::HomCoord(0, 0, 0, 1),
-                                   moab::HomCoord(num_i, num_j, num_k, 1),
+                                   moab::HomCoord(num_i-1, num_j-1, num_k-1, 1),
                                    &full_coords[0], 
                                    num_verts,
                                    scd_box);
