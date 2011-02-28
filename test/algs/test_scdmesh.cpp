@@ -24,7 +24,8 @@ using namespace MeshKit;
 #endif
 
 //---------------------------------------------------------------------------//
-// brief function definitions
+// brief function definitions and core instance declaration
+MKCore *mk;
 void scd_test_1();
 void scd_test_2();
 
@@ -32,12 +33,15 @@ void scd_test_2();
 // main function
 int main(int argc, char **argv)
 {
+  mk = new MKCore();
 
-  int scd_fail = 0;
+  int num_fail = 0;
 
-  //scd_fail += RUN_TEST(scd_test_1);
-  scd_fail += RUN_TEST(scd_test_2);
+  num_fail += RUN_TEST(scd_test_1);
+  num_fail += RUN_TEST(scd_test_2);
 
+  delete mk;
+  return num_fail;
 }
 
 //---------------------------------------------------------------------------//
@@ -47,20 +51,16 @@ int main(int argc, char **argv)
 // *: coarse/fine grid sizing
 void scd_test_1()
 {
-  // Create an instance of the MeshKit core object
-  MKCore mk_scdt;
-
   // load the test geometry
   std::string scd_geom = TestDir + "/" + DEFAULT_TEST_FILE;
-  mk_scdt.load_geometry(scd_geom.c_str());
+  mk->load_geometry(scd_geom.c_str());
 
   // get the volumes
   MEntVector vols;
-  mk_scdt.get_entities_by_dimension(3, vols);
-  CHECK_EQUAL(1, (int)vols.size());
+  mk->get_entities_by_dimension(3, vols);
 
   // make an SCD mesh instance with all volumes as separate model entities
-  SCDMesh *scdmesh = (SCDMesh*) mk_scdt.construct_meshop("SCDMesh", vols);
+  SCDMesh *scdmesh = (SCDMesh*) mk->construct_meshop("SCDMesh", vols);
 
   // provide the SCD mesh parameters for a cartesian grid
   // i need to update some of this to use the sizing functions
@@ -102,10 +102,10 @@ void scd_test_1()
   scdmesh->set_fine_k_grid(fine_k);
 
   // execute and create the SCD mesh
-  mk_scdt.setup_and_execute();
+  mk->setup_and_execute();
 
   // write the mesh to a file
-  mk_scdt.save_mesh("SCDmesh1.vtk");
+  mk->save_mesh("SCDmesh1.vtk");
 
   // free memory
   delete scdmesh;
@@ -119,20 +119,16 @@ void scd_test_1()
 // should create the same mesh as test 1
 void scd_test_2()
 {
-  // Create an instance of the MeshKit core object
-  MKCore mk_scdt;
-
   // load the test geometry
   std::string scd_geom = TestDir + "/" + DEFAULT_TEST_FILE;
-  mk_scdt.load_geometry(scd_geom.c_str());
+  mk->load_geometry(scd_geom.c_str());
 
   // get the volumes
   MEntVector vols;
-  mk_scdt.get_entities_by_dimension(3, vols);
-  CHECK_EQUAL(1, (int)vols.size());
+  mk->get_entities_by_dimension(3, vols);
 
   // make an SCD mesh instance with all volumes as separate model entities
-  SCDMesh *scdmesh = (SCDMesh*) mk_scdt.construct_meshop("SCDMesh", vols);
+  SCDMesh *scdmesh = (SCDMesh*) mk->construct_meshop("SCDMesh", vols);
 
   // provide the SCD mesh parameters for a cartesian grid
   // i need to update some of this to use the sizing functions
@@ -174,10 +170,10 @@ void scd_test_2()
   scdmesh->set_fine_k_grid(fine_k);
 
   // execute and create the SCD mesh
-  mk_scdt.setup_and_execute();
+  mk->setup_and_execute();
 
   // write the mesh to a file
-  mk_scdt.save_mesh("SCDmesh2.vtk");
+  mk->save_mesh("SCDmesh2.vtk");
 
   // free memory
   delete scdmesh;
