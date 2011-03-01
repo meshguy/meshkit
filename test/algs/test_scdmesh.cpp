@@ -21,7 +21,8 @@ using namespace MeshKit;
 #define DEFAULT_TEST_FILE_1 "brick.sat"
 #define DEFAULT_TEST_FILE_2 "three_bricks.sat"
 #elif defined(HAVE_OCC)
-#define DEFAULT_TEST_FILE "sphere.stp"
+#define DEFAULT_TEST_FILE_1 "sphere.stp"
+#define DEFAULT_TEST_FILE_2 "sphere.stp"
 #endif
 
 //---------------------------------------------------------------------------//

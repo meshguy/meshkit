@@ -100,9 +100,9 @@ int load_and_mesh(const char *input_filename,
   sm->set_name("structured_mesh");
   sm->set_interface_scheme(SCDMesh::full);
   sm->set_grid_scheme(SCDMesh::cfMesh);
+  sm->set_geometry_scheme(SCDMesh::all);
   sm->set_axis_scheme(SCDMesh::cartesian);
   sm->set_box_increase_ratio(box_increase); // add some extra layer to box
-  sm->set_box_dimension(); // set box dimension
   sm->get_box_dimension(box_min, box_max); // get box dimension
 
   // set # of intervals for 3 directions
