@@ -28,12 +28,12 @@
 namespace MeshKit {
 //===========================================================================//
 /*!
- * \class EdgeMesher
- * \brief Generate the mesh for edges
+ * \class QslimMesher
+ * \brief Decimate a set of triangles
  *
- * EdgeMesher generates a mesh for edges, creating the nodes and line segments
- * on edges. There are four schemes for edge mesher: equal meshing, Bias Meshing
- * Dual Bias Meshing, Curvature-Based Meshing
+ * QslimMesher decimates a set of triangles that form a 3d surface
+ * It uses edge collapse sequentially, while keeping the error in
+ * the quadric sense minimal at each step.
  */
 //===========================================================================//
 
@@ -58,6 +58,7 @@ public:
    static const char* name()
      { return "QslimMesher"; }
 
+   // pass
   void set_options(QslimOptions & opts)
   {
     _opts = opts;

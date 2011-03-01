@@ -22,14 +22,56 @@
 
 #include <fstream>
 
+//===========================================================================//
+  /*!
+   * \class QslimOptions
+   * \brief Place holder for decimation options
+
+   *  Options for decimation can be passed with the test driver.
+   *
+   * -o \<file\>      Output final model to given file, using moab output conventions
+   *
+   * -s \<count\>      Set the target number of faces.
+   *
+   * -i \<timings\>   Intervals for timing reports.
+   *
+   * -e \<thresh\> Set the maximum error tolerance.
+   *
+   * -t \<t\>        Set pair selection tolerance.
+   *
+   * -Q[pv]        Select what constraint quadrics to use [default=p].
+   *
+   * -On       Optimal placement policy.
+                 0=endpoints, 1=endormid, 2=line, 3=optimal [default]
+
+   *  -B \<weight\> Use boundary preservation planes with given weight.
+   *
+   *  -b       preserve boundary (do not use with -B option)
+   *
+   *  -m            Preserve mesh quality.
+   *
+   *  -a            Enable area weighting.
+   *
+   *  -p          Height fields positivity. Used for height fields, assume
+                       triangles are originally positively oriented.
+
+   *  -d          Use delayed deletion, as opposed to merging
+   *
+   *  -c           keep costs in a (sparse!!!!) tag
+   *
+
+ */
 class QslimOptions {
 public:
 	QslimOptions();
 	virtual ~QslimOptions();
+	//! decimation stops when number of triangle is less than face_target
 	int face_target;
+
+	//! decimation can stop if the error is bigger than the given tolerance
 	double error_tolerance;
 
-
+	//
 	int     will_use_plane_constraint;
 	int     will_use_vertex_constraint;
 
