@@ -251,7 +251,7 @@ int main(int argc, char* argv[])
 
   // put the initial mesh in a moab::EntityHandle initialSet
   moab::EntityHandle initialSet;
-  mk->moab_instance()->create_meshset(moab::MESHSET_SET /*| moab::MESHSET_TRACK_OWNER*/, initialSet);
+  mk->moab_instance()->create_meshset(moab::MESHSET_SET | moab::MESHSET_TRACK_OWNER, initialSet);
   mk->moab_instance()->load_file(filename, &initialSet);
 
   ModelEnt me(mk, iBase_EntitySetHandle(0), /*igeom instance*/0, initialSet);
