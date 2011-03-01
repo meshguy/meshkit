@@ -57,12 +57,18 @@ namespace MeshKit
     // oriented - i, j, k directions oriented with the primary geometric axes
     enum AxisSchemeType { cartesian, oriented};
 
+    // Set how the geometry volumes will be meshed
+    // all - A single structured grid is created for all geometric volumes specified
+    // individual - Every geometric volume specified gets its own structured grid
+    enum GeomSchemeType { all, individual};
+
   private:
 
     // enum types defining the mesh generation
     InterfaceSchemeType interfaceType;
     GridSchemeType gridType;
     AxisSchemeType axisType;
+    GeomSchemeType geomType;
 
     // for scd - MOAB ScdInterface instance
     moab::ScdInterface *scdIface;
@@ -188,6 +194,18 @@ namespace MeshKit
      */
     AxisSchemeType get_axis_scheme() const;
 
+        /*!
+     * \brief Set how the geometric volumes will be meshed
+     * \param scheme The type of volume meshing scheme to use
+     */
+    void set_geometry_scheme(GeomSchemeType scheme);
+
+    /*!
+     * \brief Get the volume meshing scheme assigned ot the mesh
+     * \return volume meshing scheme type
+     */
+    GeomSchemeType get_geometry_scheme() const;
+
     /*!
      * \brief Set the i direction number of coarse grid divisions for the cfmesh case
      * \param coarse_i_ Number of equally sized coarse divisions in the i direction
@@ -224,11 +242,6 @@ namespace MeshKit
      */
     void set_fine_k_grid(std::vector<int> fine_k_);
 
-     /*!
-     * \brief Set the geometry encompasing box dimensions
-     */
-    void set_box_dimension();
-
     /*!
      * \brief Get the geometry encompasing box dimensions
      */
@@ -241,6 +254,12 @@ namespace MeshKit
 
 
   private:
+
+    //! set the Cartesian bounding box dimensions over the entire geometry
+    void set_cart_box_all();
+
+    //! set the Cartesian bounding box dimensions over an individual model entity
+    void set_cart_box_individual(ModelEnt *this_me);
     
     //! create cartesian bounding box
     void create_cart_edges();
@@ -291,6 +310,16 @@ namespace MeshKit
   inline SCDMesh::AxisSchemeType SCDMesh::get_axis_scheme() const
   {
     return axisType;
+  }
+
+  inline void SCDMesh::set_geometry_scheme(SCDMesh::GeomSchemeType scheme)
+  {
+    geomType = scheme;
+  }
+
+  inline SCDMesh::GeomSchemeType SCDMesh::get_geometry_scheme() const
+  {
+    return geomType;
   }
 
   inline void SCDMesh::set_coarse_i_grid(int coarse_i_)

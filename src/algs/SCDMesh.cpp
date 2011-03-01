@@ -73,9 +73,14 @@ void SCDMesh::setup_this()
 
       /* Generate the bounding box */
 
-      // cartesian case
+      // Cartesian case
       if (axisType == 0) {
-        set_box_dimension();
+        if (geomType == 0) {
+          set_cart_box_all();
+        }
+        else if (geomType == 1) {
+          set_cart_box_individual(me);
+        }
         create_cart_edges();
       }
 
@@ -104,23 +109,36 @@ void SCDMesh::setup_this()
   }
 
 //---------------------------------------------------------------------------//
-// fix the box dimension for the bounding box
-void SCDMesh::set_box_dimension()
-{
-  // this should be modified to get the bounding box on the geometry
-  // that is only associated with the current model entity instead
-  // of the entire igeom instance
-  gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
+// set the Cartesian bounding box dimension for the entire geometry
+  void SCDMesh::set_cart_box_all()
+  {
+    gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
                                                   maxCoord[0], maxCoord[1], maxCoord[2]);
-  IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
+    IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
 
-  // increase box size for 3 directions 
-  for (int i = 0; i < 3; i++) {
-    double box_size = maxCoord[i] - minCoord[i];
-    minCoord[i] -= box_size*boxIncrease; 
-    maxCoord[i] += box_size*boxIncrease; 
-  } 
-}
+    // increase box size for 3 directions 
+    for (int i = 0; i < 3; i++) {
+      double box_size = maxCoord[i] - minCoord[i];
+      minCoord[i] -= box_size*boxIncrease; 
+      maxCoord[i] += box_size*boxIncrease; 
+    }
+  }
+
+//---------------------------------------------------------------------------//
+// set the Cartesian bounding box dimension for an individual volume
+  void SCDMesh::set_cart_box_individual(ModelEnt *this_me)
+  {
+    gerr = this_me->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
+                                                  maxCoord[0], maxCoord[1], maxCoord[2]);
+    IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
+
+    // increase box size for 3 directions 
+    for (int i = 0; i < 3; i++) {
+      double box_size = maxCoord[i] - minCoord[i];
+      minCoord[i] -= box_size*boxIncrease; 
+      maxCoord[i] += box_size*boxIncrease; 
+    }
+  }
 
 //---------------------------------------------------------------------------//
 // get the axis cartesian bounding box edges if cfmesh has been chosen

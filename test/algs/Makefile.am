@@ -19,7 +19,7 @@ TESTS = test_edgemesh test_ebmesh test_scdmesh test_copymesh test_extrudemesh \
 
 check_PROGRAMS = $(TESTS)
 
-MOSTLYCLEANFILES = SCDmesh1.vtk SCDmesh2.vtk
+MOSTLYCLEANFILES = SCDmesh1.vtk SCDmesh2.vtk SCDmesh3.vtk
 
 @IGEOM_CONFIG_OPTIONS_INCLUDE@
 @IMESH_CONFIG_OPTIONS_INCLUDE@
