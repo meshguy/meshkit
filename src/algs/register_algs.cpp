@@ -1,5 +1,6 @@
 #include "meshkit/RegisterMeshOp.hpp"
 #include "meshkit/CopyMesh.hpp"
+#include "meshkit/CopyGeom.hpp"
 #include "meshkit/EBMesher.hpp"
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/ExtrudeMesh.hpp"
@@ -25,6 +26,7 @@ REGISTER_MESH_OP(EdgeMesher);
 REGISTER_MESH_OP(OneToOneSwept);
 REGISTER_MESH_OP(SCDMesh);
 REGISTER_MESH_OP(CopyMesh);
+REGISTER_MESH_OP(CopyGeom);
 REGISTER_MESH_OP(ExtrudeMesh);
 REGISTER_MESH_OP(EBMesher);
 REGISTER_MESH_OP(QslimMesher);
