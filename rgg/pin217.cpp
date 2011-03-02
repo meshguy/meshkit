@@ -26,9 +26,8 @@ int main(int argc, char **argv)
 
   CopyMesh *cm = new CopyMesh(impl);
   MergeMesh *mm = new MergeMesh(impl);
-  ExtrudeMesh *ext = new ExtrudeMesh(impl);
-  char* input_file_name = NULL;
-  char* output_file_name = NULL;
+  const char* input_file_name = NULL;
+  const char* output_file_name = NULL;
 
   if (3 == argc) {
     input_file_name = argv[1];
@@ -50,49 +49,49 @@ int main(int argc, char **argv)
   double ASSY_PITCH=14.685;
   double PI = acos(-1.0);
   double Y_SEP=.5*ASSY_PITCH/sin(PI/3.0) + 
-      .5*ASSY_PITCH*sin(PI/6.0)/sin(PI/3.0);
+    .5*ASSY_PITCH*sin(PI/6.0)/sin(PI/3.0);
 
   int NRINGS = 8;
   bool sixth_core[] = {
-      false, true, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false 
-      };
+    false, true, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false 
+  };
   /*    bool sixth_core[] = {
-      false, true, true, true, true, true, true, true, 
-      true, true, true, true, true, true, true, false,
-      true, true, true, true, true, true, true, false,
-      true, true, true, true, true, true, false, false,
-      true, true, true, true, true, false, false, false,
-      true, true, true, true, false, false, false, false,
-      true, true, true, false, false, false, false, false,
-      true, false, false, false, false, false, false, false 
-      };*/
+	false, true, true, true, true, true, true, true, 
+	true, true, true, true, true, true, true, false,
+	true, true, true, true, true, true, true, false,
+	true, true, true, true, true, true, false, false,
+	true, true, true, true, true, false, false, false,
+	true, true, true, true, false, false, false, false,
+	true, true, true, false, false, false, false, false,
+	true, false, false, false, false, false, false, false 
+	};*/
 
   iBase_EntitySetHandle orig_set;
   iMesh_createEntSet(impl, 0, &orig_set, &err);
   ERRORR("Couldn't create orig entity set.", err);
   
-    // read the file 
+  // read the file 
   iMesh_load(impl, orig_set, input_file_name, NULL, &err, strlen(input_file_name), 0);
   ERRORR("Couldn't read mesh file.", err);
 
   std::cout << "Loaded initial mesh." << std::endl;
 
-    // get the entities we want to copy, basically all the non-set entities
+  // get the entities we want to copy, basically all the non-set entities
   int orig_ents_alloc = 0, orig_ents_size; 
   iBase_EntityHandle *orig_ents = NULL;
 
   iMesh_getEntities(impl, orig_set, iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
-                 &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
-   ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
+		    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
+  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
   
-    // get the copy/expand sets
+  // get the copy/expand sets
   int num_etags = 3, num_ctags = 1;
   const char *etag_names[] = {"MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET"};
   const char *etag_vals[] = {NULL, NULL, NULL};
@@ -105,7 +104,7 @@ int main(int argc, char **argv)
   err = extend_expand_sets(cm);
   ERRORR("Failed to extend expand lists.", iBase_FAILURE);
     
-    // copy
+  // copy
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
   for (int irow = 0; irow < NRINGS; irow++) {
@@ -124,55 +123,55 @@ int main(int argc, char **argv)
       cm->tag_copied_sets(ctag_names, ctag_vals, 1);
     }
   }
-       //getting hexahedron elements for merge_entities   
-    const double merge_tol =  1.0e-8;
-    const int do_merge = 1; //0 or 1 for off or on respectively 
-    const int update_sets= 0; 
-    iBase_TagHandle merge_tag = NULL;
-    iBase_EntityHandle *ents = NULL;
-    int ents_alloc = 0, ents_size;
- if(set_DIM ==2){
+  //getting hexahedron elements for merge_entities   
+  const double merge_tol =  1.0e-8;
+  const int do_merge = 1; //0 or 1 for off or on respectively 
+  const int update_sets= 0; 
+  iBase_TagHandle merge_tag = NULL;
+  iBase_EntityHandle *ents = NULL;
+  int ents_alloc = 0, ents_size;
+  if(set_DIM ==2){
     iMesh_getEntities(impl, root_set,
-                    iBase_FACE, iMesh_ALL_TOPOLOGIES,
-                    &ents, &ents_alloc, &ents_size, &err);
-     ERRORR("Failed to get entities from set recursively.", err);
- }   
+		      iBase_FACE, iMesh_ALL_TOPOLOGIES,
+		      &ents, &ents_alloc, &ents_size, &err);
+    ERRORR("Failed to get entities from set recursively.", err);
+  }   
   else{
-  iMesh_getEntities(impl, root_set,
-                    iBase_REGION, iMesh_ALL_TOPOLOGIES,
-                    &ents, &ents_alloc, &ents_size, &err);
-     ERRORR("Failed to get entities from set recursively.", err);
+    iMesh_getEntities(impl, root_set,
+		      iBase_REGION, iMesh_ALL_TOPOLOGIES,
+		      &ents, &ents_alloc, &ents_size, &err);
+    ERRORR("Failed to get entities from set recursively.", err);
   }
  
-      // merge  
-    int num1, num2;
+  // merge  
+  int num1, num2;
   
-    iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num1, &err);
-    ERRORR("Trouble getting number of entities after merge.", err);
+  iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num1, &err);
+  ERRORR("Trouble getting number of entities after merge.", err);
 
-    mm->merge_entities(ents, ents_size, merge_tol,
-                       do_merge, update_sets, merge_tag);
+  mm->merge_entities(ents, ents_size, merge_tol,
+		     do_merge, update_sets, merge_tag);
     
-    iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num2, &err);
-    ERRORR("Trouble getting number of entities after merge.", err);
+  iMesh_getNumOfType(impl, root_set, iBase_VERTEX, &num2, &err);
+  ERRORR("Trouble getting number of entities after merge.", err);
 
-    std::cout << "Merged " << num1 - num2 << " vertices." << std::endl;
+  std::cout << "Merged " << num1 - num2 << " vertices." << std::endl;
 
   // extrude the 2D mesh now
-  iBase_EntityHandle faces[] = {*ents };
-  double v[] = { 0, 0, 1 };
-  int steps = 5;
+  //  iBase_EntityHandle faces[] = {*ents };
+  //  double v[] = { 0, 0, 1 };
+  //  int steps = 5;
   // err = ext->translate(faces, ents_size, steps, v);
-  ERRORR("Couldn't extrude mesh", 1);
+  //  ERRORR("Couldn't extrude mesh", 1);
  
-   // assign new global ids
+  // assign new global ids
   std::cout << "Assigning global ids." << std::endl;
   MKUtils mu(impl);
   err = mu.assign_global_ids(root_set, 3, 1, true, false,
                              "GLOBAL_ID");
   ERRORR("Error assigning global ids.", err);
 
-    // export
+  // export
   std::cout << "Saving in file " << output_file_name << std::endl;
   iMesh_save(impl, root_set, output_file_name, NULL, &err, 
              strlen(output_file_name), 0);

@@ -161,15 +161,15 @@ int CNrgen::ReadInputPhase1 ()
     if (szInputString.substr(0,10) == "geomengine"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_szEngine;
-      if( (strcmp (m_szEngine.c_str(), "acis") != 0) &&
-	  (strcmp (m_szEngine.c_str(), "occ") != 0) || szFormatString.fail())
+      if( ((strcmp (m_szEngine.c_str(), "acis") != 0) &&
+	   (strcmp (m_szEngine.c_str(), "occ") != 0)) || szFormatString.fail())
 	IOErrorHandler(EGEOMENGINE);
     }
     if (szInputString.substr(0,8) == "meshtype"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_szMeshType;
-      if( (strcmp (m_szMeshType.c_str(), "hex") != 0) &&
-	  (strcmp (m_szMeshType.c_str(), "tet") != 0) || szFormatString.fail())
+      if( ((strcmp (m_szMeshType.c_str(), "hex") != 0) &&
+	   (strcmp (m_szMeshType.c_str(), "tet") != 0)) || szFormatString.fail())
 	IOErrorHandler(INVALIDINPUT);
     }
     if (szInputString.substr(0,4) == "duct" || szInputString.substr(0,10) == "dimensions"){
@@ -524,8 +524,8 @@ int CNrgen::ReadAndCreate()
     if (szInputString.substr(0,12) == "geometrytype"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_szGeomType;
-      if( (strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
-	  (strcmp (m_szGeomType.c_str(), "rectangular") != 0) || szFormatString.fail())
+      if( ((strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
+	   (strcmp (m_szGeomType.c_str(), "rectangular") != 0)) || szFormatString.fail())
 	IOErrorHandler(EGEOMTYPE);
 
       // set the number of sides in the geometry
@@ -825,7 +825,7 @@ int CNrgen::CreateCubitJournal()
   iGeom_getBoundBox( geom, &x1, &y1, &z1, &x2, &y2, &z2, &err );
   CHECK( "Problems getting bouding box." );
 
-  int nSideset=m_nNeumannSetId, i, j;
+  int nSideset=m_nNeumannSetId;
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
   int nTemp = 1;
@@ -2009,7 +2009,7 @@ int CNrgen::CreateOuterCovering ()
 			     &xmax,&ymax,&zmax, &err);
 	CHECK("getEntBoundBox failed."); 
 	double dTol = 1e-2; // tolerance for comparing coordinates
-	double p = abs(zmax - m_dMZAssm(nTemp, 2));
+
 	if(abs(zmax - m_dMZAssm(nTemp, 2)) <  dTol){ 
 	  if(abs(zmax-zmin) < dTol){
 

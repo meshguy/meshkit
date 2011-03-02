@@ -832,6 +832,7 @@ int CCrgen::move_geoms(iBase_EntitySetHandle set, const double *dx)
     iGeom_moveEnt(geom, entities[i], dx[0], dx[1], dx[2], &err);
     ERRORR("Failed to move geometries.", iBase_FAILURE);
   }
+  return iBase_SUCCESS;
 }
 
 
@@ -904,8 +905,27 @@ int CCrgen::save_mesh()
 
 int CCrgen::save_geometry()
 {
+  double dTol = 1e-3;
+ 
+  // getting all entities for merge and imprint
+  SimpleArray<iBase_EntityHandle> entities_merge, entities_imprint;
+  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities_merge),&err );
+  ERRORR("Trouble writing output geometry.", err);
+ 
+  // merge and imprint before save
+  std::cout << "Merging.." << std::endl;
+  iGeom_mergeEnts(geom, ARRAY_IN(entities_merge), dTol, &err);
+  ERRORR("Trouble writing output geometry.", err);
+ 
+  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities_imprint),&err );
+  ERRORR("Trouble writing output geometry.", err);
+ 
+  std::cout << "Imprinting.." << std::endl;
+  iGeom_imprintEnts(geom, ARRAY_IN(entities_imprint),&err); 
+  ERRORR("Trouble writing output geometry.", err);
   // export
-  std::cout << "Saving geometry file." << std::endl;
+  std::cout << "Saving geometry file: " <<  outfile << std::endl;
+
   iGeom_save(geom, outfile.c_str(), NULL, &err,
              strlen(outfile.c_str()), 0);
   ERRORR("Trouble writing output geometry.", err);
@@ -1014,7 +1034,6 @@ int CCrgen::extrude()
 
     int max_nset_value = 0;
     for (int i = 0; i < nsets.size(); i++) {
-      int num =0;
       int nvalue;
       iMesh_getEntSetIntData(impl, nsets[i], ntag, &nvalue, &err);
       ERRORR("Trouble getting entity set.", err);
@@ -1023,7 +1042,6 @@ int CCrgen::extrude()
     }
 
     for (int i = 0; i < nsets.size(); i++) {
-      int num =0;
 
       iMesh_getEntities(impl, nsets[i],
 			iBase_FACE, iMesh_ALL_TOPOLOGIES,
@@ -1042,8 +1060,8 @@ int CCrgen::extrude()
 	ERRORR("Trouble getting entity set.", err);
       }
     }
-    return iBase_SUCCESS;
   }
+  return iBase_SUCCESS;
 }
 
 int CCrgen::create_neumannset()

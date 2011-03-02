@@ -989,7 +989,7 @@ int CCrgen::copy_move_hex_vertex_assys_p1(CopyGeom **cg,
 	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
 
 	if(flags[assm_index]==0){
-	  move_verts(assys[assm_index], dxnew);
+	  move_geoms(assys[assm_index], dxnew);
 
 	  std::cout << "Copy/moved A: " << assm_index
 		    <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
