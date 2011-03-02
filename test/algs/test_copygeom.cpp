@@ -52,7 +52,7 @@ void test_load_and_copymove()
 //  cg->expand_sets().add_tag("NEUMANN_SET");
 
   // set the location
-  double dx[3]; dx[0] = 1; dx[1] = 0; dx[2] = 0;
+  Vector<3> dx; dx[0] = 1; dx[1] = 0; dx[2] = 0;
   cg->set_location(dx);
 
   // put them in the graph

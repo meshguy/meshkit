@@ -14,7 +14,7 @@
 
 #include "meshkit/CESets.hpp"
 #include "meshkit/LocalTag.hpp"
-#include "meshkit/Transform.hpp"
+#include "meshkit/Matrix.hpp"
 
 #include "meshkit/iMesh.hpp"
 #include "meshkit/iGeom.hpp"
@@ -32,6 +32,10 @@ public:
    * \param impl the iGeom instance handle for the Geom
    */
   CopyGeom(MKCore *mkcore, const MEntVector &me_vec);
+
+  /* \brief Destructor
+   */
+  virtual ~CopyGeom();
 
   /**\brief Get class name */
   static const char* name();
@@ -71,31 +75,18 @@ public:
   //! The only setup/execute function we need, since meshing vertices is trivial
   virtual void execute_this();
 
-  /* \brief Destructor
-   */
-  virtual ~CopyGeom();
-
-  /* \brief copy/move igeom entities
-   *
-   * to location dx
-   * \param entities, entity handle size and the location
-   */
-
-  void copy(iBase_EntityHandle *entities, const int entities_ehsize,
-	    const double *dx);
-
   /* \brief set location
    *
    * before copy moving
    * \param vector with x y z coords
    */
-  void set_location(const double x[]);
+  void set_location(const Vector<3> &dx);
 
   void tag_copied_sets(const char **tag_names, const char **tag_vals,
                        const int num_tags);
-
+private:
   iGeom *igeomImpl;
-  double m_x[3];
+  Vector<3> m_x;
 };
 
 inline const char* CopyGeom::name()
@@ -105,7 +96,7 @@ inline const char* CopyGeom::name()
 
 inline bool CopyGeom::can_mesh(iBase_EntityType)
 {
-  // Given just a dimension, CopyMesh can't do anything since it doesn't know
+  // Given just a dimension, CopyGeom can't do anything since it doesn't know
   // what to copy.
   return false;
 }
