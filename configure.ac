@@ -215,14 +215,12 @@ if test "xyes" = "x$HAVE_$2"; then
                       [AC_MSG_ERROR([$2_LDFLAGS not found in $2_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LIBS],[$2_LIBS="$make_val"],
                       [AC_MSG_ERROR([$2_LIBS not found in $2_CONFIG_OPTIONS])])
-  $2_CONFIG_OPTIONS_INCLUDE="include ${$2_CONFIG_OPTIONS}"
-  AC_SUBST($2_CONFIG_OPTIONS_INCLUDE)
-  $2_DIR=$itaps_dir
-  AC_SUBST($2_DIR)
+  FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_DEFINES],[$2_DEFINES="$make_val"],
+                      [$2_DEFINES=])
 fi
 
 if test "xyes" = "x$HAVE_$2"; then 
-  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2 ${$2_INCLUDES}"
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2 ${$2_DEFINES} ${$2_INCLUDES}"
   AM_LDFLAGS="$AM_LDFLAGS ${$2_LDFLAGS}"
   LIBS="${$2_LIBS} $LIBS"
 elif test "xyes" = "x$warn"; then
@@ -236,6 +234,7 @@ AM_CONDITIONAL( HAVE_$2, [test "xyes" == "x$HAVE_$2"] )
 CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabled] )
+
 
 ################################################################################
 #                           MOAB
