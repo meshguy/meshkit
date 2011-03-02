@@ -23,7 +23,8 @@ nobase_libMeshKitutils_la_include_HEADERS = \
 	meshkit/LocalSet.hpp \
 	meshkit/LocalTag.hpp \
 	meshkit/RegisterMeshOp.hpp \
-	meshkit/SimpleArray.hpp
+	meshkit/SimpleArray.hpp \
+	meshkit/iBaseVirtual.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
