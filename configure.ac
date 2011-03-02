@@ -896,7 +896,6 @@ AC_CONFIG_FILES([Makefile
                  testdir.h
                  algs/Makefile
                  algs/test/Makefile
-                 algs/Qslim/Makefile 
                  algs/make_watertight/Makefile
                  camal/Makefile
                  plibs/Makefile

@@ -1,7 +1,7 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = Qslim test 
+SUBDIRS = test 
 #make_watertight
 
 # Things to build
