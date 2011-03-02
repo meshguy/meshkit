@@ -11,7 +11,7 @@
 #ifndef BTREE_H
 #define BTREE_H
 
-#include <meshkit/Mesh.hpp>
+#include "Mesh.hpp"
 #include "DualGraph.hpp"
 #include "ObjectPool.hpp"
 
@@ -22,7 +22,7 @@
 //#include <ext/slist>
 //typedef __gnu_cxx::slist<BinaryNode*> BNodeList;
 
-BEGIN_JAAL_NAMESPACE
+namespace Jaal {
 
 class BinaryNode;
 
@@ -316,6 +316,6 @@ private:
   void dfs_traverse(BinaryNode *parent, BNodeList &nextnodes);
 };
 
-END_JAAL_NAMESPACE
+} // namespace Jaal
 
 #endif

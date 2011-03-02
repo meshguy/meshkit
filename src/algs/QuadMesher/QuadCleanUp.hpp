@@ -40,14 +40,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include <meshkit/Mesh.hpp>
-#include <meshkit/Tri2Quad.hpp>
+#include "Mesh.hpp"
+#include "Tri2Quad.hpp"
 
-#include "../DijkstraShortestPath.hpp"
+#include "DijkstraShortestPath.hpp"
 
 extern double area_of_poly3d(int n, double *x, double *y, double *z);
 
-BEGIN_JAAL_NAMESPACE
+namespace Jaal {
 
 struct FirstIrregularNode : public MeshFilter 
 {
@@ -738,7 +738,7 @@ QuadCleanUp::isTunnel(const Edge *e)
 void set_diamond_tag(Mesh *mesh);
 void set_bridge_tag(Mesh *mesh);
 
-END_JAAL_NAMESPACE
+} // namespace Jaal
 
 #endif
 

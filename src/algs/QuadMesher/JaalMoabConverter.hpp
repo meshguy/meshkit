@@ -1,7 +1,7 @@
 #ifndef MOAB_QUADMESH_H
 #define MOAB_QUADMESH_H
 
-#include <meshkit/Mesh.hpp>
+#include "Mesh.hpp"
 
 #ifdef HAVE_IMESH
 #include <SimpleArray.hpp>

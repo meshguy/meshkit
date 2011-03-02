@@ -1,7 +1,7 @@
 #ifndef DIJKSHORT_H
 #define DIJKSHORT_H
 
-#include <meshkit/Mesh.hpp>
+#include "Mesh.hpp"
 
 using namespace Jaal;
 

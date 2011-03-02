@@ -1,4 +1,4 @@
-#include <meshkit/QuadCleanUp.hpp>
+#include "QuadCleanUp.hpp"
 
 using namespace Jaal;
 

@@ -1,4 +1,4 @@
-#include <meshkit/Tri2Quad.hpp>
+#include "Tri2Quad.hpp"
 
 using namespace Jaal;
 

@@ -1,4 +1,4 @@
-#include <meshkit/Mesh.hpp>
+#include "Mesh.hpp"
 #include <ostream>
 
 #ifdef HAVE_MESQUITE

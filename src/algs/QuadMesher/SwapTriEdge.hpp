@@ -1,7 +1,7 @@
 #ifndef EDGEFLIP_H
 #define EDGEFLIP_H
 
-#include <meshkit/Mesh.hpp>
+#include "Mesh.hpp"
 
 using namespace Jaal;
 

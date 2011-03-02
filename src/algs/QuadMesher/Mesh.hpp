@@ -26,13 +26,8 @@
 
 #define FOR_EACH(container, iter ) for(iter = container.begin(); iter != container.end(); ++iter)
 
-#define BEGIN_JAAL_NAMESPACE  namespace Jaal {
-#define END_JAAL_NAMESPACE    }
-
-#include "../basic_math.hpp"
-#include "../circumcenter.hpp"
-#include "../ObjectPool.hpp"
-#include "../tfiblend.hpp"
+#include "basic_math.hpp"
+#include "tfiblend.hpp"
 
 #define JAAL_SUCCESS 0
 #define JAAL_GEOMETRIC_FAILURE    1
@@ -72,7 +67,7 @@ using namespace std;
 
 typedef std::pair<size_t, size_t> FacePair;
 
-BEGIN_JAAL_NAMESPACE
+namespace Jaal {
 
 class Vertex;
 class Face;
@@ -2154,7 +2149,7 @@ private:
 
 int quad_concave_tests();
 
-END_JAAL_NAMESPACE
+} // namespace Jaal
 
 #endif
 

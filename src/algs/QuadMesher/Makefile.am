@@ -12,27 +12,38 @@ libJaalQuadMesher_la_includedir = $(includedir)
 # The list of source files, and any header files that do not need to be installed
 libJaalQuadMesher_la_SOURCES = \
 	AdfrontClean.cpp  \
+	basic_math.hpp \
 	BinaryTree.cpp \
 	Bridges.cpp \
 	DijkstraShortestPath.cpp \
+	DijkstraShortestPath.hpp \
 	Doublet.cpp \
 	DualGraph.cpp \
+	DualGraph.hpp \
 	FaceClose.cpp \
+	JaalMoabConverter.cpp \
+	JaalMoabConverter.hpp \
 	laplace.cpp \
 	matching.cpp \
 	Mesh.cpp \
+	Mesh.hpp \
 	meshclean.cpp \
 	mesh_io.cpp \
 	MeshOpt.cpp \
+	MeshRefine2D.hpp \
 	off_io.cpp \
 	OneDefectRemeshing.cpp \
 	QuadCleanUp.cpp \
+	QuadCleanUp.hpp \
 	QuadPatches.cpp \
+        QuadMesh.cpp \
 	Singlet.cpp \
 	SwapQuadEdge.cpp \
 	SwapTriEdge.cpp \
+	SwapTriEdge.hpp \
 	tfiblend.cpp \
 	Tri2Quad.cpp \
+	Tri2Quad.hpp \
 	tri_io.cpp \
 	Tunnels.cpp \
 	circumcenter.cpp \
@@ -44,19 +55,13 @@ libJaalQuadMesher_la_SOURCES = \
 
 # The list of header files which are to be installed
 nobase_libJaalQuadMesher_la_include_HEADERS = \
-	meshkit/Mesh.hpp   \
-	meshkit/MeshRefine2D.hpp \
-        meshkit/QuadMesh.hpp \
-	meshkit/JaalMoabConverter.hpp \
-	meshkit/QuadCleanUp.hpp  \
-	meshkit/SwapTriEdge.hpp  \
-	meshkit/Tri2Quad.hpp	
+        meshkit/QuadMesh.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(srcdir)/../core \
-              -I$(srcdir)/../lemon \
-              -I$(srcdir)/../utils \
+              -I$(srcdir)/../../core \
+              -I$(srcdir)/../../lemon \
+              -I$(srcdir)/../../utils \
               -I$(top_builddir) \
               -I$(top_srcdir)/utils 
 

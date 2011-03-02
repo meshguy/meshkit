@@ -29,12 +29,12 @@
 #ifndef Tri2Quad_H
 #define Tri2Quad_H
 
-#include <meshkit/Mesh.hpp>
+#include "Mesh.hpp"
 #include "DualGraph.hpp"
 #include "BinaryTree.hpp"
 #include "cycle.hpp"         // performance counter. 
 
-BEGIN_JAAL_NAMESPACE
+namespace Jaal {
 
 class Tri2Quads
 {
@@ -108,6 +108,6 @@ private:
 bool has_same_dual(const BinaryNode *nd1, const BinaryNode *nd2);
 bool already_matched(const BinaryNode *node);
 
-END_JAAL_NAMESPACE
+} // namespace Jaal
 
 #endif

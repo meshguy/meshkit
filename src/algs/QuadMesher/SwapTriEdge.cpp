@@ -1,4 +1,4 @@
-#include <meshkit/SwapTriEdge.hpp>
+#include "SwapTriEdge.hpp"
 
 //#############################################################################
 

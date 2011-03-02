@@ -18,9 +18,9 @@
 #ifndef DUALGRAPH_H
 #define DUALGRAPH_H
 
-#include <meshkit/Mesh.hpp>
+#include "Mesh.hpp"
 
-BEGIN_JAAL_NAMESPACE
+namespace Jaal {
 
 class DualGraph
 {
@@ -130,6 +130,6 @@ PNode DualGraph::getNewDualNode(Face *face)
 }
 
 
-END_JAAL_NAMESPACE
+} // namespace Jaal
 
 #endif

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include <meshkit/Tri2Quad.hpp>
-#include <meshkit/JaalMoabConverter.hpp>
+#include "Tri2Quad.hpp"
+#include "JaalMoabConverter.hpp"
 
 using namespace Jaal;
 

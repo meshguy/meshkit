@@ -1,4 +1,4 @@
-#include <meshkit/JaalMoabConverter.hpp>
+#include "JaalMoabConverter.hpp"
 
 iBase_EntityHandle
 JaalMoabConverter :: new_MOAB_Handle(iMesh_Instance imesh, Vertex *vertex)
