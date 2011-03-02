@@ -1,95 +1,110 @@
-#include "MergeMesh.hpp"
-#include "MKException.hpp"
+#define HAVE_MOAB 1
+
+#include "meshkit/MKCore.hpp"
+#include "meshkit/MergeMesh.hpp"
 
 #ifdef HAVE_MOAB
+
+//KDTree required
 #include "MBSkinner.hpp"
 #include "MBAdaptiveKDTree.hpp"
 #include "MBRange.hpp"
 #include "MBCartVect.hpp"
-#endif
 
 #include <algorithm>
-#include <string>
 #include <vector>
-#include <cassert>
-#include <iostream>
 
-void MergeMesh::merge_entities(iBase_EntityHandle *elems,
-                               int elems_size,
-                               const double merge_tol,
-                               const int do_merge,
-                               const int update_sets,
-                               iBase_TagHandle merge_tag)  
+namespace MeshKit {
+
+MergeMesh::MergeMesh(MKCore *mkcore, const MEntVector &me_vec)
+  : MeshScheme(mkcore, me_vec),
+
+    mbImpl( (reinterpret_cast<MBiMesh *>(this->mk_core()->imesh_instance()) )->mbImpl),
+    mergeTol(1e-3),
+    do_merge(true),
+    update_sets(false),
+    merge_tag(0)
+{}
+
+MergeMesh::~MergeMesh() 
 {
-  mergeTol = merge_tol;
-  mergeTolSq = merge_tol*merge_tol;
+  if (merge_tag) 
+    mbImpl->tag_delete(merge_tag); //not the behaviour we want when merge_tag is passed in, fixme
+}
   
-#ifdef HAVE_MOAB  
-  MBRange tmp_elems;
-  tmp_elems.insert((MBEntityHandle*)elems, (MBEntityHandle*)elems + elems_size);
-  MBErrorCode result = merge_entities(tmp_elems, do_merge, update_sets,
-                                      (MBTag)merge_tag);
-  if (result != MB_SUCCESS)
-    throw MKException(iBase_FAILURE, "");
-#else
-  throw MKException(iBase_NOT_SUPPORTED, "");
-#endif
+// static registration of this  mesh scheme                                                                 
+moab::EntityType MergeMesh_tps[] = { moab::MBVERTEX,
+				    moab::MBEDGE,
+				    moab::MBTRI,
+				    moab::MBHEX,
+				    moab::MBMAXTYPE};
+
+const moab::EntityType* MergeMesh::output_types(){ 
+  return MergeMesh_tps; 
+}
+
+const char* MergeMesh::name() {
+  return "MergeMesh";
+}
+  
+void MergeMesh::setup_this(){
+  //no-op
+}
+
+void MergeMesh::execute_this(){
+  ModelEnt *me = mentSelection.begin()->first;
+  moab::EntityHandle set=me->mesh_handle(); // this is the initial set                                       
+
+  
 
 }
 
-void MergeMesh::perform_merge(iBase_TagHandle merge_tag) 
-{
-#ifdef HAVE_MOAB
-  // put into a range
-  MBErrorCode result = perform_merge((MBTag) merge_tag);
-  if (result != MB_SUCCESS)
-    throw MKException(iBase_FAILURE, "");
-#else
-  throw MKException(iBase_NOT_SUPPORTED, "");
-#endif
-}
 
-#ifdef HAVE_MOAB
-MBErrorCode MergeMesh::merge_entities(MBRange &elems,
-                                      const int do_merge,
-                                      const int update_sets,
-                                      MBTag merge_tag) 
+MBErrorCode MergeMesh::merge_entities(MBRange &elems)
 {
+  //elems is a bunch of 3d elements in 3d, or a bunch of 2d elements in 2d
+  //  if (result != MB_SUCCESS)
+  //throw Error(MK_FAILURE, "Something");
+
   // get the skin of the entities
   MBSkinner skinner(mbImpl);
   MBRange skin_range;
   MBErrorCode result = skinner.find_skin(elems, 0, skin_range);
-  if (MB_SUCCESS != result) return result;
+  if (MB_SUCCESS != result) 
+    return result;
 
   // create a tag to mark merged-to entity; reuse tree_root
   MBEntityHandle tree_root = 0;
   if (0 == merge_tag) {
     result = mbImpl->tag_create("__merge_tag", sizeof(MBEntityHandle), 
                                 MB_TAG_DENSE, MB_TYPE_HANDLE,
-                                mbMergeTag, &tree_root);
-    if (MB_SUCCESS != result) return result;
+                                merge_tag, &tree_root);
+    if (MB_SUCCESS != result) 
+      return result;
   }
-  else mbMergeTag = merge_tag;
   
   // build a kd tree with the vertices
   MBAdaptiveKDTree kd(mbImpl, true);
   result = kd.build_tree(skin_range, tree_root);
-  if (MB_SUCCESS != result) return result;
+  if (MB_SUCCESS != result) 
+    return result;
 
   // find matching vertices, mark them
-  result = find_merged_to(tree_root, mbMergeTag);
-  if (MB_SUCCESS != result) return result;
+  result = find_merged_to(tree_root);
+  if (MB_SUCCESS != result) 
+    return result;
   
   // merge them if requested
   if (do_merge) {
-    result = perform_merge(mbMergeTag);
-    if (MB_SUCCESS != result) return result;
+    result = perform_merge();
+    if (MB_SUCCESS != result) 
+      return result;
   }
   
   return MB_SUCCESS;
 }
 
-MBErrorCode MergeMesh::perform_merge(MBTag merge_tag) 
+MBErrorCode MergeMesh::perform_merge()
 {
   if (deadEnts.size()==0){
     std::cout << "\nWarning: Geometries don't have a common face; Nothing to merge" << std::endl;
@@ -113,11 +128,13 @@ MBErrorCode MergeMesh::perform_merge(MBTag merge_tag)
   return mbImpl->delete_entities(deadEnts);
 }
 
-MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag) 
+MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root)
 {
   MBAdaptiveKDTreeIter iter;
   MBAdaptiveKDTree tree(mbImpl);
-  
+
+  double mergeTolSq = mergeTol*mergeTol;
+
   // evaluate vertices in this leaf
   MBRange leaf_range, leaf_range2;
   std::vector<MBEntityHandle> sorted_leaves;
@@ -211,4 +228,5 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
   return MB_SUCCESS;
 }
 
+}//namespace MeshKit 
 #endif // ifdef MOAB

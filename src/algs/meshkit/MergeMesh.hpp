@@ -1,83 +1,60 @@
 #ifndef MESHKIT_MERGEMESH_HPP
 #define MESHKIT_MERGEMESH_HPP
+#ifdef HAVE_MOAB
+
+//todo:
+//- nice case for when we don't have MOAB
 
 #include "iMesh.h"
 
-#ifdef HAVE_MOAB
+#include "meshkit/MeshScheme.hpp"
+
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
-#endif
 
-class MergeMesh 
+
+namespace MeshKit {
+
+
+class MergeMesh : public MeshScheme
 {
-public:
-    /* \brief Constructor
-     */
-  MergeMesh(iMesh_Instance impl);
-  
-    /* \brief Destructor
-     */
-  virtual ~MergeMesh();
-
-    /* \brief Merge vertices in elements passed in
-     */
-  void merge_entities(iBase_EntityHandle *elems,
-                      int elems_size,
-                      const double merge_tol,
-                      const int do_merge = true,
-                      const int update_sets = false,
-                      iBase_TagHandle merge_tag = 0);
-  
-    /* \brief Perform the actual merge between entities
-     */
-  void perform_merge(iBase_TagHandle merged_to);
 private:
-  iMesh_Instance imeshImpl;
-
-  double mergeTol, mergeTolSq;
-
-  iBase_TagHandle mergeTag;
-  
-#ifdef HAVE_MOAB
-
-    //- given a kdtree, set tag on vertices in leaf nodes with vertices
-    //- to which they should be merged
-  MBErrorCode find_merged_to(MBEntityHandle &tree_root, MBTag merged_to);
-  
-  MBErrorCode merge_entities(MBRange &elems,
-                             const int do_merge,
-                             const int update_sets,
-                             MBTag merge_tag);
-  
-    //- perform the actual merge
-  MBErrorCode perform_merge(MBTag merged_to);
 
   MBInterface *mbImpl;
+  double mergeTol;
+  bool do_merge;
+  bool update_sets;
+  MBTag merge_tag; // tag pointing to the entity to which an entity will be merged
 
-    //- the tag pointing to the entity to which an entity will be merged
-  MBTag mbMergeTag;
+  MBRange deadEnts; // entities which will go away after the merge
 
-    //- entities which will go away after the merge
-  MBRange deadEnts;
-#endif
+  //- given a kdtree, set tag on vertices in leaf nodes with vertices
+  //- to which they should be merged
+  MBErrorCode find_merged_to(MBEntityHandle &tree_root);  
+  MBErrorCode merge_entities(MBRange &elems);
   
+  //- perform the actual merge
+  MBErrorCode perform_merge();
+
+public:
+  MergeMesh(MKCore *mkcore, const MEntVector &me_vec);
+  virtual ~MergeMesh();
+
+  /* \brief Get class name */
+  static const char* name();
+  const moab::EntityType* output_types();
+  void setup_this();
+  void execute_this();
+
+  void set_merge_tol(double v){mergeTol = v;};
+  void set_do_merge(bool v){do_merge = v;};
+  void set_update_sets(bool v){update_sets = v;};
+  void set_merge_tag(MBTag v){merge_tag = v;};
 };
 
-inline MergeMesh::MergeMesh(iMesh_Instance impl) 
-        : imeshImpl(impl)
-{
-#ifdef HAVE_MOAB
-  mbImpl = (reinterpret_cast<MBiMesh*> (impl))->mbImpl;
-#endif
-}
 
-inline MergeMesh::~MergeMesh() 
-{
-#ifdef HAVE_MOAB
-  if (mbMergeTag) mbImpl->tag_delete(mbMergeTag);
-#endif
-}
-
-#endif
+}//namespace MeshKit
+#endif //HAVE_MOAB
+#endif //MESHKIT_MERGEMESH_HPP
 
