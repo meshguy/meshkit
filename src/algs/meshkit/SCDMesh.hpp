@@ -25,7 +25,7 @@ namespace MeshKit
 {
 
 //===========================================================================//
-  /*!
+  /**
    * \class SCDMesh
    * \brief Generate a structured Cartesian grid over a geometry
    * 
@@ -70,7 +70,7 @@ namespace MeshKit
     AxisSchemeType axisType;
     GeomSchemeType geomType;
 
-    // for scd - MOAB ScdInterface instance
+    // MOAB ScdInterface instance - generated when InterfaceSchemeType set to scd
     moab::ScdInterface *scdIface;
 
     // number of coarse divisions in each direction
@@ -106,10 +106,6 @@ namespace MeshKit
 
     // vertex coordinates
     std::vector<double> full_coords;
-
-    // vertex range
-    moab::Range vtx_range;
-
 
   public:
 
@@ -264,8 +260,8 @@ namespace MeshKit
     //! create cartesian bounding box
     void create_cart_edges();
 
-    //! create mesh vertices
-    void create_vertices();
+    //! create mesh vertex coordinates
+    void create_vertex_coords();
 
     //! create full mesh representation
     void create_full_mesh();

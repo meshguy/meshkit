@@ -18,11 +18,11 @@ using namespace MeshKit;
 #include "TestUtil.hpp"
 
 #ifdef HAVE_ACIS
-#define DEFAULT_TEST_FILE_1 "brick.sat"
+#define DEFAULT_TEST_FILE_1 "holycyl.sat"
 #define DEFAULT_TEST_FILE_2 "three_bricks.sat"
 #elif defined(HAVE_OCC)
-#define DEFAULT_TEST_FILE_1 "sphere.stp"
-#define DEFAULT_TEST_FILE_2 "sphere.stp"
+#define DEFAULT_TEST_FILE_1 "holycyl.stp"
+#define DEFAULT_TEST_FILE_2 "three_bricks.stp"
 #endif
 
 //---------------------------------------------------------------------------//
@@ -193,7 +193,6 @@ void scd_test_2()
 // *: Cartesian bounding box
 // *: Coarse/fine grid sizing
 // *: Individual volumes meshed with their own grid
-// *: Should produce the same mesh as test 1
 void scd_test_3()
 {
   // load the test geometry

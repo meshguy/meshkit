@@ -8,7 +8,6 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "meshkit/SizingFunction.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 
 #include <vector>
@@ -31,7 +30,7 @@ namespace MeshKit
   SCDMesh::SCDMesh(MKCore *mk_core, const MEntVector &me_vec)
     : MeshScheme(mk_core, me_vec)
   {
-    boxIncrease = .0;
+    boxIncrease = 0.0;
   }
 
 //---------------------------------------------------------------------------//
@@ -87,8 +86,8 @@ void SCDMesh::setup_this()
 
       /* Generate the mesh */
 
-      // create mesh vertices
-      create_vertices();
+      // create mesh vertex coordinates
+      create_vertex_coords();
 
       // full representation case
       if (interfaceType == 0) {
@@ -116,9 +115,10 @@ void SCDMesh::setup_this()
                                                   maxCoord[0], maxCoord[1], maxCoord[2]);
     IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
 
-    // increase box size for 3 directions 
+    // increase box size
+    double box_size;
     for (int i = 0; i < 3; i++) {
-      double box_size = maxCoord[i] - minCoord[i];
+      box_size = maxCoord[i] - minCoord[i];
       minCoord[i] -= box_size*boxIncrease; 
       maxCoord[i] += box_size*boxIncrease; 
     }
@@ -132,9 +132,10 @@ void SCDMesh::setup_this()
                                                   maxCoord[0], maxCoord[1], maxCoord[2]);
     IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
 
-    // increase box size for 3 directions 
+    // increase box size
+    double box_size;
     for (int i = 0; i < 3; i++) {
-      double box_size = maxCoord[i] - minCoord[i];
+      box_size = maxCoord[i] - minCoord[i];
       minCoord[i] -= box_size*boxIncrease; 
       maxCoord[i] += box_size*boxIncrease; 
     }
@@ -180,8 +181,8 @@ void SCDMesh::create_cart_edges()
 }
 
 //---------------------------------------------------------------------------//
-// create the mesh vertices
-  void SCDMesh::create_vertices()
+// create the mesh vertex coordinates
+  void SCDMesh::create_vertex_coords()
   {
     num_i = i_arr.size();
     num_j = j_arr.size();
@@ -191,7 +192,7 @@ void SCDMesh::create_cart_edges()
     full_coords.resize(3*num_verts);
     unsigned int idx;
 
-    // generate the vertices
+    // generate the vertex coordinate array in an interleaved fashion
     for (int kval = 0; kval != num_k; kval++) {
       for (int jval = 0; jval != num_j; jval++) {
         for (int ival = 0; ival != num_i; ival++) {
@@ -202,18 +203,22 @@ void SCDMesh::create_cart_edges()
         }
       }
     }
-
-    rval = mk_core()->moab_instance()->create_vertices(&full_coords[0],
-                                                       num_verts,
-                                                       vtx_range);
-    MBERRCHK(rval, mk_core()->moab_instance());
   }
 
 //---------------------------------------------------------------------------//
 // create the full mesh representation
   void SCDMesh::create_full_mesh()
   {
+    // create the vertices from the coordinates array
+    moab::Range vtx_range;
+    rval = mk_core()->moab_instance()->create_vertices(&full_coords[0],
+                                                       num_verts,
+                                                       vtx_range);
+    MBERRCHK(rval, mk_core()->moab_instance());
+
     // generate hex entities from the vertices
+    // the entity handles here should be contiguous with the i blocks 
+    // moving the fastest and the k blocks moving the slowest
     moab::EntityHandle local_conn[8];
     unsigned int idx;
     for (int kv = 0; kv != num_k - 1; kv++) {
@@ -250,14 +255,13 @@ void SCDMesh::create_cart_edges()
 
     // create an instance of the ScdBox class
     // for now the coordinate indexing starts at 0
-    // this can be changed if necessary
+    // this should be changed to account for multiple geometric instances being meshed
     moab::ScdBox *scd_box;
     rval = scdIface->construct_box(moab::HomCoord(0, 0, 0, 1),
                                    moab::HomCoord(num_i-1, num_j-1, num_k-1, 1),
                                    &full_coords[0], 
                                    num_verts,
                                    scd_box);
-    if (moab::MB_SUCCESS != rval) mk_core()->moab_instance()->release_interface(scdIface);
     MBERRCHK(rval, mk_core()->moab_instance());
 
     // get rid of ScdInterface once we are done
