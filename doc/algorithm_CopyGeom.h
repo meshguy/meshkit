@@ -5,9 +5,9 @@
 
 <b>External dependencies:</b> (none)
 
-<b>Input:</b> 1D, 2D, or 3D ModelEnt's, <em>already meshed</em>
+<b>Input:</b> 1D, 2D, or 3D ModelEnt's
 
-<b>Output:</b> Copied entities, and sometimes additional sets (see Notes below)
+<b>Output:</b> Copied entities, and sometimes additional sets.
 
 <b>Interface(s) used:</b> CGM
 
@@ -18,6 +18,5 @@ None.
 <b>Notes:</b>
 
 Copy moves geometric entities.  Copied entities can optionally retain a tag pointing to the resulting copy.
-see CopyGeom header for details on specifying these sets.
 
 */
