@@ -58,7 +58,7 @@ FBiGeom::load( const char* file_name,
 // include here the iBaseVirtual methods that will be overloaded
 // start copy iBaseVirtual
 
-iGeomBase::EntitySetHandle FBiGeom::getRootSet()
+iGeom::EntitySetHandle FBiGeom::getRootSet()
 {
   // the root set in MOAB is always null
   return 0;

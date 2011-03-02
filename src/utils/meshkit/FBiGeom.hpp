@@ -45,7 +45,7 @@ class FBiGeom : public iGeom {
 
     // methods from iBaseVirtual that are overloaded
 
-    inline iGeomBase::EntitySetHandle getRootSet();
+    inline iGeom::EntitySetHandle getRootSet();
 
     // methods from iGeom
     inline Error getEntities( EntitySetHandle set,
