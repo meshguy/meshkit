@@ -6,7 +6,8 @@ SUBDIRS =  QuadMesher Qslim
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
-libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la QuadMesher/libJaalQuadMesher.la
+libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
+                           QuadMesher/libJaalQuadMesher.la
 
 # The directory in which to install headers
 libMeshKitalgs_la_includedir = $(includedir)
@@ -41,7 +42,12 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(srcdir)/../core -I$(srcdir)/../utils -I$(top_srcdir) \
-              -I$(top_builddir) -I$(top_srcdir)/ -I$(top_srcdir)/utils \
-              -I$(srcdir)/../lemon
+              -I$(srcdir)/../core \
+              -I$(srcdir)/../utils \
+              -I$(top_srcdir) \
+              -I$(top_builddir) \
+              -I$(top_srcdir)/ \
+              -I$(top_srcdir)/utils \
+              -I$(srcdir)/../lemon \
+              -I$(srcdir)/QuadMesher
 

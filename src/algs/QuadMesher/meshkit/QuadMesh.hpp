@@ -9,7 +9,6 @@
 #define MESHKIT_QUADMESHER_HPP
 
 #include "meshkit/MeshScheme.hpp"
-#include "Tri2Quad.hpp"
 
 namespace MeshKit
 {
@@ -23,10 +22,12 @@ namespace MeshKit
 
 using namespace std;
 
+namespace Jaal { class Mesh; }
+
 class QuadMesher : public MeshScheme
 {
 public:
-        static enum MeshCleanOps = {LOCAL_MESH_CLEANUP, GLOABAL_MESH_CLEANUP };
+        enum MeshCleanOps {LOCAL_MESH_CLEANUP, GLOBAL_MESH_CLEANUP };
 
 	//construction function for edge mesher
 	QuadMesher(MKCore *mk_core, const MEntVector &me_vec);
