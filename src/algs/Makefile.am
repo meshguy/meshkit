@@ -6,7 +6,7 @@ SUBDIRS =  QuadMesher Qslim
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
-libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la
+libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la QuadMesher/libJaalQuadMesher.la
 
 # The directory in which to install headers
 libMeshKitalgs_la_includedir = $(includedir)

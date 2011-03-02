@@ -46,7 +46,7 @@ libJaalQuadMesher_la_SOURCES = \
 nobase_libJaalQuadMesher_la_include_HEADERS = \
 	meshkit/Mesh.hpp   \
 	meshkit/MeshRefine2D.hpp \
-        meshkit/QuadMesher.hpp \
+        meshkit/QuadMesh.hpp \
 	meshkit/JaalMoabConverter.hpp \
 	meshkit/QuadCleanUp.hpp  \
 	meshkit/SwapTriEdge.hpp  \
