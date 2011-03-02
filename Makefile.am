@@ -1,7 +1,3 @@
-@IGEOM_CONFIG_OPTIONS_INCLUDE@
-@IMESH_CONFIG_OPTIONS_INCLUDE@
-@IREL_CONFIG_OPTIONS_INCLUDE@
-
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 # Don't loose the autoconf include path
