@@ -20,6 +20,7 @@ libMeshKitalgs_la_SOURCES = \
 	SCDMesh.cpp \
 	EBMesher.cpp \
 	CopyMesh.cpp \
+	CopyGeom.cpp \
 	ExtrudeMesh.cpp \
 	CESets.cpp \
 	Transform.cpp \
@@ -34,6 +35,7 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/SCDMesh.hpp \
 	meshkit/EBMesher.hpp \
 	meshkit/CopyMesh.hpp \
+	meshkit/CopyGeom.hpp \
 	meshkit/ExtrudeMesh.hpp \
 	meshkit/CESets.hpp \
 	meshkit/Transform.hpp \

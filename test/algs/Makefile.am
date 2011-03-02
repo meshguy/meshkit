@@ -20,6 +20,7 @@ TESTS = test_edgemesh \
         test_ebmesh \
         test_scdmesh \
         test_copymesh \
+        test_copygeom \
         test_extrudemesh \
         test_qslim 
 
@@ -36,6 +37,7 @@ endif
 test_edgemesh_SOURCES = test_edgemesh.cpp
 test_ebmesh_SOURCES = test_ebmesh.cpp
 test_copymesh_SOURCES = test_copymesh.cpp
+test_copygeom_SOURCES = test_copygeom.cpp
 test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslim_SOURCES = test_qslim.cpp
