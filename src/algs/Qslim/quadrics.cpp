@@ -30,7 +30,7 @@ Mat4 quadrix_vertex_constraint(const Vec3& v)
 
     return L;
 }
-Mat4 quadrix_vertex_constraint(MBEntityHandle vert)
+Mat4 quadrix_vertex_constraint(moab::EntityHandle vert)
 {
     Mat4 L(Mat4::identity);
     double v[3];
@@ -72,7 +72,7 @@ Mat4 quadrix_plane_constraint(const Vec3& n, double d)
 }
 
 //Mat4 quadrix_plane_constraint(Face& T)
-Mat4 quadrix_plane_constraint(MBEntityHandle triangle)
+Mat4 quadrix_plane_constraint(moab::EntityHandle triangle)
 {
     // const Plane& p = T.plane();
     Plane p=trianglePlane(mb, triangle);
@@ -121,30 +121,30 @@ double quadrix_evaluate_vertex(const Vec3& v, const Mat4& K)
 //
 
 //bool is_border(Edge *e )
-bool is_border(MBEntityHandle eh )
+bool is_border(moab::EntityHandle eh )
 {
    //  use nb of triangles connected to check if number of tri is 1
-    std::vector<MBEntityHandle> adjTri;
-    MBErrorCode rval = mb->get_adjacencies(&eh, 1, 2, false, adjTri,
-                                      MBInterface::UNION);
-    if (MB_SUCCESS==rval  && adjTri.size()==1)
+    std::vector<moab::EntityHandle> adjTri;
+    moab::ErrorCode rval = mb->get_adjacencies(&eh, 1, 2, false, adjTri,
+                                      moab::Interface::UNION);
+    if (moab::MB_SUCCESS==rval  && adjTri.size()==1)
          return true;
     return false;
 }
 
-bool check_for_discontinuity(MBEntityHandle eh) //Edge *e)
+bool check_for_discontinuity(moab::EntityHandle eh) //Edge *e)
 {
     return is_border(eh);
 }
 
-Mat4 quadrix_discontinuity_constraint( MBEntityHandle mbe
+Mat4 quadrix_discontinuity_constraint( moab::EntityHandle mbe
     /*Edge *edge*/, const Vec3& n)
 {
     //Vec3& org = *edge->org();
     //Vec3& dest = *edge->dest();
     // to do: Vec3 origin of edge
 	// is the orientation important for an edge?
-	const MBEntityHandle * conn;
+	const moab::EntityHandle * conn;
 	int num_nodes;
 	mb->get_connectivity(mbe, conn, num_nodes);
     Vec3 dest = getVec3FromMBVertex(mb, conn[1]); //
@@ -159,7 +159,7 @@ Mat4 quadrix_discontinuity_constraint( MBEntityHandle mbe
 }
 
 
-Mat4 quadrix_discontinuity_constraint(MBEntityHandle mbedge)// Edge *edge)
+Mat4 quadrix_discontinuity_constraint(moab::EntityHandle mbedge)// Edge *edge)
 {
     Mat4 D(Mat4::zero);
 
@@ -171,13 +171,14 @@ Mat4 quadrix_discontinuity_constraint(MBEntityHandle mbedge)// Edge *edge)
 */
     // to do : to get the connected faces to the edge
 
-	std::vector<MBEntityHandle> adjFaces;
-	MBErrorCode rval = mb->get_adjacencies(&mbedge, 1, 2, false,  adjFaces,
-								  MBInterface::UNION);
+	std::vector<moab::EntityHandle> adjFaces;
+	moab::ErrorCode rval = mb->get_adjacencies(&mbedge, 1, 2, false,  adjFaces,
+								  moab::Interface::UNION);
+	assert(rval == moab::MB_SUCCESS);
 
-	for (int i=0; i<adjFaces.size(); i++)
+	for (unsigned int i=0; i<adjFaces.size(); i++)
 	{
-		MBEntityHandle F = adjFaces[i];
+		moab::EntityHandle F = adjFaces[i];
 		Plane p = trianglePlane( mb, F);
 		D += quadrix_discontinuity_constraint(mbedge, p.normal());
 	}
@@ -278,8 +279,8 @@ bool quadrix_find_best_fit(const Mat4& Q, Vec3& candidate)
 
 
 double quadrix_pair_target(const Mat4& Q,
-			 MBEntityHandle v1, //Vertex *v1,
-			 MBEntityHandle v2, // Vertex *v2,
+			 moab::EntityHandle v1, //Vertex *v1,
+			 moab::EntityHandle v2, // Vertex *v2,
 			 Vec3& candidate)
 {
     int policy = opts.placement_policy;

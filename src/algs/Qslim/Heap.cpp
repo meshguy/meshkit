@@ -1,6 +1,6 @@
 #include <iostream>
 #include "std.h"
-#include "Heap.h"
+#include "Heap.hpp"
 #include <string.h> /* for memcpy */
 
 

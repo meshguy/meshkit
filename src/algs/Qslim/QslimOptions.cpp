@@ -5,7 +5,7 @@
  *      Author: iulian
  */
 
-#include "QslimOptions.h"
+#include "meshkit/QslimOptions.hpp"
 // for HUGES
 #include "math.h"
 

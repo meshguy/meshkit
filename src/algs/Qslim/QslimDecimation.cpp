@@ -5,11 +5,11 @@
  *      Author: iulian
  */
 
-#include "QslimDecimation.h"
-#include "MBRange.hpp"
+#include "QslimDecimation.hpp"
+#include "moab/Range.hpp"
 
 // for proximity searches
-#include "MBAdaptiveKDTree.hpp"
+#include "moab/AdaptiveKDTree.hpp"
 
 #include "Mat4.h"
 #include "defs.h"
@@ -19,55 +19,53 @@
 // those are used in model navigation/simplification
 #include "primitives.h"
 
-#include "MBiMesh.hpp"
 // this is the global thing, that everybody will use
-MBInterface * mb;
-MBTag uniqIDtag; // this will be used to mark vertices MBEntityHandles
-MBTag validTag;
+moab::Interface * mb;
+moab::Tag uniqIDtag; // this will be used to mark vertices moab::EntityHandles
+moab::Tag validTag;
 
-MBTag costTag; // simplification induces an error cost at each vertex
+moab::Tag costTag; // simplification induces an error cost at each vertex
 // try to keep adding the cost, to see if it is spreading nicely
 
 // this will be used to store plane data for each triangle, as 4 doubles
 // will be updated only if needed ( -m option == opts.will_preserve_mesh_quality)
-MBTag planeDataTag;
+moab::Tag planeDataTag;
 
-MBRange verts; // original list of vertices, that are part of the original triangles
-MBRange triangles;
-MBRange edgs;
-
+moab::Range verts; // original list of vertices, that are part of the original triangles
+moab::Range triangles;
+moab::Range edgs;
 QslimOptions opts; // external
 
-int uniqID(MBEntityHandle v) {
+int uniqID(moab::EntityHandle v) {
 	int val;
-	MBErrorCode rval = mb->tag_get_data(uniqIDtag, &v, 1, &val);
-	assert(rval==MB_SUCCESS);
+	moab::ErrorCode rval = mb->tag_get_data(uniqIDtag, &v, 1, &val);
+	assert(rval==moab::MB_SUCCESS);
 	return val;
 }
 // the vertices are not deleted anymore, just invalidated
 // the edges are deleted, though, and triangles
-int ehIsValid(MBEntityHandle v) {
+int ehIsValid(moab::EntityHandle v) {
 	unsigned char val;
-	MBErrorCode rval = mb->tag_get_data(validTag, &v, 1, &val);
-	assert(rval==MB_SUCCESS);
+	moab::ErrorCode rval = mb->tag_get_data(validTag, &v, 1, &val);
+	assert(rval==moab::MB_SUCCESS);
 	return (int) val;
 }
 
 // include here the main classes used for decimation
 
-#include "Heap.h"
+#include "Heap.hpp"
 // prox grid is used for proximity grid only
 //#include "ProxGrid.h"
 
 class pair_info: public Heapable {
 public:
-	MBEntityHandle v0, v1; // Vertex *v0, *v1;
+	moab::EntityHandle v0, v1; // Vertex *v0, *v1;
 
 	Vec3 candidate;
 	double cost;
 
 	//pair_info ( Vertex *a,Vertex *b ) { v0=a; v1=b; cost=HUGE; }
-	pair_info(MBEntityHandle a, MBEntityHandle b) {
+	pair_info(moab::EntityHandle a, moab::EntityHandle b) {
 		v0 = a;
 		v1 = b;
 		cost = HUGE;
@@ -108,9 +106,9 @@ int validVertCount;
 // Low-level routines for manipulating pairs
 //
 
-static inline vert_info& vertex_info(MBEntityHandle v)//Vertex *v )
+static inline vert_info& vertex_info(moab::EntityHandle v)//Vertex *v )
 {
-	//  MBEntityHandle should return an integer tag with an
+	//  moab::EntityHandle should return an integer tag with an
 	//  index in the big array of vert_info
 	//   something like: return tag
 	//   for the time being, we can return the simple id...
@@ -118,7 +116,7 @@ static inline vert_info& vertex_info(MBEntityHandle v)//Vertex *v )
 }
 
 static
-bool check_for_pair(MBEntityHandle v0, MBEntityHandle v1)//Vertex *v0, Vertex *v1 )
+bool check_for_pair(moab::EntityHandle v0, moab::EntityHandle v1)//Vertex *v0, Vertex *v1 )
 {
 	const pair_buffer& pairs = vertex_info(v0).pairs;
 
@@ -130,7 +128,7 @@ bool check_for_pair(MBEntityHandle v0, MBEntityHandle v1)//Vertex *v0, Vertex *v
 	return false;
 }
 
-static pair_info *new_pair(MBEntityHandle v0, MBEntityHandle v1)//  Vertex *v0, Vertex *v1 )
+static pair_info *new_pair(moab::EntityHandle v0, moab::EntityHandle v1)//  Vertex *v0, Vertex *v1 )
 {
 	vert_info& v0_info = vertex_info(v0);
 	vert_info& v1_info = vertex_info(v1);
@@ -166,7 +164,7 @@ void delete_pair(pair_info *pair) {
 //
 
 static
-bool pair_is_valid(MBEntityHandle u, MBEntityHandle v)// Vertex *u, Vertex *v )
+bool pair_is_valid(moab::EntityHandle u, moab::EntityHandle v)// Vertex *u, Vertex *v )
 {
 	//
 	Vec3 vu = getVec3FromMBVertex(mb, u);
@@ -176,13 +174,13 @@ bool pair_is_valid(MBEntityHandle u, MBEntityHandle v)// Vertex *u, Vertex *v )
 }
 
 static
-int predict_face(MBEntityHandle tria, MBEntityHandle v1, MBEntityHandle v2, /*Face& F, Vertex *v1, Vertex *v2,*/
+int predict_face(moab::EntityHandle tria, moab::EntityHandle v1, moab::EntityHandle v2, /*Face& F, Vertex *v1, Vertex *v2,*/
 Vec3& vnew, Vec3& f1, Vec3& f2, Vec3& f3) {
 	int nmapped = 0;
-	const MBEntityHandle * conn;
+	const moab::EntityHandle * conn;
 	int num_nodes;
-	MBErrorCode rval = mb->get_connectivity(tria, conn, num_nodes);
-	assert(3==num_nodes && rval == MB_SUCCESS);
+	moab::ErrorCode rval = mb->get_connectivity(tria, conn, num_nodes);
+	assert(3==num_nodes && rval == moab::MB_SUCCESS);
 	if (conn[0] == v1 || conn[0] == v2) {
 		f1 = vnew;
 		nmapped++;
@@ -221,15 +219,15 @@ Vec3& vnew, Vec3& f1, Vec3& f2, Vec3& f3) {
 #define MESH_INVERSION_PENALTY 1e9
 
 static
-double pair_mesh_positivity(/* Model& M,*/MBEntityHandle v1, MBEntityHandle v2, /*Vertex *v1, Vertex *v2,*/
+double pair_mesh_positivity(/* Model& M,*/moab::EntityHandle v1, moab::EntityHandle v2, /*Vertex *v1, Vertex *v2,*/
 		Vec3& vnew) {
-	std::vector<MBEntityHandle> changed;
+	std::vector<moab::EntityHandle> changed;
 
 	// :  construct the list of faces influenced by the
 	//   moving of vertices v1 and v2 into vnew
 	//M.contractionRegion ( v1, v2, changed );
-	MBErrorCode rval = contractionRegion(mb, v1, v2, changed);
-	if (rval != MB_SUCCESS) {
+	moab::ErrorCode rval = contractionRegion(mb, v1, v2, changed);
+	if (rval != moab::MB_SUCCESS) {
 		std::cout << "error in getting adjacency information vs: "
 				<< mb->id_from_handle(v1) << " " << mb->id_from_handle(v2)
 				<< "\n";
@@ -242,7 +240,7 @@ double pair_mesh_positivity(/* Model& M,*/MBEntityHandle v1, MBEntityHandle v2, 
 
 	for (int i = 0; i < changed.size(); i++) {
 		//Face& F = *changed ( i );
-		MBEntityHandle F = changed[i];
+		moab::EntityHandle F = changed[i];
 		Vec3 f1, f2, f3;
 
 		int nmapped = predict_face(F, v1, v2, vnew, f1, f2, f3);
@@ -281,14 +279,14 @@ double pair_mesh_positivity(/* Model& M,*/MBEntityHandle v1, MBEntityHandle v2, 
 
 static
 double pair_mesh_penalty( /*Model& M, Vertex *v1, Vertex *v2,*/
-MBEntityHandle v1, MBEntityHandle v2, Vec3& vnew) {
-	std::vector<MBEntityHandle> changed;
+moab::EntityHandle v1, moab::EntityHandle v2, Vec3& vnew) {
+	std::vector<moab::EntityHandle> changed;
 
 	//   construct the list of faces influenced by the
 	//   moving of vertices v1 and v2 into vnew
 	//M.contractionRegion ( v1, v2, changed );
-	MBErrorCode rval = contractionRegion(mb, v1, v2, changed);
-	if (rval != MB_SUCCESS) {
+	moab::ErrorCode rval = contractionRegion(mb, v1, v2, changed);
+	if (rval != moab::MB_SUCCESS) {
 		std::cout << "error in getting adjacency information vs: "
 				<< mb->id_from_handle(v1) << " " << mb->id_from_handle(v2)
 				<< "\n";
@@ -299,7 +297,7 @@ MBEntityHandle v1, MBEntityHandle v2, Vec3& vnew) {
 
 	for (int i = 0; i < changed.size(); i++) {
 		//Face& F = *changed ( i );
-		MBEntityHandle F = changed[i];
+		moab::EntityHandle F = changed[i];
 		Vec3 f1, f2, f3;
 
 		int nmapped = predict_face(F, v1, v2, vnew, f1, f2, f3);
@@ -324,8 +322,8 @@ MBEntityHandle v1, MBEntityHandle v2, Vec3& vnew) {
 
 static
 void compute_pair_info(pair_info *pair /* Model * pM0,*/) {
-	MBEntityHandle v0 = pair->v0;
-	MBEntityHandle v1 = pair->v1;
+	moab::EntityHandle v0 = pair->v0;
+	moab::EntityHandle v1 = pair->v1;
 
 	// Vertex *v0 = pair->v0;
 	// Vertex *v1 = pair->v1;
@@ -370,15 +368,15 @@ void compute_pair_info(pair_info *pair /* Model * pM0,*/) {
 				<< pairTop->cost << std::endl;
 	}
 }
-void recomputeChangedPairsCost(std::vector<MBEntityHandle> & changed,/* Model *pM0, Vertex *v0,*/
-MBEntityHandle v0) {
+void recomputeChangedPairsCost(std::vector<moab::EntityHandle> & changed,/* Model *pM0, Vertex *v0,*/
+moab::EntityHandle v0) {
 	//
 	for (int i = 0; i < changed.size(); i++) {
 
-		MBEntityHandle F = changed[i];
-		const MBEntityHandle * conn;
+		moab::EntityHandle F = changed[i];
+		const moab::EntityHandle * conn;
 		int num_nodes;
-		MBErrorCode rval = mb->get_connectivity(F, conn, num_nodes);
+		moab::ErrorCode rval = mb->get_connectivity(F, conn, num_nodes);
 		//if (!F->isValid())
 		//   continue;
 		// recompute the pair that is not connected to vertex v0
@@ -387,7 +385,7 @@ MBEntityHandle v0) {
 		// we do not have to recreate or delete any pair, we just recompute what we have
 		// some will be recomputed 2 times, but it is OK
 		for (int k = 0; k < 3; k++) {
-			MBEntityHandle v = conn[k];
+			moab::EntityHandle v = conn[k];
 			if (v == v0)
 				continue;
 			vert_info & v_info = vertex_info(v);
@@ -410,8 +408,8 @@ MBEntityHandle v0) {
 static
 void do_contract(pair_info *pair) {
 
-	MBEntityHandle v0 = pair->v0;
-	MBEntityHandle v1 = pair->v1;
+	moab::EntityHandle v0 = pair->v0;
+	moab::EntityHandle v1 = pair->v1;
 	// cost of contraction is accumulated at v0
 	double costToContract = pair->cost;
 	vert_info& v0_info = vertex_info(v0);
@@ -430,8 +428,8 @@ void do_contract(pair_info *pair) {
 
 	//
 	// Perform the actual contraction
-	std::vector<MBEntityHandle> changed;
-	MBErrorCode rval1 = contract(mb, v0, v1, vnew, changed);
+	std::vector<moab::EntityHandle> changed;
+	moab::ErrorCode rval1 = contract(mb, v0, v1, vnew, changed);
 	// this is a list of triangles still connected to v0 (are they valid? probably)
 	if (opts.will_preserve_mesh_quality)
 	{
@@ -442,7 +440,7 @@ void do_contract(pair_info *pair) {
 			computeTrianglePlane (mb, changed[i]);
 		}
 	}
-	assert (MB_SUCCESS == rval1);
+	assert (moab::MB_SUCCESS == rval1);
 
 #ifdef SUPPORT_VCOLOR
 	//
@@ -471,7 +469,7 @@ void do_contract(pair_info *pair) {
 	for (i = 0; i < v1_info.pairs.length(); i++) {
 		pair_info *p = v1_info.pairs(i);
 
-		MBEntityHandle u;
+		moab::EntityHandle u;
 		if (p->v0 == v1)
 			u = p->v1;
 		else if (p->v1 == v1)
@@ -492,11 +490,11 @@ void do_contract(pair_info *pair) {
 		// Do you have any last requests?
 		delete_pair(condemned(i));
 	// only now you can delete the vertex v1 from database
-	// MBErrorCode rval = mb->delete_entities(&v1, 1);
+	// moab::ErrorCode rval = mb->delete_entities(&v1, 1);
 	// no, it is better to invalidate the vertex, do not delete it
 	// maybe we will delete at the end all that are invalid ??
 	int invalid = 0;
-	MBErrorCode rval = mb->tag_set_data(validTag, &v1, 1, &invalid);
+	moab::ErrorCode rval = mb->tag_set_data(validTag, &v1, 1, &invalid);
 
 	if (opts.plotCost)
 	{
@@ -516,7 +514,7 @@ void do_contract(pair_info *pair) {
 // External interface: setup and single step iteration
 //
 
-bool decimate_quadric(MBEntityHandle v, Mat4& Q) {
+bool decimate_quadric(moab::EntityHandle v, Mat4& Q) {
 	if (vinfo.length() > 0) {
 		vert_info & vinf = vertex_info(v);
 		Q = vinf.Q;
@@ -558,7 +556,7 @@ void decimate_contract() {
 	validVertCount--; // Attempt to maintain valid vertex information
 }
 
-double decimate_error(MBEntityHandle v) {
+double decimate_error(moab::EntityHandle v) {
 	vert_info& info = vertex_info(v);
 
 	double err = quadrix_evaluate_vertex(v, info.Q);
@@ -602,11 +600,12 @@ double decimate_max_error ( )
 	return max_err;
 }
 #endif
+namespace MeshKit {
 
-QslimDecimation::QslimDecimation(iMesh_Instance mesh,
-		iBase_EntitySetHandle root_set) {
-	m_mesh = mesh;
-	m_InitialSet = root_set;// it is not necessarily the root set
+QslimDecimation::QslimDecimation(moab::Interface * mbi,
+		moab::EntityHandle root_set) {
+	_mb = mbi;
+	_InitialSet = root_set;// it is not necessarily the root set
 }
 
 QslimDecimation::~QslimDecimation() {
@@ -615,13 +614,13 @@ int QslimDecimation::decimate(QslimOptions & iOpts) {
 	// opts is external
 	opts = iOpts;
 
-	mb = (reinterpret_cast<MBiMesh *> (m_mesh))->mbImpl;
+	mb = _mb; // (reinterpret_cast<MBiMesh *> (m_mesh))->mbImpl;
 	// need to get all the triangles from the set
 	// also all the edges, and all vertices
 	//
 	if (NULL == mb)
 		return 1;// error
-	//MBEntityHandle mbSet = reinterpret_cast<MBEntityHandle>(m_InitialSet);
+	//moab::EntityHandle mbSet = reinterpret_cast<moab::EntityHandle>(m_InitialSet);
 
 	clock_t start_time = clock();
 	int err = Init();
@@ -659,34 +658,34 @@ int QslimDecimation::decimate(QslimOptions & iOpts) {
 	std::cout << "   Decimation: " << (double) (finish_time - init_time)
 			/ CLOCKS_PER_SEC << " s.\n";
 
-	MBRange::const_reverse_iterator rit;
+	moab::Range::const_reverse_iterator rit;
 	if (opts.useDelayedDeletion) {
 
 		// delete triangles and edges that are invalid
 		for (rit = triangles.rbegin(); rit != triangles.rend(); rit++) {
-			MBEntityHandle v = *rit;
+			moab::EntityHandle v = *rit;
 			// check the validity
 			if (ehIsValid(v))
 				continue;
-			MBErrorCode rval = mb->delete_entities(&v, 1);
+			moab::ErrorCode rval = mb->delete_entities(&v, 1);
 		}
 		// maybe we should delete all edges, but for now, we will keep them
 		for (rit = edgs.rbegin(); rit != edgs.rend(); rit++) {
-			MBEntityHandle v = *rit;
+			moab::EntityHandle v = *rit;
 			// check the validity
 			if (ehIsValid(v))
 				continue;
-			MBErrorCode rval = mb->delete_entities(&v, 1);
+			moab::ErrorCode rval = mb->delete_entities(&v, 1);
 		}
 
 	}
 	// delete them one by one
 	for (rit = verts.rbegin(); rit != verts.rend(); rit++) {
-		MBEntityHandle v = *rit;
+		moab::EntityHandle v = *rit;
 		// check the validity
 		if (ehIsValid(v))
 			continue;
-		MBErrorCode rval = mb->delete_entities(&v, 1);
+		moab::ErrorCode rval = mb->delete_entities(&v, 1);
 	}
 	clock_t delete_vTime = clock();
 	std::cout << "   Delete Vertices: "
@@ -701,31 +700,31 @@ int QslimDecimation::decimate(QslimOptions & iOpts) {
 int QslimDecimation::Init() {
 	int i, j;
 
-	MBEntityHandle * set = reinterpret_cast<MBEntityHandle *> (&m_InitialSet);
-	MBErrorCode rval = mb->get_entities_by_type(*set, MBTRI, triangles);
+	//moab::EntityHandle * set = reinterpret_cast<moab::EntityHandle *> (&_InitialSet);
+	moab::ErrorCode rval = mb->get_entities_by_type(_InitialSet, moab::MBTRI, triangles);
 	validFaceCount = triangles.size();// this gets reduced every time we simplify the model
 
 	// store the normals/planes computed at each triangle
 	// we may need just the normals, but compute planes, it is about the same job
 	double defPlane[] = {0., 0., 1., 0.};
-	rval = mb->tag_create("PlaneTriangleData", 4*sizeof(double), MB_TAG_DENSE,
-			/* MBTag */ planeDataTag,
+	rval = mb->tag_create("PlaneTriangleData", 4*sizeof(double), moab::MB_TAG_DENSE,
+			/* moab::Tag */ planeDataTag,
 				&defPlane);
 
 	// compute the triangle plane and store it, for each triangle
-	for (MBRange::iterator itr = triangles.begin(); itr != triangles.end(); itr++) {
+	for (moab::Range::iterator itr = triangles.begin(); itr != triangles.end(); itr++) {
 		// this index i will be the index in the vinfo array
-		MBEntityHandle tri = *itr;
+		moab::EntityHandle tri = *itr;
 		computeTrianglePlane(mb, tri);
 		// setting the data for the tag/triangle is done in the compute
 		//rval = mb->tag_set_data(planeDataTag, &tri, 1, &plane);
 	}
 
 	// create all the edges if not existing
-	mb->get_adjacencies(triangles, 1, true, edgs, MBInterface::UNION);
+	mb->get_adjacencies(triangles, 1, true, edgs, moab::Interface::UNION);
 
-	// MBRange verts;// the vertices are always there, they do not need to be created
-	mb->get_adjacencies(triangles, 0, true, verts, MBInterface::UNION);
+	// moab::Range verts;// the vertices are always there, they do not need to be created
+	mb->get_adjacencies(triangles, 0, true, verts, moab::Interface::UNION);
 	int numNodes = verts.size();
 	validVertCount = numNodes; // this will be kept
 	vinfo.init(numNodes);
@@ -733,41 +732,41 @@ int QslimDecimation::Init() {
 	//  this will be used instead of v->uniqID in the vinfo array
 	int def_data = -1;
 
-	rval = mb->tag_create("uniqID", sizeof(int), MB_TAG_DENSE, MB_TYPE_INTEGER, uniqIDtag,
+	rval = mb->tag_create("uniqID", sizeof(int), moab::MB_TAG_DENSE, moab::MB_TYPE_INTEGER, uniqIDtag,
 			&def_data);
-	if (MB_SUCCESS != rval)
+	if (moab::MB_SUCCESS != rval)
 		return 1;
 
 	unsigned char def_data_bit = 1;// valid by default
-	rval = mb->tag_create("valid", 1, MB_TAG_BIT, validTag, &def_data_bit);
-	if (MB_SUCCESS != rval)
+	rval = mb->tag_create("valid", 1, moab::MB_TAG_BIT, validTag, &def_data_bit);
+	if (moab::MB_SUCCESS != rval)
 		return 1;
 
 	if (opts.plotCost)
 	{
       double cost_default = 0.;
 
-      rval = mb->tag_create("costTAG", sizeof(double), MB_TAG_DENSE, MB_TYPE_DOUBLE, costTag,
+      rval = mb->tag_create("costTAG", sizeof(double), moab::MB_TAG_DENSE, moab::MB_TYPE_DOUBLE, costTag,
             &cost_default);
-      if (MB_SUCCESS != rval)
+      if (moab::MB_SUCCESS != rval)
          return 1;
 	}
 
 	// set tag for each vertex; this will not be changed during simplification
 	i = 0; // for index
-	for (MBRange::iterator it = verts.begin(); it != verts.end(); it++, i++) {
+	for (moab::Range::iterator it = verts.begin(); it != verts.end(); it++, i++) {
 		// this index i will be the index in the vinfo array
-		MBEntityHandle v = *it;
+		moab::EntityHandle v = *it;
 		rval = mb->tag_set_data(uniqIDtag, &v, 1, &i);
 		// the default valid data is 1; set it to 0 only to "mark" the vertex invalid for future deletion
 		// is it really necessary if we put the default value as 1 anyway
 
 		//rval = mb->tag_set_data(validTag, &v, 1, &def_data_bit);
 	}
-	MBRange::iterator it;
+	moab::Range::iterator it;
 	if (opts.logfile && opts.selected_output & OUTPUT_MODEL_DEFN) {
 		for (it = verts.begin(); it != verts.end(); it++) {
-			MBEntityHandle v = *it;
+			moab::EntityHandle v = *it;
 			double coords[3];
 			rval = mb->get_coords(&v, 1, coords);
 			*opts.logfile << "v: " << uniqID(v) << " " << mb->id_from_handle(v)
@@ -779,14 +778,14 @@ int QslimDecimation::Init() {
 
 	if (opts.will_use_vertex_constraint)
 		for (it = verts.begin(); it != verts.end(); it++) {
-			MBEntityHandle v = *it;
+			moab::EntityHandle v = *it;
 			vertex_info(v).Q = quadrix_vertex_constraint(v);
 		}
 
 	if (opts.will_use_plane_constraint) {
 		for (it = triangles.begin(); it != triangles.end(); it++) {
 
-			MBEntityHandle tr = *it;
+			moab::EntityHandle tr = *it;
 			Mat4 Q = quadrix_plane_constraint(tr);
 			double norm = 0.0;
 
@@ -794,7 +793,7 @@ int QslimDecimation::Init() {
 				norm = 1; // triangle area : m_model->face ( i )->area();
 				Q *= norm;
 			}
-			const MBEntityHandle * conn;
+			const moab::EntityHandle * conn;
 			int num_nodes;
 			rval = mb->get_connectivity(tr, conn, num_nodes);
 			for (j = 0; j < 3; j++) {
@@ -806,19 +805,19 @@ int QslimDecimation::Init() {
 		}
 	}
 	// just define (one uniqTag for a triangle, see what is happening)
-	MBEntityHandle tr1 = triangles[0];
+	moab::EntityHandle tr1 = triangles[0];
 	rval = mb->tag_set_data(uniqIDtag, &tr1, 1, &i);// just some value
 
 	if (opts.will_constrain_boundaries) {
 		std::cout << "  Decimate:  Accumulating discontinuity constraints."
 				<< std::endl;
 		for (it = edgs.begin(); it != edgs.end(); it++) {
-			MBEntityHandle edg = *it;
+			moab::EntityHandle edg = *it;
 			if (is_border(edg)) {
-				const MBEntityHandle * conn;
+				const moab::EntityHandle * conn;
 				int num_nodes;
 				rval = mb->get_connectivity(edg, conn, num_nodes);
-				if (MB_SUCCESS != rval)
+				if (moab::MB_SUCCESS != rval)
 					return 1;// fail
 				Mat4 B = quadrix_discontinuity_constraint(edg);
 				double norm = 0.0;
@@ -848,11 +847,11 @@ int QslimDecimation::Init() {
 
 	std::cout << "  Decimate:  Collecting pairs [edges]." << std::endl;
 	for (it = edgs.begin(); it != edgs.end(); it++) {
-		MBEntityHandle edg = *it;
-		const MBEntityHandle * conn;
+		moab::EntityHandle edg = *it;
+		const moab::EntityHandle * conn;
 		int num_nodes;
 		rval = mb->get_connectivity(edg, conn, num_nodes);
-		if (MB_SUCCESS != rval)
+		if (moab::MB_SUCCESS != rval)
 			return 1;// fail
 		pair_info *pair = new_pair(conn[0], conn[1]);
 		compute_pair_info(pair);
@@ -870,39 +869,39 @@ int QslimDecimation::Init() {
 		std::cout << "  Decimate:  Collecting pairs [limit="
 				<< opts.pair_selection_tolerance << "]." << std::endl;
 		// use adaptive kd tree to find proximity vertices
-		MBEntityHandle tree_root = 0;
-		MBAdaptiveKDTree kd(mb, true);
+		moab::EntityHandle tree_root = 0;
+		moab::AdaptiveKDTree kd(mb, true);
 		rval = kd.build_tree(verts, tree_root);
-		if (rval != MB_SUCCESS) {
+		if (rval != moab::MB_SUCCESS) {
 			std::cout << "Can't build tree for vertices" << std::endl;
 			return 1;
 		}
 
 		for (it = verts.begin(); it != verts.end(); it++) {
-			MBRange closeVertices;
+			moab::Range closeVertices;
 			closeVertices.clear();
-			MBEntityHandle v = *it;
+			moab::EntityHandle v = *it;
 			double coords[3];
 			mb->get_coords(&v, 1, coords);
-			//MBCartVect v1(coords);
-			std::vector<MBEntityHandle> leaves; // sets of vertices close by
+			//moab::CartVect v1(coords);
+			std::vector<moab::EntityHandle> leaves; // sets of vertices close by
 			kd.leaves_within_distance(tree_root, coords,
 					opts.pair_selection_tolerance, leaves);
 			// add to the list of close vertices
 			for (j = 0; j < leaves.size(); j++) {
-				rval = mb->get_entities_by_type(leaves[j], MBVERTEX,
+				rval = mb->get_entities_by_type(leaves[j], moab::MBVERTEX,
 						closeVertices);// add to the list
 			}
 
-			for (MBRange::iterator it2 = closeVertices.begin(); it2
+			for (moab::Range::iterator it2 = closeVertices.begin(); it2
 					!= closeVertices.end(); it2++) {
-				MBEntityHandle vclose = *it2;
+				moab::EntityHandle vclose = *it2;
 				if (v == vclose)
 					continue;
 				double coords2[3];
 				mb->get_coords(&vclose, 1, coords2);
 
-				//MBCartVect v2(coords2);
+				//moab::CartVect v2(coords2);
 				double dd = (coords[0] - coords2[0]) * (coords[0] - coords2[0])
 						+ (coords[1] - coords2[1]) * (coords[1] - coords2[1])
 						+ (coords[2] - coords2[2]) * (coords[2] - coords2[2]);
@@ -930,3 +929,5 @@ int QslimDecimation::Init() {
 
 	return 0;// no error
 }
+
+} // namespace MeshKit

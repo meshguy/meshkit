@@ -1,32 +1,33 @@
 /*
- * QslimDecimation.h
+ * QslimDecimation.hpp
  *
- *  Created on: Mar 10, 2010
- *      Author: iulian
  */
 
 #ifndef QSLIMDECIMATION_H_
 #define QSLIMDECIMATION_H_
 
-
-#include "iMesh.h"
-#include "QslimOptions.h"
+#include "moab/Interface.hpp"
+#include "meshkit/QslimOptions.hpp"
 #include "std.h"
 //#include "AdjModel.h"
 
+namespace MeshKit {
+
 class QslimDecimation {
 public:
-	QslimDecimation (iMesh_Instance mesh, iBase_EntitySetHandle root_set);
+	QslimDecimation (moab::Interface * mb, moab::EntityHandle root_set);
 	virtual ~QslimDecimation();
 
 int decimate(QslimOptions & opts);
 
 private:
- iMesh_Instance m_mesh;
- iBase_EntitySetHandle m_InitialSet;
+ moab::Interface * _mb;
+ moab::EntityHandle _InitialSet;
 
  int Init ();
 // Model * m_model;
 };
+
+}  // namespace MeshKit
 
 #endif /* QSLIMDECIMATION_H_ */
