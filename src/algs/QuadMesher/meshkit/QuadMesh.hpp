@@ -10,6 +10,8 @@
 
 #include "meshkit/MeshScheme.hpp"
 
+namespace Jaal { class Mesh; }
+
 namespace MeshKit
 {
 //===========================================================================//
@@ -19,10 +21,6 @@ namespace MeshKit
    * 
    */
 //===========================================================================//
-
-using namespace std;
-
-namespace Jaal { class Mesh; }
 
 class QuadMesher : public MeshScheme
 {
@@ -83,13 +81,11 @@ public:
        void   mesh_cleanup( MeshCleanOps mcleanup = GLOBAL_MESH_CLEANUP);
 
 private:
-      iMesh_Instance imesh;
-
       // Base: Everythiing must convert to Jaal format for the time being..
-      Jaal::Mesh* tri_quad_conversion (Jaal::Mesh *trimesh);  
+      //Jaal::Mesh* tri_quad_conversion (Jaal::Mesh *trimesh);  
 
       // Interface with iMesh. Internally convert to Jaal format and call the previous function..
-      Jaal::Mesh* tri_quad_conversion (iMesh_Instance imesh);
+      //Jaal::Mesh* tri_quad_conversion (iMesh_Instance imesh);
 };
 
 }

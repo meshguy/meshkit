@@ -1,8 +1,9 @@
-#include "meshkit/QuadMesher.hpp"
+#include "meshkit/QuadMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "meshkit/RegisterMeshOp.hpp"
-#include "moab/ReadUtilIface.hpp"
+#include "Mesh.hpp"
+#include "JaalMoabConverter.hpp"
+#include "Tri2Quad.hpp"
 #include <vector>
 #include <math.h>
 
@@ -16,18 +17,57 @@ const moab::EntityType* QuadMesher::output_types()
 //---------------------------------------------------------------------------//
 // Construction Function for Edge Mesher
 QuadMesher::QuadMesher(MKCore *mk_core, const MEntVector &me_vec) 
-        : MeshScheme(mk_core, me_vec), schemeType(EQUAL)
+        : MeshScheme(mk_core, me_vec) //, schemeType(EQUAL)
 {
-   imesh = mk_core()->imesh_instance();
 }
 
 // setup function: set up the number of intervals for edge meshing through the 
 // sizing function
 void QuadMesher::setup_this()
 {
-   setup_boundary();
+  setup_boundary();
+   
+    // Make sure everything has a tri mesher or is meshed 
+  MEntVector need_trimesher;
+  MEntSelection::iterator i;
+  std::vector<moab::EntityType> types;
+  std::vector<MeshOp*> ops;
+  std::vector<MeshOp*>::iterator j;   
+  for (i = me_selection().begin(); i != me_selection().end(); ++i) {
+    ModelEnt* ent = i->first;
+    if (ent->get_meshed_state() == COMPLETE_MESH)
+      continue;
+    ops.clear();
+    ent->get_meshops( ops );
+    bool found_one = false;
+    for (j = ops.begin(); j != ops.end(); ++j) {
+      types.clear();
+      (*j)->mesh_types( types );
+      if (std::find(types.begin(), types.end(), moab::MBTRI) != types.end()) {
+        found_one = true;
+        break;
+      }
+    }
+    
+    if (!found_one)
+      need_trimesher.push_back( ent );
+  }
+  
+  if (need_trimesher.empty())
+    return;
+
+    // find a tri mesher 
+  std::vector<MeshOpProxy*> avail_ops;
+  mk_core()->meshop_by_mesh_type( moab::MBTRI, avail_ops );
+  if (avail_ops.empty())
+    return; // throw exception or just hope that everthing already has a tri mesh?
+  MeshOp* tri_mesher = mk_core()->construct_meshop( avail_ops.front(), need_trimesher );
+  
+    // tell core that the tri mesher needs to run before this
+  mk_core()->insert_node( tri_mesher, this );
 }
 
+/*
 Jaal::Mesh* QuadMesher :: tri_quad_conversion (Jaal::Mesh *trimesh)
 {
   Jaal::Tri2Quads t2quad;
@@ -47,7 +87,7 @@ Jaal::Mesh* QuadMesher :: tri_quad_conversion (Jaal::Mesh *trimesh)
 
 Jaal::Mesh* tri_quad_conversion (iMesh_Instance imesh)
 {
-  Jaal::JaalMoabConverter meshconverter;
+  JaalMoabConverter meshconverter;
   Jaal::Mesh *trimesh  = meshconverter.fromMOAB(imesh);
   Jaal::Mesh* quadmesh = tri_quad_conversion ( trimesh );
 
@@ -56,23 +96,23 @@ Jaal::Mesh* tri_quad_conversion (iMesh_Instance imesh)
   delete trimesh;
   return quadmesh;
 }
-
+*/
 
 void QuadMesher::execute_this()
 {
-   tri_quad_conversion(imesh);
+  Jaal::Tri2Quads t2quad;
+  JaalMoabConverter meshconverter;
 
-/*
-  std::vector<iMesh::EntityHandle> trifaces;
-   int i = 0;
-   for (MEntSelection::iterator mit = mentSelection.begin();
-         mit != mentSelection.end(); mit++) {
-      ModelEnt *me = mit->first;
-      trifaces[i++] = reinterpret_cast<iBase_EntityHandle> (me->mesh_handle());
+  iMesh_Instance imesh = mk_core()->imesh_instance()->instance();
+  MEntSelection::iterator i;
+  for (i = me_selection().begin(); i != me_selection().end(); ++i) {
+    ModelEnt* ent = i->first;
+    std::auto_ptr<Jaal::Mesh> trimesh(meshconverter.fromMOAB( imesh, (iBase_EntitySetHandle)ent->mesh_handle() ));
+    std::auto_ptr<Jaal::Mesh> quadmesh(t2quad.getQuadMesh( trimesh.get(), 1));
+    meshconverter.toMOAB( quadmesh.get(), imesh, (iBase_EntitySetHandle)ent->mesh_handle() );
+    ent->commit_mesh( i->second, COMPLETE_MESH );
   }
-
-    me->commit_mesh(mit->second, COMPLETE_MESH);	
-  }
-*/
 }
+
+} // namespace MeshKit
 
