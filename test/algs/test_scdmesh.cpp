@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
   num_fail += RUN_TEST(scd_test_1);
   num_fail += RUN_TEST(scd_test_2);
-  num_fail += RUN_TEST(scd_test_3);
+  //num_fail += RUN_TEST(scd_test_3);
 
   delete mk;
   return num_fail;
