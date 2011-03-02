@@ -87,13 +87,13 @@ ModelEnt* get_tri_meshed_surface( moab::EntityHandle verts[9] )
     // assume edges are parallel to coordinate axes
   int first_idx = 0, opposite_idx = 0;
   for (int i = 1; i < 4; ++i)
-    if (coords[i][0] <= coords[0][0] + 1e-6 &&
-        coords[i][1] <= coords[0][1] + 1e-6 &&
-        coords[i][2] <= coords[0][2] + 1e-6)
+    if (coords[i][0] <= coords[first_idx][0] + 1e-6 &&
+        coords[i][1] <= coords[first_idx][1] + 1e-6 &&
+        coords[i][2] <= coords[first_idx][2] + 1e-6)
       first_idx = i;
-    else if (coords[i][0] >= coords[0][0] - 1e-6 &&
-             coords[i][1] >= coords[0][1] - 1e-6 &&
-             coords[i][2] >= coords[0][2] - 1e-6)
+    else if (coords[i][0] >= coords[opposite_idx][0] - 1e-6 &&
+             coords[i][1] >= coords[opposite_idx][1] - 1e-6 &&
+             coords[i][2] >= coords[opposite_idx][2] - 1e-6)
       opposite_idx = i;
   CHECK( first_idx != opposite_idx );
   int second_idx = 5, last_idx = 5;
