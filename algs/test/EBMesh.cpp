@@ -21,7 +21,6 @@ int load_and_mesh(const char *input_filename,
 
 int main(int argc, char* argv[])
 {
-#ifdef HAVE_OCC
   // check command line arg
   const char *input_filename = NULL;
   const char *output_filename = NULL;
@@ -54,7 +53,6 @@ int main(int argc, char* argv[])
   
   if (load_and_mesh(input_filename, output_filename,
 		    size, input_geom, vol_frac_res)) return 1;
-#endif
 
   return 0;
 }

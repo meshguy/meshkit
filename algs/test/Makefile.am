@@ -4,7 +4,6 @@ AUTOMAKE_OPTIONS = foreign
 # Tests and such
 check_PROGRAMS = \
 	CopyMesh_test \
-	EBMesh_test \
 	ExtrudeMesh_test \
 	ProjectShell_test \
     	IntersectMesh_test \
@@ -14,7 +13,7 @@ TESTS = $(check_PROGRAMS)
 LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
 
 CopyMesh_test_SOURCES = CopyMesh.cpp TestFramework.hpp 
-EBMesh_test_SOURCES = EBMesh.cpp TestFramework.hpp
+#EBMesh_test_SOURCES = EBMesh.cpp TestFramework.hpp
 ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp TestFramework.hpp
 ProjectShell_test_SOURCES = ProjectShell.cpp TestFramework.hpp
 IntersectMesh_test_SOURCES = IntersectMesh_test.cpp TestFramework.hpp
