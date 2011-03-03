@@ -25,7 +25,7 @@ TESTS = test_edgemesh \
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
-MOSTLYCLEANFILES = SCDmesh1.vtk SCDmesh2.vtk SCDmesh3.vtk
+MOSTLYCLEANFILES = SCDmesh1.vtk SCDmesh2.vtk SCDmesh3.vtk SCDmesh.h5m
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB

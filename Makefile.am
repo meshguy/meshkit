@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I m4
 
 # Subdirectories to build
-SUBDIRS = . 
+SUBDIRS = . python
 if ENABLE_utils
   SUBDIRS += utils
   AM_CPPFLAGS += -I$(top_srcdir)/utils
@@ -33,6 +33,8 @@ AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
 
 check_PROGRAMS =  
 TESTS = $(check_PROGRAMS)
+
+EXTRA_DIST = MKDefines.h data
 
 # Automake doesn't seem to have a directory defined for
 # platform-dependent data (or include) files. So put 

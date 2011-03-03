@@ -36,7 +36,8 @@ nobase_libMeshKitcore_la_include_HEADERS = \
 	meshkit/ModelEnt.hpp \
 	meshkit/NoOp.hpp \
 	meshkit/SizingFunction.hpp \
-	meshkit/VecUtil.hpp
+	meshkit/VecUtil.hpp \
+	meshkit/Matrix.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

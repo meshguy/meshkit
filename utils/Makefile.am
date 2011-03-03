@@ -12,10 +12,13 @@ libMKutils_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libMKutils_la_SOURCES = \
+	LocalTag.hpp \
+	LocalSet.hpp \
 	MKUtils.cpp
 
 # The list of header files which are to be installed
 libMKutils_la_include_HEADERS = \
+	MKException.hpp \
 	ArrayManager.hpp \
 	SimpleArray.hpp \
 	MKUtils.hpp 

@@ -34,7 +34,7 @@ libemon_la_SOURCES = \
 	lemon/bits/windows.cc
 
 lemondir = $(srcdir)
-nodist_lemon_HEADERS = lemon/config.h	
+#nodist_lemon_HEADERS = lemon/config.h	
 
 lemon_libemon_la_CXXFLAGS = \
 	$(AM_CXXFLAGS)
@@ -58,6 +58,7 @@ nobase_libemon_la_include_HEADERS = \
 	lemon/color.h \
 	lemon/concept_check.h \
 	lemon/connectivity.h \
+	lemon/config.h \
 	lemon/core.h \
 	lemon/cost_scaling.h \
 	lemon/counter.h \

@@ -22,7 +22,10 @@ libMKrgg_la_SOURCES = \
 	cylinder.cpp \
 	crgen.cpp \
 	copymove.cpp \
-	utils.cpp
+	utils.cpp \
+	parser.hpp \
+	arraybase.hpp \
+	fileio.hpp
 
 # The list of header files which are to be installed
 libMKrgg_la_include_HEADERS = \
@@ -34,6 +37,21 @@ libMKrgg_la_include_HEADERS = \
 	matrixtemplate.hpp \
 	crgen.hpp \
 	utils.hpp 
+
+EXTRA_DIST = assygen_default.inp \
+             coregen_default.inp \
+	     pin1.cub \
+	     pin1.sat \
+             test_geom.inp \
+	     test_sodium_all.cub \
+	     test_sodium_all.sat \
+	     twoassm.inp
+
+MOSTLYCLEANFILES = \
+	     twoassm.h5m \
+	     twoassm.makefile \
+	     pin217-out.h5m
+
 
 # Tests and such
 check_PROGRAMS = assygen coregen pin217 

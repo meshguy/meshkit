@@ -760,7 +760,8 @@ AM_CONDITIONAL(HAVE_TRIANGLE, [test "x$HAVE_TRIANGLE" = "xyes"])
 AC_ARG_WITH([mesquite],
             [AC_HELP_STRING([--with-mesquite@<:@=DIR@:>@], [Specify where to find Mesquite library])
 AC_HELP_STRING([--without-mesquite], [Configure w/out support for Mesquite library])],
-            [WITH_MESQUITE=$withval],
+            [WITH_MESQUITE="$withval"
+             DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-mesquite=\"${withval}\""]
             [WITH_MESQUITE=])
 
 
@@ -895,10 +896,8 @@ AC_CONFIG_FILES([Makefile
                  testdir.h
                  algs/Makefile
                  algs/test/Makefile
-                 algs/make_watertight/Makefile
-                 camal/Makefile
-                 plibs/Makefile
                  python/setup.py
+                 python/Makefile
                  rgg/Makefile
                  src/Makefile
                  src/core/Makefile
@@ -907,8 +906,6 @@ AC_CONFIG_FILES([Makefile
                  src/algs/Qslim/Makefile
                  src/utils/Makefile
                  src/lemon/Makefile
-                 src/lemon/doc/Makefile
-                 src/lemon/doc/Doxyfile
                  src/extern/Makefile
                  src/extern/CAMAL/Makefile
                  src/extern/netgen/Makefile
