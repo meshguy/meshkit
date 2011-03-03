@@ -21,10 +21,10 @@ if ENABLE_src
   SUBDIRS += src
   AM_CPPFLAGS += -I$(top_srcdir)/src 
 endif
-if HAVE_CAMAL
-  SUBDIRS += camal
-  AM_CPPFLAGS += -I$(top_srcdir)/camal
-endif
+#if HAVE_CAMAL
+#  SUBDIRS += camal
+#  AM_CPPFLAGS += -I$(top_srcdir)/camal
+#endif
 
 SUBDIRS += test doc
 
