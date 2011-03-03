@@ -2,6 +2,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/iMesh.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
+#include "meshkit/EdgeMesher.hpp"
 #include <iostream>
 #include <math.h>
 #include <map>
@@ -1929,24 +1930,34 @@ int OneToOneSwept::getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, d
 }
 
 //****************************************************************************//
-// function   : linear_interpolation 
+// function   : TargetSurfProjection
 // Author     : Shengyong Cai
 // Date       : Feb 15, 2011
 // Description: map the mesh on the source surface to the target surface
 //***************************************************************************//
 int OneToOneSwept::TargetSurfProjection()
 {
-	iBase_EntitySetHandle targetSet;
-	iRel::Error r_err = mk_core()->irel_pair()->getEntSetRelation(targetSurface, 0, targetSet);	
-	if (!r_err)
-	{//there exists an mesh on the target surfaces
+	iMesh::Error m_err;
+	iGeom::Error g_err;
+	iRel::Error r_err;
+
+
+	//first check whether the target surface is meshed or not
+	/*
+	if (me->get_meshed_state() >= COMPLETE_MESH)
+	{
+		//get the node list, edge list, face list
+		//find the corresponding edges, nodes
 		return 1;
 	}
+	*/
 	
+	//get the tag handle for source surface
 	iBase_TagHandle taghandle;
-	iMesh::Error m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
+	m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
 	IBERRCHK(m_err, "Trouble get the tag handle 'source'.");
 	
+
 	int index=0, id, index_t;
 	double su, tu;
 	std::vector<iBase_EntityHandle> gsEdge, gtEdge, edgeNodes, geomEdgeEnds, meshEdgeEnds;
@@ -1959,15 +1970,11 @@ int OneToOneSwept::TargetSurfProjection()
 	double A[2][2]= {{0, 0}, {0, 0}}; //affine map matrix
 	double temp[2][2] = {{0, 0}, {0, 0}};//define an array variable for storing the sum of boundary nodes
 	double b1[2] = {0,0}, b2[2] = {0,0};
-		
-	///////////////////////////////////////////////////////////////////////////////
-    	// Step II: Collect all the geometric edges and discretize them.            //
-    	///////////////////////////////////////////////////////////////////////////////
 
-	
 	//define the mesh set for various edges on the source surface
 	std::vector<iBase_EntitySetHandle> edgeMeshSets(gsEdgeList.size());
 	//loop over the various edges
+	
 	
 	for (unsigned int i=0; i < gsEdgeList.size(); i++)
 	{
@@ -1979,6 +1986,16 @@ int OneToOneSwept::TargetSurfProjection()
 		edgeNodes.clear();
 		m_err = mk_core()->imesh_instance()->getEntities(edgeMeshSets[i], iBase_VERTEX, iMesh_POINT, edgeNodes);
 		IBERRCHK(m_err, "Trouble get the mesh edge entities.");
+
+		/*
+		//initial size functon for edges, get the number of edges and assign it to the edge
+
+		//do the edge mesher 
+
+		//
+		
+		//
+		*/
 
 
 		//find the corresponding relationship for both ends on the source suface and target surface
@@ -2094,7 +2111,7 @@ int OneToOneSwept::TargetSurfProjection()
 		
 		//get the parametric variable u for both ends on the boundary edge
 		double sLeft, sRight, tLeft, tRight;
-		iGeom::Error g_err = mk_core()->igeom_instance()->getEntXYZtoU(gsEdgeList[i].gEdgeHandle, gsEdgeList[i].connect[0]->xyzCoords[0], gsEdgeList[i].connect[0]->xyzCoords[1], gsEdgeList[i].connect[0]->xyzCoords[2], sLeft);
+		g_err = mk_core()->igeom_instance()->getEntXYZtoU(gsEdgeList[i].gEdgeHandle, gsEdgeList[i].connect[0]->xyzCoords[0], gsEdgeList[i].connect[0]->xyzCoords[1], gsEdgeList[i].connect[0]->xyzCoords[2], sLeft);
 		IBERRCHK(g_err, "Trouble get the parametric coordinates from x,y,z coordinates.");
 
 		g_err = mk_core()->igeom_instance()->getEntXYZtoU(gsEdgeList[i].gEdgeHandle, gsEdgeList[i].connect[1]->xyzCoords[0], gsEdgeList[i].connect[1]->xyzCoords[1], gsEdgeList[i].connect[1]->xyzCoords[2], sRight);
@@ -2369,7 +2386,7 @@ int OneToOneSwept::TargetSurfProjection()
 
 	//determine the numbering order for quadrilateral nodes
 	int sense_out, sense_out1, sense_out2, sense_out3, sense_out4;
-	iGeom::Error g_err = mk_core()->igeom_instance()->getEgFcSense(gsEdgeList[0].gEdgeHandle, sourceSurface, sense_out1);
+	g_err = mk_core()->igeom_instance()->getEgFcSense(gsEdgeList[0].gEdgeHandle, sourceSurface, sense_out1);
 	IBERRCHK(g_err, "Trouble get the sense of edge with respect to the face.");
 	g_err = mk_core()->igeom_instance()->getEgFcSense(gtEdgeList[edgePairs[gsEdgeList[0].index]].gEdgeHandle, targetSurface, sense_out2);
 	IBERRCHK(g_err, "Trouble get the sense of edge with respect to the face.");
