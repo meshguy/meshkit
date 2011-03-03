@@ -6,7 +6,10 @@
 #include "ExtrudeMesh.hpp"
 #include "utils.hpp"
 
-#define DEFAULT_TEST_FILE "pin1.cub"
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/pin1.cub"
 #define DEFAULT_OUTPUT_FILE "pin217-out.h5m"
 
 iMesh_Instance impl;

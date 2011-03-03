@@ -37,7 +37,8 @@ libMKrgg_la_include_HEADERS = \
 
 # Tests and such
 check_PROGRAMS = assygen coregen pin217 
-TESTS = $(check_PROGRAMS)
+#TESTS = $(check_PROGRAMS)
+TESTS = pin217
 
 assygen_SOURCES = assygen.cpp
 assygen_DEPENDENCIES = libMKrgg.la  
