@@ -184,6 +184,7 @@ DISTCHECK_CONFIGURE_FLAGS="$SF"
 #   appends -DHAVE_Ixxxx = yes/no to AM_CPPFLAGS
 #   defines HAVE_Ixxxx automake conditional flag
 #   sets Ixxxx_CONFIG_OPTIONS to full path to makefile stub
+#   adds Ixxxx_DIR to base dir for implementation (needed by Python)
 AC_DEFUN([CHECK_ITAPS_DEFS],[
 itaps_pfx="$1"
 itaps_dir="$3"
@@ -217,6 +218,8 @@ if test "xyes" = "x$HAVE_$2"; then
                       [AC_MSG_ERROR([$2_LIBS not found in $2_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_DEFINES],[$2_DEFINES="$make_val"],
                       [$2_DEFINES=])
+  $2_DIR=$itaps_dir 
+  AC_SUBST($2_DIR)
 fi
 
 if test "xyes" = "x$HAVE_$2"; then 
