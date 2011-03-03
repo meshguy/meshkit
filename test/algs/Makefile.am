@@ -14,10 +14,9 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-BROKEN_TESTS = test_jaalquad
+BROKEN_TESTS = test_jaalquad test_ebmesh
 
 TESTS = test_edgemesh \
-        test_ebmesh \
         test_scdmesh \
         test_copymesh \
         test_copygeom \
