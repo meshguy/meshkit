@@ -1,7 +1,7 @@
 ################################################################################
 #                           Standard Stuff
 ################################################################################
-AC_INIT(MESHKIT, 3.99)
+AC_INIT(MESHKIT, 0.9RC0)
 AC_CANONICAL_SYSTEM
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([AM_SILENT_RULES],
