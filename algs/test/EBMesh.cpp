@@ -7,7 +7,10 @@
 
 #include "EBMesh.hpp"
 
-#define DEFAULT_TEST_FILE "sphere.stp"
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/sphere.stp"
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 
@@ -18,6 +21,7 @@ int load_and_mesh(const char *input_filename,
 
 int main(int argc, char* argv[])
 {
+#ifdef HAVE_OCC
   // check command line arg
   const char *input_filename = NULL;
   const char *output_filename = NULL;
@@ -50,7 +54,8 @@ int main(int argc, char* argv[])
   
   if (load_and_mesh(input_filename, output_filename,
 		    size, input_geom, vol_frac_res)) return 1;
-  
+#endif
+
   return 0;
 }
 

@@ -20,6 +20,9 @@
 #include "IntersectMesh.hpp"
 #include "TestFramework.hpp"
 
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
 int main(int argc, char* argv[]) {
    // check command line arg
    const char *filename_mesh1 = 0;
@@ -34,8 +37,8 @@ int main(int argc, char* argv[]) {
             argv[0]);
       if (argc != 1)
          return 1;
-      const char * f1 = "m1.vtk";
-      const char * f2 = "m2.vtk";
+      const char * f1 = STRINGIFY(SRCDIR) "/m1.vtk";
+      const char * f2 = STRINGIFY(SRCDIR) "/m2.vtk";
       const char* f3 = "intx.vtk";
       printf("No files specified.  Defaulting to: %s  %s  %s\n", f1, f2, f3);
       filename_mesh1 = f1;

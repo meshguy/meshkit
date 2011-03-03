@@ -5,6 +5,8 @@
 #include <assert.h>
 #define TESTSAVE false
 
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
 
 int test_translate_ents()
 {
@@ -321,6 +323,7 @@ int test_rotate_set()
 
 int test_2Dmesh_file()
 {
+  const char input_file[] = STRINGIFY(SRCDIR) "/assygen_default.cub";
   int err;
   iMesh_Instance mesh;
   iMesh_newMesh("", &mesh, &err, 0);
@@ -330,7 +333,7 @@ int test_2Dmesh_file()
   iMesh_getRootSet(mesh, &root_set, &err);
   CHECK_ERR("Couldn't get root set.");
 
-  iMesh_load(mesh, root_set, "assygen_default.cub", NULL, &err, 19, 0);
+  iMesh_load(mesh, root_set, input_file, NULL, &err, strlen(input_file), 0);
   CHECK_ERR("Couldn't load mesh file.");
 
   ExtrudeMesh *ext = new ExtrudeMesh(mesh);

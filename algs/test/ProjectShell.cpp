@@ -6,7 +6,10 @@
 
 #include "ProjectShell.hpp"
 
-#define DEFAULT_TEST_FILE "3k-tri-cube.h5m"
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/3k-tri-cube.h5m"
 #define DEFAULT_OUT_FILE "ProjShell_3k-tri-cube.h5m"
 
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
