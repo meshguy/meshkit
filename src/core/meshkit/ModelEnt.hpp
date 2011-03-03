@@ -638,6 +638,14 @@ inline void ModelEnt::get_meshops(std::vector<MeshOp*> &meshops)
   std::copy(meshOps.begin(), meshOps.end(), meshops.end());
 }
 
+// TODO: unimplemented functions (these are just here because SWIG expects some
+// implementation!
+inline void ModelEnt::get_adjacencies(int dim, std::vector<iGeom::EntityHandle> &adjs) const {}
+inline void ModelEnt::get_adjacencies(int dim, std::vector<moab::EntityHandle> &adjs) const {}
+inline void ModelEnt::get_adjacencies(int dim, moab::Range &adjs) const {}
+inline void ModelEnt::children(std::vector<MEntVector> &child_ents) const {}
+inline void ModelEnt::children(std::vector<MEntVector> &child_ents) {}
+
 } // namespace meshkit
 
 #endif
