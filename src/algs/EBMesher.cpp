@@ -1,4 +1,5 @@
 #include "meshkit/EBMesher.hpp"
+#include "meshkit/SCDMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
@@ -109,11 +110,16 @@ bool EBMesher::add_modelent(ModelEnt *model_ent)
 
 void EBMesher::setup_this()
 {
-  
+
 }
 
 void EBMesher::execute_this() 
 {
+  double box_min[3], box_max[3];
+  GraphNode *scd_node = other_node(in_arcs());
+  static_cast<SCDMesh*> (scd_node)->get_box_dimension(box_min, box_max);
+  set_division(box_min, box_max);
+
 #ifdef HAVE_MOAB
   time_t time1, time2, time3, time4;
   time(&time1);
@@ -159,6 +165,13 @@ void EBMesher::execute_this()
 	      << ", intersection_memory: " << mem3
 	      << ", set_info_memory: " << mem4
 	      << std::endl;
+  }
+}
+
+void EBMesher::set_num_interval(int* n_interval)
+{
+  for (int i = 0; i < 3; i++) {
+    m_nDiv[i] = n_interval[i];
   }
 }
 
@@ -574,20 +587,19 @@ int EBMesher::set_division()
   return iBase_SUCCESS;
 }
 
-int EBMesher::set_division(double* min, double* max, int* n_interval)
+int EBMesher::set_division(double* min, double* max)
 {
   for (int i = 0; i < 3; i++) {
-    m_nDiv[i] = n_interval[i];
-    m_dIntervalSize[i] = (max[i] - min[i])/n_interval[i];
+    m_dIntervalSize[i] = (max[i] - min[i])/m_nDiv[i];
     m_nNode[i] = m_nDiv[i] + 1;
     m_origin_coords[i] = min[i];
   }
 
   m_nHex = m_nDiv[0]*m_nDiv[1]*m_nDiv[2];
 
-  std::cout << "# of hex: " << m_nHex << ", intervals: "
-	    << n_interval[0] << ", " << n_interval[1] << ", "
-            << n_interval[2] << std::endl;
+  std::cout << "# of hex: " << m_nHex << ", interval_size: "
+	    << m_dIntervalSize[0] << ", " << m_dIntervalSize[1] << ", "
+            << m_dIntervalSize[2] << std::endl;
 
   std::cout << "# of division: " << m_nDiv[0] << ","
 	    << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
@@ -750,7 +762,7 @@ int EBMesher::fire_rays(int dir)
   int i, j, k, l, index[3];
   double tolerance = 1e-12;
   double rayLength = m_nDiv[dir]*m_dIntervalSize[dir];
-  int err, iNodeStart, iNodeEnd, nIntersect, nNodeSlice;
+  int iNodeStart, iNodeEnd, nIntersect, nNodeSlice;
   double startPnt[3], endPnt[3];
   int otherDir1 = (dir + 1)%3;
   int otherDir2 = (dir + 2)%3;
@@ -1437,6 +1449,7 @@ double EBMesher::get_edge_fraction(int idHex, int dir)
   if (iter != end_iter && iter->second.fraction[dir].size() > 0) {
     double frac = iter->second.fraction[dir][0];
     if (frac < 0.) frac *= -1.;
+    return frac;
   }
   else return -1.;
 }

@@ -167,10 +167,9 @@ public:
   /** \brief set # of divisions (x/y/z directions) of Cartesian box to use SCDMesh output
    * \param min Cartesian box min coordinates
    * \param max Cartesian box max coordinates
-   * \param n_interval # of divisions returned
    * \return int if is working correctly
    */
-  int set_division(double* min, double* max, int* n_interval);
+  int set_division(double* min, double* max);
   
   /**\brief Setup is a no-op, but must be provided since it's pure virtual
    */  
@@ -216,6 +215,11 @@ public:
    * \param separate export file separately(inside/outside/boundary)
    */
   void export_mesh(const char* file_name, bool separate = false);
+
+  /** \brief set number of intervals
+   * \param n_interval number of interval array for x/y/z directions
+   */
+  void set_num_interval(int* n_interval);
   
 protected:
   
@@ -236,7 +240,8 @@ private:
     m_nIteration, m_iOverlap, m_iElem, m_nNode[3], m_nDiv[3], m_nVolFracDiv,
     m_iFirstP, m_iSecondP;
   double m_dFirstP, m_dSecondP, m_curPnt, m_prevPnt,
-    m_dIntervalSize[3], m_origin_coords[3], m_dInputSize;
+    m_dIntervalSize[3], m_origin_coords[3], m_dInputSize,
+    m_min[3], m_max[3];
   EdgeStatus m_nStatus;
   bool m_bMovedOnce, m_bUseGeom;
   std::vector<iBase_EntityHandle> m_vhVertex;

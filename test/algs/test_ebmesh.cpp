@@ -95,7 +95,6 @@ int load_and_mesh(const char *input_filename,
   mk.get_entities_by_dimension(3, vols);
 
   // make and set input for structured mesher
-  double box_min[3], box_max[3];
   SCDMesh *sm = (SCDMesh*) mk.construct_meshop("SCDMesh", vols);
   sm->set_name("structured_mesh");
   sm->set_interface_scheme(SCDMesh::full);
@@ -103,7 +102,6 @@ int load_and_mesh(const char *input_filename,
   sm->set_geometry_scheme(SCDMesh::all);
   sm->set_axis_scheme(SCDMesh::cartesian);
   sm->set_box_increase_ratio(box_increase); // add some extra layer to box
-  sm->get_box_dimension(box_min, box_max); // get box dimension
 
   // set # of intervals for 3 directions
   std::vector<int> fine_i (n_interval[0], 1);
@@ -119,7 +117,7 @@ int load_and_mesh(const char *input_filename,
   // make EBMesher
   EBMesher *ebm = (EBMesher*) mk.construct_meshop("EBMesher", vols);
   ebm->set_name("embedded_boundary_mesh");
-  ebm->set_division(box_min, box_max, n_interval);
+  ebm->set_num_interval(n_interval);
 
   // put them in the graph
   mk.get_graph().addArc(mk.root_node()->get_node(), sm->get_node());

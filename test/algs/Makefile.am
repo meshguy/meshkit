@@ -14,14 +14,15 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-BROKEN_TESTS = test_jaalquad test_ebmesh
+BROKEN_TESTS = test_jaalquad
 
 TESTS = test_edgemesh \
         test_scdmesh \
         test_copymesh \
         test_copygeom \
         test_extrudemesh \
-        test_qslim 
+        test_qslim \
+	test_ebmesh
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
