@@ -4,8 +4,13 @@ Reactor Assembly Mesh Assembler
 Argonne National Laboratory
 
 CCrgen class definition.
-*********************************************/
-#define DEFAULT_TEST_FILE "twoassm"
+******************************************/
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+#define DIR STRINGIFY(SRCDIR) "/"
+#define TEST_FILE_NAME "twoassm"
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/twoassm"
+
 #include "crgen.hpp"
 #include "utils.hpp"
 #include <string.h>
@@ -81,12 +86,6 @@ int CCrgen::close ()
     iGeom_dtor( geom, &err);
     ERRORR("Failed in call iGeom_dtor", err);
   }
-
-
-
-
-
-
   return 0;
 }
 
@@ -163,8 +162,9 @@ int CCrgen::prepareIO (int argc, char *argv[])
       std::cerr << "Usage: " << argv[0] << " <input file> WITHOUT EXTENSION"<< std::endl;   
       iname = DEFAULT_TEST_FILE;
       ifile = iname+".inp";
-      outfile = iname+".h5m";
-      mfile = iname + ".makefile";
+      std::string temp = TEST_FILE_NAME;
+      outfile = temp+".h5m";
+      mfile = temp+".makefile";
       std::cout <<"  No file specified.  Defaulting to: " << DEFAULT_TEST_FILE << std::endl;
     }
 
@@ -427,6 +427,7 @@ int CCrgen::read_inputs_phase2 ()
 	    ERRORR("Reading input file failed",1);    
 	  std::istringstream formatString (input_string);
 	  formatString >> meshfile >> mf_alias;
+	  meshfile = DIR + meshfile;  
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -472,6 +473,7 @@ int CCrgen::read_inputs_phase2 ()
 	    ERRORR("Reading input file failed",1);    
 	  std::istringstream formatString (input_string);
 	  formatString >> meshfile >> mf_alias;
+	  meshfile = DIR + meshfile;  
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -514,6 +516,7 @@ int CCrgen::read_inputs_phase2 ()
 	    ERRORR("Reading input file failed",1);    
 	  std::istringstream formatString (input_string);
 	  formatString >> meshfile >> mf_alias;
+	  meshfile = DIR + meshfile;  
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -555,6 +558,7 @@ int CCrgen::read_inputs_phase2 ()
 	    ERRORR("Reading input file failed",1);    
 	  std::istringstream formatString (input_string);
 	  formatString >> meshfile >> mf_alias;
+	  meshfile = DIR + meshfile;    
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -597,6 +601,7 @@ int CCrgen::read_inputs_phase2 ()
 	    ERRORR("Reading input file failed",1);    
 	  std::istringstream formatString (input_string);
 	  formatString >> meshfile >> mf_alias;
+	  meshfile = DIR + meshfile;    
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -633,6 +638,7 @@ int CCrgen::read_inputs_phase2 ()
     if (input_string.substr(0,10) == "background"){
       std::istringstream formatString (input_string);
       formatString >> card >> back_meshfile;
+      back_meshfile = DIR + back_meshfile;
       files.push_back(back_meshfile);      
       back_mesh = true;
     }

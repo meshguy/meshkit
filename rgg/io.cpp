@@ -13,7 +13,11 @@ file with input o/p funtions
 #include <string.h>
 #include <stdlib.h>
 
-#define DEFAULT_TEST_FILE "assygen_default"
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/assygen_default"
+#define TEST_FILE_NAME "assygen_default"
 
 // NRGEN CLASS FUNCIONS:
 
@@ -91,9 +95,9 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       std::cout << "\nRunning default case:\n" << std::endl;
 
       m_szInFile = (char *)DEFAULT_TEST_FILE;
-      m_szGeomFile = (char *)DEFAULT_TEST_FILE;
-      m_szJouFile = (char *)DEFAULT_TEST_FILE;
-      m_szFile =  (char *)DEFAULT_TEST_FILE;
+      m_szGeomFile = (char *)TEST_FILE_NAME;
+      m_szJouFile = (char *)TEST_FILE_NAME;
+      m_szFile =  (char *)TEST_FILE_NAME;
       m_szInFile+=".inp";
       m_szJouFile+=".jou";
       m_szSchFile = m_szFile+".template.jou";
@@ -232,14 +236,16 @@ int CNrgen::ReadInputPhase1 ()
   CHECK("Failed to set geometry engine.");
 
   //ACIS ENGINE
-  if(m_szEngine == "acis"){
+#ifdef HAVE_ACIS
+  //  if(m_szEngine == "acis"){
     m_szGeomFile = m_szFile+".sat";
-  }
-
+    //  }
+#elif defined(HAVE_OCC)
   //  OCC ENGINE
-  if (m_szEngine == "occ"){
+  //  if (m_szEngine == "occ"){
     m_szGeomFile = m_szFile+".stp";
-  }
+    //  }
+#endif
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
   return 0;

@@ -55,8 +55,7 @@ MOSTLYCLEANFILES = \
 
 # Tests and such
 check_PROGRAMS = assygen coregen pin217 
-#TESTS = $(check_PROGRAMS)
-TESTS = pin217
+TESTS = $(check_PROGRAMS)
 
 assygen_SOURCES = assygen.cpp
 assygen_DEPENDENCIES = libMKrgg.la  
