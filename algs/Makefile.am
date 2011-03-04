@@ -22,7 +22,6 @@ libMKalgs_la_SOURCES = \
 	Transform.cpp \
 	vec_utils.cpp \
 	vec_utils.hpp \
-	EBMesh.cpp \
 	ProjectShell.cpp \
 	IntersectMesh.cpp \
 	EdgeMesher.cpp \
@@ -39,7 +38,6 @@ libMKalgs_la_include_HEADERS = \
 	ExtrudeMesh.hpp \
 	MergeMesh.hpp \
 	Transform.hpp \
-	EBMesh.hpp \
 	ProjectShell.hpp \
 	IntersectMesh.hpp \
 	EdgeMesher.hpp \
