@@ -67,37 +67,6 @@ void QuadMesher::setup_this()
   mk_core()->insert_node( tri_mesher, this );
 }
 
-/*
-Jaal::Mesh* QuadMesher :: tri_quad_conversion (Jaal::Mesh *trimesh)
-{
-  Jaal::Tri2Quads t2quad;
-
-  cout << "Input: Triangle Mesh " << endl;
-  cout << "# Nodes " << trimesh->getSize(0) << endl;
-  cout << "# Faces " << trimesh->getSize(2) << endl;
-
-  Jaal::Mesh *quadmesh = t2quad.getQuadMesh(trimesh, 1);
-
-  cout << "Input: Quad Mesh " << endl;
-  cout << "# Nodes " << quadmesh->getSize(0) << endl;
-  cout << "# Faces " << quadmesh->getSize(2) << endl;
-
-  return quadmesh;
-}
-
-Jaal::Mesh* tri_quad_conversion (iMesh_Instance imesh)
-{
-  JaalMoabConverter meshconverter;
-  Jaal::Mesh *trimesh  = meshconverter.fromMOAB(imesh);
-  Jaal::Mesh* quadmesh = tri_quad_conversion ( trimesh );
-
-  meshconverter.toMOAB(quadmesh, imesh);
-
-  delete trimesh;
-  return quadmesh;
-}
-*/
-
 void QuadMesher::execute_this()
 {
   Jaal::Tri2Quads t2quad;
@@ -110,6 +79,9 @@ void QuadMesher::execute_this()
     std::auto_ptr<Jaal::Mesh> trimesh(meshconverter.fromMOAB( imesh, (iBase_EntitySetHandle)ent->mesh_handle() ));
     std::auto_ptr<Jaal::Mesh> quadmesh(t2quad.getQuadMesh( trimesh.get(), 1));
     meshconverter.toMOAB( quadmesh.get(), imesh, (iBase_EntitySetHandle)ent->mesh_handle() );
+//  int ierr;
+//  int len =  strlen( "JVtk.vtk" );
+//  iMesh_save( imesh, 0, "JVtk.vtk", NULL, &ierr, len, 0);
     ent->commit_mesh( i->second, COMPLETE_MESH );
   }
 }

@@ -64,7 +64,7 @@ void BinaryTree::bfs_traverse(BinaryNode *parent, BNodeList &nextnodes)
 
   int nextlevel = parent->getLevelID() + 1;
 
-  for (int i = 0; i < neighs.size(); i++)
+  for (size_t i = 0; i < neighs.size(); i++)
   {
     dualnode = neighs[i];
     if (!dualnode->isVisited())

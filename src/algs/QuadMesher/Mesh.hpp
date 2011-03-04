@@ -384,7 +384,7 @@ public:
         }
 
         newattrib->key = k;
-        for (int i = 0; i < attributes.size(); i++) {
+        for (size_t i = 0; i < attributes.size(); i++) {
             if (attributes[i]->key == k) {
                 attributes[i] = newattrib;
             }
@@ -394,7 +394,7 @@ public:
     }
 
     Attribute* getAttribute(const AttribKey &k) {
-        for (int i = 0; i < attributes.size(); i++)
+        for (size_t i = 0; i < attributes.size(); i++)
             if (attributes[k]->key == k) return attributes[k];
         return NULL;
     }

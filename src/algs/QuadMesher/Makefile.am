@@ -59,7 +59,7 @@ libJaalQuadMesher_la_SOURCES = \
 	geomPredicates.hpp \
 	MeshRefine2D.cpp \
 	QuadQuality.cpp  \
-	vtk_io.cpp
+	vtk_io.cpp 
   
 
 # The list of header files which are to be installed

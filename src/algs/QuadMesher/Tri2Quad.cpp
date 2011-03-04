@@ -584,6 +584,7 @@ Mesh* Tri2Quads::getQuadMesh(Mesh *inmesh, int replace, int topo)
     int euler0 = trimesh->getEulerCharacteristic();
     cout << " Input Euler # : " << euler0 << endl;
 #endif
+    cout << inmesh->saveAs( "Check.dat");
 
     trimesh = inmesh;
 

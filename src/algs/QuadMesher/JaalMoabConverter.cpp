@@ -113,25 +113,29 @@ JaalMoabConverter::toMOAB(Mesh *jmesh, iMesh_Instance &imesh, iBase_EntitySetHan
         if( niter == moabnode.end() ) {
             ncount0++;
             newHandle = new_MOAB_Handle(imesh, v);
-            if (entitySet)
+            if (entitySet) {
                 iMesh_addEntToSet(imesh, newHandle, entitySet, &err);
+                assert( !err );
+            }
         } else {
             ncount1++;
             newHandle = niter->second;
             Point3D p3d = v->getXYZCoords();
             iMesh_setVtxCoord(imesh, newHandle, p3d[0], p3d[1], p3d[2], &err);
+            assert( !err );
         }
     }
-    cout << " New Handles " << ncount0 << endl;
-    cout << " Old Handles " << ncount1 << endl;
 
     size_t numfaces = jmesh->getSize(2);
     for (size_t i = 0; i < numfaces; i++)
     {
         Face *f = jmesh->getFaceAt(i);
         newHandle = new_MOAB_Handle(imesh, f);
-        if (entitySet)
+        
+        if (entitySet) {
             iMesh_addEntToSet(imesh, newHandle, entitySet, &err);
+            assert( !err );
+        }
     }
 
   return 0;
@@ -144,105 +148,66 @@ JaalMoabConverter ::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entityS
 {
     jmesh = new Mesh;
 
-    int err, numNodes, numFaces;
+    int err;
 
     if (entitySet == 0)
         iMesh_getRootSet(imesh, &entitySet, &err);
 
-    iMesh_getNumOfType(imesh, entitySet, iBase_VERTEX, &numNodes, &err);
-    assert(!err);
+    SimpleArray<iBase_EntityHandle> tfaceHandles;
+    iMesh_getEntities(imesh, entitySet, iBase_FACE, iMesh_TRIANGLE, ARRAY_INOUT(tfaceHandles), &err);
 
-    if (numNodes == 0)
-    {
-        cout << "Warning: There are no nodes in iMesh " << endl;
-        return NULL;
+    size_t numFaces= tfaceHandles.size();
+    SimpleArray<iBase_EntityHandle> facenodes;
+
+    jaalnode.clear();
+    for( int i = 0; i < numFaces; i++) {
+         iMesh_getEntAdj(imesh, tfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(facenodes), &err);
+         for (int j = 0; j < 3; j++)
+              jaalnode[ facenodes[j] ] = NULL;
     }
 
-    jmesh->reserve(numNodes, 0);
+    size_t numNodes = jaalnode.size();
 
-    SimpleArray<iBase_EntityHandle> nodeHandles;
-    iMesh_getEntities(imesh, entitySet, iBase_VERTEX, iMesh_ALL_TOPOLOGIES,
-                      ARRAY_INOUT(nodeHandles), &err);
-    assert( !err );
+    jmesh->reserve(numNodes, 0);
 
     Point3D p3d;
     double x, y, z;
 
     std::map<iBase_EntityHandle, PNode> ::const_iterator niter;
-       
     Vertex *jnode;
-    for (int i = 0; i < numNodes; i++)
+
+    size_t id = 0;
+    for( niter = jaalnode.begin(); niter != jaalnode.end(); ++niter) 
     {
-        niter = jaalnode.find( nodeHandles[i] );
-        if( niter == jaalnode.end() ) {
-            jnode = Vertex::newObject();
-            jaalnode[nodeHandles[i]] = jnode;
-            moabnode[jnode] = nodeHandles[i];
-        } else {
-            jnode = niter->second;
-        }
-        iMesh_getVtxCoord(imesh, nodeHandles[i], &x, &y, &z, &err);
+        iBase_EntityHandle nhandle = niter->first;
+        iMesh_getVtxCoord(imesh, nhandle, &x, &y, &z, &err);
         p3d[0] = x;
         p3d[1] = y;
         p3d[2] = z;
+        jnode  = Jaal::Vertex::newObject();
         jnode->setXYZCoords(p3d);
-        jnode->setID(i);
+        jnode->setID(id++);
         jmesh->addNode(jnode);
-    }
-
-    iMesh_getNumOfType(imesh, entitySet, iBase_FACE, &numFaces, &err);
-
-    if (numNodes == 0)
-    {
-        cout << "Warning: There are no faces in iMesh " << endl;
-        return NULL;
+        moabnode[jnode] = nhandle;
+        jaalnode[ nhandle ] = jnode;
     }
 
     jmesh->reserve(numFaces, 2);
 
     NodeSequence connect(3);
 
-    SimpleArray<iBase_EntityHandle> tfaceHandles;
-    iMesh_getEntities(imesh, entitySet, iBase_FACE, iMesh_TRIANGLE, ARRAY_INOUT(tfaceHandles), &err);
-
-    size_t numTris = tfaceHandles.size();
-    if (numTris)
+    for (size_t i = 0; i < numFaces; i++)
     {
-        connect.resize(3);
-        for (size_t i = 0; i < numTris; i++)
-        {
-            SimpleArray<iBase_EntityHandle> facenodes;
-            iMesh_getEntAdj(imesh, tfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(facenodes), &err);
-            for (int j = 0; j < 3; j++)
-                connect[j] = jaalnode[facenodes[j]];
-            Face *face = Face::newObject();;
-            face->setNodes(connect);
-            jmesh->addFace(face);
-            jaalface[tfaceHandles[i] ] = face;
-            moabface[face] = tfaceHandles[i];
-        }
+        SimpleArray<iBase_EntityHandle> facenodes;
+        iMesh_getEntAdj(imesh, tfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(facenodes), &err);
+        for (int j = 0; j < 3; j++)
+             connect[j] = jaalnode[facenodes[j]];
+        Face *face = Face::newObject();;
+        face->setNodes(connect);
+        jmesh->addFace(face);
+        jaalface[tfaceHandles[i] ] = face;
+        moabface[face] = tfaceHandles[i];
     }
 
-    SimpleArray<iBase_EntityHandle> qfaceHandles;
-    iMesh_getEntities(imesh, entitySet, iBase_FACE, iMesh_QUADRILATERAL,
-                      ARRAY_INOUT(qfaceHandles), &err);
-
-    size_t numQuads = qfaceHandles.size();
-    if (numQuads)
-    {
-        connect.resize(4);
-        for (size_t i = 0; i < numQuads; i++)
-        {
-            SimpleArray<iBase_EntityHandle> facenodes;
-            iMesh_getEntAdj(imesh, qfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(facenodes), &err);
-            for (int j = 0; j < 4; j++)
-                connect[j] = jaalnode[facenodes[j]];
-            Face *face = Face::newObject();;
-            face->setNodes(connect);
-            jaalface[qfaceHandles[i] ] = face;
-            moabface[face] = qfaceHandles[i];
-            jmesh->addFace(face);
-        }
-    }
     return jmesh;
 }
