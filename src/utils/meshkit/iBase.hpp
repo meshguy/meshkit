@@ -592,9 +592,8 @@ PFX(Base)::getEntSetData( EntitySetHandle set_handle,
                       void* tag_value_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
-  char* ptr = (char*)tag_value_out;
   PFX(_getEntSetData)( mInstance, set_handle, tag_handle, 
-                      &ptr, &alloc, &size, &err);
+                      &tag_value_out, &alloc, &size, &err);
   return (Error)err;
 }
 
@@ -708,9 +707,8 @@ PFX(Base)::getArrData( const EntityHandle* entity_handles,
                    void* tag_values_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
-  char* ptr = (char*)tag_values_out;
   PFX(_getArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
-                    &ptr, &alloc, &size, &err);
+                    &tag_values_out, &alloc, &size, &err);
   return (Error)err;
 }
 
@@ -856,9 +854,8 @@ PFX(Base)::getData( EntityHandle entity_handle,
                 void* tag_value_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
-  char* ptr = (char*)tag_value_out;
   PFX(_getData)( mInstance, entity_handle, tag_handle, 
-                &ptr, &alloc, &size, &err);
+                &tag_value_out, &alloc, &size, &err);
   return (Error)err;
 }
 

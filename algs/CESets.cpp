@@ -211,7 +211,7 @@ void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
   // allocate temp space for tag value
   std::vector<char> value;
   value.resize(tag_size);
-  char *value_ptr = &value[0];
+  void *value_ptr = &value[0];
   int value_alloc = tag_size, value_size;
   
   // for each orig copy set with this tag, copy it to its copy
@@ -225,7 +225,7 @@ void tag_copy_sets(iMesh_Instance imeshImpl, iBase_TagHandle copyTag,
     check_error(imeshImpl, err);
 
     // compare to tag value if necessary
-    if (tag_val && strncmp(tag_val, value_ptr, tag_size))
+    if (tag_val && memcmp(tag_val, value_ptr, tag_size))
       continue;
       
     // if we got here, we should set the tag on the copy; get the copy
