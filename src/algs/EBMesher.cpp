@@ -769,7 +769,7 @@ int EBMesher::fire_rays(int dir)
 
   for (j = 1; j < m_nNode[otherDir2] - 1; j++) {
     for (i = 1; i < m_nNode[otherDir1] - 1; i++) {
-      
+
       // get ray start and end points
       if (dir == 0) { // x coordinate ray
 	iNodeStart = j*m_nNode[dir]*m_nNode[otherDir1] + i*m_nNode[dir];
@@ -837,7 +837,7 @@ int EBMesher::fire_rays(int dir)
 
 	  // set status of all hexes sharing the edge
 	  if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
-	  
+
 	  if (m_nMove > 0) {
 	    if (m_iInter < nIntersect) {
 	      if (!move_intersections(dir, nIntersect, startPnt)) return iBase_FAILURE;
@@ -857,7 +857,7 @@ int EBMesher::fire_rays(int dir)
 	      if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
 	    }
 	  }
-	  
+
 	  // set cut-cell edge status
 	  if (i_skip > 0) {
 	    m_prevPnt = startPnt[dir] + i_skip*m_dIntervalSize[dir];
@@ -891,7 +891,6 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
   m_mhOverlappedSurf.clear();
   std::vector<double> temp_intersects;
   moab::ErrorCode rVal;
-  
   if (m_bUseGeom) { // geometry input
     rVal = m_hObbTree->ray_intersect_sets(temp_intersects, m_vhInterSurf,
 					  m_vhInterFacet, m_hTreeRoot, tol,
@@ -918,11 +917,12 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
       m_vIntersection[l] = temp_inter_dist;
     }
     std::sort(m_vIntersection.begin(), m_vIntersection.end(), less_intersect);
-    
+
     if (nIntersect > 1) { // when ray intersect shared edge of triangles
       bool bMoveOnce;
       m_nIteration = 0;
       m_iOverlap = 0;
+
       if (is_ray_move_and_set_overlap_surf(bMoveOnce)) {
 	if (!move_ray(nIntersect, startPnt, endPnt, tol, dir, bMoveOnce)) {
 	  std::cerr << "Number of Intersection between edges and ray should be even." << std::endl;
@@ -931,7 +931,7 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
       }
     }
   }
-
+  
   return true;
 }
 
@@ -1495,6 +1495,7 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
       else if (m_bUseGeom) { // shared/overlapped, faceting case
 	m_mhOverlappedSurf[m_iOverlap] = 0;
 	m_mhOverlappedSurf[m_iOverlap + 1] = 0;
+        return true;
       }
       else {
 	return false;
@@ -1529,6 +1530,7 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
 						 startPnt, ray.array(), &rayLength);
       m_vhInterSurf.resize(temp_intersects.size());
     }
+
     if (MB_SUCCESS != rVal) {
       std::cerr << "Failed : ray-triangle intersection." << std::endl;
       return false;
@@ -1541,9 +1543,7 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
       m_vIntersection[i] = temp_inter_dist;
     }
     std::sort(m_vIntersection.begin(), m_vIntersection.end(), less_intersect);
-    
     bMove = is_ray_move_and_set_overlap_surf(bSpecialCase);
-
     m_nIteration++;
   }
 
@@ -1690,10 +1690,6 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
 			  tolerance, dir, m_dIntervalSize[dir])) return iBase_FAILURE;
 	    
 	    if (nIntersect > 0) { // ray is intersected
-	      //std::cout << "startPnt=" << startPnt[0] << " "
-	      //	<< startPnt[1] << " " << startPnt[2] << std::endl;
-	      //std::cout << "endPnt=" << endPnt[0] << " "
-	      //	<< endPnt[1] << " " << endPnt[2] << std::endl;
 	      bOverlapSecond = false;
 	      bClosed = true;
 	      for (k = 0; k < nIntersect; k++) {

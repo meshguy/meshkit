@@ -20,7 +20,7 @@ using namespace MeshKit;
 #define DEFAULT_TEST_FILE "sphere.stp"
 #endif
 
-const bool debug_ebmesher = true;
+const bool debug_ebmesher = false;
 
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,
@@ -29,7 +29,6 @@ int load_and_mesh(const char *input_filename,
 
 int main(int argc, char **argv) 
 {
-#ifdef HAVE_OCC
   // check command line arg
   std::string input_filename;
   const char *output_filename = NULL;
@@ -181,8 +180,6 @@ int load_and_mesh(const char *input_filename,
 	    << " secs, normal query time(elems, edge-cut fractions): "
 	    << difftime(query_time, query_time_techX)
 	    << " secs." << std::endl;
-#else
-  std::cout << "Current EBMesher is not supported for ACIS geometry. Only works with OCC." << std::endl;
-#endif
+
   return 0;
 }
