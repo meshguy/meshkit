@@ -16,11 +16,11 @@
 #include <queue>
 #include <algorithm>
 
-#ifdef USE_MESQUITE
+#ifdef HAVE_MESQUITE
 #include <Mesquite_all_headers.hpp>
 #endif
 
-#ifdef USE_VERDICT
+#ifdef HAVE_VERDICT
 #include <verdict.h>
 #endif
 
