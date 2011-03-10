@@ -111,6 +111,9 @@ class PFX(Base) {
     inline Error setEntSetEHData( EntitySetHandle set_handle,
                                   TagHandle tag_handle,
                                   EntityHandle value );
+    inline Error setEntSetESHData( EntitySetHandle set_handle,
+                                   TagHandle tag_handle,
+                                   EntitySetHandle value );
     
     inline Error getEntSetData( EntitySetHandle set_handle,
                                 TagHandle tag_handle,
@@ -124,6 +127,9 @@ class PFX(Base) {
     inline Error getEntSetEHData( EntitySetHandle set_handle,
                                   TagHandle tag_handle,
                                   EntityHandle& value_out );
+    inline Error getEntSetESHData( EntitySetHandle set_handle,
+                                   TagHandle tag_handle,
+                                   EntitySetHandle& value_out );
     
     inline Error getAllEntSetTags( EntitySetHandle set,
                                    std::vector<TagHandle>& tags_out );
@@ -150,6 +156,10 @@ class PFX(Base) {
                                int entity_handles_size,
                                TagHandle tag_handle,
                                EntityHandle* tag_values_out );
+    inline Error getESHArrData( const EntityHandle* entity_handles,
+                                int entity_handles_size,
+                                TagHandle tag_handle,
+                                EntitySetHandle* tag_values_out );
     
     inline Error setArrData( const EntityHandle* entity_handles,
                              int entity_handles_size,
@@ -167,6 +177,10 @@ class PFX(Base) {
                                int entity_handles_size,
                                TagHandle tag_handle,
                                const EntityHandle* tag_values );
+    inline Error setESHArrData( const EntityHandle* entity_handles,
+                                int entity_handles_size,
+                                TagHandle tag_handle,
+                                const EntitySetHandle* tag_values );
     
     
     inline Error setData( EntityHandle entity_handle,
@@ -181,6 +195,9 @@ class PFX(Base) {
     inline Error setEHData( EntityHandle entity_handle,
                             TagHandle tag_handle,
                             EntityHandle value );
+    inline Error setESHData( EntityHandle entity_handle,
+                             TagHandle tag_handle,
+                             EntitySetHandle value );
     
     inline Error getData( EntityHandle entity_handle,
                           TagHandle tag_handle,
@@ -194,6 +211,9 @@ class PFX(Base) {
     inline Error getEHData( EntityHandle entity_handle,
                             TagHandle tag_handle,
                             EntityHandle& value_out );
+    inline Error getESHData( EntityHandle entity_handle,
+                             TagHandle tag_handle,
+                             EntitySetHandle& value_out );
 };
 
 
@@ -545,8 +565,8 @@ PFX(Base)::getTagType( TagHandle tag_handle, TagValueType& type_out )
 
 inline PFX(Base)::Error
 PFX(Base)::setEntSetData( EntitySetHandle set_handle,
-                      TagHandle tag_handle,
-                      const void* tag_value )
+                          TagHandle tag_handle,
+                          const void* tag_value )
 {
   int err, size = 1;
   PFX(_getTagSizeBytes)( mInstance, tag_handle, &size, &err );
@@ -557,8 +577,8 @@ PFX(Base)::setEntSetData( EntitySetHandle set_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::setEntSetIntData( EntitySetHandle set_handle,
-                         TagHandle tag_handle,
-                         int value )
+                             TagHandle tag_handle,
+                             int value )
 {
   int err;
   PFX(_setEntSetIntData)( mInstance, set_handle, tag_handle, value, &err );
@@ -567,8 +587,8 @@ PFX(Base)::setEntSetIntData( EntitySetHandle set_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::setEntSetDblData( EntitySetHandle set_handle,
-                         TagHandle tag_handle,
-                         double value )
+                             TagHandle tag_handle,
+                             double value )
 {
   int err;
   PFX(_setEntSetDblData)( mInstance, set_handle, tag_handle, value, &err );
@@ -577,8 +597,8 @@ PFX(Base)::setEntSetDblData( EntitySetHandle set_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::setEntSetEHData( EntitySetHandle set_handle,
-                        TagHandle tag_handle,
-                        EntityHandle value )
+                            TagHandle tag_handle,
+                            EntityHandle value )
 
 {
   int err;
@@ -587,9 +607,20 @@ PFX(Base)::setEntSetEHData( EntitySetHandle set_handle,
 }
 
 inline PFX(Base)::Error
+PFX(Base)::setEntSetESHData( EntitySetHandle set_handle,
+                             TagHandle tag_handle,
+                             EntitySetHandle value )
+
+{
+  int err;
+  PFX(_setEntSetESHData)( mInstance, set_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+inline PFX(Base)::Error
 PFX(Base)::getEntSetData( EntitySetHandle set_handle,
-                      TagHandle tag_handle,
-                      void* tag_value_out )
+                          TagHandle tag_handle,
+                          void* tag_value_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getEntSetData)( mInstance, set_handle, tag_handle, 
@@ -599,8 +630,8 @@ PFX(Base)::getEntSetData( EntitySetHandle set_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::getEntSetIntData( EntitySetHandle set_handle,
-                         TagHandle tag_handle,
-                         int& value_out )
+                             TagHandle tag_handle,
+                             int& value_out )
 {
   int err;
   PFX(_getEntSetIntData)( mInstance, set_handle, tag_handle, &value_out, &err );
@@ -609,8 +640,8 @@ PFX(Base)::getEntSetIntData( EntitySetHandle set_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::getEntSetDblData( EntitySetHandle set_handle,
-                         TagHandle tag_handle,
-                         double& value_out )
+                             TagHandle tag_handle,
+                             double& value_out )
 {
   int err;
   PFX(_getEntSetDblData)( mInstance, set_handle, tag_handle, &value_out, &err );
@@ -619,12 +650,23 @@ PFX(Base)::getEntSetDblData( EntitySetHandle set_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::getEntSetEHData( EntitySetHandle set_handle,
-                        TagHandle tag_handle,
-                        EntityHandle& value_out )
+                            TagHandle tag_handle,
+                            EntityHandle& value_out )
 
 {
   int err;
   PFX(_getEntSetEHData)( mInstance, set_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+inline PFX(Base)::Error
+PFX(Base)::getEntSetESHData( EntitySetHandle set_handle,
+                             TagHandle tag_handle,
+                             EntitySetHandle& value_out )
+
+{
+  int err;
+  PFX(_getEntSetESHData)( mInstance, set_handle, tag_handle, &value_out, &err );
   return (Error)err;
 }
 
@@ -702,9 +744,9 @@ PFX(Base)::rmvArrTag( const EntityHandle* handles, int size, TagHandle tag )
 
 inline PFX(Base)::Error
 PFX(Base)::getArrData( const EntityHandle* entity_handles,
-                   int entity_handles_size,
-                   TagHandle tag_handle,
-                   void* tag_values_out )
+                       int entity_handles_size,
+                       TagHandle tag_handle,
+                       void* tag_values_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
@@ -714,9 +756,9 @@ PFX(Base)::getArrData( const EntityHandle* entity_handles,
 
 inline PFX(Base)::Error
 PFX(Base)::getIntArrData( const EntityHandle* entity_handles,
-                      int entity_handles_size,
-                      TagHandle tag_handle,
-                      int* tag_values_out )
+                          int entity_handles_size,
+                          TagHandle tag_handle,
+                          int* tag_values_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getIntArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
@@ -726,9 +768,9 @@ PFX(Base)::getIntArrData( const EntityHandle* entity_handles,
 
 inline PFX(Base)::Error
 PFX(Base)::getDblArrData( const EntityHandle* entity_handles,
-                      int entity_handles_size,
-                      TagHandle tag_handle,
-                      double* tag_values_out )
+                          int entity_handles_size,
+                          TagHandle tag_handle,
+                          double* tag_values_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getDblArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
@@ -738,9 +780,9 @@ PFX(Base)::getDblArrData( const EntityHandle* entity_handles,
 
 inline PFX(Base)::Error
 PFX(Base)::getEHArrData( const EntityHandle* entity_handles,
-                     int entity_handles_size,
-                     TagHandle tag_handle,
-                     EntityHandle* tag_values_out )
+                         int entity_handles_size,
+                         TagHandle tag_handle,
+                         EntityHandle* tag_values_out )
 
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
@@ -750,10 +792,23 @@ PFX(Base)::getEHArrData( const EntityHandle* entity_handles,
 }
 
 inline PFX(Base)::Error
+PFX(Base)::getESHArrData( const EntityHandle* entity_handles,
+                          int entity_handles_size,
+                          TagHandle tag_handle,
+                          EntitySetHandle* tag_values_out )
+
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  PFX(_getESHArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
+                      &tag_values_out, &alloc, &size, &err);
+  return (Error)err;
+}
+
+inline PFX(Base)::Error
 PFX(Base)::setArrData( const EntityHandle* entity_handles,
-                   int entity_handles_size,
-                   TagHandle tag_handle,
-                   const void* tag_values )
+                       int entity_handles_size,
+                       TagHandle tag_handle,
+                       const void* tag_values )
 {
   int err, size = 1;
   PFX(_getTagSizeBytes)( mInstance, tag_handle, &size, &err );
@@ -765,9 +820,9 @@ PFX(Base)::setArrData( const EntityHandle* entity_handles,
 
 inline PFX(Base)::Error
 PFX(Base)::setIntArrData( const EntityHandle* entity_handles,
-                      int entity_handles_size,
-                      TagHandle tag_handle,
-                      const int* tag_values )
+                          int entity_handles_size,
+                          TagHandle tag_handle,
+                          const int* tag_values )
 {
   int err, size = 1;
   PFX(_getTagSizeValues)( mInstance, tag_handle, &size, &err );
@@ -778,9 +833,9 @@ PFX(Base)::setIntArrData( const EntityHandle* entity_handles,
 
 inline PFX(Base)::Error
 PFX(Base)::setDblArrData( const EntityHandle* entity_handles,
-                      int entity_handles_size,
-                      TagHandle tag_handle,
-                      const double* tag_values )
+                          int entity_handles_size,
+                          TagHandle tag_handle,
+                          const double* tag_values )
 {
   int err, size = 1;
   PFX(_getTagSizeValues)( mInstance, tag_handle, &size, &err );
@@ -791,9 +846,9 @@ PFX(Base)::setDblArrData( const EntityHandle* entity_handles,
 
 inline PFX(Base)::Error
 PFX(Base)::setEHArrData( const EntityHandle* entity_handles,
-                     int entity_handles_size,
-                     TagHandle tag_handle,
-                     const EntityHandle* tag_values )
+                         int entity_handles_size,
+                         TagHandle tag_handle,
+                         const EntityHandle* tag_values )
 {
   int err, size = 1;
   PFX(_getTagSizeValues)( mInstance, tag_handle, &size, &err );
@@ -802,12 +857,25 @@ PFX(Base)::setEHArrData( const EntityHandle* entity_handles,
   return (Error)err;
 }
 
+inline PFX(Base)::Error
+PFX(Base)::setESHArrData( const EntityHandle* entity_handles,
+                          int entity_handles_size,
+                          TagHandle tag_handle,
+                          const EntitySetHandle* tag_values )
+{
+  int err, size = 1;
+  PFX(_getTagSizeValues)( mInstance, tag_handle, &size, &err );
+  PFX(_setESHArrData)( mInstance, entity_handles, entity_handles_size, tag_handle,
+                      tag_values, size*entity_handles_size, &err );
+  return (Error)err;
+}
+
 
 
 inline PFX(Base)::Error
 PFX(Base)::setData( EntityHandle entity_handle,
-                TagHandle tag_handle,
-                const void* tag_value )
+                    TagHandle tag_handle,
+                    const void* tag_value )
 {
   int err, size = 1;
   PFX(_getTagSizeBytes)( mInstance, tag_handle, &size, &err );
@@ -819,8 +887,8 @@ PFX(Base)::setData( EntityHandle entity_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::setIntData( EntityHandle entity_handle,
-                   TagHandle tag_handle,
-                   int value )
+                       TagHandle tag_handle,
+                       int value )
 {
   int err;
   PFX(_setIntData)( mInstance, entity_handle, tag_handle, value, &err );
@@ -829,8 +897,8 @@ PFX(Base)::setIntData( EntityHandle entity_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::setDblData( EntityHandle entity_handle,
-                   TagHandle tag_handle,
-                   double value )
+                       TagHandle tag_handle,
+                       double value )
 {
   int err;
   PFX(_setDblData)( mInstance, entity_handle, tag_handle, value, &err );
@@ -839,8 +907,8 @@ PFX(Base)::setDblData( EntityHandle entity_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::setEHData( EntityHandle entity_handle,
-                  TagHandle tag_handle,
-                  EntityHandle value )
+                      TagHandle tag_handle,
+                      EntityHandle value )
 
 {
   int err;
@@ -849,9 +917,20 @@ PFX(Base)::setEHData( EntityHandle entity_handle,
 }
 
 inline PFX(Base)::Error
+PFX(Base)::setESHData( EntityHandle entity_handle,
+                       TagHandle tag_handle,
+                       EntitySetHandle value )
+
+{
+  int err;
+  PFX(_setESHData)( mInstance, entity_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+inline PFX(Base)::Error
 PFX(Base)::getData( EntityHandle entity_handle,
-                TagHandle tag_handle,
-                void* tag_value_out )
+                    TagHandle tag_handle,
+                    void* tag_value_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getData)( mInstance, entity_handle, tag_handle, 
@@ -861,8 +940,8 @@ PFX(Base)::getData( EntityHandle entity_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::getIntData( EntityHandle entity_handle,
-                   TagHandle tag_handle,
-                   int& value_out )
+                       TagHandle tag_handle,
+                       int& value_out )
 {
   int err;
   PFX(_getIntData)( mInstance, entity_handle, tag_handle, &value_out, &err );
@@ -871,8 +950,8 @@ PFX(Base)::getIntData( EntityHandle entity_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::getDblData( EntityHandle entity_handle,
-                   TagHandle tag_handle,
-                   double& value_out )
+                       TagHandle tag_handle,
+                       double& value_out )
 {
   int err;
   PFX(_getDblData)( mInstance, entity_handle, tag_handle, &value_out, &err );
@@ -881,11 +960,21 @@ PFX(Base)::getDblData( EntityHandle entity_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::getEHData( EntityHandle entity_handle,
-                  TagHandle tag_handle,
-                  EntityHandle& value_out )
+                      TagHandle tag_handle,
+                      EntityHandle& value_out )
 {
   int err;
   PFX(_getEHData)( mInstance, entity_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+inline PFX(Base)::Error
+PFX(Base)::getESHData( EntityHandle entity_handle,
+                       TagHandle tag_handle,
+                       EntitySetHandle& value_out )
+{
+  int err;
+  PFX(_getESHData)( mInstance, entity_handle, tag_handle, &value_out, &err );
   return (Error)err;
 }
 

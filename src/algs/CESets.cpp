@@ -61,8 +61,8 @@ void link_expand_sets(const CESets &ce_sets, iMesh::TagHandle local_tag)
 {
   CESets::set_iterator set;
   for (set = ce_sets.sbegin(); set != ce_sets.send(); ++set) {
-    IBERRCHK(ce_sets.imesh_instance()->setEntSetEHData(*set, local_tag,
-      reinterpret_cast<iMesh::EntityHandle>(*set)), *ce_sets.imesh_instance());
+    IBERRCHK(ce_sets.imesh_instance()->setEntSetESHData(*set, local_tag, *set),
+             *ce_sets.imesh_instance());
   }
 }
 
@@ -110,14 +110,11 @@ void get_dest_set(iMesh *mesh, iMesh::TagHandle local_tag,
 {
   iMesh::Error err;
 
-  err = mesh->getEntSetEHData(src, local_tag,
-                              reinterpret_cast<iMesh::EntityHandle&>(dest));
+  err = mesh->getEntSetESHData(src, local_tag, dest);
 
   if (err != iBase_SUCCESS) {
     IBERRCHK(mesh->createEntSet(false, dest), *mesh);
-    IBERRCHK(mesh->setEntSetEHData(src, local_tag,
-                                   reinterpret_cast<iMesh::EntityHandle>(dest)),
-             *mesh);
+    IBERRCHK(mesh->setEntSetESHData(src, local_tag, dest), *mesh);
   }
 }
 
@@ -211,8 +208,7 @@ void tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
       
     // if we got here, we should set the tag on the copy; get the copy
     iMesh::EntitySetHandle copy_set;
-    err = mesh->getEntSetEHData(
-      *set, copyTag, reinterpret_cast<iMesh::EntityHandle&>(copy_set));
+    err = mesh->getEntSetESHData(*set, copyTag, copy_set);
     if (err == iBase_TAG_NOT_FOUND)
       continue;
     IBERRCHK(err, *mesh);

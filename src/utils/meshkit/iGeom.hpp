@@ -396,6 +396,8 @@ public:
       TagHandle tag_handle, double value);
   virtual inline Error setEntSetEHData(EntitySetHandle set_handle,
       TagHandle tag_handle, EntityHandle value);
+  virtual inline Error setEntSetESHData(EntitySetHandle set_handle,
+      TagHandle tag_handle, EntitySetHandle value);
 
   virtual inline Error getEntSetData(EntitySetHandle set_handle, TagHandle tag_handle,
       void* tag_value_out);
@@ -405,6 +407,8 @@ public:
       TagHandle tag_handle, double& value_out);
   virtual inline Error getEntSetEHData(EntitySetHandle set_handle,
       TagHandle tag_handle, EntityHandle& value_out);
+  virtual inline Error getEntSetESHData(EntitySetHandle set_handle,
+      TagHandle tag_handle, EntitySetHandle& value_out);
 
   virtual inline Error getAllEntSetTags(EntitySetHandle set,
       std::vector<TagHandle>& tags_out);
@@ -424,6 +428,9 @@ public:
   virtual inline Error getEHArrData(const EntityHandle* entity_handles,
       int entity_handles_size, TagHandle tag_handle,
       EntityHandle* tag_values_out);
+  virtual inline Error getESHArrData(const EntityHandle* entity_handles,
+      int entity_handles_size, TagHandle tag_handle,
+      EntitySetHandle* tag_values_out);
 
   virtual inline Error setArrData(const EntityHandle* entity_handles,
       int entity_handles_size, TagHandle tag_handle, const void* tag_values);
@@ -434,6 +441,9 @@ public:
   virtual inline Error setEHArrData(const EntityHandle* entity_handles,
       int entity_handles_size, TagHandle tag_handle,
       const EntityHandle* tag_values);
+  virtual inline Error setESHArrData(const EntityHandle* entity_handles,
+      int entity_handles_size, TagHandle tag_handle,
+      const EntitySetHandle* tag_values);
 
   virtual inline Error setData(EntityHandle entity_handle, TagHandle tag_handle,
       const void* tag_value);
@@ -443,6 +453,8 @@ public:
       double value);
   virtual inline Error setEHData(EntityHandle entity_handle, TagHandle tag_handle,
       EntityHandle value);
+  virtual inline Error setESHData(EntityHandle entity_handle, TagHandle tag_handle,
+      EntitySetHandle value);
 
   virtual inline Error getData(EntityHandle entity_handle, TagHandle tag_handle,
       void* tag_value_out);
@@ -452,6 +464,8 @@ public:
       double& value_out);
   virtual inline Error getEHData(EntityHandle entity_handle, TagHandle tag_handle,
       EntityHandle& value_out);
+  virtual inline Error getESHData(EntityHandle entity_handle, TagHandle tag_handle,
+      EntitySetHandle& value_out);
   // end copy from iBaseVirtual.hpp
   /** \class EntArrIter iGeom.hpp "iGeom.hpp"
    * \brief Class for iterating over %iGeom entity arrays.
@@ -2174,6 +2188,17 @@ iGeom::setEntSetEHData( EntitySetHandle set_handle,
 }
 
 iGeom::Error
+iGeom::setEntSetESHData( EntitySetHandle set_handle,
+                         TagHandle tag_handle,
+                         EntitySetHandle value )
+
+{
+  int err;
+  iGeom_setEntSetESHData( mInstance, set_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+iGeom::Error
 iGeom::getEntSetData( EntitySetHandle set_handle,
                       TagHandle tag_handle,
                       void* tag_value_out )
@@ -2212,6 +2237,17 @@ iGeom::getEntSetEHData( EntitySetHandle set_handle,
 {
   int err;
   iGeom_getEntSetEHData( mInstance, set_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+iGeom::Error
+iGeom::getEntSetESHData( EntitySetHandle set_handle,
+                         TagHandle tag_handle,
+                         EntitySetHandle& value_out )
+
+{
+  int err;
+  iGeom_getEntSetESHData( mInstance, set_handle, tag_handle, &value_out, &err );
   return (Error)err;
 }
 
@@ -2337,6 +2373,19 @@ iGeom::getEHArrData( const EntityHandle* entity_handles,
 }
 
 iGeom::Error
+iGeom::getESHArrData( const EntityHandle* entity_handles,
+                      int entity_handles_size,
+                      TagHandle tag_handle,
+                      EntitySetHandle* tag_values_out )
+
+{
+  int err, alloc = std::numeric_limits<int>::max(), size;
+  iGeom_getESHArrData( mInstance, entity_handles, entity_handles_size, tag_handle,
+                      &tag_values_out, &alloc, &size, &err);
+  return (Error)err;
+}
+
+iGeom::Error
 iGeom::setArrData( const EntityHandle* entity_handles,
                    int entity_handles_size,
                    TagHandle tag_handle,
@@ -2389,6 +2438,19 @@ iGeom::setEHArrData( const EntityHandle* entity_handles,
   return (Error)err;
 }
 
+iGeom::Error
+iGeom::setESHArrData( const EntityHandle* entity_handles,
+                      int entity_handles_size,
+                      TagHandle tag_handle,
+                      const EntitySetHandle* tag_values )
+{
+  int err, size = 1;
+  iGeom_getTagSizeValues( mInstance, tag_handle, &size, &err );
+  iGeom_setESHArrData( mInstance, entity_handles, entity_handles_size, tag_handle,
+                      tag_values, size*entity_handles_size, &err );
+  return (Error)err;
+}
+
 
 
 iGeom::Error
@@ -2435,6 +2497,17 @@ iGeom::setEHData( EntityHandle entity_handle,
 }
 
 iGeom::Error
+iGeom::setESHData( EntityHandle entity_handle,
+                   TagHandle tag_handle,
+                   EntitySetHandle value )
+
+{
+  int err;
+  iGeom_setESHData( mInstance, entity_handle, tag_handle, value, &err );
+  return (Error)err;
+}
+
+iGeom::Error
 iGeom::getData( EntityHandle entity_handle,
                 TagHandle tag_handle,
                 void* tag_value_out )
@@ -2472,6 +2545,16 @@ iGeom::getEHData( EntityHandle entity_handle,
 {
   int err;
   iGeom_getEHData( mInstance, entity_handle, tag_handle, &value_out, &err );
+  return (Error)err;
+}
+
+iGeom::Error
+iGeom::getESHData( EntityHandle entity_handle,
+                   TagHandle tag_handle,
+                   EntitySetHandle& value_out )
+{
+  int err;
+  iGeom_getESHData( mInstance, entity_handle, tag_handle, &value_out, &err );
   return (Error)err;
 }
 
