@@ -2138,7 +2138,7 @@ iGeom::setEntSetData( EntitySetHandle set_handle,
   int err, size = 1;
   iGeom_getTagSizeBytes( mInstance, tag_handle, &size, &err );
   iGeom_setEntSetData( mInstance, set_handle, tag_handle,
-                       (const char*)tag_value, size, &err);
+                       tag_value, size, &err);
   return (Error)err;
 }
 
@@ -2179,9 +2179,8 @@ iGeom::getEntSetData( EntitySetHandle set_handle,
                       void* tag_value_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
-  char* ptr = (char*)tag_value_out;
   iGeom_getEntSetData( mInstance, set_handle, tag_handle,
-                      &ptr, &alloc, &size, &err);
+                      &tag_value_out, &alloc, &size, &err);
   return (Error)err;
 }
 
@@ -2295,9 +2294,8 @@ iGeom::getArrData( const EntityHandle* entity_handles,
                    void* tag_values_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
-  char* ptr = (char*)tag_values_out;
   iGeom_getArrData( mInstance, entity_handles, entity_handles_size, tag_handle,
-                    &ptr, &alloc, &size, &err);
+                    &tag_values_out, &alloc, &size, &err);
   return (Error)err;
 }
 
@@ -2347,7 +2345,7 @@ iGeom::setArrData( const EntityHandle* entity_handles,
   int err, size = 1;
   iGeom_getTagSizeBytes( mInstance, tag_handle, &size, &err );
   iGeom_setArrData( mInstance, entity_handles, entity_handles_size, tag_handle,
-                    (const char*)tag_values, size*entity_handles_size,
+                    tag_values, size*entity_handles_size,
                     &err );
   return (Error)err;
 }
@@ -2401,8 +2399,7 @@ iGeom::setData( EntityHandle entity_handle,
   int err, size = 1;
   iGeom_getTagSizeBytes( mInstance, tag_handle, &size, &err );
   iGeom_setData( mInstance, entity_handle, tag_handle,
-                 (const char*)tag_value, size, &err);
-  return (Error)err;
+                 tag_value, size, &err);
   return (Error)err;
 }
 
@@ -2443,9 +2440,8 @@ iGeom::getData( EntityHandle entity_handle,
                 void* tag_value_out )
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
-  char* ptr = (char*)tag_value_out;
   iGeom_getData( mInstance, entity_handle, tag_handle,
-                &ptr, &alloc, &size, &err);
+                 &tag_value_out, &alloc, &size, &err);
   return (Error)err;
 }
 
