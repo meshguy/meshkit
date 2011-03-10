@@ -44,7 +44,7 @@ const moab::EntityType* EBMesher::output_types()
   { return EBMesher_tps; }
 
 EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
-		   double size, bool use_geom, int add_layer)
+                   double size, bool use_geom, int add_layer)
   : MeshScheme(mkcore, me_vec), m_dInputSize(size),
     m_bUseGeom(use_geom), m_nAddLayer(add_layer)
 {
@@ -62,28 +62,28 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   int outside = 1;
   const void *out = &outside;
   m_elemStatusTag = get_tag("ELEM_STATUS_TAG", sizeof(int),
-			    MB_TAG_DENSE, MB_TYPE_INTEGER, out);
+                            MB_TAG_DENSE, MB_TYPE_INTEGER, out);
   
   int length = 1;
   const void *leng = &length;
   m_edgeCutFracLengthTag = get_tag("EDGE_CUT_FRAC_LENGTH_TAG", // # of fractions
-				   3*sizeof(int),
-				   //MB_TAG_SPARSE, // using dense for hdf5 exporting performance
-				   MB_TAG_DENSE,
-				   MB_TYPE_INTEGER, leng);
+                                   3*sizeof(int),
+                                   //MB_TAG_SPARSE, // using dense for hdf5 exporting performance
+                                   MB_TAG_DENSE,
+                                   MB_TYPE_INTEGER, leng);
 
   m_edgeCutFracTag = get_various_length_tag("EDGE_CUT_FRAC_TAG",
-					    //MB_TAG_SPARSE,
-					    MB_TAG_DENSE,
-					    MB_TYPE_DOUBLE);
+                                            //MB_TAG_SPARSE,
+                                            MB_TAG_DENSE,
+                                            MB_TYPE_DOUBLE);
 
   int m_id = 1;
   const void *id = &m_id;
   m_matFracIDTag = get_tag("MAT_FRAC_ID_TAG", sizeof(int),
-			   MB_TAG_SPARSE, MB_TYPE_INTEGER, id);
+                           MB_TAG_SPARSE, MB_TYPE_INTEGER, id);
 
   m_volFracTag = get_various_length_tag("VOL_FRAC_TAG",
-					MB_TAG_SPARSE, MB_TYPE_DOUBLE);
+                                        MB_TAG_SPARSE, MB_TYPE_DOUBLE);
   m_GeomTopoTool = new moab::GeomTopoTool( moab_instance() );
 #endif
 }
@@ -153,18 +153,18 @@ void EBMesher::execute_this()
   
   if (debug) {
     std::cout << "OBB_tree_construct_time: "
-	      << difftime(time2, time1)
-	      << ", intersection_time: "
-	      << difftime(time3, time2)
-	      << ", set_info_time: "
-	      << difftime(time4, time3)
-	      << std::endl;
+              << difftime(time2, time1)
+              << ", intersection_time: "
+              << difftime(time3, time2)
+              << ", set_info_time: "
+              << difftime(time4, time3)
+              << std::endl;
     
     std::cout << "start_memory: " << mem1
-	      << ", OBB_tree_construct_moemory: " << mem2
-	      << ", intersection_memory: " << mem3
-	      << ", set_info_memory: " << mem4
-	      << std::endl;
+              << ", OBB_tree_construct_moemory: " << mem2
+              << ", intersection_memory: " << mem3
+              << ", set_info_memory: " << mem4
+              << std::endl;
   }
 }
 
@@ -229,17 +229,17 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
   int hex_allocated = 0;
   int hex_size = 0;
   iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-		    iMesh_HEXAHEDRON, &hex_handles,
-		    &hex_allocated, &hex_size, &err);
+                    iMesh_HEXAHEDRON, &hex_handles,
+                    &hex_allocated, &hex_size, &err);
   IBERRCHK(err, "Failed to get hexes.\n");
 
   int* hex_status = new int[hex_size];
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
   iMesh_getIntArrData(m_mesh, hex_handles,
-		      hex_size, m_elemStatusTag,
-		      &hex_status, &hex_status_alloc,
-		      &hex_status_size, &err);
+                      hex_size, m_elemStatusTag,
+                      &hex_status, &hex_status_alloc,
+                      &hex_status_size, &err);
   IBERRCHK(err, "Failed to get hex status.\n");
   time(&time2);
 
@@ -251,32 +251,32 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
     std::vector<iBase_EntityHandle> insideHex, outsideHex, bndrHex;
     for (i = 0; i < hex_status_size; i++) {
       if (hex_status[i] == 0) {
-	n_inside_hex++;
-	hex_stat = 0;
-	insideHex.push_back(hex_handles[i]);
+        n_inside_hex++;
+        hex_stat = 0;
+        insideHex.push_back(hex_handles[i]);
       }
       else if (hex_status[i] == 1) {
-	n_outside_hex++;
-	hex_stat = 1;
-	outsideHex.push_back(hex_handles[i]);
+        n_outside_hex++;
+        hex_stat = 1;
+        outsideHex.push_back(hex_handles[i]);
       }
       else if (hex_status[i] == 2) {
-	n_boundary_hex++;
-	hex_stat = 2;
-	bndrHex.push_back(hex_handles[i]);
+        n_boundary_hex++;
+        hex_stat = 2;
+        bndrHex.push_back(hex_handles[i]);
       }
       else {
-	throw Error(MK_FAILURE, "Hex element status should be inside/outside/boundary.");
+        throw Error(MK_FAILURE, "Hex element status should be inside/outside/boundary.");
       }
     }
     
     std::cout << "# of exported inside hex:" << n_inside_hex
-	      << ", # of exported outside hex:" << n_outside_hex
-	      << ", # of exported boundary hex:" << n_boundary_hex
-	      << ", geom vol:"
-	      << n_inside_hex*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
-	      << ", vox vol:" << hex_size*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
-	      << std::endl;
+              << ", # of exported outside hex:" << n_outside_hex
+              << ", # of exported boundary hex:" << n_boundary_hex
+              << ", geom vol:"
+              << n_inside_hex*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
+              << ", vox vol:" << hex_size*m_dIntervalSize[0]*m_dIntervalSize[1]*m_dIntervalSize[2]
+              << std::endl;
     time(&time3);
 
     // save inside/outside/boundary elements separately
@@ -295,10 +295,10 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
 
     if (debug) {
       std::cout << "hex_handle_get_time: "
-		<< difftime(time2, time1)
-		<< ", separate_write_time: "
-		<< difftime(time3, time2)
-		<< std::endl;
+                << difftime(time2, time1)
+                << ", separate_write_time: "
+                << difftime(time3, time2)
+                << std::endl;
     }
   }
   else {
@@ -308,10 +308,10 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
     time3 = clock();
     if (true) {
       std::cout << "hex_handle_get_time: "
-		<< (double) (time2 - time1)/CLOCKS_PER_SEC
-		<< ", actual_write_time: "
-		<< (double) (time3 - time2)/CLOCKS_PER_SEC
-		<< std::endl;
+                << (double) (time2 - time1)/CLOCKS_PER_SEC
+                << ", actual_write_time: "
+                << (double) (time3 - time2)/CLOCKS_PER_SEC
+                << std::endl;
     }
   }
 
@@ -320,7 +320,7 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
 }
 
 int EBMesher::write_mesh(const char* file_name, int type,
-			    iBase_EntityHandle* handles, int& n_elem)
+                            iBase_EntityHandle* handles, int& n_elem)
 {
   time_t time1, time2, time3;
   time(&time1);
@@ -344,7 +344,7 @@ int EBMesher::write_mesh(const char* file_name, int type,
   ss >> out_name;
   
   rval = moab_instance()->write_mesh(out_name.c_str(),
-				     (const moab::EntityHandle*) &set, 1);
+                                     (const moab::EntityHandle*) &set, 1);
   MBERRCHK(rval, mk_core()->moab_instance());
   
   std::cout << "Elements are exported." << std::endl;
@@ -352,10 +352,10 @@ int EBMesher::write_mesh(const char* file_name, int type,
 
   if (debug) {
     std::cout << "set_creation_time: "
-	      << difftime(time2, time1)
-	      << ", write_time: "
-	      << difftime(time3, time2)
-	      << std::endl;
+              << difftime(time2, time1)
+              << ", write_time: "
+              << difftime(time3, time2)
+              << std::endl;
   }
 
   return iBase_SUCCESS;
@@ -373,11 +373,11 @@ EdgeStatus EBMesher::get_edge_status(const double dP, int& iSkip)
     else {
       if (is_shared_overlapped_surf(m_iInter - 1)) m_nMove = 1;
       else m_nMove = 2;
-	
+        
       // skip shared and overlapped interesections
       while (m_vIntersection[m_iInter].distance -
-	     m_vIntersection[m_iInter - 1].distance < 1e-7 &&
-	     (unsigned int) (m_iInter + 1) < m_vIntersection.size()) m_iInter++;	
+             m_vIntersection[m_iInter - 1].distance < 1e-7 &&
+             (unsigned int) (m_iInter + 1) < m_vIntersection.size()) m_iInter++;        
       
       return BOUNDARY;
     }
@@ -394,8 +394,8 @@ EdgeStatus EBMesher::get_edge_status(const double dP, int& iSkip)
 
       // skip shared and overlapped interesections
       while (m_vIntersection[m_iInter].distance -
-	     m_vIntersection[m_iInter - 1].distance < 1e-7 &&
-	     (unsigned int) (m_iInter + 1) < m_vIntersection.size()) m_iInter++;
+             m_vIntersection[m_iInter - 1].distance < 1e-7 &&
+             (unsigned int) (m_iInter + 1) < m_vIntersection.size()) m_iInter++;
 
       return BOUNDARY;
     }
@@ -408,23 +408,23 @@ EdgeStatus EBMesher::get_edge_status(const double dP, int& iSkip)
     }
     else {
       if (dP < m_dSecondP) {
-	m_nMove = 0;
-	if (m_prevPnt < m_dFirstP) return BOUNDARY;
-	else {
-	  iSkip = m_iSecondP;
-	  return INSIDE;
-	}
+        m_nMove = 0;
+        if (m_prevPnt < m_dFirstP) return BOUNDARY;
+        else {
+          iSkip = m_iSecondP;
+          return INSIDE;
+        }
       }
       else {
-	if (is_shared_overlapped_surf(m_iInter - 1)) m_nMove = 1;
-	else m_nMove = 2;
+        if (is_shared_overlapped_surf(m_iInter - 1)) m_nMove = 1;
+        else m_nMove = 2;
 
-	// skip shared and overlapped interesections
-	while (m_vIntersection[m_iInter].distance -
-	       m_vIntersection[m_iInter - 1].distance < 1e-7 &&
-	       (unsigned int) (m_iInter + 1) < m_vIntersection.size()) m_iInter++;
+        // skip shared and overlapped interesections
+        while (m_vIntersection[m_iInter].distance -
+               m_vIntersection[m_iInter - 1].distance < 1e-7 &&
+               (unsigned int) (m_iInter + 1) < m_vIntersection.size()) m_iInter++;
 
-	return BOUNDARY;
+        return BOUNDARY;
       }
     }
   }
@@ -529,19 +529,19 @@ int EBMesher::set_division()
     max_cart_box(0., 0., 0.);
   
   moab::ErrorCode rval = m_hObbTree->box(m_hTreeRoot, box_center.array(),
-				     box_axis1.array(), box_axis2.array(),
-				     box_axis3.array());
+                                     box_axis1.array(), box_axis2.array(),
+                                     box_axis3.array());
   MBERRCHK(rval, mk_core()->moab_instance());
 
   // cartesian box corners
   moab::CartVect corners[8] = {box_center + box_axis1 + box_axis2 + box_axis3,
-			       box_center + box_axis1 + box_axis2 - box_axis3,
-			       box_center + box_axis1 - box_axis2 + box_axis3,
-			       box_center + box_axis1 - box_axis2 - box_axis3,
-			       box_center - box_axis1 + box_axis2 + box_axis3,
-			       box_center - box_axis1 + box_axis2 - box_axis3,
-			       box_center - box_axis1 - box_axis2 + box_axis3,
-			       box_center - box_axis1 - box_axis2 - box_axis3};
+                               box_center + box_axis1 + box_axis2 - box_axis3,
+                               box_center + box_axis1 - box_axis2 + box_axis3,
+                               box_center + box_axis1 - box_axis2 - box_axis3,
+                               box_center - box_axis1 + box_axis2 + box_axis3,
+                               box_center - box_axis1 + box_axis2 - box_axis3,
+                               box_center - box_axis1 - box_axis2 + box_axis3,
+                               box_center - box_axis1 - box_axis2 - box_axis3};
 
   // get the max, min cartesian box corners
   for (i = 0; i < 8; i++) {
@@ -558,7 +558,7 @@ int EBMesher::set_division()
     int n_tri;
     rval = moab_instance()->
       get_number_entities_by_dimension(reinterpret_cast<MBEntityHandle>(m_hRootSet),
-				       2, n_tri);
+                                       2, n_tri);
     MBERRCHK(rval, mk_core()->moab_instance());
     
     double box_length_ave = (length[0] + length[1] + length[2])/3.;
@@ -579,10 +579,10 @@ int EBMesher::set_division()
   m_nHex = m_nDiv[0]*m_nDiv[1]*m_nDiv[2];
 
   std::cout << "# of hex: " << m_nHex << ", interval size: "
-	    << m_dInputSize << std::endl;
+            << m_dInputSize << std::endl;
 
   std::cout << "# of division: " << m_nDiv[0] << ","
-	    << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
+            << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
 
   return iBase_SUCCESS;
 }
@@ -598,11 +598,11 @@ int EBMesher::set_division(double* min, double* max)
   m_nHex = m_nDiv[0]*m_nDiv[1]*m_nDiv[2];
 
   std::cout << "# of hex: " << m_nHex << ", interval_size: "
-	    << m_dIntervalSize[0] << ", " << m_dIntervalSize[1] << ", "
+            << m_dIntervalSize[0] << ", " << m_dIntervalSize[1] << ", "
             << m_dIntervalSize[2] << std::endl;
 
   std::cout << "# of division: " << m_nDiv[0] << ","
-	    << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
+            << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
 
   return iBase_SUCCESS;
 }
@@ -633,7 +633,7 @@ int EBMesher::make_scd_hexes()
   moab::HomCoord p3(coord_min.i(), coord_max.j(), coord_min.k()); 
   
   rval = mbcore->add_vsequence(vertex_seq, cell_seq, coord_min, coord_min,
-					p2, p2, p3, p3);
+                                        p2, p2, p3, p3);
   MBERRCHK(rval, mk_core()->moab_instance());
 
   int nTotNode = m_nNode[0]*m_nNode[1]*m_nNode[2];
@@ -657,14 +657,14 @@ int EBMesher::make_scd_hexes()
 }
 
 iBase_TagHandle EBMesher::get_tag(const char* name, int size,
-				     MBTagType store, MBDataType type,
-				     const void* def_value,
-				     bool create_if_missing) 
+                                     MBTagType store, MBDataType type,
+                                     const void* def_value,
+                                     bool create_if_missing) 
 {
   MBTag retval = 0;
   moab::ErrorCode result = moab_instance()->tag_create(name, size, store, type,
-						   retval, def_value,
-						   create_if_missing);
+                                                   retval, def_value,
+                                                   create_if_missing);
   if (create_if_missing && MB_SUCCESS != result) {
     std::cerr << "Couldn't find nor create tag named " << name << std::endl;
   }
@@ -673,7 +673,7 @@ iBase_TagHandle EBMesher::get_tag(const char* name, int size,
 }
 
 iBase_TagHandle EBMesher::get_various_length_tag(const char* name,
-						    MBTagType store, MBDataType type)
+                                                    MBTagType store, MBDataType type)
 {
   MBTag retval = 0;
   moab::ErrorCode result = moab_instance()->
@@ -693,12 +693,12 @@ int EBMesher::set_tag_info()
   int hex_allocated = 0;
   int hex_size = 0;
   iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-		    iMesh_HEXAHEDRON, &hex_handles,
-		    &hex_allocated, &hex_size, &err);
+                    iMesh_HEXAHEDRON, &hex_handles,
+                    &hex_allocated, &hex_size, &err);
   IBERRCHK(err, "Failed to get hexes.");
 
   iMesh_setIntArrData(m_mesh, hex_handles, m_nHex, m_elemStatusTag,
-		      &m_vnHexStatus[0], m_nHex, &err);
+                      &m_vnHexStatus[0], m_nHex, &err);
   IBERRCHK(err, "Failed to set hex element status data.");
 
   // set cut fraction info to boundary hexes
@@ -734,19 +734,19 @@ int EBMesher::set_tag_info()
       nFracSize = iter->second.fraction[j].size();
       frac_data_pointer[i] = &fractions[iFrac];
       for (k = 0; k < nFracSize; k++) {
-	fractions[iFrac++] = iter->second.fraction[j][k];
+        fractions[iFrac++] = iter->second.fraction[j][k];
       }
     }
   }  
 
   iMesh_setIntArrData(m_mesh, &hvBndrHex[0],
-		      nBndrHex, m_edgeCutFracLengthTag,
-		      frac_leng, 3*nBndrHex, &err);
+                      nBndrHex, m_edgeCutFracLengthTag,
+                      frac_leng, 3*nBndrHex, &err);
   IBERRCHK(err, "Failed to set cut fraction sizes to hex.");
 
   moab::ErrorCode rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_edgeCutFracTag),
-						   reinterpret_cast<moab::EntityHandle*> (&hvBndrHex[0]),
-						   nBndrHex, &frac_data_pointer[0], frac_size);
+                                                   reinterpret_cast<moab::EntityHandle*> (&hvBndrHex[0]),
+                                                   nBndrHex, &frac_data_pointer[0], frac_size);
   MBERRCHK(rval, mk_core()->moab_instance());
   
   delete [] frac_size;
@@ -772,108 +772,108 @@ int EBMesher::fire_rays(int dir)
 
       // get ray start and end points
       if (dir == 0) { // x coordinate ray
-	iNodeStart = j*m_nNode[dir]*m_nNode[otherDir1] + i*m_nNode[dir];
-	iNodeEnd = iNodeStart + m_nNode[dir] - 1;
-	nNodeSlice = 1;
-	index[0] = 0;
-	index[1] = i;
-	index[2] = j;
+        iNodeStart = j*m_nNode[dir]*m_nNode[otherDir1] + i*m_nNode[dir];
+        iNodeEnd = iNodeStart + m_nNode[dir] - 1;
+        nNodeSlice = 1;
+        index[0] = 0;
+        index[1] = i;
+        index[2] = j;
       }
       else if (dir == 1) { // y coordinate ray
-	iNodeStart = i*m_nNode[otherDir2]*m_nNode[dir] + j;
-	iNodeEnd = iNodeStart + m_nNode[otherDir2]*(m_nNode[dir] - 1);
-	nNodeSlice = m_nNode[otherDir2];
-	index[0] = j;
-	index[1] = 0;
-	index[2] = i;
+        iNodeStart = i*m_nNode[otherDir2]*m_nNode[dir] + j;
+        iNodeEnd = iNodeStart + m_nNode[otherDir2]*(m_nNode[dir] - 1);
+        nNodeSlice = m_nNode[otherDir2];
+        index[0] = j;
+        index[1] = 0;
+        index[2] = i;
       }
       else if (dir == 2) { // z coordinate ray
-	iNodeStart = j*m_nNode[otherDir1] + i;
-	iNodeEnd = iNodeStart + m_nNode[otherDir1]*m_nNode[otherDir2]*(m_nNode[dir] - 1);
-	nNodeSlice = m_nNode[otherDir1]*m_nNode[otherDir2];
-	index[0] = i;
-	index[1] = j;
-	index[2] = 0;
+        iNodeStart = j*m_nNode[otherDir1] + i;
+        iNodeEnd = iNodeStart + m_nNode[otherDir1]*m_nNode[otherDir2]*(m_nNode[dir] - 1);
+        nNodeSlice = m_nNode[otherDir1]*m_nNode[otherDir2];
+        index[0] = i;
+        index[1] = j;
+        index[2] = 0;
       }
       else IBERRCHK(iBase_FAILURE, "Ray direction should be 0 to 2.");
 
       for (l = 0; l < 3; l++) {
-	if (l == dir) {
-	  startPnt[l] = m_origin_coords[l];
-	  endPnt[l] = m_origin_coords[l] + m_nDiv[dir]*m_dIntervalSize[l];
-	}
-	else {
-	  startPnt[l] = m_origin_coords[l] + index[l]*m_dIntervalSize[l];
-	  endPnt[l] = startPnt[l];
-	}
+        if (l == dir) {
+          startPnt[l] = m_origin_coords[l];
+          endPnt[l] = m_origin_coords[l] + m_nDiv[dir]*m_dIntervalSize[l];
+        }
+        else {
+          startPnt[l] = m_origin_coords[l] + index[l]*m_dIntervalSize[l];
+          endPnt[l] = startPnt[l];
+        }
       }
 
       k = 0;
       m_iInter = 0;
       if (!fire_ray(nIntersect, startPnt, endPnt,
-		    tolerance, dir, rayLength)) return iBase_FAILURE;
+                    tolerance, dir, rayLength)) return iBase_FAILURE;
 
       if (nIntersect > 0) {
-	m_iFirstP = m_vIntersection[m_iInter].distance/m_dIntervalSize[dir];
-	m_dFirstP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
-	m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[dir];
-	m_dSecondP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
+        m_iFirstP = m_vIntersection[m_iInter].distance/m_dIntervalSize[dir];
+        m_dFirstP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
+        m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[dir];
+        m_dSecondP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
 
-	// set outside before the first hit
-	for (k = 0; k < m_iFirstP; k++) {
-	  m_nStatus = OUTSIDE;
-	  
-	  if (!set_neighbor_hex_status(dir, i, j, k)) {
-	    return iBase_FAILURE;
-	  }
-	}
-	
-	for (; k < m_nNode[dir] - 1;) {
-	  int i_skip = 0;
-	  m_curPnt = startPnt[dir] + (k + 1)*m_dIntervalSize[dir];
-	  EdgeStatus preStat = m_nStatus;
-	  m_nStatus = get_edge_status(m_curPnt, i_skip);
-	  m_vnEdgeStatus[dir][i*m_nDiv[dir] + j*m_nDiv[dir]*m_nDiv[otherDir1] + k] = m_nStatus;
+        // set outside before the first hit
+        for (k = 0; k < m_iFirstP; k++) {
+          m_nStatus = OUTSIDE;
+          
+          if (!set_neighbor_hex_status(dir, i, j, k)) {
+            return iBase_FAILURE;
+          }
+        }
+        
+        for (; k < m_nNode[dir] - 1;) {
+          int i_skip = 0;
+          m_curPnt = startPnt[dir] + (k + 1)*m_dIntervalSize[dir];
+          EdgeStatus preStat = m_nStatus;
+          m_nStatus = get_edge_status(m_curPnt, i_skip);
+          m_vnEdgeStatus[dir][i*m_nDiv[dir] + j*m_nDiv[dir]*m_nDiv[otherDir1] + k] = m_nStatus;
 
-	  // set status of all hexes sharing the edge
-	  if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
+          // set status of all hexes sharing the edge
+          if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
 
-	  if (m_nMove > 0) {
-	    if (m_iInter < nIntersect) {
-	      if (!move_intersections(dir, nIntersect, startPnt)) return iBase_FAILURE;
-	    }
-	    else {
-	      m_nMove = 1;
-	      if (m_nStatus == BOUNDARY && !set_edge_status(dir)) return iBase_FAILURE;
-	      k++;
-	      break; // rest is all outside
-	    }
-	  }
-	  else if (m_nStatus == BOUNDARY && !set_edge_status(dir)) return iBase_FAILURE;
-	  else if (m_nStatus == OUTSIDE && preStat == BOUNDARY) { // set outside until next hit
-	    k++;
-	    for (; k < i_skip; k++) {
-	      m_nStatus = OUTSIDE;
-	      if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
-	    }
-	  }
+          if (m_nMove > 0) {
+            if (m_iInter < nIntersect) {
+              if (!move_intersections(dir, nIntersect, startPnt)) return iBase_FAILURE;
+            }
+            else {
+              m_nMove = 1;
+              if (m_nStatus == BOUNDARY && !set_edge_status(dir)) return iBase_FAILURE;
+              k++;
+              break; // rest is all outside
+            }
+          }
+          else if (m_nStatus == BOUNDARY && !set_edge_status(dir)) return iBase_FAILURE;
+          else if (m_nStatus == OUTSIDE && preStat == BOUNDARY) { // set outside until next hit
+            k++;
+            for (; k < i_skip; k++) {
+              m_nStatus = OUTSIDE;
+              if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
+            }
+          }
 
-	  // set cut-cell edge status
-	  if (i_skip > 0) {
-	    m_prevPnt = startPnt[dir] + i_skip*m_dIntervalSize[dir];
-	    k = i_skip;
-	  }
-	  else {
-	    m_prevPnt = m_curPnt;
-	    k++;
-	  }
-	}
+          // set cut-cell edge status
+          if (i_skip > 0) {
+            m_prevPnt = startPnt[dir] + i_skip*m_dIntervalSize[dir];
+            k = i_skip;
+          }
+          else {
+            m_prevPnt = m_curPnt;
+            k++;
+          }
+        }
       }
-	
+        
       // the rest are all outside
       for (; k < m_nNode[dir] - 1; k++) {
-	m_nStatus = OUTSIDE;
-	if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
+        m_nStatus = OUTSIDE;
+        if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
       }
     }
   }
@@ -882,8 +882,8 @@ int EBMesher::fire_rays(int dir)
 }
 
 bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
-		      double endPnt[3], double tol, int dir,
-		      double rayLength)
+                      double endPnt[3], double tol, int dir,
+                      double rayLength)
 {
   m_vIntersection.clear();
   m_vhInterSurf.clear();
@@ -893,14 +893,14 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
   moab::ErrorCode rVal;
   if (m_bUseGeom) { // geometry input
     rVal = m_hObbTree->ray_intersect_sets(temp_intersects, m_vhInterSurf,
-					  m_vhInterFacet, m_hTreeRoot, tol,
-					  -1, startPnt, rayDir[dir], &rayLength);
+                                          m_vhInterFacet, m_hTreeRoot, tol,
+                                          -1, startPnt, rayDir[dir], &rayLength);
   }
   else { // facet input
     std::vector<moab::EntityHandle> dum_facets_out;
     rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, dum_facets_out,
                                                m_hTreeRoot, tol,
-					       startPnt, rayDir[dir], &rayLength);
+                                               startPnt, rayDir[dir], &rayLength);
   }
   
   nIntersect = temp_intersects.size();
@@ -924,10 +924,10 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
       m_iOverlap = 0;
 
       if (is_ray_move_and_set_overlap_surf(bMoveOnce)) {
-	if (!move_ray(nIntersect, startPnt, endPnt, tol, dir, bMoveOnce)) {
-	  std::cerr << "Number of Intersection between edges and ray should be even." << std::endl;
-	  return false;
-	}
+        if (!move_ray(nIntersect, startPnt, endPnt, tol, dir, bMoveOnce)) {
+          std::cerr << "Number of Intersection between edges and ray should be even." << std::endl;
+          return false;
+        }
       }
     }
   }
@@ -940,30 +940,30 @@ bool EBMesher::move_intersections(int n_dir, int n_inter, double start_pnt[3])
   if (m_nMove > 0) {
     if (m_iInter < n_inter) {
       if (m_nMove == 1) {
-	do {
-	  if (m_nStatus == BOUNDARY && !set_edge_status(n_dir)) return false;
-	  m_iFirstP = m_iSecondP;
-	  m_dFirstP = m_dSecondP;
-	  m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
-	  m_dSecondP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
-	}
-	while (m_dSecondP < m_curPnt && m_iInter < n_inter);
+        do {
+          if (m_nStatus == BOUNDARY && !set_edge_status(n_dir)) return false;
+          m_iFirstP = m_iSecondP;
+          m_dFirstP = m_dSecondP;
+          m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
+          m_dSecondP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
+        }
+        while (m_dSecondP < m_curPnt && m_iInter < n_inter);
       }
       else if (m_nMove == 2) {
-	do {
-	  m_iFirstP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
-	  m_dFirstP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
-	  if (m_nStatus == BOUNDARY && !set_edge_status(n_dir)) return false;
-	  if (m_iInter < n_inter) {
-	    m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
-	    m_dSecondP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
-	  }
-	  else {
-	    m_iSecondP = m_iFirstP;
-	    m_dSecondP = m_dFirstP;
-	  }
-	}
-	while (m_dSecondP < m_curPnt && m_iInter < n_inter);
+        do {
+          m_iFirstP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
+          m_dFirstP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
+          if (m_nStatus == BOUNDARY && !set_edge_status(n_dir)) return false;
+          if (m_iInter < n_inter) {
+            m_iSecondP = m_vIntersection[m_iInter].distance/m_dIntervalSize[n_dir];
+            m_dSecondP = start_pnt[n_dir] + m_vIntersection[m_iInter++].distance;
+          }
+          else {
+            m_iSecondP = m_iFirstP;
+            m_dSecondP = m_dFirstP;
+          }
+        }
+        while (m_dSecondP < m_curPnt && m_iInter < n_inter);
       }
     }
   }
@@ -978,8 +978,8 @@ bool EBMesher::is_shared_overlapped_surf(int index)
   if (m_bUseGeom) {
     hSurf = m_vhInterSurf[m_vIntersection[index].index];
     iMesh_getNumPrnt(m_mesh,
-		     reinterpret_cast<iBase_EntitySetHandle> (hSurf),
-		     1, &nParent, &err);
+                     reinterpret_cast<iBase_EntitySetHandle> (hSurf),
+                     1, &nParent, &err);
     ERRORRF("Failed to get number of surface parents.\n");
 
     if (nParent > 1) return true;
@@ -990,8 +990,8 @@ bool EBMesher::is_shared_overlapped_surf(int index)
 }
 
 void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
-				      std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge,
-				      std::vector<int>& rvnInsideCell, bool isCornerExterior)
+                                      std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge,
+                                      std::vector<int>& rvnInsideCell, bool isCornerExterior)
 {
   int i, j, err, ii, jj, kk, iHex;
   for (i = 0; i < 3; i++) {
@@ -1005,8 +1005,8 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
   int hex_allocated = 0;
   int hex_size = 0;
   iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-		    iMesh_HEXAHEDRON, &hex_handles,
-		    &hex_allocated, &hex_size, &err);
+                    iMesh_HEXAHEDRON, &hex_handles,
+                    &hex_allocated, &hex_size, &err);
   IBERRCHK(err, "Failed to get hexes.");
   
   // get hex status
@@ -1014,9 +1014,9 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
   iMesh_getIntArrData(m_mesh, hex_handles,
-		      hex_size, m_elemStatusTag,
-		      &hex_status, &hex_status_alloc,
-		      &hex_status_size, &err);
+                      hex_size, m_elemStatusTag,
+                      &hex_status, &hex_status_alloc,
+                      &hex_status_size, &err);
   IBERRCHK(err, "Failed to get hex status.");
 
   // get inside and boundary hexes
@@ -1027,7 +1027,7 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
   for (i = 0; i < hex_size; i++) {
     if (hex_status[i] == 0) { // if inside
       iHex = moab_instance()->id_from_handle(reinterpret_cast<moab::EntityHandle>
-					     (hex_handles[i])) - m_iStartHex;
+                                             (hex_handles[i])) - m_iStartHex;
       rvnInsideCell.push_back((iHex%(m_nDiv[0]*m_nDiv[1]))%m_nDiv[0]);
       rvnInsideCell.push_back((iHex%(m_nDiv[0]*m_nDiv[1]))/m_nDiv[0]);
       rvnInsideCell.push_back(iHex/m_nDiv[0]/m_nDiv[1]);
@@ -1038,7 +1038,7 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
     else IBERRCHK(err, "Element status should be one of inside/outside/boundary."); 
   }
   std::cout << "# of inside, outside, boundary elem: " << nInside
-	    << ", " << nOutside << ", " << nBoundary << std::endl;
+            << ", " << nOutside << ", " << nBoundary << std::endl;
 
   // get cut-cell fractions
   double dFrac[4];
@@ -1138,8 +1138,8 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
 }
 
 bool EBMesher::get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
-				     std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellEdge,
-				     std::vector<int>& rvnInsideCell, bool isCornerExterior)
+                                     std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellEdge,
+                                     std::vector<int>& rvnInsideCell, bool isCornerExterior)
 {
   int i, ii, jj, kk, iHex;
   for (i = 0; i < 3; i++) {
@@ -1182,8 +1182,8 @@ bool EBMesher::get_inside_hex(std::vector<int>& rvnInsideCell)
   int hex_allocated = 0;
   int hex_size = 0;
   iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-		    iMesh_HEXAHEDRON, &hex_handles,
-		    &hex_allocated, &hex_size, &err);
+                    iMesh_HEXAHEDRON, &hex_handles,
+                    &hex_allocated, &hex_size, &err);
   ERRORRF("Failed to get hexes.\n");
   
   // get hex status
@@ -1191,9 +1191,9 @@ bool EBMesher::get_inside_hex(std::vector<int>& rvnInsideCell)
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
   iMesh_getIntArrData(m_mesh, hex_handles,
-		      hex_size, m_elemStatusTag,
-		      &hex_status, &hex_status_alloc,
-		      &hex_status_size, &err);
+                      hex_size, m_elemStatusTag,
+                      &hex_status, &hex_status_alloc,
+                      &hex_status_size, &err);
   ERRORRF("Failed to get hex status.\n");
 
   // get inside and boundary hexes
@@ -1204,7 +1204,7 @@ bool EBMesher::get_inside_hex(std::vector<int>& rvnInsideCell)
   for (i = 0; i < hex_size; i++) {
     if (hex_status[i] == 0) { // if inside
       iHex = moab_instance()->id_from_handle(reinterpret_cast<moab::EntityHandle>
-					     (hex_handles[i])) - m_iStartHex;
+                                             (hex_handles[i])) - m_iStartHex;
       rvnInsideCell.push_back((iHex%(m_nDiv[0]*m_nDiv[1]))%m_nDiv[0]);
       rvnInsideCell.push_back((iHex%(m_nDiv[0]*m_nDiv[1]))/m_nDiv[0]);
       rvnInsideCell.push_back(iHex/m_nDiv[0]/m_nDiv[1]);
@@ -1215,7 +1215,7 @@ bool EBMesher::get_inside_hex(std::vector<int>& rvnInsideCell)
     else ERRORRF("Element status should be one of inside/outside/boundary.\n"); 
   }
   std::cout << "# of inside, outside, boundary elem: " << nInside
-	    << ", " << nOutside << ", " << nBoundary << std::endl;
+            << ", " << nOutside << ", " << nBoundary << std::endl;
 
   free(hex_handles);
   free(hex_status);
@@ -1238,116 +1238,116 @@ bool EBMesher::export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<d
     
     if (itr->first.l == 0) {
       if (edges[0] > 0. && edges[0] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1] + edges[0]*m_dIntervalSize[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1] + edges[0]*m_dIntervalSize[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[1] > 0. && edges[1] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1] + m_dIntervalSize[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2] + edges[1]*m_dIntervalSize[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1] + m_dIntervalSize[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2] + edges[1]*m_dIntervalSize[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[2] > 0. && edges[2] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2] + m_dIntervalSize[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1] + edges[2]*m_dIntervalSize[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2] + m_dIntervalSize[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1] + edges[2]*m_dIntervalSize[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[3] > 0. && edges[3] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2] + edges[3]*m_dIntervalSize[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2] + edges[3]*m_dIntervalSize[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
     }
     if (itr->first.l == 1) {
       if (edges[0] > 0. && edges[0] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0] + edges[0]*m_dIntervalSize[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0] + edges[0]*m_dIntervalSize[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[1] > 0. && edges[1] < 1.) {
-	ePnt[0] = curPnt[0] + m_dIntervalSize[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2] + edges[1]*m_dIntervalSize[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0] + m_dIntervalSize[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2] + edges[1]*m_dIntervalSize[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[2] > 0. && edges[2] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2] + m_dIntervalSize[2];
-	ePnt[3] = ePnt[0] + edges[2]*m_dIntervalSize[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2] + m_dIntervalSize[2];
+        ePnt[3] = ePnt[0] + edges[2]*m_dIntervalSize[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[3] > 0. && edges[3] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2] + edges[3]*m_dIntervalSize[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2] + edges[3]*m_dIntervalSize[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
     }
     if (itr->first.l == 2) {
       if (edges[0] > 0. && edges[0] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0] + edges[0]*m_dIntervalSize[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0] + edges[0]*m_dIntervalSize[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[1] > 0. && edges[1] < 1.) {
-	ePnt[0] = curPnt[0] + m_dIntervalSize[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1] + edges[1]*m_dIntervalSize[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0] + m_dIntervalSize[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1] + edges[1]*m_dIntervalSize[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[2] > 0. && edges[2] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1] + m_dIntervalSize[2];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0] + edges[2]*m_dIntervalSize[0];
-	ePnt[4] = ePnt[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1] + m_dIntervalSize[2];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0] + edges[2]*m_dIntervalSize[0];
+        ePnt[4] = ePnt[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
       if (edges[3] > 0. && edges[3] < 1.) {
-	ePnt[0] = curPnt[0];
-	ePnt[1] = curPnt[1];
-	ePnt[2] = curPnt[2];
-	ePnt[3] = ePnt[0];
-	ePnt[4] = ePnt[1] + edges[3]*m_dIntervalSize[1];
-	ePnt[5] = ePnt[2];
-	if (!make_edge(ePnt, edge_handles)) return false;
+        ePnt[0] = curPnt[0];
+        ePnt[1] = curPnt[1];
+        ePnt[2] = curPnt[2];
+        ePnt[3] = ePnt[0];
+        ePnt[4] = ePnt[1] + edges[3]*m_dIntervalSize[1];
+        ePnt[5] = ePnt[2];
+        if (!make_edge(ePnt, edge_handles)) return false;
       }
     }
   }
@@ -1362,7 +1362,7 @@ bool EBMesher::export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<d
   IBERRCHK(err, "Couldn't add edges to set.");
   
   moab::ErrorCode rval = moab_instance()->write_mesh("edges.vtk",
-						 (const moab::EntityHandle*) &set, 1);
+                                                 (const moab::EntityHandle*) &set, 1);
   MBERRCHK(rval, mk_core()->moab_instance());
 
   return true;
@@ -1387,14 +1387,14 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
     for (i = 0; i < nFrc; i++) {
       frac = itr->second[i];
       if (frac > 0. && frac < 1.) {
-	for (j = 0; j < 3; j++) {
-	  if (j == dir) fracPnt[j] = curPnt[j] + frac*m_dIntervalSize[j];
-	  else fracPnt[j] = curPnt[j];
-	}
-	iMesh_createVtx(m_mesh, fracPnt[0], fracPnt[1], fracPnt[2],
-			&v_handle, &err);
-	IBERRCHK(err, "Couldn't create vertex.");
-	vertex_handles.push_back(v_handle);
+        for (j = 0; j < 3; j++) {
+          if (j == dir) fracPnt[j] = curPnt[j] + frac*m_dIntervalSize[j];
+          else fracPnt[j] = curPnt[j];
+        }
+        iMesh_createVtx(m_mesh, fracPnt[0], fracPnt[1], fracPnt[2],
+                        &v_handle, &err);
+        IBERRCHK(err, "Couldn't create vertex.");
+        vertex_handles.push_back(v_handle);
       }
     }
   }
@@ -1410,7 +1410,7 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
   IBERRCHK(err, "Couldn't add vertices to set.");
   
   result = moab_instance()->write_mesh("frac_vertices.vtk",
-				       (const moab::EntityHandle*) &set, 1);
+                                       (const moab::EntityHandle*) &set, 1);
   if (MB_SUCCESS != result) {
     std::cerr << "Failed to write fraction vertices." << std::endl;
     return false;
@@ -1428,13 +1428,13 @@ bool EBMesher::make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_h
   iBase_EntityHandle* pVertexHandle = &vertex_handle[0];
 
   iMesh_createVtxArr(m_mesh, 2,
-		     iBase_INTERLEAVED, ePnt, 6,
-		     &pVertexHandle,
-		     &vertex_alloc, &vertex_size, &err);
+                     iBase_INTERLEAVED, ePnt, 6,
+                     &pVertexHandle,
+                     &vertex_alloc, &vertex_size, &err);
   ERRORRF("Failed to create vertices.\n");
 
   iMesh_createEnt(m_mesh, iMesh_LINE_SEGMENT, &vertex_handle[0], 2,
-		  &edge_handle, &status, &err);
+                  &edge_handle, &status, &err);
   ERRORRF("Failed to create edge.\n");
 
   edge_handles.push_back(edge_handle);
@@ -1481,7 +1481,7 @@ double EBMesher::get_uncut_edge_fraction(int i, int j, int k, int dir)
 
 #ifdef HAVE_MOAB
 bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
-		      double tol, int dir, bool bSpecialCase)
+                      double tol, int dir, bool bSpecialCase)
 {
   //int i, nIteration;
   int i;
@@ -1493,19 +1493,19 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
     if (m_nIteration > 10) {
       if (bSpecialCase) return true; // special case
       else if (m_bUseGeom) { // shared/overlapped, faceting case
-	m_mhOverlappedSurf[m_iOverlap] = 0;
-	m_mhOverlappedSurf[m_iOverlap + 1] = 0;
+        m_mhOverlappedSurf[m_iOverlap] = 0;
+        m_mhOverlappedSurf[m_iOverlap + 1] = 0;
         return true;
       }
       else {
-	return false;
+        return false;
       }
     }
 
     for (i = 0; i < 3; i++) {
       if (i != dir) {
-	startPnt[i] += tol;
-	endPnt[i] += tol;
+        startPnt[i] += tol;
+        endPnt[i] += tol;
       }
     }
 
@@ -1520,14 +1520,14 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
     std::vector<double> temp_intersects;
     if (m_bUseGeom) {
       rVal = m_hObbTree->ray_intersect_sets(temp_intersects, m_vhInterSurf,
-					    m_vhInterFacet, m_hTreeRoot, tol,
-					    -1, startPnt, ray.array(), &rayLength);
+                                            m_vhInterFacet, m_hTreeRoot, tol,
+                                            -1, startPnt, ray.array(), &rayLength);
     }
     else { // facet input
       std::vector<moab::EntityHandle> dum_facets_out;
       rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, dum_facets_out,
-						 m_hTreeRoot, tol,
-						 startPnt, ray.array(), &rayLength);
+                                                 m_hTreeRoot, tol,
+                                                 startPnt, ray.array(), &rayLength);
       m_vhInterSurf.resize(temp_intersects.size());
     }
 
@@ -1560,38 +1560,38 @@ bool EBMesher::is_ray_move_and_set_overlap_surf(bool& bSpecialCase)
   while (m_iOverlap < nInter) {
     if (m_vIntersection[m_iOverlap + 1].distance - m_vIntersection[m_iOverlap].distance < 1e-7) {
       if (m_bUseGeom) {
-	moab::EntityHandle h1 = m_vhInterSurf[m_vIntersection[m_iOverlap].index];
-	moab::EntityHandle h2 = m_vhInterSurf[m_vIntersection[m_iOverlap + 1].index];
-	
-	if (h1 == h2) { // remove too close case
-	  bSpecialCase = false;
-	  return true;
-	}
-	else if (m_nIteration < 10) { // when ray intesect shared edge by 2 triangles
-	  bSpecialCase = true;
-	  return true;
-	}
-	else { // overlapped surfaces
-	  m_mhOverlappedSurf[h1] = 0;
-	  m_mhOverlappedSurf[h2] = 0;
-	  m_nIteration = 0;
-	  m_iOverlap++;
-	}
+        moab::EntityHandle h1 = m_vhInterSurf[m_vIntersection[m_iOverlap].index];
+        moab::EntityHandle h2 = m_vhInterSurf[m_vIntersection[m_iOverlap + 1].index];
+        
+        if (h1 == h2) { // remove too close case
+          bSpecialCase = false;
+          return true;
+        }
+        else if (m_nIteration < 10) { // when ray intesect shared edge by 2 triangles
+          bSpecialCase = true;
+          return true;
+        }
+        else { // overlapped surfaces
+          m_mhOverlappedSurf[h1] = 0;
+          m_mhOverlappedSurf[h2] = 0;
+          m_nIteration = 0;
+          m_iOverlap++;
+        }
       }
       else {
-	if (m_nIteration < 10) { // when ray intesect shared edge by 2 triangles
-	  bSpecialCase = true;
-	  return true;
-	}
-	else { // overlapped surfaces
-	  //bSpecialCase = false;
-	  //m_nIteration = 0;
-	  //m_iOverlap++;
-	  m_vIntersection.erase(m_vIntersection.begin() + m_iOverlap + 1);
-	  nInter = m_vIntersection.size();
-	  m_vhInterSurf.resize(nInter);
-	  //m_nIteration = 0;
-	}
+        if (m_nIteration < 10) { // when ray intesect shared edge by 2 triangles
+          bSpecialCase = true;
+          return true;
+        }
+        else { // overlapped surfaces
+          //bSpecialCase = false;
+          //m_nIteration = 0;
+          //m_iOverlap++;
+          m_vIntersection.erase(m_vIntersection.begin() + m_iOverlap + 1);
+          nInter = m_vIntersection.size();
+          m_vhInterSurf.resize(nInter);
+          //m_nIteration = 0;
+        }
       }
     }
     else m_iOverlap++;
@@ -1621,17 +1621,17 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
   int hex_allocated = 0;
   int hex_size = 0;
   iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-		    iMesh_HEXAHEDRON, &hex_handles,
-		    &hex_allocated, &hex_size, &err);
+                    iMesh_HEXAHEDRON, &hex_handles,
+                    &hex_allocated, &hex_size, &err);
   ERRORRF("Failed to get hexes.\n"); 
 
   int* hex_status = new int[hex_size];
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
   iMesh_getIntArrData(m_mesh, hex_handles,
-		      hex_size, m_elemStatusTag,
-		      &hex_status, &hex_status_alloc,
-		      &hex_status_size, &err);
+                      hex_size, m_elemStatusTag,
+                      &hex_status, &hex_status_alloc,
+                      &hex_status_size, &err);
   ERRORRF("Failed to get hex status.\n");
 
   for (n = 0; n < hex_status_size; n++) {
@@ -1640,245 +1640,245 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
       std::map<moab::EntityHandle, VolFrac>::iterator vf_iter;
       std::map<moab::EntityHandle, VolFrac>::iterator vf_end_iter;
       iHex = moab_instance()->id_from_handle(reinterpret_cast<moab::EntityHandle>
-					     (hex_handles[n])) - m_iStartHex;
+                                             (hex_handles[n])) - m_iStartHex;
       index[0] = (iHex%(m_nDiv[0]*m_nDiv[1]))%m_nDiv[0];
       index[1] = (iHex%(m_nDiv[0]*m_nDiv[1]))/m_nDiv[0];
       index[2] = iHex/m_nDiv[0]/m_nDiv[1];
       
       for (i = 0; i < 3; i++) {
-	elem_origin[i] = m_origin_coords[i] + index[i]*m_dIntervalSize[i];
-	elem_interval_size[i] = m_dIntervalSize[i]/vol_frac_div;
+        elem_origin[i] = m_origin_coords[i] + index[i]*m_dIntervalSize[i];
+        elem_interval_size[i] = m_dIntervalSize[i]/vol_frac_div;
       }
       
       for (dir = 0; dir < 3; dir++) { // x, y, z directions
-	otherDir1 = (dir + 1)%3;
-	otherDir2 = (dir + 2)%3;
-	
-	for (j = 0; j < vol_frac_div + 1; j++) {
-	  for (i = 0; i < vol_frac_div + 1; i++) {
-	    // get ray start and end points
-	    if (dir == 0) { // x coordinate ray
-	      rayIndex[0] = 0;
-	      rayIndex[1] = i;
-	      rayIndex[2] = j;
-	    }
-	    else if (dir == 1) { // y coordinate ray
-	      rayIndex[0] = j;
-	      rayIndex[1] = 0;
-	      rayIndex[2] = i;
-	    }
-	    else if (dir == 2) { // z coordinate ray
-	      rayIndex[0] = i;
-	      rayIndex[1] = j;
-	      rayIndex[2] = 0;
-	    }
-	    else IBERRCHK(iBase_FAILURE, "Ray direction should be from 0 to 2.");
-	    
-	    for (k = 0; k < 3; k++) {
-	      if (k == dir) {
-		startPnt[k] = elem_origin[k];
-		endPnt[k] = startPnt[k] + m_dIntervalSize[k];
-	      }
-	      else {
-		startPnt[k] = elem_origin[k] + rayIndex[k]*elem_interval_size[k];
-		endPnt[k] = startPnt[k];
-	      }
-	    }
-	    
-	    // ray-tracing
-	    if (!fire_ray(nIntersect, startPnt, endPnt,
-			  tolerance, dir, m_dIntervalSize[dir])) return iBase_FAILURE;
-	    
-	    if (nIntersect > 0) { // ray is intersected
-	      bOverlapSecond = false;
-	      bClosed = true;
-	      for (k = 0; k < nIntersect; k++) {
-		std::vector<moab::EntityHandle> parents;
-		//MBRange parents;
-		rval = moab_instance()->get_parent_meshsets(m_vhInterSurf[m_vIntersection[k].index],
-							    parents);
-		if (rval != MB_SUCCESS) {
-		  std::cerr << "Couldn't get parents." << std::endl;
-		  return false;
-		}
+        otherDir1 = (dir + 1)%3;
+        otherDir2 = (dir + 2)%3;
+        
+        for (j = 0; j < vol_frac_div + 1; j++) {
+          for (i = 0; i < vol_frac_div + 1; i++) {
+            // get ray start and end points
+            if (dir == 0) { // x coordinate ray
+              rayIndex[0] = 0;
+              rayIndex[1] = i;
+              rayIndex[2] = j;
+            }
+            else if (dir == 1) { // y coordinate ray
+              rayIndex[0] = j;
+              rayIndex[1] = 0;
+              rayIndex[2] = i;
+            }
+            else if (dir == 2) { // z coordinate ray
+              rayIndex[0] = i;
+              rayIndex[1] = j;
+              rayIndex[2] = 0;
+            }
+            else IBERRCHK(iBase_FAILURE, "Ray direction should be from 0 to 2.");
+            
+            for (k = 0; k < 3; k++) {
+              if (k == dir) {
+                startPnt[k] = elem_origin[k];
+                endPnt[k] = startPnt[k] + m_dIntervalSize[k];
+              }
+              else {
+                startPnt[k] = elem_origin[k] + rayIndex[k]*elem_interval_size[k];
+                endPnt[k] = startPnt[k];
+              }
+            }
+            
+            // ray-tracing
+            if (!fire_ray(nIntersect, startPnt, endPnt,
+                          tolerance, dir, m_dIntervalSize[dir])) return iBase_FAILURE;
+            
+            if (nIntersect > 0) { // ray is intersected
+              bOverlapSecond = false;
+              bClosed = true;
+              for (k = 0; k < nIntersect; k++) {
+                std::vector<moab::EntityHandle> parents;
+                //MBRange parents;
+                rval = moab_instance()->get_parent_meshsets(m_vhInterSurf[m_vIntersection[k].index],
+                                                            parents);
+                if (rval != MB_SUCCESS) {
+                  std::cerr << "Couldn't get parents." << std::endl;
+                  return false;
+                }
 
-		nParent = parents.size();
-		dDistance = m_vIntersection[k].distance;
-		
-		if (is_shared_overlapped_surf(k)) {
-		  if (nParent == 2) { // shared surface
-		    for (l = 0; l < 2; l++) {
-		      if (l == 1) {
-			dDistance *= -1.;
-			bClosed = false;
-		      }
-		      else bClosed = true;
+                nParent = parents.size();
+                dDistance = m_vIntersection[k].distance;
+                
+                if (is_shared_overlapped_surf(k)) {
+                  if (nParent == 2) { // shared surface
+                    for (l = 0; l < 2; l++) {
+                      if (l == 1) {
+                        dDistance *= -1.;
+                        bClosed = false;
+                      }
+                      else bClosed = true;
 
-		      vf_iter = vol_fraction.find(parents[l]);
-		      if (vf_iter == vol_fraction.end()) {
-			VolFrac temp_vf(dDistance, bClosed);
-			vol_fraction[parents[l]] = temp_vf;
-			//std::cout << "iHex=" << iHex << ", vh="
-			//  << parents[l] << ", dir=" << dir << ", dDistance1="
-			//  << dDistance << ", vol="
-			//  << temp_vf.vol << std::endl;
-		      }
-		      else {
-			vf_iter->second.vol += dDistance;
-			vf_iter->second.closed = bClosed;
-			//std::cout << "iHex=" << iHex << ", vh="
-			//  << vf_iter->first << ", dir=" << dir << ", dDistance1="
-			//  << dDistance << ", vol="
-			//  << vf_iter->second.vol << std::endl;
-		      }
-		    }
-		  }
-		  else if (nParent == 1) { // overlapped surface
-		    if (bOverlapSecond) { // second intersection
-		      /*
-		      for (int m = 0; m < 3; m++) {
-			ePnt[m] = startPnt[m];
-		      }
-		      ePnt[dir] += dDistance;
-		      */
-		      dDistance *= -1.;
-		      bClosed = false;
-		      bOverlapSecond = false;
-		    }
-		    else {
-		      /*
-		      // make edge
-		      for (int m = 0; m < 3; m++) {
-			if (bClosed) ePnt[m] = startPnt[m];
-			ePnt[m + 3] = ePnt[m];
-		      }
-		      ePnt[dir + 3] += dDistance;
-		      if (!make_edge(ePnt, edge_handles)) return iBase_FAILURE;
-		      */
-		      bOverlapSecond = true;// first intersection
-		      bClosed = true;
-		    }
-		    
-		    vf_iter = vol_fraction.find(parents[0]);
-		    if (vf_iter == vol_fraction.end()) {
-		      VolFrac temp_vf(dDistance, bClosed);
-		      vol_fraction[parents[0]] = temp_vf;
-		      //std::cout << "iHex=" << iHex << ", vh="
-		      //	<< parents[0] << ", dDistance2="
-		      //	<< dDistance << ", vol="
-		      //	<< temp_vf.vol << std::endl;
-		    }
-		    else {
-		      vf_iter->second.vol += dDistance;
-		      vf_iter->second.closed = bClosed;
-		      //std::cout << "iHex=" << iHex << ", vh="
-		      //	<< vf_iter->first << ", dir=" << dir << ", dDistance2="
-		      //	<< dDistance << ", vol="
-		      //	<< vf_iter->second.vol << std::endl;
-		    }
-		  }
-		  else return iBase_FAILURE;
-		}
-		else { // normal case
-		  if (nParent != 1) return iBase_FAILURE;
+                      vf_iter = vol_fraction.find(parents[l]);
+                      if (vf_iter == vol_fraction.end()) {
+                        VolFrac temp_vf(dDistance, bClosed);
+                        vol_fraction[parents[l]] = temp_vf;
+                        //std::cout << "iHex=" << iHex << ", vh="
+                        //  << parents[l] << ", dir=" << dir << ", dDistance1="
+                        //  << dDistance << ", vol="
+                        //  << temp_vf.vol << std::endl;
+                      }
+                      else {
+                        vf_iter->second.vol += dDistance;
+                        vf_iter->second.closed = bClosed;
+                        //std::cout << "iHex=" << iHex << ", vh="
+                        //  << vf_iter->first << ", dir=" << dir << ", dDistance1="
+                        //  << dDistance << ", vol="
+                        //  << vf_iter->second.vol << std::endl;
+                      }
+                    }
+                  }
+                  else if (nParent == 1) { // overlapped surface
+                    if (bOverlapSecond) { // second intersection
+                      /*
+                      for (int m = 0; m < 3; m++) {
+                        ePnt[m] = startPnt[m];
+                      }
+                      ePnt[dir] += dDistance;
+                      */
+                      dDistance *= -1.;
+                      bClosed = false;
+                      bOverlapSecond = false;
+                    }
+                    else {
+                      /*
+                      // make edge
+                      for (int m = 0; m < 3; m++) {
+                        if (bClosed) ePnt[m] = startPnt[m];
+                        ePnt[m + 3] = ePnt[m];
+                      }
+                      ePnt[dir + 3] += dDistance;
+                      if (!make_edge(ePnt, edge_handles)) return iBase_FAILURE;
+                      */
+                      bOverlapSecond = true;// first intersection
+                      bClosed = true;
+                    }
+                    
+                    vf_iter = vol_fraction.find(parents[0]);
+                    if (vf_iter == vol_fraction.end()) {
+                      VolFrac temp_vf(dDistance, bClosed);
+                      vol_fraction[parents[0]] = temp_vf;
+                      //std::cout << "iHex=" << iHex << ", vh="
+                      //        << parents[0] << ", dDistance2="
+                      //        << dDistance << ", vol="
+                      //        << temp_vf.vol << std::endl;
+                    }
+                    else {
+                      vf_iter->second.vol += dDistance;
+                      vf_iter->second.closed = bClosed;
+                      //std::cout << "iHex=" << iHex << ", vh="
+                      //        << vf_iter->first << ", dir=" << dir << ", dDistance2="
+                      //        << dDistance << ", vol="
+                      //        << vf_iter->second.vol << std::endl;
+                    }
+                  }
+                  else return iBase_FAILURE;
+                }
+                else { // normal case
+                  if (nParent != 1) return iBase_FAILURE;
 
-		  if (!is_same_direct_to_ray(k, dir)) {
-		    dDistance *= -1.; // outside
-		    bClosed = false;
-		  }
-		  else bClosed = true;
-		  
-		  vf_iter = vol_fraction.find(parents[0]);
-		  if (vf_iter == vol_fraction.end()) {
-		    VolFrac temp_vf(dDistance, bClosed);
-		    vol_fraction[parents[0]] = temp_vf;
-		    //std::cout << "iHex=" << iHex << ", vh="
-		    //      << parents[0] << ", dir=" << dir << ", dDistance3="
-		    //      << dDistance << ", vol="
-		    //      << temp_vf.vol << std::endl;
-		  }
-		  else {
-		    vf_iter->second.vol += dDistance;
-		    vf_iter->second.closed = bClosed;
-		    //std::cout << "iHex=" << iHex << ", vh="
-		    //      << vf_iter->first << ", dir=" << dir << ", dDistance3="
-		    //      << dDistance << ", vol="
-		    //      << vf_iter->second.vol << std::endl;
-		  }
-		}
-	      }
+                  if (!is_same_direct_to_ray(k, dir)) {
+                    dDistance *= -1.; // outside
+                    bClosed = false;
+                  }
+                  else bClosed = true;
+                  
+                  vf_iter = vol_fraction.find(parents[0]);
+                  if (vf_iter == vol_fraction.end()) {
+                    VolFrac temp_vf(dDistance, bClosed);
+                    vol_fraction[parents[0]] = temp_vf;
+                    //std::cout << "iHex=" << iHex << ", vh="
+                    //      << parents[0] << ", dir=" << dir << ", dDistance3="
+                    //      << dDistance << ", vol="
+                    //      << temp_vf.vol << std::endl;
+                  }
+                  else {
+                    vf_iter->second.vol += dDistance;
+                    vf_iter->second.closed = bClosed;
+                    //std::cout << "iHex=" << iHex << ", vh="
+                    //      << vf_iter->first << ", dir=" << dir << ", dDistance3="
+                    //      << dDistance << ", vol="
+                    //      << vf_iter->second.vol << std::endl;
+                  }
+                }
+              }
 
-	      // if fraction is not closed, add interval size to close
-	      vf_iter = vol_fraction.begin();
-	      vf_end_iter = vol_fraction.end();
-	      for (; vf_iter != vf_end_iter; vf_iter++) {
-		if (!vf_iter->second.closed) {
-		  vf_iter->second.vol += m_dIntervalSize[dir];
-		  vf_iter->second.closed = true;
-		  /*
-		  for (int m = 0; m < 3; m++) {
-		    ePnt[m + 3] = startPnt[m];
-		  }
-		  ePnt[dir + 3] += m_dIntervalSize[dir];
-		  if (!make_edge(ePnt, edge_handles)) return iBase_FAILURE;
-		  */
-		  //std::cout << "iHex=" << iHex << ", vh="
-		  //    << vf_iter->first << ", dir=" << dir << ", dDistance4="
-		  //    << m_dIntervalSize[dir] << ", vol="
-		  //    << vf_iter->second.vol << std::endl;
-		}
-	      }
-	    }
-	    else { // decide if it is fully inside
-	      if (!fire_ray(nIntersect, startPnt, rayMaxEnd,
-			    tolerance, dir, m_nDiv[dir]*m_dIntervalSize[dir])) return iBase_FAILURE;
-	      
-	      if (nIntersect > 0) { // fully inside
-		if (is_shared_overlapped_surf(0) || // shared or overlapped
-		    is_same_direct_to_ray(0, dir)) { // other inside case
-		  MBRange parents;
-		  rval = moab_instance()->get_parent_meshsets(m_vhInterSurf[m_vIntersection[0].index],
-							      parents);
-		  if (rval != MB_SUCCESS) {
-		    std::cerr << "Couldn't get parents." << std::endl;
-		    return false;
-		  }
+              // if fraction is not closed, add interval size to close
+              vf_iter = vol_fraction.begin();
+              vf_end_iter = vol_fraction.end();
+              for (; vf_iter != vf_end_iter; vf_iter++) {
+                if (!vf_iter->second.closed) {
+                  vf_iter->second.vol += m_dIntervalSize[dir];
+                  vf_iter->second.closed = true;
+                  /*
+                  for (int m = 0; m < 3; m++) {
+                    ePnt[m + 3] = startPnt[m];
+                  }
+                  ePnt[dir + 3] += m_dIntervalSize[dir];
+                  if (!make_edge(ePnt, edge_handles)) return iBase_FAILURE;
+                  */
+                  //std::cout << "iHex=" << iHex << ", vh="
+                  //    << vf_iter->first << ", dir=" << dir << ", dDistance4="
+                  //    << m_dIntervalSize[dir] << ", vol="
+                  //    << vf_iter->second.vol << std::endl;
+                }
+              }
+            }
+            else { // decide if it is fully inside
+              if (!fire_ray(nIntersect, startPnt, rayMaxEnd,
+                            tolerance, dir, m_nDiv[dir]*m_dIntervalSize[dir])) return iBase_FAILURE;
+              
+              if (nIntersect > 0) { // fully inside
+                if (is_shared_overlapped_surf(0) || // shared or overlapped
+                    is_same_direct_to_ray(0, dir)) { // other inside case
+                  MBRange parents;
+                  rval = moab_instance()->get_parent_meshsets(m_vhInterSurf[m_vIntersection[0].index],
+                                                              parents);
+                  if (rval != MB_SUCCESS) {
+                    std::cerr << "Couldn't get parents." << std::endl;
+                    return false;
+                  }
 
-		  moab::EntityHandle parent_entity = parents.pop_front();
-		  vf_iter = vol_fraction.find(parent_entity);
-		  if (vf_iter == vf_end_iter) {
-		    VolFrac temp_vf(m_dIntervalSize[dir], true);
-		    vol_fraction[parent_entity] = temp_vf;
-		    //std::cout << "iHex=" << iHex << ", vh="
-		    //      << parents[0] << ", dir=" << dir << ", dDistance5="
-		    //      << dDistance << ", vol="
-		    //      << temp_vf.vol << std::endl;
-		  }
-		  else {
-		    vf_iter->second.vol += m_dIntervalSize[dir];
-		    vf_iter->second.closed = bClosed;
-		    //std::cout << "iHex=" << iHex << ", vh="
-		    //      << vf_iter->first << ", dir=" << dir << ", dDistance5="
-		    //      << dDistance << ", vol="
-		    //      << vf_iter->second.vol << std::endl;
-		  }
-		}
-	      }
-	    }
-	  }
-	}
+                  moab::EntityHandle parent_entity = parents.pop_front();
+                  vf_iter = vol_fraction.find(parent_entity);
+                  if (vf_iter == vf_end_iter) {
+                    VolFrac temp_vf(m_dIntervalSize[dir], true);
+                    vol_fraction[parent_entity] = temp_vf;
+                    //std::cout << "iHex=" << iHex << ", vh="
+                    //      << parents[0] << ", dir=" << dir << ", dDistance5="
+                    //      << dDistance << ", vol="
+                    //      << temp_vf.vol << std::endl;
+                  }
+                  else {
+                    vf_iter->second.vol += m_dIntervalSize[dir];
+                    vf_iter->second.closed = bClosed;
+                    //std::cout << "iHex=" << iHex << ", vh="
+                    //      << vf_iter->first << ", dir=" << dir << ", dDistance5="
+                    //      << dDistance << ", vol="
+                    //      << vf_iter->second.vol << std::endl;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
       /*
       vf_iter = vol_fraction.begin();
       vf_end_iter = vol_fraction.end();
       for (; vf_iter != vf_end_iter; vf_iter++) {
-	std::cout << "iHex=" << iHex << ", i=" << index[0]
-		  << ", j=" << index[1] << ", k=" << index[2]
-		  << ", vol_handle=" << vf_iter->first
-		  << ", vol=" << vf_iter->second.vol
-		  << ", vol_fraction=" << vf_iter->second.vol/dTotEdgeElem
-		  << std::endl;
-		  }*/
+        std::cout << "iHex=" << iHex << ", i=" << index[0]
+                  << ", j=" << index[1] << ", k=" << index[2]
+                  << ", vol_handle=" << vf_iter->first
+                  << ", vol=" << vf_iter->second.vol
+                  << ", vol_fraction=" << vf_iter->second.vol/dTotEdgeElem
+                  << std::endl;
+                  }*/
     }
   }  
 
@@ -1897,7 +1897,7 @@ bool EBMesher::is_same_direct_to_ray(int i, int dir)
 
   // get triangle normal vector
   moab::ErrorCode rval = moab_instance()->get_connectivity(m_vhInterFacet[m_vIntersection[i].index],
-						       conn, len);
+                                                           conn, len);
   assert(MB_SUCCESS == rval && 3 == len);
   
   rval = moab_instance()->get_coords(conn, 3, coords[0].array());

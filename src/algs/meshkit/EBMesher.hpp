@@ -95,12 +95,12 @@ struct LessThan
       if (key1.j < key2.j) return true;
       else if (key1.j > key2.j) return false;
       else {
-	if (key1.k < key2.k) return true;
-	else if (key1.k > key2.k) return false;
-	else {
-	  if (key1.l < key2.l) return true;
-	  else return false;
-	}
+        if (key1.k < key2.k) return true;
+        else if (key1.k > key2.k) return false;
+        else {
+          if (key1.l < key2.l) return true;
+          else return false;
+        }
       }
     }
   };
@@ -125,8 +125,8 @@ public:
 
     //! Bare constructor
   EBMesher(MKCore *mkcore, const MEntVector &me_vec,
-	   double size = -1., bool use_geom = true,
-	   int add_layer = 3);
+           double size = -1., bool use_geom = true,
+           int add_layer = 3);
   
     //! Destructor
   virtual ~EBMesher();
@@ -188,8 +188,8 @@ public:
    * \param isCornerExterior if box corner is exterior returned
    */
   void get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDiv,
-				std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge,
-				std::vector<int>& rvnInsideCell, bool isCornerExterior = true);
+                                std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge,
+                                std::vector<int>& rvnInsideCell, bool isCornerExterior = true);
   
   /** \brief query function to get multiple cut-cell edges
    * \param boxMin Cartesian box min coordinates returned
@@ -201,8 +201,8 @@ public:
    * \return if this function is working correctly
    */
   bool get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
-			  std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellEdge,
-			  std::vector<int>& rvnInsideCell, bool isCornerExterior = true);
+                          std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellEdge,
+                          std::vector<int>& rvnInsideCell, bool isCornerExterior = true);
   
   /** \brief get volume fraction for each material
    * \param vol_frac_div resolution to get volume fraction
@@ -293,7 +293,7 @@ private:
    * \return int if is working correctly
    */
   int write_mesh(const char* file_name, int type,
-		 iBase_EntityHandle* handles, int& n_elem);
+                 iBase_EntityHandle* handles, int& n_elem);
 
   /** \brief get edge fraction information
    * \param idHex index in m_mdCutFraction
@@ -366,7 +366,7 @@ private:
    * \return Tag handle
    */
   iBase_TagHandle get_tag(const char* name, int size, MBTagType store, MBDataType type,
-			  const void* def_value = NULL, bool create_if_missing = true);
+                          const void* def_value = NULL, bool create_if_missing = true);
   
   /** \brief get MOAB's various length Tag
    * \param name Tag name
@@ -375,7 +375,7 @@ private:
    * \return Tag handle
    */
   iBase_TagHandle get_various_length_tag(const char* name,
-					 MBTagType store, MBDataType type);
+                                         MBTagType store, MBDataType type);
 
   /** \brief construct hexes in MOAB structured mesh format
    * \return int if is working correctly
@@ -420,8 +420,8 @@ private:
    * \return bool if is working correctly
    */
   bool fire_ray(int& nIntersect, double startPnt[3],
-		double endPnt[3], double tol, int dir,
-		double rayLength);
+                double endPnt[3], double tol, int dir,
+                double rayLength);
 
   /** \brief moves ray which passes any singluar point
    * \param nIntersect # of intersections returned
@@ -433,7 +433,7 @@ private:
    * \return bool if is working correctly
    */
   bool move_ray(int& nIntersect, double* startPnt, double* endPnt,
-		double tol, int dir, bool bMoveOnce);
+                double tol, int dir, bool bMoveOnce);
 
   /** \brief if the facet has the same direction to the ray
    * \param i index in m_vIntersection (intersection vector)
