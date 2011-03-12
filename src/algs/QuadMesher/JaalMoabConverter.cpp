@@ -100,6 +100,7 @@ JaalMoabConverter::toMOAB(Mesh *jmesh, iMesh_Instance &imesh, iBase_EntitySetHan
         assert(!err);
     }
 
+
     iBase_EntityHandle newHandle;
     std::map<PNode, iBase_EntityHandle> ::const_iterator niter;
 
@@ -133,6 +134,7 @@ JaalMoabConverter::toMOAB(Mesh *jmesh, iMesh_Instance &imesh, iBase_EntitySetHan
         newHandle = new_MOAB_Handle(imesh, f);
         
         if (entitySet) {
+            cout << " Adding to the set" << entitySet << endl;
             iMesh_addEntToSet(imesh, newHandle, entitySet, &err);
             assert( !err );
         }

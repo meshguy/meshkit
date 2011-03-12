@@ -1,7 +1,7 @@
 #ifndef CCENTER_H
 #define CCENTER_H
 
-#include "geomPredicates.hpp"
+#include "GeomPredicates.hpp"
 #include "basic_math.hpp"
 
 void TetCircumCenter( double *a, double *b, double *c, double *d, double *r, double *p);
