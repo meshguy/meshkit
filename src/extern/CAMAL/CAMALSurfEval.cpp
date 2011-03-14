@@ -145,4 +145,62 @@ void CAMALSurfEval::distortion_at_uv(double u, double v,
   IBERRCHK(err, "Trouble getting 1st derivative from parameters.");
 }
 
+// this could be inlined
+double tArea(double * a, double *b, double *c, double * normal)
+{
+  double result = 0;
+  // ( ( B-A ) X (C-A) ) * normal
+  double AB[3] = { b[0] - a[0], b[1] - a[1], b[2] - a[2] };
+  double AC[3] = { c[0] - a[0], c[1] - a[1], c[2] - a[2] };
+  result += (AB[1] * AC[2] - AB[2] * AC[1]) * normal[0];
+  result += (AB[2] * AC[0] - AB[0] * AC[2]) * normal[1];
+  result += (AB[0] * AC[1] - AB[1] * AC[0]) * normal[2];
+}
+
+// decide if the boundary loops are positively oriented around normal
+// use the normal at the first node on the boundary
+// It should work even if the first node is on an interior loop, not external loop
+// it should work in most cases, except the surface is highly distorted, and the projected area of an internal
+// loop is higher than the projected area of an external loop
+// it is specific to Camal advancing front algorithms (Paver and TriAdvance)
+void CAMALSurfEval::correct_orientation(std::vector<int> & loop_sizes,
+    std::vector<int> & loops, std::vector<double> & bdy_coords)
+{
+  // first, normal at the initial point on the boundary
+  double normal[3] = { 0, 0, 0 };
+  /*this->*/normal_at(bdy_coords[0], bdy_coords[1], bdy_coords[2], normal[0],
+      normal[1], normal[2]);
+
+  double oriented_area = 0.;
+  unsigned int start_current_loop = 0;
+  for (unsigned int k = 0; k < loop_sizes.size(); k++)
+  {
+    // for each loop, compute the oriented area of each triangle
+    int current_loop_size = loop_sizes[k];
+    unsigned int startIndex = loops[start_current_loop];
+    for (unsigned int i = 1; i < current_loop_size - 1; i++)
+    {
+      unsigned int i1 = loops[start_current_loop + i];
+      unsigned int i2 = loops[start_current_loop + (i + 1)];
+
+      double oArea = tArea(&bdy_coords[3 * startIndex], &bdy_coords[3 * i1],
+          &bdy_coords[3 * i2], normal);
+      oriented_area += oArea;
+    }
+    start_current_loop += current_loop_size;
+  }
+  if (oriented_area < 0.)
+  { // correct orientation
+    unsigned int start_current_loop = 0;
+    for (unsigned int k = 0; k < loop_sizes.size(); k++)
+    {
+      // for each loop, switch index 1 with last, 2, with first before last...
+      int current_loop_size = loop_sizes[k];
+      std::reverse(&loops[start_current_loop + 1], &loops[start_current_loop
+          + current_loop_size]);
+      start_current_loop += current_loop_size;
+    }
+  }
+}
+
 } // namespace MeshKit

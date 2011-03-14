@@ -5,6 +5,7 @@
  */
 
 #include "CMLSurfEval.hpp"
+#include <vector>
 
 namespace MeshKit 
 {
@@ -162,6 +163,14 @@ public:
      */
   virtual void distortion_at_uv(double u, double v, 
                                 double du[3], double dv[3]);
+
+  /** \brief correct orientation of boundary loops for advancing front methods
+       * \param loop_sizes  sizes of loops
+       * \param loops indices of boundary points that form loops
+       * \param bdy_coords coordinates of boundary points, interleaved
+       */
+  virtual void correct_orientation(std::vector<int> & loop_sizes,
+      std::vector<int> & loops, std::vector<double> & bdy_coords);
 
 private:
 
