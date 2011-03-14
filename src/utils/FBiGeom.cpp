@@ -1041,6 +1041,32 @@ iGeom::Error FBiGeom::getEntBoundBox( EntityHandle entity,
 
   return (Error)1;
 }
+
+iGeom::Error FBiGeom::isEntPeriodic( EntityHandle entity, bool& in_u, bool& in_v )
+{
+
+  in_u = false; // false
+  in_v = false; // false
+  EntityType tp_ent;
+  Error err = getEntType(entity, tp_ent);
+
+  if (iBase_SUCCESS != err) return err;
+  if (tp_ent == iBase_FACE)
+    return (Error)0; // we do not have parametric surfaces , so it cannot be periodic
+                     // in u or v
+  // if it is an edge/curve, it could be periodic in u, if there is
+  // only one vertex as neighbor
+  if (tp_ent == iBase_EDGE)
+  {
+    std::vector<EntityHandle> adj_entities_out;
+    getEntAdj( entity, iBase_VERTEX, adj_entities_out);
+    if (adj_entities_out.size() == 1)
+    {
+      in_u = true; //
+    }
+  }
+  return (Error)0; // no error
+}
 #if 0
 
 inline iGeom::Error

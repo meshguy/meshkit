@@ -132,6 +132,10 @@ class FBiGeom : public iGeom {
                            double& min_x, double& min_y, double& min_z,
                            double& max_x, double& max_y, double& max_z );
 
+    iGeom::Error isEntPeriodic( EntityHandle entity, bool& in_u,
+        bool& in_v );
+
+
 #if 0
     inline Error save( const char* file_name,
                        const char* options = 0 );
