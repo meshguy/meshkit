@@ -59,6 +59,7 @@ libJaalQuadMesher_la_SOURCES = \
 	GeomPredicates.hpp \
 	MeshRefine2D.cpp \
 	QuadQuality.cpp  \
+	StopWatch.hpp   \
 	vtk_io.cpp 
   
 
