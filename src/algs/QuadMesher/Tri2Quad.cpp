@@ -145,32 +145,6 @@ int Tri2Quads::refine_boundary_triangle(Face *tri0)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-void Tri2Quads::matchnodes(Vertex *child, Vertex *parent)
-{
-    child->setDualMate(parent);
-    parent->setDualMate(child);
-
-    child->setStatus(MeshEntity::REMOVE);
-    parent->setStatus(MeshEntity::REMOVE);
-}
-///////////////////////////////////////////////////////////////////////////////////
-
-void Tri2Quads::matchnodes(BinaryNode *child, BinaryNode *parent)
-{
-    if (parent->isMatched() && !child->isMatched())
-    {
-        cout << "Warning: parent is already matched " << endl;
-    }
-
-    if (!child->isMatched() && !parent->isMatched())
-        matchnodes(child->getDualNode(), parent->getDualNode());
-
-    btree->unlinkNode(child);
-    btree->unlinkNode(parent);
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-
 void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
                             BinaryNode *child2)
 {
@@ -362,12 +336,6 @@ void Tri2Quads::matchnode(BinaryNode* v)
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-bool Jaal::already_matched(const BinaryNode *node)
-{
-    return node->isMatched();
-}
 ///////////////////////////////////////////////////////////////////////////////
 
 BinaryNode* Tri2Quads::getChildofDegreeNParent(BNodeList &levelnodes,

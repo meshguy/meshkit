@@ -106,8 +106,41 @@ private:
 };
 
 bool has_same_dual(const BinaryNode *nd1, const BinaryNode *nd2);
-bool already_matched(const BinaryNode *node);
+
+inline 
+bool already_matched(const BinaryNode *node)
+{
+    return node->isMatched();
+}
+
+inline
+void Tri2Quads::matchnodes(Vertex *child, Vertex *parent)
+{
+    child->setDualMate(parent);
+    parent->setDualMate(child);
+
+    child->setStatus(MeshEntity::REMOVE);
+    parent->setStatus(MeshEntity::REMOVE);
+}
+///////////////////////////////////////////////////////////////////////////////////
+
+inline 
+void Tri2Quads::matchnodes(BinaryNode *child, BinaryNode *parent)
+{
+    if (parent->isMatched() && !child->isMatched())
+    {
+        cout << "Warning: parent is already matched " << endl;
+    }
+
+    if (!child->isMatched() && !parent->isMatched())
+        matchnodes(child->getDualNode(), parent->getDualNode());
+
+    btree->unlinkNode(child);
+    btree->unlinkNode(parent);
+}
+
 
 } // namespace Jaal
+
 
 #endif
