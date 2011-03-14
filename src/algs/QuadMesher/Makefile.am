@@ -55,8 +55,8 @@ libJaalQuadMesher_la_SOURCES = \
 	Tunnels.cpp \
 	circumcenter.cpp \
 	circumcenter.hpp \
-	geomPredicates.cpp \
-	geomPredicates.hpp \
+	GeomPredicates.cpp \
+	GeomPredicates.hpp \
 	MeshRefine2D.cpp \
 	QuadQuality.cpp  \
 	vtk_io.cpp 
