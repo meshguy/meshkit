@@ -3,6 +3,7 @@
 
 #include "Tri2Quad.hpp"
 #include "JaalMoabConverter.hpp"
+#include "StopWatch.hpp"
 
 using namespace Jaal;
 
@@ -27,22 +28,6 @@ Mesh* tri_quad_conversion (Mesh *trimesh)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_MOAB
-Mesh* tri_quad_conversion (iMesh_Instance imesh)
-{
-  JaalMoabConverter meshconverter;
-  Mesh *trimesh  = meshconverter.fromMOAB(imesh);
-  Mesh* quadmesh = tri_quad_conversion ( trimesh );
-
-  meshconverter.toMOAB(quadmesh, imesh);
-  delete trimesh;
-  return quadmesh;
-}
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef MAIN_QUADMESH
 int main(int argc, char **argv)
 {
   if( argc != 3) {
@@ -50,29 +35,21 @@ int main(int argc, char **argv)
       return 1;
   }
 
-  MKCore mk;
-  mk.load_mesh( argv[1] );
-
-  exit(0);
-  
-
   Mesh *trimesh = new Mesh;
   trimesh->readFromFile( argv[1] );
 
   Mesh *quadmesh = NULL;
 
-#ifdef HAVE_MOAB
-  iMesh_Instance imesh  = 0;
-  JaalMoabConverter meshconverter;
-  meshconverter.toMOAB(trimesh, imesh);
-  quadmesh = tri_quad_conversion( imesh );
-#else
-   quadmesh = tri_quad_conversion( trimesh );
-#endif
+  StopWatch watch;
+  watch.start();
+  quadmesh = tri_quad_conversion( trimesh );
+  watch.stop();
+  cout << "Info: Tri-Quad conversion time (sec) : " << watch.getSeconds() << endl;
+
+  quadmesh->saveAs( argv[2] );
 
   delete quadmesh;
   delete trimesh;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
