@@ -27,7 +27,7 @@ Mesh* tri_quad_conversion (Mesh *trimesh)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
+#if 0
 int main(int argc, char **argv)
 {
   if( argc != 3) {
@@ -51,5 +51,5 @@ int main(int argc, char **argv)
   delete quadmesh;
   delete trimesh;
 }
-
+#endif
 ///////////////////////////////////////////////////////////////////////////////
