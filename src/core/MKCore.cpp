@@ -13,6 +13,7 @@
 #include "lemon/adaptors.h"
 #include "MeshOpSet.hpp"
 #include "meshkit/MeshOpProxy.hpp"
+#include "meshkit/VertexMesher.hpp"
 
 namespace MeshKit 
 {
@@ -441,8 +442,14 @@ MeshOp *MKCore::construct_meshop(std::string op_name, const MEntVector &me_vec)
 
 MeshOp *MKCore::construct_meshop(unsigned int dim, const MEntVector &me_vec) 
 {
-  if (dim == 0)
+  if (dim == 0) {
+    if (!vertexMesher) 
+      vertexMesher = new VertexMesher(this, me_vec);
+    else 
+      for (MEntVector::const_iterator i = me_vec.begin(); i != me_vec.end(); ++i)
+        vertex_mesher()->add_modelent( *i );
     return vertex_mesher();
+  }
   else 
     return construct_meshop( get_default_meshop(dim), me_vec );
 }

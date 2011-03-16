@@ -42,5 +42,5 @@ nobase_libMeshKitcore_la_include_HEADERS = \
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/src/utils \
-              -I$(top_srcdir)/src/lemon
+              -I$(top_srcdir)/src/lemon -I$(top_srcdir)/src/algs
 
