@@ -81,9 +81,11 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 {
 	std::vector<iGeom::EntityHandle> edges, gNode;
 
+	//get the four geometrical edges
 	iGeom::Error g_err = ent->igeom_instance()->getEntAdj(ent->geom_handle(), iBase_EDGE, edges);
 	IBERRCHK(g_err, "Trouble get the adjacent geometric edges on a surface.");
 
+	//get the four corners on a surface
 	g_err = ent->igeom_instance()->getEntAdj(ent->geom_handle(), iBase_VERTEX, gNode);
 	IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a surface.");
 
@@ -94,6 +96,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	//it has already been checked that there are 4 edges bounding a surface in the execute function
 	std::vector<iGeom::EntitySetHandle> EdgeMeshSets(4);
 	std::vector<int>  num;
+	//get the edge mesh entity sets for 4 edges
 	for (unsigned int i = 0; i < edges.size(); i++)
 	{
 		iRel::Error r_err = mk_core()->irel_pair()->getEntSetRelation(edges[i], 0, EdgeMeshSets[i]);
@@ -101,7 +104,8 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
 		iMesh::Error m_err = mk_core()->imesh_instance()->getNumOfTopo(EdgeMeshSets[i], iMesh_LINE_SEGMENT, num[i]);
 		IBERRCHK(m_err, "Trouble get the number of line segments in the edge mesh.");
-
+		
+		//set the new int value for edges and nodes
 		g_err = ent->igeom_instance()->setIntData(edges[i], taghandle, i);
 		IBERRCHK(g_err, "Trouble create the taghandle for the surface.");
 
@@ -114,15 +118,10 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	map<int, int> edgePair, nodePair, adjEdgesOfNode, oppNodeOfNode;
 	num_i = num[0];
 
-
-	for (unsigned int i = 1; i < 4; i ++)
-		if (num_i == num[i])
-		{
-			edgePair[0] = i; 
- 			break;
-		}
 	std::vector<iGeom::EntityHandle> nNodes, nEdges;
 	int index_a, index_b;
+	//nodes' index for edge 0, 
+	//node_index_a denotes one node in edge 0, node_index_b denotes the corresponding node on the opposite edge
 	int node_index_a, node_index_b;	
 	//pick up the edge 0, find its two end nodes	
 	g_err = ent->igeom_instance()->getEntAdj(edges[0], iBase_VERTEX, nNodes);
@@ -132,7 +131,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	g_err = ent->igeom_instance()->getIntData(edges[0], taghandle, index_a);
 	IBERRCHK(g_err, "Trouble get the int data on edge 0.");
 	
-	//pick up nodes[0] find its adjacent edges
+	//pick up nodes[0], find its adjacent edges
 	g_err = ent->igeom_instance()->getEntAdj(nNodes[0], iBase_EDGE, nEdges);
 	IBERRCHK(g_err, "Trouble get the adjacent geometric edges on a node.");
 
@@ -242,13 +241,18 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	}
 
 	num_j = num[adjEdgesOfNode[0]];
+
+	//find the opposite geometric edge
+	for (int i = 0; i < 4; i++)
+		if ((i != 0) && (i != adjEdgesOfNode[0]) && (i != adjEdgesOfNode[1]))
+			edgePair[0] = i;
 	//finish all the geometry initialization
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	//initialize the mesh
 	std::vector<iBase_EntityHandle> NodeList_i, NodeList_j, NodeList_ii, NodeList_jj;
 	std::vector<iBase_EntityHandle> corner(4);	
-	//get mesh node lists from four edges, mesh nodes from four corners;
+	//get mesh node lists from four edges
 	iRel::Error r_err = mk_core()->irel_pair()->getEntEntArrRelation(edges[0], 0, NodeList_i);
 	IBERRCHK(r_err, "Trouble get the mesh node list from the geometrical edge.");
 

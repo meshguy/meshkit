@@ -96,9 +96,6 @@ private:
 
 	//generate the mesh on the linking surface
 	int SurfMapping(ModelEnt *ent);
-
-	
-private://private member variable
 	
 	
 };

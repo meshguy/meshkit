@@ -3,6 +3,7 @@
 #include "meshkit/CopyGeom.hpp"
 #include "meshkit/EBMesher.hpp"
 #include "meshkit/EdgeMesher.hpp"
+#include "meshkit/TFIMapping.hpp"
 #include "meshkit/ExtrudeMesh.hpp"
 #include "meshkit/OneToOneSwept.hpp"
 #include "meshkit/SCDMesh.hpp"
@@ -24,6 +25,7 @@ extern int register_algs_mesh_ops() { return 1; }
 REGISTER_MESH_OP(VertexMesher);
 REGISTER_MESH_OP(EdgeMesher);
 REGISTER_MESH_OP(OneToOneSwept);
+REGISTER_MESH_OP(TFIMapping);
 REGISTER_MESH_OP(SCDMesh);
 REGISTER_MESH_OP(CopyMesh);
 REGISTER_MESH_OP(CopyGeom);
