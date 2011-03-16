@@ -441,7 +441,10 @@ MeshOp *MKCore::construct_meshop(std::string op_name, const MEntVector &me_vec)
 
 MeshOp *MKCore::construct_meshop(unsigned int dim, const MEntVector &me_vec) 
 {
-  return construct_meshop( get_default_meshop(dim), me_vec );
+  if (dim == 0)
+    return vertex_mesher();
+  else 
+    return construct_meshop( get_default_meshop(dim), me_vec );
 }
 
 MeshOp *MKCore::construct_meshop(MeshOpProxy* proxy, const MEntVector &me_vec) 
