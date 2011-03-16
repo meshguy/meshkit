@@ -1,8 +1,10 @@
 #include "meshkit/TFIMapping.hpp"
 #include "meshkit/MKCore.hpp"
-#include "meshkit/iMesh.hpp"
-#include "meshkit/RegisterMeshOp.hpp"
 #include "meshkit/ModelEnt.hpp"
+#include "meshkit/SizingFunction.hpp"
+#include "meshkit/RegisterMeshOp.hpp"
+#include "moab/ReadUtilIface.hpp"
+#include <vector>
 #include <iostream>
 #include <math.h>
 #include <map>
@@ -13,7 +15,7 @@ namespace MeshKit
 
 //---------------------------------------------------------------------------//
 //Entity Type initilization for TFIMapping meshing
-moab::EntityType TFIMapping_tps[] = {moab::MBVERTEX, moab::MBQUAD, moab::MBMAXTYPE};
+moab::EntityType TFIMapping_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBQUAD, moab::MBMAXTYPE};
 const moab::EntityType* TFIMapping::output_types()
   { return TFIMapping_tps; }
 
@@ -59,6 +61,7 @@ void TFIMapping::execute_this()
 		me->boundary(0, edges, &senses, &edge_sizes);
 		assert(4==(int)edge_sizes.size());
 
+ 		std::cout << "test 1" << std::endl;
 		SurfMapping(me);
 		
       		//ok, we are done, commit to ME
