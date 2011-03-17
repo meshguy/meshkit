@@ -97,6 +97,8 @@ private:
 	//generate the mesh on the linking surface
 	int SurfMapping(ModelEnt *ent);
 	
+	//build the association between the geometry and mesh
+	void buildAssociation();
 	
 };
 

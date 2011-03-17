@@ -226,7 +226,7 @@ void MKCore::populate_mesh(int index, bool use_irel)
       this_me = NULL;
       err = igeom_instance(index)->getData(*eit, iGeomModelTags[index], &this_me);
       if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
-          // construct a new ModelEnt and set the geom ent to point to it
+        // construct a new ModelEnt and set the geom ent to point to it
         this_me = new ModelEnt(this, *eit, igeom_instance(index));
         err = igeom_instance(index)->setData(*eit, iGeomModelTags[index], &this_me);
         IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");

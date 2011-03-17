@@ -28,14 +28,14 @@ int main(int argc, char **argv)
 
   int num_fail = 0;
   
-  num_fail += RUN_TEST(test_TFImapping);
+  //num_fail += RUN_TEST(test_TFImapping);
   num_fail += RUN_TEST(test_TFImappingcubit);
   
 }
 
 void test_TFImappingcubit()
 {
-	std::string file_name = TestDir + "/square.cub";
+	std::string file_name = TestDir + "/SquareWithEdgesMeshed.cub";
   	mk->load_geometry(file_name.c_str());
 
 	mk->load_mesh(file_name.c_str());
@@ -43,15 +43,34 @@ void test_TFImappingcubit()
 	// populate mesh to relate geometry entities and mesh sets
   	mk->populate_mesh();
 
+	//check the number of geometrical edges
 	MEntVector surfs, curves, loops;
-	mk->get_entities_by_dimension(2, surfs);
-	CHECK_EQUAL(1, (int)surfs.size());
+  	mk->get_entities_by_dimension(2, surfs);
+	ModelEnt *this_surf = (*surfs.rbegin());
+
+	this_surf->get_adjacencies(1, curves);
+
+	CHECK_EQUAL(4, (int)curves.size());
+	
+	//check the number of mesh line segments
+	moab::Range edges;
+	moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 1, edges);
+	CHECK_EQUAL(moab::MB_SUCCESS, rval);
+	CHECK_EQUAL(40, (int)edges.size());
 
 	//now, do the TFIMapping
 	TFIMapping *tm = (TFIMapping*)mk->construct_meshop("TFIMapping", surfs);
 	mk->setup_and_execute();
 
+	//check the number of quads
+	moab::Range faces;
+	rval = mk->moab_instance()->get_entities_by_dimension(0, 2, faces);
+	CHECK_EQUAL(moab::MB_SUCCESS, rval);
+	CHECK_EQUAL(100, (int)faces.size());
 
+	mk->save_mesh("TFIMappingFromCubit.vtk");
+
+	delete tm;
 	mk->clear_graph();
 
 	
