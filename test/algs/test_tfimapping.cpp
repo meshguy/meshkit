@@ -1,6 +1,6 @@
-/** \file test_edgemesh.cpp
+/** \file test_TFIMapping.cpp
  *
- * Test the EdgeMesher for a few challenging examples.
+ * Test the TFIMapping for a few challenging examples.
  *
  */
 
