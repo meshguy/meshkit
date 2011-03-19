@@ -24,7 +24,7 @@ EdgeMesher::EdgeMesher(MKCore *mk_core, const MEntVector &me_vec)
 
 }
 #if 0
-//---------------------------------------------------------------------------//
+//---------------------------------------------IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a surface.");------------------------------//
 // measure function: compute the distance between the parametric coordinate 
 // ustart and the parametric coordinate uend
 double EdgeMesher::measure(iGeom::EntityHandle ent, double ustart, double uend) const
@@ -110,7 +110,8 @@ void EdgeMesher::execute_this()
   for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
   {
     ModelEnt *me = mit -> first;
-
+    if (me->get_meshed_state() >= COMPLETE_MESH)
+	continue;
     //resize the coords based on the interval setting
     int num_edges = me->mesh_intervals();
     coords.resize(3*(num_edges+1));
@@ -200,7 +201,9 @@ void EdgeMesher::execute_this()
     }
 
       //   ok, we are done, commit to ME
-    me->commit_mesh(mit->second, COMPLETE_MESH);	
+    me->commit_mesh(mit->second, COMPLETE_MESH);
+   
+	
   }
 
 	

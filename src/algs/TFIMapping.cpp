@@ -56,10 +56,13 @@ void TFIMapping::execute_this()
 		if (me->get_meshed_state() >= COMPLETE_MESH)
 			continue;
 		
+
 		//test number of edges bounding the surface
 		std::vector<int> senses, edge_sizes;
 		me->boundary(0, edges, &senses, &edge_sizes);
 		assert(4==(int)edges.size());
+
+		
 
 		SurfMapping(me);
 		
@@ -88,6 +91,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	g_err = ent->igeom_instance()->getEntAdj(ent->geom_handle(), iBase_VERTEX, gNode);
 	IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a surface.");
 
+
 	iBase_TagHandle taghandle;
 	g_err = ent->igeom_instance()->createTag("TFIMapping", 1, iBase_INTEGER, taghandle);
 	IBERRCHK(g_err, "Trouble create the taghandle for the surface.");
@@ -101,8 +105,14 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		iRel::Error r_err = mk_core()->irel_pair()->getEntSetRelation(edges[i], 0, EdgeMeshSets[i]);
 		IBERRCHK(r_err, "Trouble get@ the mesh entity set of geometrical edge.");
 
-		iMesh::Error m_err = mk_core()->imesh_instance()->getNumOfTopo(EdgeMeshSets[i], iMesh_LINE_SEGMENT, num[i]);
-		IBERRCHK(m_err, "Trouble get the number of line segments in the edge mesh.");
+		std::vector<iBase_EntityHandle> mEdges;
+		mEdges.clear();
+		iMesh::Error m_err = mk_core()->imesh_instance()->getEntities(EdgeMeshSets[i], iBase_EDGE, iMesh_LINE_SEGMENT, mEdges);
+		IBERRCHK(m_err, "Trouble get the line segments in the edge mesh.");
+		
+		num[i] = mEdges.size();
+		//iMesh::Error m_err = mk_core()->imesh_instance()->getNumOfTopo(EdgeMeshSets[i], iMesh_LINE_SEGMENT, num[i]);
+		//IBERRCHK(m_err, "Trouble get the number of line segments in the edge mesh.");
 		
 		//set the new int value for edges and nodes
 		g_err = ent->igeom_instance()->setIntData(edges[i], taghandle, i);
@@ -111,7 +121,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		g_err = ent->igeom_instance()->setIntData(gNode[i], taghandle, i);
 		IBERRCHK(g_err, "Trouble create the taghandle for the surface.");
 	}
-	
+
 	//find the corresponding edge and node relationship: based on the internal constraints, there are two edges with equal number of line segments
 	int num_i=0, num_j=0;
 	std::map<int, int> edgePair, nodePair, adjEdgesOfNode, oppNodeOfNode;
@@ -250,6 +260,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	for (int i = 0; i < 4; i++)
 		if ((i != 0) && (i != adjEdgesOfNode[0]) && (i != adjEdgesOfNode[1]))
 			edgePair[0] = i;
+
 	//finish all the geometry initialization
 	
 	//initialize the mesh

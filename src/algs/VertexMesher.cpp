@@ -46,9 +46,10 @@ void VertexMesher::execute_this()
   if (mentSelection.empty()) return;
   
     // generate vertices for each vertex
-  unsigned int i;
   MEntSelection::iterator sit;
   for (sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
+    if  ((*sit).first->get_meshed_state() >= COMPLETE_MESH)
+	continue;
     double pos[3];
       // get the position
     (*sit).first->evaluate(pos[0], pos[0], pos[0], pos);

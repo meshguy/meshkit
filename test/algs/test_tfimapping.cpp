@@ -28,8 +28,9 @@ int main(int argc, char **argv)
 
   int num_fail = 0;
   
-  //num_fail += RUN_TEST(test_TFImapping);
-  num_fail += RUN_TEST(test_TFImappingcubit);
+  num_fail += RUN_TEST(test_TFImapping);
+  
+  //num_fail += RUN_TEST(test_TFImappingcubit);
   
 }
 
@@ -72,15 +73,12 @@ void test_TFImappingcubit()
 
 	delete tm;
 	mk->clear_graph();
-
-	
-
 	
 }
 
 void test_TFImapping() 
 {
-  std::string file_name = TestDir + "/squaresurf.sat";
+  std::string file_name = TestDir + "/SquareWithoutMesh.cub";
   mk->load_geometry(file_name.c_str());
 
     // get the surface
@@ -102,24 +100,104 @@ void test_TFImapping()
   mk->setup_and_execute();
 
     // make sure we got the right number of edges
-  moab::Range edges;
+  moab::Range edges, nodes;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 1, edges);
   CHECK_EQUAL(moab::MB_SUCCESS, rval);
   CHECK_EQUAL(40, (int)edges.size());
 
-  std::cout << "we are done with edge mesher" << std::endl;
+  rval = mk->moab_instance()->get_entities_by_dimension(0, 0, nodes);
+  CHECK_EQUAL(moab::MB_SUCCESS, rval);
+  CHECK_EQUAL(40, (int)nodes.size());
+
+
+/*
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  // test
+  
+  std::cout << "test function: test_tfimapping.cpp " << std::endl; 
+  iBase_EntitySetHandle geom_root_set;
+  iGeom::Error g_err;
+  geom_root_set = mk->igeom_instance()->getRootSet();
+  
+  std::vector<iBase_EntityHandle> gEdges;
+  g_err = mk->igeom_instance()->getEntities(geom_root_set, iBase_EDGE, gEdges);
+  IBERRCHK(g_err, "Trouble get the geometrical edges.");
+  assert(gEdges.size()==4);
+
+  for (unsigned int i = 0; i < gEdges.size(); i++)
+  {
+  std::vector<iBase_EntityHandle> gVertices;
+  g_err = mk->igeom_instance()->getEntAdj(gEdges[i], iBase_VERTEX, gVertices);
+  IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on an edge.");
+    
+  //test one mesh node on the geometrical edge
+  iBase_EntitySetHandle TmpSet;
+  std::vector<iBase_EntityHandle> tmpNodeHandle;
+  iRel::Error r_err = mk->irel_pair()->getEntSetRelation(gVertices[0], 0, TmpSet);
+  IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical corner 0.");
+  iMesh::Error m_err = mk->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, tmpNodeHandle);	
+  IBERRCHK(m_err, "Trouble get the mesh node from the geometrical corner 0.");
+  assert(tmpNodeHandle.size()==1);	
+  double coord[3];
+  m_err = mk->imesh_instance()->getVtxCoord(tmpNodeHandle[0], coord[0], coord[1], coord[2]);
+  IBERRCHK(m_err, "Trouble get the coordinates from the mesh node.");
+  std::cout << "one end node is x = " << coord[0] << "\ty = " << coord[1] << "\tz = " << coord[2] << std::endl;
+    
+  //test the other mesh node on the geometrical edge
+  r_err = mk->irel_pair()->getEntSetRelation(gVertices[1], 0, TmpSet);
+  IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical corner 0.");
+  tmpNodeHandle.clear();
+  m_err = mk->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, tmpNodeHandle);	
+  IBERRCHK(m_err, "Trouble get the mesh node from the geometrical corner 0.");
+  assert(tmpNodeHandle.size()==1);	
+  m_err = mk->imesh_instance()->getVtxCoord(tmpNodeHandle[0], coord[0], coord[1], coord[2]);
+  IBERRCHK(m_err, "Trouble get the coordinates from the mesh node.");
+  std::cout << "The other end node is x = " << coord[0] << "\ty = " << coord[1] << "\tz = " << coord[2] << std::endl;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //test the edge mesh after EdgeMesher
+  std::vector<iBase_EntityHandle> tmpEdgeHandle;
+  r_err = mk->irel_pair()->getEntSetRelation(gEdges[i], 0, TmpSet);
+  IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical edge.");
+  tmpNodeHandle.clear();
+  m_err = mk->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, tmpNodeHandle);	
+  IBERRCHK(m_err, "Trouble get the mesh node from the geometrical edge.");
+  std::cout << "node size on the geometrical edge is " << tmpNodeHandle.size() << std::endl;
+  for (unsigned int i = 0; i < tmpNodeHandle.size(); i++)
+  {
+	m_err = mk->imesh_instance()->getVtxCoord(tmpNodeHandle[i], coord[0], coord[1], coord[2]);
+	IBERRCHK(m_err, "Trouble get the mesh node from the geometrical edge.");
+	std::cout << "i = " << i << "\tx=" << coord[0] << "\ty=" << coord[1] << "\tz=" << coord[2] << std::endl;
+
+  }
+  //test number of line segments
+  m_err = mk->imesh_instance()->getEntities(TmpSet, iBase_EDGE, iMesh_LINE_SEGMENT, tmpEdgeHandle);
+  IBERRCHK(m_err, "Trouble get the mesh line segments from the geometrical edge.");
+  std::cout << "number of line segments is " << tmpEdgeHandle.size() << std::endl;
+   //test how many mesh entity sets are there on the geometrical edge
+   
+  
+
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////  
+*/
+
+
   //ok, we are done with edge mesher
   //now, do the TFIMapping
   TFIMapping *tm = (TFIMapping*)mk->construct_meshop("TFIMapping", surfs);
   mk->setup_and_execute();
   
-  mk->populate_mesh();
+  //mk->populate_mesh();
 
   //check whether we got the right number of quads after TFIMapping
   moab::Range faces;
   rval = mk->moab_instance()->get_entities_by_dimension(0, 2, faces);
   CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  CHECK_EQUAL(40, (int)faces.size());
+  CHECK_EQUAL(100, (int)faces.size());
 
   //output the mesh to vtk file
   mk->save_mesh("TFIMapping.vtk");
