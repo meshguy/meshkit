@@ -6,15 +6,16 @@
  */
 
 #include "QslimDecimation.hpp"
-#include "moab/Range.hpp"
 
 // for proximity searches
 #include "moab/AdaptiveKDTree.hpp"
+#include "moab/ReadUtilIface.hpp"
 
 #include "Mat4.h"
 #include "defs.h"
 #include "quadrics.h"
 #include <time.h>
+#include <map>
 
 // those are used in model navigation/simplification
 #include "primitives.h"
@@ -610,7 +611,7 @@ QslimDecimation::QslimDecimation(moab::Interface * mbi,
 
 QslimDecimation::~QslimDecimation() {
 }
-int QslimDecimation::decimate(QslimOptions & iOpts) {
+int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 	// opts is external
 	opts = iOpts;
 
@@ -658,34 +659,122 @@ int QslimDecimation::decimate(QslimOptions & iOpts) {
 	std::cout << "   Decimation: " << (double) (finish_time - init_time)
 			/ CLOCKS_PER_SEC << " s.\n";
 
-	moab::Range::const_reverse_iterator rit;
-	if (opts.useDelayedDeletion) {
 
-		// delete triangles and edges that are invalid
-		for (rit = triangles.rbegin(); rit != triangles.rend(); rit++) {
-			moab::EntityHandle v = *rit;
-			// check the validity
-			if (ehIsValid(v))
-				continue;
-			moab::ErrorCode rval = mb->delete_entities(&v, 1);
-		}
-		// maybe we should delete all edges, but for now, we will keep them
-		for (rit = edgs.rbegin(); rit != edgs.rend(); rit++) {
-			moab::EntityHandle v = *rit;
-			// check the validity
-			if (ehIsValid(v))
-				continue;
-			moab::ErrorCode rval = mb->delete_entities(&v, 1);
-		}
+	if (opts.create_range)
+	{
+	  // the remaining nodes and triangles are copied in the range
+	  // they are not put in the old set, will be part of the root set only ...
+	  // maybe this has to change
+	  // count first valid vertices and triangles
+	  moab::Range::iterator it;
+	  int validTriangles=0, validVertices=0;
+	  std::vector<moab::EntityHandle> validVerts;
+	  std::vector<moab::EntityHandle> validTris;
+	  for (it = triangles.begin(); it != triangles.end(); it++)
+	  {
+	    if (ehIsValid(*it)) validTris.push_back(*it);
+	  }
+	  for (it = verts.begin(); it != verts.end(); it++)
+	  {
+	    if (ehIsValid(*it)) validVerts.push_back(*it);
+	  }
+	  //
+	  std::vector<double> coords;
+	  int numNodes = (int) validVerts.size();
+	  int numTriangles = (int) validTris.size();
+	  coords.resize(3*numNodes);
 
+	  moab::ErrorCode rval = mb->get_coords(&(validVerts[0]),
+	      numNodes,   &(coords[0]) );
+	  assert(moab::MB_SUCCESS==rval);
+
+	  // create the new vertices, at the same  coordinates
+	  // put those verts in the range that is output
+
+	  // to make sure, the range is cleared
+	  oRange.clear();
+	  rval = mb->create_vertices(&coords[0], numNodes, oRange);
+	  assert(moab::MB_SUCCESS==rval);
+	  // the first element in the range must be the start of the new vertex sequence
+	  std::map<moab::EntityHandle, moab::EntityHandle> mapping; // this will be from old
+	                                                            //  to new vertices, for connectivity
+	  for (int i=0; i<numNodes; i++){
+	    mapping[validVerts[i]] = oRange[i];
+	  }
+
+    //get the query interface, which we will use to create the triangles directly
+    moab::ReadUtilIface *iface;
+    rval = mb -> query_interface(iface);// use the new query interface
+    assert(moab::MB_SUCCESS==rval);
+
+      //create the triangles, get a direct ptr to connectivity
+    moab::EntityHandle starth, *connect;
+    rval = iface -> get_element_connect(numTriangles, 3, moab::MBTRI, 1, starth, connect);
+    assert(moab::MB_SUCCESS==rval);
+    // get first the connectivity of the old triangles
+    const moab::EntityHandle * conn3;
+    for (int i=0; i<numTriangles; i++)
+    {
+      int num_nodes;
+      // get each valid triangle one by one, and set the new connectivity directly
+      rval = mb->get_connectivity(validTris[i], conn3, num_nodes);
+      assert( (moab::MB_SUCCESS==rval) && (num_nodes==3));
+      // directly modify the connect array in database
+      for (int j=0; j<3; j++)
+        connect[j] = mapping[conn3[j]];
+
+      connect+=3; // advance
+    }
+
+	  //add triangles to output range (for the MESelection)
+	  oRange.insert(starth, starth + numTriangles - 1);
+
+
+	  // clear completely the initial set, after deleting all elements from it...
+      //   ok, we are done, commit to ME ?
+	  rval = mb->delete_entities(triangles);
+	  assert(moab::MB_SUCCESS==rval);
+	  rval = mb->delete_entities(edgs);
+	  assert(moab::MB_SUCCESS==rval);
+	  rval = mb->delete_entities(verts);
+	  assert(moab::MB_SUCCESS==rval);
+	  // so, we removed everything from the initial set
+	  // add all entities from the range to the initial set, now
+	  rval = mb->add_entities(_InitialSet, oRange);
+    //me->commit_mesh(mit->second, COMPLETE_MESH);
+	  // end copy
 	}
-	// delete them one by one
-	for (rit = verts.rbegin(); rit != verts.rend(); rit++) {
-		moab::EntityHandle v = *rit;
-		// check the validity
-		if (ehIsValid(v))
-			continue;
-		moab::ErrorCode rval = mb->delete_entities(&v, 1);
+	else
+	{
+	  moab::Range::const_reverse_iterator rit;
+    if (opts.useDelayedDeletion) {
+
+      // delete triangles and edges that are invalid
+      for (rit = triangles.rbegin(); rit != triangles.rend(); rit++) {
+        moab::EntityHandle v = *rit;
+        // check the validity
+        if (ehIsValid(v))
+          continue;
+        moab::ErrorCode rval = mb->delete_entities(&v, 1);
+      }
+      // maybe we should delete all edges, but for now, we will keep them
+      for (rit = edgs.rbegin(); rit != edgs.rend(); rit++) {
+        moab::EntityHandle v = *rit;
+        // check the validity
+        if (ehIsValid(v))
+          continue;
+        moab::ErrorCode rval = mb->delete_entities(&v, 1);
+      }
+
+    }
+    // delete them one by one
+    for (rit = verts.rbegin(); rit != verts.rend(); rit++) {
+      moab::EntityHandle v = *rit;
+      // check the validity
+      if (ehIsValid(v))
+        continue;
+      moab::ErrorCode rval = mb->delete_entities(&v, 1);
+    }
 	}
 	clock_t delete_vTime = clock();
 	std::cout << "   Delete Vertices: "

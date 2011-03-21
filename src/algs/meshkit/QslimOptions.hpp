@@ -89,7 +89,7 @@ public:
 	//! create a tag with the error cost at each vertex in the final mesh (default 0, no)
 	int     plotCost;
 
-	//! default false. If used, it will delay deletion of edges and triangles until the end  of decimation
+	//! default true. If used, it will delay deletion of edges and triangles until the end  of decimation
 	int useDelayedDeletion;
 
 	//! default 3, optimal placement policy, for the vertex when an edge is collapsed; other options are 0=end points, 1=end points or middle point, 2 = on the line
@@ -103,6 +103,9 @@ public:
 
 	//! debug level in output
 	int selected_output;
+
+	//! create the range, with contiguous handles, and delete the initial set; default false
+	int create_range;
 };
 
 #endif /* QSLIMOPTIONS_H_ */

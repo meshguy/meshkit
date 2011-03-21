@@ -27,7 +27,7 @@ QslimOptions::QslimOptions() {
 	height_fields = false;
 	timingIntervals = 10;
 
-	useDelayedDeletion = false;
+	useDelayedDeletion = true;
 
 	placement_policy = PLACE_OPTIMAL;
 
@@ -35,7 +35,7 @@ QslimOptions::QslimOptions() {
 	logfile = 0;
 	selected_output = 0;
 	plotCost = 0;
-
+	create_range = false;
 
 }
 

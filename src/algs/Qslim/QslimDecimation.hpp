@@ -7,6 +7,7 @@
 #define QSLIMDECIMATION_H_
 
 #include "moab/Interface.hpp"
+#include "moab/Range.hpp"
 #include "meshkit/QslimOptions.hpp"
 #include "std.h"
 //#include "AdjModel.h"
@@ -18,7 +19,7 @@ public:
 	QslimDecimation (moab::Interface * mb, moab::EntityHandle root_set);
 	virtual ~QslimDecimation();
 
-int decimate(QslimOptions & opts);
+int decimate(QslimOptions & opts, moab::Range & oRange);
 
 private:
  moab::Interface * _mb;

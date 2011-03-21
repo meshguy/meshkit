@@ -32,8 +32,9 @@ std::string usage_string =
 "-a		        Enable area weighting.\n"
 "-p 	        Height fields positivity. Used for height fields, assume \n"
 "                   triangles are originally positively oriented. \n"
-"-d 	        Use delayed deletion, as opposed to merging \n"
+"-d 	        do not use delayed deletion \n"
 "-c           keep costs in a (sparse!!!!) tag \n"
+"-r           create the range with resulting triangles, and delete the original elements"
 "\n";
 
 std::string logging_usage_string =
@@ -227,7 +228,7 @@ int main(int argc, char* argv[])
 				  }
 				  case 'd':
 				  {
-					  options.useDelayedDeletion = true;
+					  options.useDelayedDeletion = false;
 					  break;
 				  }
 				  case 'c':
@@ -235,7 +236,11 @@ int main(int argc, char* argv[])
 				     options.plotCost = 1;
 				     break;
 				  }
-
+				  case 'r':
+				  {
+				    options.create_range = true;
+				    break;
+				  }
 				  default :
 				  {
 					 std::cout << "unsupported wrong input argument " << argv[i] <<std::endl;
@@ -251,8 +256,10 @@ int main(int argc, char* argv[])
 
   // put the initial mesh in a moab::EntityHandle initialSet
   moab::EntityHandle initialSet;
-  mk->moab_instance()->create_meshset(moab::MESHSET_SET | moab::MESHSET_TRACK_OWNER, initialSet);
-  mk->moab_instance()->load_file(filename, &initialSet);
+  moab::ErrorCode rval = mk->moab_instance()->create_meshset(moab::MESHSET_SET | moab::MESHSET_TRACK_OWNER, initialSet);
+  CHECK_EQUAL(moab::MB_SUCCESS, rval);
+  rval = mk->moab_instance()->load_file(filename, &initialSet);
+  CHECK_EQUAL(moab::MB_SUCCESS, rval);
 
   ModelEnt me(mk, iBase_EntitySetHandle(0), /*igeom instance*/0, initialSet);
   MEntVector selection;
@@ -272,8 +279,12 @@ int main(int argc, char* argv[])
   if(outfile)
   {
     std::cout << "writing output to " << outfile << std::endl;
-    mk->moab_instance()->write_mesh(outfile,
-       &initialSet, 1);
+    if (options.create_range)
+    {
+      mk->moab_instance()->write_mesh(outfile);// write everything left
+    }
+    else
+      mk->moab_instance()->write_mesh(outfile, &initialSet, 1);
   }
 
   return 0;

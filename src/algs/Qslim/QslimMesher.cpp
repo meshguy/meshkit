@@ -41,7 +41,8 @@ void QslimMesher::setup_this()
 // execute function: Generate the mesh for decimation
 void QslimMesher::execute_this()
 {
-	_worker->decimate(_opts);
+  // put the result in the range, eventually
+	_worker->decimate(_opts, mentSelection.begin()->second);
 	// this will modify the initialSet !!
 }
 
@@ -49,7 +50,7 @@ void QslimMesher::execute_this()
 // Deconstruction function
 QslimMesher::~QslimMesher()
 {
-
+  delete _worker;
 }
 
 
