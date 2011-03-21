@@ -27,11 +27,9 @@ libJaalQuadMesher_la_SOURCES = \
 	JaalMoabConverter.cpp \
 	JaalMoabConverter.hpp \
 	laplace.cpp \
-	matching.cpp \
 	Mesh.cpp \
 	Mesh.h \
 	Mesh.hpp \
-	meshclean.cpp \
 	mesh_io.cpp \
 	MeshOpt.cpp \
 	MeshRefine2D.hpp \
