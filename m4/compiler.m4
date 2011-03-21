@@ -5,7 +5,7 @@
 #  libtool variable name
 #  variable in which to store result
 #######################################################################################
-AC_DEFUN([ITAPS_LIBTOOL_VAR], [
+AC_DEFUN([FATHOM_LIBTOOL_VAR], [
   $3=`./libtool --tag=$1 --config | sed -e 's/^$2=//p' -e 'd' | tr -d '"\n'`
 ])
 
@@ -70,14 +70,15 @@ USER_CFLAGS="$CFLAGS"
 
   # Check for Parallel
   # Need to check this early so we can look for the correct compiler
-AC_ARG_WITH( [mpi], AC_HELP_STRING([[--with-mpi(=DIR)]], [Enable parallel support]),
+AC_ARG_WITH( [mpi], AC_HELP_STRING([[--with-mpi@<:@=DIR@:>@]], [Enable parallel support]),
              [WITH_MPI=$withval],[WITH_MPI=no] )
 if test "xno" != "x$WITH_MPI"; then
 
-  CC_LIST="mpicc mpcc"
-  CXX_LIST="mpiCC mpCC mpicxx"
-  FC_LIST="mpif90"
-  F77_LIST="mpif77"
+  CC_LIST="mpixlc mpicc mpcc"
+  CXX_LIST="mpixlcxx mpiCC mpCC mpicxx"
+  FC_LIST="mpixlf95 mpixlf90 mpif90"
+  F77_LIST="mpixlf77 mpif77"
+  DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-mpi=\"${withval}\""
   
   if test "xyes" == "x$WITH_MPI"; then
     FATHOM_SET_MPI_COMPILER([CC],  [$CC_LIST])
@@ -115,6 +116,7 @@ fi
 #
 #  CFLAGS   - C compiler flags
 #  CXXFLAGS - C++ compiler flags
+#  DEBUG - yes if specified, no otherwise
 #
 #######################################################################################
 AC_DEFUN([FATHOM_COMPILER_FLAGS], [
@@ -154,6 +156,7 @@ AC_ARG_ENABLE( optimize, AC_HELP_STRING([--enable-optimize],[Compile optimized (
 
 # Do enable_optimize by default, unless user has specified
 # custom CXXFLAGS or CFLAGS
+DEBUG=no
 if test "x$enable_debug" = "x"; then
   if test "x$enable_cxx_optimize" = "x"; then
     if test "x$USER_CXXFLAGS" = "x"; then
@@ -174,12 +177,10 @@ fi
 
 # Choose compiler flags from CLI args
 if test "xyes" = "x$enable_debug"; then
+  DEBUG=yes
   CXXFLAGS="$CXXFLAGS -g"
   CFLAGS="$CFLAGS -g"
   FCFLAGS="$FCFLAGS -g"
-  DEBUG=yes
-else
-  DEBUG=no
 fi
 if test "xyes" = "x$enable_cxx_optimize"; then
   CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG"
@@ -188,7 +189,7 @@ if test "xyes" = "x$enable_cc_optimize"; then
   CFLAGS="$CFLAGS -O2 -DNDEBUG"
 fi
 if test "xyes" = "x$enable_fc_optimize"; then
-  FCFLAGS="$FCFLAGS -O2 -DNDEBUG"
+  FCFLAGS="$FCFLAGS -O2"
 fi
 
   # Check for 32/64 bit.
@@ -336,7 +337,7 @@ case "$cxx_compiler:$host_cpu" in
   Intel:*)
     FATHOM_CXX_32BIT=-m32
     FATHOM_CXX_64BIT=-m64
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS -wd981 -wd383"
+    FATHOM_CXX_SPECIAL="$EXTRA_INTEL_FLAGS -wd981 -wd383"
     ;;
   VisualAge:*)
     FATHOM_CXX_32BIT=-q32
@@ -460,7 +461,7 @@ case "$cc_compiler:$host_cpu" in
   Intel:*)
     FATHOM_CC_32BIT=-m32
     FATHOM_CC_64BIT=-m64
-    FATHOM_CC_SPECIAL="$EXTRA_GNU_FLAGS -wd981 -wd383"
+    FATHOM_CC_SPECIAL="$EXTRA_INTEL_FLAGS -wd981 -wd383"
     ;;
   GNU:mips*)
     FATHOM_CC_32BIT="-mips32 -mabi=32"
