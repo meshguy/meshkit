@@ -27,11 +27,7 @@ const moab::EntityType* OneToOneSwept::output_types()
 // construction function for OneToOneSwept class
 OneToOneSwept::OneToOneSwept(MKCore *mk_core, const MEntVector &me_vec) : MeshScheme(mk_core, me_vec)
 {
-	buildAssociation();
-
-	
-
-	
+	buildAssociation();	
 
 }
 
@@ -305,6 +301,187 @@ void OneToOneSwept::setup_this()
 }
 
 //---------------------------------------------------------------------------//
+// PreprocessGeom function: preprocess the geometry and prepare for sweeping
+// e.g. specify the source surfaces, target surfaces, linking surfaces, mapping 
+//      the relation between the source surface and target surface
+void OneToOneSwept::PreprocessGeom(ModelEnt *me)
+{
+	//get geometry root set	
+	geom_root_set = me->igeom_instance()->getRootSet();
+
+	//get the geom_id_tag
+	const char *tag = "GLOBAL_ID";
+	iGeom::Error g_err = mk_core()->igeom_instance()->getTagHandle(tag, geom_id_tag);
+	IBERRCHK(g_err, "Trouble get the geom_id_tag for 'GLOBAL_ID'.");
+	
+	std::vector<iBase_EntityHandle> gFaces;
+	g_err = mk_core()->igeom_instance()->getEntities(geom_root_set, iBase_FACE, gFaces);
+	IBERRCHK(g_err, "Trouble get the geometrical faces from geom_root_set.");
+	
+	std::cout << "***********************************************************" << std::endl;
+	for (unsigned int i = 0; i < gFaces.size(); i++)
+	{
+		std::vector<iBase_EntityHandle> gVertices;
+		g_err = mk_core()->igeom_instance()->getEntAdj(gFaces[i], iBase_VERTEX, gVertices);
+		IBERRCHK(g_err, "Trouble get the adjacent geometrical vertices to a geometrical face.");
+		std::cout << "face index = " << i << std::endl;
+		std::cout << "------------------------------------------------------" << std::endl;
+		for (unsigned int j = 0; j < gVertices.size(); j++)
+		{
+			double testCoords[3];
+			g_err = mk_core()->igeom_instance()->getVtxCoord(gVertices[j], testCoords[0], testCoords[1], testCoords[2]);
+			IBERRCHK(g_err, "Trouble get the coordinates from the geometrical vertex.");
+			std::cout << "vertex index = " << j << "\tx = " <<  testCoords[0] << "\ty = " << testCoords[1] << "\tz = " << testCoords[2] << std::endl; 
+		}
+		std::cout << "------------------------------------------------------" << std::endl;
+	}
+	std::cout << "***********************************************************" << std::endl;
+	
+	//select the source surface and target surface	
+	int index_src, index_tar;
+	std::cout << "Please select the source surface:";
+	std::cin >> index_src;
+	sourceSurface = gFaces[index_src];
+	std::cout << "Please select the target surface";
+	std::cin >> index_tar;
+	targetSurface = gFaces[index_tar];
+
+	//initialize the vertices on the source surface
+	std::vector<iBase_EntityHandle> gVertices;
+	g_err = mk_core()->igeom_instance()->getEntAdj(sourceSurface, iBase_VERTEX, gVertices);
+	IBERRCHK(g_err, "Trouble get the adjacent vertices around the source surface.");
+	gsVertexList.resize(gVertices.size());	
+	for (unsigned int i = 0; i < gVertices.size(); i++)
+	{
+		gsVertexList[i].index = i;
+		gsVertexList[i].gVertexHandle = gVertices[i];
+		g_err = mk_core()->igeom_instance()->getVtxCoord(gVertices[i], gsVertexList[i].xyzCoords[0], gsVertexList[i].xyzCoords[1], gsVertexList[i].xyzCoords[2]);
+		IBERRCHK(g_err, "Trouble get the vertex coordinates on the source surface.");
+		g_err = mk_core()->igeom_instance()->getIntData(gVertices[i], geom_id_tag, gsVertexList[i].id);
+		IBERRCHK(g_err, "Trouble get the int data for vertices on the source surface.");
+		g_err = mk_core()->igeom_instance()->getEntXYZtoUVHint(sourceSurface, gsVertexList[i].xyzCoords[0], gsVertexList[i].xyzCoords[1], gsVertexList[i].xyzCoords[2], gsVertexList[i].uvCoords[0], gsVertexList[i].uvCoords[1]);
+		IBERRCHK(g_err, "Trouble get the parametric coordinates from xyz coordinates for vertices on the source surface.");
+		
+	}
+	//initialize the vertices on the target surface
+	gVertices.clear();
+	g_err = mk_core()->igeom_instance()->getEntAdj(targetSurface, iBase_VERTEX, gVertices);
+	IBERRCHK(g_err, "Trouble get the adjacent vertices around the target surface.");
+	gtVertexList.resize(gVertices.size());	
+	for (unsigned int i = 0; i < gVertices.size(); i++)
+	{
+		gtVertexList[i].index = i;
+		gtVertexList[i].gVertexHandle = gVertices[i];
+		g_err = mk_core()->igeom_instance()->getVtxCoord(gVertices[i], gtVertexList[i].xyzCoords[0], gtVertexList[i].xyzCoords[1], gtVertexList[i].xyzCoords[2]);
+		IBERRCHK(g_err, "Trouble get the vertex coordinates on the target surface.");
+		g_err = mk_core()->igeom_instance()->getIntData(gVertices[i], geom_id_tag, gtVertexList[i].id);
+		IBERRCHK(g_err, "Trouble get the int data for vertices on the target surface.");
+		g_err = mk_core()->igeom_instance()->getEntXYZtoUVHint(targetSurface, gtVertexList[i].xyzCoords[0], gtVertexList[i].xyzCoords[1], gtVertexList[i].xyzCoords[2], gtVertexList[i].uvCoords[0], gtVertexList[i].uvCoords[1]);
+		IBERRCHK(g_err, "Trouble get the parametric coordinates from xyz coordinates for vertices on the target surface.");
+		
+	}
+	
+
+	//initialize the edges on the source surface
+	std::vector<iBase_EntityHandle> gEdges;
+	g_err = mk_core()->igeom_instance()->getEntAdj(sourceSurface, iBase_EDGE, gEdges);
+	IBERRCHK(g_err, "Trouble get the adjacent edges around the source surface.");
+	gsEdgeList.resize(gEdges.size());
+	for (unsigned int i = 0; i < gEdges.size(); i++)
+	{
+		gsEdgeList[i].index = i;
+		gsEdgeList[i].gEdgeHandle = gEdges[i];
+		gVertices.clear();
+		g_err = mk_core()->igeom_instance()->getEntAdj(gEdges[i], iBase_VERTEX, gVertices);
+		IBERRCHK(g_err, "Trouble get the adjacent vertices of edge on the source surface.");
+		g_err = mk_core()->igeom_instance()->getIntData(gEdges[i], geom_id_tag, gsEdgeList[i].EdgeID);
+		IBERRCHK(g_err, "Trouble get the int data for edges on the source surface.");
+		//more work needs to be done here
+		
+	}
+
+	//initialize the edges on the target surface
+	gEdges.clear();	
+	g_err = mk_core()->igeom_instance()->getEntAdj(targetSurface, iBase_EDGE, gEdges);
+	IBERRCHK(g_err, "Trouble get the adjacent edges around the target surface.");
+	gtEdgeList.resize(gEdges.size());
+	for (unsigned int i = 0; i < gEdges.size(); i++)
+	{
+		gtEdgeList[i].index = i;
+		gtEdgeList[i].gEdgeHandle = gEdges[i];
+		gVertices.clear();
+		g_err = mk_core()->igeom_instance()->getEntAdj(gEdges[i], iBase_VERTEX, gVertices);
+		IBERRCHK(g_err, "Trouble get the adjacent vertices of edge on the target surface.");
+		g_err = mk_core()->igeom_instance()->getIntData(gEdges[i], geom_id_tag, gtEdgeList[i].EdgeID);
+		IBERRCHK(g_err, "Trouble get the int data for edges on the target surface.");
+		//more work needs to be done here
+		
+	}
+	
+	//initialize the edges on the linking faces
+	gEdges.clear();
+	//get all the edges in the whole model
+	g_err = mk_core()->igeom_instance()->getEntities(geom_root_set, iBase_EDGE, gEdges);
+	IBERRCHK(g_err, "Trouble get the adjacent vertices of edge on the target surface.");
+	int index = 0;	
+	for (unsigned int i = 0; i < gEdges.size(); i++)
+	{
+		int EID;
+		g_err = mk_core()->igeom_instance()->getIntData(gEdges[i], geom_id_tag, EID);
+		IBERRCHK(g_err, "Trouble get the int data for edges on the target surface.");
+		bool isInSrc = false, isInTar = false;
+		//check whether an edge is in edge list on the source surface
+		for (unsigned int j = 0; j < gsEdgeList.size(); j++)
+		{
+			if (EID == gsEdgeList[j].EdgeID)
+			{
+				isInSrc = true;
+				break;
+			}
+		}
+		//check whether an edge is in edge list on the target surface
+		for (unsigned int j = 0; j < gtEdgeList.size(); j++)
+		{
+			if (EID == gtEdgeList[j].EdgeID)
+			{
+				isInTar = true;
+				break;
+			}
+		}
+		if (!isInSrc && !isInTar)
+		{
+			index++;
+			gLinkSides.resize(index);
+			gLinkSides[index - 1].index = index - 1;
+			gLinkSides[index - 1].EdgeID = EID;
+			gLinkSides[index - 1].gEdgeHandle = gEdges[i];			
+		}
+		
+	}	
+
+	//initialize the linking faces
+	index = 0;
+	for (unsigned int i = 0; i < gFaces.size(); i++)
+	{
+		if (((int)i != index_src) && ( (int)i != index_tar ))
+		{
+			index++;
+			gLinkFaceList.resize(index);
+			gLinkFaceList[index - 1].gFaceHandle = gFaces[i];
+			gLinkFaceList[index - 1].index = index - 1;
+			g_err = mk_core()->igeom_instance()->getIntData(gFaces[i], geom_id_tag, gLinkFaceList[index - 1].FaceID);
+			IBERRCHK(g_err, "Trouble get the int data for linking surfaces.");
+		}
+	}
+
+	
+
+	
+	
+}
+
+
+//---------------------------------------------------------------------------//
 // execute function: generate the all-hex mesh through sweeping from source 
 // surface to target surface
 void OneToOneSwept::execute_this()
@@ -315,6 +492,10 @@ void OneToOneSwept::execute_this()
 	for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
   	{
     		ModelEnt *me = mit -> first;
+		if (me->get_meshed_state() >= COMPLETE_MESH)
+			continue;
+
+		PreprocessGeom(me);
 
     		//resize the coords based on the interval setting
     		numLayers = me->mesh_intervals();

@@ -18,6 +18,7 @@ BROKEN_TESTS = test_jaalquad
 
 TESTS = test_edgemesh \
         test_tfimapping \
+        test_onetooneswept \
         test_scdmesh \
         test_copymesh \
         test_copygeom \
@@ -37,6 +38,7 @@ endif
 
 test_edgemesh_SOURCES = test_edgemesh.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
+test_onetooneswept_SOURCES = test_onetooneswept.cpp
 test_ebmesh_SOURCES = test_ebmesh.cpp
 test_copymesh_SOURCES = test_copymesh.cpp
 test_copygeom_SOURCES = test_copygeom.cpp

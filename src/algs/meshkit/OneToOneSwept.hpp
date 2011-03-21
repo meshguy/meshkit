@@ -139,9 +139,12 @@ private:
 	
 	//specify the source surface for OneToOneSwept class
 	void SetSourceSurface();
-	
+
 	//specify the target surface for OneToOneSwept class
 	void SetTargetSurface();
+
+	//preprocess the geometry for sweeping
+	void PreprocessGeom(ModelEnt *me);
 	
 	//function for all-quad meshing on the target surface
 	int TargetSurfProjection();
@@ -177,6 +180,8 @@ private://private member variable
 	std::vector<Vertex> NodeList;  //mesh nodes on the source surface
 	map<int, int> edgePairs;  //store the relationship between the  edge id on the source surface and target surface
 	map<int, int> cornerPairs; ////store the relationship between the corner vertex id on the source surface and target surface	
+	std::vector<Vertex> gsVertexList;// geometrical vertices on the source surface
+	std::vector<Vertex> gtVertexList;// geometrical vertices on the target surface	
 	std::vector<Vertex> gVertexList; //geometrical vertex
 	std::vector<Face> gLinkFaceList;  //geometrical face list for linking surface
 	std::vector<Vertex> TVertexList;
@@ -184,9 +189,10 @@ private://private member variable
 	std::vector<Face> TFaceList;
 	std::vector<Edge> EdgeList;
 	std::vector<Face> FaceList;
-	vector<Edge> gLinkSides;  //geometrical edges for linking sides between source and target
+	std::vector<Edge> gLinkSides;  //geometrical edges for linking sides between source and target
 	int numLayers;
 	iBase_TagHandle  geom_id_tag, mesh_id_tag;
+	iBase_EntitySetHandle geom_root_set, mesh_root_set;
 	iBase_EntityHandle volEntity;
 	iBase_EntitySetHandle volumeSet;	
 
