@@ -39,6 +39,7 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/CopyGeom.hpp \
 	meshkit/ExtrudeMesh.hpp \
 	meshkit/CESets.hpp \
+	meshkit/TransformBase.hpp \
 	meshkit/Transform.hpp \
 	meshkit/OneToOneSwept.hpp \
 	meshkit/TFIMapping.hpp
