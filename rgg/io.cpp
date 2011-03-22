@@ -2186,9 +2186,10 @@ int CNrgen::Create2DSurf ()
 
   // find the number of surfaces 't' for array allocation
   int nTemp = 1;
-  double dtol = m_dMZAssm(nTemp, 2);
+  double dTol = 1e-3;
+  double dtop = m_dMZAssm(nTemp, 2);
   for (int i = 0; i < surfs.size(); ++i){ 
-    if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol))
+    if((abs(max_corn[3*i+2] -  dtop) < dTol) && (abs(min_corn[3*i+2] - dtop)<dTol))
       t++;
   }
   
@@ -2201,7 +2202,7 @@ int CNrgen::Create2DSurf ()
   for (int i = 0; i < surfs.size(); ++i){
 
     // locate surfaces for which max and min zcoord is same as maxz coord
-    if((max_corn[3*i+2] ==  dtol) && (min_corn[3*i+2] ==  dtol)){
+     if((abs(max_corn[3*i+2] -  dtop) < dTol) && (abs(min_corn[3*i+2] - dtop) < dTol)){
       max_surfs[t] = surfs[i];
       t++;
     }
