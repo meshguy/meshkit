@@ -205,7 +205,7 @@ void ModelEnt::set_senses()
       else {
         err = igeomInstance->getEntNrmlSense((*vit)->geom_handle(), iGeomEnt, dum_sense);
         IBERRCHK(err, "Problem getting senses.");
-        rval = gt.set_sense((*vit)->mesh_handle(), moabEntSet, dum_sense);
+        rval = gt.set_sense((*vit)->mesh_handle(), moabEntSet, dum_sense==1);
         MBERRCHK(rval, mkCore->moab_instance());
       }
     }
@@ -227,7 +227,7 @@ void ModelEnt::set_senses()
       int dum_sense;
       err = igeomInstance->getEntNrmlSense(iGeomEnt, (*vit)->geom_handle(), dum_sense);
       IBERRCHK(err, "Problem getting senses.");
-      rval = gt.set_sense(moabEntSet, (*vit)->mesh_handle(), dum_sense);
+      rval = gt.set_sense(moabEntSet, (*vit)->mesh_handle(), dum_sense==1);
       MBERRCHK(rval, mkCore->moab_instance());
     }
   }
