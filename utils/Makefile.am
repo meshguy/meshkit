@@ -29,7 +29,7 @@ TESTS = $(check_PROGRAMS)
 
 MKUtils_test_SOURCES = MKUtils_test.cpp
 MKUtils_test_DEPENDENCIES = MKUtils.hpp libMKutils.la
-MKUtils_test_CXXFLAGS = -DTEST -DTEMPLATE_DEFS_INCLUDED $(CXXFLAGS)
+MKUtils_test_CXXFLAGS = -DTEST $(CXXFLAGS)
 MKUtils_test_LDADD = libMKutils.la $(IMESH_LIBS) $(IGEOM_LIBS) 
 
 # Boilerplate stuff that doesn't depend on what the targets are
