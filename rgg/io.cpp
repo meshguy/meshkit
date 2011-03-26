@@ -950,6 +950,8 @@ int CNrgen::CreateCubitJournal()
 
   //surface only
   if(m_nPlanar ==1){ 
+    m_FileOutput << "# Pointing surface normals to 0.0, 0.0, -1.0 or -ve Z or correct STAR-CCM+ cell-face orientation" << std::endl;
+    m_FileOutput << "surface all normal opposite" << std::endl;
     if(m_szSideset == "yes"){
       for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	++nSideset;
