@@ -24,7 +24,7 @@ CCrgen class declaration
 #include "matrixtemplate.hpp"
 #include "utils.hpp"
 
-#ifdef MOAB
+#ifdef HAVE_MOAB
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"

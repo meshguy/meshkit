@@ -156,9 +156,11 @@ int main (int argc, char *argv[])
       std::cout << "***Memory used: " << mem7 << " kb\n"<< std::endl;
     }
   }
-
-  err = TheCore.close ();
-  ERRORR("Failed to dellocate.", 1);
+  
+  if(run_flag == 1){
+    err = TheCore.close ();
+    ERRORR("Failed to dellocate.", 1);
+  }
   
 
   // get the current date and time

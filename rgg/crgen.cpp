@@ -722,9 +722,12 @@ int CCrgen::write_makefile()
   make_file << "COREGEN = ../../coregen\n" << std::endl;
   make_file << "ASSYGEN = ../../assygen\n" << std::endl;
 
+  // remove the ./ if run from the current working directory
   make_file << "MESH_FILES = " ;
-  for(unsigned int i=0; i<files.size(); i++)
+  for(unsigned int i=0; i<files.size(); i++){
+    files[i] = files[i].substr(2, files[i].length());
     make_file << files[i] << "  ";
+  }
 
   
   // get file names without extension
@@ -1078,7 +1081,7 @@ int CCrgen::create_neumannset()
     if(extrude_flag == true)
       set_DIM = 3;
 
-#ifdef MOAB  
+#ifdef HAVE_MOAB  
     int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
     double z1 = 0.0, z2 = 0.0;
     iBase_TagHandle ntag1, gtag1;
