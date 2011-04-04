@@ -79,12 +79,8 @@ GraphNode *MKGraph::find_node(std::string op_name) const
   return NULL;
 }
 
-void MKGraph::insert_node(GraphNode *inserted, GraphNode *before) 
+void MKGraph::insert_node(GraphNode *inserted, GraphNode *before, GraphNode *after) 
 {
-    // get the corresponding Lemon nodes
-  lemon::ListDigraph::Node linserted = inserted->get_node(), 
-      lbefore = before->get_node();
-  
     // if inserted is a leaf node (i.e. is connected to leafNode), disconnect from that
   if (mkGraph.target(inserted->out_arcs()) == leafNode->get_node())
     mkGraph.erase(inserted->out_arcs());
@@ -92,9 +88,49 @@ void MKGraph::insert_node(GraphNode *inserted, GraphNode *before)
     // if before is a root node (i.e. is connected to rootNode), also disconnect that
   if (mkGraph.source(before->in_arcs()) == rootNode->get_node())
     mkGraph.erase(before->in_arcs());
+
+  lemon::ListDigraph::InArcIt iter, jter;
+  if (after != NULL) { // if after is specified
+    lemon::ListDigraph::Node after_node = after->get_node();
+
+    // check if it is already connected
+    bool b_connected = false;
+    for (iter = inserted->in_arcs(); iter != lemon::INVALID; ++iter) {
+      if (mkGraph.source(iter) == after_node) {
+        b_connected = true;
+        break;
+      }
+    }
     
-    // now link inserted to the root, and to before
-  mkGraph.addArc(rootNode->get_node(), inserted->get_node());
+    if (!b_connected) mkGraph.addArc(after_node, inserted->get_node()); // add a new arc
+
+    // remove the arc from after node
+    for (iter = before->in_arcs(); iter != lemon::INVALID; ++iter) {
+      if (mkGraph.source(iter) == after_node) {
+        mkGraph.erase(iter);
+        break;
+      }
+    }
+  }
+  else { // check all predecessors
+    for (iter = before->in_arcs(); iter != lemon::INVALID; ++iter) {
+      lemon::ListDigraph::Node after_node = mkGraph.source(iter);
+
+      // check if it is already connected
+      bool b_connected = false;
+      for (jter = inserted->in_arcs(); jter != lemon::INVALID; ++jter) {
+        if (mkGraph.source(jter) == after_node) {
+          b_connected = true;
+          break;
+        }
+      }
+
+      if (!b_connected) mkGraph.addArc(after_node, inserted->get_node());  // add a new arc
+      mkGraph.erase(iter); // remove the arc from after node
+    }
+  }
+    
+    // now link inserted to before
   mkGraph.addArc(inserted->get_node(), before->get_node());
 }
 

@@ -91,8 +91,9 @@ public:
     /** \brief Insert a node in the graph just before the specified node
      * \param inserted Node being inserted
      * \param before Node before which new node is inserted
+     * \param after Node after which new node is inserted (default: NULL)
      */
-  void insert_node(GraphNode *inserted, GraphNode *before);
+  void insert_node(GraphNode *inserted, GraphNode *before, GraphNode *after= NULL);
 
     /** \brief add a graph edge from one node to another
      * \param source Source node
