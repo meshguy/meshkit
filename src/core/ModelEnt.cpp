@@ -84,6 +84,11 @@ void ModelEnt::create_mesh_set(int flag)
   rval = mkCore->moab_instance()->tag_set_data(mkCore->moab_model_tag(), &moabEntSet, 1, &this_ptr);
   MBERRCHK(rval, mkCore->moab_instance());
 
+  // tag it with geometry dimension
+   int geom_dim = this_tp;
+   rval = mkCore->moab_instance()->tag_set_data(mkCore->moab_geom_dim_tag(), &moabEntSet, 1, &geom_dim);
+   MBERRCHK(rval, mkCore->moab_instance());
+
     // relate the mesh to the geom, only if iRelFlag is true
   if (iRelFlag)
   {
@@ -205,7 +210,8 @@ void ModelEnt::set_senses()
       else {
         err = igeomInstance->getEntNrmlSense((*vit)->geom_handle(), iGeomEnt, dum_sense);
         IBERRCHK(err, "Problem getting senses.");
-        rval = gt.set_sense((*vit)->mesh_handle(), moabEntSet, dum_sense==1);
+
+        rval = gt.set_sense((*vit)->mesh_handle(), moabEntSet, dum_sense);
         MBERRCHK(rval, mkCore->moab_instance());
       }
     }
