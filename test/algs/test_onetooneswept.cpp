@@ -32,7 +32,7 @@ void test_brick()
 	std::string file_name = TestDir + "/BrickWithSrcMeshed.cub";
 	
 	//load the geometry
-	mk->load_geometry(file_name.c_str());
+	mk->load_geometry(file_name.c_str(), 0, 0, false);
 	//load the mesh	
 	mk->load_mesh(file_name.c_str());
 	//populate the mesh and create the relation between the geometry and mesh

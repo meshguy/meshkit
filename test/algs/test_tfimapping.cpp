@@ -28,16 +28,16 @@ int main(int argc, char **argv)
 
   int num_fail = 0;
   
-  num_fail += RUN_TEST(test_TFImapping);
+  //num_fail += RUN_TEST(test_TFImapping);
   
-  //num_fail += RUN_TEST(test_TFImappingcubit);
+  num_fail += RUN_TEST(test_TFImappingcubit);
   
 }
 
 void test_TFImappingcubit()
 {
 	std::string file_name = TestDir + "/SquareWithEdgesMeshed.cub";
-  	mk->load_geometry(file_name.c_str());
+  	mk->load_geometry(file_name.c_str(), 0, 0, false);
 
 	mk->load_mesh(file_name.c_str());
 

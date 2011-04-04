@@ -79,6 +79,7 @@ struct Face
     	int  getNumNodes() const { return connect.size(); }
     	Vertex* getVertex(int i) const { return connect[i]; }
     	vector<Vertex*> connect;
+	vector<Edge*> connEdges;
     	int FaceID;
 	int index;
 	iBase_EntityHandle gFaceHandle;
@@ -135,7 +136,7 @@ private:
 	int isEdgeBoundary(iBase_EntityHandle gEdgeHandle);	
 
 	//find the corner node list, inner node list and edge node list for the mesh on the source surface
-	void GetList();
+	void PreprocessMesh(ModelEnt *me);
 	
 	//specify the source surface for OneToOneSwept class
 	void SetSourceSurface();
