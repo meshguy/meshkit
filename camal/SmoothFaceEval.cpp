@@ -2068,11 +2068,11 @@ MBErrorCode SmoothFaceEval::find_loops() {
 		rval = _mb->get_connectivity(lastEdge, conn21, nnodes);
 		if (MB_SUCCESS != rval)
 			return MB_FAILURE;
-		if (sense == 0) // forward
+		if (sense == 1) // forward
 		{
 			startV.push_back(conn2[0]);// the first node of the first edge
 			endV.push_back(conn21[1]); // the second node of the last edge in chain
-		} else if (sense == 1) // backward
+		} else if (sense == -1) // backward
 		{
 			startV.push_back(conn21[1]);
 			endV.push_back(conn2[0]);

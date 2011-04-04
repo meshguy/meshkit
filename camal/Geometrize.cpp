@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
 	// get the GeomTopoTool on the mesh
 
 	moab::GeomTopoTool geomTool(MBI);
-	int sense = 0;//
+	int sense = 1;//
 	std::vector<int> senses;
 	senses.push_back(sense);
 	std::vector<MBEntityHandle> sets1;

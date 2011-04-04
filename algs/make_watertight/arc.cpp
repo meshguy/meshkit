@@ -642,12 +642,12 @@ namespace arc {
           result = gt.get_senses( *j, surfs, senses );
           if(gen::error(MB_SUCCESS!=result,"failed to get senses")) return result;
           for(unsigned k=0; k<surfs.size(); ++k) {
-            if(0==senses[k])
-              senses[k] = 1;
-            else if(1==senses[k])
-              senses[k] = 0;
-            else if(-1==senses[k])
+            if(1==senses[k])
               senses[k] = -1;
+            else if(-1==senses[k])
+              senses[k] = 1;
+            else if (0==senses[k])
+              ;// do nothing, it is OK to have both senses
             else
               if(gen::error(true,"unrecognized sense")) return MB_FAILURE;
           }   

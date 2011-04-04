@@ -214,7 +214,7 @@ int main( int argc, char *argv[] )
     std::cout << "entity set number=" << esets_size << std::endl;
   }
   moab::GeomTopoTool geomTool(reinterpret_cast<MBiMesh*> (mesh)->mbImpl);
-  int sense = 0;//
+  int sense = 1;//
   std::vector<int> senses;
   senses.push_back(sense);
   std::vector<MBEntityHandle> setFaces;

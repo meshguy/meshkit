@@ -288,7 +288,7 @@ int main (int argc, char * argv[])
 	std::vector<MBEntityHandle> faces;
 	faces.push_back(face1); // the face1 has all edges oriented positively
 	std::vector<int> senses;
-	senses.push_back(0); //
+	senses.push_back(moab::SENSE_FORWARD); //
 
 	//faces.push_back(face1);
 	//faces.push_back(face2);
@@ -304,7 +304,7 @@ int main (int argc, char * argv[])
 	// the only complication is edge1 (edge[0]), that has face1 forward and face 2 reverse
 	faces[0]=face1;
 	faces.push_back(face2);
-	senses.push_back(1); // 1 is reverse; face 2 is reverse for edge1 (0)
+	senses.push_back(moab::SENSE_REVERSE); // -1 is reverse; face 2 is reverse for edge1 (0)
 	// forward == 0, reverse ==1
 	gTopoTool.set_senses(edge[0], faces, senses);
 
