@@ -417,12 +417,12 @@ void OneToOneSwept::PreprocessGeom(ModelEnt *me)
 	std::cout << "***********************************************************" << std::endl;
 	
 	//select the source surface and target surface	
-	int index_src, index_tar;
-	std::cout << "Please select the source surface:";
-	std::cin >> index_src;
+	//int index_src, index_tar;
+	//std::cout << "Please select the source surface:";
+	//std::cin >> index_src;
 	sourceSurface = gFaces[index_src];
-	std::cout << "Please select the target surface:";
-	std::cin >> index_tar;
+	//std::cout << "Please select the target surface:";
+	//std::cin >> index_tar;
 	targetSurface = gFaces[index_tar];
 
 	//create a id tag handle for source surface and target surface
@@ -685,7 +685,7 @@ void OneToOneSwept::PreprocessGeom(ModelEnt *me)
 				}
 				
 			}
-			
+
 			//assigned 2 vertices on the edge of source surface to the list
 			gLinkFaceList[index - 1].connect.resize(4);
 			gVertices.clear();
@@ -716,7 +716,10 @@ void OneToOneSwept::PreprocessGeom(ModelEnt *me)
 			{
 				gLinkFaceList[index - 1].connEdges[1] = &gLinkSides[link_edge_index2];
 				gLinkFaceList[index - 1].connEdges[2] = &gLinkSides[link_edge_index1];
-			}			
+			}
+
+			//store the edge relationship 
+			edgePairs[gLinkFaceList[index - 1].connEdges[0]->index] = gLinkFaceList[index - 1].connEdges[3]->index;		
 		}
 	}	
 }
@@ -736,6 +739,25 @@ void OneToOneSwept::execute_this()
 			continue;
 
 		PreprocessGeom(me);
+		
+		
+		/********************************************************************************************************/
+		std::cout << "test geometry:\n"; 
+		std::cout << "test vertex pair:\n"; 		
+		for (unsigned int i = 0; i < gsVertexList.size(); i++)
+			std::cout << "source vertex index = " << i  << "\t target vertex index = " << cornerPairs[i] << std::endl;
+		std::cout << "test Edge pair:\n";
+		for (unsigned int i = 0; i < gsEdgeList.size(); i++)
+			std::cout << "source edge index = " << i  << "\t target edge index = " << edgePairs[i] << std::endl;
+		
+	
+
+
+		/********************************************************************************************************/
+
+
+
+
 		
 
 		me->boundary(0, nodes);
@@ -778,16 +800,16 @@ void OneToOneSwept::execute_this()
 
 //---------------------------------------------------------------------------//
 // set the source surface function
-void OneToOneSwept::SetSourceSurface()
+void OneToOneSwept::SetSourceSurface(int index)
 {
-
+	index_src = index;
 }
 
 //---------------------------------------------------------------------------//
 // set the target surface function
-void OneToOneSwept::SetTargetSurface()
+void OneToOneSwept::SetTargetSurface(int index)
 {
-
+	index_tar = index;
 }
 
 
@@ -2460,7 +2482,7 @@ int OneToOneSwept::TargetSurfProjection()
 			int index_id;
 			g_err = mk_core()->igeom_instance()->getIntData(curves[j]->geom_handle(), geom_id_tag, index_id);
 			IBERRCHK(g_err, "Trouble get the int data for the edge on the target surface.");
-			if (index_id == gtEdgeList[i].EdgeID)
+			if (index_id == gtEdgeList[edgePairs[i]].EdgeID)
 			{	
 				edge_curve[0] = curves[j];
 				break;
@@ -2481,6 +2503,16 @@ int OneToOneSwept::TargetSurfProjection()
 		m_err = mk_core()->imesh_instance()->getEntities(TestSet, iBase_VERTEX, iMesh_POINT, testNodes);
 		IBERRCHK(m_err, "Trouble get the mesh nodes from the mesh entity set.");
 
+		std::cout << "Source Mesh: Edge index = " << i << std::endl;
+		for (unsigned int k = 0; k < nodes_src.size(); k++)
+		{
+			double coords[3];
+			m_err = mk_core()->imesh_instance()->getVtxCoord(nodes_src[k], coords[0], coords[1], coords[2]);
+			IBERRCHK(m_err, "Trouble get the coordinates from mesh nodes.");
+			std::cout << "index i = " << k  << "\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2] << std::endl;
+		}
+
+		std::cout << "Target Mesh: Edge index = " << edgePairs[i] << std::endl;
 		for (unsigned int k = 0; k < testNodes.size(); k++)
 		{
 			double coords[3];
@@ -2500,10 +2532,10 @@ int OneToOneSwept::TargetSurfProjection()
 		int sense_src, sense_tar;
 		g_err = mk_core()->igeom_instance()->getEgVtxSense(gsEdgeList[i].gEdgeHandle, gsEdgeList[i].connect[0]->gVertexHandle, gsEdgeList[i].connect[1]->gVertexHandle, sense_src);
 		IBERRCHK(g_err, "Trouble get the sense of edge with respect to two vertices on the source surface.");
-		g_err = mk_core()->igeom_instance()->getEgVtxSense(gtEdgeList[i].gEdgeHandle, gtVertexList[cornerPairs[gsEdgeList[i].connect[0]->index]].gVertexHandle, gtVertexList[cornerPairs[gsEdgeList[i].connect[1]->index]].gVertexHandle, sense_tar);
+		g_err = mk_core()->igeom_instance()->getEgVtxSense(gtEdgeList[edgePairs[i]].gEdgeHandle, gtVertexList[cornerPairs[gsEdgeList[i].connect[0]->index]].gVertexHandle, gtVertexList[cornerPairs[gsEdgeList[i].connect[1]->index]].gVertexHandle, sense_tar);
 		IBERRCHK(g_err, "Trouble get the sense of edge with respect to two vertices on the target surface.");
 		
-		r_err = mk_core()->irel_pair()->getEntSetRelation(gtEdgeList[i].gEdgeHandle, 0, mEdgeSet);
+		r_err = mk_core()->irel_pair()->getEntSetRelation(gtEdgeList[edgePairs[i]].gEdgeHandle, 0, mEdgeSet);
 		IBERRCHK(r_err, "Trouble get the entity set for edge from target surface.");
 
 		std::vector<iBase_EntityHandle> nodes_tar;
@@ -2571,8 +2603,30 @@ int OneToOneSwept::TargetSurfProjection()
 			}
 		}									
 	}
-	
 	//Until now, all the nodes have been created on the boundary edge.
+
+
+	/***************************************************************************************************/
+	//test
+	std::cout << "test nodes on the edge of source surface and target surface\n";	
+	for (unsigned int i = 0; i < NodeList.size(); i++)
+	{
+		std::cout << "source index = " << i << "\tx = " << NodeList[i].xyzCoords[0] << "\ty = " << NodeList[i].xyzCoords[1] << "\tz = " << NodeList[i].xyzCoords[2] << std::endl;
+		std::cout << "target index = " << i << "\tx = " << TVertexList[i].xyzCoords[0] << "\ty = " << TVertexList[i].xyzCoords[1] << "\tz = " << TVertexList[i].xyzCoords[2] << std::endl;
+
+	}
+	
+
+
+
+	/***************************************************************************************************/
+
+
+
+
+
+
+	
 	//get the parametric coordinates for nodes on the boundary edges and cornersfrom the source surface and target surface
 	vector<Point2D> sPtsUV(0), tPtsUV(0);
 	int index=0; 

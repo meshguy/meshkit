@@ -61,6 +61,9 @@ void test_brick()
 	//make a one-to-one sweeping
 	OneToOneSwept *sw = (OneToOneSwept*) mk->construct_meshop("OneToOneSwept", vols);
 
+	sw->SetSourceSurface(1);
+	sw->SetTargetSurface(0);
+
 	//set up the size
 	SizingFunction swSize(mk, 10, -1);
 	this_vol->sizing_function_index(swSize.core_index());

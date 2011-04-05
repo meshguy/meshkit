@@ -128,6 +128,13 @@ public:
           { return output_types(); }
 
 
+	//specify the source surface for OneToOneSwept class
+	void SetSourceSurface(int index);
+
+	//specify the target surface for OneToOneSwept class
+	void SetTargetSurface(int index);
+
+
 private:
 	//Build Association function: try to build the association between the geometry and mesh
 	void buildAssociation();
@@ -137,12 +144,6 @@ private:
 
 	//find the corner node list, inner node list and edge node list for the mesh on the source surface
 	void PreprocessMesh(ModelEnt *me);
-	
-	//specify the source surface for OneToOneSwept class
-	void SetSourceSurface();
-
-	//specify the target surface for OneToOneSwept class
-	void SetTargetSurface();
 
 	//preprocess the geometry for sweeping
 	void PreprocessGeom(ModelEnt *me);
@@ -195,7 +196,8 @@ private://private member variable
 	iBase_TagHandle  geom_id_tag, mesh_id_tag;
 	iBase_EntitySetHandle geom_root_set, mesh_root_set;
 	iBase_EntityHandle volEntity;
-	iBase_EntitySetHandle volumeSet;	
+	iBase_EntitySetHandle volumeSet;
+	int index_src, index_tar;	
 
 	
 	
