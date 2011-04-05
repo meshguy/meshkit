@@ -3,6 +3,7 @@
 #include "meshkit/iMesh.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 #include "meshkit/EdgeMesher.hpp"
+#include "meshkit/TFIMapping.hpp"
 #include <iostream>
 #include <math.h>
 #include <map>
@@ -164,21 +165,7 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 			m_err = mk_core()->imesh_instance()->setIntData(Nodes[j], taghandle, NodeList[entity_index-1].index);
 			IBERRCHK(m_err, "Trouble set the int value for nodes.");
 		}		
-	}	
-	
-	/*****************************************************************************************************************/
-	std::cout << "Node size = " << NodeList.size() << std::endl;
-	for (unsigned int i = 0; i < NodeList.size(); i++)
-	{
-		std::cout << "i = " << i << "\tx = " << NodeList[i].xyzCoords[0] << "\ty = " << NodeList[i].xyzCoords[1] << "\t z = " << NodeList[i].xyzCoords[2] << std::endl;
-
 	}
-
-	
-
-
-	/*****************************************************************************************************************/
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 	//get the edge list for the source surf mesh
@@ -266,7 +253,7 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 		IBERRCHK(r_err, "Trouble get the int data for mesh node on the source surface.");
 		
 		//get the mesh entity node from the target surface
-		r_err = mk_core()->irel_pair()->getEntSetRelation(gtVertexList[i].gVertexHandle, 0, tmpSet);
+		r_err = mk_core()->irel_pair()->getEntSetRelation(gtVertexList[cornerPairs[i]].gVertexHandle, 0, tmpSet);
 		IBERRCHK(r_err, "Trouble get the mesh entity set from the geometry entity handle.");
 		Nodes.clear();
 		m_err = mk_core()->imesh_instance()->getEntities(tmpSet, iBase_VERTEX, iMesh_POINT, Nodes);
@@ -275,7 +262,7 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 		if (Nodes.size()==0)
 		{
 			Nodes.resize(1);
-			m_err = mk_core()->imesh_instance()->createVtx(gtVertexList[i].xyzCoords[0], gtVertexList[i].xyzCoords[1], gtVertexList[i].xyzCoords[2], Nodes[0]);
+			m_err = mk_core()->imesh_instance()->createVtx(gtVertexList[cornerPairs[i]].xyzCoords[0], gtVertexList[cornerPairs[i]].xyzCoords[1], gtVertexList[cornerPairs[i]].xyzCoords[2], Nodes[0]);
 			IBERRCHK(m_err, "Trouble create the mesh node for the geometry entity vertex.");
 			m_err = mk_core()->imesh_instance()->addEntToSet(Nodes[0], tmpSet);
 			IBERRCHK(m_err, "Trouble add the mesh node entity to the set.");
@@ -749,9 +736,6 @@ void OneToOneSwept::execute_this()
 		std::cout << "test Edge pair:\n";
 		for (unsigned int i = 0; i < gsEdgeList.size(); i++)
 			std::cout << "source edge index = " << i  << "\t target edge index = " << edgePairs[i] << std::endl;
-		
-	
-
 
 		/********************************************************************************************************/
 
@@ -761,23 +745,6 @@ void OneToOneSwept::execute_this()
 		
 
 		me->boundary(0, nodes);
-
-		//test the result
-		/*************************************************************************************************************
-		std::cout << "node size in Execute function is " << nodes.size() << std::endl;
-		for (unsigned int i = 0; i < nodes.size(); i++)
-		{
-			double pts[3];
-			moab::ErrorCode rval = mk_core()->moab_instance()->get_coords(&nodes[i], 1, &pts[0]);
-    			MBERRCHK(rval, mk_core()->moab_instance());
-
-			std::cout << "i = " << i << "\tx = " << pts[0] << "\ty = " << pts[1] << "\tz = " << pts[2] << std::endl;
-
-		}
-
-		**************************************************************************************************************/
-
-
 		
 		PreprocessMesh(me);
 
@@ -789,6 +756,21 @@ void OneToOneSwept::execute_this()
 		//necessary steps for setting up the source surface and target surfaces
     		
 		TargetSurfProjection();
+
+		/***************************************************************************************************/
+		//test
+		std::cout << "test nodes on the edge of source surface and target surface\n";	
+		for (unsigned int i = 0; i < NodeList.size(); i++)
+		{
+			std::cout << "source index = " << i << "\tx = " << NodeList[i].xyzCoords[0] << "\ty = " << NodeList[i].xyzCoords[1] << "\tz = " << NodeList[i].xyzCoords[2] << "\tOnBoundary = " << NodeList[i].onBoundary << "\tOnCorner = " << NodeList[i].onCorner << std::endl;
+			std::cout << "target index = " << i << "\tx = " << TVertexList[i].xyzCoords[0] << "\ty = " << TVertexList[i].xyzCoords[1] << "\tz = " << TVertexList[i].xyzCoords[2] << "\tOnBoundary = " << TVertexList[i].onBoundary << "\tOnCorner = " << TVertexList[i].onCorner << std::endl;
+
+		}
+	
+		/***************************************************************************************************/
+		
+
+
 		InnerLayerMeshing();
 		
 
@@ -831,11 +813,11 @@ int OneToOneSwept::InnerLayerMeshing()
 	for (unsigned int i = 0; i < gLinkFaceList.size(); i++)
 	{		
 		ModelEnt link_surf(mk_core(), gLinkFaceList[i].gFaceHandle, mk_core()->igeom_instance(), 0, 0);
-		if (link_surf.get_meshed_state()>=COMPLETE_MESH);
+		if (link_surf.get_meshed_state()>=COMPLETE_MESH)
 		{
 			iBase_EntitySetHandle mEdgeSet;
 			r_err = mk_core()->irel_pair()->getEntSetRelation(gLinkFaceList[i].connEdges[1]->gEdgeHandle, 0, mEdgeSet);
-			IBERRCHK(m_err, "Trouble get the mesh entity set from the geometrical linking edges.");
+			IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical linking edges.");
 
 			int num_lines;
 			m_err = mk_core()->imesh_instance()->getNumOfType(mEdgeSet, iBase_EDGE, num_lines);
@@ -872,7 +854,9 @@ int OneToOneSwept::InnerLayerMeshing()
 		}
 	}
 	*/
+	
 
+	//case 1: if numLayers = 1, then it is not necessary to create any vertices for linking surface, All the vertices have been created by source surface and target surface
 	vector<vector <Vertex> > linkVertexList(numLayers-1, vector<Vertex>(NodeList.size()));
 	
 	LinkSurfMeshing(linkVertexList);
@@ -1310,149 +1294,70 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
 	IBERRCHK(m_err, "Trouble get tag handle of the source surface.");
 
-	for (unsigned int i=0; i < gLinkSides.size(); i++)
+	//Loop over the linking surface, and check whether the two linking edges are meshed or not
+	for (unsigned int i = 0; i < gLinkFaceList.size(); i++)
 	{
-		int sIndex, stIndex;
-		double u0, u1;
-		std::vector<iBase_EntityHandle> mNodeHandle(numLayers-1);
-		//find the node
-		for (unsigned int j=0; j < gVertexList.size(); j=j+2)
+		ModelEnt surf(mk_core(), gLinkFaceList[i].gFaceHandle, mk_core()->igeom_instance(), 0, 0);		
+		MEntVector curves, edge_curve;
+		surf.get_adjacencies(1, curves);
+		int index = 0;
+
+		//find the two linking edges
+		for (unsigned int j = 0; j < curves.size(); j++)
 		{
-			if ((gLinkSides[i].connect[0]->id == gVertexList[j].id)||(gLinkSides[i].connect[1]->id == gVertexList[j].id))
+			int index_id;
+			g_err = mk_core()->igeom_instance()->getIntData(curves[j]->geom_handle(), geom_id_tag, index_id);
+			IBERRCHK(g_err, "Trouble get the int data for the edge on the target surface.");
+			//based on the previous specified storage, gLinkFaceList[i].connEdges[1] and gLinkFaceList[i].connEdges[2] are the linking edges
+			if ((index_id == gLinkFaceList[i].connEdges[1]->EdgeID)||(index_id == gLinkFaceList[i].connEdges[2]->EdgeID))
 			{
-				sIndex = j;
-				break;
+				index++;
+				edge_curve.resize(index);	
+				edge_curve[index-1] = curves[j];
+				continue;
 			}
 		}
 		
-		//find the corresponding mesh vertex on the target surface in order to get index for mesh vertex
-		iBase_EntitySetHandle CornerSet;
-		std::vector<iBase_EntityHandle> tmpNodes;
-		r_err = mk_core()->irel_pair()->getEntSetRelation(gVertexList[sIndex].gVertexHandle, 0, CornerSet);
-		IBERRCHK(r_err, "Trouble get the mesh entity set through the geometrical entity.");
-		m_err = mk_core()->imesh_instance()->getEntities(CornerSet, iBase_VERTEX, iMesh_POINT, tmpNodes);
-		IBERRCHK(m_err, "Trouble get the entities from the entity set.");
-		assert(tmpNodes.size()==1);
-		m_err = mk_core()->imesh_instance()->getIntData(tmpNodes[0], taghandle, stIndex);
-		IBERRCHK(m_err, "Trouble get the int data from the mesh node entity.");		
-	
-		g_err = mk_core()->igeom_instance()->getEntXYZtoU(gLinkSides[i].gEdgeHandle, gVertexList[sIndex].xyzCoords[0], gVertexList[sIndex].xyzCoords[1], gVertexList[sIndex].xyzCoords[2], u0);
-		IBERRCHK(g_err, "Trouble get the parametric coordinates from x, y, z coordinates.");
-		g_err = mk_core()->igeom_instance()->getEntXYZtoU(gLinkSides[i].gEdgeHandle, gVertexList[cornerPairs[sIndex]].xyzCoords[0], gVertexList[cornerPairs[sIndex]].xyzCoords[1], gVertexList[cornerPairs[sIndex]].xyzCoords[2], u1);
-		IBERRCHK(g_err, "Trouble get the parametric coordinates from x, y, z coordinates.");
-		
-		
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//detect whether linking side[i] is discretized or not
-		iBase_EntitySetHandle TestSet;
-		r_err = mk_core()->irel_pair()->getEntSetRelation(gLinkSides[i].gEdgeHandle, 0, TestSet);
-		if (!r_err)
-		{//linking side gLinkSides[i] has been discretized
-			std::vector<iBase_EntityHandle> vertices;
-			m_err = mk_core()->imesh_instance()->getEntities(TestSet, iBase_VERTEX, iMesh_ALL_TOPOLOGIES, vertices);
-			IBERRCHK(m_err, "Trouble get the entities from the entity set.");
+		//initialize the size function to prepare for generating the edge mesh for linking edges
+		SizingFunction esize(mk_core(), numLayers - 1, -1);
+  		surf.sizing_function_index(esize.core_index());
 
-			double xyz1[3], xyz2[3], dist1, dist2;
-			bool isReverse = false;
-			
-			if (int(vertices.size())>1)
-			{
-				m_err = mk_core()->imesh_instance()->getVtxCoord(vertices[0], xyz1[0], xyz1[1], xyz1[2]);
-				IBERRCHK(m_err, "Trouble get the x,y,z coordinates of node entity.");
-				m_err = mk_core()->imesh_instance()->getVtxCoord(vertices[1], xyz2[0], xyz2[1], xyz2[2]);
-				IBERRCHK(m_err, "Trouble get the x,y,z coordinates of node entity.");
-				dist1 = sqrt( pow(NodeList[stIndex].xyzCoords[0]-xyz1[0], 2) + pow( NodeList[stIndex].xyzCoords[1]-xyz1[1], 2) + pow(NodeList[stIndex].xyzCoords[2]-xyz1[2], 2));
-				dist2 = sqrt( pow(NodeList[stIndex].xyzCoords[0]-xyz2[0], 2) + pow( NodeList[stIndex].xyzCoords[1]-xyz2[1], 2) + pow(NodeList[stIndex].xyzCoords[2]-xyz2[2], 2));
-				if (dist1 > dist2)
-					isReverse = true;
-			}
-			
-			for (unsigned int m=0; m < vertices.size(); m++)
-			{
-				m_err = mk_core()->imesh_instance()->getVtxCoord(vertices[m], xyz1[0], xyz1[1], xyz1[2]);
-				IBERRCHK(m_err, "Trouble get the x,y,z coordinates of node entity.");
-				if (!isReverse)
-				{
-					linkVertexList[m][stIndex].xyzCoords[0] = xyz1[0];
-					linkVertexList[m][stIndex].xyzCoords[1] = xyz1[1];
-					linkVertexList[m][stIndex].xyzCoords[2] = xyz1[2];
-					linkVertexList[m][stIndex].index = stIndex;
-					linkVertexList[m][stIndex].gVertexHandle = vertices[m];
-				}
-				else
-				{
-					linkVertexList[numLayers-m-2][stIndex].xyzCoords[0] = xyz1[0];
-					linkVertexList[numLayers-m-2][stIndex].xyzCoords[1] = xyz1[1];
-					linkVertexList[numLayers-m-2][stIndex].xyzCoords[2] = xyz1[2];
-					linkVertexList[numLayers-m-2][stIndex].index = stIndex;
-					linkVertexList[numLayers-m-2][stIndex].gVertexHandle = vertices[m];
-				}				
-			}
-			continue;
-		}
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////
-		
-		
-		for (int j=0; j < (numLayers-1); j++)
-		{
-			//discretize the linking sides
-			double t, u;
-			Point3D pts;
-			t=(j+1)*1/double(numLayers);
-			u = linear_interpolation(t, u0, u1);
-			g_err = mk_core()->igeom_instance()->getEntUtoXYZ(gLinkSides[i].gEdgeHandle, u, pts.px, pts.py, pts.pz);
-			IBERRCHK(m_err, "Trouble get the x,y,z coordinates of parametric coordinate u.");
-			m_err = mk_core()->imesh_instance()->createVtx(pts.px, pts.py, pts.pz, mNodeHandle[j]);
-			IBERRCHK(m_err, "Trouble create the node entity.");
-				
-			//add the new generated vertex to the list
-			linkVertexList[j][stIndex].xyzCoords[0] = pts.px;
-			linkVertexList[j][stIndex].xyzCoords[1] = pts.py;
-			linkVertexList[j][stIndex].xyzCoords[2] = pts.pz;
-			linkVertexList[j][stIndex].index = stIndex;
-			linkVertexList[j][stIndex].gVertexHandle = mNodeHandle[j];	
-		}
-		
-		//create the line segments on the linking sides
-		std::vector<iBase_EntityHandle> connect(2*numLayers);
-		std::vector<iBase_EntityHandle> edgeHandle;
-		connect[0] = NodeList[stIndex].gVertexHandle;
-		for (int j=0; j < (numLayers-1); j++)
-		{
-			connect[2*j+1] = mNodeHandle[j];
-			connect[2*j+2] = mNodeHandle[j];		
-		}
-		connect[2*numLayers-1] = TVertexList[stIndex].gVertexHandle;
-		edgeHandle.resize(numLayers);
-		m_err = mk_core()->imesh_instance()->createEntArr(iMesh_LINE_SEGMENT, &connect[0], 2*numLayers, &edgeHandle[0]);
-		IBERRCHK(m_err, "Trouble create an array of line segments.");
+		EdgeMesher *em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", edge_curve);
 
-		
-		//create the entityset	for the gLinkSides[i]
-		iBase_EntitySetHandle entityset;
-		r_err = mk_core()->irel_pair()->getEntSetRelation(gLinkSides[i].gEdgeHandle, 0, entityset);
-		if (r_err)  //there is no entityset associated with gLinkSides[i].gEdgeHandle
-		{
-			m_err = mk_core()->imesh_instance()->createEntSet(1, entityset);
-			IBERRCHK(m_err, "Trouble create the entity set.");
-		}
-		m_err = mk_core()->imesh_instance()->addEntArrToSet(&mNodeHandle[0], numLayers-1, entityset);
-		IBERRCHK(m_err, "Trouble add an array of nodes to entityset.");
-		
-		m_err = mk_core()->imesh_instance()->addEntArrToSet(&edgeHandle[0], edgeHandle.size(), entityset);
-		IBERRCHK(m_err, "Trouble add an array of line segments to the entity set.");		
+		em->setup_this();
+		em->execute_this();
 
-		//create the irel between the linking sides and entityset
-		r_err = mk_core()->irel_pair()->getEntSetRelation(gLinkSides[i].gEdgeHandle, 0, entityset);
-		if (r_err)  //there is no entityset associated with gLinkSides[i].gEdgeHandle
-		{
-			r_err = mk_core()->irel_pair()->setEntSetRelation(gLinkSides[i].gEdgeHandle, entityset);
-			IBERRCHK(r_err, "Trouble create the association between the geometric entity and mesh entity set.");
-		}
+		//oK we are done with the edge mesh for linking edges
 	}
 	//finish the discretization of linking sides
-	
-	
+
+	//Prepare to do the TFIMapping for linking surface
+	MEntVector surfs, link_surfs;
+  	mk_core()->get_entities_by_dimension(2, surfs);
+	int index_id_src, index_id_tar;
+	g_err = mk_core()->igeom_instance()->getIntData(sourceSurface, geom_id_tag, index_id_src);
+	IBERRCHK(g_err, "Trouble get the int data for source surface.");
+	g_err = mk_core()->igeom_instance()->getIntData(targetSurface, geom_id_tag, index_id_tar);
+	IBERRCHK(g_err, "Trouble get the int data for target surface.");
+	int index = 0;
+	for (unsigned int i = 0; i < surfs.size(); i++)
+	{
+		int index_id_link;
+		g_err = mk_core()->igeom_instance()->getIntData(surfs[i]->geom_handle(), geom_id_tag, index_id_link);
+		IBERRCHK(g_err, "Trouble get the int data for linking surface.");
+		if ((index_id_link != index_id_src) && (index_id_link != index_id_tar))
+		{
+			index++;
+			link_surfs.resize(index);
+			link_surfs[index - 1] = surfs[i];
+			continue;		
+		}
+	}
+	TFIMapping *tm = (TFIMapping*)mk_core()->construct_meshop("TFIMapping", link_surfs);
+	tm->setup_this();
+	tm->execute_this();
+	//finish the meshing for linking surface
+
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//check whether this linking surf is meshed or not
@@ -2494,40 +2399,6 @@ int OneToOneSwept::TargetSurfProjection()
 		em->execute_this();
 		//done with the meshing for edge i on the target surface
 
-		/*****************************************************************************************************************/
-		iBase_EntitySetHandle TestSet;
-		std::vector<iBase_EntityHandle> testNodes;
-		r_err = mk_core()->irel_pair()->getEntSetRelation(gtEdgeList[edgePairs[i]].gEdgeHandle, 0, TestSet);
-		IBERRCHK(r_err, "Trouble get the mesh entity set for the edge on the target surface.");
-		testNodes.clear();		
-		m_err = mk_core()->imesh_instance()->getEntities(TestSet, iBase_VERTEX, iMesh_POINT, testNodes);
-		IBERRCHK(m_err, "Trouble get the mesh nodes from the mesh entity set.");
-
-		std::cout << "Source Mesh: Edge index = " << i << std::endl;
-		for (unsigned int k = 0; k < nodes_src.size(); k++)
-		{
-			double coords[3];
-			m_err = mk_core()->imesh_instance()->getVtxCoord(nodes_src[k], coords[0], coords[1], coords[2]);
-			IBERRCHK(m_err, "Trouble get the coordinates from mesh nodes.");
-			std::cout << "index i = " << k  << "\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2] << std::endl;
-		}
-
-		std::cout << "Target Mesh: Edge index = " << edgePairs[i] << std::endl;
-		for (unsigned int k = 0; k < testNodes.size(); k++)
-		{
-			double coords[3];
-			m_err = mk_core()->imesh_instance()->getVtxCoord(testNodes[k], coords[0], coords[1], coords[2]);
-			IBERRCHK(m_err, "Trouble get the coordinates from mesh nodes.");
-			std::cout << "index i = " << k  << "\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2] << std::endl;
-		}
-
-
-
-		/*****************************************************************************************************************/
-
-
-
-
 		//assign the edge mesh to the list: TVertexList, TEdgeList
 		int sense_src, sense_tar;
 		g_err = mk_core()->igeom_instance()->getEgVtxSense(gsEdgeList[i].gEdgeHandle, gsEdgeList[i].connect[0]->gVertexHandle, gsEdgeList[i].connect[1]->gVertexHandle, sense_src);
@@ -2603,30 +2474,7 @@ int OneToOneSwept::TargetSurfProjection()
 			}
 		}									
 	}
-	//Until now, all the nodes have been created on the boundary edge.
-
-
-	/***************************************************************************************************/
-	//test
-	std::cout << "test nodes on the edge of source surface and target surface\n";	
-	for (unsigned int i = 0; i < NodeList.size(); i++)
-	{
-		std::cout << "source index = " << i << "\tx = " << NodeList[i].xyzCoords[0] << "\ty = " << NodeList[i].xyzCoords[1] << "\tz = " << NodeList[i].xyzCoords[2] << std::endl;
-		std::cout << "target index = " << i << "\tx = " << TVertexList[i].xyzCoords[0] << "\ty = " << TVertexList[i].xyzCoords[1] << "\tz = " << TVertexList[i].xyzCoords[2] << std::endl;
-
-	}
-	
-
-
-
-	/***************************************************************************************************/
-
-
-
-
-
-
-	
+	//Until now, all the nodes have been created on the boundary edge.	
 	//get the parametric coordinates for nodes on the boundary edges and cornersfrom the source surface and target surface
 	vector<Point2D> sPtsUV(0), tPtsUV(0);
 	int index=0; 
@@ -2634,18 +2482,14 @@ int OneToOneSwept::TargetSurfProjection()
 	{
 		if (NodeList[i].onBoundary || NodeList[i].onCorner)
 		{
-			Point3D pts;
 			index++;
 			sPtsUV.resize(index);
-			pts.px = NodeList[index-1].xyzCoords[0];
-			pts.py = NodeList[index-1].xyzCoords[1];
-			pts.pz = NodeList[index-1].xyzCoords[2];
-			getUVCoords(sourceSurface, pts, sPtsUV[index-1]);
+			sPtsUV[index-1].pu = NodeList[i].uvCoords[0];
+			sPtsUV[index-1].pv = NodeList[i].uvCoords[1];
 
-			pts.px = TVertexList[index-1].xyzCoords[0];
-			pts.py = TVertexList[index-1].xyzCoords[1];
-			pts.pz = TVertexList[index-1].xyzCoords[2];
-			getUVCoords(targetSurface, pts, tPtsUV[index-1]);
+			tPtsUV.resize(index);
+			tPtsUV[index-1].pu = TVertexList[i].uvCoords[0];
+			tPtsUV[index-1].pv = TVertexList[i].uvCoords[1];
 		}
 	}
 	
@@ -2763,7 +2607,7 @@ int OneToOneSwept::TargetSurfProjection()
 	IBERRCHK(g_err, "Trouble get the sense of edge with respect to the face.");
 	g_err = mk_core()->igeom_instance()->getEgVtxSense(gsEdgeList[0].gEdgeHandle, gsEdgeList[0].connect[0]->gVertexHandle, gsEdgeList[0].connect[1]->gVertexHandle, sense_out3);
 	IBERRCHK(g_err, "Trouble get the sense of vertex with respect to the edge.");	
-	g_err = mk_core()->igeom_instance()->getEgVtxSense(gtEdgeList[edgePairs[gsEdgeList[0].index]].gEdgeHandle, gVertexList[cornerPairs[gsEdgeList[0].connect[0]->index]].gVertexHandle, gVertexList[cornerPairs[gsEdgeList[0].connect[1]->index]].gVertexHandle, sense_out4);
+	g_err = mk_core()->igeom_instance()->getEgVtxSense(gtEdgeList[edgePairs[gsEdgeList[0].index]].gEdgeHandle, gtVertexList[cornerPairs[gsEdgeList[0].connect[0]->index]].gVertexHandle, gtVertexList[cornerPairs[gsEdgeList[0].connect[1]->index]].gVertexHandle, sense_out4);
 	IBERRCHK(g_err, "Trouble get the sense of vertex with respect to the edge.");	
 	sense_out = sense_out1*sense_out2*sense_out3*sense_out4;
 
