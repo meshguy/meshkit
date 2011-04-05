@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
 void test_brick()
 {
-	std::string file_name = TestDir + "/BrickWithSrcMeshed.cub";
+	std::string file_name = TestDir + "/BrickWithSrcMeshed1.cub";
 	
 	//load the geometry
 	mk->load_geometry(file_name.c_str(), 0, 0, false);
