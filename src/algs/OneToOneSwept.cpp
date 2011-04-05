@@ -2421,8 +2421,6 @@ int OneToOneSwept::TargetSurfProjection()
 
 	//define the mesh set for various edges on the source surface
 	//loop over the various edges
-	
-	EdgeMesher *em;
 
 	ModelEnt target_surf(mk_core(), targetSurface, mk_core()->igeom_instance(), 0, 0);
 
@@ -2468,9 +2466,35 @@ int OneToOneSwept::TargetSurfProjection()
 				break;
 			}
 		}
-		em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", edge_curve);
-		mk_core()->setup_and_execute();
+		EdgeMesher *em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", edge_curve);
+		//mk_core()->setup_and_execute();
+		em->setup_this();
+		em->execute_this();
 		//done with the meshing for edge i on the target surface
+
+		/*****************************************************************************************************************/
+		iBase_EntitySetHandle TestSet;
+		std::vector<iBase_EntityHandle> testNodes;
+		r_err = mk_core()->irel_pair()->getEntSetRelation(gtEdgeList[edgePairs[i]].gEdgeHandle, 0, TestSet);
+		IBERRCHK(r_err, "Trouble get the mesh entity set for the edge on the target surface.");
+		testNodes.clear();		
+		m_err = mk_core()->imesh_instance()->getEntities(TestSet, iBase_VERTEX, iMesh_POINT, testNodes);
+		IBERRCHK(m_err, "Trouble get the mesh nodes from the mesh entity set.");
+
+		for (unsigned int k = 0; k < testNodes.size(); k++)
+		{
+			double coords[3];
+			m_err = mk_core()->imesh_instance()->getVtxCoord(testNodes[k], coords[0], coords[1], coords[2]);
+			IBERRCHK(m_err, "Trouble get the coordinates from mesh nodes.");
+			std::cout << "index i = " << k  << "\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2] << std::endl;
+		}
+
+
+
+		/*****************************************************************************************************************/
+
+
+
 
 		//assign the edge mesh to the list: TVertexList, TEdgeList
 		int sense_src, sense_tar;
