@@ -52,6 +52,7 @@ public:
             delete vpools[i];
         }
         vpools.clear();
+        return 0;
     }
 private:
     size_t chunkSize;

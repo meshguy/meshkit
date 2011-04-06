@@ -189,22 +189,57 @@ public:
     /**@{*/
 
     /** \brief Load a geometry model from a file, and populate mesh entity sets
+     * \param geom_filename The file from which to load geometry
+     * \param mesh_filename The file from which to load mesh
+     * \param geom_options File options to be passed to the load_geometry function
+     * \param mesh_options File options to be passed to the load_mesh function
+     * \param geom_index Index of geometry instance to use
+     * \param mesh_index Index of mesh instance to use
+     * \param irel_index Index of irel instance to use
+     * \param relate_too If true, infers all geometry-mesh relations after mesh load
+     * \param populate_too If true, calls populate_modelents after load and relate
+     */
+  void load_geometry_mesh(const char *geom_filename, 
+                          const char *mesh_filename, 
+                          const char *geom_options = NULL, 
+                          const char *mesh_options = NULL, 
+                          int geom_index = 0,
+                          int mesh_index = 0,
+                          int irel_index = 0,
+                          bool relate_too = true,
+                          bool populate_too = true);
+
+    /** \brief Load a geometry model from a file, and populate mesh entity sets
      * \param filename The file to load
      * \param options File options to be passed to the load function
-     * \param index Index of geometry instance to use
-     * \param populate_too If true, calls populate_mesh after load
+     * \param geom_index Index of geometry instance to use
+     * \param mesh_index Index of mesh instance to use
+     * \param irel_index Index of irel instance to use
+     * \param relate_too If true, infers all geometry-mesh relations after load
+     * \param populate_too If true, calls populate_modelents after load and relate
      */
   void load_geometry(const char *filename, const char *options = NULL, 
-                     int index = 0,
+                     int geom_index = 0,
+                     int mesh_index = 0,
+                     int irel_index = 0,
+                     bool relate_too = false,
                      bool populate_too = true);
 
     /** \brief Load a mesh model from a file
      * \param filename The file to load
      * \param options File options to be passed to the load function
-     * \param index Index of mesh instance to use
+     * \param geom_index Index of geometry instance to use
+     * \param mesh_index Index of mesh instance to use
+     * \param irel_index Index of irel instance to use
+     * \param relate_too If true, infers all geometry-mesh relations after load
+     * \param populate_too If true, calls populate_modelents after load and relate
      */
   void load_mesh(const char *filename, const char *options = NULL,
-                 int index = 0);
+                 int geom_index = 0,
+                 int mesh_index = 0,
+                 int irel_index = 0,
+                 bool relate_too = false,
+                 bool populate_too = true);
 
     /** \brief Save a geometry model to a file
      * \param filename The file to save
@@ -222,11 +257,17 @@ public:
   void save_mesh(const char *filename, const char *options = NULL,
                  int index = 0);
 
-    /** \brief Populate mesh/relations data for geometric entities
-     * \param index Index of geometry instance to use
+    /** \brief Populate model entities for geometry and mesh
+     * Pass -1 for geom, mesh, or irel index to disable checking for entities in those
+     * interfaces (geom, mesh) or skip the check for relations (irel)
+     * \param geom_index Index of geometry instance to use
+     * \param mesh_index Index of mesh instance to use
+     * \param irel_index Index of irel instance to use
      * \param use_irel flag to create relations or not
      */
-  void populate_mesh(int index = 0, bool use_irel = true);
+  void populate_model_ents(int geom_index = 0, 
+                           int mesh_index = 0, 
+                           int irel_index = 0);
 
     /**@}*/
 

@@ -86,8 +86,8 @@ int load_and_mesh(const char *input_filename,
     mk.save_mesh("input.vtk");
   }
 
-  // populate mesh to relate geometry entities and mesh sets
-  mk.populate_mesh();
+  // populate mesh w/o geometry or relations
+  mk.populate_model_ents(-1, 0, -1);
 
   // get the volumes
   MEntVector vols;

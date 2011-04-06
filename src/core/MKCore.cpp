@@ -205,90 +205,138 @@ unsigned int MKCore::add_igeom_instance(iGeom * igeom)
   return index;
 }
 
-void MKCore::populate_mesh(int index, bool use_irel)
+void MKCore::populate_model_ents(int geom_index, 
+                                 int mesh_index,
+                                 int irel_index)
 {
-    // populate mesh entity sets for geometric entities, relate them through iRel, and construct 
-    // ModelEnts for them; also handle geometry groups
+    // go through the geometry and mesh models (including geometry groups), and make sure they 
+    // all have corresponding model entities; this 
 
   std::vector<iGeom::EntityHandle> ents;
   std::vector<ModelEnt*> new_ents;
   iBase_ErrorType err;
   ModelEnt *this_me;
-  
-  for (int dim = iBase_VERTEX; dim <= iBase_REGION; dim++) {
-    // get geometry entities
-    ents.clear();
-    err = igeom_instance(index)->getEntities(igeom_instance(index)->getRootSet(), (iBase_EntityType)dim, ents);
-    IBERRCHK(err, "Failed to get entities from iGeom.");
 
-    for (std::vector<iGeom::EntityHandle>::iterator eit = ents.begin(); eit != ents.end(); eit++) {
+  if (-1 != geom_index) {
+    for (int dim = iBase_VERTEX; dim <= iBase_REGION; dim++) {
+        // get geometry entities
+      ents.clear();
+      err = igeom_instance(geom_index)->getEntities(igeom_instance(geom_index)->getRootSet(), 
+                                                    (iBase_EntityType)dim, ents);
+      IBERRCHK(err, "Failed to get entities from iGeom.");
+
+      for (std::vector<iGeom::EntityHandle>::iterator eit = ents.begin(); eit != ents.end(); eit++) {
+          // get the modelent
+        this_me = NULL;
+        err = igeom_instance(geom_index)->getData(*eit, iGeomModelTags[geom_index], &this_me);
+        if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
+            // construct a new ModelEnt and set the geom ent to point to it
+          this_me = new ModelEnt(this, *eit, geom_index, NULL, mesh_index, irel_index);
+          modelEnts[dim].push_back(this_me);
+        }
+      }
+    }
+    
+    std::vector<iGeom::EntitySetHandle> gsets;
+    err = igeom_instance(geom_index)->getEntSets(igeom_instance(geom_index)->getRootSet(), -1, gsets);
+    IBERRCHK(err, "Failed to get entity sets from iGeom.");
+    for (std::vector<iGeom::EntitySetHandle>::iterator vit = gsets.begin();
+         vit != gsets.end(); vit++) {
+      this_me = NULL;
+      err = igeom_instance(geom_index)->getEntSetData(*vit, iGeomModelTags[geom_index], &this_me);
+      if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
+          // construct a new ModelEnt and set the geom ent to point to it
+        this_me = new ModelEnt(this, *vit, geom_index, NULL, mesh_index, irel_index);
+        modelEnts[4].push_back(this_me);
+      }
+    }
+  }
+  
+  if (-1 != mesh_index) {
+    moab::Tag dum_tag = moab_geom_dim_tag(mesh_index);
+    moab::Range geom_sets;
+    moab::ErrorCode rval = moab_instance(mesh_index)->get_entities_by_type_and_tag(0, MBENTITYSET, &dum_tag, NULL, 1,
+                                                                                   geom_sets);
+    MBERRCHK(rval, moab_instance(mesh_index));
+    for (moab::Range::iterator rit = geom_sets.begin(); rit != geom_sets.end(); rit++) {
         // get the modelent
       this_me = NULL;
-      err = igeom_instance(index)->getData(*eit, iGeomModelTags[index], &this_me);
-      if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
-        // construct a new ModelEnt and set the geom ent to point to it
-        this_me = new ModelEnt(this, *eit, igeom_instance(index));
-        err = igeom_instance(index)->setData(*eit, iGeomModelTags[index], &this_me);
-        IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
-        // set the irel flag
-        this_me -> set_irel_flag(use_irel);
+      rval = moab_instance(mesh_index)->tag_get_data(moabModelTags[mesh_index], &(*rit), 1, &this_me);
+      if (NULL == this_me || MB_TAG_NOT_FOUND == rval) {
+            // construct a new ModelEnt and set the geom ent to point to it
+        this_me = new ModelEnt(this, (iGeom::EntityHandle)NULL, geom_index, *rit, mesh_index, irel_index);
+        int dim = this_me->dimension();
+        modelEnts[dim].push_back(this_me);
       }
-      
-        // check for a mesh ent, and populate one if there is none
-      if (!this_me->mesh_handle()) {
-        if (!this_me->exist_mesh_set()) {
-          this_me->create_mesh_set();
-        }
-        new_ents.push_back(this_me);
-      }
-
-        // save the model entity here
-      modelEnts[dim].push_back(this_me);
     }
+  }
+}
+
+void MKCore::load_geometry_mesh(const char *geom_filename, 
+                                const char *mesh_filename, 
+                                const char *geom_options,
+                                const char *mesh_options,
+                                int geom_index, 
+                                int mesh_index, 
+                                int irel_index, 
+                                bool relate_too,
+                                bool populate_too) 
+{
+  if (geom_filename) {
+    iBase_ErrorType err = igeom_instance(geom_index)->load(geom_filename, geom_options);
+    IBERRCHK(err, "Failed to load geometry model.");
   }
   
-  for (std::vector<ModelEnt*>::iterator vit = new_ents.begin(); vit != new_ents.end(); vit++) 
-    (*vit)->set_senses();
-
-  std::vector<iGeom::EntitySetHandle> gsets;
-  err = igeom_instance(index)->getEntSets(igeom_instance(index)->getRootSet(), -1, gsets);
-  IBERRCHK(err, "Failed to get entity sets from iGeom.");
-  for (std::vector<iGeom::EntitySetHandle>::iterator vit = gsets.begin();
-       vit != gsets.end(); vit++) {
-    this_me = NULL;
-    err = igeom_instance(index)->getEntSetData(*vit, iGeomModelTags[index], &this_me);
-    if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
-        // construct a new ModelEnt and set the geom ent to point to it
-      this_me = new ModelEnt(this, *vit, igeom_instance(index));
-      err = igeom_instance(index)->setEntSetData(*vit, iGeomModelTags[index], &this_me);
-      IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
-      this_me -> set_irel_flag(use_irel);
-    }
-      
-      // check for a mesh ent, and populate one if there is none
-    if (!this_me->mesh_handle()) {
-      this_me->create_mesh_set(index);
-    }
+  if (mesh_filename) {
+    moab::ErrorCode rval = moabInstances[mesh_index]->load_file(mesh_filename, NULL, mesh_options);
+    MBERRCHK(rval, moab_instance());
+  }
+  
+  if (relate_too) {
+    assert(irel_pair(irel_index));
+    iRel::Error err = irel_pair(irel_index)->inferAllRelations();
+    IBERRCHK(err, "Failed to infer relations.");
+  }
+  
+  if (populate_too) {
+    populate_model_ents(geom_index, mesh_index, irel_index);
   }
 }
 
-void MKCore::load_geometry(const char *filename, const char *options, int index, bool populate_too) 
+void MKCore::load_geometry(const char *filename, const char *options, int geom_index, 
+                           int mesh_index, int irel_index, bool relate_too, bool populate_too) 
 {
-  iBase_ErrorType err = igeom_instance(index)->load(filename, options);
+  iBase_ErrorType err = igeom_instance(geom_index)->load(filename, options);
   IBERRCHK(err, "Failed to load geometry model.");
 
-  if (populate_too) populate_mesh(index);
+  if (relate_too) {
+    assert(irel_pair(irel_index));
+    iRel::Error err = irel_pair(irel_index)->inferAllRelations();
+    IBERRCHK(err, "Failed to infer relations.");
+  }
+  
+  if (populate_too) populate_model_ents(geom_index, mesh_index, irel_index);
 }
 
-void MKCore::load_mesh(const char *filename, const char *options, int index) 
+void MKCore::load_mesh(const char *filename, const char *options, 
+                       int geom_index, int mesh_index, int irel_index, 
+                       bool relate_too, bool populate_too) 
 {
-  moab::ErrorCode rval = moabInstances[index]->load_file(filename, NULL, options);
-  MBERRCHK(rval, moab_instance());
+  moab::ErrorCode rval = moabInstances[mesh_index]->load_file(filename, NULL, options);
+  MBERRCHK(rval, moab_instance(mesh_index));
+
+  if (relate_too) {
+    assert(irel_pair(irel_index));
+    iRel::Error err = irel_pair(irel_index)->inferAllRelations();
+    IBERRCHK(err, "Failed to infer relations.");
+  }
+  
+  if (populate_too) populate_model_ents(geom_index, mesh_index, irel_index);
 }
 
-void MKCore::save_geometry(const char *filename, const char *options, int index) 
+void MKCore::save_geometry(const char *filename, const char *options, int geom_index) 
 {
-  iBase_ErrorType err = igeom_instance(index)->save(filename, options);
+  iBase_ErrorType err = igeom_instance(geom_index)->save(filename, options);
   IBERRCHK(err, "Failed to save geometry model.");
 }
 

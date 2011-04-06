@@ -38,7 +38,7 @@ ModelEnt* get_square_surface( )
   iBase_EntityHandle brick_handle;
   iGeom::Error err = geom->createBrick( 2, 2, 2, brick_handle );
   CHECK_EQUAL( iBase_SUCCESS, err );
-  core->populate_mesh();
+  core->populate_model_ents();
   
     // get model ent for brick
   iBase_EntityType type;

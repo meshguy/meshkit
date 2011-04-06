@@ -66,7 +66,7 @@ void mesh_test(std::string filebase)
   MEntVector dum, surfs;
   mk->get_entities_by_dimension(2, dum);
   surfs.push_back(*dum.rbegin());
-  CAMALPaver *tm = (CAMALPaver*) mk->construct_meshop("CAMALPaver", surfs);
+  mk->construct_meshop("CAMALPaver", surfs);
 
     // make a sizing function and set it on the surface
   SizingFunction esize(mk, -1, 0.25);

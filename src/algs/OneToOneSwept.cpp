@@ -812,7 +812,7 @@ int OneToOneSwept::InnerLayerMeshing()
 	//determine whether there exists the mesh on the linking surface
 	for (unsigned int i = 0; i < gLinkFaceList.size(); i++)
 	{		
-		ModelEnt link_surf(mk_core(), gLinkFaceList[i].gFaceHandle, mk_core()->igeom_instance(), 0, 0);
+		ModelEnt link_surf(mk_core(), gLinkFaceList[i].gFaceHandle, 0, 0, 0);
 		if (link_surf.get_meshed_state()>=COMPLETE_MESH)
 		{
 			iBase_EntitySetHandle mEdgeSet;
@@ -1297,7 +1297,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	//Loop over the linking surface, and check whether the two linking edges are meshed or not
 	for (unsigned int i = 0; i < gLinkFaceList.size(); i++)
 	{
-		ModelEnt surf(mk_core(), gLinkFaceList[i].gFaceHandle, mk_core()->igeom_instance(), 0, 0);		
+		ModelEnt surf(mk_core(), gLinkFaceList[i].gFaceHandle, 0, 0, 0);		
 		MEntVector curves, edge_curve;
 		surf.get_adjacencies(1, curves);
 		int index = 0;
@@ -2351,7 +2351,7 @@ int OneToOneSwept::TargetSurfProjection()
 	//define the mesh set for various edges on the source surface
 	//loop over the various edges
 
-	ModelEnt target_surf(mk_core(), targetSurface, mk_core()->igeom_instance(), 0, 0);
+	ModelEnt target_surf(mk_core(), targetSurface, 0, 0, 0);
 
 	MEntVector curves;
 	target_surf.get_adjacencies(1, curves);	

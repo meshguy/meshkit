@@ -44,8 +44,10 @@ public:
      */
   ModelEnt(MKCore *mk,
            iGeom::EntityHandle geom_ent,
-           iGeom * igeom = NULL,
+           int geom_index,
            moab::EntityHandle mesh_ent = NULL,
+           int mesh_index = -1,
+           int irel_index = -1,
            int sizing_index = -1);
 
     /** \brief Constructor; mesh entity can be missing, in which case it's retrieved or created
@@ -58,8 +60,10 @@ public:
      */
   ModelEnt(MKCore *mk,
            iGeom::EntitySetHandle geom_set,
-           iGeom * igeom = NULL,
+           int geom_index,
            moab::EntityHandle mesh_ent = NULL,
+           int mesh_index = -1,
+           int irel_index = -1,
            int sizing_index = -1);
 
     /** \brief Destructor
@@ -225,20 +229,10 @@ public:
      * flag = 1 : create a vector-based set
      * flag = 0 : create a set-based set
      * flag = -1: check dimension of iGeomEnt; if 1, vector-based set, otherwise set-based set
-     * \param flag Ordered flag
+     * \param ordered_flag Ordered flag
      */
-  void create_mesh_set(int flag = -1);
+  void create_mesh_set(int ordered_flag = -1);
 
-  bool exist_mesh_set();
-
-    /** \brief Set the senses tag on moabEntSet
-     *
-     * Called after all mesh entity sets have been created for the model.  Gets adjacencies/senses
-     * through iGeom, then sets senses on corresponding mesh sets.  After this function is called,
-     * all adjacency and sense information can be retrieved through the mesh sets.
-     */
-  void set_senses();
-  
     /** \brief Commit mesh to a model entity
      *
      * Takes the input mesh entities, adds them to the entity set for this model entity,
@@ -356,11 +350,6 @@ public:
      */
   int sizing_function_index() const;
 
-    /** \brief Get iGeom instance
-     * \return Returns 0 by default
-     */
-  iGeom * igeom_instance() const ;
-
     /** \brief Set sizing function index
      * \param index Sizing function index being set
      * \param children_too If true, sizing function index is propagated to child (bounding) entities
@@ -424,7 +413,7 @@ public:
 
     /**@}*/
 
-    /** \name Member get/set
+    /** \name Interfaces, entities
      */
 
     /**@{*/
@@ -438,18 +427,24 @@ public:
     //! Get geometry entity handle for a given mesh entity set
   iGeom::EntityHandle geom_handle(moab::EntityHandle ment) const;
 
+    /** \brief Get iGeom instance associated with this model entity
+     * \return Returns 0 by default
+     */
+  iGeom * igeom_instance() const ;
+
+    /** \brief Get moab instance associated with this model entity
+     * \return Returns 0 by default
+     */
+  moab::Interface * moab_instance() const ;
+
     //! Get mesh entity set handle
   moab::EntityHandle mesh_handle() const;
 
     //! Get mesh entity set handle for a given geometry entity
   moab::EntityHandle mesh_handle(iGeom::EntityHandle gent) const;
 
-    //!  get the flag for iRel use
-  bool get_irel_flag () { return  iRelFlag; }
-
-    //!  set the flag for iRel use
-  void set_irel_flag (bool flag) { iRelFlag = flag; return; }
-    /**@}*/
+    //! Get mesh entity set handle for a given geometry entity
+  moab::EntityHandle mesh_handle(iGeom::EntitySetHandle gent) const;
 
 private:
 
@@ -463,11 +458,28 @@ private:
                             int this_sense, 
                             MEntVector &tmp_adjs);
   
-    //! Set senses tag on moabEntSet; only called for dim=1 entities
-  void set_upward_senses();
+    /** \brief Initialize mesh set parents/children to parallel geometric topology
+     */
+  void init_parents_children();
+
+    /** \brief Initialize mesh set contents to parallel geometry set contents
+     */
+  void init_group_contents();
+  
+    //! Set senses tag on moabEntSet wrt adjacent entities
+  void set_downward_senses();
   
     //! MeshKit instance to which this model entity is associated
   MKCore *mkCore;
+
+    //! iGeom instance index associated with this model entity
+  int igeomIndex;
+
+    //! MOAB instance index associated with this model entity
+  int meshIndex;
+
+    //! iRel instance index associated with this model entity
+  int irelIndex;
 
     //! Geometry entity for this model entity
   iGeom::EntityHandle iGeomEnt;
@@ -481,9 +493,6 @@ private:
     //! Sizing function associated with this model entity
   int sizingFunctionIndex;
   
-    //! iGeom instance associated with this model entity
-  iGeom * igeomInstance;
-
     //! Mesh intervals for this model entity
   int meshIntervals;
   
@@ -499,8 +508,6 @@ private:
     //! MeshOps pointing to this entity
   std::vector<MeshOp*> meshOps;
 
-    // ! use iRel or not for this model entity
-  bool iRelFlag;
 };
 
 inline MKCore *ModelEnt::mk_core() const
@@ -552,11 +559,6 @@ inline void ModelEnt::children(std::vector<std::vector<iGeom::EntityHandle> > &c
 inline int ModelEnt::sizing_function_index() const 
 {
   return sizingFunctionIndex;
-}
-
-inline iGeom * ModelEnt::igeom_instance() const
-{
-  return igeomInstance;
 }
 
     //! Get intervals

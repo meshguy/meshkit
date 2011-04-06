@@ -32,18 +32,13 @@ void test_brick()
 	std::string file_name = TestDir + "/BrickWithSrcMeshed1.cub";
 	
 	//load the geometry
-	mk->load_geometry(file_name.c_str(), 0, 0, false);
-	//load the mesh	
-	mk->load_mesh(file_name.c_str());
-	//populate the mesh and create the relation between the geometry and mesh
-	mk->populate_mesh();
+	mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
 
 	// get the volumes
 	MEntVector vols, surfs, curves, vertices;
 	mk->get_entities_by_dimension(3, vols);
-	
-	std::cout << "Volume size = " << vols.size() << std::endl;
-	
+	std::cout << "Volume size = " << vols.size() << std::endl;	
+
 	ModelEnt *this_vol = (*vols.rbegin());
 
 	// test getting surfaces

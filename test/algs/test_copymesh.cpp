@@ -46,8 +46,8 @@ void test_load_and_copymove()
   std::string filename = TestDir + "/" + DEFAULT_TEST_FILE;
   mk->load_mesh(filename.c_str());
 
-  // populate mesh to relate geometry entities and mesh sets
-  mk->populate_mesh();
+  // populate mesh with no attached geometry or relations
+  mk->populate_model_ents(-1, 0, -1);
 
   // get the hexes
   MEntVector vols;

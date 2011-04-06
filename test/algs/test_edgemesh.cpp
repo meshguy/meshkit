@@ -94,7 +94,7 @@ void edgemesh_square()
   
     // make an edge mesher
   this_surf->get_adjacencies(1, curves);
-  EdgeMesher *em = (EdgeMesher*) mk->construct_meshop("EdgeMesher", curves);
+  mk->construct_meshop("EdgeMesher", curves);
 
     // make a sizing function and set it on the surface
   SizingFunction esize(mk, 1, 1.0);
@@ -142,7 +142,7 @@ void edgemesh_brick()
   this_vol->get_adjacencies(1, curves);
 
     // mesh all the edges
-  EdgeMesher *em = (EdgeMesher*) mk->construct_meshop("EdgeMesher", curves);
+  mk->construct_meshop("EdgeMesher", curves);
   SizingFunction esize(mk, 1, 1.0);
   this_vol->sizing_function_index(esize.core_index());
   mk->setup_and_execute();

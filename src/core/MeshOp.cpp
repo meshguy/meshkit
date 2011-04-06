@@ -17,7 +17,7 @@ MeshOp::MeshOp(MKCore *mkcore, const MEntVector &me_vec)
 {
   if (!me_vec.empty()) {
     for (MEntVector::const_iterator vit = me_vec.begin(); vit != me_vec.end(); vit++)
-      moab::Range &rit = mentSelection[*vit];
+      mentSelection[*vit];
   }
 }
 
@@ -81,7 +81,7 @@ bool MeshOp::add_modelent(ModelEnt *model_ent)
   MEntSelection::iterator sit = mentSelection.find(model_ent);
   if (sit != mentSelection.end()) return false;
   
-  moab::Range &rtmp = mentSelection[model_ent];
+  mentSelection[model_ent];
   return true;
 }
 

@@ -725,7 +725,7 @@ int CCrgen::write_makefile()
   // remove the ./ if run from the current working directory
   make_file << "MESH_FILES = " ;
   for(unsigned int i=0; i<files.size(); i++){
-    files[i] = files[i].substr(2, files[i].length());
+    if (files[i][0] == '.' && files[i][0] == '/') files[i] = files[i].substr(2, files[i].length());
     make_file << files[i] << "  ";
   }
 

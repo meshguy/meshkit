@@ -37,12 +37,7 @@ int main(int argc, char **argv)
 void test_TFImappingcubit()
 {
 	std::string file_name = TestDir + "/SquareWithEdgesMeshed.cub";
-  	mk->load_geometry(file_name.c_str(), 0, 0, false);
-
-	mk->load_mesh(file_name.c_str());
-
-	// populate mesh to relate geometry entities and mesh sets
-  	mk->populate_mesh();
+  	mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
 
 	//check the number of geometrical edges
 	MEntVector surfs, curves, loops;

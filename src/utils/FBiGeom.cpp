@@ -34,7 +34,7 @@ iGeom::Error FBiGeom::Init()
   _fbEngine->Init();// this will trigger the initialization
   // of smoothing
   // now, we need to create the ModelEnts, use populate_mesh !!!
-  _mk->populate_mesh( meshkit_index(), false );// no irel !!
+  _mk->populate_model_ents(meshkit_index(), 0, -1);// no irel !!
   return (Error)0; // success
 }
 

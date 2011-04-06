@@ -27,5 +27,5 @@ int main()
     std::cerr << "TestSuite did incorrectly registered failure for successful test!" << std::endl;
   
   int success = !fail + !abrt + !expt + succ;
-  return succ;
+  return success;
 }

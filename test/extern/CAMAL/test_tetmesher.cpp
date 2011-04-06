@@ -60,7 +60,7 @@ void mesh_test(std::string filebase)
   MEntVector dum, vols;
   mk->get_entities_by_dimension(3, dum);
   vols.push_back(*dum.rbegin());
-  CAMALTetMesher *tm = (CAMALTetMesher*) mk->construct_meshop("CAMALTetMesher", vols);
+  mk->construct_meshop("CAMALTetMesher", vols);
 
     // make a sizing function and set it on the surface
   SizingFunction esize(mk, -1, 0.25);
