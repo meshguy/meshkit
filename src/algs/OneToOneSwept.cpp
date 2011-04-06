@@ -1358,7 +1358,9 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	tm->execute_this();
 	//finish the meshing for linking surface
 
-	
+	mk_core()->save_mesh("temp.vtk");	
+
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//check whether this linking surf is meshed or not
 	vector<bool> isMeshed(gLinkFaceList.size());

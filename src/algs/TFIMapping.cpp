@@ -59,8 +59,9 @@ void TFIMapping::execute_this()
 
 		//test number of edges bounding the surface
 		std::vector<int> senses, edge_sizes;
-		me->boundary(0, edges, &senses, &edge_sizes);
-		assert(4==(int)edges.size());
+		edges.clear();
+		me->boundary(1, edges, &senses, &edge_sizes);
+		//assert(4==(int)edges.size());
 
 		
 
@@ -93,8 +94,12 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
 
 	iBase_TagHandle taghandle;
-	g_err = ent->igeom_instance()->createTag("TFIMapping", 1, iBase_INTEGER, taghandle);
-	IBERRCHK(g_err, "Trouble create the taghandle for the surface.");
+	g_err = ent->igeom_instance()->getTagHandle("TFIMapping", taghandle);
+	if (g_err)
+	{
+		g_err = ent->igeom_instance()->createTag("TFIMapping", 1, iBase_INTEGER, taghandle);
+		IBERRCHK(g_err, "Trouble create the taghandle for the surface.");
+	}
 	
 	//it has already been checked that there are 4 edges bounding a surface in the execute function
 	std::vector<iBase_EntitySetHandle> EdgeMeshSets(4);
@@ -146,17 +151,29 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
 	g_err = ent->igeom_instance()->getIntData(nNodes[0], taghandle, node_index_a);
 	IBERRCHK(g_err, "Trouble get the int data fro node 0.");	
+	
+	assert(nEdges.size()>=2);
 
-	//find the index for one of the adjacent edges 
-	g_err = ent->igeom_instance()->getIntData(nEdges[0], taghandle, index_b);
-	IBERRCHK(g_err, "Trouble get the int data on edge 0.");	
+	//find the index for one of the adjacent edges
+	int tmpIndex = 0; 
+	for (unsigned int i = 0; i < nEdges.size(); i++)
+	{
+		g_err = ent->igeom_instance()->getIntData(nEdges[i], taghandle, index_b);
+		if (!g_err)
+		{
+			tmpIndex = i;
+			break;
+		}	
+	}
+	//IBERRCHK(g_err, "Trouble get the int data on edge 0.");	
 	if (index_a != index_b)
 	{
 		//choose nEdge[0] to find the opposite node to nNodes[0]
 		adjEdgesOfNode[0] = index_b;
 		//extract the opposite node w.r.t node 0
-		std::vector<iBase_EntityHandle> tnodes;		
-		g_err = ent->igeom_instance()->getEntAdj(nEdges[0], iBase_VERTEX, tnodes);
+		std::vector<iBase_EntityHandle> tnodes;
+		tnodes.clear();	
+		g_err = ent->igeom_instance()->getEntAdj(nEdges[tmpIndex], iBase_VERTEX, tnodes);
 		IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a edge.");
 		
 		g_err = ent->igeom_instance()->getIntData(tnodes[0], taghandle, node_index_b);
@@ -174,14 +191,22 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	}
 	else
 	{//choose nEdges[1]
-		g_err = ent->igeom_instance()->getIntData(nEdges[1], taghandle, index_b);
-		IBERRCHK(g_err, "Trouble get the int data on edge 0.");
-		//adjEdgesOfNode.insert ( pair<int,int>(0,index_b) );		
+		for (unsigned int i = tmpIndex + 1; i < nEdges.size(); i++)
+		{
+			g_err = ent->igeom_instance()->getIntData(nEdges[i], taghandle, index_b);
+			//IBERRCHK(g_err, "Trouble get the int data on edge 0.");
+			if (!g_err)
+			{
+				tmpIndex = i;
+				break;
+			}
+		}		
+
 		adjEdgesOfNode[0] = index_b;
 
 		//extract the opposite node w.r.t node 0
 		std::vector<iBase_EntityHandle> tnodes;		
-		g_err = ent->igeom_instance()->getEntAdj(nEdges[1], iBase_VERTEX, tnodes);
+		g_err = ent->igeom_instance()->getEntAdj(nEdges[tmpIndex], iBase_VERTEX, tnodes);
 		IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a edge.");
 		
 		g_err = ent->igeom_instance()->getIntData(tnodes[0], taghandle, node_index_b);
@@ -209,15 +234,23 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	IBERRCHK(g_err, "Trouble get the int data fro node 0.");	
 
 	//find the index for one of the adjacent edges 
-	g_err = ent->igeom_instance()->getIntData(nEdges[0], taghandle, index_b);
-	IBERRCHK(g_err, "Trouble get the int data on edge 0.");	
+	for (unsigned int i = 0; i < nEdges.size(); i++)
+	{
+		g_err = ent->igeom_instance()->getIntData(nEdges[0], taghandle, index_b);
+		//IBERRCHK(g_err, "Trouble get the int data on edge 0.");	
+		if (!g_err)
+		{
+			tmpIndex = i;
+			break;
+		}	
+	}	
 	if (index_a != index_b)
 	{
 		//choose nEdge[0] to find the opposite node to nNodes[0]
 		adjEdgesOfNode[1] = index_b;
 		//extract the opposite node w.r.t node 0
 		std::vector<iBase_EntityHandle> tnodes;		
-		g_err = ent->igeom_instance()->getEntAdj(nEdges[0], iBase_VERTEX, tnodes);
+		g_err = ent->igeom_instance()->getEntAdj(nEdges[tmpIndex], iBase_VERTEX, tnodes);
 		IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a edge.");
 		
 		g_err = ent->igeom_instance()->getIntData(tnodes[0], taghandle, node_index_d);
@@ -233,13 +266,21 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	}
 	else
 	{//choose nEdges[1]
-		g_err = ent->igeom_instance()->getIntData(nEdges[1], taghandle, index_b);
-		IBERRCHK(g_err, "Trouble get the int data on edge 0.");
+		for (unsigned int i = tmpIndex + 1; i < nEdges.size(); i++)
+		{
+			g_err = ent->igeom_instance()->getIntData(nEdges[1], taghandle, index_b);
+			//IBERRCHK(g_err, "Trouble get the int data on edge 0.");
+			if (!g_err)
+			{
+				tmpIndex = i;
+				break;
+			}
+		}
 		adjEdgesOfNode[1] = index_b;
 
 		//extract the opposite node w.r.t node 0
 		std::vector<iBase_EntityHandle> tnodes;		
-		g_err = ent->igeom_instance()->getEntAdj(nEdges[1], iBase_VERTEX, tnodes);
+		g_err = ent->igeom_instance()->getEntAdj(nEdges[tmpIndex], iBase_VERTEX, tnodes);
 		IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a edge.");
 		
 		g_err = ent->igeom_instance()->getIntData(tnodes[0], taghandle, node_index_d);
@@ -544,6 +585,18 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	//finish creating the quads
 	m_err = mk_core()->imesh_instance()->addEntArrToSet(&Quads[0], Quads.size(), entityset);
 	IBERRCHK(m_err, "Trouble add an array of quads to the mesh entity set.");
+
+	//remove the tag 
+	//g_err = mk_core()->igeom_instance()->destroyTag(taghandle, 1);
+	//IBERRCHK(g_err, "Trouble remove the taghandle from mesh core.");
+	
+	g_err = ent->igeom_instance()->rmvArrTag(&edges[0], 4, taghandle);
+	IBERRCHK(g_err, "Trouble remove the tag values from an array of entities.");
+
+	//get the four corners on a surface
+	g_err = ent->igeom_instance()->rmvArrTag(&gNode[0], 4, taghandle);
+	IBERRCHK(g_err, "Trouble remove the tag values from an array of entities.");
+	//rmvArrTag
 	
 	return 1;
 }
@@ -585,364 +638,6 @@ double TFIMapping::linear_interpolation(double r, double x0, double x1)
 	double pt= (1-r)*x0 + r*x1;
 	return pt;
 }
-
-void TFIMapping::buildAssociation()
-{
-    std::vector<iBase_EntitySetHandle> entitySets;
-    iBase_EntitySetHandle geom_root_set, mesh_root_set;
-
-    // Get the root sets of the geometry and mesh.
-    mesh_root_set = mk_core()->igeom_instance()->getRootSet();
-    geom_root_set = mk_core()->imesh_instance()->getRootSet();
-
-    //get the global geometrical id tag, global mesh id tag, global dimension id tag
-    iBase_TagHandle geom_id_tag, mesh_id_tag, geom_dim_tag;    
-    iGeom::Error g_err = mk_core()->igeom_instance()->getTagHandle("GLOBAL_ID", geom_id_tag);
-    IBERRCHK(g_err, "Trouble get global geometry dimension id tag.");
-    iMesh::Error m_err = mk_core()->imesh_instance()->getTagHandle("GLOBAL_ID", mesh_id_tag);
-    IBERRCHK(m_err, "Trouble get global mesh dimension id tag.");
-    m_err = mk_core()->imesh_instance()->getTagHandle("GEOM_DIMENSION", geom_dim_tag);
-    IBERRCHK(m_err, "Trouble get the geometric dimension id tag.");
-
-
-
-    // Get all the entitySet in the mesh
-    m_err = mk_core()->imesh_instance()->getEntSets(mesh_root_set, 0, entitySets);
-    IBERRCHK(m_err, "Trouble get the geometric dimension id tag.");
-
-
-    	//int ncount;
-    	//iBase_EntityHandle gEntity;
-
-
-
-    // Map all the geometric nodes
-    //get size of nodes
-    std::vector<iBase_EntityHandle> gNodes;
-    g_err = mk_core()->igeom_instance()->getEntities(geom_root_set, iBase_VERTEX, gNodes);
-    IBERRCHK(g_err, "Trouble get the geometric node entities.");
-    
-    int geom_id;
-    std::map<int, iBase_EntityHandle> mapNodes;
-    for (unsigned int i=0; i < gNodes.size(); i++)
-    {
-    	g_err = mk_core()->igeom_instance()->getIntData(gNodes[i], geom_id_tag, geom_id);
-        IBERRCHK(g_err, "Trouble get the int data of node entities.");
-        mapNodes[geom_id] = gNodes[i];
-    }
-    
-
-    // Map all the geometric edges.resize
-    std::vector<iBase_EntityHandle> gEdges;
-    g_err = mk_core()->igeom_instance()->getEntities(geom_root_set, iBase_EDGE, gEdges);
-    IBERRCHK(g_err, "Trouble get the geometric edge entities.");
-
-    
-    std::map<int, iBase_EntityHandle> mapEdges;
-    for (unsigned int i = 0; i < gEdges.size(); i++)
-    {
-        g_err = mk_core()->igeom_instance()->getIntData(gEdges[i], geom_id_tag, geom_id);
-        IBERRCHK(g_err, "Trouble get the int data of edge entities.");
-        mapEdges[geom_id] = gEdges[i];
-    }
-
-    // Map all the geometric faces ...
-    std::vector<iBase_EntityHandle> gFaces;
-    g_err = mk_core()->igeom_instance()->getEntities(geom_root_set, iBase_FACE, gFaces);
-    IBERRCHK(g_err, "Trouble get the geometric face entities.");
-
-    std::map<int, iBase_EntityHandle> mapFaces;
-    for (unsigned int i = 0; i < gFaces.size(); i++)
-    {
-        g_err = mk_core()->igeom_instance()->getIntData(gFaces[i], geom_id_tag, geom_id);
-        IBERRCHK(g_err, "Trouble get the int data of face entities.");
-        mapFaces[geom_id] = gFaces[i];
-    }
-
-    // Map all the geometric cells ...
-    std::vector<iBase_EntityHandle> gCells;
-    g_err = mk_core()->igeom_instance()->getEntities(geom_root_set, iBase_REGION, gCells);
-    IBERRCHK(g_err, "Trouble get the geometric cell entities.");
-
-    std::map<int, iBase_EntityHandle> mapCells;
-    for (unsigned int i = 0; i < gCells.size(); i++)
-    {
-        g_err = mk_core()->igeom_instance()->getIntData(gCells[i], geom_id_tag, geom_id);
-        IBERRCHK(g_err, "Trouble get the int data of cell entities.");
-        mapCells[geom_id] = gCells[i];
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////////
-    // Create Vertex Assocations:
-    ///////////////////////////////////////////////////////////////////////////////
-    cout << " Building Vertex Associations " << endl;
-    int numNodes, ncount = 0, geom_dim;
-    iBase_EntityHandle gEntity;
-    m_err = mk_core()->imesh_instance()->getNumOfType(mesh_root_set, iBase_VERTEX, numNodes);
-    IBERRCHK(m_err, "Trouble get the number of vertices.");
-    std::vector<iBase_EntityHandle> mNodes;
-    
-    int numAssociations = 0;
-    
-    for (unsigned int i = 0; i < entitySets.size(); i++)
-    {
-        mNodes.clear();
-        m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_VERTEX, iMesh_ALL_TOPOLOGIES, mNodes);
-        IBERRCHK(m_err, "Trouble get the number of vertices.");	
-        if (mNodes.size() && (int(mNodes.size()) != numNodes))
-        {
-            ncount += mNodes.size();
-
-            m_err = mk_core()->imesh_instance()->getEntSetIntData(entitySets[i], mesh_id_tag, geom_id);
-            IBERRCHK(m_err, "Trouble set the mesh id tag with int value for entity set.");
-	
-            m_err = mk_core()->imesh_instance()->getEntSetIntData(entitySets[i], geom_dim_tag, geom_dim);
-            IBERRCHK(m_err, "Trouble set the geom dim tag with int value for mesh entity set.");
-
-            gEntity = 0;
-            switch (geom_dim)
-            {
-            case 0:
-            	if (mapNodes.find(geom_id) != mapNodes.end())
-                {
-                    gEntity = mapNodes[geom_id];
-                    numAssociations++;
-                }
-                else
-                {
-                    cout << "Fatal Error: Geometric Edge not found : " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            	
-            case 1:
-
-                if (mapEdges.find(geom_id) != mapEdges.end())
-                {
-                    gEntity = mapEdges[geom_id];
-                    numAssociations++;
-                }
-                else
-                {
-                    cout << "Fatal Error: Geometric Edge not found : " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            case 2:
-                if (mapFaces.find(geom_id) != mapFaces.end())
-                    gEntity = mapFaces[geom_id];
-                else
-                {
-                    cout << "Fatal Error: Geometric Face not found : " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            case 3:
-                if (mapCells.find(geom_id) != mapCells.end())
-                    gEntity = mapCells[geom_id];
-                else
-                {
-                    cout << "Fatal Error: Geometric Cell not found : " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            default:
-                cout << "Error: Invalid geometric dimension " << geom_dim << endl;
-                exit(0);
-            }
-
-            if (gEntity)
-            {
-                iRel::Error r_err = mk_core()->irel_pair()->setEntSetRelation(gEntity, entitySets[i]);
-                IBERRCHK(r_err, "Trouble set the association between the entity handle and mesh entity set.");	
-            }   
-        }
-    }
-
-    
-    
-    ///////////////////////////////////////////////////////////////////////////////
-    // Create Edge Assocations:
-    ///////////////////////////////////////////////////////////////////////////////
-    cout << " Building Edge Associations " << endl;
-
-    int numEdges;
-    m_err = mk_core()->imesh_instance()->getNumOfType(mesh_root_set, iBase_EDGE, numEdges);
-    IBERRCHK(m_err, "Trouble get the number of edges.");	
-
-    std::vector<iBase_EntityHandle> mEdges;
-
-    numAssociations = 0;
-    ncount = 0;
-    for (unsigned int i = 0; i < entitySets.size(); i++)
-    {
-        mEdges.clear();
-        m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_EDGE, iMesh_ALL_TOPOLOGIES, mEdges);
-        IBERRCHK(m_err, "Trouble get the edge entities from the entity set.");
-
-        if (mEdges.size() && (int(mEdges.size()) != numEdges))
-        {
-            ncount += mEdges.size();
-
-            m_err = mk_core()->imesh_instance()->getEntSetIntData(entitySets[i], mesh_id_tag, geom_id);
-            IBERRCHK(m_err, "Trouble set the geom_id for entity set in the edge association.");
-
-            m_err = mk_core()->imesh_instance()->getEntSetIntData(entitySets[i], geom_dim_tag, geom_dim);
-            IBERRCHK(m_err, "Trouble set the geom_dim for entity set in the edge association.");
-	    
-            gEntity = 0;
-            switch (geom_dim)
-            {
-            
-            case 1:
-
-                if (mapEdges.find(geom_id) != mapEdges.end())
-                {
-                    gEntity = mapEdges[geom_id];
-                    numAssociations++;
-                }
-                else
-                {
-                    cout << "Fatal Error: Geometric Edge not found : " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            case 2:
-                if (mapFaces.find(geom_id) != mapFaces.end())
-                    gEntity = mapFaces[geom_id];
-                else
-                {
-                    cout << "Fatal Error: Geometric Face not found : " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            case 3:
-                if (mapCells.find(geom_id) != mapCells.end())
-                    gEntity = mapCells[geom_id];
-                else
-                {
-                    cout << "Fatal Error: Geometric Cell not found : " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            default:
-                cout << "Error: Invalid geometric dimension " << geom_dim << endl;
-                exit(0);
-            }
-
-            if (gEntity)
-            {
-                iRel::Error r_err = mk_core()->irel_pair()->setEntSetRelation(gEntity, entitySets[i]);
-                IBERRCHK(r_err, "Trouble set the association between the entity handle and mesh entity set.");	
-            }
-        }
-    }
-
-    if (numAssociations != int(mapEdges.size()))
-        cout << "Warning: There are more edge entitySet than geometric edges " << endl;
-    
-    //////////////////////////////////////////////////////////////////////////////
-    // Face Association
-    //////////////////////////////////////////////////////////////////////////////
-    cout << " Building Face Associations " << endl;
-
-    std::vector<iBase_EntityHandle> mFaces;
-
-    int numFaces;
-    m_err = mk_core()->imesh_instance()->getNumOfType(mesh_root_set, iBase_FACE, numFaces);
-    IBERRCHK(m_err, "Trouble get the number of faces.");
-
-    ncount = 0;
-    numAssociations = 0;
-    for (unsigned int i = 0; i < entitySets.size(); i++)
-    {
-        mFaces.clear();
-        m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_FACE, iMesh_ALL_TOPOLOGIES, mFaces);
-        IBERRCHK(m_err, "Trouble get the mesh face entities.");
-
-        if (mFaces.size() && (int(mFaces.size()) != numFaces))
-        {
-            ncount += mFaces.size();
-            m_err = mk_core()->imesh_instance()->getEntSetIntData(entitySets[i], mesh_id_tag, geom_id);
-            IBERRCHK(m_err, "Trouble set the geom_id for entity set in the face association.");
-
-            m_err = mk_core()->imesh_instance()->getEntSetIntData(entitySets[i], geom_dim_tag, geom_dim);
-            IBERRCHK(m_err, "Trouble set the geom_dim for entity set in the face association.");
-
-            gEntity = 0;
-            switch (geom_dim)
-            {
-            case 2:
-                if (mapFaces.find(geom_id) != mapFaces.end())
-                {
-                    gEntity = mapFaces[geom_id];
-                    numAssociations++;
-                }
-                else
-                {
-                    cout << "Fatal Error: Geometric face not found " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            case 3:
-                if (mapCells.find(geom_id) != mapCells.end())
-                    gEntity = mapCells[geom_id];
-                else
-                { IBERRCHK(m_err, "Trouble set the geom_id for entity set in the face association.");
-                    cout << "Fatal Error: Geometric face not found " << geom_id << endl;
-                    exit(0);
-                }
-                break;
-            }
-            if (gEntity)
-	    {
-                iRel::Error r_err = mk_core()->irel_pair()->setEntSetRelation(gEntity, entitySets[i]);
-                IBERRCHK(r_err, "Trouble set the association between the entity handle and mesh entity set.");	
-	    }        
-	}
-    }
-    
-    if (numAssociations != int(mapFaces.size()))
-    {
-	cout << "Warning: There are more face entitySet than geometric faces " << endl;
-    }
-	
-    //////////////////////////////////////////////////////////////////////////////
-    // Cell Association
-    //////////////////////////////////////////////////////////////////////////////
-
-    std::vector<iBase_EntityHandle> mCells;
-
-    int numCells;
-    m_err = mk_core()->imesh_instance()->getNumOfType(mesh_root_set, iBase_REGION, numCells);
-    IBERRCHK(m_err, "Trouble get the number of cells.");
-
-    ncount = 0; IBERRCHK(m_err, "Trouble set the geom_id for entity set in the face association.");
-    for (unsigned int i = 0; i < entitySets.size(); i++)
-    {
-        mCells.clear();
-        m_err = mk_core()->imesh_instance()->getEntities(entitySets[i], iBase_REGION, iMesh_ALL_TOPOLOGIES, mCells);
-        IBERRCHK(m_err, "Trouble get the mesh cell entities.");
-
-        if (mCells.size() && (int(mCells.size()) != numCells))
-        {
-            ncount += mCells.size();
-            m_err = mk_core()->imesh_instance()->getEntSetIntData(entitySets[i], mesh_id_tag, geom_id);
-            IBERRCHK(m_err, "Trouble set the geom_id for entity set in the cell association.");
-
-            if (mapCells.find(geom_id) != mapCells.end())
-            {
-                if (mapCells.find(geom_id) != mapCells.end())
-                {
-                    gEntity = mapCells[geom_id];
-                    iRel::Error r_err = mk_core()->irel_pair()->setEntSetRelation(gEntity, entitySets[i]);
-                    IBERRCHK(r_err, "Trouble set the association between the entity handle and mesh entity set.");	
-                }
-            }
-        }
-    }
-}
-
 
 
 }
