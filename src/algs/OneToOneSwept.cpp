@@ -1319,7 +1319,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 		}
 		
 		//initialize the size function to prepare for generating the edge mesh for linking edges
-		SizingFunction esize(mk_core(), numLayers - 1, -1);
+		SizingFunction esize(mk_core(), numLayers, -1);
   		surf.sizing_function_index(esize.core_index());
 
 		EdgeMesher *em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", edge_curve);
@@ -1360,8 +1360,6 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 
 	mk_core()->save_mesh("temp.vtk");	
 
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//check whether this linking surf is meshed or not
 	vector<bool> isMeshed(gLinkFaceList.size());
 	for (unsigned int i=0; i < gLinkFaceList.size(); i++)

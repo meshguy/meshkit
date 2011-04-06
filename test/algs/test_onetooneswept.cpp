@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
 void test_brick()
 {
-	std::string file_name = TestDir + "/BrickWithSrcMeshed1.cub";
+	std::string file_name = TestDir + "/BrickWithSrcMeshed2.cub";
 	
 	//load the geometry
 	mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
@@ -60,7 +60,7 @@ void test_brick()
 	sw->SetTargetSurface(0);
 
 	//set up the size
-	SizingFunction swSize(mk, 10, -1);
+	SizingFunction swSize(mk, 4, -1);
 	this_vol->sizing_function_index(swSize.core_index());
 
 	//set up for the sweeping and sweep

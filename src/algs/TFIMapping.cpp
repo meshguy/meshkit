@@ -68,7 +68,7 @@ void TFIMapping::execute_this()
 		SurfMapping(me);
 		
       		//ok, we are done, commit to ME
-    		me->commit_mesh(mit->second, COMPLETE_MESH);	
+    		me->commit_mesh(mit->second, COMPLETE_MESH);
   	}
 
 }
@@ -91,7 +91,6 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	//get the four corners on a surface
 	g_err = ent->igeom_instance()->getEntAdj(ent->geom_handle(), iBase_VERTEX, gNode);
 	IBERRCHK(g_err, "Trouble get the adjacent geometric nodes on a surface.");
-
 
 	iBase_TagHandle taghandle;
 	g_err = ent->igeom_instance()->getTagHandle("TFIMapping", taghandle);
@@ -163,6 +162,11 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		{
 			tmpIndex = i;
 			break;
+		}
+		else
+		{
+			if (i ==(nEdges.size() - 1))
+				std::cout << "test fail1\n";
 		}	
 	}
 	//IBERRCHK(g_err, "Trouble get the int data on edge 0.");	
@@ -200,6 +204,11 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 				tmpIndex = i;
 				break;
 			}
+			else
+			{
+				if (i ==(nEdges.size() - 1))
+					std::cout << "test fail2\n";
+			}
 		}		
 
 		adjEdgesOfNode[0] = index_b;
@@ -229,6 +238,8 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	nEdges.clear();	
 	g_err = ent->igeom_instance()->getEntAdj(nNodes[1], iBase_EDGE, nEdges);
 	IBERRCHK(g_err, "Trouble get the adjacent geometric edges on a node.");
+	
+	assert(nEdges.size()>=2);
 
 	g_err = ent->igeom_instance()->getIntData(nNodes[1], taghandle, node_index_c);
 	IBERRCHK(g_err, "Trouble get the int data fro node 0.");	
@@ -236,12 +247,17 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	//find the index for one of the adjacent edges 
 	for (unsigned int i = 0; i < nEdges.size(); i++)
 	{
-		g_err = ent->igeom_instance()->getIntData(nEdges[0], taghandle, index_b);
+		g_err = ent->igeom_instance()->getIntData(nEdges[i], taghandle, index_b);
 		//IBERRCHK(g_err, "Trouble get the int data on edge 0.");	
 		if (!g_err)
 		{
 			tmpIndex = i;
 			break;
+		}
+		else
+		{
+			if (i ==(nEdges.size() - 1))
+				std::cout << "test fail3\n";
 		}	
 	}	
 	if (index_a != index_b)
@@ -268,12 +284,17 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	{//choose nEdges[1]
 		for (unsigned int i = tmpIndex + 1; i < nEdges.size(); i++)
 		{
-			g_err = ent->igeom_instance()->getIntData(nEdges[1], taghandle, index_b);
+			g_err = ent->igeom_instance()->getIntData(nEdges[i], taghandle, index_b);
 			//IBERRCHK(g_err, "Trouble get the int data on edge 0.");
 			if (!g_err)
 			{
 				tmpIndex = i;
 				break;
+			}
+			else
+			{
+				if (i ==(nEdges.size() - 1))
+					std::cout << "test fail4\n";
 			}
 		}
 		adjEdgesOfNode[1] = index_b;
@@ -436,10 +457,14 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_0[0], uv_0[1]);
 		IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 0.");
 
+		std::cout << "uv_0\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_0[0] << "\t v = " << uv_0[1] << std::endl;
+
+
 		g_err = mk_core()->imesh_instance()->getVtxCoord(List_jj[j], coords[0], coords[1], coords[2]);
 		IBERRCHK(g_err, "Trouble get the xyz coordinates for node 1.");
 		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_1[0], uv_1[1]);
 		IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 1.");
+		std::cout << "uv_1\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_1[0] << "\t v = " << uv_1[1] << std::endl;
 		for (unsigned int i = 1; i < (List_i.size()-1); i++)
 		{
 
@@ -448,16 +473,30 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 			g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_3[0], uv_3[1]);
 			IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 3.");
 
+			std::cout << "uv_3\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_3[0] << "\t v = " << uv_3[1] << std::endl;
+
 			g_err = mk_core()->imesh_instance()->getVtxCoord(List_ii[i], coords[0], coords[1], coords[2]);
 			IBERRCHK(g_err, "Trouble get the xyz coordinates for node 2.");
 			g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_2[0], uv_2[1]);
 			IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 2.");
+			
+			std::cout << "uv_2\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_2[0] << "\t v = " << uv_2[1] << std::endl;
 
 			double uv[2], r, s;
-			r = ((uv_2[0]+uv_3[0])/2 - umin)/(umax - umin);
-			s = ((uv_0[1]+uv_1[1])/2 - vmin)/(vmax - vmin);
-			uv[0] = parametricTFI2D(r, s, uv_0[0], uv_1[0], uv_3[0], uv_2[0]);
-			uv[1] = parametricTFI2D(r, s, uv_0[1], uv_1[1], uv_3[1], uv_2[1]);
+			if (fabs(uv_1[0] - uv_0[0]) > 1.0e-5)
+			{
+				r = (fabs((uv_2[0]+uv_3[0])/2 - uv_0[0]))/(fabs(uv_1[0] - uv_0[0]));
+				s = (fabs((uv_0[1]+uv_1[1])/2 - uv_3[1]))/(fabs(uv_2[1] - uv_3[1]));
+				uv[0] = parametricTFI2D(r, s, uv_0[0], uv_1[0], uv_3[0], uv_2[0]);
+				uv[1] = parametricTFI2D(r, s, uv_0[1], uv_1[1], uv_3[1], uv_2[1]);
+			}
+			else
+			{
+				r = (fabs((uv_2[0]+uv_3[0])/2 - uv_0[0]))/(fabs(uv_1[0] - uv_0[0]));
+				s = (fabs((uv_0[1]+uv_1[1])/2 - uv_3[1]))/(fabs(uv_2[1] - uv_3[1]));
+				uv[0] = parametricTFI2D(r, s, uv_0[0], uv_1[0], uv_3[0], uv_2[0]);
+				uv[1] = parametricTFI2D(r, s, uv_0[1], uv_1[1], uv_3[1], uv_2[1]);
+			}
 
 			g_err = mk_core()->igeom_instance()->getEntUVtoXYZ(ent->geom_handle(), uv[0], uv[1], coords[0], coords[1], coords[2]);
 			IBERRCHK(g_err, "Trouble get the xyz coordinates from uv parametric coordinates for interior node.");	
