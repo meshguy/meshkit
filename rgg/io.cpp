@@ -958,7 +958,7 @@ int CNrgen::CreateCubitJournal()
 	szSurfTop = m_szAssmMat(p)+"_top";
 	m_FileOutput <<  "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
 	m_FileOutput <<"group 'tmp1' equals curve in surface in tmpgrp" << std::endl;  
-	m_FileOutput << "sideset " << nSideset << " surface in tmp1" << std::endl;  
+	m_FileOutput << "sideset " << nSideset << " curve in tmp1" << std::endl;  
       }
     }
     // group creation dumps. each material surface  has a group
@@ -1159,7 +1159,7 @@ int CNrgen::CreateCubitJournal()
     for (int p=1; p<=m_nDuct; p++){
       for(int q=1;q<=m_nSides; q++){
 	m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge" 
-		     << (m_nSides*(p-1) + q ) << "'" << std::endl;	  
+		     << (m_nSides*(p-1) + q ) << "@'" << std::endl;	  
 
 	m_FileOutput << "group 'vt" <<  (m_nSides*(p-1) + q )  <<"' equals vertex with z_max == z_min in curve in edge" 
 		     <<  (m_nSides*(p-1) + q ) << std::endl;

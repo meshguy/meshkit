@@ -1,7 +1,7 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
-SRCDIR = $(top_srcdir)/rgg
+INPUTDIR = $(top_srcdir)/rgg
 
 # Subdirectories to build
 SUBDIRS = 
@@ -73,7 +73,7 @@ pin217_CXXFLAGS = -DTEST $(CXXFLAGS)
 pin217_LDADD = ../algs/libMKalgs.la ../utils/libMKutils.la  $(IGEOM_LIBS)  $(IMESH_LIBS)  $(IREL_LIBS)
 
 # Boilerplate stuff that doesn't depend on what the targets are
-AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(SRCDIR) \
+AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
                -I$(top_srcdir) \
                -I$(top_builddir) \
                -I$(top_srcdir)/algs \

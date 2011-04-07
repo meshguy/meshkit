@@ -225,7 +225,7 @@ private:
   int nrings, nringsx, nringsy, pack_type, symm;
   double pitch, pitchx, pitchy;
   bool global_ids, back_mesh, nst_flag, nsb_flag, nss_flag;
-  std::vector<std::string> files;
+  std::vector<std::string> files, mk_files;
   std::string outfile;
   int nassys; // the number of mesh files
   int tot_assys; // total no. of assms forming core

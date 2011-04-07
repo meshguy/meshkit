@@ -724,20 +724,32 @@ int CCrgen::write_makefile()
 
   // remove the ./ if run from the current working directory
   make_file << "MESH_FILES = " ;
+  std::string filename;
   for(unsigned int i=0; i<files.size(); i++){
-    if (files[i][0] == '.' && files[i][0] == '/') files[i] = files[i].substr(2, files[i].length());
-    make_file << files[i] << "  ";
+    if (files[i][0] == '.' && files[i][1] == '/'){
+      filename = files[i].substr(2, files[i].length());
+    }
+    else if (files[i][0] != '.' || files[i][1] != '/'){
+      int loc1 = files[i].find_last_of(".");
+      int loc2 = files[i].find_last_of("/");
+      filename = files[i].substr(loc2+1, loc1);
+    }
+    else{
+      filename = files[i];
+    }
+    mk_files.push_back(filename);
+    make_file << mk_files[i] << "  ";
   }
 
   
   // get file names without extension
-  for(unsigned int i=0; i<files.size(); i++){
-    int loc = files[i].find_first_of(".");
-    f_no_ext.push_back(files[i].substr(0,loc));
+  for(unsigned int i=0; i<mk_files.size(); i++){
+    int loc = mk_files[i].find_first_of(".");
+    f_no_ext.push_back(mk_files[i].substr(0,loc));
   }
   
   make_file << "\n\nGEOM_FILES = ";
-  for(unsigned int i=0; i<files.size(); i++){
+  for(unsigned int i=0; i<mk_files.size(); i++){
     if(geom_engine == "occ")
       name = f_no_ext[i] + ".stp";
     else
@@ -748,7 +760,7 @@ int CCrgen::write_makefile()
   }
   
   make_file << "\n\nJOU_FILES = ";
-  for(unsigned int i=0; i<files.size(); i++){
+  for(unsigned int i=0; i<mk_files.size(); i++){
     name = f_no_ext[i] + ".jou";
     f_jou.push_back(name);
     make_file << name << "  ";
@@ -756,7 +768,7 @@ int CCrgen::write_makefile()
   }
 
   make_file << "\n\nINJOU_FILES = ";
-  for(unsigned int i=0; i<files.size(); i++){
+  for(unsigned int i=0; i<mk_files.size(); i++){
     name = f_no_ext[i] + ".template.jou";
     f_injou.push_back(name);
     make_file << name << "  ";
@@ -764,7 +776,7 @@ int CCrgen::write_makefile()
   }
 
   make_file << "\n\nASSYGEN_FILES = ";
-  for(unsigned int i=0; i<files.size(); i++){
+  for(unsigned int i=0; i<mk_files.size(); i++){
     name = f_no_ext[i] + ".inp";
     f_inp.push_back(name);
     make_file << name << "  ";
@@ -773,8 +785,8 @@ int CCrgen::write_makefile()
 
   make_file << "\n\n" << outfile << " : ${MESH_FILES} " << ifile <<  std::endl;
   make_file << "\t" << "${COREGEN} " << iname << std::endl;
-  for(unsigned int i=0; i<files.size(); i++){
-    make_file << files[i] << " : " << f_sat[i] << "  " << f_jou[i] << "  " << f_injou[i] << std::endl;
+  for(unsigned int i=0; i<mk_files.size(); i++){
+    make_file << mk_files[i] << " : " << f_sat[i] << "  " << f_jou[i] << "  " << f_injou[i] << std::endl;
     make_file << "\t" << "${CUBIT} -batch " << f_jou[i] <<"\n" << std::endl;
 
     make_file << f_sat[i] << " " << f_jou[i] << " " << f_injou[i] << " : " << f_inp[i] << std::endl;
