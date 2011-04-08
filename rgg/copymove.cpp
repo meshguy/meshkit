@@ -928,6 +928,7 @@ int CCrgen::copy_move_sq_assys(CopyMesh **cm,
 	i++;
     
 	cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
+	dx[1] =  n1 * pitchy;
       }
       else{
 	i++;
@@ -1749,6 +1750,7 @@ int CCrgen::copy_move_sq_assys(CopyGeom **cg,
 	i++;
 
 	cg[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
+	dx[1] =  n1 * pitchy;
       }
       else{
 	i++;
