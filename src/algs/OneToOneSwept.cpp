@@ -233,6 +233,15 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 		}
 	}
 	
+	//changed the mesh state for source surface
+	MEntVector surfs;
+	mk_core()->get_entities_by_dimension(2, surfs);
+	for (unsigned int i = 0; i < surfs.size(); i++)
+	{
+		//if (surfs[i]->geom_handle() == sourceSurface)
+			
+	}
+
 	//initialize the mesh size on the target surface
 	TVertexList.resize(NodeList.size());
 	TEdgeList.resize(EdgeList.size());
@@ -756,6 +765,7 @@ void OneToOneSwept::execute_this()
 		//necessary steps for setting up the source surface and target surfaces
     		
 		TargetSurfProjection();
+		mk_core()->save_mesh("target.vtk");
 
 		/***************************************************************************************************/
 		//test
@@ -1293,43 +1303,8 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	
 	m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
 	IBERRCHK(m_err, "Trouble get tag handle of the source surface.");
-
-	//Loop over the linking surface, and check whether the two linking edges are meshed or not
-	for (unsigned int i = 0; i < gLinkFaceList.size(); i++)
-	{
-		ModelEnt surf(mk_core(), gLinkFaceList[i].gFaceHandle, 0, 0, 0);		
-		MEntVector curves, edge_curve;
-		surf.get_adjacencies(1, curves);
-		int index = 0;
-
-		//find the two linking edges
-		for (unsigned int j = 0; j < curves.size(); j++)
-		{
-			int index_id;
-			g_err = mk_core()->igeom_instance()->getIntData(curves[j]->geom_handle(), geom_id_tag, index_id);
-			IBERRCHK(g_err, "Trouble get the int data for the edge on the target surface.");
-			//based on the previous specified storage, gLinkFaceList[i].connEdges[1] and gLinkFaceList[i].connEdges[2] are the linking edges
-			if ((index_id == gLinkFaceList[i].connEdges[1]->EdgeID)||(index_id == gLinkFaceList[i].connEdges[2]->EdgeID))
-			{
-				index++;
-				edge_curve.resize(index);	
-				edge_curve[index-1] = curves[j];
-				continue;
-			}
-		}
-		
-		//initialize the size function to prepare for generating the edge mesh for linking edges
-		SizingFunction esize(mk_core(), numLayers, -1);
-  		surf.sizing_function_index(esize.core_index());
-
-		EdgeMesher *em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", edge_curve);
-
-		em->setup_this();
-		em->execute_this();
-
-		//oK we are done with the edge mesh for linking edges
-	}
-	//finish the discretization of linking sides
+	
+	
 
 	//Prepare to do the TFIMapping for linking surface
 	MEntVector surfs, link_surfs;
@@ -1353,6 +1328,48 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			continue;		
 		}
 	}
+
+	
+
+
+	//Loop over the linking surface, and check whether the two linking edges are meshed or not
+	for (unsigned int i = 0; i < link_surfs.size(); i++)
+	{	
+		MEntVector curves;
+		curves.clear();
+		link_surfs[i]->get_adjacencies(1, curves);
+		
+		//initialize the size function to prepare for generating the edge mesh for linking edges
+		SizingFunction esize(mk_core(), numLayers, -1);
+	  	link_surfs[i]->sizing_function_index(esize.core_index());
+		EdgeMesher *em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", curves);
+
+		em->setup_this();
+		em->execute_this();
+	}
+	//oK we are done with the edge mesh for linking edges
+
+	for (unsigned int i = 0; i < gLinkSides.size(); i++)
+	{
+		iBase_EntitySetHandle TestSet;
+		r_err = mk_core()->irel_pair()->getEntSetRelation(gLinkSides[i].gEdgeHandle, 0, TestSet);
+		IBERRCHK(r_err, "Trouble get the adjacent edges in a face.");
+		std::vector<iBase_EntityHandle> TestPoints;
+		TestPoints.clear();
+		m_err = mk_core()->imesh_instance()->getEntities(TestSet, iBase_VERTEX, iMesh_POINT, TestPoints);
+		IBERRCHK(m_err, "Trouble get the nodes.");
+
+		double coords[3];
+		std::cout << "Linking Side index = " << i << "\tnode size = " << TestPoints.size() << std::endl;
+		for (unsigned int j = 0; j < TestPoints.size(); j++)
+		{
+			m_err = mk_core()->imesh_instance()->getVtxCoord(TestPoints[j], coords[0], coords[1], coords[2]);
+			IBERRCHK(m_err, "Trouble get the nodes.");
+			std::cout << j << "\tx=" << coords[0] << "\ty=" << coords[1] << "\tz=" << coords[2] << std::endl; 
+		}
+	}
+
+
 	TFIMapping *tm = (TFIMapping*)mk_core()->construct_meshop("TFIMapping", link_surfs);
 	tm->setup_this();
 	tm->execute_this();
@@ -2345,16 +2362,31 @@ int OneToOneSwept::TargetSurfProjection()
 	iBase_TagHandle taghandle;
 	m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
 	IBERRCHK(m_err, "Trouble get the tag handle 'source'.");
-
-	//define the mesh set for various edges on the source surface
-	//loop over the various edges
-
-	ModelEnt target_surf(mk_core(), targetSurface, 0, 0, 0);
+	
+	//int target_id;
+	//g_err = mk_core()->igeom_instance()->getIntData(targetSurface, geom_id_tag, target_id);
+	//IBERRCHK(g_err, "Trouble get the int data for target surface.");
+	
+	MEntVector surfs;
+	mk_core()->get_entities_by_dimension(2, surfs);
+	ModelEnt *target_surf;	
+	for (unsigned int i = 0; i < surfs.size(); i++)
+	{
+		//int index_id = -1;
+		//g_err = mk_core()->igeom_instance()->getIntData(surfs[i]->geom_handle(), geom_id_tag, index_id);
+		//IBERRCHK(g_err, "Trouble get the int data for surfaces.");		
+		if (surfs[i]->geom_handle() == targetSurface)
+		{
+			target_surf = surfs[i];
+			break;
+		}
+	}
 
 	MEntVector curves;
-	target_surf.get_adjacencies(1, curves);	
+	target_surf->get_adjacencies(1, curves);	
 	assert(curves.size()==gsEdgeList.size());
-
+	//define the mesh set for various edges on the source surface
+	//loop over the various edges
 	for (unsigned int i=0; i < gsEdgeList.size(); i++)
 	{
 		//get the mesh entityset for edge[i]
@@ -2377,7 +2409,7 @@ int OneToOneSwept::TargetSurfProjection()
 
 		//do the edge mesher 
 		SizingFunction esize(mk_core(), num_lines, -1);
-  		target_surf.sizing_function_index(esize.core_index());
+  		target_surf->sizing_function_index(esize.core_index());
 
 		//detect the edge on the target surface which corresponds to gsEdgeList[i]
 		MEntVector edge_curve;

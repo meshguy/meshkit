@@ -351,7 +351,6 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical edge adjacent to node 1.");
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, NodeList_jj);	
 	IBERRCHK(m_err, "Trouble get the mesh node list from the geometrical edge adjacent to node 1.");
-	
 
 	//get mesh nodes from four corners
 	std::vector<iBase_EntityHandle> tmpNodeHandle;
@@ -457,14 +456,12 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_0[0], uv_0[1]);
 		IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 0.");
 
-		std::cout << "uv_0\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_0[0] << "\t v = " << uv_0[1] << std::endl;
-
 
 		g_err = mk_core()->imesh_instance()->getVtxCoord(List_jj[j], coords[0], coords[1], coords[2]);
 		IBERRCHK(g_err, "Trouble get the xyz coordinates for node 1.");
 		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_1[0], uv_1[1]);
 		IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 1.");
-		std::cout << "uv_1\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_1[0] << "\t v = " << uv_1[1] << std::endl;
+		
 		for (unsigned int i = 1; i < (List_i.size()-1); i++)
 		{
 
@@ -473,14 +470,12 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 			g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_3[0], uv_3[1]);
 			IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 3.");
 
-			std::cout << "uv_3\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_3[0] << "\t v = " << uv_3[1] << std::endl;
+			
 
 			g_err = mk_core()->imesh_instance()->getVtxCoord(List_ii[i], coords[0], coords[1], coords[2]);
 			IBERRCHK(g_err, "Trouble get the xyz coordinates for node 2.");
 			g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[0], coords[1], coords[2], uv_2[0], uv_2[1]);
 			IBERRCHK(g_err, "Trouble get the uv parametric coordinates from xyz coordinates for node 2.");
-			
-			std::cout << "uv_2\t x = " << coords[0] << "\t y = " << coords[1] << "\t z = " << coords[2]  << "\t u = " << uv_2[0] << "\t v = " << uv_2[1] << std::endl;
 
 			double uv[2], r, s;
 			if (fabs(uv_1[0] - uv_0[0]) > 1.0e-5)
@@ -534,7 +529,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 			qNodes[1] = List_j[1];
 			qNodes[2] = InteriorNodes[0];
 			qNodes[3] = List_i[1];
-				
+
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[0]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 				
@@ -544,7 +539,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 				qNodes[1] =  InteriorNodes[i-1];
 				qNodes[2] =  InteriorNodes[i];
 				qNodes[3] =  List_i[i+1];
-				
+
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
@@ -564,7 +559,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 			qNodes[1] = List_j[j+1];
 			qNodes[2] = List_ii[1];
 			qNodes[3] = InteriorNodes[(j-1)*(NodeList_i.size())];
-				
+
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 				
@@ -580,10 +575,10 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 			}
 			
 			qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+NodeList_i.size() - 1];
-			qNodes[1] = List_ii[j];
-			qNodes[2] = List_ii[j+1];
+			qNodes[1] = List_ii[List_ii.size()-2];
+			qNodes[2] = List_jj[List_jj.size()-1];
 			qNodes[3] = List_jj[List_jj.size()-2];
-				
+
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[(NodeList_j.size()+1)*(NodeList_i.size()+1) - 1]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			
@@ -604,7 +599,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 				qNodes[1] = InteriorNodes[j*NodeList_i.size() + i-1];
 				qNodes[2] = InteriorNodes[j*NodeList_i.size() + i];
 				qNodes[3] = InteriorNodes[(j-1)*NodeList_i.size() + i];
-				
+
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
@@ -639,8 +634,6 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	
 	return 1;
 }
-
-
 
 //****************************************************************************//
 // function   : parametricTFI2D
