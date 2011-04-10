@@ -60,7 +60,7 @@ void test_brick()
 	sw->SetTargetSurface(0);
 
 	//set up the size
-	SizingFunction swSize(mk, 4, -1);
+	SizingFunction swSize(mk, 6, -1);
 	this_vol->sizing_function_index(swSize.core_index());
 
 	//set up for the sweeping and sweep
@@ -70,7 +70,7 @@ void test_brick()
 	moab::Range hex;
   	moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, hex);
   	CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  	CHECK_EQUAL(100, (int)hex.size());
+  	CHECK_EQUAL(600, (int)hex.size());
 
 	mk->save_mesh("OneToOneSwept.vtk");
 

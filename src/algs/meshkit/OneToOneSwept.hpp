@@ -136,9 +136,6 @@ public:
 
 
 private:
-	//Build Association function: try to build the association between the geometry and mesh
-	void buildAssociation();
-
 	//determine whether a mesh edge is on the boundary or not
 	int isEdgeBoundary(iBase_EntityHandle gEdgeHandle);	
 
