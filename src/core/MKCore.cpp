@@ -234,17 +234,18 @@ void MKCore::populate_model_ents(int geom_index,
           this_me = new ModelEnt(this, *eit, geom_index, NULL, mesh_index, irel_index);
           modelEnts[dim].push_back(this_me);
 
-	//check whether there is the mesh related to this model entity
-	iMesh::EntitySetHandle msets;	
-	err = irel_pair(irel_index)->getEntSetRelation(this_me->geom_handle(), 0, msets);
-	IBERRCHK(err, "Failed to get imesh entity set from model entity.");
-	int num = -1;
-	err = imesh_instance(mesh_index)->getNumOfType(msets, (iBase_EntityType)dim, num);
-	IBERRCHK(err, "Failed to get the mesh entities.");
-	if (num > 0)
-	{//there is the mesh related to this model entities
-		 this_me->set_meshed_state(COMPLETE_MESH);
-	}
+          //check whether there is the mesh related to this model entity
+          if (irel_index != -1) {
+            iMesh::EntitySetHandle msets;	
+            err = irel_pair(irel_index)->getEntSetRelation(this_me->geom_handle(), 0, msets);
+            IBERRCHK(err, "Failed to get imesh entity set from model entity.");
+            int num = -1;
+            err = imesh_instance(mesh_index)->getNumOfType(msets, (iBase_EntityType)dim, num);
+            IBERRCHK(err, "Failed to get the mesh entities.");
+            if (num > 0) {//there is the mesh related to this model entities
+              this_me->set_meshed_state(COMPLETE_MESH);
+            }
+          }
         }
       }
     }

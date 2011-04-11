@@ -637,7 +637,8 @@ inline void ModelEnt::remove_meshop(MeshOp *meshop)
      */
 inline void ModelEnt::get_meshops(std::vector<MeshOp*> &meshops) 
 {
-  std::copy(meshOps.begin(), meshOps.end(), meshops.end());
+  meshops.resize(meshOps.size());
+  std::copy(meshOps.begin(), meshOps.end(), meshops.begin());
 }
 
 // TODO: unimplemented functions (these are just here because SWIG expects some

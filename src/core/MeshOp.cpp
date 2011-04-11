@@ -82,6 +82,10 @@ bool MeshOp::add_modelent(ModelEnt *model_ent)
   if (sit != mentSelection.end()) return false;
   
   mentSelection[model_ent];
+
+  // add meshop back to model ent
+  model_ent->add_meshop(this);
+  
   return true;
 }
 
