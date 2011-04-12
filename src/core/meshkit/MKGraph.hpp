@@ -38,6 +38,9 @@ public:
     //! print the graph
   void print_graph();
   
+    //! print the bfs graph
+  void print_bfs_graph();
+
     //! Get the graph
   lemon::ListDigraph &get_graph();
 

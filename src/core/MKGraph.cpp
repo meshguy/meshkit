@@ -46,6 +46,23 @@ void MKGraph::print_graph()
   }
 }
 
+void MKGraph::print_bfs_graph() 
+{
+  lemon::Bfs<lemon::ListDigraph> bfs(mkGraph);
+  bfs.init();
+  bfs.addSource(rootNode->get_node());
+
+  while (!bfs.emptyQueue()) {
+    lemon::ListDigraph::Node nd = bfs.processNextNode();
+    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
+    std::cout << "BFS_Node, distance: " << bfs.dist(nd) << ", ";
+    if (nd == rootNode->get_node()) std::cout << "root node" << std::endl;
+    else if (nd == leafNode->get_node()) std::cout << "leaf node" << std::endl;
+    else if (nodeMap[nd]) std::cout << nodeMap[nd]->get_name() << std::endl;
+    else std::cout << "(no MeshOp)" << std::endl;
+  }
+}
+
     //! Get the MeshOp corresponding to a graph node
 MeshOp *MKGraph::get_meshop(lemon::ListDigraph::Node node) const
 {
