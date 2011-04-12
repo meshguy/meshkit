@@ -504,8 +504,10 @@ MeshOp *MKCore::construct_meshop(std::string op_name, const MEntVector &me_vec)
 MeshOp *MKCore::construct_meshop(unsigned int dim, const MEntVector &me_vec) 
 {
   if (dim == 0) {
-    if (!vertexMesher) 
+    if (!vertexMesher) {
       vertexMesher = new VertexMesher(this, me_vec);
+      vertexMesher->set_name("VertexMesher");
+    }
     else 
       for (MEntVector::const_iterator i = me_vec.begin(); i != me_vec.end(); ++i)
         vertex_mesher()->add_modelent( *i );
