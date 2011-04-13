@@ -238,13 +238,13 @@ int CNrgen::ReadInputPhase1 ()
   //ACIS ENGINE
 #ifdef HAVE_ACIS
   //  if(m_szEngine == "acis"){
-    m_szGeomFile = m_szFile+".sat";
-    //  }
+  m_szGeomFile = m_szFile+".sat";
+  //  }
 #elif defined(HAVE_OCC)
   //  OCC ENGINE
   //  if (m_szEngine == "occ"){
-    m_szGeomFile = m_szFile+".stp";
-    //  }
+  m_szGeomFile = m_szFile+".stp";
+  //  }
 #endif
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
@@ -982,7 +982,7 @@ int CNrgen::CreateCubitJournal()
     for(int p=1; p <= m_szAssmMatAlias.GetSize();p++){
       szBlock = "b_"+ m_szAssmMat(p);
       szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " << m_nMaterialSetId + p << " add surface in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
       m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     m_FileOutput << "#" << std::endl;
@@ -1085,7 +1085,7 @@ int CNrgen::CreateCubitJournal()
     for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
       szBlock = "b_"+ m_szAssmMat(p);
       szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " <<  m_nMaterialSetId + p << " add body in " << szGrp  << std::endl;
+      m_FileOutput << "block " <<  m_nMaterialSetId + p << " body in " << szGrp  << std::endl;
       m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     m_FileOutput << "#" << std::endl;
@@ -2211,7 +2211,7 @@ int CNrgen::Create2DSurf ()
   for (int i = 0; i < surfs.size(); ++i){
 
     // locate surfaces for which max and min zcoord is same as maxz coord
-     if((abs(max_corn[3*i+2] -  dtop) < dTol) && (abs(min_corn[3*i+2] - dtop) < dTol)){
+    if((abs(max_corn[3*i+2] -  dtop) < dTol) && (abs(min_corn[3*i+2] - dtop) < dTol)){
       max_surfs[t] = surfs[i];
       t++;
     }
