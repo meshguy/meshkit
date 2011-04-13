@@ -562,6 +562,13 @@ int CNrgen::ReadAndCreate()
 	    (strcmp (m_szAssmMatAlias(j).c_str(), "") == 0)){
 	  IOErrorHandler(EMAT);
 	}
+	// checking if & inserted at the end of the material by mistake
+	if (j == m_nAssemblyMat){
+	  std::string dummy = "";
+	  szFormatString >> dummy;
+	  if (strcmp (dummy.c_str(), "") != 0)
+	    IOErrorHandler(EMAT);
+	}
       }
     }   
     if( (szInputString.substr(0,10) == "dimensions") || 
@@ -975,7 +982,7 @@ int CNrgen::CreateCubitJournal()
     for(int p=1; p <= m_szAssmMatAlias.GetSize();p++){
       szBlock = "b_"+ m_szAssmMat(p);
       szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " add surface in " << szGrp  << std::endl;
       m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     m_FileOutput << "#" << std::endl;
@@ -1078,7 +1085,7 @@ int CNrgen::CreateCubitJournal()
     for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
       szBlock = "b_"+ m_szAssmMat(p);
       szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " <<  m_nMaterialSetId + p << " body in " << szGrp  << std::endl;
+      m_FileOutput << "block " <<  m_nMaterialSetId + p << " add body in " << szGrp  << std::endl;
       m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     m_FileOutput << "#" << std::endl;
