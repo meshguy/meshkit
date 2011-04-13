@@ -102,9 +102,9 @@ void MKGraph::insert_node(GraphNode *inserted, GraphNode *before, GraphNode *aft
   if (mkGraph.target(inserted->out_arcs()) == leafNode->get_node())
     mkGraph.erase(inserted->out_arcs());
 
-    // if before is a root node (i.e. is connected to rootNode), also disconnect that
-  if (mkGraph.source(before->in_arcs()) == rootNode->get_node())
-    mkGraph.erase(before->in_arcs());
+    // if inserted is a root node (i.e. is connected to rootNode), also disconnect that
+  if (mkGraph.source(inserted->in_arcs()) == rootNode->get_node())
+    mkGraph.erase(inserted->in_arcs());
 
   lemon::ListDigraph::InArcIt iter, jter;
   if (after != NULL) { // if after is specified
@@ -130,8 +130,9 @@ void MKGraph::insert_node(GraphNode *inserted, GraphNode *before, GraphNode *aft
     }
   }
   else { // check all predecessors
-    for (iter = before->in_arcs(); iter != lemon::INVALID; ++iter) {
+    for (iter = before->in_arcs(); iter != lemon::INVALID;) {
       lemon::ListDigraph::Node after_node = mkGraph.source(iter);
+      std::cout << "after_node=" << nodeMap[after_node]->get_name() << std::endl;
 
       // check if it is already connected
       bool b_connected = false;
@@ -143,12 +144,19 @@ void MKGraph::insert_node(GraphNode *inserted, GraphNode *before, GraphNode *aft
       }
 
       if (!b_connected) mkGraph.addArc(after_node, inserted->get_node());  // add a new arc
-      mkGraph.erase(iter); // remove the arc from after node
+
+      jter = iter;
+      ++iter;
+      mkGraph.erase(jter); // remove the arc from after node
     }
   }
     
     // now link inserted to before
   mkGraph.addArc(inserted->get_node(), before->get_node());
+
+  // if before is a root node (i.e. is connected to rootNode), also disconnect that
+  if (mkGraph.source(before->in_arcs()) == rootNode->get_node())
+    mkGraph.erase(before->in_arcs());
 }
 
 void MKGraph::add_arc(GraphNode *source, GraphNode *target) 
