@@ -58,6 +58,8 @@ int OneToOneSwept::MeshSetting()
         cout << descr << endl;
         exit(0);
     }
+
+    return 1;
 }
 
 int OneToOneSwept::getList()
@@ -109,7 +111,7 @@ int OneToOneSwept::getList()
 	}	
 	
 	//loop over the edges and find the boundary nodes	
-	for (int i=0; i < gsEdgeList.size(); i++)
+	for (unsigned int i=0; i < gsEdgeList.size(); i++)
 	{
 		iBase_EntitySetHandle tmpSet;
 		iRel_getEntSetRelation(assoc, rel, gsEdgeList[i].gEdgeHandle, 0, &tmpSet, &err);
@@ -144,7 +146,7 @@ int OneToOneSwept::getList()
 	}	
 	
 	//loop over the corners and find the corner nodes
-	for (int i=0; i < gVertexList.size(); i=i+2)
+	for (unsigned int i=0; i < gVertexList.size(); i=i+2)
 	{
 		iBase_EntitySetHandle tmpSet;
 		iRel_getEntSetRelation(assoc, rel, gVertexList[i].gVertexHandle, 0, &tmpSet, &err);
@@ -252,7 +254,7 @@ int OneToOneSwept::getList()
 
 int OneToOneSwept::isVertexCorner(iBase_EntityHandle gNodeHandle, iBase_EntityHandle gFaceHandle)
 {
-	
+	return 1;
 }
 
 int OneToOneSwept::isEdgeBoundary(iBase_EntityHandle gEdgeHandle)
@@ -269,8 +271,7 @@ int OneToOneSwept::isEdgeBoundary(iBase_EntityHandle gEdgeHandle)
 }
 
 void OneToOneSwept::Execute()
-{
-	int err;	
+{	
 	cout << "Meshing...." << endl;
 
 	//TestGeom();
@@ -287,12 +288,12 @@ int OneToOneSwept::FindCorners()
 	int err;
 	Point3D pts;
 	Point2D uv;
-	iBase_TagHandle taghandle, tTaghandle;
+	iBase_TagHandle taghandle;
 	iMesh_getTagHandle(mesh, "source", &taghandle, &err, strlen("source"));
 	assert(!err);
 	
 	//Collect all the feature nodes on the target surface
-	for (int i=0; i < gVertexList.size(); i=i+2)
+	for (unsigned int i=0; i < gVertexList.size(); i=i+2)
 	{
 		//find the corresponding the node on the source surface
 		int ID;
@@ -396,7 +397,7 @@ int OneToOneSwept::TargetSurfProjection()
 	assert(!err);
 	
 	int index=0, id, index_t;
-	double sumin, sumax, tumin, tumax, su, tu;
+	double su, tu;
 	SimpleArray<iBase_EntityHandle> gsEdge, gtEdge, edgeNodes, geomEdgeEnds, meshEdgeEnds;
 	vector<iBase_EntitySetHandle> edgeEndsMeshSets;
 	vector<Point2D> sPtsUV(0), tPtsUV(0);   //store the boundary nodes on the sourface surface and target surface
@@ -417,7 +418,7 @@ int OneToOneSwept::TargetSurfProjection()
 	vector<iBase_EntitySetHandle> edgeMeshSets(gsEdgeList.size());
 	//loop over the various edges
 	
-	for (int i=0; i < gsEdgeList.size(); i++)
+	for (unsigned int i=0; i < gsEdgeList.size(); i++)
 	{
 		//get the mesh entityset for edge[i]
 		
@@ -549,7 +550,6 @@ int OneToOneSwept::TargetSurfProjection()
 
 		vector<iBase_EntityHandle> newNodehandle(edgeNodes.size());
 		SimpleArray<iBase_EntityHandle> testNodeHandle;
-		Point3D testPoint;
 		//create the boundary node on the edges. This doesn't include the corners.
 		for (int j=0; j < edgeNodes.size(); j++)
 		{
@@ -654,7 +654,7 @@ int OneToOneSwept::TargetSurfProjection()
 	//Until now, all the nodes have been created on the boundary edge.
 	//get the corner coordinates
 	assert(NodeList.size()==TVertexList.size());
-	for (int i=0; i < NodeList.size(); i++)
+	for (unsigned int i=0; i < NodeList.size(); i++)
 	{
 		if (NodeList[i].onCorner||NodeList[i].onBoundary)
 		{
@@ -739,7 +739,7 @@ int OneToOneSwept::TargetSurfProjection()
 	}
 
 	//create the inner nodes on the target surface
-	for (int i=0; i < NodeList.size(); i++)
+	for (unsigned int i=0; i < NodeList.size(); i++)
 	{
 		if ((!NodeList[i].onBoundary)&&(!NodeList[i].onCorner))//make sure that the node is the inner node
 		{
@@ -779,7 +779,7 @@ int OneToOneSwept::TargetSurfProjection()
 	int status;
 	index =0;
 	vector<iBase_EntityHandle> gEdgeHandle(0);
-	for (int i=0; i < EdgeList.size(); i++)
+	for (unsigned int i=0; i < EdgeList.size(); i++)
 	{
 		if (!EdgeList[i].onBoundary)
 		{
@@ -826,7 +826,7 @@ int OneToOneSwept::TargetSurfProjection()
 
 	//create the quadrilateral elements on the target surface
 	vector<iBase_EntityHandle> mFaceHandle(FaceList.size());
-	for (int i=0; i < FaceList.size(); i++)
+	for (unsigned int i=0; i < FaceList.size(); i++)
 	{
 		vector<iBase_EntityHandle> connect(FaceList[i].getNumNodes());
 		
@@ -867,6 +867,7 @@ int OneToOneSwept::TargetSurfProjection()
 		iRel_setEntSetRelation(assoc, rel, targetSurface, entityset, &err);
 		assert(!err);	
 	}
+	return 1;
 }
 
 int OneToOneSwept::getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, double uv[2])
@@ -1054,7 +1055,7 @@ void OneToOneSwept::SurfaceSpecifying()
 		iGeom_getVtxCoord(geom, gsNodes[1], &pts[1].px, &pts[1].py, &pts[1].pz, &err);
 		assert(!err);
 
-		for (int j=0; j < gVertexList.size(); j=j+2)
+		for (unsigned int j=0; j < gVertexList.size(); j=j+2)
 		{
 			if (fabs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 			{
@@ -1084,7 +1085,7 @@ void OneToOneSwept::SurfaceSpecifying()
 		iGeom_getVtxCoord(geom, gtNodes[1], &pts[1].px, &pts[1].py, &pts[1].pz, &err);
 		assert(!err);
 
-		for (int j=1; j < gVertexList.size(); j=j+2)
+		for (unsigned int j=1; j < gVertexList.size(); j=j+2)
 		{
 			if (fabs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 			{
@@ -1141,7 +1142,7 @@ void OneToOneSwept::SurfaceSpecifying()
 			iGeom_getVtxCoord(geom, gNodes[1], &pts[1].px, &pts[1].py, &pts[1].pz, &err);
 			assert(!err);		
 	
-			for (int j=0; j < gVertexList.size(); j++)
+			for (unsigned int j=0; j < gVertexList.size(); j++)
 			{
 				if (fabs(sqrt(pow(pts[0].px-gVertexList[j].xyzCoords[0],2)+pow(pts[0].py-gVertexList[j].xyzCoords[1],2)+pow(pts[0].pz-gVertexList[j].xyzCoords[2],2)))<1e-10)
 				{
@@ -1171,10 +1172,10 @@ void OneToOneSwept::SurfaceSpecifying()
 	cout << "The element size has been specified" << endl;
 
 	//create the corner relationship between source surface and target surface
-	for (int i=0; i < gVertexList.size(); i=i+2)
+	for (unsigned int i=0; i < gVertexList.size(); i=i+2)
 	{
 		int index_a;
-		for (int j=0; j < gLinkSides.size(); j++)
+		for (unsigned int j=0; j < gLinkSides.size(); j++)
 		{
 			if (gVertexList[i].id == gLinkSides[j].connect[0]->id)
 			{
@@ -1191,11 +1192,11 @@ void OneToOneSwept::SurfaceSpecifying()
 	}	
 	
 	//create the edge relationship between the source surface and target surface
-	for (int i=0; i < gsEdgeList.size(); i++)
+	for (unsigned int i=0; i < gsEdgeList.size(); i++)
 	{
 		int index_a = cornerPairs[gsEdgeList[i].connect[0]->index];
 		int index_b = cornerPairs[gsEdgeList[i].connect[1]->index];	 	
-		for (int j=0; j < gtEdgeList.size(); j++)
+		for (unsigned int j=0; j < gtEdgeList.size(); j++)
 		{
 			if (((gVertexList[index_a].id == gtEdgeList[j].connect[0]->id)&&(gVertexList[index_b].id == gtEdgeList[j].connect[1]->id))||((gVertexList[index_a].id == gtEdgeList[j].connect[1]->id)&&(gVertexList[index_b].id == gtEdgeList[j].connect[0]->id)))
 			{	
@@ -1206,7 +1207,7 @@ void OneToOneSwept::SurfaceSpecifying()
 	}
 
 	//add an array of vertex to the linking surf list
-	for (int i=0; i < gLinkFaceList.size(); i++)
+	for (unsigned int i=0; i < gLinkFaceList.size(); i++)
 	{
 		gNodes.clear();
 		iGeom_getEntAdj(geom, gFaces[i], iBase_VERTEX, ARRAY_INOUT(gNodes), &err);
@@ -1217,7 +1218,7 @@ void OneToOneSwept::SurfaceSpecifying()
 			Point3D pts;
 			iGeom_getVtxCoord(geom, gNodes[j], &pts.px, &pts.py, &pts.pz, &err);
 			assert(!err);		
-			for (int k=0; k < gVertexList.size(); k++)
+			for (unsigned int k=0; k < gVertexList.size(); k++)
 			{
 				if (is_SamePoint(pts.px, pts.py, pts.pz, gVertexList[k].xyzCoords[0], gVertexList[k].xyzCoords[1], gVertexList[k].xyzCoords[2]))
 				{
@@ -1488,7 +1489,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
         }
     }
 
-    if (numAssociations != mapEdges.size())
+    if (numAssociations != int(mapEdges.size()))
         cout << "Warning: There are more edge entitySet than geometric edges " << endl;
     
     //////////////////////////////////////////////////////////////////////////////
@@ -1501,7 +1502,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
     int numFaces;
     iMesh_getNumOfType(mesh, mesh_root_set, iBase_FACE, &numFaces, &err);
 
-    int mesh_faceid;
+
 
     numAssociations = 0;
     for (int i = 0; i < entitySets.size(); i++)
@@ -1551,7 +1552,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
 	}
     }
     
-    if (numAssociations != mapFaces.size())
+    if (numAssociations != int(mapFaces.size()))
     {
 	cout << "Warning: There are more face entitySet than geometric faces " << endl;
     }
@@ -1562,7 +1563,7 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
 
     SimpleArray<iBase_EntityHandle> mCells;
 
-    int mesh_cellid;
+   
 
     int numCells;
     iMesh_getNumOfType(mesh, mesh_root_set, iBase_REGION, &numCells, &err);
@@ -1617,7 +1618,7 @@ int OneToOneSwept::InnerLayerMeshing()
 	
 	//create the vertex on the linking surface
 	//determine whether the different linking sides have the same number of layers
-	for (int i=0; i < gLinkSides.size(); i++)
+	for (unsigned int i=0; i < gLinkSides.size(); i++)
 	{
 		iBase_EntitySetHandle testset;
 		iRel_getEntSetRelation(assoc, rel, gLinkSides[i].gEdgeHandle, 0, &testset, &err);
@@ -1651,7 +1652,8 @@ int OneToOneSwept::InnerLayerMeshing()
 	
 	//create the quadrilateral face elements on the different layers and cell elements
 	CreateElements(linkVertexList); 	
-						
+	
+	return 1;				
 }
 
 int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
@@ -1666,7 +1668,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 	{
 		if (m==0)
 		{
-			for (int i=0; i < FaceList.size(); i++)
+			for (unsigned int i=0; i < FaceList.size(); i++)
 			{
 				vector<iBase_EntityHandle> connect(8);
 				
@@ -1686,7 +1688,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 			assert(!err);
 			if (m == (numLayers-2))
 			{
-				for (int i=0; i < FaceList.size(); i++)
+				for (unsigned int i=0; i < FaceList.size(); i++)
 				{
 					vector<iBase_EntityHandle> connect(8);
 					
@@ -1710,7 +1712,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 		else
 		{
 			
-			for (int i=0; i < FaceList.size(); i++)
+			for (unsigned int i=0; i < FaceList.size(); i++)
 			{
 				vector<iBase_EntityHandle> connect(8);
 				
@@ -1730,7 +1732,7 @@ int OneToOneSwept::CreateElements(vector<vector <Vertex> > &linkVertexList)
 			assert(!err);
 			if (m == (numLayers-2))
 			{
-				for (int i=0; i < FaceList.size(); i++)
+				for (unsigned int i=0; i < FaceList.size(); i++)
 				{
 					vector<iBase_EntityHandle> connect(8);
 					
@@ -1771,7 +1773,7 @@ int OneToOneSwept::InnerNodesProjection(vector<vector <Vertex> > &linkVertexList
 		PtsCenter[i].py = 0;
 		PtsCenter[i].pz = 0;
 	}
-	for (int i=0; i < NodeList.size(); i++)
+	for (unsigned int i=0; i < NodeList.size(); i++)
 	{
 		if (NodeList[i].onBoundary || NodeList[i].onCorner)
 		{
@@ -2004,7 +2006,7 @@ int OneToOneSwept::InnerNodesProjection(vector<vector <Vertex> > &linkVertexList
 		tA[2][2] = tInvMatrix[2][0]*tb[2][0] + tInvMatrix[2][1]*tb[2][1] + tInvMatrix[2][2]*tb[2][2];
 		
 		//calculate the inner nodes for different layers
-		for (int j=0; j < NodeList.size(); j++)
+		for (unsigned int j=0; j < NodeList.size(); j++)
 		{
 			if (!(NodeList[j].onBoundary || NodeList[j].onCorner))
 			{
@@ -2050,13 +2052,13 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	iBase_TagHandle taghandle;
 	iMesh_getTagHandle(mesh, "source", &taghandle, &err, strlen("source"));
 	assert(!err);
-	for (int i=0; i < gLinkSides.size(); i++)
+	for (unsigned int i=0; i < gLinkSides.size(); i++)
 	{
 		int sIndex, stIndex;
 		double u0, u1;
 		vector<iBase_EntityHandle> mNodeHandle(numLayers-1);
 		//find the node
-		for (int j=0; j < gVertexList.size(); j=j+2)
+		for (unsigned int j=0; j < gVertexList.size(); j=j+2)
 		{
 			if ((gLinkSides[i].connect[0]->id == gVertexList[j].id)||(gLinkSides[i].connect[1]->id == gVertexList[j].id))
 			{
@@ -2138,7 +2140,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			//discretize the linking sides
 			double t, u;
 			Point3D pts;
-			int VertexID;
+			
 			t=(j+1)*1/double(numLayers);
 			u = linear_interpolation(t, u0, u1);
 			iGeom_getEntUtoXYZ(geom, gLinkSides[i].gEdgeHandle, u, &pts.px, &pts.py, &pts.pz, &err);
@@ -2195,10 +2197,10 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//check whether this linking surf is meshed or not
 	vector<bool> isMeshed(gLinkFaceList.size());
-	for (int i=0; i < gLinkFaceList.size(); i++)
+	for (unsigned int i=0; i < gLinkFaceList.size(); i++)
 	{
-		int t1=1, t2=1, t3=1, leftIndex, RightIndex, nodehandleIndex=0;
-		int sEdgeIndex, tEdgeIndex, gLeftIndex, gRightIndex;
+		int t1=1, t2=1, t3=1;
+		int sEdgeIndex, gLeftIndex, gRightIndex;
 		iBase_EntitySetHandle tmpSet;
 		SimpleArray<iBase_EntityHandle> aEdges, aNodes, aFaces, gEdges;
 		SimpleArray<iBase_EntityHandle> bNodes1, bNodes2, bNodes3;
@@ -2218,7 +2220,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			iGeom_getIntData(geom, gEdges[j], geom_id_tag, &edgeId, &err);
 			assert(!err);
 			//actually, the num of linking sides is equal to the num of edges on the source surface
-			for (int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
+			for (unsigned int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
 			{
 				if (edgeId == gsEdgeList[k].EdgeID)
 				{
@@ -2227,7 +2229,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 					break;
 				}
 			}
-			for (int k=0; (k < gLinkSides.size())&&(t2||t3); k++)
+			for (unsigned int k=0; (k < gLinkSides.size())&&(t2||t3); k++)
 			{
 				if ((edgeId == gLinkSides[k].EdgeID)&&(t2))
 				{
@@ -2419,7 +2421,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	//discretize the linking surface		
-	for (int i=0; i < gLinkFaceList.size(); i++)
+	for (unsigned int i=0; i < gLinkFaceList.size(); i++)
 	{
 		//find the linking sides
 		if (!isMeshed[i])
@@ -2430,7 +2432,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			//suLeft------parametrical coordinatiMesh_addEntArrToSet(mesh, &mNodeHandle[0], numLayers-1, entityset, &err);es on the source boundary edge
 			Point2D pt00, pt01, pt10, pt11;  //parametric coordinates for four corners on the linking surface
 			SimpleArray<iBase_EntityHandle> gEdges, mNodes;
-			int sEdgeIndex, tEdgeIndex, gLeftIndex, gRightIndex;
+			int sEdgeIndex, gLeftIndex, gRightIndex;
 			iBase_EntitySetHandle edgeNodeSet;
 			vector<iBase_EntityHandle>  nodeHandle(0);
 		
@@ -2445,7 +2447,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 				iGeom_getIntData(geom, gEdges[j], geom_id_tag, &edgeId, &err);
 				assert(!err);
 				//actually, the num of linking sides is equal to the num of edges on the source surface
-				for (int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
+				for (unsigned int k=0; ((k < gsEdgeList.size())&&(t1)); k++)
 				{
 					if (edgeId == gsEdgeList[k].EdgeID)
 					{
@@ -2454,7 +2456,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 						break;
 					}
 				}
-				for (int k=0; (k < gLinkSides.size())&&(t2||t3); k++)
+				for (unsigned int k=0; (k < gLinkSides.size())&&(t2||t3); k++)
 				{
 					if ((edgeId == gLinkSides[k].EdgeID)&&(t2))
 					{

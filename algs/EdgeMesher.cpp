@@ -117,7 +117,7 @@ int EdgeMesher::Execute()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void EdgeMesher::EdgeMesh()
 {
-	int err, NumEntitySet;
+	int err;
 	SimpleArray<iBase_EntityHandle> nodeHandles;
 	SimpleArray<iBase_EntityHandle> lineHandles;
 	SimpleArray<iBase_EntityHandle> edgeHandles;
@@ -200,8 +200,8 @@ vector<double> EdgeMesher::EqualMeshing()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<double> EdgeMesher::BiasMeshing()
 {	
-	int err, i;
-	double x, y, z, ustart, u, du, len, q, L0, dist;
+	int i;
+	double ustart, u, len, q, L0, dist;
 	vector<double> NodeCoordinates;  //temporarily store the coordinates
 	Point3D tempCoordinate;	
 
@@ -247,8 +247,8 @@ vector<double> EdgeMesher::BiasMeshing()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<double> EdgeMesher::DualBiasMeshing()
 {	
-	int err, i, NumNodes;
-	double x, y, z, ustart, u, du, len, q, L0, dist, ustart0, ustart1;
+	int i, NumNodes;
+	double u, len, q, L0, dist, ustart0, ustart1;
 	vector<double> NodeCoordinates;  //temporarily store the coordinates
 	Point3D tempCoordinate;
 
@@ -430,7 +430,7 @@ void EdgeMesher::DivideIntoMore(Point3D p0, Point3D pMid, Point3D p1, double u0,
 void EdgeMesher::RapidSorting(vector<double> &nodes, vector<double> &URecord, int left, int right)
 {
 	int i, j;
-	double middle, iTemp, x, y, z;
+	double middle, iTemp;
 	Point3D TempData;
 	
 	middle=URecord[(left+right)/2];
