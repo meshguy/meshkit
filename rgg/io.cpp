@@ -1374,7 +1374,11 @@ int CNrgen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
   }
   if(m_szGeomType == "rectangular"){
     double dPX, dPY, dPZ, dPX1, dPY1, dPZ1, dPX2, dPY2, dPZ2;
-    m_Pincell(nTempPin).GetPitch(dPX, dPY, dPZ);
+    if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx"))
+      m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+    else
+      m_Pincell(nTempPin).GetPitch(dPX, dPY, dPZ);
+
     if (n==1){
       dX = 0;
       if(m==1)
@@ -1807,11 +1811,11 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 
       m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
       if(nIFlag){
-	err = CreatePinCell_Intersect(nTempPin, dX, dY, dZ);
+	err = CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
 	ERRORR("Error in function CreatePinCell_Intersect", err);
       }
       else{
-	err = CreatePinCell(nTempPin, dX, dY, dZ);
+	err = CreatePinCell(nTempPin, dX, -dY, dZ);
 	ERRORR("Error in function CreatePinCell", err);
       }
     }
@@ -1842,7 +1846,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 
 	m_Pincell(1).GetPitch(dP, dH);
 	dX = m_nPin*dP;
-	dY = (m_nPin-1)*dP*sqrt(3.0)/2.0;
+	dY = -(m_nPin-1)*dP*sqrt(3.0)/2.0;
 	dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
 
 	// position the prism
@@ -1867,7 +1871,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
   CParser Parse;
   std::string card, szVolId, szVolAlias;
   int nInputLines, nTempPin, nIFlag = 0.0;
-  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0, dHeight = 0, dPX, dPY, dPZ;
+  double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0, dHeight = 0, dPX=0.0, dPY=0.0, dPZ=0.0;
   iBase_EntityHandle assm = NULL;
 
   std::istringstream szFormatString (szInputString);
@@ -1912,21 +1916,21 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
       std::cout << "\n--------------------------------------------------"<<std::endl;
       std::cout << " m = " << m <<" n = " << n << std::endl;
       std::cout << "creating pin: " << nTempPin;
-      std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
+      std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
 
       m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
       if(nIFlag){
-	err = CreatePinCell_Intersect(nTempPin, dX, dY, dZ);
+	err = CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
 	ERRORR("Error in function CreatePinCell_Intersect", err);
       }
       else{
-	err = CreatePinCell(nTempPin, dX, dY, dZ);
+	err = CreatePinCell(nTempPin, dX, -dY, dZ);
 	ERRORR("Error in function CreatePinCell", err);
       }
       // dMoveX and dMoveY are stored for positioning the outer squares later
       if(m == m_nPinY && n ==m_nPinX){
 	dMoveX = dX/2.0;
-	dMoveY = dY/2.0;
+	dMoveY = -dY/2.0;
       }
     }
   }

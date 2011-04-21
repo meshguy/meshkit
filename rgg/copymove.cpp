@@ -703,12 +703,12 @@ int CCrgen::copy_move_hex_full_assys_p1(CopyMesh **cm,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + 
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = (n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = (n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)); 
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0))); 
       } 
       if(flags[assm_index] == 0){
 
@@ -774,12 +774,12 @@ int CCrgen::copy_move_hex_full_assys(CopyMesh **cm,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + 
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = (n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = (n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)); 
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0))); 
       }     
 
       if(flags[assm_index]==1){
@@ -838,7 +838,7 @@ int CCrgen::copy_move_sq_assys_p1(CopyMesh **cm,
   }
 
   for (int n1 = 0; n1 < nringsx; n1++) {
-    dx[1] = n1 * pitchy;
+    dx[1] =-n1 * pitchy;
     for (int n2 = 0; n2 < nringsy; n2++) {
       
       err = find_assm(i, assm_index);
@@ -898,6 +898,7 @@ int CCrgen::copy_move_sq_assys(CopyMesh **cm,
 
   for (int n1 = 0; n1 < nringsx; n1++) {
     dx[1] = n1 * pitchy;
+    dx[1] = -dx[1];
     for (int n2 = 0; n2 < nringsy; n2++) {
       
       err = find_assm(i, assm_index);
@@ -928,7 +929,7 @@ int CCrgen::copy_move_sq_assys(CopyMesh **cm,
 	i++;
     
 	cm[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	dx[1] =  n1 * pitchy;
+	dx[1] =  -n1 * pitchy;
       }
       else{
 	i++;
@@ -1527,12 +1528,12 @@ int CCrgen::copy_move_hex_full_assys_p1(CopyGeom **cg,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 +
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = (n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = (n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
       }
       if(flags[assm_index] == 0){
 
@@ -1598,12 +1599,12 @@ int CCrgen::copy_move_hex_full_assys(CopyGeom **cg,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 +
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = (n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = (n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0));
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
       }
 
       if(flags[assm_index]==1){
@@ -1661,7 +1662,7 @@ int CCrgen::copy_move_sq_assys_p1(CopyGeom **cg,
   }
 
   for (int n1 = 0; n1 < nringsx; n1++) {
-    dx[1] = n1 * pitchy;
+    dx[1] = -n1 * pitchy;
     for (int n2 = 0; n2 < nringsy; n2++) {
 
       err = find_assm(i, assm_index);
@@ -1720,7 +1721,7 @@ int CCrgen::copy_move_sq_assys(CopyGeom **cg,
   }
 
   for (int n1 = 0; n1 < nringsx; n1++) {
-    dx[1] = n1 * pitchy;
+    dx[1] = -n1 * pitchy;
     for (int n2 = 0; n2 < nringsy; n2++) {
 
       err = find_assm(i, assm_index);
@@ -1750,7 +1751,7 @@ int CCrgen::copy_move_sq_assys(CopyGeom **cg,
 	i++;
 
 	cg[assm_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-	dx[1] =  n1 * pitchy;
+	dx[1] =  -n1 * pitchy;
       }
       else{
 	i++;
