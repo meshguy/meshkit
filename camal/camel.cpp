@@ -215,7 +215,7 @@ bool CMEL::is_meshed(iBase_EntityHandle gentity)
                                &ments, &ments_alloc, &ments_size, &result);
   if (result != iBase_TAG_NOT_FOUND && iBase_SUCCESS != result) {
     char descr[100];
-    iRel_getDescription ( relateIface, descr, &result, 99);
+    iRel_getDescription ( relateIface, descr, 99);
     std::cerr << "is_meshed: returned error, message: "
               << descr << std::endl;
     assert(false);

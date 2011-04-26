@@ -54,7 +54,7 @@ int OneToOneSwept::MeshSetting()
     {
         char descr[1000];
         int len = 1000;
-        iMesh_getDescription(mesh, descr, &err, len);
+        iMesh_getDescription(mesh, descr, len);
         cout << descr << endl;
         exit(0);
     }

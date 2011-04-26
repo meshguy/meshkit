@@ -1804,26 +1804,17 @@ inline iGeom::Error iGeom::mergeEnts(const EntityHandle* entities,
 iGeom::Error
 iGeom::getErrorType()
 {
-  // comment this out because iGeom_getErrorType does not exist
-  /*int err1, err2;
-  iGeom_getErrorType( mInstance, &err1, &err2 );
-  if (iBase_SUCCESS != err2)
-    return (Error)err2;
-  else
-    return (Error)err1;*/
-  return (Error)0;
+  int err;
+  iGeom_getErrorType( mInstance, &err );
+  return (Error)err;
 }
 
 std::string
 iGeom::getDescription()
 {
   std::vector<char> buffer(1024);
-  int err;
-  iGeom_getDescription( mInstance, &buffer[0], &err, buffer.size() );
-  if (iBase_SUCCESS != err)
-    return std::string();
-  else
-    return std::string(&buffer[0]);
+  iGeom_getDescription( mInstance, &buffer[0], buffer.size() );
+  return std::string(&buffer[0]);
 }
 
 

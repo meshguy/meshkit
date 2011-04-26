@@ -597,7 +597,7 @@ int readCubitMesh(const char *filename, iMesh_Instance &mesh)
     {
         char descr[1000];
         int len = 1000;
-        iMesh_getDescription(mesh, descr, &err, len);
+        iMesh_getDescription(mesh, descr, len);
         cout << descr << endl;
         exit(0);
     }
@@ -610,7 +610,7 @@ int readCubitMesh(const char *filename, iMesh_Instance &mesh)
     if (err)
     {
         char desc[1024];
-        iMesh_getDescription(mesh, desc, &err, 1024);
+        iMesh_getDescription(mesh, desc, 1024);
         cout << desc << endl;
         exit(0);
     }

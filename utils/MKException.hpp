@@ -23,10 +23,8 @@ inline void check_error(iMesh_Instance instance, int err)
 {
   if (err) {
     char descr[120];
-    int descr_err;
-    iMesh_getDescription(instance, descr, &descr_err, sizeof(descr)-1);
-    throw MKException(err, descr_err ? "Unable to retrieve error description" :
-                      descr);
+    iMesh_getDescription(instance, descr, sizeof(descr)-1);
+    throw MKException(err, descr);
   }
 }
 
@@ -34,10 +32,8 @@ inline void check_error(iGeom_Instance instance, int err)
 {
   if (err) {
     char descr[120];
-    int descr_err;
-    iGeom_getDescription(instance, descr, &descr_err, sizeof(descr)-1);
-    throw MKException(err, descr_err ? "Unable to retrieve error description" :
-                      descr);
+    iGeom_getDescription(instance, descr, sizeof(descr)-1);
+    throw MKException(err, descr);
   }
 }
 

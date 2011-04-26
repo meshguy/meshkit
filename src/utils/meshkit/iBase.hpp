@@ -225,24 +225,17 @@ inline PFX(_Instance) PFX(Base)::instance()
 inline PFX(Base)::Error 
 PFX(Base)::getErrorType() 
 {
-  int err1, err2;
-  PFX(_getErrorType)( mInstance, &err1, &err2 );
-  if (iBase_SUCCESS != err2)
-    return (Error)err2;
-  else
-    return (Error)err1;
+  int err;
+  PFX(_getErrorType)( mInstance, &err);
+  return (Error)err;
 }
 
 inline std::string 
 PFX(Base)::getDescription()
 {
   std::vector<char> buffer(1024);
-  int err;
-  PFX(_getDescription)( mInstance, &buffer[0], &err, buffer.size() );
-  if (iBase_SUCCESS != err)
-    return std::string();
-  else
-    return std::string(&buffer[0]);
+  PFX(_getDescription)( mInstance, &buffer[0], buffer.size() );
+  return std::string(&buffer[0]);
 }
 
 

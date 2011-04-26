@@ -186,7 +186,7 @@ int readMesh(const string &filename, iMesh_Instance &mesh)
 
    if( err ) {
        char desc[1024];
-       iMesh_getDescription( mesh, desc, &err, 1024 );
+       iMesh_getDescription( mesh, desc, 1024 );
        cout << desc << endl;
        exit(0);
    }

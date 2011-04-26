@@ -291,22 +291,15 @@ inline iRel::~iRel()
 
 inline iRel::Error iRel::getErrorType()
 {
-  int err1, err2;
-  iRel_getErrorType(mInstance, &err1, &err2 );
-  if (iBase_SUCCESS != err2)
-    return (Error)err2;
-  else
-    return (Error)err1;
+  int err;
+  iRel_getErrorType(mInstance, &err );
+  return (Error)err;
 }
     
 inline std::string iRel::getDescription() 
 {
   std::vector<char> buffer(1024);
-  int err;
-  iRel_getDescription(mInstance, &buffer[0], &err, buffer.size() );
-  if (iBase_SUCCESS != err)
-    return std::string();
-  else
+  iRel_getDescription(mInstance, &buffer[0], buffer.size() );
     return std::string(&buffer[0]);
 }
     
