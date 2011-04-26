@@ -392,8 +392,6 @@ public:
        new_defective_node  = NULL;
     }
 
-    int  remesh();
-
     size_t getSize(int e)
     {
       if( e == 0) return inner_nodes.size() + bound_nodes.size();
@@ -406,6 +404,19 @@ public:
     size_t count_irregular_nodes(int where);
 
     int  build_remeshable_boundary();
+
+    FaceSequence getFaces() const 
+    {
+       FaceSequence result;
+       if( faces.empty() ) return result;
+
+       result.resize( faces.size() );
+       std::copy( faces.begin(), faces.end(), result.begin());
+       return result;
+    }
+    NodeSequence getBoundaryNodes() const {return bound_nodes;}
+
+    int  remesh();
 
     bool operator < ( const OneDefectPatch &rhs) const
     {  return faces.size() < rhs.faces.size(); }
@@ -424,8 +435,7 @@ private:
     // Input data.
     Mesh   *mesh;
     Vertex *apex;               // Seed: Irregular vertex to start from.
-
-    FaceSet       faces;      // Faces within the blob.
+    FaceSet       faces;        // Faces within the blob.
     NodeSequence  nodepath;     // Initial joining two irregular nodes..
 
     Vertex *new_defective_node;
@@ -491,6 +501,34 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+struct QuadVertexDegreeReduction 
+{
+    void initialize();
+
+    int  reduce_degree(Vertex *v);
+
+    void finalize();
+
+private:
+    int  reduce_internal_vertex_degree(Vertex *v);
+    int  reduce_boundary_vertex_degree(Vertex *v);
+};
+
+struct DoubletRemoval
+{
+    void initialize();
+    int  remove(Vertex *v);
+    void finalize();
+};
+
+struct SingletRemoval
+{
+    void initialize();
+    int  remove(Vertex *v);
+    void finalize();
+};
+
+
 class QuadCleanUp 
 {
 public:
@@ -503,17 +541,24 @@ public:
     static bool isEdge35(const Edge *e);
     static bool isDiamond(Face *f, int &pos, int type = 33);
 
+    QuadCleanUp() {}
+
     QuadCleanUp(Mesh *m) {
-        mesh = m;
-        lapsmooth = new LaplaceSmoothing(mesh);
-        lapweight = new LaplaceLengthWeight;
-        lapsmooth->setWeight( lapweight );
+       setMesh(m);
     }
 
     ~QuadCleanUp() 
     {
       if( lapweight ) delete lapweight;
       if( lapsmooth ) delete lapsmooth;
+    }
+
+    void setMesh( Mesh *m ) 
+    {
+        mesh = m;
+        lapsmooth = new LaplaceSmoothing(mesh);
+        lapweight = new LaplaceLengthWeight;
+        lapsmooth->setWeight( lapweight );
     }
 
     // Query methods ...
@@ -526,12 +571,14 @@ public:
     vector<Doublet> search_interior_doublets();
     vector<Edge>    search_tunnels();
     vector<OneDefectPatch> search_one_defect_patches();
-    OneDefectPatch* build_one_defect_patch(Vertex *vertex);
+
+    OneDefectPatch* build_one_defect_patch(Vertex *vertex = NULL );
 
     // Global Cleanup methods ..
     int remesh_defective_patches();
 
     // Local Cleanup methods ..
+    int reduce_degree( Vertex *v );
     int vertex_degree_reduction();
 
     int swap_concave_faces();
@@ -567,14 +614,19 @@ public:
     // Utility functions ...
     void get_strips(Face *face, FaceSequence &strip1, FaceSequence strip2);
 
+    int  reduce_internal_vertex_degree(Vertex *v);
+    int  reduce_boundary_vertex_degree(Vertex *v);
+
 private:
-    // Input-output instance. Input mesh is modified...
+
+    // Input-Output mesh.
     Mesh *mesh;
+
     MeshOptimization mopt;
     LaplaceSmoothing *lapsmooth;
     LaplaceWeight *lapweight;
-    int  region_search_method;
 
+    int  region_search_method;
     int  has_interior_nodes_degree_345();
 
     NodeSet  irregular_nodes_set;
@@ -590,7 +642,6 @@ private:
     vector<Diamond> search_bridges_in_layer(int l);
     vector<Diamond> search_diamonds_in_layer(int l);
 
-    // Basic Operations ...
     int clean_layer_once(int id);
     int face_close(Face *face, Vertex *v0, Vertex *v2);
     int diamond_collapse(FaceClose &d);

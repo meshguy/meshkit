@@ -148,7 +148,7 @@ int Jaal::dijkstra_shortest_path_test()
   struct MyFilter: public MeshFilter 
   {
       MyFilter( int i ) { id = i; }
-      int id;
+      size_t id;
       bool pass( const Vertex *v) { 
          return v->getID() != id; 
       }
@@ -160,11 +160,12 @@ int Jaal::dijkstra_shortest_path_test()
 
   NodeSequence sq = djk.getPath(mesh->getNodeAt(0), filter);
 
-  cout << " Final Path " << endl;
-  for( int i = 0; i < sq.size(); i++)  
+  for( size_t i = 0; i < sq.size(); i++)  
        cout << sq[i]->getID() << endl;
   
   delete filter;
+
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

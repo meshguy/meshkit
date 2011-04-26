@@ -18,7 +18,8 @@ int Tri2Quads::verify(Mesh *mesh, const vector<FacePair> &matching)
         f->setVisitMark(0);
     }
 
-    for (size_t i = 0; i < matching.size(); i++)
+    size_t nsize = matching.size();
+    for (size_t i = 0; i < nsize; i++)
     {
         size_t f1 = matching[i].first;
         size_t f2 = matching[i].second;
@@ -62,14 +63,16 @@ Mesh* Tri2Quads::collapse_matched_triangles(Mesh *trimesh, const vector<FacePair
 
     Mesh *quadmesh = new Mesh;
 
-    assert(matching.size());
+    size_t nsize = matching.size();
+
+    assert( nsize );
 
     Face *tri1, *tri2, *quad;
 
     quadmesh->addNodes(trimesh->getNodes());
-    quadmesh->reserve( matching.size(), 2 );
+    quadmesh->reserve( nsize, 2 );
 
-    for (size_t i = 0; i < matching.size(); i++)
+    for (size_t i = 0; i < nsize; i++)
     {
         size_t f1 = matching[i].first;
         size_t f2 = matching[i].second;
@@ -144,6 +147,7 @@ int Tri2Quads::refine_boundary_triangle(Face *tri0)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+
 
 void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
                             BinaryNode *child2)
@@ -574,17 +578,17 @@ Mesh* Tri2Quads::getQuadMesh(Mesh *inmesh, int replace, int topo)
     // Roughly we can expect that about 4-5% steiner points are inserted in
     // most of the general cases.
     ///////////////////////////////////////////////////////////////////////////
+#ifdef MEASURE_PERF
     ticks start_tick = getticks();
+#endif
 
     maximum_tree_matching();
 
     Mesh *quadmesh = collapse_matched_triangles(trimesh, facematching, replace);
 
+#ifdef MEASURE_PERF
     ticks end_tick = getticks();
-
     double elapsed_ticks = elapsed(end_tick, start_tick);
-
-#ifdef VERBOSE
     cout << "Info: Tri->Quad Elapsed Performance Counter " << elapsed_ticks << endl;
 #endif
 

@@ -94,12 +94,13 @@ void BinaryTree::dfs_traverse(BinaryNode *parent, BNodeList &nextnodes)
   if (dualnode->isVisited())
     return;
 
+  vector<BinaryNode*> neighQ;
   NodeSequence neighs = dualnode->getRelations0();
 
   int nextlevel = parent->getLevelID() + 1;
 
-  vector<BinaryNode*> neighQ;
-  for (int i = 0; i < neighs.size(); i++)
+  int nSize = neighs.size();
+  for (int i = 0; i < nSize; i++)
   {
     dualnode = neighs[i];
     if (!dualnode->isVisited())

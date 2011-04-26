@@ -120,8 +120,8 @@ void DualGraph::addEdge(const PNode v1, const PNode v2)
 inline 
 PNode DualGraph::getNewDualNode(Face *face) 
 {
-  PNode  dualnode = Vertex::newObject();
-  Point3D p3d = face->getCentroid();
+  PNode dualnode = Vertex::newObject();
+  const Point3D &p3d = face->getCentroid();
   dualnode->setXYZCoords(p3d);
 
   face->setDualNode( dualnode );

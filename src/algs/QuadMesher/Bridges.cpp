@@ -431,6 +431,7 @@ QuadCleanUp::remove_bridges_in_layer(int layerid)
 {
     cout << "CSV : " << endl;
     abort();
+/*
     int rel2exist = mesh->build_relations(0, 2);
     mesh->search_boundary();
 
@@ -438,6 +439,7 @@ QuadCleanUp::remove_bridges_in_layer(int layerid)
         search_edges33_in_layer(layerid);
 
     return remove_bridges_once();
+*/
 }
 
 ////////////////////////////////////////////////////////////////////

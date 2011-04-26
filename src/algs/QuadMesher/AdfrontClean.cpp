@@ -17,7 +17,6 @@ QuadCleanUp::apply_advance_front_singlet_rule(Vertex *singlet)
     Face *face = vfaces[0];
     int pos = face->getPosOf(singlet);
 
-    Vertex *v0 = face->getNodeAt((pos + 0) % 4);
     Vertex *v1 = face->getNodeAt((pos + 1) % 4);
     Vertex *v2 = face->getNodeAt((pos + 2) % 4);
     Vertex *v3 = face->getNodeAt((pos + 3) % 4);
@@ -191,7 +190,6 @@ QuadCleanUp::apply_advance_front_excess_rule(Vertex *vertex)
 int
 QuadCleanUp::advance_front_edges_swap_once(int layerid)
 {
-    int err;
     if (mesh->getAdjTable(0, 0))
         mesh->clear_relations(0, 0);
 
@@ -372,10 +370,7 @@ QuadCleanUp::advancing_front_edges_swap()
     //
     //
     //***************************************************************************
-    size_t numnodes = mesh->getSize(0);
-
     int nfronts = mesh->setWavefront(0);
-
 
 #ifdef DEBUG
     cout << "Info:  Before Advance front swapping " << endl;

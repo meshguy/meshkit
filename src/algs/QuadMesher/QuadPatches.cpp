@@ -178,13 +178,16 @@ void build_submesh_topology(StructuredMesh2D &smesh) {
 
     FaceSequence adjfaces;
     set<int> nset;
-    for (size_t i = 0; i < smesh.faces.size(); i++) {
+
+    size_t numFaces = smesh.faces.size();
+    for (size_t i = 0; i < numFaces; i++) {
         Face *face = smesh.faces[i];
         for (int j = 0; j < 4; j++) {
             Vertex *v0 = face->getNodeAt((j + 0) % 4);
             Vertex *v1 = face->getNodeAt((j + 1) % 4);
             adjfaces = Mesh::getRelations112(v0, v1);
-            for (int k = 0; k < adjfaces.size(); k++) {
+            int numneighs = adjfaces.size();
+            for (int k = 0; k < numneighs; k++) {
                 int nid = adjfaces[k]->getTag();
                 nset.insert(nid);
             }
@@ -213,6 +216,8 @@ Face *getSeedFace(Jaal::Mesh *mesh) {
 size_t independent_components(Jaal::Mesh *mesh) {
 
     size_t numfaces = mesh->getSize(2);
+    size_t numneighs;
+
     for (size_t i = 0; i < numfaces; i++) {
         Face *f = mesh->getFaceAt(i);
         f->setVisitMark(0);
@@ -237,7 +242,8 @@ size_t independent_components(Jaal::Mesh *mesh) {
                     Vertex *v1 = currface->getNodeAt((i + 1) % 4);
                     if (v0->isVisited() && v1->isVisited()) continue;
                     adjfaces = Mesh::getRelations112(v0, v1);
-                    for (int j = 0; j < adjfaces.size(); j++)
+                    numneighs= adjfaces.size();
+                    for (size_t j = 0; j < numneighs; j++)
                         faceQ.push_back(adjfaces[j]);
                 }
             }
@@ -267,8 +273,11 @@ int merge_submesh(StructuredMesh2D &amesh, StructuredMesh2D &bmesh) {
 
     if (common.size() != 2) return 3;
 
+    size_t numFaces;
+
     FaceSequence vfaces;
-    for (int i = 0; i < amesh.faces.size(); i++) {
+    numFaces = amesh.faces.size();
+    for (size_t i = 0; i < numFaces; i++) {
         for (int j = 0; j < 4; j++) {
             Vertex *v = amesh.faces[i]->getNodeAt(j);
             if (!v->isBoundary()) {
@@ -278,7 +287,8 @@ int merge_submesh(StructuredMesh2D &amesh, StructuredMesh2D &bmesh) {
         }
     }
 
-    for (int i = 0; i < bmesh.faces.size(); i++) {
+    numFaces = bmesh.faces.size();
+    for (size_t i = 0; i < numFaces; i++) {
         for (int j = 0; j < 4; j++) {
             Vertex *v = bmesh.faces[i]->getNodeAt(j);
             if (!v->isBoundary()) {
@@ -288,7 +298,8 @@ int merge_submesh(StructuredMesh2D &amesh, StructuredMesh2D &bmesh) {
         }
     }
 
-    for (int i = 0; i < bmesh.faces.size(); i++) {
+    numFaces = bmesh.faces.size();
+    for (size_t i = 0; i < numFaces; i++) {
         amesh.faces.push_back(bmesh.faces[i]);
         bmesh.faces[i]->setTag(amesh.myID);
     }
@@ -337,17 +348,22 @@ StructuredMesh2D getQuadPatch(Jaal::Mesh *mesh, int compid) {
     FaceSet boundFaces, cornerFaces;
 
     FaceSequence vfaces;
+    int     ncount;
+    size_t  numneighs;
     for (nit = nodeSet.begin(); nit != nodeSet.end(); ++nit) {
         Vertex *vertex = *nit;
         vfaces = vertex->getRelations2();
-        int ncount = 0;
-        for (int j = 0; j < vfaces.size(); j++)
+        ncount = 0;
+        numneighs = vfaces.size();
+        for (size_t j = 0; j < numneighs; j++)
             if (faceSet.find(vfaces[j]) != faceSet.end()) ncount++;
+
         if (ncount == 1) {
             cornerNodes.insert(vertex);
-            for (int j = 0; j < vfaces.size(); j++)
+            for (size_t j = 0; j < numneighs; j++)
                 if (faceSet.find(vfaces[j]) != faceSet.end()) cornerFaces.insert(vfaces[j]);
         }
+
         if (ncount != 4) boundNodes.insert(vertex);
     }
 
@@ -400,9 +416,10 @@ int Mesh::search_quad_patches()
         Vertex *vertex = getNodeAt(i);
         if (!vertex->isBoundary()) {
             NodeSequence vnodes = vertex->getRelations0();
-            if (vnodes.size() != 4)  {
+            size_t numneighs = vnodes.size();
+            if (numneighs  != 4)  {
                 qp.sequence[0] = vertex;
-                for (int j = 0; j < vnodes.size(); j++) {
+                for (size_t j = 0; j < numneighs; j++) {
                      qp.sequence[1] = vnodes[j];
                      nCount++;
                      qpath.push_back(qp);
@@ -421,8 +438,9 @@ int Mesh::search_quad_patches()
         qpath[j].advance(0);
 
     sort(qpath.begin(), qpath.end());
-    saveAs("b.dat");
 
+/*
+    saveAs("b.dat");
     for (int i = 0; i < qpath.size(); i++) {
         if (qpath[i].sequence.front()->isBoundary()) continue;
         if (qpath[i].sequence.back()->isBoundary() ) continue;
@@ -442,7 +460,7 @@ int Mesh::search_quad_patches()
         }
         assert(found);
     }
-
+*/
     exit(0);
 
     int numPatches = independent_components(this);
@@ -457,7 +475,7 @@ int Mesh::search_quad_patches()
     sort(submesh.begin(), submesh.end());
 
     while (1) {
-        size_t nSize = submesh.size();
+        int  nSize = submesh.size();
         cout << "#Submeshes " << submesh.size() << endl;
         size_t count_merged = 0;
         for (int i = 0; i < nSize; i++) {
@@ -481,8 +499,6 @@ int Mesh::search_quad_patches()
     }
 
     sort(submesh.begin(), submesh.end());
-    for (int i = 0; i < submesh.size(); i++)
-        cout << submesh[i].getSize(2) << " ";
 
     for (size_t i = 0; i < numnodes; i++) {
         Vertex *vertex = getNodeAt(i);

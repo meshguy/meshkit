@@ -24,6 +24,11 @@
 #include <verdict.h>
 #endif
 
+#ifdef HAVE_BOOST
+#include <boost/any.hpp>
+#endif
+
+
 #define FOR_EACH(container, iter ) for(iter = container.begin(); iter != container.end(); ++iter)
 
 #include "basic_math.hpp"
@@ -39,25 +44,28 @@
    getchar(); \
 } \
 
-
 template <class T>
-T next(T x) {
+T next(T x)
+{
     return ++x;
 }
 
 template <class T, class Distance>
-T next(T x, Distance n) {
+T next(T x, Distance n)
+{
     std::advance(x, n);
     return x;
 }
 
 template <class T>
-T prior(T x) {
+T prior(T x)
+{
     return --x;
 }
 
 template <class T, class Distance>
-T prior(T x, Distance n) {
+T prior(T x, Distance n)
+{
     std::advance(x, -n);
     return x;
 }
@@ -67,7 +75,8 @@ using namespace std;
 
 typedef std::pair<size_t, size_t> FacePair;
 
-namespace Jaal {
+namespace Jaal
+{
 
 class Vertex;
 class Face;
@@ -98,8 +107,10 @@ typedef std::set<PFace> FaceSet;
 ///////////////////////////////////////////////////////////////////////////////
 
 template <class T>
-int split_stl_vector(const std::vector<T> &a, size_t pos, std::vector<T> &b, std::vector<T> &c) {
-    if (pos >= a.size()) return 1;
+int split_stl_vector(const std::vector<T> &a, size_t pos, std::vector<T> &b, std::vector<T> &c)
+{
+    size_t nSize = a.size();
+    if (pos >= nSize ) return 1;
 
     b.resize(pos);
 
@@ -107,9 +118,10 @@ int split_stl_vector(const std::vector<T> &a, size_t pos, std::vector<T> &b, std
     for (size_t i = 0; i < pos; i++)
         b[index++] = a[i];
 
-    c.resize(a.size() - pos + 1);
+    c.resize(nSize - pos + 1);
     index = 0;
-    for (size_t i = pos - 1; i < a.size(); i++)
+
+    for (size_t i = pos - 1; i < nSize; i++)
         c[index++] = a[i];
 
     return 0;
@@ -118,8 +130,11 @@ int split_stl_vector(const std::vector<T> &a, size_t pos, std::vector<T> &b, std
 ///////////////////////////////////////////////////////////////////////////////
 
 template <class T>
-int split_stl_vector(const std::deque<T> &a, size_t pos, std::deque<T> &b, std::deque<T> &c) {
-    if (pos >= a.size()) return 1;
+int split_stl_vector(const std::deque<T> &a, size_t pos, std::deque<T> &b, std::deque<T> &c)
+{
+    size_t nSize = a.size();
+
+    if (pos >= nSize) return 1;
 
     b.resize(pos);
 
@@ -127,13 +142,14 @@ int split_stl_vector(const std::deque<T> &a, size_t pos, std::deque<T> &b, std::
     for (size_t i = 0; i < pos; i++)
         b[index++] = a[i];
 
-    c.resize(a.size() - pos + 1);
+    c.resize(nSize - pos + 1);
     index = 0;
-    for (size_t i = pos - 1; i < a.size(); i++)
+    for (size_t i = pos - 1; i < nSize; i++)
         c[index++] = a[i];
 
     return 0;
 }
+
 
 typedef int AttribKey;
 
@@ -144,7 +160,7 @@ struct Attribute {
     }
     AttribKey key;
 
-#ifdef USE_BOOST_LIBS
+#ifdef HAVE_BOOST
     boost::any value;
 #endif
 };
@@ -169,7 +185,8 @@ struct StlSet : public Attribute {
     std::set<T> values;
 };
 
-class AttributeManager {
+class AttributeManager
+{
 public:
 
     AttributeManager() {
@@ -193,7 +210,8 @@ typedef size_t Handle_t;
 
 /// Base class for all handle types
 
-class Handle {
+class Handle
+{
 public:
 
     explicit Handle(Handle_t hid = 0) : hid(hid) {
@@ -249,7 +267,8 @@ private:
     Handle_t hid;
 };
 
-class MeshEntity {
+class MeshEntity
+{
 public:
 
     typedef size_t idtype;
@@ -325,8 +344,9 @@ public:
         return iTag;
     }
 
-#ifdef USE_BOOST_LIBS
 
+#ifdef CSV
+#ifdef HAVE_BOOST
     template<class T>
     void setAttribute(const string &s, const T &val) {
         AttribKey key = getAttribKey(s);
@@ -374,6 +394,7 @@ public:
         }
         return 1;
     }
+#endif
 #endif
 
     void setAttribute(const AttribKey &k, Attribute *newattrib) {
@@ -428,8 +449,19 @@ public:
     void removeRelation0(const Vertex *vertex);
     void removeRelation2(const Face *face);
 
-    const NodeSequence &getRelations0() const;
-    const FaceSequence &getRelations2() const;
+    const NodeSequence &getRelations0() const {
+        return relations0;
+    }
+    const FaceSequence &getRelations2() const {
+        return relations2;
+    }
+
+    NodeSequence &getRelations0() {
+        return relations0;
+    }
+    FaceSequence &getRelations2() {
+        return relations2;
+    }
 
     size_t getNumOfRelations(int e) {
         if (e == 0)
@@ -464,7 +496,8 @@ struct EntityRemovedPred {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Vertex : public MeshEntity {
+class Vertex : public MeshEntity
+{
     static size_t global_id;
 public:
     typedef Handle_t VertexHandle;
@@ -512,9 +545,10 @@ public:
 
     Vertex* getClone() const;
 
+    double getSpanAngle() const;
     double getFeatureLength() const;
-    double getFeatureAngle() const;
-    int get_ideal_vertex_degree() const;
+
+    int get_ideal_vertex_degree( int n ) const;
 
 private:
     // void * operator new( size_t size, void *);
@@ -586,7 +620,8 @@ struct HighLayerCompare {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Edge : public MeshEntity {
+class Edge : public MeshEntity
+{
 public:
     typedef Handle_t EdgeHandle;
 
@@ -643,7 +678,8 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Face : public MeshEntity {
+class Face : public MeshEntity
+{
 public:
     typedef Handle_t FaceHandle;
 
@@ -670,14 +706,14 @@ public:
 
     // Centroid of Quad  element ...
     static Vertex *centroid(const Vertex *v0, const Vertex *v1, const Vertex *v2,
-            const Vertex *v3, const Vertex *v4);
+                            const Vertex *v3, const Vertex *v4);
 
     // Distortion of a triangle element ...
     static double distortion(const Vertex *v0, const Vertex *v1, const Vertex *v2);
 
     // Distortion of a quad element ...
     static double distortion(const Vertex *v0, const Vertex *v1, const Vertex *v2,
-            const Vertex *v3, const Vertex *v4);
+                             const Vertex *v3, const Vertex *v4);
 
     /////////////////////////////////////////////////////////////////////////////
     // Use modified Heron formula for find out the area of a triangle
@@ -701,10 +737,17 @@ public:
     //           Result : 2 *( 0.5*2.0* 2.0) = 4.0
     /////////////////////////////////////////////////////////////////////////////
     static double quad_area(const Point3D &p0, const Point3D &p1,
-            const Point3D &p2, const Point3D &p3);
+                            const Point3D &p2, const Point3D &p3);
 
     static bool is_convex_quad(const Point3D &p0, const Point3D &p1,
-            const Point3D &p2, const Point3D &p3);
+                               const Point3D &p2, const Point3D &p3);
+
+    static PNode opposite_node(const PFace quad, const PNode n1);
+    static PNode opposite_node(const PFace tri, PNode n1, PNode n2);
+    static void opposite_nodes(const PFace quad, PNode n1, PNode n2,
+                               PNode &n3, PNode &n4);
+
+    static int check_on_boundary(const PFace tri);
 
     Face() {
         statusMark = 0;
@@ -714,12 +757,22 @@ public:
         partID = 0;
     }
 
-    static PNode opposite_node(const PFace quad, const PNode n1);
-    static PNode opposite_node(const PFace tri, PNode n1, PNode n2);
-    static void opposite_nodes(const PFace quad, PNode n1, PNode n2,
-            PNode &n3, PNode &n4);
+    Face( const Vertex *v0, const Vertex *v1, const Vertex *v2) {
+        NodeSequence seq(3);
+        seq[0] = const_cast<Vertex*>(v0);
+        seq[1] = const_cast<Vertex*>(v1);
+        seq[2] = const_cast<Vertex*>(v2);
+        setNodes(seq);
+    }
 
-    static int check_on_boundary(const PFace tri);
+    Face( const Vertex *v0, const Vertex *v1, const Vertex *v2, const Vertex *v3) {
+        NodeSequence seq(4);
+        seq[0] = const_cast<Vertex*>(v0);
+        seq[1] = const_cast<Vertex*>(v1);
+        seq[2] = const_cast<Vertex*>(v2);
+        seq[3] = const_cast<Vertex*>(v3);
+        setNodes(seq);
+    }
 
     Vertex* getHashNode() const {
         return *min_element(connect.begin(), connect.end());
@@ -747,8 +800,9 @@ public:
         return 0;
     }
 
-    int getPosOf(const PNode vertex) const {
-        for (size_t i = 0; i < connect.size(); i++)
+    int getPosOf(const Vertex *vertex) const {
+        int nSize = connect.size();
+        for (int i = 0; i < nSize; i++)
             if (connect[i] == vertex) return i;
 
         return -1;
@@ -759,11 +813,11 @@ public:
     }
 
     int getOrientation(const Vertex *ev0, const Vertex *ev1) const {
-        size_t nsize = connect.size();
+        int  nSize = connect.size();
 
-        for (int i = 0; i < nsize; i++) {
-            Vertex *v0 = connect[(i + 0) % nsize];
-            Vertex *v1 = connect[(i + 1) % nsize];
+        for (int i = 0; i < nSize; i++) {
+            Vertex *v0 = connect[(i + 0) % nSize];
+            Vertex *v1 = connect[(i + 1) % nSize];
             if (v0 == ev0 && v1 == ev1) return +1;
             if (v0 == ev1 && v1 == ev0) return -1;
         }
@@ -772,7 +826,8 @@ public:
 
     int replaceNode(const Vertex *oldvertex, Vertex *newvertex) {
 
-        for (size_t i = 0; i < connect.size(); i++) {
+        int  nSize = connect.size();
+        for (int i = 0; i < nSize; i++) {
             if (connect[i] == oldvertex) {
                 connect[i] = newvertex;
                 return 0;
@@ -789,8 +844,9 @@ public:
     }
 
     void setNodes(const NodeSequence &v) {
-        for (size_t i = 0; i < v.size(); i++) {
-            for (size_t j = 0; j < v.size(); j++) {
+        int nSize = v.size();
+        for (int i = 0; i < nSize; i++) {
+            for (int j = 0; j < nSize; j++) {
                 if (i != j) assert(v[i] != v[j]);
             }
         }
@@ -801,12 +857,12 @@ public:
         return connect;
     }
 
-    const PNode &getNodeAt(int id) const {
+    const PNode &getNodeAt(size_t id) const {
         assert(id < connect.size());
         return connect[id];
     }
 
-    Point3D getCentroid() const;
+    const Point3D getCentroid() const;
 
     void setDualNode(const PNode n) {
         dualnode = n;
@@ -818,7 +874,8 @@ public:
     }
 
     bool hasBoundaryNode() const {
-        for (int i = 0; i < connect.size(); i++)
+        int nSize = connect.size();
+        for (int i = 0; i < nSize; i++)
             if (connect[i]->isBoundary()) return 1;
         return 0;
     }
@@ -835,9 +892,9 @@ public:
 
         if (connect.size() == 4)
             return is_convex_quad(connect[0]->getXYZCoords(),
-                connect[1]->getXYZCoords(),
-                connect[2]->getXYZCoords(),
-                connect[3]->getXYZCoords());
+                                  connect[1]->getXYZCoords(),
+                                  connect[2]->getXYZCoords(),
+                                  connect[3]->getXYZCoords());
 
         return 0;
     }
@@ -851,20 +908,20 @@ public:
     double getArea() {
         if (connect.size() == 3) {
             return tri_area(connect[0]->getXYZCoords(),
-                    connect[1]->getXYZCoords(),
-                    connect[2]->getXYZCoords());
+                            connect[1]->getXYZCoords(),
+                            connect[2]->getXYZCoords());
         }
 
         if (connect.size() == 4) {
             return quad_area(connect[0]->getXYZCoords(),
-                    connect[1]->getXYZCoords(),
-                    connect[2]->getXYZCoords(),
-                    connect[3]->getXYZCoords());
+                             connect[1]->getXYZCoords(),
+                             connect[2]->getXYZCoords(),
+                             connect[3]->getXYZCoords());
         }
         return 0.0;
     }
 
-    vector<Face> triangulate();
+    vector<Face> triangulate() const;
 
     bool isValid() const;
 
@@ -940,7 +997,8 @@ private:
 
 inline
 PNode
-Vertex::newObject() {
+Vertex::newObject()
+{
     Vertex *v = new Vertex;
     assert(v);
     v->setID(global_id);
@@ -950,7 +1008,8 @@ Vertex::newObject() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline PNode Vertex::getClone() const {
+inline PNode Vertex::getClone() const
+{
     Vertex *v = new Vertex;
     assert(v);
     v->setID(global_id);
@@ -960,7 +1019,8 @@ inline PNode Vertex::getClone() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline PEdge Edge::newObject() {
+inline PEdge Edge::newObject()
+{
     Edge *e = new Edge;
     assert(e);
     return e;
@@ -968,17 +1028,59 @@ inline PEdge Edge::newObject() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline PFace Face::newObject() {
+inline PFace Face::newObject()
+{
     Face *f = new Face;
     assert(f);
     return f;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+inline double Face:: getAngleAt( const Vertex *v) const
+{
+    int pos = getPosOf(v);
+    assert( pos >= 0);
 
-#define TOPOLOGICAL_DISTANCE  0 
-#define EUCLIDEAN_DISTANCE    1 
-#define EUCLIDEAN_DISTANCE2   2 
+    int nnodes = getSize(0);
+
+    if( nnodes == 3 ) {
+        const Point3D &p0 =  getNodeAt((pos+0)%nnodes)->getXYZCoords();
+        const Point3D &p1 =  getNodeAt((pos+1)%nnodes)->getXYZCoords();
+        const Point3D &p2 =  getNodeAt((pos+2)%nnodes)->getXYZCoords();
+        return Math::getAngle(p0, p1, p2);
+    }
+
+    if( nnodes == 4 ) {
+        const Point3D &p0 =  getNodeAt((pos+0)%nnodes)->getXYZCoords();
+        const Point3D &p1 =  getNodeAt((pos+1)%nnodes)->getXYZCoords();
+        const Point3D &p2 =  getNodeAt((pos+2)%nnodes)->getXYZCoords();
+        const Point3D &p3 =  getNodeAt((pos+3)%nnodes)->getXYZCoords();
+        double a1 = Math::getAngle(p0, p1, p2);
+        double a2 = Math::getAngle(p0, p2, p3);
+        return a1 + a2;
+    }
+
+    cout << "Error: Not implemented for general polygons " << endl;
+    exit(0);
+    return 0;
+}
+
+inline double Vertex :: getSpanAngle() const
+{
+    const FaceSequence &vfaces = this->getRelations2();
+    int nSize = vfaces.size();
+    double sum = 0.0;
+    for( int i = 0; i <  nSize; i++) {
+         Face *face = vfaces[i];
+         sum += face->getAngleAt( this );
+    }
+    return sum;
+}
+////////////////////////////////////////////////////////////////////////////////
+
+#define TOPOLOGICAL_DISTANCE  0
+#define EUCLIDEAN_DISTANCE    1
+#define EUCLIDEAN_DISTANCE2   2
 #define CITY_BLOCK_DISTANCE   3
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -995,7 +1097,8 @@ struct MeshFilter {
     };
 };
 
-class Mesh {
+class Mesh
+{
 public:
     static NodeSequence generate_nodes(size_t n);
     static FaceSequence generate_faces(size_t n);
@@ -1140,7 +1243,8 @@ public:
     // Appends a bulk of nodes in the mesh.
 
     void addNodes(const NodeSequence &vnodes) {
-        for (size_t i = 0; i < vnodes.size(); i++)
+       size_t nSize = vnodes.size();
+        for (size_t i = 0; i < nSize; i++)
             addNode(vnodes[i]);
     }
 
@@ -1173,7 +1277,7 @@ public:
     FaceList &get_faces_list(); // Returns faces as STL List and clear from the mesh
 
     //
-    // Return irregular nodes in the domain. 
+    // Return irregular nodes in the domain.
     // regular_count = 6   :  For triangle mesh;
     // regular_count = 4   :  For Quad mesh;
     // where         = 0   :  From the inner nodes only
@@ -1204,7 +1308,8 @@ public:
     }
 
     bool hasFeatureEdge(const Edge &query_edge) const {
-        for (size_t i = 0; i < feature_edges.size(); i++)
+        size_t nSize = feature_edges.size();
+        for (size_t i = 0; i < nSize; i++)
             if (feature_edges[i]->isSameAs(query_edge)) return 1;
         return 0;
     }
@@ -1219,7 +1324,8 @@ public:
     // Add bulk of faces in the mesh. No duplication is checked..
 
     void addFaces(FaceSequence &vfaces) {
-        for (size_t i = 0; i < vfaces.size(); i++)
+        size_t nSize = vfaces.size();
+        for (size_t i = 0; i < nSize; i++)
             addFace(vfaces[i]);
     }
 
@@ -1304,9 +1410,10 @@ public:
     // the normal of each face.
 
     void reverse() {
-        for (size_t i = 0; i < faces.size(); i++)
+        
+        size_t  nSize = faces.size();
+        for (size_t i = 0; i < nSize; i++)
             faces[i]->reverse();
-        ;
     }
 
     // Collect topological information. Ideally an internal vertex has 4 faces.
@@ -1343,7 +1450,7 @@ public:
     // other. Using in the Ring Collapse Simplification
     //
     void get_quad_strips(Face *rootface, FaceSequence &strip1,
-            FaceSequence &strip2);
+                         FaceSequence &strip2);
 
     //
     void set_strip_markers();
@@ -1507,7 +1614,7 @@ struct MeshExporter {
 
     int saveAs(Mesh *m, const string & fname) {
 
-        int err;
+        int err = 1;
         if (fname.rfind(".vtk") != string::npos) {
             err = vtk_file(m, fname);
         }
@@ -1519,7 +1626,7 @@ struct MeshExporter {
         if (fname.rfind(".dat") != string::npos) {
             err = simple_file(m, fname);
         }
-
+        return err;
     }
 
 private:
@@ -1533,30 +1640,6 @@ struct MeshOptimization {
     int untangle(Mesh * m);
     int equalize_edge_length(Mesh * m);
     int bandwidth_reduction(Mesh * m);
-};
-
-struct Delaunay {
-    Delaunay();
-
-    Delaunay(Mesh * m) {
-        mesh = m;
-    }
-
-    //
-    // Check if the surface triangulation is Delaunay. Works only for
-    // triangle mesh. We use Jonathan Shewchuk's predicates and all his
-    // ideas. For 2D check with Circum-Circle and for 2D Equitorial Sphere.
-    //
-    bool isDelaunay();
-
-    //
-    // If the surface triangulation is not Delaunay, use edge-flips to
-    // tranform the mesh into Delaunay.
-    //
-    int makeDelaunay();
-
-private:
-    Mesh *mesh;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1576,7 +1659,6 @@ public:
     bool isSimple();
 
     NodeSequence get_boundary_segment_nodes(int i) {
-        int nsize = corners.size();
         int ib = cornerPos[i];
         int ie = cornerPos[i + 1];
         return get_bound_nodes(bound_nodes[ib], bound_nodes[ie]);
@@ -1600,12 +1682,14 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void MeshEntity::addRelation0(Vertex *vertex) {
+inline void MeshEntity::addRelation0(Vertex *vertex)
+{
     if (!hasRelation0(vertex)) relations0.push_back(vertex);
     sort(relations0.begin(), relations0.end());
 }
 
-inline void MeshEntity::removeRelation0(const Vertex *vertex) {
+inline void MeshEntity::removeRelation0(const Vertex *vertex)
+{
     if (hasRelation0(vertex)) {
         NodeSequence::iterator it;
         it = remove(relations0.begin(), relations0.end(), vertex);
@@ -1613,12 +1697,14 @@ inline void MeshEntity::removeRelation0(const Vertex *vertex) {
     }
 }
 
-inline void MeshEntity::addRelation2(Face* face) {
+inline void MeshEntity::addRelation2(Face* face)
+{
     if (!hasRelation2(face)) relations2.push_back(face);
     sort(relations2.begin(), relations2.end());
 }
 
-inline void MeshEntity::removeRelation2(const Face *face) {
+inline void MeshEntity::removeRelation2(const Face *face)
+{
     if (hasRelation2(face)) {
         FaceSequence::iterator it;
         it = remove(relations2.begin(), relations2.end(), face);
@@ -1626,21 +1712,14 @@ inline void MeshEntity::removeRelation2(const Face *face) {
     }
 }
 
-inline void MeshEntity::clearRelations(int t) {
+inline void MeshEntity::clearRelations(int t)
+{
     if (t == 0) relations0.clear();
     if (t == 2) relations2.clear();
 }
 
-inline const NodeSequence &MeshEntity::getRelations0() const {
-    return relations0;
-}
-
-inline const FaceSequence &MeshEntity::getRelations2() const {
-    return relations2;
-}
-///////////////////////////////////////////////////////////////////////////////
-
-inline bool MeshEntity::hasRelation0(const Vertex* vertex) const {
+inline bool MeshEntity::hasRelation0(const Vertex* vertex) const
+{
     if (relations0.empty()) return 0;
 
     NodeSequence::const_iterator it;
@@ -1652,7 +1731,8 @@ inline bool MeshEntity::hasRelation0(const Vertex* vertex) const {
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-inline bool MeshEntity::hasRelation2(const Face* face) const {
+inline bool MeshEntity::hasRelation2(const Face* face) const
+{
     if (relations2.empty()) return 0;
     FaceSequence::const_iterator it;
 
@@ -1664,22 +1744,25 @@ inline bool MeshEntity::hasRelation2(const Face* face) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Vertex::get_ideal_vertex_degree() const {
-    if (!isBoundary())
-        return 4;
-    else
-        return 3;
+inline int Vertex::get_ideal_vertex_degree(int n) const
+{
+    if( n == 4 ) {
+    if (!isBoundary()) return 4;
 
-    if (getFeatureAngle() <= 90.0) return 1;
-    if (getFeatureAngle() <= 180.0) return 2;
-    if (getFeatureAngle() <= 270.0) return 3;
+    if (getSpanAngle() <= 100 )  return 1;
+    if (getSpanAngle() <= 220.0) return 2;
+    if (getSpanAngle() <= 300.0) return 3;
 
     return 4;
+    }
+    cout << "Error: Ideal vertex degree only for Quad right now " << endl;
+    exit(0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline void Face::start_from_concave_corner() {
+inline void Face::start_from_concave_corner()
+{
     int pos = invertedAt();
     if (pos < 1) return;
 
@@ -1691,7 +1774,8 @@ inline void Face::start_from_concave_corner() {
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-inline NodeSequence Mesh::generate_nodes(size_t n) {
+inline NodeSequence Mesh::generate_nodes(size_t n)
+{
     assert(n > 0);
     NodeSequence seq(n);
     for (size_t i = 0; i < n; i++)
@@ -1700,7 +1784,8 @@ inline NodeSequence Mesh::generate_nodes(size_t n) {
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-inline FaceSequence Mesh::generate_faces(size_t n) {
+inline FaceSequence Mesh::generate_faces(size_t n)
+{
     assert(n > 0);
     FaceSequence seq(n);
     for (size_t i = 0; i < n; i++)
@@ -1709,7 +1794,8 @@ inline FaceSequence Mesh::generate_faces(size_t n) {
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Mesh::remove(PNode v) {
+inline int Mesh::remove(PNode v)
+{
     if (v == NULL) return 1;
 
     if (v->isRemoved()) return 0;
@@ -1746,23 +1832,24 @@ inline int Mesh::remove(PNode v) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Mesh::addFace(PFace f) {
+inline int Mesh::addFace(PFace f)
+{
     faces.push_back(f);
+    int nSize = f->getSize(0);
 
     adjTable[2][0] = 1;
 
     if (adjTable[0][2]) {
-        for (int i = 0; i < f->getSize(0); i++) {
+        for (int i = 0; i < nSize; i++) {
             Vertex *v = f->getNodeAt(i);
             v->addRelation2(f);
         }
     }
 
     if (adjTable[0][0]) {
-        int nsize = f->getSize(0);
-        for (int i = 0; i < nsize; i++) {
-            Vertex *vi = f->getNodeAt((i + 0) % nsize);
-            Vertex *vj = f->getNodeAt((i + 1) % nsize);
+        for (int i = 0; i < nSize; i++) {
+            Vertex *vi = f->getNodeAt((i + 0) % nSize);
+            Vertex *vj = f->getNodeAt((i + 1) % nSize);
             vi->addRelation0(vj);
             vj->addRelation0(vi);
         }
@@ -1773,13 +1860,14 @@ inline int Mesh::addFace(PFace f) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Mesh::remove(PFace f) {
+inline int Mesh::remove(PFace f)
+{
+    int nSize = f->getSize(0);
     if (f->isActive()) {
         if (adjTable[0][0]) {
-            int nsize = f->getSize(0);
-            for (int i = 0; i < nsize; i++) {
-                Vertex *vi = f->getNodeAt((i + 0) % nsize);
-                Vertex *vj = f->getNodeAt((i + 1) % nsize);
+            for (int i = 0; i < nSize; i++) {
+                Vertex *vi = f->getNodeAt((i + 0) % nSize);
+                Vertex *vj = f->getNodeAt((i + 1) % nSize);
                 FaceSequence vfaces = Mesh::getRelations112(vi, vj);
                 if (vfaces.size() == 1) {
                     vi->removeRelation0(vj);
@@ -1789,7 +1877,7 @@ inline int Mesh::remove(PFace f) {
         }
 
         if (adjTable[0][2]) {
-            for (int i = 0; i < f->getSize(0); i++) {
+            for (int i = 0; i <  nSize; i++) {
                 Vertex *v = f->getNodeAt(i);
                 v->removeRelation2(f);
             }
@@ -1803,12 +1891,14 @@ inline int Mesh::remove(PFace f) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Mesh::deactivate(PNode vi) {
+inline int Mesh::deactivate(PNode vi)
+{
     assert(!vi->isRemoved());
 
     if (adjTable[0][0]) {
         NodeSequence vneighs = vi->getRelations0();
-        for (size_t j = 0; j < vneighs.size(); j++) {
+        int nSize = vneighs.size();
+        for (int j = 0; j <  nSize; j++) {
             Vertex *vj = vneighs[j];
             vi->removeRelation0(vj);
             vj->removeRelation0(vi);
@@ -1821,7 +1911,8 @@ inline int Mesh::deactivate(PNode vi) {
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Mesh::deactivate(PFace face) {
+inline int Mesh::deactivate(PFace face)
+{
     // For the time being. but if you change the API, reimplement it.
     // The "remove" function can remove the elements immediately and
     // free the memory, but deactivate doesn't free it until garbage]
@@ -1845,11 +1936,13 @@ inline int Mesh::deactivate(PFace face) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Mesh::reactivate(PNode vertex) {
+inline int Mesh::reactivate(PNode vertex)
+{
 
     if (adjTable[0][0]) {
         FaceSequence vfaces = vertex->getRelations2();
-        for (int i = 0; i < vfaces.size(); i++) {
+        int numFaces = vfaces.size();
+        for (int i = 0; i < numFaces; i++) {
             int nsize = vfaces[i]->getSize(0);
             for (int j = 0; j < nsize; j++) {
                 Vertex *vi = vfaces[i]->getNodeAt((i + 0) % nsize);
@@ -1866,9 +1959,11 @@ inline int Mesh::reactivate(PNode vertex) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Mesh::reactivate(PFace face) {
+inline int Mesh::reactivate(PFace face)
+{
+    int nsize = face->getSize(0);
+
     if (adjTable[0][0]) {
-        int nsize = face->getSize(0);
         for (int i = 0; i < nsize; i++) {
             Vertex *vi = face->getNodeAt((i + 0) % nsize);
             Vertex *vj = face->getNodeAt((i + 1) % nsize);
@@ -1880,7 +1975,7 @@ inline int Mesh::reactivate(PFace face) {
     }
 
     if (adjTable[0][2]) {
-        for (int i = 0; i < face->getSize(0); i++) {
+        for (int i = 0; i < nsize; i++) {
             Vertex *vi = face->getNodeAt(i);
             assert(!vi->isRemoved());
             vi->addRelation2(face);
@@ -1898,38 +1993,38 @@ Mesh *create_structured_mesh(double *origin, double *length, int *griddim, int s
 NodeSequence linear_interpolation(Vertex *v0, Vertex *v1, int n);
 
 int remesh_quad_loop(Mesh *m, NodeSequence &nodes,
-        int nx, int ny,
-        NodeSequence &newnodes, FaceSequence &newfaces,
-        bool smooth = 0);
+                     int nx, int ny,
+                     NodeSequence &newnodes, FaceSequence &newfaces,
+                     bool smooth = 0);
 
 int remesh_quad_loop(Mesh *m,
-        NodeSequence &anodes,
-        NodeSequence &bnodes,
-        NodeSequence &cnodes,
-        NodeSequence &dnodes,
-        NodeSequence &newnodes,
-        FaceSequence &newfaces,
-        bool smooth = 0);
+                     NodeSequence &anodes,
+                     NodeSequence &bnodes,
+                     NodeSequence &cnodes,
+                     NodeSequence &dnodes,
+                     NodeSequence &newnodes,
+                     FaceSequence &newfaces,
+                     bool smooth = 0);
 
 int remesh_tri_loop(Mesh *m,
-        NodeSequence &anodes,
-        NodeSequence &bnodes,
-        NodeSequence &cnodes,
-        int *segments,
-        NodeSequence &newnodes,
-        FaceSequence &newfaces,
-        bool smooth = 0);
+                    NodeSequence &anodes,
+                    NodeSequence &bnodes,
+                    NodeSequence &cnodes,
+                    int *segments,
+                    NodeSequence &newnodes,
+                    FaceSequence &newfaces,
+                    bool smooth = 0);
 
 int remesh_penta_loop(Mesh *mesh,
-        NodeSequence &anodes,
-        NodeSequence &bnodes,
-        NodeSequence &cnodes,
-        NodeSequence &dnodes,
-        NodeSequence &enodes,
-        int *segments,
-        NodeSequence &newnodes,
-        FaceSequence &newfaces,
-        bool smooth = 0);
+                      NodeSequence &anodes,
+                      NodeSequence &bnodes,
+                      NodeSequence &cnodes,
+                      NodeSequence &dnodes,
+                      NodeSequence &enodes,
+                      int *segments,
+                      NodeSequence &newnodes,
+                      FaceSequence &newfaces,
+                      bool smooth = 0);
 
 //
 // QTrack is similar to "Motorcycle graph" proposed by Eppestein group.
@@ -2088,7 +2183,8 @@ struct LaplaceAreaWeight : public LaplaceWeight {
     }
 };
 
-class LaplaceSmoothing {
+class LaplaceSmoothing
+{
 public:
 
     LaplaceSmoothing(Mesh *m, int n = 100) {

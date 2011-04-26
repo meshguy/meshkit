@@ -116,7 +116,7 @@ LaplaceSmoothing::update_vertex_position(Vertex *vertex)
 int
 LaplaceSmoothing::execute()
 {
-     global_smoothing();
+  return global_smoothing();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ LaplaceSmoothing::global_smoothing()
     for (int iter = 0; iter < numIters; iter++)
     {
         maxerror = 0.0;
-        for (int i = 0; i < numnodes; i++)
+        for (size_t i = 0; i < numnodes; i++)
         {
             Vertex *v = mesh->getNodeAt(i);
             maxerror = max(maxerror, update_vertex_position(v));
@@ -183,7 +183,7 @@ LaplaceSmoothing::localized_at(const NodeSequence &vertexQ)
     int relexist0 = mesh->build_relations(0, 0);
     int relexist2 = mesh->build_relations(0, 2);
 
-    size_t numnodes = mesh->getSize(0);
+//    size_t numnodes = mesh->getSize(0);
 
     //How many faces will be affected by changing the coordinates of vertexQ
 
@@ -298,11 +298,10 @@ LaplaceSmoothing::convexify()
                 v0->setXYZCoords(newpos);
 
                 // Upate the remaining nodes...
-                double localerror;
-                for (int i = 0; i < numnodes; i++)
+                for (size_t i = 0; i < numnodes; i++)
                     update_vertex_position(mesh->getNodeAt(i));
                 // unconstrained the face nodes ..
-                for (int j = 0; j < fixnodes.size(); j++)
+                for (size_t j = 0; j < fixnodes.size(); j++)
                     fixnodes[j]->setConstrainedMark(0);
             }
         }

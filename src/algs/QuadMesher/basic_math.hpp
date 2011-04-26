@@ -1,6 +1,7 @@
 #ifndef BASIC_MATH_H
 #define BASIC_MATH_H
 
+#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
 #include <values.h>
@@ -47,6 +48,35 @@ typedef Array<float,3> Vec3F;
 
 namespace Math
 {
+  template<class T>
+  T random_value(T minval, T maxval)
+  {
+  }
+
+  template<>
+  inline int random_value(int minval, int maxval)
+  {
+      return(minval + rand() % (int) (maxval - minval + 1));
+  }
+
+  template<>
+  inline size_t random_value(size_t minval, size_t maxval)
+  {
+      return(size_t) (minval + rand() % (int) (maxval - minval + 1));
+  }
+
+  template<>
+  inline double random_value(double minval, double maxval)
+  {
+      return minval + 0.5 * (1.0 + drand48())*(maxval - minval);
+  }
+
+  template<>
+  inline float random_value(float minval, float maxval)
+  {
+      return minval + 0.5 * (1.0 + drand48())*(maxval - minval);
+  }
+
 inline Vec3D create_vector( const Point3D &head, const Point3D &tail)
 {
   Vec3D xyz;
@@ -155,7 +185,7 @@ inline double getAngle(const Array<T, n> &VecA, const Array<T, n> &VecB,
 
       double value = dot_product(VecA, VecB) / (Abar * Bbar);
 
-      if (value > 1.0) value = 1.0;
+      if (value > +1.0) value = +1.0;
       if (value < -1.0) value = -1.0;
 
       theta = acos(value);
@@ -176,6 +206,20 @@ const Array<T, n> &pc, int unit_measure = 0)
       return getAngle(VecA, VecB, unit_measure);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+inline double getAngle(const Point3D &pa, const Point3D &pb, const Point3D &pc)
+{
+   double a2   =  length2( pb, pc );
+   double b2   =  length2( pc, pa );
+   double c2   =  length2( pa, pb );
+   double cosA =  (b2 + c2 - a2)/(2*sqrt(b2*c2) );   
+
+  if( cosA >  1.0) cosA =  1.0;
+  if( cosA < -1.0) cosA = -1.0;
+  return 180*acos(cosA)/M_PI;
+
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 inline Point3D getAngles(const Point3D &pa, const Point3D &pb, const Point3D &pc)
@@ -200,8 +244,10 @@ inline Point3D getAngles(const Point3D &pa, const Point3D &pb, const Point3D &pc
   if( cosC < -1.0) cosC = -1.0;
   angles[2] = 180*acos(cosC)/M_PI;
 
+#ifdef DEBUG
   double sum = angles[0] + angles[1] + angles[2];
   assert( fabs( sum - 180.0) < 1.0E-10);
+#endif
   return angles;
 }
 

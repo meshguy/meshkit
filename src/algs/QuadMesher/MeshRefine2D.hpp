@@ -114,8 +114,8 @@ class MeshRefine2D
         bool hasEdge( Vertex *v1, Vertex *v2) const; 
         bool allow_edge_refinement( const Edge *edge) const;
 
-        int setVertexOnEdge(Vertex *v1, Vertex *v2);
-        Vertex *getVertexOnEdge(Vertex *v1, Vertex *v2) const;
+        Vertex* setVertexOnEdge(Vertex *v1, Vertex *v2);
+        Vertex* getVertexOnEdge(Vertex *v1, Vertex *v2) const;
         bool  boundary_split_flag;                
 
 	// Get All the inserted vertices on the edges..
@@ -162,8 +162,8 @@ class MeshRefine2D
     Face* append_new_triangle(Vertex *v0, Vertex *v1, Vertex *v2);
     Face* append_new_quad(Vertex *v0, Vertex *v1, Vertex *v2, Vertex *v3);
 
-    void remove_it( Face *face) {
-         face->setStatus( MeshEntity::REMOVE);
+    void remove_it(Face *face) {
+        face->setStatus( MeshEntity::REMOVE);
     }
 
 };
@@ -184,7 +184,12 @@ class CentroidRefine2D : public MeshRefine2D
 {
  public:
    CentroidRefine2D() {}
-   CentroidRefine2D(Mesh *m) { setMesh(m); }
+   CentroidRefine2D(Mesh *m) {setMesh(m ); }
+
+   void refine( Face *f ) {
+        atomicOp( f );
+        mesh->prune();
+   }
 
    int  execute();
  private:
@@ -256,7 +261,7 @@ class Refine2D14 : public MeshRefine2D
 
   ~Refine2D14() {}
 
-  int  initialize();
+  int  initialize() {}
   int  execute();
 
  private:

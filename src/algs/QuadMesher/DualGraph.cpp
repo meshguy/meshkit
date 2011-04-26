@@ -10,7 +10,6 @@ int DualGraph::build(Mesh *m)
   nodes.clear();
   edges.clear();
 
-  size_t numnodes = mesh->getSize(0);
   size_t numfaces = mesh->getSize(2);
 
   int relexist = mesh->build_relations(0, 2);

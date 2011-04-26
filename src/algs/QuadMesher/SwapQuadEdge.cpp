@@ -9,16 +9,19 @@ QuadEdge::commit()
 {
     if (newFaces.empty()) return 1;
 
-    for (int i = 0; i < newFaces.size(); i++)
+    int numfaces = newFaces.size();
+    int numnodes = newNodes.size();
+
+    for (int i = 0; i < numfaces; i++)
         if (newFaces[i] == NULL) return 2;
 
     if (adjFaces[0]->isRemoved() || adjFaces[1]->isRemoved())
     {
-        for (int i = 0; i < newNodes.size(); i++)
+        for (int i = 0; i < numnodes; i++)
             delete newNodes[i];
         newNodes.clear();
 
-        for (int i = 0; i < newFaces.size(); i++)
+        for (int i = 0; i < numfaces; i++)
             delete newFaces[i];
         newFaces.clear();
         return 3;
@@ -29,6 +32,7 @@ QuadEdge::commit()
     {
         vertex = adjFaces[0]->getNodeAt(i);
         if (vertex->isVisited()) return 4;
+
         vertex = adjFaces[1]->getNodeAt(i);
         if (vertex->isVisited()) return 4;
     }
@@ -38,10 +42,10 @@ QuadEdge::commit()
 
     assert(mesh);
 
-    for (int i = 0; i < newNodes.size(); i++)
+    for (int i = 0; i < numnodes; i++)
         mesh->addNode(newNodes[i]);
 
-    for (int i = 0; i < newFaces.size(); i++)
+    for (int i = 0; i < numfaces; i++)
         mesh->addFace(newFaces[i]);
 
     for (int i = 0; i < 4; i++)
@@ -183,6 +187,7 @@ SwapQuadEdge::get_boundary_nodes_chain()
 
 void SwapQuadEdge::update_front()
 {
+    size_t nSize;
     if (check_fronts)
     {
         NodeSequence vneighs;
@@ -193,7 +198,8 @@ void SwapQuadEdge::update_front()
             {
                 vneighs = bound_nodes[i]->getRelations0();
                 int minid = bound_nodes[i]->getLayerID();
-                for (int j = 0; j < vneighs.size(); j++)
+                nSize   = vneighs.size();
+                for (size_t j = 0; j < nSize; j++)
                     minid = min(minid, vneighs[j]->getLayerID() + 1);
 
                 if (bound_nodes[i]->getLayerID() != minid)
@@ -323,12 +329,12 @@ SwapQuadEdge::make_new_diagonal_at(int pos, bool bound_check)
     {
         Vertex *v = bound_nodes[i];
         FaceSequence vfaces = v->getRelations2();
-        for (int j = 0; j < vfaces.size(); j++)
+        size_t nSize = vfaces.size();
+        for (size_t j = 0; j < nSize; j++)
             neighSet.insert(vfaces[j]);
     }
     assert(!neighSet.empty());
 
-    int status = 0;
     FaceSet::const_iterator it;
     for (it = neighSet.begin(); it != neighSet.end(); ++it)
     {

@@ -48,7 +48,7 @@ int MeshImporter ::off_file(const string &fname)
   infile >> numNodes >> numFaces >> numEdges;
 
   Point3D p3d;
-  for( int i = 0; i < numNodes; i++) {
+  for( size_t i = 0; i < numNodes; i++) {
        infile >> x >> y >> z;
        p3d[0] = x;
        p3d[1] = y;
@@ -64,7 +64,7 @@ int MeshImporter ::off_file(const string &fname)
 
        facevtx.resize(numNodes);
        connect.resize(numNodes);
-       for( int j = 0; j < numNodes; j++) 
+       for( size_t j = 0; j < numNodes; j++) 
             infile >> facevtx[j];
 
        switch( numNodes )
@@ -81,7 +81,7 @@ int MeshImporter ::off_file(const string &fname)
               connect[3] = mesh->getNodeAt(facevtx[3]);
               break;
           default:
-              for( int j = 0; j < numNodes; j++) 
+              for( size_t j = 0; j < numNodes; j++) 
                    connect[j] = mesh->getNodeAt(facevtx[j]);
               break; 
        }

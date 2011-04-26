@@ -26,15 +26,6 @@ Jaal::set_diamond_tag(Mesh *mesh)
 }
 
 ////////////////////////////////////////////////////////////////////
-/*
-int FaceClose::remove()
-{
-    return 1;
-}
-*/
-
-////////////////////////////////////////////////////////////////////
-
 bool
 FaceClose::isSafe() const
 {
@@ -104,9 +95,9 @@ FaceClose::build()
     FaceSequence neighs = face->getRelations202();
     NodeSet nodeset;
 
-    for (size_t i = 0; i < neighs.size(); i++)
+    size_t nSize = neighs.size();
+    for (size_t i = 0; i < nSize; i++)
     {
-        Face *f = neighs[i];
         for (int j = 0; j < 4; j++)
         {
             Vertex *v = neighs[i]->getNodeAt(j);
@@ -128,11 +119,9 @@ FaceClose::build()
         backupCoords[v] = v->getXYZCoords();
         localnodes.push_back(v);
         FaceSequence vneighs = v->getRelations2();
-        for (int i = 0; i < vneighs.size(); i++)
-        {
-            Face *f = vneighs[i];
-            faces_to_check.insert(f);
-        }
+        nSize = vneighs.size();
+        for (size_t i = 0; i < nSize; i++)
+            faces_to_check.insert( vneighs[i] );
     }
     faces_to_check.erase(face);
 
@@ -202,20 +191,21 @@ FaceClose::commit()
 {
     if (replacedNode == NULL) return 1;
 
-    FaceSequence vr0 = vertex0->getRelations2();
-    FaceSequence vr2 = vertex2->getRelations2();
+    const FaceSequence &vr0 = vertex0->getRelations2();
+    const FaceSequence &vr2 = vertex2->getRelations2();
 
     mesh->addNode(replacedNode);
     
     NodeSequence fnodes;
 
-    int err;
-    for (size_t i = 0; i < vr0.size(); i++)
+    size_t nSize = vr0.size();
+    for (size_t i = 0; i < nSize; i++)
     {
         if (vr0[i] != face)
         {
             fnodes = vr0[i]->getNodes();
-            for( int j = 0; j < fnodes.size(); j++) 
+            int nv = fnodes.size();
+            for( int j = 0; j < nv; j++) 
                if( fnodes[j] == vertex0) fnodes[j] = replacedNode;
             mesh->deactivate(vr0[i]);  // remove all existing relationships.
             vr0[i]->setNodes( fnodes );
@@ -223,12 +213,14 @@ FaceClose::commit()
         }
     }
 
+    nSize = vr2.size();
     for (size_t i = 0; i < vr2.size(); i++)
     {
         if (vr2[i] != face)
         {
             fnodes = vr2[i]->getNodes();
-            for( int j = 0; j < fnodes.size(); j++) 
+            int nv = fnodes.size();
+            for( int j = 0; j < nv; j++) 
                if( fnodes[j] == vertex2) fnodes[j] = replacedNode;
             mesh->deactivate(vr2[i]); // remove all existing relatioships
             vr2[i]->setNodes( fnodes );
@@ -260,22 +252,22 @@ QuadCleanUp::isDiamond(Face *face, int &pos, int type)
     FaceSequence neighs;
 
     neighs = v0->getRelations2();
-    size_t d0 = neighs.size();
+    int d0 = neighs.size();
 
     neighs = v1->getRelations2();
-    size_t d1 = neighs.size();
+    int d1 = neighs.size();
 
     neighs = v2->getRelations2();
-    size_t d2 = neighs.size();
+    int d2 = neighs.size();
 
     neighs = v3->getRelations2();
-    size_t d3 = neighs.size();
+    int d3 = neighs.size();
 
     // Boundary Cases ...
     if (v0->isBoundary() || v2->isBoundary())
     {
-        if( d0 <= v0->get_ideal_vertex_degree() ) return 0;
-        if( d2 <= v2->get_ideal_vertex_degree() ) return 0;
+        if( d0 <= v0->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
+        if( d2 <= v2->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
         if (!v1->isBoundary() && !v3->isBoundary())
         {
             if (d1 == 3 && d3 == 3)
@@ -288,8 +280,8 @@ QuadCleanUp::isDiamond(Face *face, int &pos, int type)
 
     if (v1->isBoundary() || v3->isBoundary())
     {
-        if( d1 <= v1->get_ideal_vertex_degree() ) return 0;
-        if( d3 <= v3->get_ideal_vertex_degree() ) return 0;
+        if( d1 <= v1->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
+        if( d3 <= v3->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
 
         if (!v0->isBoundary() && !v2->isBoundary())
         {
