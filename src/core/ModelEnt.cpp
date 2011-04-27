@@ -145,9 +145,15 @@ void ModelEnt::create_mesh_set(int ordered_flag)
   moab::ErrorCode rval = mkCore->moab_instance(meshIndex)->create_meshset(ordered, moabEntSet);
   MBERRCHK(rval, mkCore->moab_instance());
 
-    // set dimension tag
+    // set dimension tag and global id tag
   if (iBase_ALL_TYPES != this_tp) {
     rval = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_geom_dim_tag(), &moabEntSet, 1, &this_tp);
+    MBERRCHK(rval, mkCore->moab_instance());
+    // set the id tag; get it with id(); if it returns -1, set a value 0
+    int id_from_geometry = id();
+    if (id_from_geometry==-1)
+      id_from_geometry = 0;
+    rval = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_global_id_tag(), &moabEntSet, 1, &id_from_geometry);
     MBERRCHK(rval, mkCore->moab_instance());
   }
   

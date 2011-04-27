@@ -978,6 +978,13 @@ iGeom::Error FBiGeom::getData( EntityHandle entity_handle,
 
 }
 
+iGeom::Error FBiGeom::getIntData( EntityHandle entity_handle,
+                           TagHandle tag_handle,
+                           int& value_out )
+{
+  // we know this is really a moab thingy
+   return getArrData(  &entity_handle, 1, tag_handle, (void*)&value_out );
+}
 iGeom::Error FBiGeom::getArrData( const EntityHandle* entity_handles,
                    int entity_handles_size,
                    TagHandle tag_handle,

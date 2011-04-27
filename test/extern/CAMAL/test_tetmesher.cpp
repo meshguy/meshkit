@@ -77,7 +77,7 @@ void mesh_test(std::string filebase)
 
   if (save_mesh) {
         // output mesh
-    std::string outfile = filebase + std::string(".vtk");
+    std::string outfile = filebase + std::string(".h5m");
     moab::EntityHandle out_set = vols[0]->mesh_handle();
     rval = mk->moab_instance()->write_file(outfile.c_str(), NULL, NULL, &out_set, 1);
     MBERRCHK(rval, mk->moab_instance());

@@ -102,7 +102,7 @@ void meshFB()
 
   if (save_mesh) {
     // output mesh only for the first surface
-    std::string outfile = file_name + std::string(".vtk");
+    std::string outfile = file_name + std::string(".h5m");
     moab::EntityHandle out_set;
     rval = mk->moab_instance()->create_meshset(moab::MESHSET_SET, out_set);
     MBERRCHK(rval, mk->moab_instance());

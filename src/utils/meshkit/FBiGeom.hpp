@@ -70,6 +70,10 @@ class FBiGeom : public iGeom {
                        TagHandle tag_handle,
                        void* tag_values_out );
 
+    iGeom::Error getIntData( EntityHandle entity_handle,
+                           TagHandle tag_handle,
+                           int& value_out );
+
     iGeom::Error setData( EntityHandle entity_handle,
                     TagHandle tag_handle,
                     const void* tag_value );
