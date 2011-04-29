@@ -5,7 +5,6 @@
  *      Author: iulian
  */
 
-#include <assert.h>
 #include "primitives.h"
 
 void filterValid(moab::Interface * mb, std::vector<moab::EntityHandle> & io) {
@@ -360,7 +359,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 					*opts.logfile << "Triangle t" << mb->id_from_handle(tr)
 							<< "  filtered : " << localEdges.size();
-					for (int j = 0; j < localEdges.size(); j++)
+					for (unsigned int j = 0; j < localEdges.size(); j++)
 						*opts.logfile << " e" << mb->id_from_handle(
 								localEdges[j]);
 					*opts.logfile << std::endl;
@@ -426,7 +425,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 					other = 0;
 				moab::EntityHandle v2 = conn2[other];
 				// let's see now if v2 is among vertices from otherVertices1
-				for (int i1 = 0; i1 < otherVertices1.size(); i1++) {
+				for (unsigned int i1 = 0; i1 < otherVertices1.size(); i1++) {
 					if (v2 == otherVertices1[i1]) {
 						// we have a match, some work to do
 						// invalidate the edge edges1[i1]

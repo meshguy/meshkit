@@ -45,21 +45,21 @@ enum Axis {X=0, Y=1, Z=2, W=3};
 //
 // Define the report_error and assert_failed functions.
 //
-inline void report_error(char *msg,char *file,int line)
+inline void report_error(const char *msg,const char *file,int line)
 {
     std::cerr << msg << " ("<<file<<":"<<line<<")"<<std::endl;
     exit(1);
 }
 
-inline void assert_failed(char *text,char *file,int line)
+inline void assert_failed(const char *text,const char *file,int line)
 {
 	std::cerr << "Assertion failed: {" << text <<"} at ";
 	std::cerr << file << ":" << line << std::endl;
     abort();
 }
 
-inline void assertf(int test, char *msg,
-                    char *file=__FILE__, int line=__LINE__)
+inline void assertf(int test, const char *msg,
+                    const char *file=__FILE__, int line=__LINE__)
 {
     if( !test )
     {
