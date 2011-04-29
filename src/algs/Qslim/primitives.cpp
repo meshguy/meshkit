@@ -5,6 +5,7 @@
  *      Author: iulian
  */
 
+#include <assert.h>
 #include "primitives.h"
 
 void filterValid(moab::Interface * mb, std::vector<moab::EntityHandle> & io) {
@@ -93,7 +94,7 @@ void computeTrianglePlane (moab::Interface * mb, moab::EntityHandle tri)
 	const moab::EntityHandle * conn;
 	int num_nodes;
 	moab::ErrorCode rval = mb->get_connectivity(tri, conn, num_nodes);
-	assert(3==num_nodes && rval == moab::MB_SUCCESS);
+          assert(3==num_nodes && rval == moab::MB_SUCCESS);
 	Vec3 ve1 = getVec3FromMBVertex(mb, conn[0]);
 	Vec3 ve2 = getVec3FromMBVertex(mb, conn[1]);
 	Vec3 ve3 = getVec3FromMBVertex(mb, conn[2]);

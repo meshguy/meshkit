@@ -46,7 +46,7 @@ const moab::EntityType* EBMesher::output_types()
 EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
                    double size, bool use_geom, int add_layer)
   : MeshScheme(mkcore, me_vec), m_dInputSize(size),
-    m_bUseGeom(use_geom), m_nAddLayer(add_layer)
+    m_nAddLayer(add_layer), m_bUseGeom(use_geom)
 {
   m_mesh = mkcore->imesh_instance()->instance();
 

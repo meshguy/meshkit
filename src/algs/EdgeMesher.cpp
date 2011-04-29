@@ -175,7 +175,7 @@ void EdgeMesher::execute_this()
 
       //get the query interface, which we will use to create the edges directly 
     moab::ReadUtilIface *iface;
-    rval = mk_core() -> moab_instance() -> query_interface("ReadUtilIface", (void**)&iface);
+    rval = mk_core() -> moab_instance() -> query_interface(iface);
     MBERRCHK(rval, mk_core()->moab_instance());		
 
       //create the edges, get a direct ptr to connectivity

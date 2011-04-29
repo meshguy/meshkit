@@ -88,7 +88,7 @@ QuadCleanUp::remove_boundary_singlets_once()
 
     // Simplest case: just remove it by refinement;
     int ncount = 0;
-    for (int i = 0; i < vSinglets.size(); i++)
+    for (unsigned int i = 0; i < vSinglets.size(); i++)
     {
         int err = vSinglets[i].remove();
         if (!err) ncount++;

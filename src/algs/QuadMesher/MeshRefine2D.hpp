@@ -261,7 +261,7 @@ class Refine2D14 : public MeshRefine2D
 
   ~Refine2D14() {}
 
-  int  initialize() {}
+  int  initialize() {return 0;}
   int  execute();
 
  private:
@@ -278,7 +278,7 @@ struct DelaunayRefinement2D : public MeshRefine2D
 
   int  initialize();
   int  finalize();
-  int  execute() {}
+  int  execute() {return 0;}
 };
 
 ///////////////////////////////////////////////////////////////////////////////

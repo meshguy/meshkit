@@ -316,7 +316,6 @@ void tricircumcenter3d(double a[3], double b[3], double c[3], double circumcente
   double xcrossbc, ycrossbc, zcrossbc;
   double denominator;
   double xcirca, ycirca, zcirca;
-  double A[2], B[2], C[2];
 
   /* Use coordinates relative to point `a' of the triangle. */
   xba = b[0] - a[0];

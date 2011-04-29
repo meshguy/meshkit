@@ -253,6 +253,7 @@ int VertexDegreeReduction::atomicOp(const Vertex *apexVertex)
         if( nsuccess ) atomicOp(apexVertex);
         return nsuccess;
      */
+  return 0;
 }
 ///////////////////////////////////////////////////////////////////////////
 

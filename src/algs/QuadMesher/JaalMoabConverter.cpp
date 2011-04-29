@@ -162,7 +162,7 @@ JaalMoabConverter ::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entityS
     SimpleArray<iBase_EntityHandle> facenodes;
 
     jaalnode.clear();
-    for( int i = 0; i < numFaces; i++) {
+    for( unsigned int i = 0; i < numFaces; i++) {
          iMesh_getEntAdj(imesh, tfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(facenodes), &err);
          for (int j = 0; j < 3; j++)
               jaalnode[ facenodes[j] ] = NULL;

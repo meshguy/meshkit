@@ -86,7 +86,7 @@ int MeshImporter::simple_file(const string &fname)
       return 1;
   }
 
-  size_t id, numnodes, numfaces;
+  size_t numnodes, numfaces;
 
   infile >> numnodes >> numfaces;
 

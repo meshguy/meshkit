@@ -602,7 +602,7 @@ int findNodes(MBEntityHandle red, MBEntityHandle blue, double * iP, int nP) {
          connTri[2] = foundIds[i + 1];//ftr.v[2] = foundIds[i + 1];
          //m_finalMesh.push_back(ftr);
          MBEntityHandle triNew;
-         MBErrorCode rval = mbOut->create_element(MBTRI, connTri, 3, triNew);
+         mbOut->create_element(MBTRI, connTri, 3, triNew);
          mbOut->add_entities(mbSetOut, &triNew, 1);
          if (dbg_1) {
             std::cout << " triangle " << mbOut->id_from_handle(triNew)

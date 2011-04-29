@@ -57,7 +57,7 @@ iMesh::Error iMesh_getStructure(iMesh_Instance instance,
   CHKERR(err);
 
   // shift all the offsets to account for vertices
-  for(int i = num_verts; i < offsets.size(); ++i)
+  for(unsigned int i = num_verts; i < offsets.size(); ++i)
     offsets[i] += num_verts;
 
   all_adj.reserve(all_adj.size() + tmp_adj_size);

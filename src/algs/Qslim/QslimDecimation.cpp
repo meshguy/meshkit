@@ -5,6 +5,7 @@
  *      Author: iulian
  */
 
+#include <assert.h>
 #include "QslimDecimation.hpp"
 
 // for proximity searches
@@ -239,7 +240,7 @@ double pair_mesh_positivity(/* Model& M,*/moab::EntityHandle v1, moab::EntityHan
 		*opts.logfile << " positivity for v1, v2: " << mb->id_from_handle(v1)
 				<< " " << mb->id_from_handle(v2) << std::endl;
 
-	for (int i = 0; i < changed.size(); i++) {
+	for (unsigned int i = 0; i < changed.size(); i++) {
 		//Face& F = *changed ( i );
 		moab::EntityHandle F = changed[i];
 		Vec3 f1, f2, f3;
@@ -296,7 +297,7 @@ moab::EntityHandle v1, moab::EntityHandle v2, Vec3& vnew) {
 	// double Nsum = 0;
 	double Nmin = 0;
 
-	for (int i = 0; i < changed.size(); i++) {
+	for (unsigned int i = 0; i < changed.size(); i++) {
 		//Face& F = *changed ( i );
 		moab::EntityHandle F = changed[i];
 		Vec3 f1, f2, f3;
@@ -372,12 +373,12 @@ void compute_pair_info(pair_info *pair /* Model * pM0,*/) {
 void recomputeChangedPairsCost(std::vector<moab::EntityHandle> & changed,/* Model *pM0, Vertex *v0,*/
 moab::EntityHandle v0) {
 	//
-	for (int i = 0; i < changed.size(); i++) {
+	for (unsigned int i = 0; i < changed.size(); i++) {
 
 		moab::EntityHandle F = changed[i];
 		const moab::EntityHandle * conn;
 		int num_nodes;
-		moab::ErrorCode rval = mb->get_connectivity(F, conn, num_nodes);
+		mb->get_connectivity(F, conn, num_nodes);
 		//if (!F->isValid())
 		//   continue;
 		// recompute the pair that is not connected to vertex v0
@@ -667,7 +668,6 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 	  // maybe this has to change
 	  // count first valid vertices and triangles
 	  moab::Range::iterator it;
-	  int validTriangles=0, validVertices=0;
 	  std::vector<moab::EntityHandle> validVerts;
 	  std::vector<moab::EntityHandle> validTris;
 	  for (it = triangles.begin(); it != triangles.end(); it++)
@@ -755,7 +755,7 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
         // check the validity
         if (ehIsValid(v))
           continue;
-        moab::ErrorCode rval = mb->delete_entities(&v, 1);
+        mb->delete_entities(&v, 1);
       }
       // maybe we should delete all edges, but for now, we will keep them
       for (rit = edgs.rbegin(); rit != edgs.rend(); rit++) {
@@ -763,7 +763,7 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
         // check the validity
         if (ehIsValid(v))
           continue;
-        moab::ErrorCode rval = mb->delete_entities(&v, 1);
+        mb->delete_entities(&v, 1);
       }
 
     }
@@ -773,7 +773,7 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
       // check the validity
       if (ehIsValid(v))
         continue;
-      moab::ErrorCode rval = mb->delete_entities(&v, 1);
+      mb->delete_entities(&v, 1);
     }
 	}
 	clock_t delete_vTime = clock();
@@ -787,7 +787,8 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 }
 
 int QslimDecimation::Init() {
-	int i, j;
+  int i;
+  unsigned int j;
 
 	//moab::EntityHandle * set = reinterpret_cast<moab::EntityHandle *> (&_InitialSet);
 	moab::ErrorCode rval = mb->get_entities_by_type(_InitialSet, moab::MBTRI, triangles);

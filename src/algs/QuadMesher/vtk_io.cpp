@@ -67,7 +67,7 @@ int MeshImporter ::vtk_file( const string &fname)
       return 1;
   }
 
-  size_t id, numnodes, numfaces;
+  size_t numnodes, numfaces;
   double x, y, z = 0.0;
   Point3D xyz;
 

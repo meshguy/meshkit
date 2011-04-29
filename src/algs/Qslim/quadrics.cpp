@@ -1,6 +1,7 @@
 // $Id: quadrics.cxx,v 1.5 1997/10/01 14:07:28 garland Exp $
 
 //#include "qslim.h"
+#include <assert.h>
 #include "quadrics.h"
 #include "3D.h"
 #include "primitives.h"

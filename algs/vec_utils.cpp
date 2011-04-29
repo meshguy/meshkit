@@ -61,4 +61,6 @@ double normal3D(double * normal, const double *a, const double *b, const double 
    cross(norm1, ab, ac);
    
    normalize (normal, norm1); 
+
+   return 0.0;
 }

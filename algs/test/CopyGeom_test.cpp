@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
   // create cm instances for each geometry
   cg = new CopyGeom*[num_geoms];
-  for (unsigned int i = 0; i < num_geoms; i++) {
+  for (int i = 0; i < num_geoms; i++) {
     cg[i] = new CopyGeom(geom);
   }
 
