@@ -220,6 +220,11 @@ public:
    * \param n_interval number of interval array for x/y/z directions
    */
   void set_num_interval(int* n_interval);
+
+  /** \brief set number of intervals
+   * \param n_interval number of interval array for x/y/z directions
+   */
+  void increase_box(double box_increase);
   
 protected:
   
@@ -228,6 +233,8 @@ private:
   //! No copy constructor, since there's only meant to be one of these
   EBMesher(const EBMesher &);
   
+  MeshOp* get_scd_mesher();
+
   //! No operator=, since there's only meant to be one of these
   EBMesher &operator=(const EBMesher &);
 
@@ -239,7 +246,7 @@ private:
   int m_nTri, m_nHex, m_iInter, m_nFraction, m_iStartHex, m_nMove, m_nAddLayer,
     m_nIteration, m_iOverlap, m_iElem, m_nNode[3], m_nDiv[3], m_nVolFracDiv,
     m_iFirstP, m_iSecondP;
-  double m_dFirstP, m_dSecondP, m_curPnt, m_prevPnt,
+  double m_dFirstP, m_dSecondP, m_curPnt, m_prevPnt, m_boxIncrease,
     m_dIntervalSize[3], m_origin_coords[3], m_dInputSize,
     m_min[3], m_max[3];
   EdgeStatus m_nStatus;
@@ -292,8 +299,8 @@ private:
    * \param n_elem # of elements
    * \return int if is working correctly
    */
-  int write_mesh(const char* file_name, int type,
-                 iBase_EntityHandle* handles, int& n_elem);
+  void write_mesh(const char* file_name, int type,
+                  iBase_EntityHandle* handles, int& n_elem);
 
   /** \brief get edge fraction information
    * \param idHex index in m_mdCutFraction
@@ -461,6 +468,11 @@ private:
   std::map<MBEntityHandle, int> m_mhOverlappedSurf;
 #endif
 };
+
+inline void EBMesher::increase_box(double box_increase)
+{
+  m_boxIncrease = box_increase;
+}
 
 }
 

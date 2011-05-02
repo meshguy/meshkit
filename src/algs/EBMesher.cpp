@@ -49,11 +49,7 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
     m_nAddLayer(add_layer), m_bUseGeom(use_geom)
 {
   m_mesh = mkcore->imesh_instance()->instance();
-
-  int err;
-  iMesh_getRootSet(m_mesh, &m_hRootSet, &err);
-  IBERRCHK(err, "Couldn't get root set.");
-
+  m_hRootSet = mkcore->imesh_instance()->getRootSet();
   m_nStatus = OUTSIDE;
   m_iStartHex = 0;
 
@@ -108,9 +104,64 @@ bool EBMesher::add_modelent(ModelEnt *model_ent)
   return MeshOp::add_modelent(model_ent);
 }
 
+MeshOp *EBMesher::get_scd_mesher()
+{
+  MeshOpProxy* proxy = NULL;
+  proxy = MKCore::meshop_proxy("SCDMesh");
+  if (proxy == NULL) throw Error(MK_FAILURE, "Couldn't find a MeshOp capable of producing the given mesh type.");
+  return mk_core()->construct_meshop(proxy);
+}
+
 void EBMesher::setup_this()
 {
+  MeshOp *scd_mesher = NULL;
+  std::vector<MeshOp*> meshops;
+  bool inserted = false;
 
+  for (MEntSelection::iterator sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
+    ModelEnt *me = (*sit).first;
+    bool found = false;
+    if (!scd_mesher) scd_mesher = get_scd_mesher();
+    meshops.clear();
+    me->get_meshops(meshops);
+    int n_meshops = meshops.size();
+
+    if (n_meshops > 0) {
+      for (int i = 0; i < n_meshops; i++) {
+        if (meshops[i] == scd_mesher) {
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) { // if no scd meshop
+      // add this entity to it, and if first, make sure it's added upstream
+      scd_mesher->add_modelent(me);
+      if (!inserted) {
+        mk_core()->insert_node(scd_mesher, this);
+        inserted = true;
+      }
+    }
+  }
+
+  SCDMesh *sm = (SCDMesh*) scd_mesher;
+  sm->set_interface_scheme(SCDMesh::full);
+  sm->set_grid_scheme(SCDMesh::cfMesh);
+  sm->set_geometry_scheme(SCDMesh::all);
+  sm->set_axis_scheme(SCDMesh::cartesian);
+  sm->set_box_increase_ratio(m_boxIncrease); // add some extra layer to box
+
+  // set # of intervals for 3 directions
+  std::vector<int> fine_i (m_nDiv[0], 1);
+  sm->set_coarse_i_grid(m_nDiv[0]);
+  sm->set_fine_i_grid(fine_i);
+  std::vector<int> fine_j (m_nDiv[1], 1);
+  sm->set_coarse_j_grid(m_nDiv[1]);
+  sm->set_fine_j_grid(fine_j);
+  std::vector<int> fine_k (m_nDiv[2], 1);
+  sm->set_coarse_k_grid(m_nDiv[2]);
+  sm->set_fine_k_grid(fine_k);
 }
 
 void EBMesher::execute_this() 
@@ -224,23 +275,30 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
   // get all hexes
   time_t time1, time2, time3;
   time(&time1);
-  int i, err;
-  iBase_EntityHandle* hex_handles = NULL;
-  int hex_allocated = 0;
-  int hex_size = 0;
-  iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-                    iMesh_HEXAHEDRON, &hex_handles,
-                    &hex_allocated, &hex_size, &err);
+  int i;
+  iMesh::Error err;
+  std::vector<iBase_EntityHandle> hex_handles;
+  err = mk_core()->imesh_instance()->getEntities(m_hRootSet, iBase_REGION,
+                                                 iMesh_HEXAHEDRON, hex_handles);
   IBERRCHK(err, "Failed to get hexes.\n");
+  /*
+  int hex_size = hex_handles.size();
+  int* hex_status = new int[hex_size];
+  int* hex_status = NULL;
+  std::vector<int> hex_status(hex_size);
+  err = mk_core()->imesh_instance()->getIntArrData(&hex_handles[0], hex_size,
+  m_elemStatusTag, &hex_status[0]);*/
 
+  int error;
+  int hex_size = hex_handles.size();
   int* hex_status = new int[hex_size];
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
-  iMesh_getIntArrData(m_mesh, hex_handles,
+  iMesh_getIntArrData(m_mesh, &hex_handles[0],
                       hex_size, m_elemStatusTag,
                       &hex_status, &hex_status_alloc,
-                      &hex_status_size, &err);
-  IBERRCHK(err, "Failed to get hex status.\n");
+                      &hex_status_size, &error);
+  IBERRCHK(error, "Failed to get hex status.\n");
   time(&time2);
 
   if (separate) {
@@ -249,7 +307,7 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
     int n_boundary_hex = 0;
     int hex_stat;
     std::vector<iBase_EntityHandle> insideHex, outsideHex, bndrHex;
-    for (i = 0; i < hex_status_size; i++) {
+    for (i = 0; i < hex_size; i++) {
       if (hex_status[i] == 0) {
         n_inside_hex++;
         hex_stat = 0;
@@ -281,16 +339,13 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
 
     // save inside/outside/boundary elements separately
     if (n_inside_hex > 0) {
-      err = write_mesh(file_name, 0, &insideHex[0], n_inside_hex);
-      IBERRCHK(err, "Couldn't write inside mesh.");
+      write_mesh(file_name, 0, &insideHex[0], n_inside_hex);
     }
     if (n_boundary_hex > 0) {
-      err = write_mesh(file_name, 2, &bndrHex[0], n_boundary_hex);
-      IBERRCHK(err, "Couldn't write boundary mesh.");
+      write_mesh(file_name, 2, &bndrHex[0], n_boundary_hex);
     }
     if (n_outside_hex > 0) {
-      err = write_mesh(file_name, 1, &outsideHex[0], n_outside_hex);
-      IBERRCHK(err, "Couldn't write outside mesh.");
+      write_mesh(file_name, 1, &outsideHex[0], n_outside_hex);
     }
 
     if (debug) {
@@ -302,9 +357,7 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
     }
   }
   else {
-    err = write_mesh(file_name, 3, hex_handles, hex_size);
-    IBERRCHK(err, "Couldn't write all hex mesh.");
-
+    write_mesh(file_name, 3, &hex_handles[0], hex_size);
     time3 = clock();
     if (true) {
       std::cout << "hex_handle_get_time: "
@@ -314,24 +367,23 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
                 << std::endl;
     }
   }
-
-  free(hex_handles);
-  free(hex_status);
+  delete [] hex_status;
 }
 
-int EBMesher::write_mesh(const char* file_name, int type,
-                            iBase_EntityHandle* handles, int& n_elem)
+void EBMesher::write_mesh(const char* file_name, int type,
+                          iBase_EntityHandle* handles, int& n_elem)
 {
   time_t time1, time2, time3;
   time(&time1);
-  int is_list = 1, err;
+  int is_list = 1;
   moab::ErrorCode rval;
   iBase_EntitySetHandle set;
+  iMesh::Error err;
 
-  iMesh_createEntSet(m_mesh, is_list, &set, &err);
+  err = mk_core()->imesh_instance()->createEntSet(is_list, set);
   IBERRCHK(err, "Couldn't create set.");
 
-  iMesh_addEntArrToSet(m_mesh, handles, n_elem, set, &err);
+  err = mk_core()->imesh_instance()->addEntArrToSet(handles, n_elem, set);
   IBERRCHK(err, "Couldn't add hexes to set.");
   time(&time2);
 
@@ -357,8 +409,6 @@ int EBMesher::write_mesh(const char* file_name, int type,
               << difftime(time3, time2)
               << std::endl;
   }
-
-  return iBase_SUCCESS;
 }
 #endif
 
@@ -688,17 +738,16 @@ iBase_TagHandle EBMesher::get_various_length_tag(const char* name,
 int EBMesher::set_tag_info()
 {
   // get all hexes
-  int i, j, k, err;
-  iBase_EntityHandle* hex_handles = NULL;
-  int hex_allocated = 0;
-  int hex_size = 0;
-  iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-                    iMesh_HEXAHEDRON, &hex_handles,
-                    &hex_allocated, &hex_size, &err);
-  IBERRCHK(err, "Failed to get hexes.");
+  int i, j, k;
+  iMesh::Error err;
+  std::vector<iBase_EntityHandle> hex_handles;
+  err = mk_core()->imesh_instance()->getEntities(m_hRootSet, iBase_REGION,
+                                                 iMesh_HEXAHEDRON, hex_handles);
+  IBERRCHK(err, "Failed to get hexes.\n");
 
-  iMesh_setIntArrData(m_mesh, hex_handles, m_nHex, m_elemStatusTag,
-                      &m_vnHexStatus[0], m_nHex, &err);
+  err = mk_core()->imesh_instance()->setIntArrData(&hex_handles[0], m_nHex,
+                                                   m_elemStatusTag,
+                                                   &m_vnHexStatus[0]);
   IBERRCHK(err, "Failed to set hex element status data.");
 
   // set cut fraction info to boundary hexes
@@ -723,7 +772,6 @@ int EBMesher::set_tag_info()
     frac_size[i] = nDoubleSize*nFracSize; // sizeof(double)*
     nTolFrac += nFracSize;
   }
-  free(hex_handles);
 
   int iFrac = 0;
   double* fractions = new double[nTolFrac];
@@ -737,11 +785,11 @@ int EBMesher::set_tag_info()
         fractions[iFrac++] = iter->second.fraction[j][k];
       }
     }
-  }  
+  }
 
-  iMesh_setIntArrData(m_mesh, &hvBndrHex[0],
-                      nBndrHex, m_edgeCutFracLengthTag,
-                      frac_leng, 3*nBndrHex, &err);
+  err = mk_core()->imesh_instance()->setIntArrData(&hvBndrHex[0], nBndrHex,
+                                                   m_edgeCutFracLengthTag,
+                                                   frac_leng);
   IBERRCHK(err, "Failed to set cut fraction sizes to hex.");
 
   moab::ErrorCode rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_edgeCutFracTag),
@@ -973,14 +1021,14 @@ bool EBMesher::move_intersections(int n_dir, int n_inter, double start_pnt[3])
 
 bool EBMesher::is_shared_overlapped_surf(int index)
 {
-  int nParent, err;
+  int nParent;
+  iMesh::Error err;
   moab::EntityHandle hSurf;
   if (m_bUseGeom) {
     hSurf = m_vhInterSurf[m_vIntersection[index].index];
-    iMesh_getNumPrnt(m_mesh,
-                     reinterpret_cast<iBase_EntitySetHandle> (hSurf),
-                     1, &nParent, &err);
-    ERRORRF("Failed to get number of surface parents.\n");
+    err = mk_core()->imesh_instance()->getNumPrnt(reinterpret_cast<iBase_EntitySetHandle> (hSurf),
+                                                  1, nParent);
+    IBERRCHK(err, "Failed to get number of surface parents.\n");
 
     if (nParent > 1) return true;
   }
@@ -1001,23 +1049,31 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
   }
   
   // get all hexes
-  iBase_EntityHandle* hex_handles = NULL;
-  int hex_allocated = 0;
-  int hex_size = 0;
-  iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-                    iMesh_HEXAHEDRON, &hex_handles,
-                    &hex_allocated, &hex_size, &err);
-  IBERRCHK(err, "Failed to get hexes.");
+  std::vector<iBase_EntityHandle> hex_handles;
+  err = mk_core()->imesh_instance()->getEntities(m_hRootSet, iBase_REGION,
+                                                 iMesh_HEXAHEDRON, hex_handles);
+  IBERRCHK(err, "Failed to get hexes.\n");
   
   // get hex status
+  int hex_size = hex_handles.size();
+  /*
+  //int* hex_status = new int[hex_size];
+  //int* hex_status;
+  //std::vector<int> hex_status(hex_size);
+  int temp = 0;
+  int* hex_status = &temp;
+  err = mk_core()->imesh_instance()->getIntArrData(&hex_handles[0], hex_size,
+                                                   m_elemStatusTag, hex_status);
+  */
+  int error;
   int* hex_status = new int[hex_size];
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
-  iMesh_getIntArrData(m_mesh, hex_handles,
+  iMesh_getIntArrData(m_mesh, &hex_handles[0],
                       hex_size, m_elemStatusTag,
                       &hex_status, &hex_status_alloc,
-                      &hex_status_size, &err);
-  IBERRCHK(err, "Failed to get hex status.");
+                      &hex_status_size, &error);
+  IBERRCHK(error, "Failed to get hex status.");
 
   // get inside and boundary hexes
   int nInside = 0;
@@ -1039,6 +1095,7 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
   }
   std::cout << "# of inside, outside, boundary elem: " << nInside
             << ", " << nOutside << ", " << nBoundary << std::endl;
+  delete [] hex_status;
 
   // get cut-cell fractions
   double dFrac[4];
@@ -1130,10 +1187,7 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
       rmdCutCellSurfEdge[surfKey] = edges;
     }
   }
-
-  free(hex_handles);
-  free(hex_status);
-
+  
   if (debug) export_fraction_edges(rmdCutCellSurfEdge);
 }
 
@@ -1178,22 +1232,28 @@ bool EBMesher::get_inside_hex(std::vector<int>& rvnInsideCell)
   int i, err, iHex;
   
   // get all hexes
-  iBase_EntityHandle* hex_handles = NULL;
-  int hex_allocated = 0;
-  int hex_size = 0;
-  iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-                    iMesh_HEXAHEDRON, &hex_handles,
-                    &hex_allocated, &hex_size, &err);
-  ERRORRF("Failed to get hexes.\n");
+  std::vector<iBase_EntityHandle> hex_handles;
+  err = mk_core()->imesh_instance()->getEntities(m_hRootSet, iBase_REGION,
+                                                 iMesh_HEXAHEDRON, hex_handles);
+  IBERRCHK(err, "Failed to get hexes.\n");
   
   // get hex status
+  int hex_size = hex_handles.size();
+  /*
+  //int* hex_status = new int[hex_size];
+  //int* hex_status;
+  std::vector<int> hex_status(hex_size);
+  err = mk_core()->imesh_instance()->getIntArrData(&hex_handles[0], hex_size,
+                                                   m_elemStatusTag, &hex_status[0]);
+  */
+  int error;
   int* hex_status = new int[hex_size];
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
-  iMesh_getIntArrData(m_mesh, hex_handles,
+  iMesh_getIntArrData(m_mesh, &hex_handles[0],
                       hex_size, m_elemStatusTag,
                       &hex_status, &hex_status_alloc,
-                      &hex_status_size, &err);
+                      &hex_status_size, &error);
   ERRORRF("Failed to get hex status.\n");
 
   // get inside and boundary hexes
@@ -1217,9 +1277,7 @@ bool EBMesher::get_inside_hex(std::vector<int>& rvnInsideCell)
   std::cout << "# of inside, outside, boundary elem: " << nInside
             << ", " << nOutside << ", " << nBoundary << std::endl;
 
-  free(hex_handles);
-  free(hex_status);
-
+  delete [] hex_status;
   return true;
 }
 
@@ -1352,17 +1410,18 @@ bool EBMesher::export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<d
     }
   }
 
-  int err, is_list = 1;
+  int is_list = 1;
   iBase_EntitySetHandle set;
-  
-  iMesh_createEntSet(m_mesh, is_list, &set, &err);
+  iMesh::Error err;
+  err = mk_core()->imesh_instance()->createEntSet(is_list, set);
   IBERRCHK(err, "Couldn't create set.");
   
-  iMesh_addEntArrToSet(m_mesh, &edge_handles[0], edge_handles.size(), set, &err);
+  err = mk_core()->imesh_instance()->addEntArrToSet(&edge_handles[0],
+                                                    edge_handles.size(), set);
   IBERRCHK(err, "Couldn't add edges to set.");
   
   moab::ErrorCode rval = moab_instance()->write_mesh("edges.vtk",
-                                                 (const moab::EntityHandle*) &set, 1);
+                                                     (const moab::EntityHandle*) &set, 1);
   MBERRCHK(rval, mk_core()->moab_instance());
 
   return true;
@@ -1371,7 +1430,8 @@ bool EBMesher::export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<d
 bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& mdCutCellEdge)
 {
   // export fractions as edge
-  int i, j, dir, nFrc, err;
+  int i, j, dir, nFrc;
+  iMesh::Error err;
   double curPnt[3], fracPnt[3], frac;
   iBase_EntityHandle v_handle;
   std::vector<iBase_EntityHandle> vertex_handles;
@@ -1391,8 +1451,8 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
           if (j == dir) fracPnt[j] = curPnt[j] + frac*m_dIntervalSize[j];
           else fracPnt[j] = curPnt[j];
         }
-        iMesh_createVtx(m_mesh, fracPnt[0], fracPnt[1], fracPnt[2],
-                        &v_handle, &err);
+        err = mk_core()->imesh_instance()->createVtx(fracPnt[0], fracPnt[1],
+                                                     fracPnt[2], v_handle);
         IBERRCHK(err, "Couldn't create vertex.");
         vertex_handles.push_back(v_handle);
       }
@@ -1402,11 +1462,11 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
   int is_list = 1;
   moab::ErrorCode result;
   iBase_EntitySetHandle set;
-  
-  iMesh_createEntSet(m_mesh, is_list, &set, &err);
+  err = mk_core()->imesh_instance()->createEntSet(is_list, set);
   IBERRCHK(err, "Couldn't create set.");
   
-  iMesh_addEntArrToSet(m_mesh, &vertex_handles[0], vertex_handles.size(), set, &err);
+  err = mk_core()->imesh_instance()->addEntArrToSet(&vertex_handles[0],
+                                                    vertex_handles.size(), set);
   IBERRCHK(err, "Couldn't add vertices to set.");
   
   result = moab_instance()->write_mesh("frac_vertices.vtk",
@@ -1421,21 +1481,18 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
 
 bool EBMesher::make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles)
 {
-  int err, status;
-  int vertex_alloc = sizeof(iBase_EntityHandle)*2;
-  int vertex_size = 2;
+  int status;
+  iMesh::Error err;
   iBase_EntityHandle vertex_handle[2], edge_handle;
   iBase_EntityHandle* pVertexHandle = &vertex_handle[0];
+  err = mk_core()->imesh_instance()->createVtxArr(2, iBase_INTERLEAVED,
+                                                  ePnt, pVertexHandle);
+  IBERRCHK(err, "Failed to create vertices.\n");
 
-  iMesh_createVtxArr(m_mesh, 2,
-                     iBase_INTERLEAVED, ePnt, 6,
-                     &pVertexHandle,
-                     &vertex_alloc, &vertex_size, &err);
-  ERRORRF("Failed to create vertices.\n");
-
-  iMesh_createEnt(m_mesh, iMesh_LINE_SEGMENT, &vertex_handle[0], 2,
-                  &edge_handle, &status, &err);
-  ERRORRF("Failed to create edge.\n");
+  err = mk_core()->imesh_instance()->createEnt(iMesh_LINE_SEGMENT,
+                                               &vertex_handle[0], 2,
+                                               edge_handle);
+  IBERRCHK(err, "Failed to create edge.\n");
 
   edge_handles.push_back(edge_handle);
 
@@ -1617,24 +1674,29 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
   }
 
   // get all hexes
-  iBase_EntityHandle* hex_handles = NULL;
-  int hex_allocated = 0;
-  int hex_size = 0;
-  iMesh_getEntities(m_mesh, m_hRootSet, iBase_REGION,
-                    iMesh_HEXAHEDRON, &hex_handles,
-                    &hex_allocated, &hex_size, &err);
-  ERRORRF("Failed to get hexes.\n"); 
+  std::vector<iBase_EntityHandle> hex_handles;
+  err = mk_core()->imesh_instance()->getEntities(m_hRootSet, iBase_REGION,
+                                                 iMesh_HEXAHEDRON, hex_handles);
+  IBERRCHK(err, "Failed to get hexes.\n");
 
+  int hex_size = hex_handles.size();
+  /*
+  std::vector<int> hex_status(hex_size);
+  //int* hex_status = NULL;
+  err = mk_core()->imesh_instance()->getIntArrData(&hex_handles[0], hex_size,
+                                                   m_elemStatusTag, &hex_status[0]);
+  */
+  int error;
   int* hex_status = new int[hex_size];
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
-  iMesh_getIntArrData(m_mesh, hex_handles,
+  iMesh_getIntArrData(m_mesh, &hex_handles[0],
                       hex_size, m_elemStatusTag,
                       &hex_status, &hex_status_alloc,
-                      &hex_status_size, &err);
+                      &hex_status_size, &error);
   ERRORRF("Failed to get hex status.\n");
 
-  for (n = 0; n < hex_status_size; n++) {
+  for (n = 0; n < hex_size; n++) {
     if (hex_status[n] == 2) { // just boundary
       std::map<moab::EntityHandle, VolFrac> vol_fraction;
       std::map<moab::EntityHandle, VolFrac>::iterator vf_iter;
@@ -1882,7 +1944,6 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
     }
   }  
 
-  free(hex_handles);
   delete [] hex_status;
 
   return true;

@@ -79,49 +79,21 @@ int load_and_mesh(const char *input_filename,
   // start up MK and load the geometry
   MKCore mk;
   time(&start_time);
-  mk.load_mesh(input_filename);
+  mk.load_mesh(input_filename, NULL, -1); // not use geom
   time(&load_time);
 
   if (debug_ebmesher) {
     mk.save_mesh("input.vtk");
   }
 
-  // populate mesh w/o geometry or relations
-  mk.populate_model_ents(-1, 0, -1);
-
   // get the volumes
   MEntVector vols;
   mk.get_entities_by_dimension(3, vols);
 
-  // make and set input for structured mesher
-  SCDMesh *sm = (SCDMesh*) mk.construct_meshop("SCDMesh", vols);
-  sm->set_name("structured_mesh");
-  sm->set_interface_scheme(SCDMesh::full);
-  sm->set_grid_scheme(SCDMesh::cfMesh);
-  sm->set_geometry_scheme(SCDMesh::all);
-  sm->set_axis_scheme(SCDMesh::cartesian);
-  sm->set_box_increase_ratio(box_increase); // add some extra layer to box
-
-  // set # of intervals for 3 directions
-  std::vector<int> fine_i (n_interval[0], 1);
-  sm->set_coarse_i_grid(n_interval[0]);
-  sm->set_fine_i_grid(fine_i);
-  std::vector<int> fine_j (n_interval[1], 1);
-  sm->set_coarse_j_grid(n_interval[1]);
-  sm->set_fine_j_grid(fine_j);
-  std::vector<int> fine_k (n_interval[2], 1);
-  sm->set_coarse_k_grid(n_interval[2]);
-  sm->set_fine_k_grid(fine_k);
-
   // make EBMesher
   EBMesher *ebm = (EBMesher*) mk.construct_meshop("EBMesher", vols);
-  ebm->set_name("embedded_boundary_mesh");
   ebm->set_num_interval(n_interval);
-
-  // put them in the graph
-  mk.get_graph().addArc(mk.root_node()->get_node(), sm->get_node());
-  mk.get_graph().addArc(sm->get_node(), ebm->get_node());
-  mk.get_graph().addArc(ebm->get_node(), mk.leaf_node()->get_node());
+  ebm->increase_box(box_increase);
 
   // mesh embedded boundary mesh, by calling execute
   mk.setup_and_execute();
@@ -181,5 +153,6 @@ int load_and_mesh(const char *input_filename,
 	    << difftime(query_time, query_time_techX)
 	    << " secs." << std::endl;
 
+  mk.clear_graph();
   return 0;
 }
