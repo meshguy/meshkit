@@ -3,7 +3,6 @@
 #include <cmath>
 #include <string.h>
 #include <assert.h>
-#define TESTSAVE false
 
 #define STRINGIFY_(X) #X
 #define STRINGIFY(X) STRINGIFY_(X)
@@ -382,8 +381,8 @@ int test_2Dmesh_file()
   CHECK_ERR("Trouble getting face mesh.");
 
   // now extrude
-  double v[] = { 0, 0, 5 };
-  int steps = 5;
+  double v[] = { 0, 0, -5 };
+  int steps = 10;
   CHECK_THROW( ext->extrude(set, extrude::Translate(v, steps),true) );
 
   // update the copy sets, this creates the ent set for destination 2D quads.
@@ -428,7 +427,6 @@ int test_2Dmesh_file()
 
   int max_nset_value = 0;
   for (int i = 0; i < nsets.size(); i++) {
-    int num =0;
     int nvalue;
     iMesh_getEntSetIntData(mesh, nsets[i], ntag, &nvalue, &err);
     CHECK_ERR("Trouble getting entity set.");
@@ -437,8 +435,6 @@ int test_2Dmesh_file()
   }
 
   for (int i = 0; i < nsets.size(); i++) {
-    int num =0;
-
     iMesh_getEntities(mesh, nsets[i],
 		      iBase_FACE, iMesh_ALL_TOPOLOGIES,
 		      &ents1, &ents_alloc1, &ents_size1, &err);

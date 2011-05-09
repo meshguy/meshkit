@@ -29,7 +29,8 @@ int main (int argc, char *argv[])
 
   Timer.GetDateTime (szDateTime);
   std::cout << "\nStarting out at : " << szDateTime << "\n";
-  
+  clock_t sTime = clock();
+
   // read inputs and create makefile
   err = TheCore.prepareIO (argc, argv);
   ERRORR("Failed in preparing i/o.", 1);
@@ -170,6 +171,9 @@ int main (int argc, char *argv[])
   // compute the elapsed time
   std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
 	    << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
+
+  std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
+	    << " seconds" << std::endl; 
 
   return 0;
 }

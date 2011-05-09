@@ -11,9 +11,9 @@ control.cub  C1
 Lattice 3				 ! 'Lattice' card defines arrangement of assemblies in core
 !
     C1  C1  C1          &
-  C1  C1  C1  C1        &
+  C1  FF  FF  C1        &
 C1  FF  FF  FF  C1      &
-  C1  C1  C1  C1        &
+  C1  FF  FF  C1        &
     C1  C1  C1  
 !
 Background outer_cylinder.cub		 ! Background mesh file 

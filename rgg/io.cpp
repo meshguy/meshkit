@@ -1502,8 +1502,8 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
 // ---------------------------------------------------------------------------
 {
   // get the surface with max z
-  double dTol=1.0e-6, dZTemp;
-  int flag = 0, locTemp;
+  double dTol=1.0e-6, dZTemp = 0.0;
+  int flag = 0, locTemp = 0;
   iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
   SimpleArray<iBase_EntityHandle> surfs;
   int nSide = 0;
@@ -1756,7 +1756,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 {
   CParser Parse;
   std::string card, szVolId, szVolAlias;
-  int nInputLines, nTempPin, t, nIFlag = 0;
+  int nInputLines, nTempPin = 1, t, nIFlag = 0;
   double dX = 0.0, dY =0.0, dZ=0.0;
   double  dP, dH, dSide, dHeight;
   iBase_EntityHandle assm = NULL;
@@ -1869,7 +1869,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
 {
   CParser Parse;
   std::string card, szVolId, szVolAlias;
-  int nInputLines, nTempPin, nIFlag = 0.0;
+  int nInputLines, nTempPin = 1, nIFlag = 0.0;
   double dX = 0.0, dY =0.0, dZ=0.0, dMoveX = 0.0, dMoveY = 0.0, dHeight = 0, dPX=0.0, dPY=0.0, dPZ=0.0;
   iBase_EntityHandle assm = NULL;
 

@@ -61,7 +61,7 @@ curve with z_coord == {ht} and length < {pitch} interval 12
 curve with z_coord == {ht} and length > {pitch} interval 240
 mesh vol all
 block 9999 vol all
-!sideset 9997 surface 31
-!sideset 9998 surface 32
-!sideset 9999 surface 15
+sideset 9997 surface 31
+sideset 9998 surface 32
+sideset 9999 surface 15
 save as 'outer_cylinder.cub' over

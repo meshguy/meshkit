@@ -73,7 +73,6 @@ int CCrgen::close ()
       delete cm[i];
     } 
 
-
     iMesh_dtor(impl, &err);
     ERRORR("Failed in call iMesh_dtor", err);
 
@@ -228,7 +227,6 @@ int CCrgen::load_meshes()
     cm[i] = new CopyMesh(impl);
   }  
 
-  mm = new MergeMesh(impl);
   iBase_EntitySetHandle orig_set;
 
   // loop reading all mesh files
@@ -807,7 +805,7 @@ int CCrgen::move_verts(iBase_EntitySetHandle set, const double *dx)
 // ---------------------------------------------------------------------------
 {
 
-  int verts_ents_alloc = 0, verts_ents_size;
+  int verts_ents_alloc = 0, verts_ents_size = 0;
   iBase_EntityHandle *verts_ents = NULL;
 
   iMesh_getEntities(impl, set, iBase_VERTEX,iMesh_ALL_TOPOLOGIES,
@@ -869,7 +867,7 @@ int CCrgen::merge_nodes()
   //get entities for merging
   iBase_EntityHandle *ents = NULL; 
   int ents_alloc = 0, ents_size;
-
+  mm = new MergeMesh(impl);
   if(set_DIM ==2){ // if surface geometry specified
     iMesh_getEntities(impl, root_set,
 		      iBase_FACE, iMesh_ALL_TOPOLOGIES,
@@ -895,6 +893,7 @@ int CCrgen::merge_nodes()
   ERRORR("Trouble getting number of entities after merge.", err);
 
   std::cout << "Merged " << num1 - num2 << " vertices." << std::endl;
+  delete mm;
   return iBase_SUCCESS;
 }
 
@@ -908,6 +907,7 @@ int CCrgen::assign_gids()
 				"GLOBAL_ID");
     ERRORR("Error assigning global ids.", err);
   }
+  delete mu;
   return iBase_SUCCESS;
 }
 
@@ -1061,7 +1061,7 @@ int CCrgen::extrude()
       if (nvalue > max_nset_value)
 	max_nset_value = nvalue;
     }
-
+    
     for (int i = 0; i < nsets.size(); i++) {
 
       iMesh_getEntities(impl, nsets[i],
@@ -1081,6 +1081,7 @@ int CCrgen::extrude()
 	ERRORR("Trouble getting entity set.", err);
       }
     }
+    delete ext;    
   }
   return iBase_SUCCESS;
 }

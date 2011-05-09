@@ -21,7 +21,8 @@ int main (int argc, char *argv[])
   std::string szDateTime;
   Timer.GetDateTime (szDateTime);
   std::cout << "\nStarting out at : " << szDateTime << "\n";
-  
+  clock_t sTime = clock();
+
   // show program banner
   TheNR.Banner (std::cout); 
   
@@ -49,6 +50,8 @@ int main (int argc, char *argv[])
   std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
 	    << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
 
+  std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
+	    << " seconds" << std::endl; 
   // close input and output files
   TheNR.TerminateProgram ();
   ERRORR("Error in function TerminateProgram", err);
