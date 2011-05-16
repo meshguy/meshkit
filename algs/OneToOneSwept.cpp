@@ -1265,11 +1265,11 @@ void OneToOneSwept::buildAssociation(iGeom_Instance &geom, iMesh_Instance &mesh,
     iMesh_getTagHandle(mesh, tag2, &geom_dim_tag, &err, namelen);
     assert(!err);
 
-    iRel_newRel(0, &assoc, &err, 0);
+    iRel_create(0, &assoc, &err, 0);
 
     iRel_createPair(assoc,
-                    geom, 0, iRel_IGEOM_IFACE,
-                    mesh, 2, iRel_IMESH_IFACE, &rel, &err);
+                    geom, iRel_ENTITY, iRel_IGEOM_IFACE, iRel_ACTIVE,
+                    mesh, iRel_BOTH, iRel_IMESH_IFACE, iRel_ACTIVE, &rel, &err);
     assert(!err);
 
     // Get all the entitySet in the mesh

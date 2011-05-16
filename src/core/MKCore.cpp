@@ -127,8 +127,13 @@ void MKCore::init(bool construct_missing_ifaces)
 
   if (iRelPairs.empty() && !iRelInstances.empty() && !iGeomInstances.empty() && !iMeshInstances.empty()) {
     iRelPairs.resize(1);
-    err = iRelInstances[0]->createPair(iGeomInstances[0]->instance(), iRel::ENTITY, iRel::IGEOM_IFACE,
-                                       iMeshInstances[0]->instance(), iRel::SET, iRel::IMESH_IFACE, iRelPairs[0]);
+    err = iRelInstances[0]->createPair(iGeomInstances[0]->instance(),
+                                       iRel::ENTITY, iRel::IGEOM_IFACE,
+                                       iRel::ACTIVE,
+                                       iMeshInstances[0]->instance(),
+                                       iRel::SET, iRel::IMESH_IFACE,
+                                       iRel::ACTIVE,
+                                       iRelPairs[0]);
     IBERRCHK(err, "Failure to create relation pair.");
       // don't need to keep track of whether I created the pair, since it'll be deleted anyway when
       // the iRel instance is deleted.
@@ -139,8 +144,13 @@ void MKCore::init(bool construct_missing_ifaces)
   
   if (groupSetPairs.empty() && !iRelInstances.empty() && !iGeomInstances.empty() && !iMeshInstances.empty()) {
     groupSetPairs.resize(1);
-    err = iRelInstances[0]->createPair(iGeomInstances[0]->instance(), iRel::SET, iRel::IGEOM_IFACE,
-                                       iMeshInstances[0]->instance(), iRel::SET, iRel::IMESH_IFACE, groupSetPairs[0]);
+    err = iRelInstances[0]->createPair(iGeomInstances[0]->instance(),
+                                       iRel::SET, iRel::IGEOM_IFACE,
+                                       iRel::ACTIVE,
+                                       iMeshInstances[0]->instance(),
+                                       iRel::SET, iRel::IMESH_IFACE,
+                                       iRel::ACTIVE,
+                                       groupSetPairs[0]);
     IBERRCHK(err, "Failure to create relation pair.");
   }
 

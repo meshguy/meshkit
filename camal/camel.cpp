@@ -41,13 +41,13 @@ CMEL::CMEL( iGeom_Instance geom,
   if (NULL == mesh) iMesh_newMesh(NULL, &meshIface, &err, 0);
   else meshIface = mesh;
   
-  if (NULL == relate) iRel_newRel(NULL, &relateIface, &err, 0);
-  else relateIface =  relate; 
+  if (NULL == relate) iRel_create(NULL, &relateIface, &err, 0);
+  else relateIface = relate; 
   
   if (NULL == relate || NULL == rel)
-    iRel_createPair( relateIface, geom, 1, iRel_IGEOM_IFACE,
-                                         mesh, 1, iRel_IMESH_IFACE,
-                                         &pairHandle, &err );
+    iRel_createPair(relateIface, geom, 1, iRel_IGEOM_IFACE, iRel_ACTIVE,
+                    mesh, 1, iRel_IMESH_IFACE, iRel_ACTIVE,
+                    &pairHandle, &err);
   else
     pairHandle = rel;
 }

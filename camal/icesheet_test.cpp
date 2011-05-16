@@ -98,7 +98,7 @@ int main( int argc, char *argv[] )
   assert(iBase_SUCCESS == err);
   
   iRel_Instance relate;
-  iRel_newRel(0, &relate, &err, 0);
+  iRel_create(0, &relate, &err, 0);
   assert(iBase_SUCCESS == err);
 
   iBase_EntitySetHandle mesh_root_set;
@@ -110,9 +110,9 @@ int main( int argc, char *argv[] )
 
   // create an association pair
   iRel_PairHandle classification;
-  iRel_createPair(relate, geom, 0, iRel_IGEOM_IFACE,
-			 out_mesh, 1, iRel_IMESH_IFACE,
-			 &classification, &err );
+  iRel_createPair(relate, geom, iRel_ENTITY, iRel_IGEOM_IFACE, iRel_ACTIVE,
+                  out_mesh, iRel_SET, iRel_IMESH_IFACE, iRel_ACTIVE,
+                  &classification, &err );
   ERRORR("ERROR : can not create an assoc pair.");
 
   // read surface mesh

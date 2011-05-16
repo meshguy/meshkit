@@ -321,9 +321,7 @@ void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate)
 
 /** \brief Commit mesh to a model entity
  *
- * Takes the input mesh entities, adds them to the entity set for this model entity,
- * and (if both-type relation on the mesh side) sets the relations to the corresponding
- * geometry entity.
+ * Takes the input mesh entities, and adds them to the entity set for this model entity.
  * \param mesh_ents Mesh entities being assigned to this model entity
  * \param mstate The meshed state after this mesh is added
  */
@@ -333,17 +331,7 @@ void ModelEnt::commit_mesh(moab::EntityHandle *mesh_ents,
 {
   assert(-1 != meshIndex);
   
-    // if it's BOTH, set the relation through iRel
-  if (-1 != irelIndex)
-  {
-    if (mkCore->irel_pair(irelIndex)->get_rel_type(1) == iRel::BOTH) {
-      iRel::Error err =
-          mkCore->irel_pair(irelIndex)->setEntEntArrRelation(geom_handle(), false,
-                                                    (iBase_EntityHandle*)mesh_ents, num_ents);
-      IBERRCHK(err, "Trouble committing mesh.");
-    }
-  }
-    // either way, add them to the set
+    // add them to the set
   moab::ErrorCode rval = mkCore->moab_instance(meshIndex)->add_entities(moabEntSet, mesh_ents, num_ents);
   MBERRCHK(rval, mkCore->moab_instance(meshIndex));
   
