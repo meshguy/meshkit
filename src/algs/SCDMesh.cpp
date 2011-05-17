@@ -31,6 +31,14 @@ namespace MeshKit
     : MeshScheme(mk_core, me_vec)
   {
     boxIncrease = 0.0;
+
+    // set bounding box size tag
+    double bb_default[6] = { 0., 0., 0., 0., 0., 0. };
+    rval = mk_core->moab_instance()->tag_create("BOUNDING_BOX_SIZE",
+                                                6*sizeof(double), moab::MB_TAG_SPARSE,
+                                                moab::MB_TYPE_DOUBLE, bb_tag, bb_default, true);
+    if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
+      MBERRCHK(rval, mk_core->moab_instance());
   }
 
 //---------------------------------------------------------------------------//
@@ -69,7 +77,6 @@ void SCDMesh::setup_this()
     for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
       ModelEnt *me = mit->first;
 
-
       /* Generate the bounding box */
 
       // Cartesian case
@@ -83,7 +90,6 @@ void SCDMesh::setup_this()
         create_cart_edges();
       }
 
-
       /* Generate the mesh */
 
       // create mesh vertex coordinates
@@ -91,16 +97,16 @@ void SCDMesh::setup_this()
 
       // full representation case
       if (interfaceType == 0) {
-        create_full_mesh();
+        create_full_mesh(mit->second);
       }
 
       // lighweight ScdInterface case
       if (interfaceType == 1) {
-        create_light_mesh();
+        create_light_mesh(mit->second);
       }
 
-
-      /* Finish */
+      // stop if mesh is created for whole geometry
+      if (geomType == 0) break;
 
       // commit the mesh when finished
       me->commit_mesh(mit->second, COMPLETE_MESH);
@@ -139,6 +145,13 @@ void SCDMesh::setup_this()
       minCoord[i] -= box_size*boxIncrease; 
       maxCoord[i] += box_size*boxIncrease; 
     }
+
+    // set bounding box size as tag
+    moab::EntityHandle meshset = this_me->mesh_handle();
+    double box_min_max[6] = { minCoord[0], minCoord[1], minCoord[2],
+                              maxCoord[0], maxCoord[1], maxCoord[2] };
+    rval = mk_core()->moab_instance()->tag_set_data(bb_tag, &meshset, 1,
+                                                    box_min_max);
   }
 
 //---------------------------------------------------------------------------//
@@ -207,7 +220,7 @@ void SCDMesh::create_cart_edges()
 
 //---------------------------------------------------------------------------//
 // create the full mesh representation
-  void SCDMesh::create_full_mesh()
+  void SCDMesh::create_full_mesh(moab::Range& me_range)
   {
     // create the vertices from the coordinates array
     moab::Range vtx_range;
@@ -215,6 +228,8 @@ void SCDMesh::create_cart_edges()
                                                        num_verts,
                                                        vtx_range);
     MBERRCHK(rval, mk_core()->moab_instance());
+
+    if (geomType == 0) me_range.merge(vtx_range);
 
     // generate hex entities from the vertices
     // the entity handles here should be contiguous with the i blocks 
@@ -240,6 +255,7 @@ void SCDMesh::create_cart_edges()
                                                              8,
                                                              this_elem);
           MBERRCHK(rval, mk_core()->moab_instance());
+          if (geomType == 0) me_range.insert(this_elem);
         }
       }
     }
@@ -247,7 +263,7 @@ void SCDMesh::create_cart_edges()
 
 //---------------------------------------------------------------------------//
 // create mesh using light-weight MOAB ScdInterface
-  void SCDMesh::create_light_mesh()
+  void SCDMesh::create_light_mesh(moab::Range& me_range)
   {
     // create an instance of the ScdInterface
     rval = mk_core()->moab_instance()->query_interface(scdIface);
@@ -267,6 +283,17 @@ void SCDMesh::create_cart_edges()
     // get rid of ScdInterface once we are done
     rval = mk_core()->moab_instance()->release_interface(scdIface);
     MBERRCHK(rval, mk_core()->moab_instance());
+
+    // add created vertex and hexes
+    if (geomType == 1) {
+      moab::EntityHandle start;
+      start = scd_box->start_vertex();
+      moab::Range vert_range(start, start + scd_box->num_vertices()-1);
+      me_range.merge(vert_range);
+      start = scd_box->start_element();
+      moab::Range hex_range(start, start + scd_box->num_elements()-1);
+      me_range.merge(hex_range);
+    }
   }
 
 //---------------------------------------------------------------------------//

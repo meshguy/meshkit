@@ -27,7 +27,7 @@
 
 double rayDir[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
-const bool debug = false;
+const bool debug_ebmesh = false;
 inline bool less_intersect(const IntersectDist d1, const IntersectDist d2) {
   return d1.distance < d2.distance;
 }
@@ -52,6 +52,7 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   m_hRootSet = mkcore->imesh_instance()->getRootSet();
   m_nStatus = OUTSIDE;
   m_iStartHex = 0;
+  m_hObbTree = NULL;
 
 #ifdef HAVE_MOAB
   // create tags with MOAB for dense tags
@@ -80,6 +81,12 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
 
   m_volFracTag = get_various_length_tag("VOL_FRAC_TAG",
                                         MB_TAG_SPARSE, MB_TYPE_DOUBLE);
+  
+  // set bounding box size tag
+  double bb_default[6] = { 0., 0., 0., 0., 0., 0. };
+  m_bbTag = get_tag("BOUNDING_BOX_SIZE", 6*sizeof(double),
+                    MB_TAG_SPARSE, MB_TYPE_DOUBLE, bb_default);
+  
   m_GeomTopoTool = new moab::GeomTopoTool( moab_instance() );
 #endif
 }
@@ -143,14 +150,20 @@ void EBMesher::setup_this()
         inserted = true;
       }
     }
+
+    // no need to traverse all geometry for using whole geometry
+    if (m_bUseWholeGeom) break;
   }
 
   SCDMesh *sm = (SCDMesh*) scd_mesher;
   sm->set_interface_scheme(SCDMesh::full);
   sm->set_grid_scheme(SCDMesh::cfMesh);
-  sm->set_geometry_scheme(SCDMesh::all);
+  
   sm->set_axis_scheme(SCDMesh::cartesian);
   sm->set_box_increase_ratio(m_boxIncrease); // add some extra layer to box
+
+  if (m_bUseWholeGeom) sm->set_geometry_scheme(SCDMesh::all);
+  else sm->set_geometry_scheme(SCDMesh::individual);
 
   // set # of intervals for 3 directions
   std::vector<int> fine_i (m_nDiv[0], 1);
@@ -166,51 +179,70 @@ void EBMesher::setup_this()
 
 void EBMesher::execute_this() 
 {
-  double box_min[3], box_max[3];
+  iBase_ErrorType  err;
   GraphNode *scd_node = other_node(in_arcs());
-  static_cast<SCDMesh*> (scd_node)->get_box_dimension(box_min, box_max);
-  set_division(box_min, box_max);
 
 #ifdef HAVE_MOAB
+  double obb_time = .0;
+  double intersection_time = .0;
+  double set_info_time = .0;
   time_t time1, time2, time3, time4;
-  time(&time1);
   unsigned long mem1, mem2, mem3, mem4;
   moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
   moab::ErrorCode rval;
 
-  if (debug) {
-    rval = moab_instance()->write_mesh("input.vtk");
+  if (debug_ebmesh) {
+    rval = mk_core()->moab_instance()->write_mesh("input.vtk");
     MBERRCHK(rval, mk_core()->moab_instance());
   }
 
-  // 1. construct obb tree for all surfaces and volumes
-  int err = construct_obb_tree();
-  IBERRCHK(err, "Couldn't construct obb tree.");
+  time(&time1);
+  if (m_bUseGeom) { // construct obb tree for geometry surfaces and volumes by GeomTopoTool
+    rval = m_GeomTopoTool->construct_obb_trees(m_bUseWholeGeom);
+    MBERRCHK(rval, mk_core()->moab_instance());
+  }
   time(&time2);
-  moab_instance()->estimated_memory_use(0, 0, 0, &mem2);
+  obb_time += difftime(time2, time1);
 
-  // 2. find intersected geometry surfaces by rays
-  err = find_intersections();
-  IBERRCHK(err, "Couldn't find intersected surfaces.");
-  time(&time3);
-  moab_instance()->estimated_memory_use(0, 0, 0, &mem3);
-  
-  // 3. set hex status and boundary hex cut fraction info
-  err = set_tag_info();
-  IBERRCHK(err, "Couldn't set tag infor.");
-  time(&time4);
-  moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
+  for (MEntSelection::iterator sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
+    // 1. set division
+    double box_min_max[6];
+    if (m_bUseWholeGeom) {
+      static_cast<SCDMesh*> (scd_node)->get_box_dimension(box_min_max, &box_min_max[3]);
+    }
+    else {
+      err = mk_core()->imesh_instance()->getData(reinterpret_cast< iBase_EntityHandle >
+                                                 (sit ->first->mesh_handle()), m_bbTag, &box_min_max[0]);
+      IBERRCHK(err, "Failed to get hexes.\n");
+    }
+    set_division(box_min_max, &box_min_max[3]);
+
+    // 2. set or construct obb tree
+    time(&time1);
+    set_tree_root(sit->first);
+    time(&time2);
+    obb_time += difftime(time2, time1);
+
+    // 3. find intersected geometry surfaces by rays
+    find_intersections();
+    time(&time3);
+    intersection_time += difftime(time3, time2);
+    moab_instance()->estimated_memory_use(0, 0, 0, &mem3);
+    
+    // 4. set hex status and boundary hex cut fraction info
+    set_tag_info();
+    time(&time4);
+    set_info_time += difftime(time4, time3);
+    moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
+
+    if (m_bUseWholeGeom) break;
+  }
 #endif
   
-  if (debug) {
-    std::cout << "OBB_tree_construct_time: "
-              << difftime(time2, time1)
-              << ", intersection_time: "
-              << difftime(time3, time2)
-              << ", set_info_time: "
-              << difftime(time4, time3)
-              << std::endl;
-    
+  if (debug_ebmesh) {
+    std::cout << "OBB_tree_construct_time: " << obb_time
+              << ", intersection_time: " << intersection_time
+              << ", set_info_time: " << set_info_time << std::endl;
     std::cout << "start_memory: " << mem1
               << ", OBB_tree_construct_moemory: " << mem2
               << ", intersection_memory: " << mem3
@@ -227,33 +259,39 @@ void EBMesher::set_num_interval(int* n_interval)
 }
 
 #ifdef HAVE_MOAB
-int EBMesher::construct_obb_tree()
+void EBMesher::set_tree_root(ModelEnt* me)
 {
+  moab::ErrorCode rval;
   if (m_bUseGeom) {
-    // construct obb tree for geometry surfaces and volumes by GeomTopoTool
-    moab::ErrorCode rval = m_GeomTopoTool->construct_obb_trees(true);
-    MBERRCHK(rval, mk_core()->moab_instance());
-    
-    m_hObbTree = m_GeomTopoTool->obb_tree();
-    m_hTreeRoot = m_GeomTopoTool->get_one_vol_root();
+    if (m_hObbTree == NULL) {
+      m_hObbTree = m_GeomTopoTool->obb_tree();
+    }
+    if (m_bUseWholeGeom) m_hTreeRoot = m_GeomTopoTool->get_one_vol_root();
+    else {
+      rval = m_GeomTopoTool->get_root(me->mesh_handle(), m_hTreeRoot);
+      MBERRCHK(rval, mk_core()->moab_instance());
+    }
   }
   else { // facet data input case
-    // get all triangles
+    MBEntityHandle meshset;
+    if (m_bUseWholeGeom) meshset = NULL;
+    else meshset = me->mesh_handle();
+
+    // get triangles
     MBRange tris;
-    moab::ErrorCode rval = moab_instance()->
-      get_entities_by_dimension(reinterpret_cast<moab::EntityHandle>(m_hRootSet), 2, tris);
+    rval = moab_instance()->get_entities_by_dimension(meshset, 2, tris);
     MBERRCHK(rval, mk_core()->moab_instance());
     
     // make tree
-    m_hObbTree = new MBOrientedBoxTreeTool( moab_instance() );
+    if (m_hObbTree == NULL) {
+      m_hObbTree = new MBOrientedBoxTreeTool( moab_instance() );
+    }
     rval = m_hObbTree->build(tris, m_hTreeRoot);
     MBERRCHK(rval, mk_core()->moab_instance());
   }
-
-  return iBase_SUCCESS;
 }
-  
-int EBMesher::find_intersections()
+
+void EBMesher::find_intersections()
 {
   int i, err;
   //m_vnHexStatus.resize(m_nHex, 1); // initialize all hex as outside
@@ -263,11 +301,8 @@ int EBMesher::find_intersections()
   for (i = 0; i < 3; i++) {
     //m_vnEdgeStatus[i].resize(m_nDiv[i]*m_nDiv[(i + 1)%3]*m_nDiv[(i + 2)%3], OUTSIDE);
     m_vnEdgeStatus[i].resize(m_nDiv[i]*m_nDiv[(i + 1)%3]*m_nDiv[(i + 2)%3], INSIDE);
-    err = fire_rays(i);
-    if (err != iBase_SUCCESS) return err;
+    fire_rays(i);
   }
-
-  return iBase_SUCCESS;
 }
 
 void EBMesher::export_mesh(const char* file_name, bool separate)
@@ -276,7 +311,7 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
   time_t time1, time2, time3;
   time(&time1);
   int i;
-  iMesh::Error err;
+  iBase_ErrorType err;
   std::vector<iBase_EntityHandle> hex_handles;
   err = mk_core()->imesh_instance()->getEntities(m_hRootSet, iBase_REGION,
                                                  iMesh_HEXAHEDRON, hex_handles);
@@ -348,7 +383,7 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
       write_mesh(file_name, 1, &outsideHex[0], n_outside_hex);
     }
 
-    if (debug) {
+    if (debug_ebmesh) {
       std::cout << "hex_handle_get_time: "
                 << difftime(time2, time1)
                 << ", separate_write_time: "
@@ -378,7 +413,7 @@ void EBMesher::write_mesh(const char* file_name, int type,
   int is_list = 1;
   moab::ErrorCode rval;
   iBase_EntitySetHandle set;
-  iMesh::Error err;
+  iBase_ErrorType err;
 
   err = mk_core()->imesh_instance()->createEntSet(is_list, set);
   IBERRCHK(err, "Couldn't create set.");
@@ -402,7 +437,7 @@ void EBMesher::write_mesh(const char* file_name, int type,
   std::cout << "Elements are exported." << std::endl;
   time(&time3);
 
-  if (debug) {
+  if (debug_ebmesh) {
     std::cout << "set_creation_time: "
               << difftime(time2, time1)
               << ", write_time: "
@@ -571,7 +606,7 @@ bool EBMesher::set_edge_status(int dir)
 }
 
 #ifdef HAVE_MOAB
-int EBMesher::set_division()
+void EBMesher::set_division()
 {
   int i, j;
   moab::CartVect box_center, box_axis1, box_axis2, box_axis3,
@@ -633,8 +668,6 @@ int EBMesher::set_division()
 
   std::cout << "# of division: " << m_nDiv[0] << ","
             << m_nDiv[1] << "," << m_nDiv[2] << std::endl;
-
-  return iBase_SUCCESS;
 }
 
 int EBMesher::set_division(double* min, double* max)
@@ -735,11 +768,11 @@ iBase_TagHandle EBMesher::get_various_length_tag(const char* name,
   return (iBase_TagHandle) retval;
 }
 
-int EBMesher::set_tag_info()
+void EBMesher::set_tag_info()
 {
   // get all hexes
   int i, j, k;
-  iMesh::Error err;
+  iBase_ErrorType err;
   std::vector<iBase_EntityHandle> hex_handles;
   err = mk_core()->imesh_instance()->getEntities(m_hRootSet, iBase_REGION,
                                                  iMesh_HEXAHEDRON, hex_handles);
@@ -800,11 +833,9 @@ int EBMesher::set_tag_info()
   delete [] frac_size;
   delete [] frac_leng;
   delete [] fractions;
-  
-  return iBase_SUCCESS;
 }
 
-int EBMesher::fire_rays(int dir)
+void EBMesher::fire_rays(int dir)
 {
   // ray fire
   int i, j, k, l, index[3];
@@ -844,7 +875,7 @@ int EBMesher::fire_rays(int dir)
         index[2] = 0;
       }
       else IBERRCHK(iBase_FAILURE, "Ray direction should be 0 to 2.");
-
+      
       for (l = 0; l < 3; l++) {
         if (l == dir) {
           startPnt[l] = m_origin_coords[l];
@@ -855,12 +886,13 @@ int EBMesher::fire_rays(int dir)
           endPnt[l] = startPnt[l];
         }
       }
-
+      
       k = 0;
       m_iInter = 0;
-      if (!fire_ray(nIntersect, startPnt, endPnt,
-                    tolerance, dir, rayLength)) return iBase_FAILURE;
-
+      if (!fire_ray(nIntersect, startPnt, endPnt, tolerance, dir, rayLength)) {
+        IBERRCHK(iBase_FAILURE, "Couldn't fire ray.");
+      }
+      
       if (nIntersect > 0) {
         m_iFirstP = m_vIntersection[m_iInter].distance/m_dIntervalSize[dir];
         m_dFirstP = startPnt[dir] + m_vIntersection[m_iInter++].distance;
@@ -872,7 +904,7 @@ int EBMesher::fire_rays(int dir)
           m_nStatus = OUTSIDE;
           
           if (!set_neighbor_hex_status(dir, i, j, k)) {
-            return iBase_FAILURE;
+            IBERRCHK(iBase_FAILURE, "Couldn't set neighbor hex status.");
           }
         }
         
@@ -884,25 +916,35 @@ int EBMesher::fire_rays(int dir)
           m_vnEdgeStatus[dir][i*m_nDiv[dir] + j*m_nDiv[dir]*m_nDiv[otherDir1] + k] = m_nStatus;
 
           // set status of all hexes sharing the edge
-          if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
+          if (!set_neighbor_hex_status(dir, i, j, k)) {
+            IBERRCHK(iBase_FAILURE, "Couldn't set neighbor hex status.");
+          }
 
           if (m_nMove > 0) {
             if (m_iInter < nIntersect) {
-              if (!move_intersections(dir, nIntersect, startPnt)) return iBase_FAILURE;
+              if (!move_intersections(dir, nIntersect, startPnt)) {
+                IBERRCHK(iBase_FAILURE, "Couldn't move intersections.");
+              }
             }
             else {
               m_nMove = 1;
-              if (m_nStatus == BOUNDARY && !set_edge_status(dir)) return iBase_FAILURE;
+              if (m_nStatus == BOUNDARY && !set_edge_status(dir)) {
+                IBERRCHK(iBase_FAILURE, "Couldn't set edge status.");
+              }
               k++;
               break; // rest is all outside
             }
           }
-          else if (m_nStatus == BOUNDARY && !set_edge_status(dir)) return iBase_FAILURE;
+          else if (m_nStatus == BOUNDARY && !set_edge_status(dir)) {
+            IBERRCHK(iBase_FAILURE, "Couldn't set edge status.");
+          }
           else if (m_nStatus == OUTSIDE && preStat == BOUNDARY) { // set outside until next hit
             k++;
             for (; k < i_skip; k++) {
               m_nStatus = OUTSIDE;
-              if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
+              if (!set_neighbor_hex_status(dir, i, j, k)) {
+                IBERRCHK(iBase_FAILURE, "Couldn't set neighbor hex status.");
+              }
             }
           }
 
@@ -921,12 +963,12 @@ int EBMesher::fire_rays(int dir)
       // the rest are all outside
       for (; k < m_nNode[dir] - 1; k++) {
         m_nStatus = OUTSIDE;
-        if (!set_neighbor_hex_status(dir, i, j, k)) return iBase_FAILURE;
+        if (!set_neighbor_hex_status(dir, i, j, k)) {
+          IBERRCHK(iBase_FAILURE, "Couldn't set neighbor hex status.");
+        }
       }
     }
   }
-  
-  return iBase_SUCCESS;
 }
 
 bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
@@ -1022,7 +1064,7 @@ bool EBMesher::move_intersections(int n_dir, int n_inter, double start_pnt[3])
 bool EBMesher::is_shared_overlapped_surf(int index)
 {
   int nParent;
-  iMesh::Error err;
+  iBase_ErrorType err;
   moab::EntityHandle hSurf;
   if (m_bUseGeom) {
     hSurf = m_vhInterSurf[m_vIntersection[index].index];
@@ -1188,7 +1230,7 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
     }
   }
   
-  if (debug) export_fraction_edges(rmdCutCellSurfEdge);
+  if (debug_ebmesh) export_fraction_edges(rmdCutCellSurfEdge);
 }
 
 bool EBMesher::get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
@@ -1222,7 +1264,7 @@ bool EBMesher::get_grid_and_edges(double* boxMin, double* boxMax, int* nDiv,
     }
   }
 
-  if (debug) return export_fraction_points(rmdCutCellEdge);
+  if (debug_ebmesh) return export_fraction_points(rmdCutCellEdge);
  
   return true;
 }
@@ -1412,7 +1454,7 @@ bool EBMesher::export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<d
 
   int is_list = 1;
   iBase_EntitySetHandle set;
-  iMesh::Error err;
+  iBase_ErrorType err;
   err = mk_core()->imesh_instance()->createEntSet(is_list, set);
   IBERRCHK(err, "Couldn't create set.");
   
@@ -1431,7 +1473,7 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
 {
   // export fractions as edge
   int i, j, dir, nFrc;
-  iMesh::Error err;
+  iBase_ErrorType err;
   double curPnt[3], fracPnt[3], frac;
   iBase_EntityHandle v_handle;
   std::vector<iBase_EntityHandle> vertex_handles;
@@ -1482,7 +1524,7 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
 bool EBMesher::make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles)
 {
   int status;
-  iMesh::Error err;
+  iBase_ErrorType err;
   iBase_EntityHandle vertex_handle[2], edge_handle;
   iBase_EntityHandle* pVertexHandle = &vertex_handle[0];
   err = mk_core()->imesh_instance()->createVtxArr(2, iBase_INTERLEAVED,

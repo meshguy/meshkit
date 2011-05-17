@@ -107,6 +107,12 @@ namespace MeshKit
     // vertex coordinates
     std::vector<double> full_coords;
 
+    // created vertex and hex ranges
+    moab::Range vtx_range;
+    moab::Range hex_range;
+
+    moab::Tag bb_tag;
+
   public:
 
     //! Bare Constructor
@@ -264,10 +270,10 @@ namespace MeshKit
     void create_vertex_coords();
 
     //! create full mesh representation
-    void create_full_mesh();
+    void create_full_mesh(moab::Range& me_range);
 
     //! create lightweight ScdInterface representation
-    void create_light_mesh();
+    void create_light_mesh(moab::Range& me_range);
     
   }; // end class SCDMesh
 

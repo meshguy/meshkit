@@ -222,9 +222,14 @@ public:
   void set_num_interval(int* n_interval);
 
   /** \brief set number of intervals
-   * \param n_interval number of interval array for x/y/z directions
+   * \param box_increase number of interval array for x/y/z directions
    */
   void increase_box(double box_increase);
+
+  /** \brief set if mesh for whole geometry at once or individually
+   * \param use if mesh for whole geometry at once
+   */
+  void use_whole_geom(int use);
   
 protected:
   
@@ -239,7 +244,7 @@ private:
   EBMesher &operator=(const EBMesher &);
 
   iBase_TagHandle m_elemStatusTag, m_edgeCutFracLengthTag,
-    m_edgeCutFracTag, m_matFracIDTag, m_volFracTag;
+    m_edgeCutFracTag, m_matFracIDTag, m_volFracTag, m_bbTag;
   iMesh_Instance m_mesh;
   iBase_EntitySetHandle m_hRootSet;
   std::vector<IntersectDist> m_vIntersection;
@@ -250,7 +255,7 @@ private:
     m_dIntervalSize[3], m_origin_coords[3], m_dInputSize,
     m_min[3], m_max[3];
   EdgeStatus m_nStatus;
-  bool m_bMovedOnce, m_bUseGeom;
+  bool m_bMovedOnce, m_bUseGeom, m_bUseWholeGeom;
   std::vector<iBase_EntityHandle> m_vhVertex;
   std::vector<int> m_vnHexStatus;
   std::map<int, CutFraction> m_mdCutFraction;
@@ -288,9 +293,8 @@ private:
 
   /** \brief set all produced mesh information as tag
    * \ hex status, edge-cut information.....
-   * \ return int if is working correctly
    */
-  int set_tag_info();
+  void set_tag_info();
 
   /** \brief wirte mesh
    * \param file_name
@@ -400,22 +404,25 @@ private:
    */
   int construct_obb_tree();
 
+  /** \brief construct and set OBB tree
+   * \input Model entity pointer for tree construction
+   */
+  void set_tree_root(ModelEnt* me);
+
   /** \brief set # of divisions
    * \calcalate the best ones from the size of faceted triangles
    */
-  int set_division();
+  void set_division();
 
   /** \brief find intersections by firing rays
-   * \return int if is working correctly
    */
-  int find_intersections();
+  void find_intersections();
 
   /** \brief fires rays to 3 directions
    * \param dir give the ray direction
    * \it calls fire_ray
-   * \return int if is working correctly
    */
-  int fire_rays(int dir);
+  void fire_rays(int dir);
 
   /** \brief fires ray
    * \param nIntersect # of intersections returned
@@ -466,6 +473,8 @@ private:
 
   // ! overlapped surface list
   std::map<MBEntityHandle, int> m_mhOverlappedSurf;
+
+  std::map<MBEntityHandle, MBEntityHandle>  m_mRootSets;
 #endif
 };
 
@@ -474,6 +483,10 @@ inline void EBMesher::increase_box(double box_increase)
   m_boxIncrease = box_increase;
 }
 
+inline void EBMesher::use_whole_geom(int use)
+{
+  m_bUseWholeGeom = use;
+}
 }
 
 #endif
