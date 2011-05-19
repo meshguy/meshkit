@@ -10,6 +10,8 @@
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/QslimMesher.hpp"
 #include "meshkit/QuadMesh.hpp"
+#include "meshkit/ParallelMesher.hpp"
+#include "meshkit/ParExchangeMesh.hpp"
 
 namespace MeshKit {
 
@@ -33,6 +35,7 @@ REGISTER_MESH_OP(ExtrudeMesh);
 REGISTER_MESH_OP(EBMesher);
 REGISTER_MESH_OP(QslimMesher);
 REGISTER_MESH_OP(QuadMesher);
-
+REGISTER_MESH_OP(ParallelMesher);
+REGISTER_MESH_OP(ParExchangeMesh);
 
 } // namespace MeshKit
