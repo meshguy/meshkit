@@ -1,5 +1,11 @@
 SUBDIRS = core algs extern
 
+if PARALLEL
+if HAVE_PARALLEL_MOAB
+SUBDIRS += parallel
+endif
+endif
+
 build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
 

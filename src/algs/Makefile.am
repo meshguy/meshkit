@@ -27,7 +27,7 @@ libMeshKitalgs_la_SOURCES = \
 	CopyUtils.cpp \
 	CopyUtils.hpp \
 	OneToOneSwept.cpp \
-	TFIMapping.cpp
+        TFIMapping.cpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
@@ -56,3 +56,11 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(srcdir)/../lemon \
               -I$(srcdir)/QuadMesher
 
+
+if PARALLEL
+if HAVE_PARALLEL_MOAB
+  libMeshKitalgs_la_SOURCES += ParallelMesher.cpp ParExchangeMesh.cpp
+  nobase_libMeshKitalgs_la_include_HEADERS += meshkit/ParallelMesher.hpp meshkit/ParExchangeMesh.hpp
+  AM_CPPFLAGS += -I$(srcdir)/../../extern/CAMAL
+endif
+endif

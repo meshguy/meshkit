@@ -251,6 +251,15 @@ AC_SUBST([HAVE_MOAB])
 if test "xyes" = "x$HAVE_MOAB"; then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_MOAB"
 fi
+
+CPPFLAGS="$CPPFLAGS -I$IMESH_DIR/include"
+AC_CHECK_HEADER([moab/ParallelComm.hpp], [HAVE_PARALLEL_MOAB=yes], [HAVE_PARALLEL_MOAB=no])
+AM_CONDITIONAL(HAVE_PARALLEL_MOAB, [test "x$HAVE_PARALLEL_MOAB" = "xyes"])
+AC_SUBST([HAVE_PARALLEL_MOAB])
+if test "xyes" = "x$HAVE_PARALLEL_MOAB"; then 
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_PARALLEL_MOAB"
+fi
+
 LIBS="$old_LIBS"
 LDFLAGS="$old_LDFLAGS"
 CPPFLAGS="$old_CPPFLAGS"
@@ -918,6 +927,7 @@ AC_CONFIG_FILES([Makefile
                  test/extern/CAMAL/Makefile
                  test/extern/mesquite/Makefile
                  test/extern/netgen/Makefile
+                 test/parallel/Makefile
                  utils/Makefile
                  doc/Makefile
                  doc/meshkit.dox
