@@ -45,7 +45,7 @@ class FBiGeom : public iGeom {
 
     // methods from iBaseVirtual that are overloaded
 
-    inline iGeom::EntitySetHandle getRootSet();
+    iGeom::EntitySetHandle getRootSet();
 
     // methods from iGeom
     inline Error getEntities( EntitySetHandle set,
@@ -139,6 +139,14 @@ class FBiGeom : public iGeom {
     iGeom::Error isEntPeriodic( EntityHandle entity, bool& in_u,
         bool& in_v );
 
+    // we do not have yet a model for geometry sets in mesh-based geometry
+    // would be set of sets (groups?)
+    iGeom::Error getEntSets( EntitySetHandle set, int num_hops,
+                       std::vector<EntitySetHandle>& contained_sets_out )
+    {
+      contained_sets_out.clear(); // empty
+      return (Error)0; // no error
+    }
 
 #if 0
     inline Error save( const char* file_name,

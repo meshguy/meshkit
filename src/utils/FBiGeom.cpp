@@ -19,6 +19,8 @@ FBiGeom::FBiGeom( MKCore * mk, bool smooth):
 FBiGeom::~FBiGeom()
 {
   if (_fbEngine) {
+    if (_smooth)
+      _fbEngine->delete_smooth_tags();
     delete _fbEngine;
   }
 }
@@ -61,7 +63,10 @@ FBiGeom::load( const char* file_name,
 iGeom::EntitySetHandle FBiGeom::getRootSet()
 {
   // the root set in MOAB is always null
-  return 0;
+  // we will return the set from FBEngine
+  moab::EntityHandle modelSet;
+  _fbEngine->getRootSet(&modelSet);
+  return (iGeom::EntitySetHandle)modelSet;
 }
 
 iGeom::Error FBiGeom::getEntType( EntityHandle handle, EntityType& type_out )

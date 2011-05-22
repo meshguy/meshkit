@@ -15,7 +15,7 @@ MKCore * mk;
 bool save_mesh = false;
 bool quadMesh = true;
 double mesh_size = 0.3;
-std::string file_name="shell.h5m";
+std::string file_name; //="shell.h5m";
 
 #include "TestUtil.hpp"
 
@@ -28,10 +28,11 @@ int main(int argc, char **argv)
    iGeom * fbiGeom = new FBiGeom(mb); // true means smooth
    MKCore mk(fbiGeom, mb); // iMesh, iRel, will be constructed*/
 
-  if (argc < 2) {
+  file_name = TestDir + "/" + "shell.h5m";// default test file
+  if (argc < 4) {
     {
       std::cout << "Usage : filename < q, t >  <mesh_size> \n";
-      std::cout << "default options: " << file_name << " " <<
+      std::cout << "use default options: " << file_name << " " <<
           (quadMesh ? "q " : "t " ) << mesh_size << "\n";
     }
   }
@@ -52,7 +53,6 @@ int main(int argc, char **argv)
 void meshFB()
 {
   mk = new MKCore;
-  std::string file = TestDir + "/" + file_name;
   FBiGeom * fbiGeom = new FBiGeom(mk, true); // true for smooth, false for linear
 
   // this will do the reading of the moab db in memory
@@ -60,16 +60,17 @@ void meshFB()
   //this also will do heavy stuff, like smoothing
   // we do not want to do it in the constructor
   // this should also populate ModelEnts in MKCore
-  fbiGeom->load(file.c_str());
+  fbiGeom->load(file_name.c_str());
 
   moab::Range tris;
-  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 2,
-      tris);
+  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(
+      (moab::EntityHandle)fbiGeom->getRootSet() , 2,
+      tris, /*recursive*/ true);
 
   int nbInitial = tris.size();
   tris.clear();
   // initial number of triangles
-  std::cout << nbInitial << " initial triangles in the model" << std::endl;
+  std::cout << nbInitial << " initial elements in the model" << std::endl;
   //fbiGeom->Init();
 
   // get the surface model ents
@@ -100,8 +101,10 @@ void meshFB()
   std::string elem =(quadMesh? " quads ": " triangles");
   std::cout << tris.size() - nbInitial << elem << " generated." << std::endl;
 
+  delete fbiGeom;// this will trigger also deletion of FBEngine tags, etc
+
   if (save_mesh) {
-    // output mesh only for the first surface
+    // output mesh for surfaces (implicitly for edges too, as edges are children of surface sets)
     std::string outfile = file_name + std::string(".h5m");
     moab::EntityHandle out_set;
     rval = mk->moab_instance()->create_meshset(moab::MESHSET_SET, out_set);
@@ -116,8 +119,6 @@ void meshFB()
         &out_set, 1);
     MBERRCHK(rval, mk->moab_instance());
   }
-
-  delete fbiGeom;
   // delete the model ents too, unload geometry
 
   delete mk;
