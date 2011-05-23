@@ -132,7 +132,6 @@ void MKGraph::insert_node(GraphNode *inserted, GraphNode *before, GraphNode *aft
   else { // check all predecessors
     for (iter = before->in_arcs(); iter != lemon::INVALID;) {
       lemon::ListDigraph::Node after_node = mkGraph.source(iter);
-      std::cout << "after_node=" << nodeMap[after_node]->get_name() << std::endl;
 
       // check if it is already connected
       bool b_connected = false;

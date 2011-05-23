@@ -49,8 +49,14 @@ void MeshOp::setup_boundary()
       }
     }
   }
-  
-  for (int dim = 0; dim <= 3; dim++) {
+
+  // VertexMesher should be inserted after root node to be done before other meshops
+  // It is because the VertexMesher instance is only one
+  if (this_op[0]) {
+    mk_core()->insert_node(this_op[0], this, mk_core()->root_node());
+  }
+
+  for (int dim = 1; dim <= 3; dim++) {
     if (this_op[dim])
       mk_core()->insert_node(this_op[dim], this);
   }
