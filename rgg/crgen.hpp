@@ -11,11 +11,11 @@ CCrgen class declaration
 #include <iostream>
 #include <cfloat>
 #include <math.h>
-#include "MKUtils.hpp"
 #include "MergeMesh.hpp"
 #include "ExtrudeMesh.hpp"
 #include "CopyMesh.hpp"
 #include "CopyGeom.hpp"
+#include "MKUtils.hpp"
 #include "parser.hpp"
 #include "fileio.hpp"
 #include "clock.hpp"
@@ -31,25 +31,41 @@ CCrgen class declaration
 #include "MBSkinner.hpp"
 #endif
 
+
+#ifdef USE_MPI
+#include "mpi.h"
+#include "iMeshP.h"
+#include "moab_mpi.h"
+#include "moab/ParallelMergeMesh.hpp"
+#include "moab/ParallelComm.hpp"
+#include "MBParallelConventions.h"
+#endif
+
 class CCrgen
 {
 public:
   CCrgen ();    // ctor
   ~CCrgen ();   // dtor
-  int prepareIO (int argc, char *argv[]);
+  int prepareIO (int argc, char *argv[], int myID, int numprocs);
   int load_meshes();
+  int load_meshes_parallel(const int, const int);
   int load_geometries();
   int read_inputs_phase1 ();
   int read_inputs_phase2 ();
   int write_makefile ();
   int find_assm(const int i, int &assm_index);
   int banner();
-  int copy_move(); 
+  int copy_move();
+  int copy_move_parallel(const int nrank, const int numprocs);
   int merge_nodes();
+  int merge_nodes_parallel(const int nrank, const int numprocs);
   int assign_gids();
+  int assign_gids_parallel(const int nrank, const int numprocs);
   int save_mesh();
+  int save_mesh_parallel(const int nrank, const int numprocs);
   int save_geometry();
   int close();
+  int close_parallel(const int nrank, const int numprocs);
   int extrude();
   int move_verts(iBase_EntitySetHandle set, const double *dx);
   int move_geoms(iBase_EntitySetHandle set, const double *dx);
@@ -67,6 +83,7 @@ public:
 			 const int symm,
 			 std::vector<std::string> &core_alias,
 			 std::vector<iBase_EntitySetHandle> &assys);
+
 
   int copy_move_hex_full_assys(CopyMesh **cm,
 			       const int nrings, const int pack_type,
@@ -126,7 +143,7 @@ public:
 				     std::vector<std::string> &core_alias,
 				     std::vector<iBase_EntitySetHandle> &assys);
 
-// function for geometries
+  // function for geometries
   int copy_move_hex_flat_assys(CopyGeom **cg,
 			       const int nrings, const int pack_type,
 			       const double pitch,
@@ -199,18 +216,98 @@ public:
 				     std::vector<std::string> &core_alias,
 				     std::vector<iBase_EntitySetHandle> &assys);
 
+  /*parallel funtion*/
+  int copy_move_hex_flat_assys_parallel(CopyMesh **cm,
+					const int nrings, const int pack_type,
+					const double pitch,
+					const int symm,
+					std::vector<std::string> &core_alias,
+					std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+  int copy_move_sq_assys_parallel(CopyMesh **cm,
+				  const int nrings, const int pack_type,
+				  const double pitch,
+				  const int symm,
+				  std::vector<std::string> &core_alias,
+				  std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+
+  int copy_move_hex_full_assys_parallel(CopyMesh **cm,
+					const int nrings, const int pack_type,
+					const double pitch,
+					const int symm,
+					std::vector<std::string> &core_alias,
+					std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+  int copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
+					  const int nrings, const int pack_type,
+					  const double pitch,
+					  const int symm,
+					  std::vector<std::string> &core_alias,
+					  std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+
+  int copy_move_one_twelfth_assys_parallel(CopyMesh **cm,
+					   const int nrings, const int pack_type,
+					   const double pitch,
+					   const int symm,
+					   std::vector<std::string> &core_alias,
+					   std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+  // phase 1's
+  int copy_move_hex_vertex_assys_p1_parallel(CopyMesh **cm,
+					     const int nrings, const int pack_type,
+					     const double pitch,
+					     const int symm,
+					     std::vector<std::string> &core_alias,
+					     std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+  int copy_move_hex_flat_assys_p1_parallel(CopyMesh **cm,
+					   const int nrings, const int pack_type,
+					   const double pitch,
+					   const int symm,
+					   std::vector<std::string> &core_alias,
+					   std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+  int copy_move_sq_assys_p1_parallel(CopyMesh **cm,
+				     const int nrings, const int pack_type,
+				     const double pitch,
+				     const int symm,
+				     std::vector<std::string> &core_alias,
+				     std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+  int copy_move_hex_full_assys_p1_parallel(CopyMesh **cm,
+					   const int nrings, const int pack_type,
+					   const double pitch,
+					   const int symm,
+					   std::vector<std::string> &core_alias,
+					   std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
+  int copy_move_one_twelfth_assys_p1_parallel(CopyMesh **cm,
+					      const int nrings, const int pack_type,
+					      const double pitch,
+					      const int symm,
+					      std::vector<std::string> &core_alias,
+					      std::vector<iBase_EntitySetHandle> &assys, const int nrank, const int nproc);
+
 
   iMesh_Instance impl;
   iGeom_Instance geom;
   
 #ifdef HAVE_MOAB
   MBInterface* mbImpl() {return reinterpret_cast<MBiMesh*> (impl)->mbImpl;};
+#ifdef USE_MPI
+  moab::ParallelComm *pc;
+#endif
 #endif
 
   bool extrude_flag;
   bool mem_tflag;
   std::string prob_type;
-
+  std::vector<std::string> files, mk_files;
+  std::vector<int> assm_meshfiles;
+  std::vector<int> assm_status;
+  std::vector<int> meshfile_proc;
 private:
 
   CopyMesh **cm;
@@ -218,19 +315,18 @@ private:
   CopyGeom **cg;
   iBase_EntitySetHandle root_set;
   std::vector<iBase_EntitySetHandle> assys;
-
+  std::vector<int> assys_index;
   // declare variables read in the inputs
   int err;
   int UNITCELL_DUCT, ASSY_TYPES ;
   int nrings, nringsx, nringsy, pack_type, symm;
   double pitch, pitchx, pitchy;
   bool global_ids, back_mesh, nst_flag, nsb_flag, nss_flag;
-  std::vector<std::string> files, mk_files;
   std::string outfile;
   int nassys; // the number of mesh files
   int tot_assys; // total no. of assms forming core
   int set_DIM; // default is 3D
-  double PI;
+  double PII;
   double z_height;    // z_height for extruding surfaces mesh
   int z_divisions; // z_divisions for extruding surface mesh
   int nst_Id, nsb_Id, nss_Id;
@@ -254,8 +350,9 @@ private:
   int do_merge;
   int update_sets;
   iBase_TagHandle merge_tag;
-
+  
   // MKUtils obj, assigning gid's etc.
   MKUtils *mu;
+	
 };
 #endif

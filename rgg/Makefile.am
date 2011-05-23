@@ -22,6 +22,7 @@ libMKrgg_la_SOURCES = \
 	cylinder.cpp \
 	crgen.cpp \
 	copymove.cpp \
+	copy_move_parallel.cpp\
 	utils.cpp \
 	parser.hpp \
 	arraybase.hpp \
