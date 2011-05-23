@@ -68,7 +68,7 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
   }
   else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE ||
            type == EXCHANGE_SURF) {
-    proxy = MKCore::meshop_proxy("ExchangeMesh");
+    proxy = MKCore::meshop_proxy("ParExchangeMesh");
   }
 
   if (proxy == NULL) throw Error(MK_FAILURE, "Couldn't find a MeshOp capable of producing the given mesh type.");
