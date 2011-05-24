@@ -153,17 +153,17 @@ int CCrgen::copy_move_hex_vertex_assys_p1(CopyMesh **cm,
 	}
 	if(n2 <= n1/2){// before or equal to diagonal
 	  dx[0] = n2 * pitch;
-	  dx[1] = n1 * pitch * sin(PI/3.0);
+	  dx[1] = n1 * pitch * sin(PII/3.0);
 	}
 	else{//below the diagonal
 	  dx[0] = (n1 + 1 + bd) * pitch / 2.0; 
-	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
 	  ++bd;      
 	}      
 
 	// starting from x-axis
-	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
-	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));      
+	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));      
 
 	if(flags[assm_index]==0){
 	  move_verts(assys[assm_index], dxnew);
@@ -187,21 +187,21 @@ int CCrgen::copy_move_hex_vertex_assys_p1(CopyMesh **cm,
 	}
 	if(n2 <= (n1-1)/2){// before or equal to diagonal
 	  dx[0] = (2 * n2 + 1) * pitch / 2.0;
-	  dx[1] = n1 * pitch * sin(PI/3.0);
+	  dx[1] = n1 * pitch * sin(PII/3.0);
 
 	}
 	else{//below the diagonal 
 	  dx[0] = (n1 + 1 + bd) * pitch / 2.0; 
 	  if (bd == 0) // first n2 = 1 assembly
-	    dx[1] = pitch * sin(PI/3.0);
-	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	    dx[1] = pitch * sin(PII/3.0);
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
 	  ++bd;    
 	}
 
 
 	// starting from x-axis
-	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
-	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
+	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
 
 	if(flags[assm_index]==0){
@@ -268,19 +268,19 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 	}
 	if(n2 <= n1/2){// before or equal to diagonal
 	  dx[0] = n2 * pitch;
-	  dx[1] = n1 * pitch * sin(PI/3.0);
+	  dx[1] = n1 * pitch * sin(PII/3.0);
 	}
 	else{//below the diagonal
 	  dx[0] = (n1 + 1 + bd) * pitch / 2.0; 
-	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
 	  ++bd;      
 	}      
 	new_ents = NULL;
 	new_ents_alloc = 0;
 
 	// starting from x-axis
-	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
-	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));      
+	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));      
 
 	if(flags[assm_index]==1){
 	  dxnew[0]-=dx_orig(assm_index+1, 1);
@@ -326,14 +326,14 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 	}
 	if(n2 <= (n1-1)/2){// before or equal to diagonal
 	  dx[0] = (2 * n2 + 1) * pitch / 2.0;
-	  dx[1] = n1 * pitch * sin(PI/3.0);
+	  dx[1] = n1 * pitch * sin(PII/3.0);
 
 	}
 	else{//below the diagonal 
 	  dx[0] = (n1 + 1 + bd) * pitch / 2.0; 
 	  if (bd == 0) // first n2 = 1 assembly
-	    dx[1] = pitch * sin(PI/3.0);
-	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	    dx[1] = pitch * sin(PII/3.0);
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
 	  ++bd;    
 	}
 	new_ents = NULL;
@@ -341,8 +341,8 @@ int CCrgen::copy_move_hex_vertex_assys(CopyMesh **cm,
 
 
 	// starting from x-axis
-	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
-	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
+	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
 
 	if(flags[assm_index]==1){
@@ -404,12 +404,12 @@ int CCrgen::copy_move_one_twelfth_assys_p1(CopyMesh **cm,
 
     if( flag == 0 ){
       dx[0] = (n1 + loc - 1) * pitch / 2.0;
-      dx[1] = (n1 - loc + 1) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc + 1) * pitch * sin(PII/3.0);
       flag = 1;
     }
     else{
       dx[0] = (n1 + loc) * pitch / 2.0;
-      dx[1] = (n1 - loc) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc) * pitch * sin(PII/3.0);
       flag = 0;
     }
 
@@ -420,8 +420,8 @@ int CCrgen::copy_move_one_twelfth_assys_p1(CopyMesh **cm,
         continue;
       }  
     
-      dxnew[1] = dx[1] - n2 * pitch * sin(PI/3.0);
-      dxnew[0] = dx[0] + n2 * pitch * cos(PI/3.0);
+      dxnew[1] = dx[1] - n2 * pitch * sin(PII/3.0);
+      dxnew[0] = dx[0] + n2 * pitch * cos(PII/3.0);
       if(flags[assm_index] == 0){
 
  	move_verts(assys[assm_index], dxnew);
@@ -479,12 +479,12 @@ int CCrgen::copy_move_one_twelfth_assys(CopyMesh **cm,
 
     if( flag == 0 ){
       dx[0] = (n1 + loc - 1) * pitch / 2.0;
-      dx[1] = (n1 - loc + 1) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc + 1) * pitch * sin(PII/3.0);
       flag = 1;
     }
     else{
       dx[0] = (n1 + loc) * pitch / 2.0;
-      dx[1] = (n1 - loc) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc) * pitch * sin(PII/3.0);
       flag = 0;
     }
 
@@ -495,8 +495,8 @@ int CCrgen::copy_move_one_twelfth_assys(CopyMesh **cm,
         continue;
       }  
     
-      dxnew[1] = dx[1] - n2 * pitch * sin(PI/3.0);
-      dxnew[0] = dx[0] + n2 * pitch * cos(PI/3.0);
+      dxnew[1] = dx[1] - n2 * pitch * sin(PII/3.0);
+      dxnew[0] = dx[0] + n2 * pitch * cos(PII/3.0);
 
       if(flags[assm_index]==1){
 	dxnew[0]-=dx_orig(assm_index+1, 1);
@@ -567,8 +567,8 @@ int CCrgen::copy_move_hex_flat_assys_p1(CopyMesh **cm,
       }
 
 
-      dx[1] = n1 * pitch * sin(PI/3.0)  - n2 * pitch * sin(PI/3.0);
-      dx[0] = n1 * pitch *  cos(PI/3.0)  + n2 * pitch * cos(PI/3.0);
+      dx[1] = n1 * pitch * sin(PII/3.0)  - n2 * pitch * sin(PII/3.0);
+      dx[0] = n1 * pitch *  cos(PII/3.0)  + n2 * pitch * cos(PII/3.0);
       if(flags[assm_index] == 0){
 
  	move_verts(assys[assm_index], dx);
@@ -626,8 +626,8 @@ int CCrgen::copy_move_hex_flat_assys(CopyMesh **cm,
       }
 
 
-      dx[1] = n1 * pitch * sin(PI/3.0)  - n2 * pitch * sin(PI/3.0);
-      dx[0] = n1 * pitch *  cos(PI/3.0)  + n2 * pitch * cos(PI/3.0);
+      dx[1] = n1 * pitch * sin(PII/3.0)  - n2 * pitch * sin(PII/3.0);
+      dx[0] = n1 * pitch *  cos(PII/3.0)  + n2 * pitch * cos(PII/3.0);
 
 
       if(flags[assm_index]==1){
@@ -703,12 +703,12 @@ int CCrgen::copy_move_hex_full_assys_p1(CopyMesh **cm,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + 
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0))); 
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0))); 
       } 
       if(flags[assm_index] == 0){
 
@@ -774,12 +774,12 @@ int CCrgen::copy_move_hex_full_assys(CopyMesh **cm,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + 
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0))); 
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0))); 
       }     
 
       if(flags[assm_index]==1){
@@ -978,17 +978,17 @@ int CCrgen::copy_move_hex_vertex_assys_p1(CopyGeom **cg,
 	}
 	if(n2 <= n1/2){// before or equal to diagonal
 	  dx[0] = n2 * pitch;
-	  dx[1] = n1 * pitch * sin(PI/3.0);
+	  dx[1] = n1 * pitch * sin(PII/3.0);
 	}
 	else{//below the diagonal
 	  dx[0] = (n1 + 1 + bd) * pitch / 2.0;
-	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
 	  ++bd;
 	}
 
 	// starting from x-axis
-	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
-	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
+	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
 	if(flags[assm_index]==0){
 	  move_geoms(assys[assm_index], dxnew);
@@ -1012,21 +1012,21 @@ int CCrgen::copy_move_hex_vertex_assys_p1(CopyGeom **cg,
 	}
 	if(n2 <= (n1-1)/2){// before or equal to diagonal
 	  dx[0] = (2 * n2 + 1) * pitch / 2.0;
-	  dx[1] = n1 * pitch * sin(PI/3.0);
+	  dx[1] = n1 * pitch * sin(PII/3.0);
 
 	}
 	else{//below the diagonal
 	  dx[0] = (n1 + 1 + bd) * pitch / 2.0;
 	  if (bd == 0) // first n2 = 1 assembly
-	    dx[1] = pitch * sin(PI/3.0);
-	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+	    dx[1] = pitch * sin(PII/3.0);
+	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
 	  ++bd;
 	}
 
 
 	// starting from x-axis
-	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
-	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
+	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
 
 	if(flags[assm_index]==0){
@@ -1093,19 +1093,19 @@ int CCrgen::copy_move_hex_vertex_assys(CopyGeom **cg,
  	}
  	if(n2 <= n1/2){// before or equal to diagonal
  	  dx[0] = n2 * pitch;
- 	  dx[1] = n1 * pitch * sin(PI/3.0);
+ 	  dx[1] = n1 * pitch * sin(PII/3.0);
  	}
  	else{//below the diagonal
  	  dx[0] = (n1 + 1 + bd) * pitch / 2.0;
- 	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+ 	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
  	  ++bd;
  	}
  	new_ents = NULL;
  	new_ents_alloc = 0;
 
  	// starting from x-axis
- 	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
- 	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
+ 	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+ 	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
  	if(flags[assm_index]==1){
  	  dxnew[0]-=dx_orig(assm_index+1, 1);
@@ -1150,14 +1150,14 @@ int CCrgen::copy_move_hex_vertex_assys(CopyGeom **cg,
  	}
  	if(n2 <= (n1-1)/2){// before or equal to diagonal
  	  dx[0] = (2 * n2 + 1) * pitch / 2.0;
- 	  dx[1] = n1 * pitch * sin(PI/3.0);
+ 	  dx[1] = n1 * pitch * sin(PII/3.0);
 
  	}
  	else{//below the diagonal
  	  dx[0] = (n1 + 1 + bd) * pitch / 2.0;
  	  if (bd == 0) // first n2 = 1 assembly
- 	    dx[1] = pitch * sin(PI/3.0);
- 	  dx[1] = (n1 - 1 - bd) * pitch * sin(PI/3.0);
+ 	    dx[1] = pitch * sin(PII/3.0);
+ 	  dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
  	  ++bd;
  	}
  	new_ents = NULL;
@@ -1165,8 +1165,8 @@ int CCrgen::copy_move_hex_vertex_assys(CopyGeom **cg,
 
 
  	// starting from x-axis
- 	dxnew[0] = (dx[0] * cos(PI/6.0) + dx[1] * sin(PI/6.0));
- 	dxnew[1] = (dx[1] * cos(PI/6.0) - dx[0] * sin(PI/6.0));
+ 	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+ 	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
 
  	if(flags[assm_index]==1){
@@ -1227,12 +1227,12 @@ int CCrgen::copy_move_one_twelfth_assys_p1(CopyGeom **cg,
 
     if( flag == 0 ){
       dx[0] = (n1 + loc - 1) * pitch / 2.0;
-      dx[1] = (n1 - loc + 1) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc + 1) * pitch * sin(PII/3.0);
       flag = 1;
     }
     else{
       dx[0] = (n1 + loc) * pitch / 2.0;
-      dx[1] = (n1 - loc) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc) * pitch * sin(PII/3.0);
       flag = 0;
     }
 
@@ -1243,8 +1243,8 @@ int CCrgen::copy_move_one_twelfth_assys_p1(CopyGeom **cg,
 	continue;
       }
 
-      dxnew[1] = dx[1] - n2 * pitch * sin(PI/3.0);
-      dxnew[0] = dx[0] + n2 * pitch * cos(PI/3.0);
+      dxnew[1] = dx[1] - n2 * pitch * sin(PII/3.0);
+      dxnew[0] = dx[0] + n2 * pitch * cos(PII/3.0);
       if(flags[assm_index] == 0){
 
 	move_geoms(assys[assm_index], dxnew);
@@ -1302,12 +1302,12 @@ int CCrgen::copy_move_one_twelfth_assys(CopyGeom **cg,
 
     if( flag == 0 ){
       dx[0] = (n1 + loc - 1) * pitch / 2.0;
-      dx[1] = (n1 - loc + 1) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc + 1) * pitch * sin(PII/3.0);
       flag = 1;
     }
     else{
       dx[0] = (n1 + loc) * pitch / 2.0;
-      dx[1] = (n1 - loc) * pitch * sin(PI/3.0);
+      dx[1] = (n1 - loc) * pitch * sin(PII/3.0);
       flag = 0;
     }
 
@@ -1318,8 +1318,8 @@ int CCrgen::copy_move_one_twelfth_assys(CopyGeom **cg,
 	continue;
       }
 
-      dxnew[1] = dx[1] - n2 * pitch * sin(PI/3.0);
-      dxnew[0] = dx[0] + n2 * pitch * cos(PI/3.0);
+      dxnew[1] = dx[1] - n2 * pitch * sin(PII/3.0);
+      dxnew[0] = dx[0] + n2 * pitch * cos(PII/3.0);
 
       if(flags[assm_index]==1){
 	dxnew[0]-=dx_orig(assm_index+1, 1);
@@ -1389,8 +1389,8 @@ int CCrgen::copy_move_hex_flat_assys_p1(CopyGeom **cg,
       }
 
 
-      dx[1] = n1 * pitch * sin(PI/3.0)  - n2 * pitch * sin(PI/3.0);
-      dx[0] = n1 * pitch *  cos(PI/3.0)  + n2 * pitch * cos(PI/3.0);
+      dx[1] = n1 * pitch * sin(PII/3.0)  - n2 * pitch * sin(PII/3.0);
+      dx[0] = n1 * pitch *  cos(PII/3.0)  + n2 * pitch * cos(PII/3.0);
       if(flags[assm_index] == 0){
 
 	move_geoms(assys[assm_index], dx);
@@ -1447,8 +1447,8 @@ int CCrgen::copy_move_hex_flat_assys(CopyGeom **cg,
       }
 
 
-      dx[1] = n1 * pitch * sin(PI/3.0)  - n2 * pitch * sin(PI/3.0);
-      dx[0] = n1 * pitch *  cos(PI/3.0)  + n2 * pitch * cos(PI/3.0);
+      dx[1] = n1 * pitch * sin(PII/3.0)  - n2 * pitch * sin(PII/3.0);
+      dx[0] = n1 * pitch *  cos(PII/3.0)  + n2 * pitch * cos(PII/3.0);
 
 
       if(flags[assm_index]==1){
@@ -1528,12 +1528,12 @@ int CCrgen::copy_move_hex_full_assys_p1(CopyGeom **cg,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 +
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0)));
       }
       if(flags[assm_index] == 0){
 
@@ -1599,12 +1599,12 @@ int CCrgen::copy_move_hex_full_assys(CopyGeom **cg,
       if (n1 < nrings){
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 +
 	  (n2 - 1) * pitch - (n1 - 1) * pitch / 2.0;
-	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
+	dx[1] = -((n1 - 1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0)));
       }
       else{
 	dx[0] = (nrings - n2 + 1) * pitch / 2.0 + n2 * pitch / 2.0 + (n2 - 1) * pitch -
 	  (2 * nrings - n1 -1) * pitch / 2.0;
-	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PI/3.0) + 0.5 * pitch * sin(PI/6.0) / sin(PI/3.0)));
+	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0)));
       }
 
       if(flags[assm_index]==1){

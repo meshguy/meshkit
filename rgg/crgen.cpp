@@ -17,7 +17,7 @@
 /* ==================================================================
    ======================= CCrgen class =============================
    ================================================================== */
-
+#ifdef USE_MPI   
 int CCrgen::assign_gids_parallel(const int nrank, const int numprocs) {
   // assign new global ids
   if (global_ids == true) {
@@ -169,7 +169,7 @@ int CCrgen::load_meshes_parallel(const int nrank, const int numprocs)
   }
   return iBase_SUCCESS;
 }
-
+#endif
 CCrgen::CCrgen()
 // ---------------------------------------------------------------------------
 // Function: default constructor
@@ -1089,43 +1089,44 @@ int CCrgen::merge_nodes()
 
 int CCrgen::assign_gids() {
   // assign new global ids
-  // if (global_ids == true){
-  //   std::cout << "Assigning global ids." << std::endl;
-  //   mu = new MKUtils(impl);
-  //   err = mu->assign_global_ids(root_set, 3, 1, true, false,
-  // 				"GLOBAL_ID");
-  //   ERRORR("Error assigning global ids.", err);
-  // }
-  // delete mu;
-  // return iBase_SUCCESS;
-
-
-  // assign new global ids
-  if (global_ids == true) {
+  if (global_ids == true){
     std::cout << "Assigning global ids." << std::endl;
-    err = pc->assign_global_ids(0, 3, 1, false, false, false);
+    mu = new MKUtils(impl);
+    err = mu->assign_global_ids(root_set, 3, 1, true, false,
+  				"GLOBAL_ID");
     ERRORR("Error assigning global ids.", err);
   }
-
-  // assign global ids for all entity sets
-  SimpleArray<iBase_EntitySetHandle> sets;
-  iBase_TagHandle gid_tag;
-  const char *tag_name = "GLOBAL_ID"; 
-  iMesh_getTagHandle(impl, tag_name, &gid_tag, &err, 9);
-  if (iBase_TAG_NOT_FOUND == err) {
-    iMesh_createTag(impl, tag_name, 1, iBase_INTEGER, 
-                    &gid_tag, &err, strlen(tag_name));
-    ERRORR("Couldn't create global id tag", err);
-  }
-
-  iMesh_getEntSets(impl,root_set, 1, ARRAY_INOUT(sets), &err);
-  ERRORR("Failed to get contained sets.", err);
-
-  for(int id = 1; id <= sets.size(); id++){
-    iMesh_setEntSetIntData(impl, sets[id-1], gid_tag, id, &err);
-    ERRORR("Failed to set tags on sets.", err);
-  }
+  delete mu;
   return iBase_SUCCESS;
+
+
+  // // assign new global ids
+  // if (global_ids == true) {
+  //   std::cout << "Assigning global ids." << std::endl;
+  //   err = pc->assign_global_ids(0, 3, 1, false, false, false);
+  //   ERRORR("Error assigning global ids.", err);
+  // }
+
+  // // assign global ids for all entity sets
+  // SimpleArray<iBase_EntitySetHandle> sets;
+  // iBase_TagHandle gid_tag;
+  // const char *tag_name = "GLOBAL_ID"; 
+  // iMesh_getTagHandle(impl, tag_name, &gid_tag, &err, 9);
+  // if (iBase_TAG_NOT_FOUND == err) {
+  //   iMesh_createTag(impl, tag_name, 1, iBase_INTEGER, 
+  //                   &gid_tag, &err, strlen(tag_name));
+  //   ERRORR("Couldn't create global id tag", err);
+  // }
+
+  // iMesh_getEntSets(impl,root_set, 1, ARRAY_INOUT(sets), &err);
+  // ERRORR("Failed to get contained sets.", err);
+
+  // for(int id = 1; id <= sets.size(); id++){
+  //   iMesh_setEntSetIntData(impl, sets[id-1], gid_tag, id, &err);
+  //   ERRORR("Failed to set tags on sets.", err);
+  // }
+  // return
+    iBase_SUCCESS;
 }
 
 int CCrgen::save_mesh() {
@@ -1156,9 +1157,9 @@ int CCrgen::save_geometry() {
   iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities_imprint),&err );
   ERRORR("Trouble writing output geometry.", err);
  
-  std::cout << "Imprinting.." << std::endl;
-  iGeom_imprintEnts(geom, ARRAY_IN(entities_imprint),&err); 
-  ERRORR("Trouble writing output geometry.", err);
+  // std::cout << "Imprinting.." << std::endl;
+  // iGeom_imprintEnts(geom, ARRAY_IN(entities_imprint),&err); 
+  // ERRORR("Trouble writing output geometry.", err);
   // export
   std::cout << "Saving geometry file: " <<  outfile << std::endl;
 

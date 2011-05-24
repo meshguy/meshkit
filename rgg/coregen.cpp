@@ -60,12 +60,14 @@ int main(int argc, char *argv[]) {
       if (nprocs == 1) {
   	err = TheCore.load_meshes();
   	ERRORR("Failed to load meshes.", 1);
-  	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
+	//  	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
       } else {
 	err = TheCore.load_meshes_parallel(rank, nprocs);
 	ERRORR("Failed to load meshes.", 1);
   	//Get a pcomm object
+#ifdef USE_MPI
 	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
+#endif
       }
     } else if (strcmp(TheCore.prob_type.c_str(), "geometry") == 0) {
       err = TheCore.load_geometries();
@@ -101,7 +103,9 @@ int main(int argc, char *argv[]) {
     		<< " seconds" << std::endl;
       std::cout << "***Memory used: " << mem2 << " kb\n" << std::endl;
     }
+#ifdef USE_MPI    
     MPI::COMM_WORLD.Barrier();
+#endif
     if (TheCore.prob_type == "mesh") {
       /*********************************************/
       // merge
@@ -150,7 +154,9 @@ int main(int argc, char *argv[]) {
       /*********************************************/
       // assign gids
       /*********************************************/
+#ifdef USE_MPI   
       MPI::COMM_WORLD.Barrier();
+#endif
       CClock ld_gid;
       if (nprocs == 1) {
     	err = TheCore.assign_gids();
@@ -194,12 +200,14 @@ int main(int argc, char *argv[]) {
     	err = TheCore.save_mesh();
     	ERRORR("Failed to save o/p file.", 1);
       } else {
+#ifdef USE_MPI   
     	double write_time = MPI_Wtime();
     	err = TheCore.save_mesh_parallel(rank, nprocs);
     	ERRORR("Failed to save o/p file.", 1);
     	write_time = MPI_Wtime() - write_time;
     	if (rank == 0)
     	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
+#endif
       }
     }
 
@@ -229,7 +237,9 @@ int main(int argc, char *argv[]) {
     }
   
     // compute the elapsed time
+#ifdef USE_MPI   
     MPI::COMM_WORLD.Barrier();
+#endif
     if (rank == 0) {
       Timer.GetDateTime(szDateTime);
       std::cout << "Ending at : " << szDateTime;
