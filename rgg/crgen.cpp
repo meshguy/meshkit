@@ -17,8 +17,9 @@
 /* ==================================================================
    ======================= CCrgen class =============================
    ================================================================== */
-#ifdef USE_MPI   
+
 int CCrgen::assign_gids_parallel(const int nrank, const int numprocs) {
+#ifdef USE_MPI   
   // assign new global ids
   if (global_ids == true) {
     if(nrank==0)
@@ -46,7 +47,7 @@ int CCrgen::assign_gids_parallel(const int nrank, const int numprocs) {
   //   iMesh_setEntSetIntData(impl, sets[id-1], gid_tag, id, &err);
   //   ERRORR("Failed to set tags on sets.", err);
   // }
-
+#endif
   return iBase_SUCCESS;
 }
 
@@ -57,6 +58,7 @@ int CCrgen::close_parallel(const int nrank, const int numprocs)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
+#ifdef USE_MPI
   // deallocate ... deallocate ... deallocate
   if (prob_type == "mesh") {
     for (unsigned int i = 0; i < assys.size(); i++) {
@@ -75,10 +77,12 @@ int CCrgen::close_parallel(const int nrank, const int numprocs)
     iGeom_dtor(geom, &err);
     ERRORR("Failed in call iGeom_dtor", err);
   }
+#endif
   return 0;
 }
 
 int CCrgen::save_mesh_parallel(const int nrank, const int numprocs) {
+#ifdef USE_MPI
   // write file
   if (nrank == 0) {
     std::cout << "Saving mesh file in parallel. " << std::endl;
@@ -95,7 +99,9 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs) {
     std::cout << "Done saving mesh file: " << outfile << std::endl;
   }
 #endif
+#endif
   return iBase_SUCCESS;
+
 }
 
 int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
@@ -105,6 +111,7 @@ int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
 // Output:   none
 // -------------------------------------------------------------------------------------------
 {
+#ifdef USE_MPI
   //Call the resolve parallel function
   moab::ParallelMergeMesh pm(pc, merge_tol);
   //err = pm.merge();
@@ -112,6 +119,7 @@ int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
     std::cerr << "Merge Failed" << std::endl;
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
+#endif
   return iBase_SUCCESS;
 }
 
@@ -122,6 +130,7 @@ int CCrgen::load_meshes_parallel(const int nrank, const int numprocs)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
+#ifdef USE_MPI
   iBase_EntitySetHandle orig_set;
   // make a mesh instance, get root set, create ent set for loading meshfiles
   iMesh_newMesh("MOAB", &impl, &err, 4);
@@ -167,9 +176,10 @@ int CCrgen::load_meshes_parallel(const int nrank, const int numprocs)
   for (unsigned int i = 0; i < assys.size(); i++) {
     cm[i] = new CopyMesh(impl);
   }
+#endif
   return iBase_SUCCESS;
 }
-#endif
+
 CCrgen::CCrgen()
 // ---------------------------------------------------------------------------
 // Function: default constructor
