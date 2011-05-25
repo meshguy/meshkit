@@ -2,7 +2,9 @@ SUBDIRS = core algs extern
 
 if PARALLEL
 if HAVE_PARALLEL_MOAB
+if HAVE_PARALLEL_CGM
 SUBDIRS += parallel
+endif
 endif
 endif
 
