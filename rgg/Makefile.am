@@ -23,6 +23,7 @@ libMKrgg_la_SOURCES = \
 	crgen.cpp \
 	copymove.cpp \
 	copy_move_parallel.cpp\
+        copymove_parallel.cpp \
 	utils.cpp \
 	parser.hpp \
 	arraybase.hpp \

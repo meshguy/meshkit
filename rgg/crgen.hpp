@@ -49,6 +49,7 @@ public:
   int prepareIO (int argc, char *argv[], int myID, int numprocs);
   int load_meshes();
   int load_meshes_parallel(const int, const int);
+  int distribute_mesh(const int, const int);
   int load_geometries();
   int read_inputs_phase1 ();
   int read_inputs_phase2 ();
@@ -57,6 +58,9 @@ public:
   int banner();
   int copy_move();
   int copy_move_parallel(const int nrank, const int numprocs);
+  int copymove_parallel(const int nrank, const int numprocs);
+  int copymove_all(const int nrank, const int numprocs);
+  int set_copymove_coords();
   int merge_nodes();
   int merge_nodes_parallel(const int nrank, const int numprocs);
   int assign_gids();
@@ -306,8 +310,13 @@ public:
   std::string prob_type;
   std::vector<std::string> files, mk_files;
   std::vector<int> assm_meshfiles;
-  std::vector<int> assm_status;
+  std::vector< std::vector<int> > assm_location;
+  std::vector<std::vector<int> > position_core;
   std::vector<int> meshfile_proc;
+  std::vector<double> x_coord;
+  std::vector<double> y_coord;
+
+
 private:
 
   CopyMesh **cm;

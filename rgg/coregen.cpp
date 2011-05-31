@@ -13,13 +13,12 @@
 int main(int argc, char *argv[]) {
   //Initialize MPI
   int rank = 0, nprocs = 1;
-  
+
 #ifdef USE_MPI
   MPI::Init(argc, argv);
   nprocs = MPI::COMM_WORLD.Get_size();
   rank = MPI::COMM_WORLD.Get_rank();
 #endif
-  
   double ld_t = 0;
   int err = 0;
   int run_flag = 1;
@@ -60,10 +59,16 @@ int main(int argc, char *argv[]) {
       if (nprocs == 1) {
   	err = TheCore.load_meshes();
   	ERRORR("Failed to load meshes.", 1);
-	//  	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
+	//  	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());	
       } else {
 	err = TheCore.load_meshes_parallel(rank, nprocs);
 	ERRORR("Failed to load meshes.", 1);
+	
+	MPI::COMM_WORLD.Barrier();
+	if(nprocs > (int) TheCore.files.size()){
+	  err = TheCore.distribute_mesh(rank, nprocs);
+	  ERRORR("Failed to load meshes.", 1);
+	}
   	//Get a pcomm object
 #ifdef USE_MPI
 	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
@@ -73,8 +78,6 @@ int main(int argc, char *argv[]) {
       err = TheCore.load_geometries();
       ERRORR("Failed to load geometries", 1);
     }
-  
-
     if (TheCore.mem_tflag == true) {
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem1);
 
@@ -87,14 +90,14 @@ int main(int argc, char *argv[]) {
     // copy move
     /*********************************************/
     CClock ld_cm;
-    if (nprocs == 1) {
-      err = TheCore.copy_move();
-      ERRORR("Failed in copy move routine.", 1);
-    } else {
+    if (nprocs <= (int) TheCore.files.size()) {
       err = TheCore.copy_move_parallel(rank, nprocs);
       ERRORR("Failed in copy move routine.", 1);
+    } else {
+      err = TheCore.copymove_parallel(rank, nprocs);
+      ERRORR("Failed in copy move routine.", 1);
     }
-
+    
     if (TheCore.mem_tflag == true) {
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
 
@@ -202,11 +205,12 @@ int main(int argc, char *argv[]) {
       } else {
 #ifdef USE_MPI   
     	double write_time = MPI_Wtime();
-    	err = TheCore.save_mesh_parallel(rank, nprocs);
+	err = TheCore.save_mesh_parallel(rank, nprocs);
     	ERRORR("Failed to save o/p file.", 1);
     	write_time = MPI_Wtime() - write_time;
-    	if (rank == 0)
-    	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
+    	if (rank == 0){
+	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
+	}
 #endif
       }
     }
