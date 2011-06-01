@@ -61,16 +61,17 @@ int main(int argc, char *argv[]) {
   	ERRORR("Failed to load meshes.", 1);
 	//  	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());	
       } else {
+#ifdef USE_MPI	
 	err = TheCore.load_meshes_parallel(rank, nprocs);
 	ERRORR("Failed to load meshes.", 1);
-	
+
 	MPI::COMM_WORLD.Barrier();
+
 	if(nprocs > (int) TheCore.files.size()){
 	  err = TheCore.distribute_mesh(rank, nprocs);
 	  ERRORR("Failed to load meshes.", 1);
 	}
   	//Get a pcomm object
-#ifdef USE_MPI
 	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
 #endif
       }
