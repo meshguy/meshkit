@@ -11,7 +11,7 @@
 #include <string.h>
 int CCrgen::copymove_parallel(const int nrank, const int numprocs)
 // ---------------------------------------------------------------------------
-// Function: copy/move the assemblies based on the geometrytype and symmetry
+// Function: copy/move the assemblies based on the geometrytype and symmetry - Assume 1 meshfile in each instance
 // Input:    none
 // Output:   none
 // ---------------------------------------------------------------------------
@@ -55,9 +55,9 @@ int CCrgen::set_copymove_coords()
   if (!strcmp(geom_type.c_str(), "rectangular") && symm == 1) {
     if (strcmp(prob_type.c_str(), "mesh") == 0) {
       for (int n1 = 0; n1 < nringsx; n1++) {
-	y_coord[i] = n1 * pitchy;
-	y_coord[i] = -y_coord[i];
 	for (int n2 = 0; n2 < nringsy; n2++) {
+	  err = find_assm(i, assm_index);
+	  y_coord[i] = -n1 * pitchy;
 	  x_coord[i] = n2 * pitchx;
 	  i++;
 	}
@@ -127,7 +127,12 @@ int CCrgen::set_copymove_coords()
 	  for (int n2 = 0; n2 < n1+1; n2++) {
 
 	    err = find_assm(i, assm_index);
-
+	    if (-1 == assm_index){
+	      i++;
+	      if(n2 > (n1+1)/2)
+		++bd; // index for assemblies below diagonal needs updatation
+	      continue;
+	    }
 	    if(n2 <= n1/2){// before or equal to diagonal
 	      dx[0] = n2 * pitch;
 	      dx[1] = n1 * pitch * sin(PII/3.0);
@@ -142,10 +147,40 @@ int CCrgen::set_copymove_coords()
 	    i++;
 	  }
 	}
+	else{//n1 is odd
+	  for (int n2 = 0; n2 < n1; n2++) {
+	    err = find_assm(i, assm_index);
+	    if (-1 == assm_index){
+	      i++;
+	      if(n2 > (n1+1)/2)
+		++bd; // index for assemblies below diagonal needs updatation
+	      continue;
+
+	    }
+	    if(n2 <= (n1-1)/2){// before or equal to diagonal
+	      dx[0] = (2 * n2 + 1) * pitch / 2.0;
+	      dx[1] = n1 * pitch * sin(PII/3.0);
+
+	    }
+	    else{//below the diagonal 
+	      dx[0] = (n1 + 1 + bd) * pitch / 2.0; 
+	      if (bd == 0) // first n2 = 1 assembly
+		dx[1] = pitch * sin(PII/3.0);
+	      dx[1] = (n1 - 1 - bd) * pitch * sin(PII/3.0);
+	      ++bd;    
+	    }
+
+
+	    // starting from x-axis
+	    x_coord[i] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
+	    y_coord[i] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
+	    i++;
+	  }
+	}
+	bd = 0;
       }
     }
   }
-
   return iBase_SUCCESS;
 }
 
@@ -179,6 +214,10 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
   //std::cout << position_core[nrank][i] << "jii " << tot_assys << std::endl;
   for(int i =0; i < (int) position_core[nrank].size(); i++){
     assm_index = position_core[nrank][i];
+    if (-1 == assm_index) {
+      i++;
+      continue;
+    }
     //err = find_assm(i, assm_index);
     if(flag == 0){
       dx[0] = x_coord[assm_index] - dx_orig[0];

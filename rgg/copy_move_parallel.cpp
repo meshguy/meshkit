@@ -97,7 +97,7 @@ int CCrgen::copy_move_hex_flat_assys_p1_parallel(CopyMesh **cm,
       if(assm_index >= 0){
 	// check if this file is with the proc
 	int out = 0;
-	for(int c=0; c<assys.size(); c++){
+	for(int c=0; c < (int) assys.size(); c++){
 	  if(assys_index[c] == assm_index){
 	    //found assembly
 	    move_index=c;
@@ -141,7 +141,6 @@ int CCrgen::copy_move_hex_flat_assys_parallel(CopyMesh **cm, const int nrings,
   int new_ents_alloc, new_ents_size;
   int assm_index, cmove_index = 0;
   int flags[assys.size()];
-  int flag = 0;
   CMatrix<double> dx_orig(assys.size(), 3);
   dx_orig.Set(0.0);
   int i = 0;
@@ -169,7 +168,7 @@ int CCrgen::copy_move_hex_flat_assys_parallel(CopyMesh **cm, const int nrings,
       if(assm_index >= 0){
       	// check if this file is with the proc
       	int out = 0;
-      	for(int c=0; c<assys.size(); c++){
+      	for(int c=0; c < (int) assys.size(); c++){
       	  if(assys_index[c] == assm_index){
       	    //found assembly
       	    cmove_index=c;
@@ -265,7 +264,7 @@ int CCrgen::copy_move_hex_vertex_assys_p1_parallel(CopyMesh **cm,
 	if(assm_index >= 0){
 	  // check if this file is with the proc
 	  int out = 0;
-	  for(int c=0; c<assys.size(); c++){
+	  for(int c=0; c < (int) assys.size(); c++){
 	    if(assys_index[c] == assm_index){
 	      //found assembly
 	      move_index=c;
@@ -317,7 +316,7 @@ int CCrgen::copy_move_hex_vertex_assys_p1_parallel(CopyMesh **cm,
 	if(assm_index >= 0){
 	  // check if this file is with the proc
 	  int out = 0;
-	  for(int c=0; c<assys.size(); c++){
+	  for(int c=0; c < (int) assys.size(); c++){
 	    if(assys_index[c] == assm_index){
 	      //found assembly
 	      move_index=c;
@@ -418,7 +417,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	if(assm_index >= 0){
 	  // check if this file is with the proc
 	  int out = 0;
-	  for(int c=0; c<assys.size(); c++){
+	  for(int c=0; c < (int) assys.size(); c++){
 	    if(assys_index[c] == assm_index){
 	      //found assembly
 	      cmove_index=c;
@@ -494,7 +493,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	if(assm_index >= 0){
 	  // check if this file is with the proc
 	  int out = 0;
-	  for(int c=0; c<assys.size(); c++){
+	  for(int c=0; c < (int) assys.size(); c++){
 	    if(assys_index[c] == assm_index){
 	      //found assembly
 	      cmove_index=c;
@@ -608,6 +607,25 @@ int CCrgen::copy_move_one_twelfth_assys_p1_parallel(CopyMesh **cm,
 
     for (int n2 = 0; n2 < loc; n2++) {
       err = find_assm(i,assm_index);
+      if(assm_index >= 0){
+      	// check if this file is with the proc
+      	int out = 0;
+      	for(int c=0; c < (int) assys.size(); c++){
+      	  if(assys_index[c] == assm_index){
+      	    //found assembly
+      	    move_index=c;
+      	    out = 0;
+      	    break;
+      	  }
+	  else{
+	    out = 1;
+	  }
+      	}
+      	if(out == 1){
+      	  i++;
+      	  continue;
+      	}
+      }
       if (-1 == assm_index) {
         i++;
         continue;
@@ -683,6 +701,25 @@ int CCrgen::copy_move_one_twelfth_assys_parallel(CopyMesh **cm,
 
     for (int n2 = 0; n2 < loc; n2++) {
       err = find_assm(i,assm_index);
+      if(assm_index >= 0){
+      	// check if this file is with the proc
+      	int out = 0;
+      	for(int c=0; c < (int) assys.size(); c++){
+      	  if(assys_index[c] == assm_index){
+      	    //found assembly
+      	    cmove_index=c;
+      	    out = 0;
+      	    break;
+      	  }
+	  else{
+	    out = 1;
+	  }
+      	}
+      	if(out == 1){
+      	  i++;
+      	  continue;
+      	}
+      }
       if (-1 == assm_index) {
         i++;
         continue;
@@ -759,6 +796,25 @@ int CCrgen::copy_move_hex_full_assys_p1_parallel(CopyMesh **cm,
 
     for (int n2 = 1; n2 <= (nrings + t - 1); n2++) {
       err = find_assm(i,assm_index);
+      if(assm_index >= 0){
+      	// check if this file is with the proc
+      	int out = 0;
+      	for(int c=0; c < (int) assys.size(); c++){
+      	  if(assys_index[c] == assm_index){
+      	    //found assembly
+      	    move_index=c;
+      	    out = 0;
+      	    break;
+      	  }
+	  else{
+	    out = 1;
+	  }
+      	}
+      	if(out == 1){
+      	  i++;
+      	  continue;
+      	}
+      }
       if (-1 == assm_index) {
         i++;
         continue;
@@ -830,6 +886,25 @@ int CCrgen::copy_move_hex_full_assys_parallel(CopyMesh **cm,
 
     for (int n2 = 1; n2 <= (nrings + t - 1); n2++) {
       err = find_assm(i,assm_index);
+      if(assm_index >= 0){
+      	// check if this file is with the proc
+      	int out = 0;
+      	for(int c=0; c < (int) assys.size(); c++){
+      	  if(assys_index[c] == assm_index){
+      	    //found assembly
+      	    cmove_index=c;
+      	    out = 0;
+      	    break;
+      	  }
+	  else{
+	    out = 1;
+	  }
+      	}
+      	if(out == 1){
+      	  i++;
+      	  continue;
+      	}
+      }
       if (-1 == assm_index) {
         i++;
         continue;
@@ -909,7 +984,7 @@ int CCrgen::copy_move_sq_assys_p1_parallel(CopyMesh **cm,
       if(assm_index >= 0){
 	// check if this file is with the proc
 	int out = 0;
-	for(int c=0; c<assys.size(); c++){
+	for(int c=0; c < (int) assys.size(); c++){
 	  if(assys_index[c] == assm_index){
 	    //found assembly
 	    move_index=c;
@@ -988,7 +1063,7 @@ int CCrgen::copy_move_sq_assys_parallel(CopyMesh **cm,
       if(assm_index >= 0){
 	// check if this file is with the proc
 	int out = 0;
-	for(int c=0; c<assys.size(); c++){
+	for(int c=0; c < (int) assys.size(); c++){
 	  if(assys_index[c] == assm_index){
 	    //found assembly
 	    cmove_index=c;
