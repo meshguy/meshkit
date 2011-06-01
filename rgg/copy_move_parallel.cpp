@@ -300,14 +300,14 @@ int CCrgen::copy_move_hex_vertex_assys_p1_parallel(CopyMesh **cm,
 	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
 	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));      
 
-	if(flags[assm_index]==0){
+	if(flags[move_index]==0){
 	  move_verts(assys[move_index], dxnew);
 
 	  std::cout << "Copy/moved A: " << assm_index 
 		    <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 	}
 	i++;
-	flags[assm_index] = 1;
+	flags[move_index] = 1;
       }
     }
     else{// n1 is odd
@@ -358,14 +358,14 @@ int CCrgen::copy_move_hex_vertex_assys_p1_parallel(CopyMesh **cm,
 	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
 
-	if(flags[assm_index]==0){
+	if(flags[move_index]==0){
 	  move_verts(assys[move_index], dxnew);
 
 	  std::cout << "Copy/moved A: " << assm_index 
 		    <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
 	}
 	i++;
-	flags[assm_index] = 1;
+	flags[move_index] = 1;
       }
     }
     bd = 0;
@@ -455,7 +455,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	dxnew[0] = (dx[0] * cos(PII/6.0) + dx[1] * sin(PII/6.0));
 	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));      
 
-	if(flags[assm_index]==1){
+	if(flags[cmove_index]==1){
 	  dxnew[0]-=dx_orig(cmove_index+1, 1);
 	  dxnew[1]-=dx_orig(cmove_index+1, 2);
 	  dxnew[2]-=dx_orig(cmove_index+1, 3);
@@ -480,7 +480,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	}
 	else{
 	  i++;
-	  flags[assm_index]=1;
+	  flags[cmove_index]=1;
 	  dx_orig(cmove_index+1, 1)=dxnew[0];
 	  dx_orig(cmove_index+1, 2)=dxnew[1];
 	  dx_orig(cmove_index+1, 3)=dxnew[2];
@@ -537,7 +537,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	dxnew[1] = (dx[1] * cos(PII/6.0) - dx[0] * sin(PII/6.0));
 
 
-	if(flags[assm_index]==1){
+	if(flags[cmove_index]==1){
 	  dxnew[0]-=dx_orig(cmove_index+1, 1);
 	  dxnew[1]-=dx_orig(cmove_index+1, 2);
 	  dxnew[2]-=dx_orig(cmove_index+1, 3);
@@ -561,7 +561,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	}
 	else{
 	  i++;
-	  flags[assm_index]=1;
+	  flags[cmove_index]=1;
 	  dx_orig(cmove_index+1, 1)=dxnew[0];
 	  dx_orig(cmove_index+1, 2)=dxnew[1];
 	  dx_orig(cmove_index+1, 3)=dxnew[2];
@@ -633,7 +633,7 @@ int CCrgen::copy_move_one_twelfth_assys_p1_parallel(CopyMesh **cm,
     
       dxnew[1] = dx[1] - n2 * pitch * sin(PII/3.0);
       dxnew[0] = dx[0] + n2 * pitch * cos(PII/3.0);
-      if(flags[assm_index] == 0){
+      if(flags[move_index] == 0){
 
  	move_verts(assys[move_index], dxnew);
 
@@ -641,7 +641,7 @@ int CCrgen::copy_move_one_twelfth_assys_p1_parallel(CopyMesh **cm,
 		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
       }
       i++;
-      flags[assm_index] = 1;
+      flags[move_index] = 1;
     }
     dx[0] = 0.0;
     dx[1] = 0.0;
@@ -728,7 +728,7 @@ int CCrgen::copy_move_one_twelfth_assys_parallel(CopyMesh **cm,
       dxnew[1] = dx[1] - n2 * pitch * sin(PII/3.0);
       dxnew[0] = dx[0] + n2 * pitch * cos(PII/3.0);
 
-      if(flags[assm_index]==1){
+      if(flags[cmove_index]==1){
 	dxnew[0]-=dx_orig(cmove_index+1, 1);
 	dxnew[1]-=dx_orig(cmove_index+1, 2);
 	dxnew[2]-=dx_orig(cmove_index+1, 3);
@@ -757,7 +757,7 @@ int CCrgen::copy_move_one_twelfth_assys_parallel(CopyMesh **cm,
       }
       else{
 	i++;
-	flags[assm_index]=1;
+	flags[cmove_index]=1;
 	dx_orig(cmove_index+1, 1)=dxnew[0];
 	dx_orig(cmove_index+1, 2)=dxnew[1];
 	dx_orig(cmove_index+1, 3)=dxnew[2];
@@ -800,7 +800,9 @@ int CCrgen::copy_move_hex_full_assys_p1_parallel(CopyMesh **cm,
       	// check if this file is with the proc
       	int out = 0;
       	for(int c=0; c < (int) assys.size(); c++){
+
       	  if(assys_index[c] == assm_index){
+	    //  std::cout << "we are rank " << nrank << " asembly " << c << std::endl;
       	    //found assembly
       	    move_index=c;
       	    out = 0;
@@ -830,15 +832,13 @@ int CCrgen::copy_move_hex_full_assys_p1_parallel(CopyMesh **cm,
 	  (2 * nrings - n1 -1) * pitch / 2.0;
 	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0))); 
       } 
-      if(flags[assm_index] == 0){
-
+      if(flags[move_index] == 0){
  	move_verts(assys[move_index], dx);
-
 	std::cout << "Copy/moved A: " << assm_index 
 		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
       }
       i++;
-      flags[assm_index] = 1;
+      flags[move_index] = 1;
     }
   }
   return iBase_SUCCESS;
@@ -921,7 +921,7 @@ int CCrgen::copy_move_hex_full_assys_parallel(CopyMesh **cm,
 	dx[1] = -((n1 -1) * (0.5 * pitch / sin(PII/3.0) + 0.5 * pitch * sin(PII/6.0) / sin(PII/3.0))); 
       }     
 
-      if(flags[assm_index]==1){
+      if(flags[cmove_index]==1){
 	dx[0]-=dx_orig(cmove_index+1, 1);
 	dx[1]-=dx_orig(cmove_index+1, 2);
 	dx[2]-=dx_orig(cmove_index+1, 3);
@@ -950,7 +950,7 @@ int CCrgen::copy_move_hex_full_assys_parallel(CopyMesh **cm,
       }
       else{
 	i++;
-	flags[assm_index]=1;
+	flags[cmove_index]=1;
 	dx_orig(cmove_index+1, 1)=dx[0];
 	dx_orig(cmove_index+1, 2)=dx[1];
 	dx_orig(cmove_index+1, 3)=dx[2];
@@ -1005,7 +1005,7 @@ int CCrgen::copy_move_sq_assys_p1_parallel(CopyMesh **cm,
         continue;
       }
 
-      if(flags[assm_index] == 0){
+      if(flags[move_index] == 0){
 
 	dx[0] = n2 * pitchx;
  	move_verts(assys[move_index], dx);
@@ -1014,7 +1014,7 @@ int CCrgen::copy_move_sq_assys_p1_parallel(CopyMesh **cm,
 		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
       }
       i++;
-      flags[assm_index] = 1;
+      flags[move_index] = 1;
     }
   }
   return iBase_SUCCESS;
@@ -1087,7 +1087,7 @@ int CCrgen::copy_move_sq_assys_parallel(CopyMesh **cm,
       new_ents = NULL;
       new_ents_alloc = 0;
 
-      if(flags[assm_index]==1){
+      if(flags[cmove_index]==1){
 	dx[0]-=dx_orig(cmove_index+1, 1);
 	dx[1]-=dx_orig(cmove_index+1, 2);
 	dx[2]-=dx_orig(cmove_index+1, 3);
@@ -1110,7 +1110,7 @@ int CCrgen::copy_move_sq_assys_parallel(CopyMesh **cm,
       }
       else{
 	i++;
-	flags[assm_index]=1;
+	flags[cmove_index]=1;
 	dx_orig(cmove_index+1, 1)=dx[0];
 	dx_orig(cmove_index+1, 2)=dx[1];
 	dx_orig(cmove_index+1, 3)=dx[2];

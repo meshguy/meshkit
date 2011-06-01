@@ -66,6 +66,7 @@ public:
   int assign_gids();
   int assign_gids_parallel(const int nrank, const int numprocs);
   int save_mesh();
+  int save_mesh(int rank);
   int save_mesh_parallel(const int nrank, const int numprocs);
   int save_geometry();
   int close();

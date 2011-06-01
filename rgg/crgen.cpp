@@ -18,6 +18,21 @@
    ======================= CCrgen class =============================
    ================================================================== */
 
+
+int CCrgen::save_mesh(int nrank) {
+  // export proc- nrank mesh
+  std::ostringstream os;
+  std::string fname;
+  fname = iname;
+  os << fname << nrank << ".h5m";
+  fname = os.str();
+  iMesh_save(impl, root_set, fname.c_str(), NULL, &err, strlen(fname.c_str()), 0);
+  ERRORR("Trouble writing output mesh.", err);
+  std::cout << "Saved mesh file: " << fname.c_str() << std::endl;
+
+  return iBase_SUCCESS;
+}
+
 int CCrgen::assign_gids_parallel(const int nrank, const int numprocs) {
 #ifdef USE_MPI   
   // assign new global ids
@@ -318,7 +333,7 @@ CCrgen::CCrgen()
   extrude_flag = false;
   mem_tflag = false;
   global_ids = true;
-  merge_tol = 1.0e-9;
+  merge_tol = 1.0e-4;
   do_merge = 1;
   update_sets = 0;
   merge_tag = NULL;

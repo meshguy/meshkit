@@ -210,15 +210,9 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
   double dx_orig[3], dx[3];
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
-  //for(int i =0; i < position_core[nrank].size(); i++)
-  //std::cout << position_core[nrank][i] << "jii " << tot_assys << std::endl;
+
   for(int i =0; i < (int) position_core[nrank].size(); i++){
     assm_index = position_core[nrank][i];
-    if (-1 == assm_index) {
-      i++;
-      continue;
-    }
-    //err = find_assm(i, assm_index);
     if(flag == 0){
       dx[0] = x_coord[assm_index] - dx_orig[0];
       dx[1] = y_coord[assm_index] - dx_orig[1];

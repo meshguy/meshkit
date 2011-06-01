@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
     	ERRORR("Failed to assign global ids.", 1);
       }
       else{
-    	err = TheCore.assign_gids_parallel(rank, nprocs);
+	err = TheCore.assign_gids_parallel(rank, nprocs);
     	ERRORR("Failed to assign global ids.", 1);
       }
 
@@ -204,6 +204,8 @@ int main(int argc, char *argv[]) {
     	err = TheCore.save_mesh();
     	ERRORR("Failed to save o/p file.", 1);
       } else {
+	//	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
+    	ERRORR("Failed to save o/p file.", 1);
 #ifdef USE_MPI   
     	double write_time = MPI_Wtime();
 	err = TheCore.save_mesh_parallel(rank, nprocs);
