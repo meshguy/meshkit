@@ -634,6 +634,26 @@ void ModelEnt::boundary(int dim,
         // either way we need the d-2 entities
       MEntVector bridges;
       this_entity->get_adjacencies(dimension()-2, bridges);
+      if (dimension()-2==0 && bridges.size()==2)// edge case; this_entity is an edge
+      {
+        // if the vertices are reversed, change them back
+        int sense_vertices = 0;
+        iGeom::Error rg = igeom_instance()->getEgVtxSense(this_entity->geom_handle(),
+            bridges[0]->geom_handle(),
+            bridges[1]->geom_handle(),  sense_vertices );
+        IBERRCHK(rg, "Trouble getting edge sense");
+        if (-1==sense_vertices)
+        {
+          // reverse the order of bridges;
+          // a better fix would be to have the bridges from get_adjacencies in order
+          // this would mean that children of sets should be returned in the order they
+          // were inserted as children (maybe too hard to control that)
+          ModelEnt * tmp = bridges[0];
+          bridges[0] = bridges[1];
+          bridges[1] = tmp;
+        }
+
+      }
       
         // only remove from the list of candidates if it's not dual-sensed
       if (0 != this_sense) 

@@ -117,6 +117,9 @@ bool CAMALSurfEval::uv_from_position(double x, double y, double z,
 {
   iGeom::Error err = modelEnt->igeom_instance()->getEntXYZtoUV(modelEnt->geom_handle(), x, y, z, u, v);
   IBERRCHK(err, "Trouble getting parameters from position.");
+  if (err)
+    return false;
+  return true;
 }
 
 bool CAMALSurfEval::uv_from_position(double x, double y, double z, 
@@ -127,6 +130,9 @@ bool CAMALSurfEval::uv_from_position(double x, double y, double z,
   IBERRCHK(err, "Trouble getting parameters from position.");
   err = modelEnt->igeom_instance()->getEntUVtoXYZ(modelEnt->geom_handle(), u, v, cx, cy, cz);
   IBERRCHK(err, "Trouble getting position from parameters.");
+  if (err)
+    return false;
+  return true;
 }
 
 void CAMALSurfEval::position_from_uv(double u, double v, 
@@ -155,6 +161,7 @@ double tArea(double * a, double *b, double *c, double * normal)
   result += (AB[1] * AC[2] - AB[2] * AC[1]) * normal[0];
   result += (AB[2] * AC[0] - AB[0] * AC[2]) * normal[1];
   result += (AB[0] * AC[1] - AB[1] * AC[0]) * normal[2];
+  return result;
 }
 
 // decide if the boundary loops are positively oriented around normal
@@ -177,11 +184,11 @@ void CAMALSurfEval::correct_orientation(std::vector<int> & loop_sizes,
   {
     // for each loop, compute the oriented area of each triangle
     int current_loop_size = loop_sizes[k];
-    unsigned int startIndex = loops[start_current_loop];
-    for (unsigned int i = 1; i < current_loop_size - 1; i++)
+    int startIndex = loops[start_current_loop];
+    for ( int i = 1; i < current_loop_size - 1; i++)
     {
-      unsigned int i1 = loops[start_current_loop + i];
-      unsigned int i2 = loops[start_current_loop + (i + 1)];
+      int i1 = loops[start_current_loop + i];
+      int i2 = loops[start_current_loop + (i + 1)];
 
       double oArea = tArea(&bdy_coords[3 * startIndex], &bdy_coords[3 * i1],
           &bdy_coords[3 * i2], normal);
