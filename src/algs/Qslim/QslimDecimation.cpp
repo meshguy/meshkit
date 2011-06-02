@@ -797,9 +797,8 @@ int QslimDecimation::Init() {
 	// store the normals/planes computed at each triangle
 	// we may need just the normals, but compute planes, it is about the same job
 	double defPlane[] = {0., 0., 1., 0.};
-	rval = mb->tag_create("PlaneTriangleData", 4*sizeof(double), moab::MB_TAG_DENSE,
-			/* moab::Tag */ planeDataTag,
-				&defPlane);
+	rval = mb->tag_get_handle("PlaneTriangleData", 4, moab::MB_TYPE_DOUBLE, planeDataTag,
+	    moab::MB_TAG_DENSE|moab::MB_TAG_CREAT, &defPlane );
 
 	// compute the triangle plane and store it, for each triangle
 	for (moab::Range::iterator itr = triangles.begin(); itr != triangles.end(); itr++) {
@@ -822,13 +821,14 @@ int QslimDecimation::Init() {
 	//  this will be used instead of v->uniqID in the vinfo array
 	int def_data = -1;
 
-	rval = mb->tag_create("uniqID", sizeof(int), moab::MB_TAG_DENSE, moab::MB_TYPE_INTEGER, uniqIDtag,
-			&def_data);
+	rval = mb->tag_get_handle("uniqID", 1, moab::MB_TYPE_INTEGER, uniqIDtag,
+	    moab::MB_TAG_DENSE|moab::MB_TAG_EXCL,	&def_data);
 	if (moab::MB_SUCCESS != rval)
 		return 1;
 
 	unsigned char def_data_bit = 1;// valid by default
-	rval = mb->tag_create("valid", 1, moab::MB_TAG_BIT, validTag, &def_data_bit);
+
+	rval = mb->tag_get_handle("valid", 1, moab::MB_TYPE_BIT, validTag, moab::MB_TAG_EXCL|moab::MB_TAG_BIT, &def_data_bit);
 	if (moab::MB_SUCCESS != rval)
 		return 1;
 
@@ -836,7 +836,7 @@ int QslimDecimation::Init() {
 	{
       double cost_default = 0.;
 
-      rval = mb->tag_create("costTAG", sizeof(double), moab::MB_TAG_DENSE, moab::MB_TYPE_DOUBLE, costTag,
+      rval = mb->tag_get_handle("costTAG", 1, moab::MB_TYPE_DOUBLE, costTag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT,
             &cost_default);
       if (moab::MB_SUCCESS != rval)
          return 1;
