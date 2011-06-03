@@ -76,9 +76,9 @@ int CCrgen::close_parallel(const int nrank, const int numprocs)
 #ifdef USE_MPI
   // deallocate ... deallocate ... deallocate
   if (prob_type == "mesh") {
-//    for (unsigned int i = 0; i < assys.size(); i++) {
-//      delete cm[i];
-//    }
+    for (unsigned int i = 0; i < assys.size(); i++) {
+      delete cm[i];
+    }
 
     iMesh_dtor(impl, &err);
     ERRORR("Failed in call iMesh_dtor", err);
