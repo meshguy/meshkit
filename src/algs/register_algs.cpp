@@ -13,8 +13,10 @@
 
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
+#ifdef HAVE_PARALLEL_CGM
 #include "meshkit/ParallelMesher.hpp"
 #include "meshkit/ParExchangeMesh.hpp"
+#endif
 #endif
 #endif
 
@@ -43,8 +45,10 @@ REGISTER_MESH_OP(QuadMesher);
 
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
+#ifdef HAVE_PARALLEL_CGM
 REGISTER_MESH_OP(ParallelMesher);
 REGISTER_MESH_OP(ParExchangeMesh);
+#endif
 #endif
 #endif
 
