@@ -279,17 +279,26 @@ if test "xyes" = "x$HAVE_CGM"; then
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CGM"
 fi
 
-CPPFLAGS="$CPPFLAGS -I$IGEOM_DIR/include"
-AC_CHECK_HEADER([CGMParallelComm.hpp], [HAVE_PARALLEL_CGM=yes], [HAVE_PARALLEL_CGM=no])
+# Check for parallel support
+AC_MSG_CHECKING([For CGMParallelComm in libcgm])
+AC_LINK_IFELSE([
+   AC_LANG_PROGRAM(
+[class CGMParallelComm{ public: static CGMParallelComm* get_pcomm(const 
+int); };],
+[CGMParallelComm::get_pcomm(0);])],
+[HAVE_PARALLEL_CGM=yes],[HAVE_PARALLEL_CGM=no])
+AC_MSG_RESULT([$HAVE_PARALLEL_CGM])
 AM_CONDITIONAL(HAVE_PARALLEL_CGM, [test "x$HAVE_PARALLEL_CGM" = "xyes"])
 AC_SUBST([HAVE_PARALLEL_CGM])
 if test "xyes" = "x$HAVE_PARALLEL_CGM"; then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_PARALLEL_CGM"
 fi
 
+# Restore state
 LIBS="$old_LIBS"
 LDFLAGS="$old_LDFLAGS"
 CPPFLAGS="$old_CPPFLAGS"
+AC_LANG_POP([C++])
 
 ###############################################################################
 #                           Optional Tools
