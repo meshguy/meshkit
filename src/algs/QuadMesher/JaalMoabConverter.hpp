@@ -7,7 +7,6 @@
 #include <SimpleArray.hpp>
 #include <iMesh.h>
 #include <MBInterface.hpp>
-#endif
 
 using namespace Jaal;
 
@@ -40,5 +39,7 @@ private:
     std::map<iBase_EntityHandle, PNode> jaalnode;
     std::map<iBase_EntityHandle, PFace> jaalface;
 };
+
+#endif
 
 #endif

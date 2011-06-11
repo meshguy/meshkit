@@ -36,8 +36,10 @@ Doublet::isSafe() const
 
     if (vertex->isRemoved()) return 0;
 
-    FaceSequence apexfaces = vertex->getRelations2();
-    for (size_t i = 0; i < apexfaces.size(); i++)
+    const FaceSequence &apexfaces = vertex->getRelations2();
+
+    int nSize = apexfaces.size();
+    for (int i = 0; i < nSize; i++)
     {
         Face *face = apexfaces[i];
         if (face->isRemoved()) return 0;
@@ -51,8 +53,10 @@ Doublet::isSafe() const
 void
 Doublet::makeShield()
 {
-    FaceSequence apexfaces = vertex->getRelations2();
-    for (size_t i = 0; i < apexfaces.size(); i++)
+    const FaceSequence &apexfaces = vertex->getRelations2();
+
+    size_t nSize = apexfaces.size();
+    for (size_t i = 0; i < nSize; i++)
     {
         Face *face = apexfaces[i];
         face->setVisitMark(1);
@@ -66,13 +70,11 @@ QuadCleanUp::search_interior_doublets()
 {
     //
     ///////////////////////////////////////////////////////////////////////////
-    // An interior doublet is a vertex, which is shared by two face neighbours. 
-    // They are undesirables in the quadmesh as it would mean the angle is 180 
+    // An interior doublet is a vertex, which is shared by two face neighbours.
+    // They are undesirables in the quadmesh as it would mean the angle is 180
     // between some adjacent edges...
-    // 
+    //
     ///////////////////////////////////////////////////////////////////////////
-
-    int relexist2 = mesh->build_relations(0, 2);
 
     size_t numnodes = mesh->getSize(0);
 
@@ -92,24 +94,18 @@ QuadCleanUp::search_interior_doublets()
     for (size_t i = 0; i < numnodes; i++)
     {
         Vertex *vertex = mesh->getNodeAt(i);
-        if (isDoublet(vertex))
+        if( !vertex->isRemoved() )
         {
-            Doublet newdoublet(mesh, vertex);
-            if (newdoublet.isSafe())
+            if (isDoublet(vertex))
             {
-                newdoublet.makeShield();
-                vDoublets.push_back(newdoublet);
+                Doublet newdoublet(mesh, vertex);
+                if (newdoublet.isSafe())
+                {
+                    newdoublet.makeShield();
+                    vDoublets.push_back(newdoublet);
+                }
             }
         }
-    }
-
-    if (!relexist2)
-        mesh->clear_relations(0, 2);
-
-    if (vDoublets.size())
-    {
-        cout << "Info: Number of interior doublets Detected : "
-                << vDoublets.size() << endl;
     }
 
     return vDoublets;
@@ -130,10 +126,10 @@ QuadCleanUp::insert_doublet(Face *face, Vertex *v0, Vertex *v2)
     if( pos < 0) return NULL;
 
     assert( v2 == face->getNodeAt( (pos+2)%4 ) );
- 
+
     Vertex *o1 = face->getNodeAt( (pos+1)%4 );
     Vertex *o2 = face->getNodeAt( (pos+3)%4 );
-   
+
     //  Creating a doublet in the mesh changes:
     //  (1)  insert new node
     //  (2)  one old face is removed
@@ -187,17 +183,17 @@ QuadCleanUp::insert_boundary_doublet(Face *face)
     //
     //                                  X  ( Internal Vertex)
     //                               .      .
-    //	                           .           .				
+    //	                           .           .
     //                           .               .
     //                         .                   .
     //               ********X...........X...........X************************
-    //        Boundary                 Singlet                Boundary 
+    //        Boundary                 Singlet                Boundary
     //
     //   There is one quad on the boundary with three nodes on the boundary and
     //   one internal nodes. In order to remove the singlet node, we artifically
     //   create one doublet between the internal node and the singlet node.
     ////////////////////////////////////////////////////////////////////////////
-  
+
     if (!face->isBoundary())
         return NULL;
 
@@ -233,29 +229,29 @@ QuadCleanUp::insert_boundary_doublet(Face *face)
 int
 Doublet::remove()
 {
-    if (vertex->isBoundary())
-        return 1;
+    if (vertex->isRemoved() || vertex->isBoundary()) return 1;
 
-    FaceSequence neighs = vertex->getRelations2();
+    const FaceSequence &neighs = vertex->getRelations2();
     assert(neighs.size() > 0);
 
-    if (neighs.size() != 2)
-        return 1;
+    if (neighs.size() != 2) return 1;
 
-    assert(neighs[0] != neighs[1]);
+    Face *face0 = neighs[0];
+    Face *face1 = neighs[1];
+
+    assert(face0 != face1 );
+
+    if (face0->isRemoved() || face1->isRemoved() )
+        return 1;
 
     Vertex *d1 = NULL, *d2 = NULL, *o1 = NULL, *o2 = NULL;
 
-    NodeSequence connect = neighs[0]->getNodes();
+    NodeSequence connect = face0->getNodes();
     if (connect.size() != 4)
-        return 1;
-
-    if (neighs[0]->isRemoved())
-        return 2;
-    if (neighs[1]->isRemoved())
         return 2;
 
-    for (size_t i = 0; i < connect.size(); i++)
+    int nC = connect.size();
+    for (int i = 0; i < nC; i++)
     {
         if (connect[i] == vertex)
         {
@@ -266,11 +262,12 @@ Doublet::remove()
         }
     }
 
-    connect = neighs[1]->getNodes();
+    connect = face1->getNodes();
     if (connect.size() != 4)
         return 1;
 
-    for (size_t i = 0; i < connect.size(); i++)
+    nC = connect.size();
+    for (int i = 0; i < nC; i++)
     {
         if (connect[i] == vertex)
         {
@@ -285,32 +282,21 @@ Doublet::remove()
     assert(o2);
     assert(o1 != o2);
 
-    d1->removeRelation2(neighs[0]);
-    d1->removeRelation2(neighs[1]);
-
-    d2->removeRelation2(neighs[0]);
-    d2->removeRelation2(neighs[1]);
-
-    o1->removeRelation2(neighs[0]);
-    o2->removeRelation2(neighs[1]);
+    // Change the connectivity of face0 and face1 is removed.
+    mesh->deactivate( face0 );
+    mesh->deactivate( face1 );
 
     connect[0] = d1;
     connect[1] = o1;
     connect[2] = d2;
     connect[3] = o2;
 
-    Face *newquad = Face::newObject();
-    newquad->setNodes(connect);
-    mesh->addFace(newquad);
+    // Reuse one of the face
+    face0->setNodes( connect );
+    mesh->reactivate( face0 );
 
-    d1->addRelation2(newquad);
-    d2->addRelation2(newquad);
-
-    o1->addRelation2(newquad);
-    o2->addRelation2(newquad);
-
-    neighs[0]->setStatus( MeshEntity::REMOVE);
-    neighs[1]->setStatus( MeshEntity::REMOVE);
+    // Other face and doublet die.
+    face1->setStatus( MeshEntity::REMOVE);
     vertex->setStatus( MeshEntity::REMOVE);
 
     return 0;
@@ -321,31 +307,18 @@ Doublet::remove()
 int
 QuadCleanUp::remove_doublets_once()
 {
-    int relexist = mesh->build_relations(0, 2);
-
     search_interior_doublets();
 
     int ncount = 0;
-    for (size_t i = 0; i < vDoublets.size(); i++)
+    size_t nSize = vDoublets.size();
+
+    for (size_t i = 0; i < nSize; i++)
     {
         int err = vDoublets[i].remove();
-        if (!err)
-            ncount++;
+        if (!err) ncount++;
     }
+    cout << "Info: #Doublets removed : " << ncount << endl;
 
-    if (ncount)
-    {
-        mesh->prune();
-        mesh->enumerate(0);
-        mesh->enumerate(2);
-        cout << "Info: Number of doublets committed : " << ncount << endl;
-        mesh->collect_garbage();
-    }
-
-    mesh->setBoundaryKnown(0);
-
-    if (!relexist)
-        mesh->clear_relations(0, 2);
 
     return ncount;
 }
@@ -355,18 +328,30 @@ QuadCleanUp::remove_doublets_once()
 int
 QuadCleanUp::remove_interior_doublets()
 {
+    StopWatch swatch;
+    swatch.start();
+
     if (!mesh->isPruned()) mesh->prune();
+
+    int relexist2 = mesh->build_relations(0, 2);
 
     mesh->search_boundary();
 
     // It is possible that removal of doublet may create singlets on the boundary
     // so, it is better to call doublets first and then call to singlet removal next.
-
     while (1)
     {
         int ncount = remove_doublets_once();
         if (ncount == 0) break;
     }
+
+    swatch.stop();
+
+    if (!relexist2)
+        mesh->clear_relations(0, 2);
+
+    cout << "Info:  Doublet removal execution time : " << swatch.getSeconds() << endl;
+    if (!mesh->isPruned()) mesh->prune();
 
     if (vDoublets.empty()) return 0;
 

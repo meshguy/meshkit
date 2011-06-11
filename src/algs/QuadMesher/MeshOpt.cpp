@@ -4,21 +4,42 @@
 #ifdef HAVE_MESQUITE
 #include "Mesquite_all_headers.hpp"
 using namespace Mesquite;
-using Mesquite::MsqError;
 #endif
 
-using namespace Jaal;
-
-int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
+int Jaal::MeshOptimization::shape_optimize(Jaal::Mesh *mesh)
 {
+    int topo = mesh->isHomogeneous();
 
+    if( topo == 3 )
+    {
+        shape_tri_optimize(mesh);
+        return 0;
+    }
+
+    if( topo == 4 )
+    {
+        vector<Vertex*> steiner;
+        Mesh *trimesh = Jaal::quad_to_tri4( mesh, steiner);
+//      Mesh *trimesh = Jaal::quad_to_tri2( mesh );
+        assert( trimesh );
+        shape_tri_optimize(trimesh);
+        trimesh->deleteFaces();
+        for( size_t i = 0; i < steiner.size(); i++)
+            delete steiner[i];
+        delete trimesh;
+        return 0;
+    }
+
+    return 1;
+}
+
+int Jaal::MeshOptimization::shape_tri_optimize(Jaal::Mesh *mesh)
+{
 #ifdef HAVE_MESQUITE
     MsqError err;
 
     unsigned long int numnodes = mesh->getSize(0);
     unsigned long int numfaces = mesh->getSize(2);
-
-    int relexist2 = mesh->build_relations(0, 2);
 
     //
     //////////////////////////////////////////////////////////////////////////////
@@ -35,89 +56,64 @@ int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
 
     mesh->search_boundary();
 
-    for (size_t i = 0; i < numfaces; i++)
-    {
-        Face *face = mesh->getFaceAt(i);
-        face->setVisitMark(0);
-    }
-
-    vector<int> vfixed(numnodes);
+    std::map<size_t,size_t> nodemap;
+    size_t index = 0;
     for (size_t i = 0; i < numnodes; i++)
     {
         Vertex *vertex = mesh->getNodeAt(i);
-        vfixed[i] = 0;
-        if (vertex->isBoundary())
+        if( !vertex->isRemoved() )
         {
-            vfixed[i] = 1;
-        }
-        else
-        {
-            FaceSequence vfaces = vertex->getRelations2();
-            if (vfaces.size() == 2)
-            {
-                vfaces[0]->setVisitMark(1);
-                vfaces[1]->setVisitMark(1);
-            }
+            nodemap[vertex->getID()] = index++;
         }
     }
+    assert( nodemap.size() == index );
 
-    if (!relexist2) mesh->clear_relations(0, 2);
+    int numActiveNodes = nodemap.size();
+    vector<int> vfixed;
+    vfixed.resize(numActiveNodes);
+    for (size_t i = 0; i < numnodes; i++)
+    {
+        Vertex *vertex = mesh->getNodeAt(i);
+        if( !vertex->isRemoved() )
+        {
+            int lid = nodemap[vertex->getID()];
+            if (vertex->isBoundary())
+                vfixed[lid] = 1;
+            else
+                vfixed[lid] = 0;
+        }
+    }
 
     size_t noptfaces = 0;
-
-    vector<unsigned long int> vNodes;
-    double coords[4][3];
-    Point3D xyz;
-    vNodes.reserve(4 * numfaces);
-
-    for (size_t i = 0; i < numfaces; i++)
+    for( size_t i = 0; i < numfaces; i++)
     {
-        Face *face = mesh->getFaceAt(i);
-//      if (face->invertedAt() >= 0) face->setVisitMark(1);
-        int nsize = face->getSize(0);
-        for( int j = 0; j <  nsize; j++) {
-             xyz = face->getNodeAt(j)->getXYZCoords();
-             coords[j][0] =  xyz[0];
-             coords[j][1] =  xyz[1];
-             coords[j][2] =  xyz[2];
-        }
- 
-        if( nsize == 4 ) 
-            if (v_quad_maximum_angle(nsize, coords) > 179) face->setVisitMark(1);
-
-        if (face->isVisited())
-        {
-            for (int j = 0; j < face->getSize(0); j++)
-            {
-                Vertex *vertex = mesh->getNodeAt(j);
-                vfixed[ vertex->getID() ] = 1;
-            }
-        }
-        else
-        {
-            noptfaces++;
-            for (int j = 0; j < face->getSize(0); j++)
-            {
-                Vertex *v = face->getNodeAt(j);
-                vNodes.push_back(v->getID());
-            }
-        }
+        Face *f = mesh->getFaceAt(i);
+        if( !f->isRemoved() ) noptfaces++;
     }
 
-    vector<double> vCoords = mesh->getCoordsArray();
+    vector<size_t>  vNodes;
+    vector<double>  vCoords;
+    vector<size_t>  l2g;
+    vector<int>     etopo;
+
+    mesh->getCoordsArray( vCoords, l2g );
+    mesh->getNodesArray( vNodes, etopo );
 
     Mesquite::ArrayMesh *optmesh = NULL;
 
     int topo = mesh->isHomogeneous();
 
+    numnodes = vCoords.size()/3;
+    assert( vfixed.size() == numnodes );
+
     if (topo == 4)
         optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
                                           noptfaces, Mesquite::QUADRILATERAL, &vNodes[0]);
-    if (topo == 3) {
-        cout << " Hello " << endl;
+    if (topo == 3)
+    {
         optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
                                           noptfaces, Mesquite::TRIANGLE, &vNodes[0]);
-   }
+    }
 
     if (optmesh == NULL) return 1;
 
@@ -159,133 +155,134 @@ int Jaal::MeshOptimization::shape_optimize(Mesh *mesh)
         return 2;
     }
 
-    mesh->setCoordsArray(vCoords);
+    mesh->setCoordsArray(vCoords, l2g);
     delete optmesh;
 
     return 0;
-
 #endif
+
     return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
+
 int Jaal::MeshOptimization::untangle(Mesh *mesh)
 {
 #ifdef HAVE_MESQUITE
-    MsqError err;
-    unsigned long int numnodes = mesh->getSize(0);
-    unsigned long int numfaces = mesh->getSize(2);
+    /*
+        MsqError err;
+        unsigned long int numnodes = mesh->getSize(0);
+        unsigned long int numfaces = mesh->getSize(2);
 
-    mesh->search_boundary();
+        mesh->search_boundary();
 
-    vector<int> vfixed(numnodes);
-    for (size_t i = 0; i < numnodes; i++)
-    {
-        Vertex *vertex = mesh->getNodeAt(i);
-        assert(vertex->getID() == i);
-        vfixed[i] = 0;
-        if (vertex->isBoundary())
-        {
-            vfixed[i] = 1;
+        vector<int> vfixed(numnodes);
+        for (size_t i = 0; i < numnodes; i++) {
+            Vertex *vertex = mesh->getNodeAt(i);
+            assert(vertex->getID() == i);
+            vfixed[i] = 0;
+            if (vertex->isBoundary()) {
+                vfixed[i] = 1;
+            }
         }
-    }
 
-    vector<unsigned long int> vNodes;
-    vNodes.reserve(4 * numfaces);
+        vector<unsigned long int> vNodes;
+        vNodes.reserve(4 * numfaces);
 
-    for (size_t i = 0; i < numfaces; i++)
-    {
-        Face *face = mesh->getFaceAt(i);
-        for (int j = 0; j < face->getSize(0); j++)
-        {
-            Vertex *v = face->getNodeAt(j);
-            vNodes.push_back(v->getID());
+        for (size_t i = 0; i < numfaces; i++) {
+            Face *face = mesh->getFaceAt(i);
+            for (int j = 0; j < face->getSize(0); j++) {
+                Vertex *v = face->getNodeAt(j);
+                vNodes.push_back(v->getID());
+            }
         }
-    }
 
-    vector<double> vCoords = mesh->getCoordsArray();
+        vector<double> vCoords;
+        vector<size_t> l2g;
+        mesh->getCoordsArray( vCoords, l2g );
 
-    Mesquite::ArrayMesh *optmesh = NULL;
+        Mesquite::ArrayMesh *optmesh = NULL;
 
-    int topo = mesh->isHomogeneous();
+        int topo = mesh->isHomogeneous();
 
-    if (topo == 4)
-        optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
-                                          numfaces, Mesquite::QUADRILATERAL, &vNodes[0]);
-    if (topo == 3)
-        optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
-                                          numfaces, Mesquite::TRIANGLE, &vNodes[0]);
+        if (topo == 4)
+            optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
+                                              numfaces, Mesquite::QUADRILATERAL, &vNodes[0]);
+        if (topo == 3)
+            optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
+                                              numfaces, Mesquite::TRIANGLE, &vNodes[0]);
 
-    if (optmesh == NULL) return 1;
+        if (optmesh == NULL) return 1;
 
-    // Set Domain Constraint
-    Vector3D pnt(0, 0, 0);
-    Vector3D s_norm(0, 0, 1);
-    PlanarDomain msq_geom(s_norm, pnt);
+        // Set Domain Constraint
+        Vector3D pnt(0, 0, 0);
+        Vector3D s_norm(0, 0, 1);
+        PlanarDomain msq_geom(s_norm, pnt);
 
-    // creates an intruction queue
-    InstructionQueue queue1;
+        // creates an intruction queue
+        InstructionQueue queue1;
 
-    // creates a mean ratio quality metric ...
-    ConditionNumberQualityMetric shape_metric;
-    UntangleBetaQualityMetric untangle(2);
-    Randomize pass0(.05);
-    // ... and builds an objective function with it
-    //LInfTemplate* obj_func = new LInfTemplate(shape_metric);
-    LInfTemplate obj_func(&untangle);
-    LPtoPTemplate obj_func2(&shape_metric, 2, err);
-    if (err) return 1;
-    // creates the steepest descent optimization procedures
-    ConjugateGradient pass1(&obj_func, err);
-    if (err) return 1;
+        // creates a mean ratio quality metric ...
+        ConditionNumberQualityMetric shape_metric;
+        UntangleBetaQualityMetric untangle(2);
+        Randomize pass0(.05);
+        // ... and builds an objective function with it
+        //LInfTemplate* obj_func = new LInfTemplate(shape_metric);
+        LInfTemplate obj_func(&untangle);
+        LPtoPTemplate obj_func2(&shape_metric, 2, err);
+        if (err) return 1;
+        // creates the steepest descent optimization procedures
+        ConjugateGradient pass1(&obj_func, err);
+        if (err) return 1;
 
-    //SteepestDescent* pass2 = new SteepestDescent( obj_func2 );
-    ConjugateGradient pass2(&obj_func2, err);
-    if (err) return 1;
-    pass2.use_element_on_vertex_patch();
-    if (err) return 1;
-    pass2.use_global_patch();
-    if (err) return 1;
-    QualityAssessor stop_qa = QualityAssessor(&shape_metric);
-    QualityAssessor stop_qa2 = QualityAssessor(&shape_metric);
+        //SteepestDescent* pass2 = new SteepestDescent( obj_func2 );
+        ConjugateGradient pass2(&obj_func2, err);
+        if (err) return 1;
+        pass2.use_element_on_vertex_patch();
+        if (err) return 1;
+        pass2.use_global_patch();
+        if (err) return 1;
+        QualityAssessor stop_qa = QualityAssessor(&shape_metric);
+        QualityAssessor stop_qa2 = QualityAssessor(&shape_metric);
 
-    stop_qa.add_quality_assessment(&untangle);
-    // **************Set stopping criterion**************
-    //untangle beta should be 0 when untangled
-    TerminationCriterion sc1;
-    sc1.add_relative_quality_improvement(0.000001);
-    TerminationCriterion sc3;
-    sc3.add_iteration_limit(10);
-    TerminationCriterion sc_rand;
-    sc_rand.add_iteration_limit(1);
+        stop_qa.add_quality_assessment(&untangle);
+        // **************Set stopping criterion**************
+        //untangle beta should be 0 when untangled
+        TerminationCriterion sc1;
+        sc1.add_relative_quality_improvement(0.000001);
+        TerminationCriterion sc3;
+        sc3.add_iteration_limit(10);
+        TerminationCriterion sc_rand;
+        sc_rand.add_iteration_limit(1);
 
-    //StoppingCriterion sc1(&stop_qa,-1.0,.0000001);
-    //StoppingCriterion sc3(&stop_qa2,.9,1.00000001);
-    //StoppingCriterion sc2(StoppingCriterion::NUMBER_OF_PASSES,10);
-    //StoppingCriterion sc_rand(StoppingCriterion::NUMBER_OF_PASSES,1);
-    //either until untangled or 10 iterations
-    pass0.set_outer_termination_criterion(&sc_rand);
-    pass1.set_outer_termination_criterion(&sc1);
-    pass2.set_inner_termination_criterion(&sc3);
+        //StoppingCriterion sc1(&stop_qa,-1.0,.0000001);
+        //StoppingCriterion sc3(&stop_qa2,.9,1.00000001);
+        //StoppingCriterion sc2(StoppingCriterion::NUMBER_OF_PASSES,10);
+        //StoppingCriterion sc_rand(StoppingCriterion::NUMBER_OF_PASSES,1);
+        //either until untangled or 10 iterations
+        pass0.set_outer_termination_criterion(&sc_rand);
+        pass1.set_outer_termination_criterion(&sc1);
+        pass2.set_inner_termination_criterion(&sc3);
 
-    // adds 1 pass of pass1 to mesh_set1
-    queue1.add_quality_assessor(&stop_qa, err);
-    if (err) return 1;
-    //queue1.add_preconditioner(pass0,err);MSQ_CHKERR(err);
-    //queue1.add_preconditioner(pass1,err);MSQ_CHKERR(err);
-    //queue1.set_master_quality_improver(pass2, err); MSQ_CHKERR(err);
-    queue1.set_master_quality_improver(&pass1, err);
-    if (err) return 1;
-    queue1.add_quality_assessor(&stop_qa2, err);
-    if (err) return 1;
+        // adds 1 pass of pass1 to mesh_set1
+        queue1.add_quality_assessor(&stop_qa, err);
+        if (err) return 1;
+        //queue1.add_preconditioner(pass0,err);MSQ_CHKERR(err);
+        //queue1.add_preconditioner(pass1,err);MSQ_CHKERR(err);
+        //queue1.set_master_quality_improver(pass2, err); MSQ_CHKERR(err);
+        queue1.set_master_quality_improver(&pass1, err);
+        if (err) return 1;
+        queue1.add_quality_assessor(&stop_qa2, err);
+        if (err) return 1;
 
-    // launches optimization on mesh_set1
-    queue1.run_instructions(optmesh, &msq_geom, err);
-    if (err) return 1;
+        // launches optimization on mesh_set1
+        queue1.run_instructions(optmesh, &msq_geom, err);
+        if (err) return 1;
 
-    mesh->setCoordsArray(vCoords);
-    return 0;
+        mesh->setCoordsArray(vCoords);
+        return 0;
+    */
 #endif
     return 1;
 }
@@ -406,6 +403,5 @@ run_local_smoother(Mesquite::Mesh* mesh, MsqError& err)
     return 0;
 }
 
-#endif
-
 ///////////////////////////////////////////////////////////////////////////////
+#endif

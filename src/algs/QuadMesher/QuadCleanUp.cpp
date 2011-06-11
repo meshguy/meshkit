@@ -18,13 +18,13 @@ QuadCleanUp::automatic()
 // If the mesh is triangular first convert it into Quad mesh ....
 //  ****************************************************************************
 //
-    if (mesh->isHomogeneous () == 3) {
+    if (mesh->isHomogeneous () == 3)
+    {
         Tri2Quads t2quad;
         Mesh *quadmesh = t2quad.getQuadMesh( mesh, 1);
         delete mesh; // deletes the triangle mesh...
         mesh = quadmesh;
     }
-    exit(0);
 
 // Throughout the cleaning process, euler characteristic should remain same
     int euler1, euler0 = mesh->getEulerCharacteristic(); // Invariant
@@ -34,7 +34,8 @@ QuadCleanUp::automatic()
 
 //  Ensure that there are irregular nodes in the mesh. if not, you are lucky and done.
     NodeSequence irreg_nodes = mesh->get_irregular_nodes( 4 );
-    if( irreg_nodes.empty() ) {
+    if( irreg_nodes.empty() )
+    {
         cout << "Great: There are no irregular nodes in the mesh" << endl;
         mopt.shape_optimize( mesh );
         return 0;
@@ -76,7 +77,8 @@ QuadCleanUp::automatic()
 #endif
 
     err = remove_interior_doublets();
-    if( err ) {
+    if( err )
+    {
         cout << "Fatal Error: There are interior doublets in the mesh " << endl;
         cout << "Check the mesh in : dbg.dat" << endl;
         mesh->saveAs( "dbg.dat");
@@ -84,11 +86,13 @@ QuadCleanUp::automatic()
         return stage;
     }
 
+#ifdef DEBUG
     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
     cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
     euler1 = mesh->getEulerCharacteristic();
     assert( euler0 == euler1 );
+#endif
 
 //  ****************************************************************************
 //  Check the boundary nodes connectivity, and ensure that all elements adjacent
@@ -101,21 +105,17 @@ QuadCleanUp::automatic()
     mesh->saveAs("stage1.dat");
 #endif
 
-    swap_concave_faces();
-
-#ifdef DEBUG
-    Jaal::set_no_tags(mesh);
-    mesh->saveAs("stage2.dat");
-#endif
-
-    if( mesh->count_concave_faces() )
-        lapsmooth.convexify();
+    /*
+       if( mesh->count_concave_faces() )
+           lapsmooth.convexify();
+    */
 
 #ifdef DEBUG
     Jaal::set_no_tags(mesh);
     mesh->saveAs("stage3.dat");
 #endif
 
+#ifdef GEOM2D
     if( !mesh->count_concave_faces() )
         mopt.shape_optimize( mesh );
 
@@ -124,44 +124,47 @@ QuadCleanUp::automatic()
 
     if( mesh->count_concave_faces() )
         swap_concave_faces();
+#endif
 
 #ifdef DEBUG
     Jaal::set_no_tags(mesh);
     mesh->saveAs("stage4.dat");
-#endif
 
     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-    cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
+    cout << "# of concave faces   " << mesh->count_concave_faces(4)    << endl;
     euler1 = mesh->getEulerCharacteristic();
     assert( euler0 == euler1 );
-
+#endif
 
 //  ***************************************************************************
 //  Tunnels may put constraints in the movements, so it is better to remove them,
 //  Condition: Soft
 //  ***************************************************************************
 
-    err = remove_tunnels();
-    cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
-    cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-    cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
-    euler1 = mesh->getEulerCharacteristic();
-    assert( euler0 == euler1 );
+    /*
+        err = remove_tunnels();
+        cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
+        cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
+        cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
+        euler1 = mesh->getEulerCharacteristic();
+        assert( euler0 == euler1 );
+    */
 
 //  ***************************************************************************
 //  Perform  vertex degree reduction with local edge swapping: Soft.
 //  ***************************************************************************
 
     err = vertex_degree_reduction();
+
+#ifdef DEBUG
     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
     cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
-    euler1 = mesh->getEulerCharacteristic();
-    assert( euler0 == euler1 );
     mesh->get_topological_statistics();
 
-#ifdef DEBUG
+    euler1 = mesh->getEulerCharacteristic();
+    assert( euler0 == euler1 );
     Jaal::set_no_tags(mesh);
     mesh->saveAs("stage5.dat");
 #endif
@@ -173,33 +176,17 @@ QuadCleanUp::automatic()
 //  ***************************************************************************
 
     err = remove_diamonds();
+
+#ifdef DEBUG
     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
     cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
+
     euler1 = mesh->getEulerCharacteristic();
     assert( euler0 == euler1 );
-
-#ifdef DEBUG
     Jaal::set_no_tags(mesh);
     mesh->saveAs("stage6.dat");
 #endif
-
-//  ***************************************************************************
-//  Last attempt to make all elements convex ..
-//  ***************************************************************************
-
-    if( mesh->count_concave_faces() == 0)
-        mopt.shape_optimize(mesh);
-
-    cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
-    cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-    cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
-    euler1 = mesh->getEulerCharacteristic();
-    assert( euler0 == euler1 );
-
-//  ***************************************************************************
-//  Cluster all irregular nodes away from the boundaries.
-//  ***************************************************************************
 
 // ****************************************************************************
 // Perform Global remeshing to elimate 3 and 5 degree nodes ..
@@ -217,7 +204,8 @@ Jaal::set_regular_node_tag(Mesh *mesh)
     int relexist = mesh->build_relations(0, 2);
 
     size_t numnodes = mesh->getSize(0);
-    for (size_t i = 0; i < numnodes; i++) {
+    for (size_t i = 0; i < numnodes; i++)
+    {
         Vertex *vertex = mesh->getNodeAt(i);
         int nsize = vertex->getRelations2().size();
         if (nsize >= 6) vertex->setTag(0);
@@ -235,24 +223,26 @@ Jaal::set_regular_node_tag(Mesh *mesh)
 int
 QuadCleanUp::reduce_boundary_vertex_degree( Vertex *vertex )
 {
-  if (!vertex->isBoundary()) return 1;
+    if (!vertex->isBoundary() || vertex->isRemoved() ) return 1;
 
-  NodeSequence &vneighs = vertex->getRelations0();
-  int vdegree  = vneighs.size();
+    NodeSequence &vneighs = vertex->getRelations0();
+    int vdegree  = vneighs.size();
 
-  if ( vdegree <=  (vertex->get_ideal_vertex_degree( Face::QUADRILATERAL)+1) ) return 2;
+    if ( vdegree <= (vertex->get_ideal_vertex_degree(Face::QUADRILATERAL)+1) ) return 2;
 
-  sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
+    sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
 
-  for (int k = 0; k < vdegree; k++) {
-       const NodeSequence &wneighs = vneighs[k]->getRelations0();
-       if (!vneighs[k]->isBoundary() && wneighs.size() > 3) {
-           SwapQuadEdge edge(mesh, vertex, vneighs[k]);
-           int err = edge.apply_bound_rule();
-           if (!err) return 0;
-       }
-   }
-   return 3;
+    for (int k = 0; k < vdegree; k++)
+    {
+        const NodeSequence &wneighs = vneighs[k]->getRelations0();
+        if (!vneighs[k]->isBoundary() && wneighs.size() > 3)
+        {
+            SwapQuadEdge edge(mesh, vertex, vneighs[k]);
+            int err = edge.apply_bound_rule();
+            if (!err) return 0;
+        }
+    }
+    return 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -265,14 +255,15 @@ QuadCleanUp::boundary_vertex_degree_reduction_once()
 
     mesh->search_boundary();
 
-    // Precondition : The mesh must be doublet free ...
-    vector<Doublet> doublets = search_interior_doublets();
-    assert(doublets.empty());
+//  Precondition : The mesh must be doublet free ...
+//  vector<Doublet> doublets = search_interior_doublets();
+//  assert(doublets.empty());
 
     size_t numnodes = mesh->getSize(0);
 
     size_t ncount = 0;
-    for (size_t i = 0; i < numnodes; i++) {
+    for (size_t i = 0; i < numnodes; i++)
+    {
         Vertex *vertex = mesh->getNodeAt(i);
         int err =  reduce_boundary_vertex_degree( vertex );
         if( !err) ncount++;
@@ -287,10 +278,6 @@ QuadCleanUp::boundary_vertex_degree_reduction_once()
     if (!relexist2)
         mesh->clear_relations(0, 2);
 
-    // Post-Condition : The mesh must be doublet free ...
-    doublets = search_interior_doublets();
-    assert(doublets.empty());
-
     return ncount;
 }
 
@@ -298,30 +285,32 @@ QuadCleanUp::boundary_vertex_degree_reduction_once()
 int
 QuadCleanUp::reduce_internal_vertex_degree( Vertex *vertex )
 {
-  if (vertex->isBoundary()) return 1;
+    if (vertex->isBoundary() || vertex->isRemoved() ) return 1;
 
-  NodeSequence &vneighs = vertex->getRelations0();
-  int nSize = vneighs.size();
+    NodeSequence &vneighs = vertex->getRelations0();
+    int nSize = vneighs.size();
 
-  if( nSize <= 4) return 2;
+    if( nSize <= 4) return 2;
 
-  sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
+    sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
 
-  for (int k = 0; k < nSize; k++) {
-       const NodeSequence &wneighs = vneighs[k]->getRelations0();
-       if (wneighs.size() > 3) {
-           SwapQuadEdge edge(mesh, vertex, vneighs[k]);
-           int err = edge.apply_reduce_degree_rule();
-           if (!err) return 0;
-       }
-  }
+    for (int k = 0; k < nSize; k++)
+    {
+        const NodeSequence &wneighs = vneighs[k]->getRelations0();
+        if (wneighs.size() > 3)
+        {
+            SwapQuadEdge edge(mesh, vertex, vneighs[k]);
+            int err = edge.apply_reduce_degree_rule();
+            if (!err) return 0;
+        }
+    }
 
-  return 3;
+    return 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int 
+int
 QuadCleanUp::internal_vertex_degree_reduction_once()
 {
     int relexist0 = mesh->build_relations(0, 0);
@@ -329,8 +318,8 @@ QuadCleanUp::internal_vertex_degree_reduction_once()
 
     mesh->search_boundary();
 
-    vector<Doublet> doublets = search_interior_doublets();
-    assert(doublets.empty());
+//  vector<Doublet> doublets = search_interior_doublets();
+//  assert(doublets.empty());
 
     size_t numnodes = mesh->getSize(0);
 
@@ -338,23 +327,21 @@ QuadCleanUp::internal_vertex_degree_reduction_once()
     sort(nodes.begin(), nodes.end(), HighVertexDegreeCompare());
 
     size_t ncount = 0;
-    for (size_t i = 0; i < numnodes; i++) {
+    for (size_t i = 0; i < numnodes; i++)
+    {
         Vertex *vertex = nodes[i];
         int err = reduce_internal_vertex_degree( vertex );
         if( !err ) ncount++;
-   }
+    }
 
     if (ncount)
-      cout << "Info: number of internal edges swapped " << ncount << endl;
+        cout << "Info: number of internal edges swapped " << ncount << endl;
 
     if (!relexist0)
         mesh->clear_relations(0, 0);
 
     if (!relexist2)
         mesh->clear_relations(0, 2);
-
-    doublets = search_interior_doublets();
-    assert(doublets.empty());
 
     return ncount;
 }
@@ -364,20 +351,12 @@ QuadCleanUp::internal_vertex_degree_reduction_once()
 int
 QuadCleanUp::vertex_degree_reduction()
 {
-
-    int ncount1 = 0;
-    int ncount2 = 0;
-    while (1) {
-        ncount1 = 0;
-        ncount2 = 0;
-        ncount1 = boundary_vertex_degree_reduction_once();
-        ncount2 = internal_vertex_degree_reduction_once();
-        int err = lapsmooth->execute();
-        if (err || (ncount1 + ncount2) == 0) break;
+    while (1)
+    {
+        int ncount1 = boundary_vertex_degree_reduction_once();
+        int ncount2 = internal_vertex_degree_reduction_once();
+        if (ncount1 + ncount2 == 0) break;
     }
-
-    if( mesh->count_concave_faces() == 0)
-        mopt.shape_optimize(mesh);
 
     return 0;
 }
@@ -398,22 +377,28 @@ QuadCleanUp::search_flat_quads()
     FaceSequence flatQ, neighs;
 
     int edgefaces[4];
-    for (size_t iface = 0; iface < numfaces; iface++) {
+    for (size_t iface = 0; iface < numfaces; iface++)
+    {
         Face *face = mesh->getFaceAt(iface);
         assert(face);
-        if (face->getSize(0) == 4) {
+        if (face->getSize(0) == 4)
+        {
             int boundary = 1;
-            for (int j = 0; j < 4; j++) {
+            for (int j = 0; j < 4; j++)
+            {
                 Vertex *vb = face->getNodeAt(j);
-                if (!vb->isBoundary()) {
+                if (!vb->isBoundary())
+                {
                     boundary = 0;
                     break;
                 }
             }
 
-            if (boundary) {
+            if (boundary)
+            {
                 int bound_edges = 0;
-                for (int j = 0; j < 4; j++) {
+                for (int j = 0; j < 4; j++)
+                {
                     Vertex *v0 = face->getNodeAt((j + 0) % 4);
                     Vertex *v1 = face->getNodeAt((j + 1) % 4);
                     neighs = Mesh::getRelations112(v0, v1);
@@ -422,7 +407,8 @@ QuadCleanUp::search_flat_quads()
                     edgefaces[j] = neighs.size();
                 }
 
-                if (bound_edges == 3) {
+                if (bound_edges == 3)
+                {
                     /*
                      Point3D v1 = make_vector( neighs[0], node );
                      Point3D v2 = make_vector( neighs[1], node );
@@ -455,14 +441,16 @@ QuadCleanUp::search_restricted_faces()
 
     FaceSequence restricted_faces;
 
-    for (size_t i = 0; i < numfaces; i++) {
+    for (size_t i = 0; i < numfaces; i++)
+    {
         Face *face = mesh->getFaceAt(i);
         face->setTag(0);
         Vertex *v0 = face->getNodeAt(0);
         Vertex *v1 = face->getNodeAt(1);
         Vertex *v2 = face->getNodeAt(2);
         Vertex *v3 = face->getNodeAt(3);
-        if ((v0->isBoundary() && v2->isBoundary()) || (v1->isBoundary() && v3->isBoundary())) {
+        if ((v0->isBoundary() && v2->isBoundary()) || (v1->isBoundary() && v3->isBoundary()))
+        {
             restricted_faces.push_back(face);
             face->setTag(1);
         }
@@ -571,7 +559,8 @@ RestrictedEdge::build()
     for (int i = 0; i < 3; i++)
         area_after += newFaces[i]->getArea();
 
-    if (fabs(area_after - area_before) > 1.0E-10) {
+    if (fabs(area_after - area_before) > 1.0E-10)
+    {
         delete newFaces[0];
         delete newFaces[1];
         delete newFaces[2];
@@ -579,8 +568,10 @@ RestrictedEdge::build()
         return 4;
     }
 
-    for (int i = 0; i < 3; i++) {
-        if (!newFaces[i]->isConvex()) {
+    for (int i = 0; i < 3; i++)
+    {
+        if (!newFaces[i]->isConvex())
+        {
             delete newFaces[0];
             delete newFaces[1];
             delete newFaces[2];
@@ -603,18 +594,23 @@ QuadCleanUp::cleanup_internal_boundary_face()
 
     FaceSequence boundfaces;
 
-    for (size_t i = 0; i < numfaces; i++) {
+    for (size_t i = 0; i < numfaces; i++)
+    {
         Face *face = mesh->getFaceAt(i);
-        if (face->hasBoundaryNode()) {
+        if (face->hasBoundaryNode())
+        {
             int nfnodes = face->getSize(0);
             Vertex *v0 = NULL;
             Vertex *v1 = NULL;
-            for (int j = 0; j < nfnodes; j++) {
+            for (int j = 0; j < nfnodes; j++)
+            {
                 Vertex *v = face->getNodeAt(j);
-                if (v->isBoundary()) {
+                if (v->isBoundary())
+                {
                     v0 = face->getNodeAt((j + 1) % nfnodes);
                     v1 = face->getNodeAt((j + 3) % nfnodes);
-                    if (!v0->isBoundary() && !v1->isBoundary()) {
+                    if (!v0->isBoundary() && !v1->isBoundary())
+                    {
                         FaceClose closeface(mesh, face, v0, v1);
                         break;
                     }
@@ -639,12 +635,15 @@ int QuadCleanUp::refine_degree3_faces()
 
     Vertex *vertex;
     FaceSequence vfaces;
-    for (size_t i = 0; i < numnodes; i++) {
+    for (size_t i = 0; i < numnodes; i++)
+    {
         vertex = mesh->getNodeAt(i);
         vfaces = vertex->getRelations2();
         int nsize = vfaces.size();
-        if ( nsize == 3) {
-            for (int j = 0; j < nsize; j++) {
+        if ( nsize == 3)
+        {
+            for (int j = 0; j < nsize; j++)
+            {
                 vertex = vfaces[j]->getNodeAt(0);
                 if (vertex->getRelations2().size() > 4) continue;
 
@@ -676,6 +675,12 @@ void QuadCleanUp::report()
 {
     if (mesh == NULL) return;
     cout << "Info: Reporting mesh information " << endl;
+    cout << "#Nodes " << mesh->getSize(0) << endl;
+    cout << "#Faces " << mesh->getSize(2) << endl;
+    mesh->get_topological_statistics();
+    cout << "#Irregular Nodes (internal) " << mesh->count_irregular_nodes(4) << endl;
+    cout << "#Concave Quads : " <<  mesh->count_concave_faces() << endl;
+
 
 }
 
@@ -689,14 +694,9 @@ void QuadCleanUp :: build_irregular_nodes_set()
         irregular_nodes_set.insert( nset[i] );
 
 }
+
 ///////////////////////////////////////////////////////////////////////
 
-int QuadCleanUp :: remove_tunnels()
-{
-    return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 #ifdef REMOVE_LATER
 
@@ -719,6 +719,7 @@ int QuadCleanUp::has_interior_nodes_degree_345()
 
     return 1;
 }
+///////////////////////////////////////////////////////////////////////
 
 int
 QuadCleanUp::free_restricted_nodes_once()
@@ -733,14 +734,18 @@ QuadCleanUp::free_restricted_nodes_once()
     vector<Vertex*> vneighs;
     vector<RestrictedEdge> redges;
 
-    for (size_t i = 0; i < vrestrict.size (); i++) {
+    for (size_t i = 0; i < vrestrict.size (); i++)
+    {
         Vertex *vertex = vrestrict[i];
         vneighs = vertex->getRelations0 ();
-        for (size_t j = 0; j < vneighs.size (); j++) {
-            if (vneighs[j]->isBoundary ()) {
+        for (size_t j = 0; j < vneighs.size (); j++)
+        {
+            if (vneighs[j]->isBoundary ())
+            {
                 RestrictedEdge edge (mesh, vertex, vneighs[j]);
                 int err = edge.build ();
-                if (!err) {
+                if (!err)
+                {
                     redges.push_back (edge);
                 }
             }
@@ -751,12 +756,14 @@ QuadCleanUp::free_restricted_nodes_once()
         cout << "Info:  # of valid restricted edges : " << redges.size () << endl;
 
     int ncount = 0;
-    for (size_t i = 0; i < redges.size (); i++) {
+    for (size_t i = 0; i < redges.size (); i++)
+    {
         int err = redges[i].commit ();
         if (!err) ncount++;
     }
 
-    if (ncount) {
+    if (ncount)
+    {
         mesh->prune ();
         mesh->enumerate (0);
         mesh->enumerate (2);
@@ -781,7 +788,8 @@ void
 QuadCleanUp::free_restricted_nodes()
 {
     int ncount;
-    while (1) {
+    while (1)
+    {
         ncount = free_restricted_nodes_once();
         if (ncount == 0) break;
     }
@@ -789,6 +797,8 @@ QuadCleanUp::free_restricted_nodes()
     if (!mesh->isConsistentlyOriented())
         mesh->makeConsistentlyOriented();
 }
+
+///////////////////////////////////////////////////////////////////////
 
 void
 QuadCleanUp::cleanup_boundary(double cutOffAngle)
@@ -809,24 +819,31 @@ QuadCleanUp::cleanup_boundary(double cutOffAngle)
 
     NodeSequence updated;
 
-    for (int iter = 0; iter < 10; iter++) {
+    for (int iter = 0; iter < 10; iter++)
+    {
         updated.clear();
 
-        for (size_t i = 0; i < numnodes; i++) {
+        for (size_t i = 0; i < numnodes; i++)
+        {
             Vertex *bndnode = mesh->getNodeAt(i);
-            if (bndnode->isBoundary()) {
+            if (bndnode->isBoundary())
+            {
                 bound_neighs = bndnode->getRelations0();
-                for (size_t j = 0; j < bound_neighs.size(); j++) {
+                for (size_t j = 0; j < bound_neighs.size(); j++)
+                {
                     Vertex *freenode = bound_neighs[j];
-                    if (!freenode->isBoundary()) {
+                    if (!freenode->isBoundary())
+                    {
                         free_neighs = freenode->getRelations0();
                         int ncount = 0;
                         for (size_t k = 0; k < free_neighs.size(); k++)
                             if (free_neighs[k]->isBoundary()) ncount++;
-                        if (ncount == 1) {
+                        if (ncount == 1)
+                        {
                             flen = bndnode->getFeatureLength();
                             len = Vertex::length(bndnode, freenode);
-                            if (len > 2.0 * flen) {
+                            if (len > 2.0 * flen)
+                            {
                                 pf = freenode->getXYZCoords();
                                 pb = bndnode->getXYZCoords();
                                 t = 0.75;
@@ -836,15 +853,19 @@ QuadCleanUp::cleanup_boundary(double cutOffAngle)
                                 freenode->setXYZCoords(pn);
                                 vfaces = freenode->getRelations2();
                                 bool pass = 1;
-                                for (size_t iface = 0; iface < vfaces.size(); iface++) {
-                                    if (!vfaces[iface]->isConvex()) {
+                                for (size_t iface = 0; iface < vfaces.size(); iface++)
+                                {
+                                    if (!vfaces[iface]->isConvex())
+                                    {
                                         pass = 0.0;
                                         break;
                                     }
                                 }
-                                if (!pass) {
+                                if (!pass)
+                                {
                                     freenode->setXYZCoords(pf);
-                                } else
+                                }
+                                else
                                     updated.push_back(freenode);
                             }
                         }
@@ -873,8 +894,6 @@ QuadCleanUp::cleanup_boundary(double cutOffAngle)
 
     return;
 
-
-
     ///////////////////////////////////////////////////////////////
     // First try to handle flat node...
     ///////////////////////////////////////////////////////////////
@@ -883,12 +902,16 @@ QuadCleanUp::cleanup_boundary(double cutOffAngle)
 
 
     Vertex* node, *onode;
-    for (size_t i = 0; i < numnodes; i++) {
+    for (size_t i = 0; i < numnodes; i++)
+    {
         node = mesh->getNodeAt(i);
-        if (node->isBoundary()) {
+        if (node->isBoundary())
+        {
             neighs = node->getRelations0();
-            if (neighs.size() == 2) {
-                if (neighs[0]->isBoundary() && neighs[1]->isBoundary()) {
+            if (neighs.size() == 2)
+            {
+                if (neighs[0]->isBoundary() && neighs[1]->isBoundary())
+                {
                     Point3D v1 = make_vector(neighs[0], node);
                     Point3D v2 = make_vector(neighs[1], node);
                     double angle = Math::getVectorAngle(v1, v2);
@@ -904,12 +927,15 @@ QuadCleanUp::cleanup_boundary(double cutOffAngle)
 
     Face *boundface;
     FaceSequence faceneighs;
-    for (size_t i = 0; i < degree2nodes.size(); i++) {
+    for (size_t i = 0; i < degree2nodes.size(); i++)
+    {
         node = degree2nodes[i];
         faceneighs = node->getRelations2();
-        if (faceneighs.size() == 1) {
+        if (faceneighs.size() == 1)
+        {
             boundface = faceneighs[0];
-            if (boundface->getSize(0) == 4) {
+            if (boundface->getSize(0) == 4)
+            {
                 int j = boundface->getPosOf(node);
                 onode = boundface->getNodeAt((j + 2) % 4);
                 if (!onode->isBoundary())

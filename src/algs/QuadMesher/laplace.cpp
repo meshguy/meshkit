@@ -24,11 +24,11 @@ double
 LaplaceSmoothing::update_vertex_position(Vertex *vertex, const Point3D &newpos)
 {
     double area0, area1, localerror = 0.0;
-    NodeSequence vneighs = vertex->getRelations0();
+    const NodeSequence &vneighs = vertex->getRelations0();
 
     Point3D oldpos = vertex->getXYZCoords();
 
-    FaceSequence vfaces = vertex->getRelations2();
+    const FaceSequence &vfaces = vertex->getRelations2();
 
     area0 = 0.0;
     for (size_t i = 0; i < vfaces.size(); i++)
@@ -48,7 +48,7 @@ LaplaceSmoothing::update_vertex_position(Vertex *vertex, const Point3D &newpos)
         MeshEntity::idtype id = vfaces[i]->getID();
         facearea[id] = vfaces[i]->getArea(); // Recalculate new face area ...
         area1 += facearea[id];
-        if (vfaces[i]->invertedAt() >= 0)
+        if (vfaces[i]->concaveAt() >= 0)
         {
             some_face_inverted = 1;
             break;
@@ -80,9 +80,9 @@ LaplaceSmoothing::update_vertex_position(Vertex *vertex)
 {
     if (vertex->isConstrained()) return 0.0;
 
-    Point3D oldpos = vertex->getXYZCoords();
+    const Point3D &oldpos = vertex->getXYZCoords();
 
-    NodeSequence neighs = vertex->getRelations0();
+    const NodeSequence &neighs = vertex->getRelations0();
     assert(neighs.size());
 
     Point3D newpos, xyz;
@@ -124,8 +124,6 @@ LaplaceSmoothing::execute()
 int
 LaplaceSmoothing::global_smoothing()
 {
-    assert( mesh->isPruned() );
-
     assert(lapweight);
     mesh->search_boundary();
 
@@ -135,15 +133,14 @@ LaplaceSmoothing::global_smoothing()
     size_t numnodes = mesh->getSize(0);
     size_t numfaces = mesh->getSize(2);
 
-    size_t num_inverted_before_smoothing = 0;
-
     facearea.resize(numfaces);
+    size_t num_inverted_before_smoothing = 0;
     for (size_t i = 0; i < numfaces; i++)
     {
         Face *face = mesh->getFaceAt(i);
         face->setID(i); // Needed because of facearea is an  external array...
         facearea[i] = face->getArea();
-        if (face->invertedAt() >= 0) num_inverted_before_smoothing++;
+        if (face->concaveAt() >= 0) num_inverted_before_smoothing++;
     }
 
     for (int iter = 0; iter < numIters; iter++)
@@ -152,22 +149,26 @@ LaplaceSmoothing::global_smoothing()
         for (size_t i = 0; i < numnodes; i++)
         {
             Vertex *v = mesh->getNodeAt(i);
-            maxerror = max(maxerror, update_vertex_position(v));
+            if( !v->isRemoved() ) 
+                maxerror = max(maxerror, update_vertex_position(v));
         }
+        cout << " iter " << maxerror << endl;
+ 
         if (maxerror < 1.0E-06) break;
     }
 
     if (!relexist0) mesh->clear_relations(0, 0);
     if (!relexist2) mesh->clear_relations(0, 2);
 
+/*
     size_t num_inverted_after_smoothing = 0;
     for (size_t i = 0; i < numfaces; i++)
     {
         Face *face = mesh->getFaceAt(i);
         if (face->invertedAt() >= 0) num_inverted_after_smoothing++;
     }
-
     assert(num_inverted_after_smoothing <= num_inverted_before_smoothing);
+*/
 
     return 0;
 }
@@ -178,12 +179,15 @@ int
 LaplaceSmoothing::localized_at(const NodeSequence &vertexQ)
 {
     assert(lapweight);
-    mesh->search_boundary();
 
+    assert( mesh->isBoundaryKnown() );
+    assert( mesh->getAdjTable(0,0)  );
+    assert( mesh->getAdjTable(0,2)  );
+
+/*
     int relexist0 = mesh->build_relations(0, 0);
     int relexist2 = mesh->build_relations(0, 2);
-
-//    size_t numnodes = mesh->getSize(0);
+*/
 
     //How many faces will be affected by changing the coordinates of vertexQ
 
@@ -226,18 +230,19 @@ LaplaceSmoothing::localized_at(const NodeSequence &vertexQ)
     for (size_t i = 0; i < numfaces; i++)
     {
         Face *face = mesh->getFaceAt(i);
-        if (face->isVisited() && face->invertedAt() >= 0)
+        if (face->isVisited() && face->concaveAt() >= 0)
         {
             status = 1;
             break;
         }
     }
 
+/*
     if (!relexist0) mesh->clear_relations(0, 0);
     if (!relexist2) mesh->clear_relations(0, 2);
+*/
 
     return status;
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -269,7 +274,7 @@ LaplaceSmoothing::convexify()
     for (size_t iface = 0; iface < numfaces; iface++)
     {
         Face *face = mesh->getFaceAt(iface);
-        int pos = face->invertedAt();
+        int pos = face->concaveAt();
         if (pos >= 0)
         {
             Vertex *v0 = face->getNodeAt((pos + 0) % 4);

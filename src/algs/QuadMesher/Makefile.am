@@ -15,7 +15,6 @@ libJaalQuadMesher_la_SOURCES = \
 	basic_math.hpp \
 	BinaryTree.cpp \
 	BinaryTree.hpp \
-	Bridges.cpp \
 	cycle.hpp \
 	DijkstraShortestPath.cpp \
 	DijkstraShortestPath.hpp \
@@ -33,8 +32,6 @@ libJaalQuadMesher_la_SOURCES = \
 	mesh_io.cpp \
 	MeshOpt.cpp \
 	MeshRefine2D.hpp \
-	meshViewer.hpp \
-	ObjectPool.hpp \
 	off_io.cpp \
 	OneDefectRemeshing.cpp \
 	QuadCleanUp.cpp \
@@ -50,13 +47,12 @@ libJaalQuadMesher_la_SOURCES = \
 	Tri2Quad.cpp \
 	Tri2Quad.hpp \
 	tri_io.cpp \
-	Tunnels.cpp \
 	circumcenter.cpp \
 	circumcenter.hpp \
 	GeomPredicates.cpp \
 	GeomPredicates.hpp \
 	MeshRefine2D.cpp \
-	QuadQuality.cpp  \
+	MeshQuality.cpp  \
 	StopWatch.hpp   \
 	vtk_io.cpp 
   

@@ -47,6 +47,9 @@ int MeshImporter ::off_file(const string &fname)
   size_t  numNodes, numFaces, numEdges;
   infile >> numNodes >> numFaces >> numEdges;
 
+  mesh->reserve( numNodes, 0);
+  mesh->reserve( numFaces, 2);
+
   Point3D p3d;
   for( size_t i = 0; i < numNodes; i++) {
        infile >> x >> y >> z;
@@ -61,7 +64,6 @@ int MeshImporter ::off_file(const string &fname)
   for( size_t i = 0; i < numFaces; i++) 
   {
        infile >> numNodes;
-
        facevtx.resize(numNodes);
        connect.resize(numNodes);
        for( size_t j = 0; j < numNodes; j++) 
@@ -85,11 +87,44 @@ int MeshImporter ::off_file(const string &fname)
                    connect[j] = mesh->getNodeAt(facevtx[j]);
               break; 
        }
+
        Face *face = new Face;
-       face->setNodes( connect );
-       mesh->addFace(face);
+
+       int err = face->setNodes( connect );
+       if( !err ) 
+          mesh->addFace(face);
+       else {
+          cout << "Fatal error:  Bad element " << endl;
+          for( size_t j = 0; j < numNodes; j++) 
+              cout << facevtx[j] << " ";
+          exit(0);
+          delete face;
+       }
    }  
 
+   int gid;
+   infile >> str;
+   if( str == "#NODE_GROUP")  {
+       numNodes = mesh->getSize(0);
+       for( size_t i = 0; i < numNodes; i++) {
+            infile >> gid;
+            Vertex *v = mesh->getNodeAt(i);
+//           v->setGroupID( gid );
+            v->setTag( gid );
+       }
+       infile >> str;
+   }
+
+   if( str == "#FACE_GROUP")  {
+       numFaces = mesh->getSize(2);
+       for( size_t i = 0; i < numFaces; i++) {
+            infile >> gid;
+            Face *f = mesh->getFaceAt(i);
+            f->setTag( gid );
+//            f->setGroupID( gid );
+       }
+   }
+   
    return 0;
 }
 
@@ -100,7 +135,9 @@ MeshExporter ::off_file(Mesh *mesh, const string &s)
 {
     if (!mesh->isPruned())
     {
+        cout << " Pruning Start " << endl;
         mesh->prune();
+        cout << " Pruning End  " << endl;
         mesh->enumerate(0);
         mesh->enumerate(2);
     }
@@ -159,5 +196,23 @@ MeshExporter ::off_file(Mesh *mesh, const string &s)
         }
         ofile << endl;
     }
-    return 0;
+
+   ofile << "#NODE_GROUP ";
+   size_t numNodes = mesh->getSize(0);
+   for( size_t i = 0; i < numNodes; i++) {
+       Vertex *v = mesh->getNodeAt(i);
+       ofile << v->getTag() << " ";
+//     ofile << v->getGroupID() << " ";
+   }
+   ofile << endl;
+
+   ofile << "#FACE_GROUP ";
+   size_t numFaces = mesh->getSize(2);
+   for( size_t i = 0; i < numFaces; i++) {
+        Face *f = mesh->getFaceAt(i);
+        ofile << f->getTag() << " ";
+//      ofile << f->getGroupID() << " ";
+   }
+   
+   return 0;
 }

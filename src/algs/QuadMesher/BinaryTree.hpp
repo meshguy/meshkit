@@ -287,6 +287,8 @@ public:
   // Clear all the nodes created in the tree.
   void clear();
 
+  void deleteAll();
+
   void relinkAll();
 
   // Save the tree in GraphViz data format...

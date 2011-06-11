@@ -7,17 +7,17 @@
 // Developed by:  Chaman Singh Verma
 //                Department of Computer Sciences.
 //                The University of Wisconsin, Madison
-// 
-// Work Supported by:  
+//
+// Work Supported by:
 //                 Dr. Tim Tautges
 //                 Argonne National Lab, Chicago
 //
 //
 // Objective:  Given a quadrilateral mesh, this class implements various strategies
-// to improve the quadrilateral mesh both geometrically and topologically. The 
+// to improve the quadrilateral mesh both geometrically and topologically. The
 // Laplacian ( local and global ) is used for geometric quality improvement, and for
-// topological improvements various operations are used. 
-// The two basis operations for topological improvements are 
+// topological improvements various operations are used.
+// The two basis operations for topological improvements are
 //  1)   Face close
 //  2)   doublet insertion and removal.
 //
@@ -31,7 +31,7 @@
 //     Master Thesis, Brigham Young University.
 //
 //  3) Non-Local Topological Clean-Up ( The idea of yring  is from this paper)
-//     Guy Bunin. 
+//     Guy Bunin.
 //
 // For suggestios, bugs and criticisms, please send e-mail to
 //                      csverma@cs.wisc.edu
@@ -42,22 +42,25 @@
 
 #include "Mesh.hpp"
 #include "Tri2Quad.hpp"
+#include "basic_math.hpp"
+#include "StopWatch.hpp"
 
 #include "DijkstraShortestPath.hpp"
 
 extern double area_of_poly3d(int n, double *x, double *y, double *z);
 
-namespace Jaal {
-
-struct FirstIrregularNode : public MeshFilter 
+namespace Jaal
 {
-   bool pass( const Vertex *vertex ) const
-   {
-       if( vertex->isBoundary() ) return 1;
-       FaceSequence vfaces = vertex->getRelations2();
-       if( vfaces.size() != 4 ) return 0;
-       return 1;
-   }
+
+struct FirstIrregularNode : public MeshFilter
+{
+    bool pass( const Vertex *vertex ) const
+    {
+        if( vertex->isBoundary() ) return 1;
+        FaceSequence vfaces = vertex->getRelations2();
+        if( vfaces.size() != 4 ) return 0;
+        return 1;
+    }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -67,10 +70,12 @@ struct FirstIrregularNode : public MeshFilter
 // and we are working towards it.
 ///////////////////////////////////////////////////////////////////////////////////
 
-class FaceClose {
+class FaceClose
+{
 public:
 
-    FaceClose(Mesh *m, Face *f, Vertex *v0, Vertex *v1) {
+    FaceClose(Mesh *m, Face *f, Vertex *v0, Vertex *v1)
+    {
         mesh = m;
         face = f;
         vertex0 = v0;
@@ -78,9 +83,10 @@ public:
         replacedNode = NULL;
     }
 
-    ~FaceClose() {
+    ~FaceClose()
+    {
         if( replacedNode ) delete replacedNode;
-     }
+    }
 
     int remove();
 
@@ -99,43 +105,53 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-struct Diamond {
+struct Diamond
+{
 
-    Diamond(Mesh *m, Face *f, int p) {
+    Diamond(Mesh *m, Face *f, int p)
+    {
         mesh = m;
         face = f;
         position = p;
         faceclose = NULL;
-        if (position == 0 || position == 2) {
+        vertex0   = NULL;
+        vertex2   = NULL;
+
+        if (position == 0 || position == 2)
+        {
             vertex0 = face->getNodeAt(0);
             vertex2 = face->getNodeAt(2);
         }
 
-        if (position == 1 || position == 3) {
+        if (position == 1 || position == 3)
+        {
             vertex0 = face->getNodeAt(1);
             vertex2 = face->getNodeAt(3);
         }
     }
     ~Diamond()
-     {
+    {
         if( faceclose) delete faceclose;
-     }
+    }
 
     int remove();
     int commit();
     int isSafe();
     int makeShield();
 
-    bool operator<(const Diamond & rhs) const {
+    bool operator<(const Diamond & rhs) const
+    {
         return face->getArea() < rhs.face->getArea();
     }
 
-    Vertex * getNewNode() const {
+    Vertex * getNewNode() const
+    {
         if (faceclose) return faceclose->replacedNode;
         return NULL;
     }
 
-    double getDiagonalRatio() const {
+    double getDiagonalRatio() const
+    {
         Vertex *v0 = face->getNodeAt((position + 0) % 4);
         Vertex *v1 = face->getNodeAt((position + 1) % 4);
         Vertex *v2 = face->getNodeAt((position + 2) % 4);
@@ -147,8 +163,8 @@ struct Diamond {
     int build();
 
     Face *face;
-    Vertex *vertex0, *vertex2;
 private:
+    Vertex *vertex0, *vertex2;
     Mesh *mesh;
     int position;
     FaceClose *faceclose;
@@ -156,9 +172,11 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-struct Doublet {
+struct Doublet
+{
 
-    Doublet(Mesh *m, Vertex * v) {
+    Doublet(Mesh *m, Vertex * v)
+    {
         mesh = m;
         vertex = v;
         replacedFace = NULL;
@@ -176,9 +194,10 @@ struct Doublet {
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-struct Singlet 
+struct Singlet
 {
-    Singlet(Mesh *m, Vertex * v) {
+    Singlet(Mesh *m, Vertex * v)
+    {
         mesh = m;
         vertex = v;
         type = 0;
@@ -211,33 +230,36 @@ private:
 //         different. In the bridge we use element removal followed by edge swapping.
 /////////////////////////////////////////////////////////////////////////////////////
 
-struct QuadEdge {
+struct QuadEdge
+{
 
-    QuadEdge() {
+    QuadEdge()
+    {
         mesh = NULL;
         connect[0] = NULL;
         connect[1] = NULL;
     }
 
     ~QuadEdge()
-     {
-        for( size_t i = 0; i < newNodes.size(); i++) 
-             if( newNodes[i] ) delete newNodes[i];
-  
-        for( size_t i = 0; i < newFaces.size(); i++) 
-             if( newFaces[i] ) delete newFaces[i];
-     }
+    {
+        for( size_t i = 0; i < newNodes.size(); i++)
+            if( newNodes[i] ) delete newNodes[i];
 
-    bool isBoundary() const {
+        for( size_t i = 0; i < newFaces.size(); i++)
+            if( newFaces[i] ) delete newFaces[i];
+    }
+
+    bool isBoundary() const
+    {
         if (adjFaces[0] == NULL || adjFaces[1] == NULL) return 1;
         return 0;
     }
 
     Vertex*  getNodeAt( int i ) const
     {
-       if( i == 0) return connect[0];
-       if( i == 1) return connect[1];
-       return NULL;
+        if( i == 0) return connect[0];
+        if( i == 1) return connect[1];
+        return NULL;
     }
 
     Vertex * connect[2];
@@ -251,15 +273,18 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-struct Edge33 : public QuadEdge {
+struct Edge33 : public QuadEdge
+{
 
-    Edge33(Mesh *m, Vertex *v0, Vertex * v1) {
+    Edge33(Mesh *m, Vertex *v0, Vertex * v1)
+    {
         mesh = m;
         connect[0] = v0;
         connect[1] = v1;
     }
 
-    int remove() {
+    int remove()
+    {
         if (build()  != 0) return 1;
         if (commit() != 0) return 2;
         return 0;
@@ -286,10 +311,11 @@ private:
 // Note: This name is ambiguous: I couldn't find suitable name for it.
 //
 //
+struct RestrictedEdge : public QuadEdge
+{
 
-struct RestrictedEdge : public QuadEdge {
-
-    RestrictedEdge(Mesh *m, Vertex *resnode, Vertex * bndnode) {
+    RestrictedEdge(Mesh *m, Vertex *resnode, Vertex * bndnode)
+    {
         mesh = m;
         connect[0] = resnode;
         connect[1] = bndnode;
@@ -300,11 +326,13 @@ struct RestrictedEdge : public QuadEdge {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-class SwapQuadEdge : public QuadEdge {
+class SwapQuadEdge : public QuadEdge
+{
 public:
     static bool is_topologically_valid_swap(int d1, int d2, int d3, int d4);
 
-    SwapQuadEdge(Mesh *m, Vertex *v0, Vertex *v1, Face *firstface = NULL) {
+    SwapQuadEdge(Mesh *m, Vertex *v0, Vertex *v1, Face *firstface = NULL)
+    {
         mesh = m;
         edge = NULL;
         connect[0] = v0;
@@ -314,7 +342,8 @@ public:
         check_fronts = 0;
     }
 
-    SwapQuadEdge(Mesh *m, Edge *e, Face *firstface = NULL) {
+    SwapQuadEdge(Mesh *m, Edge *e, Face *firstface = NULL)
+    {
         mesh = m;
         edge = e;
         connect[0] = e->getNodeAt(0);
@@ -323,13 +352,15 @@ public:
         assert(mesh);
     }
 
-    void clear() {
+    void clear()
+    {
         if (newFaces[0] != NULL) delete newFaces[0];
         if (newFaces[1] != NULL) delete newFaces[1];
     }
 
-    void modify_fronts( int v ){
-        check_fronts = v; 
+    void modify_fronts( int v )
+    {
+        check_fronts = v;
     }
 
     int rotate(); // Only for the graphical interaction purpose..
@@ -345,14 +376,15 @@ public:
 private:
     bool  check_fronts;
     Face *firstFace;            // Which one of the two faces is the first one. It is needed
-                                // type1, type2, and type3 updates...
+    // type1, type2, and type3 updates...
     Edge *edge;                 // Swapping edge.
     NodeSequence bound_nodes;   //   It is always going to be six nodes...
 
-    struct BackUpData {
+    struct BackUpData
+    {
         Vertex *diagonalConnect[2]; // Diagonal of the two quads.
         NodeSequence face1Connect, face2Connect;
-        map<Vertex*, Point3D>  pCoords; // Six Boundary node's coordinates. 
+        map<Vertex*, Point3D>  pCoords; // Six Boundary node's coordinates.
     };
     BackUpData bkp_data;
 
@@ -372,62 +404,104 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-class OneDefectPatch {
-
+class OneDefectPatch
+{
 public:
+    static int MAX_FACES_ALLOWED;
+
+    static int count_3_patches;
+    static int count_4_patches;
+    static int count_5_patches;
+    static double time_3_patches;
+    static double time_4_patches;
+    static double time_5_patches;
+
+    OneDefectPatch( Mesh *m )
+    {
+        mesh = m;
+        apex = NULL;
+        quad_splitting_node = NULL;
+        new_defective_node  = NULL;
+    }
 
     OneDefectPatch( Mesh *m, Vertex *v)
     {
-       mesh = m; apex = v;
-       quad_splitting_node = NULL;
-       new_defective_node = NULL;
+        mesh = m;
+        apex = v;
+        quad_splitting_node = NULL;
+        new_defective_node  = NULL;
     }
 
-    OneDefectPatch( Mesh *m, NodeSequence &sq)
+    void set_initial_path( const NodeSequence &sq)
     {
-       mesh = m; 
-       apex = NULL;
-       nodepath = sq;
-       quad_splitting_node = NULL;
-       new_defective_node  = NULL;
+        nodepath = sq;
     }
 
     size_t getSize(int e)
     {
-      if( e == 0) return inner_nodes.size() + bound_nodes.size();
-      if( e == 2) return faces.size();
-      return 0;
+        if( e == 0) return inner_nodes.size() + bound_nodes.size();
+        if( e == 2) return faces.size();
+        return 0;
     }
 
-    NodeSequence get_irregular_nodes_removed() { return irregular_nodes_removed; }
+    const NodeSequence &get_irregular_nodes_removed()
+    {
+        return irregular_nodes_removed;
+    }
 
     size_t count_irregular_nodes(int where);
 
     int  build_remeshable_boundary();
 
-    FaceSequence getFaces() const 
+    FaceSequence getFaces() const
     {
-       FaceSequence result;
-       if( faces.empty() ) return result;
+        FaceSequence result;
+        if( faces.empty() ) return result;
 
-       result.resize( faces.size() );
-       std::copy( faces.begin(), faces.end(), result.begin());
-       return result;
+        result.resize( faces.size() );
+        std::copy( faces.begin(), faces.end(), result.begin());
+        return result;
     }
-    NodeSequence getBoundaryNodes() const {return bound_nodes;}
+
+    const NodeSequence &getBoundaryNodes() const
+    {
+        return bound_nodes;
+    }
+
+    bool operator < ( const OneDefectPatch &rhs) const
+    {
+        return faces.size() < rhs.faces.size();
+    }
+
+    Vertex *get_new_defective_node()
+    {
+        return new_defective_node;
+    }
 
     int  remesh();
 
-    bool operator < ( const OneDefectPatch &rhs) const
-    {  return faces.size() < rhs.faces.size(); }
-
-    Vertex *get_new_defective_node() { return new_defective_node; }
-
     void setTags();
-private:
-    static ObjectPool<Vertex> nodePool; // For reusing node objects
-    static ObjectPool<Face>   facePool; // For reusing face objects
 
+    void clear()
+    {
+        faces.clear();
+        nodepath.clear();
+        new_defective_node  = NULL;
+        quad_splitting_node = NULL;
+        corners.clear();
+        inner_nodes.clear();
+        bound_nodes.clear();
+        irregular_nodes_removed.clear();
+        boundary.clear();
+        cornerPos.clear();
+        segSize.clear();
+        newnodes.clear();
+        newfaces.clear();
+        seednodes.clear();
+        seedfaces.clear();
+    }
+
+private:
     bool isSafe();
     NodeSequence seednodes;
     FaceSequence seedfaces;
@@ -443,10 +517,11 @@ private:
     // Local data ...
     Vertex *quad_splitting_node;    // One special node that splits a quad loop
     int     quad_splitting_node_degree;  // Valence of the splitting node.
+
     NodeSet corners;      // Corners of the blob
     NodeSet inner_nodes;  // Inner nodes ( not on the boundary ) of the blob
-    NodeSequence bound_nodes;       // Boundary nodes 
-    NodeSequence irregular_nodes_removed; 
+    NodeSequence bound_nodes;       // Boundary nodes
+    NodeSequence irregular_nodes_removed;
     vector<Edge> boundary;          // boundary of the blob.
     vector<int>  cornerPos;         // Positions of the corners in the bound_nodes.
     vector<int>  segSize;
@@ -459,10 +534,15 @@ private:
     NodeSequence     backupConnect;
 
     // Get the position on the boundary ...
-    int getPosOf( const Vertex *v);
-
+    int getPosOf( const Vertex *v)
+    {
+        size_t nSize = bound_nodes.size();
+        for (size_t i = 0; i <  nSize; i++)
+            if (bound_nodes[i] == v) return i;
+        return -1;
+    }
     // Return nodes within the range (src, dst)
-    NodeSequence get_bound_nodes( const Vertex *src, const Vertex *dst);
+    void get_bound_nodes( const Vertex *src, const Vertex *dst, NodeSequence &s);
 
     // randomly select one irregular node
     bool  has_irregular_node_on_first_segment() const;
@@ -481,10 +561,10 @@ private:
     bool  is_simply_connected();
 
     bool  is_quad_breakable_at( const Vertex *v);
-    // Query for the validity of 3-4-5 sided patches. 
+    // Query for the validity of 3-4-5 sided patches.
     bool  is_4_sided_convex_loop_quad_meshable();
 
-    // Set the boundary pattern string. 
+    // Set the boundary pattern string.
     void set_boundary_segments();
 
     // If the resulting mesh is invalid for some reasons, revert back to
@@ -496,12 +576,14 @@ private:
     int  remesh_3_sided_patch();
     int  remesh_4_sided_patch();
     int  remesh_5_sided_patch();
+    void local_smoothing();
+    double local_shape_optimize(FaceSequence &s, double minQuality);
     void post_remesh(); // After successful remeshing, do some clean-up
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-struct QuadVertexDegreeReduction 
+struct QuadVertexDegreeReduction
 {
     void initialize();
 
@@ -529,7 +611,7 @@ struct SingletRemoval
 };
 
 
-class QuadCleanUp 
+class QuadCleanUp
 {
 public:
     static bool isDoublet(const Vertex *v);
@@ -541,19 +623,28 @@ public:
     static bool isEdge35(const Edge *e);
     static bool isDiamond(Face *f, int &pos, int type = 33);
 
-    QuadCleanUp() {}
-
-    QuadCleanUp(Mesh *m) {
-       setMesh(m);
-    }
-
-    ~QuadCleanUp() 
+    QuadCleanUp()
     {
-      if( lapweight ) delete lapweight;
-      if( lapsmooth ) delete lapsmooth;
+        djkpath = NULL;
+        defective_patch = NULL;
     }
 
-    void setMesh( Mesh *m ) 
+    QuadCleanUp(Mesh *m)
+    {
+        setMesh(m);
+        djkpath = NULL;
+        defective_patch = NULL;
+    }
+
+    ~QuadCleanUp()
+    {
+        if( lapweight ) delete lapweight;
+        if( lapsmooth ) delete lapsmooth;
+        if( djkpath   ) delete djkpath;
+        if( defective_patch ) delete defective_patch;
+    }
+
+    void setMesh( Mesh *m )
     {
         mesh = m;
         lapsmooth = new LaplaceSmoothing(mesh);
@@ -573,6 +664,8 @@ public:
     vector<OneDefectPatch> search_one_defect_patches();
 
     OneDefectPatch* build_one_defect_patch(Vertex *vertex = NULL );
+
+    int  degree_5_dominated();
 
     // Global Cleanup methods ..
     int remesh_defective_patches();
@@ -607,7 +700,7 @@ public:
     Vertex* insert_doublet(Face *face, Vertex *v0, Vertex *v2);
 
     vector<Edge33>  search_edges33();
-    int  remove_edges35();
+    int remove_edges35();
     int refine_restricted_node(Vertex *resnode, Vertex *bndnode);
     int refine_degree3_faces();
     int refine_bridges_face();
@@ -618,13 +711,14 @@ public:
     int  reduce_boundary_vertex_degree(Vertex *v);
 
 private:
-
-    // Input-Output mesh.
     Mesh *mesh;
 
     MeshOptimization mopt;
     LaplaceSmoothing *lapsmooth;
     LaplaceWeight *lapweight;
+
+    DijkstraShortestPath *djkpath; // Used in one defect remeshing ....
+    OneDefectPatch* defective_patch;
 
     int  region_search_method;
     int  has_interior_nodes_degree_345();
@@ -670,12 +764,12 @@ private:
     // High level utility function composed of basic functions...
     void cleanup_internal_boundary_face();
 
-    // May become obsolere 
-    vector<Edge33>  vEdges33; 
+    // May become obsolere
+    vector<Edge33>  vEdges33;
     int refine_3454_pattern( const Face *face, int pos);
     int refine_3444_pattern( const Face *face, int pos);
-    vector<Edge33> search_edges33_in_layer(int layerid );
     int apply_shift_node3_rule( Vertex *vertex);
+    vector<Edge33> search_edges33_in_layer(int layerid );
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -683,9 +777,10 @@ private:
 inline bool
 QuadCleanUp::isRegular (const Vertex *v)
 {
-  // Any interior vertex having four nodes( or faces ) is a regular node. 
-  if (!v->isBoundary () && (v->getRelations2 ().size () == 4)) return 1;
-  return 0;
+    assert(v);
+    // Any interior vertex having four nodes( or faces ) is a regular node.
+    if (!v->isBoundary () && (v->getNumRelations(2) == 4)) return 1;
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -693,9 +788,10 @@ QuadCleanUp::isRegular (const Vertex *v)
 inline bool
 QuadCleanUp::isDoublet (const Vertex *v)
 {
-  // Any interior node having two neighboring face is a  doublet node.
-  if (!v->isBoundary () && (v->getRelations2 ().size () == 2)) return 1;
-  return 0;
+    assert(v);
+    // Any interior node having two neighboring face is a  doublet node.
+    if (!v->isBoundary () && (v->getNumRelations(2) == 2)) return 1;
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -703,11 +799,12 @@ QuadCleanUp::isDoublet (const Vertex *v)
 inline bool
 QuadCleanUp::isSinglet (const Vertex *v)
 {
-  // Any boundary node having only one neigbour cell is a singlet node ...
-  int numfaces = v->getRelations2 ().size ();
-  assert (numfaces > 0);
-  if (v->isBoundary () && (numfaces == 1)) return 1;
-  return 0;
+    assert( v );
+    // Any boundary node having only one neigbour cell is a singlet node ...
+    int numfaces = v->getNumRelations(2);
+    assert (numfaces > 0);
+    if (v->isBoundary () && (numfaces == 1)) return 1;
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -715,11 +812,15 @@ QuadCleanUp::isSinglet (const Vertex *v)
 inline bool
 QuadCleanUp::hasSinglet (const Face *face)
 {
-  for (int i = 0; i < face->getSize (0); i++)
+    assert( face );
+
+    if( face->isRemoved() ) return 0;
+
+    for (int i = 0; i < face->getSize (0); i++)
     {
-      if (isSinglet (face->getNodeAt (i))) return 1;
+        if (isSinglet (face->getNodeAt (i))) return 1;
     }
-  return 0;
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -727,22 +828,23 @@ QuadCleanUp::hasSinglet (const Face *face)
 inline bool
 QuadCleanUp::isEdge33 (const Edge *e)
 {
-  // Any interior edge having end vertex degrees 3 is edge33 
-  Vertex *v0 = e->getNodeAt (0);
-  Vertex *v1 = e->getNodeAt (1);
+    assert(e);
+    // Any interior edge having end vertex degrees 3 is edge33
+    Vertex *v0 = e->getNodeAt (0);
+    Vertex *v1 = e->getNodeAt (1);
 
-  if (v0->isBoundary ()) return 0;
-  if (v1->isBoundary ()) return 0;
+    if (v0->isBoundary ()) return 0;
+    if (v1->isBoundary ()) return 0;
 
-  FaceSequence vneighs;
+    FaceSequence vneighs;
 
-  vneighs = v0->getRelations2 ();
-  if (vneighs.size () != 3) return 0;
+    vneighs = v0->getRelations2 ();
+    if (vneighs.size () != 3) return 0;
 
-  vneighs = v1->getRelations2 ();
-  if (vneighs.size () != 3) return 0;
+    vneighs = v1->getRelations2 ();
+    if (vneighs.size () != 3) return 0;
 
-  return 1;
+    return 1;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -750,21 +852,21 @@ QuadCleanUp::isEdge33 (const Edge *e)
 inline bool
 QuadCleanUp::isEdge35 (const Edge *e)
 {
-  Vertex *v0 = e->getNodeAt (0);
-  Vertex *v1 = e->getNodeAt (1);
+    Vertex *v0 = e->getNodeAt (0);
+    Vertex *v1 = e->getNodeAt (1);
 
-  if (v0->isBoundary ()) return 0;
-  if (v1->isBoundary ()) return 0;
+    if (v0->isBoundary ()) return 0;
+    if (v1->isBoundary ()) return 0;
 
-  FaceSequence vneighs;
+    FaceSequence vneighs;
 
-  vneighs = v0->getRelations2 ();
-  if (vneighs.size () != 3) return 0;
+    vneighs = v0->getRelations2 ();
+    if (vneighs.size () != 3) return 0;
 
-  vneighs = v1->getRelations2 ();
-  if (vneighs.size () != 5) return 0;
+    vneighs = v1->getRelations2 ();
+    if (vneighs.size () != 5) return 0;
 
-  return 1;
+    return 1;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -772,17 +874,17 @@ QuadCleanUp::isEdge35 (const Edge *e)
 inline bool
 QuadCleanUp::isTunnel(const Edge *e)
 {
-  Vertex *v0 = e->getNodeAt (0);
-  Vertex *v1 = e->getNodeAt (1);
+    Vertex *v0 = e->getNodeAt (0);
+    Vertex *v1 = e->getNodeAt (1);
 
-  if (!v0->isBoundary ()) return 0;
-  if (!v1->isBoundary ()) return 0;
+    if (!v0->isBoundary ()) return 0;
+    if (!v1->isBoundary ()) return 0;
 
-  FaceSequence vneighs = Mesh::getRelations112(v0, v1);
+    FaceSequence vneighs = Mesh::getRelations112(v0, v1);
 
-  if( vneighs.size() != 1 ) return 1;
+    if( vneighs.size() != 1 ) return 1;
 
-  return 0;
+    return 0;
 }
 /////////////////////////////////////////////////////////////////////////////
 

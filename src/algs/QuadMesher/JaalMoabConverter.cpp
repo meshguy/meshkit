@@ -1,5 +1,7 @@
 #include "JaalMoabConverter.hpp"
 
+#ifdef HAVE_MOAB 
+
 iBase_EntityHandle
 JaalMoabConverter :: new_MOAB_Handle(iMesh_Instance imesh, Vertex *vertex)
 {
@@ -162,7 +164,7 @@ JaalMoabConverter ::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entityS
     SimpleArray<iBase_EntityHandle> facenodes;
 
     jaalnode.clear();
-    for( unsigned int i = 0; i < numFaces; i++) {
+    for( int i = 0; i < numFaces; i++) {
          iMesh_getEntAdj(imesh, tfaceHandles[i], iBase_VERTEX, ARRAY_INOUT(facenodes), &err);
          for (int j = 0; j < 3; j++)
               jaalnode[ facenodes[j] ] = NULL;
@@ -213,3 +215,5 @@ JaalMoabConverter ::fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle entityS
 
     return jmesh;
 }
+
+#endif

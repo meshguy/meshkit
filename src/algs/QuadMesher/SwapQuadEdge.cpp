@@ -168,8 +168,8 @@ SwapQuadEdge::get_boundary_nodes_chain()
     {
         for (int j = 0; j < 4; j++)
         {
-            Vertex *vf0 = adjFaces[i]->getNodeAt((j + 0) % 4);
-            Vertex *vf1 = adjFaces[i]->getNodeAt((j + 1) % 4);
+            Vertex *vf0 = adjFaces[i]->getNodeAt(j + 0);
+            Vertex *vf1 = adjFaces[i]->getNodeAt(j + 1);
             Edge edge(vf0, vf1);
             if (!edge.isSameAs(sharededge))
                 bndedges.push_back(edge);
@@ -312,45 +312,56 @@ SwapQuadEdge::make_new_diagonal_at(int pos, bool bound_check)
     assert(!adjFaces[0]->isRemoved());
     assert(!adjFaces[1]->isRemoved());
 
-    // The change may produce concave or tangled mesh. Do some local
-    // Laplacian smoothing at the six nodes only. Hopefully, the elements
-    // will be acceptable. If not, we need to rollback this operation.
+    int con1 = adjFaces[0]->concaveAt();
+    int con2 = adjFaces[1]->concaveAt();
+//  int con1 = adjFaces[0]->isSimple();
+//  int con2 = adjFaces[1]->isSimple();
+//  if( con1 && con2 ) return  0;
 
-    LaplaceLengthWeight lw;
-    LaplaceSmoothing lapsmooth(mesh);
-    lapsmooth.setWeight(&lw);
-    lapsmooth.setNumIterations(10);
-    lapsmooth.localized_at(bound_nodes);
-
-    // Look at the neighbors, if some elements is inverted. Here we create
-    // a set of neighbours, to avoid duplicate checking.
-    FaceSet neighSet;
-    for (int i = 0; i < 6; i++)
-    {
-        Vertex *v = bound_nodes[i];
-        FaceSequence vfaces = v->getRelations2();
-        size_t nSize = vfaces.size();
-        for (size_t j = 0; j < nSize; j++)
-            neighSet.insert(vfaces[j]);
+    if( con1 >= 0 || con2 >=0) {
+        rollback();
+        return 1;
     }
-    assert(!neighSet.empty());
+    return 0;
 
-    FaceSet::const_iterator it;
-    for (it = neighSet.begin(); it != neighSet.end(); ++it)
-    {
-        Face *face = *it;
-        int pos = face->invertedAt();
-        if (pos >= 0)
+   // The change may produce concave or tangled mesh. Do some local
+   // Laplacian smoothing at the six nodes only. Hopefully, the elements
+        // will be acceptable. If not, we need to rollback this operation.
+
+        LaplaceLengthWeight lw;
+        LaplaceSmoothing lapsmooth(mesh);
+        lapsmooth.setWeight(&lw);
+        lapsmooth.setNumIterations(10);
+        lapsmooth.localized_at(bound_nodes);
+
+        // Look at the neighbors, if some elements is inverted. Here we create
+        // a set of neighbours, to avoid duplicate checking.
+        FaceSet neighSet;
+        for (int i = 0; i < 6; i++)
         {
-            Vertex *v = face->getNodeAt(pos);
-            if (!v->isBoundary())
+            Vertex *v = bound_nodes[i];
+            const FaceSequence &vfaces = v->getRelations2();
+            size_t nSize = vfaces.size();
+            for (size_t j = 0; j < nSize; j++)
+                neighSet.insert(vfaces[j]);
+        }
+        assert(!neighSet.empty());
+
+        FaceSet::const_iterator it;
+        for (it = neighSet.begin(); it != neighSet.end(); ++it)
+        {
+            Face *face = *it;
+            int pos = face->concaveAt();
+            if (pos >= 0)
             {
-                rollback();
-                return 1;
+                Vertex *v = face->getNodeAt(pos);
+                if (!v->isBoundary())
+                {
+                    rollback();
+                    return 1;
+                }
             }
         }
-    }
-
     update_front();
 
     return 0;
@@ -434,6 +445,7 @@ SwapQuadEdge::apply_bound_rule()
             if (!err) return 0;
         }
     }
+
     return 3;
 }
 
@@ -514,32 +526,32 @@ SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
 
     if (d1 == 4)
     {
-         FaceSequence faces = vertex->getRelations2();
-         if (faces.size() != 3) return 1;
-         int layerid = connect[0]->getLayerID();
-         faces = vertex->getRelations2();
-         Face *f0 = firstFace;
-         faces = Mesh::getRelations112(connect[0], connect[1]);
-         assert(faces.size() == 2);
-         Face *f1 = NULL;
-         if (faces[0] == f0) f1 = faces[1];
-         if (faces[1] == f0) f1 = faces[0];
-         assert(f1);
+        FaceSequence faces = vertex->getRelations2();
+        if (faces.size() != 3) return 1;
+        int layerid = connect[0]->getLayerID();
+        faces = vertex->getRelations2();
+        Face *f0 = firstFace;
+        faces = Mesh::getRelations112(connect[0], connect[1]);
+        assert(faces.size() == 2);
+        Face *f1 = NULL;
+        if (faces[0] == f0) f1 = faces[1];
+        if (faces[1] == f0) f1 = faces[0];
+        assert(f1);
 
 
-         int pos = f1->getPosOf(connect[0]);
-         Vertex *vopp = f1->getNodeAt((pos + 2) % 4);
-         if (connect[1]->getLayerID() > layerid && vopp->getLayerID() > layerid)
-          {
-             set_no_tags(mesh);
-             connect[1]->setTag(1);
-             vopp->setTag(1);
-             mesh->saveAs("dbg.dat");
-             Break();
-             SwapQuadEdge edge(mesh, connect[1], vopp, f1);
-             int err = edge.apply_deficient_rule(connect[0]);
-             if (err) return 1;
-          }
+        int pos = f1->getPosOf(connect[0]);
+        Vertex *vopp = f1->getNodeAt(pos + 2);
+        if (connect[1]->getLayerID() > layerid && vopp->getLayerID() > layerid)
+        {
+            set_no_tags(mesh);
+            connect[1]->setTag(1);
+            vopp->setTag(1);
+            mesh->saveAs("dbg.dat");
+            Break();
+            SwapQuadEdge edge(mesh, connect[1], vopp, f1);
+            int err = edge.apply_deficient_rule(connect[0]);
+            if (err) return 1;
+        }
     }
     exit(0);
 
@@ -570,17 +582,17 @@ SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
     // Create new quads whose common diagonal must contain the singlet.
     int err = make_new_diagonal_at(pos);
 
-/*
-    if( err  ) {
-        for (int i = 0; i < 6; i++) {
-             NodeSequence vneighs = bound_nodes[i]->getRelations0();
-             int minid = bound_nodes[i]->getLayerID();
-             for( int j = 0; j < vneighs.size(); j++)  
-                  minid = min( minid, vneighs[j]->getLayerID() );
-            assert( bound_nodes[i]->getLayerID() == minid+1);
-         }
-    }
-*/
+    /*
+        if( err  ) {
+            for (int i = 0; i < 6; i++) {
+                 NodeSequence vneighs = bound_nodes[i]->getRelations0();
+                 int minid = bound_nodes[i]->getLayerID();
+                 for( int j = 0; j < vneighs.size(); j++)
+                      minid = min( minid, vneighs[j]->getLayerID() );
+                assert( bound_nodes[i]->getLayerID() == minid+1);
+             }
+        }
+    */
 
     return err;
 }
@@ -613,13 +625,13 @@ QuadCleanUp::swap_concave_faces()
     for (size_t iface = 0; iface < numfaces; iface++)
     {
         Face *face = mesh->getFaceAt(iface);
-        int pos = face->invertedAt();
+        int pos = face->concaveAt();
         if (pos >= 0)
         {
             for (int i = 0; i < 2; i++)
             {
-                Vertex *v0 = face->getNodeAt((pos + 1 + i) % 4);
-                Vertex *v1 = face->getNodeAt((pos + 2 + i) % 4);
+                Vertex *v0 = face->getNodeAt(pos + 1 + i);
+                Vertex *v1 = face->getNodeAt(pos + 2 + i);
                 SwapQuadEdge edge(mesh, v0, v1);
                 int err = edge.apply_concave_rule();
                 if (!err)

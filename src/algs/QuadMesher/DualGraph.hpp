@@ -84,11 +84,21 @@ public:
 
   void clear()
   {
-    for (size_t i = 0; i < nodes.size(); i++)
+      nodes.clear();
+      edges.clear();
+  }
+
+  void deleteAll()
+  {
+    size_t nSize;
+
+    nSize = nodes.size();
+    for (size_t i = 0; i < nSize; i++)
       delete nodes[i];
     nodes.clear();
 
-    for (size_t i = 0; i < edges.size(); i++)
+    nSize = edges.size();
+    for (size_t i = 0; i < nSize; i++)
       delete edges[i];
     edges.clear();
   }
