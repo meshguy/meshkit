@@ -769,7 +769,7 @@ double Vertex:: point_orient( const Point3D &p0, const Point3D &p1, const Point3
     y[2] = qpoint[1];
 
     z[0] = p0[2];
-    z[1] = p1[3];
+    z[1] = p1[2];
     z[2] = qpoint[2];
 
     return PolygonArea3D(3, x, y, z);
@@ -1420,6 +1420,9 @@ Face::is_5_sided_convex_loop_quad_meshable(const int *segments, int *partSegment
 int
 Mesh::refine_quad15(Face *face)
 {
+    if( face == NULL ) return 1;
+    if( face->isRemoved() ) return 2;
+
     NodeSequence newnodes;
     FaceSequence newfaces;
     face->refine_quad15(newnodes, newfaces);
@@ -1849,17 +1852,16 @@ Mesh::getRelations112(const PNode vtx0, const PNode vtx1)
 size_t
 Mesh::count_edges()
 {
-    if (getAdjTable(1, 1)) return edges.size();
+    if (getAdjTable(1, 0)) return edges.size();
 
     int relexist = build_relations(0, 0);
 
     size_t numnodes = getSize(0);
 
-    NodeSequence neighs;
     size_t ncount = 0;
     for (size_t i = 0; i < numnodes; i++)
     {
-        neighs = nodes[i]->getRelations0();
+        const NodeSequence &neighs = nodes[i]->getRelations0();
         for (size_t j = 0; j < neighs.size(); j++)
             if (nodes[i] > neighs[j])
                 ncount++;
@@ -1895,6 +1897,7 @@ void Mesh::build_edges()
     }
 
     if (!relexist0) clear_relations(0, 0);
+    adjTable[1][0] = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1978,6 +1981,17 @@ Mesh::prune()
         }
     }
 
+    nSize = edges.size();
+    for (size_t i = 0; i < nSize; i++)
+    {
+        Edge *e = edges[i];
+        if (e->isRemoved())
+        {
+            if (find(garbageEdges.begin(), garbageEdges.end(), e) == garbageEdges.end())
+                garbageEdges.push_back(e);
+        }
+    }
+
     nSize = faces.size();
     for (size_t i = 0; i < nSize; i++)
     {
@@ -1996,6 +2010,14 @@ Mesh::prune()
     nSize = nodes.size();
     for (size_t i = 0; i < nSize; i++)
         assert(nodes[i]->isActive());
+
+    EdgeSequence::iterator eend;
+    eend = remove_if(edges.begin(), edges.end(), EntityRemovedPred());
+    edges.erase(eend, edges.end());
+
+    nSize = edges.size();
+    for (size_t i = 0; i < nSize; i++)
+        assert(edges[i]->isActive());
 
     FaceSequence::iterator fend;
     fend = remove_if(faces.begin(), faces.end(), EntityRemovedPred());
@@ -5022,9 +5044,9 @@ vector<QTrack> Jaal::generate_quad_partitioning(Mesh *mesh)
     sort(qpath.begin(), qpath.end());
 
     int partid = 1;
-    for( int i = 0; i < qpath.size(); i++)
+    for( size_t i = 0; i < qpath.size(); i++)
     {
-        for( int j = 0; j < qpath[i].sequence.size(); j++)
+        for( size_t j = 0; j < qpath[i].sequence.size(); j++)
             qpath[i].sequence[j]->setGroupID( partid );
         partid++;
     }
@@ -5074,7 +5096,7 @@ vector<QTrack> Jaal::generate_quad_partitioning(Mesh *mesh)
                     if( v0->getGroupID() == 0 || v1->getGroupID() == 0)
                     {
                         FaceSequence fneighs = Mesh::getRelations112( v0, v1);
-                        for( int j = 0; j < fneighs.size(); j++)
+                        for( size_t j = 0; j < fneighs.size(); j++)
                             if( fneighs[j]->getGroupID() == 0)
                                 faceQ.push_back( fneighs[j] );
                     }

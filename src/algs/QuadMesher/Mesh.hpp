@@ -150,7 +150,6 @@ int split_stl_vector(const std::deque<T> &a, size_t pos, std::deque<T> &b, std::
     return 0;
 }
 
-
 typedef int AttribKey;
 
 struct Attribute
@@ -1519,6 +1518,8 @@ public:
     const PEdge &getEdgeAt(size_t id) const
     {
         assert(id < edges.size());
+        if( edges[id]->getNodeAt(0)->isRemoved() || edges[id]->getNodeAt(1)->isRemoved()  )
+            edges[id]->setStatus( MeshEntity::REMOVE );
         return edges[id];
     }
 
@@ -1760,9 +1761,9 @@ public:
     void collect_garbage();
     int search_quad_patches();
 
+    void build_edges();
 private:
     volatile char adjTable[4][4];
-    void build_edges();
     size_t count_edges();
     string meshname;
 
@@ -1791,6 +1792,7 @@ private:
 
     // Lazy garbage collection containers.
     NodeList garbageNodes;
+    EdgeList garbageEdges;
     FaceList garbageFaces;
 
     // Build Topological relations...
@@ -2121,16 +2123,36 @@ inline int Mesh::addFace(PFace f)
         }
     }
 
+    if (adjTable[1][0])
+    {
+        cout << " Adding Edges " << endl;
+        for (int i = 0; i < nSize; i++)
+        {
+            Vertex *v0 = f->getNodeAt(i);
+            Vertex *v1 = f->getNodeAt(i+1);
+            Vertex *vi = min( v0, v1);
+            Vertex *vj = max( v0, v1);
+            if( !vi->hasRelation0(vj) )
+            {
+                Edge *edge = new Edge(vi, vj);
+                edges.push_back(edge);
+                vi->addRelation0(vj);
+                vj->addRelation0(vi);
+            }
+        }
+    }
+
     if (adjTable[0][0])
     {
         for (int i = 0; i < nSize; i++)
         {
-            Vertex *vi = f->getNodeAt((i + 0) % nSize);
-            Vertex *vj = f->getNodeAt((i + 1) % nSize);
+            Vertex *vi = f->getNodeAt((i + 0));
+            Vertex *vj = f->getNodeAt((i + 1));
             vi->addRelation0(vj);
             vj->addRelation0(vi);
         }
     }
+
     f->setStatus(MeshEntity::ACTIVE);
     return 0;
 }
@@ -2569,6 +2591,7 @@ int quad_concave_tests();
 } // namespace Jaal
 
 void plot_all_quad_quality_measures( Jaal::Mesh *mesh );
+void plot_all_tri_quality_measures( Jaal::Mesh *mesh );
 
 #endif
 
