@@ -215,7 +215,7 @@ int CCrgen::copy_move_hex_flat_assys_parallel(CopyMesh **cm, const int nrings,
 			      &new_ents, &new_ents_alloc, &new_ents_size, false);
       	std::cout << "Copy/moved Assm: " << assm_index << " n1=" << n1
       		  << ", n2=" << n2 << " dX = " << dx[0] << " dY = "
-      		  << dx[1] << std::endl;
+      		  << dx[1] << " rank " << nrank << std::endl;
 
       	free(new_ents);
       	free(orig_ents);
@@ -304,7 +304,7 @@ int CCrgen::copy_move_hex_vertex_assys_p1_parallel(CopyMesh **cm,
 	  move_verts(assys[move_index], dxnew);
 
 	  std::cout << "Copy/moved A: " << assm_index 
-		    <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		    <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
 	}
 	i++;
 	flags[move_index] = 1;
@@ -362,7 +362,7 @@ int CCrgen::copy_move_hex_vertex_assys_p1_parallel(CopyMesh **cm,
 	  move_verts(assys[move_index], dxnew);
 
 	  std::cout << "Copy/moved A: " << assm_index 
-		    <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		    <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
 	}
 	i++;
 	flags[move_index] = 1;
@@ -471,7 +471,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	  cm[cmove_index]->copy(orig_ents,orig_ents_size, copy::Translate(dxnew), 
 				&new_ents, &new_ents_alloc, &new_ents_size, false);
 	  std::cout << "Copy/moved A: " << assm_index 
-		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
+		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << " rank " << nrank << std::endl;
 	  free(new_ents);
 	  free(orig_ents);
 	  i++;
@@ -552,7 +552,7 @@ int CCrgen::copy_move_hex_vertex_assys_parallel(CopyMesh **cm,
 	  cm[cmove_index]->copy(orig_ents,orig_ents_size, copy::Translate(dxnew), 
 				&new_ents, &new_ents_alloc, &new_ents_size, false);
 	  std::cout << "Copy/moved A: " << assm_index 
-		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
+		    << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << " rank " << nrank << std::endl;
 	  free(new_ents);
 	  free(orig_ents);
 	  i++;
@@ -638,7 +638,7 @@ int CCrgen::copy_move_one_twelfth_assys_p1_parallel(CopyMesh **cm,
  	move_verts(assys[move_index], dxnew);
 
 	std::cout << "Copy/moved A: " << assm_index 
-		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
+		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << " rank " << nrank << std::endl;
       }
       i++;
       flags[move_index] = 1;
@@ -746,7 +746,7 @@ int CCrgen::copy_move_one_twelfth_assys_parallel(CopyMesh **cm,
 	cm[cmove_index]->copy(orig_ents,orig_ents_size, copy::Translate(dxnew),
 			      &new_ents, &new_ents_alloc, &new_ents_size, false);
 	std::cout << "Copy/moved A: " << assm_index 
-		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << std::endl;
+		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dxnew[0]<< " dY = " << dxnew[1] << " rank " << nrank << std::endl;
 
 	free(new_ents);
 	free(orig_ents);
@@ -835,7 +835,7 @@ int CCrgen::copy_move_hex_full_assys_p1_parallel(CopyMesh **cm,
       if(flags[move_index] == 0){
  	move_verts(assys[move_index], dx);
 	std::cout << "Copy/moved A: " << assm_index 
-		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
       }
       i++;
       flags[move_index] = 1;
@@ -940,7 +940,7 @@ int CCrgen::copy_move_hex_full_assys_parallel(CopyMesh **cm,
 	cm[cmove_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx),
 			      &new_ents, &new_ents_alloc, &new_ents_size, false);
 	std::cout << "Copy/moved A: " << assm_index 
-		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		  << " n1=" << n1 << ", n2=" << n2 <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
 
 	free(new_ents);
 	free(orig_ents);
@@ -1011,7 +1011,7 @@ int CCrgen::copy_move_sq_assys_p1_parallel(CopyMesh **cm,
  	move_verts(assys[move_index], dx);
 
 	std::cout << "Copy/moved A: " << assm_index 
-		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
       }
       i++;
       flags[move_index] = 1;
@@ -1101,7 +1101,7 @@ int CCrgen::copy_move_sq_assys_parallel(CopyMesh **cm,
 	cm[cmove_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx), 
 			      &new_ents, &new_ents_alloc, &new_ents_size, false);
 	std::cout << "Copy/moved A: " << assm_index 
-		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << std::endl;
+		  <<  " n1=" << n1 << ", n2=" << n2  <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
 	free(new_ents);
 	i++;
     

@@ -1,56 +1,42 @@
 ------------------------------------------------------------------------------------------------------
 TABLE OF CONTENTS:
 ------------------------------------------------------------------------------------------------------
-
 1. INTRODUCTION
 2. DEFAULT TEST CASE
 3. RUNNING
-4. EXAMPLE AND TEST CASES
-5. SECTION A: Syntax and Keyword Definition
-6. SECTION B: Detailed Installation Instructions
+4. EXAMPLE DESCRIPTION AND TEST CASES
+5. SECTION A: 'assygen'- Syntax and Keyword Definition
+5. SECTION B: 'coregen'- Syntax and Keyword Definition
+6. SECTION C: Detailed Installation Instructions
 
 ------------------------------------------------------------------------------------------------------
 1. INTRODUCTION
 ------------------------------------------------------------------------------------------------------
-
 RGG is a toolkit used for generating nuclear reactor assembly and core geometry/mesh. 
 It takes advantage of repeated lattice structures to simplify specification of geometry and mesh parameters.
 
 RGG consists of two programs:
-
-1.'assygen': Generates assembly geometry and Cubit journal files for meshing. These are based on a user defined input file (See Section A-(a),(b) for details).
-2.'coregen': Takes assembly meshes as input and copy/move/merge 's them into core specified in the input file (See Section A-(d),(e) for details).
+1.'assygen': Generates assembly geometry and Cubit journal files for meshing. These are based on a user defined input file (See Section A for details).
+2.'coregen': Reads assembly meshes or geometries as input and forms the core-lattice model as specified in the input file (See Section B for details).
 
 Some salient features of RGG tookit are:
-
 1. It is capable of creating 'Rectangular' (e.g. PWR, BWR) and 'Hexagonal' (e.g. VHTR, SFR) assembly/core geometries and meshes.
 2. For 'Hexaonal' type lattice, RGG has schemes for creation of 1/6th (HexFlat and HexVertex) 1/12 and full core meshes. 
 3. RGG allows specification of mesh sizes and schemes. It supports both 'Hexahedral' and 'Tetrahedral' meshing. 
-4. It supports construction of assemblies with varying axial properties. It also offers creation of dummy and intersecting cells.
-5. RGG has builtin features to specify and propagate the metadata into the final mesh.
-6. RGG is capable of creating geometries in OCC or ACIS file format. 
+4. 'assygen' supports construction of assemblies with varying axial properties. It also offers creation of dummy and intersecting cells.
+5. 'coregen' has builtin features to specify and propagate the metadata into the final mesh.
+6. 'assygen' is capable of creating geometries in OCC or ACIS file format. 
 7. Both 2D and 3D geometry and meshes can be created.
 8. Meshing can be done using 'assygen' created Cubit journal files or by any tool of user's choice.
 9. RGG is capable of creating meshes in a variety of file formats, typically the one's supported by MOAB(http://trac.mcs.anl.gov/projects/ITAPS/wiki/MOAB). 
 10. RGG not only efficient in memory and time, but, it also allows automation of creation of reactor cores. 
 
-Picture and breif methodology description about RGG can be found at: http://www.tstt-scidac.org/applications/gnep.html
-
-------------------------------------------------------------------------------------------------------
-In order to use rgg program use standard autotools commands to build 'MeshKit' as listed below (See Section B for installation of ITAPS dependencies).
-'MeshKit' source code can be checked out from the website - https://svn.mcs.anl.gov/repos/fathom/MeshKit/trunk
-
-autoreconf -fi
-./configure --with-igeom=<igeom-dir> --with-imesh=<imesh-dir> --with-irel=<irel-dir> --enable-algs --enable-rgg --enable-debug
-make
-cd rgg
-make assygen coregen
+RGG methodology and some models created using RGG can be found on the website: https://trac.mcs.anl.gov/projects/fathom/wiki/rgg
 
 --------------------------------------------------------------------------------------------------------
 2. DEFAULT TEST CASE
 --------------------------------------------------------------------------------------------------------
-
-On the MeshKit/rgg directory launch the following commands:
+Goto MeshKit/rgg directory launch the following commands:
 1. assygen
 2. cubit
 3. play 'assygen_default.jou'
@@ -171,9 +157,9 @@ sixth_hexvertexcore     : A toy example of sixth of a hexagonal core (cut along 
 twelfth_hexflatcore	: A toy example of twelfth of a hexagonal core with 3 rings.
 vhtr-hexvertex          : A full VHTR core with 11 rings.
 
-============================================
-SECTION A: Syntax and Keyword Definition
-============================================
+===================================================
+SECTION A: 'assygen'- Syntax and Keyword Definition
+===================================================
 
 -------------------------------------------
 (a) Keywords used in AssyGen input file:
@@ -291,6 +277,9 @@ save as <mesh_file>.cub
 
 * details of tetmeshing journal file are not included in this syntax description.
 
+===================================================
+SECTION B: 'coregen'- Syntax and Keyword Definition
+===================================================
 --------------------------------------
 (d) Keywords used in CoreGen input file:
 --------------------------------------
@@ -320,6 +309,8 @@ save as <mesh_file>.cub
 12.  Background: If specified, this keyword specifies an assembly mesh that fills interstices regions between assemblies, along with any structure surrounding the core, like a core barrel.
 
 13.  End: This command marks the end of CoreGen input file.
+
+14. ProblemType: Copy/move operations can be performed on 'Mesh' or 'Geometry'. Default value of this keyword is 'Mesh'. When using geometry files in 'Assemblies' keyword this keyword should be setup to copy/move geometry.
 
 ----------------------------
 (e) Syntax used with CoreGen:
@@ -367,44 +358,75 @@ ASSYGEN_FILES = { <mesh_file>.inp } 	        *n_assys
 
 
 ==============================================
-SECTION B: Detailed Installation Instructions
+SECTION C: Detailed Installation Instructions
 ==============================================
 
 Build and Installation Instructions:
 The software prerequisites for  building the tools described here, and the means of obtaining them, are: 
 
-• CGM: the Common Geometry Module; download and build instructions can be found at http://trac.mcs.anl.gov/projects/ITAPS/wiki/CGM. Although CGM supports both the ACIS and Open.Cascade modeling engines, the latter is not yet robust enough to support AssyGen and CoreGen, so the ACIS version should be used. Note that CGM can be configured to use ACIS libraries through the CUBIT mesh generation toolkit.
+• CGM: the Common Geometry Module; download and build instructions can be found at http://trac.mcs.anl.gov/projects/ITAPS/wiki/CGM. CGM supports both the ACIS and Open.Cascade modeling engines. Note that CGM can be configured to use ACIS libraries through the CUBIT mesh generation toolkit.
 
 • MOAB: the Mesh-Oriented database; download and build instructions can be found at
-http://trac.mcs.anl.gov/projects/ITAPS/wiki/MOAB. MOAB depends on the HDF5 library, which is necessary for storing meshes generated by CoreGen; see MOAB build instructions for accessing and building this library.
+http://trac.mcs.anl.gov/projects/ITAPS/wiki/MOAB; Prerequisites: hdf5, netcdf,  it should be kept in mind that hdf5 and netcdf must be compiled with 'zlib' and 'szlib' support:
+http://www.hdfgroup.org/HDF5-FAQ.html
+http://www.unidata.ucar.edu/software/netcdf/
+Tip: If you are using ubuntu or other linux based system try getting hdf5 and netcdf from package manager.
+See this webpage for building - "netcdf/hdf5, autotools and described tools" below from scratch: http://trac.mcs.anl.gov/projects/fathom/wiki/rgg/RGGFromScratch
 
-• Lasso: a library for relating mesh to geometry. Download and build instructions are located at http://trac.mcs.anl.gov/projects/ITAPS/wiki/Lasso. Lasso requires compiled versions of MOAB and CGM before it can be compiled.
+• Lasso: a library for relating mesh to geometry. Download and build instructions are located at http://trac.mcs.anl.gov/projects/ITAPS/wiki/Lasso. 
 
 • CUBIT: a mesh generation toolkit developed at Sandia National Laboratories. See http://cubit.sandia.gov/. CUBIT is available for a nominal fee for government use in the US. The source code for the AssyGen and CoreGen tools is released as open source software, under and LGPL license. The tools are part of the MeshKit library for mesh generation. This software resides in an svn repository located at Argonne National Laboratory. 
-These tools are built using the following steps.
 
-1. Download the MeshKit source code using subversion:
+Skip to 'Building MeshKit' if CGM, MOAB and Lasso are already built.
+Run the following commands from your current directory to built and install RGG (Cubit-based geometry engine) from scratch:
 
-2. svn co https://svn.mcs.anl.gov/repos/fathom/MeshKit/trunk MeshKit
+mkdir cgm moab lasso meshkit
+svn co https://svn.mcs.anl.gov/repos/ITAPS/cgm/trunk cgm
+svn co https://svn.mcs.anl.gov/repos/ITAPS/MOAB/trunk moab
+svn co https://svn.mcs.anl.gov/repos/ITAPS/Lasso/trunk lasso
+svn co https://svn.mcs.anl.gov/repos/fathom/MeshKit/trunk/ meshkit
 
-3. Change to the MeshKit source directory, and configure the library, using Linux autotools commands:
-cd MeshKit
-autoreconf –fi
-./configure –with-imesh=<MOAB_DIR> --with-cgm=<CGM_DIR>
---with-lasso=<LASSO_DIR> --prefix=$PWD
-Where <MOAB_DIR>, <CGM_DIR>, and <LASSO_DIR> are the top-level directories of the MOAB, CGM, and Lasso libraries, respectively.
+Building CGM :
+Note: Cubit's bin directory, netcdf lib and hdf5 lib must be setup in LD_LIBRARY_PATH
 
-4. Compile and install MeshKit:
+cd cgm
+autoreconf -fi
+./configure --prefix=../lib/cgm --with-cubit=<cubit-dir> --disable-debug --enable-optimize
+make
 make install
 
-5. Build/test AssyGen and CoreGen:
+Tip: If you are having trouble with autotools, see link: http://trac.mcs.anl.gov/projects/ITAPS/wiki/AutoToolsIssues
+
+Building MOAB:
+cd moab
+autoreconf -fi
+./configure --with-cgm=../lib/cgm --prefix=../lib/moab --with-hdf5=<hdf5-dir> --with-netcdf=<netcdf-dir>  --enable-optimize --disable-debug
+make
+make install
+
+Building Lasso
+cd lasso
+autoreconf -fi
+./configure --with-igeom=../ilb/cgm --with-imesh=../lib/moab --prefix=../lib/lasso --enable-optimize --disable-debug
+make
+make install
+
+Building MeshKit
+cd meshkit
+autoreconf -fi
+./configure -prefix=../lib/meshkit --with-igeom=../lib/cgm --with-imesh=../lib/moab --with-irel=../lib/lasso --enable-algs --enable-rgg --enable-optimize --disable-debug
+make
+make install
+
 cd rgg
-make assygen coregen
 make check
+
+All tests should pass.
+
 After this procedure is finished, the AssyGen and CoreGen executables will be in the <MESHKIT_DIR>/rgg directory. AssyGen and CoreGen can be run using the commands:
 assygen <input>
 coregen <input>
-where <input> is the base name (the filename without the extension) of the input file. The output of AssyGen will be the files <input>.sat (the assembly model geometry), and <input>.jou and template.jou for generating assembly mesh.
+where <input> is the base name (the filename without the extension) of the input file. The output of AssyGen will be the files <input>.sat/.stp (the assembly model geometry), and <input>.jou and template.jou for generating assembly mesh.
 Any problems building, installing, or running these tools should be sent to the Fathom email list at
 fathom@lists.mcs.anl.gov.
 
