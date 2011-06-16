@@ -630,7 +630,7 @@ public:
     double getSpanAngle() const;
     double getFeatureLength() const;
 
-    int get_ideal_vertex_degree( int n ) const;
+    int get_ideal_face_degree( int n ) const;
 
 private:
     // void * operator new( size_t size, void *);
@@ -645,7 +645,6 @@ private:
 
 struct LowVertexDegreeCompare
 {
-
     bool operator() (const Vertex *vertex1, const Vertex * vertex2) const
     {
         NodeSequence neighs;
@@ -660,7 +659,6 @@ struct LowVertexDegreeCompare
 
 struct HighVertexDegreeCompare
 {
-
     bool operator() (const Vertex *vertex1, const Vertex * vertex2) const
     {
         NodeSequence neighs;
@@ -699,14 +697,14 @@ struct HighVertexTagCompare
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct HighLayerCompare
+struct LowLayerCompare
 {
 
     bool operator() (const Vertex *vertex1, const Vertex * vertex2) const
     {
         int val1 = vertex1->getLayerID();
         int val2 = vertex2->getLayerID();
-        return val1 > val2;
+        return val1 < val2;
     }
 };
 
@@ -1211,6 +1209,8 @@ inline double Face:: getAngleAt( const Vertex *v) const
     return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 inline double Vertex :: getSpanAngle() const
 {
     const FaceSequence &vfaces = this->getRelations2();
@@ -1498,7 +1498,12 @@ public:
 
     // Get All the nodes in the mesh after lazy prunning ( Garbage collection ).
 
-    const NodeSequence &getNodes()
+    const NodeSequence &getNodes() const
+    {
+        return nodes;
+    }
+
+    NodeSequence &getNodes() 
     {
         return nodes;
     }
@@ -1687,8 +1692,6 @@ public:
     NodeSet get_topological_neighbors(const NodeSequence &n, int k = 1);
 
     int remove_unreferenced_nodes();
-
-    //  int check_unused_objects();
 
     //
     // Connect a strip of faces. Termination occurs when the face is reached
@@ -2012,8 +2015,18 @@ inline bool MeshEntity::hasRelation2(const Face* face) const
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int Vertex::get_ideal_vertex_degree(int n) const
+inline int Vertex::get_ideal_face_degree(int n) const
 {
+    if( n == 3 )
+    {
+        if (!isBoundary()) return 6;
+
+        if (getSpanAngle() <= 90.0 ) return 1;
+        if (getSpanAngle() <= 220.0) return 3;
+        if (getSpanAngle() <= 300.0) return 4;
+        return 5;
+    }
+
     if( n == 4 )
     {
         if (!isBoundary()) return 4;
@@ -2462,6 +2475,7 @@ void set_feature_angle_tag(Mesh *m);
 void set_convexity_tag(Mesh *m);
 void set_bound1node_tag(Mesh *m);
 void set_regular_node_tag(Mesh *m);
+void set_ideal_node_tag(Mesh *m, int elemtype);
 void set_inverted_tag(Mesh *m);
 void set_large_area_tag(Mesh *m);
 void set_tiny_area_tag(Mesh *m, double val = 1.0E-06);
@@ -2489,7 +2503,7 @@ struct LaplaceWeight
     virtual double get(const Vertex *apex, const Vertex * neigh) = 0;
 };
 
-struct NoWeight : public LaplaceWeight
+struct LaplaceNoWeight : public LaplaceWeight
 {
 
     double get(const Vertex *apex, const Vertex * neigh)

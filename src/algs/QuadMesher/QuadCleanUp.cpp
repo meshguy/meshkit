@@ -228,7 +228,7 @@ QuadCleanUp::reduce_boundary_vertex_degree( Vertex *vertex )
     NodeSequence &vneighs = vertex->getRelations0();
     int vdegree  = vneighs.size();
 
-    if ( vdegree <= (vertex->get_ideal_vertex_degree(Face::QUADRILATERAL)+1) ) return 2;
+    if ( vdegree <= (vertex->get_ideal_face_degree(Face::QUADRILATERAL)+1) ) return 2;
 
     sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
 
@@ -957,15 +957,42 @@ QuadCleanUp::cleanup_boundary(double cutOffAngle)
 #endif
 
 ///////////////////////////////////////////////////////////////////////
+int QuadCleanUp :: shift_irregular_nodes()
+{
+  int rel0exist = mesh->build_relations(0, 0);
+  int rel2exist = mesh->build_relations(0, 2);
 
-/*
+   mesh->setWavefront(0);
+   mesh->setWavefront(2);
+
+   while(1) {
+        int ncount = 0;
+        size_t numnodes = mesh->getSize(0);
+        for( int i = 0; i < numnodes; i++) {
+             Vertex *v = mesh->getNodeAt(i);
+             if( !v->isRemoved() && v->getNumRelations(2) == 3 ) {
+                 int err = apply_shift_node3_rule(v);
+                 if( !err ) ncount++;
+             }
+        }
+        if( ncount == 0) break;
+   }
+
+   if (!rel0exist) mesh->clear_relations(0, 0);
+   if (!rel2exist) mesh->clear_relations(0, 2);
+}
+///////////////////////////////////////////////////////////////////////
+
 int QuadCleanUp::apply_shift_node3_rule(Vertex *vertex)
 {
+    if( vertex->isRemoved() ) return 1;
+
     int layerID = vertex->getLayerID();
 
-    FaceSequence vfaces = vertex->getRelations2();
+    const FaceSequence &vfaces = vertex->getRelations2();
     if (vfaces.size() != 3) return 1;
 
+    // Find the face inside the domain i.e. in the higher level..
     Face *face = NULL;
     for (size_t i = 0; i < vfaces.size(); i++)
     {
@@ -980,41 +1007,27 @@ int QuadCleanUp::apply_shift_node3_rule(Vertex *vertex)
     int pos = face->getPosOf(vertex);
     assert(pos >= 0);
 
-    Vertex *opp_vertex = face->getNodeAt((pos + 2) % 4);
+    Vertex *opp_vertex = face->getNodeAt(pos + 2);
 
-    vfaces = opp_vertex->getRelations2();
-    if (vfaces.size() == 4)
-        return refine_3444_pattern(face, pos);
-
-    if (vfaces.size() == 5)
-        return refine_3454_pattern(face, pos);
-
-    if (vfaces.size() > 5)
-    {
-        while (1)
-        {
-            int err = apply_advance_front_excess_rule(opp_vertex);
-            if (err) break;
-        }
-        vfaces = opp_vertex->getRelations2();
-        if (vfaces.size() < 6)
-            return apply_shift_node3_rule(vertex);
-    }
-
-    return 2;
+    int nopp = opp_vertex->getNumRelations(2);
+//  if ( nopp == 3) return refine_3434_pattern(face, pos);
+    if ( nopp == 4) return refine_3444_pattern(face, pos);
+    if ( nopp == 5) return refine_3454_pattern(face, pos);
 }
 
 ///////////////////////////////////////////////////////////////////////
 
-int QuadCleanUp::refine_3454_pattern(const Face *face, int pos)
+int QuadCleanUp::refine_3434_pattern(Face *face, int pos)
 {
     Point3D xyz;
-    NodeSequence localnodes(13);
+    NodeSequence localnodes(10);
+    for( int i = 0; i < 10; i++)
+         localnodes[i] = NULL;
 
-    localnodes[0] = face->getNodeAt((pos + 0) % 4);
-    localnodes[1] = face->getNodeAt((pos + 1) % 4);
-    localnodes[2] = face->getNodeAt((pos + 2) % 4);
-    localnodes[3] = face->getNodeAt((pos + 3) % 4);
+    localnodes[0] = face->getNodeAt(pos + 0);
+    localnodes[1] = face->getNodeAt(pos + 1);
+    localnodes[2] = face->getNodeAt(pos + 2);
+    localnodes[3] = face->getNodeAt(pos + 3);
 
     int layerid = localnodes[0]->getLayerID();
 
@@ -1022,18 +1035,10 @@ int QuadCleanUp::refine_3454_pattern(const Face *face, int pos)
     if (localnodes[2]->getLayerID() <= layerid) return 1;
     if (localnodes[3]->getLayerID() != layerid) return 1;
 
-    FaceSequence vfaces;
-    vfaces = localnodes[0]->getRelations2();
-    if (vfaces.size() != 3) return 1;
-
-    vfaces = localnodes[1]->getRelations2();
-    if (vfaces.size() != 4) return 1;
-
-    vfaces = localnodes[2]->getRelations2();
-    if (vfaces.size() != 5) return 1;
-
-    vfaces = localnodes[3]->getRelations2();
-    if (vfaces.size() != 4) return 1;
+    if( localnodes[0]->getNumRelations(2) != 3 ) return 1;
+    if( localnodes[1]->getNumRelations(2) != 4 ) return 1;
+    if( localnodes[2]->getNumRelations(2) != 3 ) return 1;
+    if( localnodes[3]->getNumRelations(2) != 4 ) return 1;
 
     Face *neigh1 = NULL;
     Face *neigh2 = NULL;
@@ -1041,7 +1046,143 @@ int QuadCleanUp::refine_3454_pattern(const Face *face, int pos)
     FaceSequence adjFaces;
 
     adjFaces = Mesh::getRelations112(localnodes[1], localnodes[2]);
-    if (adjFaces.size() != 2) return 1;
+    assert( adjFaces.size() == 2 ) ;
+
+    if (adjFaces[0] == face) neigh1 = adjFaces[1];
+    if (adjFaces[1] == face) neigh1 = adjFaces[0];
+    localnodes[4] = Face::opposite_node(neigh1, localnodes[2]);
+    localnodes[5] = Face::opposite_node(neigh1, localnodes[1]);
+
+    adjFaces = Mesh::getRelations112(localnodes[2], localnodes[3]);
+    assert( adjFaces.size() == 2);
+
+    if (adjFaces[0] == face) neigh2 = adjFaces[1];
+    if (adjFaces[1] == face) neigh2 = adjFaces[0];
+    localnodes[6] = Face::opposite_node(neigh2, localnodes[2]);
+
+    xyz = Vertex::mid_point(localnodes[0], localnodes[2]);
+    localnodes[9] = Vertex::newObject();
+    localnodes[9]->setXYZCoords(xyz);
+
+    xyz = Vertex::mid_point(localnodes[9], localnodes[1]);
+    localnodes[7] = Vertex::newObject();
+    localnodes[7]->setXYZCoords(xyz);
+
+    xyz = Vertex::mid_point(localnodes[9], localnodes[3]);
+    localnodes[8] = Vertex::newObject();
+    localnodes[8]->setXYZCoords(xyz);
+
+    assert( neigh1 );
+    assert( neigh2 );
+
+    Face * newfaces[5];
+    NodeSequence connect(4);
+
+    connect[0] = localnodes[0];
+    connect[1] = localnodes[1];
+    connect[2] = localnodes[7];
+    connect[3] = localnodes[9];
+    newfaces[0] = Face::newObject();
+    newfaces[0]->setNodes(connect);
+
+    connect[0] = localnodes[1];
+    connect[1] = localnodes[4];
+    connect[2] = localnodes[5];
+    connect[3] = localnodes[7];
+    newfaces[1] = Face::newObject();
+    newfaces[1]->setNodes(connect);
+
+    connect[0] = localnodes[0];
+    connect[1] = localnodes[9];
+    connect[2] = localnodes[8];
+    connect[3] = localnodes[3];
+    newfaces[2] = Face::newObject();
+    newfaces[2]->setNodes(connect);
+
+    connect[0] = localnodes[3];
+    connect[1] = localnodes[8];
+    connect[2] = localnodes[5];
+    connect[3] = localnodes[6];
+    newfaces[3] = Face::newObject();
+    newfaces[3]->setNodes(connect);
+
+    connect[0] = localnodes[9];
+    connect[1] = localnodes[7];
+    connect[2] = localnodes[5];
+    connect[3] = localnodes[8];
+    newfaces[4] = Face::newObject();
+    newfaces[4]->setNodes(connect);
+
+    int pass = 1;
+    for( int i = 0; i < 5; i++) {
+        if (!newfaces[i]->isSimple() ) pass = 0;
+    }
+
+    if( ! pass ) {
+        cout << " 3434 Effort failed " << endl;
+        for( int i = 0; i < 5; i++) delete newfaces[i];
+        delete localnodes[7];
+        delete localnodes[8];
+        delete localnodes[9];
+        return 1;
+    }
+
+    mesh->remove( face  );
+    mesh->remove( neigh1 );
+    mesh->remove( neigh2 );
+
+    mesh->remove ( localnodes[2] ); // Caused by doublet ..
+    mesh->addNode( localnodes[7] );
+    mesh->addNode( localnodes[8] );
+    mesh->addNode( localnodes[9] );
+    for( int i = 0; i < 5; i++) mesh->addFace( newfaces[i] );
+
+    // Update front levels ...
+    localnodes[7]->setLayerID(layerid + 1);
+    localnodes[8]->setLayerID(layerid + 1);
+    localnodes[9]->setLayerID(layerid + 1);
+
+    newfaces[0]->setLayerID(layerid);
+    newfaces[1]->setLayerID(layerid);
+    newfaces[2]->setLayerID(layerid + 1);
+    newfaces[3]->setLayerID(layerid + 1);
+    newfaces[4]->setLayerID(layerid + 2);
+
+    return 0;
+}
+
+
+int QuadCleanUp::refine_3454_pattern(Face *face, int pos)
+{
+    Point3D xyz;
+    NodeSequence localnodes(13);
+
+    localnodes[0] = face->getNodeAt(pos + 0);
+    localnodes[1] = face->getNodeAt(pos + 1);
+    localnodes[2] = face->getNodeAt(pos + 2);
+    localnodes[3] = face->getNodeAt(pos + 3);
+
+    int layerid = localnodes[0]->getLayerID();
+
+    if (localnodes[1]->getLayerID() != layerid) return 1;
+    if (localnodes[2]->getLayerID() <= layerid) return 1;
+    if (localnodes[3]->getLayerID() != layerid) return 1;
+
+    if( localnodes[0]->getNumRelations(2) != 3 ) return 1;
+    if( localnodes[1]->getNumRelations(2) != 4 ) return 1;
+    if( localnodes[2]->getNumRelations(2) != 5 ) return 1;
+    if( localnodes[3]->getNumRelations(2) != 4 ) return 1;
+
+    Face *neigh1 = NULL;
+    Face *neigh2 = NULL;
+    Face *neigh3 = NULL;
+    Face *neigh4 = NULL;
+
+    FaceSequence adjFaces;
+
+    adjFaces = Mesh::getRelations112(localnodes[1], localnodes[2]);
+    assert( adjFaces.size() == 2 ) ;
+
     if (adjFaces[0] == face) neigh1 = adjFaces[1];
     if (adjFaces[1] == face) neigh1 = adjFaces[0];
     localnodes[4] = Face::opposite_node(neigh1, localnodes[2]);
@@ -1051,27 +1192,35 @@ int QuadCleanUp::refine_3454_pattern(const Face *face, int pos)
     localnodes[11]->setXYZCoords(xyz);
 
     adjFaces = Mesh::getRelations112(localnodes[2], localnodes[5]);
-    if (adjFaces.size() != 2) return 1;
+    assert( adjFaces.size() == 2);
+
     if (adjFaces[0] == neigh1) neigh2 = adjFaces[1];
     if (adjFaces[1] == neigh1) neigh2 = adjFaces[0];
     localnodes[8] = Face::opposite_node(neigh2, localnodes[2]);
     localnodes[9] = Face::opposite_node(neigh2, localnodes[5]);
 
     adjFaces = Mesh::getRelations112(localnodes[2], localnodes[3]);
-    if (adjFaces.size() != 2) return 1;
-    if (adjFaces[0] == face) neigh1 = adjFaces[1];
-    if (adjFaces[1] == face) neigh1 = adjFaces[0];
-    localnodes[6] = Face::opposite_node(neigh1, localnodes[3]);
-    localnodes[7] = Face::opposite_node(neigh1, localnodes[2]);
+    assert( adjFaces.size() == 2);
+
+    if (adjFaces[0] == face) neigh3 = adjFaces[1];
+    if (adjFaces[1] == face) neigh3 = adjFaces[0];
+    localnodes[6] = Face::opposite_node(neigh3, localnodes[3]);
+    localnodes[7] = Face::opposite_node(neigh3, localnodes[2]);
     xyz = Vertex::mid_point(localnodes[2], localnodes[6]);
     localnodes[12] = Vertex::newObject();
     localnodes[12]->setXYZCoords(xyz);
 
     adjFaces = Mesh::getRelations112(localnodes[2], localnodes[6]);
-    if (adjFaces.size() != 2) return 1;
-    if (adjFaces[0] == neigh1) neigh2 = adjFaces[1];
-    if (adjFaces[1] == neigh1) neigh2 = adjFaces[0];
-    localnodes[10] = Face::opposite_node(neigh2, localnodes[2]);
+    assert( adjFaces.size() == 2);
+
+    if (adjFaces[0] == neigh3) neigh4 = adjFaces[1];
+    if (adjFaces[1] == neigh3) neigh4 = adjFaces[0];
+    localnodes[10] = Face::opposite_node(neigh4, localnodes[2]);
+
+    assert( neigh1 );
+    assert( neigh2 );
+    assert( neigh3 );
+    assert( neigh4 );
 
     Face * newfaces[7];
     NodeSequence connect(4);
@@ -1125,6 +1274,30 @@ int QuadCleanUp::refine_3454_pattern(const Face *face, int pos)
     newfaces[6] = Face::newObject();
     newfaces[6]->setNodes(connect);
 
+    int pass = 1;
+    for( int i = 0; i < 7; i++) {
+        if (newfaces[i]->concaveAt() >= 0) pass = 0;
+    }
+
+    if( ! pass ) {
+        cout << "Effort failed " << endl;
+        for( int i = 0; i < 7; i++) delete newfaces[i];
+        delete localnodes[11];
+        delete localnodes[12];
+        return 1;
+    }
+
+    mesh->remove( face  );
+    mesh->remove( neigh1 );
+    mesh->remove( neigh2 );
+    mesh->remove( neigh3 );
+    mesh->remove( neigh4 );
+
+    mesh->addNode( localnodes[11] );
+    mesh->addNode( localnodes[12] );
+    for( int i = 0; i < 7; i++) mesh->addFace( newfaces[i] );
+
+/*
     // Do backup of Coordinates. Only 11 nodes to be backed up.
     Point3D backupCoords[11];
     for (int i = 0; i < 11; i++)
@@ -1185,6 +1358,7 @@ int QuadCleanUp::refine_3454_pattern(const Face *face, int pos)
         mesh->remove(localnodes[12]);
         return 1;
     }
+*/
 
     // Update front levels ...
     localnodes[11]->setLayerID(layerid + 1);
@@ -1205,15 +1379,15 @@ int QuadCleanUp::refine_3454_pattern(const Face *face, int pos)
 
 ///////////////////////////////////////////////////////////////////////
 
-int QuadCleanUp::refine_3444_pattern(const Face *face, int pos)
+int QuadCleanUp::refine_3444_pattern(Face *face, int pos)
 {
     Point3D xyz;
     NodeSequence localnodes(12);
 
-    localnodes[0] = face->getNodeAt((pos + 0) % 4);
-    localnodes[1] = face->getNodeAt((pos + 1) % 4);
-    localnodes[2] = face->getNodeAt((pos + 2) % 4);
-    localnodes[3] = face->getNodeAt((pos + 3) % 4);
+    localnodes[0] = face->getNodeAt( pos + 0 );
+    localnodes[1] = face->getNodeAt( pos + 1 );
+    localnodes[2] = face->getNodeAt( pos + 2 );
+    localnodes[3] = face->getNodeAt( pos + 3 );
 
     int layerid = localnodes[0]->getLayerID();
 
@@ -1221,30 +1395,25 @@ int QuadCleanUp::refine_3444_pattern(const Face *face, int pos)
     if (localnodes[2]->getLayerID() <= layerid) return 1;
     if (localnodes[3]->getLayerID() != layerid) return 1;
 
-    FaceSequence vfaces;
-    vfaces = localnodes[0]->getRelations2();
-    if (vfaces.size() != 3) return 1;
-
-    vfaces = localnodes[1]->getRelations2();
-    if (vfaces.size() != 4) return 1;
-
-    vfaces = localnodes[2]->getRelations2();
-    if (vfaces.size() != 4) return 1;
-
-    vfaces = localnodes[3]->getRelations2();
-    if (vfaces.size() != 4) return 1;
+    if( localnodes[0]->getNumRelations(2) != 3) return 1;
+    if( localnodes[1]->getNumRelations(2) != 4) return 1;
+    if( localnodes[2]->getNumRelations(2) != 4) return 1;
+    if( localnodes[3]->getNumRelations(2) != 4) return 1;
 
     Face *neigh1 = NULL;
     Face *neigh2 = NULL;
+    Face *neigh3 = NULL;
 
     FaceSequence adjFaces;
 
     adjFaces = Mesh::getRelations112(localnodes[1], localnodes[2]);
     if (adjFaces.size() != 2) return 1;
+
     if (adjFaces[0] == face) neigh1 = adjFaces[1];
     if (adjFaces[1] == face) neigh1 = adjFaces[0];
     localnodes[4] = Face::opposite_node(neigh1, localnodes[2]);
     localnodes[5] = Face::opposite_node(neigh1, localnodes[1]);
+
     xyz = Vertex::mid_point(localnodes[2], localnodes[5]);
     localnodes[9] = Vertex::newObject();
     localnodes[9]->setXYZCoords(xyz);
@@ -1257,10 +1426,10 @@ int QuadCleanUp::refine_3444_pattern(const Face *face, int pos)
 
     adjFaces = Mesh::getRelations112(localnodes[2], localnodes[3]);
     if (adjFaces.size() != 2) return 1;
-    if (adjFaces[0] == face) neigh1 = adjFaces[1];
-    if (adjFaces[1] == face) neigh1 = adjFaces[0];
-    localnodes[6] = Face::opposite_node(neigh1, localnodes[3]);
-    localnodes[7] = Face::opposite_node(neigh1, localnodes[2]);
+    if (adjFaces[0] == face) neigh3 = adjFaces[1];
+    if (adjFaces[1] == face) neigh3 = adjFaces[0];
+    localnodes[6] = Face::opposite_node(neigh3, localnodes[3]);
+    localnodes[7] = Face::opposite_node(neigh3, localnodes[2]);
     xyz = Vertex::mid_point(localnodes[2], localnodes[6]);
     localnodes[11] = Vertex::newObject();
     localnodes[11]->setXYZCoords(xyz);
@@ -1321,6 +1490,32 @@ int QuadCleanUp::refine_3444_pattern(const Face *face, int pos)
     newfaces[6] = Face::newObject();
     newfaces[6]->setNodes(connect);
 
+    int pass = 1;
+    for( int i = 0; i < 7; i++) {
+        if (newfaces[i]->concaveAt() >= 0) pass = 0;
+    }
+
+    if( ! pass ) {
+        cout << " Effort failed " << endl;
+        for( int i = 0; i < 7; i++) delete newfaces[i];
+        delete localnodes[9];
+        delete localnodes[10];
+        delete localnodes[11];
+        return 1;
+    }
+
+    mesh->remove( face   );
+    mesh->remove( neigh1 );
+    mesh->remove( neigh2 );
+    mesh->remove( neigh3 );
+
+    mesh->addNode( localnodes[9] );
+    mesh->addNode( localnodes[10] );
+    mesh->addNode( localnodes[11] );
+
+    for( int i = 0; i < 7; i++) mesh->addFace( newfaces[i] );
+
+/*
     Point3D backupCoords[9];
     for (int i = 0; i < 9; i++)
         backupCoords[i] = localnodes[i]->getXYZCoords();
@@ -1383,7 +1578,7 @@ int QuadCleanUp::refine_3444_pattern(const Face *face, int pos)
 
         return 1;
     }
-
+*/
     // Update front levels ...
     localnodes[9]->setLayerID(layerid + 1);
     localnodes[10]->setLayerID(layerid + 2);
@@ -1401,5 +1596,4 @@ int QuadCleanUp::refine_3444_pattern(const Face *face, int pos)
 
     return 0;
 }
-*/
 

@@ -1880,13 +1880,11 @@ void Mesh::build_edges()
 
     size_t numnodes = getSize(0);
 
-    NodeSequence neighs;
-
     edges.clear();
 
     for (size_t i = 0; i < numnodes; i++)
     {
-        neighs = nodes[i]->getRelations0();
+        NodeSequence &neighs = nodes[i]->getRelations0();
         for (size_t j = 0; j < neighs.size(); j++)
             if (nodes[i] > neighs[j])
             {
@@ -2138,7 +2136,8 @@ int
 Mesh::isHomogeneous() const
 {
     int maxnodes = 0;
-    for (size_t i = 0; i < faces.size(); i++)
+    size_t nSize = faces.size();
+    for (size_t i = 0; i < nSize; i++)
     {
         if (!faces[i]->isRemoved())
             maxnodes = max(maxnodes, faces[i]->getSize(0));
@@ -2166,7 +2165,7 @@ Mesh::nearest_neighbour(const Vertex *myself, double &mindist)
     mindist = MAXDOUBLE;
     nearest = NULL;
 
-    NodeSequence neighs = myself->getRelations0();
+    const NodeSequence &neighs = myself->getRelations0();
 
     for (size_t i = 0; i < neighs.size(); i++)
     {
@@ -2518,7 +2517,7 @@ Mesh::is_consistently_oriented()
 void
 Mesh::make_consistently_oriented()
 {
-    build_relations(0, 2);
+    int relexist2 = build_relations(0, 2);
 
     Face *face = NULL;
     deque<Face*> faceQ;
@@ -2576,7 +2575,7 @@ Mesh::make_consistently_oriented()
                  << face->isVisited() << endl;
     }
 
-    clear_relations(0, 2);
+    if( !relexist2) clear_relations(0, 2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3106,9 +3105,7 @@ Mesh::get_topological_statistics(int entity, bool sorted)
     {
         Vertex *v = getNodeAt(i);
         if( !v->isRemoved() )
-        {
             degree.push_back(v->getNumRelations(2) );
-        }
     }
 
     int mindegree = *min_element(degree.begin(), degree.end());
@@ -3116,9 +3113,9 @@ Mesh::get_topological_statistics(int entity, bool sorted)
 
     cout << " Mesh Topological Quality : " << endl;
 
-    cout << " *********************** " << endl;
-    cout << " Degree        Count " << endl;
-    cout << " *********************** " << endl;
+    cout << " ************************ " << endl;
+    cout << " Degree         FaceCount " << endl;
+    cout << " ************************ " << endl;
 
     for (int i = mindegree; i <= maxdegree; i++)
     {
@@ -3168,7 +3165,7 @@ Mesh::setNodeWavefront(int layerid)
             Vertex *vertex = getNodeAt(i);
             if (vertex->getLayerID() == layerid - 1)
             {
-                NodeSequence vnodes = vertex->getRelations0();
+                NodeSequence &vnodes = vertex->getRelations0();
                 for (size_t j = 0; j < vnodes.size(); j++)
                 {
                     int lid = vnodes[j]->getLayerID();
@@ -3202,11 +3199,12 @@ Mesh::setNodeWavefront()
         v->setVisitMark(0);
     }
 
-    NodeSequence vertexQ, nextQ, vneighs;
+    NodeSequence vertexQ;
+    NodeSet  nextQ;
     for (size_t i = 0; i < numNodes; i++)
     {
         Vertex *v = getNodeAt(i);
-        if (v->isBoundary())
+        if (v->isBoundary() && !v->isRemoved() )
         {
             v->setLayerID(0);
             v->setVisitMark(1);
@@ -3215,35 +3213,41 @@ Mesh::setNodeWavefront()
     }
 
     if (vertexQ.empty())
-    {
         cout << "Warning: No boundary detected " << endl;
-    }
 
     int layerid = 1;
+    size_t nSize;
     while (!vertexQ.empty())
     {
+        cout << "Layer " << vertexQ.size() << endl;
         nextQ.clear();
-#ifdef SEQUENCE_IS_VECTOR
-        nextQ.reserve(vertexQ.size());
-#endif
-        for (size_t j = 0; j < vertexQ.size(); j++)
+        nSize = vertexQ.size();
+        for (size_t j = 0; j < nSize; j++)
         {
             Vertex *currVertex = vertexQ[j];
-            vneighs = currVertex->getRelations0();
+            NodeSequence &vneighs = currVertex->getRelations0();
             for (size_t i = 0; i < vneighs.size(); i++)
             {
                 Vertex *vn = vneighs[i];
-                if (!vn->isVisited()) nextQ.push_back(vn);
+                if (!vn->isVisited()) nextQ.insert(vn);
             }
         }
 
-        for (size_t j = 0; j < nextQ.size(); j++)
+        nSize = nextQ.size();
+        if( nSize == 0) break;
+
+        NodeSet::const_iterator it;
+        for( it = nextQ.begin(); it != nextQ.end(); ++it)
         {
-            Vertex *currVertex = nextQ[j];
+            Vertex *currVertex = *it;
             currVertex->setLayerID(layerid);
             currVertex->setVisitMark(1);
         }
-        vertexQ = nextQ;
+
+        vertexQ.clear();
+        vertexQ.reserve( nSize );
+        for( it = nextQ.begin(); it != nextQ.end(); ++it)
+            vertexQ.push_back( *it );
         layerid++;
     }
 
@@ -3334,38 +3338,39 @@ Mesh::setFaceWavefront()
     for (size_t i = 0; i < numFaces; i++)
     {
         Face *f = getFaceAt(i);
-        f->setLayerID(1);
-        assert(!f->isRemoved());
-        if (f->has_boundary_edge())
+        if( !f->isRemoved() )
         {
-            f->setLayerID(0);
-            f->setVisitMark(1);
-            faceQ.push_back(f);
+            f->setLayerID(1);
+            if (f->has_boundary_edge())
+            {
+                f->setLayerID(0);
+                f->setVisitMark(1);
+                faceQ.push_back(f);
+            }
         }
     }
 
     int layerid = 1;
-    FaceSequence neighs;
+    size_t nSize;
 
     while (!faceQ.empty())
     {
         nextQ.clear();
-#ifdef SEQUENCE_IS_VECTOR
         nextQ.reserve(faceQ.size());
-#endif
-        for (size_t j = 0; j < faceQ.size(); j++)
+        nSize = faceQ.size();
+        for (size_t j = 0; j < nSize; j++)
         {
             Face *currFace = faceQ[j];
-            neighs = currFace->getRelations212();
+            FaceSequence neighs = currFace->getRelations212();
             for (size_t i = 0; i < neighs.size(); i++)
             {
                 Face *nf = neighs[i];
-                if (!nf->isVisited())
-                    nextQ.push_back(nf);
+                if (!nf->isVisited()) nextQ.push_back(nf);
             }
         }
 
-        for (size_t i = 0; i < nextQ.size(); i++)
+        nSize = nextQ.size();
+        for (size_t i = 0; i < nSize; i++)
         {
             Face *f = nextQ[i];
             f->setLayerID(layerid);
@@ -3375,14 +3380,6 @@ Mesh::setFaceWavefront()
         layerid++;
         faceQ = nextQ;
     }
-
-#ifdef DEBUG
-    for (size_t i = 0; i < numFaces; i++)
-    {
-        Face *f = getFaceAt(i);
-        assert(f->isVisited());
-    }
-#endif
 
     if (!relexist)
         clear_relations(0, 2);
@@ -5196,6 +5193,21 @@ Jaal::set_convexity_tag(Mesh *mesh)
     }
 }
 
+void
+Jaal::set_ideal_node_tag(Mesh *mesh, int elem)
+{
+    size_t numnodes = mesh->getSize(0);
+    for (size_t i = 0; i < numnodes; i++)
+    {
+        Vertex *v = mesh->getNodeAt(i);
+        if( !v->isRemoved() ) {
+            int ideal_degree = v->get_ideal_face_degree(elem);
+            int curr_degree  = v->getNumRelations(2);
+            v->setTag(1);
+            if( curr_degree != ideal_degree ) v->setTag(0);
+        }
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

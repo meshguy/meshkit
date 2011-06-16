@@ -5,52 +5,84 @@
 
 using namespace Jaal;
 
-class SwapTriEdge : public MeshOptimization {
+class SwapTriEdge : public MeshOptimization
+{
+    static const int  DELAUNAY_RULE = 0;
+    static const int  ADVANCE_FRONT_RULE = 1;
+    static const int  DEGREE_REDUCTION_RULE = 2;
 public:
     //!  Constructor ...
 
-    SwapTriEdge(Mesh *m, double angle = 10.0) {
+    SwapTriEdge(Mesh *m, double angle = 10.0)
+    {
         mesh = m;
         creaseAngle = angle;
     }
 
-    ~SwapTriEdge() {
+    ~SwapTriEdge()
+    {
     }
 
-    void setCreaseAngle(double a) {
+    void setCreaseAngle(double a)
+    {
         creaseAngle = a;
     }
 
-    virtual int execute();
-
-    void setConstraintEdges(vector<Edge*> &edges) {
+    void setConstraintEdges(vector<Edge*> &edges)
+    {
         //	  constraint_edges.add(emesh);
     }
 
-    size_t get_number_of_edges_flipped() const {
+    size_t get_number_of_edges_flipped() const
+    {
         return num_edges_flipped;
     }
 
-    int apply_reduce_degree_rule();
+    int apply_degree_reduction_rule();
     int apply_advance_front_rule();
     int apply_delaunay_rule();
 
-protected:
+private:
     Mesh *mesh;
     double creaseAngle;
     size_t num_edges_flipped;
-    //   EdgeMap constraint_edges;
 
-    struct FlipEdge : public Edge {
+    bool  isIdeal( const Vertex *v)  const
+    {
+        int ideal_degree = v->get_ideal_face_degree(3);
+        int curr_degree  = v->getNumRelations(2);
+        if( curr_degree == ideal_degree ) return 1;
+        return 0;
+    }
 
-        FlipEdge() {
+    bool unchecked( const Face *f ) const
+    {
+       for( int i = 0; i < 3; i++)
+          if( f->getNodeAt(i)->getLayerID() == INT_MAX) return 1;
+       return 0;
+    }
+
+    struct FlipEdge : public Edge
+    {
+
+        FlipEdge()
+        {
         }
 
-        FlipEdge(Vertex *v1, Vertex * v2) {
+        FlipEdge(Vertex *v1, Vertex * v2)
+        {
             process(v1, v2);
         }
 
-        ~FlipEdge() {
+        ~FlipEdge()
+        {
+        }
+
+        bool isValid() const
+        {
+            if( faces[0] == NULL || faces[1] == NULL ) return 0;
+            if( opposite_nodes[0] == NULL || opposite_nodes[1] == NULL ) return 0;
+            return 1;
         }
 
         bool isSharp(double creseAngle) const;
@@ -58,31 +90,14 @@ protected:
 
         Face * faces[2];
         Vertex * opposite_nodes[2];
-
-    private:
+private:
         void process(Vertex *v1, Vertex * v2);
     };
-
-    int atomicOp(const Face *face);
+    int   one_sweep( int entity, int r);
+    int atomicOp(const Face *face, int r);
+    int atomicOp(Vertex *v, int r);
     virtual int commit(const FlipEdge &edge);
-    virtual bool is_edge_flip_allowed(const FlipEdge &edge) const;
-};
-
-class VertexDegreeReduction : public SwapTriEdge {
-public:
-
-    VertexDegreeReduction(Mesh *m) : SwapTriEdge(m) {
-    }
-
-    size_t getMinDegree() const;
-    size_t getMaxDegree() const;
-
-    int execute();
-
-private:
-    int atomicOp(const Vertex *apexVertex);
-    bool is_edge_flip_allowed(const FlipEdge &edge) const;
-    int getVertexDegree(const Vertex *v) const;
+    virtual bool is_edge_flip_allowed(const FlipEdge &edge, int r ) const;
 };
 
 #endif

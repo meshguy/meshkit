@@ -363,22 +363,18 @@ public:
         check_fronts = v;
     }
 
-    int rotate(); // Only for the graphical interaction purpose..
-
     int apply_reduce_degree_rule();
-    int apply_concave_rule(); // Swap some concave edge
-    int apply_bound_rule(); // Swap some boundary edge
+    int apply_concave_rule();    // Swap some concave edge
+    int apply_bound_rule();     // Swap some boundary edge
     int apply_singlet_rule(Vertex *singlet); // Force creating diagonal at singlet..
     int apply_deficient_rule(Vertex *v); // Force creating diagonal at deficient vertex..
     int apply_advance_front_rule();
 
-    bool active;
 private:
     bool  check_fronts;
-    Face *firstFace;            // Which one of the two faces is the first one. It is needed
-    // type1, type2, and type3 updates...
-    Edge *edge;                 // Swapping edge.
-    NodeSequence bound_nodes;   //   It is always going to be six nodes...
+    Face *firstFace;           // Which one of the two faces is the first one. It is needed
+    Edge *edge;                // Swapping edge.
+    NodeSequence bound_nodes;  // It is always going to be six nodes...
 
     struct BackUpData
     {
@@ -682,8 +678,9 @@ public:
     int  remove_interior_doublets();
     int  remove_boundary_singlets();
     int  remove_bridges();
+    int  shift_irregular_nodes();
 
-    int irregular_nodes_clustering();
+//  int irregular_nodes_clustering();
 
     //  void remove_ynodes();
     int  clean_layer(int id);
@@ -693,6 +690,9 @@ public:
 
     int  automatic();
     void report();
+
+    int atomic_op_swap_edge( Vertex *v0, Vertex *v1);
+    int atomic_op_face_close( Face *f);
 
     // Some Feature that may be obsolete in the next version...
     Vertex* insert_doublet(Face *face);
@@ -766,8 +766,9 @@ private:
 
     // May become obsolere
     vector<Edge33>  vEdges33;
-    int refine_3454_pattern( const Face *face, int pos);
-    int refine_3444_pattern( const Face *face, int pos);
+    int refine_3434_pattern( Face *face, int pos);
+    int refine_3454_pattern( Face *face, int pos);
+    int refine_3444_pattern( Face *face, int pos);
     int apply_shift_node3_rule( Vertex *vertex);
     vector<Edge33> search_edges33_in_layer(int layerid );
 };

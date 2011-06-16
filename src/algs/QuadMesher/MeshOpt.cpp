@@ -56,19 +56,14 @@ int Jaal::MeshOptimization::shape_tri_optimize(Jaal::Mesh *mesh)
 
     mesh->search_boundary();
 
-    std::map<size_t,size_t> nodemap;
     size_t index = 0;
     for (size_t i = 0; i < numnodes; i++)
     {
         Vertex *vertex = mesh->getNodeAt(i);
         if( !vertex->isRemoved() )
-        {
-            nodemap[vertex->getID()] = index++;
-        }
+            vertex->setID( index++ );
     }
-    assert( nodemap.size() == index );
-
-    int numActiveNodes = nodemap.size();
+    int numActiveNodes = index;
     vector<int> vfixed;
     vfixed.resize(numActiveNodes);
     for (size_t i = 0; i < numnodes; i++)
@@ -76,7 +71,7 @@ int Jaal::MeshOptimization::shape_tri_optimize(Jaal::Mesh *mesh)
         Vertex *vertex = mesh->getNodeAt(i);
         if( !vertex->isRemoved() )
         {
-            int lid = nodemap[vertex->getID()];
+            int lid = vertex->getID();
             if (vertex->isBoundary())
                 vfixed[lid] = 1;
             else

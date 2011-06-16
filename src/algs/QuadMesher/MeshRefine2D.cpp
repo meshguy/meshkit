@@ -162,7 +162,7 @@ int Sqrt3Refine2D :: execute()
 
     for ( int itime = 0; itime < numIterations; itime++) {
         refine.execute();
-        eflip.execute();
+        eflip.apply_degree_reduction_rule();
     }
 
     return 0;

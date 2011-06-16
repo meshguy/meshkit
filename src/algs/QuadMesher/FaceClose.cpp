@@ -213,8 +213,8 @@ QuadCleanUp::isDiamond(Face *face, int &pos, int type)
 
     // Boundary Cases ...
     if (v0->isBoundary() || v2->isBoundary()) {
-        if( d0 <= v0->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
-        if( d2 <= v2->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
+        if( d0 <= v0->get_ideal_face_degree( Face::QUADRILATERAL ) ) return 0;
+        if( d2 <= v2->get_ideal_face_degree( Face::QUADRILATERAL ) ) return 0;
         if (!v1->isBoundary() && !v3->isBoundary()) {
             if (d1 == 3 && d3 == 3) {
                 pos = 1;
@@ -224,8 +224,8 @@ QuadCleanUp::isDiamond(Face *face, int &pos, int type)
     }
 
     if (v1->isBoundary() || v3->isBoundary()) {
-        if( d1 <= v1->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
-        if( d3 <= v3->get_ideal_vertex_degree( Face::QUADRILATERAL ) ) return 0;
+        if( d1 <= v1->get_ideal_face_degree( Face::QUADRILATERAL ) ) return 0;
+        if( d3 <= v3->get_ideal_face_degree( Face::QUADRILATERAL ) ) return 0;
 
         if (!v0->isBoundary() && !v2->isBoundary()) {
             if ((d0 == 3 && d2 == 3)) {
