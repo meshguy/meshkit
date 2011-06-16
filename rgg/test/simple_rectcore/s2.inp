@@ -4,7 +4,7 @@
 !
 GeometryType Rectangular
 !
-Materials 3 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3
+Materials 3 Block_2 G1 Coolant_2 C1 RefRod_2 M3
 !
 Duct 2 0.0 0.0 0 124.0 18.0 18.0 23.5 23.5  G1 C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
