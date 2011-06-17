@@ -111,23 +111,27 @@ int getXYcoordsAndNodeHandles(MBInterface * MB, MBEntityHandle tr,
 
 void createTags(MBInterface * m1, MBInterface * m2, MBInterface * m3) {
    unsigned char def_data_bit = 0;// unused by default
-   MBErrorCode rval = m1->tag_create("blueFlag", 1, MB_TAG_BIT, BlueFlagTag,
-         &def_data_bit);
+   MBErrorCode rval = m1->tag_get_handle("blueFlag", 1, MB_TYPE_BIT, BlueFlagTag,
+        MB_TAG_CREAT, &def_data_bit);
    if (MB_SUCCESS != rval)
       return;
    // maybe the red tag is better to be deleted every time, and recreated;
    // or is it easy to set all values to something again? like 0?
-   rval = m2->tag_create("redFlag", 1, MB_TAG_BIT, RedFlagTag, &def_data_bit);
+   rval = m2->tag_get_handle("redFlag", 1, MB_TYPE_BIT, RedFlagTag, MB_TAG_CREAT, &def_data_bit);
    if (MB_SUCCESS != rval)
       return;
    // create a tag in mb1 for eh nodes in mbOut
    const MBEntityHandle def_val = (MBEntityHandle) 0;
-   rval = m2->tag_create("redNodeTag", sizeof(MBEntityHandle), MB_TAG_DENSE,
-         MB_TYPE_HANDLE, RedNodeTag, &def_val);
+   //rval = m2->tag_create("redNodeTag", sizeof(MBEntityHandle), MB_TAG_DENSE,
+   //      MB_TYPE_HANDLE, RedNodeTag, &def_val);
+   rval = m2->tag_get_handle("redNodeTag", 1, MB_TYPE_HANDLE, RedNodeTag, 
+                             MB_TAG_DENSE|MB_TAG_CREAT, &def_val);
    if (MB_SUCCESS != rval)
       return;
-   rval = m1->tag_create("blueNodeTag", sizeof(MBEntityHandle), MB_TAG_DENSE,
-         MB_TYPE_HANDLE, BlueNodeTag, &def_val);
+   //rval = m1->tag_create("blueNodeTag", 1, MB_TYPE_HANDLE, BlueNodeTag,
+   //                      MB_TAG_DENSE|MB_TAG_CREAT, &def_val);
+   rval = m2->tag_get_handle("blueNodeTag", 1, MB_TYPE_HANDLE, BlueNodeTag, 
+                             MB_TAG_DENSE|MB_TAG_CREAT, &def_val);
    if (MB_SUCCESS != rval)
       return;
    // assume that the edges are on the red triangles
@@ -155,10 +159,14 @@ void createTags(MBInterface * m1, MBInterface * m2, MBInterface * m3) {
    //MBTag redParentTag;
    //MBTag blueParentTag;
    int defaultInt = 0;
-   rval = m3 ->tag_create("Positive", sizeof(int), MB_TAG_SPARSE,
-         MB_TYPE_INTEGER, redParentTag, &defaultInt);
-   rval = m3 ->tag_create("Negative", sizeof(int), MB_TAG_SPARSE,
-         MB_TYPE_INTEGER, blueParentTag, &defaultInt);
+   //rval = m3 ->tag_create("Positive", sizeof(int), MB_TAG_SPARSE,
+   //      MB_TYPE_INTEGER, redParentTag, &defaultInt);
+   //rval = m3 ->tag_create("Negative", sizeof(int), MB_TAG_SPARSE,
+   //      MB_TYPE_INTEGER, blueParentTag, &defaultInt);
+   rval = m3->tag_get_handle( "Positive", 1, MB_TYPE_INTEGER, redParentTag,
+                               MB_TAG_SPARSE|MB_TAG_CREAT, &defaultInt );
+   rval = m3->tag_get_handle( "Negative", 1, MB_TYPE_INTEGER, redParentTag,
+                               MB_TAG_SPARSE|MB_TAG_CREAT, &defaultInt );
 
    return;
 }

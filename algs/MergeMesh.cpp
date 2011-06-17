@@ -64,9 +64,12 @@ MBErrorCode MergeMesh::merge_entities(MBRange &elems,
   // create a tag to mark merged-to entity; reuse tree_root
   MBEntityHandle tree_root = 0;
   if (0 == merge_tag) {
-    result = mbImpl->tag_create("__merge_tag", sizeof(MBEntityHandle), 
-                                MB_TAG_DENSE, MB_TYPE_HANDLE,
-                                mbMergeTag, &tree_root);
+    //result = mbImpl->tag_create("__merge_tag", sizeof(MBEntityHandle), 
+    //                            MB_TAG_DENSE, MB_TYPE_HANDLE,
+    //                            mbMergeTag, &tree_root);
+    result = mbImpl->tag_get_handle("__merge_tag", 1, MB_TYPE_HANDLE,
+                                    mbMergeTag, MB_TAG_DENSE|MB_TAG_CREAT,
+                                    &tree_root);
     if (MB_SUCCESS != result) return result;
   }
   else mbMergeTag = merge_tag;

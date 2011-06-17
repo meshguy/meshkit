@@ -891,8 +891,10 @@ void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
   moab::ErrorCode rval;
   bool i_created_tag = false;
   if (0 == tagh) {
-    rval = mk_core()->moab_instance()->tag_create("__ModelEntidtag", sizeof(int), moab::MB_TAG_DENSE, 
-                                                  moab::MB_TYPE_INTEGER, tagh, NULL);
+    //rval = mk_core()->moab_instance()->tag_create("__ModelEntidtag", sizeof(int), moab::MB_TAG_DENSE, 
+    //                                              moab::MB_TYPE_INTEGER, tagh, NULL);
+    rval = mk_core()->moab_instance()->tag_get_handle("__ModelEntidtag", 1, moab::MB_TYPE_INTEGER, tagh, 
+                                                      moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
     MBERRCHK(rval, mkCore->moab_instance());
     i_created_tag = true;
   }

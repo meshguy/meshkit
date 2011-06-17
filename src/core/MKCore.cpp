@@ -165,27 +165,31 @@ void MKCore::init(bool construct_missing_ifaces)
   if (moabModelTags.empty()) {
     ModelEnt *null_me = NULL;
     moabModelTags.resize(1);
-    rval = moabInstances[0]->tag_create("__MKModelEntity", sizeof(MeshKit::ModelEnt*), moab::MB_TAG_SPARSE,
-                                        moab::MB_TYPE_OPAQUE, moabModelTags[0], &null_me);
-    if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
+    //rval = moabInstances[0]->tag_create("__MKModelEntity", sizeof(MeshKit::ModelEnt*), moab::MB_TAG_SPARSE,
+    //                                    moab::MB_TYPE_OPAQUE, moabModelTags[0], &null_me);
+    rval = moabInstances[0]->tag_get_handle("__MKModelEntity", sizeof(MeshKit::ModelEnt*), moab::MB_TYPE_OPAQUE, 
+                                            moabModelTags[0], moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT, &null_me);
+    if (moab::MB_SUCCESS != rval) 
       MBERRCHK(rval, moab_instance());
   }
 
   if (moabGeomDimTags.empty()) {
       // moab geometry dimension tag
     moabGeomDimTags.resize(1);
-    rval = moabInstances[0]->tag_create(GEOM_DIMENSION_TAG_NAME, sizeof(int), moab::MB_TAG_SPARSE,
-                                        moab::MB_TYPE_INTEGER, moabGeomDimTags[0], 0, true);
-    if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
+    //rval = moabInstances[0]->tag_create(GEOM_DIMENSION_TAG_NAME, sizeof(int), moab::MB_TAG_SPARSE,
+    //                                    moab::MB_TYPE_INTEGER, moabGeomDimTags[0], 0, true);
+    rval = moabInstances[0]->tag_get_handle(GEOM_DIMENSION_TAG_NAME, 1, moab::MB_TYPE_INTEGER, moabGeomDimTags[0], 
+                                            moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT);
+    if (moab::MB_SUCCESS != rval) 
       MBERRCHK(rval, moab_instance());
   }
   
   // moab global id tag
   if (moabIDTags.empty()) {
     moabIDTags.resize(1);
-    rval = moabInstances[0]->tag_create(GLOBAL_ID_TAG_NAME, sizeof(int), moab::MB_TAG_DENSE,
-                                        moab::MB_TYPE_INTEGER, moabIDTags[0], 0, true);
-    if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
+    rval = moabInstances[0]->tag_get_handle(GLOBAL_ID_TAG_NAME, 1, moab::MB_TYPE_INTEGER, moabIDTags[0], 
+                                            moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
+    if (moab::MB_SUCCESS != rval) 
       MBERRCHK(rval, moab_instance());
   }
 }

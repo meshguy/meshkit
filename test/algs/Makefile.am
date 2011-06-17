@@ -24,7 +24,8 @@ TESTS = test_edgemesh \
         test_copygeom \
         test_extrudemesh \
         test_qslim \
-	test_ebmesh
+	test_ebmesh \
+	test_jaalquad
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
