@@ -770,7 +770,9 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
-	  meshfile = DIR + meshfile;
+	  if (iname == DEFAULT_TEST_FILE){
+	    meshfile = DIR + meshfile;
+	  }
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -817,7 +819,9 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
-	  meshfile = DIR + meshfile;
+	  if (iname == DEFAULT_TEST_FILE){
+	    meshfile = DIR + meshfile;
+	  }
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -860,7 +864,9 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
-	  meshfile = DIR + meshfile;
+	  if (iname == DEFAULT_TEST_FILE){
+	    meshfile = DIR + meshfile;
+	  }
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -901,7 +907,9 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
-	  meshfile = DIR + meshfile;
+	  if (iname == DEFAULT_TEST_FILE){
+	    meshfile = DIR + meshfile;
+	  }
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -943,7 +951,9 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
-	  meshfile = DIR + meshfile;
+	  if (iname == DEFAULT_TEST_FILE){
+	    meshfile = DIR + meshfile;
+	  }
 	  files.push_back(meshfile);
 	  assm_alias.push_back(mf_alias);
 	}
@@ -980,7 +990,9 @@ int CCrgen::read_inputs_phase2()
     if (input_string.substr(0, 10) == "background") {
       std::istringstream formatString(input_string);
       formatString >> card >> back_meshfile;
-      back_meshfile = DIR + back_meshfile;
+      if (iname == DEFAULT_TEST_FILE){
+	back_meshfile = DIR + back_meshfile;
+      }
       files.push_back(back_meshfile);
       back_mesh = true;
     }
