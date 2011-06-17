@@ -1,7 +1,7 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = test make_watertight
+SUBDIRS = test
 #make_watertight
 
 # Things to build
