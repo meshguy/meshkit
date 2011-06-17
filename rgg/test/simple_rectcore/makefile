@@ -4,11 +4,11 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = /opt/cubit-10.2-amd64/cubit -nographics -batch
+CUBIT = cubit -nographics -batch
 
-COREGEN = ../../../../acis/meshkit/rgg/coregen
+COREGEN = ../../coregen
 
-ASSYGEN = ../../../../acis/meshkit/rgg/assygen
+ASSYGEN = ../../assygen
 
 MESH_FILES = s1.cub  s2.cub  
 
