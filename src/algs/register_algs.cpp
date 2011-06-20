@@ -10,6 +10,7 @@
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/QslimMesher.hpp"
 #include "meshkit/QuadMesh.hpp"
+#include "meshkit/AssyGen.hpp"
 
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
@@ -42,6 +43,8 @@ REGISTER_MESH_OP(ExtrudeMesh);
 REGISTER_MESH_OP(EBMesher);
 REGISTER_MESH_OP(QslimMesher);
 REGISTER_MESH_OP(QuadMesher);
+REGISTER_MESH_OP(AssyGen);
+
 
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB

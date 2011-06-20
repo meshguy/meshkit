@@ -2,12 +2,13 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim
+SUBDIRS =  QuadMesher Qslim AssyGen
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
 libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
-                           QuadMesher/libJaalQuadMesher.la
+                           QuadMesher/libJaalQuadMesher.la \
+                           AssyGen/libAssyGen.la
 
 # The directory in which to install headers
 libMeshKitalgs_la_includedir = $(includedir)
@@ -54,7 +55,8 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir)/ \
               -I$(top_srcdir)/utils \
               -I$(srcdir)/../lemon \
-              -I$(srcdir)/QuadMesher
+              -I$(srcdir)/QuadMesher \
+	      -I$(srcdir)/AssyGen
 
 
 if PARALLEL

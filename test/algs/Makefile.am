@@ -14,7 +14,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-BROKEN_TESTS = test_jaalquad
+BROKEN_TESTS = test_jaalquad test_assygen
 
 TESTS = test_edgemesh \
         test_tfimapping \
@@ -24,7 +24,8 @@ TESTS = test_edgemesh \
         test_copygeom \
         test_extrudemesh \
         test_qslim \
-	test_ebmesh
+	test_ebmesh \
+	test_assygen
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
@@ -46,6 +47,7 @@ test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslim_SOURCES = test_qslim.cpp
 test_jaalquad_SOURCES = test_jaalquad.cpp
+test_assygen_SOURCES = test_assygen.cpp
 
 # Utility target: build but don't run tests
 build-check:
