@@ -103,100 +103,100 @@ namespace MeshKit {
     virtual void execute_this();
 
     /** \brief Prepare input/output files for reading/writing
-     * \param command line args and testdir for default test case
+     *  command line args and testdir for default test case
      */
     void PrepareIO (int argc, char *argv[], std::string TestDir);
 
     /** \brief Read the command based text input file
-     * \param input file
+     *  input file
      */
     void ReadInputPhase1 ();
 
     /** \brief Keep reading input file and create
-     * \param input file
+     *  input file
      */
     void ReadAndCreate ();
 
     /** \brief Name the surface created
-     * \param material name from input file, surface entity, name tag
+     *  material name from input file, surface entity, name tag
      */
     void Name_Faces( const std::string sMatName, const iBase_EntityHandle body,
 		     iBase_TagHandle this_tag);
 
     /** \brief Move the assembly to the center
-     * \param direction
+     *  direction
      */
     void Center_Assm( char&);
 
     /** \brief Section assembly
-     * \param direction, offset, reverse/forward
+     *  direction, offset, reverse/forward
      */
     void Section_Assm ( char&, double&, const std::string);
 
     /** \brief Rotate assembly
-     * \param direction, angle
+     *  direction, angle
      */
     void Rotate_Assm ( char&, double&);
 
     /** \brief Move assembly
-     * \param X, Y, Z distance
+     *  X, Y, Z distance
      */
     void Move_Assm ( double&, double&, double&);
 
     /** \brief Create hexagonal assembly
-     * \param data from input file
+     *  data from input file
      */
     void Create_HexAssm( std::string &);
 
     /** \brief Create cartesian or rectangular assembly
-     * \param data from input file 
+     *  data from input file 
      */
     void Create_CartAssm( std::string &);
 
     /** \brief Create outermost ducts
-     * \param data from input file 
+     *  data from input file 
      */
     void CreateOuterCovering();
 
     /** \brief Merge and impring the geometry creaed
-     * \param geometry created
+     *  geometry created
      */
     void Imprint_Merge ();
 
     /** \brief Subtract the pins from innermost duct
-     * \param geometry entities
+     *  geometry entities
      */
     void Subtract_Pins ();
 
     /** \brief Get the top surface from 3D assembly geometry
-     * \param pins, ducts
+     *  pins, ducts
      */
     void Create2DSurf();
 
     /** \brief Read pincell data
-     * \param input file
+     *  input file
      */
     void ReadPinCellData( int i);
 
     /** \brief Create pincell i, pincell intersects the assembly
-     * \param i and location
+     *  i and location
      */
     void CreatePinCell_Intersect( int i, double dX,
 				  double dY, double dZ);
 
     /** \brief Create pincell i
-     * \param i and location
+     *  i and location
      */
     void CreatePinCell( int i, double dX,
 			double dY, double dZ);  
 
     /** \brief Write cubit journal file 
-     * \param information read from text based input file
+     *  information read from text based input file
      */
     void CreateCubitJournal();
 
     /** \brief Computes the location of the pincells in the assembly
-     * \param pin-number and location of the pincell
+     *  pin-number and location of the pincell
      */
     void ComputePinCentroid( int, CMatrix<std::string>, int, int,
 			     double&, double&, double&);
