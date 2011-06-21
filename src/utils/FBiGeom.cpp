@@ -1079,6 +1079,31 @@ iGeom::Error FBiGeom::isEntPeriodic( EntityHandle entity, bool& in_u, bool& in_v
   }
   return (Error)0; // no error
 }
+
+iGeom::Error FBiGeom::getPntRayIntsct( double x, double y, double z,
+                                      double dir_x, double dir_y, double dir_z,
+                                      StorageOrder order,
+                                      std::vector<EntityHandle>& entities_out,
+                                      std::vector<double>& points_out,
+                                      std::vector<double>& params_out )
+{
+  // storage order not used?
+  // fbengine
+  std::vector<moab::EntityHandle> intersect_entity_handles;
+  moab::ErrorCode rval =  _fbEngine->getPntRayIntsct(  x, y,  z,
+         dir_x,  dir_y,  dir_z,
+         intersect_entity_handles,
+        /* int storage_order,*/
+         points_out,
+         params_out);
+  if (rval != moab::MB_SUCCESS)
+    return (Error)1;
+  for (unsigned int i=0; i<intersect_entity_handles.size(); i++)
+  {
+    entities_out.push_back( (iGeom::EntityHandle)intersect_entity_handles[i] );
+  }
+  return (Error)0;
+}
 #if 0
 
 inline iGeom::Error

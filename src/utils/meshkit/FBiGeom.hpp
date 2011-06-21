@@ -148,6 +148,13 @@ class FBiGeom : public iGeom {
       return (Error)0; // no error
     }
 
+    iGeom::Error getPntRayIntsct( double x, double y, double z,
+                                      double i, double j, double k,
+                                      StorageOrder order,
+                                      std::vector<EntityHandle>& entities_out,
+                                      std::vector<double>& points_out,
+                                      std::vector<double>& params_out );
+
 #if 0
     inline Error save( const char* file_name,
                        const char* options = 0 );
