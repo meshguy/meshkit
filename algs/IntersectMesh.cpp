@@ -130,7 +130,7 @@ void createTags(MBInterface * m1, MBInterface * m2, MBInterface * m3) {
       return;
    //rval = m1->tag_create("blueNodeTag", 1, MB_TYPE_HANDLE, BlueNodeTag,
    //                      MB_TAG_DENSE|MB_TAG_CREAT, &def_val);
-   rval = m2->tag_get_handle("blueNodeTag", 1, MB_TYPE_HANDLE, BlueNodeTag, 
+   rval = m1->tag_get_handle("blueNodeTag", 1, MB_TYPE_HANDLE, BlueNodeTag,
                              MB_TAG_DENSE|MB_TAG_CREAT, &def_val);
    if (MB_SUCCESS != rval)
       return;
@@ -165,7 +165,7 @@ void createTags(MBInterface * m1, MBInterface * m2, MBInterface * m3) {
    //      MB_TYPE_INTEGER, blueParentTag, &defaultInt);
    rval = m3->tag_get_handle( "Positive", 1, MB_TYPE_INTEGER, redParentTag,
                                MB_TAG_SPARSE|MB_TAG_CREAT, &defaultInt );
-   rval = m3->tag_get_handle( "Negative", 1, MB_TYPE_INTEGER, redParentTag,
+   rval = m3->tag_get_handle( "Negative", 1, MB_TYPE_INTEGER, blueParentTag,
                                MB_TAG_SPARSE|MB_TAG_CREAT, &defaultInt );
 
    return;
