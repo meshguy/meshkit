@@ -8,7 +8,15 @@
 #include "CAMALSurfEval.hpp"
 #include "CAMALSizeEval.hpp"
 #include "CMLTriAdvance.hpp"
+#include "RefEntity.hpp"
+
+#ifdef HAVE_PARALLEL_MOAB
+#include "moab/ParallelComm.hpp"
+#endif
+
 #include <vector>
+
+const bool debug_camaltriadv = false;
 
 namespace MeshKit
 {
@@ -64,8 +72,10 @@ void CAMALTriAdvance::execute_this()
       // ok, now generate the mesh
     int num_pts, num_tris;
     success = triadv.generate_mesh(num_pts, num_tris);
-    if (!success)
+    if (!success) {
+      if (debug_camaltriadv) print_debug(me, coords, bdy_vrange, group_sizes, bdy_ids);
       ECERRCHK(MK_FAILURE, "Trouble generating tri mesh.");
+    }
 
     moab::Range &new_ents = (*sit).second;
     moab::ErrorCode rval;
@@ -116,4 +126,55 @@ void CAMALTriAdvance::execute_this()
   }
 }
 
+void CAMALTriAdvance::print_debug(ModelEnt *me, std::vector<double> &coords,
+                                  moab::Range &bdy_vrange, std::vector<int> &group_sizes,
+                                  std::vector<int> &bdy_ids)
+{
+  std::cout << "Surface_bounadry_mesh: mesh_size = "
+            << me->mesh_interval_size() << std::endl;
+  
+  for (int i = 0; i < bdy_vrange.size(); i++) {
+    std::cout << coords[3 * i] << "  " << coords[3 * i + 1]
+              << "  " << coords[3 * i + 2] << std::endl;
+  }
+  
+  std::cout << "bdy_vertex_size:" << bdy_vrange.size()
+            << ", group_size:" << group_sizes.size() << std::endl;
+  
+  int index = 0;
+  for (int i = 0; i < group_sizes.size(); i++) {
+    int g_size = group_sizes[i];
+    std::cout << "boundary_order_group" << i + 1 << ", group_size="
+              << g_size << std::endl;
+    for (int j = 0; j < g_size; j++) {
+          std::cout << bdy_ids[index + j] << " ";
+    }
+    std::cout << std::endl;
+    index += g_size;
+  }
+  
+  moab::ErrorCode rval;
+  moab::EntityHandle outset;
+  std::string outfile;
+  std::stringstream ss;
+  
+  RefEntity* entity = reinterpret_cast<RefEntity*> (me->geom_handle());
+  ss << "CAMALTri_boundary_surf";
+  ss << entity->id();
+  ss << "_";
+#ifdef HAVE_PARALLEL_MOAB
+  moab::ParallelComm* pcomm = moab::ParallelComm::get_pcomm(mk_core()->moab_instance(), 0);
+  ss << "proc";
+  ss << pcomm->proc_config().proc_rank();
+#endif
+  ss >> outfile;
+  outfile += ".vtk";
+  rval = mk_core()->moab_instance()->create_meshset(0, outset);
+  MBERRCHK(rval, mk_core()->moab_instance());
+  rval = mk_core()->moab_instance()->add_entities(outset, bdy_vrange);
+  MBERRCHK(rval, mk_core()->moab_instance());
+  rval = mk_core()->moab_instance()->write_mesh(outfile.c_str(), &outset, 1);
+  MBERRCHK(rval, mk_core()->moab_instance());
+  std::cout << outfile.c_str() << " is saved." << std::endl;
+}
 } // namespace MeshKit

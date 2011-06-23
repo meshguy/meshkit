@@ -90,6 +90,11 @@ public:
   
 private:
 
+  /** \brief print debug information and save input boundary mesh for CAMAL library
+   */
+  void print_debug(ModelEnt *me, std::vector<double> &coords,
+                   moab::Range &bdy_vrange, std::vector<int> &group_sizes,
+                   std::vector<int> &bdy_ids);
 };
 
 } // namespace MeshKit

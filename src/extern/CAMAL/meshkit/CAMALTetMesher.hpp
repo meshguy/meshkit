@@ -96,6 +96,14 @@ private:
      * \return A MeshOp that can generate tri elements
      */
   MeshOp *get_tri_mesher();
+
+  /** \brief print debug information and save input boundary mesh for CAMAL library
+   */
+  void print_debug(ModelEnt *me, std::vector<double> &coords,
+                   moab::Range &bdy_vrange,
+                   std::vector<moab::EntityHandle> &bdy,
+                   std::vector<int> &group_sizes,
+                   std::vector<int> &bdy_ids);
   
     /** \brief CAMAL mesher object called by this mesher
      */
