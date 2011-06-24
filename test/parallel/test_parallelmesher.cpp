@@ -12,7 +12,11 @@ using namespace MeshKit;
 
 #include "TestUtil.hpp"
 
+#ifdef HAVE_ACIS
+#define DEFAULT_TEST_FILE "bricks_3.sat"
+#elif defined (HAVE_OCC)
 #define DEFAULT_TEST_FILE "bricks_3.occ"
+#endif
 
 int load_and_mesh(const char *geom_filename,
                   const char *mesh_filename,
@@ -21,7 +25,6 @@ int load_and_mesh(const char *geom_filename,
 
 int main( int argc, char *argv[] )
 {
-#ifdef HAVE_OCC
   int rank, size;
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -31,13 +34,13 @@ int main( int argc, char *argv[] )
   // Check command line arg
   std::string geom_filename;
   const char *mesh_filename = NULL;
-  int send_method = 3; // broadcst and delete
+  int send_method = 1; // read and delete
   double mesh_size = 0.1;
   int mesh_interval = -1;
   bool force_intervals = false;
   std::string options;
 
-  if (argc < 3) {
+  if (argc < 2) {
     if (rank == 0) {
       std::cout << "Usage: " << argv[0] << " <input_geom_filename> <output_mesh_filename> [<send_methond>] [-s <uniform_size>] [-i <uniform_int>] [-f] "
                 << std::endl
@@ -47,10 +50,9 @@ int main( int argc, char *argv[] )
       std::cout << "  -s <uniform_size> = mesh with this size" << std::endl;
       std::cout << "  -i <uniform_int> = mesh curves with this # intervals" << std::endl;
       std::cout << "  -f = force these size/interval settings even if geometry has interval settings" << std::endl;
-      std::cout << "No file specified.  Defaulting to: merge_test.OCC" << std::endl;
-      std::cout << "No send method specified.  Defaulting to: bcast_delete" << std::endl;
+      std::cout << "No file specified.  Defaulting to: " << DEFAULT_TEST_FILE << std::endl;
+      std::cout << "No send method specified.  Defaulting to: read_delete" << std::endl;
     }
-
     std::string file_name = TestDir + "/" + DEFAULT_TEST_FILE;
     geom_filename += TestDir;
     geom_filename += "/";
@@ -58,7 +60,7 @@ int main( int argc, char *argv[] )
   }
   else {
     geom_filename = argv[1];
-    mesh_filename = argv[2];
+    if (argc > 2) mesh_filename = argv[2];
     if (argc > 3) send_method = atoi(argv[3]);
     if (argc > 4) {
       int argno = 4;
@@ -83,6 +85,12 @@ int main( int argc, char *argv[] )
         }
       }
     }
+#ifdef HAVE_ACIS
+    if (send_method != 1) {
+      std::cerr << "Other send methods than read_and_delete for ACIS geometry are not supported." << std::endl;
+      return 0;
+    }
+#endif
   }
 
   // set geometry send method
@@ -94,8 +102,8 @@ int main( int argc, char *argv[] )
   else if (send_method == 5) options += "PARALLEL=READ_PARALLEL;";
   else {
     std::cout << "Send method " << send_method
-              << " is not supported. Defaulting to: broadcast_delete" << std::endl;
-    options = "PARALLEL=BCAST_DELETE;";
+              << " is not supported. Defaulting to: read_delete" << std::endl;
+    options = "PARALLEL=READ_DELETE;";
   }
 
   // do body partitioning with round robin distribution
@@ -103,9 +111,6 @@ int main( int argc, char *argv[] )
 
   if (load_and_mesh(geom_filename.c_str(), mesh_filename,
                     options.c_str(), mesh_size, mesh_interval, rank)) return 1;
-#else
-  std::cout << "Parallel meshing is only supported OCC geometry now." << std::endl;
-#endif
   return 0;
 }
 
@@ -115,14 +120,11 @@ int load_and_mesh(const char *geom_filename,
                   const int n_interval, const int rank)
 {
   // start up MK and load the geometry
-  double t_start = MPI_Wtime();
+  double t1 = MPI_Wtime();
   MKCore *mk = new MKCore;
   mk->load_geometry(geom_filename, options);
   MPI_Barrier(MPI_COMM_WORLD);
-  double t_load = MPI_Wtime();
-  std::cout << "Geometry is loaded in "
-            << (double) (t_load - t_start)/CLOCKS_PER_SEC
-            << " seconds." << std::endl;
+  double t2 = MPI_Wtime();
 
   // get the volumes
   MEntVector dum, vols, part_vols;
@@ -130,26 +132,37 @@ int load_and_mesh(const char *geom_filename,
 
   // make a sizing function and set it on the surface
   SizingFunction esize(mk, n_interval, interval_size);
-  vols[0]->sizing_function_index(esize.core_index());
+  unsigned int i_sf = esize.core_index();
+  for (int i = 0; i < vols.size(); i++) vols[i]->sizing_function_index(i_sf);
   
   // do parallel mesh
   mk->construct_meshop("ParallelMesher", vols);
   mk->setup_and_execute();
+  double t3 = MPI_Wtime();
+
+  if (mesh_filename != NULL) {
+    double t4 = MPI_Wtime();
+    std::string out_name;
+    std::stringstream ss;
+    ss << mesh_filename << "_" << rank << ".vtk";
+    ss >> out_name;
+    iMesh::Error err = mk->imesh_instance()->save(0, out_name.c_str());
+    IBERRCHK(err, "Couldn't save mesh.");
+    double t5 = MPI_Wtime();
+    std::cout << "Export_time="
+              << (double) (t5 - t4)/CLOCKS_PER_SEC << std::endl;
+  }
+
+  double t6 = MPI_Wtime();
+  std::cout << "Geometry_loading_time=" << t2 - t1
+            << " secs, Meshing_time=" << t3 - t2
+            << " secs, Total_time=" << t6 - t1 << std::endl;
 
   // report the number of tets
   moab::Range tets;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, tets);
   CHECK_EQUAL(moab::MB_SUCCESS, rval);
   std::cout << tets.size() << " tets generated." << std::endl;
-
-  if (mesh_filename != NULL) {
-    std::string out_name;
-    std::stringstream ss;
-    ss << mesh_filename << rank << ".vtk";
-    ss >> out_name;
-    iMesh::Error err = mk->imesh_instance()->save(0, out_name.c_str());
-    IBERRCHK(err, "Couldn't save mesh.");
-  }
 
   mk->clear_graph();
   MPI_Finalize();
