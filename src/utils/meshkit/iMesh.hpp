@@ -62,7 +62,7 @@ class iMesh : public iMeshBase {
     
     inline Error getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out );
     
-    inline bool areEHValid( bool do_reset = false );
+    inline bool optimize();
     
     inline Error getEntities( EntitySetHandle set,
                               EntityType type,
@@ -329,11 +329,11 @@ iMesh::getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out )
 }
 
 inline bool 
-iMesh::areEHValid( bool do_reset )
+iMesh::optimize()
 {
   int err, result;
-  iMesh_areEHValid( mInstance, do_reset, &result, &err );
-  return (iBase_SUCCESS == err) ? !!result : false;
+  iMesh_optimize( mInstance, &result, &err );
+  return (iBase_SUCCESS == err) ? !!result : true;
 }
 
 inline iMesh::Error
