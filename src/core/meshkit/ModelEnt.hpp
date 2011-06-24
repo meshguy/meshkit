@@ -151,11 +151,13 @@ public:
      * \param to_dim Dimension of adjacencies requested
      * \param to_ents Adjacent entities
      * \param op_type Boolean type, intersect or union
+     * \param only_to_ents if is true, get adjacencies from to_ents
      */
   void get_adjs_bool(MEntVector &from_ents,
                      int to_dim,
                      MEntVector &to_ents,
-                     BooleanType op_type);
+                     BooleanType op_type,
+                     bool only_to_ents = true);
     /**@}*/
 
     /** \name Geometric evaluation

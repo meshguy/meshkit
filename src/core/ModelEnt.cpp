@@ -742,7 +742,7 @@ ModelEnt *ModelEnt::shared_entity(ModelEnt *ent2, int to_dim)
   from_ents[0] = this;
   from_ents[1] = ent2;
   try {
-    get_adjs_bool(from_ents, to_dim, to_ents, INTERSECT); 
+    get_adjs_bool(from_ents, to_dim, to_ents, INTERSECT, false);
   }
   catch (Error err) {
     if (err.error_code() != MK_SUCCESS || to_ents.empty()) return NULL;
@@ -756,7 +756,8 @@ ModelEnt *ModelEnt::shared_entity(ModelEnt *ent2, int to_dim)
 void ModelEnt::get_adjs_bool(MEntVector &from_ents,
                              int to_dim,
                              MEntVector &to_ents,
-                             BooleanType op_type) 
+                             BooleanType op_type,
+                             bool only_to_ents) 
 {
   if (from_ents.empty()) {
     to_ents.clear();
@@ -766,7 +767,7 @@ void ModelEnt::get_adjs_bool(MEntVector &from_ents,
   MEntVector bridges;
 
   MEntVector::iterator from_it = from_ents.begin();
-  if (to_ents.empty() && op_type == INTERSECT) {
+  if (to_ents.empty() && !only_to_ents && op_type == INTERSECT) {
     from_ents.front()->get_adjacencies(to_dim, bridges);
     std::copy(bridges.begin(), bridges.end(), std::back_inserter(to_ents));
     from_it++;
