@@ -10,8 +10,10 @@
 #include "CMLTriAdvance.hpp"
 #include "RefEntity.hpp"
 
+#ifdef PARALLEL
 #ifdef HAVE_PARALLEL_MOAB
 #include "moab/ParallelComm.hpp"
+#endif
 #endif
 
 #include <vector>
@@ -162,10 +164,12 @@ void CAMALTriAdvance::print_debug(ModelEnt *me, std::vector<double> &coords,
   ss << "CAMALTri_boundary_surf";
   ss << entity->id();
   ss << "_";
+#ifdef PARALLEL
 #ifdef HAVE_PARALLEL_MOAB
   moab::ParallelComm* pcomm = moab::ParallelComm::get_pcomm(mk_core()->moab_instance(), 0);
   ss << "proc";
   ss << pcomm->proc_config().proc_rank();
+#endif
 #endif
   ss >> outfile;
   outfile += ".vtk";

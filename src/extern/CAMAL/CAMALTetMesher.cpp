@@ -11,8 +11,10 @@
 #include "RefEntity.hpp"
 #include <vector>
 
+#ifdef PARALLEL
 #ifdef HAVE_PARALLEL_MOAB
 #include "moab/ParallelComm.hpp"
+#endif
 #endif
 
 const bool debug_camaltet = false;
@@ -190,10 +192,12 @@ void CAMALTetMesher::print_debug(ModelEnt *me, std::vector<double> &coords,
   ss << "CAMALTet_boundary";
   ss << entity->id();
   ss << "_";
+#ifdef PARALLEL
 #ifdef HAVE_PARALLEL_MOAB
   moab::ParallelComm* pcomm = moab::ParallelComm::get_pcomm(mk_core()->moab_instance(), 0);
   ss << "proc";
   ss << pcomm->proc_config().proc_rank();
+#endif
 #endif
   ss >> outfile;
   outfile += ".vtk";
