@@ -3,8 +3,8 @@
 namespace MeshKit 
 {
     
-CAMALSizeEval::CAMALSizeEval(double size)
-  : meshSize(size)
+CAMALSizeEval::CAMALSizeEval(double size, SizingFunction * szf)
+  : meshSize(size), sizingFunc(szf)
 {
 }
 
@@ -14,6 +14,11 @@ bool CAMALSizeEval::size_at_point(double x, double y, double z, double& size,
 			   int level)
 {
   size = meshSize;
+  if (sizingFunc)
+  {
+    double pos[3] = {x, y, z};
+    size = sizingFunc->size(pos);
+  }
   return true;
 }
 
@@ -56,6 +61,7 @@ bool CAMALSizeEval::tensor_at_point(double u, double v,
   for (int i = 0; i < 4; i++) {
     size[i] = meshSize;
   }
+  return true;
 }
 
 bool CAMALSizeEval::size_at_point(double u, double& size, 

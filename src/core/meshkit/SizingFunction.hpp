@@ -48,6 +48,9 @@ public:
     //! Return index of this sf in MKCore
   virtual unsigned int core_index() const;
   
+  // a marker for var size or not; by default false; implemented by SizingFunctionVar -> true
+  virtual bool variable() {return false;}
+
 protected:
     //! MKCore associated with this SizingFunction
   MKCore *mkCore;

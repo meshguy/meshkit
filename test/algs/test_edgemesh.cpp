@@ -7,6 +7,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/SizingFunction.hpp"
+#include "meshkit/SizingFunctionVar.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/Matrix.hpp"
 #include "meshkit/VertexMesher.hpp"
@@ -20,6 +21,7 @@ MKCore *mk = NULL;
 void edgemesh_hole();
 void edgemesh_square();
 void edgemesh_brick();
+void edgemesh_var();
 
 int main(int argc, char **argv) 
 {
@@ -28,11 +30,11 @@ int main(int argc, char **argv)
   mk = new MKCore();
 
   int num_fail = 0;
-  
   num_fail += RUN_TEST(edgemesh_hole);
   num_fail += RUN_TEST(edgemesh_square);
   num_fail += RUN_TEST(edgemesh_brick);
-  
+  num_fail += RUN_TEST(edgemesh_var);
+  return num_fail;
 }
 
 void edgemesh_hole() 
@@ -172,4 +174,40 @@ void edgemesh_brick()
   
   mk->clear_graph();
 }
+void edgemesh_var()
+{
+  std::string file_name = TestDir + "/squaresurf.sat";
+  mk->load_geometry(file_name.c_str());
 
+    // get the surface
+  MEntVector surfs, curves, loops;
+  mk->get_entities_by_dimension(2, surfs);
+  ModelEnt *this_surf = (*surfs.rbegin());
+
+    // test getting loops
+  std::vector<int> senses, loop_sizes;
+  this_surf->boundary(0, loops, &senses, &loop_sizes);
+  CHECK_EQUAL(1, (int)loop_sizes.size());
+
+    // make an edge mesher
+  this_surf->get_adjacencies(1, curves);
+  EdgeMesher * emesher = (EdgeMesher *)mk->construct_meshop("EdgeMesher", curves);
+
+  emesher->set_edge_scheme(EdgeMesher::VARIABLE);
+
+    // make a sizing function and set it on the surface
+  SizingFunctionVar * svar = new SizingFunctionVar(mk, -1, 0.1);
+
+  // these could be read from a file, or something
+  double point0[3] = {0, 0, 0};
+  double coeffs[4] = {0.05, 0.05, 0.05, 0.1};
+  svar->set_linear_coeff(point0, coeffs);
+
+  this_surf->sizing_function_index(svar->core_index());
+
+  mk->setup_and_execute();
+
+  //mk->moab_instance()->write_file("var1.vtk");
+  mk->clear_graph();
+
+}

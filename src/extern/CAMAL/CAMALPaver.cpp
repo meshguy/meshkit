@@ -41,7 +41,13 @@ void CAMALPaver::execute_this()
 
       // create a surface evaluator for this modelent, and a size evaluator
     CAMALSurfEval cse(me);
-    CAMALSizeEval mesize(me->mesh_interval_size());
+
+    SizingFunction * sz = mk_core()->sizing_function(me->sizing_function_index());
+    if (!sz->variable())
+      sz = NULL; // no function variable
+
+    CAMALSizeEval mesize(me->mesh_interval_size(), sz);
+          // make sure the size isn't negative
       // make sure the size isn't negative
     if (mesize.get_size() == -1) mesize.set_size(1.0);
     

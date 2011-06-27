@@ -1,4 +1,5 @@
 #include "meshkit/EdgeMesher.hpp"
+#include "meshkit/Matrix.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
@@ -135,9 +136,13 @@ void EdgeMesher::execute_this()
     for (int i = 0; i < 3; i++)
       coords[3*num_edges+i] = coords[index2+i];
 
+    EdgeSchemeType scheme = schemeType;
+    SizingFunction *sz = mk_core()->sizing_function(me->sizing_function_index());
+    if (sz->variable())
+      scheme = VARIABLE;
 
     //choose the scheme for edge mesher
-    switch(schemeType)
+    switch(scheme)
     {
       case EQUAL://equal meshing for edges
           EqualMeshing(me, num_edges, coords);
@@ -150,6 +155,9 @@ void EdgeMesher::execute_this()
           break;
       case CURVATURE://curvature-based meshing for edges
           CurvatureMeshing(me, num_edges, coords);
+          break;
+      case VARIABLE: // use a var size from sizing function
+          VariableMeshing(me, num_edges, coords);
           break;
       default:
           break;			
@@ -507,6 +515,175 @@ void EdgeMesher::DivideIntoMore(ModelEnt *ent, Point3D p0, Point3D pMid, Point3D
     DivideIntoMore(ent, pts0, ptsMid, pts1, uu0, uu1, uumid, index, nodes, URecord);
   }
 			
+}
+
+//create the mesh for edges based on variable size from SizingFunction (var)
+void EdgeMesher::VariableMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords)
+{
+  double umin, umax, measure;
+  // because of that, keep track of the first node position and last node position
+  // first node position does not change, but the last node position do change
+  // coords will contain all nodes, including umax in Urecord!
+
+  SizingFunction *sf = mk_core()->sizing_function(ent->sizing_function_index());
+  //get the u range for the edge
+  iGeom::EntityHandle edge = ent->geom_handle();
+  iGeom::Error gerr = ent->igeom_instance() ->getEntURange(edge, umin, umax);
+  IBERRCHK(gerr, "Trouble get parameter range for edge.");
+
+  if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
+
+  //get the arc length
+  measure = ent -> measure();
+
+  // start advancing for each edge mesh, from the first point position
+  double currentPar = umin;
+  double currentPosition[3];
+  gerr = ent->igeom_instance() ->getEntUtoXYZ(edge, umin, currentPosition[0],
+      currentPosition[1], currentPosition[2] );
+
+  double endPoint[3];
+  gerr = ent->igeom_instance() ->getEntUtoXYZ(edge, umax, endPoint[0],
+      endPoint[1], endPoint[2] );
+  Vector<3> endpt(endPoint);
+
+  double targetSize = sf->size(currentPosition);
+  double startSize = targetSize;
+
+  double endSize = sf->size(endPoint);
+  // advance u such that the next point is at "currentSize" distance
+  // or close to it
+  // try first with a u that is coming from the (umax-umin)/number of edges
+  double deltaU = (umax-umin)/num_edges;
+  //coords.clear(); we do not want to clear, as the first node is still fine
+  std::vector<double> URecord;    //record the values for u; we may have to adjust all
+  // of them accordingly, and even add one more if we have some evenify problems.
+  // keep in mind that size is just a suggestion, number of intervals is more important for
+  // paver mesher
+  Vector<3> pt(currentPosition);
+
+  //bool notDone = true;
+  double prevU = umin;
+  while (currentPar + 1.1*deltaU < umax)
+  {
+    // do some binary search; actually, better, do Newton-Raphson, which should converge
+    // faster
+    //
+    prevU = currentPar;
+    currentPar += deltaU;
+    // adjust current par, such that
+    double point[3];
+    gerr=ent->igeom_instance()->getEntUtoXYZ(edge, currentPar, point[0], point[1], point[2] );
+    IBERRCHK(gerr, "Trouble getting position at parameter u.");
+    Vector<3> ptCandidate(point);
+    double compSize = length(ptCandidate-pt);
+    int nit = 0;
+
+    while ( (fabs(1.-compSize/targetSize)> 0.02 ) && (nit < 5))// 2% of the target size
+    {
+      // do Newton iteration
+      double tangent[3];
+      gerr=ent->igeom_instance() ->getEntTgntU(edge, currentPar, tangent[0], tangent[1], tangent[2] );
+      IBERRCHK(gerr, "Trouble getting tangent at parameter u.");
+      Vector<3> tang(tangent);
+      double dldu = 1./compSize * ((ptCandidate-pt )%tang);
+      nit++;// increase iteration count
+      if (dldu!=0.)
+      {
+        double deu= (targetSize-compSize)/dldu;
+        currentPar+=deu;
+        if (prevU>currentPar)
+        {
+          break; // something is wrong
+        }
+        if (umax < currentPar)
+        {
+          currentPar = umax;
+          break;
+        }
+        ent->igeom_instance()->getEntUtoXYZ(edge, currentPar, point[0], point[1], point[2]);
+        Vector<3> newPt(point);
+        compSize = length(newPt-pt);
+        ptCandidate = newPt;
+      }
+
+    }
+    // we have found an acceptable point/param
+    URecord.push_back(currentPar);
+    deltaU = currentPar-prevU;// should be greater than 0
+    pt = ptCandidate;
+    targetSize = sf->size(pt.data());// a new target size, at the current point
+
+
+
+  }
+  // when we are out of here, we need to adjust the URecords, to be more nicely
+  // distributed; also, look at the evenify again
+  int sizeU = (int)URecord.size();
+  if ((sizeU%2==0) && ent->constrain_even() )
+  {
+    // add one more
+    if (sizeU==0)
+    {
+      // just add one in the middle, and call it done
+      URecord.push_back( (umin+umax)/2);
+    }
+    else
+    {
+      //at least 2 (maybe 4)
+      double lastDelta = URecord[sizeU-1]-URecord[sizeU-2];
+      URecord.push_back(URecord[sizeU-1]+lastDelta );
+    }
+  }
+  // now, we have to redistribute, such as the last 2 deltas are about the same
+  // so, we should have after a little work,
+  // umin, umin+c*(URecord[0]-umin), ... umin+c*(URecord[size-1]-umin), umax
+  // what we have now is
+  // umin, URecord[0], ... ,URecord[size-1], and umax could be even outside or inside
+  // keep the last sizes equal
+  //  umin+c(UR[size-2]-umin) + umax = 2*( umin+c*(UR[size-1]-umin))
+  //  c ( 2*(UR[size-1]-umin) -(UR[size-2]-umin) ) = umax - umin
+  // c ( 2*UR[size-1] - UR[size-2] - umin ) = umax - umin
+  // c = (umax-umin)/( 2*UR[size-1] - UR[size-2] - umin)
+  sizeU = (int)URecord.size();// it may be bigger by one than the last time
+  if (sizeU == 0)
+  {
+    // nothing to do, only one edge to generate
+  }
+  else if (sizeU == 1)
+  {
+    // put it according to the sizes at ends, and assume a nice variation for u
+    // (u-umin) / (umax-u) = startSize / endSize
+    // (u-umin)*endSize = (umax-u) * startSize
+    // u(endSize+startSize)=(umax*startSize+umin*endSize)
+    URecord[0] = (umax*startSize+umin*endSize)/(startSize+endSize);
+
+  }
+  else // sizeU>=2, so we can spread the param a little more, assuming nice
+    // uniform mapping
+  {
+    double c =  (umax-umin)/( 2*URecord[sizeU-1] - URecord[sizeU-2] - umin);
+    for (int i=0; i<sizeU; i++)
+      URecord[i] = umin + c*(URecord[i] -umin);// some spreading out
+  }
+  // now, we can finally get the points for each U, U's should be spread out nicely
+  URecord.push_back(umax); // just add the last u, for the end point
+  //
+  sizeU = (int) URecord.size(); // new size, after pushing the last u, umax
+  num_edges = sizeU;// this is the new number of edges; the last one will be the end point
+  // of the edge, corresponding to umax
+  coords.resize(3*sizeU+3);
+  // we already know that at i=0 is the first node, start vertex of edge
+  // the rest will be computed from u
+  // even the last one, which is an overkill
+  for (int i = 1; i <= num_edges; i++)
+  {
+    double u = URecord[i-1];
+    gerr = ent->igeom_instance()->getEntUtoXYZ(edge, u, coords[3*i], coords[3*i+1], coords[3*i+2]);
+    IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
+  }
+  return;
+
 }
 
 

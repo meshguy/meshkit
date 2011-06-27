@@ -155,6 +155,10 @@ class FBiGeom : public iGeom {
                                       std::vector<double>& points_out,
                                       std::vector<double>& params_out );
 
+    iGeom::Error getEntTgntU( EntityHandle edge,
+                                  double u,
+                                  double& i, double& j, double& k );
+
 #if 0
     inline Error save( const char* file_name,
                        const char* options = 0 );

@@ -21,6 +21,7 @@ libMeshKitcore_la_SOURCES = \
 	MKGraph.cpp \
 	ModelEnt.cpp \
 	SizingFunction.cpp \
+	SizingFunctionVar.cpp \
 	VecUtil.cpp
 
 # The list of header files which are to be installed
@@ -36,6 +37,7 @@ nobase_libMeshKitcore_la_include_HEADERS = \
 	meshkit/ModelEnt.hpp \
 	meshkit/NoOp.hpp \
 	meshkit/SizingFunction.hpp \
+	meshkit/SizingFunctionVar.hpp \
 	meshkit/VecUtil.hpp \
 	meshkit/Matrix.hpp
 

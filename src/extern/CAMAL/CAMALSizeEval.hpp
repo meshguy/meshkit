@@ -2,7 +2,7 @@
 #define MESHKIT_CAMAL_SIZE_EVAL_HPP
 
 #include "CMLSizeEval.hpp"
-
+#include "meshkit/SizingFunction.hpp"
 namespace MeshKit 
 {
 
@@ -15,7 +15,7 @@ public:
     /** \brief Constructor
      * \param size Size setting for this evaluator
      */
-  CAMALSizeEval(double size);
+  CAMALSizeEval(double size, SizingFunction * szf = NULL);
   
     /** \brief Destructor
      */
@@ -137,6 +137,7 @@ public:
   
 private:
   double meshSize;
+  SizingFunction * sizingFunc;
 };
 
 

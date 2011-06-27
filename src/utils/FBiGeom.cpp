@@ -931,6 +931,18 @@ iGeom::Error FBiGeom::getEntUtoXYZ( EntityHandle edge, double u,
   else
     return (Error)1;
 }
+
+iGeom::Error FBiGeom::getEntTgntU( EntityHandle edge,
+                                  double u,
+                                  double& i, double& j, double& k )
+{
+  moab::ErrorCode rval = _fbEngine->getEntTgntU( (moab::EntityHandle) edge,   u,
+                                    i, j, k);
+  if (rval == moab::MB_SUCCESS)
+    return (Error) 0;
+  else
+    return (Error)1;
+}
 iGeom::Error FBiGeom::isEntAdj( EntityHandle entity1, EntityHandle entity2,
         bool& adjacent_out )
 {
