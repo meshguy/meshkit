@@ -23,6 +23,12 @@ void edgemesh_square();
 void edgemesh_brick();
 void edgemesh_var();
 
+#ifdef HAVE_ACIS
+std::string extension = ".sat";
+#elif HAVE_OCC
+std::string extension = ".stp";
+#endif
+
 int main(int argc, char **argv) 
 {
   
@@ -39,7 +45,7 @@ int main(int argc, char **argv)
 
 void edgemesh_hole() 
 {
-  std::string file_name = TestDir + "/holysurf.sat";
+  std::string file_name = TestDir + "/holysurf" + extension;
   mk->load_geometry(file_name.c_str());
 
     // get the surface
@@ -81,7 +87,7 @@ void edgemesh_hole()
 
 void edgemesh_square() 
 {
-  std::string file_name = TestDir + "/squaresurf.sat";
+  std::string file_name = TestDir + "/squaresurf" + extension;
   mk->load_geometry(file_name.c_str());
 
     // get the surface
@@ -133,7 +139,7 @@ void edgemesh_square()
 
 void edgemesh_brick() 
 {
-  std::string file_name = TestDir + "/brick.sat";
+  std::string file_name = TestDir + "/brick" + extension;
   mk->load_geometry(file_name.c_str());
 
     // get the vol, surfs, curves
@@ -176,7 +182,7 @@ void edgemesh_brick()
 }
 void edgemesh_var()
 {
-  std::string file_name = TestDir + "/squaresurf.sat";
+  std::string file_name = TestDir + "/squaresurf" + extension;
   mk->load_geometry(file_name.c_str());
 
     // get the surface
