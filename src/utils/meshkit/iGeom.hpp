@@ -458,6 +458,8 @@ public:
 
   virtual inline Error getData(EntityHandle entity_handle, TagHandle tag_handle,
       void* tag_value_out);
+  virtual inline Error getFacets(EntityHandle entity_handle, double dist_tolerance,
+      double *point, int *facets);
   virtual inline Error getIntData(EntityHandle entity_handle, TagHandle tag_handle,
       int& value_out);
   virtual inline Error getDblData(EntityHandle entity_handle, TagHandle tag_handle,
@@ -2336,6 +2338,17 @@ iGeom::getIntArrData( const EntityHandle* entity_handles,
   iGeom_getIntArrData( mInstance, entity_handles, entity_handles_size, tag_handle,
                        &tag_values_out, &alloc, &size, &err);
   return (Error)err;
+}
+
+iGeom::Error iGeom::getFacets(EntityHandle entity_handle, double dist_tolerance,
+      double *point, int *facets)
+{
+	int err, alloc_f = std::numeric_limits<int>::max(),
+	alloc_p = std::numeric_limits<double>::max(), size_f, size_p;
+	iGeom_getFacets(mInstance, entity_handle, dist_tolerance, &point, &alloc_p, &size_p,
+                       &facets, &alloc_f, &size_f, &err);
+	
+	return (Error)err;
 }
 
 iGeom::Error
