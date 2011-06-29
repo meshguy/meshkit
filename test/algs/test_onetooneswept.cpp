@@ -24,6 +24,12 @@ int main(int argc, char **argv)
   int num_fail = 0;
   
   num_fail += RUN_TEST(test_brick);
+
+#if HAVE_OCC
+  return 0;
+#else
+  return num_fail;
+#endif
   
 }
 
