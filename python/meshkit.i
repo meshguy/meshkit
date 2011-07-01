@@ -16,6 +16,7 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/MeshOp.hpp"
 #include "meshkit/MeshOpProxy.hpp"
+#include "meshkit/SizingFunction.hpp"
 
 #include "meshkit/Transform.hpp"
 #include "meshkit/CESets.hpp"
@@ -23,12 +24,14 @@
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/CopyMesh.hpp"
+#include "meshkit/OneToOneSwept.hpp"
 %}
 
 %factory(MeshKit::MeshOp * MeshKit::MKCore::construct_meshop,
          MeshKit::EdgeMesher,
          MeshKit::VertexMesher,
-         MeshKit::CopyMesh);
+         MeshKit::CopyMesh,
+         MeshKit::OneToOneSwept);
 
 %template(MEntVector) std::vector<MeshKit::ModelEnt*>;
 
@@ -57,11 +60,13 @@
 }
 
 %include "meshkit/Types.hpp"
+%include "meshkit/MKGraph.hpp"
 %include "meshkit/MKCore.hpp"
 %include "meshkit/ModelEnt.hpp"
 %include "meshkit/MeshOp.hpp"
 %include "meshkit/MeshOpProxy.hpp"
 %include "meshkit/Matrix.hpp"
+%include "meshkit/SizingFunction.hpp"
 
 %rename(Copy_Transform) MeshKit::Copy::Transform;
 %rename(Copy_Identity) MeshKit::Copy::Identity;
@@ -92,6 +97,7 @@
 %include "meshkit/EdgeMesher.hpp"
 %include "meshkit/VertexMesher.hpp"
 %include "meshkit/CopyMesh.hpp"
+%include "meshkit/OneToOneSwept.hpp"
 
 %init {
     import_iBase();
