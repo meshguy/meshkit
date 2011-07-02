@@ -41,7 +41,7 @@ int DualGraph::build(Mesh *m)
         {
             v0 = face->getNodeAt((j + 0) % nc);
             v1 = face->getNodeAt((j + 1) % nc);
-            neighs = Mesh::getRelations112(v0, v1);
+            Mesh::getRelations112(v0, v1, neighs);
             if (neighs.size() == 2)
             {
                 dv0 = neighs[0]->getDualNode();

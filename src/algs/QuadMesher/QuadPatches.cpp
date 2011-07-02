@@ -183,9 +183,9 @@ void build_submesh_topology(StructuredMesh2D &smesh) {
     for (size_t i = 0; i < numFaces; i++) {
         Face *face = smesh.faces[i];
         for (int j = 0; j < 4; j++) {
-            Vertex *v0 = face->getNodeAt((j + 0) % 4);
-            Vertex *v1 = face->getNodeAt((j + 1) % 4);
-            adjfaces = Mesh::getRelations112(v0, v1);
+            Vertex *v0 = face->getNodeAt(j + 0);
+            Vertex *v1 = face->getNodeAt(j + 1);
+            Mesh::getRelations112(v0, v1, adjfaces);
             int numneighs = adjfaces.size();
             for (int k = 0; k < numneighs; k++) {
                 int nid = adjfaces[k]->getTag();
@@ -241,7 +241,7 @@ size_t independent_components(Jaal::Mesh *mesh) {
                     Vertex *v0 = currface->getNodeAt((i + 0) % 4);
                     Vertex *v1 = currface->getNodeAt((i + 1) % 4);
                     if (v0->isVisited() && v1->isVisited()) continue;
-                    adjfaces = Mesh::getRelations112(v0, v1);
+                    Mesh::getRelations112(v0, v1, adjfaces);
                     numneighs= adjfaces.size();
                     for (size_t j = 0; j < numneighs; j++)
                         faceQ.push_back(adjfaces[j]);

@@ -125,7 +125,7 @@ QuadCleanUp::apply_advance_front_bridge_rule(Vertex *v0, Vertex *v1)
     if (adjFaces.size() != 3) return 3;
 
     // Our assumption is that all the edges are simple.
-    adjFaces = Mesh::getRelations112(v0, v1);
+    Mesh::getRelations112(v0, v1, adjFaces);
     if (adjFaces.size() != 2) return 4;
 
     if (adjFaces[0]->getLayerID() == adjFaces[1]->getLayerID()) return 5;

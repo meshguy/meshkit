@@ -190,7 +190,7 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
     for (int i = 0; i < 3; i++) {
         Vertex *v0 = parentface->getNodeAt(i + 1);
         Vertex *v1 = parentface->getNodeAt(i + 2);
-        neighs = Mesh::getRelations112(v0, v1);
+        Mesh::getRelations112(v0, v1, neighs);
 
         if (neighs.size() == 1)
             edge3 = i;

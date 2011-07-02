@@ -399,9 +399,9 @@ QuadCleanUp::search_flat_quads()
                 int bound_edges = 0;
                 for (int j = 0; j < 4; j++)
                 {
-                    Vertex *v0 = face->getNodeAt((j + 0) % 4);
-                    Vertex *v1 = face->getNodeAt((j + 1) % 4);
-                    neighs = Mesh::getRelations112(v0, v1);
+                    Vertex *v0 = face->getNodeAt(j + 0);
+                    Vertex *v1 = face->getNodeAt(j + 1);
+                    Mesh::getRelations112(v0, v1, neighs);
                     if (neighs.size() == 1)
                         bound_edges++;
                     edgefaces[j] = neighs.size();
@@ -1045,7 +1045,7 @@ int QuadCleanUp::refine_3434_pattern(Face *face, int pos)
 
     FaceSequence adjFaces;
 
-    adjFaces = Mesh::getRelations112(localnodes[1], localnodes[2]);
+    Mesh::getRelations112(localnodes[1], localnodes[2], adjFaces);
     assert( adjFaces.size() == 2 ) ;
 
     if (adjFaces[0] == face) neigh1 = adjFaces[1];
@@ -1053,7 +1053,7 @@ int QuadCleanUp::refine_3434_pattern(Face *face, int pos)
     localnodes[4] = Face::opposite_node(neigh1, localnodes[2]);
     localnodes[5] = Face::opposite_node(neigh1, localnodes[1]);
 
-    adjFaces = Mesh::getRelations112(localnodes[2], localnodes[3]);
+    Mesh::getRelations112(localnodes[2], localnodes[3], adjFaces);
     assert( adjFaces.size() == 2);
 
     if (adjFaces[0] == face) neigh2 = adjFaces[1];
@@ -1180,7 +1180,7 @@ int QuadCleanUp::refine_3454_pattern(Face *face, int pos)
 
     FaceSequence adjFaces;
 
-    adjFaces = Mesh::getRelations112(localnodes[1], localnodes[2]);
+    Mesh::getRelations112(localnodes[1], localnodes[2], adjFaces);
     assert( adjFaces.size() == 2 ) ;
 
     if (adjFaces[0] == face) neigh1 = adjFaces[1];
@@ -1191,7 +1191,7 @@ int QuadCleanUp::refine_3454_pattern(Face *face, int pos)
     localnodes[11] = Vertex::newObject();
     localnodes[11]->setXYZCoords(xyz);
 
-    adjFaces = Mesh::getRelations112(localnodes[2], localnodes[5]);
+    Mesh::getRelations112(localnodes[2], localnodes[5], adjFaces);
     assert( adjFaces.size() == 2);
 
     if (adjFaces[0] == neigh1) neigh2 = adjFaces[1];
@@ -1199,7 +1199,7 @@ int QuadCleanUp::refine_3454_pattern(Face *face, int pos)
     localnodes[8] = Face::opposite_node(neigh2, localnodes[2]);
     localnodes[9] = Face::opposite_node(neigh2, localnodes[5]);
 
-    adjFaces = Mesh::getRelations112(localnodes[2], localnodes[3]);
+    Mesh::getRelations112(localnodes[2], localnodes[3], adjFaces);
     assert( adjFaces.size() == 2);
 
     if (adjFaces[0] == face) neigh3 = adjFaces[1];
@@ -1210,7 +1210,7 @@ int QuadCleanUp::refine_3454_pattern(Face *face, int pos)
     localnodes[12] = Vertex::newObject();
     localnodes[12]->setXYZCoords(xyz);
 
-    adjFaces = Mesh::getRelations112(localnodes[2], localnodes[6]);
+    Mesh::getRelations112(localnodes[2], localnodes[6], adjFaces);
     assert( adjFaces.size() == 2);
 
     if (adjFaces[0] == neigh3) neigh4 = adjFaces[1];
@@ -1406,7 +1406,7 @@ int QuadCleanUp::refine_3444_pattern(Face *face, int pos)
 
     FaceSequence adjFaces;
 
-    adjFaces = Mesh::getRelations112(localnodes[1], localnodes[2]);
+    Mesh::getRelations112(localnodes[1], localnodes[2], adjFaces);
     if (adjFaces.size() != 2) return 1;
 
     if (adjFaces[0] == face) neigh1 = adjFaces[1];
@@ -1418,13 +1418,13 @@ int QuadCleanUp::refine_3444_pattern(Face *face, int pos)
     localnodes[9] = Vertex::newObject();
     localnodes[9]->setXYZCoords(xyz);
 
-    adjFaces = Mesh::getRelations112(localnodes[2], localnodes[5]);
+    Mesh::getRelations112(localnodes[2], localnodes[5], adjFaces);
     if (adjFaces.size() != 2) return 1;
     if (adjFaces[0] == neigh1) neigh2 = adjFaces[1];
     if (adjFaces[1] == neigh1) neigh2 = adjFaces[0];
     localnodes[8] = Face::opposite_node(neigh2, localnodes[2]);
 
-    adjFaces = Mesh::getRelations112(localnodes[2], localnodes[3]);
+    Mesh::getRelations112(localnodes[2], localnodes[3], adjFaces);
     if (adjFaces.size() != 2) return 1;
     if (adjFaces[0] == face) neigh3 = adjFaces[1];
     if (adjFaces[1] == face) neigh3 = adjFaces[0];

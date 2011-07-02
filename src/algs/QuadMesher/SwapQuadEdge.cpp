@@ -1,7 +1,6 @@
 #include "QuadCleanUp.hpp"
 
 using namespace Jaal;
-
 ///////////////////////////////////////////////////////////////////////////////
 
 int
@@ -128,7 +127,7 @@ SwapQuadEdge::build_boundary()
 
     // Possibility of doublet creation is ruled out now..
 
-    nghs = Mesh::getRelations112(connect[0], connect[1]);
+    Mesh::getRelations112(connect[0], connect[1], nghs);
 
     if (nghs.size() != 2) return 1;
 
@@ -531,7 +530,7 @@ SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
         int layerid = connect[0]->getLayerID();
         faces = vertex->getRelations2();
         Face *f0 = firstFace;
-        faces = Mesh::getRelations112(connect[0], connect[1]);
+        Mesh::getRelations112(connect[0], connect[1], faces);
         assert(faces.size() == 2);
         Face *f1 = NULL;
         if (faces[0] == f0) f1 = faces[1];

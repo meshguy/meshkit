@@ -881,7 +881,8 @@ QuadCleanUp::isTunnel(const Edge *e)
     if (!v0->isBoundary ()) return 0;
     if (!v1->isBoundary ()) return 0;
 
-    FaceSequence vneighs = Mesh::getRelations112(v0, v1);
+    FaceSequence vneighs;
+    Mesh::getRelations112(v0, v1, vneighs);
 
     if( vneighs.size() != 1 ) return 1;
 

@@ -936,7 +936,7 @@ public:
         return 0;
     }
 
-    int replaceNode(const Vertex *oldvertex, Vertex *newvertex)
+    int replaceNode(Vertex *oldvertex, Vertex *newvertex)
     {
 
         int  nSize = connect.size();
@@ -948,8 +948,6 @@ public:
                 return 0;
             }
         }
-
-        cout << " Warning: Requested node not replaced " << endl;
         return 1;
     }
 
@@ -1253,8 +1251,8 @@ public:
     static NodeSequence generate_nodes(size_t n);
     static FaceSequence generate_faces(size_t n);
 
-    static FaceSequence getRelations112(PNode v0, PNode v1);
-    static FaceSequence getRelations102(PNode v0, PNode v1);
+    static int getRelations112(const PNode v0, const PNode v1, FaceSequence &seq);
+    static int getRelations102(const PNode v0, const PNode v1, FaceSequence &seq);
     static int make_chain(vector<Edge> &edges);
     static int is_closed_chain(const vector<Edge> &edges);
     static int is_closeable_chain(const vector<Edge> &edges);
@@ -1755,6 +1753,17 @@ public:
 
     void setFacesNormal();
 
+    //
+    // Refine the mesh into "n" segments and return newnodes and newfaces 
+    // inserted into  the mesh structure. Old faces are reused, i.e. 
+    // they are deactivated and then reactivated with new connectivity...
+    //
+    // Requirement: At least two segments must be given...
+    int refine_tri_edge( Vertex *v0, Vertex *v1, int n, 
+                         NodeSequence &newnodes, FaceSequence &newfaces);
+
+    int collapse_tri_edge( Vertex *v0, Vertex *v1);
+
     int refine_quads14();
     int refine_quads15();
 
@@ -2096,6 +2105,11 @@ inline int Mesh::remove(PNode v)
                 if (!vfaces[i]->isRemoved())
                 {
                     cout << "Warning: The vertex is currently used by face: vertex not removed" << endl;
+                    cout << "Debug : Vertex ID : " << v->getID() << endl;
+                    cout << "Face:  ";
+                    for( int j = 0; j < vfaces[i]->getSize(0); j++) 
+                         cout << vfaces[i]->getNodeAt(j)->getID() << " ";
+                    cout << endl;
                     return 1;
                 }
             }
@@ -2179,6 +2193,8 @@ inline int Mesh::remove(PFace f)
 
     int nSize = f->getSize(0);
 
+    FaceSequence vfaces;
+
     if( f->isActive() )
     {
         if (adjTable[0][0])
@@ -2187,7 +2203,7 @@ inline int Mesh::remove(PFace f)
             {
                 Vertex *vi = f->getNodeAt(i + 0);
                 Vertex *vj = f->getNodeAt(i + 1);
-                FaceSequence vfaces = Mesh::getRelations112(vi, vj);
+                Mesh::getRelations112(vi, vj, vfaces);
                 if (vfaces.size() == 1)
                 {
                     vi->removeRelation0(vj);
@@ -2265,7 +2281,6 @@ inline int Mesh::deactivate(PFace face)
 
 inline int Mesh::reactivate(PNode vertex)
 {
-
     if (adjTable[0][0])
     {
         FaceSequence vfaces = vertex->getRelations2();
@@ -2275,8 +2290,8 @@ inline int Mesh::reactivate(PNode vertex)
             int nsize = vfaces[i]->getSize(0);
             for (int j = 0; j < nsize; j++)
             {
-                Vertex *vi = vfaces[i]->getNodeAt((i + 0) % nsize);
-                Vertex *vj = vfaces[i]->getNodeAt((i + 1) % nsize);
+                Vertex *vi = vfaces[i]->getNodeAt(i + 0);
+                Vertex *vj = vfaces[i]->getNodeAt(i + 1);
                 vi->addRelation0(vj);
                 vj->addRelation0(vi);
             }
@@ -2297,8 +2312,8 @@ inline int Mesh::reactivate(PFace face)
     {
         for (int i = 0; i < nsize; i++)
         {
-            Vertex *vi = face->getNodeAt((i + 0) % nsize);
-            Vertex *vj = face->getNodeAt((i + 1) % nsize);
+            Vertex *vi = face->getNodeAt(i + 0);
+            Vertex *vj = face->getNodeAt(i + 1);
             assert(!vi->isRemoved());
             assert(!vj->isRemoved());
             vi->addRelation0(vj);
@@ -2362,6 +2377,7 @@ int remesh_penta_loop(Mesh *mesh,
                       FaceSequence &newfaces,
                       bool smooth = 0);
 
+void advancing_front_triangle_cleanup ( Mesh *mesh );
 //
 // QTrack is similar to "Motorcycle graph" proposed by Eppestein group.
 // But somehow, I don't like this term.

@@ -3,8 +3,8 @@
 #include <iostream>
 #include <iomanip>
 
-
 //#############################################################################
+
 int SwapTriEdge:: one_sweep(int entity, int rule)
 {
      size_t total_count = 0;
@@ -104,7 +104,8 @@ void SwapTriEdge::FlipEdge::process(Vertex *v1, Vertex *v2)
 
      if (v1->isBoundary() && v2->isBoundary()) return;
 
-     FaceSequence neighs = Mesh::getRelations112(v1, v2);
+     FaceSequence neighs;
+     Mesh::getRelations112(v1, v2, neighs);
 
      assert(neighs.size() == 2);
 
@@ -314,7 +315,7 @@ int SwapTriEdge :: apply_advance_front_rule()
      NodeSequence currlayer;
      NodeSet   nextlayer;
 
-     for( int i = 0; i < numNodes; i++) {
+     for(size_t i = 0; i < numNodes; i++) {
           Vertex *v = mesh->getNodeAt(i);
           if( v->isBoundary() ) {
                v->setLayerID(0);
@@ -339,7 +340,7 @@ int SwapTriEdge :: apply_advance_front_rule()
      while(1) {
           nSize = currlayer.size();
           nirregular0 = 0;
-          for( int i = 0; i < nSize; i++) {
+          for( size_t i = 0; i < nSize; i++) {
                Vertex *v = currlayer[i];
                if( !v->isRemoved() && !isIdeal(v) ) nirregular0++;
           }
@@ -348,7 +349,7 @@ int SwapTriEdge :: apply_advance_front_rule()
                while(1) {
                     nSize = currlayer.size();
                     ncount = 0;
-                    for( int i = 0; i < nSize; i++) {
+                    for( size_t i = 0; i < nSize; i++) {
                          Vertex *v = currlayer[i];
                          if( !v->isRemoved() &&  !isIdeal(v)) {
                               int err  = atomicOp( v, ADVANCE_FRONT_RULE );
@@ -361,7 +362,7 @@ int SwapTriEdge :: apply_advance_front_rule()
 
                nSize = currlayer.size();
                nirregular1 = 0;
-               for( int i = 0; i < nSize; i++) {
+               for( size_t i = 0; i < nSize; i++) {
                     Vertex *v = currlayer[i];
                     if( !v->isRemoved() &&  !isIdeal(v) ) nirregular1++;
                }
@@ -378,10 +379,10 @@ int SwapTriEdge :: apply_advance_front_rule()
 
           nextlayer.clear();
           nSize = currlayer.size();
-          for( int i = 0; i < nSize; i++) {
+          for( size_t i = 0; i < nSize; i++) {
                Vertex *v = currlayer[i];
                NodeSequence &vneighs = v->getRelations0();
-               for( int k = 0; k < vneighs.size(); k++) {
+               for( size_t k = 0; k < vneighs.size(); k++) {
                     int lid = vneighs[k]->getLayerID();
                     if( lid > curr_layer_id ) {
                          vneighs[k]->setLayerID( curr_layer_id+1 );
@@ -415,7 +416,7 @@ int SwapTriEdge :: apply_advance_front_rule()
 
      numNodes = mesh->getSize(0);
      int final_irregular = 0;
-     for( int i = 0; i < numNodes; i++) {
+     for( size_t i = 0; i < numNodes; i++) {
           Vertex *v = mesh->getNodeAt(i);
           if( !v->isRemoved()) {
                int lid   = v->getLayerID();

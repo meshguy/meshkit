@@ -59,7 +59,7 @@ void BinaryTree::bfs_traverse(BinaryNode *parent, BNodeList &nextnodes)
     if (dualnode->isVisited())
         return;
 
-    NodeSequence neighs = dualnode->getRelations0();
+    const NodeSequence &neighs = dualnode->getRelations0();
 
     int nextlevel = parent->getLevelID() + 1;
 
