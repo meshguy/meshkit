@@ -45,14 +45,6 @@ public:
      */
   virtual void execute_this();
 	
-    /** \brief Static variable for registering this meshop
-     */
-  static bool meshopRegistered;
-  
-    /** \brief Static list of geometry types treated by this scheme
-     */
-  static iBase_EntityType geomTps[];
-  
     /** \brief Static list of mesh types treated by this scheme
      */
   static moab::EntityType meshTps[];
@@ -69,7 +61,7 @@ public:
   static bool can_mesh(iBase_EntityType dim)
     { return iBase_REGION == dim; }
 
-  /** \brief Function returning whether this scheme can mesh the specified entity
+  /** \brief Function returnign whether this scheme can mesh the specified entity
    * 
    * Used by MeshOpFactory to find scheme for an entity.
    * \param me ModelEnt being queried

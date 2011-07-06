@@ -11,10 +11,17 @@
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/CopyMesh.hpp"
 #include "meshkit/OneToOneSwept.hpp"
+
+#include "meshkit/CAMALPaver.hpp"
+#include "meshkit/CAMALTetMesher.hpp"
+#include "meshkit/CAMALTriAdvance.hpp"
 %}
 
 %factory(MeshKit::MeshOp * MeshKit::MKCore::construct_meshop,
          MeshKit::EdgeMesher,
          MeshKit::VertexMesher,
          MeshKit::CopyMesh,
-         MeshKit::OneToOneSwept);
+         MeshKit::OneToOneSwept,
+         MeshKit::CAMALPaver,
+         MeshKit::CAMALTetMesher,
+         MeshKit::CAMALTriAdvance);

@@ -43,14 +43,6 @@ public:
      */
   virtual void execute_this();
 	
-    /** \brief Static variable for registering this meshop
-     */
-  static bool meshopRegistered;
-  
-    /** \brief Static list of geometry types treated by this scheme
-     */
-  static iBase_EntityType geomTps[];
-  
     /** \brief Static list of mesh types treated by this scheme
      */
   static moab::EntityType meshTps[];

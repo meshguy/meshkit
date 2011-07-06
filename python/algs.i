@@ -31,3 +31,7 @@
 %include "meshkit/VertexMesher.hpp"
 %include "meshkit/CopyMesh.hpp"
 %include "meshkit/OneToOneSwept.hpp"
+
+%include "meshkit/CAMALPaver.hpp"
+%include "meshkit/CAMALTetMesher.hpp"
+%include "meshkit/CAMALTriAdvance.hpp"
