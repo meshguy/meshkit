@@ -26,11 +26,21 @@
 
 %include "meshkit/Transform.hpp"
 %include "meshkit/CESets.hpp"
+%include "meshkit/QslimOptions.hpp"
 
+// TODO: AssyGen
+%include "meshkit/CopyGeom.hpp"
+%include "meshkit/EBMesher.hpp"
 %include "meshkit/EdgeMesher.hpp"
-%include "meshkit/VertexMesher.hpp"
-%include "meshkit/CopyMesh.hpp"
+%include "meshkit/ExtrudeMesh.hpp"
+// TODO: MergeMesh
 %include "meshkit/OneToOneSwept.hpp"
+// TODO: ParallelMesher
+// TODO: ParExchangeMesh
+%include "meshkit/QslimMesher.hpp"
+%include "meshkit/SCDMesh.hpp"
+%include "meshkit/TFIMapping.hpp"
+%include "meshkit/VertexMesher.hpp"
 
 %include "meshkit/CAMALPaver.hpp"
 %include "meshkit/CAMALTetMesher.hpp"
