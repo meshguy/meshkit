@@ -16,6 +16,7 @@ include_dirs = [os.path.join(imesh_base, 'include'),
 
 meshkit = Extension('_MeshKit',
                     sources=['meshkit.i'],
+                    depends=['algs_factory.i', 'algs.i', 'core.i', 'itaps.i'],
                     swig_opts=['-modern', '-c++'] +
                               ['-I'+i for i in include_dirs],
                     include_dirs=include_dirs,
