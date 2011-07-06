@@ -55,10 +55,6 @@ public:
 	//Generate the edge mesh
 	virtual void execute_this();
 
-	//make an instance of the EdgeMesher class
-	EdgeSchemeType get_edge_scheme() const;
-	 void set_edge_scheme(EdgeSchemeType scheme);
-
        /**\brief Get class name */
        static const char* name() 
          { return "EdgeMesher"; }
@@ -91,6 +87,13 @@ public:
        virtual const moab::EntityType* mesh_types_arr() const
          { return output_types(); }
 
+  // set/get some options
+  EdgeSchemeType get_edge_scheme() const;
+  void set_edge_scheme(EdgeSchemeType scheme);
+
+  // used in bias and dual meshing schemes
+  void set_ratio(double q);
+  double get_ratio();
 	~EdgeMesher();
 	
 private:
@@ -103,6 +106,7 @@ private:
         };
 
  	EdgeSchemeType schemeType;
+ 	double ratio;
 
 	//return x, y, z coordinates based on the parametric coordinate u on the edge
 	Point3D getXYZCoords(ModelEnt *ent, double u) const;
@@ -151,6 +155,18 @@ inline void EdgeMesher::set_edge_scheme(EdgeMesher::EdgeSchemeType scheme)
 inline EdgeMesher::EdgeSchemeType EdgeMesher::get_edge_scheme() const
 {
 	return schemeType;
+}
+
+// set the ratio for bias or dual meshing
+inline void EdgeMesher::set_ratio(double q)
+{
+  ratio = q;
+}
+
+// get the ratio for bias or dual meshing
+inline double EdgeMesher::get_ratio()
+{
+  return ratio;
 }
 }
 

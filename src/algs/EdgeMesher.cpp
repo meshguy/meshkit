@@ -20,7 +20,7 @@ const moab::EntityType* EdgeMesher::output_types()
 //---------------------------------------------------------------------------//
 // Construction Function for Edge Mesher
 EdgeMesher::EdgeMesher(MKCore *mk_core, const MEntVector &me_vec) 
-        : MeshScheme(mk_core, me_vec), schemeType(EQUAL)
+        : MeshScheme(mk_core, me_vec), schemeType(EQUAL), ratio(1.2)
 {
 
 }
@@ -388,8 +388,8 @@ void EdgeMesher::DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<doub
       coords[3*num_edges + k] = coords[3*num_edges + k - 3];
   }
 
-  //set up the default bias ratio 1.2 temporarily	
-  double q = 1.2;
+  //default bias ratio is 1.2
+  double q = ratio;//
 	
   //get the distance between the first two nodes
   L0 = 0.5 * measure * (1-q) / (1 - pow(q, num_edges/2));
@@ -413,6 +413,7 @@ void EdgeMesher::DualBiasMeshing(ModelEnt *ent, int &num_edges, std::vector<doub
     {
       u = u1 - (umax-umin) * dist / measure;
       u = getUCoord(ent, u1, dist, u, umin, umax);
+      u1 = u;
       gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*(num_edges-i)], coords[3*(num_edges-i)+1], coords[3*(num_edges-i)+2]);
       IBERRCHK(gerr, "Trouble getting U from XYZ along the edge");
     }
@@ -438,8 +439,8 @@ void EdgeMesher::BiasMeshing(ModelEnt *ent, int num_edges, std::vector<double> &
 
   double u, L0, dist = 0, u0;
 	
-  //set up the default bias ratio 1.2	
-  double q = 1.2;
+  // the default bias ratio 1.2
+  double q = ratio;
   L0 = measure * (1-q) / (1 - pow(q, num_edges));
 		
 	

@@ -22,6 +22,7 @@ void edgemesh_hole();
 void edgemesh_square();
 void edgemesh_brick();
 void edgemesh_var();
+void edgemesh_dual();
 
 #ifdef HAVE_ACIS
 std::string extension = ".sat";
@@ -40,6 +41,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(edgemesh_square);
   num_fail += RUN_TEST(edgemesh_brick);
   num_fail += RUN_TEST(edgemesh_var);
+  num_fail += RUN_TEST(edgemesh_dual);
 #if HAVE_OCC
   return 0;
 #else
@@ -186,6 +188,9 @@ void edgemesh_brick()
 }
 void edgemesh_var()
 {
+  // delete existing mesh
+  mk->moab_instance()->delete_mesh();
+
   std::string file_name = TestDir + "/squaresurf" + extension;
   mk->load_geometry(file_name.c_str());
 
@@ -218,6 +223,43 @@ void edgemesh_var()
   mk->setup_and_execute();
 
   //mk->moab_instance()->write_file("var1.vtk");
+  mk->clear_graph();
+
+}
+void edgemesh_dual()
+{
+  // delete existing mesh
+  mk->moab_instance()->delete_mesh();
+
+  std::string file_name = TestDir + "/squaresurf" + extension;
+  mk->load_geometry(file_name.c_str());
+
+    // get the surface
+  MEntVector surfs, curves, loops;
+  mk->get_entities_by_dimension(2, surfs);
+  ModelEnt *this_surf = (*surfs.rbegin());
+
+    // test getting loops
+  std::vector<int> senses, loop_sizes;
+  this_surf->boundary(0, loops, &senses, &loop_sizes);
+  CHECK_EQUAL(1, (int)loop_sizes.size());
+
+    // make an edge mesher
+  this_surf->get_adjacencies(1, curves);
+  EdgeMesher * emesher = (EdgeMesher *)mk->construct_meshop("EdgeMesher", curves);
+
+  emesher->set_edge_scheme(EdgeMesher::DUAL);
+
+    // make a sizing function and set it on the surface
+  SizingFunction * svar = new SizingFunction(mk, 10, -1);
+
+  emesher->set_ratio(1.3);
+
+  this_surf->sizing_function_index(svar->core_index());
+
+  mk->setup_and_execute();
+
+  //mk->moab_instance()->write_file("dual1.1.vtk");
   mk->clear_graph();
 
 }
