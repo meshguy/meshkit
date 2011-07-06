@@ -1,0 +1,18 @@
+Installation
+============
+
+The following steps describe how to get the Python bindings for MeshKit up and
+running. This will hopefully become simpler in the future as various
+installation bugs are worked out.
+
+1) Build CGM, MOAB, and Lasso with --enable-shared
+2) Download and untar PyTAPS from <http://pypi.python.org/pypi/PyTAPS>
+   a) Run "python setup.py install"
+   b) Run "python setup.py install_headers"
+3) Build MeshKit with --enable-shared, --enable-python, and --with-camal
+4) Make sure the headers from (2b) are in your CPATH
+5) cd into meshkit/python and run "python setup.py install"
+   Note: You may need to run this twice, due to a bug in how SWIG extensions get
+   built.
+6) Run some examples from meshkit/python/examples to make sure that installation
+   worked
