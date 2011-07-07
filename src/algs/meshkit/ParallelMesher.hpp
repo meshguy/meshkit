@@ -11,6 +11,7 @@
 
 #include "meshkit/MeshScheme.hpp"
 #include "moab/ParallelComm.hpp"
+#include "TDParallel.hpp"
 
 namespace MeshKit
 {
@@ -103,6 +104,8 @@ private:
    * \return A MeshOp that can generate input type elements
    */
   void add_parallel_mesh_op(PARALLEL_OP_TYPE type, bool after = false);
+
+  void check_partition(TDParallel* td_par, ModelEnt* me, int dim);
 
   ParallelComm* m_mpcomm; // mesh parallel communication
 

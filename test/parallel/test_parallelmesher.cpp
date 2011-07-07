@@ -139,8 +139,14 @@ int load_and_mesh(const char *geom_filename,
   mk->construct_meshop("ParallelMesher", vols);
   mk->setup_and_execute();
   double t3 = MPI_Wtime();
+  
+  // report the number of tets
+  moab::Range tets;
+  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, tets);
+  CHECK_EQUAL(moab::MB_SUCCESS, rval);
+  std::cout << tets.size() << " tets generated." << std::endl;
 
-  if (mesh_filename != NULL) {
+  if (mesh_filename != NULL && tets.size() > 0) {
     double t4 = MPI_Wtime();
     std::string out_name;
     std::stringstream ss;
@@ -158,12 +164,7 @@ int load_and_mesh(const char *geom_filename,
             << " secs, Meshing_time=" << t3 - t2
             << " secs, Total_time=" << t6 - t1 << std::endl;
 
-  // report the number of tets
-  moab::Range tets;
-  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, tets);
-  CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  std::cout << tets.size() << " tets generated." << std::endl;
-
+  
   mk->clear_graph();
   MPI_Finalize();
   

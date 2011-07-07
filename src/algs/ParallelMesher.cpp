@@ -14,7 +14,6 @@
 #include "RefFace.hpp"
 #include "RefEdge.hpp"
 #include "RefVertex.hpp"
-#include "TDParallel.hpp"
 #include "CADefines.hpp"
 #include "GeometryQueryTool.hpp"
 
@@ -91,52 +90,22 @@ void ParallelMesher::setup_this()
     unsigned int charge_proc = td_par_vol->get_charge_proc();
     MEntVector children;
 
-    if (m_rank == charge_proc) { // partititoned vols
+    // partititoned vols
+    if (m_rank == charge_proc) {
       m_sEntity[MESH_VOLUME].insert(me_vol); // volume
+      if (debug_parallelmesher) print_geom_info(me_vol, 3, true);
+    }
 
-      for (int i = 2; i > -1; i--) { // child entities
-        children.clear();
-        me_vol->get_adjacencies(i, children);
+    for (int i = 2; i > -1; i--) { // child entities
+      children.clear();
+      me_vol->get_adjacencies(i, children);
 
-        for (MEntVector::iterator cit = children.begin(); cit != children.end(); cit++) {
-          RefEntity* child = reinterpret_cast< RefEntity* > ((*cit)->geom_handle());
-          TDParallel *td_par_child = (TDParallel *) child->get_TD(&TDParallel::is_parallel);
-
-          if (i == 2) { // surface : make local, send/non-send surface sets
-            if (td_par_child != NULL) {
-              charge_proc = td_par_child->get_charge_proc();
-              if (m_rank == charge_proc) {
-                m_sEntity[MESH_SURF].insert(*cit);
-              }
-              m_sEntity[EXCHANGE_SURF].insert(*cit);
-            }
-          }
-          else if (i == 1) { // edge
-            if (td_par_child != NULL) {
-              charge_proc = td_par_child->get_charge_proc();
-              if (m_rank == charge_proc) {
-                m_sEntity[MESH_EDGE].insert(*cit);
-              }
-              m_sEntity[EXCHANGE_EDGE].insert(*cit);
-            }
-          }
-          else if (i == 0) { // vertex
-            if (td_par_child != NULL) {
-              charge_proc = td_par_child->get_charge_proc();
-              if (m_rank == charge_proc) {
-                m_sEntity[MESH_VERTEX].insert(*cit);
-              }
-              m_sEntity[EXCHANGE_VERTEX].insert(*cit);
-            }
-          }
-
-          if (td_par_child != NULL) {
-            // set geometry unique id to corresponding surface entityset
-            unsigned int unique_id = td_par_child->get_unique_id();
-            iBase_EntitySetHandle entityset = reinterpret_cast<iBase_EntitySetHandle> ((*cit)->mesh_handle());
-            iMesh::Error err = mk_core()->imesh_instance()->setEntSetIntData(entityset, m_mPuniqueIDTag, unique_id);
-            IBERRCHK(err, "Couldn't set geometry unique id to corresponding mesh entityset.");
-          }
+      for (MEntVector::iterator cit = children.begin(); cit != children.end(); cit++) {
+        RefEntity* child = reinterpret_cast< RefEntity* > ((*cit)->geom_handle());
+        TDParallel *td_par_child = (TDParallel *) child->get_TD(&TDParallel::is_parallel);
+        if (td_par_child != NULL) {
+          check_partition(td_par_child, *cit, i);
+          if (debug_parallelmesher) print_geom_info(*cit, i, m_rank == td_par_child->get_charge_proc());
         }
       }
     }
@@ -148,10 +117,66 @@ void ParallelMesher::setup_this()
   add_parallel_mesh_op(MESH_SURF);
   add_parallel_mesh_op(EXCHANGE_SURF);
   add_parallel_mesh_op(MESH_VOLUME);
+
+  if (debug_parallelmesher) {
+    for (PARALLEL_OP_TYPE type = MESH_VERTEX; type <= MESH_VOLUME;) {
+      std::cout << "# of parallel mesh type " << type << "="
+                << m_sEntity[type].size() << std::endl;
+      type = static_cast<PARALLEL_OP_TYPE> (type + 1);
+    }
+  }
+}
+
+void ParallelMesher::check_partition(TDParallel* td_par, ModelEnt* me, int dim)
+{
+  bool b_partitioned = false;
+  int charge_p = td_par->get_charge_proc();
+  if (m_rank == charge_p) { // charge processor
+    if (dim == 2) {
+      m_sEntity[MESH_SURF].insert(me);
+      m_sEntity[EXCHANGE_SURF].insert(me);
+    }
+    else if (dim == 1) {
+      m_sEntity[MESH_EDGE].insert(me);
+      m_sEntity[EXCHANGE_EDGE].insert(me);
+    }
+    else if (dim == 0) {
+      m_sEntity[MESH_VERTEX].insert(me);
+      m_sEntity[EXCHANGE_VERTEX].insert(me);
+    }
+    b_partitioned = true;
+  }
+  else {
+    DLIList<int>* shared_procs = td_par->get_shared_proc_list();
+    int n_shared = shared_procs->size();
+    for (int i = 0; i < n_shared; i++) {
+      if (m_rank == shared_procs->get_and_step()) { // shared processor
+        if (dim == 2) {
+          m_sEntity[EXCHANGE_SURF].insert(me);
+        }
+        else if (dim == 1) {
+          m_sEntity[EXCHANGE_EDGE].insert(me);
+        }
+        else if (dim == 0) {
+          m_sEntity[EXCHANGE_VERTEX].insert(me);
+        }
+        b_partitioned = true;
+        break;
+      }
+    }
+  }
+
+  // set geometry unique id to corresponding surface entityset
+  if (b_partitioned) {
+    unsigned int unique_id = td_par->get_unique_id();
+    iBase_EntitySetHandle entityset = reinterpret_cast<iBase_EntitySetHandle> ((me)->mesh_handle());
+    iMesh::Error err = mk_core()->imesh_instance()->setEntSetIntData(entityset, m_mPuniqueIDTag, unique_id);
+    IBERRCHK(err, "Couldn't set geometry unique id to corresponding mesh entityset.");
+  }
 }
 
 void ParallelMesher::print_geom_info(ModelEnt* me, const int dim,
-                                   const bool local)
+                                     const bool local)
 {
   RefEntity* ent = reinterpret_cast<RefEntity*> (me->geom_handle());
   CubitVector edge_geom = ent->center_point();
@@ -162,7 +187,8 @@ void ParallelMesher::print_geom_info(ModelEnt* me, const int dim,
   else std::cout << ",remote";
   std::cout << ",geom_center=" << edge_geom.x()
             << " "<< edge_geom.y() << " " << edge_geom.z() << ", meshset="
-            << entityset << ",uid=" << td_par->get_unique_id() << std::endl;
+            << entityset << ",uid=" << td_par->get_unique_id()
+            << ",id=" << ent->id() << std::endl;
 }
 
 void ParallelMesher::add_parallel_mesh_op(PARALLEL_OP_TYPE type, bool after)
