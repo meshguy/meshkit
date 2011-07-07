@@ -1,9 +1,9 @@
 /* Bindings to ITAPS interfaces by way of PyTAPS */
 
 %{
-#include "python/PyTAPS/iGeom_Python.h"
-#include "python/PyTAPS/iMesh_Python.h"
-#include "python/PyTAPS/iRel_Python.h"
+#include "PyTAPS/iGeom_Python.h"
+#include "PyTAPS/iMesh_Python.h"
+#include "PyTAPS/iRel_Python.h"
 
 #include "meshkit/iGeom.hpp"
 #include "meshkit/iMesh.hpp"

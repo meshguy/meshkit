@@ -7,12 +7,14 @@ installation bugs are worked out.
 
 1) Install SWIG 1.3 using your preferred method (e.g. Synaptic)
 2) Build CGM, MOAB, and Lasso with --enable-shared
-3) Download and untar PyTAPS from <http://pypi.python.org/pypi/PyTAPS>
+3) Download and untar PyTAPS from <http://pypi.python.org/pypi/PyTAPS>, or get
+   the latest source from <https://svn.mcs.anl.gov/repos/ITAPS/python/trunk>
    a) Run "python setup.py install"
    b) Run "python setup.py install_headers"
 4) Build MeshKit with --enable-shared, --enable-python, and --with-camal
-5) Make sure the headers from (3b) are in your CPATH, e.g.
-   "<root>/include/python"
+5) Make sure the headers from (3b) are in your CPATH, e.g. if your headers were
+   installed to "/usr/include/python/PyTAPS/<file>.h", your CPATH should contain
+   "/usr/include/python"
 6) cd into meshkit/python and run "python setup.py install"
    Note: You may need to run this twice, due to a bug in how SWIG extensions get
    built.
