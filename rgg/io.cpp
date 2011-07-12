@@ -2114,7 +2114,7 @@ int CNrgen::Subtract_Pins()
       std::cout << "Duct no.: " << k << " subtracting " << num_inpins << " pins from the duct .. " << std::endl;
 
       // if there are more than one pins
-      if(in_pins.size() > 1){
+      if((in_pins.size()/m_nDuct) > 1){
 
 	iGeom_uniteEnts(geom, &cp_inpins(k,1), num_inpins, &unite, &err); 
 	CHECK( "uniteEnts failed!" ); 
@@ -2127,7 +2127,7 @@ int CNrgen::Subtract_Pins()
 	tmp_new1=NULL;
       }
       else{ // only one pin in in_pins
-	iGeom_subtractEnts(geom, tmp_vol, in_pins[0], &tmp_new1, &err);
+	iGeom_subtractEnts(geom, tmp_vol, in_pins[k-1], &tmp_new1, &err);
 	CHECK("Couldn't subtract pins from block.");	
       }
     }
