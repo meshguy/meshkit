@@ -19,16 +19,19 @@ int main(int argc, char *argv[]) {
   nprocs = MPI::COMM_WORLD.Get_size();
   rank = MPI::COMM_WORLD.Get_rank();
 #endif
-  double ld_t = 0;
-  int err = 0;
-  int run_flag = 1;
-  unsigned long mem1, mem2, mem3, mem4, mem5, mem6, mem7;
+
   // start program timer
   CClock Timer;
   std::string szDateTime;
 
   // the one and only Core!
   CCrgen TheCore;
+  int err = 0;
+  int run_flag = 1;
+
+  // memory related variables
+  double ld_t = 0;
+  unsigned long mem1, mem2, mem3, mem4, mem5, mem6, mem7;
 
   if (rank == 0) {
     err = TheCore.banner();
@@ -75,18 +78,27 @@ int main(int argc, char *argv[]) {
 	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
 #endif
       }
-    } else if (strcmp(TheCore.prob_type.c_str(), "geometry") == 0) {
+      if (TheCore.mem_tflag == true) {
+        TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem1);
+
+        ld_t = ld_time.DiffTime();
+        std::cout << "\n**from rank: " << rank<< " Time taken to load mesh files = " << ld_t
+		  << " seconds" << std::endl;
+        std::cout << "***from rank: " << rank<< " Memory used: " << mem1 << " kb\n" << std::endl;
+      }
+    }
+    /*********************************************/
+    // load geometry files
+    /*********************************************/
+    else if (TheCore.prob_type == "geometry" && nprocs == 1) {
       err = TheCore.load_geometries();
       ERRORR("Failed to load geometries", 1);
     }
-    if (TheCore.mem_tflag == true) {
-      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem1);
-
-      ld_t = ld_time.DiffTime();
-      std::cout << "\n**from rank: " << rank<< " Time taken to load mesh files = " << ld_t
-    		<< " seconds" << std::endl;
-      std::cout << "***from rank: " << rank<< " Memory used: " << mem1 << " kb\n" << std::endl;
+    else if(TheCore.prob_type == "geometry" && nprocs > 1){
+      std::cout << " Parallel mode not supported for problem-type: Geometry " << std::endl;
+      exit(1);
     }
+
     /*********************************************/
     // copy move
     /*********************************************/
@@ -99,7 +111,7 @@ int main(int argc, char *argv[]) {
       ERRORR("Failed in copy move routine.", 1);
     }
     
-    if (TheCore.mem_tflag == true) {
+    if (TheCore.mem_tflag == true && (strcmp(TheCore.prob_type.c_str(), "mesh") == 0)) {
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
 
       ld_t = ld_cm.DiffTime();
@@ -194,44 +206,42 @@ int main(int argc, char *argv[]) {
     		  << " seconds" << std::endl;
     	std::cout << "***from rank: " << rank<< " Memory used: " << mem6 << " kb\n" << std::endl;
       }
-    }
-    /*********************************************/
-    // save
-    /*********************************************/
-    CClock ld_sv;
-    if (TheCore.prob_type == "mesh") {
+      /*********************************************/
+      // save
+      /*********************************************/
+      CClock ld_sv;
       if (nprocs == 1) {
-    	err = TheCore.save_mesh();
-    	ERRORR("Failed to save o/p file.", 1);
+      	err = TheCore.save_mesh();
+      	ERRORR("Failed to save o/p file.", 1);
       } else {
-	//	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
-    	ERRORR("Failed to save o/p file.", 1);
-#ifdef USE_MPI   
-    	double write_time = MPI_Wtime();
-	err = TheCore.save_mesh_parallel(rank, nprocs);
-    	ERRORR("Failed to save o/p file.", 1);
-    	write_time = MPI_Wtime() - write_time;
-    	if (rank == 0){
-	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
-	}
+  	//	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
+      	ERRORR("Failed to save o/p file.", 1);
+#ifdef USE_MPI
+      	double write_time = MPI_Wtime();
+  	err = TheCore.save_mesh_parallel(rank, nprocs);
+      	ERRORR("Failed to save o/p file.", 1);
+      	write_time = MPI_Wtime() - write_time;
+      	if (rank == 0){
+  	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
+  	}
 #endif
       }
-    }
+      if (TheCore.mem_tflag == true) {
+	TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem7);
 
+	ld_t = ld_sv.DiffTime();
+	std::cout << "\n**from rank: " << rank<< " Time taken to save = " << ld_t << " seconds"
+		  << std::endl;
+	std::cout << "***from rank: " << rank<< " Memory used: " << mem7 << " kb\n" << std::endl;
+      }
+    }
+    /*********************************************/
+    // geometry operations
+    /*********************************************/
     else if (TheCore.prob_type == "geometry") {
       err = TheCore.save_geometry();
       ERRORR("Failed to save o/p file.", 1);
     }
-    if (TheCore.mem_tflag == true) {
-      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem7);
-
-      ld_t = ld_sv.DiffTime();
-      std::cout << "\n**from rank: " << rank<< " Time taken to save = " << ld_t << " seconds"
-    		<< std::endl;
-      std::cout << "***from rank: " << rank<< " Memory used: " << mem7 << " kb\n" << std::endl;
-    }
-  
-
     /*********************************************/
     // close
     /*********************************************/

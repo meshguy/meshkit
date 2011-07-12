@@ -107,7 +107,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
     // open the file
     m_FileInput.open (m_szInFile.c_str(), std::ios::in); 
     if (!m_FileInput){
-      std::cout << "Unable to open file" << std::endl;
+      std::cout << "Unable to open file: " << m_szInFile << std::endl;
       std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
       m_FileInput.clear ();
       exit(1);
@@ -121,7 +121,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
   do{
     m_FileOutput.open (m_szJouFile.c_str(), std::ios::out); 
     if (!m_FileOutput){
-      std::cout << "Unable to open o/p file" << std::endl;
+      std::cout << "Unable to open o/p file: " << m_szJouFile << std::endl;
       m_FileOutput.clear ();
       exit(1);
     }
@@ -133,7 +133,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
   do{
     m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out); 
     if (!m_SchemesFile){
-      std::cout << "Unable to open o/p file" << std::endl;
+      std::cout << "Unable to open o/p file: " << m_szSchFile << std::endl;
       m_SchemesFile.clear ();
       exit(1);
     }
@@ -933,9 +933,9 @@ int CNrgen::CreateCubitJournal()
     // imprint
     m_FileOutput << "Merge Tolerance " << m_dMergeTol << std::endl;
     m_FileOutput << "#" << std::endl;      
-    m_FileOutput << "#Imprint geometry" << std::endl; 
-    m_FileOutput << "imprint all" << std::endl;
-    m_FileOutput << "#" << std::endl;
+    //    m_FileOutput << "#Imprint geometry" << std::endl;
+    //    m_FileOutput << "imprint all" << std::endl;
+    //    m_FileOutput << "#" << std::endl;
 
     // merge
     m_FileOutput << "#Merge geometry" << std::endl; 
@@ -1140,22 +1140,23 @@ int CNrgen::CreateCubitJournal()
 	  " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
 	m_FileOutput << "mesh vol all" << std::endl;
       }
-      else if (m_nDuct > 1)
+      else if (m_nDuct > 1){
 	m_FileOutput << "### Setting Z intervals on ducts and meshing along Z " << std::endl;
-      for( int p=m_nDuct; p>= 1; p--){
-	if(dMid == 0){ // z - centered
-	  m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
-		       << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
-	  m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
-		       << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << std::endl;
-	}
-	else{
-	  m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1)
-		       << " and z_coord < " << m_dMZAssm(p, 2) << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
-	  m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1)
-		       << " and z_coord < " << m_dMZAssm(p, 2) << std::endl;
+	for( int p=m_nDuct; p>= 1; p--){
+	  if(dMid == 0){ // z - centered
+	    m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
+			 << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
+	    m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
+			 << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << std::endl;
+	  }
+	  else{
+	    m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1)
+			 << " and z_coord < " << m_dMZAssm(p, 2) << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
+	    m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1)
+			 << " and z_coord < " << m_dMZAssm(p, 2) << std::endl;
 
-	  m_FileOutput << "##" << std::endl;
+	    m_FileOutput << "##" << std::endl;
+	  }
 	}
       }
     }
@@ -1263,9 +1264,9 @@ int CNrgen::CreateCubitJournal()
     // imprint
     m_FileOutput << "Merge Tolerance " << m_dMergeTol << std::endl;
     m_FileOutput << "#" << std::endl;      
-    m_FileOutput << "#Imprint geometry" << std::endl; 
-    m_FileOutput << "imprint all" << std::endl;
-    m_FileOutput << "#" << std::endl;
+    //    m_FileOutput << "#Imprint geometry" << std::endl;
+    //    m_FileOutput << "imprint all" << std::endl;
+    //    m_FileOutput << "#" << std::endl;
 
     // merge
     m_FileOutput << "#Merge geometry" << std::endl; 
@@ -2150,12 +2151,12 @@ int CNrgen::Imprint_Merge()
   iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
   CHECK( "ERROR : getRootSet failed!" );
   
-  //  now imprint
-  std::cout << "\n\nImprinting...." << std::endl;
-  iGeom_imprintEnts(geom, ARRAY_IN(entities),&err); 
-  CHECK("Imprint failed.");
-  std::cout << "\n--------------------------------------------------"<<std::endl;
-  
+  //  //  now imprint
+  //  std::cout << "\n\nImprinting...." << std::endl;
+  //  iGeom_imprintEnts(geom, ARRAY_IN(entities),&err);
+  //  CHECK("Imprint failed.");
+  //  std::cout << "\n--------------------------------------------------"<<std::endl;
+  //
   //   // merge tolerance
   //   double dTol = 1e-4;
   //   // now  merge
