@@ -83,9 +83,9 @@ int main(int argc, char *argv[]) {
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem1);
 
       ld_t = ld_time.DiffTime();
-      std::cout << "\n**Time taken to load mesh files = " << ld_t
+      std::cout << "\n**from rank: " << rank<< " Time taken to load mesh files = " << ld_t
     		<< " seconds" << std::endl;
-      std::cout << "***Memory used: " << mem1 << " kb\n" << std::endl;
+      std::cout << "***from rank: " << rank<< " Memory used: " << mem1 << " kb\n" << std::endl;
     }
     /*********************************************/
     // copy move
@@ -103,9 +103,9 @@ int main(int argc, char *argv[]) {
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
 
       ld_t = ld_cm.DiffTime();
-      std::cout << "\n**Time taken to copy/move mesh files = " << ld_t
+      std::cout << "\n**from rank: " << rank<< " Time taken to copy/move mesh files = " << ld_t
     		<< " seconds" << std::endl;
-      std::cout << "***Memory used: " << mem2 << " kb\n" << std::endl;
+      std::cout << "***from rank: " << rank<< " Memory used: " << mem2 << " kb\n" << std::endl;
     }
 #ifdef USE_MPI    
     MPI::COMM_WORLD.Barrier();
@@ -127,9 +127,9 @@ int main(int argc, char *argv[]) {
     	TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem3);
 
     	ld_t = ld_mm.DiffTime();
-    	std::cout << "\n**Time taken to merge nodes = " << ld_t
+    	std::cout << "\n**from rank: " << rank<< " Time taken to merge nodes = " << ld_t
     		  << " seconds" << std::endl;
-    	std::cout << "***Memory used: " << mem3 << " kb\n" << std::endl;
+    	std::cout << "***from rank: " << rank<< " Memory used: " << mem3 << " kb\n" << std::endl;
       }
 
       /*********************************************/
@@ -149,9 +149,9 @@ int main(int argc, char *argv[]) {
     	  TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem4);
 
     	  ld_t = ld_em.DiffTime();
-    	  std::cout << "\n**Time taken to extrude = " << ld_t
+    	  std::cout << "\n**from rank: " << rank<< " Time taken to extrude = " << ld_t
     		    << " seconds" << std::endl;
-    	  std::cout << "***Memory used: " << mem4 << " kb\n"
+    	  std::cout << "***from rank: " << rank<< " Memory used: " << mem4 << " kb\n"
     		    << std::endl;
     	}
       }
@@ -175,9 +175,9 @@ int main(int argc, char *argv[]) {
     	TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem5);
 
     	ld_t = ld_gid.DiffTime();
-    	std::cout << "\n**Time taken to assign gids = " << ld_t
+    	std::cout << "\n**from rank: " << rank<< " Time taken to assign gids = " << ld_t
     		  << " seconds" << std::endl;
-    	std::cout << "***Memory used: " << mem5 << " kb\n" << std::endl;
+    	std::cout << "***from rank: " << rank<< " Memory used: " << mem5 << " kb\n" << std::endl;
       }
       /*********************************************/
       // create neumann sets on the core model
@@ -190,9 +190,9 @@ int main(int argc, char *argv[]) {
     	TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem6);
 
     	ld_t = ld_ns.DiffTime();
-    	std::cout << "\n**Time taken to create neumann sets = " << ld_t
+    	std::cout << "\n**from rank: " << rank<< " Time taken to create neumann sets = " << ld_t
     		  << " seconds" << std::endl;
-    	std::cout << "***Memory used: " << mem6 << " kb\n" << std::endl;
+    	std::cout << "***from rank: " << rank<< " Memory used: " << mem6 << " kb\n" << std::endl;
       }
     }
     /*********************************************/
@@ -226,9 +226,9 @@ int main(int argc, char *argv[]) {
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem7);
 
       ld_t = ld_sv.DiffTime();
-      std::cout << "\n**Time taken to save = " << ld_t << " seconds"
+      std::cout << "\n**from rank: " << rank<< " Time taken to save = " << ld_t << " seconds"
     		<< std::endl;
-      std::cout << "***Memory used: " << mem7 << " kb\n" << std::endl;
+      std::cout << "***from rank: " << rank<< " Memory used: " << mem7 << " kb\n" << std::endl;
     }
   
 
