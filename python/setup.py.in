@@ -1,4 +1,7 @@
-from distutils.core import setup, Extension
+import ez_setup
+ez_setup.use_setuptools()
+
+from setuptools import setup, Extension
 import os.path
 
 imesh_base   = '@IMESH_DIR@'
@@ -33,4 +36,5 @@ setup(name        = 'MeshKit',
       description = """MeshKit Python bindings""",
       ext_modules = [meshkit],
       py_modules  = ["MeshKit"],
+      test_suite  = "test",
       )
