@@ -24,7 +24,7 @@ int CCrgen::save_mesh(int nrank) {
   std::ostringstream os;
   std::string fname;
   fname = iname;
-  os << fname << nrank << ".exo";
+  os << fname << nrank << ".h5m";
   fname = os.str();
   iMesh_save(impl, root_set, fname.c_str(), NULL, &err, strlen(fname.c_str()), 0);
   ERRORR("Trouble writing output mesh.", err);
