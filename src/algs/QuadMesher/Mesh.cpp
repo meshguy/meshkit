@@ -1517,16 +1517,16 @@ int Mesh::collapse_tri_edge( Vertex *v0, Vertex *v1)
      const FaceSequence &v1faces = removeVertex->getRelations2();
      int nSize = v1faces.size();
      for( int i = 0; i < nSize; i++) {
-         Face *f = v1faces[i];
-         assert( !f->isRemoved() );
-         int err = f->replaceNode(removeVertex, keepVertex);
-         assert( !err);
-         reactivate( f );
+          Face *f = v1faces[i];
+          assert( !f->isRemoved() );
+          int err = f->replaceNode(removeVertex, keepVertex);
+          assert( !err);
+          reactivate( f );
      }
 
      removeVertex->clearRelations(0);
      removeVertex->clearRelations(2);
-     
+
      remove( removeVertex );
 
      return 0;
@@ -1776,8 +1776,8 @@ Mesh::make_chain(vector<Edge> &boundedges)
      list<Edge> listedges;
      for (size_t i = 1; i < nSize; i++)
           listedges.push_back(boundedges[i]);
-     boundedges.clear();
 
+     boundedges.clear();
      boundedges.reserve(nSize);
 
      Vertex *curr_vertex = edge.getNodeAt(1);
@@ -4207,6 +4207,7 @@ Jaal::remesh_quad_loop(Mesh *mesh,
      size_t nx = anodes.size();
      size_t ny = bnodes.size();
 
+#ifdef DEBUG
      for (size_t i = 0; i < nx; i++) {
           assert(mesh->contains(anodes[i]));
           assert(mesh->contains(cnodes[i]));
@@ -4216,6 +4217,7 @@ Jaal::remesh_quad_loop(Mesh *mesh,
           assert(mesh->contains(bnodes[i]));
           assert(mesh->contains(dnodes[i]));
      }
+#endif
 
      NodeSequence boundnodes(2 * nx + 2 * ny - 4);
      int index = 0;
@@ -4319,21 +4321,18 @@ Jaal::remesh_tri_loop(Mesh *mesh,
      // Split Side "A" nodes into a1nodes and b1nodes.
      NodeSequence a1nodes, b1nodes;
      int a1 = partSegments[0];
-//  int b1 = partSegments[1];
      err = split_stl_vector(anodes, a1 + 1, a1nodes, b1nodes);
      if (err) return 1;
 
      // Split Side "B" nodes into a2nodes and b2nodes.
      NodeSequence a2nodes, b2nodes;
      int a2 = partSegments[2];
-//  int b2 = partSegments[3];
      err = split_stl_vector(bnodes, a2 + 1, a2nodes, b2nodes);
      if (err) return 1;
 
      // Split Side "C" nodes into a3nodes and b3nodes.
      NodeSequence a3nodes, b3nodes;
      int a3 = partSegments[4];
-//  int b3 = partSegments[5];
      err = split_stl_vector(cnodes, a3 + 1, a3nodes, b3nodes);
      if (err) return 1;
 
@@ -4510,62 +4509,32 @@ Jaal::remesh_penta_loop(Mesh *mesh,
      // Split Side "A" nodes into a1nodes and b1nodes.
      NodeSequence a1nodes, b1nodes;
      int a1 = partSegments[0];
-#ifdef DEBUG
-     int b1 = partSegments[1];
-     assert(a1 > 0 && b1 > 0);
-#endif
      err = split_stl_vector(anodes, a1 + 1, a1nodes, b1nodes);
      if (err) return 1;
 
      // Split Side "B" nodes into a2nodes and b2nodes.
      NodeSequence a2nodes, b2nodes;
      int a2 = partSegments[2];
-#ifdef DEBUG
-     int b2 = partSegments[3];
-     assert(a2 > 0 && b2 > 0);
-#endif
      err = split_stl_vector(bnodes, a2 + 1, a2nodes, b2nodes);
      if (err) return 1;
 
      // Split Side "C" nodes into a3nodes and b3nodes.
      NodeSequence a3nodes, b3nodes;
      int a3 = partSegments[4];
-#ifdef DEBUG
-     int b3 = partSegments[5];
-     assert(a3 > 0 && b3 > 0);
-#endif
      err = split_stl_vector(cnodes, a3 + 1, a3nodes, b3nodes);
      if (err) return 1;
 
      // Split Side "C" nodes into a3nodes and b3nodes.
      NodeSequence a4nodes, b4nodes;
      int a4 = partSegments[6];
-#ifdef DEBUG
-     int b4 = partSegments[7];
-     assert(a4 > 0 && b4 > 0);
-#endif
      split_stl_vector(dnodes, a4 + 1, a4nodes, b4nodes);
      if (err) return 1;
 
      // Split Side "C" nodes into a3nodes and b3nodes.
      NodeSequence a5nodes, b5nodes;
      int a5 = partSegments[8];
-#ifdef DEBUG
-     int b5 = partSegments[9];
-     assert(a5 > 0 && b5 > 0);
-#endif
      err = split_stl_vector(enodes, a5 + 1, a5nodes, b5nodes);
      if (err) return 1;
-
-#ifdef DEBUG
-     assert(a1 == b4);
-     assert(b1 == a3);
-
-     assert(a2 == b5);
-     assert(b2 == a4);
-
-     assert(b3 == a5);
-#endif
 
      // Splitting nodes on each side
      Vertex *ca = a1nodes.back();
@@ -4787,36 +4756,34 @@ QTrack::advance(int endat)
      assert(sequence.size() == 2);
 
      // Starting node is always irregular ...
-     const FaceSequence &vfaces = sequence[0]->getRelations2();
-     assert(vfaces.size() != 4);
+     assert( sequence[0]->getNumRelations(2) != 4);
 
      while (1) {
           int progress = advance_single_step(endat);
           if (!progress) break;
      }
 
+#ifdef DEBUG
      Vertex *endvertex;
-
      // Sanity Checking ....
      if (endat == END_AT_TERMINALS) {
           endvertex = sequence.front();
           if (!endvertex->isBoundary()) {
-               const FaceSequence &vfaces1 = endvertex->getRelations2();
-               assert(vfaces1.size() != 4);
+               assert( endvertex->getNumRelations(2) != 4);
           }
 
           endvertex = sequence.back();
           if (!endvertex->isBoundary()) {
-               const FaceSequence &vfaces1 = endvertex->getRelations2();
-               assert(vfaces1.size() != 4);
+               assert( endvertex->getNumRelations(2) != 4);
           }
 
           for (size_t i = 1; i < sequence.size() - 1; i++) {
-               const FaceSequence &vfaces1 = sequence[i]->getRelations2();
                assert(!sequence[i]->isBoundary());
-               assert(vfaces1.size() == 4);
+               assert( endvertex->getNumRelations(2) == 4);
           }
      }
+#endif
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5173,8 +5140,8 @@ void Mesh :: objects_from_pool( size_t n, vector<Vertex*> &objects)
 
      size_t ncount = 0;
      while( !garbageNodes.empty() ) {
-          Vertex *v = garbageNodes.back();
-          garbageNodes.pop_back();
+          Vertex *v = garbageNodes.front();
+          garbageNodes.pop_front();
           if( v->isRemoved() ) {
                v->setStatus( MeshEntity::INACTIVE);
                objects.push_back(v);
@@ -5205,8 +5172,8 @@ void Mesh :: objects_from_pool( size_t n, vector<Face*> &objects)
 
      size_t ncount = 0;
      while( !garbageFaces.empty() ) {
-          Face *f = garbageFaces.back();
-          garbageFaces.pop_back();
+          Face *f = garbageFaces.front();
+          garbageFaces.pop_front();
           if( f->isRemoved() ) {
                f->setStatus( MeshEntity::INACTIVE);
                objects.push_back(f);

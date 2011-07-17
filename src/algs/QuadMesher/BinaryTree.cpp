@@ -185,20 +185,35 @@ void BinaryTree::build(BinaryNode *r)
         tnodemap[dualnode] = tnode;
     }
 
+    srand( time(NULL)); // Initialize random number
+
     int mindegree = numnodes;
     if (r == NULL)
     {
-        Vertex *rootnode = NULL;
         for (int i = 0; i < numnodes; i++)
         {
             Vertex *dualnode = dgraph->getNode(i);
             int degree = dualnode->getNumOfRelations(0);
-            if (degree < mindegree)
-            {
-                mindegree = degree;
+            if (degree < mindegree) mindegree = degree;
+        }
+
+        cout << " Root Degree : " << mindegree << endl;
+
+        int offset = rand()%numnodes;
+        assert( offset >=0 && offset < numnodes );
+        Vertex *rootnode = NULL;
+        for (int i = 0; i < numnodes; i++)
+        {
+            int j =  (offset + i)%numnodes;
+            assert( j >=0 && j < numnodes );
+            Vertex *dualnode = dgraph->getNode(j);
+            int degree = dualnode->getNumOfRelations(0);
+            if( degree == mindegree) {
                 rootnode = dualnode;
+                break;
             }
         }
+         
         assert(rootnode);
         root = tnodemap[rootnode];
     }

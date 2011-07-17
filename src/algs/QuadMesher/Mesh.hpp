@@ -1915,6 +1915,10 @@ struct MeshOptimization
 private:
     Mesh *inmesh;
     int shape_tri_optimize(Mesh * m);
+
+#ifdef HAVE_MESQUITE
+    Mesquite::ArrayMesh* jaal_to_mesquite(Mesh *m);
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////

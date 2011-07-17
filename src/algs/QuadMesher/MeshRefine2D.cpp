@@ -46,7 +46,7 @@ MeshRefine2D::RefinedEdgeMap::hasEdge( Vertex *v1, Vertex *v2) const
     if( it == refined_edges.end() ) return 0;
 
     const vector<RefinedEdge> &refedges = it->second;
-    for( unsigned int i = 0; i < refedges.size(); i++) {
+    for( int i = 0; i < refedges.size(); i++) {
         Vertex *ev1 = refedges[i].edge->getNodeAt(0);
         Vertex *ev2 = refedges[i].edge->getNodeAt(1);
         if( ev1 == v1 && ev2 == v2) return 1;
@@ -102,7 +102,7 @@ Vertex* MeshRefine2D::RefinedEdgeMap::getVertexOnEdge( Vertex *v1, Vertex *v2 ) 
 
     if( it == refined_edges.end() ) return NULL;
     const vector<RefinedEdge> &refedges = it->second;
-    for( unsigned int i = 0; i < refedges.size(); i++) {
+    for( int i = 0; i < refedges.size(); i++) {
         Vertex *ev1 = refedges[i].edge->getNodeAt(0);
         Vertex *ev2 = refedges[i].edge->getNodeAt(1);
         if( ev1 == v1 && ev2 == v2) return refedges[i].midVertex;
@@ -246,6 +246,7 @@ int  ConsistencyRefine2D :: execute()
 
 void ConsistencyRefine2D :: subDivideQuad2Tri( const NodeSequence &connect)
 {
+    int err, status;
     assert( connect.size() == 4 );
     //********************************************************************
     // Subdivide a quadrilateral cell into two triangles. We can choose

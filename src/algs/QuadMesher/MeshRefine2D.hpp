@@ -84,8 +84,8 @@ class MeshRefine2D
 
   void setBoundarySplitFlag( bool f ) { boundary_split_flag = f; }
 
-  NodeSequence getNewNodes() const { return insertedNodes; }
-  FaceSequence getNewFaces() const { return insertedFaces; }
+  const NodeSequence &getNewNodes() const { return insertedNodes; }
+  const FaceSequence &getNewFaces() const { return insertedFaces; }
 
   size_t  getNumFacesRefined() const { return numfacesRefined; }
 
@@ -261,7 +261,7 @@ class Refine2D14 : public MeshRefine2D
 
   ~Refine2D14() {}
 
-  int  initialize() {return 0;}
+  int  initialize() { return 0; }
   int  execute();
 
  private:
@@ -278,7 +278,10 @@ struct DelaunayRefinement2D : public MeshRefine2D
 
   int  initialize();
   int  finalize();
-  int  execute() {return 0;}
+  int  execute() {
+
+       return 0;
+   }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

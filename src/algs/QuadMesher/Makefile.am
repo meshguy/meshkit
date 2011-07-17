@@ -31,7 +31,6 @@ libJaalQuadMesher_la_SOURCES = \
 	Mesh.hpp \
 	mesh_io.cpp \
 	MeshOpt.cpp \
-	MeshRefine2D.hpp \
 	off_io.cpp \
 	OneDefectRemeshing.cpp \
 	QuadCleanUp.cpp \
@@ -51,6 +50,7 @@ libJaalQuadMesher_la_SOURCES = \
 	circumcenter.hpp \
 	GeomPredicates.cpp \
 	GeomPredicates.hpp \
+	MeshRefine2D.hpp \
 	MeshRefine2D.cpp \
 	MeshQuality.cpp  \
 	StopWatch.hpp   \

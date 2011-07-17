@@ -251,10 +251,13 @@ size_t independent_components(Jaal::Mesh *mesh) {
         compid++;
     }
 
+#ifdef DEBUG
     for (size_t i = 0; i < numfaces; i++) {
         Face *f = mesh->getFaceAt(i);
         assert(f->isVisited());
     }
+#endif
+
     return compid;
 }
 

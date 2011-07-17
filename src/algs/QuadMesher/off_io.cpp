@@ -133,14 +133,10 @@ int MeshImporter ::off_file(const string &fname)
 int 
 MeshExporter ::off_file(Mesh *mesh, const string &s)
 {
-    if (!mesh->isPruned())
-    {
-        cout << " Pruning Start " << endl;
-        mesh->prune();
-        cout << " Pruning End  " << endl;
-        mesh->enumerate(0);
-        mesh->enumerate(2);
-    }
+    if (!mesh->isPruned()) mesh->prune();
+
+    mesh->enumerate(0);
+
     string filename = s;
     ofstream ofile(filename.c_str(), ios::out);
     if( ofile.fail() ) 

@@ -27,7 +27,7 @@ QuadCleanUp::automatic()
     }
 
 // Throughout the cleaning process, euler characteristic should remain same
-    int euler1, euler0 = mesh->getEulerCharacteristic(); // Invariant
+    int euler0 = mesh->getEulerCharacteristic(); // Invariant
 
 // Total area of the domain must be same ...
     double area0 = mesh->getSurfaceArea();
@@ -230,8 +230,9 @@ QuadCleanUp::reduce_boundary_vertex_degree( Vertex *vertex )
 
     if ( vdegree <= (vertex->get_ideal_face_degree(Face::QUADRILATERAL)+1) ) return 2;
 
-    sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
+//  sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
 
+    // First try with swapping edges ....
     for (int k = 0; k < vdegree; k++)
     {
         const NodeSequence &wneighs = vneighs[k]->getRelations0();
@@ -242,6 +243,22 @@ QuadCleanUp::reduce_boundary_vertex_degree( Vertex *vertex )
             if (!err) return 0;
         }
     }
+
+    // If failed, try to close one of the face.
+    FaceSequence &vfaces = vertex->getRelations2();
+    for( size_t i = 0; i < vfaces.size(); i++) {
+         Face *face = vfaces[i];
+         int  pos   = face->getPosOf(vertex);
+         Vertex *v1 = face->getNodeAt( pos + 1 );
+         Vertex *v3 = face->getNodeAt( pos + 3 );
+         if( !v1->isBoundary() &&  !v3->isBoundary() ) {
+            FaceClose closeface(mesh, face, v1, v3);
+            if( closeface.build() == 0) {
+                if( closeface.commit() == 0) return 0;
+            }
+         }
+    }
+
     return 3;
 }
 
@@ -968,7 +985,7 @@ int QuadCleanUp :: shift_irregular_nodes()
    while(1) {
         int ncount = 0;
         size_t numnodes = mesh->getSize(0);
-        for( int i = 0; i < numnodes; i++) {
+        for( size_t i = 0; i < numnodes; i++) {
              Vertex *v = mesh->getNodeAt(i);
              if( !v->isRemoved() && v->getNumRelations(2) == 3 ) {
                  int err = apply_shift_node3_rule(v);
