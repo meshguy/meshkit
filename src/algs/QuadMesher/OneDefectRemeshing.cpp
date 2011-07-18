@@ -300,7 +300,7 @@ int OneDefectPatch::remesh_4_sided_patch()
      NodeSequence nnodes;
      FaceSequence nfaces;
 
-     err = remesh_tri_loop(mesh, abnodes, bcnodes, canodes, NULL, nnodes, nfaces, 0);
+     err = remesh_tri_loop(mesh, abnodes, bcnodes, canodes, partSegments, nnodes, nfaces, 0);
      if (!err) {
           nSize = nnodes.size();
           newnodes.reserve( newnodes.size() + nSize );
@@ -499,7 +499,7 @@ bool OneDefectPatch::is_4_sided_convex_loop_quad_meshable()
           }
      }
 
-     NodeSequence a1nodes, a2nodes, c0nodes;
+     NodeSequence a1nodes, a2nodes, bcnodes;
      int segments[3];
 
      int nSize = trynodes.size();
@@ -511,10 +511,10 @@ bool OneDefectPatch::is_4_sided_convex_loop_quad_meshable()
           tb = bound_nodes[cornerPos[2] + a2nodes.size() - 1 ];
           tc = bound_nodes[cornerPos[3] - a1nodes.size() + 1];
 
-          get_bound_nodes(tb, tc, c0nodes);
-          segments[0] = c0nodes.size() - 1;
-          segments[1] = segSize[3] - 1;
-          segments[2] = segSize[2] - 1;
+          get_bound_nodes(tb, tc, bcnodes);
+          segments[0] = segSize[1] - 1;
+          segments[1] = bcnodes.size() - 1;
+          segments[2] = segSize[3] - 1;
 
           if (Face::is_3_sided_convex_loop_quad_meshable(segments, partSegments)) {
                quad_splitting_node = ta;
@@ -1106,14 +1106,15 @@ int QuadCleanUp::remesh_defective_patches()
 
      Jaal::MeshOptimization mopt;
 
+     int ncount1 = 0;
      for( int i = 4; i < 14; i++) {
           OneDefectPatch :: MAX_FACES_ALLOWED = ( int)pow(2,i);
           cout << "Remeshing with maximum patch size :  " << (int)pow(2,i) << endl;
+          cout << "#of irregular nodes in the mesh " << mesh->count_irregular_nodes(4) << endl;
 
           while (1) {
                build_irregular_nodes_set();
-
-               size_t ncount = 0;
+               size_t ncount2 = 0;
                while (1) {
                     if (irregular_nodes_set.empty()) break;
                     Vertex *vertex = *irregular_nodes_set.begin();
@@ -1126,7 +1127,7 @@ int QuadCleanUp::remesh_defective_patches()
                          int err = patch->remesh();
                          watch[1].stop();
                          if (!err) {
-                              if( ncount% 10 == 0) cout << "patch count : " << ncount << endl;
+                              if( ncount1% 100 == 0) cout << "patch count : " << ncount1 << endl;
                               const NodeSequence &vrem = patch->get_irregular_nodes_removed();
                               size_t nSize = vrem.size();
                               for (size_t j = 0; j < nSize; j++)
@@ -1134,19 +1135,18 @@ int QuadCleanUp::remesh_defective_patches()
                               // Note that no irregular node possible in case of quad patch...
                               Vertex *vtx = patch->get_new_defective_node();
                               if (vtx) irregular_nodes_set.insert(vtx);
-                              ncount++;
+                              ncount2++;
+                              ncount1++;
                          }
                     }
                }
-               cout << "#of patches remeshed: " << ncount << endl;
 
-               if (ncount) {
+               if (ncount2) {
                     watch[2].start();
-//              mopt.shape_optimize(mesh);
+//                  mopt.shape_optimize(mesh);
                     watch[2].stop();
                }
-
-               if( ncount == 0) break;
+               if( ncount2 == 0) break;
           }
      }
 

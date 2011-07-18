@@ -2997,15 +2997,15 @@ NodeSequence Mesh::get_irregular_nodes(int regular_count, int from_where)
      int    nSize;
 
      NodeSequence seq;
-     FaceSequence vfaces;
 
      // Query from the boundary nodes ...
      if (from_where == 1) {
           for (size_t i = 0; i < numnodes; i++) {
                Vertex *v = getNodeAt(i);
-               vfaces = v->getRelations2();
-               nSize  = vfaces.size();
+               if( !v->isRemoved() ) {
+               nSize  = v->getNumRelations(2);
                if (v->isBoundary() && nSize != regular_count) seq.push_back(v);
+               }
           }
      }
 
@@ -3013,9 +3013,10 @@ NodeSequence Mesh::get_irregular_nodes(int regular_count, int from_where)
      if (from_where == 0) {
           for (size_t i = 0; i < numnodes; i++) {
                Vertex *v = getNodeAt(i);
-               vfaces = v->getRelations2();
-               nSize  = vfaces.size();
+               if( !v->isRemoved() ) {
+               nSize  = v->getNumRelations(2);
                if (!v->isBoundary() &&  nSize != regular_count) seq.push_back(v);
+               }
           }
      }
 
@@ -3840,7 +3841,7 @@ Mesh::count_concave_faces()
      size_t ncount = 0;
      for (size_t i = 0; i < numfaces; i++) {
           Face *f = getFaceAt(i);
-          if (!f->isConvex()) ncount++;
+          if(!f->isRemoved()  &&  !f->isConvex() ) ncount++;
      }
      return ncount;
 }
