@@ -1891,7 +1891,7 @@ Mesh::getRelations102(const PNode vtx0, const PNode vtx1, FaceSequence &faceneig
      for (size_t i = 0; i < v1faces.size(); i++)
           vset.insert(v1faces[i]);
 
-     std::set<PFace>::iterator it;
+     FaceSet::const_iterator it;
 
      if (vset.size()) {
           faceneighs.resize(vset.size());
@@ -2041,33 +2041,6 @@ Mesh::prune()
           }
      }
 
-     nSize = nodes.size();
-     for (size_t i = 0; i < nSize; i++) {
-          Vertex *v = nodes[i];
-          if (v->isRemoved()) {
-               if (find(garbageNodes.begin(), garbageNodes.end(), v) == garbageNodes.end())
-                    garbageNodes.push_back(v);
-          }
-     }
-
-     nSize = edges.size();
-     for (size_t i = 0; i < nSize; i++) {
-          Edge *e = edges[i];
-          if (e->isRemoved()) {
-               if (find(garbageEdges.begin(), garbageEdges.end(), e) == garbageEdges.end())
-                    garbageEdges.push_back(e);
-          }
-     }
-
-     nSize = faces.size();
-     for (size_t i = 0; i < nSize; i++) {
-          Face *f = faces[i];
-          if (f->isRemoved()) {
-               if (find(garbageFaces.begin(), garbageFaces.end(), f) == garbageFaces.end())
-                    garbageFaces.push_back(f);
-          }
-     }
-
      NodeSequence::iterator vend;
      vend = remove_if(nodes.begin(), nodes.end(), EntityRemovedPred());
      nodes.erase(vend, nodes.end());
@@ -2081,16 +2054,20 @@ Mesh::prune()
      edges.erase(eend, edges.end());
 
      nSize = edges.size();
-     for (size_t i = 0; i < nSize; i++)
+     for(size_t i = 0; i < nSize; i++)
           assert(edges[i]->isActive());
+  
+
+     cout << " Before Prune " << faces.size() << endl;
 
      FaceSequence::iterator fend;
      fend = remove_if(faces.begin(), faces.end(), EntityRemovedPred());
      faces.erase(fend, faces.end());
-
      nSize = faces.size();
      for (size_t i = 0; i < nSize; i++)
           assert(faces[i]->isActive());
+
+     cout << " After Prune : " << faces.size() << endl;
 
      enumerate(0);
      enumerate(2);
@@ -2148,7 +2125,7 @@ Mesh::enumerate(int etype)
           index = 0;
           for (viter = nodes.begin(); viter != nodes.end(); ++viter) {
                Vertex *vertex = *viter;
-               vertex->setID(index++);
+               if( !vertex->isRemoved() ) vertex->setID(index++);
           }
      }
 
@@ -2157,7 +2134,7 @@ Mesh::enumerate(int etype)
           index = 0;
           for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
                Face *face = *fiter;
-               face->setID(index++);
+               if( !face->isRemoved() ) face->setID(index++);
           }
      }
 }
@@ -2268,7 +2245,8 @@ Mesh::build_relations02(bool rebuild)
           Face *face = getFaceAt(iface);
           if( face ) {
                if( !face->isRemoved() ) {
-                    for (int j = 0; j < face->getSize(0); j++) {
+                    int nf = face->getSize(0);
+                    for (int j = 0; j < nf; j++) {
                          Vertex *vtx = face->getNodeAt(j);
                          vtx->addRelation2(face);
                     }
@@ -3003,8 +2981,8 @@ NodeSequence Mesh::get_irregular_nodes(int regular_count, int from_where)
           for (size_t i = 0; i < numnodes; i++) {
                Vertex *v = getNodeAt(i);
                if( !v->isRemoved() ) {
-               nSize  = v->getNumRelations(2);
-               if (v->isBoundary() && nSize != regular_count) seq.push_back(v);
+                    nSize  = v->getNumRelations(2);
+                    if (v->isBoundary() && nSize != regular_count) seq.push_back(v);
                }
           }
      }
@@ -3014,8 +2992,8 @@ NodeSequence Mesh::get_irregular_nodes(int regular_count, int from_where)
           for (size_t i = 0; i < numnodes; i++) {
                Vertex *v = getNodeAt(i);
                if( !v->isRemoved() ) {
-               nSize  = v->getNumRelations(2);
-               if (!v->isBoundary() &&  nSize != regular_count) seq.push_back(v);
+                    nSize  = v->getNumRelations(2);
+                    if (!v->isBoundary() &&  nSize != regular_count) seq.push_back(v);
                }
           }
      }
@@ -4018,7 +3996,7 @@ Jaal::linear_interpolation(Mesh *mesh, Vertex *v0, Vertex *v1, int n, NodeSequen
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-set_tfi_coords(int i, int j, int nx, int ny, vector<Vertex*> &qnodes)
+Jaal::set_tfi_coords(int i, int j, int nx, int ny, vector<Vertex*> &qnodes)
 {
      int offset;
 
@@ -4063,637 +4041,6 @@ set_tfi_coords(int i, int j, int nx, int ny, vector<Vertex*> &qnodes)
 
 }
 ///////////////////////////////////////////////////////////////////////////////
-
-int
-Jaal::remesh_quad_loop(Mesh *mesh,
-                       NodeSequence &boundnodes, int nx, int ny,
-                       NodeSequence &newnodes, FaceSequence &newfaces,
-                       bool smooth)
-{
-     static int nsuccess = 0;
-
-     newnodes.clear();
-     newfaces.clear();
-
-     size_t nSize = boundnodes.size();
-     assert( nSize == size_t(2 * nx + 2 * ny - 4));
-
-     for (size_t i = 0; i < nSize; i++)
-          assert(!boundnodes[i]->isRemoved());
-
-     vector<Vertex*> qnodes(nx * ny);
-
-     //
-     // Put the boundary nodes on the structured mesh: The orientation is
-     // Counter clockwise ( south->east->north->west );
-     //
-
-     int offset, index = 0;
-
-     // South Side ...
-     index = 0;
-     for (int i = 0; i < nx; i++) {
-          offset = i;
-          qnodes[i] = boundnodes[index++];
-     }
-
-     // East Side
-     for (int j = 1; j < ny; j++) {
-          offset = j * nx + (nx - 1);
-          qnodes[offset] = boundnodes[index++];
-     }
-
-     // North Side
-     for (int i = nx - 2; i >= 0; i--) {
-          offset = (ny - 1) * nx + i;
-          qnodes[offset] = boundnodes[index++];
-     }
-
-     // West Side
-     for (int j = ny - 2; j >= 1; j--) {
-          offset = j*nx;
-          qnodes[j * nx] = boundnodes[index++];
-     }
-
-     mesh->objects_from_pool( (nx-2)*(ny-2), newnodes );
-
-     index = 0;
-     for (int j = 1; j < ny - 1; j++) {
-          for (int i = 1; i < nx - 1; i++) {
-               offset = j * nx + i;
-               qnodes[offset] = newnodes[index++];
-               set_tfi_coords(i, j, nx, ny, qnodes); // Coordinates values
-          }
-     }
-
-     mesh->objects_from_pool( (nx-1)*(ny-1), newfaces );
-
-     NodeSequence qc(4);
-
-     // Create new faces ...
-     index = 0;
-     for (int j = 0; j < ny - 1; j++) {
-          for (int i = 0; i < nx - 1; i++) {
-               int offset = j * nx + i;
-               qc[0] = qnodes[offset];
-               qc[1] = qnodes[offset + 1];
-               qc[2] = qnodes[offset + 1 + nx];
-               qc[3] = qnodes[offset + nx];
-               Face *face = newfaces[index++];
-               face->setNodes(qc);
-          }
-     }
-
-     // Update the mesh ...
-     nSize = newnodes.size();
-     for (size_t i = 0; i < nSize; i++)
-          mesh->reactivate( newnodes[i] );
-
-     nSize = newfaces.size();
-     for (size_t i = 0; i < nSize; i++)
-          mesh->reactivate( newfaces[i] );
-
-     if (smooth) {
-          // Perform some laplacian smoothing inside the local mesh...
-          LaplaceLengthWeight lw;
-          LaplaceSmoothing lapsmooth(mesh);
-          lapsmooth.setWeight(&lw);
-          lapsmooth.setNumIterations(10);
-          lapsmooth.localized_at(newnodes);
-     }
-
-     // Check for any inversion of the element, if there is inversion,
-     // undo everthing (i.e. remove new nodes and faces).
-     //
-     nSize = newfaces.size();
-     for (size_t i = 0; i < nSize; i++) {
-          if (newfaces[i]->concaveAt() >= 0) {
-               nSize = newfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    mesh->remove(newfaces[i]);
-               nSize = newnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    mesh->remove(newnodes[i]);
-               newnodes.clear();
-               newfaces.clear();
-               return 1;
-          }
-     }
-
-     nsuccess++;
-
-     return 0;
-
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-int
-Jaal::remesh_quad_loop(Mesh *mesh,
-                       NodeSequence &anodes,
-                       NodeSequence &bnodes,
-                       NodeSequence &cnodes,
-                       NodeSequence &dnodes,
-                       NodeSequence &newnodes,
-                       FaceSequence &newfaces,
-                       bool smooth)
-{
-     size_t nSize;
-     newnodes.clear();
-     newfaces.clear();
-
-     assert(anodes.size() == cnodes.size());
-     assert(bnodes.size() == dnodes.size());
-
-     size_t nx = anodes.size();
-     size_t ny = bnodes.size();
-
-#ifdef DEBUG
-     for (size_t i = 0; i < nx; i++) {
-          assert(mesh->contains(anodes[i]));
-          assert(mesh->contains(cnodes[i]));
-     }
-
-     for (size_t i = 0; i < ny; i++) {
-          assert(mesh->contains(bnodes[i]));
-          assert(mesh->contains(dnodes[i]));
-     }
-#endif
-
-     NodeSequence boundnodes(2 * nx + 2 * ny - 4);
-     int index = 0;
-
-     // Append anodes..
-     nSize = anodes.size();
-     for (size_t i = 0; i < nSize; i++)
-          boundnodes[index++] = anodes[i];
-
-     // Append bnodes ...
-     if (bnodes.front() != anodes.back())
-          reverse(bnodes.begin(), bnodes.end());
-
-     assert(anodes.back() == bnodes.front());
-     nSize = bnodes.size();
-     for (size_t i = 1; i < nSize; i++)
-          boundnodes[index++] = bnodes[i];
-
-     // Append cnodes ...
-     if (cnodes.front() != bnodes.back())
-          reverse(cnodes.begin(), cnodes.end());
-
-     assert(bnodes.back() == cnodes.front());
-     nSize = cnodes.size();
-     for (size_t i = 1; i < nSize; i++)
-          boundnodes[index++] = cnodes[i];
-
-     // Append dnodes ...
-     if (dnodes.front() != cnodes.back())
-          reverse(dnodes.begin(), dnodes.end());
-
-     assert(cnodes.back() == dnodes.front());
-     nSize = dnodes.size();
-     for (size_t i = 1; i < nSize; i++)
-          boundnodes[index++] = dnodes[i];
-
-     // Ensure that loop is closed ...
-     assert(anodes.front() == dnodes.back());
-
-     return remesh_quad_loop(mesh, boundnodes, nx, ny, newnodes, newfaces, smooth);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int
-Jaal::remesh_tri_loop(Mesh *mesh,
-                      NodeSequence &anodes,
-                      NodeSequence &bnodes,
-                      NodeSequence &cnodes,
-                      int *partition,
-                      NodeSequence &newnodes,
-                      FaceSequence &newfaces,
-                      bool smooth)
-{
-     static int nsuccess = 0;
-     // First thing to do is to clear the existing record.
-     newnodes.clear();
-     newfaces.clear();
-
-     // We need atleast three nodes on each side ...
-     if (anodes.size() < 3) return 1;
-     if (bnodes.size() < 3) return 1;
-     if (cnodes.size() < 3) return 1;
-
-     int segments[3], partSegments[6];
-
-     if (partition == NULL) {
-          segments[0] = anodes.size() - 1;
-          segments[1] = bnodes.size() - 1;
-          segments[2] = cnodes.size() - 1;
-
-          if (!Face::is_3_sided_convex_loop_quad_meshable(segments, partSegments))
-               return 1;
-     } else {
-          for (int i = 0; i < 6; i++)
-               partSegments[i] = partition[i];
-     }
-
-
-     int err;
-     if (anodes.back() == bnodes.back()) {
-          reverse(bnodes.begin(), bnodes.end());
-          swap(partSegments[2], partSegments[3]);
-     }
-
-     if (anodes.front() == cnodes.front()) {
-          reverse(cnodes.begin(), cnodes.end());
-          swap(partSegments[4], partSegments[5]);
-     }
-
-     // Ensure that input is closed loop of three sides ...
-     assert(anodes.front() == cnodes.back());
-     assert(bnodes.front() == anodes.back());
-     assert(cnodes.front() == bnodes.back());
-
-     // Ensure that segments are valid ...
-     assert((int)anodes.size() == partSegments[0] + partSegments[1] + 1);
-     assert((int)bnodes.size() == partSegments[2] + partSegments[3] + 1);
-     assert((int)cnodes.size() == partSegments[4] + partSegments[5] + 1);
-
-     // Split Side "A" nodes into a1nodes and b1nodes.
-     NodeSequence a1nodes, b1nodes;
-     int a1 = partSegments[0];
-     err = split_stl_vector(anodes, a1 + 1, a1nodes, b1nodes);
-     if (err) return 1;
-
-     // Split Side "B" nodes into a2nodes and b2nodes.
-     NodeSequence a2nodes, b2nodes;
-     int a2 = partSegments[2];
-     err = split_stl_vector(bnodes, a2 + 1, a2nodes, b2nodes);
-     if (err) return 1;
-
-     // Split Side "C" nodes into a3nodes and b3nodes.
-     NodeSequence a3nodes, b3nodes;
-     int a3 = partSegments[4];
-     err = split_stl_vector(cnodes, a3 + 1, a3nodes, b3nodes);
-     if (err) return 1;
-
-     // Splitting nodes on each side
-     Vertex *ca = a1nodes.back();
-     Vertex *cb = a2nodes.back();
-     Vertex *cc = a3nodes.back();
-     Vertex *co = Face::centroid(ca, cb, cc);
-
-     mesh->addNode(co);
-     newnodes.push_back(co);
-
-     NodeSequence oa_nodes, ob_nodes, oc_nodes;
-
-     linear_interpolation(mesh, co, ca, a2 + 1, oa_nodes);
-     size_t nSize = oa_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(oa_nodes[i]);
-     }
-
-     linear_interpolation(mesh, co, cb, a3 + 1, ob_nodes);
-     nSize = ob_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(ob_nodes[i]);
-     }
-
-     linear_interpolation(mesh, co, cc, a1 + 1, oc_nodes);
-     nSize = oc_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(oc_nodes[i]);
-     }
-
-     NodeSequence qnodes;
-     FaceSequence qfaces;
-
-     err = remesh_quad_loop(mesh, b2nodes, a3nodes, oc_nodes, ob_nodes, qnodes, qfaces, 0);
-     if (!err) {
-          assert(!qfaces.empty());
-          nSize = qnodes.size();
-          for (size_t i = 0; i < nSize; i++)
-               newnodes.push_back(qnodes[i]);
-
-          nSize = qfaces.size();
-          for (size_t i = 0; i < nSize; i++)
-               newfaces.push_back(qfaces[i]);
-     }
-
-     if (!err) {
-          err = remesh_quad_loop(mesh, a1nodes, oa_nodes, oc_nodes, b3nodes, qnodes, qfaces, 0);
-          if (!err) {
-               assert(!qfaces.empty());
-
-               nSize = qnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(qnodes[i]);
-
-               nSize = qfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(qfaces[i]);
-          }
-     }
-
-     if (!err) {
-          err = remesh_quad_loop(mesh, a2nodes, ob_nodes, oa_nodes, b1nodes, qnodes, qfaces, 0);
-          if (!err) {
-               assert(!qfaces.empty());
-
-               nSize = qnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(qnodes[i]);
-
-               nSize = qfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(qfaces[i]);
-          }
-     }
-
-     if (err) {
-          nSize = newfaces.size();
-          for (size_t i = 0; i < nSize; i++)
-               mesh->remove(newfaces[i]);
-
-          nSize = newnodes.size();
-          for (size_t i = 0; i < nSize; i++)
-               mesh->remove(newnodes[i]);
-          newnodes.clear();
-          newfaces.clear();
-          return 2;
-     }
-
-     if (smooth) {
-          LaplaceLengthWeight lw;
-          LaplaceSmoothing lapsmooth(mesh);
-          lapsmooth.setWeight(&lw);
-          lapsmooth.setNumIterations(10);
-          lapsmooth.localized_at(newnodes);
-     }
-
-     // Check for any inversion of the element, if there is inversion,
-     // undo everthing (i.e. remove new nodes and faces).
-     //
-     nSize = newfaces.size();
-     for (size_t i = 0; i < nSize; i++) {
-          if (newfaces[i]->concaveAt() >= 0) {
-
-               nSize = newfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    mesh->remove(newfaces[i]);
-
-               nSize = newnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    mesh->remove(newnodes[i]);
-               newnodes.clear();
-               newfaces.clear();
-               return 1;
-          }
-     }
-
-     nsuccess++;
-
-     return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int
-Jaal::remesh_penta_loop(Mesh *mesh,
-                        NodeSequence &anodes,
-                        NodeSequence &bnodes,
-                        NodeSequence &cnodes,
-                        NodeSequence &dnodes,
-                        NodeSequence &enodes,
-                        int *partition, NodeSequence &newnodes,
-                        FaceSequence &newfaces, bool smooth)
-{
-     static int nsuccess = 0;
-     size_t nSize;
-     // First clear the existing records.
-     newnodes.clear();
-     newfaces.clear();
-
-     int segments[5], partSegments[10];
-
-     if (partition == NULL) {
-          segments[0] = anodes.size() - 1;
-          segments[1] = bnodes.size() - 1;
-          segments[2] = cnodes.size() - 1;
-          segments[3] = dnodes.size() - 1;
-          segments[4] = enodes.size() - 1;
-          if (!Face::is_5_sided_convex_loop_quad_meshable(segments, partSegments)) {
-               cout << "Warning: Triangle patch not quad meshable " << endl;
-               return 1;
-          }
-     } else {
-          for (int i = 0; i < 10; i++)
-               partSegments[i] = partition[i];
-     }
-
-     int err;
-     // Ensure that input is closed loop of three sides ...
-     assert(anodes.front() == enodes.back());
-     assert(bnodes.front() == anodes.back());
-     assert(cnodes.front() == bnodes.back());
-     assert(dnodes.front() == cnodes.back());
-     assert(enodes.front() == dnodes.back());
-
-     // Ensure that segments are valid ...
-     assert((int)anodes.size() == partSegments[0] + partSegments[1] + 1);
-     assert((int)bnodes.size() == partSegments[2] + partSegments[3] + 1);
-     assert((int)cnodes.size() == partSegments[4] + partSegments[5] + 1);
-     assert((int)dnodes.size() == partSegments[6] + partSegments[7] + 1);
-     assert((int)enodes.size() == partSegments[8] + partSegments[9] + 1);
-
-     // Split Side "A" nodes into a1nodes and b1nodes.
-     NodeSequence a1nodes, b1nodes;
-     int a1 = partSegments[0];
-     err = split_stl_vector(anodes, a1 + 1, a1nodes, b1nodes);
-     if (err) return 1;
-
-     // Split Side "B" nodes into a2nodes and b2nodes.
-     NodeSequence a2nodes, b2nodes;
-     int a2 = partSegments[2];
-     err = split_stl_vector(bnodes, a2 + 1, a2nodes, b2nodes);
-     if (err) return 1;
-
-     // Split Side "C" nodes into a3nodes and b3nodes.
-     NodeSequence a3nodes, b3nodes;
-     int a3 = partSegments[4];
-     err = split_stl_vector(cnodes, a3 + 1, a3nodes, b3nodes);
-     if (err) return 1;
-
-     // Split Side "C" nodes into a3nodes and b3nodes.
-     NodeSequence a4nodes, b4nodes;
-     int a4 = partSegments[6];
-     split_stl_vector(dnodes, a4 + 1, a4nodes, b4nodes);
-     if (err) return 1;
-
-     // Split Side "C" nodes into a3nodes and b3nodes.
-     NodeSequence a5nodes, b5nodes;
-     int a5 = partSegments[8];
-     err = split_stl_vector(enodes, a5 + 1, a5nodes, b5nodes);
-     if (err) return 1;
-
-     // Splitting nodes on each side
-     Vertex *ca = a1nodes.back();
-     Vertex *cb = a2nodes.back();
-     Vertex *cc = a3nodes.back();
-     Vertex *cd = a4nodes.back();
-     Vertex *ce = a5nodes.back();
-     Vertex *co = Face::centroid(ca, cb, cc, cd, ce);
-
-     mesh->addNode(co);
-     newnodes.push_back(co);
-
-     NodeSequence oa_nodes, ob_nodes, oc_nodes, od_nodes, oe_nodes;
-
-     linear_interpolation(mesh, co, ca, a2 + 1, oa_nodes);
-     nSize = oa_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(oa_nodes[i]);
-     }
-
-     linear_interpolation(mesh, co, cb, a3 + 1, ob_nodes);
-     nSize = ob_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(ob_nodes[i]);
-     }
-
-     linear_interpolation(mesh, co, cc, a4 + 1, oc_nodes);
-     nSize = oc_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(oc_nodes[i]);
-     }
-
-     linear_interpolation(mesh, co, cd, a5 + 1, od_nodes);
-     nSize = od_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(od_nodes[i]);
-     }
-
-     linear_interpolation(mesh, co, ce, a1 + 1, oe_nodes);
-     nSize = oe_nodes.size();
-     for (size_t i = 1; i < nSize - 1; i++) {
-          newnodes.push_back(oe_nodes[i]);
-     }
-
-     NodeSequence qnodes;
-     FaceSequence qfaces;
-
-     err = remesh_quad_loop(mesh, a1nodes, oa_nodes, oe_nodes, b5nodes, qnodes, qfaces, 0);
-     if (!err) {
-          nSize = qnodes.size();
-          for (size_t i = 0; i < nSize; i++)
-               newnodes.push_back(qnodes[i]);
-
-          nSize = qfaces.size();
-          for (size_t i = 0; i < nSize; i++)
-               newfaces.push_back(qfaces[i]);
-     }
-
-     if (!err) {
-          err = remesh_quad_loop(mesh, a2nodes, ob_nodes, oa_nodes, b1nodes, qnodes, qfaces, 0);
-          if (!err) {
-               nSize = qnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(qnodes[i]);
-
-               nSize = qfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(qfaces[i]);
-          }
-     }
-
-     if (!err) {
-          err = remesh_quad_loop(mesh, a3nodes, oc_nodes, ob_nodes, b2nodes, qnodes, qfaces, 0);
-          if (!err) {
-               nSize = qnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(qnodes[i]);
-
-               nSize = qfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(qfaces[i]);
-          }
-     }
-
-     if (!err) {
-          err = remesh_quad_loop(mesh, a4nodes, od_nodes, oc_nodes, b3nodes, qnodes, qfaces, 0);
-          if (!err) {
-               nSize = qnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(qnodes[i]);
-
-               nSize = qfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(qfaces[i]);
-          }
-     }
-
-     if (!err) {
-          err = remesh_quad_loop(mesh, a5nodes, oe_nodes, od_nodes, b4nodes, qnodes, qfaces, 0);
-          if (!err) {
-               nSize = qnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(qnodes[i]);
-
-               nSize = qfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(qfaces[i]);
-          }
-     }
-
-     if (err) {
-          nSize = newfaces.size();
-          for (size_t i = 0; i < nSize; i++)
-               mesh->remove(newfaces[i]);
-
-          nSize = newnodes.size();
-          for (size_t i = 0; i < nSize; i++)
-               mesh->remove(newnodes[i]);
-
-          newnodes.clear();
-          newfaces.clear();
-          return 2;
-     }
-
-     if( !err && smooth ) {
-          LaplaceLengthWeight lw;
-          LaplaceSmoothing lapsmooth(mesh);
-          lapsmooth.setWeight(&lw);
-          lapsmooth.setNumIterations(10);
-          lapsmooth.localized_at(newnodes);
-     }
-
-     // Check for any inversion of the element, if there is inversion,
-     // undo everthing (i.e. remove new nodes and faces).
-     //
-     nSize = newfaces.size();
-     for (size_t i = 0; i < nSize; i++) {
-          if (newfaces[i]->concaveAt() >= 0) {
-               nSize = newfaces.size();
-               for (size_t i = 0; i < nSize; i++)
-                    mesh->remove(newfaces[i]);
-
-               nSize = newnodes.size();
-               for (size_t i = 0; i < nSize; i++)
-                    mesh->remove(newnodes[i]);
-
-               newnodes.clear();
-               newfaces.clear();
-               return 1;
-          }
-     }
-
-     nsuccess++;
-
-     return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 int
 QTrack::advance_single_step(int endat)
@@ -5523,7 +4870,7 @@ int Jaal::SurfPatch::search_boundary()
      assert(!faces.empty());
 
      // We need to rebuild relations locally to identfy corners and boundary.
-     set<Face*>::const_iterator fiter;
+     FaceSet::const_iterator fiter;
      std::map<Vertex*, FaceSet> relations02;
 
      for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
@@ -5616,7 +4963,7 @@ void Jaal::SurfPatch::set_boundary_segments()
 
      cornerPos.resize(corners.size() + 1);
 
-     set<Vertex*>::const_iterator it;
+     NodeSet::const_iterator it;
      int index = 0;
      for (it = corners.begin(); it != corners.end(); ++it) {
           cornerPos[index++] = getPosOf(*it);

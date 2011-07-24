@@ -44,6 +44,7 @@
 #include "Tri2Quad.hpp"
 #include "basic_math.hpp"
 #include "StopWatch.hpp"
+#include "tfiblend.hpp"
 
 #include "DijkstraShortestPath.hpp"
 
@@ -181,7 +182,6 @@ struct Singlet {
      Singlet(Mesh *m, Vertex * v) {
           mesh = m;
           vertex = v;
-          type = 0;
           active = 1;
      }
 
@@ -190,17 +190,13 @@ struct Singlet {
 private:
      Mesh *mesh;
      Vertex *vertex;
-     int type;
      bool active;
      NodeSequence oldNodes, newNodes;
      FaceSequence oldFaces, newFaces;
-     int update_type1();
 
      int remove_by_refinement();
      int remove_by_swapping();
 
-     int update_type2();
-     int update_type3();
      int commit();
      void clear();
 };
@@ -365,6 +361,86 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+struct RemeshTemplate {
+     NodeSequence newnodes;
+     FaceSequence newfaces;
+
+     void addNewElements( const NodeSequence &nnodes, const FaceSequence &nfaces) {
+          size_t nSize;
+          nSize = nnodes.size();
+          for (size_t i = 0; i < nSize; i++)
+               newnodes.push_back(nnodes[i]);
+
+          nSize = nfaces.size();
+          for (size_t i = 0; i < nSize; i++)
+               newfaces.push_back(nfaces[i]);
+     }
+
+     void discard() {
+          size_t nSize = newfaces.size();
+          for (size_t i = 0; i < nSize; i++)
+               mesh->remove(newfaces[i]);
+
+          nSize = newnodes.size();
+          for (size_t i = 0; i < nSize; i++)
+               mesh->remove(newnodes[i]);
+     }
+
+     Mesh   *mesh;
+};
+
+struct QuadRemeshTemplate : public RemeshTemplate {
+     int remesh(Mesh *mesh,
+                NodeSequence &anodes,
+                NodeSequence &bnodes,
+                NodeSequence &cnodes,
+                NodeSequence &dnodes);
+private:
+     int remesh();
+     int nx, ny;
+     NodeSequence boundnodes, qnodes;
+};
+
+struct TriRemeshTemplate : public RemeshTemplate {
+     int remesh(Mesh *mesh, NodeSequence &anodes,
+                NodeSequence &bnodes,
+                NodeSequence &cnodes, int *partition);
+private:
+     QuadRemeshTemplate quadtemplate;
+     int segments[3], partSegments[6];
+
+     NodeSequence a1nodes, b1nodes;
+     NodeSequence a2nodes, b2nodes;
+     NodeSequence a3nodes, b3nodes;
+     NodeSequence oa_nodes, ob_nodes, oc_nodes;
+};
+
+
+struct PentaRemeshTemplate : public RemeshTemplate {
+     int  remesh(Mesh *mesh,
+                 NodeSequence &anodes,
+                 NodeSequence &bnodes,
+                 NodeSequence &cnodes,
+                 NodeSequence &dnodes,
+                 NodeSequence &enodes,
+                 int *partition);
+private:
+     QuadRemeshTemplate quadtemplate;
+
+     int segments[5], partSegments[10];
+     NodeSequence a1nodes, b1nodes;
+     NodeSequence a2nodes, b2nodes;
+     NodeSequence a3nodes, b3nodes;
+     NodeSequence a4nodes, b4nodes;
+     NodeSequence a5nodes, b5nodes;
+     NodeSequence oa_nodes, ob_nodes, oc_nodes, od_nodes, oe_nodes;
+};
+
+struct CircleRemeshTemplate : public RemeshTemplate {
+     int  remesh(Mesh *mesh, NodeSequence &anodes);
+
+};
+
 class OneDefectPatch {
 public:
      static size_t MAX_FACES_ALLOWED;
@@ -372,10 +448,6 @@ public:
      static size_t count_3_patches;
      static size_t count_4_patches;
      static size_t count_5_patches;
-
-     static double time_3_patches;
-     static double time_4_patches;
-     static double time_5_patches;
 
      OneDefectPatch( Mesh *m ) {
           mesh = m;
@@ -418,7 +490,7 @@ public:
           result.resize( nSize );
 
           int index = 0;
-          FaceSet::iterator it;
+          FaceSet::const_iterator it;
           for( it = faces.begin(); it != faces.end(); ++it)
                result[index++] = *it;
           return result;
@@ -448,10 +520,7 @@ public:
           inner_nodes.clear();
           bound_nodes.clear();
           faces.clear();
-/*
           inner_faces.clear();
-          bound_faces.clear();
-*/
           irregular_nodes_removed.clear();
           boundary.clear();
           cornerPos.clear();
@@ -466,9 +535,17 @@ private:
      // Input data.
      Mesh   *mesh;
      Vertex *apex;               // Seed: Irregular vertex to start from.
-     FaceSet       faces;        // Faces within the blob.
-//   FaceSet       inner_faces, bound_faces;
      NodeSequence  nodepath;     // Initial joining two irregular nodes..
+
+     FaceSet faces, inner_faces;        // Faces within the blob.
+
+#ifdef USE_HASHMAP
+     std::tr1::unordered_map<Vertex*, FaceSet> relations02;
+     std::tr1::unordered_map<Vertex*, FaceSet>::iterator miter;
+#else
+     std::map<Vertex*, FaceSet> relations02;
+     std::map<Vertex*, FaceSet>::iterator miter;
+#endif
 
      Vertex *new_defective_node;
 
@@ -480,22 +557,33 @@ private:
      NodeSet inner_nodes;             // Inner nodes ( not on the boundary ) of the blob
      NodeSequence bound_nodes;        // Boundary nodes
      NodeSequence irregular_nodes_removed;
+
      vector<Edge> boundary;          // boundary of the blob.
      vector<int>  cornerPos;         // Positions of the corners in the bound_nodes.
      vector<int>  segSize;
      int   partSegments[10];
 
+     TriRemeshTemplate    template3;
+     QuadRemeshTemplate   template4;
+     PentaRemeshTemplate  template5;
+
+     // Variable used in 3-5 sided patch...
      NodeSequence anodes, bnodes, cnodes, dnodes, enodes;  // Nodes on each segment.
 
-     NodeSequence  newnodes;
-     FaceSequence  newfaces;
+     // Variables used in 4 sided patch..
+     NodeSequence a1nodes, a2nodes, b1nodes, c0nodes, c1nodes, c2nodes,
+     abnodes, canodes, bcnodes, d1nodes;
+
+     // New nodes and faces in the patch...
+     NodeSequence  newnodes, nnodes;
+     FaceSequence  newfaces, nfaces;
 
      // backup data.
      vector<Point3D>  backupCoords;
      NodeSequence     backupConnect;
 
      // Get the position on the boundary ...
-     int getPosOf( const Vertex *v) {
+     int getPosOf( const Vertex *v) const {
           size_t nSize = bound_nodes.size();
           for (size_t i = 0; i <  nSize; i++)
                if (bound_nodes[i] == v) return i;
@@ -516,7 +604,7 @@ private:
      // Patch creation functions...
      void  init_blob();
      int   create_boundary();
-     void  expand_blob( Vertex *v);
+     void  expand_blob( const Vertex *v);
      int   get_topological_outer_angle( Vertex *v);
      bool  is_simply_connected();
 
@@ -537,7 +625,6 @@ private:
      int  remesh_4_sided_patch();
      int  remesh_5_sided_patch();
      void local_smoothing();
-     double local_shape_optimize(FaceSequence &s, double minQuality);
      void post_remesh(); // After successful remeshing, do some clean-up
 };
 
@@ -676,20 +763,17 @@ private:
      DijkstraShortestPath *djkpath; // Used in one defect remeshing ....
      OneDefectPatch* defective_patch;
 
-     int  region_search_method;
+//   int  region_search_method;
      int  has_interior_nodes_degree_345();
 
-     NodeSet  irregular_nodes_set;
+     NodeSequence  irregular_nodes;
 
      vector<OneDefectPatch>  vDefectPatches;
      vector<Doublet> vDoublets;
      vector<Singlet> vSinglets;
      vector<Diamond> vDiamonds; // Diamonds in the mesh;
-     vector<Edge>    vTunnels;
-
-     void  build_irregular_nodes_set();
-
-     vector<Diamond> search_bridges_in_layer(int l);
+//   vector<Edge>    vTunnels;
+//   vector<Diamond> search_bridges_in_layer(int l);
      vector<Diamond> search_diamonds_in_layer(int l);
 
      int clean_layer_once(int id);
@@ -703,7 +787,7 @@ private:
      int remove_bridges_once();
      int remove_diamonds_once();
      int remove_diamonds_in_layer( int l);
-     int remove_tunnels_once();
+//   int remove_tunnels_once();
      int advance_front_edges_swap_once(int layerid);
 
      int apply_advance_front_bridge_rule( Vertex *v0, Vertex *v1);
@@ -781,6 +865,7 @@ QuadCleanUp::hasSinglet (const Face *face)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 inline bool
 QuadCleanUp::isEdge33 (const Edge *e)
 {
@@ -843,6 +928,7 @@ QuadCleanUp::isTunnel(const Edge *e)
 
      return 0;
 }
+*/
 /////////////////////////////////////////////////////////////////////////////
 
 void set_diamond_tag(Mesh *mesh);

@@ -3,15 +3,463 @@
 using namespace Jaal;
 
 size_t OneDefectPatch :: MAX_FACES_ALLOWED = 500;
+
 size_t OneDefectPatch :: count_3_patches   = 0;
 size_t OneDefectPatch :: count_4_patches   = 0;
 size_t OneDefectPatch :: count_5_patches   = 0;
 
-double OneDefectPatch :: time_3_patches   = 0.0;
-double OneDefectPatch :: time_4_patches   = 0.0;
-double OneDefectPatch :: time_5_patches   = 0.0;
+///////////////////////////////////////////////////////////////////////////////
+int TriRemeshTemplate::remesh(Mesh *msh,
+                              NodeSequence &anodes,
+                              NodeSequence &bnodes,
+                              NodeSequence &cnodes, int *partition)
+{
+     mesh = msh;
+
+     // First thing to do is to clear the existing record.
+     newnodes.clear();
+     newfaces.clear();
+
+     // We need atleast three nodes on each side ...
+     if (anodes.size() < 3) return 1;
+     if (bnodes.size() < 3) return 1;
+     if (cnodes.size() < 3) return 1;
+
+     if (partition == NULL) {
+          segments[0] = anodes.size() - 1;
+          segments[1] = bnodes.size() - 1;
+          segments[2] = cnodes.size() - 1;
+
+          if (!Face::is_3_sided_convex_loop_quad_meshable(segments, partSegments))
+               return 1;
+     } else {
+          for (int i = 0; i < 6; i++)
+               partSegments[i] = partition[i];
+     }
+
+
+     int err;
+     if (anodes.back() == bnodes.back()) {
+          reverse(bnodes.begin(), bnodes.end());
+          swap(partSegments[2], partSegments[3]);
+     }
+
+     if (anodes.front() == cnodes.front()) {
+          reverse(cnodes.begin(), cnodes.end());
+          swap(partSegments[4], partSegments[5]);
+     }
+
+     // Ensure that input is closed loop of three sides ...
+     assert(anodes.front() == cnodes.back());
+     assert(bnodes.front() == anodes.back());
+     assert(cnodes.front() == bnodes.back());
+
+     // Ensure that segments are valid ...
+     assert((int)anodes.size() == partSegments[0] + partSegments[1] + 1);
+     assert((int)bnodes.size() == partSegments[2] + partSegments[3] + 1);
+     assert((int)cnodes.size() == partSegments[4] + partSegments[5] + 1);
+
+     // Split Side "A" nodes into a1nodes and b1nodes.
+     int a1 = partSegments[0];
+     err = split_stl_vector(anodes, a1 + 1, a1nodes, b1nodes);
+     if (err) return 1;
+
+     // Split Side "B" nodes into a2nodes and b2nodes.
+     int a2 = partSegments[2];
+     err = split_stl_vector(bnodes, a2 + 1, a2nodes, b2nodes);
+     if (err) return 1;
+
+     // Split Side "C" nodes into a3nodes and b3nodes.
+     int a3 = partSegments[4];
+     err = split_stl_vector(cnodes, a3 + 1, a3nodes, b3nodes);
+     if (err) return 1;
+
+     // Splitting nodes on each side
+     Vertex *ca = a1nodes.back();
+     Vertex *cb = a2nodes.back();
+     Vertex *cc = a3nodes.back();
+
+     // We are not if the centroid will be in the patch, take the risk.
+     Vertex *co = Face::centroid(ca, cb, cc);
+
+     mesh->addNode(co);
+     newnodes.push_back(co);
+
+     linear_interpolation(mesh, co, ca, a2 + 1, oa_nodes);
+     size_t nSize = oa_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++)
+          newnodes.push_back(oa_nodes[i]);
+
+     linear_interpolation(mesh, co, cb, a3 + 1, ob_nodes);
+     nSize = ob_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++)
+          newnodes.push_back(ob_nodes[i]);
+
+     linear_interpolation(mesh, co, cc, a1 + 1, oc_nodes);
+     nSize = oc_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++)
+          newnodes.push_back(oc_nodes[i]);
+
+     err = quadtemplate.remesh(mesh, b2nodes, a3nodes, oc_nodes, ob_nodes);
+     if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+
+     if (!err) {
+          err = quadtemplate.remesh(mesh, a1nodes, oa_nodes, oc_nodes, b3nodes);
+          if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+     }
+
+     if (!err) {
+          err = quadtemplate.remesh(mesh, a2nodes, ob_nodes, oa_nodes, b1nodes);
+          if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+     }
+
+     if (err) {
+          discard();
+          return 1;
+     }
+
+     // Check for any inversion of the element, if there is inversion,
+     // undo everthing (i.e. remove new nodes and faces).
+     //
+     nSize = newfaces.size();
+     for (size_t i = 0; i < nSize; i++) {
+          if (newfaces[i]->concaveAt() >= 0) {
+               discard();
+               return 2;
+          }
+     }
+
+     return 0;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
+
+int
+QuadRemeshTemplate :: remesh()
+{
+     size_t nSize = boundnodes.size();
+     assert( nSize == size_t(2 * nx + 2 * ny - 4));
+
+     qnodes.resize(nx * ny);
+
+     //
+     // Put the boundary nodes on the structured mesh: The orientation is
+     // Counter clockwise ( south->east->north->west );
+     //
+     int offset, index = 0;
+
+     // South Side ...
+     index = 0;
+     for (int i = 0; i < nx; i++) {
+          offset = i;
+          qnodes[i] = boundnodes[index++];
+     }
+
+     // East Side
+     for (int j = 1; j < ny; j++) {
+          offset = j * nx + (nx - 1);
+          qnodes[offset] = boundnodes[index++];
+     }
+
+     // North Side
+     for (int i = nx - 2; i >= 0; i--) {
+          offset = (ny - 1) * nx + i;
+          qnodes[offset] = boundnodes[index++];
+     }
+
+     // West Side
+     for (int j = ny - 2; j >= 1; j--) {
+          offset = j*nx;
+          qnodes[j * nx] = boundnodes[index++];
+     }
+
+     // New internal nodes must be generated.(either new or from  the trash bin)
+     mesh->objects_from_pool( (nx-2)*(ny-2), newnodes );
+
+     // Assign the coordinates using Transfinite-interpolation method. For 3D
+     // Coordinates must be projected on the surface.
+     //
+     index = 0;
+     for (int j = 1; j < ny - 1; j++) {
+          for (int i = 1; i < nx - 1; i++) {
+               offset = j * nx + i;
+               qnodes[offset] = newnodes[index++];
+               set_tfi_coords(i, j, nx, ny, qnodes); // Coordinates values
+          }
+     }
+
+     // All new faces must be generated. ( Objects are either new or from the trash bin)
+     mesh->objects_from_pool( (nx-1)*(ny-1), newfaces );
+
+     NodeSequence qc(4);
+
+     // Create new faces ...
+     index = 0;
+     for (int j = 0; j < ny - 1; j++) {
+          for (int i = 0; i < nx - 1; i++) {
+               int offset = j * nx + i;
+               qc[0] = qnodes[offset];
+               qc[1] = qnodes[offset + 1];
+               qc[2] = qnodes[offset + 1 + nx];
+               qc[3] = qnodes[offset + nx];
+               Face *face = newfaces[index++];
+               face->setNodes(qc);
+          }
+     }
+
+     // Update the mesh ...
+     nSize = newnodes.size();
+     for (size_t i = 0; i < nSize; i++)
+          mesh->reactivate( newnodes[i] );
+
+     nSize = newfaces.size();
+     for (size_t i = 0; i < nSize; i++)
+          mesh->reactivate( newfaces[i] );
+
+     // Check for any inversion of the element, if there is inversion,
+     // undo everthing (i.e. remove new nodes and faces).
+     //
+     nSize = newfaces.size();
+     for (size_t i = 0; i < nSize; i++) {
+          if (newfaces[i]->concaveAt() >= 0) {
+               discard();
+               return 1;
+          }
+     }
+
+     return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int
+QuadRemeshTemplate ::remesh(Mesh *msh,
+                            NodeSequence &anodes,
+                            NodeSequence &bnodes,
+                            NodeSequence &cnodes,
+                            NodeSequence &dnodes )
+{
+     mesh = msh;
+
+     newnodes.clear();
+     newfaces.clear();
+
+     assert(anodes.size() == cnodes.size());
+     assert(bnodes.size() == dnodes.size());
+
+     nx = anodes.size();
+     ny = bnodes.size();
+
+     boundnodes.resize(2 * nx + 2 * ny - 4);
+
+     int index = 0;
+
+     // First edge is always the reference edge which decides the orientation.
+     // Append anodes..
+     size_t nSize = anodes.size();
+     for (size_t i = 0; i < nSize; i++)
+          boundnodes[index++] = anodes[i];
+
+     // Append bnodes ...
+     if (bnodes.front() != anodes.back())
+          reverse(bnodes.begin(), bnodes.end());
+
+     assert(anodes.back() == bnodes.front());
+
+     nSize = bnodes.size();
+     for (size_t i = 1; i < nSize; i++)
+          boundnodes[index++] = bnodes[i];
+
+     // Append cnodes ...
+     if (cnodes.front() != bnodes.back())
+          reverse(cnodes.begin(), cnodes.end());
+
+     assert(bnodes.back() == cnodes.front());
+
+     nSize = cnodes.size();
+     for (size_t i = 1; i < nSize; i++)
+          boundnodes[index++] = cnodes[i];
+
+     // Append dnodes ...
+     if (dnodes.front() != cnodes.back())
+          reverse(dnodes.begin(), dnodes.end());
+
+     assert(cnodes.back() == dnodes.front());
+     nSize = dnodes.size();
+     for (size_t i = 1; i < nSize; i++)
+          boundnodes[index++] = dnodes[i];
+
+     // Ensure that loop is closed ...
+     assert(anodes.front() == dnodes.back());
+
+     return remesh();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int
+PentaRemeshTemplate :: remesh(Mesh *msh,
+                              NodeSequence &anodes,
+                              NodeSequence &bnodes,
+                              NodeSequence &cnodes,
+                              NodeSequence &dnodes,
+                              NodeSequence &enodes,
+                              int *partition)
+{
+     //
+     // Implicit in this implementation is the orientation of the newly formed
+     // faces which is decided by the orientation of the boundary. User need
+     // not check for the consistency of the mesh. It will be, if the initial
+     // mesh is consistent.
+     //
+     mesh = msh;
+
+     newnodes.clear();
+     newfaces.clear();
+
+     if (partition == NULL) {
+          segments[0] = anodes.size() - 1;
+          segments[1] = bnodes.size() - 1;
+          segments[2] = cnodes.size() - 1;
+          segments[3] = dnodes.size() - 1;
+          segments[4] = enodes.size() - 1;
+          if (!Face::is_5_sided_convex_loop_quad_meshable(segments, partSegments)) {
+               cout << "Warning: Penta patch not quad meshable " << endl;
+               return 1;
+          }
+     } else {
+          for (int i = 0; i < 10; i++)
+               partSegments[i] = partition[i];
+     }
+
+     int err;
+     // Ensure that input is closed loop of three sides ...
+     assert(anodes.front() == enodes.back());
+     assert(bnodes.front() == anodes.back());
+     assert(cnodes.front() == bnodes.back());
+     assert(dnodes.front() == cnodes.back());
+     assert(enodes.front() == dnodes.back());
+
+     // Ensure that segments are valid ...
+     assert((int)anodes.size() == partSegments[0] + partSegments[1] + 1);
+     assert((int)bnodes.size() == partSegments[2] + partSegments[3] + 1);
+     assert((int)cnodes.size() == partSegments[4] + partSegments[5] + 1);
+     assert((int)dnodes.size() == partSegments[6] + partSegments[7] + 1);
+     assert((int)enodes.size() == partSegments[8] + partSegments[9] + 1);
+
+     // Split Side "A" nodes into a1nodes and b1nodes.
+     int a1 = partSegments[0];
+     err = split_stl_vector(anodes, a1 + 1, a1nodes, b1nodes);
+     if (err) return 1;
+
+     // Split Side "B" nodes into a2nodes and b2nodes.
+     int a2 = partSegments[2];
+     err = split_stl_vector(bnodes, a2 + 1, a2nodes, b2nodes);
+     if (err) return 1;
+
+     // Split Side "C" nodes into a3nodes and b3nodes.
+     int a3 = partSegments[4];
+     err = split_stl_vector(cnodes, a3 + 1, a3nodes, b3nodes);
+     if (err) return 1;
+
+     // Split Side "C" nodes into a3nodes and b3nodes.
+     int a4 = partSegments[6];
+     split_stl_vector(dnodes, a4 + 1, a4nodes, b4nodes);
+     if (err) return 1;
+
+     // Split Side "C" nodes into a3nodes and b3nodes.
+     int a5 = partSegments[8];
+     err = split_stl_vector(enodes, a5 + 1, a5nodes, b5nodes);
+     if (err) return 1;
+
+     // Splitting nodes on each side
+     Vertex *ca = a1nodes.back();
+     Vertex *cb = a2nodes.back();
+     Vertex *cc = a3nodes.back();
+     Vertex *cd = a4nodes.back();
+     Vertex *ce = a5nodes.back();
+
+     // Centoid may not be within the patch. But take the risk.
+     Vertex *co = Face::centroid(ca, cb, cc, cd, ce);
+
+     mesh->addNode(co);
+     newnodes.push_back(co);
+
+     size_t nSize;
+     linear_interpolation(mesh, co, ca, a2 + 1, oa_nodes);
+     nSize = oa_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++) {
+          newnodes.push_back(oa_nodes[i]);
+     }
+
+     linear_interpolation(mesh, co, cb, a3 + 1, ob_nodes);
+     nSize = ob_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++) {
+          newnodes.push_back(ob_nodes[i]);
+     }
+
+     linear_interpolation(mesh, co, cc, a4 + 1, oc_nodes);
+     nSize = oc_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++) {
+          newnodes.push_back(oc_nodes[i]);
+     }
+
+     linear_interpolation(mesh, co, cd, a5 + 1, od_nodes);
+     nSize = od_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++) {
+          newnodes.push_back(od_nodes[i]);
+     }
+
+     linear_interpolation(mesh, co, ce, a1 + 1, oe_nodes);
+     nSize = oe_nodes.size();
+     for (size_t i = 1; i < nSize - 1; i++) {
+          newnodes.push_back(oe_nodes[i]);
+     }
+
+     err = quadtemplate.remesh(mesh, a1nodes, oa_nodes, oe_nodes, b5nodes);
+     if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+
+     if (!err) {
+          err = quadtemplate.remesh(mesh, a2nodes, ob_nodes, oa_nodes, b1nodes);
+          if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+     }
+
+     if (!err) {
+          err = quadtemplate.remesh(mesh, a3nodes, oc_nodes, ob_nodes, b2nodes);
+          if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+     }
+
+     if (!err) {
+          err = quadtemplate.remesh(mesh, a4nodes, od_nodes, oc_nodes, b3nodes );
+          if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+     }
+
+     if (!err) {
+          err = quadtemplate.remesh(mesh, a5nodes, oe_nodes, od_nodes, b4nodes);
+          if (!err) addNewElements( quadtemplate.newnodes, quadtemplate.newfaces);
+     }
+
+     if (err) {
+          discard();
+          return 1;
+     }
+
+     // Check for any inversion of the element, if there is inversion,
+     // undo everthing (i.e. remove new nodes and faces).
+     //
+     nSize = newfaces.size();
+     for (size_t i = 0; i < nSize; i++) {
+          if (newfaces[i]->concaveAt() >= 0) {
+               discard();
+               return 2;
+          }
+     }
+
+     return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 
 void OneDefectPatch::setTags()
 {
@@ -37,11 +485,11 @@ void OneDefectPatch::setTags()
      for (size_t i = 0; i <  nSize; i++)
           bound_nodes[i]->setTag(3);
 
-     set<Vertex*>::const_iterator vit;
+     NodeSet::const_iterator vit;
      for (vit = corners.begin(); vit != corners.end(); ++vit)
           (*vit)->setTag(2);
 
-     set<Face*>::const_iterator it;
+     FaceSet::const_iterator it;
      for (it = faces.begin(); it != faces.end(); ++it)
           (*it)->setTag(1);
 
@@ -223,7 +671,6 @@ int OneDefectPatch::remesh_3_sided_patch()
 {
      Vertex *c0, *c1, *c2;
 
-     count_3_patches++;
 
      c0 = bound_nodes[ cornerPos[0] ];
      c1 = bound_nodes[ cornerPos[1] ];
@@ -233,21 +680,17 @@ int OneDefectPatch::remesh_3_sided_patch()
      get_bound_nodes(c1, c2, bnodes);
      get_bound_nodes(c2, c0, cnodes);
 
-     int err;
-     err = remesh_tri_loop(mesh, anodes, bnodes, cnodes, partSegments, newnodes, newfaces);
-
+     int err = template3.remesh(mesh, anodes, bnodes, cnodes, partSegments);
+     if( !err ) count_3_patches++;
      return err;
 }
 //////////////////////////////////////////////////////////////////////////////
 
 int OneDefectPatch::remesh_4_sided_patch()
 {
-     static int ncount = 0;
      int err;
      size_t nSize;
      Vertex *c0, *c1, *c2, *c3, *ta, *tb, *tc;
-
-     count_4_patches++;
 
      // Collect landmark nodes on the patch..
      c0 = bound_nodes[ cornerPos[0] ];
@@ -256,16 +699,14 @@ int OneDefectPatch::remesh_4_sided_patch()
      c3 = bound_nodes[ cornerPos[3] ];
      ta = quad_splitting_node;
 
-     NodeSequence a1nodes, a2nodes, b1nodes, c0nodes, c1nodes, c2nodes,
-     abnodes, canodes, bcnodes, d1nodes;
-
      if (ta == NULL) {
           if ((segSize[0] == segSize[2]) && (segSize[1] == segSize[3])) {
                get_bound_nodes(c0, c1, anodes);
                get_bound_nodes(c1, c2, bnodes);
                get_bound_nodes(c2, c3, cnodes);
                get_bound_nodes(c3, c0, dnodes);
-               err = remesh_quad_loop(mesh, anodes, bnodes, cnodes, dnodes, newnodes, newfaces, 0);
+//             err = remesh_quad_loop(mesh, anodes, bnodes, cnodes, dnodes, newnodes, newfaces);
+               err = template4.remesh(mesh, anodes, bnodes, cnodes, dnodes);
                return err;
           }
      }
@@ -297,49 +738,34 @@ int OneDefectPatch::remesh_4_sided_patch()
      get_bound_nodes(tc, c3, c1nodes);
      get_bound_nodes(c3, c0, d1nodes);
 
-     NodeSequence nnodes;
-     FaceSequence nfaces;
-
-     err = remesh_tri_loop(mesh, abnodes, bcnodes, canodes, partSegments, nnodes, nfaces, 0);
+//   err = remesh_tri_loop(mesh, abnodes, bcnodes, canodes, partSegments, nnodes, nfaces);
+     err = template3.remesh(mesh, abnodes, bcnodes, canodes, partSegments);
      if (!err) {
-          nSize = nnodes.size();
-          newnodes.reserve( newnodes.size() + nSize );
-          for (size_t i = 0; i < nSize; i++)
-               newnodes.push_back(nnodes[i]);
-
-          nSize = nfaces.size();
-          newfaces.reserve( newfaces.size() + nSize );
-          for (size_t i = 0; i < nSize; i++)
-               newfaces.push_back(nfaces[i]);
+          for( size_t i = 0; i < template3.newnodes.size(); i++)
+               newnodes.push_back( template3.newnodes[i] );
+          for( size_t i = 0; i < template3.newfaces.size(); i++)
+               newfaces.push_back( template3.newfaces[i] );
      }
 
      if (!err) {
-          err = remesh_quad_loop(mesh, a1nodes, canodes, c1nodes, d1nodes, nnodes, nfaces, 0);
+//        err = remesh_quad_loop(mesh, a1nodes, canodes, c1nodes, d1nodes, nnodes, nfaces);
+          err = template4.remesh(mesh, a1nodes, canodes, c1nodes, d1nodes);
           if (!err) {
-               nSize = nnodes.size();
-               newnodes.reserve( newnodes.size() + nSize );
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(nnodes[i]);
-
-               nSize = nfaces.size();
-               newfaces.reserve( newfaces.size() + nSize );
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(nfaces[i]);
+               for( size_t i = 0; i < template4.newnodes.size(); i++)
+                    newnodes.push_back( template4.newnodes[i] );
+               for( size_t i = 0; i < template4.newfaces.size(); i++)
+                    newfaces.push_back( template4.newfaces[i] );
           }
      }
 
      if (!err) {
-          err = remesh_quad_loop(mesh, a2nodes, b1nodes, c2nodes, abnodes, nnodes, nfaces, 0);
+//        err = remesh_quad_loop(mesh, a2nodes, b1nodes, c2nodes, abnodes, nnodes, nfaces);
+          err = template4.remesh(mesh, a2nodes, b1nodes, c2nodes, abnodes);
           if (!err) {
-               nSize = nnodes.size();
-               newnodes.reserve( newnodes.size() + nSize );
-               for (size_t i = 0; i < nSize; i++)
-                    newnodes.push_back(nnodes[i]);
-
-               nSize = nfaces.size();
-               newfaces.reserve( newfaces.size() + nSize );
-               for (size_t i = 0; i < nSize; i++)
-                    newfaces.push_back(nfaces[i]);
+               for( size_t i = 0; i < template4.newnodes.size(); i++)
+                    newnodes.push_back( template4.newnodes[i] );
+               for( size_t i = 0; i < template4.newfaces.size(); i++)
+                    newfaces.push_back( template4.newfaces[i] );
           }
      }
 
@@ -357,6 +783,8 @@ int OneDefectPatch::remesh_4_sided_patch()
           return 2;
      }
 
+     if( !err ) count_4_patches++;
+
      return err;
 }
 
@@ -364,8 +792,6 @@ int OneDefectPatch::remesh_4_sided_patch()
 
 int OneDefectPatch::remesh_5_sided_patch()
 {
-     count_5_patches++;
-
      Vertex *c0, *c1, *c2, *c3, *c4;
      c0 = bound_nodes[ cornerPos[0] ];
      c1 = bound_nodes[ cornerPos[1] ];
@@ -379,13 +805,9 @@ int OneDefectPatch::remesh_5_sided_patch()
      get_bound_nodes(c3, c4, dnodes);
      get_bound_nodes(c4, c0, enodes);
 
-     int err;
-     err = remesh_penta_loop(mesh, anodes, bnodes, cnodes, dnodes, enodes, partSegments, newnodes, newfaces);
+     int err = template5.remesh(mesh, anodes, bnodes, cnodes, dnodes, enodes, partSegments);
 
-     if( err ) {
-          assert( newnodes.empty() );
-          assert( newfaces.empty() );
-     }
+     if( !err) count_5_patches++;
 
      return err;
 }
@@ -394,7 +816,6 @@ int OneDefectPatch::remesh_5_sided_patch()
 
 bool OneDefectPatch::is_quad_breakable_at(const Vertex *ta)
 {
-
      // Landmark nodes on the boundary. There are seven such nodes.
      Vertex *c0, *c1, *c2, *c3, *tb, *tc;
      c0 = bound_nodes[ cornerPos[0] ];
@@ -402,15 +823,14 @@ bool OneDefectPatch::is_quad_breakable_at(const Vertex *ta)
      c2 = bound_nodes[ cornerPos[2] ];
      c3 = bound_nodes[ cornerPos[3] ];
 
-     NodeSequence a1nodes, a2nodes, c0nodes;
-     int segments[3];
-
      get_bound_nodes(c0, ta, a1nodes);
      get_bound_nodes(ta, c1, a2nodes);
+
      tb = bound_nodes[cornerPos[2] + a2nodes.size() - 1 ];
      tc = bound_nodes[cornerPos[3] - a1nodes.size() + 1];
-
      get_bound_nodes(tb, tc, c0nodes);
+
+     int segments[3];
      segments[0] = c0nodes.size() - 1;
      segments[1] = segSize[3] - 1;
      segments[2] = segSize[2] - 1;
@@ -479,10 +899,8 @@ bool OneDefectPatch::is_4_sided_convex_loop_quad_meshable()
      //
 
      NodeSequence trynodes;
-     FaceSequence vfaces;
      for (int i = 1; i < segSize[0] - 1; i++) {
-          vfaces = bound_nodes[i]->getRelations2();
-          if (vfaces.size() == 3)
+          if (bound_nodes[i]->getNumRelations(2) == 3)
                trynodes.push_back(bound_nodes[i]);
      }
 
@@ -493,15 +911,14 @@ bool OneDefectPatch::is_4_sided_convex_loop_quad_meshable()
 
      if (nr0 > 2) {
           for (int i = 1; i < segSize[0] - 1; i++) {
-               vfaces = bound_nodes[i]->getRelations2();
-               if (vfaces.size() == 4)
+               if (bound_nodes[i]->getNumRelations(2) == 4)
                     trynodes.push_back(bound_nodes[i]);
           }
      }
 
-     NodeSequence a1nodes, a2nodes, bcnodes;
-     int segments[3];
+     quad_splitting_node = NULL;
 
+     int segments[3];
      int nSize = trynodes.size();
      for (int i = 0; i < nSize; i++) {
           ta = trynodes[i];
@@ -534,29 +951,27 @@ void OneDefectPatch::init_blob()
      bound_nodes.clear();
 
      faces.clear();
+     inner_faces.clear();
+
+     relations02.clear();
 
      size_t nSize;
      if (apex) {
           inner_nodes.insert(apex);
-          FaceSequence &vfaces = apex->getRelations2();
-          nSize  = vfaces.size();
-          for (size_t i = 0; i < nSize; i++)
-               faces.insert(vfaces[i]);
+          expand_blob( apex );
      } else {
           nSize = nodepath.size();
           for (size_t i = 0; i < nSize; i++) {
                Vertex *v = nodepath[i];
                inner_nodes.insert(v);
-               FaceSequence &vfaces = v->getRelations2();
-               for (size_t i = 0; i < vfaces.size(); i++)
-                    faces.insert(vfaces[i]);
+               expand_blob(v );
           }
      }
 
      create_boundary();
 
      nSize = bound_nodes.size();
-  
+
      for (size_t i = 0; i < nSize; i++) {
           int degree = bound_nodes[i]->getNumRelations(2);
           if (degree != 4) {
@@ -570,7 +985,7 @@ void OneDefectPatch::init_blob()
 
 size_t OneDefectPatch::count_irregular_nodes(int where)
 {
-     set<Vertex*>::const_iterator it;
+     NodeSet::const_iterator it;
      assert(mesh->getAdjTable(0, 2));
 
      size_t ncount = 0;
@@ -601,70 +1016,44 @@ OneDefectPatch::create_boundary()
 
      // We need to rebuild relations locally to identfy corners and boundary.
      FaceSet::const_iterator fiter;
-     std::map<Vertex*, FaceSequence> relations02;
-
-     for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
-          Face *face = *fiter;
-          assert(!face->isRemoved() );
-          for (int j = 0; j < face->getSize(0); j++) {
-               vertex = face->getNodeAt(j);
-               relations02[vertex].push_back(face);
-          }
-     }
-
-     std::map<Vertex*, FaceSequence> ::iterator it;
-     for( it = relations02.begin(); it != relations02.end(); ++it) {
-          FaceSequence &seq = it->second;
-          sort( seq.begin(), seq.end() );
-     }
 
      // A boundary edge must have exactly one face neighbor...
      FaceSequence faceneighs;
-     FaceSequence ifaces;
      for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
           Face *face = *fiter;
-          int ncount = 0;
-          for (int j = 0; j < 4; j++) {
-               Vertex *v0 = face->getNodeAt(j + 0);
-               Vertex *v1 = face->getNodeAt(j + 1);
-               faceneighs.clear();
-               assert(relations02[v0].size() > 0);
-               assert(relations02[v1].size() > 0);
-               set_intersection(relations02[v0].begin(), relations02[v0].end(),
-                                relations02[v1].begin(), relations02[v1].end(),
-                                back_inserter(faceneighs));
-               if (faceneighs.size() == 1) {
-                    ncount = 1;
-                    Edge newedge(v0, v1);
-                    boundary.push_back(newedge);
+          if( inner_faces.find(face) == inner_faces.end() ) {
+               int ncount = 0;
+               for (int j = 0; j < 4; j++) {
+                    Vertex *v0 = face->getNodeAt(j + 0);
+                    Vertex *v1 = face->getNodeAt(j + 1);
+                    faceneighs.clear();
+                    assert(relations02[v0].size() > 0);
+                    assert(relations02[v1].size() > 0);
+                    set_intersection(relations02[v0].begin(), relations02[v0].end(),
+                                     relations02[v1].begin(), relations02[v1].end(),
+                                     back_inserter(faceneighs));
+                    if (faceneighs.size() == 1) {
+                         ncount = 1;
+                         Edge newedge(v0, v1);
+                         boundary.push_back(newedge);
+                    }
                }
+               if( ncount == 0) inner_faces.insert(face);
           }
-          if( ncount == 0) ifaces.push_back(face);
      }
 
      // Sequence the chain and start from one of the corner...
      int err = Mesh::make_chain(boundary);
      if (err) return 2;
 
-     //
-     // Identify corners in the mesh.
-     // Should we check only one vertex per edge ?
-     //
-
      size_t nSize = boundary.size();
-     FaceSequence neighs;
      for (size_t k = 0; k < nSize; k++) {
           vertex = boundary[k].getNodeAt(0);
-          neighs = relations02[vertex];
-          if (neighs.size() == 1) corners.insert(vertex);
+          if (relations02[vertex].size() == 1) corners.insert(vertex);
 
           vertex = boundary[k].getNodeAt(1);
-          neighs = relations02[vertex];
-          if (neighs.size() == 1) corners.insert(vertex);
+          if (relations02[vertex].size() == 1) corners.insert(vertex);
      }
-
-     // We don't handle these cases...
-     // if (corners.size() < 3 || corners.size() > 5) return 2;
 
      // Start the chain from one of the corners.
      err = Mesh::rotate_chain(boundary, *corners.begin());
@@ -686,7 +1075,7 @@ OneDefectPatch::create_boundary()
           for (int j = 0; j < 4; j++) {
                Vertex *v = face->getNodeAt(j);
                if( find(bound_nodes.begin(), bound_nodes.end(), v) == bound_nodes.end() )
-                   inner_nodes.insert(v);
+                    inner_nodes.insert(v);
           }
      }
 
@@ -707,7 +1096,7 @@ void OneDefectPatch::set_boundary_segments()
 
      cornerPos.resize( nSize + 1);
 
-     set<Vertex*>::const_iterator it;
+     NodeSet::const_iterator it;
      int index = 0;
      for (it = corners.begin(); it != corners.end(); ++it) {
           cornerPos[index++] = getPosOf(*it);
@@ -739,13 +1128,19 @@ int OneDefectPatch::get_topological_outer_angle(Vertex *vertex)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void OneDefectPatch::expand_blob(Vertex *vertex)
+void OneDefectPatch::expand_blob(const Vertex *vertex)
 {
      const FaceSequence &vfaces = vertex->getRelations2();
 
-     int nSize  = vfaces.size();
+     int nSize = vfaces.size();
      for (int i = 0; i < nSize; i++) {
-         faces.insert(vfaces[i]);
+          Face *face = vfaces[i];
+          assert(!face->isRemoved() );
+          faces.insert(face);
+          for (int j = 0; j < 4; j++) {
+               Vertex *vf = face->getNodeAt(j);
+               relations02[vf].insert(face);
+          }
      }
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -753,6 +1148,7 @@ void OneDefectPatch::expand_blob(Vertex *vertex)
 int
 OneDefectPatch::build_remeshable_boundary()
 {
+     static int failed_attempts = 0;
      assert(mesh->getAdjTable(0, 2));
 
      /////////////////////////////////////////////////////////////////////////////
@@ -801,7 +1197,6 @@ OneDefectPatch::build_remeshable_boundary()
           if (topo_convex_region) {
                int nsides = corners.size();
 
-               // We restrict ourselves with 3-4-5 sides patches.
                if (nsides > 5) return 6;
 
                int segments[5];
@@ -855,67 +1250,30 @@ OneDefectPatch::build_remeshable_boundary()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void OneDefectPatch::backup()
-{
-     // Node Coordinates ...
-     set<Vertex*>::const_iterator it;
-
-     backupCoords.clear();
-     backupCoords.reserve(inner_nodes.size());
-
-     for (it = inner_nodes.begin(); it != inner_nodes.end(); ++it) {
-          Vertex *v = *it;
-          assert(!v->isRemoved());
-          backupCoords.push_back(v->getXYZCoords());
-     }
-
-     // Face Connectivity information ...
-     backupConnect.clear();
-     set<Face*>::const_iterator fiter;
-
-     int nSize = faces.size();
-
-     backupConnect.reserve(4 * nSize );
-     for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
-          Face *face = *fiter;
-          assert(!face->isRemoved());
-          backupConnect.push_back(face->getNodeAt(0));
-          backupConnect.push_back(face->getNodeAt(1));
-          backupConnect.push_back(face->getNodeAt(2));
-          backupConnect.push_back(face->getNodeAt(3));
-     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void OneDefectPatch::rollback()
 {
-     assert(!inner_nodes.empty());
-
-     set<Vertex*>::const_iterator it;
-     int index = 0;
+     NodeSet::const_iterator it;
      for (it = inner_nodes.begin(); it != inner_nodes.end(); ++it) {
           Vertex *v = *it;
-          v->setXYZCoords(backupCoords[index++]);
           mesh->reactivate(v);
-          assert(!v->isRemoved());
-          assert(mesh->contains(v));
      }
 
-     set<Face*>::const_iterator fiter;
-     NodeSequence connect(4);
-     index = 0;
+     FaceSet::const_iterator fiter;
      for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
-          connect[0] = backupConnect[index++];
-          connect[1] = backupConnect[index++];
-          connect[2] = backupConnect[index++];
-          connect[3] = backupConnect[index++];
-          for (int i = 0; i < 4; i++)
-               assert(!connect[i]->isRemoved());
           Face *face = *fiter;
-          face->setNodes(connect);
           mesh->reactivate(face);
      }
+
+     size_t nSize = newfaces.size();
+     for (size_t i = 0; i < nSize; i++)
+          mesh->remove(newfaces[i]);
+     newfaces.clear();
+
+     nSize = newnodes.size();
+     for (size_t i = 0; i < nSize; i++)
+          mesh->remove(newnodes[i]);
+     newnodes.clear();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -947,23 +1305,23 @@ void OneDefectPatch::post_remesh()
 {
      size_t nSize;
 
+     // Remove the old faces ( will go to trash bin );
      FaceSet::const_iterator fiter;
      for (fiter = faces.begin(); fiter != faces.end(); ++fiter)
           mesh->remove(*fiter);
 
+     // Remove the old nodes.. (will go to trash bin );
      NodeSet::const_iterator niter;
      for (niter = inner_nodes.begin(); niter != inner_nodes.end(); ++niter)
           mesh->remove(*niter);
 
-     faces.clear();
+     // Patch contains new nodes new faces now ...
 
+     faces.clear();
      nSize = newfaces.size();
-     double minQuality = 10000;
      for (size_t i = 0; i < nSize; i++) {
           faces.insert(newfaces[i]);
-          minQuality = min( minQuality, newfaces[i]->getAspectRatio() );
      }
-
      newfaces.clear();
 
      nSize = newnodes.size();
@@ -981,6 +1339,11 @@ void OneDefectPatch::post_remesh()
                new_defective_node = v;
           }
      }
+
+     if( ncount > 2) {
+          cout << "Fatal Error:There must be at the most one defective node in the patch" << endl;
+          exit(0);
+     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -990,15 +1353,10 @@ int OneDefectPatch::remesh()
      // Check if any node or element is modifed by previous operations.
      if (!isSafe()) return 1;
 
-//  if (!is_simply_connected()) return 2;
-
      newnodes.clear();
      newfaces.clear();
 
      if (corners.size() > 5) cout << "Warning: Corners more than 5 " << endl;
-
-     // backup all nodes and faces within the patch.
-     backup();
 
 #ifdef DEBUG
      int nirregular0 = count_irregular_nodes(0) + count_irregular_nodes(1);
@@ -1021,16 +1379,6 @@ int OneDefectPatch::remesh()
      }
 
      if (err) {
-          size_t nSize = newfaces.size();
-          for (size_t i = 0; i < nSize; i++)
-               mesh->remove(newfaces[i]);
-          newfaces.clear();
-
-          nSize = newnodes.size();
-          for (size_t i = 0; i < nSize; i++)
-               mesh->remove(newnodes[i]);
-          newnodes.clear();
-
           rollback();
           return 1;
      }
@@ -1092,9 +1440,6 @@ int QuadCleanUp::remesh_defective_patches()
 
      mesh->search_boundary();
 
-     cout << "# of Irregular nodes before cleanup "
-          << mesh->count_irregular_nodes(4) << endl;
-
      djkpath = new DijkstraShortestPath(mesh, 1);
 
      assert( djkpath);
@@ -1102,52 +1447,63 @@ int QuadCleanUp::remesh_defective_patches()
      assert(mesh->getAdjTable(0, 2));
      OneDefectPatch *patch;
 
-     StopWatch watch[4];
-
      Jaal::MeshOptimization mopt;
+
+     NodeSequence nextSeq;
+     irregular_nodes = mesh->get_irregular_nodes(4);
+
+     // Record execution time ...
+     StopWatch wc[4];
 
      int ncount1 = 0;
      for( int i = 4; i < 14; i++) {
           OneDefectPatch :: MAX_FACES_ALLOWED = ( int)pow(2,i);
           cout << "Remeshing with maximum patch size :  " << (int)pow(2,i) << endl;
-          cout << "#of irregular nodes in the mesh " << mesh->count_irregular_nodes(4) << endl;
+          cout << "#of irregular nodes in the mesh " << irregular_nodes.size() << endl;
+
+          wc[3].start();
 
           while (1) {
-               build_irregular_nodes_set();
+               nextSeq.clear();
                size_t ncount2 = 0;
-               while (1) {
-                    if (irregular_nodes_set.empty()) break;
-                    Vertex *vertex = *irregular_nodes_set.begin();
-                    irregular_nodes_set.erase(vertex);
-                    watch[0].start();
-                    patch = build_one_defect_patch(vertex);
-                    watch[0].stop();
-                    if (patch) {
-                         watch[1].start();
-                         int err = patch->remesh();
-                         watch[1].stop();
-                         if (!err) {
-                              if( ncount1% 100 == 0) cout << "patch count : " << ncount1 << endl;
-                              const NodeSequence &vrem = patch->get_irregular_nodes_removed();
-                              size_t nSize = vrem.size();
-                              for (size_t j = 0; j < nSize; j++)
-                                   irregular_nodes_set.erase(vrem[j]);
-                              // Note that no irregular node possible in case of quad patch...
-                              Vertex *vtx = patch->get_new_defective_node();
-                              if (vtx) irregular_nodes_set.insert(vtx);
-                              ncount2++;
-                              ncount1++;
-                         }
+               size_t nSize = irregular_nodes.size();
+               for( size_t i = 0; i < nSize; i++) {
+                    Vertex *vertex = irregular_nodes[i];
+                    if( !vertex->isRemoved() ) {
+                         wc[0].start();
+                         patch = build_one_defect_patch(vertex);
+                         wc[0].stop();
+                         if (patch) {
+                              wc[1].start();
+                              int err = patch->remesh();
+                              wc[1].stop();
+                              if (!err) {
+                                   if( ncount1% 100 == 0) cout << "patch count : " << ncount1 << endl;
+                                   Vertex *vtx = patch->get_new_defective_node();
+                                   if (vtx) nextSeq.push_back(vtx);
+                                   ncount2++;
+                                   ncount1++;
+                              } else
+                                   nextSeq.push_back( vertex );  // Because patch was not remeshed
+                         } else
+                              nextSeq.push_back( vertex ); // Because invalid patch occured.
                     }
                }
+               irregular_nodes.swap(nextSeq);
 
                if (ncount2) {
-                    watch[2].start();
-//                  mopt.shape_optimize(mesh);
-                    watch[2].stop();
+                  wc[2].start();
+//                mopt.shape_optimize(mesh);
+                  wc[2].stop();
                }
                if( ncount2 == 0) break;
           }
+          wc[3].stop();
+          cout << "Execution Summary: " << endl;
+          cout << "    Time for searching patches  : " << wc[0].getSeconds()  << endl;
+          cout << "    Time for remeshing patches  : " << wc[1].getSeconds()  << endl;
+          cout << "    Time for shape optimization : " << wc[2].getSeconds()  << endl;
+          cout << "    Total Execution time        : " << wc[3].getSeconds() << endl;
      }
 
      cout << "3 Sided Patches : " << OneDefectPatch::count_3_patches << endl;
@@ -1155,11 +1511,9 @@ int QuadCleanUp::remesh_defective_patches()
      cout << "5 Sided Patches : " << OneDefectPatch::count_5_patches << endl;
 
      cout << "Execution Summary: " << endl;
-     cout << "    Time for searching patches  : " << watch[0].getSeconds() << endl;
-     cout << "    Time for remeshing patches  : " << watch[1].getSeconds() << endl;
-     cout << "    Time for shape optimization : " << watch[2].getSeconds() << endl;
-
-//  if( djkpath ) delete djkpath;
+     cout << "    Time for searching patches  : " << wc[0].getSeconds()  << endl;
+     cout << "    Time for remeshing patches  : " << wc[1].getSeconds()  << endl;
+     cout << "    Time for shape optimization : " << wc[2].getSeconds()  << endl;
 
      if (!relexist0)
           mesh->clear_relations(0, 0);
@@ -1169,5 +1523,4 @@ int QuadCleanUp::remesh_defective_patches()
 
      return 0;
 }
-///////////////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////////////////
