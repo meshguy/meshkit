@@ -38,11 +38,19 @@ void MKGraph::clear_graph()
 void MKGraph::print_graph() 
 {
   for (lemon::ListDigraph::NodeIt nit(mkGraph); nit != lemon::INVALID; ++nit) {
-    std::cout << "Node: ";
+    std::cout << "Node: " << mkGraph.id(nit) << " ";
     if (nit == rootNode->get_node()) std::cout << "root node" << std::endl;
     else if (nit == leafNode->get_node()) std::cout << "leaf node" << std::endl;
     else if (nodeMap[nit]) std::cout << nodeMap[nit]->get_name() << std::endl;
     else std::cout << "(no MeshOp)" << std::endl;
+  }
+  for (lemon::ListDigraph::ArcIt ait(mkGraph); ait != lemon::INVALID; ++ait) {
+    //lemon::ListDigraph::A
+    lemon::ListDigraph::Node s=mkGraph.source(ait);
+    lemon::ListDigraph::Node t=mkGraph.target(ait);
+
+    std::cout << "Arc: "<< mkGraph.id(ait)<< " : "<< nodeMap[s]->get_name() << "(" <<  mkGraph.id(s)<< ") - " <<
+     nodeMap[t]->get_name() << "(" <<  mkGraph.id(t)<< ")\n";
   }
 }
 

@@ -196,7 +196,7 @@ void ModelEnt::init_parents_children()
   std::vector<iGeom::EntityHandle> geom_adjs;
   std::vector<iGeom::EntityHandle>::iterator vit;
   moab::EntityHandle mseth;
-  moab::GeomTopoTool gt(mkCore->moab_instance(meshIndex), false);
+  //moab::GeomTopoTool gt(mkCore->moab_instance(meshIndex), false);
   iBase_EntityType this_tp;
   moab::ErrorCode rval;
   iGeom::Error err = igeom_instance()->getEntType(iGeomEnt, this_tp);

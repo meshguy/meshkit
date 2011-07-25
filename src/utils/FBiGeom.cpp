@@ -60,7 +60,7 @@ FBiGeom::load( const char* file_name,
 // include here the iBaseVirtual methods that will be overloaded
 // start copy iBaseVirtual
 
-iGeom::EntitySetHandle FBiGeom::getRootSet()
+iGeom::EntitySetHandle FBiGeom::getRootSet() const
 {
   // the root set in MOAB is always null
   // we will return the set from FBEngine
@@ -69,7 +69,7 @@ iGeom::EntitySetHandle FBiGeom::getRootSet()
   return (iGeom::EntitySetHandle)modelSet;
 }
 
-iGeom::Error FBiGeom::getEntType( EntityHandle handle, EntityType& type_out )
+iGeom::Error FBiGeom::getEntType( EntityHandle handle, EntityType& type_out ) const
 {
   int type;
   moab::ErrorCode rval = _fbEngine-> getEntType( (moab::EntityHandle)handle, &type);
@@ -741,7 +741,7 @@ PFX(Base)::getEHData( EntityHandle entity_handle,
 // no inlining anymore
 iGeom::Error FBiGeom::getEntities( EntitySetHandle set,
                     EntityType type,
-                    std::vector<EntityHandle>& entities_out )
+                    std::vector<EntityHandle>& entities_out ) const
 {
   // ErrorCode getEntities(EntityHandle root_set, int ent_type, Range & gentities);
   moab::Range gentities;
@@ -758,7 +758,7 @@ iGeom::Error FBiGeom::getEntities( EntitySetHandle set,
 
 iGeom::Error FBiGeom::getEntAdj( EntityHandle handle,
                   EntityType type_requested,
-                  std::vector<EntityHandle>& adj_entities_out )
+                  std::vector<EntityHandle>& adj_entities_out ) const
 {
   moab::Range adjEnts;
   moab::ErrorCode rval = _fbEngine->getEntAdj((moab::EntityHandle)handle,
@@ -775,7 +775,7 @@ iGeom::Error FBiGeom::getEntAdj( EntityHandle handle,
   else
     return (Error)1;
 }
-iGeom::Error FBiGeom::getEgFcSense( EntityHandle edge, EntityHandle face, int& sense )
+iGeom::Error FBiGeom::getEgFcSense( EntityHandle edge, EntityHandle face, int& sense ) const
 {
   moab::EntityHandle mbedge = (moab::EntityHandle) edge;
   moab::EntityHandle mbface = (moab::EntityHandle) face;
@@ -788,7 +788,7 @@ iGeom::Error FBiGeom::getEgFcSense( EntityHandle edge, EntityHandle face, int& s
 
 iGeom::Error FBiGeom::measure( const EntityHandle* entities,
                               int entities_size,
-                              double* measures )
+                              double* measures ) const
 {
   const moab::EntityHandle * moab_entities = ( moab::EntityHandle *) entities;
 
@@ -800,7 +800,7 @@ iGeom::Error FBiGeom::measure( const EntityHandle* entities,
 }
 
 iGeom::Error FBiGeom::getEntNrmlSense( EntityHandle face, EntityHandle region,
-        int& sense )
+        int& sense ) const
 {
   moab::EntityHandle mbregion = (moab::EntityHandle) region;
   moab::EntityHandle mbface = (moab::EntityHandle) face;
@@ -813,7 +813,7 @@ iGeom::Error FBiGeom::getEntNrmlSense( EntityHandle face, EntityHandle region,
 
 iGeom::Error FBiGeom::getEntNrmlXYZ( EntityHandle entity,
                                     double x, double y, double z,
-                                    double& i, double& j, double& k )
+                                    double& i, double& j, double& k ) const
 {
   moab::EntityHandle mbentity = (moab::EntityHandle) entity;
   moab::ErrorCode rval = _fbEngine->getEntNrmlXYZ( mbentity,
@@ -826,7 +826,7 @@ iGeom::Error FBiGeom::getEntNrmlXYZ( EntityHandle entity,
 }
 
 iGeom::Error FBiGeom::getVtxCoord( EntityHandle vertex,
-                                  double& x, double& y, double& z )
+                                  double& x, double& y, double& z ) const
 {
   moab::EntityHandle mbentity = (moab::EntityHandle) vertex;
   moab::ErrorCode rval = _fbEngine->getVtxCoord(mbentity, &x, &y, &z);
@@ -838,7 +838,7 @@ iGeom::Error FBiGeom::getVtxCoord( EntityHandle vertex,
 
 iGeom::Error FBiGeom::getEntClosestPt( EntityHandle entity,
                                       double near_x, double near_y, double near_z,
-                                      double& on_x, double& on_y, double& on_z )
+                                      double& on_x, double& on_y, double& on_z ) const
 {
   moab::EntityHandle mbentity = (moab::EntityHandle) entity;
   moab::ErrorCode rval = _fbEngine->getEntClosestPt(mbentity,
@@ -853,7 +853,7 @@ iGeom::Error FBiGeom::getEgEvalXYZ( EntityHandle edge,
                                    double x, double y, double z,
                                    double& on_x, double& on_y, double& on_z,
                                    double& tngt_i, double& tngt_j, double& tngt_k,
-                                   double& cvtr_i, double& cvtr_j, double& cvtr_k )
+                                   double& cvtr_i, double& cvtr_j, double& cvtr_k ) const
 {
   moab::ErrorCode rval = _fbEngine->getEgEvalXYZ( (moab::EntityHandle) edge,
                                    x, y, z,
@@ -870,7 +870,7 @@ iGeom::Error FBiGeom::getFcEvalXYZ( EntityHandle face,
                                    double& on_x, double& on_y, double& on_z,
                                    double& nrml_i, double& nrml_j, double& nrml_k,
                                    double& cvtr1_i, double& cvtr1_j, double& cvtr1_k,
-                                   double& cvtr2_i, double& cvtr2_j, double& cvtr2_k )
+                                   double& cvtr2_i, double& cvtr2_j, double& cvtr2_k ) const
 {
   /*
   moab::ErrorCode rval = _fbEngine->getFcEvalXYZ( (moab::EntityHandle) face,
@@ -901,7 +901,7 @@ iGeom::Error FBiGeom::getFcEvalXYZ( EntityHandle face,
 
 }
 
-iGeom::Error FBiGeom::getEgVtxSense( EntityHandle edge, EntityHandle vtx1, EntityHandle vtx2, int& sense )
+iGeom::Error FBiGeom::getEgVtxSense( EntityHandle edge, EntityHandle vtx1, EntityHandle vtx2, int& sense ) const
 {
   moab::ErrorCode rval = _fbEngine->getEgVtxSense((moab::EntityHandle) edge,
       (moab::EntityHandle) vtx1, (moab::EntityHandle) vtx2,  sense);
@@ -912,7 +912,7 @@ iGeom::Error FBiGeom::getEgVtxSense( EntityHandle edge, EntityHandle vtx1, Entit
 }
 
 iGeom::Error FBiGeom::getEntURange( EntityHandle edge,
-                                   double& u_min, double& u_max )
+                                   double& u_min, double& u_max ) const
 {
   moab::ErrorCode rval = _fbEngine->getEntURange((moab::EntityHandle) edge,
                u_min,  u_max );
@@ -922,7 +922,7 @@ iGeom::Error FBiGeom::getEntURange( EntityHandle edge,
     return (Error)1;
 }
 iGeom::Error FBiGeom::getEntUtoXYZ( EntityHandle edge, double u,
-                                   double& x, double& y, double& z )
+                                   double& x, double& y, double& z ) const
 {
   moab::ErrorCode rval = _fbEngine->getEntUtoXYZ( (moab::EntityHandle) edge,   u,
                                     x,  y,   z );
@@ -934,7 +934,7 @@ iGeom::Error FBiGeom::getEntUtoXYZ( EntityHandle edge, double u,
 
 iGeom::Error FBiGeom::getEntTgntU( EntityHandle edge,
                                   double u,
-                                  double& i, double& j, double& k )
+                                  double& i, double& j, double& k ) const
 {
   moab::ErrorCode rval = _fbEngine->getEntTgntU( (moab::EntityHandle) edge,   u,
                                     i, j, k);
@@ -944,7 +944,7 @@ iGeom::Error FBiGeom::getEntTgntU( EntityHandle edge,
     return (Error)1;
 }
 iGeom::Error FBiGeom::isEntAdj( EntityHandle entity1, EntityHandle entity2,
-        bool& adjacent_out )
+        bool& adjacent_out ) const
 {
   moab::ErrorCode rval = _fbEngine->isEntAdj( (moab::EntityHandle) entity1,
       (moab::EntityHandle) entity2,
@@ -955,11 +955,11 @@ iGeom::Error FBiGeom::isEntAdj( EntityHandle entity1, EntityHandle entity2,
     return (Error)1;
 }
 
-iGeom::Error FBiGeom::getTagHandle( const char* name, TagHandle& handle_out )
+iGeom::Error FBiGeom::getTagHandle( const char* name, TagHandle& handle_out ) const
 {
   moab::Tag handle;
-  moab::ErrorCode rval = _fbEngine->moab_instance()->tag_get_handle( name, handle );
-
+  moab::ErrorCode rval = _fbEngine->moab_instance()->tag_get_handle(name, 0, moab::MB_TYPE_OPAQUE,
+      handle, moab::MB_TAG_ANY);
   if (rval==moab::MB_SUCCESS)
   {
     handle_out = (TagHandle) handle;
@@ -988,7 +988,7 @@ iGeom::Error FBiGeom::createTag( const char* tag_name,
 
 iGeom::Error FBiGeom::getData( EntityHandle entity_handle,
                 TagHandle tag_handle,
-                void* tag_value_out )
+                void* tag_value_out ) const
 {
   // we know this is really a moab thingy
   return getArrData(  &entity_handle, 1, tag_handle, tag_value_out );
@@ -997,7 +997,7 @@ iGeom::Error FBiGeom::getData( EntityHandle entity_handle,
 
 iGeom::Error FBiGeom::getIntData( EntityHandle entity_handle,
                            TagHandle tag_handle,
-                           int& value_out )
+                           int& value_out ) const
 {
   // we know this is really a moab thingy
    return getArrData(  &entity_handle, 1, tag_handle, (void*)&value_out );
@@ -1005,7 +1005,7 @@ iGeom::Error FBiGeom::getIntData( EntityHandle entity_handle,
 iGeom::Error FBiGeom::getArrData( const EntityHandle* entity_handles,
                    int entity_handles_size,
                    TagHandle tag_handle,
-                   void* tag_values_out )
+                   void* tag_values_out ) const
 {
   moab::Tag tagh=(moab::Tag)tag_handle;
   const moab::EntityHandle *ents = reinterpret_cast<const moab::EntityHandle *>(entity_handles);
@@ -1041,13 +1041,13 @@ iGeom::Error FBiGeom::setArrData( const EntityHandle* entity_handles,
 
 }
 
-iGeom::Error FBiGeom::getFaceType( EntityHandle face, std::string& type )
+iGeom::Error FBiGeom::getFaceType( EntityHandle face, std::string& type ) const
 {
   type = "nonplanar";
   return (Error)0;
 }
 
-iGeom::Error FBiGeom::isEntParametric( EntityHandle entity, bool& parametric )
+iGeom::Error FBiGeom::isEntParametric( EntityHandle entity, bool& parametric ) const
 {
   parametric = false;
   return (Error)0;
@@ -1055,7 +1055,7 @@ iGeom::Error FBiGeom::isEntParametric( EntityHandle entity, bool& parametric )
 
 iGeom::Error FBiGeom::getEntBoundBox( EntityHandle entity,
                        double& min_x, double& min_y, double& min_z,
-                       double& max_x, double& max_y, double& max_z )
+                       double& max_x, double& max_y, double& max_z ) const
 {
   moab::ErrorCode rval =  _fbEngine->getEntBoundBox((moab::EntityHandle) entity,
       &min_x, &min_y, &min_z,
@@ -1066,7 +1066,7 @@ iGeom::Error FBiGeom::getEntBoundBox( EntityHandle entity,
   return (Error)1;
 }
 
-iGeom::Error FBiGeom::isEntPeriodic( EntityHandle entity, bool& in_u, bool& in_v )
+iGeom::Error FBiGeom::isEntPeriodic( EntityHandle entity, bool& in_u, bool& in_v ) const
 {
 
   in_u = false; // false
@@ -1097,7 +1097,7 @@ iGeom::Error FBiGeom::getPntRayIntsct( double x, double y, double z,
                                       StorageOrder order,
                                       std::vector<EntityHandle>& entities_out,
                                       std::vector<double>& points_out,
-                                      std::vector<double>& params_out )
+                                      std::vector<double>& params_out ) const
 {
   // storage order not used?
   // fbengine

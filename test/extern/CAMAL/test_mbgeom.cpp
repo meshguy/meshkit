@@ -53,6 +53,8 @@ int main(int argc, char **argv)
 void meshFB()
 {
   mk = new MKCore;
+  // just for debugging
+  mk->print_graph();
   FBiGeom * fbiGeom = new FBiGeom(mk, true); // true for smooth, false for linear
 
   // this will do the reading of the moab db in memory
@@ -84,6 +86,8 @@ void meshFB()
     mk->construct_meshop("CAMALTriAdvance", surfs);
 
 
+  // just for debugging
+  mk->print_graph();
 
   // size the mesh
   SizingFunction *sf = new SizingFunction(mk, -1, mesh_size);
@@ -92,6 +96,10 @@ void meshFB()
 
   // now mesh them
   mk->setup_and_execute();
+
+  std::cout<<" after execute:\n";
+  // just for debugging
+  mk->print_graph();
 
   // report the number of triangles generated
   // put it in a new set in moab

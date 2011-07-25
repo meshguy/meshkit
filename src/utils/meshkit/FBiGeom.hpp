@@ -45,16 +45,16 @@ class FBiGeom : public iGeom {
 
     // methods from iBaseVirtual that are overloaded
 
-    iGeom::EntitySetHandle getRootSet();
+    iGeom::EntitySetHandle getRootSet() const;
 
     // methods from iGeom
     inline Error getEntities( EntitySetHandle set,
                                   EntityType type,
-                                  std::vector<EntityHandle>& entities_out );
+                                  std::vector<EntityHandle>& entities_out ) const;
 
 
     // methods from iBase
-    iGeom::Error getTagHandle( const char* name, TagHandle& handle_out );
+    iGeom::Error getTagHandle( const char* name, TagHandle& handle_out ) const;
 
     iGeom::Error createTag( const char* tag_name,
                       int tag_num_type_values,
@@ -63,16 +63,16 @@ class FBiGeom : public iGeom {
 
     iGeom::Error getData( EntityHandle entity_handle,
                     TagHandle tag_handle,
-                    void* tag_value_out );
+                    void* tag_value_out ) const;
 
     iGeom::Error getArrData( const EntityHandle* entity_handles,
                        int entity_handles_size,
                        TagHandle tag_handle,
-                       void* tag_values_out );
+                       void* tag_values_out ) const;
 
     iGeom::Error getIntData( EntityHandle entity_handle,
                            TagHandle tag_handle,
-                           int& value_out );
+                           int& value_out ) const;
 
     iGeom::Error setData( EntityHandle entity_handle,
                     TagHandle tag_handle,
@@ -83,66 +83,66 @@ class FBiGeom : public iGeom {
                        TagHandle tag_handle,
                        const void* tag_values );
 
-    iGeom::Error getEntType( EntityHandle handle, EntityType& type_out );
+    iGeom::Error getEntType( EntityHandle handle, EntityType& type_out ) const;
 
     iGeom::Error getEntAdj( EntityHandle handle,
                                 EntityType type_requested,
-                                std::vector<EntityHandle>& adj_entities_out );
+                                std::vector<EntityHandle>& adj_entities_out ) const;
 
-    iGeom::Error getEgFcSense( EntityHandle edge, EntityHandle face, int& sense );
+    iGeom::Error getEgFcSense( EntityHandle edge, EntityHandle face, int& sense ) const;
 
     iGeom::Error measure( const EntityHandle* entities,
                               int entities_size,
-                              double* measures );
+                              double* measures ) const;
     iGeom::Error getEntNrmlSense( EntityHandle face, EntityHandle region,
-        int& sense );
+        int& sense ) const;
 
-    iGeom::Error getEgVtxSense( EntityHandle edge, EntityHandle vtx1, EntityHandle vtx2, int& sense );
+    iGeom::Error getEgVtxSense( EntityHandle edge, EntityHandle vtx1, EntityHandle vtx2, int& sense ) const;
 
     iGeom::Error getEntNrmlXYZ( EntityHandle entity,
                                     double x, double y, double z,
-                                    double& i, double& j, double& k );
+                                    double& i, double& j, double& k ) const;
 
     iGeom::Error getVtxCoord( EntityHandle vertex,
-                                  double& x, double& y, double& z );
+                                  double& x, double& y, double& z ) const;
 
     iGeom::Error getEntClosestPt( EntityHandle entity,
                                       double near_x, double near_y, double near_z,
-                                      double& on_x, double& on_y, double& on_z );
+                                      double& on_x, double& on_y, double& on_z ) const;
     iGeom::Error getEgEvalXYZ( EntityHandle edge,
                                    double x, double y, double z,
                                    double& on_x, double& on_y, double& on_z,
                                    double& tngt_i, double& tngt_j, double& tngt_k,
-                                   double& cvtr_i, double& cvtr_j, double& cvtr_k );
+                                   double& cvtr_i, double& cvtr_j, double& cvtr_k ) const;
     iGeom::Error getFcEvalXYZ( EntityHandle face,
                                    double x, double y, double z,
                                    double& on_x, double& on_y, double& on_z,
                                    double& nrml_i, double& nrml_j, double& nrml_k,
                                    double& cvtr1_i, double& cvtr1_j, double& cvtr1_k,
-                                   double& cvtr2_i, double& cvtr2_j, double& cvtr2_k );
+                                   double& cvtr2_i, double& cvtr2_j, double& cvtr2_k ) const;
 
     iGeom::Error getEntURange( EntityHandle edge,
-                                   double& u_min, double& u_max );
+                                   double& u_min, double& u_max ) const;
     iGeom::Error getEntUtoXYZ( EntityHandle edge, double u,
-                                   double& x, double& y, double& z );
+                                   double& x, double& y, double& z ) const;
     iGeom::Error isEntAdj( EntityHandle entity1, EntityHandle entity2,
-        bool& adjacent_out );
+        bool& adjacent_out ) const;
 
-    iGeom::Error getFaceType( EntityHandle face, std::string& type );
+    iGeom::Error getFaceType( EntityHandle face, std::string& type ) const;
 
-    iGeom::Error isEntParametric( EntityHandle entity, bool& parametric );
+    iGeom::Error isEntParametric( EntityHandle entity, bool& parametric ) const;
 
     iGeom::Error getEntBoundBox( EntityHandle entity,
                            double& min_x, double& min_y, double& min_z,
-                           double& max_x, double& max_y, double& max_z );
+                           double& max_x, double& max_y, double& max_z ) const;
 
     iGeom::Error isEntPeriodic( EntityHandle entity, bool& in_u,
-        bool& in_v );
+        bool& in_v ) const;
 
     // we do not have yet a model for geometry sets in mesh-based geometry
     // would be set of sets (groups?)
     iGeom::Error getEntSets( EntitySetHandle set, int num_hops,
-                       std::vector<EntitySetHandle>& contained_sets_out )
+                       std::vector<EntitySetHandle>& contained_sets_out ) const
     {
       contained_sets_out.clear(); // empty
       return (Error)0; // no error
@@ -153,11 +153,11 @@ class FBiGeom : public iGeom {
                                       StorageOrder order,
                                       std::vector<EntityHandle>& entities_out,
                                       std::vector<double>& points_out,
-                                      std::vector<double>& params_out );
+                                      std::vector<double>& params_out ) const;
 
     iGeom::Error getEntTgntU( EntityHandle edge,
                                   double u,
-                                  double& i, double& j, double& k );
+                                  double& i, double& j, double& k ) const;
 
 #if 0
     inline Error save( const char* file_name,
