@@ -34,19 +34,19 @@ class PFX(Base) {
 
     inline PFX(_Instance) instance();
     
-    inline Error getErrorType();
+    inline Error getErrorType() const;
     
-    inline std::string getDescription();
+    inline std::string getDescription() const;
     
-    inline EntitySetHandle getRootSet();
+    inline EntitySetHandle getRootSet() const;
 
     inline Error createEntSet( bool is_list, EntitySetHandle& handle_out );
     inline Error destroyEntSet( EntitySetHandle handle );
-    inline Error isList( EntitySetHandle handle, bool& is_list );
+    inline Error isList( EntitySetHandle handle, bool& is_list ) const;
     
-    inline Error getNumEntSets( EntitySetHandle set, int num_hops, int& num_sets_out );
+    inline Error getNumEntSets( EntitySetHandle set, int num_hops, int& num_sets_out ) const;
     inline Error getEntSets( EntitySetHandle set, int num_hops,
-                             std::vector<EntitySetHandle>& contained_sets_out );
+                             std::vector<EntitySetHandle>& contained_sets_out ) const;
     
     inline Error addEntToSet( EntityHandle entity, EntitySetHandle set );
     inline Error rmvEntFromSet( EntityHandle entity, EntitySetHandle set );
@@ -61,24 +61,24 @@ class PFX(Base) {
     inline Error addEntSet( EntitySetHandle to_add, EntitySetHandle add_to );
     inline Error rmvEntSet( EntitySetHandle to_rmv, EntitySetHandle rmv_from );
     
-    inline Error isEntContained( EntitySetHandle set, EntityHandle ent, bool& contained_out );
+    inline Error isEntContained( EntitySetHandle set, EntityHandle ent, bool& contained_out ) const;
     inline Error isEntArrContained( EntitySetHandle containing_set,
                                     const EntityHandle* entity_handles,
                                     int num_entity_handles,
-                                    bool* is_contained_out );
+                                    bool* is_contained_out ) const;
     inline Error isEntSetContained( EntitySetHandle containing_set, 
                                     EntitySetHandle contained_set, 
-                                    bool& contained_out );
+                                    bool& contained_out ) const;
     
     inline Error addPrntChld( EntitySetHandle parent, EntitySetHandle child );
     inline Error rmvPrntChld( EntitySetHandle parent, EntitySetHandle child );
-    inline Error isChildOf( EntitySetHandle parent, EntitySetHandle child, bool& is_child_out );
-    inline Error getNumChld( EntitySetHandle parent, int num_hops, int& num_child_out );
-    inline Error getNumPrnt( EntitySetHandle child, int num_hops, int& num_parent_out );
+    inline Error isChildOf( EntitySetHandle parent, EntitySetHandle child, bool& is_child_out ) const;
+    inline Error getNumChld( EntitySetHandle parent, int num_hops, int& num_child_out ) const;
+    inline Error getNumPrnt( EntitySetHandle child, int num_hops, int& num_parent_out ) const;
     inline Error getChldn( EntitySetHandle parent, int num_hops, 
-                           std::vector<EntitySetHandle>& children_out );
+                           std::vector<EntitySetHandle>& children_out ) const;
     inline Error getPrnts( EntitySetHandle child, int num_hops, 
-                           std::vector<EntitySetHandle>& parents_out );
+                           std::vector<EntitySetHandle>& parents_out ) const;
     
     inline Error subtract( EntitySetHandle set1, EntitySetHandle set2,
                            EntitySetHandle& result_set_out );
@@ -93,11 +93,11 @@ class PFX(Base) {
                             TagHandle& tag_handle_out );
     
     inline Error destroyTag( TagHandle tag_handle, bool forced );
-    inline Error getTagName( TagHandle tag_handle, std::string& name_out );
-    inline Error getTagSizeValues( TagHandle tag_handle, int& size_out );
-    inline Error getTagSizeBytes( TagHandle tag_handle, int& size_out );
-    inline Error getTagHandle( const char* name, TagHandle& handle_out );
-    inline Error getTagType( TagHandle tag_handle, TagValueType& type_out );
+    inline Error getTagName( TagHandle tag_handle, std::string& name_out ) const;
+    inline Error getTagSizeValues( TagHandle tag_handle, int& size_out ) const;
+    inline Error getTagSizeBytes( TagHandle tag_handle, int& size_out ) const;
+    inline Error getTagHandle( const char* name, TagHandle& handle_out ) const;
+    inline Error getTagType( TagHandle tag_handle, TagValueType& type_out ) const;
     
     inline Error setEntSetData( EntitySetHandle set_handle,
                                 TagHandle tag_handle,
@@ -117,24 +117,24 @@ class PFX(Base) {
     
     inline Error getEntSetData( EntitySetHandle set_handle,
                                 TagHandle tag_handle,
-                                void* tag_value_out );
+                                void* tag_value_out ) const;
     inline Error getEntSetIntData( EntitySetHandle set_handle,
                                    TagHandle tag_handle,
-                                   int& value_out );
+                                   int& value_out ) const;
     inline Error getEntSetDblData( EntitySetHandle set_handle,
                                    TagHandle tag_handle,
-                                   double& value_out );
+                                   double& value_out ) const;
     inline Error getEntSetEHData( EntitySetHandle set_handle,
                                   TagHandle tag_handle,
-                                  EntityHandle& value_out );
+                                  EntityHandle& value_out ) const;
     inline Error getEntSetESHData( EntitySetHandle set_handle,
                                    TagHandle tag_handle,
-                                   EntitySetHandle& value_out );
+                                   EntitySetHandle& value_out ) const;
     
     inline Error getAllEntSetTags( EntitySetHandle set,
-                                   std::vector<TagHandle>& tags_out );
+                                   std::vector<TagHandle>& tags_out ) const;
     inline Error getAllTags( EntityHandle entity,
-                             std::vector<TagHandle>& tags_out );
+                             std::vector<TagHandle>& tags_out ) const;
                                    
     inline Error rmvEntSetTag( EntitySetHandle set, TagHandle tag );
     inline Error rmvTag( EntityHandle entity, TagHandle tag );
@@ -143,23 +143,23 @@ class PFX(Base) {
     inline Error getArrData( const EntityHandle* entity_handles,
                              int entity_handles_size,
                              TagHandle tag_handle,
-                             void* tag_values_out );
+                             void* tag_values_out ) const;
     inline Error getIntArrData( const EntityHandle* entity_handles,
                                 int entity_handles_size,
                                 TagHandle tag_handle,
-                                int* tag_values_out );
+                                int* tag_values_out ) const;
     inline Error getDblArrData( const EntityHandle* entity_handles,
                                 int entity_handles_size,
                                 TagHandle tag_handle,
-                                double* tag_values_out );
+                                double* tag_values_out ) const;
     inline Error getEHArrData( const EntityHandle* entity_handles,
                                int entity_handles_size,
                                TagHandle tag_handle,
-                               EntityHandle* tag_values_out );
+                               EntityHandle* tag_values_out ) const;
     inline Error getESHArrData( const EntityHandle* entity_handles,
                                 int entity_handles_size,
                                 TagHandle tag_handle,
-                                EntitySetHandle* tag_values_out );
+                                EntitySetHandle* tag_values_out ) const;
     
     inline Error setArrData( const EntityHandle* entity_handles,
                              int entity_handles_size,
@@ -201,19 +201,19 @@ class PFX(Base) {
     
     inline Error getData( EntityHandle entity_handle,
                           TagHandle tag_handle,
-                          void* tag_value_out );
+                          void* tag_value_out ) const;
     inline Error getIntData( EntityHandle entity_handle,
                              TagHandle tag_handle,
-                             int& value_out );
+                             int& value_out ) const;
     inline Error getDblData( EntityHandle entity_handle,
                              TagHandle tag_handle,
-                             double& value_out );
+                             double& value_out ) const;
     inline Error getEHData( EntityHandle entity_handle,
                             TagHandle tag_handle,
-                            EntityHandle& value_out );
+                            EntityHandle& value_out ) const;
     inline Error getESHData( EntityHandle entity_handle,
                              TagHandle tag_handle,
-                             EntitySetHandle& value_out );
+                             EntitySetHandle& value_out ) const;
 };
 
 
@@ -223,7 +223,7 @@ inline PFX(_Instance) PFX(Base)::instance()
 }
     
 inline PFX(Base)::Error 
-PFX(Base)::getErrorType() 
+PFX(Base)::getErrorType() const
 {
   int err;
   PFX(_getErrorType)( mInstance, &err);
@@ -231,7 +231,7 @@ PFX(Base)::getErrorType()
 }
 
 inline std::string 
-PFX(Base)::getDescription()
+PFX(Base)::getDescription() const
 {
   std::vector<char> buffer(1024);
   PFX(_getDescription)( mInstance, &buffer[0], buffer.size() );
@@ -242,7 +242,7 @@ PFX(Base)::getDescription()
 
 
 inline PFX(Base)::EntitySetHandle 
-PFX(Base)::getRootSet()
+PFX(Base)::getRootSet() const
 {
   int err;
   EntitySetHandle result;
@@ -269,7 +269,7 @@ PFX(Base)::destroyEntSet( EntitySetHandle handle )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::isList( EntitySetHandle handle, bool& is_list )
+PFX(Base)::isList( EntitySetHandle handle, bool& is_list ) const
 {
   int err, result;
   PFX(_isList)( mInstance, handle, &result, &err );
@@ -278,7 +278,7 @@ PFX(Base)::isList( EntitySetHandle handle, bool& is_list )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getNumEntSets( EntitySetHandle set, int num_hops, int& num_sets_out )
+PFX(Base)::getNumEntSets( EntitySetHandle set, int num_hops, int& num_sets_out ) const
 {
   int err;
   PFX(_getNumEntSets)( mInstance, set, num_hops, &num_sets_out, &err );
@@ -287,7 +287,7 @@ PFX(Base)::getNumEntSets( EntitySetHandle set, int num_hops, int& num_sets_out )
 
 inline PFX(Base)::Error
 PFX(Base)::getEntSets( EntitySetHandle set, int num_hops,
-                   std::vector<EntitySetHandle>& contained_sets_out )
+                   std::vector<EntitySetHandle>& contained_sets_out ) const
 {
   int err, count;
   PFX(_getNumEntSets)( mInstance, set, num_hops, &count, &err );
@@ -353,7 +353,7 @@ PFX(Base)::rmvEntSet( EntitySetHandle to_rmv, EntitySetHandle rmv_from )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::isEntContained( EntitySetHandle set, EntityHandle ent, bool& contained_out )
+PFX(Base)::isEntContained( EntitySetHandle set, EntityHandle ent, bool& contained_out ) const
 {
   int err, result;
   PFX(_isEntContained)( mInstance, set, ent, &result, &err );
@@ -365,7 +365,7 @@ inline PFX(Base)::Error
 PFX(Base)::isEntArrContained( EntitySetHandle containing_set,
                                 const EntityHandle* entity_handles,
                                 int num_entity_handles,
-                                bool* is_contained_out )
+                                bool* is_contained_out ) const
 {
   int err, *ptr = 0, alloc = 0, size = 0;
   PFX(_isEntArrContained)( mInstance, containing_set,
@@ -382,7 +382,7 @@ PFX(Base)::isEntArrContained( EntitySetHandle containing_set,
 inline PFX(Base)::Error
 PFX(Base)::isEntSetContained( EntitySetHandle containing_set, 
                           EntitySetHandle contained_set, 
-                          bool& contained_out )
+                          bool& contained_out ) const
 {
   int err, result;
   PFX(_isEntSetContained)( mInstance, containing_set, contained_set, &result, &err );
@@ -407,7 +407,7 @@ PFX(Base)::rmvPrntChld( EntitySetHandle parent, EntitySetHandle child )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::isChildOf( EntitySetHandle parent, EntitySetHandle child, bool& is_child_out )
+PFX(Base)::isChildOf( EntitySetHandle parent, EntitySetHandle child, bool& is_child_out ) const
 {
   int err, result;
   PFX(_isChildOf)( mInstance, parent, child, &result, &err );
@@ -416,7 +416,7 @@ PFX(Base)::isChildOf( EntitySetHandle parent, EntitySetHandle child, bool& is_ch
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getNumChld( EntitySetHandle parent, int num_hops, int& num_child_out )
+PFX(Base)::getNumChld( EntitySetHandle parent, int num_hops, int& num_child_out ) const
 {
   int err;
   PFX(_getNumChld)( mInstance, parent, num_hops, &num_child_out, &err );
@@ -424,7 +424,7 @@ PFX(Base)::getNumChld( EntitySetHandle parent, int num_hops, int& num_child_out 
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getNumPrnt( EntitySetHandle child, int num_hops, int& num_parent_out )
+PFX(Base)::getNumPrnt( EntitySetHandle child, int num_hops, int& num_parent_out ) const
 {
   int err;
   PFX(_getNumPrnt)( mInstance, child, num_hops, &num_parent_out, &err );
@@ -433,7 +433,7 @@ PFX(Base)::getNumPrnt( EntitySetHandle child, int num_hops, int& num_parent_out 
 
 inline PFX(Base)::Error
 PFX(Base)::getChldn( EntitySetHandle parent, int num_hops, 
-                 std::vector<EntitySetHandle>& children_out )
+                 std::vector<EntitySetHandle>& children_out ) const
 {
   int err, count;
   PFX(_getNumChld)( mInstance, parent, num_hops, &count, &err );
@@ -448,7 +448,7 @@ PFX(Base)::getChldn( EntitySetHandle parent, int num_hops,
 
 inline PFX(Base)::Error
 PFX(Base)::getPrnts( EntitySetHandle child, int num_hops, 
-                 std::vector<EntitySetHandle>& parents_out )
+                 std::vector<EntitySetHandle>& parents_out ) const
 {
   int err, count;
   PFX(_getNumPrnt)( mInstance, child, num_hops, &count, &err );
@@ -512,7 +512,7 @@ PFX(Base)::destroyTag( TagHandle tag_handle, bool forced )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getTagName( TagHandle tag_handle, std::string& name_out )
+PFX(Base)::getTagName( TagHandle tag_handle, std::string& name_out ) const
 {
   int err;
   char buffer[1024];
@@ -523,7 +523,7 @@ PFX(Base)::getTagName( TagHandle tag_handle, std::string& name_out )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getTagSizeValues( TagHandle tag_handle, int& size_out )
+PFX(Base)::getTagSizeValues( TagHandle tag_handle, int& size_out ) const
 {
   int err;
   PFX(_getTagSizeValues)( mInstance, tag_handle, &size_out, &err );
@@ -531,7 +531,7 @@ PFX(Base)::getTagSizeValues( TagHandle tag_handle, int& size_out )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getTagSizeBytes( TagHandle tag_handle, int& size_out )
+PFX(Base)::getTagSizeBytes( TagHandle tag_handle, int& size_out ) const
 {
   int err;
   PFX(_getTagSizeBytes)( mInstance, tag_handle, &size_out, &err );
@@ -539,7 +539,7 @@ PFX(Base)::getTagSizeBytes( TagHandle tag_handle, int& size_out )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getTagHandle( const char* name, TagHandle& handle_out )
+PFX(Base)::getTagHandle( const char* name, TagHandle& handle_out ) const
 {
   int err;
   PFX(_getTagHandle)( mInstance, name, &handle_out, &err, strlen(name) );
@@ -547,7 +547,7 @@ PFX(Base)::getTagHandle( const char* name, TagHandle& handle_out )
 }
 
 inline PFX(Base)::Error
-PFX(Base)::getTagType( TagHandle tag_handle, TagValueType& type_out )
+PFX(Base)::getTagType( TagHandle tag_handle, TagValueType& type_out ) const
 {
   int err, result;
   PFX(_getTagType)( mInstance, tag_handle, &result, &err );
@@ -613,7 +613,7 @@ PFX(Base)::setEntSetESHData( EntitySetHandle set_handle,
 inline PFX(Base)::Error
 PFX(Base)::getEntSetData( EntitySetHandle set_handle,
                           TagHandle tag_handle,
-                          void* tag_value_out )
+                          void* tag_value_out ) const
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getEntSetData)( mInstance, set_handle, tag_handle, 
@@ -624,7 +624,7 @@ PFX(Base)::getEntSetData( EntitySetHandle set_handle,
 inline PFX(Base)::Error
 PFX(Base)::getEntSetIntData( EntitySetHandle set_handle,
                              TagHandle tag_handle,
-                             int& value_out )
+                             int& value_out ) const
 {
   int err;
   PFX(_getEntSetIntData)( mInstance, set_handle, tag_handle, &value_out, &err );
@@ -634,7 +634,7 @@ PFX(Base)::getEntSetIntData( EntitySetHandle set_handle,
 inline PFX(Base)::Error
 PFX(Base)::getEntSetDblData( EntitySetHandle set_handle,
                              TagHandle tag_handle,
-                             double& value_out )
+                             double& value_out ) const
 {
   int err;
   PFX(_getEntSetDblData)( mInstance, set_handle, tag_handle, &value_out, &err );
@@ -644,7 +644,7 @@ PFX(Base)::getEntSetDblData( EntitySetHandle set_handle,
 inline PFX(Base)::Error
 PFX(Base)::getEntSetEHData( EntitySetHandle set_handle,
                             TagHandle tag_handle,
-                            EntityHandle& value_out )
+                            EntityHandle& value_out ) const
 
 {
   int err;
@@ -655,7 +655,7 @@ PFX(Base)::getEntSetEHData( EntitySetHandle set_handle,
 inline PFX(Base)::Error
 PFX(Base)::getEntSetESHData( EntitySetHandle set_handle,
                              TagHandle tag_handle,
-                             EntitySetHandle& value_out )
+                             EntitySetHandle& value_out ) const
 
 {
   int err;
@@ -665,7 +665,7 @@ PFX(Base)::getEntSetESHData( EntitySetHandle set_handle,
 
 inline PFX(Base)::Error
 PFX(Base)::getAllEntSetTags( EntitySetHandle set,
-                         std::vector<TagHandle>& tags_out )
+                         std::vector<TagHandle>& tags_out ) const
 {
   if (tags_out.capacity() == 0)
     tags_out.resize( 32 );
@@ -688,7 +688,7 @@ PFX(Base)::getAllEntSetTags( EntitySetHandle set,
 
 inline PFX(Base)::Error
 PFX(Base)::getAllTags( EntityHandle entity,
-                   std::vector<TagHandle>& tags_out )
+                   std::vector<TagHandle>& tags_out ) const
                                
 {
   if (tags_out.capacity() == 0)
@@ -739,7 +739,7 @@ inline PFX(Base)::Error
 PFX(Base)::getArrData( const EntityHandle* entity_handles,
                        int entity_handles_size,
                        TagHandle tag_handle,
-                       void* tag_values_out )
+                       void* tag_values_out ) const
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
@@ -751,7 +751,7 @@ inline PFX(Base)::Error
 PFX(Base)::getIntArrData( const EntityHandle* entity_handles,
                           int entity_handles_size,
                           TagHandle tag_handle,
-                          int* tag_values_out )
+                          int* tag_values_out ) const
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getIntArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
@@ -763,7 +763,7 @@ inline PFX(Base)::Error
 PFX(Base)::getDblArrData( const EntityHandle* entity_handles,
                           int entity_handles_size,
                           TagHandle tag_handle,
-                          double* tag_values_out )
+                          double* tag_values_out ) const
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getDblArrData)( mInstance, entity_handles, entity_handles_size, tag_handle, 
@@ -775,7 +775,7 @@ inline PFX(Base)::Error
 PFX(Base)::getEHArrData( const EntityHandle* entity_handles,
                          int entity_handles_size,
                          TagHandle tag_handle,
-                         EntityHandle* tag_values_out )
+                         EntityHandle* tag_values_out ) const
 
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
@@ -788,7 +788,7 @@ inline PFX(Base)::Error
 PFX(Base)::getESHArrData( const EntityHandle* entity_handles,
                           int entity_handles_size,
                           TagHandle tag_handle,
-                          EntitySetHandle* tag_values_out )
+                          EntitySetHandle* tag_values_out ) const
 
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
@@ -923,7 +923,7 @@ PFX(Base)::setESHData( EntityHandle entity_handle,
 inline PFX(Base)::Error
 PFX(Base)::getData( EntityHandle entity_handle,
                     TagHandle tag_handle,
-                    void* tag_value_out )
+                    void* tag_value_out ) const
 {
   int err, alloc = std::numeric_limits<int>::max(), size;
   PFX(_getData)( mInstance, entity_handle, tag_handle, 
@@ -934,7 +934,7 @@ PFX(Base)::getData( EntityHandle entity_handle,
 inline PFX(Base)::Error
 PFX(Base)::getIntData( EntityHandle entity_handle,
                        TagHandle tag_handle,
-                       int& value_out )
+                       int& value_out ) const
 {
   int err;
   PFX(_getIntData)( mInstance, entity_handle, tag_handle, &value_out, &err );
@@ -944,7 +944,7 @@ PFX(Base)::getIntData( EntityHandle entity_handle,
 inline PFX(Base)::Error
 PFX(Base)::getDblData( EntityHandle entity_handle,
                        TagHandle tag_handle,
-                       double& value_out )
+                       double& value_out ) const
 {
   int err;
   PFX(_getDblData)( mInstance, entity_handle, tag_handle, &value_out, &err );
@@ -954,7 +954,7 @@ PFX(Base)::getDblData( EntityHandle entity_handle,
 inline PFX(Base)::Error
 PFX(Base)::getEHData( EntityHandle entity_handle,
                       TagHandle tag_handle,
-                      EntityHandle& value_out )
+                      EntityHandle& value_out ) const
 {
   int err;
   PFX(_getEHData)( mInstance, entity_handle, tag_handle, &value_out, &err );
@@ -964,7 +964,7 @@ PFX(Base)::getEHData( EntityHandle entity_handle,
 inline PFX(Base)::Error
 PFX(Base)::getESHData( EntityHandle entity_handle,
                        TagHandle tag_handle,
-                       EntitySetHandle& value_out )
+                       EntitySetHandle& value_out ) const
 {
   int err;
   PFX(_getESHData)( mInstance, entity_handle, tag_handle, &value_out, &err );

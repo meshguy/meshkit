@@ -49,34 +49,34 @@ class iMesh : public iMeshBase {
                        const char* file_name,
                        const char* options = 0 );
     
-    inline int getGeometricDimension();
+    inline int getGeometricDimension() const;
     
     inline Error setGeometricDimension( int dim );
     
-    inline StorageOrder getDfltStorage();
+    inline StorageOrder getDfltStorage() const;
     
     typedef AdjacencyCost (*AdjTableType)[4];
     inline const AdjTableType getAdjTable();
     
-    inline Error getNumOfType( EntitySetHandle set, EntityType type, int& count_out  );
+    inline Error getNumOfType( EntitySetHandle set, EntityType type, int& count_out  ) const;
     
-    inline Error getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out );
+    inline Error getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out ) const;
     
     inline bool optimize();
     
     inline Error getEntities( EntitySetHandle set,
                               EntityType type,
                               EntityTopology topo,
-                              std::vector<EntityHandle>& entities_out );
+                              std::vector<EntityHandle>& entities_out ) const;
     
-    inline Error getVtxCoord( EntityHandle vertex, double& x, double& y, double& z );
+    inline Error getVtxCoord( EntityHandle vertex, double& x, double& y, double& z ) const;
     inline Error setVtxCoord( EntityHandle vertex, double x, double y, double z );
     
     
     inline Error getVtxArrCoords( const EntityHandle* vertex_handles,
                                   int vertex_handles_size,
                                   StorageOrder storage_order,
-                                  double* coords_out );
+                                  double* coords_out ) const;
     
     inline Error setVtxArrCoords( const EntityHandle* vertex_handles,
                                   int vertex_handles_size,
@@ -109,7 +109,7 @@ class iMesh : public iMeshBase {
                                  EntityTopology topo_requestor,
                                  EntityType type_requested,
                                  std::vector<EntityHandle>& adj_entity_handles,
-                                 std::vector<int>& offset );
+                                 std::vector<int>& offset ) const;
     
 /** \class EntArrIter iMesh.hpp "iMesh.hpp"
  * \brief Class for iterating over %iMesh entity arrays.
@@ -155,35 +155,35 @@ class iMesh : public iMeshBase {
                                  int requested_array_size,
                                  EntArrIter& iter );
     
-    inline Error getEntTopo( EntityHandle handle, EntityTopology& topo_out );
+    inline Error getEntTopo( EntityHandle handle, EntityTopology& topo_out ) const;
     inline Error getEntArrTopo( const EntityHandle* entity_handles,
                                 int entity_handles_Size,
-                                EntityTopology* topos_out );
+                                EntityTopology* topos_out ) const;
      
-    inline Error getEntType( EntityHandle handle, EntityType& type_out );
+    inline Error getEntType( EntityHandle handle, EntityType& type_out ) const;
     inline Error getEntArrType( const EntityHandle* entity_handles,
                                 int entity_handles_Size,
-                                EntityType* types_out );
+                                EntityType* types_out ) const;
     
     inline Error getEntAdj( EntityHandle handle, 
                             EntityType type_requested,
-                            std::vector<EntityHandle>& adj_entities_out );                   
+                            std::vector<EntityHandle>& adj_entities_out ) const;                   
     inline Error getEntArrAdj( const EntityHandle* entity_handles,
                                int entity_handles_size,
                                EntityType type_requested,
                                std::vector<EntityHandle>& adjacent_entity_handles_out,
-                               int* offsets_out );
+                               int* offsets_out ) const ;
                        
    inline Error getEnt2ndAdj( EntityHandle handle, 
                               EntityType bridge_entity_type,
                               EntityType type_requested,
-                              std::vector<EntityHandle> adj_entities_out );                   
+                              std::vector<EntityHandle> adj_entities_out ) const;                   
    inline Error getEntArr2ndAdj( const EntityHandle* entity_handles,
                                   int entity_handles_size,
                                   EntityType order_key,
                                   EntityType type_requested,
                                   std::vector<EntityHandle>& adjacent_entity_handles_out,
-                                  int* offsets_out );
+                                  int* offsets_out ) const;
 
     inline Error getAdjEntIndices( EntitySetHandle set,
                                    EntityType requestor_type,
@@ -192,7 +192,7 @@ class iMesh : public iMeshBase {
                                    std::vector<EntityHandle>& entity_handles_out,
                                    std::vector<EntityHandle>& adj_entity_handles_out,
                                    std::vector<int>& adj_entity_indices_out,
-                                   std::vector<int>& offsets_out );
+                                   std::vector<int>& offsets_out ) const;
     
   private:
     bool iMeshInstanceOwner;
@@ -282,7 +282,7 @@ iMesh::save( EntitySetHandle set,
 
 
 inline int 
-iMesh::getGeometricDimension()
+iMesh::getGeometricDimension() const
 {
   int err, result;
   iMesh_getGeometricDimension( mInstance, &result, &err );
@@ -299,7 +299,7 @@ iMesh::setGeometricDimension( int dim )
 }
 
 inline iMesh::StorageOrder 
-iMesh::getDfltStorage()
+iMesh::getDfltStorage() const
 {
   int err, order;
   iMesh_getDfltStorage( mInstance, &order, &err );
@@ -307,13 +307,13 @@ iMesh::getDfltStorage()
 }
 
 inline const iMesh::AdjTableType
-iMesh::getAdjTable()
+iMesh::getAdjTable() 
 {
   return (iBase_SUCCESS == adjTableErr) ? adjTable : 0;
 }
   
 inline iMesh::Error
-iMesh::getNumOfType( EntitySetHandle set, EntityType type, int& count_out  )
+iMesh::getNumOfType( EntitySetHandle set, EntityType type, int& count_out  ) const
 {
   int err;
   iMesh_getNumOfType( mInstance, set, type, &count_out, &err );
@@ -321,7 +321,7 @@ iMesh::getNumOfType( EntitySetHandle set, EntityType type, int& count_out  )
 }
 
 inline iMesh::Error
-iMesh::getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out )
+iMesh::getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out ) const
 {
   int err;
   iMesh_getNumOfTopo( mInstance, set, topo, &count_out, &err );
@@ -340,7 +340,7 @@ inline iMesh::Error
 iMesh::getEntities( EntitySetHandle set,
                     EntityType type,
                     EntityTopology topo,
-                    std::vector<EntityHandle>& entities_out )
+                    std::vector<EntityHandle>& entities_out ) const
 {
     // if input vect has no allocated space, allocate some so
     // we don't accidentally ask the impl to allocate an array
@@ -374,7 +374,7 @@ iMesh::getEntities( EntitySetHandle set,
 }
 
 inline iMesh::Error
-iMesh::getVtxCoord( EntityHandle vertex, double& x, double& y, double& z )
+iMesh::getVtxCoord( EntityHandle vertex, double& x, double& y, double& z ) const
 {
   int err;
   iMesh_getVtxCoord( mInstance, vertex, &x, &y, &z, &err );
@@ -394,7 +394,7 @@ inline iMesh::Error
 iMesh::getVtxArrCoords( const EntityHandle* vertex_handles,
                         int vertex_handles_size,
                         StorageOrder storage_order,
-                        double* coords_out )
+                        double* coords_out ) const
 {
   int err, alloc = 3*vertex_handles_size, junk, order = storage_order;
   iMesh_getVtxArrCoords( mInstance, vertex_handles, vertex_handles_size,
@@ -505,7 +505,7 @@ iMesh::getAdjEntities( EntitySetHandle set,
                        EntityTopology topo_requestor,
                        EntityType type_requested,
                        std::vector<EntityHandle>& adj_entity_handles,
-                       std::vector<int>& offset )
+                       std::vector<int>& offset ) const
 {
   std::vector<EntityHandle> entities;
   Error err = getEntities( set, type_requestor, topo_requestor, entities );
@@ -603,7 +603,7 @@ iMesh::EntIter::reset()
 }
 
 inline iMesh::Error
-iMesh::getEntTopo( EntityHandle handle, EntityTopology& topo_out )
+iMesh::getEntTopo( EntityHandle handle, EntityTopology& topo_out ) const
 {
   int err, result;
   iMesh_getEntTopo( mInstance, handle, &result, &err );
@@ -614,7 +614,7 @@ iMesh::getEntTopo( EntityHandle handle, EntityTopology& topo_out )
 inline iMesh::Error
 iMesh::getEntArrTopo( const EntityHandle* entity_handles,
                       int entity_handles_size,
-                      EntityTopology* topos_out )
+                      EntityTopology* topos_out ) const 
 {
   int err, alloc = entity_handles_size, junk, *ptr;
   std::vector<int> storage;
@@ -636,7 +636,7 @@ iMesh::getEntArrTopo( const EntityHandle* entity_handles,
 }
  
 inline iMesh::Error
-iMesh::getEntType( EntityHandle handle, EntityType& type_out )
+iMesh::getEntType( EntityHandle handle, EntityType& type_out ) const
 {
   int err, result;
   iMesh_getEntType( mInstance, handle, &result, &err );
@@ -647,7 +647,7 @@ iMesh::getEntType( EntityHandle handle, EntityType& type_out )
 inline iMesh::Error
 iMesh::getEntArrType( const EntityHandle* entity_handles,
                       int entity_handles_size,
-                      EntityType* types_out )
+                      EntityType* types_out ) const
 {
   int err, alloc = entity_handles_size, junk, *ptr;
   std::vector<int> storage;
@@ -671,7 +671,7 @@ iMesh::getEntArrType( const EntityHandle* entity_handles,
 inline iMesh::Error
 iMesh::getEntAdj( EntityHandle handle, 
                   EntityType type_requested,
-                  std::vector<EntityHandle>& adj_entities_out )                  
+                  std::vector<EntityHandle>& adj_entities_out ) const
 {
   if (adj_entities_out.capacity() == 0) 
     adj_entities_out.resize(12);
@@ -699,7 +699,7 @@ iMesh::getEntArrAdj( const EntityHandle* entity_handles,
                            int entity_handles_size,
                            EntityType type_requested,
                            std::vector<EntityHandle>& adj_entities_out,
-                           int* offsets_out )
+                           int* offsets_out ) const
 {
   if (adj_entities_out.capacity() == 0) 
     adj_entities_out.resize(12*entity_handles_size);
@@ -734,7 +734,7 @@ inline iMesh::Error
 iMesh::getEnt2ndAdj( EntityHandle handle, 
                      EntityType bridge_entity_type,
                      EntityType type_requested,
-                     std::vector<EntityHandle> adj_entities_out )                  
+                     std::vector<EntityHandle> adj_entities_out ) const
 {
   if (adj_entities_out.capacity() == 0) 
     adj_entities_out.resize(12);
@@ -763,7 +763,7 @@ iMesh::getEntArr2ndAdj( const EntityHandle* entity_handles,
                         EntityType order_key,
                         EntityType type_requested,
                         std::vector<EntityHandle>& adj_entities_out,
-                        int* offsets_out )
+                        int* offsets_out ) const
 {
   if (adj_entities_out.capacity() == 0) 
     adj_entities_out.resize(12*entity_handles_size);
@@ -802,7 +802,7 @@ iMesh::getAdjEntIndices( EntitySetHandle set,
                          std::vector<EntityHandle>& entities_out,
                          std::vector<EntityHandle>& adj_entities_out,
                          std::vector<int>& adj_indices_out,
-                         std::vector<int>& offsets_out )
+                         std::vector<int>& offsets_out ) const
 {
     // if input vects have no allocated space, allocate some so
     // we don't accidentally ask the impl to allocate an array
