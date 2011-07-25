@@ -71,7 +71,7 @@ MKCore::MKCore(iGeom *igeom, moab::Interface *moab, iMesh *imesh, iRel *irel,
     // by default that's NULL
   rootNode = new NoOp(this);
   leafNode = new NoOp(this);
-  mkGraph.addArc(rootNode->get_node(), leafNode->get_node());
+  //mkGraph.addArc(rootNode->get_node(), leafNode->get_node());
 
   init(construct_missing_ifaces);
   
