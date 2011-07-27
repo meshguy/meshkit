@@ -3,6 +3,8 @@
 #include "lemon/core.h"
 #include "lemon/adaptors.h"
 #include "lemon/connectivity.h"
+#include "lemon/math.h"
+#include "lemon/graph_to_eps.h"
 
 namespace MeshKit 
 {
@@ -52,6 +54,35 @@ void MKGraph::print_graph()
     std::cout << "Arc: "<< mkGraph.id(ait)<< " : "<< nodeMap[s]->get_name() << "(" <<  mkGraph.id(s)<< ") - " <<
      nodeMap[t]->get_name() << "(" <<  mkGraph.id(t)<< ")\n";
   }
+
+  typedef lemon::dim2::Point<int> Point;
+  lemon::ListDigraph::NodeMap< Point > coords(mkGraph);
+
+  lemon::Bfs<lemon::ListDigraph> bfs(mkGraph);
+  bfs.init();
+  bfs.addSource(rootNode->get_node());
+
+  lemon::ListDigraph::NodeMap<std::string> label(mkGraph);
+
+  while (!bfs.emptyQueue()) {
+    lemon::ListDigraph::Node nd = bfs.processNextNode();
+    //assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
+    std::cout << "BFS_Node, distance: " << bfs.dist(nd) << "\n ";
+    coords[nd]=Point(10*bfs.dist(nd), 10*mkGraph.id(nd));
+    if (nd == rootNode->get_node())
+      label[nd]="Root";
+    else
+    {
+      if (nd == leafNode->get_node())
+        label[nd] = "Leaf";
+      else
+        label[nd] = nodeMap[nd]->get_name();
+    }
+  }
+
+  graphToEps(mkGraph, "graph.eps").coords(coords).nodeTexts(label).
+      nodeTextSize(3).drawArrows().run();
+
 }
 
 void MKGraph::print_bfs_graph() 
