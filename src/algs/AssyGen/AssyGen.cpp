@@ -46,10 +46,7 @@ namespace MeshKit
 
   void AssyGen::setup_this()
   {
-  }
 
-  void AssyGen::execute_this()
-  {
     // start the timer 
     CClock Timer;
     clock_t sTime = clock();
@@ -76,6 +73,10 @@ namespace MeshKit
 
     std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
 	      << " seconds" << std::endl; 
+  }
+
+  void AssyGen::execute_this()
+  {
   }
 
   void AssyGen::PrepareIO (int argc, char *argv[], std::string  TestDir)
