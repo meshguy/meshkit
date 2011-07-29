@@ -15,12 +15,11 @@
 
 #include <boost/foreach.hpp>
 
-#include <iGeom.h>
-#include <iMesh.h>
-#include <iRel.h>
+#include <meshkit/iGeom.hpp>
+#include <meshkit/iMesh.hpp>
+#include <meshkit/iRel.hpp>
 #include <MBCN.hpp>
 
-#include "SimpleArray.hpp"
 #include "GEdge.h"
 #include "GFace.h"
 #include "tfiblend.h"
@@ -38,7 +37,7 @@
 //             If the geometry is available then the nodes are projected on the
 //             underlying edges and faces.
 //
-//             If the geometric face has structured mesh, then TFI is used to 
+//             If the geometric face has structured mesh, then TFI is used to
 //             modify the mesh and generation of higher order nodes.
 //
 //             If the geometric region has structured mesh, then TFI is used
@@ -54,11 +53,11 @@
 //
 // Notes for Developers:
 //
-//             
+//
 // Developed by:  Chaman Singh Verma
 //                Argonne National Lab. IL, Chicago.
 // Date:          10th August, 2009.
-// 
+//
 // Dependencies:  MOAB, CGM, and Boost Libraries.
 //
 //
@@ -66,106 +65,110 @@
 
 class GFace;
 
-class SpectralElements
-{
+class SpectralElements {
 public:
 
-    static void gauss_linear_nodes(int N, vector<double> &x);
-    static void gauss_lobatto_nodes(int n, vector<double> &x);
-    static void bilinear_weights(double xi, double eta, vector<double> &weight);
-    static void trilinear_weights( double x, double y, double z, vector<double> &weight);
-    static double linear_interpolation( const vector<double> &x, const vector<double> &w);
-    static int canonical_quad_coords( const vector<Point2D> &uvCorners, const Point2D &qPoint,
-                                      Point2D &xy);
+     static void gauss_linear_nodes(int N, vector<double> &x);
+     static void gauss_lobatto_nodes(int n, vector<double> &x);
+     static void bilinear_weights(double xi, double eta, vector<double> &weight);
+     static void trilinear_weights( double x, double y, double z, vector<double> &weight);
+     static double linear_interpolation( const vector<double> &x, const vector<double> &w);
+     static int canonical_quad_coords( const vector<Point2D> &uvCorners, const Point2D &qPoint,
+                                       Point2D &xy);
 
-    SpectralElements();
+     SpectralElements();
 
 //  Brick 20 is special subproblem, which can be done much faster than the general
 //  solution.
-    void brick20(iMesh_Instance &m);
+     void brick20(iMesh *m);
 
-    void brick20( iMesh_Instance &m, 
-                  const iGeom_Instance &g, const iRel_Instance  &a, const iRel_RelationHandle &r);
+     void brick20( iMesh *m,
+                   iGeom *g, iRel *r, iRel::PairHandle *a);
 
 //  Generate higher order elements of a given order without geometry.
-    void generate( iMesh_Instance n, int order );
+     void generate( iMesh *n, int order );
 
 //  Generate higher order elements and project on the underlying geometry.
-    void generate( iMesh_Instance m, int order,
-                   iGeom_Instance g, iRel_Instance a, iRel_RelationHandle r);
-                      
-//  Should a monolithic hexelements be created at the end ?
-    void create_subelements( bool b);
+     void generate( iMesh *m, int order,
+                    iGeom *g, iRel *r, iRel::PairHandle *a);
 
-//  Save the mesh. At present, we create a single monolithic hex elements out of 
+//  Should a monolithic hexelements be created at the end ?
+     void create_subelements( bool b);
+
+//  Save the mesh. At present, we create a single monolithic hex elements out of
 //  higher order elements. The reason is that the most visualization software don't
 //  support higher order elements.
-    void saveAs(const string &s);
+     void saveAs(const string &s);
 
 private:
 
-     struct EntityNodes
-     {
-        EntityNodes() { projected = 0; }
+     struct EntityNodes {
+          EntityNodes() {
+               projected = 0;
+          }
 
-        void add( iBase_EntityHandle &h) { nodes.push_back(h); }
-        void clear() { nodes.clear(); }
+          void add( iBase_EntityHandle &h) {
+               nodes.push_back(h);
+          }
+          void clear() {
+               nodes.clear();
+          }
 
-        int projected;
-        vector<iBase_EntityHandle> nodes;
+          int projected;
+          vector<iBase_EntityHandle> nodes;
      };
 
-    iMesh_Instance mesh;
-    iGeom_Instance geom;
-    iRel_Instance  assoc;
-    iRel_RelationHandle  rel;
+     iMesh  *mesh;
+     iGeom  *geom;
+     iRel   *rel;
+     iRel::PairHandle  *relPair;
 
-    map<iBase_EntityHandle, int>  structured_mesh;
+     map<iBase_EntityHandle, int>  structured_mesh;
 
-    int  subCellDim[3];
-    bool hasGeometry;
-    bool subElements;
-    bool hasSubStructuredGrid;
+     int  subCellDim[3];
+     bool hasGeometry;
+     bool subElements;
+     bool hasSubStructuredGrid;
 
-    iBase_TagHandle idtag;
-    iBase_TagHandle horder_tag;
-    iBase_EntitySetHandle meshRootSet;
+     iBase_TagHandle idtag;
+     iBase_TagHandle horder_tag;
+     iBase_EntitySetHandle meshRootSet;
 
-    vector<double> gllnodes;
+     vector<double> gllnodes;
 
-    std::map<iBase_EntityHandle, EntityNodes> entityNodesMap;
+     std::map<iBase_EntityHandle, EntityNodes> entityNodesMap;
 
-    void init();
+     void init();
 
-    void project_on_edges( );
-    void project_on_faces( );
+     void project_on_edges( );
+     void project_on_faces( );
 
-    void brick20();
+     void brick20();
 
-    void linear_edge( iBase_EntityHandle h,   int numPoints);
-    void bilinear_face( iBase_EntityHandle h, int numPoints);
-    void trilinear_cell( iBase_EntityHandle h,int numPoints);
+     void linear_edge( iBase_EntityHandle h,   int numPoints);
+     void bilinear_face( iBase_EntityHandle h, int numPoints);
+     void trilinear_cell( iBase_EntityHandle h,int numPoints);
 
-    void project_on_quad_face( GFace &f, iBase_EntityHandle &mHandle);
+     void project_on_quad_face( GFace &f, iBase_EntityHandle &mHandle);
 
-    void   linear_interpolation( iBase_EntityHandle h, double xi, double eta, double zeta,
-                       double &x, double &y, double &z);
-    void arrange_subcell_nodes(iBase_EntityHandle h, vector<iBase_EntityHandle> &n);
+     void   linear_interpolation( iBase_EntityHandle h, double xi, double eta, double zeta,
+                                  double &x, double &y, double &z);
+     void arrange_subcell_nodes(iBase_EntityHandle h, vector<iBase_EntityHandle> &n);
 
-    int  getIndex( int *dim, int i, int j, int k);
+     int  getIndex( int *dim, int i, int j, int k);
 
-    int check_edge_discretization();
+     int check_edge_discretization();
 
-    void arrange_brick20_nodes(iBase_EntityHandle h, vector<iBase_EntityHandle> &nodes);
+     void arrange_brick20_nodes(iBase_EntityHandle h, vector<iBase_EntityHandle> &nodes);
 
-    bool hasStructuredMesh2D(iBase_EntityHandle gface) const;
-    bool hasStructuredMesh3D(iBase_EntityHandle gcell) const;
+     bool hasStructuredMesh2D(iBase_EntityHandle gface) const;
+     bool hasStructuredMesh3D(iBase_EntityHandle gcell) const;
 
-    void setTFIMesh();
+     void setTFIMesh();
 
-    int  matching_node( const vector<Point3D> &p, const Point3D &q);
-    void get_subcells(iBase_EntityHandle handle, vector<int> &connect);
-    void get_subedges(iBase_EntityHandle handle, vector<int> &connect);
+     int  matching_node( const vector<Point3D> &p, const Point3D &q);
+     void get_subcells(iBase_EntityHandle handle, vector<int> &connect);
+     void get_subedges(iBase_EntityHandle handle, vector<int> &connect);
 };
 
 #endif
