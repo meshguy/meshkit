@@ -243,22 +243,6 @@ void GFace::delete_kdtree()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Point2D GFace::getUVRange(int i) const
-{
-     assert(kdtree);
-     static Point2D p2d;
-     if (i == 0) {
-          p2d[0] = umin;
-          p2d[1] = umax;
-          return p2d;
-     }
-
-     p2d[0] = vmin;
-     p2d[1] = vmax;
-     return p2d;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 
 double GFace::getGeodesicLength(const Point2D &u0, const Point2D &uN) const
 {
@@ -303,7 +287,7 @@ double GFace::getGeodesicLength(const Point2D &u0, const Point2D &uN) const
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Vec3D GFace::getNormal(const Point2D &uv) const
+int GFace::getNormal(const Point2D &uv, Vec3D &avec) const
 {
      assert(kdtree);
 
@@ -314,16 +298,15 @@ Vec3D GFace::getNormal(const Point2D &uv) const
 
      double mag = 1.0 / sqrt(nx * nx + ny * ny + nz * nz);
 
-     Vec3D avec;
      avec[0] = nx*mag;
      avec[1] = ny*mag;
      avec[2] = nz*mag;
 
-     return avec;
+     return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-std::pair<Vec3D, Vec3D> GFace::getFirstDer(const Point2D &uv) const
+int GFace::getFirstDer(const Point2D &uv, Vec3D &du, Vec3D &dv) const
 {
      int err;
      vector<double> uDeriv, vDeriv;
@@ -347,29 +330,20 @@ std::pair<Vec3D, Vec3D> GFace::getFirstDer(const Point2D &uv) const
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Point3D GFace::getXYZCoords(const Point2D &uv) const
+int GFace::getXYZCoords(const Point2D &uv, Point3D &p3d) const
 {
-     Point3D p3d;
      int err;
-
-     double x, y, z;
-     err = geom->getEntUVtoXYZ(gFaceHandle, uv[0], uv[1], x, y, z);
+     err = geom->getEntUVtoXYZ(gFaceHandle, uv[0], uv[1], p3d[0], p3d[1], p3d[2] );
      assert(!err);
-
-     p3d[0] = x;
-     p3d[1] = y;
-     p3d[2] = z;
-
-     return p3d;
+     return err;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Point2D GFace::getUVCoords(const Point3D &xyz) const
+int GFace::getUVCoords(const Point3D &xyz, Point2D &uv) const
 {
      assert(kdtree);
 
-     Point2D uv;
      double tol = 1.0E-06;
      int err;
      double x, y, z, u, v, dx, dy, dz, derr;
@@ -401,7 +375,7 @@ Point2D GFace::getUVCoords(const Point3D &xyz) const
      if (derr < tol * tol) {
           uv[0] = u;
           uv[1] = v;
-          return uv;
+          return 0;
      }
 
      double queryPoint[3], eps = 0.0;
@@ -440,17 +414,16 @@ Point2D GFace::getUVCoords(const Point3D &xyz) const
 
      uv[0] = u;
      uv[1] = v;
-     return uv;
+     return 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Point2D GFace::getUVCoords(const Point3D &xyz, const Point2D &nearto) const
+int GFace::getUVCoords(const Point3D &xyz, const Point2D &nearto, Point2D &uv) const
 {
      assert(kdtree);
 
-     Point2D uv;
      double tol = 1.0E-06;
      int err;
      double x, y, z, u, v, dx, dy, dz, derr;
@@ -484,7 +457,7 @@ Point2D GFace::getUVCoords(const Point3D &xyz, const Point2D &nearto) const
      if (derr < tol * tol) {
           uv[0] = u;
           uv[1] = v;
-          return uv;
+          return 0;
      }
 
      assert(1);
@@ -510,7 +483,7 @@ Point2D GFace::getUVCoords(const Point3D &xyz, const Point2D &nearto) const
 
      uv[0] = u;
      uv[1] = v;
-     return uv;
+     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -518,8 +491,9 @@ Point2D GFace::getUVCoords(const Point3D &xyz, const Point2D &nearto) const
 int GFace::getUVCoords(const Point2D &uvstart, double dist, Point2D &uvguess) const
 {
      Point2D uv;
-     Point3D p0 = getXYZCoords(uvstart);
-     Point3D p1 = getXYZCoords(uvguess);
+     Point3D p0, p1;
+     getXYZCoords(uvstart, p0);
+     getXYZCoords(uvguess, p1);
 
      double dx, dy, dz, dl;
      double u = uvguess[0];
@@ -539,7 +513,7 @@ int GFace::getUVCoords(const Point2D &uvstart, double dist, Point2D &uvguess) co
           uv[0] = u;
           uv[1] = v;
 
-          p1 = getXYZCoords(uv);
+          getXYZCoords(uv, p1);
 
           if (ntrials++ == 100) {
                cout << " Warning: UV  Search failed" << endl;
@@ -556,10 +530,9 @@ int GFace::getUVCoords(const Point2D &uvstart, double dist, Point2D &uvguess) co
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Point3D GFace::getClosestPoint(const Point3D &qPoint) const
+int GFace::getClosestPoint(const Point3D &qPoint, Point3D &p3d) const
 {
      int err;
-     Point3D p3d;
      double p[3], eps = 0.0;
      double xon, yon, zon;
      double xon1, yon1, zon1;
@@ -584,7 +557,7 @@ Point3D GFace::getClosestPoint(const Point3D &qPoint) const
           p3d[0] = xon;
           p3d[1] = yon;
           p3d[2] = zon;
-          return p3d;
+          return 0;
      }
 
      cout << " Searching from k-d tree " << endl;
@@ -617,7 +590,7 @@ Point3D GFace::getClosestPoint(const Point3D &qPoint) const
      p3d[0] = xon;
      p3d[1] = yon;
      p3d[2] = zon;
-     return p3d;
+     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -700,17 +673,16 @@ void GFace::projectEdgeHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
      pnear[0] = (1 - unear) * p0[0] + unear * pN[0];
      pnear[1] = (1 - unear) * p0[1] + unear * pN[1];
      pnear[2] = (1 - unear) * p0[2] + unear * pN[2];
-     uvnear = getUVCoords(pnear);
-     uv0 = getUVCoords(p0, uvnear);
+     getUVCoords(pnear, uvnear);
+     getUVCoords(p0, uvnear, uv0);
 
      pnear[0] = (1 - unear) * pN[0] + unear * p0[0];
      pnear[1] = (1 - unear) * pN[1] + unear * p0[1];
      pnear[2] = (1 - unear) * pN[2] + unear * p0[2];
-     uvnear = getUVCoords(pnear);
-     uvN = getUVCoords(pN, uvnear);
+     getUVCoords(pnear, uvnear);
+     getUVCoords(pN, uvnear, uvN);
 
      char *tag_val = NULL;
-     int tag_val_allocated, tag_val_size;
      err = mesh->getData(mEdgeHandle, horder_tag, &tag_val);
      assert(!err);
 
@@ -733,7 +705,7 @@ void GFace::projectEdgeHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
           uv[0] = 0.5 * (1 - u) * uv0[0] + 0.5 * (1 + u) * uvN[0];
           uv[1] = 0.5 * (1 - u) * uv0[1] + 0.5 * (1 + u) * uvN[1];
 //      getUVCoords(uvnear, dl, uv);
-          pon = getXYZCoords(uv);
+          getXYZCoords(uv, pon);
           err = mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2]);
           uvnear[0] = uv[0];
           uvnear[1] = uv[1];
@@ -751,7 +723,7 @@ void GFace::projectEdgeHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
           uv[0] = 0.5 * (1 - u) * uvN[0] + 0.5 * (1 + u) * uv0[0]; // careful, u0, uN swapped
           uv[1] = 0.5 * (1 - u) * uvN[1] + 0.5 * (1 + u) * uv0[1]; // careful, u0, uN swapped
 //      getUVCoords(uvnear, dl, uv);
-          pon = getXYZCoords(uv);
+          getXYZCoords(uv, pon);
           mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2]);
           uvnear[0] = uv[0];
           uvnear[1] = uv[1];
@@ -764,7 +736,7 @@ void GFace::projectEdgeHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
           u = gllnodes[midpos + 1];
           uv[0] = 0.5 * (1 - u) * uv0[0] + 0.5 * (1 + u) * uvN[0];
           uv[1] = 0.5 * (1 - u) * uv0[1] + 0.5 * (1 + u) * uvN[1];
-          pon = getXYZCoords(uv);
+          getXYZCoords(uv, pon);
           mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2]);
      }
 }
@@ -859,48 +831,48 @@ void GFace::projectFaceHigherOrderNodes(iBase_EntityHandle mFaceHandle)
      p0     = linear_interpolation01( corners[0], corners[1], t );
      p1     = linear_interpolation01( corners[0], corners[3], t );
      pnear  = linear_interpolation01( p0, p1, 0.50);
-     uvnear = getUVCoords(pnear);
+     getUVCoords(pnear, uvnear);
 
      offset = 0;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = getUVCoords(p3d, uvnear);
+     getUVCoords(p3d, uvnear, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      p0     = linear_interpolation01( corners[1], corners[0], t );
      p1     = linear_interpolation01( corners[1], corners[2], t );
      pnear  = linear_interpolation01( p0, p1, 0.50);
-     uvnear = getUVCoords(pnear);
+     getUVCoords(pnear, uvnear);
 
      offset = nx - 1;
      currvertex = nodeHandles[offset];
      err = mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = getUVCoords(p3d, uvnear);
+     getUVCoords(p3d, uvnear, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      p0     = linear_interpolation01( corners[3], corners[2], t );
      p1     = linear_interpolation01( corners[3], corners[0], t );
      pnear  = linear_interpolation01( p0, p1, 0.50);
-     uvnear = getUVCoords(pnear);
+     getUVCoords(pnear, uvnear);
 
      offset = (ny - 1) * nx;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = getUVCoords(p3d, uvnear);
+     getUVCoords(p3d, uvnear, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      p0     = linear_interpolation01( corners[2], corners[1], t );
      p1     = linear_interpolation01( corners[2], corners[3], t );
      pnear  = linear_interpolation01( p0, p1, 0.50);
-     uvnear = getUVCoords(pnear);
+     getUVCoords(pnear, uvnear);
 
      offset = nx * ny - 1;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = getUVCoords(p3d, uvnear);
+     getUVCoords(p3d, uvnear, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
@@ -910,7 +882,7 @@ void GFace::projectFaceHigherOrderNodes(iBase_EntityHandle mFaceHandle)
           offset = i;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = getUVCoords(p3d, uvnear);
+          getUVCoords(p3d, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
           uvnear    = uv;
@@ -922,7 +894,7 @@ void GFace::projectFaceHigherOrderNodes(iBase_EntityHandle mFaceHandle)
           offset = i + (ny - 1) * nx;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = getUVCoords(p3d, uvnear);
+          getUVCoords(p3d, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
           uvnear    = uv;
@@ -934,7 +906,7 @@ void GFace::projectFaceHigherOrderNodes(iBase_EntityHandle mFaceHandle)
           offset = j*nx;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2] );
-          uv = getUVCoords(p3d, uvnear);
+          getUVCoords(p3d, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
      }
@@ -945,7 +917,7 @@ void GFace::projectFaceHigherOrderNodes(iBase_EntityHandle mFaceHandle)
           offset = j * nx + (nx - 1);
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2] );
-          uv = getUVCoords(p3d, uvnear);
+          getUVCoords(p3d, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
      }
@@ -953,12 +925,13 @@ void GFace::projectFaceHigherOrderNodes(iBase_EntityHandle mFaceHandle)
      TFIMap::blend_from_edges(u, gllnodes, gllnodes);
      TFIMap::blend_from_edges(v, gllnodes, gllnodes);
 
+     Point3D pon;
      for (int j = 1; j < ny - 1; j++) {
           for (int i = 1; i < nx - 1; i++) {
                offset = j * nx + i;
                uv[0] = u[offset];
                uv[1] = v[offset];
-               Point3D pon = getXYZCoords(uv);
+               getXYZCoords(uv, pon);
                mesh->setVtxCoord(nodeHandles[offset], pon[0], pon[1], pon[2]);
           }
      }

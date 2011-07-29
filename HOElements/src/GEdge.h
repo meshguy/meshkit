@@ -63,17 +63,17 @@ public:
 
      iBase_EntityHandle getVertex(int i) const;
 
-     Point3D getXYZCoords(double u) const;
-     Point3D getClosestPoint(const Point3D &p) const;
+     int  getXYZCoords(double u, Point3D &p) const;
+     int  getClosestPoint(const Point3D &q, Point3D &psurf) const;
+     int  getURange( Point2D &p) const;
 
-     Point2D getURange() const;
      double getUCoord(const Point3D &p) const;
      double getUCoord(const Point3D &p, double nearto) const;
      int getUCoord(double ustart, double dist, double &uguess) const;
 
-     Vec3D getNormal(double u) const;
-     Vec3D getFirstDer(double u) const;
-     Vec3D getSecondDer(double u) const;
+     int getNormal(double u, Vec3D &v) const;
+     int getFirstDer(double u, Vec3D &v) const;
+     int getSecondDer(double u, Vec3D &v) const;
 
      double getLength() const;
      double getLength(double ustart, double uend) const;
@@ -83,11 +83,11 @@ public:
      // Discretize the curve using equal parametric distance, The argument persistent = 1 will update the
      // Coordinates in the data structures also.
      bool is_u_uniformly_discretized();
-     void uniform_u_discretization(int n, vector<Point3D> &xyz, vector<double> &u, bool persistent = 0);
+     void uniform_u_discretization(int n, vector<Point3D> &xyz, vector<double> &u);
 
      // Discretize the curve using equal xyz distance
      bool is_xyz_uniformly_discretized();
-     void uniform_xyz_discretization(int n, vector<Point3D> &xyz, vector<double> &u, bool persistent = 0);
+     void uniform_xyz_discretization(int n, vector<Point3D> &xyz, vector<double> &u);
 
      void projectHigherOrderNodes(const vector<double> &gllnodes);
 
@@ -106,6 +106,7 @@ private:
      bool periodic;
      double umin, umax;
      double xmin, xmax, ymin, ymax, zmin, zmax;
+     mutable Point3D p0, p1;
 
      // Stuff for K-D tree
      int numNodes;
@@ -124,5 +125,38 @@ private:
      void build_kdtree();
      void delete_kdtree();
 };
+
+inline
+int GEdge::getURange( Point2D &p2d) const
+{
+     p2d[0] = umin;
+     p2d[1] = umax;
+
+     return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+inline
+int GEdge::getXYZCoords(double u, Point3D &p3d) const
+{
+     int err;
+     err = geom->getEntUtoXYZ(gEdgeHandle, u, p3d[0], p3d[1], p3d[2]);
+     assert(!err);
+
+     return err;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+inline
+double GEdge::getLength() const
+{
+     double measure;
+     int err = geom->measure(&gEdgeHandle, 1, &measure ); assert( !err );
+     return measure;
+}
+//////////////////////////////////////////////////////////////////////////////
 
 #endif

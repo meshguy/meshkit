@@ -40,19 +40,17 @@ public:
 
      iBase_EntityHandle getVertex(int i) const;
 
-     Point2D getUVRange(int i) const;
-
      int getUVCoords(const Point2D &uvstart, double dist, Point2D &uvguess) const;
-     Point2D getUVCoords(const Point3D &xyz) const;
-     Point2D getUVCoords(const Point3D &xyz, const Point2D &nearto) const;
+     int getUVCoords(const Point3D &xyz, Point2D &puv) const;
+     int getUVCoords(const Point3D &xyz, const Point2D &nearto, Point2D &puv) const;
 
-     Point3D getXYZCoords(const Point2D &uv) const;
-     Point3D getClosestPoint(const Point3D &xyz) const;
+     int getXYZCoords(const Point2D &uv, Point3D &xyz) const;
+     int getClosestPoint(const Point3D &xyz, Point3D &psurf) const;
 
-     Vec3D getNormal(const Point2D &uv) const;
+     int getNormal(const Point2D &uv, Vec3D &v) const;
 
-     std::pair<Vec3D, Vec3D> getFirstDer(const Point2D &uv) const;
-     Vec3D getSecondDer(const Point2D &uv) const;
+     int getFirstDer(const Point2D &uv, Vec3D &du, Vec3D &dv) const;
+     int getSecondDer(const Point2D &uv, Vec3D &v) const;
 
      double getGeodesicLength(const Point2D &u0, const Point2D &u1) const;
 
@@ -66,6 +64,7 @@ public:
      void projectFaceHigherOrderNodes(const vector<double> &gnodes);
 
 private:
+
      iGeom *geom;
      iMesh *mesh;
      iRel  *rel;

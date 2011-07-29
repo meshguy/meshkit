@@ -1105,7 +1105,7 @@ void TFIMap::blend_from_corners(vector<double> &x,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline Point3D TFIMap::CoEdge::getXYZCoords(double ur)
+inline int TFIMap::CoEdge::getXYZCoords(double ur, Point3D &p3d)
 {
      assert(ur >= 0.0 && ur <= 1.0);
 
@@ -1124,16 +1124,15 @@ inline Point3D TFIMap::CoEdge::getXYZCoords(double ur)
           break;
      }
 
-     Point3D p3d;
      geom->getEntUtoXYZ(edgeHandle, u, p3d[0], p3d[1], p3d[2]);
      assert(!err);
 
-     return p3d;
+     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline Point2D TFIMap::CoEdge::getUVCoords(double ur)
+inline int TFIMap::CoEdge::getUVCoords(double ur, Point2D &p2d)
 {
      assert(ur >= 0.0 && ur <= 1.0);
 
@@ -1156,9 +1155,9 @@ inline Point2D TFIMap::CoEdge::getUVCoords(double ur)
      err = geom->getEntUtoXYZ(edgeHandle, u, p3d[0], p3d[1], p3d[2]);
      assert(!err);
 
-     Point2D p2d = gface->getUVCoords(p3d);
+     gface->getUVCoords(p3d, p2d);
 
-     return p2d;
+     return 0;
 }
 
 
@@ -1181,8 +1180,7 @@ int TFIMap::init_coedges4()
 
      // Need iGeom Extension functions, as we need ordered facenodes
      vector<iBase_EntityHandle> facenodes;
-//    iGeom_getEntAdj_Ext(geometry, gFaceHandle, iBase_VERTEX, facenodes, &err);
-     assert(!err);
+     iGeom_getEntAdj_Ext(geom, gFaceHandle, iBase_VERTEX, facenodes);
      assert(facenodes.size() == 4);
 
      int side_no, sense;
@@ -1193,32 +1191,32 @@ int TFIMap::init_coedges4()
           GEdge::get_quad_edge_number(&facenodes[0], &edgenodes[0], side_no, sense);
           coedge[side_no].edgeHandle = faceedges[i];
           coedge[side_no].direction = sense;
-//      coedge[side_no].geometry = geom;
+          coedge[side_no].geom = geom;
      }
 
      double dl, eps = 1.0E-06;
      Point3D p1, p2;
 
-     p1 = coedge[0].getXYZCoords(0.0);
-     p2 = coedge[3].getXYZCoords(0.0);
+     coedge[0].getXYZCoords(0.0, p1);
+     coedge[3].getXYZCoords(0.0, p2);
      dl = square_length(p1, p2);
      if (dl > eps * eps)
           cout << "Warning: Mismatch at face vertex 0 " << sqrt(dl) << endl;
 
-     p1 = coedge[0].getXYZCoords(1.0);
-     p2 = coedge[1].getXYZCoords(0.0);
+     coedge[0].getXYZCoords(1.0, p1);
+     coedge[1].getXYZCoords(0.0, p2);
      dl = square_length(p1, p2);
      if (dl > eps * eps)
           cout << "Warning: Mismatch at face vertex 1 " << sqrt(dl) << endl;
 
-     p1 = coedge[1].getXYZCoords(1.0);
-     p2 = coedge[2].getXYZCoords(1.0);
+     coedge[1].getXYZCoords(1.0, p1);
+     coedge[2].getXYZCoords(1.0, p2);
      dl = square_length(p1, p2);
      if (dl > eps * eps)
           cout << "Warning: Mismatch at face vertex 2 " << sqrt(dl) << endl;
 
-     p1 = coedge[2].getXYZCoords(0.0);
-     p2 = coedge[3].getXYZCoords(1.0);
+     coedge[2].getXYZCoords(0.0, p1);
+     coedge[3].getXYZCoords(1.0, p2);
      dl = square_length(p1, p2);
      if (dl > eps * eps)
           cout << "Warning: Mismatch at face vertex 3 " << sqrt(dl) << endl;
@@ -1261,8 +1259,8 @@ int TFIMap::reconstruct_structured_mesh2d()
 
      int geom_dim;
      for (int i = 0; i < gEdges.size(); i++) {
-//        iRel_getEntSetAssociation(assoc, rel, gEdges[i], 0, &meshSet, &err);
-//        assert(!err);
+         err = relPair->getEntSetRelation(gEdges[i], 0, meshSet);
+         assert(!err);
 
           err = mesh->getEntSetIntData(meshSet, dim_tag, geom_dim );
           assert(!err);
@@ -1284,7 +1282,7 @@ int TFIMap::reconstruct_structured_mesh2d()
      }
 
      vector<iBase_EntityHandle> mFaces;
-//    iRel_getEntSetAssociation(assoc, rel, gFaceHandle, 0, &meshSet, &err);
+     err = relPair->getEntSetRelation(gFaceHandle, 0, meshSet);
      err = mesh->getEntities(meshSet, iBase_FACE, iMesh_ALL_TOPOLOGIES, mFaces);
 
      map<iBase_EntityHandle, vector<iBase_EntityHandle> > relation02Map; // Vertex->Faces Relations
@@ -1318,7 +1316,7 @@ int TFIMap::reconstruct_structured_mesh2d()
           if (relation02Map[internalNodes[i]].size() != 4) return 1;
 
      int nxedges = 0, nyedges = 0;
-//  iRel_getEntSetAssociation(assoc, rel, coedge[0].edgeHandle, 0, &meshSet, &err);
+     relPair->getEntSetRelation(coedge[0].edgeHandle, 0, meshSet);
      assert(!err);
 
      mesh->getEntSetIntData(meshSet, dim_tag, geom_dim );
@@ -1331,7 +1329,7 @@ int TFIMap::reconstruct_structured_mesh2d()
      }
 
      ny = 0;
-//  iRel_getEntSetAssociation(assoc, rel, coedge[3].edgeHandle, 0, &meshSet, &err);
+     relPair->getEntSetRelation(coedge[3].edgeHandle, 0, meshSet);
      assert(!err);
      err = mesh->getEntSetIntData(meshSet, dim_tag, geom_dim );
      assert(!err);
@@ -1342,7 +1340,7 @@ int TFIMap::reconstruct_structured_mesh2d()
           nyedges = mEdges.size();
      }
 
-//  iRel_getEntSetAssociation(assoc, rel, coedge[1].edgeHandle, 0, &meshSet, &err);
+     err = relPair->getEntSetRelation(coedge[1].edgeHandle, 0, meshSet);
      assert(!err);
      err = mesh->getEntSetIntData(meshSet, dim_tag, geom_dim);
      assert(!err);
@@ -1356,7 +1354,7 @@ int TFIMap::reconstruct_structured_mesh2d()
           }
      }
 
-//  iRel_getEntSetAssociation(assoc, rel, coedge[2].edgeHandle, 0, &meshSet, &err);
+     err = relPair->getEntSetRelation(coedge[2].edgeHandle, 0, meshSet);
      assert(!err);
      err = mesh->getEntSetIntData(meshSet, dim_tag, geom_dim);
      assert(!err);
@@ -1381,9 +1379,9 @@ int TFIMap::reconstruct_structured_mesh2d()
      // this cann't be tested (in general ) combinatorically.
      //
      vector<iBase_EntityHandle> gNodes;
-//  iGeom_getEntAdj_Ext(geometry, gFaceHandle, iBase_VERTEX, gNodes, &err);
+     iGeom_getEntAdj_Ext(geom, gFaceHandle, iBase_VERTEX, gNodes);
 
-//  iRel_getEntSetAssociation(assoc, rel, coedge[0].edgeHandle, 0, &meshSet, &err);
+     err = relPair->getEntSetRelation(coedge[0].edgeHandle, 0, meshSet);
      mEdges.clear();
 
      err = mesh->getEntities(meshSet, iBase_EDGE, iMesh_ALL_TOPOLOGIES, mEdges);
@@ -1538,8 +1536,10 @@ void TFIMap::project_edge_u(iBase_EntityHandle mEdgeHandle, int dir, double u0, 
      iBase_EntityHandle *nodesOnEdge = hopoints->nodeHandles;
      int numHPoints = hopoints->nx;
 
-     Point2D uv0s = coedge[3].getUVCoords(s);
-     Point2D uv1s = coedge[1].getUVCoords(s);
+     Point2D uv0s, uv1s;
+
+     coedge[3].getUVCoords(s, uv0s);
+     coedge[1].getUVCoords(s, uv1s);
 
      double u00, u10, u11, u01, ur0, u1s, ur1, u0s;
      double v00, v10, v11, v01, vr0, v1s, vr1, v0s;
@@ -1560,7 +1560,7 @@ void TFIMap::project_edge_u(iBase_EntityHandle mEdgeHandle, int dir, double u0, 
 
      double u, r;
      Point3D pon;
-     Point2D uv;
+     Point2D uv, uvr0, uvr1;
 
      iBase_EntityHandle currvertex;
 
@@ -1568,8 +1568,8 @@ void TFIMap::project_edge_u(iBase_EntityHandle mEdgeHandle, int dir, double u0, 
           u = gllnodes[i];
           r = 0.5 * (1 - u) * u0 + 0.5 * (1 + u) * uN;
 
-          Point2D uvr0 = coedge[0].getUVCoords(r);
-          Point2D uvr1 = coedge[2].getUVCoords(r);
+          coedge[0].getUVCoords(r, uvr0);
+          coedge[2].getUVCoords(r, uvr1);
 
           ur0 = uvr0[0];
           ur1 = uvr1[0];
@@ -1584,7 +1584,7 @@ void TFIMap::project_edge_u(iBase_EntityHandle mEdgeHandle, int dir, double u0, 
           else
                currvertex = nodesOnEdge[numHPoints - 1 - i];
 
-          pon = gface->getXYZCoords(uv);
+          gface->getXYZCoords(uv, pon);
           mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2] );
 
      }
@@ -1606,8 +1606,9 @@ void TFIMap::project_edge_v(iBase_EntityHandle mEdgeHandle, int dir, double v0, 
      iBase_EntityHandle *nodesOnEdge = hopoints->nodeHandles;
      int numHPoints = hopoints->nx;
 
-     Point2D uvr0 = coedge[0].getUVCoords(r);
-     Point2D uvr1 = coedge[2].getUVCoords(r);
+     Point2D uvr0, uvr1;
+     coedge[0].getUVCoords(r, uvr0);
+     coedge[2].getUVCoords(r, uvr1);
 
      double v, s;
      double u00, u10, u11, u01, ur0, u1s, ur1, u0s;
@@ -1628,14 +1629,14 @@ void TFIMap::project_edge_v(iBase_EntityHandle mEdgeHandle, int dir, double v0, 
      vr1 = uvr1[1];
 
      Point3D pon;
-     Point2D uv;
+     Point2D uv, uv0s, uv1s;
      iBase_EntityHandle currvertex;
 
      for (int j = 1; j < numHPoints - 1; j++) {
           v = gllnodes[j];
           s = 0.5 * (1 - v) * v0 + 0.5 * (1 + v) * vN;
-          Point2D uv0s = coedge[3].getUVCoords(s);
-          Point2D uv1s = coedge[1].getUVCoords(s);
+          coedge[3].getUVCoords(s, uv0s);
+          coedge[1].getUVCoords(s, uv1s);
 
           u0s = uv0s[0];
           u1s = uv1s[0];
@@ -1651,7 +1652,7 @@ void TFIMap::project_edge_v(iBase_EntityHandle mEdgeHandle, int dir, double v0, 
           else
                currvertex = nodesOnEdge[numHPoints - 1 - j];
 
-          pon = gface->getXYZCoords(uv);
+          gface->getXYZCoords(uv, pon);
           mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2]);
 
      }
@@ -1662,7 +1663,7 @@ void TFIMap::project_edge_v(iBase_EntityHandle mEdgeHandle, int dir, double v0, 
 void TFIMap::parametricTFI2D()
 {
      int err;
-//  geomface = new GFace(geom, gFaceHandle);
+//     gface = new GFace(geom, gFaceHandle);
 
      vector<double> u, v;
      u.resize(nx * ny);
@@ -1673,7 +1674,7 @@ void TFIMap::parametricTFI2D()
 
      int offset;
      Point2D uvnear, uv;
-     Point3D xyz;
+     Point3D xyz, p0, p1;
 
      // In the case of periodic surface, (U,V) coordinates of the corners
      // or on the edge could be ambigous. To remove the ambiguity, we try to
@@ -1683,18 +1684,18 @@ void TFIMap::parametricTFI2D()
      // Careful don't change the order of four loops because of dependency of
      // uvnear in 4 loops.
 
-     Point3D p0 = coedge[0].getXYZCoords(du);
-     Point3D p1 = coedge[3].getXYZCoords(dv);
+     coedge[0].getXYZCoords(du, p0);
+     coedge[3].getXYZCoords(dv, p1);
      xyz[0] = 0.5 * (p0[0] + p1[0]);
      xyz[1] = 0.5 * (p0[1] + p1[1]);
      xyz[2] = 0.5 * (p0[2] + p1[2]);
-     uvnear = gface->getUVCoords(xyz);
+     gface->getUVCoords(xyz, uvnear);
 
      // Lower Edge ...
      for (int i = 0; i < nx; i++) {
-          xyz = coedge[0].getXYZCoords(i * du);
+          coedge[0].getXYZCoords(i * du, xyz);
           offset = i;
-          uv = gface->getUVCoords(xyz, uvnear);
+          gface->getUVCoords(xyz, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
           uvnear = uv;
@@ -1702,9 +1703,9 @@ void TFIMap::parametricTFI2D()
 
      // Right Edge ...
      for (int j = 0; j < ny; j++) {
-          xyz = coedge[1].getXYZCoords(j * dv);
+          coedge[1].getXYZCoords(j * dv, xyz);
           offset = j * nx + (nx - 1);
-          uv = gface->getUVCoords(xyz, uvnear);
+          gface->getUVCoords(xyz, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
           uvnear = uv;
@@ -1714,9 +1715,9 @@ void TFIMap::parametricTFI2D()
      uvnear[0] = u[0];
      uvnear[1] = v[0];
      for (int j = 0; j < ny; j++) {
-          xyz = coedge[3].getXYZCoords(j * dv);
+          coedge[3].getXYZCoords(j * dv, xyz);
           offset = j*nx;
-          uv = gface->getUVCoords(xyz, uvnear);
+          gface->getUVCoords(xyz, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
           uvnear = uv;
@@ -1724,9 +1725,9 @@ void TFIMap::parametricTFI2D()
 
      // Top Edge ...
      for (int i = 0; i < nx; i++) {
-          xyz = coedge[2].getXYZCoords(i * du);
+          coedge[2].getXYZCoords(i * du, xyz);
           offset = (ny - 1) * nx + i;
-          uv = gface->getUVCoords(xyz, uvnear);
+          gface->getUVCoords(xyz, uvnear, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
           uvnear = uv;
@@ -1734,8 +1735,8 @@ void TFIMap::parametricTFI2D()
 
      vector<double> glxnodes, glynodes;
 
-//    SpectralElements::gauss_linear_nodes(nx, glxnodes);
-//    SpectralElements::gauss_linear_nodes(ny, glynodes);
+     SpectralElements::gauss_linear_nodes(nx, glxnodes);
+     SpectralElements::gauss_linear_nodes(ny, glynodes);
 
      blend_from_edges(u, glxnodes, glynodes);
      blend_from_edges(v, glxnodes, glynodes);
@@ -1745,7 +1746,7 @@ void TFIMap::parametricTFI2D()
                int id = j * nx + i;
                uv[0] = u[id];
                uv[1] = v[id];
-               xyz = gface->getXYZCoords(uv);
+               gface->getXYZCoords(uv, xyz);
                mesh->setVtxCoord(structured_nodes[id], xyz[0], xyz[1], xyz[2]);
           }
      }
@@ -1759,7 +1760,7 @@ void TFIMap::parametricTFI2D()
      vector<iBase_EntityHandle> mEdges;
      iBase_EntitySetHandle meshSet;
 
-//  iRel_getEntSetAssociation(assoc, rel, gFaceHandle, 0, &meshSet, &err);
+     err = relPair->getEntSetRelation(gFaceHandle, 0, meshSet);
      mesh->getEntities(meshSet, iBase_EDGE, iMesh_ALL_TOPOLOGIES, mEdges);
 
      set<iBase_EntityHandle> edgeSet;
@@ -1858,7 +1859,7 @@ void TFIMap::project_face(iBase_EntityHandle mFaceHandle)
      pCentroid[0] /= 4.0;
      pCentroid[1] /= 4.0;
      pCentroid[2] /= 4.0;
-     uvCentroid = gface->getUVCoords(pCentroid);
+     gface->getUVCoords(pCentroid, uvCentroid);
 
      char *tag_val = NULL;
      err = mesh->getData(mFaceHandle, horder_tag, &tag_val);
@@ -1879,28 +1880,28 @@ void TFIMap::project_face(iBase_EntityHandle mFaceHandle)
      offset = 0;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = gface->getUVCoords(p3d, uvCentroid);
+     gface->getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      offset = nhx - 1;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = gface->getUVCoords(p3d, uvCentroid);
+     gface->getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      offset = (nhy - 1) * nhx;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = gface->getUVCoords(p3d, uvCentroid);
+     gface->getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      offset = nhx * nhy - 1;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = gface->getUVCoords(p3d, uvCentroid);
+     gface->getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
@@ -1908,14 +1909,14 @@ void TFIMap::project_face(iBase_EntityHandle mFaceHandle)
           offset = i;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = gface->getUVCoords(p3d, uvCentroid);
+          gface->getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
 
           offset = i + (nhy - 1) * nhx;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = gface->getUVCoords(p3d, uvCentroid);
+          gface->getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
      }
@@ -1924,14 +1925,14 @@ void TFIMap::project_face(iBase_EntityHandle mFaceHandle)
           offset = j*nhx;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = gface->getUVCoords(p3d, uvCentroid);
+          gface->getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
 
           offset = j * nhx + (nhx - 1);
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = gface->getUVCoords(p3d, uvCentroid);
+          gface->getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
      }
@@ -1939,12 +1940,13 @@ void TFIMap::project_face(iBase_EntityHandle mFaceHandle)
      TFIMap::blend_from_edges(u, gllnodes, gllnodes);
      TFIMap::blend_from_edges(v, gllnodes, gllnodes);
 
+     Point3D pon;
      for (int j = 1; j < nhy - 1; j++) {
           for (int i = 1; i < nhx - 1; i++) {
                offset = j * nhx + i;
                uv[0] = u[offset];
                uv[1] = v[offset];
-               Point3D pon = gface->getXYZCoords(uv);
+               gface->getXYZCoords(uv, pon);
                mesh->setVtxCoord(nodeHandles[offset], pon[0], pon[1], pon[2]);
           }
      }
@@ -2114,7 +2116,7 @@ void TFIMap::saveAs(const string &filename)
 
      for (int k = 0; k < gEdges.size(); k++) {
           mEdges.clear();
-//      iRel_getEntSetAssociation(assoc, rel, gEdges[k], 0, &meshSet, &err);
+          err = relPair->getEntSetRelation(gEdges[k], 0, meshSet);
           mesh->getEntities(meshSet, iBase_EDGE, iMesh_ALL_TOPOLOGIES, mEdges);
           for (int j = 0; j < mEdges.size(); j++) {
                err = mesh->getData(mEdges[j], horder_tag, &tag_val);
@@ -2129,7 +2131,7 @@ void TFIMap::saveAs(const string &filename)
           }
      }
 
-//   iRel_getEntSetAssociation(assoc, rel, gFaceHandle, 0, &meshSet, &err);
+     err = relPair->getEntSetRelation(gFaceHandle, 0, meshSet);
 
      mEdges.clear();
      mesh->getEntities(meshSet, iBase_EDGE, iMesh_ALL_TOPOLOGIES, mEdges);

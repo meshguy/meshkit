@@ -180,7 +180,6 @@ iGeom *readGeometry(const char *filename )
 
 void buildAssociations(iGeom *geom, iMesh *mesh, iRel *rel, iRel::PairHandle *&relPair)
 {
-
      int err, namelen;
 
      vector<iBase_EntitySetHandle> entitySets;

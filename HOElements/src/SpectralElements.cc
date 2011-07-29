@@ -1647,7 +1647,7 @@ void SpectralElements::project_on_quad_face(GFace &currface,
      pCentroid[0] /= 4.0;
      pCentroid[1] /= 4.0;
      pCentroid[2] /= 4.0;
-     uvCentroid = currface.getUVCoords(pCentroid);
+     currface.getUVCoords(pCentroid, uvCentroid);
 
      char *tag_val = NULL;
      err = mesh->getData(mFaceHandle, horder_tag, &tag_val);
@@ -1667,28 +1667,28 @@ void SpectralElements::project_on_quad_face(GFace &currface,
      offset = 0;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = currface.getUVCoords(p3d, uvCentroid);
+     currface.getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      offset = nx - 1;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = currface.getUVCoords(p3d, uvCentroid);
+     currface.getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      offset = (ny - 1) * nx;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = currface.getUVCoords(p3d, uvCentroid);
+     currface.getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
      offset = nx * ny - 1;
      currvertex = nodeHandles[offset];
      mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-     uv = currface.getUVCoords(p3d, uvCentroid);
+     currface.getUVCoords(p3d, uvCentroid, uv);
      u[offset] = uv[0];
      v[offset] = uv[1];
 
@@ -1696,14 +1696,14 @@ void SpectralElements::project_on_quad_face(GFace &currface,
           offset = i;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = currface.getUVCoords(p3d, uvCentroid);
+          currface.getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
 
           offset = i + (ny - 1) * nx;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2] );
-          uv = currface.getUVCoords(p3d, uvCentroid);
+          currface.getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
      }
@@ -1712,14 +1712,14 @@ void SpectralElements::project_on_quad_face(GFace &currface,
           offset = j*nx;
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2] );
-          uv = currface.getUVCoords(p3d, uvCentroid);
+          currface.getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
 
           offset = j * nx + (nx - 1);
           currvertex = nodeHandles[offset];
           mesh->getVtxCoord(currvertex, p3d[0], p3d[1], p3d[2]);
-          uv = currface.getUVCoords(p3d, uvCentroid);
+          currface.getUVCoords(p3d, uvCentroid, uv);
           u[offset] = uv[0];
           v[offset] = uv[1];
      }
@@ -1727,12 +1727,13 @@ void SpectralElements::project_on_quad_face(GFace &currface,
      TFIMap::blend_from_edges(u, gllnodes, gllnodes);
      TFIMap::blend_from_edges(v, gllnodes, gllnodes);
 
+     Point3D pon;
      for (int j = 1; j < ny - 1; j++) {
           for (int i = 1; i < nx - 1; i++) {
                offset = j * nx + i;
                uv[0] = u[offset];
                uv[1] = v[offset];
-               Point3D pon = currface.getXYZCoords(uv);
+               currface.getXYZCoords(uv, pon);
                mesh->setVtxCoord(nodeHandles[offset], pon[0], pon[1], pon[2]);
           }
      }

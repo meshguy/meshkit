@@ -224,7 +224,11 @@ int GEdge::get_hex_edge_number(const iBase_EntityHandle *cellnodes,
 GEdge::GEdge(iBase_EntityHandle h, iGeom *g, iMesh *m, iRel *r, iRel::PairHandle *p)
 {
      gEdgeHandle = h;
-     geom = g;
+     geom    = g;
+     mesh    = m;
+     rel     = r;
+     relPair = p;
+     kdtree = NULL;
 
      assert( geom );
 
@@ -238,8 +242,9 @@ GEdge::GEdge(iBase_EntityHandle h, iGeom *g, iMesh *m, iRel *r, iRel::PairHandle
 
      periodic = in_u;
 
-     Point3D p0 = getXYZCoords(umin);
-     Point3D p1 = getXYZCoords(umax);
+/*
+     getXYZCoords(umin, p0);
+     getXYZCoords(umax, p1);
 
      double dx = p0[0] - p1[0];
      double dy = p0[1] - p1[1];
@@ -248,17 +253,13 @@ GEdge::GEdge(iBase_EntityHandle h, iGeom *g, iMesh *m, iRel *r, iRel::PairHandle
      if (dx * dx + dy * dy + dz * dz < eps * eps) periodic = 1;
 
      numNodes = 1000;
-     kdtree = NULL;
      uCoord = NULL;
      numNeighs = 2;
      annIdx.resize(numNeighs);
      anndist.resize(numNeighs);
-
      build_kdtree();
+*/
 
-     mesh  = m;
-     rel   = r;
-     relPair   = p;
 }
 
 
@@ -270,33 +271,24 @@ GEdge::~GEdge()
 }
 //////////////////////////////////////////////////////////////////////////////
 
-Point2D GEdge::getURange() const
+/*
+int GEdge::getURange( Point2D &p2d) const
 {
-     Point2D p2d;
-
      p2d[0] = umin;
      p2d[1] = umax;
 
-     return p2d;
+     return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-Point3D GEdge::getXYZCoords(double u) const
+int GEdge::getXYZCoords(double u, Point3D &p3d) const
 {
-     Point3D p3d;
-
-     double x, y, z;
-
      int err;
-     err = geom->getEntUtoXYZ(gEdgeHandle, u, x, y, z);
+     err = geom->getEntUtoXYZ(gEdgeHandle, u, p3d[0], p3d[1], p3d[2]);
      assert(!err);
 
-     p3d[0] = x;
-     p3d[1] = y;
-     p3d[2] = z;
-
-     return p3d;
+     return err;
 }
 
 
@@ -304,11 +296,11 @@ Point3D GEdge::getXYZCoords(double u) const
 
 double GEdge::getLength() const
 {
-     int err;
      double measure;
-     err = geom->measure(&gEdgeHandle, 1, &measure );
+     int err = geom->measure(&gEdgeHandle, 1, &measure ); assert( !err );
      return measure;
 }
+*/
 //////////////////////////////////////////////////////////////////////////////
 
 double GEdge::getLength(double ustart, double uend) const
@@ -378,8 +370,8 @@ int GEdge::getUCoord(double ustart, double dist, double &uguess) const
 {
      assert( fabs(uguess-ustart) > 1.0E-15 );
 
-     Point3D p0 = getXYZCoords(ustart);
-     Point3D p1 = getXYZCoords(uguess);
+     getXYZCoords(ustart, p0);
+     getXYZCoords(uguess, p1);
 
      double dx, dy, dz, dl, u = uguess;
 
@@ -393,7 +385,7 @@ int GEdge::getUCoord(double ustart, double dist, double &uguess) const
           dl = sqrt(dx * dx + dy * dy + dz * dz);
           if ( fabs(dl-dist) < tol) break;
           u = ustart + (u - ustart) * (dist/dl);
-          p1 = getXYZCoords(u);
+          getXYZCoords(u, p1);
 
           if (ntrials++ == 100) {
                cout << " Warning: Searching for U failed " << endl;
@@ -413,14 +405,14 @@ void GEdge::refine_search(const Point3D &qPoint, double u0, double u1, double &u
 
      double dx, dy, dz, d0, d1, dm;
 
-     Point3D p0 = getXYZCoords(u0);
+     getXYZCoords(u0, p0);
      dx = qPoint[0] - p0[0];
      dy = qPoint[1] - p0[1];
      dz = qPoint[2] - p0[2];
      d0 = dx * dx + dy * dy + dz*dz;
      mindist2 = std::min(d0, mindist2);
 
-     Point3D p1 = getXYZCoords(u1);
+     getXYZCoords(u1, p1);
      dx = qPoint[0] - p1[0];
      dy = qPoint[1] - p1[1];
      dz = qPoint[2] - p1[2];
@@ -432,9 +424,10 @@ void GEdge::refine_search(const Point3D &qPoint, double u0, double u1, double &u
      int N = 1000;
      double du = (u1 - u0) / (double) (N - 1);
 
+     Point3D pm;
      for (int i = 0; i < N - 2; i++) {
           um = u0 + (i + 1) * du;
-          Point3D pm = getXYZCoords(um);
+          getXYZCoords(um, pm);
           dx = qPoint[0] - pm[0];
           dy = qPoint[1] - pm[1];
           dz = qPoint[2] - pm[2];
@@ -464,7 +457,7 @@ double GEdge::getUCoord(const Point3D &qPoint, double unear) const
      double u = uCoord[index];
 
      Point3D pnear;
-     pnear = getXYZCoords(u);
+     getXYZCoords(u, pnear);
      double dx = qPoint[0] - pnear[0];
      double dy = qPoint[1] - pnear[1];
      double dz = qPoint[2] - pnear[2];
@@ -495,7 +488,7 @@ double GEdge::getUCoord(const Point3D &qPoint, double unear) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-Point3D GEdge::getClosestPoint(const Point3D &qPoint) const
+int GEdge::getClosestPoint(const Point3D &qPoint, Point3D &psurf) const
 {
      int err;
      double xon, yon, zon;
@@ -505,11 +498,10 @@ Point3D GEdge::getClosestPoint(const Point3D &qPoint) const
      assert(!err);
 
      if (!err) {
-          Point3D p3d;
-          p3d[0] = xon;
-          p3d[1] = yon;
-          p3d[2] = zon;
-          return p3d;
+          psurf[0] = xon;
+          psurf[1] = yon;
+          psurf[2] = zon;
+          return 0;
      }
 
      double u = getUCoord(qPoint);
@@ -517,13 +509,12 @@ Point3D GEdge::getClosestPoint(const Point3D &qPoint) const
      if (u == umin || u == umax)
           cout << " Warning: Selecting end points is dangerous " << endl;
 
-     return getXYZCoords(u);
+     return getXYZCoords(u, psurf);
 }
 //////////////////////////////////////////////////////////////////////////////
 
-Vec3D GEdge::getFirstDer(double u) const
+int GEdge::getFirstDer(double u, Vec3D &avec) const
 {
-     Vec3D avec;
      if (u < umin || u > umax)
           cout << "Warning: U value " << u << " Out of Range : " << umin << " " << umax << endl;
 
@@ -546,7 +537,7 @@ Vec3D GEdge::getFirstDer(double u) const
           avec[0] = nx;
           avec[1] = ny;
           avec[2] = nz;
-          return avec;
+          return 0;
      }
 
      if (u == umax) {
@@ -558,7 +549,7 @@ Vec3D GEdge::getFirstDer(double u) const
           avec[0] = nx;
           avec[1] = ny;
           avec[2] = nz;
-          return avec;
+          return 0;
      }
 
      uf = u + du;
@@ -574,7 +565,8 @@ Vec3D GEdge::getFirstDer(double u) const
      avec[0] = nx;
      avec[1] = ny;
      avec[2] = nz;
-     return avec;
+
+     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -631,21 +623,22 @@ bool GEdge::is_u_uniformly_discretized()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GEdge::uniform_u_discretization(int n, vector<Point3D> &xyz, vector<double> &u, bool persistent)
+void GEdge::uniform_u_discretization(int n, vector<Point3D> &xyz, vector<double> &u)
 {
+     assert( n >= 2 );
      double du = (umax - umin) / (double) (n - 1);
 
      u.resize(n);
      xyz.resize(n);
      for (int i = 0; i < n; i++) {
           u[i] = umin + i*du;
-          xyz[i] = getXYZCoords(u[i]);
+          getXYZCoords(u[i], xyz[i] );
      }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GEdge::uniform_xyz_discretization(int n, vector<Point3D> &xyz, vector<double> &u, bool persistent)
+void GEdge::uniform_xyz_discretization(int n, vector<Point3D> &xyz, vector<double> &u)
 {
      u.resize(n);
      xyz.resize(n);
@@ -655,18 +648,18 @@ void GEdge::uniform_xyz_discretization(int n, vector<Point3D> &xyz, vector<doubl
      double du = 0.90 * (umax - umin) / (double) (n - 1);
 
      u[0] = umin;
-     xyz[0] = getXYZCoords(umin);
+     getXYZCoords(umin, xyz[0] );
 
      for (int i = 1; i < n - 1; i++) {
           double ufrom = u[i - 1];
           double uguess = ufrom + du;
           getUCoord(ufrom, dl, uguess);
           u[i] = uguess;
-          xyz[i] = getXYZCoords(u[i]);
+          getXYZCoords(u[i], xyz[i] );
      }
 
      u[n - 1] = umax;
-     xyz[n - 1] = getXYZCoords(umax);
+     getXYZCoords(umax, xyz[n-1] );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -730,7 +723,7 @@ void GEdge::projectHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
      int err;
 
      vector<iBase_EntityHandle> edgenodes;
-     Point3D p0, p1, pnear, pon;
+     Point3D pnear, pon;
      double u, u0, uN, unear, arclen, arcdist, dl;
 
      char *tag_val = NULL;
@@ -780,7 +773,7 @@ void GEdge::projectHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
           u = gllnodes[i];
           u = 0.5 * (1 - u) * u0 + 0.5 * (1 + u) * uN;
 //      getUCoord(unear, dl, u);
-          pon = getXYZCoords(u);
+          getXYZCoords(u, pon);
           err = mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2]);
           assert( !err );
           unear = u;
@@ -798,7 +791,7 @@ void GEdge::projectHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
           u = gllnodes[i];
           u = 0.5 * (1 - u) * uN + 0.5 * (1 + u) * u0; // careful, u0, uN swapped
 //      getUCoord(unear, dl, u);
-          pon = getXYZCoords(u);
+          getXYZCoords(u, pon);
           err = mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2]);
           assert( !err );
           unear = u;
@@ -810,7 +803,7 @@ void GEdge::projectHigherOrderNodes(iBase_EntityHandle mEdgeHandle)
           iBase_EntityHandle currvertex = nodesOnEdge[midpos];
           u = gllnodes[midpos + 1];
           u = 0.5 * (1 - u) * u0 + 0.5 * (1 + u) * uN;
-          pon = getXYZCoords(u);
+          getXYZCoords(u, pon);
           err = mesh->setVtxCoord(currvertex, pon[0], pon[1], pon[2]);
           assert( !err );
      }

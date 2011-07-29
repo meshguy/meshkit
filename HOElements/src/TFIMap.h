@@ -127,8 +127,8 @@ private:
                direction = 0;
                imaginary = 0;
           }
-          Point3D getXYZCoords(double u); // U is relative ( 0-1);
-          Point2D getUVCoords(double u);  // U is relative ( 0-1);
+          int getXYZCoords(double u, Point3D &p); // U is relative ( 0-1);
+          int getUVCoords(double u,  Point2D &p);  // U is relative ( 0-1);
           int direction;
           bool imaginary; // wtheher the edge is fictitious
           iGeom *geom;
