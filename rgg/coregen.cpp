@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
   // start program timer
   CClock Timer;
   std::string szDateTime;
+  clock_t sTime = clock();
 
-  // the one and only Core!
   CCrgen TheCore;
   int err = 0;
   int run_flag = 1;
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     std::cout << "\nStarting out at : " << szDateTime << "\n";
   }
   /*********************************************/
-  // read inputs and create makefile
+  // read inputs and create makefile, do this on all processors
   /*********************************************/
   err = TheCore.prepareIO(argc, argv, rank, nprocs);
   ERRORR("Failed in preparing i/o.", 1);
@@ -104,14 +104,18 @@ int main(int argc, char *argv[]) {
     // copy move
     /*********************************************/
     CClock ld_cm;
-    if (nprocs <= (int) TheCore.files.size()) {
-      err = TheCore.copy_move_parallel(rank, nprocs);
-      ERRORR("Failed in copy move routine.", 1);
-    } else {
-      err = TheCore.copymove_parallel(rank, nprocs);
-      ERRORR("Failed in copy move routine.", 1);
+    if(TheCore.prob_type == "mesh"){ 
+      if (nprocs <= (int) TheCore.files.size()) {
+	err = TheCore.copy_move_parallel(rank, nprocs);
+	ERRORR("Failed in copy move routine.", 1);
+      } else {
+	err = TheCore.copymove_parallel(rank, nprocs);
+	ERRORR("Failed in copy move routine.", 1);
+      }
     }
-    
+    else{
+      err = TheCore.copy_move();
+    }
     if (TheCore.mem_tflag == true && (strcmp(TheCore.prob_type.c_str(), "mesh") == 0)) {
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
 
@@ -120,6 +124,7 @@ int main(int argc, char *argv[]) {
     		<< " seconds" << std::endl;
       std::cout << "***from rank: " << rank<< " Memory used: " << mem2 << " kb\n" << std::endl;
     }
+
 #ifdef USE_MPI    
     MPI::COMM_WORLD.Barrier();
 #endif
@@ -217,15 +222,15 @@ int main(int argc, char *argv[]) {
       } else {
 	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
       	ERRORR("Failed to save o/p file.", 1);
-// #ifdef USE_MPI
-//       	double write_time = MPI_Wtime();
-//   	err = TheCore.save_mesh_parallel(rank, nprocs);
-//       	ERRORR("Failed to save o/p file.", 1);
-//       	write_time = MPI_Wtime() - write_time;
-//       	if (rank == 0){
-//   	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
-//   	}
-// #endif
+	// #ifdef USE_MPI
+	//       	double write_time = MPI_Wtime();
+	//   	err = TheCore.save_mesh_parallel(rank, nprocs);
+	//       	ERRORR("Failed to save o/p file.", 1);
+	//       	write_time = MPI_Wtime() - write_time;
+	//       	if (rank == 0){
+	//   	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
+	//   	}
+	// #endif
       }
       if (TheCore.mem_tflag == true) {
 	TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem7);
@@ -263,7 +268,13 @@ int main(int argc, char *argv[]) {
       std::cout << "Ending at : " << szDateTime;
       std::cout << "Elapsed wall clock time: " << Timer.DiffTime()
     		<< " seconds or " << (Timer.DiffTime()) / 60.0 << " mins\n";
+
+      std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
+		<< " seconds" << std::endl;
     }
+  }
+  else{
+    // makefile already generated
   }
 
 #ifdef USE_MPI
