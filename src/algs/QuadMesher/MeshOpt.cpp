@@ -8,8 +8,10 @@ using namespace Mesquite;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int Jaal::MeshOptimization::shape_optimize(Jaal::Mesh *mesh)
+int Jaal::MeshOptimization::shape_optimize(Jaal::Mesh *mesh, int algo, int niter)
 {
+     algorithm = algo;
+     numIter   = niter;
 #ifdef HAVE_MESQUITE
      int topo = mesh->isHomogeneous();
 
@@ -193,7 +195,6 @@ int Jaal::MeshOptimization::execute(Jaal::Mesh *mesh)
           optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
                                             noptfaces, Mesquite::TRIANGLE, &vNodes[0]);
      }
-
      if (optmesh == NULL) return 1;
 
      Vector3D normal(0, 0, 1);
@@ -201,56 +202,103 @@ int Jaal::MeshOptimization::execute(Jaal::Mesh *mesh)
      PlanarDomain mesh_plane(normal, point);
 
      // creates a mean ratio quality metric ...
-     IdealWeightInverseMeanRatio mesh_quality( err );
+     IdealWeightInverseMeanRatio mesh_quality;
+
 //  IdealWeightMeanRatio mesh_quality;
-//  ConditionNumberQualityMetric mesh_quality();
+//  ConditionNumberQualityMetric mesh_quality;
 //  EdgeLengthQualityMetric mesh_quality;
 
      // sets the objective function template
      LPtoPTemplate obj_func(&mesh_quality, 2, err);
 
      // creates the optimization procedures
-//  ConjugateGradient* improver = new ConjugateGradient( obj_func, err );
 
+     TerminationCriterion tc_outer;
 
-//  SteepestDescent improver( &obj_func);   // Fastest but poor convergence in the tail.
-     QuasiNewton     improver( &obj_func);   // Best Quality ( two time slower than SD )
-//  TrustRegion     improver( &obj_func);
-//  FeasibleNewton  improver( &obj_func);
-//  SmartLaplacianSmoother improver(&obj_func); // Slightly better than useless.
-
-     //performs optimization globally
-     improver.use_global_patch();
-
-     // creates a termination criterion and
-     // add it to the optimization procedure
-     // outer loop: default behavior: 1 iteration
-     // inner loop: stop if gradient norm < eps
      TerminationCriterion tc_inner;
      tc_inner.add_absolute_gradient_L2_norm(1e-4);
-     tc_inner.add_iteration_limit(100);
-     improver.set_inner_termination_criterion(&tc_inner);
+     tc_inner.write_iterations("opt.dat", err);
 
-     // creates a quality assessor
-     QualityAssessor qa(&mesh_quality);
+     SteepestDescent  *sp = NULL;
+     QuasiNewton      *qn = NULL;
+     TrustRegion      *tr = NULL;
+     FeasibleNewton   *fn = NULL;
+     ConjugateGradient *cg = NULL;
+     SmartLaplacianSmoother *lp = NULL;
 
-     // creates an instruction queue
-     InstructionQueue queue;
-     queue.add_quality_assessor(&qa, err);
-     queue.set_master_quality_improver(&improver, err);
-     queue.add_quality_assessor(&qa, err);
+     improver  = NULL;
 
-     // do optimization of the mesh_set
-     queue.run_instructions(optmesh, &mesh_plane, err);
-
-     cout << "# of iterations " << tc_inner.get_iteration_count() << endl;
-
-     if (err) {
-          std::cout << err << std::endl;
-          return 2;
+     switch (algorithm) {
+     case STEEPEST_DESCENT:
+          sp = new SteepestDescent( &obj_func);   // Fastest but poor convergence in the tail.
+          sp->use_global_patch();
+          improver = sp;
+          tc_inner.add_iteration_limit(numIter);
+          improver->set_inner_termination_criterion(&tc_inner);
+          break;
+     case QUASI_NEWTON:
+          qn = new QuasiNewton( &obj_func);   // Fastest but poor convergence in the tail.
+          qn->use_global_patch();
+          improver = qn;
+          tc_inner.add_iteration_limit(numIter);
+          improver->set_inner_termination_criterion(&tc_inner);
+          break;
+     case TRUST_REGION:
+          tr = new TrustRegion( &obj_func);   // Fastest but poor convergence in the tail.
+          tr->use_global_patch();
+          improver = tr;
+          tc_inner.add_iteration_limit(numIter);
+          improver->set_inner_termination_criterion(&tc_inner);
+          break;
+     case FEASIBLE_NEWTON:
+          fn = new FeasibleNewton( &obj_func);   // Fastest but poor convergence in the tail.
+          fn->use_global_patch();
+          improver = fn;
+          tc_inner.add_iteration_limit(numIter);
+          improver->set_inner_termination_criterion(&tc_inner);
+          break;
+     case CONJUGATE_GRADIENT:
+          cg = new ConjugateGradient(&obj_func);
+          cg->use_global_patch();
+          improver = cg;
+          tc_inner.add_iteration_limit(numIter);
+          improver->set_inner_termination_criterion(&tc_inner);
+          break;
+     case LAPLACIAN:
+          lp = new SmartLaplacianSmoother( &obj_func);   // Fastest but poor convergence in the tail.
+          improver = lp;
+          tc_outer.add_iteration_limit(numIter);
+          improver->set_outer_termination_criterion(&tc_outer);
+          break;
+     default:
+          cout << "Warning: Invalid optimization algorithm selected: "<< endl;
      }
 
-     mesh->setCoordsArray(vCoords, l2g);
+     if( improver ) {
+
+          // creates a quality assessor
+          QualityAssessor qa(&mesh_quality);
+
+          // creates an instruction queue
+          InstructionQueue queue;
+          queue.add_quality_assessor(&qa, err);
+          queue.set_master_quality_improver(improver, err);
+          queue.add_quality_assessor(&qa, err);
+
+          // do optimization of the mesh_set
+          queue.run_instructions(optmesh, &mesh_plane, err);
+
+          cout << "# of iterations " << tc_inner.get_iteration_count() << endl;
+
+          if (err) {
+               std::cout << err << std::endl;
+               return 2;
+          }
+
+          mesh->setCoordsArray(vCoords, l2g);
+          delete improver;
+     }
+
      delete optmesh;
 
      return 0;
@@ -260,239 +308,3 @@ int Jaal::MeshOptimization::execute(Jaal::Mesh *mesh)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-
-int Jaal::MeshOptimization::untangle(Mesh *mesh)
-{
-#ifdef HAVE_MESQUITE
-     /*
-         MsqError err;
-         unsigned long int numnodes = mesh->getSize(0);
-         unsigned long int numfaces = mesh->getSize(2);
-
-         mesh->search_boundary();
-
-         vector<int> vfixed(numnodes);
-         for (size_t i = 0; i < numnodes; i++) {
-             Vertex *vertex = mesh->getNodeAt(i);
-             assert(vertex->getID() == i);
-             vfixed[i] = 0;
-             if (vertex->isBoundary()) {
-                 vfixed[i] = 1;
-             }
-         }
-
-         vector<unsigned long int> vNodes;
-         vNodes.reserve(4 * numfaces);
-
-         for (size_t i = 0; i < numfaces; i++) {
-             Face *face = mesh->getFaceAt(i);
-             for (int j = 0; j < face->getSize(0); j++) {
-                 Vertex *v = face->getNodeAt(j);
-                 vNodes.push_back(v->getID());
-             }
-         }
-
-         vector<double> vCoords;
-         vector<size_t> l2g;
-         mesh->getCoordsArray( vCoords, l2g );
-
-         Mesquite::ArrayMesh *optmesh = NULL;
-
-         int topo = mesh->isHomogeneous();
-
-         if (topo == 4)
-             optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
-                                               numfaces, Mesquite::QUADRILATERAL, &vNodes[0]);
-         if (topo == 3)
-             optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
-                                               numfaces, Mesquite::TRIANGLE, &vNodes[0]);
-
-         if (optmesh == NULL) return 1;
-
-         // Set Domain Constraint
-         Vector3D pnt(0, 0, 0);
-         Vector3D s_norm(0, 0, 1);
-         PlanarDomain msq_geom(s_norm, pnt);
-
-         // creates an intruction queue
-         InstructionQueue queue1;
-
-         // creates a mean ratio quality metric ...
-         ConditionNumberQualityMetric shape_metric;
-         UntangleBetaQualityMetric untangle(2);
-         Randomize pass0(.05);
-         // ... and builds an objective function with it
-         //LInfTemplate* obj_func = new LInfTemplate(shape_metric);
-         LInfTemplate obj_func(&untangle);
-         LPtoPTemplate obj_func2(&shape_metric, 2, err);
-         if (err) return 1;
-         // creates the steepest descent optimization procedures
-         ConjugateGradient improver(&obj_func, err);
-         if (err) return 1;
-
-         //SteepestDescent* pass2 = new SteepestDescent( obj_func2 );
-         ConjugateGradient pass2(&obj_func2, err);
-         if (err) return 1;
-         pass2.use_element_on_vertex_patch();
-         if (err) return 1;
-         pass2.use_global_patch();
-         if (err) return 1;
-         QualityAssessor stop_qa = QualityAssessor(&shape_metric);
-         QualityAssessor stop_qa2 = QualityAssessor(&shape_metric);
-
-         stop_qa.add_quality_assessment(&untangle);
-         // **************Set stopping criterion**************
-         //untangle beta should be 0 when untangled
-         TerminationCriterion sc1;
-         sc1.add_relative_quality_improvement(0.000001);
-         TerminationCriterion sc3;
-         sc3.add_iteration_limit(10);
-         TerminationCriterion sc_rand;
-         sc_rand.add_iteration_limit(1);
-
-         //StoppingCriterion sc1(&stop_qa,-1.0,.0000001);
-         //StoppingCriterion sc3(&stop_qa2,.9,1.00000001);
-         //StoppingCriterion sc2(StoppingCriterion::NUMBER_OF_PASSES,10);
-         //StoppingCriterion sc_rand(StoppingCriterion::NUMBER_OF_PASSES,1);
-         //either until untangled or 10 iterations
-         pass0.set_outer_termination_criterion(&sc_rand);
-         improver.set_outer_termination_criterion(&sc1);
-         pass2.set_inner_termination_criterion(&sc3);
-
-         // adds 1 pass of improver to mesh_set1
-         queue1.add_quality_assessor(&stop_qa, err);
-         if (err) return 1;
-         //queue1.add_preconditioner(pass0,err);MSQ_CHKERR(err);
-         //queue1.add_preconditioner(improver,err);MSQ_CHKERR(err);
-         //queue1.set_master_quality_improver(pass2, err); MSQ_CHKERR(err);
-         queue1.set_master_quality_improver(&improver, err);
-         if (err) return 1;
-         queue1.add_quality_assessor(&stop_qa2, err);
-         if (err) return 1;
-
-         // launches optimization on mesh_set1
-         queue1.run_instructions(optmesh, &msq_geom, err);
-         if (err) return 1;
-
-         mesh->setCoordsArray(vCoords);
-         return 0;
-     */
-#endif
-     return 1;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifdef HAVE_MESQUITE
-int
-run_global_smoother(Mesquite::Mesh* mesh, MsqError& err)
-{
-     double OF_value = 0.0001;
-
-     // creates an intruction queue
-     InstructionQueue queue1;
-
-     // creates a mean ratio quality metric ...
-     IdealWeightInverseMeanRatio* mean_ratio = new IdealWeightInverseMeanRatio(err);
-     if (err) return 1;
-
-     mean_ratio->set_averaging_method(QualityMetric::SUM, err);
-     if (err) return 1;
-
-     // ... and builds an objective function with it
-     LPtoPTemplate* obj_func = new LPtoPTemplate(mean_ratio, 1, err);
-     if (err) return 1;
-
-     // creates the feas newt optimization procedures
-     FeasibleNewton* improver = new FeasibleNewton(obj_func, true);
-     improver->use_global_patch();
-     if (err) return 1;
-
-     QualityAssessor stop_qa(mean_ratio);
-
-     // **************Set stopping criterion****************
-     TerminationCriterion tc_inner;
-     tc_inner.add_absolute_vertex_movement(OF_value);
-     if (err) return 1;
-
-     TerminationCriterion tc_outer;
-     tc_outer.add_iteration_limit(1);
-     improver->set_inner_termination_criterion(&tc_inner);
-     improver->set_outer_termination_criterion(&tc_outer);
-
-     queue1.add_quality_assessor(&stop_qa, err);
-     if (err) return 1;
-
-     // adds 1 pass of improver to mesh_set1
-     queue1.set_master_quality_improver(improver, err);
-     if (err) return 1;
-
-     queue1.add_quality_assessor(&stop_qa, err);
-     if (err) return 1;
-
-     // launches optimization on mesh_set
-     queue1.run_instructions(mesh, err);
-     cout << " Error " << err << endl;
-     if (err) return 1;
-
-     return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-int
-run_local_smoother(Mesquite::Mesh* mesh, MsqError& err)
-{
-     double OF_value = 0.0001;
-
-     // creates an intruction queue
-     InstructionQueue queue1;
-
-     // creates a mean ratio quality metric ...
-     IdealWeightInverseMeanRatio* mean_ratio = new IdealWeightInverseMeanRatio(err);
-     if (err) return 1;
-
-     mean_ratio->set_averaging_method(QualityMetric::SUM, err);
-     if (err) return 1;
-
-     // ... and builds an objective function with it
-     LPtoPTemplate* obj_func = new LPtoPTemplate(mean_ratio, 1, err);
-     if (err) return 1;
-
-     // creates the smart laplacian optimization procedures
-     SmartLaplacianSmoother* improver = new SmartLaplacianSmoother(obj_func);
-
-     QualityAssessor stop_qa(mean_ratio);
-
-     // **************Set stopping criterion****************
-     TerminationCriterion tc_inner;
-     tc_inner.add_absolute_vertex_movement(OF_value);
-
-     TerminationCriterion tc_outer;
-     tc_outer.add_iteration_limit(1);
-
-     improver->set_inner_termination_criterion(&tc_inner);
-     improver->set_outer_termination_criterion(&tc_outer);
-
-     queue1.add_quality_assessor(&stop_qa, err);
-     if (err) return 1;
-
-     // adds 1 pass of improver to mesh_set
-     queue1.set_master_quality_improver(improver, err);
-     if (err) return 1;
-
-     queue1.add_quality_assessor(&stop_qa, err);
-     if (err) return 1;
-
-     // launches optimization on mesh_set
-     queue1.run_instructions(mesh, err);
-     if (err) return 1;
-
-     return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-#endif

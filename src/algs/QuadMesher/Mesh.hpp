@@ -976,7 +976,7 @@ private:
      PNode dualnode;
      Vec3D fnormal;
 
-     int refine_convex_quad15(NodeSequence &newnodes, FaceSequence &newfaces);
+     int refine_convex_quad15(NodeSequence &newnodes,  FaceSequence &newfaces);
      int refine_concave_quad15(NodeSequence &newnodes, FaceSequence &newfaces);
 };
 
@@ -1722,16 +1722,27 @@ private:
      int vtk_file(Mesh *m, const string & s);
 };
 
-struct MeshOptimization {
-     int shape_optimize(Mesh * m);
-     int untangle(Mesh * m);
-     int equalize_edge_length(Mesh * m);
+class MeshOptimization {
+public:
+     static const int STEEPEST_DESCENT   = 0;
+     static const int QUASI_NEWTON       = 1;
+     static const int TRUST_REGION       = 2;
+     static const int FEASIBLE_NEWTON    = 3;
+     static const int CONJUGATE_GRADIENT = 4;
+     static const int LAPLACIAN          = 5;
+
+     int shape_optimize(Mesh * m, int algo = QUASI_NEWTON ,  int numiter = 10);
+
      int bandwidth_reduction(Mesh * m);
 private:
      Mesh *inmesh;
      int execute(Mesh * m);
 
+     int algorithm;
+     int numIter;
+
 #ifdef HAVE_MESQUITE
+     Mesquite::QualityImprover *improver;
      Mesquite::ArrayMesh* jaal_to_mesquite(Mesh *m);
 #endif
 };
