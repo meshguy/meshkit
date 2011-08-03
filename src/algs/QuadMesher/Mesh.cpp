@@ -1582,7 +1582,8 @@ Mesh::boundary_chain_nodes(Vertex *v0, Vertex *v1)
           }
      }
 
-     Mesh::make_chain(bndedges);
+     int err = Mesh::make_chain(bndedges);
+     if( err ) return bndnodes;
 
 #ifdef SEQUENCE_IS_VECTOR
      bndnodes.reserve(6);
@@ -1777,6 +1778,7 @@ Mesh::make_chain(vector<Edge> &boundedges)
           for( size_t  j = i; j < nSize; j++) {
                Vertex *v0 = boundedges[j].getNodeAt(0);
                Vertex *v1 = boundedges[j].getNodeAt(1);
+               assert( !v0->isRemoved() && !v1->isRemoved() );
                if (v0 == curr_vertex) {
                     curr_vertex = v1;
                     if( j > i) swap( boundedges[i], boundedges[j] );
@@ -1791,67 +1793,9 @@ Mesh::make_chain(vector<Edge> &boundedges)
           }
      }
 
-     if( !is_closed_chain( boundedges )  ) {
-         cout << "Warning: The Chain is not closed " << endl;
-         return 1;
-         for( int i = 0; i < boundedges.size(); i++)  {
-              Vertex *v0 = boundedges[i].getNodeAt(0);
-              Vertex *v1 = boundedges[i].getNodeAt(1);
-              v0->setID( i );
-              v1->setID( i + 1 );
-         }
-         for( int i = 0; i < boundedges.size(); i++) {
-              Vertex *v0 = boundedges[i].getNodeAt(0);
-              Vertex *v1 = boundedges[i].getNodeAt(1);
-              cout << v0->getID() << " " << v1->getID() << endl;
-         }
-         exit(0);
-     }
-     return 0;
-
-/*
-     Edge edge = boundedges.front();
-
-     list<Edge> listedges;
-     for (size_t i = 1; i < nSize; i++)
-          listedges.push_back(boundedges[i]);
-
-     boundedges.clear();
-     boundedges.reserve(nSize);
-
-     boundedges.push_back(edge);
-
-     list<Edge>::iterator it;
-
-     for (size_t i = 0; i < nSize; i++) {
-          for (it = listedges.begin(); it != listedges.end(); ++it) {
-               edge = *it;
-               Vertex *v0 = edge.getNodeAt(0);
-               Vertex *v1 = edge.getNodeAt(1);
-               if (v0 == curr_vertex) {
-                    curr_vertex = v1;
-                    boundedges.push_back(edge);
-                    break;
-               }
-               if (v1 == curr_vertex) {
-                    curr_vertex = v0;
-                    Edge newedge(v1, v0);
-                    boundedges.push_back(newedge);
-                    break;
-               }
-          }
-          if (it != listedges.end()) listedges.erase(it);
-     }
-
-     if( nSize != boundedges.size() ) return 1;
-
-     if( !is_closed_chain( boundedges )  ) {
-            cout << "Error: The Chain is not closed " << endl;
-            exit(0);
-     }
+     if( !is_closed_chain( boundedges )  ) return 1;
 
      return 0;
-*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1898,20 +1842,19 @@ Mesh::is_closed_chain(const vector<Edge> &boundedges)
 int
 Mesh::rotate_chain(vector<Edge> &boundedges, Vertex *first_vertex)
 {
-     size_t nSize = boundedges.size();
      if (!is_closeable_chain(boundedges)) return 1;
 
-     vector<Edge> listedges(nSize);
-     int istart = 0;
-     for (size_t i = 0; i < nSize; i++) {
-          if (boundedges[i].getNodeAt(0) == first_vertex) istart = i;
-          listedges[i] = boundedges[i];
+     vector<Edge>::iterator middle, it;
+     for( it = boundedges.begin(); it != boundedges.end(); ++it) {
+          if (it->getNodeAt(0) == first_vertex) {
+              middle = it;
+              break;
+          }
      }
+     std::rotate( boundedges.begin(), middle, boundedges.end() );
+     assert( boundedges[0].getNodeAt(0) == first_vertex );
 
-     for (size_t i = 0; i < nSize; i++)
-          boundedges[i] = listedges[(i + istart) % nSize];
-
-     return 0;
+    return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
 
