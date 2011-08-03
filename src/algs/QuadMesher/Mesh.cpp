@@ -1771,6 +1771,45 @@ Mesh::make_chain(vector<Edge> &boundedges)
 {
      size_t nSize = boundedges.size();
 
+     Vertex *curr_vertex = boundedges[0].getNodeAt(1);
+
+     for( size_t i = 1; i < nSize; i++) {
+          for( size_t  j = i; j < nSize; j++) {
+               Vertex *v0 = boundedges[j].getNodeAt(0);
+               Vertex *v1 = boundedges[j].getNodeAt(1);
+               if (v0 == curr_vertex) {
+                    curr_vertex = v1;
+                    if( j > i) swap( boundedges[i], boundedges[j] );
+                    break;
+               }
+               if (v1 == curr_vertex) {
+                    curr_vertex = v0;
+                    boundedges[j].setNodes(v1, v0);
+                    if( j > i ) swap( boundedges[i], boundedges[j] );
+                    break;
+               }
+          }
+     }
+
+     if( !is_closed_chain( boundedges )  ) {
+         cout << "Warning: The Chain is not closed " << endl;
+         return 1;
+         for( int i = 0; i < boundedges.size(); i++)  {
+              Vertex *v0 = boundedges[i].getNodeAt(0);
+              Vertex *v1 = boundedges[i].getNodeAt(1);
+              v0->setID( i );
+              v1->setID( i + 1 );
+         }
+         for( int i = 0; i < boundedges.size(); i++) {
+              Vertex *v0 = boundedges[i].getNodeAt(0);
+              Vertex *v1 = boundedges[i].getNodeAt(1);
+              cout << v0->getID() << " " << v1->getID() << endl;
+         }
+         exit(0);
+     }
+     return 0;
+
+/*
      Edge edge = boundedges.front();
 
      list<Edge> listedges;
@@ -1780,7 +1819,6 @@ Mesh::make_chain(vector<Edge> &boundedges)
      boundedges.clear();
      boundedges.reserve(nSize);
 
-     Vertex *curr_vertex = edge.getNodeAt(1);
      boundedges.push_back(edge);
 
      list<Edge>::iterator it;
@@ -1805,7 +1843,15 @@ Mesh::make_chain(vector<Edge> &boundedges)
           if (it != listedges.end()) listedges.erase(it);
      }
 
+     if( nSize != boundedges.size() ) return 1;
+
+     if( !is_closed_chain( boundedges )  ) {
+            cout << "Error: The Chain is not closed " << endl;
+            exit(0);
+     }
+
      return 0;
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////
