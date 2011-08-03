@@ -220,17 +220,17 @@ int main(int argc, char *argv[]) {
       	err = TheCore.save_mesh();
       	ERRORR("Failed to save o/p file.", 1);
       } else {
-	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
-      	ERRORR("Failed to save o/p file.", 1);
-	// #ifdef USE_MPI
-	//       	double write_time = MPI_Wtime();
-	//   	err = TheCore.save_mesh_parallel(rank, nprocs);
-	//       	ERRORR("Failed to save o/p file.", 1);
-	//       	write_time = MPI_Wtime() - write_time;
-	//       	if (rank == 0){
-	//   	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
-	//   	}
-	// #endif
+	//	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
+	//      	ERRORR("Failed to save o/p file.", 1);
+#ifdef USE_MPI
+	double write_time = MPI_Wtime();
+	err = TheCore.save_mesh_parallel(rank, nprocs);
+	ERRORR("Failed to save o/p file.", 1);
+	write_time = MPI_Wtime() - write_time;
+	if (rank == 0){
+	  std::cout << "Parallel write time = " << write_time << " seconds" << std::endl;
+	}
+#endif
       }
       if (TheCore.mem_tflag == true) {
 	TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem7);

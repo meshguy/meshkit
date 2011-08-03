@@ -133,6 +133,10 @@ int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
 // Output:   none
 // -------------------------------------------------------------------------------------------
 {
+  if (nrank == 0) {
+    std::cout << "Merging nodes in parallel. " << std::endl;
+  }
+
 #ifdef USE_MPI
   //Call the resolve parallel function
   moab::ParallelMergeMesh pm(pc, merge_tol);
