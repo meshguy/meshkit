@@ -1038,10 +1038,9 @@ OneDefectPatch::create_boundary()
      int err = Mesh::make_chain(boundary);
      if (err) return 2;
 
+     size_t nSize = boundary.size();
 
      Vertex *vertex;
-
-     size_t nSize = boundary.size();
      for (size_t k = 0; k < nSize; k++) {
           vertex = boundary[k].getNodeAt(0);
           if (relations02[vertex].size() == 1) corners.insert(vertex);
@@ -1054,23 +1053,18 @@ OneDefectPatch::create_boundary()
      err = Mesh::rotate_chain(boundary, *corners.begin());
      if (err) return 3;
 
-     // Collect the sequence of boundary nodes...,
+     bound_nodes.resize( nSize );
+     for (size_t k = 0; k < nSize; k++) 
+          bound_nodes[k] = boundary[k].getNodeAt(0); 
+     sort( bound_nodes.begin(), bound_nodes.end() );
+     inner_nodes.clear();
+     set_difference(nodes.begin(), nodes.end(),
+                    bound_nodes.begin(), bound_nodes.end(), back_inserter(inner_nodes));
+
+     // We need nodes in cycle, so collect the sequence of boundary nodes...,
      bound_nodes.resize( nSize );
      for (size_t k = 0; k < nSize; k++)
           bound_nodes[k] = boundary[k].getNodeAt(0); // Only the first node.
-
-     //
-     // Collect the inner nodes of the patch. These nodes will be deleted, if
-     // the remesh operation is successful...
-     //
-
-     inner_nodes.clear();
-     NodeSet::iterator niter;
-     for (niter = nodes.begin(); niter != nodes.end(); ++niter) {
-          Vertex *v = *niter;
-          if( find(bound_nodes.begin(), bound_nodes.end(), v) == bound_nodes.end() )
-             inner_nodes.push_back(v);
-     }
 
      // Split the boundary loop into segments.
      // (i.e. End of the segments are the corners identified earlier )
