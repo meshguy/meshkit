@@ -445,9 +445,11 @@ class OneDefectPatch {
 public:
      static size_t MAX_FACES_ALLOWED;
 
-     static size_t count_3_patches;
-     static size_t count_4_patches;
-     static size_t count_5_patches;
+     static size_t num_boundaries;
+     static double exec_time;
+     static size_t num_3_patches;
+     static size_t num_4_patches;
+     static size_t num_5_patches;
 
      OneDefectPatch( Mesh *m ) {
           mesh = m;
@@ -537,11 +539,13 @@ private:
      Vertex *apex;               // Seed: Irregular vertex to start from.
      NodeSequence  nodepath;     // Initial joining two irregular nodes..
 
-     FaceSet faces, inner_faces;        // Faces within the blob.
+     FaceSet faces;
+     FaceSet inner_faces; 
 
 #ifdef USE_HASHMAP
      std::tr1::unordered_map<Vertex*, FaceSet> relations02;
      std::tr1::unordered_map<Vertex*, FaceSet>::iterator miter;
+//   std::tr1::unordered_set<Face*> inner_faces;
 #else
      std::map<Vertex*, FaceSet> relations02;
      std::map<Vertex*, FaceSet>::iterator miter;
@@ -554,7 +558,8 @@ private:
      int quad_splitting_node_degree;  // Valence of the splitting node.
 
      NodeSet corners;                 // Corners of the blob
-     NodeSet inner_nodes;             // Inner nodes ( not on the boundary ) of the blob
+     NodeSet nodes;                   // All the nodes (inner + boundary)
+     NodeSequence inner_nodes;        // Inner nodes (not on the boundary ) of the blob
      NodeSequence bound_nodes;        // Boundary nodes
      NodeSequence irregular_nodes_removed;
 
@@ -604,7 +609,7 @@ private:
      // Patch creation functions...
      void  init_blob();
      int   create_boundary();
-     void  expand_blob( const Vertex *v);
+     void  expand_blob(Vertex *v);
      int   get_topological_outer_angle( Vertex *v);
      bool  is_simply_connected();
 
@@ -864,72 +869,6 @@ QuadCleanUp::hasSinglet (const Face *face)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-inline bool
-QuadCleanUp::isEdge33 (const Edge *e)
-{
-     assert(e);
-     // Any interior edge having end vertex degrees 3 is edge33
-     Vertex *v0 = e->getNodeAt (0);
-     Vertex *v1 = e->getNodeAt (1);
-
-     if (v0->isBoundary ()) return 0;
-     if (v1->isBoundary ()) return 0;
-
-     FaceSequence vneighs;
-
-     vneighs = v0->getRelations2 ();
-     if (vneighs.size () != 3) return 0;
-
-     vneighs = v1->getRelations2 ();
-     if (vneighs.size () != 3) return 0;
-
-     return 1;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-
-inline bool
-QuadCleanUp::isEdge35 (const Edge *e)
-{
-     Vertex *v0 = e->getNodeAt (0);
-     Vertex *v1 = e->getNodeAt (1);
-
-     if (v0->isBoundary ()) return 0;
-     if (v1->isBoundary ()) return 0;
-
-     FaceSequence vneighs;
-
-     vneighs = v0->getRelations2 ();
-     if (vneighs.size () != 3) return 0;
-
-     vneighs = v1->getRelations2 ();
-     if (vneighs.size () != 5) return 0;
-
-     return 1;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-
-inline bool
-QuadCleanUp::isTunnel(const Edge *e)
-{
-     Vertex *v0 = e->getNodeAt (0);
-     Vertex *v1 = e->getNodeAt (1);
-
-     if (!v0->isBoundary ()) return 0;
-     if (!v1->isBoundary ()) return 0;
-
-     FaceSequence vneighs;
-     Mesh::getRelations112(v0, v1, vneighs);
-
-     if( vneighs.size() != 1 ) return 1;
-
-     return 0;
-}
-*/
-/////////////////////////////////////////////////////////////////////////////
 
 void set_diamond_tag(Mesh *mesh);
 void set_bridge_tag(Mesh *mesh);

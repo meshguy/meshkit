@@ -4,9 +4,11 @@ using namespace Jaal;
 
 size_t OneDefectPatch :: MAX_FACES_ALLOWED = 500;
 
-size_t OneDefectPatch :: count_3_patches   = 0;
-size_t OneDefectPatch :: count_4_patches   = 0;
-size_t OneDefectPatch :: count_5_patches   = 0;
+size_t OneDefectPatch :: num_boundaries  = 0;
+size_t OneDefectPatch :: num_3_patches   = 0;
+size_t OneDefectPatch :: num_4_patches   = 0;
+size_t OneDefectPatch :: num_5_patches   = 0;
+double OneDefectPatch :: exec_time       = 0.0;
 
 ///////////////////////////////////////////////////////////////////////////////
 int TriRemeshTemplate::remesh(Mesh *msh,
@@ -671,7 +673,6 @@ int OneDefectPatch::remesh_3_sided_patch()
 {
      Vertex *c0, *c1, *c2;
 
-
      c0 = bound_nodes[ cornerPos[0] ];
      c1 = bound_nodes[ cornerPos[1] ];
      c2 = bound_nodes[ cornerPos[2] ];
@@ -681,7 +682,7 @@ int OneDefectPatch::remesh_3_sided_patch()
      get_bound_nodes(c2, c0, cnodes);
 
      int err = template3.remesh(mesh, anodes, bnodes, cnodes, partSegments);
-     if( !err ) count_3_patches++;
+     if( !err ) num_3_patches++;
      return err;
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -705,7 +706,6 @@ int OneDefectPatch::remesh_4_sided_patch()
                get_bound_nodes(c1, c2, bnodes);
                get_bound_nodes(c2, c3, cnodes);
                get_bound_nodes(c3, c0, dnodes);
-//             err = remesh_quad_loop(mesh, anodes, bnodes, cnodes, dnodes, newnodes, newfaces);
                err = template4.remesh(mesh, anodes, bnodes, cnodes, dnodes);
                return err;
           }
@@ -738,7 +738,6 @@ int OneDefectPatch::remesh_4_sided_patch()
      get_bound_nodes(tc, c3, c1nodes);
      get_bound_nodes(c3, c0, d1nodes);
 
-//   err = remesh_tri_loop(mesh, abnodes, bcnodes, canodes, partSegments, nnodes, nfaces);
      err = template3.remesh(mesh, abnodes, bcnodes, canodes, partSegments);
      if (!err) {
           for( size_t i = 0; i < template3.newnodes.size(); i++)
@@ -748,7 +747,6 @@ int OneDefectPatch::remesh_4_sided_patch()
      }
 
      if (!err) {
-//        err = remesh_quad_loop(mesh, a1nodes, canodes, c1nodes, d1nodes, nnodes, nfaces);
           err = template4.remesh(mesh, a1nodes, canodes, c1nodes, d1nodes);
           if (!err) {
                for( size_t i = 0; i < template4.newnodes.size(); i++)
@@ -759,7 +757,6 @@ int OneDefectPatch::remesh_4_sided_patch()
      }
 
      if (!err) {
-//        err = remesh_quad_loop(mesh, a2nodes, b1nodes, c2nodes, abnodes, nnodes, nfaces);
           err = template4.remesh(mesh, a2nodes, b1nodes, c2nodes, abnodes);
           if (!err) {
                for( size_t i = 0; i < template4.newnodes.size(); i++)
@@ -783,7 +780,7 @@ int OneDefectPatch::remesh_4_sided_patch()
           return 2;
      }
 
-     if( !err ) count_4_patches++;
+     if( !err ) num_4_patches++;
 
      return err;
 }
@@ -807,7 +804,7 @@ int OneDefectPatch::remesh_5_sided_patch()
 
      int err = template5.remesh(mesh, anodes, bnodes, cnodes, dnodes, enodes, partSegments);
 
-     if( !err) count_5_patches++;
+     if( !err) num_5_patches++;
 
      return err;
 }
@@ -947,6 +944,7 @@ bool OneDefectPatch::is_4_sided_convex_loop_quad_meshable()
 
 void OneDefectPatch::init_blob()
 {
+     nodes.clear();
      inner_nodes.clear();
      bound_nodes.clear();
 
@@ -957,35 +955,22 @@ void OneDefectPatch::init_blob()
 
      size_t nSize;
      if (apex) {
-          inner_nodes.insert(apex);
           expand_blob( apex );
      } else {
           nSize = nodepath.size();
           for (size_t i = 0; i < nSize; i++) {
                Vertex *v = nodepath[i];
-               inner_nodes.insert(v);
                expand_blob(v );
           }
      }
-
      create_boundary();
-
-     nSize = bound_nodes.size();
-
-     for (size_t i = 0; i < nSize; i++) {
-          int degree = bound_nodes[i]->getNumRelations(2);
-          if (degree != 4) {
-               expand_blob(bound_nodes[i]);
-               break;
-          }
-     }
 }
 
 ////////////////////////////////////////////////////////////////////
 
 size_t OneDefectPatch::count_irregular_nodes(int where)
 {
-     NodeSet::const_iterator it;
+     NodeSequence::const_iterator it;
      assert(mesh->getAdjTable(0, 2));
 
      size_t ncount = 0;
@@ -1010,9 +995,13 @@ size_t OneDefectPatch::count_irregular_nodes(int where)
 int
 OneDefectPatch::create_boundary()
 {
+     num_boundaries++;
+     StopWatch wc;
+
      corners.clear();
      boundary.clear();
-     Vertex *vertex;
+
+     wc.start();
 
      // We need to rebuild relations locally to identfy corners and boundary.
      FaceSet::const_iterator fiter;
@@ -1042,9 +1031,15 @@ OneDefectPatch::create_boundary()
           }
      }
 
+     wc.stop();
+     exec_time += wc.getSeconds();
+
      // Sequence the chain and start from one of the corner...
      int err = Mesh::make_chain(boundary);
      if (err) return 2;
+
+
+     Vertex *vertex;
 
      size_t nSize = boundary.size();
      for (size_t k = 0; k < nSize; k++) {
@@ -1068,15 +1063,13 @@ OneDefectPatch::create_boundary()
      // Collect the inner nodes of the patch. These nodes will be deleted, if
      // the remesh operation is successful...
      //
-     inner_nodes.clear();
 
-     for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
-          Face *face = *fiter;
-          for (int j = 0; j < 4; j++) {
-               Vertex *v = face->getNodeAt(j);
-               if( find(bound_nodes.begin(), bound_nodes.end(), v) == bound_nodes.end() )
-                    inner_nodes.insert(v);
-          }
+     inner_nodes.clear();
+     NodeSet::iterator niter;
+     for (niter = nodes.begin(); niter != nodes.end(); ++niter) {
+          Vertex *v = *niter;
+          if( find(bound_nodes.begin(), bound_nodes.end(), v) == bound_nodes.end() )
+             inner_nodes.push_back(v);
      }
 
      // Split the boundary loop into segments.
@@ -1128,7 +1121,7 @@ int OneDefectPatch::get_topological_outer_angle(Vertex *vertex)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void OneDefectPatch::expand_blob(const Vertex *vertex)
+void OneDefectPatch::expand_blob(Vertex *vertex)
 {
      const FaceSequence &vfaces = vertex->getRelations2();
 
@@ -1140,6 +1133,7 @@ void OneDefectPatch::expand_blob(const Vertex *vertex)
           for (int j = 0; j < 4; j++) {
                Vertex *vf = face->getNodeAt(j);
                relations02[vf].insert(face);
+               nodes.insert( vf );
           }
      }
 }
@@ -1148,7 +1142,6 @@ void OneDefectPatch::expand_blob(const Vertex *vertex)
 int
 OneDefectPatch::build_remeshable_boundary()
 {
-     static int failed_attempts = 0;
      assert(mesh->getAdjTable(0, 2));
 
      /////////////////////////////////////////////////////////////////////////////
@@ -1252,7 +1245,7 @@ OneDefectPatch::build_remeshable_boundary()
 
 void OneDefectPatch::rollback()
 {
-     NodeSet::const_iterator it;
+     NodeSequence::const_iterator it;
      for (it = inner_nodes.begin(); it != inner_nodes.end(); ++it) {
           Vertex *v = *it;
           mesh->reactivate(v);
@@ -1290,7 +1283,7 @@ void OneDefectPatch::pre_remesh()
           mesh->deactivate(*fiter);
 
      irregular_nodes_removed.clear();
-     NodeSet::const_iterator niter;
+     NodeSequence::const_iterator niter;
      for (niter = inner_nodes.begin(); niter != inner_nodes.end(); ++niter) {
           if (!QuadCleanUp::isRegular(*niter)) irregular_nodes_removed.push_back(*niter);
           mesh->deactivate(*niter);
@@ -1311,7 +1304,7 @@ void OneDefectPatch::post_remesh()
           mesh->remove(*fiter);
 
      // Remove the old nodes.. (will go to trash bin );
-     NodeSet::const_iterator niter;
+     NodeSequence::const_iterator niter;
      for (niter = inner_nodes.begin(); niter != inner_nodes.end(); ++niter)
           mesh->remove(*niter);
 
@@ -1327,7 +1320,7 @@ void OneDefectPatch::post_remesh()
      nSize = newnodes.size();
      inner_nodes.clear();
      for (size_t i = 0; i < nSize; i++)
-          inner_nodes.insert(newnodes[i]);
+          inner_nodes.push_back(newnodes[i]);
      newnodes.clear();
 
      int ncount = 0;
@@ -1402,7 +1395,7 @@ int OneDefectPatch::remesh()
 
 OneDefectPatch *QuadCleanUp::build_one_defect_patch(Vertex *vertex)
 {
-     assert( vertex );
+     if( vertex->isRemoved() ) return NULL;
 
      if( defective_patch == NULL )
           defective_patch = new OneDefectPatch(mesh);
@@ -1492,9 +1485,9 @@ int QuadCleanUp::remesh_defective_patches()
                irregular_nodes.swap(nextSeq);
 
                if (ncount2) {
-                  wc[2].start();
+                    wc[2].start();
 //                mopt.shape_optimize(mesh);
-                  wc[2].stop();
+                    wc[2].stop();
                }
                if( ncount2 == 0) break;
           }
@@ -1506,9 +1499,11 @@ int QuadCleanUp::remesh_defective_patches()
           cout << "    Total Execution time        : " << wc[3].getSeconds() << endl;
      }
 
-     cout << "3 Sided Patches : " << OneDefectPatch::count_3_patches << endl;
-     cout << "4 Sided Patches : " << OneDefectPatch::count_4_patches << endl;
-     cout << "5 Sided Patches : " << OneDefectPatch::count_5_patches << endl;
+     cout << "#of times boundaries created : " << OneDefectPatch::num_boundaries << endl;
+     cout << "Exec time boundaries created : " << OneDefectPatch::exec_time      << endl;
+     cout << "3 Sided Patches : " << OneDefectPatch::num_3_patches << endl;
+     cout << "4 Sided Patches : " << OneDefectPatch::num_4_patches << endl;
+     cout << "5 Sided Patches : " << OneDefectPatch::num_5_patches << endl;
 
      cout << "Execution Summary: " << endl;
      cout << "    Time for searching patches  : " << wc[0].getSeconds()  << endl;

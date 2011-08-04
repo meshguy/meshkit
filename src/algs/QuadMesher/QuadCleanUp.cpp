@@ -66,14 +66,14 @@ QuadCleanUp::automatic()
      if( ninvert > 0.5*numfaces ) mesh->reverse();
 
 //  ****************************************************************************
+//  Check the boundary nodes connectivity, and ensure that all elements adjacent
+//  to them are convex. Singlet must be called after doublets removal ...
+//  ****************************************************************************
+     err = remove_boundary_singlets();
+
+//  ****************************************************************************
 //  Initial mesh may have  doublets, remove them, they are troublesome: Condition Strict
 //  ****************************************************************************
-
-#ifdef DEBUG
-     Jaal::set_doublet_tag(mesh);
-     mesh->saveAs("stage0.dat");
-#endif
-
      err = remove_interior_doublets();
      if( err ) {
           cout << "Fatal Error: There are interior doublets in the mesh " << endl;
@@ -83,114 +83,49 @@ QuadCleanUp::automatic()
           return stage;
      }
 
-#ifdef DEBUG
-     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
-     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-     cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
-     euler1 = mesh->getEulerCharacteristic();
-     assert( euler0 == euler1 );
-#endif
+     mopt.shape_optimize( mesh );
 
-//  ****************************************************************************
-//  Check the boundary nodes connectivity, and ensure that all elements adjacent
-//  to them are convex. Singlet must be called after doublets removal ...
-//  ****************************************************************************
-     err = remove_boundary_singlets();
+     for( int i = 0; i < 3; i++) {
 
-#ifdef DEBUG
-     Jaal::set_no_tags(mesh);
-     mesh->saveAs("stage1.dat");
-#endif
-
-     /*
-        if( mesh->count_concave_faces() )
-            lapsmooth.convexify();
-     */
-
-#ifdef DEBUG
-     Jaal::set_no_tags(mesh);
-     mesh->saveAs("stage3.dat");
-#endif
-
-#ifdef GEOM2D
-     if( !mesh->count_concave_faces() )
-          mopt.shape_optimize( mesh );
-
-     if( mesh->count_concave_faces() )
-          lapsmooth.convexify();
-
-     if( mesh->count_concave_faces() )
-          swap_concave_faces();
-#endif
-
-#ifdef DEBUG
-     Jaal::set_no_tags(mesh);
-     mesh->saveAs("stage4.dat");
-
-     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
-     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-     cout << "# of concave faces   " << mesh->count_concave_faces(4)    << endl;
-     euler1 = mesh->getEulerCharacteristic();
-     assert( euler0 == euler1 );
-#endif
-
-//  ***************************************************************************
-//  Tunnels may put constraints in the movements, so it is better to remove them,
-//  Condition: Soft
-//  ***************************************************************************
-
-     /*
-         err = remove_tunnels();
-         cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
-         cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-         cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
-         euler1 = mesh->getEulerCharacteristic();
-         assert( euler0 == euler1 );
-     */
-
-//  ***************************************************************************
-//  Perform  vertex degree reduction with local edge swapping: Soft.
-//  ***************************************************************************
-
-     err = vertex_degree_reduction();
-
-#ifdef DEBUG
-     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
-     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-     cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
-     mesh->get_topological_statistics();
-
-     euler1 = mesh->getEulerCharacteristic();
-     assert( euler0 == euler1 );
-     Jaal::set_no_tags(mesh);
-     mesh->saveAs("stage5.dat");
-#endif
-
+          for( int j = 0; j < 3; j++) {
 //  ***************************************************************************
 //  Perform some local operations: Condition: Soft. Diamonds must be called after the
 //  vertex deduction operation, otherewise, face-close operation might increase the
 //  vertex degrees.
 //  ***************************************************************************
+               err = remove_diamonds();
 
-     err = remove_diamonds();
+//  ***************************************************************************
+//  Perform  vertex degree reduction with local edge swapping: Soft.
+//  ***************************************************************************
 
-#ifdef DEBUG
-     cout << "Info:  Stage "  << stage++ << " :  Passed " << endl;
-     cout << "# of irregular nodes " << mesh->count_irregular_nodes(4) << endl;
-     cout << "# of concave faces   " << mesh->count_concave_faces()    << endl;
+               err = vertex_degree_reduction();
 
-     euler1 = mesh->getEulerCharacteristic();
-     assert( euler0 == euler1 );
-     Jaal::set_no_tags(mesh);
-     mesh->saveAs("stage6.dat");
-#endif
+               mopt.shape_optimize( mesh );
+          }
 
 // ****************************************************************************
 // Perform Global remeshing to elimate 3 and 5 degree nodes ..
 // ****************************************************************************
-     err = remesh_defective_patches();
+          err = remesh_defective_patches();
+          mopt.shape_optimize( mesh );
 
-     return 0;
+     }
+
+     mesh->prune();
+     mesh->collect_garbage();
+
+// Throughout the cleaning process, euler characteristic should remain same
+    int euler1 = mesh->getEulerCharacteristic(); // Invariant
+
+// Total area of the domain must be same ...
+    double area1 = mesh->getSurfaceArea();
+
+   cout <<  "Mesh Invariants : " << endl;
+   cout <<  "     Euler Characteristics : " << euler0 << "  " << euler1 << endl;
+   cout <<  "     Surface Area          : " << area0  << "  " << area1 << endl;
+
+   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -757,8 +692,6 @@ QuadCleanUp::free_restricted_nodes_once()
      if (!relexist2)
           mesh->clear_relations (0, 2);
 
-     lapsmooth->execute ();
-
      return ncount;
      return 1;
 }
@@ -942,6 +875,8 @@ int QuadCleanUp :: shift_irregular_nodes()
 
      if (!rel0exist) mesh->clear_relations(0, 0);
      if (!rel2exist) mesh->clear_relations(0, 2);
+
+    return 0;
 }
 ///////////////////////////////////////////////////////////////////////
 
@@ -973,6 +908,7 @@ int QuadCleanUp::apply_shift_node3_rule(Vertex *vertex)
 //  if ( nopp == 3) return refine_3434_pattern(face, pos);
      if ( nopp == 4) return refine_3444_pattern(face, pos);
      if ( nopp == 5) return refine_3454_pattern(face, pos);
+     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////
