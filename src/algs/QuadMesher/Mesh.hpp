@@ -293,9 +293,6 @@ public:
           return visitMark;
      }
 
-     void setStatus(int a) {
-          statusMark = a;
-     }
 
      int getStatus() const {
           return statusMark;
@@ -486,6 +483,10 @@ public:
           return 0;
      }
 
+     void setStatus(int a) {
+          statusMark = a;
+     }
+
 protected:
      idtype gid;
      int boundarymark;
@@ -500,6 +501,7 @@ protected:
      FaceSequence relations2; // vertex-face
 
      std::vector<Attribute*> attributes;
+
 };
 
 struct EntityRemovedPred {
@@ -2043,10 +2045,12 @@ inline int Mesh::deactivate(PNode vi)
           int nSize = vneighs.size();
           for (int j = 0; j <  nSize; j++) {
                Vertex *vj = vneighs[j];
-               vi->removeRelation0(vj);
                vj->removeRelation0(vi);
           }
+          vi->clearRelations(0);
      }
+
+     if (adjTable[0][2]) vi->clearRelations(2);
 
      vi->setStatus(MeshEntity::INACTIVE);
 

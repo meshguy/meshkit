@@ -1848,10 +1848,19 @@ Mesh::rotate_chain(vector<Edge> &boundedges, Vertex *first_vertex)
      for( it = boundedges.begin(); it != boundedges.end(); ++it) {
           if (it->getNodeAt(0) == first_vertex) {
               middle = it;
+              
               break;
           }
      }
+
+     if( it == boundedges.end() ) {
+         assert( first_vertex );
+         cout << "Fatal Error in rotate Chain : First vertex " << first_vertex->getID() << endl;
+         exit(0);
+     }
+
      std::rotate( boundedges.begin(), middle, boundedges.end() );
+
      assert( boundedges[0].getNodeAt(0) == first_vertex );
 
     return 0;
@@ -1960,7 +1969,7 @@ void Mesh::build_edges()
      edges.clear();
 
      for (size_t i = 0; i < numnodes; i++) {
-          NodeSequence &neighs = nodes[i]->getRelations0();
+          const NodeSequence &neighs = nodes[i]->getRelations0();
           for (size_t j = 0; j < neighs.size(); j++)
                if (nodes[i] > neighs[j]) {
                     Edge *newedge = new Edge(nodes[i], neighs[j]);
@@ -2325,6 +2334,7 @@ Mesh::search_boundary()
      if (boundary_known == 1) return 1;
 
      if (!isPruned()) prune();
+
      int relexist = build_relations(0, 2);
      size_t numfaces = getSize(2);
 
@@ -2335,7 +2345,7 @@ Mesh::search_boundary()
           size_t nnodes = face->getSize(0);
           for (size_t j = 0; j < nnodes; j++) {
                Vertex *v0 = face->getNodeAt(j);
-               Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
+               Vertex *v1 = face->getNodeAt(j + 1);
                Mesh::getRelations112(v0, v1, neighs);
                if (neighs.size() == 1) {
                     bmark = max(1, face->getBoundaryMark());
@@ -2352,9 +2362,6 @@ Mesh::search_boundary()
 
      if (!relexist)
           clear_relations(0, 2);
-
-     // Calculate the boundary feature angles also.
-     // setFeatureAngles ();
 
      boundary_known = 1;
 
@@ -3573,9 +3580,10 @@ Mesh::refine_quads14()
      size_t numfaces = this->getSize(2);
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = this->getFaceAt(iface);
+          if( !face->isRemoved() ) {
           for (int j = 0; j < 4; j++) {
-               Vertex *v0 = face->getNodeAt((j + 0) % 4);
-               Vertex *v1 = face->getNodeAt((j + 1) % 4);
+               Vertex *v0 = face->getNodeAt((j + 0));
+               Vertex *v1 = face->getNodeAt((j + 1));
                Edge edge(v0, v1);
                Vertex *vh = edge.getHashNode();
                ilower = edgemap.lower_bound(vh);
@@ -3598,6 +3606,7 @@ Mesh::refine_quads14()
           for (int j = 0; j < 4; j++)
                this->addFace(newfaces[j]);
           face->setStatus(MeshEntity::REMOVE);
+          }
      }
 
      prune();
@@ -3619,6 +3628,7 @@ Mesh::refine_quads15()
      size_t numfaces = getSize(2);
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = getFaceAt(iface);
+          if( !face->isRemoved() ) {
           face->refine_quad15(newnodes, newfaces);
 
           nSize = newnodes.size();
@@ -3628,8 +3638,8 @@ Mesh::refine_quads15()
           nSize = newfaces.size();
           for (int j = 0; j < nSize; j++)
                addFace(newfaces[j]);
-
           face->setStatus(MeshEntity::REMOVE);
+          }
      }
 
      prune();

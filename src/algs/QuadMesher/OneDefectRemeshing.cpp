@@ -1049,13 +1049,15 @@ OneDefectPatch::create_boundary()
           if (relations02[vertex].size() == 1) corners.insert(vertex);
      }
 
+     if( corners.size() < 3) return 3;
+
      // Start the chain from one of the corners.
      err = Mesh::rotate_chain(boundary, *corners.begin());
-     if (err) return 3;
+     if (err) return 4;
 
      bound_nodes.resize( nSize );
-     for (size_t k = 0; k < nSize; k++) 
-          bound_nodes[k] = boundary[k].getNodeAt(0); 
+     for (size_t k = 0; k < nSize; k++)
+          bound_nodes[k] = boundary[k].getNodeAt(0);
      sort( bound_nodes.begin(), bound_nodes.end() );
      inner_nodes.clear();
      set_difference(nodes.begin(), nodes.end(),
@@ -1240,16 +1242,12 @@ OneDefectPatch::build_remeshable_boundary()
 void OneDefectPatch::rollback()
 {
      NodeSequence::const_iterator it;
-     for (it = inner_nodes.begin(); it != inner_nodes.end(); ++it) {
-          Vertex *v = *it;
-          mesh->reactivate(v);
-     }
+     for (it = inner_nodes.begin(); it != inner_nodes.end(); ++it) 
+          mesh->reactivate(*it);
 
      FaceSet::const_iterator fiter;
-     for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
-          Face *face = *fiter;
-          mesh->reactivate(face);
-     }
+     for (fiter = faces.begin(); fiter != faces.end(); ++fiter)
+          mesh->reactivate(*fiter);
 
      size_t nSize = newfaces.size();
      for (size_t i = 0; i < nSize; i++)
@@ -1389,8 +1387,6 @@ int OneDefectPatch::remesh()
 
 OneDefectPatch *QuadCleanUp::build_one_defect_patch(Vertex *vertex)
 {
-     if( vertex->isRemoved() ) return NULL;
-
      if( defective_patch == NULL )
           defective_patch = new OneDefectPatch(mesh);
 
@@ -1426,6 +1422,9 @@ int QuadCleanUp::remesh_defective_patches()
      int relexist2 = mesh->build_relations(0, 2);
 
      mesh->search_boundary();
+
+     if( !mesh->is_consistently_oriented() ) 
+          mesh->make_consistently_oriented();
 
      djkpath = new DijkstraShortestPath(mesh, 1);
 
@@ -1512,4 +1511,5 @@ int QuadCleanUp::remesh_defective_patches()
 
      return 0;
 }
+
 /////////////////////////////////////////////////////////////////////////
