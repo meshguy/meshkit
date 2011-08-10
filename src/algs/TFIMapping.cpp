@@ -631,6 +631,39 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	g_err = ent->igeom_instance()->rmvArrTag(&gNode[0], 4, taghandle);
 	IBERRCHK(g_err, "Trouble remove the tag values from an array of entities.");
 	//rmvArrTag
+
+	//Get the global id tag
+	const char *tag = "GLOBAL_ID";
+	iBase_TagHandle mesh_id_tag;
+	m_err = mk_core()->imesh_instance()->getTagHandle(tag, mesh_id_tag);
+	IBERRCHK(m_err, "Trouble get the mesh_id_tag for 'GLOBAL_ID'.");
+
+	std::vector<iBase_EntityHandle> m_Nodes, m_Edges, m_Quads;
+
+	//set the int data for Global ID tag
+	iBase_EntitySetHandle root_set;
+	int err;
+	iMesh_getRootSet(mk_core()->imesh_instance()->instance(), &root_set, &err);
+	assert(!err);
+	m_err = mk_core()->imesh_instance()->getEntities(root_set, iBase_VERTEX, iMesh_POINT, m_Nodes);
+	IBERRCHK(m_err, "Trouble get the node list from the mesh entity set.");	
+	m_err = mk_core()->imesh_instance()->getEntities(root_set, iBase_EDGE, iMesh_LINE_SEGMENT, m_Edges);
+	IBERRCHK(m_err, "Trouble get the edges from the mesh entity set.");	
+	m_err = mk_core()->imesh_instance()->getEntities(root_set, iBase_FACE, iMesh_QUADRILATERAL, m_Quads);
+	IBERRCHK(m_err, "Trouble get the faces from the mesh entity set.");
+	
+	for (unsigned int i = 0; i < m_Nodes.size(); i++){
+		m_err = mk_core()->imesh_instance()->setIntData(m_Nodes[i], mesh_id_tag, i);
+		IBERRCHK(m_err, "Trouble set the int data for 'GLOBAL_ID'.");		
+	}
+	for (unsigned int i = 0; i < m_Edges.size(); i++){
+		m_err = mk_core()->imesh_instance()->setIntData(m_Edges[i], mesh_id_tag, i);
+		IBERRCHK(m_err, "Trouble set the int data for 'GLOBAL_ID'.");		
+	}
+	for (unsigned int i = 0; i < m_Quads.size(); i++){
+		m_err = mk_core()->imesh_instance()->setIntData(m_Quads[i], mesh_id_tag, i);
+		IBERRCHK(m_err, "Trouble set the int data for 'GLOBAL_ID'.");		
+	}
 	
 	return 1;
 }
