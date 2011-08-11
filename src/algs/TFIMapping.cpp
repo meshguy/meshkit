@@ -487,8 +487,8 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 			}
 			else
 			{
-				r = (fabs((uv_2[0]+uv_3[0])/2 - uv_0[0]))/(fabs(uv_1[0] - uv_0[0]));
-				s = (fabs((uv_0[1]+uv_1[1])/2 - uv_3[1]))/(fabs(uv_2[1] - uv_3[1]));
+				r = (fabs((uv_2[1]+uv_3[1])/2 - uv_0[1]))/(fabs(uv_1[1] - uv_0[1]));
+				s = (fabs((uv_0[0]+uv_1[0])/2 - uv_3[0]))/(fabs(uv_2[0] - uv_3[0]));
 				uv[0] = parametricTFI2D(r, s, uv_0[0], uv_1[0], uv_3[0], uv_2[0]);
 				uv[1] = parametricTFI2D(r, s, uv_0[1], uv_1[1], uv_3[1], uv_2[1]);
 			}
