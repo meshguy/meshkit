@@ -316,7 +316,7 @@ public:
   std::vector<int> meshfile_proc;
   std::vector<double> x_coord;
   std::vector<double> y_coord;
-
+  bool nst_flag, nsb_flag, nss_flag;
 
 private:
 
@@ -331,7 +331,7 @@ private:
   int UNITCELL_DUCT, ASSY_TYPES ;
   int nrings, nringsx, nringsy, pack_type, symm;
   double pitch, pitchx, pitchy;
-  bool global_ids, back_mesh, nst_flag, nsb_flag, nss_flag;
+  bool global_ids, back_mesh;
   std::string outfile;
   int nassys; // the number of mesh files
   int tot_assys; // total no. of assms forming core

@@ -1071,7 +1071,7 @@ int CCrgen::banner()
 {
   std::cout << '\n';
   std::cout
-    << "\t\t--------------------------------------------------------------------"
+    << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     << '\n';
   std::cout
     << "\t\tProgram to Assemble Nuclear Reactor Assembly Meshes and Form a Core     "
@@ -1079,7 +1079,7 @@ int CCrgen::banner()
   std::cout << "\t\t\t\t\tArgonne National Laboratory" << '\n';
   std::cout << "\t\t\t\t\t        2009-2010         " << '\n';
   std::cout
-    << "\t\t--------------------------------------------------------------------"
+    << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     << '\n';
   return iBase_SUCCESS;
 }
