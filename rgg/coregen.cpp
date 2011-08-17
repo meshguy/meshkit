@@ -286,8 +286,9 @@ int main(int argc, char *argv[]) {
     mem3/=1e6;
     mem5/=1e6;
     mem7/=1e6;
-    unsigned long max_mem7 = 1.0;
+
 #ifdef USE_MPI   
+    unsigned long max_mem7 = 1.0;
     MPI::COMM_WORLD.Reduce( &mem7, &max_mem7, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
 #endif
 
