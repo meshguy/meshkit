@@ -25,7 +25,6 @@ int Jaal::MeshOptimization::shape_optimize(Jaal::Mesh *mesh, int algo, int niter
                cout << " Optimizing triangle mesh of the quadrilateral mesh: " << endl;
                vector<Vertex*> steiner;
                Mesh *trimesh = Jaal::quad_to_tri4( mesh, steiner);
-               assert( trimesh );
                execute(trimesh);
                trimesh->deleteFaces();
                for( size_t i = 0; i < steiner.size(); i++)
@@ -44,7 +43,7 @@ int Jaal::MeshOptimization::shape_optimize(Jaal::Mesh *mesh, int algo, int niter
 
 #ifdef HAVE_MESQUITE
 ///////////////////////////////////////////////////////////////////////////////
-Mesquite::ArrayMesh* Jaal::MeshOptimization::jaal_to_mesquite( Jaal::Mesh *mesh)
+Mesquite::ArrayMesh* Jaal::MeshOptimization::jaal_to_mesquite( Jaal::Mesh *mesh )
 {
      MsqError err;
 
@@ -69,16 +68,14 @@ Mesquite::ArrayMesh* Jaal::MeshOptimization::jaal_to_mesquite( Jaal::Mesh *mesh)
      size_t index = 0;
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *vertex = mesh->getNodeAt(i);
-          if( !vertex->isRemoved() )
-               vertex->setID( index++ );
+          if( vertex->isActive() ) vertex->setID( index++ );
      }
+     size_t noptnodes = index;
 
-     size_t numActiveNodes = index;
-     vector<int> vfixed;
-     vfixed.resize(numActiveNodes);
+     vfixed.resize(noptnodes);
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *vertex = mesh->getNodeAt(i);
-          if( !vertex->isRemoved() ) {
+          if( vertex->isActive() ) {
                int lid = vertex->getID();
                if (vertex->isBoundary())
                     vfixed[lid] = 1;
@@ -90,13 +87,8 @@ Mesquite::ArrayMesh* Jaal::MeshOptimization::jaal_to_mesquite( Jaal::Mesh *mesh)
      size_t noptfaces = 0;
      for( size_t i = 0; i < numfaces; i++) {
           Face *f = mesh->getFaceAt(i);
-          if( !f->isRemoved() ) noptfaces++;
+          if( f->isActive() ) noptfaces++;
      }
-
-     vector<size_t>  vNodes;
-     vector<double>  vCoords;
-     vector<size_t>  l2g;
-     vector<int>     etopo;
 
      mesh->getCoordsArray( vCoords, l2g );
      mesh->getNodesArray( vNodes, etopo );
@@ -105,14 +97,14 @@ Mesquite::ArrayMesh* Jaal::MeshOptimization::jaal_to_mesquite( Jaal::Mesh *mesh)
 
      int topo = mesh->isHomogeneous();
 
-     numnodes = vCoords.size()/3;
+     assert( numnodes = vCoords.size()/3 );
      assert( vfixed.size() == numnodes );
 
      if (topo == 4)
-          optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
+          optmesh = new Mesquite::ArrayMesh(3, noptnodes, &vCoords[0], &vfixed[0],
                                             noptfaces, Mesquite::QUADRILATERAL, &vNodes[0]);
      if (topo == 3) {
-          optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
+          optmesh = new Mesquite::ArrayMesh(3, noptnodes, &vCoords[0], &vfixed[0],
                                             noptfaces, Mesquite::TRIANGLE, &vNodes[0]);
      }
 
@@ -128,77 +120,12 @@ int Jaal::MeshOptimization::execute(Jaal::Mesh *mesh)
 #ifdef HAVE_MESQUITE
      MsqError err;
 
-     unsigned long int numnodes = mesh->getSize(0);
-     unsigned long int numfaces = mesh->getSize(2);
-
-     //
-     //////////////////////////////////////////////////////////////////////////////
-     // Mesquite works only when the faces are convex, and our mesh may contain some
-     // truly bad elements. Therefore, we will skip those faces and mark them fix.
-     // Hopefully, later by some other operations ( smoothing, decimation, refinement
-     // etc.) those bad elements may get removed.
-
-     // By ignoring some of the faces, the mesh may get disconnected. ( I need to test
-     // such cases ).
-     //
-     // The mesh must be doublets free. ( I found out this after some pains ).
-     //////////////////////////////////////////////////////////////////////////////
-
-     mesh->search_boundary();
-
-     size_t index = 0;
-     for (size_t i = 0; i < numnodes; i++) {
-          Vertex *vertex = mesh->getNodeAt(i);
-          if( !vertex->isRemoved() )
-               vertex->setID( index++ );
-     }
-
-     size_t numActiveNodes = index;
-     vector<int> vfixed;
-     vfixed.resize(numActiveNodes);
-     for (size_t i = 0; i < numnodes; i++) {
-          Vertex *vertex = mesh->getNodeAt(i);
-          if( !vertex->isRemoved() ) {
-               int lid = vertex->getID();
-               if (vertex->isBoundary())
-                    vfixed[lid] = 1;
-               else
-                    vfixed[lid] = 0;
-          }
-     }
-
-     size_t noptfaces = 0;
-     for( size_t i = 0; i < numfaces; i++) {
-          Face *f = mesh->getFaceAt(i);
-          if( !f->isRemoved() ) noptfaces++;
-     }
-
-     vector<size_t>  vNodes;
-     vector<double>  vCoords;
-     vector<size_t>  l2g;
-     vector<int>     etopo;
-
-     mesh->getCoordsArray( vCoords, l2g );
-     mesh->getNodesArray( vNodes, etopo );
-
      Mesquite::ArrayMesh *optmesh = NULL;
-
-     int topo = mesh->isHomogeneous();
-
-     numnodes = vCoords.size()/3;
-     assert( vfixed.size() == numnodes );
-
-     if (topo == 4)
-          optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
-                                            noptfaces, Mesquite::QUADRILATERAL, &vNodes[0]);
-     if (topo == 3) {
-          optmesh = new Mesquite::ArrayMesh(3, numnodes, &vCoords[0], &vfixed[0],
-                                            noptfaces, Mesquite::TRIANGLE, &vNodes[0]);
-     }
-     if (optmesh == NULL) return 1;
+     optmesh = Jaal::MeshOptimization::jaal_to_mesquite( mesh);
+     if( optmesh == NULL ) return 1;
 
      Vector3D normal(0, 0, 1);
-     Vector3D point(0, 0, 0);
+     Vector3D point (0, 0, 0);
      PlanarDomain mesh_plane(normal, point);
 
      // creates a mean ratio quality metric ...
@@ -285,8 +212,12 @@ int Jaal::MeshOptimization::execute(Jaal::Mesh *mesh)
           queue.set_master_quality_improver(improver, err);
           queue.add_quality_assessor(&qa, err);
 
+          cout << " Hello " << endl;
+
           // do optimization of the mesh_set
           queue.run_instructions(optmesh, &mesh_plane, err);
+
+          cout << " Hello " << endl;
 
           cout << "# of iterations " << tc_inner.get_iteration_count() << endl;
 

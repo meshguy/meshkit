@@ -10,7 +10,7 @@ using namespace Jaal;
 
 size_t Vertex::global_id = 0;
 
-#ifdef USE_BOOST_LIBS
+#ifdef HAVE_BOOST
 AttribKey MeshEntity::maxAttribID = 0;
 std::map<string, AttribKey> MeshEntity::attribKeyMap;
 
@@ -585,7 +585,7 @@ Face::getRelations202()
 
      int nSize = connect.size();
      for (int i = 0; i < nSize; i++) {
-          Vertex *v0 = connect[(i + 0) % nSize];
+          Vertex *v0 = connect[i];
           const FaceSequence &vneighs = v0->getRelations2();
           int numneighs = vneighs.size();
           for (int  j = 0; j < numneighs; j++) {
@@ -607,8 +607,8 @@ Face::getRelations212()
 
      int nSize = connect.size();
      for (int i = 0; i < nSize; i++) {
-          Vertex *v0 = connect[i + 0];
-          Vertex *v1 = connect[i + 1];
+          Vertex *v0 = getNodeAt(i + 0);
+          Vertex *v1 = getNodeAt(i + 1);
           Mesh::getRelations112(v0, v1, edgeneighs);
           int numneighs = edgeneighs.size();
           for (int j = 0; j <  numneighs; j++) {
@@ -627,7 +627,7 @@ Face::getRelations212()
 bool
 Face::isValid() const
 {
-     if (isRemoved()) return 0;
+     if (!isActive()) return 0;
 
      int nSize = connect.size();
      for (int i = 0; i < nSize; i++)
@@ -650,8 +650,8 @@ Face::has_boundary_edge() const
      int nSize = connect.size();
      FaceSequence neighs;
      for (int i = 0; i < nSize; i++) {
-          Vertex *v0 = connect[(i + 0) % nSize];
-          Vertex *v1 = connect[(i + 1) % nSize];
+          Vertex *v0 = getNodeAt(i + 0);
+          Vertex *v1 = getNodeAt(i + 1);
           if (v0->isBoundary() && v1->isBoundary()) {
                Mesh::getRelations112(v0, v1, neighs);
                if (neighs.size() == 1) return 1;
@@ -711,13 +711,13 @@ Face::concaveAt() const
           y[0] = xyz[1];
           z[0] = xyz[2];
 
-          vertex = getNodeAt((i + 1) % nsize);
+          vertex = getNodeAt(i + 1 );
           xyz = vertex->getXYZCoords();
           x[1] = xyz[0];
           y[1] = xyz[1];
           z[1] = xyz[2];
 
-          vertex = getNodeAt((i + nsize - 1) % nsize);
+          vertex = getNodeAt(i + nsize - 1 );
           xyz = vertex->getXYZCoords();
           x[2] = xyz[0];
           y[2] = xyz[1];
@@ -1479,6 +1479,8 @@ int Mesh::refine_tri_edge( Vertex *v0, Vertex *v1, int numSegments,
      return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 int Mesh::collapse_tri_edge( Vertex *v0, Vertex *v1)
 {
      assert( getAdjTable(0,2) );
@@ -1618,10 +1620,12 @@ Mesh::check_convexity()
      size_t nconvex = 0, nconcave = 0;
      for (size_t i = 0; i < numfaces; i++) {
           Face *face = getFaceAt(i);
-          if (face->isConvex())
-               nconvex++;
-          else
-               nconcave++;
+          if( face->isActive() ) {
+               if (face->isConvex())
+                    nconvex++;
+               else
+                    nconcave++;
+          }
      }
      cout << "Info: Total Number of faces " << numfaces << " #Convex : " << nconvex << " #Concave " << nconcave << endl;
      return 0;
@@ -1637,7 +1641,7 @@ Mesh::getMinMaxFaceArea(double &minarea, double &maxarea)
      vector<double> area(numfaces);
      for (size_t i = 0; i < numfaces; i++) {
           Face *face = getFaceAt(i);
-          area[i] = face->getArea();
+          if( face->isActive() ) area[i] = face->getArea();
      }
      minarea = *min_element(area.begin(), area.end());
      maxarea = *max_element(area.begin(), area.end());
@@ -1656,7 +1660,7 @@ Mesh::getCoordsArray( vector<double> &vcoords, vector<size_t> &l2g)
 
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *v = getNodeAt(i);
-          if( !v->isRemoved() ) {
+          if( v->isActive() ) {
                l2g.push_back( v->getID() );
                const Point3D &xyz = v->getXYZCoords();
                vcoords.push_back( xyz[0] );
@@ -1686,15 +1690,14 @@ Mesh::getNodesArray( vector<size_t> &nodearray, vector<int> &elmtopo)
      size_t index = 0;
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *v = getNodeAt(i);
-          if( !v->isRemoved() )
-               nodemap[v->getID()] = index++;
+          if( v->isActive() ) nodemap[v->getID()] = index++;
      }
 
      elmtopo.reserve( numfaces );
 
      for (size_t i = 0; i < numfaces; i++) {
           Face *face = getFaceAt(i);
-          if( !face->isRemoved() ) {
+          if( face->isActive() ) {
                elmtopo.push_back( face->getSize(0) );
                for (int j = 0; j < face->getSize(0); j++) {
                     Vertex *v = face->getNodeAt(j);
@@ -1753,7 +1756,7 @@ Mesh::setCoordsArray(const vector<double> &vcoords, const vector<size_t> &l2g)
      int index = 0;
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *v = getNodeAt(i);
-          if( !v->isRemoved() ) {
+          if( v->isActive() ) {
                assert( v->getID() == l2g[index] );
                xyz[0] = vcoords[3 * index + 0];
                xyz[1] = vcoords[3 * index + 1];
@@ -1778,7 +1781,7 @@ Mesh::make_chain(vector<Edge> &boundedges)
           for( size_t  j = i; j < nSize; j++) {
                Vertex *v0 = boundedges[j].getNodeAt(0);
                Vertex *v1 = boundedges[j].getNodeAt(1);
-               assert( !v0->isRemoved() && !v1->isRemoved() );
+               assert( v0->isActive() && v1->isActive() );
                if (v0 == curr_vertex) {
                     curr_vertex = v1;
                     if( j > i) swap( boundedges[i], boundedges[j] );
@@ -1827,7 +1830,7 @@ int
 Mesh::is_closed_chain(const vector<Edge> &boundedges)
 {
      Vertex *first_vertex = boundedges[0].getNodeAt(0);
-     Vertex *curr_vertex = boundedges[0].getNodeAt(1);
+     Vertex *curr_vertex  = boundedges[0].getNodeAt(1);
 
      for (size_t i = 1; i < boundedges.size(); i++) {
           if (boundedges[i].getNodeAt(0) != curr_vertex) return 0;
@@ -1847,23 +1850,23 @@ Mesh::rotate_chain(vector<Edge> &boundedges, Vertex *first_vertex)
      vector<Edge>::iterator middle, it;
      for( it = boundedges.begin(); it != boundedges.end(); ++it) {
           if (it->getNodeAt(0) == first_vertex) {
-              middle = it;
-              
-              break;
+               middle = it;
+
+               break;
           }
      }
 
      if( it == boundedges.end() ) {
-         assert( first_vertex );
-         cout << "Fatal Error in rotate Chain : First vertex " << first_vertex->getID() << endl;
-         exit(0);
+          assert( first_vertex );
+          cout << "Fatal Error in rotate Chain : First vertex " << first_vertex->getID() << endl;
+          exit(0);
      }
 
      std::rotate( boundedges.begin(), middle, boundedges.end() );
 
      assert( boundedges[0].getNodeAt(0) == first_vertex );
 
-    return 0;
+     return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1872,7 +1875,7 @@ Mesh::getRelations102(const PNode vtx0, const PNode vtx1, FaceSequence &faceneig
 {
      faceneighs.clear();
 
-     assert( !vtx0->isRemoved() && !vtx1->isRemoved() );
+     assert( vtx0->isActive() && vtx1->isActive() );
 
      const FaceSequence &v0faces = vtx0->getRelations2();
      const FaceSequence &v1faces = vtx1->getRelations2();
@@ -1908,6 +1911,8 @@ Mesh::getRelations112(const PNode vtx0, const PNode vtx1, FaceSequence &faceneig
 {
      faceneighs.clear();
 
+     assert( vtx0->isActive() && vtx1->isActive() );
+
      const FaceSequence &v0faces = vtx0->getRelations2();
      const FaceSequence &v1faces = vtx1->getRelations2();
 
@@ -1939,18 +1944,19 @@ Mesh::getRelations112(const PNode vtx0, const PNode vtx1, FaceSequence &faceneig
 size_t
 Mesh::count_edges()
 {
-     if (getAdjTable(1, 0)) return edges.size();
-
      int relexist = build_relations(0, 0);
 
      size_t numnodes = getSize(0);
 
      size_t ncount = 0;
      for (size_t i = 0; i < numnodes; i++) {
-          const NodeSequence &neighs = nodes[i]->getRelations0();
-          for (size_t j = 0; j < neighs.size(); j++)
-               if (nodes[i] > neighs[j])
-                    ncount++;
+          Vertex *vertex = nodes[i];
+          if( vertex->isActive() )  {
+               const NodeSequence &neighs = vertex->getRelations0();
+               size_t nSize = neighs.size();
+               for (size_t j = 0; j < nSize; j++)
+                    if (vertex > neighs[j]) ncount++;
+          }
      }
 
      if (!relexist) clear_relations(0, 0);
@@ -1969,13 +1975,16 @@ void Mesh::build_edges()
      edges.clear();
 
      for (size_t i = 0; i < numnodes; i++) {
-          const NodeSequence &neighs = nodes[i]->getRelations0();
-          for (size_t j = 0; j < neighs.size(); j++)
-               if (nodes[i] > neighs[j]) {
-                    Edge *newedge = new Edge(nodes[i], neighs[j]);
-                    assert(newedge);
-                    edges.push_back(newedge);
-               }
+          Vertex *vertex = nodes[i];
+          if( vertex->isActive() ) {
+               const NodeSequence &neighs = vertex->getRelations0();
+               for (size_t j = 0; j < neighs.size(); j++)
+                    if (vertex > neighs[j]) {
+                         Edge *newedge = new Edge( vertex, neighs[j]);
+                         assert(newedge);
+                         edges.push_back(newedge);
+                    }
+          }
      }
 
      if (!relexist0) clear_relations(0, 0);
@@ -1992,7 +2001,7 @@ Mesh::prune()
      nSize = faces.size();
      for (size_t i = 0; i < nSize; i++) {
           Face *f = faces[i];
-          if (f->isRemoved()) {
+          if (!f->isActive()) {
                int nnodes = f->getSize(0);
                for( int j = 0; j < nnodes; j++) {
                     Vertex *v = f->getNodeAt(j);
@@ -2004,7 +2013,7 @@ Mesh::prune()
      nSize = faces.size();
      for (size_t i = 0; i < nSize; i++) {
           Face *f = faces[i];
-          if (!f->isRemoved()) {
+          if (f->isActive()) {
                int nnodes = f->getSize(0);
                for( int j = 0; j < nnodes; j++) {
                     Vertex *v = f->getNodeAt(j);
@@ -2017,7 +2026,7 @@ Mesh::prune()
           nSize = nodes.size();
           for (size_t i = 0; i < nSize; i++) {
                Vertex *vi = nodes[i];
-               if( vi->isRemoved() ) {
+               if( !vi->isActive() ) {
                     const NodeSequence &vneighs = vi->getRelations0();
                     for (size_t j = 0; j < vneighs.size(); j++)
                          vneighs[j]->removeRelation0(vi);
@@ -2030,7 +2039,7 @@ Mesh::prune()
           nSize = faces.size();
           for (size_t i = 0; i < nSize; i++) {
                Face *f = faces[i];
-               if( f->isRemoved() ) {
+               if( !f->isActive() ) {
                     for (int j = 0; j < f->getSize(0); j++) {
                          Vertex *v = f->getNodeAt(j);
                          v->removeRelation2(f);
@@ -2054,18 +2063,14 @@ Mesh::prune()
      nSize = edges.size();
      for(size_t i = 0; i < nSize; i++)
           assert(edges[i]->isActive());
-  
-
-     cout << " Before Prune " << faces.size() << endl;
 
      FaceSequence::iterator fend;
      fend = remove_if(faces.begin(), faces.end(), EntityRemovedPred());
      faces.erase(fend, faces.end());
+
      nSize = faces.size();
      for (size_t i = 0; i < nSize; i++)
           assert(faces[i]->isActive());
-
-     cout << " After Prune : " << faces.size() << endl;
 
      enumerate(0);
      enumerate(2);
@@ -2120,19 +2125,23 @@ Mesh::enumerate(int etype)
 
      NodeSequence::const_iterator viter;
      if (etype == 0) {
-          index = 0;
           for (viter = nodes.begin(); viter != nodes.end(); ++viter) {
                Vertex *vertex = *viter;
-               if( !vertex->isRemoved() ) vertex->setID(index++);
+               if( vertex->isActive() ) vertex->setID(index++);
           }
      }
 
      FaceSequence::const_iterator fiter;
      if (etype == 2) {
-          index = 0;
           for (fiter = faces.begin(); fiter != faces.end(); ++fiter) {
                Face *face = *fiter;
-               if( !face->isRemoved() ) face->setID(index++);
+               if( face->isActive() ) {
+                    face->setID(index++);
+                    for( int i  = 0; i < faces[i]->getSize(0); i++) {
+                         if( !faces[i]->getNodeAt(i)->isActive() )
+                              cout << "Error: Face is active, but one of the nodes is not" << endl;
+                    }
+               }
           }
      }
 }
@@ -2149,14 +2158,14 @@ Mesh::getBoundarySize(int d)
      if (d == 0) {
           nSize = nodes.size();
           for (size_t i = 0; i < nSize; i++)
-               if (!nodes[i]->isRemoved() && nodes[i]->isBoundary())
+               if (nodes[i]->isActive() && nodes[i]->isBoundary())
                     ncount++;
      }
 
      if (d == 2) {
           nSize = faces.size();
           for (size_t i = 0; i < nSize; i++)
-               if (!faces[i]->isRemoved() && faces[i]->isBoundary())
+               if (faces[i]->isActive() && faces[i]->isBoundary())
                     ncount++;
      }
 
@@ -2165,13 +2174,36 @@ Mesh::getBoundarySize(int d)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+int Mesh :: getEulerCharacteristic()
+{
+    size_t nSize;
+
+    size_t  V = 0;
+    size_t  E = 0;
+    size_t  F = 0;
+    
+    nSize = getSize(0);
+    for( size_t i = 0; i < nSize; i++) 
+         if( nodes[i]->isActive() ) V++;
+
+    nSize = getSize(2);
+    for( size_t i = 0; i < nSize; i++) 
+         if( faces[i]->isActive() ) F++;
+
+    E = count_edges();
+    
+    return F - E + V;
+}
+///////////////////////////////////////////////////////////////////////////////
+
+
 int
 Mesh::isHomogeneous() const
 {
      int maxnodes = 0;
      size_t nSize = faces.size();
      for (size_t i = 0; i < nSize; i++) {
-          if (!faces[i]->isRemoved())
+          if (faces[i]->isActive())
                maxnodes = max(maxnodes, faces[i]->getSize(0));
      }
 
@@ -2221,22 +2253,7 @@ Mesh::build_relations02(bool rebuild)
 
      int status = adjTable[0][2];
 
-     if (adjTable[0][2] == 1) {
-          size_t numnodes = getSize(0);
-          for (size_t inode = 0; inode < numnodes; inode++) {
-               Vertex *vtx = getNodeAt( inode);
-               if( vtx ) {
-                    if( vtx->isRemoved() )
-                         vtx->clearRelations(2);
-                    else {
-                         FaceSequence &vfaces = vtx->getRelations2();
-                         FaceSequence::iterator fend;
-                         fend = remove_if(vfaces.begin(), vfaces.end(), EntityRemovedPred());
-                         vfaces.erase(fend, vfaces.end());
-                    }
-               }
-          }
-     }
+     if( status == 1 ) return 1;
 
      size_t numfaces = getSize(2);
      for (size_t iface = 0; iface < numfaces; iface++) {
@@ -2262,38 +2279,23 @@ Mesh::build_relations02(bool rebuild)
 int
 Mesh::build_relations00(bool rebuild)
 {
-     int status = adjTable[0][0];
-     // Delete all the old stuff and rebuild new. Sometimes used for debugging purpose
-     // also.
      if (rebuild) clear_relations(0, 0);
 
-     if (adjTable[0][0] == 1) {
-          size_t numnodes = getSize(0);
-          for (size_t inode = 0; inode < numnodes; inode++) {
-               Vertex *vtx = getNodeAt( inode);
-               if( vtx ) {
-                    if( vtx->isRemoved() )
-                         vtx->clearRelations(0);
-                    else {
-                         NodeSequence &vneighs = vtx->getRelations0();
-                         NodeSequence::iterator vend;
-                         vend = remove_if(vneighs.begin(), vneighs.end(), EntityRemovedPred());
-                         vneighs.erase(vend, vneighs.end());
-                    }
-               }
-          }
-     }
+     int status = adjTable[0][0];
+     if( status == 1 ) return 1;
 
      size_t numfaces = getSize(2);
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = getFaceAt(iface);
           if( face ) {
-               size_t nnodes = face->getSize(0);
-               for (size_t j = 0; j < nnodes; j++) {
-                    Vertex *v0 = face->getNodeAt(j);
-                    Vertex *v1 = face->getNodeAt((j + 1) % nnodes);
-                    v0->addRelation0(v1);
-                    v1->addRelation0(v0);
+               if( face->isActive() ) {
+                    size_t nnodes = face->getSize(0);
+                    for (size_t j = 0; j < nnodes; j++) {
+                         Vertex *v0 = face->getNodeAt(j);
+                         Vertex *v1 = face->getNodeAt(j + 1);
+                         v0->addRelation0(v1);
+                         v1->addRelation0(v0);
+                    }
                }
           }
      }
@@ -2342,20 +2344,22 @@ Mesh::search_boundary()
      FaceSequence neighs;
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = getFaceAt(iface);
-          size_t nnodes = face->getSize(0);
-          for (size_t j = 0; j < nnodes; j++) {
-               Vertex *v0 = face->getNodeAt(j);
-               Vertex *v1 = face->getNodeAt(j + 1);
-               Mesh::getRelations112(v0, v1, neighs);
-               if (neighs.size() == 1) {
-                    bmark = max(1, face->getBoundaryMark());
-                    face->setBoundaryMark(bmark);
+          if( face->isActive() ) {
+               size_t nnodes = face->getSize(0);
+               for (size_t j = 0; j < nnodes; j++) {
+                    Vertex *v0 = face->getNodeAt(j);
+                    Vertex *v1 = face->getNodeAt(j + 1);
+                    Mesh::getRelations112(v0, v1, neighs);
+                    if (neighs.size() == 1) {
+                         bmark = max(1, face->getBoundaryMark());
+                         face->setBoundaryMark(bmark);
 
-                    bmark = max(1, v0->getBoundaryMark());
-                    v0->setBoundaryMark(bmark);
+                         bmark = max(1, v0->getBoundaryMark());
+                         v0->setBoundaryMark(bmark);
 
-                    bmark = max(1, v1->getBoundaryMark());
-                    v1->setBoundaryMark(bmark);
+                         bmark = max(1, v1->getBoundaryMark());
+                         v1->setBoundaryMark(bmark);
+                    }
                }
           }
      }
@@ -2408,15 +2412,17 @@ Mesh::isSimple()
      FaceSequence neighs;
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = getFaceAt(iface);
-          assert(face);
-          int nnodes = face->getSize(0);
-          for (int j = 0; j < nnodes; j++) {
-               Vertex *v0 = face->getNodeAt(j);
-               Vertex *v1 = face->getNodeAt(j + 1);
-               Mesh::getRelations112(v0, v1, neighs);
-               if (neighs.size() > 2) {
-                    simple = 0;
-                    break;
+          if( face->isActive() ) {
+               assert(face);
+               int nnodes = face->getSize(0);
+               for (int j = 0; j < nnodes; j++) {
+                    Vertex *v0 = face->getNodeAt(j);
+                    Vertex *v1 = face->getNodeAt(j + 1);
+                    Mesh::getRelations112(v0, v1, neighs);
+                    if (neighs.size() > 2) {
+                         simple = 0;
+                         break;
+                    }
                }
           }
      }
@@ -2433,19 +2439,19 @@ Mesh::isSimple()
 size_t Mesh::count_irregular_nodes(int degree_of_regular_node)
 {
      int relexist = build_relations(0, 2);
+
      search_boundary();
 
      size_t numnodes = getSize(0);
      size_t ncount = 0;
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *vertex = getNodeAt(i);
-          if( !vertex->isRemoved() ) {
+          if( vertex->isActive() ) {
+               int nSize = vertex->getNumRelations(2);
                if (!vertex->isBoundary()) {
-                    const FaceSequence &vfaces = vertex->getRelations2();
-                    int nSize = vfaces.size();
                     if ( nSize != degree_of_regular_node)
                          ncount++;
-               }
+              }
           }
      }
 
@@ -2467,8 +2473,7 @@ Mesh::is_consistently_oriented()
      FaceSequence neighs;
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = getFaceAt(iface);
-          if( !face->isRemoved() ) {
-               assert(face);
+          if( !face->isActive() ) {
                int nnodes = face->getSize(0);
                for (int j = 0; j < nnodes; j++) {
                     Vertex *v0 = face->getNodeAt(j);
@@ -2524,7 +2529,11 @@ Mesh::make_consistently_oriented()
           face->setVisitMark(0);
      }
 
-     face = getFaceAt(0);
+     for (size_t iface = 0; iface < numfaces; iface++) {
+          face = getFaceAt( iface );
+          if( face->isActive() ) break;
+     }
+
      faceQ.push_back(face);
 
      while (!faceQ.empty()) {
@@ -2556,9 +2565,10 @@ Mesh::make_consistently_oriented()
 
      for (size_t iface = 0; iface < numfaces; iface++) {
           face = getFaceAt(iface);
-          if (!face->isVisited())
+          if( face->isActive() && !face->isVisited()) {
                cout << "Error: not visited : " << face->getID() << " "
                     << face->isVisited() << endl;
+          }
      }
 
      if( !relexist2) clear_relations(0, 2);
@@ -3581,31 +3591,31 @@ Mesh::refine_quads14()
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = this->getFaceAt(iface);
           if( !face->isRemoved() ) {
-          for (int j = 0; j < 4; j++) {
-               Vertex *v0 = face->getNodeAt((j + 0));
-               Vertex *v1 = face->getNodeAt((j + 1));
-               Edge edge(v0, v1);
-               Vertex *vh = edge.getHashNode();
-               ilower = edgemap.lower_bound(vh);
-               iupper = edgemap.upper_bound(vh);
-               Vertex *vmid = NULL;
-               for (iter = ilower; iter != iupper; ++iter) {
-                    Edge *existing_edge = iter->second;
-                    if (existing_edge->isSameAs(edge)) {
-                         NodeSequence vneighs = existing_edge->getRelations0();
-                         assert(vneighs.size() == 1);
-                         vmid = vneighs[0];
-                         break;
+               for (int j = 0; j < 4; j++) {
+                    Vertex *v0 = face->getNodeAt((j + 0));
+                    Vertex *v1 = face->getNodeAt((j + 1));
+                    Edge edge(v0, v1);
+                    Vertex *vh = edge.getHashNode();
+                    ilower = edgemap.lower_bound(vh);
+                    iupper = edgemap.upper_bound(vh);
+                    Vertex *vmid = NULL;
+                    for (iter = ilower; iter != iupper; ++iter) {
+                         Edge *existing_edge = iter->second;
+                         if (existing_edge->isSameAs(edge)) {
+                              NodeSequence vneighs = existing_edge->getRelations0();
+                              assert(vneighs.size() == 1);
+                              vmid = vneighs[0];
+                              break;
+                         }
                     }
+                    assert(vmid);
+                    newnodes[j] = vmid;
                }
-               assert(vmid);
-               newnodes[j] = vmid;
-          }
-          face->refine_quad14(newnodes, newfaces);
-          this->addNode(newnodes[4]); // Only the center node, others already registered
-          for (int j = 0; j < 4; j++)
-               this->addFace(newfaces[j]);
-          face->setStatus(MeshEntity::REMOVE);
+               face->refine_quad14(newnodes, newfaces);
+               this->addNode(newnodes[4]); // Only the center node, others already registered
+               for (int j = 0; j < 4; j++)
+                    this->addFace(newfaces[j]);
+               face->setStatus(MeshEntity::REMOVE);
           }
      }
 
@@ -3629,16 +3639,16 @@ Mesh::refine_quads15()
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = getFaceAt(iface);
           if( !face->isRemoved() ) {
-          face->refine_quad15(newnodes, newfaces);
+               face->refine_quad15(newnodes, newfaces);
 
-          nSize = newnodes.size();
-          for (int  j = 0; j < nSize; j++)
-               addNode(newnodes[j]);
+               nSize = newnodes.size();
+               for (int  j = 0; j < nSize; j++)
+                    addNode(newnodes[j]);
 
-          nSize = newfaces.size();
-          for (int j = 0; j < nSize; j++)
-               addFace(newfaces[j]);
-          face->setStatus(MeshEntity::REMOVE);
+               nSize = newfaces.size();
+               for (int j = 0; j < nSize; j++)
+                    addFace(newfaces[j]);
+               face->setStatus(MeshEntity::REMOVE);
           }
      }
 
@@ -3818,7 +3828,7 @@ Mesh::count_concave_faces()
      size_t ncount = 0;
      for (size_t i = 0; i < numfaces; i++) {
           Face *f = getFaceAt(i);
-          if(!f->isRemoved()  &&  !f->isConvex() ) ncount++;
+          if(f->isActive()  &&  !f->isConvex() ) ncount++;
      }
      return ncount;
 }
@@ -3855,13 +3865,16 @@ Mesh::normalize()
      zmax = xyz[2];
 
      for (size_t i = 0; i < numnodes; i++) {
-          xyz = nodes[i]->getXYZCoords();
+          Vertex *v = nodes[i];
+          if( v->isActive() ) {
+          xyz = v->getXYZCoords();
           xmin = min(xmin, xyz[0]);
           xmax = max(xmax, xyz[0]);
           ymin = min(ymin, xyz[1]);
           ymax = max(ymax, xyz[1]);
           zmin = min(zmin, xyz[2]);
           zmax = max(zmax, xyz[2]);
+          }
      }
 
      double xlen = fabs(xmax - xmin);
@@ -3870,11 +3883,14 @@ Mesh::normalize()
      double scale = max(max(xlen, ylen), zlen);
 
      for (size_t i = 0; i < numnodes; i++) {
-          xyz = nodes[i]->getXYZCoords();
+          Vertex *v = nodes[i];
+          if( v->isActive() ) {
+          xyz = v->getXYZCoords();
           xyz[0] /= scale;
           xyz[1] /= scale;
           xyz[2] /= scale;
-          nodes[i]->setXYZCoords(xyz);
+          v->setXYZCoords(xyz);
+          }
      }
 }
 
@@ -3899,6 +3915,8 @@ Mesh::getBoundingBox() const
      zmax = xyz[2];
 
      for (size_t i = 0; i < numnodes; i++) {
+          Vertex *v = nodes[i];
+          if( v->isActive() ) {
           xyz = nodes[i]->getXYZCoords();
           xmin = min(xmin, xyz[0]);
           xmax = max(xmax, xyz[0]);
@@ -3906,6 +3924,7 @@ Mesh::getBoundingBox() const
           ymax = max(ymax, xyz[1]);
           zmin = min(zmin, xyz[2]);
           zmax = max(zmax, xyz[2]);
+          }
      }
 
      xyz[0] = xmin;
@@ -5072,6 +5091,7 @@ Mesh * Jaal::create_structured_mesh(double *origin, double *length,
                                     int *grid_dim, int space_dim)
 {
      if (space_dim < 2 || space_dim > 3) return NULL;
+
      Mesh *mesh = new Mesh;
 
      int nx = grid_dim[0];
@@ -5186,8 +5206,7 @@ Mesh* Jaal::quad_to_tri4( Mesh *quadmesh, vector<Vertex*> &steiner)
 
      for( size_t i = 0; i < numnodes; i++) {
           Vertex *v = quadmesh->getNodeAt(i);
-          if( !v->isRemoved() )
-               trimesh->addNode(v);
+          if( v->isActive() ) trimesh->addNode(v);
      }
      steiner.clear();
      steiner.reserve( numfaces );
@@ -5197,7 +5216,7 @@ Mesh* Jaal::quad_to_tri4( Mesh *quadmesh, vector<Vertex*> &steiner)
      vector<Vertex*> connect(3);
      for( size_t i = 0; i < numfaces; i++) {
           Face *f = quadmesh->getFaceAt(i);
-          if( !f->isRemoved() ) {
+          if( f->isActive() ) {
                int pos = f->concaveAt();
                if( pos >= 0) {
                     p3d = Vertex::mid_point( f->getNodeAt(pos), f->getNodeAt(pos+2) );
@@ -5215,7 +5234,7 @@ Mesh* Jaal::quad_to_tri4( Mesh *quadmesh, vector<Vertex*> &steiner)
                     tface  = Face::newObject();
                     tface->setNodes(connect);
                     trimesh->addFace( tface );
-                    assert( tface->concaveAt() < 0);
+//                  assert( tface->concaveAt() < 0);
                }
           }
      }
@@ -5239,15 +5258,14 @@ Mesh* Jaal::quad_to_tri2( Mesh *quadmesh )
 
      for( size_t i = 0; i < numnodes; i++) {
           Vertex *v = quadmesh->getNodeAt(i);
-          if( !v->isRemoved() )
-               trimesh->addNode(v);
+          if( v->isActive() ) trimesh->addNode(v);
      }
 
      Face  *tface;
      vector<Vertex*> connect(3);
      for( size_t i = 0; i < numfaces; i++) {
           Face *f = quadmesh->getFaceAt(i);
-          if( !f->isRemoved() ) {
+          if( f->isActive() ) {
                int pos = f->concaveAt();
                if( pos >= 0) {
                     connect[0] = f->getNodeAt(pos);

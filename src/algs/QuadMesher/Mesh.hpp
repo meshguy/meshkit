@@ -156,34 +156,48 @@ int split_stl_vector(const std::deque<T> &a, size_t pos, std::deque<T> &b, std::
 typedef int AttribKey;
 
 struct Attribute {
+     virtual string getType() const = 0;
+};
 
-     bool operator ==(const Attribute & rhs) const {
-          return key == rhs.key;
-     }
-     AttribKey key;
-
+struct AnyAttribute : public Attribute 
+{
+     string getType() const { return "Any"; }
 #ifdef HAVE_BOOST
      boost::any value;
 #endif
 };
 
 template<class T>
-struct POD : public Attribute {
+struct PODAttribute : public Attribute {
+     string getType() const { return "POD"; }
      T value;
 };
 
 template<class T>
-struct StlVec : public Attribute {
+struct VecAttribute : public Attribute {
+     string getType() const { return "STLVec"; }
      std::vector<T> values;
 };
 
+template<class T, int n>
+struct ArrayAttribute : public Attribute {
+     string getType() const { return "Array"; }
+#ifdef HAVE_BOOST
+     boost::array<T,n> values;
+#else
+     Array<T,n> values;
+#endif
+};
+
 template<class T>
-struct StlList : public Attribute {
+struct ListAttribute : public Attribute {
+     string getType() const { return "STLlist"; }
      std::list<T> values;
 };
 
 template<class T>
-struct StlSet : public Attribute {
+struct SetAttribute : public Attribute {
+     string getType() const { return "STLset"; }
      std::set<T> values;
 };
 
@@ -209,70 +223,12 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 typedef size_t Handle_t;
 
-/// Base class for all handle types
-
-class Handle {
-public:
-
-     explicit Handle(Handle_t hid = 0) : hid(hid) {
-     }
-
-     /// Get the underlying index of this handle
-
-     Handle_t getHandle() const {
-          return hid;
-     }
-
-     /// The handle is valid iff the index is not equal to 0.
-
-     bool is_valid() const {
-          return hid != 0;
-     }
-
-     /// reset handle to be invalid
-
-     void reset() {
-          hid = 0;
-     }
-
-     /// reset handle to be invalid
-
-     void invalidate() {
-          hid = 0;
-     }
-
-     bool operator==(const Handle& rhs) const {
-          return hid == rhs.hid;
-     }
-
-     bool operator!=(const Handle& rhs) const {
-          return hid != rhs.hid;
-     }
-
-     bool operator<(const Handle& rhs) const {
-          return hid < rhs.hid;
-     }
-
-     // this is to be used only by the iterators
-
-     void increment() {
-          ++hid;
-     }
-
-     void decrement() {
-          --hid;
-     }
-
-private:
-     Handle_t hid;
-};
-
 class MeshEntity {
 public:
 
      typedef size_t idtype;
-     static const int ACTIVE = 0;
-     static const int REMOVE = 1;
+     static const int ACTIVE   = 0;
+     static const int REMOVE   = 1;
      static const int INACTIVE = 2;
 
      MeshEntity() {
@@ -283,6 +239,12 @@ public:
           groupID      = 0;
           constrained = 0; // Default: No Contrainted
           boundarymark = 0; // Default: Internal entity
+     }
+
+     ~MeshEntity() 
+     {
+        for( size_t i = 0; i < attributes.size(); i++)
+             delete attributes[i];
      }
 
      void setVisitMark(bool r) {
@@ -396,7 +358,6 @@ public:
           return 1;
      }
 #endif
-#endif
 
      void setAttribute(const AttribKey &k, Attribute *newattrib) {
           Attribute *oldattrib = getAttribute(k);
@@ -430,6 +391,7 @@ public:
           attributes.erase(it, attributes.end());
           delete a;
      }
+#endif
 
      void setLayerID(int l) {
           layerID = l;
@@ -1246,13 +1208,7 @@ public:
           return 0;
      }
 
-     int getEulerCharacteristic() {
-          size_t F = getSize(2);
-          size_t E = getSize(1);
-          size_t V = getSize(0);
-
-          return F - E + V;
-     }
+     int getEulerCharacteristic();
 
      Vertex* nearest_neighbour(const Vertex *v, double &d);
 
@@ -1447,8 +1403,8 @@ public:
      // Build entity-entity relations.
 
      int build_relations(int src, int dst, bool rebuild = 0) {
-          if (src == 0 && dst == 0) return build_relations00(rebuild);
-          if (src == 0 && dst == 2) return build_relations02(rebuild);
+          if (src == 0 && dst == 0) return build_relations00( rebuild );
+          if (src == 0 && dst == 2) return build_relations02( rebuild );
           return 1;
      }
 
@@ -1743,6 +1699,12 @@ private:
      int algorithm;
      int numIter;
 
+     vector<int>     vfixed;
+     vector<size_t>  vNodes;
+     vector<int>     etopo;
+     vector<size_t>  l2g;
+     vector<double>  vCoords;
+
 #ifdef HAVE_MESQUITE
      Mesquite::QualityImprover *improver;
      Mesquite::ArrayMesh* jaal_to_mesquite(Mesh *m);
@@ -2027,7 +1989,6 @@ inline int Mesh::remove(PFace f)
                }
           }
      }
-
      f->setStatus(MeshEntity::REMOVE);
      garbageFaces.push_back(f);
 
