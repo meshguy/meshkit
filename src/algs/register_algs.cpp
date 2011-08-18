@@ -1,6 +1,7 @@
 #include "meshkit/RegisterMeshOp.hpp"
 #include "meshkit/CopyMesh.hpp"
 #include "meshkit/CopyGeom.hpp"
+#include "meshkit/MergeMesh.hpp"
 #include "meshkit/EBMesher.hpp"
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/TFIMapping.hpp"
@@ -38,6 +39,7 @@ REGISTER_MESH_OP(OneToOneSwept);
 REGISTER_MESH_OP(TFIMapping);
 REGISTER_MESH_OP(SCDMesh);
 REGISTER_MESH_OP(CopyMesh);
+REGISTER_MESH_OP(MergeMesh);
 REGISTER_MESH_OP(CopyGeom);
 REGISTER_MESH_OP(ExtrudeMesh);
 REGISTER_MESH_OP(EBMesher);

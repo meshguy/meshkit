@@ -1,6 +1,6 @@
 /** \file test_copymesh.cpp
  *
- * Test CopyMesh
+ * Test CopyMesh & MergeMesh
  *
  */
 
@@ -8,6 +8,7 @@
 #include "meshkit/MeshOp.hpp"
 #include "meshkit/CopyMesh.hpp"
 #include "meshkit/ModelEnt.hpp"
+#include "meshkit/MergeMesh.hpp"
 
 using namespace MeshKit;
 
@@ -64,14 +65,23 @@ void test_load_and_copymove()
   Vector<3> dx; dx[0] = 10; dx[1] = 0; dx[2] = 0;
   cm->set_transform(Copy::Translate(dx));
 
+  //accesses entities for merging directly from moab instance, vols are used for finding the dimension
+  MergeMesh *mm = (MergeMesh*) mk->construct_meshop("MergeMesh", vols);
+  mm->set_name("merge_mesh");
+
+  double merge_tol = 1e-3; int updatesets = 0, domerge = 1; iBase_TagHandle merge_tag = NULL;
+  mm->set_merge_params(merge_tol, updatesets, domerge, merge_tag);
+
   // put them in the graph
   mk->get_graph().addArc(mk->root_node()->get_node(), cm->get_node());
-  mk->get_graph().addArc(cm->get_node(), mk->leaf_node()->get_node());
+  mk->get_graph().addArc(cm->get_node(), mm->get_node());
+  mk->get_graph().addArc(mm->get_node(), mk->leaf_node()->get_node());
 
-  // mesh embedded boundary mesh, by calling execute
+  // copy and merge
   mk->setup_and_execute();
 
   delete cm;
+  delete mm;
 }
 
 
