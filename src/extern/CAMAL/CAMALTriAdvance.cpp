@@ -67,11 +67,6 @@ void CAMALTriAdvance::execute_this()
     std::vector<double> coords;
     me->get_indexed_connect_coords(bdy, NULL, NULL, bdy_ids, coords, &bdy_vrange);
 
-    // the surface needs to be to the left of boundary, with respect to normal
-#ifdef HAVE_OCC
-    cse.correct_orientation(group_sizes, bdy_ids, coords);
-#endif
-
     // now construct the CAMAL mesher, and pass it initial conditions
     CMLTriAdvance triadv(&cse, &mesize);
     bool success = triadv.set_boundary_mesh(bdy_vrange.size(), &coords[0], group_sizes.size(), &group_sizes[0], &bdy_ids[0]);
