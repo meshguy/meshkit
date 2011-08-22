@@ -61,8 +61,6 @@ void CAMALPaver::execute_this()
     std::vector<double> coords;
     me->get_indexed_connect_coords(bdy, NULL, NULL, bdy_ids, coords, &bdy_vrange);
 
-    // the surface needs to be to the left of boundary, with respect to normal
-    cse.correct_orientation(group_sizes, bdy_ids, coords);
       // now construct the CAMAL mesher, and pass it initial conditions
     CMLPaver paver(&cse, &mesize);
     bool success = paver.set_boundary_mesh(bdy_vrange.size(), &coords[0], group_sizes.size(), &group_sizes[0], &bdy_ids[0]);
