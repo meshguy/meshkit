@@ -778,6 +778,11 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
+    // edge interval
+    if (szInputString.substr(0, 12) == "edgeinterval") {
+      std::istringstream szFormatString(szInputString);
+      szFormatString >> card >> m_edgeInterval;
+    }
     // Handle mesh size inputs
     if (szInputString.substr(0,18) == "neumannset_startid"){
       std::istringstream szFormatString (szInputString);
@@ -1117,6 +1122,10 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
       m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
       m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
+      m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge"<< std::endl;
+ 
+      m_FileOutput << "curve in edges interval " << m_edgeInterval << std::endl;
+
       //    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
 
       // dumping these sizes schemes.jou also
