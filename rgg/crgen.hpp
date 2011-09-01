@@ -48,8 +48,8 @@ public:
   ~CCrgen ();   // dtor
   int prepareIO (int argc, char *argv[], int myID, int numprocs);
   int load_meshes();
-  int load_meshes_parallel(const int, const int);
-  int distribute_mesh(const int, const int);
+  int load_meshes_parallel(const int, int);
+  int distribute_mesh(const int,  int);
   int load_geometries();
   int read_inputs_phase1 ();
   int read_inputs_phase2 ();
@@ -317,6 +317,7 @@ public:
   std::vector<double> x_coord;
   std::vector<double> y_coord;
   bool nst_flag, nsb_flag, nss_flag;
+  std::vector<std::string> core_alias;
 
 private:
 
@@ -348,7 +349,6 @@ private:
   int linenumber;
   std::string card,geom_type, meshfile, mf_alias, temp_alias;
   std::vector<std::string> assm_alias;
-  std::vector<std::string> core_alias;
   
   // parsing related
   std::string input_string;

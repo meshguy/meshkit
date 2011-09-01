@@ -109,6 +109,39 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   if (nrank == 0) {
     std::cout << "Saving mesh file in parallel. " << std::endl;
   }
+
+  // //All explicit sharing data must be updated in ParallelComm instance before save
+  // moab::Range entities, sets, faces, edges;
+  // moab::Tag gid_tag;
+  // mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
+  // mbImpl()->get_entities_by_type( 0, MBHEX, entities );
+  // mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
+  // mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
+
+  // err = pc->resolve_shared_ents( 0, entities, 3, 0, &gid_tag );
+  // if (err != moab::MB_SUCCESS) {
+  //   std::cerr << "failed to resolve shared ents" << std::endl;
+  //   MPI_Abort(MPI_COMM_WORLD, 1);
+  // }
+  // err = pc->resolve_shared_ents( 0, faces, 2, 0, &gid_tag );
+  // if (err != moab::MB_SUCCESS) {
+  //   std::cerr << "failed to resolve shared ents" << std::endl;
+  //   MPI_Abort(MPI_COMM_WORLD, 1);
+  // }
+
+  // err = pc->resolve_shared_ents( 0, edges, 1, 0, &gid_tag );
+  // if (err != moab::MB_SUCCESS) {
+  //   std::cerr << "failed to resolve shared ents" << std::endl;
+  //   MPI_Abort(MPI_COMM_WORLD, 1);
+  // }
+
+  // mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
+  // err = pc->resolve_shared_sets( sets, gid_tag );
+  // if (err != moab::MB_SUCCESS) {
+  //   std::cerr << "failed to resolve shared sets" << std::endl;
+  //   MPI_Abort(MPI_COMM_WORLD, 1);
+  // }
+
 #ifdef HAVE_MOAB
   int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
   if(rval != moab::MB_SUCCESS) {
@@ -150,189 +183,194 @@ int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
 }
 
 
-int CCrgen::distribute_mesh(const int nrank, const int numprocs)
+int CCrgen::distribute_mesh(const int nrank, int numprocs)
 // -------------------------------------------------------------------------------------------
 // Function: merge the nodes within a set tolerance in the model
 // Input:    none
 // Output:   none
 // -------------------------------------------------------------------------------------------
 {
+  if(nrank < (int) core_alias.size()){
+    if(numprocs > (int) core_alias.size()){
+      numprocs =  core_alias.size();
+    }
 #ifdef USE_MPI
-  std::vector<int> rank_load;
-  rank_load.resize(numprocs);
-  int extra_procs = numprocs - files.size();
-  if(numprocs > (int) files.size() && numprocs <= tot_assys){
-    // again fill assm_meshfiles
-    for(int p=0; p<nassys; p++)
-      assm_meshfiles[p]=0;
-  
-    for(int p=0; p<tot_assys; p++){
-      for(int q=0; q<nassys; q++){
-	if(strcmp(core_alias[p].c_str(), assm_alias[q].c_str()) ==0) {
-	  assm_meshfiles[q]+=1;
+    std::vector<int> rank_load;
+    rank_load.resize(numprocs);
+    int extra_procs = numprocs - files.size();
+    if(numprocs >= (int) files.size() && numprocs <= tot_assys){
+      // again fill assm_meshfiles
+      for(int p=0; p<nassys; p++)
+	assm_meshfiles[p]=0;
+      for(int p=0; p<tot_assys; p++){
+	for(int q=0; q<nassys; q++){
+	  if(strcmp(core_alias[p].c_str(), assm_alias[q].c_str()) ==0) {
+	    assm_meshfiles[q]+=1;
+	  }
 	}
       }
-    }
-    //distribute
-    for(int i=0; i< (int) files.size(); i++){
-      rank_load[i] = i;
-    }
+      //distribute
+      for(int i=0; i< (int) files.size(); i++){
+	rank_load[i] = i;
+      }
    
-    int temp = 0;
-    int assm_load = - 1;
-    int e= 0;
-    // compute the rank, mf vector for extra procs
-    while(e < extra_procs){
-      for(int i = 0; i < nassys; i++){
-	if (assm_meshfiles[i] > temp){
-	  temp = assm_meshfiles[i];
-	  assm_load = i;
+      int temp = 0;
+      int assm_load = - 1;
+      int e= 0;
+      // compute the rank, mf vector for extra procs
+      while(e < extra_procs){
+	for(int i = 0; i < nassys; i++){
+	  if (assm_meshfiles[i] > temp){
+	    temp = assm_meshfiles[i];
+	    assm_load = i;
+	  }
+	  else if (assm_load == -1){
+	    std::cout << "No assemblies mesh files used in core" << std::endl;
+	    exit(0);
+	  }
 	}
-	else if (assm_load == -1){
-	  std::cout << "No assemblies mesh files used in core" << std::endl;
-	  exit(0);
-	}
-      }
-      assm_meshfiles[assm_load]-=1;
-      int temp_rank = files.size()+ e;
-      rank_load[temp_rank] = assm_load;
-      e++;
-      temp = 0;     
-    }
-  }
-  else{
-    // bailout
-    std::cout << "Invalid number of procs"<< std::endl;
-    exit(0);
-  }
-
-  std::vector<int> times_loaded(nassys);
-  std::vector<std::vector<int> > meshfiles_rank (files.size());
-  for(int i=0; i < (int) files.size(); i++){
-    for(int j=0; j < (int) rank_load.size(); j++){
-      if(rank_load[j]==i){
-	meshfiles_rank[i].push_back(j);
-	times_loaded[i]+=1;
-      }
-    }
-  }
-
-  position_core.resize(numprocs);
-  for(int i=0; i < (int) files.size(); i++){
-    int k = 0;
-    if(i < nassys){
-      for(int j=0; j < (int) assm_location[i].size(); j++){
-	if (k >= (int) meshfiles_rank[i].size()){
-	  k = 0;
-	}
-	int p = meshfiles_rank[i][k];
-	int q = assm_location[i][j];
-	position_core[p].push_back(q);
-   
-	++k;
+	assm_meshfiles[assm_load]-=1;
+	int temp_rank = files.size()+ e;
+	rank_load[temp_rank] = assm_load;
+	e++;
+	temp = 0;     
       }
     }
     else{
-      // this is background mesh set it -2, no meshfile to copy/move
-      position_core[i].push_back(-2);
+      std::cout << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
     }
-  }
-  if(nrank == 0){
-    std::cout << " copy/move task distribution " << std::endl;
-    for(int i =0; i< numprocs; i++){
-      std::cout << "rank: " << i <<  " positions : ";
-      for(int j=0; j< (int) position_core[i].size(); j++){
-	std::cout << (int) position_core[i][j] << " ";
+
+    std::vector<int> times_loaded(nassys);
+    std::vector<std::vector<int> > meshfiles_rank (files.size());
+    for(int i=0; i < (int) files.size(); i++){
+      for(int j=0; j < (int) rank_load.size(); j++){
+	if(rank_load[j]==i){
+	  meshfiles_rank[i].push_back(j);
+	  times_loaded[i]+=1;
+	}
       }
-      std::cout << "\n" << std::endl;
     }
-  }
+
+    position_core.resize(numprocs);
+    for(int i=0; i < (int) files.size(); i++){
+      int k = 0;
+      if(i < nassys){
+	for(int j=0; j < (int) assm_location[i].size(); j++){
+	  if (k >= (int) meshfiles_rank[i].size()){
+	    k = 0;
+	  }
+	  int p = meshfiles_rank[i][k];
+	  int q = assm_location[i][j];
+	  position_core[p].push_back(q);
+   
+	  ++k;
+	}
+      }
+      else{
+	// this is background mesh set it -2, no meshfile to copy/move
+	position_core[i].push_back(-2);
+      }
+    }
+    if(nrank == 0){
+      std::cout << " copy/move task distribution " << std::endl;
+      for(int i =0; i< numprocs; i++){
+	std::cout << "rank: " << i <<  " positions : ";
+	for(int j=0; j< (int) position_core[i].size(); j++){
+	  std::cout << (int) position_core[i][j] << " ";
+	}
+	std::cout << "\n" << std::endl;
+      }
+    }
 #endif
+  }
   return 0;
 }
 
-int CCrgen::load_meshes_parallel(const int nrank, const int numprocs)
+int CCrgen::load_meshes_parallel(const int nrank, int numprocs)
 // ---------------------------------------------------------------------------
 // Function: loads all the meshes and initializes copymesh object
 // Input:    none
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-#ifdef USE_MPI
-  if(numprocs > (int) core_alias.size()){
-    std::cout << "Error: #procs should be <= #assys in core" << std::endl;
-    exit(0);
-    //MPI::COMM_WORLD.Abort(0);
-  }
-  iBase_EntitySetHandle orig_set;
-  // make a mesh instance, get root set, create ent set for loading meshfiles
   iMesh_newMesh("MOAB", &impl, &err, 4);
   ERRORR("Failed to create instance.", 1);
 
   iMesh_getRootSet(impl, &root_set, &err);
   ERRORR("Couldn't get the root set", err);
- 
-  int temp_index;
-  int extra_procs = numprocs - files.size();
-  std::vector<int> rank_load;
-  for(int i = 0; i< (int) files.size(); i++){
-    temp_index = numprocs*i + nrank;
-    if(temp_index >= (int) files.size()){     
-      if (nrank >= (int) files.size() && nrank <= tot_assys){
-	int temp = 1;
-	int p = extra_procs;
-	// compute the rank, mf vector for extra procs
-	while(p !=0){
-	  int assm_load = - 1;
-	  for(int i = 0; i < nassys; i++){
-	    if ((int) assm_meshfiles[i] > temp){
-	      temp = assm_meshfiles[i];
-	      assm_load = i;
+  if(nrank < (int) core_alias.size()){
+    if(numprocs > (int) core_alias.size()){
+      numprocs =  core_alias.size();
+    }
+
+#ifdef USE_MPI
+    if(numprocs > (int) core_alias.size()){
+      std::cout << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
+    }
+
+    iBase_EntitySetHandle orig_set;
+    int temp_index;
+    int extra_procs = numprocs - files.size();
+    std::vector<int> rank_load;
+    for(int i = 0; i< (int) files.size(); i++){
+      temp_index = numprocs*i + nrank;
+      if(temp_index >= (int) files.size()){     
+	if (nrank >= (int) files.size() && nrank <= tot_assys){
+	  int temp = 1;
+	  int p = extra_procs;
+	  // compute the rank, mf vector for extra procs
+	  while(p !=0){
+	    int assm_load = - 1;
+	    for(int i = 0; i < nassys; i++){
+	      if ((int) assm_meshfiles[i] > temp){
+		temp = assm_meshfiles[i];
+		assm_load = i;
+	      }
 	    }
-
+	    if (assm_load == -1){
+	      continue;
+	      std::cout << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
+	    }
+	    assm_meshfiles[assm_load]-=1;
+	    rank_load.push_back(assm_load);
+	    --p;
+	    temp = 1;     
 	  }
-	  if (assm_load == -1){
-	    std::cout << "No assemblies mesh files used in core or #procs >= #assys in core " << std::endl;
-	    exit(0);
-	  }
 
-	  assm_meshfiles[assm_load]-=1;
-	  rank_load.push_back(assm_load);
-	  --p;
-	  temp = 1;     
+
+	  temp_index = nrank - files.size();
+	  iMesh_createEntSet(impl, 0, &orig_set, &err);
+	  ERRORR("Couldn't create file set.", err);
+
+	  // load this file
+	  iMesh_load(impl, orig_set, files[rank_load[temp_index]].c_str(), NULL, &err, strlen(files[rank_load[temp_index]].c_str()), 0);
+	  ERRORR("Couldn't read mesh file.", err);
+	  std::cout << "Loaded mesh file " << rank_load[temp_index] << " in processor: " << nrank << std::endl;
+	  assys.push_back(orig_set);
+	  assys_index.push_back(rank_load[temp_index]);
+	  break;
 	}
-
-
-	temp_index = nrank - files.size();
+      }
+      else{
 	iMesh_createEntSet(impl, 0, &orig_set, &err);
 	ERRORR("Couldn't create file set.", err);
+
 	// load this file
-	iMesh_load(impl, orig_set, files[rank_load[temp_index]].c_str(), NULL, &err, strlen(files[rank_load[temp_index]].c_str()), 0);
+	iMesh_load(impl, orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
 	ERRORR("Couldn't read mesh file.", err);
-	std::cout << "Loaded mesh file " << rank_load[temp_index] << " in processor: " << nrank << std::endl;
+	std::cout << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
 	assys.push_back(orig_set);
-	assys_index.push_back(rank_load[temp_index]);
-	break;
+	assys_index.push_back(temp_index);
       }
     }
-    else{
-      iMesh_createEntSet(impl, 0, &orig_set, &err);
-      ERRORR("Couldn't create file set.", err);
-      // load this file
-      iMesh_load(impl, orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
-      ERRORR("Couldn't read mesh file.", err);
-      std::cout << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
-      assys.push_back(orig_set);
-      assys_index.push_back(temp_index);
-    }
-  }
  
-  // create cm instances for each mesh file
-  cm = new CopyMesh*[assys.size()];
-  for (unsigned int i = 0; i < assys.size(); i++) {
-    cm[i] = new CopyMesh(impl);
-  }
+    // create cm instances for each mesh file
+    cm = new CopyMesh*[assys.size()];
+    for (unsigned int i = 0; i < assys.size(); i++) {
+      cm[i] = new CopyMesh(impl);
+    }
 #endif
+  }
   return iBase_SUCCESS;
 }
  

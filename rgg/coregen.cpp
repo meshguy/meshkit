@@ -110,6 +110,9 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
+#ifdef USE_MPI
+    MPI::COMM_WORLD.Barrier();
+#endif
     /*********************************************/
     // copy move
     /*********************************************/
@@ -138,7 +141,9 @@ int main(int argc, char *argv[]) {
       std::cout << " CPU time = " << ctcopymove << " mins" << std::endl;
       std::cout << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
     }
-
+#ifdef USE_MPI
+    MPI::COMM_WORLD.Barrier();
+#endif
     if (TheCore.prob_type == "mesh") {
       /*********************************************/
       // merge
@@ -164,7 +169,9 @@ int main(int argc, char *argv[]) {
 	std::cout << " CPU time = " << ctmerge << " mins" << std::endl;
     	std::cout << " Memory used: " << mem3/1e6 << " Mb\n" << std::endl;
       }
-
+#ifdef USE_MPI
+      MPI::COMM_WORLD.Barrier();
+#endif
       /*********************************************/
       // extrude
       /*********************************************/
@@ -193,6 +200,9 @@ int main(int argc, char *argv[]) {
 	  }
 	}
       }
+#ifdef USE_MPI
+      MPI::COMM_WORLD.Barrier();
+#endif
       /*********************************************/
       // assign gids
       /*********************************************/
@@ -237,6 +247,9 @@ int main(int argc, char *argv[]) {
 	  std::cout << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
 	}
       }
+#ifdef USE_MPI
+      MPI::COMM_WORLD.Barrier();
+#endif
       /*********************************************/
       // save
       /*********************************************/
@@ -246,7 +259,7 @@ int main(int argc, char *argv[]) {
       	ERRORR("Failed to save o/p file.", 1);
       } else {
 	//	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
-	//      	ERRORR("Failed to save o/p file.", 1);
+	//	ERRORR("Failed to save o/p file.", 1);
 #ifdef USE_MPI
 	double write_time = MPI_Wtime();
 	err = TheCore.save_mesh_parallel(rank, nprocs);

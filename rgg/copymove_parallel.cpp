@@ -16,14 +16,14 @@ int CCrgen::copymove_parallel(const int nrank, const int numprocs)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-
-  err = set_copymove_coords();
-  ERRORR("Failed to set cm coords.", err);
+  if(nrank < (int) core_alias.size()){
+    err = set_copymove_coords();
+    ERRORR("Failed to set cm coords.", err);
   
-  // now copy/move
-  err = copymove_all(nrank, numprocs);
-  ERRORR("Failed to cm hexflat.", err);
-      
+    // now copy/move
+    err = copymove_all(nrank, numprocs);
+    ERRORR("Failed to cm hexflat.", err);
+  }
   return iBase_SUCCESS;
 }
 
