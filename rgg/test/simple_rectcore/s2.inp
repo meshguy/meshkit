@@ -4,24 +4,26 @@
 !
 GeometryType Rectangular
 !
-Materials 2 Ma3 M1 Coolant_2 C1
+Materials 3  Coolant_2 C1 BADS B1 RefRod_2 M3
 !
-Dimensions 1 0.0 0.0 0 10.0 10.0 10.0  C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Duct 3 0.0 0.0 0 10.0 1.0 1.0 3.0 3.0 5.0 5.0  M3 B1 C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
 Pincells 1 
-!
-! Standard fuel cell (1)
-PWR_FC_01 FC 2
-Pitch  9.0 9.0 10.0 
-Cylinder 1 0.0 0.0  0.0 10.0   3.0  M1
+!                                                                                          
+! reflector
+PWR_RF_01 RF 2
+Pitch  18.0 18.0 124.0 
+Cylinder 1 0.0 0.0  0.0 124.0   7.0 M3  
 !
 Assembly 1 1
-FC
+XX
 Center
-RadialMeshSize 10.0
+RadialMeshSize 1.0
 AxialMeshSize 10.0
+EdgeInterval 5
 MaterialSet_StartId 100
-NeumannSet_StartId 100
+CreateSideSet No
+!NeumannSet_StartId 100
 END     ! This is a must                  
                                                                                          
 

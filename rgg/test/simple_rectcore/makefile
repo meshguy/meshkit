@@ -4,32 +4,26 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit -nographics -batch
+CUBIT = cubit
 
 COREGEN = ../../coregen
 
 ASSYGEN = ../../assygen
 
-MESH_FILES = s1.cub  s2.cub  
+MESH_FILES = s2  
 
-GEOM_FILES = s1.sat  s2.sat  
+GEOM_FILES = s2.sat  
 
-JOU_FILES = s1.jou  s2.jou  
+JOU_FILES = s2.jou  
 
-INJOU_FILES = s1.template.jou  s2.template.jou  
+INJOU_FILES = s2.template.jou  
 
-ASSYGEN_FILES = s1.inp  s2.inp  
+ASSYGEN_FILES = s2.inp  
 
 simple_rectcore.h5m : ${MESH_FILES} simple_rectcore.inp
 	${COREGEN} simple_rectcore
-s1.cub : s1.sat  s1.jou  s1.template.jou
-	${CUBIT} s1.jou
-
-s1.sat s1.jou s1.template.jou : s1.inp
-	${ASSYGEN} s1
-
-s2.cub : s2.sat  s2.jou  s2.template.jou
-	${CUBIT} s2.jou
+s2 : s2.sat  s2.jou  s2.template.jou
+	${CUBIT} -batch s2.jou
 
 s2.sat s2.jou s2.template.jou : s2.inp
 	${ASSYGEN} s2
