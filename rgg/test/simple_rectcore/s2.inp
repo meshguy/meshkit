@@ -4,23 +4,17 @@
 !
 GeometryType Rectangular
 !
-Materials 3  Coolant_2 C1 BADS B1 RefRod_2 M3
+Materials 1  Coolant_2 C1
 !
-Duct 3 0.0 0.0 0 10.0 1.0 1.0 3.0 3.0 5.0 5.0  M3 B1 C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Duct 1 0.0 0.0 0 10.0 5.0 5.0  C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
-Pincells 1 
-!                                                                                          
-! reflector
-PWR_RF_01 RF 2
-Pitch  18.0 18.0 124.0 
-Cylinder 1 0.0 0.0  0.0 124.0   7.0 M3  
-!
+Pincells 0
 Assembly 1 1
 XX
 Center
-RadialMeshSize 1.0
+RadialMeshSize 5.0
 AxialMeshSize 10.0
-EdgeInterval 5
+EdgeInterval 2
 MaterialSet_StartId 100
 CreateSideSet No
 !NeumannSet_StartId 100

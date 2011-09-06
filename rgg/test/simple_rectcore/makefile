@@ -22,7 +22,7 @@ ASSYGEN_FILES = s2.inp
 
 simple_rectcore.h5m : ${MESH_FILES} simple_rectcore.inp
 	${COREGEN} simple_rectcore
-s2 : s2.sat  s2.jou  s2.template.jou
+s2.cub : s2.sat  s2.jou  s2.template.jou
 	${CUBIT} -batch s2.jou
 
 s2.sat s2.jou s2.template.jou : s2.inp
