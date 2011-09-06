@@ -110,37 +110,44 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
     std::cout << "Saving mesh file in parallel. " << std::endl;
   }
 
-  // //All explicit sharing data must be updated in ParallelComm instance before save
-  // moab::Range entities, sets, faces, edges;
-  // moab::Tag gid_tag;
-  // mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
-  // mbImpl()->get_entities_by_type( 0, MBHEX, entities );
-  // mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
-  // mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
+  //All explicit sharing data must be updated in ParallelComm instance before save
+   moab::Range entities, sets, faces, edges;
+  moab::Tag gid_tag;
+  mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
+  mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
+  mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
 
-  // err = pc->resolve_shared_ents( 0, entities, 3, 0, &gid_tag );
-  // if (err != moab::MB_SUCCESS) {
-  //   std::cerr << "failed to resolve shared ents" << std::endl;
-  //   MPI_Abort(MPI_COMM_WORLD, 1);
-  // }
-  // err = pc->resolve_shared_ents( 0, faces, 2, 0, &gid_tag );
-  // if (err != moab::MB_SUCCESS) {
-  //   std::cerr << "failed to resolve shared ents" << std::endl;
-  //   MPI_Abort(MPI_COMM_WORLD, 1);
-  // }
+  err = pc->resolve_shared_ents( 0, edges, 0, -1, &gid_tag );
+  if (err != moab::MB_SUCCESS) {
+    std::cerr << "failed to resolve shared ents" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
+  
+  err = pc->resolve_shared_ents( 0, faces, 0, -1, &gid_tag );
+  if (err != moab::MB_SUCCESS) {
+    std::cerr << "failed to resolve shared ents" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
 
-  // err = pc->resolve_shared_ents( 0, edges, 1, 0, &gid_tag );
-  // if (err != moab::MB_SUCCESS) {
-  //   std::cerr << "failed to resolve shared ents" << std::endl;
-  //   MPI_Abort(MPI_COMM_WORLD, 1);
-  // }
+  moab::Tag mattag;
+  mbImpl()->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+  moab::Range matsets;
+  mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+  pc->resolve_shared_sets( matsets, mattag );
 
-  // mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
-  // err = pc->resolve_shared_sets( sets, gid_tag );
-  // if (err != moab::MB_SUCCESS) {
-  //   std::cerr << "failed to resolve shared sets" << std::endl;
-  //   MPI_Abort(MPI_COMM_WORLD, 1);
-  // }
+  moab::Tag nstag;
+  mbImpl()->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
+  moab::Range nssets;
+  mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+  pc->resolve_shared_sets( nssets, nstag );
+
+
+  mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
+  err = pc->resolve_shared_sets( sets, gid_tag );
+  if (err != moab::MB_SUCCESS) {
+    std::cerr << "failed to resolve shared sets" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
 
 #ifdef HAVE_MOAB
   int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
