@@ -212,8 +212,8 @@ int main(int argc, char *argv[]) {
     	ERRORR("Failed to assign global ids.", 1);
       }
       else{
-	err = TheCore.assign_gids_parallel(rank, nprocs);
-    	ERRORR("Failed to assign global ids.", 1);
+	// err = TheCore.assign_gids_parallel(rank, nprocs);
+    	// ERRORR("Failed to assign global ids.", 1);
       }
 
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem5);
@@ -222,10 +222,10 @@ int main(int argc, char *argv[]) {
       ctgid = (double) (tgid-tmerge)/(60*CLOCKS_PER_SEC);
 
       if (TheCore.mem_tflag == true && nprocs == 1) {
-    	std::cout << "\n" << " Clock time taken to assign gids = " << ld_tgid
-    		  << " seconds" << std::endl;
-	std::cout << " CPU time = " << ctgid << " mins" << std::endl;
-    	std::cout << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
+      	std::cout << "\n" << " Clock time taken to assign gids = " << ld_tgid
+      		  << " seconds" << std::endl;
+      	std::cout << " CPU time = " << ctgid << " mins" << std::endl;
+      	std::cout << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
       }
       /*********************************************/
       // create neumann sets on the core model
@@ -258,7 +258,7 @@ int main(int argc, char *argv[]) {
       	err = TheCore.save_mesh();
       	ERRORR("Failed to save o/p file.", 1);
       } else {
-	//	err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
+	//		err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
 	//	ERRORR("Failed to save o/p file.", 1);
 #ifdef USE_MPI
 	double write_time = MPI_Wtime();
