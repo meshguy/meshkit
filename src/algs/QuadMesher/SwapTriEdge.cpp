@@ -8,10 +8,11 @@
 int SwapTriEdge:: one_sweep(int entity, int rule)
 {
      size_t total_count = 0;
+     size_t numnodes = mesh->getSize(0);
+     size_t numfaces = mesh->getSize(2);
 
      // Sweep over nodes in the mesh...
      if( entity == 0 ) {
-          size_t numnodes = mesh->getSize(0);
           while(1) {
                size_t curr_count = 0;
                for (size_t i = 0; i < numnodes; i++) {
@@ -25,7 +26,6 @@ int SwapTriEdge:: one_sweep(int entity, int rule)
 
      // Sweep over faces in the mesh...
      if( entity == 2 ) {
-          size_t numfaces = mesh->getSize(2);
           while(1) {
                size_t curr_count = 0;
                for (size_t i = 0; i < numfaces; i++) {
@@ -36,13 +36,18 @@ int SwapTriEdge:: one_sweep(int entity, int rule)
                total_count += curr_count;
           }
      }
+ 
+     assert( numnodes ==  mesh->getSize(0) );
+     assert( numfaces ==  mesh->getSize(2) );
+
+     mesh->make_consistently_oriented();
 
      return total_count;
 }
 
 //#############################################################################
 
-int SwapTriEdge::apply_degree_reduction_rule()
+int SwapTriEdge::apply_rule(int rule )
 {
      int relexist2 = mesh->build_relations(0, 2);
 
@@ -55,11 +60,10 @@ int SwapTriEdge::apply_degree_reduction_rule()
 
      int curr_count;
      while(1) {
-          curr_count = one_sweep( 2, DEGREE_REDUCTION_RULE );
+          curr_count = one_sweep( 2, rule);
           if( curr_count == 0) {
-               mesh->make_consistently_oriented();
                mopt.shape_optimize(mesh);
-               curr_count = one_sweep( 2, DEGREE_REDUCTION_RULE );
+               curr_count = one_sweep( 2, rule );
                if( curr_count == 0) break;
                num_edges_flipped+= curr_count;
           } else
@@ -77,6 +81,8 @@ int SwapTriEdge::apply_degree_reduction_rule()
 
 int SwapTriEdge::atomicOp(const Face *face, int rule)
 {
+     if( !face->isActive() )  return 1;
+
      for (int i = 0; i < 3; i++) {
           Vertex *v1 = face->getNodeAt(i + 1);
           Vertex *v2 = face->getNodeAt(i + 2);
@@ -86,7 +92,7 @@ int SwapTriEdge::atomicOp(const Face *face, int rule)
                if( !err) return 0;
           }
      }
-     return 1;
+     return 2;
 }
 
 //#############################################################################
@@ -195,10 +201,17 @@ bool SwapTriEdge::is_edge_flip_allowed(const FlipEdge &edge, int rule) const
           int ideal_v3 =  ov1->get_ideal_face_degree(3);
           int ideal_v4 =  ov2->get_ideal_face_degree(3);
 
-          int l1 = v1->getLayerID();
-          int l2 = v2->getLayerID();
-          int l3 = ov1->getLayerID();
-          int l4 = ov2->getLayerID();
+          int l1 = 0;
+          v1->getAttribute("Layer",  l1);
+
+          int l2 = 0;
+          v2->getAttribute("Layer",  l2);
+
+          int l3 = 0;
+          ov1->getAttribute("Layer", l3);
+
+          int l4 = 0;
+          ov2->getAttribute("Layer", l4);
 
           // Decrease the vertex degree
           if( (d1  > ideal_v1) && (l2 > l1) && (l3 > l1) && (l4 > l1) ) return 1;
@@ -240,12 +253,12 @@ int SwapTriEdge::commit(const FlipEdge &edge)
      int pos1 = t1->getPosOf(v1);
      int pos2 = t2->getPosOf(v1);
 
-     v1->removeRelation2(t1);
-     v1->removeRelation2(t2);
-     v2->removeRelation2(t1);
-     v2->removeRelation2(t2);
-     v1->removeRelation0(v2);
-     v2->removeRelation0(v1);
+     v1->removeRelation(t1);
+     v1->removeRelation(t2);
+     v2->removeRelation(t1);
+     v2->removeRelation(t2);
+     v1->removeRelation(v2);
+     v2->removeRelation(v1);
 
      NodeSequence vconn(3);
 
@@ -291,7 +304,8 @@ int SwapTriEdge::commit(const FlipEdge &edge)
 
 int SwapTriEdge ::atomicOp(Vertex *apexVertex, int rule)
 {
-     FaceSequence &vneighs = apexVertex->getRelations2();
+     FaceSequence vneighs;
+     apexVertex->getRelations( vneighs );
      int numNeighs = vneighs.size();
 
      for( int i = 0; i < numNeighs; i++) {
@@ -312,16 +326,16 @@ int SwapTriEdge :: apply_advance_front_rule()
      mesh->search_boundary();
 
      size_t numNodes = mesh->getSize(0);
-     NodeSequence currlayer;
+     NodeSequence currlayer, vneighs;
      NodeSet   nextlayer;
 
      for(size_t i = 0; i < numNodes; i++) {
           Vertex *v = mesh->getNodeAt(i);
           if( v->isBoundary() ) {
-               v->setLayerID(0);
+               v->setAttribute("Layer", 0);
                currlayer.push_back(v);
           } else
-               v->setLayerID(INT_MAX);
+               v->setAttribute("Layer",INT_MAX);
      }
 
      Jaal::MeshOptimization mopt;
@@ -369,7 +383,7 @@ int SwapTriEdge :: apply_advance_front_rule()
                assert( nirregular1 <= nirregular0);
                if( nirregular1 == 0) break;
           }
-               lapsmooth.execute();
+          lapsmooth.execute();
 
 //        mopt.shape_optimize(mesh);
 
@@ -377,15 +391,17 @@ int SwapTriEdge :: apply_advance_front_rule()
           cout << "# of Irregular nodes before swapping : " << nirregular0 << endl;
           cout << "# of Irregular nodes after swapping  : " << nirregular1 << endl;
 
+          int lid;
+
           nextlayer.clear();
           nSize = currlayer.size();
           for( size_t i = 0; i < nSize; i++) {
                Vertex *v = currlayer[i];
-               NodeSequence &vneighs = v->getRelations0();
+               v->getRelations( vneighs );
                for( size_t k = 0; k < vneighs.size(); k++) {
-                    int lid = vneighs[k]->getLayerID();
+                    vneighs[k]->getAttribute( "Layer", lid);
                     if( lid > curr_layer_id ) {
-                         vneighs[k]->setLayerID( curr_layer_id+1 );
+                         vneighs[k]->setAttribute("Layer", curr_layer_id+1 );
                          nextlayer.insert( vneighs[k] );
                     }
                }
@@ -413,73 +429,37 @@ int SwapTriEdge :: apply_advance_front_rule()
           more_than_ideal[i] = 0;
           total_ideal[i] = 0;
      }
+     int lid;
 
      numNodes = mesh->getSize(0);
      int final_irregular = 0;
      for( size_t i = 0; i < numNodes; i++) {
           Vertex *v = mesh->getNodeAt(i);
           if( !v->isRemoved()) {
-               int lid   = v->getLayerID();
+               v->getAttribute("Layer", lid );
                int curr_degree  = v->getNumRelations(2);
                int ideal_degree = v->get_ideal_face_degree(3);
                if( curr_degree != ideal_degree ) {
                     final_irregular++;
                     if( curr_degree < ideal_degree) less_than_ideal[lid]++;
                     if( curr_degree > ideal_degree) more_than_ideal[lid]++;
-               } else 
-                  total_ideal[lid]++;
+               } else
+                    total_ideal[lid]++;
           }
      }
 
      cout << " Layer   Less   More  Ideal " << endl;
      for( int i = 0; i < numLayers; i++)
-          cout << i << setw(10) <<  less_than_ideal[i] 
-                    << setw(10) <<  more_than_ideal[i] 
-                    << setw(10) <<  total_ideal[i] << endl;
+          cout << i << setw(10) <<  less_than_ideal[i]
+               << setw(10) <<  more_than_ideal[i]
+               << setw(10) <<  total_ideal[i] << endl;
      cout << " Final # of irregular nodes : " << final_irregular << endl;
 
      mopt.shape_optimize(mesh);
-     Jaal::set_ideal_node_tag(mesh, 3);
-     mesh->saveAs("final.off");
+
      if (!relexist2) mesh->clear_relations(0, 2);
      if (!relexist0) mesh->clear_relations(0, 0);
 
      return num_edges_flipped;
 }
 
-#ifdef CSV
-///////////////////////////////////////////////////////////////////////////
-
-void UnitTest::test_vertex_degree_reduction()
-{
-     int N = 100;
-     double theta = 2.0 * M_PI / (double) N;
-     Point3D p3d;
-     SharedNodeSet nodeset = NodeSet::newObject();
-     for (int i = 0; i < N; i++) {
-          p3d[0] = cos(i * theta);
-          p3d[1] = sin(i * theta);
-          p3d[2] = 0.0;
-          SharedVertex v = Vertex::newObject();
-          v->setCoords(p3d);
-          nodeset->add(v);
-     }
-     SharedEdgeMesh edgemesh = MeshUtil::create_close_contour(nodeset);
-
-     boost::tuple<SharedFaceMesh, SharedVertex> product;
-     product = MeshUtil::convex_star_triangulation(edgemesh);
-
-     SharedFaceMesh facemesh = product.get < 0 > ();
-
-     nodeset = facemesh->getNodes();
-     nodeset->getRenumbered();
-
-     VTKMeshExporter vtk;
-     vtk.saveAs(facemesh, "vreduce_before.vtk");
-
-     VertexDegreeReduction vd(facemesh);
-     vd.execute();
-     vtk.saveAs(facemesh, "vreduce_after.vtk");
-}
-///////////////////////////////////////////////////////////////////////////
-#endif

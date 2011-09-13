@@ -18,10 +18,12 @@ int DijkstraShortestPath::atomicOp(LVertex &currnode)
           }
      }
 
-     const NodeSequence &vneighs = vi->getRelations0();
+     NodeSequence vneighs;
+     vi->getRelations( vneighs );
      int nSize = vneighs.size();
 
-     int offset = Math::random_value((int)0, nSize-1);
+//   int offset = Math::random_value((int)0, nSize-1);
+     int offset = 0;
 
      LVertex lv;
      for (int i = 0; i < nSize; i++) {
@@ -75,7 +77,6 @@ void DijkstraShortestPath::traceback()
 
 void DijkstraShortestPath::fastmarching()
 {
-//  int relexist0 = mesh->build_relations(0, 0);
      assert( mesh->getAdjTable(0,0) );
 
      while (!vertexQ.empty()) vertexQ.pop();
@@ -89,6 +90,8 @@ void DijkstraShortestPath::fastmarching()
      vmap[vsrc]  = lv;
      vertexQ.push( lv );
 
+     assert( !vsrc->isRemoved() );
+
      int progress;
      while (!vertexQ.empty()) {
           LVertex currVertex = vertexQ.top();
@@ -96,9 +99,6 @@ void DijkstraShortestPath::fastmarching()
           progress = atomicOp(currVertex);
           if (!progress) break;
      }
-
-//  if( !relexist0) mesh->clear_relations(0, 0);
-
 }
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -136,22 +136,3 @@ int Jaal::dijkstra_shortest_path_test()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
-#ifdef JAAL_EXAMPLE
-void Example::shortest_path(const string &filename)
-{
-     OFFMeshImporter mimp;
-     SharedFaceMesh facemesh = mimp.read_faces(filename);
-
-     string attribname = "Geodesic";
-     DijkstraShortestPath2D djk(facemesh);
-     djk.setAttributeName(attribname);
-     djk.execute();
-
-     VTKMeshExporter vtk;
-     vtk.addAttribute(attribname, 0);
-     vtk.saveAs(facemesh, "geodesic.vtk");
-}
-
-///////////////////////////////////////////////////////////////////////////////
-#endif

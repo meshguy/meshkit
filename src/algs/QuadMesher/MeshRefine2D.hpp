@@ -165,7 +165,6 @@ class MeshRefine2D
     void remove_it(Face *face) {
         face->setStatus( MeshEntity::REMOVE);
     }
-
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -184,11 +183,20 @@ class CentroidRefine2D : public MeshRefine2D
 {
  public:
    CentroidRefine2D() {}
-   CentroidRefine2D(Mesh *m) {setMesh(m ); }
+   CentroidRefine2D( Mesh *m ) { setMesh(m); }
 
    void refine( Face *f ) {
         atomicOp( f );
         mesh->prune();
+   }
+
+   void refine( Mesh *m ) {
+       setMesh( m );
+
+       size_t nSize = mesh->getSize(2);
+       for( size_t i = 0; i < nSize; i++) 
+            atomicOp( mesh->getFaceAt(i)  );
+       mesh->prune();
    }
 
    int  execute();

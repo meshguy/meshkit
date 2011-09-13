@@ -245,6 +245,7 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+/*
 struct Edge33 : public QuadEdge {
 
      Edge33(Mesh *m, Vertex *v0, Vertex * v1) {
@@ -269,6 +270,7 @@ private:
      int remove_internal_one();
      int remove_boundary_one();
 };
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -450,6 +452,7 @@ public:
      static size_t num_3_patches;
      static size_t num_4_patches;
      static size_t num_5_patches;
+     static size_t disk_remeshable;
 
      OneDefectPatch( Mesh *m ) {
           mesh = m;
@@ -479,15 +482,28 @@ public:
           return irregular_nodes_removed;
      }
 
+     bool isBoundaryEven() const {
+          if( bound_nodes.size()%2 == 0 ) return 1;
+          return 1;
+     }
+
      size_t count_irregular_nodes(int where);
 
      int  build_remeshable_boundary();
 
-     FaceSequence getFaces() const {
+     double get_isoperimetic_quotient() const {
+          // This definiation is taken from Wikipedia..
+          double A = getArea();
+          double L = getPerimeter();
+          double q = 4*M_PI*A/(L*L);
+          return q;
+     }
+
+     void getFaces( FaceSequence &result) const {
           size_t nSize = faces.size();
 
-          FaceSequence result;
-          if( nSize == 0 ) return result;
+          result.clear();
+          if( nSize == 0 ) return;
 
           result.resize( nSize );
 
@@ -495,7 +511,6 @@ public:
           FaceSet::const_iterator it;
           for( it = faces.begin(); it != faces.end(); ++it)
                result[index++] = *it;
-          return result;
      }
 
      const NodeSequence &getBoundaryNodes() const {
@@ -512,7 +527,7 @@ public:
 
      int  remesh();
 
-     void setTags();
+     void setAttributes();
 
      void clear() {
           nodepath.clear();
@@ -540,7 +555,7 @@ private:
      NodeSequence  nodepath;     // Initial joining two irregular nodes..
 
      FaceSet faces;
-     FaceSet inner_faces; 
+     FaceSet inner_faces;
 
 #ifdef USE_HASHMAP
      std::tr1::unordered_map<Vertex*, FaceSet> relations02;
@@ -583,10 +598,6 @@ private:
      NodeSequence  newnodes, nnodes;
      FaceSequence  newfaces, nfaces;
 
-     // backup data.
-     vector<Point3D>  backupCoords;
-     NodeSequence     backupConnect;
-
      // Get the position on the boundary ...
      int getPosOf( const Vertex *v) const {
           size_t nSize = bound_nodes.size();
@@ -607,9 +618,11 @@ private:
      int reorient_4_sided_loop();
 
      // Patch creation functions...
-     void  init_blob();
-     int   create_boundary();
-     void  expand_blob(Vertex *v);
+     int   init_blob();
+     int   update_boundary();
+     int   finalize_boundary();
+     int   expand_blob(Vertex *v);
+     int   expand_blob();
      int   get_topological_outer_angle( Vertex *v);
      bool  is_simply_connected();
 
@@ -622,7 +635,6 @@ private:
 
      // If the resulting mesh is invalid for some reasons, revert back to
      // original and restore all information.
-     void backup();
      void rollback();
 
      void pre_remesh();  // Before we start remeshing, do some clean-up
@@ -631,6 +643,25 @@ private:
      int  remesh_5_sided_patch();
      void local_smoothing();
      void post_remesh(); // After successful remeshing, do some clean-up
+
+     double getArea() const {
+          double a = 0.0;
+          FaceSet::const_iterator it;
+          assert( faces.size() );
+          for( it = faces.begin(); it != faces.end(); ++it) {
+               a += fabs( (*it)->getArea() );
+          }
+          return a;
+     }
+
+     double getPerimeter() const {
+          double l = 0.0;
+          int nSize = bound_nodes.size();
+          for( int i = 0; i < nSize; i++)
+               l += Vertex::length( bound_nodes[i], bound_nodes[(i+1)%nSize] );
+          return l;
+     }
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -683,17 +714,21 @@ public:
      }
 
      ~QuadCleanUp() {
-          if( lapweight ) delete lapweight;
-          if( lapsmooth ) delete lapsmooth;
+          /*
+                    if( lapweight ) delete lapweight;
+                    if( lapsmooth ) delete lapsmooth;
+          */
           if( djkpath   ) delete djkpath;
           if( defective_patch ) delete defective_patch;
      }
 
      void setMesh( Mesh *m ) {
           mesh = m;
-          lapsmooth = new LaplaceSmoothing(mesh);
-          lapweight = new LaplaceLengthWeight;
-          lapsmooth->setWeight( lapweight );
+          /*
+                    lapsmooth = new LaplaceSmoothing(mesh);
+                    lapweight = new LaplaceLengthWeight;
+                    lapsmooth->setWeight( lapweight );
+          */
      }
 
      // Query methods ...
@@ -747,8 +782,9 @@ public:
      Vertex* insert_boundary_doublet(Face *face);
      Vertex* insert_doublet(Face *face, Vertex *v0, Vertex *v2);
 
-     vector<Edge33>  search_edges33();
-     int remove_edges35();
+//   vector<Edge33>  search_edges33();
+//   int remove_edges35();
+
      int refine_restricted_node(Vertex *resnode, Vertex *bndnode);
      int refine_degree3_faces();
      int refine_bridges_face();
@@ -762,13 +798,14 @@ private:
      Mesh *mesh;
 
      MeshOptimization mopt;
-     LaplaceSmoothing *lapsmooth;
-     LaplaceWeight *lapweight;
+     /*
+          LaplaceSmoothing *lapsmooth;
+          LaplaceWeight *lapweight;
+     */
 
      DijkstraShortestPath *djkpath; // Used in one defect remeshing ....
      OneDefectPatch* defective_patch;
 
-//   int  region_search_method;
      int  has_interior_nodes_degree_345();
 
      NodeSequence  irregular_nodes;
@@ -777,8 +814,6 @@ private:
      vector<Doublet> vDoublets;
      vector<Singlet> vSinglets;
      vector<Diamond> vDiamonds; // Diamonds in the mesh;
-//   vector<Edge>    vTunnels;
-//   vector<Diamond> search_bridges_in_layer(int l);
      vector<Diamond> search_diamonds_in_layer(int l);
 
      int clean_layer_once(int id);
@@ -792,7 +827,6 @@ private:
      int remove_bridges_once();
      int remove_diamonds_once();
      int remove_diamonds_in_layer( int l);
-//   int remove_tunnels_once();
      int advance_front_edges_swap_once(int layerid);
 
      int apply_advance_front_bridge_rule( Vertex *v0, Vertex *v1);
@@ -810,12 +844,10 @@ private:
      void cleanup_internal_boundary_face();
 
      // May become obsolere
-     vector<Edge33>  vEdges33;
      int refine_3434_pattern( Face *face, int pos);
      int refine_3454_pattern( Face *face, int pos);
      int refine_3444_pattern( Face *face, int pos);
      int apply_shift_node3_rule( Vertex *vertex);
-     vector<Edge33> search_edges33_in_layer(int layerid );
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -870,8 +902,9 @@ QuadCleanUp::hasSinglet (const Face *face)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void set_diamond_tag(Mesh *mesh);
-void set_bridge_tag(Mesh *mesh);
+void set_singlet_tag(Mesh *m, const string &s = "Singlet" );
+void set_doublet_tag(Mesh *m, const string &s = "Doublet" );
+void set_diamond_tag(Mesh *mesh, const string &s = "Diamond" );
 
 } // namespace Jaal
 

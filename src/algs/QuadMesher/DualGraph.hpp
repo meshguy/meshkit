@@ -123,15 +123,16 @@ private:
 inline
 void DualGraph::addEdge(const PNode v1, const PNode v2)
 {
-  v1->addRelation0(v2);
-  v2->addRelation0(v1);
+  v1->addRelation(v2);
+  v2->addRelation(v1);
 }
 
 inline 
 PNode DualGraph::getNewDualNode(Face *face) 
 {
   PNode dualnode = Vertex::newObject();
-  const Point3D &p3d = face->getCentroid();
+  Point3D p3d;
+  face->getAvgPos( p3d );
   dualnode->setXYZCoords(p3d);
 
   face->setDualNode( dualnode );

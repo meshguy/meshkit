@@ -24,11 +24,14 @@ double
 LaplaceSmoothing::update_vertex_position(Vertex *vertex, const Point3D &newpos)
 {
     double area0, area1, localerror = 0.0;
-    const NodeSequence &vneighs = vertex->getRelations0();
+
+    NodeSequence vneighs;
+    vertex->getRelations( vneighs );
 
     Point3D oldpos = vertex->getXYZCoords();
 
-    const FaceSequence &vfaces = vertex->getRelations2();
+    FaceSequence vfaces;
+    vertex->getRelations( vfaces );
 
     area0 = 0.0;
     for (size_t i = 0; i < vfaces.size(); i++)
@@ -82,7 +85,8 @@ LaplaceSmoothing::update_vertex_position(Vertex *vertex)
 
     const Point3D &oldpos = vertex->getXYZCoords();
 
-    const NodeSequence &neighs = vertex->getRelations0();
+    NodeSequence neighs;
+    vertex->getRelations( neighs );
     assert(neighs.size());
 
     Point3D newpos, xyz;
@@ -203,7 +207,7 @@ LaplaceSmoothing::localized_at(const NodeSequence &vertexQ)
     for (size_t i = 0; i < vertexQ.size(); i++)
     {
         Vertex *v = vertexQ[i];
-        vfaces = v->getRelations2();
+        v->getRelations( vfaces );
         for (size_t j = 0; j < vfaces.size(); j++)
             vfaces[j]->setVisitMark(1);
     }
@@ -297,7 +301,8 @@ LaplaceSmoothing::convexify()
                 Vertex *v2 = face->getNodeAt((pos + 2) % 4);
                 Vertex *v3 = face->getNodeAt((pos + 3) % 4);
 
-                Point3D pm = Vertex::mid_point(v1, v3, r);
+                Point3D pm ;
+                Vertex::mid_point(v1, v3, pm, r);
                 Point3D newpos = displace( pm, v2->getXYZCoords(), 1.0001);
 
                 v0->setXYZCoords(newpos);

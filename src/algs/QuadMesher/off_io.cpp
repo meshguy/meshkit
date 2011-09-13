@@ -58,6 +58,7 @@ int MeshImporter ::off_file(const string &fname)
        p3d[2] = z;
        vertex = Vertex::newObject();
        vertex->setXYZCoords(p3d);
+       vertex->setID(i);
        mesh->addNode( vertex );
   } 
 
@@ -102,29 +103,6 @@ int MeshImporter ::off_file(const string &fname)
        }
    }  
 
-   int gid;
-   infile >> str;
-   if( str == "#NODE_GROUP")  {
-       numNodes = mesh->getSize(0);
-       for( size_t i = 0; i < numNodes; i++) {
-            infile >> gid;
-            Vertex *v = mesh->getNodeAt(i);
-//           v->setGroupID( gid );
-            v->setTag( gid );
-       }
-       infile >> str;
-   }
-
-   if( str == "#FACE_GROUP")  {
-       numFaces = mesh->getSize(2);
-       for( size_t i = 0; i < numFaces; i++) {
-            infile >> gid;
-            Face *f = mesh->getFaceAt(i);
-            f->setTag( gid );
-//            f->setGroupID( gid );
-       }
-   }
-   
    return 0;
 }
 
@@ -133,19 +111,13 @@ int MeshImporter ::off_file(const string &fname)
 int 
 MeshExporter ::off_file(Mesh *mesh, const string &s)
 {
-    if (!mesh->isPruned()) mesh->prune();
-
+    mesh->prune();
     mesh->enumerate(0);
 
     string filename = s;
     ofstream ofile(filename.c_str(), ios::out);
     if( ofile.fail() ) 
         return 1;
-
-    if (!mesh->is_consistently_oriented())
-    {
-        cout << "Warning: Mesh is not conistently oriented " << endl;
-    }
 
     size_t numnodes = mesh->getSize(0);
     size_t numfaces = mesh->getSize(2);
@@ -158,6 +130,7 @@ MeshExporter ::off_file(Mesh *mesh, const string &s)
     for (size_t i = 0; i < numnodes; i++)
     {
         Vertex *v = mesh->getNodeAt(i);
+        assert( v->isActive() );
         const Point3D &p3d = v->getXYZCoords();
         ofile << p3d[0] << " " << p3d[1] << " " << p3d[2] << endl;
     }
@@ -166,6 +139,7 @@ MeshExporter ::off_file(Mesh *mesh, const string &s)
     for (size_t i = 0; i < numfaces; i++)
     {
         Face *face = mesh->getFaceAt(i);
+        if( face->isActive()) {
         if (face->getSize(0) == 4)
         {
             oldConnect = face->getNodes();
@@ -181,34 +155,16 @@ MeshExporter ::off_file(Mesh *mesh, const string &s)
             size_t vid = newConnect[j]->getID();
             if (vid >= numnodes)
             {
-                assert(!face->isRemoved());
                 assert(!newConnect[j]->isRemoved());
-                cout << face->getID() << endl;
-                cout << face->isRemoved() << endl;
-                cout << "Vertex indexing out of range " << vid << endl;
+                cout << face->getStatus() << endl;
+                cout << "Vertex indexing out of range " << vid << " Total : " << numnodes << endl;
                 exit(0);
             }
             ofile << vid << " ";
         }
         ofile << endl;
+        }
     }
 
-   ofile << "#NODE_GROUP ";
-   size_t numNodes = mesh->getSize(0);
-   for( size_t i = 0; i < numNodes; i++) {
-       Vertex *v = mesh->getNodeAt(i);
-       ofile << v->getTag() << " ";
-//     ofile << v->getGroupID() << " ";
-   }
-   ofile << endl;
-
-   ofile << "#FACE_GROUP ";
-   size_t numFaces = mesh->getSize(2);
-   for( size_t i = 0; i < numFaces; i++) {
-        Face *f = mesh->getFaceAt(i);
-        ofile << f->getTag() << " ";
-//      ofile << f->getGroupID() << " ";
-   }
-   
    return 0;
 }

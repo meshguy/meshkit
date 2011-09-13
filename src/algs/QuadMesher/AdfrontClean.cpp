@@ -8,7 +8,10 @@ int
 QuadCleanUp::apply_advance_front_singlet_rule(Vertex *singlet)
 {
     int err;
-    if (singlet->getLayerID() != 0) return 1;
+
+    int lid;
+    singlet->getAttribute("Layer", lid);
+    if ( lid  != 0) return 1;
     if (!QuadCleanUp::isSinglet(singlet)) return 1;
 
     FaceSequence vfaces = singlet->getRelations2();
@@ -17,9 +20,9 @@ QuadCleanUp::apply_advance_front_singlet_rule(Vertex *singlet)
     Face *face = vfaces[0];
     int pos = face->getPosOf(singlet);
 
-    Vertex *v1 = face->getNodeAt((pos + 1) % 4);
-    Vertex *v2 = face->getNodeAt((pos + 2) % 4);
-    Vertex *v3 = face->getNodeAt((pos + 3) % 4);
+    Vertex *v1 = face->getNodeAt(pos + 1);
+    Vertex *v2 = face->getNodeAt(pos + 2);
+    Vertex *v3 = face->getNodeAt(pos + 3);
 
     SwapQuadEdge edge1(mesh, v1, v2);
     err = edge1.apply_singlet_rule(singlet);
@@ -65,7 +68,7 @@ QuadCleanUp::apply_advance_front_triplet_rule(Vertex *vertex)
     for (int j = 0; j < 3; j++) {
         Face *f = vfaces[j];
         pos = f->getPosOf( vertex );
-        Vertex *v = f->getNodeAt( ( pos+2)%4 );
+        Vertex *v = f->getNodeAt(  pos+2 );
         if( v->getLayerID() > layerid ) {
             face = f;
            break;

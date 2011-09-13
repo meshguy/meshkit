@@ -5,99 +5,92 @@
 
 using namespace Jaal;
 
-class SwapTriEdge : public MeshOptimization
-{
-    static const int  DELAUNAY_RULE = 0;
-    static const int  ADVANCE_FRONT_RULE = 1;
-    static const int  DEGREE_REDUCTION_RULE = 2;
+class SwapTriEdge : public MeshOptimization {
+
 public:
-    //!  Constructor ...
+     static const int  DELAUNAY_RULE = 0;
+     static const int  DEGREE_REDUCTION_RULE = 1;
+     static const int  ADVANCE_FRONT_RULE = 2;
 
-    SwapTriEdge(Mesh *m, double angle = 10.0)
-    {
-        mesh = m;
-        creaseAngle = angle;
-    }
+     //!  Constructor ...
 
-    ~SwapTriEdge()
-    {
-    }
+     SwapTriEdge(Mesh *m, double angle = 10.0) {
+          mesh = m;
+          creaseAngle = angle;
+     }
 
-    void setCreaseAngle(double a)
-    {
-        creaseAngle = a;
-    }
+     ~SwapTriEdge() {
+     }
 
-    void setConstraintEdges(vector<Edge*> &edges)
-    {
-        //	  constraint_edges.add(emesh);
-    }
+     void setCreaseAngle(double a) {
+          creaseAngle = a;
+     }
 
-    size_t get_number_of_edges_flipped() const
-    {
-        return num_edges_flipped;
-    }
+     void setConstraintEdges(vector<Edge*> &edges) {
+          //	  constraint_edges.add(emesh);
+     }
 
-    int apply_degree_reduction_rule();
-    int apply_advance_front_rule();
-    int apply_delaunay_rule();
+     size_t get_number_of_edges_flipped() const {
+          return num_edges_flipped;
+     }
+
+     int apply_rule(int r = DELAUNAY_RULE);
 
 private:
-    Mesh *mesh;
-    double creaseAngle;
-    size_t num_edges_flipped;
+     Mesh *mesh;
+     double creaseAngle;
+     size_t num_edges_flipped;
 
-    bool  isIdeal( const Vertex *v)  const
-    {
-        int ideal_degree = v->get_ideal_face_degree(3);
-        int curr_degree  = v->getNumRelations(2);
-        if( curr_degree == ideal_degree ) return 1;
-        return 0;
-    }
+     int apply_advance_front_rule();
 
-    bool unchecked( const Face *f ) const
-    {
-       for( int i = 0; i < 3; i++)
-          if( f->getNodeAt(i)->getLayerID() == INT_MAX) return 1;
-       return 0;
-    }
+     bool  isIdeal( const Vertex *v)  const {
+          int ideal_degree = v->get_ideal_face_degree(3);
+          int curr_degree  = v->getNumRelations(2);
+          if( curr_degree == ideal_degree ) return 1;
+          return 0;
+     }
 
-    struct FlipEdge : public Edge
-    {
+     bool unchecked( const Face *f ) const {
+          int lid = 0;
+          for( int i = 0; i < 3; i++) {
+               Vertex *v = f->getNodeAt(i);
+               v->getAttribute("Layer", lid );
+               if( lid == INT_MAX) return 1;
+          }
+          return 0;
+     }
 
-        FlipEdge()
-        {
-        }
+     struct FlipEdge : public Edge {
 
-        FlipEdge(Vertex *v1, Vertex * v2)
-        {
-            process(v1, v2);
-        }
+          FlipEdge() {
+          }
 
-        ~FlipEdge()
-        {
-        }
+          FlipEdge(Vertex *v1, Vertex * v2) {
+               process(v1, v2);
+          }
 
-        bool isValid() const
-        {
-            if( faces[0] == NULL || faces[1] == NULL ) return 0;
-            if( opposite_nodes[0] == NULL || opposite_nodes[1] == NULL ) return 0;
-            return 1;
-        }
+          ~FlipEdge() {
+          }
 
-        bool isSharp(double creseAngle) const;
-        bool isConcave() const;
+          bool isValid() const {
+               if( faces[0] == NULL || faces[1] == NULL ) return 0;
+               if( opposite_nodes[0] == NULL || opposite_nodes[1] == NULL ) return 0;
+               return 1;
+          }
 
-        Face * faces[2];
-        Vertex * opposite_nodes[2];
+          bool isSharp(double creseAngle) const;
+          bool isConcave() const;
+
+          Face * faces[2];
+          Vertex * opposite_nodes[2];
 private:
-        void process(Vertex *v1, Vertex * v2);
-    };
-    int   one_sweep( int entity, int r);
-    int atomicOp(const Face *face, int r);
-    int atomicOp(Vertex *v, int r);
-    virtual int commit(const FlipEdge &edge);
-    virtual bool is_edge_flip_allowed(const FlipEdge &edge, int r ) const;
+          void process(Vertex *v1, Vertex * v2);
+     };
+     int one_sweep( int entity, int r);
+     int atomicOp(const Face *face, int r);
+     int atomicOp(Vertex *v, int r);
+     virtual int commit(const FlipEdge &edge);
+     virtual bool is_edge_flip_allowed(const FlipEdge &edge, int r ) const;
 };
 
 #endif

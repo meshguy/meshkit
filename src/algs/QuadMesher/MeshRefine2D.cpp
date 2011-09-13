@@ -77,8 +77,9 @@ MeshRefine2D::RefinedEdgeMap::setVertexOnEdge( Vertex *v1, Vertex *v2)
     RefinedEdge  refedge;
     Edge *edge = new Edge(v1,v2);
 
+    Point3D  p3d;
     if( allow_edge_refinement(edge) ) {
-        Point3D p3d = Vertex::mid_point(v1,v2);
+        Vertex::mid_point(v1, v2, p3d);
         Vertex *v   = Vertex::newObject();
         v->setXYZCoords( p3d );
         refedge.edge = edge;
@@ -162,7 +163,7 @@ int Sqrt3Refine2D :: execute()
 
     for ( int itime = 0; itime < numIterations; itime++) {
         refine.execute();
-        eflip.apply_degree_reduction_rule();
+        eflip.apply_rule(SwapTriEdge::DEGREE_REDUCTION_RULE);
     }
 
     return 0;
@@ -176,16 +177,16 @@ int LongestEdgeRefine2D :: atomicOp( const Face *oldface)
 
     double maxlen = 0.0;
     for( int i = 0; i < 3; i++) {
-        Vertex *v1  = oldface->getNodeAt((i+1)%3);
-        Vertex *v2  = oldface->getNodeAt((i+2)%3);
+        Vertex *v1  = oldface->getNodeAt(i+1);
+        Vertex *v2  = oldface->getNodeAt(i+2);
         elen[i] = Vertex::length(v1, v2);
         maxlen  = std::max(elen[i], maxlen);
     }
 
     for( int i = 0; i < 3; i++) {
         if( elen[i]/maxlen > 0.90 ) {
-            Vertex *v1 = oldface->getNodeAt( (i+1)%3);
-            Vertex *v2 = oldface->getNodeAt( (i+2)%3);
+            Vertex *v1 = oldface->getNodeAt( i+1 );
+            Vertex *v2 = oldface->getNodeAt( i+2 );
             edgemap->setVertexOnEdge(v1,v2);
         }
     }
@@ -437,8 +438,8 @@ void ConsistencyRefine2D :: checkFaceConsistency( Face *oldface )
     bitvec.reset();
 
     for( int i = 0; i < 3; i++) {
-        Vertex *v1  = oldface->getNodeAt( (i+1)%3 );
-        Vertex *v2  = oldface->getNodeAt( (i+2)%3 );
+        Vertex *v1  = oldface->getNodeAt( i+1 );
+        Vertex *v2  = oldface->getNodeAt( i+2 );
         hangingVertex[i] = edgemap->getVertexOnEdge( v1, v2 );
         if( hangingVertex[i] ) bitvec.set(i);
     }
@@ -495,7 +496,9 @@ void ConsistencyRefine2D :: makeConsistent()
 int CentroidRefine2D::refine_tri(Face *oldface)
 {
     Vertex *vcenter = Vertex::newObject();
-    vcenter->setXYZCoords( oldface->getCentroid() );
+    Point3D pc;
+    oldface->getAvgPos( pc );
+    vcenter->setXYZCoords( pc );
 
     Vertex *v1 = oldface->getNodeAt( 0 );
     Vertex *v2 = oldface->getNodeAt( 1 );
@@ -515,7 +518,9 @@ int CentroidRefine2D::refine_tri(Face *oldface)
 int  CentroidRefine2D::refine_quad(Face *oldface)
 {
     Vertex *vcenter = Vertex::newObject();
-    vcenter->setXYZCoords( oldface->getCentroid() );
+    Point3D pc;
+    oldface->getAvgPos( pc );
+    vcenter->setXYZCoords( pc );
 
     Vertex *v0 = oldface->getNodeAt( 0 );
     Vertex *v1 = oldface->getNodeAt( 1 );
@@ -536,7 +541,7 @@ int  CentroidRefine2D::refine_quad(Face *oldface)
 
 int CentroidRefine2D::atomicOp(Face *oldface)
 {
-    if( oldface->isRemoved() ) return 1;
+    if( !oldface->isActive() ) return 1;
 
     if( oldface->getSize(0) == 3 ) return refine_tri( oldface );
     if( oldface->getSize(0) == 4 ) return refine_quad( oldface );
@@ -645,7 +650,9 @@ int Refine2D14::refine_quad(Face *oldface)
     Vertex *v13  = edgemap->getVertexOnEdge( v1,v3 );
 
     Vertex *vcenter = Vertex::newObject();
-    vcenter->setXYZCoords( oldface->getCentroid() );
+    Point3D pc;
+    oldface->getAvgPos( pc );
+    vcenter->setXYZCoords( pc );
 
     append_new_quad( v0, v01, v02, vcenter);
     append_new_quad( v01, v1, vcenter, v13);

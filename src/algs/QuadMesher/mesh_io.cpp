@@ -11,6 +11,7 @@ MeshExporter::simple_file( Mesh *mesh, const string &s)
         mesh->enumerate(0);
         mesh->enumerate(2);
     }
+
     string filename = s;
     ofstream ofile(filename.c_str(), ios::out);
     if( ofile.fail() ) { 
@@ -61,6 +62,7 @@ MeshExporter::simple_file( Mesh *mesh, const string &s)
         ofile << endl;
     }
 
+/*
     for (size_t i = 0; i < numnodes; i++)
     {
         Vertex *vertex = mesh->getNodeAt(i);
@@ -73,6 +75,7 @@ MeshExporter::simple_file( Mesh *mesh, const string &s)
         Face *face = mesh->getFaceAt(i);
         ofile << face->getTag() << " ";
     }
+*/
     return 0;
 }
 
@@ -141,6 +144,7 @@ int MeshImporter::simple_file(const string &fname)
        }
   }
 
+/*
   int itag;
   for( size_t i = 0; i < numnodes; i++)  {
       infile >> itag;
@@ -153,6 +157,7 @@ int MeshImporter::simple_file(const string &fname)
       Face *f = mesh->getFaceAt(i);
       f->setTag(itag);
   }
+*/
 
   return 0;
 }

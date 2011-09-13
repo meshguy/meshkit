@@ -12,6 +12,7 @@ int Jaal::MeshOptimization::shape_optimize(Jaal::Mesh *mesh, int algo, int niter
 {
      algorithm = algo;
      numIter   = niter;
+
 #ifdef HAVE_MESQUITE
      int topo = mesh->isHomogeneous();
 
@@ -97,8 +98,8 @@ Mesquite::ArrayMesh* Jaal::MeshOptimization::jaal_to_mesquite( Jaal::Mesh *mesh 
 
      int topo = mesh->isHomogeneous();
 
-     assert( numnodes = vCoords.size()/3 );
-     assert( vfixed.size() == numnodes );
+     assert( noptnodes == vCoords.size()/3 );
+     assert( noptnodes == vfixed.size());
 
      if (topo == 4)
           optmesh = new Mesquite::ArrayMesh(3, noptnodes, &vCoords[0], &vfixed[0],
@@ -166,6 +167,7 @@ int Jaal::MeshOptimization::execute(Jaal::Mesh *mesh)
      case QUASI_NEWTON:
           qn = new QuasiNewton( &obj_func);   // Fastest but poor convergence in the tail.
           qn->use_global_patch();
+//        qn->use_element_on_vertex_patch();
           improver = qn;
           tc_inner.add_iteration_limit(numIter);
           improver->set_inner_termination_criterion(&tc_inner);
@@ -212,12 +214,8 @@ int Jaal::MeshOptimization::execute(Jaal::Mesh *mesh)
           queue.set_master_quality_improver(improver, err);
           queue.add_quality_assessor(&qa, err);
 
-          cout << " Hello " << endl;
-
           // do optimization of the mesh_set
           queue.run_instructions(optmesh, &mesh_plane, err);
-
-          cout << " Hello " << endl;
 
           cout << "# of iterations " << tc_inner.get_iteration_count() << endl;
 

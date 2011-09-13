@@ -5,7 +5,7 @@ using namespace Jaal;
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-Jaal::set_singlet_tag(Mesh *mesh)
+Jaal::set_singlet_tag(Mesh *mesh, const string &aname )
 {
      size_t numnodes = mesh->getSize(0);
 
@@ -14,13 +14,18 @@ Jaal::set_singlet_tag(Mesh *mesh)
      if (!mesh->isBoundaryKnown());
      mesh->search_boundary();
 
+     size_t ncount = 0;
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *vertex = mesh->getNodeAt(i);
-          if (QuadCleanUp::isSinglet(vertex)) {
-               vertex->setTag(0);
-          } else
-               vertex->setTag(1);
+          if( vertex->isActive() ) {
+               if (QuadCleanUp::isSinglet(vertex)) {
+                    vertex->setAttribute(aname, 1);
+                    ncount++;
+               } else
+                    vertex->setAttribute(aname, 0);
+          }
      }
+     cout << "#of Singlets detected: " << ncount << endl;
 
      if (!relexist)
           mesh->clear_relations(0, 2);
@@ -56,7 +61,7 @@ QuadCleanUp::search_boundary_singlets()
      size_t numnodes = mesh->getSize(0);
      for (size_t i = 0; i < numnodes; i++) {
           Vertex *v = mesh->getNodeAt(i);
-          if( !v->isRemoved() )  {
+          if( v->isActive() )  {
                if (isSinglet(v)) {
                     Singlet newsinglet(mesh, v);
                     vSinglets.push_back(newsinglet);
@@ -99,7 +104,8 @@ QuadCleanUp::remove_boundary_singlets_once()
 //////////////////////////////////////////////////////////////////////////
 int Singlet::remove()
 {
-     const FaceSequence &vfaces = vertex->getRelations2();
+     FaceSequence vfaces;
+     vertex->getRelations( vfaces );
      if (vfaces.size() > 1) return 1;
 
      return mesh->refine_quad15(vfaces[0]);
@@ -121,7 +127,7 @@ QuadCleanUp::remove_boundary_singlets()
 
      if (!relexist) mesh->clear_relations(0, 2);
 
-     return 0;
+     return ncount;
 }
 
 ////////////////////////////////////////////////////////////////////

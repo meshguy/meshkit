@@ -51,7 +51,7 @@ int DualGraph::build(Mesh *m)
             else
             {
                 dv0 = neighs[0]->getDualNode();
-                dv0->setBoundaryMark(1);
+                dv0->setAttribute("Boundary", 1);
             }
         }
     }
@@ -100,7 +100,7 @@ void DualGraph::edge_rep()
     for (size_t iface = 0; iface < numfaces; iface++)
     {
         Vertex *dualvtx = nodes[iface];
-        vneighs = dualvtx->getRelations0();
+        dualvtx->getRelations( vneighs );
         for (size_t i = 0; i < vneighs.size(); i++)
         {
             Edge *newedge = new Edge(dualvtx, vneighs[i]);

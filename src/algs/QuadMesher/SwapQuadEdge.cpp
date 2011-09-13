@@ -34,8 +34,8 @@ QuadEdge::commit()
           if (vertex->isVisited()) return 4;
      }
 
-     adjFaces[0]->setStatus(MeshEntity::REMOVE);
-     adjFaces[1]->setStatus(MeshEntity::REMOVE);
+     mesh->remove( adjFaces[0] );
+     mesh->remove( adjFaces[1] );
 
      assert(mesh);
 
@@ -98,7 +98,7 @@ SwapQuadEdge::build_boundary()
      // one, by restricting the swapping to degree greater than 3 will
      // ensure that no doublet is created.
      //
-     nghs = connect[0]->getRelations2();
+     connect[0]->getRelations( nghs );
      int nsize1 = nghs.size();
 
      if (connect[0]->isBoundary()) {
@@ -107,7 +107,7 @@ SwapQuadEdge::build_boundary()
           if (nsize1 < 4) return 1;
      }
 
-     nghs = connect[1]->getRelations2();
+     connect[1]->getRelations( nghs );
      int nsize2 = nghs.size();
 
      if (connect[1]->isBoundary()) {
@@ -172,27 +172,31 @@ SwapQuadEdge::get_boundary_nodes_chain()
 
 void SwapQuadEdge::update_front()
 {
-     size_t nSize;
-     if (check_fronts) {
-          NodeSequence vneighs;
-          while (1) {
-               int values_updated = 0;
-               for (int i = 0; i < 6; i++) {
-                    vneighs = bound_nodes[i]->getRelations0();
-                    int minid = bound_nodes[i]->getLayerID();
-                    nSize   = vneighs.size();
-                    for (size_t j = 0; j < nSize; j++)
-                         minid = min(minid, vneighs[j]->getLayerID() + 1);
+     cout << "Update front : " << endl;
+     exit(0);
 
-                    if (bound_nodes[i]->getLayerID() != minid) {
-                         bound_nodes[i]->setLayerID(minid);
-                         values_updated = 1;
+     /*
+          size_t nSize;
+          if (check_fronts) {
+               NodeSequence vneighs;
+               while (1) {
+                    int values_updated = 0;
+                    for (int i = 0; i < 6; i++) {
+                         bound_nodes[i]->getRelations( vneighs );
+                         int minid = bound_nodes[i]->getLayerID();
+                         nSize   = vneighs.size();
+                         for (size_t j = 0; j < nSize; j++)
+                              minid = min(minid, vneighs[j]->getLayerID() + 1);
+
+                         if (bound_nodes[i]->getLayerID() != minid) {
+                              bound_nodes[i]->setLayerID(minid);
+                              values_updated = 1;
+                         }
                     }
+                    if (!values_updated) break;
                }
-               if (!values_updated) break;
           }
-     }
-
+     */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,8 +219,8 @@ void
 SwapQuadEdge::rollback()
 {
      // We need to manual delete the relation
-     connect[0]->removeRelation0(connect[1]);
-     connect[1]->removeRelation0(connect[0]);
+     connect[0]->removeRelation(connect[1]);
+     connect[1]->removeRelation(connect[0]);
 
      // remove all relations by deactivating the elements ...
      mesh->deactivate(adjFaces[0]);
@@ -240,7 +244,7 @@ SwapQuadEdge::rollback()
      assert(!adjFaces[0]->isRemoved());
      assert(!adjFaces[1]->isRemoved());
 
-     update_front();
+//     update_front();
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -263,8 +267,8 @@ SwapQuadEdge::make_new_diagonal_at(int pos, bool bound_check)
      backup();
 
      // Remove the vertex-vertex relationship.
-     connect[0]->removeRelation0(connect[1]);
-     connect[1]->removeRelation0(connect[0]);
+     connect[0]->removeRelation(connect[1]);
+     connect[1]->removeRelation(connect[0]);
 
      mesh->deactivate(adjFaces[0]);
      mesh->deactivate(adjFaces[1]);
@@ -315,9 +319,10 @@ SwapQuadEdge::make_new_diagonal_at(int pos, bool bound_check)
      // Look at the neighbors, if some elements is inverted. Here we create
      // a set of neighbours, to avoid duplicate checking.
      FaceSet neighSet;
+     FaceSequence vfaces;
      for (int i = 0; i < 6; i++) {
           Vertex *v = bound_nodes[i];
-          const FaceSequence &vfaces = v->getRelations2();
+          v->getRelations( vfaces );
           size_t nSize = vfaces.size();
           for (size_t j = 0; j < nSize; j++)
                neighSet.insert(vfaces[j]);
@@ -350,11 +355,11 @@ SwapQuadEdge::apply_reduce_degree_rule()
 
      NodeSequence neighs;
 
-     neighs = connect[0]->getRelations0();
+     connect[0]->getRelations( neighs );
      int d1 = neighs.size();
      if (d1 < 4) return 1;
 
-     neighs = connect[1]->getRelations0();
+     connect[1]->getRelations( neighs );
      int d2 = neighs.size();
      if (d2 < 4) return 1;
 
@@ -365,12 +370,12 @@ SwapQuadEdge::apply_reduce_degree_rule()
           int pos = (start_pos + i + 1) % 6;
           Vertex *v0 = bound_nodes[ pos ];
           if (v0->isBoundary()) continue;
-          neighs = v0->getRelations0();
+          v0->getRelations( neighs );
           int d3 = neighs.size();
 
           Vertex *v3 = bound_nodes[(pos + 3) % 6];
           if (v3->isBoundary()) continue;
-          neighs = v3->getRelations0();
+          v3->getRelations( neighs );
           int d4 = neighs.size();
 
           if (SwapQuadEdge::is_topologically_valid_swap(d1, d2, d3, d4)) {
@@ -425,15 +430,17 @@ SwapQuadEdge::apply_advance_front_rule()
 {
      if (build_boundary() != 0) return 1;
 
-     int layerid = connect[0]->getLayerID();
-     for (int i = 0; i < 3; i++) {
-          Vertex *v0 = bound_nodes[(i + 0) % 6];
-          Vertex *v3 = bound_nodes[(i + 3) % 6];
-          if ((v0->getLayerID() > layerid) && (v3->getLayerID() > layerid)) {
-               int err = make_new_diagonal_at(i);
-               if (!err) return 0;
+     /*
+          int layerid = connect[0]->getLayerID();
+          for (int i = 0; i < 3; i++) {
+               Vertex *v0 = bound_nodes[(i + 0) % 6];
+               Vertex *v3 = bound_nodes[(i + 3) % 6];
+               if ((v0->getLayerID() > layerid) && (v3->getLayerID() > layerid)) {
+                    int err = make_new_diagonal_at(i);
+                    if (!err) return 0;
+               }
           }
-     }
+     */
      return 3;
 }
 
@@ -474,12 +481,14 @@ SwapQuadEdge::apply_singlet_rule(Vertex *singlet)
 int
 SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
 {
+
+#ifdef NEEDS_RECONSIDER
      assert(firstFace);
      if (vertex->isBoundary()) return 1;
 
 
-     int d1 = connect[0]->getRelations2().size();
-     int d2 = connect[1]->getRelations2().size();
+     int d1 = connect[0]->getNumRelations( 2 );
+     int d2 = connect[1]->getNumRelations( 2 );
 
      // Note 1: Just near the deficient node, there must be atleast 5 nodes in
      // order to swap the edge,otherwise, things may not converge, on the
@@ -491,11 +500,11 @@ SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
      // that the deficient node will be generated there.
      if( d2 < 4 ) return 1;
 
+     FaceSequence faces;
      if (d1 == 4) {
-          FaceSequence faces = vertex->getRelations2();
+          vertex->getRelations( faces );
           if (faces.size() != 3) return 1;
           int layerid = connect[0]->getLayerID();
-          faces = vertex->getRelations2();
           Face *f0 = firstFace;
           Mesh::getRelations112(connect[0], connect[1], faces);
           assert(faces.size() == 2);
@@ -520,8 +529,8 @@ SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
      }
      exit(0);
 
-     d1 = connect[0]->getRelations2().size();
-     d2 = connect[1]->getRelations2().size();
+     d1 = connect[0]->getNumRelations(2);
+     d2 = connect[1]->getNumRelations(2);
 
      // Don't create doublet at two nodes...
      if( d1 == 3 || d2 == 3 ) return 1;
@@ -559,6 +568,7 @@ SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
      */
 
      return err;
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -610,9 +620,6 @@ QuadCleanUp::swap_concave_faces()
 
      if (!relexist0) mesh->clear_relations(0, 0);
      if (!relexist2) mesh->clear_relations(0, 2);
-
-     if (mesh->count_concave_faces() == 0)
-          mopt.shape_optimize(mesh);
 
      return ncount;
 }

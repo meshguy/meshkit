@@ -11,7 +11,6 @@ libJaalQuadMesher_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libJaalQuadMesher_la_SOURCES = \
-	AdfrontClean.cpp  \
 	basic_math.hpp \
 	BinaryTree.cpp \
 	BinaryTree.hpp \
