@@ -1,4 +1,5 @@
 from MeshKit import *
+from optparse import OptionParser
 
 parser = OptionParser(usage="Usage: %prog [options] [FILE]")
 parser.add_option("-s", "--save", dest="save",
@@ -31,7 +32,7 @@ vols[0].get_adjacencies(0, vertices)
 
 first_vol = MEntVector()
 first_vol.push_back(vols.front())
-sw = mk.construct_meshop("OneToOneSwept", vols[0])
+sw = mk.construct_meshop("OneToOneSwept", vols)
 
 sw.SetSourceSurface(1)
 sw.SetTargetSurface(0)
