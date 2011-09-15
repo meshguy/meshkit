@@ -53,7 +53,8 @@ libJaalQuadMesher_la_SOURCES = \
 	MeshRefine2D.cpp \
 	MeshQuality.cpp  \
 	StopWatch.hpp   \
-	vtk_io.cpp 
+	vtk_io.cpp      \
+	xml_io.cpp      
   
 
 # The list of header files which are to be installed
