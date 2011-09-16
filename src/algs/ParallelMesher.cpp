@@ -94,22 +94,23 @@ void ParallelMesher::setup_this()
     if (m_rank == charge_proc) {
       m_sEntity[MESH_VOLUME].insert(me_vol); // volume
       if (debug_parallelmesher) print_geom_info(me_vol, 3, true);
-    }
-
-    for (int i = 2; i > -1; i--) { // child entities
-      children.clear();
-      me_vol->get_adjacencies(i, children);
-
-      for (MEntVector::iterator cit = children.begin(); cit != children.end(); cit++) {
-        RefEntity* child = reinterpret_cast< RefEntity* > ((*cit)->geom_handle());
-        TDParallel *td_par_child = (TDParallel *) child->get_TD(&TDParallel::is_parallel);
-        if (td_par_child != NULL) {
-          check_partition(td_par_child, *cit, i);
-          if (debug_parallelmesher) print_geom_info(*cit, i, m_rank == td_par_child->get_charge_proc());
+      
+      for (int i = 2; i > -1; i--) { // child entities
+        children.clear();
+        me_vol->get_adjacencies(i, children);
+        
+        for (MEntVector::iterator cit = children.begin(); cit != children.end(); cit++) {
+          RefEntity* child = reinterpret_cast< RefEntity* > ((*cit)->geom_handle());
+          TDParallel *td_par_child = (TDParallel *) child->get_TD(&TDParallel::is_parallel);
+          if (td_par_child != NULL) {
+            check_partition(td_par_child, *cit, i);
+            if (debug_parallelmesher) print_geom_info(*cit, i, m_rank == td_par_child->get_charge_proc());
+          }
         }
       }
     }
   }
+
   add_parallel_mesh_op(MESH_VERTEX);
   add_parallel_mesh_op(EXCHANGE_VERTEX);
   add_parallel_mesh_op(MESH_EDGE);
