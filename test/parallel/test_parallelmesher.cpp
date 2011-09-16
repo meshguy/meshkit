@@ -35,6 +35,7 @@ int main( int argc, char *argv[] )
   std::string geom_filename;
   const char *mesh_filename = NULL;
   int send_method = 1; // read and delete
+  int part_method = 0; // round_robin
   double mesh_size = 0.1;
   int mesh_interval = -1;
   bool force_intervals = false;
@@ -42,11 +43,12 @@ int main( int argc, char *argv[] )
 
   if (argc < 2) {
     if (rank == 0) {
-      std::cout << "Usage: " << argv[0] << " <input_geom_filename> <output_mesh_filename> [<send_methond>] [-s <uniform_size>] [-i <uniform_int>] [-f] "
+      std::cout << "Usage: " << argv[0] << " <input_geom_filename> <output_mesh_filename> [<send_methond>] [<partition_method>] [-s <uniform_size>] [-i <uniform_int>] [-f] "
                 << std::endl
                 << "  <send_method> = 0:read, 1:read_delete, 2:broadcast"
                 << " , 3:bcast_delete, 4:scatter,"
                 << " , 5:read_parallel" << std::endl;
+      std::cout << " <partition_method> = 0:round-robin, 1:static" << std::endl;
       std::cout << "  -s <uniform_size> = mesh with this size" << std::endl;
       std::cout << "  -i <uniform_int> = mesh curves with this # intervals" << std::endl;
       std::cout << "  -f = force these size/interval settings even if geometry has interval settings" << std::endl;
@@ -62,8 +64,9 @@ int main( int argc, char *argv[] )
     geom_filename = argv[1];
     if (argc > 2) mesh_filename = argv[2];
     if (argc > 3) send_method = atoi(argv[3]);
-    if (argc > 4) {
-      int argno = 4;
+    if (argc > 4) part_method = atoi(argv[4]);
+    if (argc > 5) {
+      int argno = 5;
       while (argno < argc) {
         if (!strcmp(argv[argno], "-s")) {
           argno++;
@@ -106,8 +109,15 @@ int main( int argc, char *argv[] )
     options = "PARALLEL=READ_DELETE;";
   }
 
-  // do body partitioning with round robin distribution
-  options += "PARTITION=GEOM_DIMENSION;PARTITION_VAL=3;PARTITION_DISTRIBUTE;";
+  // set partition method
+  if (part_method == 0) options += "PARTITION=GEOM_DIMENSION;PARTITION_VAL=3;PARTITION_DISTRIBUTE;";
+  else if (part_method == 1) options += "PARTITION=PAR_PARTITION_STATIC;";
+  else {
+    std::cout << "Partition method " << part_method
+              << " is not supported. Defaulting to: round_robin" << std::endl;
+    options = "PARTITION=GEOM_DIMENSION;PARTITION_VAL=3;PARTITION_DISTRIBUTE;";
+  }
+
 
   if (load_and_mesh(geom_filename.c_str(), mesh_filename,
                     options.c_str(), mesh_size, mesh_interval, rank)) return 1;
