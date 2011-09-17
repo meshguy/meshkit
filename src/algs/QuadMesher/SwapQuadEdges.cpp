@@ -1,3 +1,4 @@
+#include "SwapEdges.hpp"
 #include "QuadCleanUp.hpp"
 
 using namespace Jaal;
@@ -93,13 +94,11 @@ SwapQuadEdge::build_boundary()
 
      assert(mesh->getAdjTable(0, 2));
 
-     FaceSequence nghs;
      // Since the degree of each node of an existing edge decreases by
      // one, by restricting the swapping to degree greater than 3 will
      // ensure that no doublet is created.
      //
-     connect[0]->getRelations( nghs );
-     int nsize1 = nghs.size();
+     int nsize1 = connect[0]->getNumRelations(2);
 
      if (connect[0]->isBoundary()) {
           if (nsize1 < 3) return 1;
@@ -107,8 +106,7 @@ SwapQuadEdge::build_boundary()
           if (nsize1 < 4) return 1;
      }
 
-     connect[1]->getRelations( nghs );
-     int nsize2 = nghs.size();
+     int nsize2 = connect[1]->getNumRelations(2);
 
      if (connect[1]->isBoundary()) {
           if (nsize2 < 3) return 1;
@@ -117,7 +115,7 @@ SwapQuadEdge::build_boundary()
      }
 
      // Possibility of doublet creation is ruled out now..
-
+     FaceSequence nghs;
      Mesh::getRelations112(connect[0], connect[1], nghs);
 
      if (nghs.size() != 2) return 1;
@@ -126,10 +124,12 @@ SwapQuadEdge::build_boundary()
           adjFaces[0] = nghs[0];
           adjFaces[1] = nghs[1];
      }
+
      if (nghs[0] == firstFace) {
           adjFaces[0] = nghs[0];
           adjFaces[1] = nghs[1];
      }
+
      if (nghs[1] == firstFace) {
           adjFaces[0] = nghs[1];
           adjFaces[1] = nghs[0];
@@ -569,6 +569,8 @@ SwapQuadEdge::apply_deficient_rule(Vertex *vertex)
 
      return err;
 #endif
+    return 1;
+
 }
 
 /////////////////////////////////////////////////////////////////////////////

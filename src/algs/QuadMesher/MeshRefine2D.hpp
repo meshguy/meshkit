@@ -3,7 +3,7 @@
 
 #include <bitset>
 #include "Mesh.hpp"
-#include "SwapTriEdge.hpp"
+#include "SwapEdges.hpp"
 
 #include "basic_math.hpp"
 

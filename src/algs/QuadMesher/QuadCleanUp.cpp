@@ -1,4 +1,5 @@
 #include "QuadCleanUp.hpp"
+#include "SwapEdges.hpp"
 
 using namespace Jaal;
 
@@ -161,11 +162,12 @@ QuadCleanUp::reduce_boundary_vertex_degree( Vertex *vertex )
 {
      if (!vertex->isBoundary() || !vertex->isActive() ) return 1;
 
-     NodeSequence vneighs, wneighs;
-     vertex->getRelations( vneighs );
-     int vdegree  = vneighs.size();
+     int vdegree  = vertex->getNumRelations(0);
 
      if ( vdegree <= (vertex->get_ideal_face_degree(Face::QUADRILATERAL)+1) ) return 2;
+
+     NodeSequence vneighs, wneighs;
+     vertex->getRelations( vneighs );
 
      // First try with swapping edges ....
      for (int k = 0; k < vdegree; k++) {
@@ -231,11 +233,11 @@ QuadCleanUp::reduce_internal_vertex_degree( Vertex *vertex )
 {
      if (vertex->isBoundary() || !vertex->isActive() ) return 1;
 
+     int nSize = vertex->getNumRelations(0); 
+     if( nSize <= 4) return 2;
+
      NodeSequence vneighs, wneighs;
      vertex->getRelations( vneighs );
-     int nSize = vneighs.size();
-
-     if( nSize <= 4) return 2;
 
      sort(vneighs.begin(), vneighs.end(), HighVertexDegreeCompare());
 
@@ -288,6 +290,8 @@ QuadCleanUp::internal_vertex_degree_reduction_once()
 int
 QuadCleanUp::vertex_degree_reduction()
 {
+     cout << "#Irregular Nodes  " << mesh->count_irregular_nodes(4) << endl;
+
      int ncount = 0;
      while (1) {
           int ncount1 = boundary_vertex_degree_reduction_once();
@@ -295,6 +299,10 @@ QuadCleanUp::vertex_degree_reduction()
           if (ncount1 + ncount2 == 0) break;
           ncount += (ncount1 + ncount2 );
      }
+
+     cout << "#Edges Swapped : " << ncount << endl;
+     cout << "#Irregular Nodes  " << mesh->count_irregular_nodes(4) << endl;
+
      return ncount;
 }
 
@@ -391,6 +399,7 @@ QuadCleanUp::search_restricted_faces()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 int
 RestrictedEdge::build()
 {
@@ -509,6 +518,7 @@ RestrictedEdge::build()
 
      return 0;
 }
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 

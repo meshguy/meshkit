@@ -1,4 +1,4 @@
-#include "SwapTriEdge.hpp"
+#include "SwapEdges.hpp"
 
 #include <iostream>
 #include <iomanip>

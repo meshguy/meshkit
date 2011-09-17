@@ -159,11 +159,11 @@ Face* MeshRefine2D::append_new_quad( Vertex *v0, Vertex *v1 , Vertex *v2, Vertex
 int Sqrt3Refine2D :: execute()
 {
     CentroidRefine2D refine(mesh);
-    SwapTriEdge eflip(mesh);
+    SwapTriEdges eflip(mesh);
 
     for ( int itime = 0; itime < numIterations; itime++) {
         refine.execute();
-        eflip.apply_rule(SwapTriEdge::DEGREE_REDUCTION_RULE);
+        eflip.apply_rule(SwapEdges::DEGREE_REDUCTION_RULE);
     }
 
     return 0;

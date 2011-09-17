@@ -37,9 +37,9 @@ libJaalQuadMesher_la_SOURCES = \
 	QuadPatches.cpp \
         QuadMesh.cpp \
 	Singlet.cpp \
-	SwapQuadEdge.cpp \
-	SwapTriEdge.cpp \
-	SwapTriEdge.hpp \
+	SwapEdges.hpp \
+	SwapTriEdges.cpp \
+	SwapQuadEdges.cpp \
 	tfiblend.cpp \
 	tfiblend.hpp \
 	Tri2Quad.cpp \
