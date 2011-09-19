@@ -46,6 +46,7 @@ class CCrgen
 public:
   CCrgen ();    // ctor
   ~CCrgen ();   // dtor
+  enum ErrorStates {INVALIDINPUT, ENEGATIVE};
   int prepareIO (int argc, char *argv[], int myID, int numprocs);
   int load_meshes();
   int load_meshes_parallel(const int, int);
@@ -318,7 +319,8 @@ public:
   std::vector<double> y_coord;
   bool nst_flag, nsb_flag, nss_flag;
   std::vector<std::string> core_alias;
-
+  std::vector<double> nsx, nsy, nsc;
+  int num_nsside;
 private:
 
   CopyMesh **cm;
@@ -340,7 +342,8 @@ private:
   double PII;
   double z_height;    // z_height for extruding surfaces mesh
   int z_divisions; // z_divisions for extruding surface mesh
-  int nst_Id, nsb_Id, nss_Id;
+  int nst_Id, nsb_Id;
+  std::vector<int> nss_Id;
   
   // file related
   std::ifstream file_input;    // File Input
@@ -363,6 +366,7 @@ private:
   
   // MKUtils obj, assigning gid's etc.
   MKUtils *mu;
-	
+  // error handler
+  void IOErrorHandler (ErrorStates) const;
 };
 #endif

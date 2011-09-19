@@ -111,23 +111,23 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   }
 
   //All explicit sharing data must be updated in ParallelComm instance before save
-   moab::Range entities, sets, faces, edges;
-  moab::Tag gid_tag;
-  mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
-  mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
-  mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
+  //  moab::Range entities, sets, faces, edges;
+  // moab::Tag gid_tag;
+  // mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
+  // mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
+  // mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
 
-  err = pc->resolve_shared_ents( 0, edges, 0, -1, &gid_tag );
-  if (err != moab::MB_SUCCESS) {
-    std::cerr << "failed to resolve shared ents" << std::endl;
-    MPI_Abort(MPI_COMM_WORLD, 1);
-  }
+  // err = pc->resolve_shared_ents( 0, edges, 0, -1, &gid_tag );
+  // if (err != moab::MB_SUCCESS) {
+  //   std::cerr << "failed to resolve shared ents" << std::endl;
+  //   MPI_Abort(MPI_COMM_WORLD, 1);
+  // }
   
-  err = pc->resolve_shared_ents( 0, faces, 0, -1, &gid_tag );
-  if (err != moab::MB_SUCCESS) {
-    std::cerr << "failed to resolve shared ents" << std::endl;
-    MPI_Abort(MPI_COMM_WORLD, 1);
-  }
+  // err = pc->resolve_shared_ents( 0, faces, 0, -1, &gid_tag );
+  // if (err != moab::MB_SUCCESS) {
+  //   std::cerr << "failed to resolve shared ents" << std::endl;
+  //   MPI_Abort(MPI_COMM_WORLD, 1);
+  // }
 
   moab::Tag mattag;
   mbImpl()->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
@@ -141,13 +141,13 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
   pc->resolve_shared_sets( nssets, nstag );
 
-
-  mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
-  err = pc->resolve_shared_sets( sets, gid_tag );
-  if (err != moab::MB_SUCCESS) {
-    std::cerr << "failed to resolve shared sets" << std::endl;
-    MPI_Abort(MPI_COMM_WORLD, 1);
-  }
+  // 
+  // mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
+  // err = pc->resolve_shared_sets( sets, gid_tag );
+  // if (err != moab::MB_SUCCESS) {
+  //   std::cerr << "failed to resolve shared sets" << std::endl;
+  //   MPI_Abort(MPI_COMM_WORLD, 1);
+  // }
 
 #ifdef HAVE_MOAB
   int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
@@ -413,8 +413,11 @@ CCrgen::CCrgen()
   nss_flag = false;
   nst_Id = 9997;
   nsb_Id = 9998;
-  nss_Id = 9999;
+  //  nss_Id = 9999;
   prob_type = "mesh";
+  num_nsside = 0;
+  linenumber = 0;
+  //  nsx =0, nsy=0, nsc=0;
 }
 
 CCrgen::~CCrgen()
@@ -717,17 +720,23 @@ int CCrgen::read_inputs_phase1() {
     if (!parse.ReadNextLine(file_input, linenumber, input_string, MAXCHARS,
 			    comment))
       ERRORR("Reading input file failed",1);
-
+    //    std::cout << input_string << std::endl;
     if (input_string.substr(0, 11) == "problemtype") {
       std::istringstream formatString(input_string);
       formatString >> card >> prob_type;
+      if(((strcmp (prob_type.c_str(), "geometry") != 0) 
+	  && (strcmp (prob_type.c_str(), "mesh") != 0)) || formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
       if ((strcmp(prob_type.c_str(), "geometry") == 0)) {
 	prob_type = "geometry";
       }
     }
-    if (input_string.substr(0, 8) == "geometry") {
+    if (input_string.substr(0, 8) == "geometry" && input_string.substr(0, 12) != "geometrytype") {
       std::istringstream formatString(input_string);
       formatString >> card >> geometry;
+      if(((strcmp (geometry.c_str(), "volume") != 0) 
+	  && (strcmp (geometry.c_str(), "surface") != 0)) || formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
       if ((strcmp(geometry.c_str(), "surface") == 0)) {
 	set_DIM = 2;
       }
@@ -737,26 +746,36 @@ int CCrgen::read_inputs_phase1() {
     if (input_string.substr(0, 10) == "geomengine") {
       std::istringstream formatString(input_string);
       formatString >> card >> geom_engine;
+      if(((strcmp (geom_engine.c_str(), "acis") != 0) 
+	  && (strcmp (geom_engine.c_str(), "occ") != 0)) || formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
     }
 
     // symmetry
     if (input_string.substr(0, 8) == "symmetry") {
       std::istringstream formatString(input_string);
       formatString >> card >> symm;
+      if((symm !=1 && symm !=6 && symm !=12) || formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
     }
 
     // merge tolerance
     if (input_string.substr(0, 14) == "mergetolerance") {
       std::istringstream formatString(input_string);
       formatString >> card >> merge_tol;
+      if(merge_tol < 0 || formatString.fail())
+	IOErrorHandler (ENEGATIVE);
     }
 
     // neumannset card
     if (input_string.substr(0, 10) == "neumannset") {
       std::istringstream formatString(input_string);
-      std::string nsLoc = "";
+      std::string nsLoc = "", temp1, temp2, temp3;
+      double x, y, c;
       int nsId = 0;
       formatString >> card >> nsLoc >> nsId;
+      if(nsId < 0 || formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
       if ((strcmp(nsLoc.c_str(), "top") == 0)) {
 	nst_flag = true;
 	nst_Id = nsId;
@@ -764,8 +783,17 @@ int CCrgen::read_inputs_phase1() {
 	nsb_flag = true;
 	nsb_Id = nsId;
       } else if ((strcmp(nsLoc.c_str(), "side") == 0)) {
+	nss_Id.push_back(nsId);
+	
+	formatString >> temp1 >> x >> temp2 >> y >> temp3 >> c;
+	if(formatString.fail())
+	  IOErrorHandler (INVALIDINPUT);
+	nsx.push_back(x);
+	nsy.push_back(y);
+	nsc.push_back(c);
+
+	++num_nsside;
 	nss_flag = true;
-	nss_Id = nsId;
       } else {
 	std::cout << "Invalid Neumann set specification" << std::endl;
       }
@@ -798,9 +826,12 @@ int CCrgen::read_inputs_phase2()
 			    comment))
       ERRORR("Reading input file failed",1);
 
-    if (input_string.substr(0, 12) == "geometrytype") {
+    if (input_string.substr(0, 12) == "geometrytype" ) {
       std::istringstream formatString(input_string);
       formatString >> card >> geom_type;
+      if(formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
+
       if (geom_type == "hexvertex" && symm == 6) {
 
 	// reading pitch info
@@ -810,6 +841,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 10) == "assemblies") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nassys >> pitch;
+	  if(nassys < 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	}
 
 	// reading file and alias names
@@ -819,6 +852,9 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
+
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -832,6 +868,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 7) == "lattice") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nrings;
+	  if(nrings < 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  if (nrings % 2 == 0)
 	    tot_assys = (nrings * (nrings)) / 2;
 	  else
@@ -846,6 +884,8 @@ int CCrgen::read_inputs_phase2()
 	std::istringstream formatString(input_string);
 	for (int i = 1; i <= tot_assys; i++) {
 	  formatString >> temp_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  core_alias.push_back(temp_alias);
 	}
       }
@@ -859,6 +899,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 10) == "assemblies") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nassys >> pitchx >> pitchy;
+	  if(nassys < 0 || pitchx < 0 || pitchy< 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	}
 
 	// reading file and alias names
@@ -868,6 +910,8 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -882,6 +926,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 7) == "lattice") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nringsx >> nringsy;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  tot_assys = nringsx * nringsy;
 	}
 
@@ -892,6 +938,8 @@ int CCrgen::read_inputs_phase2()
 	std::istringstream formatString(input_string);
 	for (int i = 1; i <= tot_assys; i++) {
 	  formatString >> temp_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  core_alias.push_back(temp_alias);
 	}
       }
@@ -904,6 +952,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 10) == "assemblies") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nassys >> pitch;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	}
 
 	// reading file and alias names
@@ -913,6 +963,8 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -927,6 +979,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 7) == "lattice") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nrings;
+	  if(nrings < 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  tot_assys = (nrings * (nrings + 1)) / 2;
 	}
 
@@ -937,6 +991,8 @@ int CCrgen::read_inputs_phase2()
 	std::istringstream formatString(input_string);
 	for (int i = 1; i <= tot_assys; i++) {
 	  formatString >> temp_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  core_alias.push_back(temp_alias);
 	}
       } else if (geom_type == "hexflat" && symm == 1) {
@@ -947,6 +1003,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 10) == "assemblies") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nassys >> pitch;
+	  if(nassys < 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	}
 
 	// reading file and alias names
@@ -956,6 +1014,8 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -970,6 +1030,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 7) == "lattice") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nrings;
+	  if(nrings < 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  tot_assys = 3 * (nrings * (nrings - 1)) + 1;
 	}
 
@@ -980,6 +1042,8 @@ int CCrgen::read_inputs_phase2()
 	std::istringstream formatString(input_string);
 	for (int i = 1; i <= tot_assys; i++) {
 	  formatString >> temp_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  core_alias.push_back(temp_alias);
 	}
       } else if (geom_type == "hexflat" && symm == 12) {
@@ -991,6 +1055,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 10) == "assemblies") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nassys >> pitch;
+	  if(nassys < 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	}
 
 	// reading file and alias names
@@ -1000,6 +1066,8 @@ int CCrgen::read_inputs_phase2()
 	    ERRORR("Reading input file failed",1);
 	  std::istringstream formatString(input_string);
 	  formatString >> meshfile >> mf_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -1014,6 +1082,8 @@ int CCrgen::read_inputs_phase2()
 	if (input_string.substr(0, 7) == "lattice") {
 	  std::istringstream formatString(input_string);
 	  formatString >> card >> nrings;
+	  if(nrings < 0 || formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  if (nrings % 2 == 0)
 	    tot_assys = (nrings * (nrings + 2)) / 4;
 	  else
@@ -1027,6 +1097,8 @@ int CCrgen::read_inputs_phase2()
 	std::istringstream formatString(input_string);
 	for (int i = 1; i <= tot_assys; i++) {
 	  formatString >> temp_alias;
+	  if(formatString.fail())
+	    IOErrorHandler (INVALIDINPUT);
 	  core_alias.push_back(temp_alias);
 	}
       }
@@ -1039,6 +1111,8 @@ int CCrgen::read_inputs_phase2()
     if (input_string.substr(0, 10) == "background") {
       std::istringstream formatString(input_string);
       formatString >> card >> back_meshfile;
+      if(formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
       if (iname == DEFAULT_TEST_FILE){
 	back_meshfile = DIR + back_meshfile;
       }
@@ -1050,12 +1124,27 @@ int CCrgen::read_inputs_phase2()
       extrude_flag = true;
       std::istringstream formatString(input_string);
       formatString >> card >> z_height >> z_divisions;
+      if(z_divisions < 0 || formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
     }
 
+    // // neumannset card
+    // if (input_string.substr(0, 10) == "neumannset") {
+    //   std::istringstream formatString(input_string);
+    //   std::string nsLoc = "", temp;
+    //   int nsId = 0;
+    //   formatString >> card >> nsLoc >> nsId;
+    //   if ((strcmp(nsLoc.c_str(), "side") == 0)) {
+    // 	formatString >> temp >> nsx[ns] >> temp >> nsy[ns] >> temp >> nsc[ns];
+    // 	++ns
+    //   } 
+    // }
     // OutputFileName
     if (input_string.substr(0, 14) == "outputfilename") {
       std::istringstream formatString(input_string);
       formatString >> card >> outfile;
+      if(formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
     }
 
     // breaking condition
@@ -1321,6 +1410,11 @@ int CCrgen::merge_nodes()
 }
 
 int CCrgen::assign_gids() {
+  // ---------------------------------------------------------------------------
+  // Function: assign global ids
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
   // assign new global ids
   if (global_ids == true){
     std::cout << "Assigning global ids." << std::endl;
@@ -1362,6 +1456,11 @@ int CCrgen::assign_gids() {
 }
 
 int CCrgen::save_mesh() {
+  // ---------------------------------------------------------------------------
+  // Function: save mesh serially
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
   // export
   std::cout << "Saving mesh file." << std::endl;
   iMesh_save(impl, root_set, outfile.c_str(), NULL, &err, strlen(
@@ -1373,6 +1472,11 @@ int CCrgen::save_mesh() {
 }
 
 int CCrgen::save_geometry() {
+  // ---------------------------------------------------------------------------
+  // Function: save geometry serially
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
   double dTol = 1e-3;
 
   // getting all entities for merge and imprint
@@ -1404,6 +1508,11 @@ int CCrgen::save_geometry() {
 }
 
 int CCrgen::extrude() {
+  // ---------------------------------------------------------------------------
+  // Function: extrude 2D surface core
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
   // extrude if this is a surface mesh
   if (set_DIM == 2 && extrude_flag == true) { // if surface geometry and extrude
     std::cout << "Extruding surface mesh." << std::endl;
@@ -1424,7 +1533,6 @@ int CCrgen::extrude() {
 
     iMesh_addEntArrToSet(impl, ents, ents_size, set, &err);
     ERRORR("Trouble getting face mesh.", err);
-
     // This tag needs to be set to the newly created extrude sets
     const char *tag_g1 = "GEOM_DIMENSION";
     iBase_TagHandle gtag;
@@ -1531,6 +1639,11 @@ int CCrgen::extrude() {
 }
 
 int CCrgen::create_neumannset() {
+  // ---------------------------------------------------------------------------
+  // Function: create Neumann set on the whole core
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
   if (nss_flag == true || nsb_flag == true || nst_flag == true) {
     std::cout << "Creating NeumannSet." << std::endl;
 
@@ -1543,7 +1656,8 @@ int CCrgen::create_neumannset() {
     iBase_TagHandle ntag1, gtag1;
     iBase_EntityHandle *ents = NULL;
     iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
-
+    std::vector<iBase_EntitySetHandle> set_side;
+ 	
     //get entities for skinner
     if(set_DIM ==2) { // if surface geometry specified
       iMesh_getEntities(impl, root_set,
@@ -1576,6 +1690,12 @@ int CCrgen::create_neumannset() {
 
       iMesh_createEntSet(impl,0, &set_z2, &err);
       ERRORR("Trouble creating set handle.", err);
+
+      set_side.resize(num_nsside);
+      for(int i=0; i<num_nsside; i++){
+	iMesh_createEntSet(impl,0, &set_side[i], &err);
+	ERRORR("Trouble creating set handle.", err);
+      }
     }
 
     MBRange tmp_elems;
@@ -1603,7 +1723,6 @@ int CCrgen::create_neumannset() {
 	iMesh_getVtxArrCoords(impl, vertex, size_vertex, iBase_INTERLEAVED,
 			      &coords, &coords_alloc, &coords_size, &err);
 	ERRORR("Trouble getting number of entities after merge.", err);
-
 	double ztemp = coords[2];
 	int flag = 0;
 	for (int p=1; p<num_vertex; p++) {
@@ -1629,8 +1748,23 @@ int CCrgen::create_neumannset() {
 	  }
 	}
 	else if (flag == 1) { // add the faces that are not top or bottom surface
-	  iMesh_addEntToSet(impl, (iBase_EntityHandle)(*rit), set, &err);
-	  ERRORR("Trouble getting number of entities after merge.", err);
+	  // filter the sidesets based on their x and y coords
+
+	  for(int k=0; k<num_nsside; k++){
+	    if ( abs((coords[0])*nsx[k] + (coords[1])*nsy[k] + nsc[k]) <= merge_tol
+		 && abs((coords[3])*nsx[k] + (coords[4])*nsy[k] + nsc[k]) <= merge_tol
+		 && abs((coords[6])*nsx[k] + (coords[7])*nsy[k] + nsc[k]) <= merge_tol) {
+	      iMesh_addEntToSet(impl, (iBase_EntityHandle)(*rit), (iBase_EntitySetHandle) set_side[k], &err);
+	      ERRORR("Trouble getting number of entities after merge.", err);
+	      continue;
+	    }
+	    else{ // outside the specified
+	      iMesh_addEntToSet(impl, (iBase_EntityHandle)(*rit), set, &err);
+	      ERRORR("Trouble getting number of entities after merge.", err);
+	      continue;
+	    }
+
+       	  }
 	}
       }
       else if(set_DIM == 2) { // edges add all for sideset
@@ -1639,10 +1773,10 @@ int CCrgen::create_neumannset() {
       }
     }
 
-    iMesh_setEntSetIntData( impl, set, ntag1, nss_Id, &err);
+    iMesh_setEntSetIntData( impl, set, ntag1, 99999, &err);
     ERRORR("Trouble getting handle.", err);
 
-    iMesh_setEntSetIntData( impl, set, gtag1, nss_Id, &err);
+    iMesh_setEntSetIntData( impl, set, gtag1, 99999, &err);
     ERRORR("Trouble getting handle.", err);
 
     if (set_DIM == 3) {
@@ -1659,6 +1793,14 @@ int CCrgen::create_neumannset() {
 
 	iMesh_setEntSetIntData( impl, set_z2, gtag1, nsb_Id, &err);
 	ERRORR("Trouble getting handle.", err);
+
+	for(int j=0; j<num_nsside; j++){
+	  iMesh_setEntSetIntData( impl, set_side[j], ntag1, nss_Id[j], &err);
+	  ERRORR("Trouble getting handle.", err);
+	  
+	  iMesh_setEntSetIntData( impl, set_side[j], gtag1, nss_Id[j], &err);
+	  ERRORR("Trouble getting handle.", err);
+	}
       }
     }
 #endif
@@ -1666,3 +1808,23 @@ int CCrgen::create_neumannset() {
   return iBase_SUCCESS;
 }
 
+
+void CCrgen::IOErrorHandler (ErrorStates ECode) const
+// ---------------------------------------------------------------------------
+// Function: displays error messages related to input data
+// Input:    error code
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  std::cerr << '\n';
+  if (ECode == INVALIDINPUT) // invalid input
+    std::cerr << "Invalid input.";
+  else if (ECode == ENEGATIVE) // invalid input
+    std::cerr << "Unexpected negative value.";
+  else
+    std::cerr << "Unknown error ...?";
+
+  std::cerr << '\n' << "Error reading input file, line : " << linenumber;
+  std::cerr << std::endl;
+  exit (1);
+}
