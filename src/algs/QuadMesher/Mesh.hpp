@@ -173,19 +173,24 @@ struct SetAttribute
 ///////////////////////////////////////////////////////////////////////////////
 struct RelationRep {
      void clearRelations(int t);
+
      void addRelation(Vertex *vertex);
+     void addRelation(Edge *edge);
      void addRelation(Face* face);
 
      int  getNumRelations( int e ) const {
           if( e == 0) return relations0.size();
+          if( e == 1) return relations1.size();
           if( e == 2) return relations2.size();
           return 0;
      }
 
      bool hasRelation(const Vertex* vertex) const;
+     bool hasRelation(const Edge* edge) const;
      bool hasRelation(const Face* face) const;
 
      void removeRelation(const Vertex *vertex);
+     void removeRelation(const Edge *edge);
      void removeRelation(const Face *face);
 
      int getRelations( NodeSequence &seq, bool cyclic_ordered = 0) const {
@@ -198,6 +203,17 @@ struct RelationRep {
           return 0;
      }
 
+     int getRelations( EdgeSequence &seq, bool cyclic_ordered = 0) const {
+          seq.clear();
+          size_t nSize = relations1.size();
+          if( nSize == 0) return 1;
+          seq.resize( nSize );
+          for( size_t i = 0; i< nSize; i++)
+               seq[i] = relations1[i];
+          return 0;
+     }
+
+
      int getRelations( FaceSequence &seq, bool cyclic_ordered = 0) const {
           seq.clear();
           size_t nSize = relations2.size();
@@ -207,7 +223,9 @@ struct RelationRep {
                seq[i] = relations2[i];
           return 0;
      }
+
      NodeSequence relations0; // vertex-vertex
+     EdgeSequence relations1; // vertex-vertex
      FaceSequence relations2; // vertex-face
 };
 
@@ -365,6 +383,11 @@ public:
           relationRep->addRelation(vertex);
      }
 
+     void addRelation(Edge  *edge) {
+          if( relationRep  == NULL ) relationRep = new RelationRep;
+          relationRep->addRelation(edge);
+     }
+
      void addRelation(Face* face) {
           if( relationRep  == NULL ) relationRep = new RelationRep;
           relationRep->addRelation(face);
@@ -382,6 +405,12 @@ public:
           return 0;
      }
 
+     bool hasRelation(const Edge* edge) const {
+          if( relationRep )
+               return relationRep->hasRelation( edge );
+          return 0;
+     }
+
      bool hasRelation(const Face* face) const {
           if( relationRep )
                return relationRep->hasRelation( face );
@@ -396,6 +425,13 @@ public:
      }
 
      int getRelations( NodeSequence &seq, bool cyclic_ordered = 0) const {
+          seq.clear();
+          if( relationRep )
+               return relationRep->getRelations(seq,cyclic_ordered);
+          return 1;
+     }
+
+     int getRelations( EdgeSequence &seq, bool cyclic_ordered = 0) const {
           seq.clear();
           if( relationRep )
                return relationRep->getRelations(seq,cyclic_ordered);
@@ -446,7 +482,6 @@ public:
           visitMark = 0;
           statusMark = MeshEntity::ACTIVE;
           boundarymark = 0;
-          mate = 0;
           primalface = 0;
      }
 
@@ -464,14 +499,6 @@ public:
 
      const Point3D &getXYZCoords() const {
           return xyz;
-     }
-
-     void setDualMate(Vertex *v) {
-          mate = v;
-     }
-
-     const Vertex* getDualMate() const {
-          return mate;
      }
 
      void setPrimalFace(Face *f) {
@@ -492,7 +519,6 @@ public:
 private:
      // void * operator new( size_t size, void *);
 
-     Vertex *mate;
      Face *primalface;
 
      Point3D xyz;
@@ -850,9 +876,7 @@ public:
 private:
      // void * operator new( size_t size, void *);
      NodeSequence connect;
-//     static std::map<string, AttribKey> attribKeyMap;
      PNode dualnode;
-//   Vec3D fnormal;
 
      int refine_convex_quad15(NodeSequence &newnodes,  FaceSequence &newfaces);
      int refine_concave_quad15(NodeSequence &newnodes, FaceSequence &newfaces);
@@ -1021,8 +1045,8 @@ public:
           collect_garbage();
      }
 
-     void  objects_from_pool( size_t n, vector<Vertex*> &objects);
-     void  objects_from_pool( size_t n, vector<Face*>   &objects);
+     void  objects_from_pool( size_t n, NodeSequence &objects);
+     void  objects_from_pool( size_t n, FaceSequence &objects);
 
      void setName(const string &s) {
           meshname = s;
@@ -1273,7 +1297,9 @@ public:
 
      int build_relations(int src, int dst, bool rebuild = 0) {
           if (src == 0 && dst == 0) return build_relations00( rebuild );
+          if (src == 0 && dst == 1) return build_relations01( rebuild );
           if (src == 0 && dst == 2) return build_relations02( rebuild );
+          if (src == 1 && dst == 2) return build_relations12( rebuild );
           return 1;
      }
 
@@ -1459,7 +1485,9 @@ private:
 
      // Build Topological relations...
      int build_relations00(bool rebuild = 0);
+     int build_relations01(bool rebuild = 0);
      int build_relations02(bool rebuild = 0);
+     int build_relations12(bool rebuild = 0);
 
      // Build wavefronts ...
      int setNodeWavefront();
@@ -1635,6 +1663,18 @@ inline void RelationRep::addRelation(Vertex *vertex)
      sort(relations0.begin(), relations0.end());
 }
 
+inline void RelationRep::addRelation(Edge *edge)
+{
+     if (!hasRelation(edge)) relations1.push_back(edge);
+     sort(relations1.begin(), relations1.end());
+}
+
+inline void RelationRep ::addRelation(Face* face)
+{
+     if (!hasRelation(face)) relations2.push_back(face);
+     sort(relations2.begin(), relations2.end());
+}
+
 inline void RelationRep::removeRelation(const Vertex *vertex)
 {
      if (hasRelation(vertex)) {
@@ -1644,10 +1684,13 @@ inline void RelationRep::removeRelation(const Vertex *vertex)
      }
 }
 
-inline void RelationRep ::addRelation(Face* face)
+inline void RelationRep::removeRelation(const Edge *edge)
 {
-     if (!hasRelation(face)) relations2.push_back(face);
-     sort(relations2.begin(), relations2.end());
+     if (hasRelation(edge)) {
+          EdgeSequence::iterator it;
+          it = remove(relations1.begin(), relations1.end(), edge);
+          relations1.erase(it, relations1.end());
+     }
 }
 
 inline void RelationRep ::removeRelation(const Face *face)
@@ -1662,6 +1705,7 @@ inline void RelationRep ::removeRelation(const Face *face)
 inline void RelationRep ::clearRelations(int t)
 {
      if (t == 0) relations0.clear();
+     if (t == 1) relations1.clear();
      if (t == 2) relations2.clear();
 }
 
@@ -1673,6 +1717,18 @@ inline bool RelationRep ::hasRelation(const Vertex* vertex) const
 
      it = find(relations0.begin(), relations0.end(), vertex);
      if (it == relations0.end()) return 0;
+
+     return 1;
+}
+
+inline bool RelationRep ::hasRelation(const Edge* edge) const
+{
+     if (relations1.empty()) return 0;
+
+     EdgeSequence::const_iterator it;
+
+     it = find(relations1.begin(), relations1.end(), edge);
+     if (it == relations1.end()) return 0;
 
      return 1;
 }

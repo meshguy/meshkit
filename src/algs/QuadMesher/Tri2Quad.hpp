@@ -116,9 +116,8 @@ bool already_matched(const BinaryNode *node)
 inline
 void Tri2Quads::matchnodes(Vertex *child, Vertex *parent)
 {
-    child->setDualMate(parent);
-    parent->setDualMate(child);
-
+    child->setAttribute("DualMate", parent);
+    parent->setAttribute("DualMate", child);
     child->setStatus(MeshEntity::REMOVE);
     parent->setStatus(MeshEntity::REMOVE);
 }

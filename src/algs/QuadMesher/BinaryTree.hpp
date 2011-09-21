@@ -227,8 +227,15 @@ public:
      bool isMatched(const BinaryNode *u, const BinaryNode *v) const {
           Vertex *du = u->getDualNode();
           Vertex *dv = v->getDualNode();
+          Vertex *umate = NULL;
+          Vertex *vmate = NULL;
+          du->getAttribute("DualMate", umate);
+          dv->getAttribute("DualMate", vmate);
+          if (umate == dv && vmate == du) return 1;
+/*
           if (du->getDualMate() == dv && dv->getDualMate() == du)
                return 1;
+*/
           return 0;
      }
 

@@ -439,7 +439,8 @@ void Tri2Quads::percolateup()
           Face *face = trimesh->getFaceAt(i);
           Vertex *u = face->getDualNode();
           assert(u);
-          const Vertex *v = u->getDualMate();
+          Vertex *v = NULL;
+          u->getAttribute("DualMate", v);
           if (v) {
                if (v->getID() > u->getID()) {
                     FacePair facepair;
@@ -617,7 +618,7 @@ void Tri2Quads::match_tree_walk(BinaryTree *btree, BinaryNode *parent)
                          Vertex *c2 = child2->getDualNode();
                          assert(c2);
                          matchnodes(np, c1);
-                         c2->setDualMate(NULL);
+                         c2->setAttribute("DualMate", 0);
                          c2->setStatus(MeshEntity::ACTIVE);
                          match_tree_walk(btree, child2);
                          return;

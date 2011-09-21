@@ -1509,7 +1509,7 @@ int
 Mesh::refine_quad15(Face *face)
 {
      if( face == NULL ) return 1;
-     if( face->isRemoved() ) return 2;
+     if( !face->isActive() ) return 2;
 
      NodeSequence newnodes;
      FaceSequence newfaces;
@@ -2015,7 +2015,7 @@ void Mesh::build_edges()
           if( vertex->isActive() ) {
                vertex->getRelations( neighs );
                for (size_t j = 0; j < neighs.size(); j++)
-                    if (vertex > neighs[j]) {
+                    if (vertex < neighs[j]) {
                          Edge *newedge = new Edge( vertex, neighs[j]);
                          assert(newedge);
                          edges.push_back(newedge);
@@ -2285,6 +2285,30 @@ Mesh::nearest_neighbour(const Vertex *myself, double &mindist)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+int
+Mesh::build_relations01(bool rebuild)
+{
+     if (rebuild) clear_relations(0, 1);
+
+     int status = adjTable[0][1];
+
+     if( status == 1 ) return 1;
+
+     size_t numedges = getSize(1);
+     for (size_t i = 0; i < numedges; i++) {
+          Edge *edge = getEdgeAt(i);
+          if( edge->isActive() ) {
+              Vertex *v0 = edge->getNodeAt(0);
+              Vertex *v1 = edge->getNodeAt(1);
+              v0->addRelation(edge);
+              v1->addRelation(edge);
+          }
+     }
+
+     adjTable[0][1] = 1;
+
+     return status;
+}
 
 int
 Mesh::build_relations02(bool rebuild)
@@ -2343,6 +2367,37 @@ Mesh::build_relations00(bool rebuild)
 
      return status;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+int
+Mesh::build_relations12(bool rebuild)
+{
+     if (rebuild) clear_relations(1, 2);
+     int relexist2 = build_relations(0,2);
+
+     int status = adjTable[1][2];
+     if( status == 1 ) return 1;
+
+     FaceSequence neighs;
+     size_t numfaces = getSize(1);
+     for (size_t iedge = 0; iedge < numfaces; iedge++) {
+          Edge *edge = getEdgeAt(iedge);
+          if( edge->isActive() ) {
+              Vertex *v0 = edge->getNodeAt(0);
+              Vertex *v1 = edge->getNodeAt(1);
+              Mesh::getRelations112(v0, v1, neighs);
+              for( int j = 0; j < neighs.size(); j++)
+                   edge->addRelation( neighs[j] );
+          }
+     }
+     adjTable[1][2] = 1;
+
+     if( !relexist2 )  clear_relations(0,2);
+
+     return status;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2885,6 +2940,7 @@ expand_strip(Face *prevface, Vertex *v0, Vertex *v1, list<Face*> &strip)
 }
 ////////////////////////////////////////////////////////////////////
 
+#ifdef CSV
 void
 Mesh::get_quad_strips(Face *rootface, FaceSequence &strip1,
                       FaceSequence &strip2)
@@ -2957,6 +3013,7 @@ Mesh::get_quad_strips(Face *rootface, FaceSequence &strip1,
      for (it = strip03.begin(); it != strip03.end(); ++it)
           strip2.push_back(*it);
 }
+#endif
 ////////////////////////////////////////////////////////////////////////////////////////
 
 int
@@ -3065,6 +3122,7 @@ int Mesh::get_irregular_nodes(NodeSequence &seq, int regular_count, int from_whe
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef CSV
 void
 Mesh::set_strip_markers()
 {
@@ -3093,6 +3151,7 @@ Mesh::set_strip_markers()
            */
      }
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -3638,9 +3697,11 @@ Mesh::refine_quads14()
      for (size_t i = 0; i < edges.size(); i++) {
           Vertex *v0 = edges[i]->getNodeAt(0);
           Vertex *v1 = edges[i]->getNodeAt(1);
+
           Vertex::mid_point(v0, v1, xyz);
           Vertex *vnew = Vertex::newObject();
           vnew->setXYZCoords(xyz);
+
           edges[i]->addRelation(vnew);
           Vertex *vhash = edges[i]->getHashNode();
           edgemap.insert(std::make_pair(vhash, edges[i]));
@@ -4529,7 +4590,7 @@ Mesh::setNormals()
                double nx = 0.0;
                double ny = 0.0;
                double nz = 0.0;
-               for( int j = 0; j < vfaces.size(); j++) {
+               for( size_t j = 0; j < vfaces.size(); j++) {
                     vfaces[j]->getAttribute("Normal", normal);
                     nx += normal[0];
                     ny += normal[1];
