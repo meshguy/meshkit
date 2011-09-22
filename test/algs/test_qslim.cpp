@@ -253,38 +253,21 @@ int main(int argc, char* argv[])
   // initialize everything
 
   mk = new MKCore();
-
-  // put the initial mesh in a moab::EntityHandle initialSet
-  moab::EntityHandle initialSet;
-  moab::ErrorCode rval = mk->moab_instance()->create_meshset(moab::MESHSET_SET | moab::MESHSET_TRACK_OWNER, initialSet);
-  CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  rval = mk->moab_instance()->load_file(filename, &initialSet);
-  CHECK_EQUAL(moab::MB_SUCCESS, rval);
-
-  ModelEnt me(mk, iBase_EntitySetHandle(0), /*igeom instance*/0, initialSet);
-  MEntVector selection;
-  selection.push_back(&me);
+  mk->load_mesh(filename);
+  MEntVector selection, dum;
+  mk->get_entities_by_dimension(2, dum);
+  selection.push_back(*dum.rbegin());// push just the last one retrieved from core
 
   QslimMesher *qm = (QslimMesher*) mk->construct_meshop("QslimMesher", selection);
 
   qm->set_options(options);
 
-  // put them in the graph
-  mk->get_graph().addArc(mk->root_node()->get_node(), qm->get_node());
-  mk->get_graph().addArc(qm->get_node(), mk->leaf_node()->get_node());
-
-  // mesh embedded boundary mesh, by calling execute
   mk->setup_and_execute();
 
   if(outfile)
   {
     std::cout << "writing output to " << outfile << std::endl;
-    if (options.create_range)
-    {
-      mk->moab_instance()->write_mesh(outfile);// write everything left
-    }
-    else
-      mk->moab_instance()->write_mesh(outfile, &initialSet, 1);
+    mk->moab_instance()->write_mesh(outfile);// write everything left
   }
 
   return 0;

@@ -297,6 +297,44 @@ void MKCore::populate_model_ents(int geom_index,
       }
     }
   }
+  // if there are no model ents after parsing through geometry entities or mesh sets, create at least one
+  // model entity, with the existing mesh inside, and with a dimension decided upon the highest degree
+  // this is useful for loading a mesh for qslim, if there are no sets available to start with
+  if (-1 != mesh_index) {
+  // first test if there are no ments so far
+    int nments = 0;
+    for (int k=0; k<5; k++)
+    {
+      nments += modelEnts[k].size();
+    }
+    if (nments > 0)
+      return; // do not force creation of a model ent, we have at least one and we should be fine
+    // put all ents we have so far in one set
+    // we know that none of the sets we have so far is a geo set (we would have gotten at least
+    // one model ent)
+    // so, get all sets first
+    moab::ErrorCode rval;
+    for (int dimension=3; dimension >=1; dimension--)
+    {
+      moab::Range ents;
+      rval = moab_instance(mesh_index)->get_entities_by_dimension(0, dimension, ents);
+      MBERRCHK(rval, moab_instance(mesh_index));
+      if (ents.empty())
+        continue;
+      // put all ents in one moab set, and create one ModelEnt with it, of given dimension
+      moab::EntityHandle newSet;
+      rval = moab_instance(mesh_index)->create_meshset(moab::MESHSET_SET, newSet);
+      MBERRCHK(rval, moab_instance(mesh_index));
+      rval = moab_instance(mesh_index)->add_entities(newSet, ents);
+      MBERRCHK(rval, moab_instance(mesh_index));
+      // also, set the geom dimension
+      rval = moab_instance(mesh_index)->tag_set_data(moab_geom_dim_tag(mesh_index), &newSet, 1, &dimension);
+      MBERRCHK(rval, moab_instance(mesh_index));
+      this_me = new ModelEnt(this, (iGeom::EntityHandle)NULL, geom_index, newSet, mesh_index, irel_index);
+      modelEnts[dimension].push_back(this_me);
+      return;// get out if we created one model ent
+    }
+  }
 }
 
 void MKCore::load_geometry_mesh(const char *geom_filename, 
