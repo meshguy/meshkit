@@ -3,9 +3,11 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace Jaal;
+
 //#############################################################################
 
-int SwapTriEdge:: one_sweep(int entity, int rule)
+int SwapTriEdges:: one_sweep(int entity, int rule)
 {
      size_t total_count = 0;
      size_t numnodes = mesh->getSize(0);
@@ -47,7 +49,7 @@ int SwapTriEdge:: one_sweep(int entity, int rule)
 
 //#############################################################################
 
-int SwapTriEdge::apply_rule(int rule )
+int SwapTriEdges::apply_rule(int rule )
 {
      int relexist2 = mesh->build_relations(0, 2);
 
@@ -79,7 +81,7 @@ int SwapTriEdge::apply_rule(int rule )
 
 //#############################################################################
 
-int SwapTriEdge::atomicOp(const Face *face, int rule)
+int SwapTriEdges::atomicOp(const Face *face, int rule)
 {
      if( !face->isActive() )  return 1;
 
@@ -97,7 +99,7 @@ int SwapTriEdge::atomicOp(const Face *face, int rule)
 
 //#############################################################################
 
-void SwapTriEdge::FlipEdge::process(Vertex *v1, Vertex *v2)
+void SwapTriEdges::FlipEdge::process(Vertex *v1, Vertex *v2)
 {
      assert(v1 != v2);
 
@@ -127,7 +129,7 @@ void SwapTriEdge::FlipEdge::process(Vertex *v1, Vertex *v2)
 
 //#############################################################################
 
-bool SwapTriEdge::FlipEdge::isSharp(double featureAngle) const
+bool SwapTriEdges::FlipEdge::isSharp(double featureAngle) const
 {
      Vertex *v1 = getNodeAt(0);
      Vertex *v2 = getNodeAt(1);
@@ -146,7 +148,7 @@ bool SwapTriEdge::FlipEdge::isSharp(double featureAngle) const
 
 //#############################################################################
 
-bool SwapTriEdge::FlipEdge::isConcave() const
+bool SwapTriEdges::FlipEdge::isConcave() const
 {
      Vertex *v1 = getNodeAt(0);
      Vertex *v2 = getNodeAt(1);
@@ -168,7 +170,7 @@ bool SwapTriEdge::FlipEdge::isConcave() const
 
 //*****************************************************************************
 
-bool SwapTriEdge::is_edge_flip_allowed(const FlipEdge &edge, int rule) const
+bool SwapTriEdges::is_edge_flip_allowed(const FlipEdge &edge, int rule) const
 {
      if (!edge.isValid())   return 0;
      if (edge.isConcave()) return 0;
@@ -241,7 +243,7 @@ bool SwapTriEdge::is_edge_flip_allowed(const FlipEdge &edge, int rule) const
 
 //#############################################################################
 
-int SwapTriEdge::commit(const FlipEdge &edge)
+int SwapTriEdges::commit(const FlipEdge &edge)
 {
      Face *t1 = edge.faces[0];
      Face *t2 = edge.faces[1];
@@ -302,7 +304,7 @@ int SwapTriEdge::commit(const FlipEdge &edge)
 
 //#############################################################################
 
-int SwapTriEdge ::atomicOp(Vertex *apexVertex, int rule)
+int SwapTriEdges ::atomicOp(Vertex *apexVertex, int rule)
 {
      FaceSequence vneighs;
      apexVertex->getRelations( vneighs );
@@ -318,7 +320,7 @@ int SwapTriEdge ::atomicOp(Vertex *apexVertex, int rule)
      return 1;
 }
 ///////////////////////////////////////////////////////////////////////////
-int SwapTriEdge :: apply_advance_front_rule()
+int SwapTriEdges :: apply_advance_front_rule()
 {
      int relexist2 = mesh->build_relations(0, 2);
      int relexist0 = mesh->build_relations(0, 0);
@@ -391,7 +393,7 @@ int SwapTriEdge :: apply_advance_front_rule()
           cout << "# of Irregular nodes before swapping : " << nirregular0 << endl;
           cout << "# of Irregular nodes after swapping  : " << nirregular1 << endl;
 
-          int lid;
+          int lid = 0;
 
           nextlayer.clear();
           nSize = currlayer.size();
@@ -429,7 +431,8 @@ int SwapTriEdge :: apply_advance_front_rule()
           more_than_ideal[i] = 0;
           total_ideal[i] = 0;
      }
-     int lid;
+
+     int lid = 0;
 
      numNodes = mesh->getSize(0);
      int final_irregular = 0;
