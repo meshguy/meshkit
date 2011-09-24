@@ -12,7 +12,7 @@ size_t Vertex::global_id = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void 
+void
 Vertex::mid_point(const Vertex *v0, const Vertex *v1, Point3D &pmid, double alpha)
 {
      const Point3D &p0 = v0->getXYZCoords();
@@ -23,16 +23,16 @@ Vertex::mid_point(const Vertex *v0, const Vertex *v1, Point3D &pmid, double alph
      pmid[2] = (1 - alpha) * p0[2] + alpha * p1[2];
 }
 
-Vertex* 
+Vertex*
 Vertex::mid_node(const Vertex *v0, const Vertex *v1, double alpha)
 {
      Point3D xyz;
      Vertex::mid_point(v0, v1, xyz, alpha);
- 
-      Vertex *vmid = Vertex::newObject();
-      vmid->setXYZCoords(xyz);
-      return vmid;
- }
+
+     Vertex *vmid = Vertex::newObject();
+     vmid->setXYZCoords(xyz);
+     return vmid;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -104,7 +104,7 @@ Face::quad_tessalate(const NodeSequence &orgNodes, NodeSequence &rotatedNodes)
 int
 Face::triangulate( vector<Face> &trifaces ) const
 {
-      trifaces.clear();
+     trifaces.clear();
      NodeSequence rotatedNodes(4), tconnect(3);
      if (this->getSize(0) == 4) {
           quad_tessalate(connect, rotatedNodes);
@@ -1491,8 +1491,7 @@ int Mesh::collapse_tri_edge( Vertex *v0, Vertex *v1)
      for( int i = 0; i < nSize; i++) {
           Face *f = v1faces[i];
           assert( !f->isRemoved() );
-          int err = f->replaceNode(removeVertex, keepVertex);
-          assert( !err);
+          f->replaceNode(removeVertex, keepVertex);
           reactivate( f );
      }
 
@@ -2298,10 +2297,10 @@ Mesh::build_relations01(bool rebuild)
      for (size_t i = 0; i < numedges; i++) {
           Edge *edge = getEdgeAt(i);
           if( edge->isActive() ) {
-              Vertex *v0 = edge->getNodeAt(0);
-              Vertex *v1 = edge->getNodeAt(1);
-              v0->addRelation(edge);
-              v1->addRelation(edge);
+               Vertex *v0 = edge->getNodeAt(0);
+               Vertex *v1 = edge->getNodeAt(1);
+               v0->addRelation(edge);
+               v1->addRelation(edge);
           }
      }
 
@@ -2384,11 +2383,11 @@ Mesh::build_relations12(bool rebuild)
      for (size_t iedge = 0; iedge < numfaces; iedge++) {
           Edge *edge = getEdgeAt(iedge);
           if( edge->isActive() ) {
-              Vertex *v0 = edge->getNodeAt(0);
-              Vertex *v1 = edge->getNodeAt(1);
-              Mesh::getRelations112(v0, v1, neighs);
-              for( int j = 0; j < neighs.size(); j++)
-                   edge->addRelation( neighs[j] );
+               Vertex *v0 = edge->getNodeAt(0);
+               Vertex *v1 = edge->getNodeAt(1);
+               Mesh::getRelations112(v0, v1, neighs);
+               for( size_t j = 0; j < neighs.size(); j++)
+                    edge->addRelation( neighs[j] );
           }
      }
      adjTable[1][2] = 1;
@@ -3208,7 +3207,7 @@ Mesh::setNodeWavefront(int layerid)
      size_t numNodes = getSize(0);
 
      size_t ncount = 0;
-     int lid;
+     int lid = 0;
 
      if (layerid == 0) {
           search_boundary();
@@ -3322,7 +3321,7 @@ Mesh::setFaceWavefront(int layerid)
      size_t numfaces = getSize(2);
 
      size_t ncount = 0;
-     int lid;
+     int lid = 0;
 
      FaceSequence vfaces;
      if (layerid == 0) {
@@ -3646,12 +3645,12 @@ Mesh::deleteAll()
 ///////////////////////////////////////////////////////////////////////////////
 
 int
-Face::refine_quad14(NodeSequence &newnodes, FaceSequence &newfaces)
+Face ::refine_quad14(NodeSequence &newnodes, FaceSequence &newfaces)
 {
      assert(newnodes.size() == 5);
 
      Point3D xyz;
-     getAvgPos( xyz );
+     this->getAvgPos( xyz );
      newnodes[4] = Vertex::newObject();
      newnodes[4]->setXYZCoords(xyz);
 
@@ -3660,20 +3659,20 @@ Face::refine_quad14(NodeSequence &newnodes, FaceSequence &newfaces)
      for (int i = 0; i < 4; i++)
           newfaces[i] = Face::newObject();
 
-     qC[0] = connect[0];
+     qC[0] = this->getNodeAt(0);
      qC[1] = newnodes[0];
      qC[2] = newnodes[4];
      qC[3] = newnodes[3];
      newfaces[0]->setNodes(qC);
 
      qC[0] = newnodes[0];
-     qC[1] = connect[1];
+     qC[1] = this->getNodeAt(1);
      qC[2] = newnodes[1];
      qC[3] = newnodes[4];
      newfaces[1]->setNodes(qC);
 
      qC[0] = newnodes[1];
-     qC[1] = connect[2];
+     qC[1] = this->getNodeAt(2);
      qC[2] = newnodes[2];
      qC[3] = newnodes[4];
      newfaces[2]->setNodes(qC);
@@ -3681,7 +3680,7 @@ Face::refine_quad14(NodeSequence &newnodes, FaceSequence &newfaces)
      qC[0] = newnodes[3];
      qC[1] = newnodes[4];
      qC[2] = newnodes[2];
-     qC[3] = connect[3];
+     qC[3] = this->getNodeAt(3);
      newfaces[3]->setNodes(qC);
      return 0;
 }
@@ -4285,9 +4284,9 @@ QTrack::advance(int endat)
 
 vector<QTrack> Jaal::generate_quad_partitioning(Mesh *mesh)
 {
-#ifdef CHANGE
      vector<QTrack> qpath;
 
+#ifdef CHANGE
      int nTopo = mesh->isHomogeneous();
      if (nTopo != 4) {
           cout << "Error: The mesh must be all Quads " << endl;
@@ -4405,8 +4404,8 @@ vector<QTrack> Jaal::generate_quad_partitioning(Mesh *mesh)
      if (!relexist2) mesh->clear_relations(0, 2);
      if (!relexist0) mesh->clear_relations(0, 0);
 
-     return qpath;
 #endif
+     return qpath;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4578,12 +4577,12 @@ Mesh::setNormals()
                normal[2] = nz;
                face->setAttribute("Normal", normal);
           }
-    }
-    int relexist2 = build_relations(0,2);
+     }
+     int relexist2 = build_relations(0,2);
 
-    FaceSequence vfaces;
-    nSize = nodes.size();
-    for (size_t i = 0; i < nSize; i++) {
+     FaceSequence vfaces;
+     nSize = nodes.size();
+     for (size_t i = 0; i < nSize; i++) {
           Vertex *vertex = nodes[i];
           if( vertex->isActive() ) {
                vertex->getRelations(vfaces);
@@ -4602,8 +4601,8 @@ Mesh::setNormals()
                normal[2] = nz*multby;
                vertex->setAttribute("Normal", normal);
           }
-    }
-    if( !relexist2 )  clear_relations(0,2);
+     }
+     if( !relexist2 )  clear_relations(0,2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

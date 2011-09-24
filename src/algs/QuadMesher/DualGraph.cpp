@@ -29,7 +29,6 @@ int DualGraph::build(Mesh *m)
         nodes[iface] = dualvtx;
     }
 
-
     PNode v0, v1, dv0, dv1;
 
     FaceSequence neighs;
@@ -39,18 +38,21 @@ int DualGraph::build(Mesh *m)
         int nc = face->getSize(0);
         for (int j = 0; j < nc; j++)
         {
-            v0 = face->getNodeAt((j + 0) % nc);
-            v1 = face->getNodeAt((j + 1) % nc);
+            v0 = face->getNodeAt((j + 0) );
+            v1 = face->getNodeAt((j + 1) );
             Mesh::getRelations112(v0, v1, neighs);
             if (neighs.size() == 2)
             {
-                dv0 = neighs[0]->getDualNode();
-                dv1 = neighs[1]->getDualNode();
+                 dv0 = NULL;
+                 neighs[0]->getAttribute("DualNode", dv0);
+                 dv1 = NULL;
+                 neighs[1]->getAttribute("DualNode", dv1);
                 addEdge(dv0, dv1);
             }
             else
             {
-                dv0 = neighs[0]->getDualNode();
+                dv0 = NULL;
+                neighs[0]->getAttribute("DualNode", dv0);
                 dv0->setAttribute("Boundary", 1);
             }
         }

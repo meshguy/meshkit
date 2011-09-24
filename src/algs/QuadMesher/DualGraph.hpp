@@ -135,8 +135,9 @@ PNode DualGraph::getNewDualNode(Face *face)
   face->getAvgPos( p3d );
   dualnode->setXYZCoords(p3d);
 
-  face->setDualNode( dualnode );
-  dualnode->setPrimalFace(face);
+  face->setAttribute("DualNode", dualnode);
+  dualnode->setAttribute("PrimalFace", face);
+
   return dualnode;
 }
 

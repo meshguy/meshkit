@@ -145,29 +145,25 @@ public:
 };
 
 template<class T>
-struct VecAttribute
-{
-  std::vector<T> values;
+struct VecAttribute {
+     std::vector<T> values;
 };
 
 #ifdef HAVE_BOOST
 template<class T, int n>
-struct ArrayAttribute
-{
-  boost::array<T,n> values;
+struct ArrayAttribute {
+     boost::array<T,n> values;
 };
 #endif
 
 template<class T>
-struct ListAttribute
-{
-  std::list<T> values;
+struct ListAttribute {
+     std::list<T> values;
 };
 
 template<class T>
-struct SetAttribute
-{
-   std::set<T> values;
+struct SetAttribute {
+     std::set<T> values;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -229,13 +225,11 @@ struct RelationRep {
      FaceSequence relations2; // vertex-face
 };
 
-struct AttribRep
-{
-    void removeAll()
-    {
+struct AttribRep {
+     void removeAll() {
           for( size_t i = 0; i < attributes.size(); i++)
                delete attributes[i];
-    }
+     }
      template<class T>
      int setAttribute(const string &s, const T &val) {
 #ifdef HAVE_BOOST
@@ -268,15 +262,15 @@ struct AttribRep
 
      int hasAttribute(const string &s) const {
           int nAttribs = attributes.size();
-          for( int i = 0; i < nAttribs; i++) 
+          for( int i = 0; i < nAttribs; i++)
                if( attributes[i]->name == s ) return 1;
           return 0;
      }
 
      void removeAttribute( const string &s) {
-    }
+     }
 
-    std::vector<Attribute*> attributes;
+     std::vector<Attribute*> attributes;
 };
 
 class MeshEntity {
@@ -297,7 +291,7 @@ public:
      }
 
      ~MeshEntity() {
-         if( attribRep ) attribRep->removeAll();
+          if( attribRep ) attribRep->removeAll();
      }
 
      void setVisitMark(bool r) {
@@ -353,25 +347,25 @@ public:
 
      template<class T>
      int setAttribute(const string &s, const T &val) {
-         if( attribRep == NULL ) attribRep = new AttribRep;
-         return attribRep->setAttribute(s,val);
+          if( attribRep == NULL ) attribRep = new AttribRep;
+          return attribRep->setAttribute(s,val);
      }
 
      template<class T>
      int getAttribute(const string &s, T &val) const {
-         if( attribRep ) 
-             return attribRep->getAttribute(s,val);
+          if( attribRep )
+               return attribRep->getAttribute(s,val);
           return 1;
      }
 
      int hasAttribute(const string &s) const {
-         if( attribRep ) 
-             return attribRep->hasAttribute(s);
-         return 0;
+          if( attribRep )
+               return attribRep->hasAttribute(s);
+          return 0;
      }
 
      void  removeAttribute(const string &s) const {
-         if( attribRep ) attribRep->removeAttribute(s);
+          if( attribRep ) attribRep->removeAttribute(s);
      }
 
      void clearRelations(int e) {
@@ -482,7 +476,6 @@ public:
           visitMark = 0;
           statusMark = MeshEntity::ACTIVE;
           boundarymark = 0;
-          primalface = 0;
      }
 
      static double length(const Vertex *v0, const Vertex *v1);
@@ -501,26 +494,13 @@ public:
           return xyz;
      }
 
-     void setPrimalFace(Face *f) {
-          primalface = f;
-     }
-
-     Face* getPrimalFace() const {
-          return primalface;
-     }
-
      Vertex* getClone() const;
 
      double getSpanAngle() const;
      double getFeatureLength() const;
-
      int get_ideal_face_degree( int n ) const;
 
 private:
-     // void * operator new( size_t size, void *);
-
-     Face *primalface;
-
      Point3D xyz;
 };
 
@@ -617,14 +597,11 @@ struct BaseFace : public MeshEntity {
 
 class Face : public BaseFace {
 public:
-//     typedef Handle_t FaceHandle;
-
      static const int POLYGON = 0;
      static const int TRIANGLE = 3;
      static const int QUADRILATERAL = 4;
 
      static PFace newObject();
-     //  static AttributeManager attribManager;
 
      static PFace create_quad(const PFace t1, const PFace t2, int replace = 0);
 
@@ -689,7 +666,6 @@ public:
           statusMark = 0;
           boundarymark = 0;
           visitMark = 0;
-          dualnode = 0;
      }
 
      Face( const Vertex *v0, const Vertex *v1, const Vertex *v2) {
@@ -800,15 +776,6 @@ public:
 
      void getAvgPos( Point3D &p) const;
 
-     void setDualNode(const PNode n) {
-          dualnode = n;
-          dualnode->setPrimalFace(this);
-     }
-
-     PNode getDualNode() const {
-          return dualnode;
-     }
-
      bool hasBoundaryNode() const {
           int nSize = connect.size();
           for (int i = 0; i < nSize; i++)
@@ -874,9 +841,7 @@ public:
      }
 
 private:
-     // void * operator new( size_t size, void *);
      NodeSequence connect;
-     PNode dualnode;
 
      int refine_convex_quad15(NodeSequence &newnodes,  FaceSequence &newfaces);
      int refine_concave_quad15(NodeSequence &newnodes, FaceSequence &newfaces);
@@ -1524,8 +1489,8 @@ struct MeshImporter {
                err = triangle_file(fname);
           }
 
-          if( !mesh->is_consistently_oriented() ) 
-              mesh->make_consistently_oriented();
+          if( !mesh->is_consistently_oriented() )
+               mesh->make_consistently_oriented();
 
           global2local.clear();
 

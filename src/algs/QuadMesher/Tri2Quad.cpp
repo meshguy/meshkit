@@ -151,9 +151,19 @@ int Tri2Quads::refine_boundary_triangle(Face *tri0)
 void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
                             BinaryNode *child2)
 {
-     Face *parentface = parent->getDualNode()->getPrimalFace();
-     Face *face1 = child1->getDualNode()->getPrimalFace();
-     Face *face2 = child2->getDualNode()->getPrimalFace();
+     Vertex* dnode = NULL;
+     dnode = parent->getDualNode();
+
+     Face *parentface = NULL;
+     dnode->getAttribute("PrimalFace", parentface);
+
+     dnode = child1->getDualNode();
+     Face *face1 = NULL;
+     dnode->getAttribute("PrimalFace", face1);
+
+     dnode = child2->getDualNode();
+     Face *face2 = NULL;
+     dnode->getAttribute("PrimalFace", face2);
 
      NodeSequence connect(3);
 
@@ -182,7 +192,9 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
           vertex->addRelation(face2);
      }
 
-     Vertex *steiner = parentface->getDualNode()->getClone();
+     dnode = NULL;
+     parentface->getAttribute("DualNode", dnode);
+     Vertex *steiner = dnode->getClone();
      steiner->setID(parentface->getID());
      trimesh->addNode(steiner);
      steinerNodes.push_back(steiner);
@@ -224,7 +236,9 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
      dc1->setID(maxfaceID);
      trimesh->addFace(qface);
      steinerFaces.push_back(qface);
-     matchnodes(face1->getDualNode(), dc1);
+     dnode = NULL;
+     face1->getAttribute("DualNode", dnode);
+     matchnodes( dnode, dc1);
      BinaryNode *bnode1 = new BinaryNode(dc1);
      bnode1->setMatchMark(1);
      bnode1->setParent(parent);
@@ -245,7 +259,10 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
      dc2->setID(maxfaceID);
      trimesh->addFace(qface);
      steinerFaces.push_back(qface);
-     matchnodes(face2->getDualNode(), dc2);
+     dnode = NULL;
+     face2->getAttribute( "DualNode", dnode);
+     matchnodes( dnode, dc2);
+
      BinaryNode *bnode2 = new BinaryNode(dc2);
      bnode2->setMatchMark(1);
      bnode2->setParent(parent);
@@ -261,7 +278,9 @@ void Tri2Quads::splitParent(BinaryNode *parent, BinaryNode *child1,
      parentface->setNodes(connect);
      Point3D p3d;
      parentface->getAvgPos( p3d );
-     Vertex *dc3 = parentface->getDualNode();
+
+     Vertex *dc3 = NULL;
+     parentface->getAttribute("DualNode", dc3);
      dc3->setXYZCoords(p3d);
      parent->addChild(bnode1);
      parent->addChild(bnode2);
@@ -437,7 +456,9 @@ void Tri2Quads::percolateup()
 
      for (size_t i = 0; i < numfaces; i++) {
           Face *face = trimesh->getFaceAt(i);
-          Vertex *u = face->getDualNode();
+          Vertex *u = NULL;
+          face->getAttribute("DualNode", u);
+           
           assert(u);
           Vertex *v = NULL;
           u->getAttribute("DualMate", v);
@@ -458,7 +479,9 @@ void Tri2Quads::percolateup()
 #ifdef VERBOSE
           cout << "Warning: Boundary Triangle modified " << endl;
 #endif
-          Face *rootface = root->getDualNode()->getPrimalFace();
+          Vertex *dnode = root->getDualNode();
+          Face *rootface = NULL;
+          dnode->getAttribute("PrimalFace", rootface);
           refine_boundary_triangle(rootface);
      }
 
@@ -488,6 +511,7 @@ void Tri2Quads::maximum_tree_matching()
 
      btree = new BinaryTree(dgraph);
      btree->build();
+     btree->saveAs("btree");
 
 #ifdef VERBOSE
      cout << " Tree Matching ... " << endl;
