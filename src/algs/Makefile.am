@@ -2,13 +2,14 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen
+SUBDIRS =  QuadMesher Qslim AssyGen Triangle
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
 libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
                            QuadMesher/libJaalQuadMesher.la \
-                           AssyGen/libAssyGen.la
+                           AssyGen/libAssyGen.la \
+                           Triangle/libMKTriangle.la
 
 # The directory in which to install headers
 libMeshKitalgs_la_includedir = $(includedir)

@@ -45,3 +45,5 @@
 %include "meshkit/CAMALPaver.hpp"
 %include "meshkit/CAMALTetMesher.hpp"
 %include "meshkit/CAMALTriAdvance.hpp"
+
+%include "meshkit/TriangleMesher.hpp"

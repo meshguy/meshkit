@@ -33,6 +33,8 @@ ExtrudeMesh_test_SOURCES = ExtrudeMesh.cpp TestFramework.hpp
 ProjectShell_test_SOURCES = ProjectShell.cpp TestFramework.hpp
 IntersectMesh_test_SOURCES = IntersectMesh_test.cpp TestFramework.hpp
 CopyGeom_test_SOURCES = CopyGeom_test.cpp TestFramework.hpp
+pointset_SOURCES = pointset.cpp
+check_PROGRAMS += pointset
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir)\

@@ -22,6 +22,7 @@
 #include "meshkit/CAMALPaver.hpp"
 #include "meshkit/CAMALTetMesher.hpp"
 #include "meshkit/CAMALTriAdvance.hpp"
+#include "meshkit/TriangleMesher.hpp"
 %}
 
 %factory(MeshKit::MeshOp * MeshKit::MKCore::construct_meshop,
@@ -38,4 +39,5 @@
 
          MeshKit::CAMALPaver,
          MeshKit::CAMALTetMesher,
-         MeshKit::CAMALTriAdvance);
+         MeshKit::CAMALTriAdvance, 
+         MeshKit::TriangleMesher);

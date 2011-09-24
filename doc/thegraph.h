@@ -8,7 +8,7 @@ entities in increasing dimension, i.e. the
 geometric vertices, then edges, then faces, then regions.  In this case, the graph is the topology
 graph, with graph nodes corresponding to geometric entities, and graph edges the adjacency relationships
 between entities.  When the BREP is the graph, each meshing operation is synonymous with the geometric 
-tity it operates on.  However, this is only a special case of a graph-based process; more generally, each 
+entity it operates on.  However, this is only a special case of a graph-based process; more generally, each 
 meshing operation can be a node in the graph, with 
 graph edges representing dependencies between operations.  For example, in the case of meshing
 then refinement, the graph would have two nodes, one for generating the initial

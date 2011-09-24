@@ -1,5 +1,4 @@
 from MeshKit import *
-from itaps import iBase
 
 qopts = QslimOptions()
 
