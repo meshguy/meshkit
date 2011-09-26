@@ -1459,7 +1459,7 @@ private:
      int setFaceWavefront();
 };
 
-int mesh_unit_tests();
+//int mesh_unit_tests();
 
 struct MeshImporter {
      static const int SIMPLE_FORMAT = 0;
@@ -1467,6 +1467,7 @@ struct MeshImporter {
      static const int OBJ_FORMAT = 2;
      static const int VTK_FORMAT = 3;
      static const int TRIANGLE_FORMAT = 4;
+     static const int CUBIT_FORMAT = 5;
 
      Mesh * load(const string &fname, Mesh *m = NULL) {
           mesh = m;
@@ -1485,18 +1486,22 @@ struct MeshImporter {
                err = simple_file(fname);
           }
 
+          if (fname.rfind(".cub") != string::npos) {
+               err = cubit_file(fname);
+          }
+
           if (err) {
                err = triangle_file(fname);
           }
+
+          if( err ) return NULL;
 
           if( !mesh->is_consistently_oriented() )
                mesh->make_consistently_oriented();
 
           global2local.clear();
 
-          if (!err) return mesh;
-
-          return NULL;
+          return mesh;
      }
 
 private:
@@ -1512,6 +1517,7 @@ private:
      int simple_file(const string & s);
      int triangle_file(const string & s);
      int xml_file(const string & s);
+     int cubit_file(const string & s);
 };
 
 struct MeshExporter {

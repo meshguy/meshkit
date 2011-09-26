@@ -23,6 +23,8 @@ Vertex::mid_point(const Vertex *v0, const Vertex *v1, Point3D &pmid, double alph
      pmid[2] = (1 - alpha) * p0[2] + alpha * p1[2];
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 Vertex*
 Vertex::mid_node(const Vertex *v0, const Vertex *v1, double alpha)
 {

@@ -3,17 +3,14 @@
 
 #include "Mesh.hpp"
 
-#ifdef HAVE_IMESH
-#include <SimpleArray.hpp>
-#include <iMesh.h>
-#include <MBInterface.hpp>
+#include <meshkit/SimpleArray.hpp>
+#include <meshkit/iMesh.hpp>
 
 using namespace Jaal;
 
 class JaalMoabConverter
 {
    public:
-
     void clear()
     {
         moabnode.clear();
@@ -22,14 +19,13 @@ class JaalMoabConverter
         jaalface.clear();
     }
     //  Converts the mesh into MOAB data structures.
-    int toMOAB(Mesh *mesh, iMesh_Instance &imesh, iBase_EntitySetHandle eset = 0);
+    int toMOAB(Jaal::Mesh *mesh, iMesh_Instance &imesh, iBase_EntitySetHandle eset = 0);
 
     //  Fill the mesh from MOAB..
-    Mesh *fromMOAB(iMesh_Instance imesh, iBase_EntitySetHandle eset = 0);
-
+    Jaal::Mesh *fromMOAB(iMesh_Instance imesh, Jaal::Mesh *m = NULL, iBase_EntitySetHandle eset = 0);
 
 private:
-    Mesh *jmesh;
+    Jaal::Mesh *jmesh;
 
     iBase_EntityHandle new_MOAB_Handle(iMesh_Instance imesh, Vertex *vertex);
     iBase_EntityHandle new_MOAB_Handle(iMesh_Instance imesh, Face *f);
@@ -39,7 +35,5 @@ private:
     std::map<iBase_EntityHandle, PNode> jaalnode;
     std::map<iBase_EntityHandle, PFace> jaalface;
 };
-
-#endif
 
 #endif

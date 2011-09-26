@@ -74,16 +74,15 @@ void QuadMesher::execute_this()
 
   iMesh_Instance imesh = mk_core()->imesh_instance()->instance();
   MEntSelection::iterator i;
+/*
   for (i = me_selection().begin(); i != me_selection().end(); ++i) {
     ModelEnt* ent = i->first;
     std::auto_ptr<Jaal::Mesh> trimesh(meshconverter.fromMOAB( imesh, (iBase_EntitySetHandle)ent->mesh_handle() ));
     std::auto_ptr<Jaal::Mesh> quadmesh(t2quad.getQuadMesh( trimesh.get(), 1));
     meshconverter.toMOAB( quadmesh.get(), imesh, (iBase_EntitySetHandle)ent->mesh_handle() );
-//  int ierr;
-//  int len =  strlen( "JVtk.vtk" );
-//  iMesh_save( imesh, 0, "JVtk.vtk", NULL, &ierr, len, 0);
     ent->commit_mesh( i->second, COMPLETE_MESH );
   }
+*/
 }
 
 } // namespace MeshKit
