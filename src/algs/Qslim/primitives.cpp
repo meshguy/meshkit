@@ -9,6 +9,8 @@
 
 void filterValid(moab::Interface * mb, std::vector<moab::EntityHandle> & io) {
 	int next = 0, size = io.size();
+        if (size==0)
+          return;
 	std::vector<unsigned char> tags(size);
 	moab::ErrorCode rval = mb->tag_get_data(validTag, &io[0], size, &tags[0] );
 	if (moab::MB_SUCCESS != rval)
@@ -237,8 +239,8 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			// look at all triangles that are adjacent
 			// invalidate first tris
 			unsigned char invalid = 0;
-			rval
-					= mb->tag_set_data(validTag, &(tris[0]), tris.size(),
+			if (tris.size()>0)
+		          mb->tag_set_data(validTag, &(tris[0]), tris.size(),
 							&invalid);
 			if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 				*opts.logfile << "Triangles invalidated: " << tris.size()
@@ -308,7 +310,8 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			validFaceCount -= tris.size();
 			rval = mb->tag_set_data(validTag, &ev0v1, 1, &invalid);
 			// invalidate the edges connected for sure to v1
-			rval = mb->tag_set_data(validTag, &edgesWithV1[0],
+			if (edgesWithV1.size()>0)
+                           mb->tag_set_data(validTag, &edgesWithV1[0],
 					edgesWithV1.size(), &invalid);
 			// reset the connectivity of some edges (from v1 to v0)
 			for (unsigned int i = 0; i < edges.size(); i++) {
