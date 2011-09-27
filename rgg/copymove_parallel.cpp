@@ -16,14 +16,12 @@ int CCrgen::copymove_parallel(const int nrank, const int numprocs)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  if(nrank < (int) core_alias.size()){
-    err = set_copymove_coords();
-    ERRORR("Failed to set cm coords.", err);
+  err = set_copymove_coords();
+  ERRORR("Failed to set cm coords.", err);
   
-    // now copy/move
-    err = copymove_all(nrank, numprocs);
-    ERRORR("Failed to cm hexflat.", err);
-  }
+  // now copy/move
+  err = copymove_all(nrank, numprocs);
+  ERRORR("Failed to cm hexflat.", err);
   return iBase_SUCCESS;
 }
 
@@ -197,13 +195,6 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
   const char *etag_vals[] = { NULL, NULL, NULL };
   const char *ctag_names[] = { "GEOM_DIMENSION" };
   const char *ctag_vals[] = { (const char*) &set_DIM };
-  int i = 0;
-  err = get_expand_sets(cm[i], assys[i], etag_names, etag_vals, num_etags);
-  ERRORR("Failed to add expand lists.", iBase_FAILURE);
-  err = get_copy_sets(cm[i], assys[i], ctag_names, ctag_vals, num_ctags);
-  ERRORR("Failed to add expand lists.", iBase_FAILURE);
-  err = extend_expand_sets(cm[i]);
-  ERRORR("Failed to extend expand lists.", iBase_FAILURE);
   
   int flag = 1;
   int assm_index = -1;
@@ -211,42 +202,147 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
   iBase_EntityHandle *new_ents;
   int new_ents_alloc, new_ents_size;
 
-  for(int i =0; i < (int) position_core[nrank].size(); i++){
-    assm_index = position_core[nrank][i];
-    if(flag == 0){
-      dx[0] = x_coord[assm_index] - dx_orig[0];
-      dx[1] = y_coord[assm_index] - dx_orig[1];
-      dx[2] = 0.0;
+  if(numprocs <= (int) files.size()){
+    // no distribution of task for copy/move; each file loaded only once 
+    int flags[assys.size()], move_index;
+    double dx[3] = { 0.0, 0.0, 0.0 };
+    double dx_move[3] = { 0.0, 0.0, 0.0 };
+    CMatrix<double> dx_orig(assys.size(), 3);
+    dx_orig.Set(0.0);
+
+    // get the copy/expand sets
+    int num_etags = 3, num_ctags = 1;
+    const char     *etag_names[] = { "MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET" };
+    const char *etag_vals[] = { NULL, NULL, NULL };
+    const char *ctag_names[] = { "GEOM_DIMENSION" };
+    const char *ctag_vals[] = { (const char*) &set_DIM };
+
+    for (unsigned int i = 0; i < assys.size(); i++) {
+      flags[i]=0;
+      err = get_expand_sets(cm[i], assys[i], etag_names, etag_vals, num_etags);
+      ERRORR("Failed to add expand lists.", iBase_FAILURE);
+      err = get_copy_sets(cm[i], assys[i], ctag_names, ctag_vals, num_ctags);
+      ERRORR("Failed to add expand lists.", iBase_FAILURE);
+      err = extend_expand_sets(cm[i]);
+      ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+    }
+    for (int k=0; k< tot_assys; k++){
+      err = find_assm(k, assm_index);
+      if(assm_index >= 0){
+      	// check if this file is with the proc
+	int out = 0;
+      	for(int c=0; c < (int) assys.size(); c++){
+      	  if(assys_index[c] == assm_index){
+      	    //found assembly
+      	    move_index=c;
+      	    out = 0;
+      	    break;
+      	  }
+	  else{
+	    out = 1;
+	  }
+      	}
+      	if(out == 1){
+      	  continue;
+      	}
+	if (-1 == assm_index) {
+	  continue;
+	}
+	
+	if (flags[move_index] == 0) {
+	  dx_move[0] = x_coord[k];
+	  dx_move[1] = y_coord[k];
+	  dx_move[2] = 0;
+	  dx_orig(move_index + 1, 1) = dx_move[0];
+	  dx_orig(move_index + 1, 2) = dx_move[1];
+	  dx_orig(move_index + 1, 3) = dx_move[2];
+
+	  move_verts(assys[move_index], dx_move);
+	  std::cout << "Moved Assembly: " << assm_index  << " dX = " << dx_move[0] << " dY = "
+		    << dx_move[1] << " in proc with rank " << nrank << std::endl;
+	  flags[move_index]=1;
+	}
+	else{
+
+	  dx[0] =  x_coord[k] - dx_orig(move_index+1, 1);
+	  dx[1] =  y_coord[k] - dx_orig(move_index+1, 2);
+	  dx[2] =  0.0;
+
+	  int orig_ents_alloc = 0, orig_ents_size;
+	  iBase_EntityHandle *orig_ents = NULL;
+	  new_ents = NULL;
+	  new_ents_alloc = 0;
+
+	  iMesh_getEntities(impl, assys[move_index], iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
+			    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
+	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
+
+	  //	  std::cout << " dy0 = " << dx[1] << " move_index = " << move_index << std::endl;
+
+	  cm[move_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx), 
+			       &new_ents, &new_ents_alloc, &new_ents_size, false);
+	  //	  std::cout << " xk = " << x_coord[k] << " after move_index = " << move_index << std::endl;
+	  std::cout << "Copy/moved A: " << assm_index 
+		    <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
+	  free(new_ents);
+	  free(orig_ents);
+
+	  cm[move_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
+	}
+
+      }
+    }
+  }
+  else{
+    for(int i =0; i < (int) position_core[nrank].size(); i++){
+      assm_index = position_core[nrank][i];
+      if(assm_index >= 0){
+	// some files are loaded in two or more processors, copy/move task distribution takes place
+	int j = 0;
+	err = get_expand_sets(cm[j], assys[j], etag_names, etag_vals, num_etags);
+	ERRORR("Failed to add expand lists.", iBase_FAILURE);
+	err = get_copy_sets(cm[j], assys[j], ctag_names, ctag_vals, num_ctags);
+	ERRORR("Failed to add expand lists.", iBase_FAILURE);
+	err = extend_expand_sets(cm[j]);
+	ERRORR("Failed to extend expand lists.", iBase_FAILURE);
+	
+	if(flag == 0){
+	  dx[0] = x_coord[assm_index] - dx_orig[0];
+	  dx[1] = y_coord[assm_index] - dx_orig[1];
+	  dx[2] = 0.0;
       
-      new_ents = NULL;
-      new_ents_alloc = 0;
-      new_ents_size = 0;
+	  new_ents = NULL;
+	  new_ents_alloc = 0;
+	  new_ents_size = 0;
       
-      int orig_ents_alloc = 0, orig_ents_size;
-      iBase_EntityHandle *orig_ents = NULL;
+	  int orig_ents_alloc = 0, orig_ents_size;
+	  iBase_EntityHandle *orig_ents = NULL;
       
       
-      iMesh_getEntities(impl, assys[0], iBase_ALL_TYPES,
-  			iMesh_ALL_TOPOLOGIES, &orig_ents, &orig_ents_alloc,
-  			&orig_ents_size, &err);
-      ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
+	  iMesh_getEntities(impl, assys[0], iBase_ALL_TYPES,
+			    iMesh_ALL_TOPOLOGIES, &orig_ents, &orig_ents_alloc,
+			    &orig_ents_size, &err);
+	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
       
-      cm[0]->copy(orig_ents, orig_ents_size, copy::Translate(dx),
-  		  &new_ents, &new_ents_alloc, &new_ents_size, false);
-      std::cout << "Copy/moved Assm: " << assm_index << " dX = " << dx[0] << " dY = "
-  		<< dx[1] << std::endl;
+	  cm[0]->copy(orig_ents, orig_ents_size, copy::Translate(dx),
+		      &new_ents, &new_ents_alloc, &new_ents_size, false);
+	  std::cout << "Copy/moved Assm: " << assm_index << " dX = " << dx[0] << " dY = "
+		    << dx[1]  << " rank " << nrank << std::endl;
+
+	  cm[0]->tag_copied_sets(ctag_names, ctag_vals, 1);
       
-      free(new_ents);
-      free(orig_ents);
-      cm[0]->tag_copied_sets(ctag_names, ctag_vals, 1);
-    } else {
-      flag = 0;
-      dx_orig[0] = x_coord[assm_index];
-      dx_orig[1] = y_coord[assm_index];
-      dx_orig[2] = 0;
-      move_verts(assys[0], dx_orig);
-      std::cout << "Moved Assm: " << assm_index << " dX = " << dx_orig[0] << " dY = "
-		<< dx_orig[1] << std::endl;
+	  free(new_ents);
+	  free(orig_ents);
+	} else {
+	  flag = 0;
+	  dx_orig[0] = x_coord[assm_index];
+	  dx_orig[1] = y_coord[assm_index];
+	  dx_orig[2] = 0;
+	  move_verts(assys[0], dx_orig);
+	  std::cout << "Moved Assm: " << assm_index << " dX = " << dx_orig[0] << " dY = "
+		    << dx_orig[1] << " rank " << nrank << std::endl;
+	}
+      }
     }
   }
   return iBase_SUCCESS;

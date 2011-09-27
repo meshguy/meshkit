@@ -110,9 +110,9 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
     std::cout << "Saving mesh file in parallel. " << std::endl;
   }
 
-  //All explicit sharing data must be updated in ParallelComm instance before save
-  //  moab::Range entities, sets, faces, edges;
-  // moab::Tag gid_tag;
+  //  All explicit sharing data must be updated in ParallelComm instance before save
+  moab::Range entities, sets, faces, edges;
+  moab::Tag gid_tag;
   // mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
   // mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
   // mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
@@ -135,12 +135,17 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
   pc->resolve_shared_sets( matsets, mattag );
 
-  moab::Tag nstag;
-  mbImpl()->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
-  moab::Range nssets;
-  mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
-  pc->resolve_shared_sets( nssets, nstag );
+  // moab::Tag nstag;
+  // mbImpl()->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
+  // moab::Range nssets;
+  // mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+  // pc->resolve_shared_sets( nssets, nstag );
 
+  // moab::Tag gdtag;
+  // mbImpl()->tag_get_handle( "GEOM_DIMENSION", 1, MB_TYPE_INTEGER, gdtag );
+  // moab::Range gdsets;
+  // mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &gdtag, 0, 1, gdsets );
+  // pc->resolve_shared_sets( gdsets, mattag );
   // 
   // mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
   // err = pc->resolve_shared_sets( sets, gid_tag );
@@ -197,15 +202,16 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
 // Output:   none
 // -------------------------------------------------------------------------------------------
 {
-  if(nrank < (int) core_alias.size()){
+  int nback = files.size() - nassys;
+  if(nrank < ((int) core_alias.size() + nback)){
     if(numprocs > (int) core_alias.size()){
-      numprocs =  core_alias.size();
+      numprocs =  core_alias.size() + nback;
     }
 #ifdef USE_MPI
     std::vector<int> rank_load;
     rank_load.resize(numprocs);
     int extra_procs = numprocs - files.size();
-    if(numprocs >= (int) files.size() && numprocs <= tot_assys){
+    if(numprocs >= (int) files.size() && numprocs <= (tot_assys + nback)){
       // again fill assm_meshfiles
       for(int p=0; p<nassys; p++)
 	assm_meshfiles[p]=0;
@@ -217,7 +223,7 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
 	}
       }
       //distribute
-      for(int i=0; i< (int) files.size(); i++){
+      for(int i=0; i<  (int)files.size(); i++){
 	rank_load[i] = i;
       }
    
@@ -237,7 +243,7 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
 	  }
 	}
 	assm_meshfiles[assm_load]-=1;
-	int temp_rank = files.size()+ e;
+	int temp_rank = files.size()+ e + nback;
 	rank_load[temp_rank] = assm_load;
 	e++;
 	temp = 0;     
@@ -259,9 +265,10 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
     }
 
     position_core.resize(numprocs);
+    
     for(int i=0; i < (int) files.size(); i++){
       int k = 0;
-      if(i < nassys){
+      if(i < (nassys) ){
 	for(int j=0; j < (int) assm_location[i].size(); j++){
 	  if (k >= (int) meshfiles_rank[i].size()){
 	    k = 0;
@@ -278,6 +285,7 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
 	position_core[i].push_back(-2);
       }
     }
+
     if(nrank == 0){
       std::cout << " copy/move task distribution " << std::endl;
       for(int i =0; i< numprocs; i++){
@@ -300,18 +308,19 @@ int CCrgen::load_meshes_parallel(const int nrank, int numprocs)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
+  int nback = files.size() - nassys;
   iMesh_newMesh("MOAB", &impl, &err, 4);
   ERRORR("Failed to create instance.", 1);
 
   iMesh_getRootSet(impl, &root_set, &err);
   ERRORR("Couldn't get the root set", err);
-  if(nrank < (int) core_alias.size()){
+  if(nrank < ((int) core_alias.size() + nback)){
     if(numprocs > (int) core_alias.size()){
-      numprocs =  core_alias.size();
+      numprocs =  core_alias.size() + nback;
     }
 
 #ifdef USE_MPI
-    if(numprocs > (int) core_alias.size()){
+    if(numprocs > ((int) core_alias.size() + nback)){
       std::cout << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
     }
 
@@ -322,7 +331,7 @@ int CCrgen::load_meshes_parallel(const int nrank, int numprocs)
     for(int i = 0; i< (int) files.size(); i++){
       temp_index = numprocs*i + nrank;
       if(temp_index >= (int) files.size()){     
-	if (nrank >= (int) files.size() && nrank <= tot_assys){
+	if (nrank >= (int) files.size() && nrank <= (tot_assys + nback)){
 	  int temp = 1;
 	  int p = extra_procs;
 	  // compute the rank, mf vector for extra procs
@@ -343,7 +352,6 @@ int CCrgen::load_meshes_parallel(const int nrank, int numprocs)
 	    --p;
 	    temp = 1;     
 	  }
-
 
 	  temp_index = nrank - files.size();
 	  iMesh_createEntSet(impl, 0, &orig_set, &err);

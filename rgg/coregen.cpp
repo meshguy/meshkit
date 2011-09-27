@@ -118,13 +118,8 @@ int main(int argc, char *argv[]) {
     /*********************************************/
     CClock ld_cm;
     if(TheCore.prob_type == "mesh"){ 
-      if (nprocs <= (int) TheCore.files.size()) {
-	err = TheCore.copy_move_parallel(rank, nprocs);
-	ERRORR("Failed in copy move routine.", 1);
-      } else {
-	err = TheCore.copymove_parallel(rank, nprocs);
-	ERRORR("Failed in copy move routine.", 1);
-      }
+      err = TheCore.copymove_parallel(rank, nprocs);
+      ERRORR("Failed in copy move routine.", 1);
     }
     else{
       err = TheCore.copy_move();
@@ -258,8 +253,8 @@ int main(int argc, char *argv[]) {
       	err = TheCore.save_mesh();
       	ERRORR("Failed to save o/p file.", 1);
       } else {
-	//		err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
-	//	ERRORR("Failed to save o/p file.", 1);
+	// err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
+	// ERRORR("Failed to save o/p file.", 1);
 #ifdef USE_MPI
 	double write_time = MPI_Wtime();
 	err = TheCore.save_mesh_parallel(rank, nprocs);
