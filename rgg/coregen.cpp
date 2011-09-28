@@ -120,22 +120,23 @@ int main(int argc, char *argv[]) {
     if(TheCore.prob_type == "mesh"){ 
       err = TheCore.copymove_parallel(rank, nprocs);
       ERRORR("Failed in copy move routine.", 1);
+
+      TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
+      ld_tcopymove = ld_cm.DiffTime();
+      tcopymove = clock();
+      ctcopymove = (double) (tcopymove - tload)/(60*CLOCKS_PER_SEC);
+
+      if (TheCore.mem_tflag == true && (strcmp(TheCore.prob_type.c_str(), "mesh") == 0) && nprocs == 1) {
+	std::cout << "\n" << " Clock time taken to copy/move mesh files = " << ld_tcopymove
+		  << " seconds" << std::endl;
+	std::cout << " CPU time = " << ctcopymove << " mins" << std::endl;
+	std::cout << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
+      }
     }
     else{
       err = TheCore.copy_move();
     }
 
-    TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
-    ld_tcopymove = ld_cm.DiffTime();
-    tcopymove = clock();
-    ctcopymove = (double) (tcopymove - tload)/(60*CLOCKS_PER_SEC);
-
-    if (TheCore.mem_tflag == true && (strcmp(TheCore.prob_type.c_str(), "mesh") == 0) && nprocs == 1) {
-      std::cout << "\n" << " Clock time taken to copy/move mesh files = " << ld_tcopymove
-    		<< " seconds" << std::endl;
-      std::cout << " CPU time = " << ctcopymove << " mins" << std::endl;
-      std::cout << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
-    }
 #ifdef USE_MPI
     MPI::COMM_WORLD.Barrier();
 #endif
