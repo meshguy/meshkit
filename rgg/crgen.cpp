@@ -113,9 +113,9 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   //  All explicit sharing data must be updated in ParallelComm instance before save
   moab::Range entities, sets, faces, edges;
   moab::Tag gid_tag;
-  // mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
-  // mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
-  // mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
+  mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
+  mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
+  mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
 
   // err = pc->resolve_shared_ents( 0, edges, 0, -1, &gid_tag );
   // if (err != moab::MB_SUCCESS) {
@@ -129,30 +129,32 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   //   MPI_Abort(MPI_COMM_WORLD, 1);
   // }
 
-  moab::Tag mattag;
-  mbImpl()->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
-  moab::Range matsets;
-  mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
-  pc->resolve_shared_sets( matsets, mattag );
-
-  // moab::Tag nstag;
-  // mbImpl()->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
-  // moab::Range nssets;
-  // mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
-  // pc->resolve_shared_sets( nssets, nstag );
-
-  // moab::Tag gdtag;
-  // mbImpl()->tag_get_handle( "GEOM_DIMENSION", 1, MB_TYPE_INTEGER, gdtag );
-  // moab::Range gdsets;
-  // mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &gdtag, 0, 1, gdsets );
-  // pc->resolve_shared_sets( gdsets, mattag );
-  // 
   // mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
   // err = pc->resolve_shared_sets( sets, gid_tag );
   // if (err != moab::MB_SUCCESS) {
   //   std::cerr << "failed to resolve shared sets" << std::endl;
   //   MPI_Abort(MPI_COMM_WORLD, 1);
   // }
+
+
+  moab::Tag mattag;
+  mbImpl()->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+  moab::Range matsets;
+  mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+  pc->resolve_shared_sets( matsets, mattag );
+
+  moab::Tag nstag;
+  mbImpl()->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
+  moab::Range nssets;
+  mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+  pc->resolve_shared_sets( nssets, nstag );
+
+  // moab::Tag gdtag;
+  // mbImpl()->tag_get_handle( "GEOM_DIMENSION", 1, MB_TYPE_INTEGER, gdtag );
+  // moab::Range gdsets;
+  // mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &gdtag, 0, 1, gdsets );
+  // pc->resolve_shared_sets( gdsets, mattag );
+  
 
 #ifdef HAVE_MOAB
   int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
@@ -222,6 +224,9 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
 	  }
 	}
       }
+      	for(int i = 0; i < nassys; i++){
+	  std::cout << i << " # files " <<  assm_meshfiles[i] << std::endl;
+	}
       //distribute
       for(int i=0; i<  (int)files.size(); i++){
 	rank_load[i] = i;
@@ -243,7 +248,7 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
 	  }
 	}
 	assm_meshfiles[assm_load]-=1;
-	int temp_rank = files.size()+ e + nback;
+	int temp_rank = files.size()+ e;
 	rank_load[temp_rank] = assm_load;
 	e++;
 	temp = 0;     

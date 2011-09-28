@@ -40,7 +40,6 @@ Rotate Z 30
 Section X 0
 Rotate Z -30
 MaterialSet_StartId 100
-NeumannSet_StartId 100
 EdgeInterval 72
 CreateSideset No
 END ! This is a must

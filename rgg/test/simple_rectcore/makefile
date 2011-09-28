@@ -10,7 +10,7 @@ COREGEN = ../../coregen
 
 ASSYGEN = ../../assygen
 
-MESH_FILES = s2  
+MESH_FILES = s2.cub  
 
 GEOM_FILES = s2.sat  
 

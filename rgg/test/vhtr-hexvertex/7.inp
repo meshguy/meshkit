@@ -52,6 +52,5 @@ AxialMeshSize 50
 EdgeInterval 72
 Center
 MaterialSet_StartId 700
-NeumannSet_StartId 700
 CreateSideset No
 END ! This is a must

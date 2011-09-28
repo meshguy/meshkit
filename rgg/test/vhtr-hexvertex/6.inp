@@ -55,6 +55,5 @@ RadialMeshSize 0.3
 AxialMeshSize 50
 EdgeInterval 72
 MaterialSet_StartId 600
-NeumannSet_StartId 600
 CreateSideset No
 END ! This is a must

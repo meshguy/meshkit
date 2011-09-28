@@ -56,6 +56,5 @@ EdgeInterval 72
 Center
 Rotate Z 180
 MaterialSet_StartId 800
-NeumannSet_StartId 800
 CreateSideset No
 END ! This is a must

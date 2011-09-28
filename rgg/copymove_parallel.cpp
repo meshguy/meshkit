@@ -16,13 +16,15 @@ int CCrgen::copymove_parallel(const int nrank, const int numprocs)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  err = set_copymove_coords();
-  ERRORR("Failed to set cm coords.", err);
+  if (nrank < ((int) core_alias.size() + ((int) files.size() - nassys))){
+    err = set_copymove_coords();
+    ERRORR("Failed to set cm coords.", err);
   
-  // now copy/move
-  err = copymove_all(nrank, numprocs);
-  ERRORR("Failed to cm hexflat.", err);
-  return iBase_SUCCESS;
+    // now copy/move
+    err = copymove_all(nrank, numprocs);
+    ERRORR("Failed to cm hexflat.", err);
+    return iBase_SUCCESS;
+  }
 }
 
 int CCrgen::set_copymove_coords()
@@ -277,11 +279,9 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
 			    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
 	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
 
-	  //	  std::cout << " dy0 = " << dx[1] << " move_index = " << move_index << std::endl;
-
 	  cm[move_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx), 
 			       &new_ents, &new_ents_alloc, &new_ents_size, false);
-	  //	  std::cout << " xk = " << x_coord[k] << " after move_index = " << move_index << std::endl;
+
 	  std::cout << "Copy/moved A: " << assm_index 
 		    <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
 	  free(new_ents);
