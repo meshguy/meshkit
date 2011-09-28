@@ -17,7 +17,7 @@ bool quadMesh = true;
 double mesh_size = 0.3;
 std::string file_name; //="shell.h5m";
 double fixedPoint[3] = {0., 0., 0.};
-double a=0.1, b=0.1, c=0.1, d=0.3;// so size will vary from 0.3 to about 0.6, for the default model
+double a=0.1, b=0.1, c=0.1; // so size will vary from 0.3 to about 0.6, for the default model
 
 #include "TestUtil.hpp"
 
@@ -33,9 +33,11 @@ int main(int argc, char **argv)
   file_name = TestDir + "/" + "shell.h5m";// default test file
   if (argc < 4) {
     {
-      std::cout << "Usage : filename < q, t >  <mesh_size> \n";
+      std::cout << "Usage : filename < q, t >  <mesh_size>  x0  y0  z0  a  b  c \n";
+      std::cout <<  " mesh size is variable with formula: \n size(x, y, z) = mesh_size+a(x-x0)+b(y-y0)+c(z-z0)\n";
       std::cout << "use default options: " << file_name << " " <<
-          (quadMesh ? "q " : "t " ) << mesh_size << "\n";
+          (quadMesh ? "q " : "t " ) << mesh_size ;
+      std::cout << " 0. 0. 0. 0.1 0.1 0.1 \n";
     }
   }
   else
@@ -46,7 +48,7 @@ int main(int argc, char **argv)
     mesh_size = atof(argv[3]);
     save_mesh = true;
     // give some linear coefficients to the var size case
-    if (argc==11)
+    if (argc==10)
     {
       fixedPoint[0] = atof(argv[4]);
       fixedPoint[1] = atof(argv[5]);
@@ -54,7 +56,11 @@ int main(int argc, char **argv)
       a = atof(argv[7]);
       b = atof(argv[8]);
       c = atof(argv[9]);
-      d = atof(argv[10]);
+    }
+    else
+    {
+      std::cout<<" wrong number of arguments: argc=" << argc << "\n";
+      return 1; // fail;
     }
 
   }
@@ -105,7 +111,7 @@ void meshFBvar()
   for (unsigned int i = 0; i < surfs.size(); i++)
     surfs[i]->sizing_function_index(sf->core_index());
 
-  double coeff[4] = {a, b, c, d};
+  double coeff[4] = {a, b, c, mesh_size};
   sf->set_linear_coeff(fixedPoint, coeff);
 
   // now mesh them
