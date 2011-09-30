@@ -111,11 +111,11 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   }
 
   //  All explicit sharing data must be updated in ParallelComm instance before save
-  moab::Range entities, sets, faces, edges;
-  moab::Tag gid_tag;
-  mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
-  mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
-  mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
+  // moab::Range entities, sets, faces, edges;
+  // moab::Tag gid_tag;
+  // mbImpl()->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
+  // mbImpl()->get_entities_by_type( 0, MBQUAD, faces );
+  // mbImpl()->get_entities_by_type( 0, MBEDGE, edges );
 
   // err = pc->resolve_shared_ents( 0, edges, 0, -1, &gid_tag );
   // if (err != moab::MB_SUCCESS) {
@@ -224,9 +224,6 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
 	  }
 	}
       }
-      	for(int i = 0; i < nassys; i++){
-	  std::cout << i << " # files " <<  assm_meshfiles[i] << std::endl;
-	}
       //distribute
       for(int i=0; i<  (int)files.size(); i++){
 	rank_load[i] = i;
