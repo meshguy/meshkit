@@ -1347,7 +1347,7 @@ int CNrgen::CreateCubitJournal()
     }
   }   
 
-
+  m_FileOutput << "delete group all" << std::endl;
   // save as .cub file dump
   m_FileOutput << "#\n#Save file" << std::endl; 
   std::string szSave = m_szFile + ".cub";
