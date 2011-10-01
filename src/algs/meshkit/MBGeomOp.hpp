@@ -12,7 +12,7 @@
 
 namespace MeshKit {
 
-class MBGeomOp: public virtual MeshKit::MeshScheme
+class MBGeomOp: public MeshKit::MeshScheme
 {
 public:
   MBGeomOp(MKCore *mk_core, const MEntVector &me_vec);
