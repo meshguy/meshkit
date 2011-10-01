@@ -47,3 +47,4 @@
 %include "meshkit/CAMALTriAdvance.hpp"
 
 %include "meshkit/TriangleMesher.hpp"
+%include "meshkit/MBGeomOp.hpp"

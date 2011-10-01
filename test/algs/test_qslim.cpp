@@ -3,7 +3,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <cstring>
-#include <cstring>
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
