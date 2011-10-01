@@ -23,7 +23,7 @@ check_PROGRAMS = \
 	ExtrudeMesh_test \
 	ProjectShell_test \
     	IntersectMesh_test \
-    	CopyGeom_test AddZTag
+    	CopyGeom_test
 TESTS = $(check_PROGRAMS)
 
 LDADD = ../libMKalgs.la $(IMESH_LIBS) $(IGEOM_LIBS) $(IREL_LIBS)
@@ -35,7 +35,6 @@ IntersectMesh_test_SOURCES = IntersectMesh_test.cpp TestFramework.hpp
 CopyGeom_test_SOURCES = CopyGeom_test.cpp TestFramework.hpp
 pointset_SOURCES = pointset.cpp
 check_PROGRAMS += pointset
-AddZTag_SOURCES = kp.AddZTag_test.cpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir)\
