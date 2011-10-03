@@ -149,31 +149,34 @@ int load_and_mesh(const char *geom_filename,
   mk->construct_meshop("ParallelMesher", vols);
   mk->setup_and_execute();
   double t3 = MPI_Wtime();
-  
+
+  if (mesh_filename != NULL) {
+    std::string out_name;
+    std::stringstream ss;
+    ss << mesh_filename << ".h5m";
+    ss >> out_name;
+    iMesh::Error err = mk->imesh_instance()->save(0, out_name.c_str(),
+                                                  "moab:PARALLEL=WRITE_PART");
+    IBERRCHK(err, "Couldn't save mesh.");
+    double t4 = MPI_Wtime();
+    std::cout << "Export_time="
+              << (double) (t4 - t3)/CLOCKS_PER_SEC << std::endl;
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  double t5 = MPI_Wtime();
+
   // report the number of tets
   moab::Range tets;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, tets);
   CHECK_EQUAL(moab::MB_SUCCESS, rval);
   std::cout << tets.size() << " tets generated." << std::endl;
 
-  if (mesh_filename != NULL && tets.size() > 0) {
-    double t4 = MPI_Wtime();
-    std::string out_name;
-    std::stringstream ss;
-    ss << mesh_filename << "_" << rank << ".vtk";
-    ss >> out_name;
-    iMesh::Error err = mk->imesh_instance()->save(0, out_name.c_str());
-    IBERRCHK(err, "Couldn't save mesh.");
-    double t5 = MPI_Wtime();
-    std::cout << "Export_time="
-              << (double) (t5 - t4)/CLOCKS_PER_SEC << std::endl;
+  if (rank == 0) {
+    std::cout << "Geometry_loading_time=" << t2 - t1
+              << " secs, Meshing_time=" << t3 - t2
+              << " secs, Total_time=" << t5 - t1 << std::endl;
   }
-
-  double t6 = MPI_Wtime();
-  std::cout << "Geometry_loading_time=" << t2 - t1
-            << " secs, Meshing_time=" << t3 - t2
-            << " secs, Total_time=" << t6 - t1 << std::endl;
-
   
   mk->clear_graph();
   MPI_Finalize();
