@@ -24,6 +24,7 @@
 #include "meshkit/CAMALTriAdvance.hpp"
 #include "meshkit/TriangleMesher.hpp"
 #include "meshkit/MBGeomOp.hpp"
+#include "meshkit/MBSplitOp.hpp"
 %}
 
 %factory(MeshKit::MeshOp * MeshKit::MKCore::construct_meshop,
@@ -42,4 +43,5 @@
          MeshKit::CAMALTetMesher,
          MeshKit::CAMALTriAdvance, 
          MeshKit::TriangleMesher,
-         MeshKit::MBGeomOp);
+         MeshKit::MBGeomOp, 
+         MeshKit::MBSplitOp);

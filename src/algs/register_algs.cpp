@@ -14,6 +14,7 @@
 #include "meshkit/AssyGen.hpp"
 #include "meshkit/TriangleMesher.hpp"
 #include "meshkit/MBGeomOp.hpp"
+#include "meshkit/MBSplitOp.hpp"
 
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
@@ -50,6 +51,7 @@ REGISTER_MESH_OP(QuadMesher);
 REGISTER_MESH_OP(AssyGen);
 REGISTER_MESH_OP(TriangleMesher);
 REGISTER_MESH_OP(MBGeomOp);
+REGISTER_MESH_OP(MBSplitOp);
 
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB

@@ -31,7 +31,8 @@ libMeshKitalgs_la_SOURCES = \
 	CopyUtils.hpp \
 	OneToOneSwept.cpp \
   TFIMapping.cpp \
-  MBGeomOp.cpp
+  MBGeomOp.cpp \
+  MBSplitOp.cpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
@@ -48,7 +49,8 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/Transform.hpp \
 	meshkit/OneToOneSwept.hpp \
 	meshkit/TFIMapping.hpp \
-	meshkit/MBGeomOp.hpp
+	meshkit/MBGeomOp.hpp \
+	meshkit/MBSplitOp.hpp
 
 
 # Boilerplate stuff that doesn't depend on what the targets are

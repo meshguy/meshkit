@@ -48,3 +48,4 @@
 
 %include "meshkit/TriangleMesher.hpp"
 %include "meshkit/MBGeomOp.hpp"
+%include "meshkit/MBSplitOp.hpp"
