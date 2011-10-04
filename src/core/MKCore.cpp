@@ -1,6 +1,7 @@
 #include "meshkit/iGeom.hpp"
 #include "meshkit/iMesh.hpp"
 #include "meshkit/iRel.hpp"
+#include "meshkit/FBiGeom.hpp"
 #include "moab/Core.hpp"
 #include "MBiMesh.hpp"
 #include "moab/CN.hpp"
@@ -574,4 +575,11 @@ MeshOp *MKCore::construct_meshop(MeshOpProxy* proxy, const MEntVector &me_vec)
   return proxy->create( this, me_vec );
 }
 
+void MKCore::initialize_mesh_based_geometry()
+{
+  // the mesh should be already loaded/transformed/split/cropped
+  FBiGeom * fbiGeom = new FBiGeom(this, true);
+  fbiGeom->Init();
+  return;
+}
 } // namespace meshkit

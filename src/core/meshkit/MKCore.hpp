@@ -408,6 +408,13 @@ public:
      */
   void remove_sizing_function(int index, bool delete_too = true);
   
+  /** \brief interpret mesh-based geometry
+       *
+       * This function interprets the mesh from a moab db as mesh based geometry
+       * it will create a new FBiGeom instance and populate the model ents
+       * accordingly, with the geometry implied from moab sets and tags
+       */
+  void initialize_mesh_based_geometry();
     /**@}*/
 
 private:

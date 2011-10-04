@@ -33,7 +33,9 @@ test_mbgeom_SOURCES = test_mbgeom.cpp
 test_mbgeom_DEPENDENCIES = $(LDADD)
 test_mbgeomvar_SOURCES = test_mbgeomvar.cpp
 test_mbgeomvar_DEPENDENCIES = $(LDADD)
-TESTS += test_triadvance test_mbgeom test_mbgeomvar
+test_mb2_SOURCES= test_mb2.cpp
+test_mb2_DEPENDENCIES = $(LDADD)
+TESTS += test_triadvance test_mbgeom test_mbgeomvar test_mb2
 endif
 
 if HAVE_CAMAL_PAVER
