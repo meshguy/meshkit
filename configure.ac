@@ -789,7 +789,7 @@ AC_ARG_WITH([mesquite],
             [AC_HELP_STRING([--with-mesquite@<:@=DIR@:>@], [Specify where to find Mesquite library])
 AC_HELP_STRING([--without-mesquite], [Configure w/out support for Mesquite library])],
             [WITH_MESQUITE="$withval"
-             DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-mesquite=\"${withval}\""]
+             DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-mesquite=\"${withval}\""],
             [WITH_MESQUITE=])
 
 
@@ -834,7 +834,7 @@ if test "x$WITH_MESQUITE" != "xno"; then
   
   old_LIBS="$LIBS"
   old_LDFLAGS="$LD_FLAGS"
-  old_CPPFLAGS="$old_CPPFLAGS"
+  old_CPPFLAGS="$CPPFLAGS"
   LDFLAGS="$LDFLAGS $MESQUITE_LDFLAGS"
   CPPFLAGS="$CPPFLAGS $MESQUITE_CPPFLAGS"
   
