@@ -29,6 +29,17 @@ void SizingFunctionVar::set_linear_coeff(double * fixedPoint, double * coeff)
   a = coeff[0]; b= coeff[1]; c=coeff[2]; d = coeff[3];
 }
 
+// another version, easier to pythonize
+// this is just because I don't understand swig
+void SizingFunctionVar::set_coeff(double x0, double y0, double z0, double a1,
+      double b1, double c1, double d1)
+{
+  fixed[0] = x0;
+  fixed[1] = y0;
+  fixed[2] = z0;
+  a = a1; b= b1; c=c1; d = d1;
+}
+
 double SizingFunctionVar::size(double *xyz ) const
 {
   double sz = d;

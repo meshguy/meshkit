@@ -25,6 +25,10 @@ public:
   // passed as arguments to the test / usage scenario
   void set_linear_coeff(double * fixedPoint, double * coeff);
 
+  // another version, easier to pythonize
+  void set_coeff(double x0, double y0, double c0, double a,
+      double b, double c, double d);
+
   virtual double size(double *xyz = NULL) const;
   // will be used by edge meshers to decide are we or not variables
   // use a different edge mesh strategy then (different enum)

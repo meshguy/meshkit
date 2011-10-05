@@ -12,6 +12,7 @@
 #include "meshkit/MeshOpProxy.hpp"
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/SizingFunction.hpp"
+#include "meshkit/SizingFunctionVar.hpp"
 %}
 
 /* MeshKit::Vector typemaps */
@@ -36,3 +37,4 @@
 %include "meshkit/MeshScheme.hpp"
 %include "meshkit/Matrix.hpp"
 %include "meshkit/SizingFunction.hpp"
+%include "meshkit/SizingFunctionVar.hpp"
