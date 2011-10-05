@@ -931,6 +931,7 @@ AC_CONFIG_FILES([Makefile
                  src/core/Makefile
                  src/algs/Makefile
                  src/algs/QuadMesher/Makefile
+                 src/algs/Sweep/Makefile
                  src/algs/AssyGen/Makefile
                  src/algs/Qslim/Makefile
                  src/algs/Triangle/Makefile

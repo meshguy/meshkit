@@ -12,6 +12,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/core \
                -I$(top_srcdir)/src/extern/CAMAL \
                -I$(top_srcdir)/src/algs \
+               -I$(top_srcdir)/src/algs/Sweep \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 

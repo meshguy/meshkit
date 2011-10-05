@@ -2,12 +2,13 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen Triangle
+SUBDIRS =  QuadMesher Qslim AssyGen Triangle Sweep
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
 libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
                            QuadMesher/libJaalQuadMesher.la \
+                           Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
                            Triangle/libMKTriangle.la
 
@@ -29,7 +30,6 @@ libMeshKitalgs_la_SOURCES = \
 	Transform.cpp \
 	CopyUtils.cpp \
 	CopyUtils.hpp \
-	OneToOneSwept.cpp \
   TFIMapping.cpp \
   MBGeomOp.cpp \
   MBSplitOp.cpp
@@ -47,7 +47,6 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/CESets.hpp \
 	meshkit/TransformBase.hpp \
 	meshkit/Transform.hpp \
-	meshkit/OneToOneSwept.hpp \
 	meshkit/TFIMapping.hpp \
 	meshkit/MBGeomOp.hpp \
 	meshkit/MBSplitOp.hpp
@@ -63,6 +62,7 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir)/utils \
               -I$(srcdir)/../lemon \
               -I$(srcdir)/QuadMesher \
+              -I$(srcdir)/Sweep \
 	      -I$(srcdir)/AssyGen
 
 
