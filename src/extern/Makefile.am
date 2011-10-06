@@ -2,7 +2,7 @@
 noinst_LTLIBRARIES = libMeshKitextern.la 
 
 # Subdirectories to build
-SUBDIRS = 
+SUBDIRS = mesquite
 
 AM_CPPFLAGS += -I$(srcdir)/../core \
                -I$(srcdir)/../utils \
