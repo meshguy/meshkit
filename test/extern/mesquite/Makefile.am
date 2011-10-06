@@ -13,7 +13,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/extern/mesquite \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils \
-               $(MESQUITE_DEFINES)
+               $(MESQUITE_DEFINES) \
+               $(MESQUITE_CPPFLAGS)
 TESTS = test_mesquite
 check_PROGRAMS = $(TESTS)
 test_mesquite_SOURCES = test_mesquite.cpp

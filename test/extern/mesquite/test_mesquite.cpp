@@ -239,7 +239,7 @@ ModelEnt* create_surface_mesh( moab::EntityHandle vertices[4][4] )
 
 ModelEnt* get_model_ent( iBase_EntityHandle geom )
 {
-  core->populate_mesh();
+  core->populate_model_ents();
   iBase_EntityType type;
   iGeom::Error err = core->igeom_instance()->getEntType( geom, type );
   CHECK_EQUAL(iBase_SUCCESS,err);
