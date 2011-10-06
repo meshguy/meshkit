@@ -74,9 +74,9 @@ ModelEnt::ModelEnt(MKCore *mk,
   if (-1 != igeomIndex && geom_ent) {
     ModelEnt *dum_this = this;
     iGeom::Error err = igeom_instance()->setEntSetData(geom_ent, 
-                                                                         mkCore->igeom_model_tag(igeomIndex), 
-                                                                         &dum_this);
-    IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
+    mkCore->igeom_model_tag(igeomIndex),
+    &dum_this);
+    IBERRCHK(err, "Failed to set iGeom ModelSet tag.");
   }
   
   if (!mesh_ent && geom_ent && -1 != meshIndex && -1 != irelIndex) {
@@ -104,7 +104,28 @@ ModelEnt::ModelEnt(MKCore *mk,
 }
     
 ModelEnt::~ModelEnt() 
-{}
+{
+  // if we delete the Model Entity, remove the tag on the gent that
+  // was pointing to it (or set it to NULL)
+  /*if (-1 != igeomIndex && iGeomEnt) {
+    iGeom::Error err = igeom_instance()->rmvTag(iGeomEnt,
+        mkCore->igeom_model_tag(igeomIndex));
+    IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
+  }
+
+  if (-1 != igeomIndex && iGeomSet) {
+    iGeom::Error err = igeom_instance()->rmvEntSetTag(iGeomSet,
+        mkCore->igeom_model_tag(igeomIndex));
+    IBERRCHK(err, "Failed to set iGeom ModelSet tag.");
+  }*/
+  // if we delete the Model Entity, remove the tag on the moabEntSet
+  // that was pointing to it (set the value to NULL)
+  if (moabEntSet && -1 != meshIndex) {
+    moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_delete_data(
+          mkCore->moab_model_tag(meshIndex), &moabEntSet, 1);
+    IBERRCHK(err, "Failed to set moab ModelEnt tag.");
+  }
+}
 
 void ModelEnt::sizing_function_index(int ind, bool children_too)
 {

@@ -16,6 +16,7 @@ bool save_mesh = false;
 bool quadMesh = true;
 double mesh_size = 0.3;
 std::string file_name; //="shell.h5m";
+std::string output_file; //="output.h5m";
 double fixedPoint[3] = {0., 0., 0.};
 double a=0.1, b=0.1, c=0.1; // so size will vary from 0.3 to about 0.6, for the default model
 
@@ -31,11 +32,12 @@ int main(int argc, char **argv)
    MKCore mk(fbiGeom, mb); // iMesh, iRel, will be constructed*/
 
   file_name = TestDir + "/" + "shell.h5m";// default test file
-  if (argc < 4) {
+  output_file = "output.h5m";
+  if (argc < 5) {
     {
-      std::cout << "Usage : filename < q, t >  <mesh_size>  x0  y0  z0  a  b  c \n";
+      std::cout << "Usage : filename outfile < q, t >  <mesh_size>  x0  y0  z0  a  b  c \n";
       std::cout <<  " mesh size is variable with formula: \n size(x, y, z) = mesh_size+a(x-x0)+b(y-y0)+c(z-z0)\n";
-      std::cout << "use default options: " << file_name << " " <<
+      std::cout << "use default options: " << file_name << " " << output_file << " "<<
           (quadMesh ? "q " : "t " ) << mesh_size ;
       std::cout << " 0. 0. 0. 0.1 0.1 0.1 \n";
     }
@@ -43,19 +45,20 @@ int main(int argc, char **argv)
   else
   {
     file_name = argv[1];
-    if (!strcmp(argv[2], "t"))
+    output_file = argv[2];
+    if (!strcmp(argv[3], "t"))
       quadMesh = false;
-    mesh_size = atof(argv[3]);
+    mesh_size = atof(argv[4]);
     save_mesh = true;
     // give some linear coefficients to the var size case
-    if (argc==10)
+    if (argc==11)
     {
-      fixedPoint[0] = atof(argv[4]);
-      fixedPoint[1] = atof(argv[5]);
-      fixedPoint[2] = atof(argv[6]);
-      a = atof(argv[7]);
-      b = atof(argv[8]);
-      c = atof(argv[9]);
+      fixedPoint[0] = atof(argv[5]);
+      fixedPoint[1] = atof(argv[6]);
+      fixedPoint[2] = atof(argv[7]);
+      a = atof(argv[8]);
+      b = atof(argv[9]);
+      c = atof(argv[10]);
     }
     else
     {
@@ -129,19 +132,7 @@ void meshFBvar()
 
   if (save_mesh) {
     // output mesh for surfaces (implicitly for edges too, as edges are children of surface sets)
-    std::string outfile = file_name + std::string(".var.h5m");
-    moab::EntityHandle out_set;
-    rval = mk->moab_instance()->create_meshset(moab::MESHSET_SET, out_set);
-    MBERRCHK(rval, mk->moab_instance());
-    for (unsigned int i = 0; i < surfs.size(); i++) {
-      rval = mk->moab_instance()->add_child_meshset(out_set,
-          surfs[i]->mesh_handle());
-      MBERRCHK(rval, mk->moab_instance());
-    }
-
-    rval = mk->moab_instance()->write_file(outfile.c_str(), NULL, NULL,
-        &out_set, 1);
-    MBERRCHK(rval, mk->moab_instance());
+    mk->save_mesh_from_model_ents(output_file.c_str(), surfs);
   }
   // delete the model ents too, unload geometry
 

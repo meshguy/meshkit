@@ -15,6 +15,7 @@ bool save_mesh = false;
 bool quadMesh = true;
 double mesh_size = 0.3;
 std::string file_name; //="shell.h5m";
+std::string output_file; //="output.h5m";
 
 #include "TestUtil.hpp"
 
@@ -28,19 +29,22 @@ int main(int argc, char **argv)
    MKCore mk(fbiGeom, mb); // iMesh, iRel, will be constructed*/
 
   file_name = TestDir + "/" + "shell.h5m";// default test file
-  if (argc < 4) {
+  output_file = "output.h5m";
+
+  if (argc < 5) {
     {
-      std::cout << "Usage : filename < q, t >  <mesh_size> \n";
-      std::cout << "use default options: " << file_name << " " <<
-          (quadMesh ? "q " : "t " ) << mesh_size << "\n";
+      std::cout << "Usage : filename  output  < q, t >  <mesh_size> \n";
+      std::cout << "use default options: " << file_name << " " << output_file <<
+          (quadMesh ? " q " : " t " ) << mesh_size << "\n";
     }
   }
   else
   {
     file_name = argv[1];
-    if (!strcmp(argv[2], "t"))
+    output_file = argv[2];
+    if (!strcmp(argv[3], "t"))
       quadMesh = false;
-    mesh_size = atof(argv[3]);
+    mesh_size = atof(argv[4]);
     save_mesh = true;
   }
 
@@ -100,19 +104,7 @@ void meshFB2()
 
   if (save_mesh) {
     // output mesh for surfaces (implicitly for edges too, as edges are children of surface sets)
-    std::string outfile = file_name + std::string(".h5m");
-    moab::EntityHandle out_set;
-    rval = mk->moab_instance()->create_meshset(moab::MESHSET_SET, out_set);
-    MBERRCHK(rval, mk->moab_instance());
-    for (unsigned int i = 0; i < surfs.size(); i++) {
-      rval = mk->moab_instance()->add_child_meshset(out_set,
-          surfs[i]->mesh_handle());
-      MBERRCHK(rval, mk->moab_instance());
-    }
-
-    rval = mk->moab_instance()->write_file(outfile.c_str(), NULL, NULL,
-        &out_set, 1);
-    MBERRCHK(rval, mk->moab_instance());
+    mk->save_mesh_from_model_ents(output_file.c_str(), surfs);
   }
   // delete the model ents too, unload geometry
 

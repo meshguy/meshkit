@@ -257,6 +257,15 @@ public:
   void save_mesh(const char *filename, const char *options = NULL,
                  int index = 0);
 
+  /** \brief Save part of a model mesh to a file
+      * \param filename The file to save
+      * \param ments vector of model entities to be exported
+      * \param options File options to be passed to the save function
+      * \param index Index of mesh instance to use
+      */
+  void save_mesh_from_model_ents(const char *filename, MEntVector & ments, const char *options = NULL,
+                  int index = 0);
+
     /** \brief Populate model entities for geometry and mesh
      * Pass -1 for geom, mesh, or irel index to disable checking for entities in those
      * interfaces (geom, mesh) or skip the check for relations (irel)
@@ -415,6 +424,15 @@ public:
        * accordingly, with the geometry implied from moab sets and tags
        */
   void initialize_mesh_based_geometry();
+
+  /** \brief delete model entities
+       *
+       * This function clears memory occupied by model entities, and
+       * empties the vectors.
+       * more careful with the lifecycles.
+       */
+
+  void delete_model_entities();
     /**@}*/
 
 private:

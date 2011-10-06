@@ -20,6 +20,6 @@ surfs[1].sizing_function_index(esize.core_index())
 
 mk.setup_and_execute()
 
-mk.save_mesh("out.h5m")
+mk.save_mesh_from_model_ents("out.h5m", surfs)
 
 

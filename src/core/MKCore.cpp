@@ -85,6 +85,9 @@ MKCore::~MKCore()
     // delete the graphnodes here, since they point back to me and depend on me being still here
   clear_graph();
   
+  // delete the model entities, otherwise they would leak memory
+  delete_model_entities();
+
   for (unsigned int i = 0; i < iRelInstances.size(); i++) 
     if (iCreatedIrels[i]) delete iRelInstances[i];
 
@@ -409,7 +412,23 @@ void MKCore::save_geometry(const char *filename, const char *options, int geom_i
 void MKCore::save_mesh(const char *filename, const char *options, int index)
 {
   moab::ErrorCode rval = moab_instance(index)->write_file(filename, NULL, options);
-  MBERRCHK(rval, moab_instance());
+  MBERRCHK(rval, moab_instance(index));
+}
+
+void MKCore::save_mesh_from_model_ents(const char *filename,
+    MEntVector & ments, const char *options, int index)
+{
+  // first, extract moab ent sets from the ments vector
+  moab::Range output_sets;
+  for (unsigned int i=0; i<ments.size(); i++)
+  {
+    moab::EntityHandle mset;
+    if ((mset = ments[i]->mesh_handle()))
+      output_sets.insert(mset);
+  }
+  moab::ErrorCode rval = moab_instance(index)->write_file(
+      filename, NULL, options, output_sets);
+  MBERRCHK(rval, moab_instance(index));
 }
 
 void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents) 
@@ -420,7 +439,6 @@ void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents)
     end = iBase_REGION;
   }
   
-  std::vector<ModelEnt*> tmp_ents;
   for (dim = start; dim <= end; dim++) {
     std::copy(modelEnts[dim].begin(), modelEnts[dim].end(), std::back_inserter(model_ents));
   }
@@ -581,5 +599,16 @@ void MKCore::initialize_mesh_based_geometry()
   FBiGeom * fbiGeom = new FBiGeom(this, true);
   fbiGeom->Init();
   return;
+}
+void MKCore::delete_model_entities()
+{
+
+  std::vector<ModelEnt*> tmp_ents;
+  for (int dim = 0; dim <= iBase_REGION; dim++) {
+    unsigned int sz = modelEnts[dim].size();
+    for (unsigned int i=0; i<sz; i++)
+       delete modelEnts[dim][i];
+    modelEnts[dim].clear();
+  }
 }
 } // namespace meshkit
