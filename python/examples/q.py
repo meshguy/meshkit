@@ -6,7 +6,7 @@ file_name = "../data/partBed.smf"
 outfile = "out.h5m"
 qopts.will_constrain_boundaries = 1
 qopts.face_target = 4500
-qopts.boundary_constraint_weight = 1000
+qopts.boundary_constraint_weight = 100
 qopts.height_fields = 1
 print file_name 
 

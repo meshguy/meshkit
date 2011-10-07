@@ -590,6 +590,8 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				*opts.logfile << std::endl;
 			}
 			rval = mb->delete_entities(&(tris[0]), tris.size());
+			if (iniSet)
+			  mb->remove_entities(iniSet, &(tris[0]), tris.size());
 			validFaceCount -= tris.size();
 			// hopefully, all adjacencies are preserved
 			// delete now the edge ev0v1
@@ -597,6 +599,9 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				*opts.logfile << "Edge invalidated"
 						<< mb->id_from_handle(ev0v1) << std::endl;
 			rval = mb->delete_entities(&ev0v1, 1);
+			if (iniSet)
+			  mb->remove_entities(iniSet, &ev0v1, 1);// it may not be part of it, but
+			// delete it anyway
 			// among adj_entities, remove the tris triangles, and return them
 			for (unsigned int j = 0; j < adj_entities.size(); j++) {
 				moab::EntityHandle F = adj_entities[j];

@@ -23,10 +23,8 @@ int decimate(QslimOptions & opts, moab::Range & oRange);
 
 private:
  moab::Interface * _mb;
- moab::EntityHandle _InitialSet;
 
  int Init ();
-// Model * m_model;
 };
 
 }  // namespace MeshKit

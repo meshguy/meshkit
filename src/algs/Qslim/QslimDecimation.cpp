@@ -37,6 +37,7 @@ moab::Range verts; // original list of vertices, that are part of the original t
 moab::Range triangles;
 moab::Range edgs;
 QslimOptions opts; // external
+moab::EntityHandle iniSet;
 
 int uniqID(moab::EntityHandle v) {
 	int val;
@@ -607,7 +608,7 @@ namespace MeshKit {
 QslimDecimation::QslimDecimation(moab::Interface * mbi,
 		moab::EntityHandle root_set) {
 	_mb = mbi;
-	_InitialSet = root_set;// it is not necessarily the root set
+	iniSet = root_set;// it is not necessarily the root set; this is external; bad design
 }
 
 QslimDecimation::~QslimDecimation() {
@@ -619,6 +620,7 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 	mb = _mb; // (reinterpret_cast<MBiMesh *> (m_mesh))->mbImpl;
 	// need to get all the triangles from the set
 	// also all the edges, and all vertices
+	// not  a good design here; mb is extern !
 	//
 	if (NULL == mb)
 		return 1;// error
@@ -740,7 +742,7 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 	  assert(moab::MB_SUCCESS==rval);
 	  // so, we removed everything from the initial set
 	  // add all entities from the range to the initial set, now
-	  rval = mb->add_entities(_InitialSet, oRange);
+	  rval = mb->add_entities(iniSet, oRange);
     //me->commit_mesh(mit->second, COMPLETE_MESH);
 	  // end copy
 	}
@@ -749,14 +751,18 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 	  moab::Range::const_reverse_iterator rit;
     if (opts.useDelayedDeletion) {
 
+      // put in a range triangles to delete
+      moab::Range delRange;
       // delete triangles and edges that are invalid
       for (rit = triangles.rbegin(); rit != triangles.rend(); rit++) {
-        moab::EntityHandle v = *rit;
+        moab::EntityHandle tr = *rit;
         // check the validity
-        if (ehIsValid(v))
+        if (ehIsValid(tr))
           continue;
-        mb->delete_entities(&v, 1);
+        mb->delete_entities(&tr, 1);
+        delRange.insert(tr);
       }
+      mb->remove_entities(iniSet, delRange);
       // maybe we should delete all edges, but for now, we will keep them
       for (rit = edgs.rbegin(); rit != edgs.rend(); rit++) {
         moab::EntityHandle v = *rit;
@@ -781,6 +787,18 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 			<< (double) (delete_vTime - finish_time) / CLOCKS_PER_SEC
 			<< " s.\n";
 	// we need to delete the tags we created; they are artificial
+	// list of tags to delete:
+	// moab::Tag uniqIDtag; // this will be used to mark vertices moab::EntityHandles
+	// moab::Tag validTag;
+	// moab::Tag planeDataTag;
+
+	// moab::Tag costTag; // simplification induces an error cost at each vertex
+	// try to keep adding the cost, to see if it is spreading nicely
+
+	// keep only the cost, the rest are artificial
+  mb->tag_delete(uniqIDtag);
+  mb->tag_delete(validTag);
+  mb->tag_delete(planeDataTag);
 	//
 
 	return 0;
@@ -791,7 +809,7 @@ int QslimDecimation::Init() {
   unsigned int j;
 
 	//moab::EntityHandle * set = reinterpret_cast<moab::EntityHandle *> (&_InitialSet);
-	moab::ErrorCode rval = mb->get_entities_by_type(_InitialSet, moab::MBTRI, triangles);
+	moab::ErrorCode rval = mb->get_entities_by_type(iniSet, moab::MBTRI, triangles);
 	validFaceCount = triangles.size();// this gets reduced every time we simplify the model
 
 	// store the normals/planes computed at each triangle

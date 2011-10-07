@@ -24,6 +24,7 @@ extern moab::Tag validTag;   // defined in QslimDecimation
 extern moab::Tag planeDataTag;  // defined in QslimDecimation
 extern int ehIsValid(moab::EntityHandle v);  // defined in QslimDecimation; maybe we should pass Interface too
 extern QslimOptions opts;
+extern moab::EntityHandle iniSet;
 
 extern void filterValid(moab::Interface * mb, std::vector<moab::EntityHandle> & io);
 extern int classifyVertex(moab::Interface * mb, moab::EntityHandle v);
@@ -38,6 +39,6 @@ extern Plane trianglePlane(moab::Interface * mb, moab::EntityHandle tri);
 
 extern void computeTrianglePlane (moab::Interface * mb, moab::EntityHandle tri);
 
-extern moab::ErrorCode contract (moab::Interface * mb, moab::EntityHandle v0, moab::EntityHandle v1, Vec3 & vnew, std::vector<moab::EntityHandle> & changed );
+extern moab::ErrorCode contract (moab::Interface * mb, moab::EntityHandle v0, moab::EntityHandle v1, Vec3 & vnew, std::vector<moab::EntityHandle> & changed);
 
 #endif /* PRIMITIVES_H_ */

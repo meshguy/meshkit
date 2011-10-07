@@ -31,7 +31,8 @@ TESTS = test_edgemesh \
         test_assygen \
         test_TriangleMesher \
         test_MBGeomOp \
-        test_MBSplitOp
+        test_MBSplitOp \
+        test_SetPnt2Quad
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
@@ -57,6 +58,7 @@ test_assygen_SOURCES = test_assygen.cpp
 test_TriangleMesher_SOURCES = test_TriangleMesher.cpp
 test_MBGeomOp_SOURCES = test_MBGeomOp.cpp
 test_MBSplitOp_SOURCES = test_MBSplitOp.cpp
+test_SetPnt2Quad_SOURCES = test_SetPnt2Quad.cpp
 
 # Utility target: build but don't run tests
 build-check:
