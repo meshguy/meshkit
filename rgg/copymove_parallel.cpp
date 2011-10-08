@@ -23,8 +23,8 @@ int CCrgen::copymove_parallel(const int nrank, const int numprocs)
     // now copy/move
     err = copymove_all(nrank, numprocs);
     ERRORR("Failed to cm hexflat.", err);
-    return iBase_SUCCESS;
-  }
+   }
+  return iBase_SUCCESS;
 }
 
 int CCrgen::set_copymove_coords()
