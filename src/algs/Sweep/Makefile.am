@@ -18,6 +18,12 @@ libSweep_la_SOURCES = OneToOneSwept.cpp
 #        SmoothAngleBased.hpp \
 #        SmoothAngleBased.cpp
 
+if HAVE_MESQUITE
+libSweep_la_SOURCES += SweepWrapper.hpp \
+        SweepWrapper.cpp
+endif
+
+
 # The list of header files which are to be installed
 nobase_libSweep_la_include_HEADERS = \
         meshkit/OneToOneSwept.hpp
@@ -30,6 +36,16 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(srcdir)/../../algs \
               -I$(top_builddir) \
               -I$(top_srcdir)/utils 
+
+if HAVE_MESQUITE
+AM_CPPFLAGS += $(MESQUITE_CPPFLAGS) -DHAVE_MESQUITE
+LIBS += $(MESQUITE_LIBS)
+
+AM_CPPFLAGS += $(MESQUITE_DEFINES) \
+              $(MESQUITE_CPPFLAGS)
+
+AM_LDFLAGS += $(MESQUITE_LDFLAGS)
+endif
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
