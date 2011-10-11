@@ -593,13 +593,33 @@ MeshOp *MKCore::construct_meshop(MeshOpProxy* proxy, const MEntVector &me_vec)
   return proxy->create( this, me_vec );
 }
 
-void MKCore::initialize_mesh_based_geometry()
+int MKCore::initialize_mesh_based_geometry()
 {
   // the mesh should be already loaded/transformed/split/cropped
   FBiGeom * fbiGeom = new FBiGeom(this, true);
   fbiGeom->Init();
-  return;
+  // the index of FBiGeom in the iGeom instances is size()-1  because this
+  // instance was the last added
+  int index = (int)iGeomInstances.size()-1;
+  return index;
 }
+
+void MKCore::remove_mesh_based_geometry(int index)
+{
+  // first, check if the index does make sense
+  if (index <0 || index >= (int)iGeomInstances.size())
+    throw new Error(MK_BAD_INPUT, "Specified index too big for FBiGeom.");
+  FBiGeom * fbIGeom = reinterpret_cast<FBiGeom*>(iGeomInstances[index]);
+  unsigned int sz = iGeomInstances.size();
+  delete fbIGeom;
+  fbIGeom = NULL;
+  for (unsigned int i=index; i<sz-1; i++)
+  {
+    iGeomInstances[i] = iGeomInstances[i+1];
+  }
+  iGeomInstances.resize(sz-1);
+}
+
 void MKCore::delete_model_entities()
 {
 

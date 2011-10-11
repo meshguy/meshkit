@@ -80,7 +80,7 @@ mk.clear_graph()
 surfs.clear()
 mk.delete_model_entities()
 
-mk.initialize_mesh_based_geometry()
+indx = mk.initialize_mesh_based_geometry()
 
 mk.get_entities_by_dimension(2, surfs)
 # we should have 2 surfaces, one internal
@@ -98,5 +98,7 @@ esize = SizingFunction(mk, -1, 80)
 surfs2[0].sizing_function_index(esize.core_index())
 
 mk.setup_and_execute()
+
+mk.remove_mesh_based_geometry(indx)
 
 mk.save_mesh_from_model_ents(outfile, surfs2)

@@ -422,8 +422,17 @@ public:
        * This function interprets the mesh from a moab db as mesh based geometry
        * it will create a new FBiGeom instance and populate the model ents
        * accordingly, with the geometry implied from moab sets and tags
+       * it returns the index of FBiGeom in iGeomInstances vector
        */
-  void initialize_mesh_based_geometry();
+  int initialize_mesh_based_geometry();
+
+  /** \brief remove mesh-based geometry instance
+     *
+     * This function removes the FBiGeom instance and clears some memory
+     * (will delete the smooth tags, among other things), but it should preserve
+     * the geom topo model intact
+     */
+  void remove_mesh_based_geometry(int index);
 
   /** \brief delete model entities
        *

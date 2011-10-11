@@ -58,7 +58,7 @@ void meshFB2()
   mk = new MKCore;
   // just for debugging
   mk->load_mesh(file_name.c_str(), NULL, 0, 0, 0, false, false);
-  mk->initialize_mesh_based_geometry();
+  int indx=  mk->initialize_mesh_based_geometry();
 
   moab::Range tris;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(
@@ -102,6 +102,7 @@ void meshFB2()
   std::string elem =(quadMesh? " quads ": " triangles");
   std::cout << tris.size() - nbInitial << elem << " generated." << std::endl;
 
+  mk->remove_mesh_based_geometry(indx);
   if (save_mesh) {
     // output mesh for surfaces (implicitly for edges too, as edges are children of surface sets)
     mk->save_mesh_from_model_ents(output_file.c_str(), surfs);
