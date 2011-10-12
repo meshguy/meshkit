@@ -19,6 +19,9 @@ class MesquiteOpt : public MeshOp
   public:
   
     MesquiteOpt( MKCore* core, const MEntVector &me_vec = MEntVector());
+
+    /**\brief Get class name */
+    static const char* name();
     
     /**\brief specify mesquite optimization algorithm to execute */
     void set_mesquite_op( Mesquite::IQInterface* msq_algo ) { msqAlgo = msq_algo; }
@@ -139,6 +142,13 @@ class MesquiteOpt : public MeshOp
     bool verboseOutput;
     iBase_TagHandle fixedTag;
 };
+
+inline const char* MesquiteOpt::name()
+{
+  return "MesquiteOpt";
+}
+
+
 
 }
 

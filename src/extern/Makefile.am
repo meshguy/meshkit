@@ -27,7 +27,7 @@ endif
 if HAVE_MESQUITE
 SUBDIRS += mesquite
 LIBADD += mesquite/libMeshKitmesquite.la
-AM_CPPFLAGS += $(MESQUITE_CPPFLAGS)  -DHAVE_MESQUITE
+AM_CPPFLAGS += -I$(srcdir)/mesquite $(MESQUITE_CPPFLAGS)  -DHAVE_MESQUITE
 LIBS += $(MESQUITE_LIBS)
 endif
 
