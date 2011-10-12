@@ -26,6 +26,17 @@
 
 %template(MEntVector) std::vector<MeshKit::ModelEnt*>;
 
+%exception {
+  try {
+    $function
+  }
+  catch (MeshKit::Error *e) {
+    // TODO: this should be a const-reference, not a pointer (ugh)
+    PyErr_SetString(PyExc_RuntimeError, e->what());
+    return NULL;
+  }
+}
+
 %include "meshkit/Types.hpp"
 %include "meshkit/MKGraph.hpp"
 %include "meshkit/MKCore.hpp"
