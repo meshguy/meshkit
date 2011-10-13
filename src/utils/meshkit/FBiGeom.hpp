@@ -43,6 +43,10 @@ class FBiGeom : public iGeom {
 
     int meshkit_index() { return _index;}
 
+    // careful what you do with the
+    //  facet based engine from moab
+    moab::FBEngine *  facet_based_engine () { return _fbEngine;}
+
     // methods from iBaseVirtual that are overloaded
 
     iGeom::EntitySetHandle getRootSet() const;

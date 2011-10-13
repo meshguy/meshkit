@@ -14,6 +14,7 @@
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
+#include "ReadPolyLine.hpp"
 
 MKCore *mk;
 
@@ -62,48 +63,28 @@ int main(int argc, char* argv[])
 
   mk = new MKCore();
   mk->load_mesh(filename);
+  //int indx=  mk->initialize_mesh_based_geometry();
   MEntVector  selection;
   mk->get_entities_by_dimension(2, selection);
   //selection.push_back(*dum.rbegin());// push just the last one retrieved from core
 
   MBSplitOp *splitOp = (MBSplitOp*) mk->construct_meshop("MBSplitOp", selection);
 
-  // get the direction, and the polygon/ polyline points
-  std::ifstream datafile(file_poly, std::ifstream::in);
-  if (!datafile) {
-    std::cout << "can't read polyline file\n";
-    return 1;
-  }
-    //
-  char temp[100];
-  double direction[3];// normalized
-  double gridSize;
-  datafile.getline(temp, 100);// first line
-
-  // get direction and mesh size along polygon segments, from file
-  sscanf(temp, " %lf %lf %lf %lf ", direction, direction + 1, direction + 2,
-      &gridSize);
-
-
   std::vector<double> xyz;
-  while (!datafile.eof()) {
-    datafile.getline(temp, 100);
-    //int id = 0;
-    double x, y, z;
-    int nr = sscanf(temp, "%lf %lf %lf", &x, &y, &z);
-    if (nr == 3) {
-      xyz.push_back(x);
-      xyz.push_back(y);
-      xyz.push_back(z);
-    }
+  double direction[3];
+
+  int rc = ReadPolyLineFromFile(file_poly, direction, xyz);
+  if (rc !=0)
+  {
+    std::cout<<" can't read from polyline file\n";
+    return rc;
+
   }
   int sizePolygon = (int)xyz.size()/3;
   if (sizePolygon < 3) {
     std::cerr << " Not enough points in the polygon" << std::endl;
     return 1;
   }
-
-
 
   splitOp->set_options( /* int globalId*/ 1, direction[0], direction[1],
       direction[2], /* int closed*/ 1);

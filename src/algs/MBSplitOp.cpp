@@ -9,10 +9,10 @@
 #include "meshkit/ModelEnt.hpp"
 
 #include "moab/Core.hpp"
+#include "meshkit/FBiGeom.hpp"
 #include "moab/FBEngine.hpp"
 
 namespace MeshKit {
-
 
 //Entity Type initialization for splitting; no mesh output
 moab::EntityType MBSplitOp_tps[] = { moab::MBMAXTYPE }; // no mesh, really
@@ -22,7 +22,7 @@ const moab::EntityType* MBSplitOp::output_types()
 }
 
 MBSplitOp::MBSplitOp(MKCore *mk_core, const MEntVector &me_vec) :
-          MeshScheme(mk_core, me_vec)
+  MeshScheme(mk_core, me_vec)
 {
 }
 
@@ -31,16 +31,16 @@ MBSplitOp::~MBSplitOp()
 }
 
 //set up the crop/split of a mesh based surface
-void MBSplitOp::set_options(int globalId,
-    double dirx, double diry, double dirz, int closed)
+void MBSplitOp::set_options(int globalId, double dirx, double diry,
+    double dirz, int closed)
 {
   _globalId = globalId;
   /*for (int i=0; i<nPoints*3; i++)
-    _polyline.push_back(polyline[i]);*/
+   _polyline.push_back(polyline[i]);*/
 
-  _direction[0]=dirx;
-  _direction[1]=diry;
-  _direction[2]=dirz;
+  _direction[0] = dirx;
+  _direction[1] = diry;
+  _direction[2] = dirz;
   _closed = closed;
   return;
 }
@@ -58,38 +58,36 @@ void MBSplitOp::setup_this()
     return;
   // go through the map, to find the set with the given globalId
   // find the set of dimension 2, with the global id matching
-  MEntSelection::iterator mit ;
+  MEntSelection::iterator mit;
 
   moab::EntityHandle mset;
-  moab::Tag  gid= mk_core()->moab_global_id_tag();
+  moab::Tag gid = mk_core()->moab_global_id_tag();
   moab::ErrorCode rval;
   int id = -1;
-  for (mit = mentSelection.begin(); mit!=mentSelection.end(); mit++)
-  {
-     mset= (mit->first)->mesh_handle();
-     // get the globalId tag
+  for (mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
+    mset = (mit->first)->mesh_handle();
+    // get the globalId tag
 
-     rval = mk_core()->moab_instance()->tag_get_data(gid, &mset, 1, &id );
-     if (_globalId == id)
-       break;
+    rval = mk_core()->moab_instance()->tag_get_data(gid, &mset, 1, &id);
+    if (_globalId == id)
+      break;
   }
-  if (id!=_globalId)
-  {
-    std::cout<<" the face not found, abort\n";
+  if (id != _globalId) {
+    std::cout << " the face not found, abort\n";
     return;
   }
   //
   // get the one and only model entity, which should be of dimension 2, and geometrize it
   // this should be the model entity handle
 
-  iGeom::EntityHandle gent = (mit->first)->geom_handle() ;
-  if (gent!=0)
-  {
-    std::cout<< "geometry exists on the model ent; Abort.\n";
+  iGeom::EntityHandle gent = (mit->first)->geom_handle();
+  if (gent != 0) {
+    std::cout << "geometry exists on the model ent; Abort.\n";
     return; //
   }
 
-  moab::FBEngine * pFacet = new moab::FBEngine (mk_core()->moab_instance(), NULL, true);
+  moab::FBEngine * pFacet = new moab::FBEngine(mk_core()->moab_instance(),
+      NULL, true);
 
   rval = pFacet->Init();
   MBERRCHK(rval, mk_core()->moab_instance());
@@ -97,7 +95,8 @@ void MBSplitOp::setup_this()
   // the mset will be split according to the rule
 
   moab::EntityHandle newFace;
-  rval = pFacet->split_surface_with_direction(mset, _polyline, _direction, newFace, _closed);
+  rval = pFacet->split_surface_with_direction(mset, _polyline, _direction,
+      newFace, _closed);
 
   MBERRCHK(rval, mk_core()->moab_instance());
 
@@ -111,13 +110,10 @@ void MBSplitOp::setup_this()
   // maybe not all surfaces need to be meshed, only the "result" new face
   // it will get a new id too;
   return;
-
-  // get dimensions
-
 }
 
-  // construct the mesh: nothing to do, there is no mesh, really, only geometry
-  // in the form of mesh-based geometry
+// construct the mesh: nothing to do, there is no mesh, really, only geometry
+// in the form of mesh-based geometry
 void MBSplitOp::execute_this()
 {
 

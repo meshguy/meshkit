@@ -366,7 +366,7 @@ void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const
   IBERRCHK(err, "Trouble getting geom adjacencies.");
   adjs.resize(gents.size());
   iGeom::TagHandle mkmodeltag;
-  err = igeom_instance()->getTagHandle("__MKModelEntity", mkmodeltag);
+  err = igeom_instance()->getTagHandle("__MKModelEntityGeo", mkmodeltag);
   IBERRCHK(err, "Failed to get tag handle for model entity.");
   err = igeom_instance()->getArrData(&gents[0], adjs.size(), mkmodeltag,
                                              &adjs[0]);
@@ -1042,7 +1042,7 @@ moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const
     if (!igeom_instance())
       return ment;// NULL so far
     iGeom::TagHandle mkmodeltag;
-    iBase_ErrorType err = igeom_instance()->getTagHandle("__MKModelEntity", mkmodeltag);
+    iBase_ErrorType err = igeom_instance()->getTagHandle("__MKModelEntityGeo", mkmodeltag);
     IBERRCHK(err, "Failed to get tag handle for model entity.");
     // now get the model entity
     ModelEnt * modelEnt = NULL;
@@ -1072,7 +1072,7 @@ moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntitySetHandle gent) const
     if (-1 == igeomIndex)
       return ment;// NULL so far
     iGeom::TagHandle mkmodeltag;
-    iBase_ErrorType err = igeom_instance()->getTagHandle("__MKModelEntity", mkmodeltag);
+    iBase_ErrorType err = igeom_instance()->getTagHandle("__MKModelEntityGeo", mkmodeltag);
     IBERRCHK(err, "Failed to get tag handle for model entity.");
     // now get the model entity
     ModelEnt * modelEnt = NULL;

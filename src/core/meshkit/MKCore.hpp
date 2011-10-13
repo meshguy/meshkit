@@ -276,7 +276,7 @@ public:
      */
   void populate_model_ents(int geom_index = 0, 
                            int mesh_index = 0, 
-                           int irel_index = 0);
+                           int irel_index = 0, bool only_geom = false);
 
     /**@}*/
 
@@ -287,8 +287,11 @@ public:
     /** \brief Get model entities of a given dimension
      * \param dim Dimension of entities to get
      * \param model_ents The list these entities get appended to
+     * \param igindx the geometry instance index of the retrieved model ents
+     *   (default -1 means no check on igeom instance index)
      */
-  void get_entities_by_dimension(int dim, MEntVector &model_ents);
+  void get_entities_by_dimension(int dim, MEntVector &model_ents,
+      int igindx = -1);
 
     /** \brief Get all model entities
      * \param model_ents The list these entities get appended to
@@ -434,13 +437,21 @@ public:
      */
   void remove_mesh_based_geometry(int index);
 
+  /** \brief retrieve number of iGeom instances
+     *
+     * This function returns number of igeom instances, to be used
+     * by some mesh operations.
+     */
+  int number_of_igeom_instances()
+  {
+    return (int)iGeomInstances.size();
+  }
   /** \brief delete model entities
        *
        * This function clears memory occupied by model entities, and
        * empties the vectors.
        * more careful with the lifecycles.
        */
-
   void delete_model_entities();
     /**@}*/
 

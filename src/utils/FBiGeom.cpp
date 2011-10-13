@@ -36,7 +36,9 @@ iGeom::Error FBiGeom::Init()
   _fbEngine->Init();// this will trigger the initialization
   // of smoothing
   // now, we need to create the ModelEnts, use populate_mesh !!!
-  _mk->populate_model_ents(meshkit_index(), 0, -1);// no irel !!
+  // we do not need new model ents for moab g sets!
+  //
+  _mk->populate_model_ents(meshkit_index(), 0, -1, true);
   return (Error)0; // success
 }
 
@@ -969,13 +971,15 @@ iGeom::Error FBiGeom::getTagHandle( const char* name, TagHandle& handle_out ) co
     return (Error)1;
 }
 
+// this will be used mostly for
 iGeom::Error FBiGeom::createTag( const char* tag_name,
                   int tag_num_type_values,
                   TagValueType tag_type,
                   TagHandle& tag_handle_out )
 {
   moab::Tag handle;
-  // this is not implemented yet
+  // this is implemented now
+  // tag_num_type_values is tag_size ...
   moab::ErrorCode rval = _fbEngine->createTag(tag_name,
       tag_num_type_values, tag_type, handle );
   if (rval == moab::MB_SUCCESS)

@@ -448,6 +448,9 @@ public:
     //! Get mesh entity set handle for a given geometry entity
   moab::EntityHandle mesh_handle(iGeom::EntitySetHandle gent) const;
 
+  int iGeomIndex()
+   {return igeomIndex;}
+
 private:
 
     /** \brief Return the next entity in the loop, using winding number

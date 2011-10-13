@@ -160,7 +160,11 @@ void MKCore::init(bool construct_missing_ifaces)
 
   if (iGeomModelTags.empty()) {
     iGeomModelTags.resize(1);
-    err = iGeomInstances[0]->createTag("__MKModelEntity", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
+    // change the name of ModelEntity pointer tag, for iGeom, to
+    // differentiate from the tag with the same name in Moab
+    // for mesh-based geometry, the model ent tag from moab will conflict
+    //  with igeom tag !!! "__MKModelEntityGeo" != "__MKModelEntity"
+    err = iGeomInstances[0]->createTag("__MKModelEntityGeo", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
                                        iGeomModelTags[0]);
     IBERRCHK(err, "Failure to create MKModelEnt tag in iGeom.");
   }
@@ -207,14 +211,14 @@ unsigned int MKCore::add_igeom_instance(iGeom * igeom)
   // add the iGeomModelTag
   // it could exist already
   iGeom::TagHandle mkmodeltag;
-  err = igeom->getTagHandle("__MKModelEntity", mkmodeltag);
+  err = igeom->getTagHandle("__MKModelEntityGeo", mkmodeltag);
   if (iBase_SUCCESS == err)
   {
     iGeomModelTags[index]= mkmodeltag;
   }
   else
   {
-    err = igeom->createTag("__MKModelEntity", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
+    err = igeom->createTag("__MKModelEntityGeo", sizeof(MeshKit::ModelEnt*), iBase_BYTES,
                                              iGeomModelTags[index]);
     IBERRCHK(err, "Failure to create MKModelEnt tag in iGeom.");
   }
@@ -225,7 +229,7 @@ unsigned int MKCore::add_igeom_instance(iGeom * igeom)
 
 void MKCore::populate_model_ents(int geom_index, 
                                  int mesh_index,
-                                 int irel_index)
+                                 int irel_index, bool only_geom)
 {
     // go through the geometry and mesh models (including geometry groups), and make sure they 
     // all have corresponding model entities; this 
@@ -282,8 +286,8 @@ void MKCore::populate_model_ents(int geom_index,
       }
     }
   }
-  
-  if (-1 != mesh_index) {
+
+  if (-1 != mesh_index && !only_geom) {
     moab::Tag dum_tag = moab_geom_dim_tag(mesh_index);
     moab::Range geom_sets;
     moab::ErrorCode rval = moab_instance(mesh_index)->get_entities_by_type_and_tag(0, MBENTITYSET, &dum_tag, NULL, 1,
@@ -431,16 +435,33 @@ void MKCore::save_mesh_from_model_ents(const char *filename,
   MBERRCHK(rval, moab_instance(index));
 }
 
-void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents) 
+void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents,
+    int igindx)
 {
   int start = dim, end = dim;
   if (iBase_ALL_TYPES == dim) {
     start = 0;
     end = iBase_REGION;
   }
-  
-  for (dim = start; dim <= end; dim++) {
-    std::copy(modelEnts[dim].begin(), modelEnts[dim].end(), std::back_inserter(model_ents));
+  for (dim = start; dim <= end; dim++)
+  {
+    if (igindx < 0)
+    {
+
+        std::copy(modelEnts[dim].begin(), modelEnts[dim].end(), std::back_inserter(model_ents));
+    }
+    else
+    {
+      // retrieve only the model ents with the desired igeom index
+      for (unsigned int i=0; i<modelEnts[dim].size(); i++)
+      {
+        ModelEnt * ment = modelEnts[dim][i];
+        if (ment->iGeomIndex() == igindx)
+        {
+          model_ents.push_back(ment);
+        }
+      }
+    }
   }
 }
 
