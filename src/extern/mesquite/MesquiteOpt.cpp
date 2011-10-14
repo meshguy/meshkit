@@ -23,7 +23,7 @@ typedef Mesquite::ShapeImprovementWrapper DefaultAlgorithm;
 #define MSQERRCHK(err)                                 \
   do {                                                 \
     if ((err)) {                                       \
-      throw new Error(MK_FAILURE,"%s:%d: Mesquite error: %s",     \
+      throw Error(MK_FAILURE,"%s:%d: Mesquite error: %s",     \
           __FILE__, __LINE__, (err).error_message() ); \
     }                                                  \
   } while(false)
@@ -222,7 +222,7 @@ void MesquiteOpt::get_adjacent_entity_set( MEntSet& from_this,
                                            bool& created_result_set )
 {
   if (from_this.empty())
-    throw new Error(MK_BAD_INPUT,"Input set is empty");
+    throw Error(MK_BAD_INPUT,"Input set is empty");
   
   iMesh* imesh = mk_core()->imesh_instance();
   bool first = true;
@@ -345,7 +345,7 @@ void MesquiteOpt::execute_this()
         
         if (ent->dimension() == 2 && ent->geom_handle()) {
 #ifndef MSQIGEOM
-          throw new Error(MK_BAD_GEOMETRIC_EVALUATION,
+          throw Error(MK_BAD_GEOMETRIC_EVALUATION,
               "Mesquite not configured with iGeom support.  "
               "Cannot optimize surface meshes.");
 #else
@@ -363,7 +363,7 @@ void MesquiteOpt::execute_this()
   else {
     // shouuld be checked by FreeSmoothDomain
     //if (!all_model_ents_have_geom())
-    //  throw new Error(MK_BAD_GEOMETRIC_EVALUATION,
+    //  throw Error(MK_BAD_GEOMETRIC_EVALUATION,
     //        "Cannot do free smooth of entity that doesn't have bounding geometry.");
 
     MEntSet remaining;

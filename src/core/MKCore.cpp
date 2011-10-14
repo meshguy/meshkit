@@ -539,7 +539,7 @@ MeshOpProxy* MKCore::get_default_meshop( unsigned dimension )
   if (!defaultMeshOps[dimension]) {
     const MeshOpSet::OpList& list = MeshOpSet::instance().mesh_ops( dimension );
     if (list.empty()) 
-      throw new Error(MK_NOT_FOUND, "No MeshOp available for dimension %u", dimension);
+      throw Error(MK_NOT_FOUND, "No MeshOp available for dimension %u", dimension);
     defaultMeshOps[dimension] = list.front();
   }
   
@@ -551,7 +551,7 @@ void MKCore::set_default_meshop(MeshOpProxy* mesh_op, unsigned short dims)
     // check the specified dimension(s) against the types the meshop can mesh
   for (unsigned i = 0; i < 4; ++i)
     if ((dims & (1u << i)) && !mesh_op->can_mesh(iBase_EntityType(i)))
-      throw new Error(MK_BAD_INPUT, "Specified MeshOp type cannot generate elements of specified dimension.");
+      throw Error(MK_BAD_INPUT, "Specified MeshOp type cannot generate elements of specified dimension.");
   
     // set as default for specified dimensions
   for (unsigned i = 0; i < 4; ++i)
@@ -629,7 +629,7 @@ void MKCore::remove_mesh_based_geometry(int index)
 {
   // first, check if the index does make sense
   if (index <0 || index >= (int)iGeomInstances.size())
-    throw new Error(MK_BAD_INPUT, "Specified index too big for FBiGeom.");
+    throw Error(MK_BAD_INPUT, "Specified index too big for FBiGeom.");
   FBiGeom * fbIGeom = reinterpret_cast<FBiGeom*>(iGeomInstances[index]);
   unsigned int sz = iGeomInstances.size();
   delete fbIGeom;

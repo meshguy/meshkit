@@ -30,9 +30,8 @@
   try {
     $function
   }
-  catch (MeshKit::Error *e) {
-    // TODO: this should be a const-reference, not a pointer (ugh)
-    PyErr_SetString(PyExc_RuntimeError, e->what());
+  catch (const MeshKit::Error &e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
   }
 }

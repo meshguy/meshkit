@@ -21,14 +21,14 @@ void MeshOpSet::register_mesh_op( MeshOpProxy* proxy )
     if (*other == proxy)
       return;
     else
-      throw new Error(MK_MULTIPLE_FOUND,"Conflicting MeshOp name: \"%s\"", proxy->name());
+      throw Error(MK_MULTIPLE_FOUND,"Conflicting MeshOp name: \"%s\"", proxy->name());
   }
   
     // Try to detect unterminated output entity lists
   const moab::EntityType* types = proxy->output_types();
   for (int i = 0; types[i] != moab::MBMAXTYPE; ++i) 
     if (i >= moab::MBMAXTYPE)
-      throw new Error(MK_BAD_INPUT,"Unterminated output type list for MeshOp: \"%s\"", proxy->name());
+      throw Error(MK_BAD_INPUT,"Unterminated output type list for MeshOp: \"%s\"", proxy->name());
   
     // Add to list of all MeshOps
   allMeshOps.push_back(proxy);
@@ -52,7 +52,7 @@ MeshOpProxy* MeshOpSet::mesh_op( const char* op_name ) const
 {
   iterator i = mesh_op_no_throw( op_name );
   if (i == allMeshOps.end())
-    throw new Error(MK_NOT_FOUND,"Invalid MeshOp name: \"%s\"", op_name);
+    throw Error(MK_NOT_FOUND,"Invalid MeshOp name: \"%s\"", op_name);
   return *i;
 }
 
@@ -60,7 +60,7 @@ unsigned MeshOpSet::index( const char* op_name ) const
 {
   iterator i = mesh_op_no_throw( op_name );
   if (i == allMeshOps.end())
-    throw new Error(MK_NOT_FOUND,"Invalid MeshOp name: \"%s\"", op_name);
+    throw Error(MK_NOT_FOUND,"Invalid MeshOp name: \"%s\"", op_name);
   return i - allMeshOps.begin();
 }
 
