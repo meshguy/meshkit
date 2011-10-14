@@ -36,7 +36,7 @@ class FBiGeom : public iGeom {
 
     ~FBiGeom();
     
-    Error Init();
+    Error Init(iGeom::EntitySetHandle rootset = 0);
 
     Error load( const char* file_name,
                        const char* options = 0 );

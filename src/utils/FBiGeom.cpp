@@ -5,6 +5,7 @@
 
 #include "meshkit/FBiGeom.hpp"
 #include "meshkit/MKCore.hpp"
+#include "moab/GeomTopoTool.hpp"
 
 namespace MeshKit {
 
@@ -24,11 +25,19 @@ FBiGeom::~FBiGeom()
     delete _fbEngine;
   }
 }
-iGeom::Error FBiGeom::Init()
+iGeom::Error FBiGeom::Init(iGeom::EntitySetHandle rootset)
 {
   // what will happen here:
   // create facet-based engine, smooth option
-  _fbEngine= new moab::FBEngine(_mk->moab_instance(), NULL, true); //
+  // see if we have a root set passed on or not
+  // it will encompass a full topo model in MOAB
+  moab::GeomTopoTool * gtt = NULL;
+  if (rootset)
+  {
+    moab::EntityHandle rootModel = (moab::EntityHandle)rootset;
+    gtt = new moab::GeomTopoTool(_mk->moab_instance(), true, rootModel);
+  }
+  _fbEngine= new moab::FBEngine(_mk->moab_instance(), gtt, true); //
   if (!_fbEngine)
     return (Error)1;
   _index = _mk->add_igeom_instance((iGeom*)this);

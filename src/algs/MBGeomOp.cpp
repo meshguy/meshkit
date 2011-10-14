@@ -80,6 +80,9 @@ void MBGeomOp::setup_this()
 
   // at this moment, we have model entities with geom index indx,
   //  for the mesh-based geometry
+  mentSelection[me].insert(output);
+  // the range (result) will have an rootModelSet appropriate for
+  // a new instantiation of GeomTopoTool
   return;
 
   // get dimensions

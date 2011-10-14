@@ -60,6 +60,7 @@ void MBSplitOp::setup_this()
   // find the set of dimension 2, with the global id matching
   MEntSelection::iterator mit;
 
+  moab::Interface * MBI = mk_core()->moab_instance();
   moab::EntityHandle mset;
   moab::Tag gid = mk_core()->moab_global_id_tag();
   moab::ErrorCode rval;
@@ -68,7 +69,7 @@ void MBSplitOp::setup_this()
     mset = (mit->first)->mesh_handle();
     // get the globalId tag
 
-    rval = mk_core()->moab_instance()->tag_get_data(gid, &mset, 1, &id);
+    rval = MBI->tag_get_data(gid, &mset, 1, &id);
     if (_globalId == id)
       break;
   }
@@ -86,11 +87,11 @@ void MBSplitOp::setup_this()
     return; //
   }
 
-  moab::FBEngine * pFacet = new moab::FBEngine(mk_core()->moab_instance(),
+  moab::FBEngine * pFacet = new moab::FBEngine(MBI,
       NULL, true);
 
   rval = pFacet->Init();
-  MBERRCHK(rval, mk_core()->moab_instance());
+  MBERRCHK(rval, MBI);
 
   // the mset will be split according to the rule
 
@@ -98,7 +99,7 @@ void MBSplitOp::setup_this()
   rval = pFacet->split_surface_with_direction(mset, _polyline, _direction,
       newFace, _closed);
 
-  MBERRCHK(rval, mk_core()->moab_instance());
+  MBERRCHK(rval, MBI);
 
   // at the end of this, moab database will contain new gsets, for the split eometry
   // the old pFacet should be cleaned and deleted
@@ -109,6 +110,39 @@ void MBSplitOp::setup_this()
   // now, the moab db would be ready for another round, including meshing...
   // maybe not all surfaces need to be meshed, only the "result" new face
   // it will get a new id too;
+
+  // the result of the split operation will be a set encompassing all the
+  // gsets that form the current topological model
+  // and the newFace + g children of it
+  // the root model could be used for a new GeomTopoTool, as in
+  //  new  GeomTopoTool(mb, true, newRootModel);
+  moab::EntityHandle newRootModel;
+  rval = MBI->create_meshset(moab::MESHSET_SET, newRootModel);
+  MBERRCHK(rval, MBI);
+  // add to this root model set all the moabEntSets from model ents in this
+  // MeshOp, and all children of the newFace !!!
+  // collect in newRootModel all gsets...
+  // they should form a "correct" topo model; (check!)
+  for (mit = mentSelection.begin(); mit != mentSelection.end(); mit++) {
+    mset = (mit->first)->mesh_handle();
+    // get all children of this set
+    moab::Range children;
+    rval = MBI->get_child_meshsets(mset, children, 0); // all children
+    MBERRCHK(rval, MBI);
+    children.insert(mset); // insert the current face too
+    rval = MBI->add_entities(newRootModel, children);
+    MBERRCHK(rval, MBI);
+  }
+  // add the new face children too
+  moab::Range children;
+  rval = MBI->get_child_meshsets(newFace, children, 0); // all children
+  MBERRCHK(rval, MBI);
+  children.insert(newFace);
+  rval = MBI->add_entities(newRootModel, children);
+  MBERRCHK(rval, MBI);
+  // add to the mentSelection of first model entity
+  ModelEnt * firstModelEnt = (mentSelection.begin())->first;
+  mentSelection[firstModelEnt].insert(newRootModel);
   return;
 }
 
