@@ -12,6 +12,8 @@
 #include "meshkit/FBiGeom.hpp"
 #include "moab/FBEngine.hpp"
 
+// #include "meshkit/MBGeomOp.hpp"
+
 namespace MeshKit {
 
 //Entity Type initialization for splitting; no mesh output
@@ -54,8 +56,57 @@ void MBSplitOp::add_points(double x, double y, double z)
 // model entities should be created on mesh based geometry
 void MBSplitOp::setup_this()
 {
+
+}
+
+// it is not a true mesh operation, it is a geometry operation
+void MBSplitOp::execute_this()
+{
   if (mentSelection.empty())
-    return;
+  {
+    // change of strategy: do not return, go to
+    // previous operation, find the result  (either another split or
+    // an initial MBGeomOp, get the Range of the first mapped entity)
+    // this will be the input to create other "ModelEnt"s, (mesh based geo)
+    // find previous operation:
+    GraphNode * prevNode = other_node(in_arcs());
+
+    MeshOp * prevOp = reinterpret_cast<MeshOp*> (prevNode);
+    std::string nameOp = prevNode->get_name();// just for debugging
+
+    if (NULL==prevOp)
+      return;
+
+    MEntSelection & mentsel = prevOp->me_selection();
+    // ments[0]
+    ModelEnt * firstMe = (*(mentsel.begin()) ).first;
+    moab::Range prevModelSet = mentsel[firstMe];
+
+    if (prevModelSet.size()!=1)
+      return;
+
+    // this range has one set that can serve as basis for
+    // mesh based geometry
+    // the model ents have no model tag on the sets!!
+    MEntVector model_ents; // existing model ents of dimension 2
+    // the new ones will be put in the mentSelection!!!
+    mk_core()->get_entities_by_dimension(2, model_ents);
+    // assume moab_instance 0
+    mk_core()->create_mbg_model_entities(prevModelSet[0], false);
+
+    MEntVector model_ent_new; // existing model ents of dimension 2
+        // the new ones will be put in the mentSelection!!!
+    MEntVector model_ents_new; // all model ents of dimension 2...
+    mk_core()->get_entities_by_dimension(2, model_ents_new);
+
+    for (unsigned int i = model_ents.size(); i<model_ents_new.size(); i++)
+    {
+      moab::Range rr = mentSelection[model_ents_new[i]];
+      rr.clear(); // just to use it , to avoid some warnings
+    }
+    //return;
+  }
+
   // go through the map, to find the set with the given globalId
   // find the set of dimension 2, with the global id matching
   MEntSelection::iterator mit;
@@ -144,12 +195,5 @@ void MBSplitOp::setup_this()
   ModelEnt * firstModelEnt = (mentSelection.begin())->first;
   mentSelection[firstModelEnt].insert(newRootModel);
   return;
-}
-
-// construct the mesh: nothing to do, there is no mesh, really, only geometry
-// in the form of mesh-based geometry
-void MBSplitOp::execute_this()
-{
-
 }
 }

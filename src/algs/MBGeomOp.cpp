@@ -37,8 +37,14 @@ MBGeomOp::~MBGeomOp()
 void MBGeomOp::setup_this()
 {
 
+}
+
+// construct the mesh: nothing to do, there is no mesh, really, only geometry
+// in the form of mesh-based geometry
+void MBGeomOp::execute_this()
+{
   if (mentSelection.empty())
-    return;
+      return;
   ModelEnt * me = mentSelection.begin()->first;
   // get the one and only model entity, which should be of dimension 2, and geometrize it
   // this should be the model entity handle
@@ -86,14 +92,6 @@ void MBGeomOp::setup_this()
   return;
 
   // get dimensions
-
-}
-
-// construct the mesh: nothing to do, there is no mesh, really, only geometry
-// in the form of mesh-based geometry
-void MBGeomOp::execute_this()
-{
-
 }
 
 }

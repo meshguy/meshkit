@@ -278,6 +278,13 @@ public:
                            int mesh_index = 0, 
                            int irel_index = 0, bool only_geom = false);
 
+  /**
+   *  \ brief  create model entities based on a set root for mesh based geometry
+   *  \param modelRootSet root model for a complete topology model (for GeomTopoTool)
+   *  \param geometry flag true for FBiGeom geometry, false for simple mesh ModelEnts
+   */
+  void create_mbg_model_entities(moab::EntityHandle modelRootSet, bool geometry);
+
     /**@}*/
 
     /** \name Entity access */

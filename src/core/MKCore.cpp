@@ -652,4 +652,30 @@ void MKCore::delete_model_entities()
     modelEnts[dim].clear();
   }
 }
+
+void MKCore::create_mbg_model_entities(moab::EntityHandle modelRootSet, bool geometry)
+{
+  if (geometry)
+  {
+    //
+  }
+  else
+  {
+    moab::Tag dum_tag = moab_geom_dim_tag();// default 0, no issues here
+    moab::Range geom_sets;
+    // the enclosing set is the only difference from populate method above
+    moab::ErrorCode rval = moab_instance()->get_entities_by_type_and_tag(modelRootSet, MBENTITYSET, &dum_tag, NULL, 1,
+                                                                                   geom_sets);
+    MBERRCHK(rval, moab_instance());
+    for (moab::Range::iterator rit = geom_sets.begin(); rit != geom_sets.end(); rit++) {
+      // get the modelent
+
+          // construct a new ModelEnt and set the geom ent to point to it
+      // assume mesh index 0, as always, and no relations yet
+      ModelEnt * this_me = new ModelEnt(this, (iGeom::EntityHandle)NULL, 0, *rit, 0, -1);
+      int dim = this_me->dimension();// will get it from moab set, actually
+      modelEnts[dim].push_back(this_me);
+    }
+  }
+}
 } // namespace meshkit
