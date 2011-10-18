@@ -4,6 +4,8 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 
+#include "meshkit/FBiGeom.hpp"
+
 namespace MeshKit 
 {
     
@@ -114,6 +116,63 @@ void MeshOp::mesh_types(std::vector<moab::EntityType> &mesh_types)
   const moab::EntityType* types = mesh_types_arr();
   for (int i = 0; types[i] != moab::MBMAXTYPE; ++i)
     mesh_types.push_back(types[i]);
+}
+
+void MeshOp::create_model_ents_from_previous_ops()
+{
+  // model ents are empty so far...
+  GraphNode * prevNode = other_node(in_arcs());// assumes one incoming edge!!
+
+  MeshOp * prevOp = reinterpret_cast<MeshOp*> (prevNode);
+  std::string nameOp = prevNode->get_name();
+
+  if (NULL==prevOp)
+    return;
+  // if the previous op is MBSplitOp or MBGeomOp, we know what to do
+  if ( !(nameOp == "MBGeomOp" || nameOp == "MBSplitOp"))
+  {
+    return; // do not process yet other OPs
+  }
+
+
+  MEntSelection & mentsel = prevOp->me_selection();
+  if (mentsel.empty())
+    return;
+  ModelEnt * firstMe = (*(mentsel.begin()) ).first;
+  moab::Range prevModelSet = mentsel[firstMe];
+
+  if (prevModelSet.size()!=1)
+   return;
+
+  // this range has one set that can serve as basis for
+  // mesh based geometry
+  // the model ents have no model tag on the sets!!
+  iGeom::EntitySetHandle rootSet = (iGeom::EntitySetHandle) prevModelSet[0];
+
+  FBiGeom * fbiGeom = new FBiGeom(mk_core(), true);//
+  fbiGeom->Init(rootSet);
+  int latestGeomIndex = mk_core()->number_of_igeom_instances()-1;
+
+  mk_core()->populate_model_ents(latestGeomIndex, 0, -1, true); // only geometry
+  MEntVector model_ents;
+  // get the model entities of dimension 2, created with the latest FBiGeom!!!
+  mk_core()->get_entities_by_dimension(2, model_ents, latestGeomIndex);
+
+  // add it to the mentSelection!!
+  if (model_ents.size()==0)
+    return; // nothing to mesh .... could be an infinite loop maybe we should abort
+  for (unsigned int i = 0; i<model_ents.size(); i++)
+  {
+    moab::Range rr = mentSelection[model_ents[i]];
+    rr.clear(); // just to use it , to avoid some warnings
+  }
+
+  /*// redo the setup for the op, as we added more entities
+  setup_this();
+  // we will have to also execute operations before this ...
+  mk_core()->setup_and_execute();// will relaunch the whole execute// some are marked as
+  // executed, so no worries*/
+
 }
 
 }

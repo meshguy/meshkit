@@ -94,6 +94,12 @@ public:
      */
   static bool canmesh_region(ModelEnt *model_ent);
 
+  /**
+   * brief  mesh-based geometry model ents based on previous ops
+   * it will be used for Camal advancing front meshers
+   */
+  void create_model_ents_from_previous_ops();
+
 protected:
     //! MEntSelection that stores what this operation generated or otherwise worked on
   MEntSelection mentSelection;

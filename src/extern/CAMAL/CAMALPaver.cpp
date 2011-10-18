@@ -35,6 +35,26 @@ void CAMALPaver::setup_this()
 
 void CAMALPaver::execute_this()
 {
+  if (mentSelection.empty())
+  {
+    // create model ents from previous op
+    create_model_ents_from_previous_ops();
+    // now look at the latest SizingFunction, and set it or each model ent
+    int latestIndexSF = 0; // maybe we would need to set it right
+    for (MEntSelection::iterator sit = mentSelection.begin();
+        sit != mentSelection.end(); sit++) {
+        // make a me, for convenience
+        ModelEnt *me = (*sit).first;
+        me->sizing_function_index(latestIndexSF); // need to work on this one; how do we know?
+    }
+    // now, setup again everything (overkill...)
+    mk_core()->setup();
+    // debug
+    mk_core()->print_graph();
+    // it may not be enough, we may have to execute the previous ops, that were just
+    // created during setup... not very clean code;
+    mk_core()->execute_before((GraphNode *) this);
+  }
   for (MEntSelection::iterator sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
       // make a me, for convenience
     ModelEnt *me = (*sit).first;
@@ -81,7 +101,7 @@ void CAMALPaver::execute_this()
     if (num_pts > (int)bdy_vrange.size()) {
       coords.resize(3*(num_pts-bdy_vrange.size()));
       int pts_returned = paver.get_points_buf(coords.size(), &coords[0], bdy_vrange.size());
-      if (pts_returned != num_pts-bdy_vrange.size()) 
+      if (pts_returned != num_pts-(int)bdy_vrange.size())
         ECERRCHK(MK_FAILURE, "Number of new points returned from Paver doesn't agree with previous value output.");
     
         // create the new vertices' entities on the face
@@ -91,11 +111,11 @@ void CAMALPaver::execute_this()
 
       // for quads, pre-allocate connectivity
     moab::ReadUtilIface *iface;
-    rval = mk_core()-> moab_instance() -> query_interface("ReadUtilIface", (void**)&iface);
+    rval = mk_core()-> moab_instance() -> query_interface(iface);
     MBERRCHK(rval, mk_core()->moab_instance());		
 
       //create the quads, get a direct ptr to connectivity
-    moab::EntityHandle starth, *connect, *tmp_connect;
+    moab::EntityHandle starth, *connect;
     rval = iface->get_element_connect(num_quads, 4, moab::MBQUAD, 1, starth, connect);
     MBERRCHK(rval, mk_core()->moab_instance());
 

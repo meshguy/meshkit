@@ -17,6 +17,9 @@
 #include "meshkit/MBGeomOp.hpp"
 #include "meshkit/MBSplitOp.hpp"
 
+#include "meshkit/CAMALPaver.hpp"
+#include "meshkit/SizingFunction.hpp"
+
 
 using namespace MeshKit;
 
@@ -105,21 +108,34 @@ int main(int argc, char* argv[])
   for (int k=0 ; k<sizePolygon; k++)
       splitOp->add_points(xyz[3*k], xyz[3*k+1], xyz[3*k+2]);
 
+  // add an operation for CAMAL Paver mesher...
+  MEntVector surfs;// empty so far
+  CAMALPaver * camalPaver = (CAMALPaver*) mk->construct_meshop("CAMALPaver", surfs);
+  // this will make sure that camal will be executed after split
+  // if the model ents sel is empty, trigger a special case...
+  // size the mesh
+  double mesh_size = 50;
+  /*SizingFunction *sf =*/ new SizingFunction(mk, -1, mesh_size);
+  // convention: will add the latest SizingFunction available to the model ents
+  // before the "setup" in execute
+  /*{
+    for (unsigned int i = 0; i < surfs.size(); i++)
+      surfs[i]->sizing_function_index(sf->core_index());
+  }*/
+
+  mk->get_graph().addArc(splitOp->get_node(), camalPaver->get_node());
+
   mk->setup_and_execute();
 
-/*  mk->clear_graph();
-  mk->delete_model_entities();
-// clear model ents
-  selection.clear();
-  //
-  mk->populate_model_ents(-1, 0, -1);
+  MEntSelection & mentSel = camalPaver->me_selection();
+  MEntVector ments;
+  for (MEntSelection::iterator sit = mentSel.begin(); sit != mentSel.end(); sit++) {
+        // make a me, for convenience
+      ModelEnt *me = (*sit).first;
+      ments.push_back(me);
+  }
 
-  mk->get_entities_by_dimension(2, selection);
-  mk->construct_meshop("MBGeomOp", selection);*/
-
-  //mk->setup_and_execute();
-
-  mk->save_mesh("oo.h5m");
+  mk->save_mesh_from_model_ents("test.h5m", ments);
 
   return 0;
 }

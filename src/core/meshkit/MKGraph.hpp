@@ -113,6 +113,9 @@ public:
     //! Run both setup and execute on the graph
   virtual void setup_and_execute();
 
+  // run execute on all nodes before this node (it may be a second run)
+  virtual void execute_before(GraphNode * upto);
+
 protected:
     //! The GraphNode graph
   lemon::ListDigraph mkGraph;

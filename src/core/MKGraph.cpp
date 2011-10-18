@@ -281,5 +281,31 @@ void MKGraph::execute()
   }
 
 }
+// run execute on all nodes before this node (it may be a second run)
+void MKGraph::execute_before(GraphNode * upto)
+{
 
+  typedef lemon::IterableIntMap<lemon::ListDigraph, lemon::ListDigraph::Node> topomap;
+
+  // Run execute_this on all nodes in topological order
+  topomap topo_levels( mkGraph );
+  int upToId = mkGraph.id(upto->get_node());
+  lemon::topologicalSort( mkGraph, topo_levels );
+  for( int i = 0; i<topo_levels.size(); ++i){
+
+    for( topomap::ItemIt j(topo_levels, i); j != lemon::INVALID; ++j ){
+
+      GraphNode* gn = nodeMap[ j ];
+      assert( gn );
+      if (mkGraph.id(gn->get_node())==upToId)
+        return; // stop when we reached our node, do not execute again
+      if (!gn->execute_called()) {
+        gn->execute_this();
+        gn->execute_called(true);
+      }
+    }
+  }
+
+  return;
+}
 } // namespace MeshKit
