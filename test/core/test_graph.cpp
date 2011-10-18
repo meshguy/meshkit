@@ -80,18 +80,17 @@ int main(int argc, char **argv)
   D->set_name("D");
   
     // put them in the graph
-  mk.get_graph().addArc(mk.root_node()->get_node(), A->get_node());
-  mk.get_graph().addArc(mk.root_node()->get_node(), B->get_node());
-  mk.get_graph().addArc(A->get_node(), C->get_node());
-  mk.get_graph().addArc(A->get_node(), D->get_node());
-  mk.get_graph().addArc(B->get_node(), mk.leaf_node()->get_node());
-  mk.get_graph().addArc(C->get_node(), mk.leaf_node()->get_node());
-  mk.get_graph().addArc(D->get_node(), mk.leaf_node()->get_node());
+  //mk.get_graph().addArc(A->get_node(), C->get_node());
+  mk.insert_node(A, C);
+  //mk.get_graph().addArc(A->get_node(), D->get_node());
+  mk.insert_node(A, D);
   
     // now traverse
   mk.setup();
   
   mk.execute();
+ 
+  mk.print_graph();
 }
 
   
