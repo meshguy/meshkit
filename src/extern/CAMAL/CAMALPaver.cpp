@@ -47,8 +47,9 @@ void CAMALPaver::execute_this()
         ModelEnt *me = (*sit).first;
         me->sizing_function_index(latestIndexSF); // need to work on this one; how do we know?
     }
-    // now, setup again everything (overkill...)
-    mk_core()->setup();
+    // now, force setup of this node again, as we have added model entities to it
+    setup_called(false);
+    mk_core()->setup(false);
     // debug
     mk_core()->print_graph();
     // it may not be enough, we may have to execute the previous ops, that were just

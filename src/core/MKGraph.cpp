@@ -217,19 +217,21 @@ void MKGraph::add_arc(GraphNode *source, GraphNode *target)
 }
 
 //! Run setup on the graph
-void MKGraph::setup() 
+void MKGraph::setup(bool reset)
 {
     // run BFS on reversed graph
   lemon::ReverseDigraph<lemon::ListDigraph> rg(mkGraph);
-  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs1(rg);
-  rbfs1.init();
-  rbfs1.addSource(leafNode->get_node());
-  while (!rbfs1.emptyQueue()) {
-    lemon::ListDigraph::Node nd = rbfs1.processNextNode();
-    assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
-    if (nodeMap[nd]) nodeMap[nd]->setup_called(false);
+  if (reset)
+  {
+    lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs1(rg);
+    rbfs1.init();
+    rbfs1.addSource(leafNode->get_node());
+    while (!rbfs1.emptyQueue()) {
+      lemon::ListDigraph::Node nd = rbfs1.processNextNode();
+      assert(nd != lemon::INVALID && (nodeMap[nd] || (nd == leafNode->get_node() || nd == rootNode->get_node())));
+      if (nodeMap[nd]) nodeMap[nd]->setup_called(false);
+    }
   }
-
   bool called_one;
   do {
     called_one = false;

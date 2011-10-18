@@ -104,8 +104,11 @@ public:
      */
   void add_arc(GraphNode *source, GraphNode *target);
   
-    //! Run setup on the graph
-  virtual void setup();
+    /** \brief setup of the graph
+     * \param reset : if true (default), force setup of the whole graph
+     *                if false, setup only newly added nodes, that were not setup yet
+     */
+  virtual void setup(bool reset = true);
 
     //! Run execute on the graph
   virtual void execute();
