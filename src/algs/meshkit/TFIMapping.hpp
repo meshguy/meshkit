@@ -92,13 +92,12 @@ private:
 	double linear_interpolation(double r, double x0, double x1);
 
 	//implement the transfinite interpolation between (pt_0s, pt_1s) and (pt_r0, pt_r1)
-	double parametricTFI2D(double r, double s, double pt_0s, double pt_1s, double pt_r0, double pt_r1);
+	void parametricTFI3D(double *pts, double r, double s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3]);
 
 	//generate the mesh on the linking surface
 	int SurfMapping(ModelEnt *ent);
-	
-	//build the association between the geometry and mesh
-	void buildAssociation();
+
+	void SurfMeshImprove();
 	
 };
 
