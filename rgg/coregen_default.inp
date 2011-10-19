@@ -16,6 +16,7 @@ NeumannSet Side 103 x 0 y 1 c -11.75
 NeumannSet Side 104 x 1 y 0 c -35.25
 NeumannSet Side 105 x 1 y 0 c 11.75
 MergeTolerance 1e-6
+SaveParallel Both
 OutputFileName cgd.h5m                  !  cgd.h5m is the desired o/p file name 
 end					! 'END' card is a MUST; Marks the end of file for the file reader
 

@@ -254,22 +254,26 @@ int main(int argc, char *argv[]) {
       	err = TheCore.save_mesh();
       	ERRORR("Failed to save o/p file.", 1);
       } else {
-	// err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
-	// ERRORR("Failed to save o/p file.", 1);
-#ifdef USE_MPI
-	double write_time = MPI_Wtime();
-	err = TheCore.save_mesh_parallel(rank, nprocs);
-	ERRORR("Failed to save o/p file.", 1);
-	write_time = MPI_Wtime() - write_time;
-	if (rank == 0){
-	  std::cout << "Parallel write time = " << write_time/60.0 << " mins" << std::endl;
+	if(TheCore.savefiles != "one" && (TheCore.savefiles == "multiple" || TheCore.savefiles == "both")){
+	  err = TheCore.save_mesh(rank); // uncomment to save the meshes with each proc
+	  ERRORR("Failed to save o/p file.", 1);
 	}
+#ifdef USE_MPI
+	if(TheCore.savefiles != "multiple"){
+	  double write_time = MPI_Wtime();
+	  err = TheCore.save_mesh_parallel(rank, nprocs);
+	  ERRORR("Failed to save o/p file.", 1);
+	  write_time = MPI_Wtime() - write_time;
+	  if (rank == 0){
+	    std::cout << "Parallel write time = " << write_time/60.0 << " mins" << std::endl;
+	  }
 #endif
+	}
       }
 
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem7);
       ld_tsave = ld_sv.DiffTime();
-      tsave = clock();
+	tsave = clock();
       ctsave = (double) (tsave - tgid)/(60*CLOCKS_PER_SEC);
 
       if (TheCore.mem_tflag == true && nprocs == 1 ) {

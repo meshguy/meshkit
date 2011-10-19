@@ -129,14 +129,6 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   //   MPI_Abort(MPI_COMM_WORLD, 1);
   // }
 
-  // mbImpl()->get_entities_by_type( 0, MBENTITYSET, sets );
-  // err = pc->resolve_shared_sets( sets, gid_tag );
-  // if (err != moab::MB_SUCCESS) {
-  //   std::cerr << "failed to resolve shared sets" << std::endl;
-  //   MPI_Abort(MPI_COMM_WORLD, 1);
-  // }
-
-
   moab::Tag mattag;
   mbImpl()->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
   moab::Range matsets;
@@ -148,13 +140,6 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   moab::Range nssets;
   mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
   pc->resolve_shared_sets( nssets, nstag );
-
-  // moab::Tag gdtag;
-  // mbImpl()->tag_get_handle( "GEOM_DIMENSION", 1, MB_TYPE_INTEGER, gdtag );
-  // moab::Range gdsets;
-  // mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &gdtag, 0, 1, gdsets );
-  // pc->resolve_shared_sets( gdsets, mattag );
-  
 
 #ifdef HAVE_MOAB
   int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
@@ -425,6 +410,7 @@ CCrgen::CCrgen()
   nsb_Id = 9998;
   //  nss_Id = 9999;
   prob_type = "mesh";
+  savefiles = "one";
   num_nsside = 0;
   linenumber = 0;
   //  nsx =0, nsy=0, nsc=0;
@@ -777,6 +763,13 @@ int CCrgen::read_inputs_phase1() {
 	IOErrorHandler (ENEGATIVE);
     }
 
+    // save onefile for each proc (multiple) flag
+    if (input_string.substr(0, 12) == "saveparallel") {
+      std::istringstream formatString(input_string);
+      formatString >> card >> savefiles;
+      if(formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
+    }
     // neumannset card
     if (input_string.substr(0, 10) == "neumannset") {
       std::istringstream formatString(input_string);

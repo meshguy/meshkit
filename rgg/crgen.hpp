@@ -309,7 +309,7 @@ public:
 
   bool extrude_flag;
   bool mem_tflag;
-  std::string prob_type;
+  std::string prob_type, savefiles;
   std::vector<std::string> files, mk_files;
   std::vector<int> assm_meshfiles;
   std::vector< std::vector<int> > assm_location;
