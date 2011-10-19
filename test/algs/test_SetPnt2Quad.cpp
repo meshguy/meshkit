@@ -58,9 +58,9 @@ int main(int argc, char* argv[])
   QslimOptions options;
   options.face_target = 4500;
   options.will_constrain_boundaries = true;
-  options.boundary_constraint_weight = 1000;
+  options.boundary_constraint_weight = 100;
   options.height_fields = 1;
-  //options.create_range = 1;
+  options.create_range = 1;
 
   // use the same model ents as from triangle
   QslimMesher *qm = (QslimMesher*) mk->construct_meshop("QslimMesher", selection);
