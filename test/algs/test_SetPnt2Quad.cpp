@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
   options.will_constrain_boundaries = true;
   options.boundary_constraint_weight = 1000;
   options.height_fields = 1;
+  //options.create_range = 1;
 
   // use the same model ents as from triangle
   QslimMesher *qm = (QslimMesher*) mk->construct_meshop("QslimMesher", selection);
@@ -67,14 +68,18 @@ int main(int argc, char* argv[])
   qm->set_options(options);
 
   // mk.add_arc(tm, qm )
-  mk->get_graph().addArc(tm->get_node(), qm->get_node());
+  //mk->get_graph().addArc(tm->get_node(), qm->get_node());
+  // insert_node(GraphNode *inserted, GraphNode *before, GraphNode *after= NULL);
+  mk->insert_node( qm, mk->leaf_node(), tm);
 
   // selection.clear();
   MBGeomOp * geo = (MBGeomOp *) mk->construct_meshop("MBGeomOp", selection);
 
   // maybe we should look at the moab set from the previous node in the
   // graph, to decide what set to geometrize
-  mk->get_graph().addArc(qm->get_node(), geo->get_node());
+  // mk->get_graph().addArc(qm->get_node(), geo->get_node());
+  // insert_node(GraphNode *inserted, GraphNode *before, GraphNode *after= NULL);
+  mk->insert_node(geo, mk->leaf_node(), qm);
 
   // now add a split operation
   // we should add it to the graph
@@ -82,7 +87,9 @@ int main(int argc, char* argv[])
   MBSplitOp * splitOp = (MBSplitOp*) mk->construct_meshop("MBSplitOp", noEntsYet);
 
   // make sure that we split the face we want...
-  mk->get_graph().addArc(geo->get_node(), splitOp->get_node());
+  //mk->get_graph().addArc(geo->get_node(), splitOp->get_node());
+  //insert_node(GraphNode *inserted, GraphNode *before, GraphNode *after= NULL);
+  mk->insert_node(splitOp, mk->leaf_node(), geo);
   // how???
 
   std::vector<double> xyz;
@@ -123,7 +130,9 @@ int main(int argc, char* argv[])
       surfs[i]->sizing_function_index(sf->core_index());
   }*/
 
-  mk->get_graph().addArc(splitOp->get_node(), camalPaver->get_node());
+  //mk->get_graph().addArc(splitOp->get_node(), camalPaver->get_node());
+  // insert_node(GraphNode *inserted, GraphNode *before, GraphNode *after= NULL);
+  mk->insert_node(camalPaver, mk->leaf_node(), splitOp);
 
   mk->setup_and_execute();
 
