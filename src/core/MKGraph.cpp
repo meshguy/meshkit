@@ -27,14 +27,16 @@ void MKGraph::clear_graph()
       nodes.push_back(nit);
   
     // now delete all those nodes
+  // lemon will automatically delete all the edges connected to these nodes
   for (std::vector<lemon::ListDigraph::Node>::iterator vit = nodes.begin(); vit != nodes.end(); vit++) {
     if (nodeMap[*vit]) delete nodeMap[*vit];
     else mkGraph.erase(*vit);
   }
   
-    // restore an edge between the root and leaf
-  if (!mkGraph.valid(lemon::ArcLookUp<lemon::ListDigraph>(mkGraph)(rootNode->get_node(), leafNode->get_node())))
-    mkGraph.addArc(rootNode->get_node(), leafNode->get_node());
+    // restore an edge between the root and leaf !! comment this out
+  // we are not creating it anymore in the constructor of MKCore
+  /*if (!mkGraph.valid(lemon::ArcLookUp<lemon::ListDigraph>(mkGraph)(rootNode->get_node(), leafNode->get_node())))
+    mkGraph.addArc(rootNode->get_node(), leafNode->get_node());*/
 }
 
 void MKGraph::print_graph() 
