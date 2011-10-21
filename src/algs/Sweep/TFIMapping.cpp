@@ -474,6 +474,13 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	IBERRCHK(m_err, "Trouble add an array of entities to the mesh entity set.");
 	
 	//create the quads
+	int isReversed = 0;
+	int face_sense;
+	g_err = mk_core()->igeom_instance()->getEgFcSense(edges[0], ent->geom_handle(), face_sense);
+	IBERRCHK(m_err, "Trouble get the edge sense with respect to a geometrical face.");
+	isReversed = face_sense*senses[0];
+	std::cout << "is reversed or not = " << isReversed << std::endl;
+
 	std::vector<iBase_EntityHandle> Quads((NodeList_j.size()+1)*(NodeList_i.size()+1));		
 	for (unsigned int j = 0; j < (NodeList_j.size()+1); j++)
 	{
@@ -481,47 +488,50 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		if (j == 0)
 		{//starting row boundary
 			//first quad on first colume and first row
-			/*			
+		    if (isReversed < 0){			
 			qNodes[0] = List_i[0];
 			qNodes[1] = List_j[1];
 			qNodes[2] = InteriorNodes[0];
 			qNodes[3] = List_i[1];
-			*/
+		    }
+		    else{
 			qNodes[0] = List_i[0];
 			qNodes[1] = List_i[1];
 			qNodes[2] = InteriorNodes[0];
 			qNodes[3] = List_j[1];			
-			
+		    }
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[0]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 				
 			for (unsigned int i = 1; i < (NodeList_i.size()); i++)
 			{
-				/*
+			    if (isReversed < 0){
 				qNodes[0] =  List_i[i];
 				qNodes[1] =  InteriorNodes[i-1];
 				qNodes[2] =  InteriorNodes[i];
 				qNodes[3] =  List_i[i+1];
-				*/
+			    }
+			    else{
 				qNodes[0] =  List_i[i];
 				qNodes[1] =  List_i[i+1];
 				qNodes[2] =  InteriorNodes[i];
 				qNodes[3] =  InteriorNodes[i-1];				
-				
+			    }
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
-			/*
-			qNodes[0] = List_i[List_i.size()-2];
-			qNodes[1] = InteriorNodes[List_i.size()-3];
-			qNodes[2] = List_jj[1];
-			qNodes[3] = List_jj[0];
-			*/
-			qNodes[0] = List_i[List_i.size()-2];
-			qNodes[1] = List_jj[0];
-			qNodes[2] = List_jj[1];
-			qNodes[3] = InteriorNodes[List_i.size()-3];
-			
+			if (isReversed < 0){
+			    qNodes[0] = List_i[List_i.size()-2];
+			    qNodes[1] = InteriorNodes[List_i.size()-3];
+			    qNodes[2] = List_jj[1];
+			    qNodes[3] = List_jj[0];
+			}
+			else{
+			    qNodes[0] = List_i[List_i.size()-2];
+			    qNodes[1] = List_jj[0];
+			    qNodes[2] = List_jj[1];
+			    qNodes[3] = InteriorNodes[List_i.size()-3];
+			}
 			
 
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[NodeList_i.size()]);
@@ -530,47 +540,50 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		
 		else if (j == NodeList_j.size())
 		{//ending row boundary
-			/*
-			qNodes[0] = List_j[j];
-			qNodes[1] = List_j[j+1];
-			qNodes[2] = List_ii[1];
-			qNodes[3] = InteriorNodes[(j-1)*(NodeList_i.size())];
-			*/
-			qNodes[0] = List_j[j];
-			qNodes[1] = InteriorNodes[(j-1)*(NodeList_i.size())];
-			qNodes[2] = List_ii[1];
-			qNodes[3] = List_j[j+1];			
-
+			if (isReversed < 0){
+			    qNodes[0] = List_j[j];
+			    qNodes[1] = List_j[j+1];
+			    qNodes[2] = List_ii[1];
+			    qNodes[3] = InteriorNodes[(j-1)*(NodeList_i.size())];
+			}
+			else{
+			    qNodes[0] = List_j[j];
+			    qNodes[1] = InteriorNodes[(j-1)*(NodeList_i.size())];
+			    qNodes[2] = List_ii[1];
+			    qNodes[3] = List_j[j+1];			
+			}
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 				
 			for (unsigned int i = 1; i < (NodeList_i.size()); i++)
 			{
-				/*
+			    if (isReversed < 0){
 				qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+ i - 1];
 				qNodes[1] = List_ii[i];
 				qNodes[2] = List_ii[i+1];
 				qNodes[3] = InteriorNodes[(j-1)*(NodeList_i.size())+ i];
-				*/
+			    }
+			    else{
 				qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+ i - 1];
 				qNodes[1] = InteriorNodes[(j-1)*(NodeList_i.size())+ i];
 				qNodes[2] = List_ii[i+1];
 				qNodes[3] = List_ii[i];
-	
+			    }
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
-			/*
-			qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+NodeList_i.size() - 1];
-			qNodes[1] = List_ii[List_ii.size()-2];
-			qNodes[2] = List_jj[List_jj.size()-1];
-			qNodes[3] = List_jj[List_jj.size()-2];
-			*/
-			qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+NodeList_i.size() - 1];
-			qNodes[1] = List_jj[List_jj.size()-2];
-			qNodes[2] = List_jj[List_jj.size()-1];
-			qNodes[3] = List_ii[List_ii.size()-2];
-
+			if (isReversed < 0){
+				qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+NodeList_i.size() - 1];
+				qNodes[1] = List_ii[List_ii.size()-2];
+				qNodes[2] = List_jj[List_jj.size()-1];
+				qNodes[3] = List_jj[List_jj.size()-2];
+			}
+			else{
+				qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+NodeList_i.size() - 1];
+				qNodes[1] = List_jj[List_jj.size()-2];
+				qNodes[2] = List_jj[List_jj.size()-1];
+				qNodes[3] = List_ii[List_ii.size()-2];
+			}
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[(NodeList_j.size()+1)*(NodeList_i.size()+1) - 1]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			
@@ -578,49 +591,52 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		else
 		{
 			//first column
-			/*			
-			qNodes[0] = List_j[j];
-			qNodes[1] = List_j[j+1];
-			qNodes[2] = InteriorNodes[j*NodeList_i.size()];
-			qNodes[3] = InteriorNodes[(j-1)*NodeList_i.size()];
-			*/
-			qNodes[0] = List_j[j];
-			qNodes[1] = InteriorNodes[(j-1)*NodeList_i.size()];
-			qNodes[2] = InteriorNodes[j*NodeList_i.size()];
-			qNodes[3] = List_j[j+1];
-			
+			if (isReversed < 0){			
+			    qNodes[0] = List_j[j];
+			    qNodes[1] = List_j[j+1];
+			    qNodes[2] = InteriorNodes[j*NodeList_i.size()];
+			    qNodes[3] = InteriorNodes[(j-1)*NodeList_i.size()];
+			}
+			else{
+			    qNodes[0] = List_j[j];
+			    qNodes[1] = InteriorNodes[(j-1)*NodeList_i.size()];
+			    qNodes[2] = InteriorNodes[j*NodeList_i.size()];
+			    qNodes[3] = List_j[j+1];
+			}
 			
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			for (unsigned int i = 1; i < (NodeList_i.size()); i++)
 			{
-				/*				
-				qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + i-1];
-				qNodes[1] = InteriorNodes[j*NodeList_i.size() + i-1];
-				qNodes[2] = InteriorNodes[j*NodeList_i.size() + i];
-				qNodes[3] = InteriorNodes[(j-1)*NodeList_i.size() + i];
-				*/
-				qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + i-1];
-				qNodes[1] = InteriorNodes[(j-1)*NodeList_i.size() + i];
-				qNodes[2] = InteriorNodes[j*NodeList_i.size() + i];
-				qNodes[3] = InteriorNodes[j*NodeList_i.size() + i-1];
-				
+				if (isReversed < 0){				
+				    qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + i-1];
+				    qNodes[1] = InteriorNodes[j*NodeList_i.size() + i-1];
+				    qNodes[2] = InteriorNodes[j*NodeList_i.size() + i];
+				    qNodes[3] = InteriorNodes[(j-1)*NodeList_i.size() + i];
+				}
+				else{
+				    qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + i-1];
+				    qNodes[1] = InteriorNodes[(j-1)*NodeList_i.size() + i];
+				    qNodes[2] = InteriorNodes[j*NodeList_i.size() + i];
+				    qNodes[3] = InteriorNodes[j*NodeList_i.size() + i-1];
+				}
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
 
 			//end column
-			/*
-			qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + NodeList_i.size() - 1];
-			qNodes[1] = InteriorNodes[j*NodeList_i.size() + NodeList_i.size() - 1];
-			qNodes[2] = List_jj[j+1];
-			qNodes[3] = List_jj[j];
-			*/
-			qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + NodeList_i.size() - 1];
-			qNodes[1] = List_jj[j];
-			qNodes[2] = List_jj[j+1];
-			qNodes[3] = InteriorNodes[j*NodeList_i.size() + NodeList_i.size() - 1];
-			
+			if (isReversed < 0){
+			    qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + NodeList_i.size() - 1];
+			    qNodes[1] = InteriorNodes[j*NodeList_i.size() + NodeList_i.size() - 1];
+			    qNodes[2] = List_jj[j+1];
+			    qNodes[3] = List_jj[j];
+			}
+			else{
+			    qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + NodeList_i.size() - 1];
+			    qNodes[1] = List_jj[j];
+			    qNodes[2] = List_jj[j+1];
+			    qNodes[3] = InteriorNodes[j*NodeList_i.size() + NodeList_i.size() - 1];
+			}
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+NodeList_i.size()]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 		}
