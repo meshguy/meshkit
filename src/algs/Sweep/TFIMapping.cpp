@@ -4,10 +4,16 @@
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 #include "moab/ReadUtilIface.hpp"
+#ifdef HAVE_MESQUITE
+#include "meshkit/MeshImprove.hpp"
+#endif
+
 #include <vector>
 #include <iostream>
 #include <math.h>
 #include <map>
+
+const double EPS = 1.0e-6;
 
 
 namespace MeshKit
@@ -435,20 +441,10 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 			IBERRCHK(g_err, "Trouble get the xyz coordinates for node 2.");
 			
 			//calculate the parameter based on the distance
-			double r, s, pts[3], dist[2];
-			for (int k = 0; k < 3; k++)
-			    pts[k] = (coords_ii[k] + coords_i[k])/2.0;
-			dist[0] = sqrt(pow(pts[0]-coords_j[0],2)+pow(pts[1]-coords_j[1],2)+pow(pts[2]-coords_j[2],2));
-			dist[1] = sqrt(pow(coords_jj[0]-coords_j[0],2)+pow(coords_jj[1]-coords_j[1],2)+pow(coords_jj[2]-coords_j[2],2));
-			r = dist[0]/dist[1];
-			//calculate the s
-			for (int k = 0; k < 3; k++)
-			    pts[k] = (coords_jj[k] + coords_j[k])/2.0;
-			dist[0] = sqrt(pow(pts[0]-coords_i[0],2)+pow(pts[1]-coords_i[1],2)+pow(pts[2]-coords_i[2],2));
-			dist[1] = sqrt(pow(coords_ii[0]-coords_i[0],2)+pow(coords_ii[1]-coords_i[1],2)+pow(coords_ii[2]-coords_i[2],2));
-			s = dist[0]/dist[1];
+			double r, s, pts[3];
+			ParameterCalculate(r, s, coords_j, coords_jj, coords_i, coords_ii, pts);
 
-			parametricTFI3D(&pts[0], r, s, coords_j, coords_jj, coords_i, coords_ii);
+			parametricTFI3D(&pts[0], s, r, coords_j, coords_jj, coords_i, coords_ii);
 
 			g_err = mk_core()->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
 			if (g_err){
@@ -485,29 +481,48 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		if (j == 0)
 		{//starting row boundary
 			//first quad on first colume and first row
+			/*			
 			qNodes[0] = List_i[0];
 			qNodes[1] = List_j[1];
 			qNodes[2] = InteriorNodes[0];
 			qNodes[3] = List_i[1];
-
+			*/
+			qNodes[0] = List_i[0];
+			qNodes[1] = List_i[1];
+			qNodes[2] = InteriorNodes[0];
+			qNodes[3] = List_j[1];			
+			
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[0]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 				
 			for (unsigned int i = 1; i < (NodeList_i.size()); i++)
 			{
+				/*
 				qNodes[0] =  List_i[i];
 				qNodes[1] =  InteriorNodes[i-1];
 				qNodes[2] =  InteriorNodes[i];
 				qNodes[3] =  List_i[i+1];
-
+				*/
+				qNodes[0] =  List_i[i];
+				qNodes[1] =  List_i[i+1];
+				qNodes[2] =  InteriorNodes[i];
+				qNodes[3] =  InteriorNodes[i-1];				
+				
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
-			
+			/*
 			qNodes[0] = List_i[List_i.size()-2];
 			qNodes[1] = InteriorNodes[List_i.size()-3];
 			qNodes[2] = List_jj[1];
 			qNodes[3] = List_jj[0];
+			*/
+			qNodes[0] = List_i[List_i.size()-2];
+			qNodes[1] = List_jj[0];
+			qNodes[2] = List_jj[1];
+			qNodes[3] = InteriorNodes[List_i.size()-3];
+			
+			
 
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[NodeList_i.size()]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
@@ -515,29 +530,46 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		
 		else if (j == NodeList_j.size())
 		{//ending row boundary
+			/*
 			qNodes[0] = List_j[j];
 			qNodes[1] = List_j[j+1];
 			qNodes[2] = List_ii[1];
 			qNodes[3] = InteriorNodes[(j-1)*(NodeList_i.size())];
+			*/
+			qNodes[0] = List_j[j];
+			qNodes[1] = InteriorNodes[(j-1)*(NodeList_i.size())];
+			qNodes[2] = List_ii[1];
+			qNodes[3] = List_j[j+1];			
 
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 				
 			for (unsigned int i = 1; i < (NodeList_i.size()); i++)
 			{
+				/*
 				qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+ i - 1];
 				qNodes[1] = List_ii[i];
 				qNodes[2] = List_ii[i+1];
 				qNodes[3] = InteriorNodes[(j-1)*(NodeList_i.size())+ i];
-				
+				*/
+				qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+ i - 1];
+				qNodes[1] = InteriorNodes[(j-1)*(NodeList_i.size())+ i];
+				qNodes[2] = List_ii[i+1];
+				qNodes[3] = List_ii[i];
+	
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
-			
+			/*
 			qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+NodeList_i.size() - 1];
 			qNodes[1] = List_ii[List_ii.size()-2];
 			qNodes[2] = List_jj[List_jj.size()-1];
 			qNodes[3] = List_jj[List_jj.size()-2];
+			*/
+			qNodes[0] = InteriorNodes[(j-1)*(NodeList_i.size())+NodeList_i.size() - 1];
+			qNodes[1] = List_jj[List_jj.size()-2];
+			qNodes[2] = List_jj[List_jj.size()-1];
+			qNodes[3] = List_ii[List_ii.size()-2];
 
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[(NodeList_j.size()+1)*(NodeList_i.size()+1) - 1]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
@@ -546,29 +578,48 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		else
 		{
 			//first column
+			/*			
 			qNodes[0] = List_j[j];
 			qNodes[1] = List_j[j+1];
 			qNodes[2] = InteriorNodes[j*NodeList_i.size()];
 			qNodes[3] = InteriorNodes[(j-1)*NodeList_i.size()];
+			*/
+			qNodes[0] = List_j[j];
+			qNodes[1] = InteriorNodes[(j-1)*NodeList_i.size()];
+			qNodes[2] = InteriorNodes[j*NodeList_i.size()];
+			qNodes[3] = List_j[j+1];
+			
 			
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			for (unsigned int i = 1; i < (NodeList_i.size()); i++)
 			{
+				/*				
 				qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + i-1];
 				qNodes[1] = InteriorNodes[j*NodeList_i.size() + i-1];
 				qNodes[2] = InteriorNodes[j*NodeList_i.size() + i];
 				qNodes[3] = InteriorNodes[(j-1)*NodeList_i.size() + i];
-
+				*/
+				qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + i-1];
+				qNodes[1] = InteriorNodes[(j-1)*NodeList_i.size() + i];
+				qNodes[2] = InteriorNodes[j*NodeList_i.size() + i];
+				qNodes[3] = InteriorNodes[j*NodeList_i.size() + i-1];
+				
 				m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+i]);
 				IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
 			}
 
 			//end column
+			/*
 			qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + NodeList_i.size() - 1];
 			qNodes[1] = InteriorNodes[j*NodeList_i.size() + NodeList_i.size() - 1];
 			qNodes[2] = List_jj[j+1];
 			qNodes[3] = List_jj[j];
+			*/
+			qNodes[0] = InteriorNodes[(j-1)*NodeList_i.size() + NodeList_i.size() - 1];
+			qNodes[1] = List_jj[j];
+			qNodes[2] = List_jj[j+1];
+			qNodes[3] = InteriorNodes[j*NodeList_i.size() + NodeList_i.size() - 1];
 			
 			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(NodeList_i.size()+1)+NodeList_i.size()]);
 			IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
@@ -624,18 +675,110 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		m_err = mk_core()->imesh_instance()->setIntData(m_Quads[i], mesh_id_tag, i);
 		IBERRCHK(m_err, "Trouble set the int data for 'GLOBAL_ID'.");		
 	}
-	
+
+	//SurfImprove(ent->geom_handle(), entityset, iBase_FACE);
+
+#ifdef HAVE_MESQUITE
+	MeshImprove meshopt(mk_core(), true, false, false, false);
+    	meshopt.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
+
+#endif
+
 	return 1;
 }
 
 //****************************************************************************//
-// function   : SurfMeshImprove
+// function   : ParameterCalculate
 // Date       : Feb 15, 2011
-// Description: smooth the surface mesh on the linking surface by using Mesquite
+// Description: calculate the parameters for TFI mapping
 //***************************************************************************//
-void TFIMapping::SurfMeshImprove()
+int TFIMapping::ParameterCalculate(double &r, double &s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3], double *pts)
 {
+    // equations P_0s + s*(P_1s - P_0s) = P_r0 + t*(P_r1 - P_r0)
 
+    assert(((fabs(pt_0s[0]-pt_1s[0])>1.0e-5)||(fabs(pt_0s[1]-pt_1s[1]) > 1.0e-5)||(fabs(pt_0s[2]-pt_1s[2]) > 1.0e-5)));
+    assert(((fabs(pt_r0[0]-pt_r1[0])>1.0e-5)||(fabs(pt_r0[1]-pt_r1[1]) > 1.0e-5)||(fabs(pt_r0[2]-pt_1s[2]) > 1.0e-5)));
+    s = 0; r = 0;
+    double pt_s[3], pt_r[3];
+    if (!LineLineIntersect(pt_0s, pt_1s, pt_r0, pt_r1, &pt_s[0], &pt_r[0], s, r)){      
+	throw Error(1, "2 3D lines don't intersect at a point.");
+
+    }
+    for (int i = 0; i < 3; i++)
+	pts[i] = (pt_s[i] + pt_r[i])/2;
+
+    return 1;
+
+}
+
+
+
+//****************************************************************************//
+// function   : SurfMeshImprove
+// Date       : Oct 20, 2011
+// Desription :
+//   Calculate the line segment PaPb that is the shortest route between
+//   two lines P1P2 and P3P4. Calculate also the values of mua and mub where
+//      Pa = P1 + mua (P2 - P1)
+//      Pb = P3 + mub (P4 - P3)
+//   Return FALSE if no solution exists.
+//****************************************************************************//
+bool TFIMapping::LineLineIntersect(double p1[3], double p2[3], double p3[3], double p4[3], double *pa, double *pb, double &mua, double &mub)
+{
+   double p13[3], p43[3], p21[3];
+   double d1343, d4321, d1321, d4343, d2121;
+   double numer,denom;
+
+   for (int i = 0; i < 3; i++){
+       p13[i] = p1[i] - p3[i];
+       p43[i] = p4[i] - p3[i];
+   }
+   if ( (fabs(p43[0]) < EPS) && (fabs(p43[1]) < EPS) && (fabs(p43[2]) < EPS))
+       return false;
+
+   for (int i = 0; i < 3; i++)
+       p21[i] = p2[i] - p1[i];
+   if ((fabs(p21[0]) < EPS) && (fabs(p21[1]) < EPS) && (fabs(p21[2]) < EPS))
+      return false;
+
+   d1343 = p13[0] * p43[0] + p13[1] * p43[1] + p13[2] * p43[2];
+   d4321 = p43[0] * p21[0] + p43[1] * p21[1] + p43[2] * p21[2];
+   d1321 = p13[0] * p21[0] + p13[1] * p21[1] + p13[2] * p21[2];
+   d4343 = p43[0] * p43[0] + p43[1] * p43[1] + p43[2] * p43[2];
+   d2121 = p21[0] * p21[0] + p21[1] * p21[1] + p21[2] * p21[2];
+
+   denom = d2121 * d4343 - d4321 * d4321;
+   if (fabs(denom) < EPS)
+      return false;
+   numer = d1343 * d4321 - d1321 * d4343;
+
+   mua = numer / denom;
+   mub = (d1343 + d4321 * (mua)) / d4343;
+
+   for (int i = 0; i < 3; i++){
+       pa[i] = p1[i] + mua*p21[i];
+       pb[i] = p3[i] + mub*p43[i];
+   }
+
+   return true;
+}
+
+
+
+
+
+//****************************************************************************//
+// function   : SurfMeshImprove
+// Date       : Oct 20, 2011
+// Description: smooth the surface mesh on the linking surface by using Mesquite
+// Because the linking surface is convex in general, the Laplace is used to smooth
+// the surface mesh on the linking surface
+//***************************************************************************//
+void TFIMapping::SurfImprove(iBase_EntityHandle surface, iBase_EntitySetHandle surfMesh, iBase_EntityType entity_type)
+{
+#ifdef HAVE_MESQUITE
+
+#endif
 
 }
 
@@ -652,9 +795,8 @@ void TFIMapping::parametricTFI3D(double *pts, double r, double s, double pt_0s[3
 			//		pt_0s---------Node------------pt_1s	
 			//		  	 	 |		 
 			//		               pt_r0
-
-	assert(r>= 0 && r <= 1.0);
-	assert(s>= 0 && s <= 1.0);
+	//assert(r>= 0 && r <= 1.0);
+	//assert(s>= 0 && s <= 1.0);
 	
 	for (int i = 0; i < 3; i++)//interpolate the pt_rs based on pt_r0, pt_r1, pt_0s and pt_1s
 	    pts[i] = 0.5*( linear_interpolation( s, pt_r0[i], pt_r1[i]) + linear_interpolation(r, pt_0s[i], pt_1s[i]) );

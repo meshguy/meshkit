@@ -10,7 +10,8 @@ SUBDIRS =
 libSweep_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-libSweep_la_SOURCES = OneToOneSwept.cpp
+libSweep_la_SOURCES = OneToOneSwept.cpp \
+        TFIMapping.cpp
 #        HarmonicMap.cpp \
 #        HarmonicMap.hpp \
 #        MatrixOp.hpp \
@@ -20,13 +21,22 @@ libSweep_la_SOURCES = OneToOneSwept.cpp
 
 if HAVE_MESQUITE
 libSweep_la_SOURCES += SweepWrapper.hpp \
-        SweepWrapper.cpp
+        SweepWrapper.cpp \
+        MeshImprove.cpp \
+        SmartLaplaceWrapper.hpp \
+        SmartLaplaceWrapper.cpp
 endif
 
 
 # The list of header files which are to be installed
 nobase_libSweep_la_include_HEADERS = \
-        meshkit/OneToOneSwept.hpp
+        meshkit/OneToOneSwept.hpp \
+        meshkit/TFIMapping.hpp
+
+if HAVE_MESQUITE
+nobase_libSweep_la_include_HEADERS += \
+        meshkit/MeshImprove.hpp 
+endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

@@ -97,7 +97,13 @@ private:
 	//generate the mesh on the linking surface
 	int SurfMapping(ModelEnt *ent);
 
-	void SurfMeshImprove();
+	//calculate the parameter r and s
+	int ParameterCalculate(double &r, double &s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3], double *pts);
+
+	//calculate the intersection or shortest distance between 2 3D lines
+	bool LineLineIntersect(double p1[3], double p2[3], double p3[3], double p4[3], double *pa, double *pb, double &mua, double &mub);
+
+	void SurfImprove(iBase_EntityHandle surface, iBase_EntitySetHandle surfMesh, iBase_EntityType entity_type);
 	
 };
 

@@ -30,7 +30,6 @@ libMeshKitalgs_la_SOURCES = \
 	Transform.cpp \
 	CopyUtils.cpp \
 	CopyUtils.hpp \
-  TFIMapping.cpp \
   MBGeomOp.cpp \
   MBSplitOp.cpp
 
@@ -47,7 +46,6 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/CESets.hpp \
 	meshkit/TransformBase.hpp \
 	meshkit/Transform.hpp \
-	meshkit/TFIMapping.hpp \
 	meshkit/MBGeomOp.hpp \
 	meshkit/MBSplitOp.hpp
 
