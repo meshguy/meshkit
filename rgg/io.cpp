@@ -964,15 +964,7 @@ int CNrgen::CreateCubitJournal()
   if(m_nPlanar ==1){ 
     m_FileOutput << "# Pointing surface normals to 0.0, 0.0, -1.0 or -ve Z or correct STAR-CCM+ cell-face orientation" << std::endl;
     m_FileOutput << "surface all normal opposite" << std::endl;
-    if(m_szSideset == "yes"){
-      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	++nSideset;
-	szSurfTop = m_szAssmMat(p)+"_top";
-	m_FileOutput <<  "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-	m_FileOutput <<"group 'tmp1' equals curve in surface in tmpgrp" << std::endl;  
-	m_FileOutput << "sideset " << nSideset << " curve in tmp1" << std::endl;  
-      }
-    }
+
     // group creation dumps. each material surface  has a group
     m_FileOutput << "#Creating groups" << std::endl;  
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -1122,9 +1114,11 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
       m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
       m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
-      m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge"<< std::endl;
- 
-      m_FileOutput << "curve in edges interval " << m_edgeInterval << std::endl;
+
+      if (p==1 && m_edgeInterval != 99){
+	m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge'"<< std::endl;
+	m_FileOutput << "curve in edges interval " << m_edgeInterval << std::endl;
+      }
 
       //    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
 

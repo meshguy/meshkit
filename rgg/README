@@ -1,3 +1,4 @@
+RGG methodology and some models created using RGG can be found on the website: https://trac.mcs.anl.gov/projects/fathom/wiki/rgg
 ------------------------------------------------------------------------------------------------------
 TABLE OF CONTENTS:
 ------------------------------------------------------------------------------------------------------
@@ -5,62 +6,67 @@ TABLE OF CONTENTS:
 2. DEFAULT TEST CASE
 3. RUNNING
 4. EXAMPLE DESCRIPTION AND TEST CASES
-5. SECTION A: 'assygen'- Syntax and Keyword Definition
-5. SECTION B: 'coregen'- Syntax and Keyword Definition
+5. SECTION A: AssyGen- Syntax and Keyword Definition
+5. SECTION B: CoreGen- Syntax and Keyword Definition
 6. SECTION C: Detailed Installation Instructions
 
 ------------------------------------------------------------------------------------------------------
 1. INTRODUCTION
 ------------------------------------------------------------------------------------------------------
-RGG is a toolkit used for generating nuclear reactor assembly and core geometry/mesh. 
-It takes advantage of repeated lattice structures to simplify specification of geometry and mesh parameters.
+RGG stands for Reactor Geometry (&mesh) Generator. It is a toolkit used for generating nuclear reactor assembly and core geometry/mesh. 
+It takes advantage of repeated lattice structures to simplify specification of geometry and mesh parameters. 
+RGG can make use of Meshing algorithms in MeshKit, CoreGen tool described below can work in serial and parallel. It has been tested on 700+ processors.
 
 RGG consists of two programs:
-1.'assygen': Generates assembly geometry and Cubit journal files for meshing. These are based on a user defined input file (See Section A for details).
-2.'coregen': Reads assembly meshes or geometries as input and forms the core-lattice model as specified in the input file (See Section B for details).
+1.AssyGen: Generates assembly geometry and Cubit journal files for meshing. These are based on a user defined input file (See Section A for details).
+2.CoreGen: Reads assembly meshes or geometries as input and forms the core-lattice model as specified in the input file (See Section B for details).
+
+Publications: 
+T. J. Tautges and R. Jain, “Creating Geometry and Mesh Models for Nuclear Reactor Core Geometries Using a Lattice Hierarchy-Based Approach", Journal of Engineering with Computers, 2011 
+http://www.springerlink.com/content/39g645tv2j571565/
+
+T. J. Tautges and R. Jain, “Creating Geometry and Mesh Models for Nuclear Reactor Core Geometries Using a Lattice Hierarchy-Based Approach”, in Proceedings of the 19th International Meshing Roundtable, Springer Berlin Heidelberg, 2010, pp. 351-365. 
+
 
 Some salient features of RGG tookit are:
-1. It is capable of creating 'Rectangular' (e.g. PWR, BWR) and 'Hexagonal' (e.g. VHTR, SFR) assembly/core geometries and meshes.
-2. For 'Hexaonal' type lattice, RGG has schemes for creation of 1/6th (HexFlat and HexVertex) 1/12 and full core meshes. 
-3. RGG allows specification of mesh sizes and schemes. It supports both 'Hexahedral' and 'Tetrahedral' meshing. 
-4. 'assygen' supports construction of assemblies with varying axial properties. It also offers creation of dummy and intersecting cells.
-5. 'coregen' has builtin features to specify and propagate the metadata into the final mesh.
-6. 'assygen' is capable of creating geometries in OCC or ACIS file format. 
+1. It is capable of creating rectangular (e.g. PWR, BWR) and hexagonal (e.g. VHTR, SFR) assembly/core geometries and meshes.
+2. For hexaonal type lattice, RGG has schemes for creation of 1/6th (HexFlat and HexVertex) 1/12 and full core meshes. 
+3. RGG allows specification of mesh sizes and schemes. It supports both hexahedral and tetrahedral meshing. 
+4. AssyGen supports construction of assemblies with varying axial properties. It also offers creation of dummy and intersecting cells.
+5. CoreGen has built-in features to specify and propagate the metadata into the final mesh.
+6. AssyGen is capable of creating geometries in OCC or ACIS file format. 
 7. Both 2D and 3D geometry and meshes can be created.
-8. Meshing can be done using 'assygen' created Cubit journal files or by any tool of user's choice.
+8. Meshing can be done using AssyGen created Cubit journal files or by any tool of user's choice.
 9. RGG is capable of creating meshes in a variety of file formats, typically the one's supported by MOAB(http://trac.mcs.anl.gov/projects/ITAPS/wiki/MOAB). 
-10. RGG not only efficient in memory and time, but, it also allows automation of creation of reactor cores. 
-
-RGG methodology and some models created using RGG can be found on the website: https://trac.mcs.anl.gov/projects/fathom/wiki/rgg
 
 --------------------------------------------------------------------------------------------------------
 2. DEFAULT TEST CASE
 --------------------------------------------------------------------------------------------------------
-Goto MeshKit/rgg directory launch the following commands:
+Under MeshKit/rgg directory launch the following commands:
 1. assygen
 2. cubit
 3. play 'assygen_default.jou'
 4. coregen coregen_default
 
 The first command "assygen": 
-Launches assygen program, reads assygen_default.inp and generates assygen_default.sat, assygen_default.jou, assygen_default.template.jou
+Launches AssyGen program, reads assygen_default.inp and generates assygen_default.sat, assygen_default.jou, assygen_default.template.jou
 
 The second command "cubit":
 Assuming you have Cubit's executable set in your path, this launches Cubit.
 
 The third command "play 'assygen_default.jou'":
-Runs the cubit journal file 'assygen_default.jou' includes assygen_default.template.jou; imports assygen_default.sat generated by assygen program
+Runs the cubit journal file 'assygen_default.jou' includes assygen_default.template.jou; imports assygen_default.sat generated by AssyGen program
 in the first step, and creates  mesh file: assygen_default.cub.
 
 The fourth command "coregen coregen_default":
-Launches coregen program, reads coregen_default.inp and generates the reactor core mesh file coregen_default.h5m. coregen also creates a makefile called 'coregen_defaults.makefile'. This makefile can be used automate the regeneration of assemblies (mesh file in third command).
+Launches CoreGen program, reads coregen_default.inp and generates the reactor core mesh file coregen_default.h5m. CoreGen also creates a makefile called 'coregen_defaults.makefile'. This makefile can be used automate the regeneration of assemblies (mesh file in third command).
 
 -------------------------------------------------------------------------------------------------------
 3. RUNNING 
 -------------------------------------------------------------------------------------------------------
 
-A. 'assygen' program
-Launch the executable 'assygen' from the rgg directory as follows:
+A. AssyGen program
+Launch the executable AssyGen from the rgg directory as follows:
 usage: assygen <inpufile name WITHOUT EXTENSION> 
 
 RGG by default assumes that:
@@ -68,14 +74,14 @@ Input file name is  <input file name WITHOUT EXTENSION>.inp
 Geometry file name created by RGG is  <input file name WITHOUT EXTENSION>.sat or .brep based on the geometry engine*
 Journal file name created by RGG is  <input file name WITHOUT EXTENSION>.jou
 
-B. 'coregen' program
-Launch the executable 'coregen' from the rgg directory as follows:
+B. CoreGen program
+Launch the executable CoreGen from the rgg directory as follows:
 usage: coregen <inpufile name WITHOUT EXTENSION> 
-option -m: Inorder to create the only the makefile, without actually running coregen "-m" option case be used: coregen -m <inpufile name WITHOUT EXTENSION> 
+option -m: Inorder to create the only the makefile, without actually running CoreGen "-m" option case be used: CoreGen -m <inpufile name WITHOUT EXTENSION> 
 
-+C. Running tests in <yourpath>/MeshKit/rgg/test/<dir_name>
+C. Running tests in <yourpath>/MeshKit/rgg/test/<dir_name>
 These tests create a core from scratch. 
-Test cases first run 'assygen' to generate the required .sat (geometry) files, then run 'cubit' to generate .cub (meshes) files and finally run 'coregen' to create the core mesh in .h5m file format.
+Test cases first run AssyGen to generate the required .sat (geometry) files, then run 'cubit' to generate .cub (meshes) files and finally run CoreGen to create the core mesh in .h5m file format.
 
 -------------------------------------------------------------------------------------------------------
 4. EXAMPLE (Sample input files can be found in <yourpath>/MeshKit/rgg/test)
@@ -148,17 +154,18 @@ TEST CASES
 Test cases can be found in <yourpath>/MeshKit/rgg/test directory can be run by simply using the makefile ('make') in each of the test directories. 
 Warning: Check 'cubit' path in the makefile (<yourpath>/MeshKit/rgg/test/<test_case>/makefile) before running.
 
-The following directories have 'assygen' and 'coregen' input files:
+The following directories have AssyGen and CoreGen input files:
 
 simple_hexflatcore      : A toy example of full hexagonal core with 3 rings.
 simple_rectcore         : A toy example of full rectangular core with 3 rings.
 sixth_hexflatcore       : A toy example of sixth of a hexagonal core (cut along flats) with 3 rings.
 sixth_hexvertexcore     : A toy example of sixth of a hexagonal core (cut along vertices) with 3 rings.
 twelfth_hexflatcore	: A toy example of twelfth of a hexagonal core with 3 rings.
+vhtr-2d-extrude         : 1/6th VHTR core, 2D mesh is extruded to form 3D core
 vhtr-hexvertex          : A full VHTR core with 11 rings.
 
 ===================================================
-SECTION A: 'assygen'- Syntax and Keyword Definition
+SECTION A: AssyGen- Syntax and Keyword Definition
 ===================================================
 
 -------------------------------------------
@@ -211,6 +218,12 @@ SECTION A: 'assygen'- Syntax and Keyword Definition
    
 23.  End: This command marks the end of AssyGen input file.
 
+24. EdgeInterval: Specify the interval on outer edges of the assembly, often needed to constraint meshing on the skin of the model
+
+25. MergeTolerance: Tolerance of merging geometric entities in the model.
+
+26. CreateSideSet: Option to disable sideset creation for CUBIT journal file. Takes values 'yes' or 'no'. 
+
 Note: ‘&’ sign can be used for continuing the line input on the next line.
 
 ------------------------------
@@ -243,13 +256,16 @@ Lattice {n_ring | n_x n_y}
 [AxialMeshSize <size>]
 [RadialMeshSize <size>]
 [TetMeshSize <size>]
+[EdgeInterval <value>]
+[MergeTolerance <value>]
+[CreateSideSet {Yes | No}
 END
 
 --------------------------------------- 
 (c) Syntax used with CUBIT journal file:
 ---------------------------------------
 
-# This file is automatically created by assygen program
+# This file is automatically created by AssyGen program
 {include(“<mesh_file>.template.jou”)}
 import ‘<mesh_file>.sat’
 merge all
@@ -275,10 +291,10 @@ surface with z_coord > {Z_MID -.1*Z_HEIGHT} and z_coord < {Z_MID + .1*Z_HEIGHT} 
 mesh vol all
 save as <mesh_file>.cub
 
-* details of tetmeshing journal file are not included in this syntax description.
+Note: Details of tetmeshing journal file are not included in this syntax description.
 
 ===================================================
-SECTION B: 'coregen'- Syntax and Keyword Definition
+SECTION B: CoreGen- Syntax and Keyword Definition
 ===================================================
 --------------------------------------
 (d) Keywords used in CoreGen input file:
@@ -312,11 +328,15 @@ SECTION B: 'coregen'- Syntax and Keyword Definition
 
 14. ProblemType: Copy/move operations can be performed on 'Mesh' or 'Geometry'. Default value of this keyword is 'Mesh'. When using geometry files in 'Assemblies' keyword this keyword should be setup to copy/move geometry.
 
+15. SaveParallel: When using parallel-capable CoreGen. This keywords offer enables option for saving mesh file. 
+Takes values 'Multiple', 'Both' and 'One' - for generating one files per processor, one file per processor and one combined file, one combine file respectively.
+
 ----------------------------
 (e) Syntax used with CoreGen:
 ----------------------------
 
 Geometry {Surface | Volume}
+ProblemType {Geometry | Surface}
 GeomEngine {ACIS | OCC}
 GeometryType {Hexflat | Hexvertex | Rectangular}
 Extrude {<Z_height>  <Z_divisions>}
@@ -331,15 +351,16 @@ Lattice {<n_x> <n_y> (rectangular) | <n_rings> (hexagonal)}
 Background <mesh_file>
 NeumannSet {top | bot | side}
 OutputFileName <mesh_file_name>.<extension>
+SaveParallel {Multiple | Both | One}
 END
 
 -----------------------------------------
 (f) Syntax of makefile created by CoreGen:
 -----------------------------------------
-# This makefile is automatically created by coregen program
+# This makefile is automatically created by CoreGen program
 CUBIT = cubit
-COREGEN = ../../coregen
-ASSYGEN = ../../assygen
+COREGEN = ../../CoreGen
+ASSYGEN = ../../AssyGen
 MESH_FILES = { <mesh_file>.cub  }   		*n_assys
 GEOM_FILES = { <mesh_file> .sat }               *n_assys
 JOU = { <mesh_file>.jou }                       *n_assys
@@ -360,7 +381,6 @@ ASSYGEN_FILES = { <mesh_file>.inp } 	        *n_assys
 ==============================================
 SECTION C: Detailed Installation Instructions
 ==============================================
-
 Build and Installation Instructions:
 The software prerequisites for  building the tools described here, and the means of obtaining them, are: 
 
@@ -427,6 +447,9 @@ After this procedure is finished, the AssyGen and CoreGen executables will be in
 assygen <input>
 coregen <input>
 where <input> is the base name (the filename without the extension) of the input file. The output of AssyGen will be the files <input>.sat/.stp (the assembly model geometry), and <input>.jou and template.jou for generating assembly mesh.
+
+Another user submitted version of build instruction can be found at: http://trac.mcs.anl.gov/projects/fathom/wiki/rgg/RGGFromScratch
+
 Any problems building, installing, or running these tools should be sent to the Fathom email list at
 fathom@lists.mcs.anl.gov.
 

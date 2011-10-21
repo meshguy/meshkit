@@ -38,7 +38,7 @@ CNrgen::CNrgen ()
   m_nJouFlag = 0;
   m_szSideset = "yes";
   m_dMergeTol = 1e-4;
-  m_edgeInterval = 10;
+  m_edgeInterval = 99;
 }
 
 CNrgen::~CNrgen ()
