@@ -34,6 +34,7 @@ std::string usage_string =
 "-d 	        do not use delayed deletion \n"
 "-c           keep costs in a (sparse!!!!) tag \n"
 "-r           create the range with resulting triangles, and delete the original elements"
+"-k           keep the topology unchanged, like holes, tunnels."
 "\n";
 
 std::string logging_usage_string =
@@ -62,12 +63,13 @@ int main(int argc, char* argv[])
   {
 	  std::cout<<usage_string;
 	  std::cout << "\n\n";
-	  std::cout<< "default arguments: -s 4500 -B 1000 -p -o out.smf ./partBed.smf \n";
+	  fstr=TestDir + "/partBed.smf";
+	  std::cout<< "default arguments: -s 4500 -B 1000 -p -o out.smf " << fstr <<" \n";
 	  options.face_target = 4500;
 	  options.will_constrain_boundaries = true;
 	  options.boundary_constraint_weight = 1000;
 	  options.height_fields = 1;
-	  fstr=TestDir + "/partBed.smf";
+
 	  filename = fstr.c_str();
 	  // ostr = "out.smf";
 	  // outfile = ostr.c_str();
@@ -238,6 +240,11 @@ int main(int argc, char* argv[])
 				  case 'r':
 				  {
 				    options.create_range = true;
+				    break;
+				  }
+				  case 'k':
+				  {
+				    options.topology = 1;
 				    break;
 				  }
 				  default :

@@ -42,6 +42,7 @@
    *   - -m            Preserve mesh quality.
    *   - -a            Enable area weighting.
    *   - -p          Height fields positivity. Used for height fields, assume
+   *   - -k          maintain Euler characteristic of the model (topology unchanged)
    *   triangles are originally positively oriented.
    *   - -d          Use delayed deletion, as opposed to merging
    *   - -c           keep costs in a (sparse!!!!) tag
@@ -106,6 +107,10 @@ public:
 
 	//! create the range, with contiguous handles, and delete the initial set; default false
 	int create_range;
+
+	//! keep the topology unchanged; Euler characteristic would remain the same
+	// triggered by -k option (default 0)
+	int topology;
 };
 
 #endif /* QSLIMOPTIONS_H_ */

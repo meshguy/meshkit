@@ -36,6 +36,7 @@ QslimOptions::QslimOptions() {
 	selected_output = 0;
 	plotCost = 0;
 	create_range = false;
+	topology = 0;
 
 }
 

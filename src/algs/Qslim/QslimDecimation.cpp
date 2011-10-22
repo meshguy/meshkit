@@ -280,6 +280,69 @@ double pair_mesh_positivity(/* Model& M,*/moab::EntityHandle v1,
   return 0.0;
 }
 
+// will make sure that no hole would be closed
+/*
+ * will accomplish that by looking at the edges connected to both vertices
+ * if there would be edges that would merge without a connecting triangle,
+ * it would increase the cost (penalize it harshly)
+ */
+static double pair_mesh_topology(moab::EntityHandle v1, moab::EntityHandle v2)
+{
+  // first, find nodes v3 that are connected to both v1 and v2 by edges
+  // if there is no triangle that is formed with v1, v2, v3, it means it would
+  //  collapse a hole
+  std::vector<moab::EntityHandle> edges1, edges2;
+  moab::Range nodes1, nodes2;
+  moab::ErrorCode rval = mb->get_adjacencies(&v1, 1, 1, false, edges1);
+  assert (moab::MB_SUCCESS == rval);
+  filterValid(mb, edges1);
+  rval = mb->get_adjacencies(&v2, 1, 1, false, edges2);
+  assert (moab::MB_SUCCESS == rval);
+  filterValid(mb, edges2);
+  rval = mb->get_connectivity(&edges1[0], edges1.size(), nodes1);
+  assert (moab::MB_SUCCESS == rval);
+  rval = mb->get_connectivity(&edges2[0], edges2.size(), nodes2);
+  assert (moab::MB_SUCCESS == rval);
+  moab::Range commonV=intersect (nodes1, nodes2);
+  moab::Range v12;
+  v12.insert(v1); v12.insert(v2);
+  moab::Range leftOver = subtract(commonV, v12);
+  for (moab::Range::iterator it = leftOver.begin(); it!=leftOver.end(); it++)
+  {
+    moab::EntityHandle thirdNode = *it;
+    if (!ehIsValid(thirdNode))
+      continue;
+    // the moment we find a triple v1, v2, thirdNode that is not a triangle, return penalty
+    moab::Range triple=v12;
+    triple.insert(thirdNode);
+    moab::Range connTris;
+    rval = mb->get_adjacencies(triple, 2, false, connTris );
+    if (moab::MB_SUCCESS == rval)
+    {
+      if (connTris.empty())
+        return MESH_INVERSION_PENALTY; // this means that there are no
+                                       /// triangles connected to the 3 nodes
+                                       // so it would close a hole/tunnel
+
+      int noValidTris = 0;
+      for (moab::Range::iterator it2 = connTris.begin(); it2!=connTris.end(); it2++)
+      {
+        if (ehIsValid(*it2))
+        {
+          noValidTris++;
+          break;
+        }
+      }
+      if (0==noValidTris)
+        return MESH_INVERSION_PENALTY; // this means that there are no
+                                       // triangles connected to the 3 nodes
+                                       // so it would close a hole/tunnel
+
+    }
+
+  }
+  return 0.; // no penalty
+}
 static
 double pair_mesh_penalty( /*Model& M, Vertex *v1, Vertex *v2,*/
 moab::EntityHandle v1, moab::EntityHandle v2, Vec3& vnew) {
@@ -346,6 +409,9 @@ void compute_pair_info(pair_info *pair /* Model * pM0,*/) {
 
   if (opts.height_fields)
     pair->cost += pair_mesh_positivity(/* *pM0, */v0, v1, pair->candidate);
+
+  if (opts.topology)
+    pair->cost += pair_mesh_topology(v0, v1);
 
   if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS)
 
