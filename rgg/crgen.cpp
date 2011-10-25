@@ -1601,7 +1601,7 @@ int CCrgen::extrude() {
     // Step 2: get all max. value of neumann sets, then, for newly created NS set a new value and GD =2 tag.
 
     iBase_EntityHandle *ents1 = NULL;
-    int ents_alloc1 = 0, ents_size1;
+    int ents_alloc1 = 0, ents_size1 = 0;
 
     SimpleArray<iBase_EntitySetHandle> nsets;
     iMesh_getEntSetsByTagsRec(impl, root_set, &ntag, NULL,
@@ -1635,6 +1635,9 @@ int CCrgen::extrude() {
 	iMesh_setEntSetIntData(impl,nsets[i], gtag, gd, &err);
 	ERRORR("Trouble getting entity set.", err);
       }
+      ents_alloc1 = 0;
+      ents_size1 = 0;
+      *ents1 = NULL;
     }
     delete ext;    
   }
