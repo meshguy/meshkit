@@ -21,7 +21,6 @@ libMKrgg_la_SOURCES = \
 	pincell.cpp  \
 	cylinder.cpp \
 	crgen.cpp \
-	copymove.cpp \
         copymove_parallel.cpp \
 	utils.cpp \
 	parser.hpp \

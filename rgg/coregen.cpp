@@ -117,10 +117,10 @@ int main(int argc, char *argv[]) {
     // copy move
     /*********************************************/
     CClock ld_cm;
-    if(TheCore.prob_type == "mesh"){ 
-      err = TheCore.copymove_parallel(rank, nprocs);
-      ERRORR("Failed in copy move routine.", 1);
+    err = TheCore.copymove(rank, nprocs);
+    ERRORR("Failed in copy move routine.", 1);
 
+    if (TheCore.prob_type == "mesh"){
       TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem2);
       ld_tcopymove = ld_cm.DiffTime();
       tcopymove = clock();
@@ -133,10 +133,6 @@ int main(int argc, char *argv[]) {
 	std::cout << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
       }
     }
-    else{
-      err = TheCore.copy_move();
-    }
-
 #ifdef USE_MPI
     MPI::COMM_WORLD.Barrier();
 #endif

@@ -697,6 +697,9 @@ int CCrgen::load_geometries()
     ERRORR( "Unable to subtract entity sets.", err );
 
     assys.push_back(orig_set);
+
+    assys_index.push_back(i);
+
     // store this set for subtraction with next entity set
     temp_set1 = temp_set;
   }
