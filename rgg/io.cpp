@@ -53,6 +53,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       m_szInFile=m_szFile+".inp";
       m_szJouFile = m_szFile+".jou";
       m_szSchFile = m_szFile+".template.jou";
+      m_szAssmInfo = m_szFile + "_info.csv";
     }
     else if (3 == argc) {
       int i=1;// will loop through arguments, and process them
@@ -68,6 +69,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
 		m_szInFile=m_szFile+".inp";
 		m_szJouFile = m_szFile+".jou";
 		m_szSchFile = m_szFile+".template.jou";
+		m_szAssmInfo = m_szFile + "_info.csv";
 		break;
 	      }	
 	    case 'h': 
@@ -101,6 +103,8 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       m_szInFile+=".inp";
       m_szJouFile+=".jou";
       m_szSchFile = m_szFile+".template.jou";
+      m_szAssmInfo = m_szFile + "_info.csv";
+
       std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
 		<< "  " << m_szJouFile << std::endl;
     }
@@ -153,7 +157,7 @@ int CNrgen::ReadInputPhase1 ()
 // Output:   none
 // -------------------------------------------------------------------------------------------
 {
-  CParser Parse;
+  CParser Parse;  bool bDone = false;
   int nCyl =0, nCellMat=0, nInputLines=0;
   std::string card, szVolId, szVolAlias;
   // count the total number of cylinder commands in each pincell
@@ -225,6 +229,12 @@ int CNrgen::ReadInputPhase1 ()
 	nCellMat = 0;
       }
     }
+    // info flag
+    if (szInputString.substr(0,4) == "info"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_szInfo;
+      std::cout <<"--------------------------------------------------"<<std::endl;
+    }
     // breaking condition
     if(szInputString.substr(0,3) == "end"){
       std::istringstream szFormatString (szInputString);
@@ -248,6 +258,24 @@ int CNrgen::ReadInputPhase1 ()
 #endif
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
+  if(strcmp(m_szInfo.c_str(),"on") == 0){
+    std::cout  << m_szAssmInfo <<std::endl;
+    do{
+      m_AssmInfo.open (m_szAssmInfo.c_str(), std::ios::out); 
+      if (!m_AssmInfo){
+	std::cout << "Unable to open o/p file: " << m_szAssmInfo << std::endl;
+	m_AssmInfo.clear ();
+	exit(1);
+      }
+      else
+	bDone = true; // file opened successfully
+    } while (!bDone);
+  
+    // write header for info file
+    m_AssmInfo <<"pincell"<<  " \t" << 
+      "m" << " \t" << "n" << " \t" << "dX" << " \t" << 
+      "dY" << " \t" << "dZ"  << std::endl;
+  }
   return 0;
 }
 
@@ -751,7 +779,8 @@ int CNrgen::ReadAndCreate()
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_dMergeTol;
       std::cout <<"--------------------------------------------------"<<std::endl;
-    }  // Handle mesh size inputs
+    }
+    // Handle mesh size inputs
     if (szInputString.substr(0,14) == "radialmeshsize"){
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> m_dRadialSize;
@@ -1347,9 +1376,10 @@ int CNrgen::CreateCubitJournal()
   std::string szSave = m_szFile + ".cub";
   m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl; 
 
-
   std::cout << "Schemes file created: " << m_szSchFile << std::endl;
   std::cout << "Cubit journal file created: " << m_szJouFile << std::endl;
+  std::cout << "Assembly info file created: " << m_szAssmInfo << std::endl;
+
   return 0;
 }
   
@@ -1473,6 +1503,8 @@ int CNrgen::TerminateProgram ()
   m_FileInput.close ();
   m_FileOutput.close ();
   m_SchemesFile.close ();
+  if(strcmp(m_szInfo.c_str(),"on") == 0)
+    m_AssmInfo.close ();
 
   return 0;
 }
@@ -1811,6 +1843,9 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
       std::cout << " m = " << m <<" n = " << n << std::endl;
       std::cout << "creating pin: " << nTempPin;
       std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
+    
+      if(strcmp(m_szInfo.c_str(),"on") == 0)
+	m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
 
       m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
       if(nIFlag){
@@ -1920,6 +1955,9 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
       std::cout << " m = " << m <<" n = " << n << std::endl;
       std::cout << "creating pin: " << nTempPin;
       std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
+
+      if(strcmp(m_szInfo.c_str(),"on") == 0)
+	m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
 
       m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
       if(nIFlag){

@@ -70,10 +70,10 @@ private:
   std::ifstream m_FileInput;  
     
   // journal file Output
-  std::ofstream m_FileOutput, m_SchemesFile;
+  std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
   // string for file names
-  std::string m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;    
+  std::string m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo;    
 
   // matrix for holding pincell arrangement
   CMatrix<std::string> m_Assembly; 

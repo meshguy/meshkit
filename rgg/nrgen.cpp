@@ -39,6 +39,7 @@ CNrgen::CNrgen ()
   m_szSideset = "yes";
   m_dMergeTol = 1e-4;
   m_edgeInterval = 99;
+  m_szInfo = "off";
 }
 
 CNrgen::~CNrgen ()
@@ -48,5 +49,5 @@ CNrgen::~CNrgen ()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-    // deallocate ... deallocate ... deallocate
+  // deallocate ... deallocate ... deallocate
 }
