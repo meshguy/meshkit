@@ -253,6 +253,9 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
 	    move_verts(assys[move_index], dx_move);
 	    std::cout << "Moved Assembly: " << assm_index  << " dX = " << dx_move[0] << " dY = "
 		      << dx_move[1] << " in proc with rank " << nrank << std::endl;
+	    if(strcmp(core_info.c_str(),"on") == 0)
+	      info_file << assm_index << " \t" << k  << " \t" << dx_move[0] << " \t" << dx_move[1]  << " \t" << dx_move[2]  << " \t" << nrank << std::endl;
+
 	    flags[move_index]=1;
 	  }
 	  else{
@@ -275,6 +278,8 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
 
 	    std::cout << "Copy/moved A: " << assm_index 
 		      <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
+	    if(strcmp(core_info.c_str(),"on") == 0)
+	      info_file << assm_index << " \t" << k  << " \t" << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
 	    free(new_ents);
 	    free(orig_ents);
 
@@ -319,6 +324,8 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
 			&new_ents, &new_ents_alloc, &new_ents_size, false);
 	    std::cout << "Copy/moved Assm: " << assm_index << " dX = " << dx[0] << " dY = "
 		      << dx[1]  << " rank " << nrank << std::endl;
+	    if(strcmp(core_info.c_str(),"on") == 0)
+	      info_file << assm_index << " \t" << i  << " \t" << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
 
 	    cm[0]->tag_copied_sets(ctag_names, ctag_vals, 1);
       
@@ -332,6 +339,9 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
 	    move_verts(assys[0], dx_orig);
 	    std::cout << "Moved Assm: " << assm_index << " dX = " << dx_orig[0] << " dY = "
 		      << dx_orig[1] << " rank " << nrank << std::endl;
+	    if(strcmp(core_info.c_str(),"on") == 0)
+	      info_file << assm_index << " \t" << i  << " \t" << dx_orig[0] << " \t" << dx_orig[1]  << " \t" << dx_orig[2]  << " \t" << nrank << std::endl;
+
 	  }
 	}
       }
