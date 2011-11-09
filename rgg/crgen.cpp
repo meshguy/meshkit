@@ -413,7 +413,7 @@ CCrgen::CCrgen()
   savefiles = "one";
   num_nsside = 0;
   linenumber = 0;
-  //  nsx =0, nsy=0, nsc=0;
+  core_info = "off";
 }
 
 CCrgen::~CCrgen()
@@ -486,6 +486,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
       ifile = iname + ".inp";
       outfile = iname + ".h5m";
       mfile = iname + ".makefile";
+      infofile = iname + "_info.csv";
     } else if (3 == argc) {
       int i = 1;// will loop through arguments, and process them
       for (i = 1; i < argc - 1; i++) {
@@ -500,6 +501,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
 	    ifile = iname + ".inp";
 	    outfile = iname + ".h5m";
 	    mfile = iname + ".makefile";
+	    infofile = iname + "_info.csv";
 	    break;
 	  }
 	  case 't': {
@@ -508,6 +510,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
 	    ifile = iname + ".inp";
 	    outfile = iname + ".h5m";
 	    mfile = iname + ".makefile";
+	    infofile = iname + "_info.csv";
 	    break;
 	  }
 	  case 'h': {
@@ -546,6 +549,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
       std::string temp = TEST_FILE_NAME;
       outfile = temp + ".h5m";
       mfile = temp + ".makefile";
+      infofile = temp + "_info.csv";
     }
 
     // open the file
@@ -596,6 +600,23 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
   err = read_inputs_phase2();
   ERRORR("Failed to read inputs in phase2.", 1);
 
+
+  // open info file
+  if(strcmp(core_info.c_str(),"on") == 0){
+    do {
+      info_file.open(infofile.c_str(), std::ios::out);
+      if (!info_file) {
+	if (myID == 0) {
+	  std::cout << "Unable to open makefile for writing" << std::endl;
+	}
+	info_file.clear();
+      } else
+	bDone = true; // file opened successfully
+      std::cout << "Created core info file: " << infofile << std::endl;
+    } while (!bDone);
+
+    info_file << "assm index"  << " \t" << "assm number" << " \t" << "dX" << " \t" << "dY" << " \t" << "dZ"  << " \t" << "rank" << std::endl;
+  }
   if (myID == 0) {
     err = write_makefile();
     ERRORR("Failed to write a makefile.", 1);
@@ -770,6 +791,13 @@ int CCrgen::read_inputs_phase1() {
     if (input_string.substr(0, 12) == "saveparallel") {
       std::istringstream formatString(input_string);
       formatString >> card >> savefiles;
+      if(formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
+    }
+    // info flag
+    if (input_string.substr(0, 4) == "info") {
+      std::istringstream formatString(input_string);
+      formatString >> card >> core_info;
       if(formatString.fail())
 	IOErrorHandler (INVALIDINPUT);
     }

@@ -113,7 +113,7 @@ private:
   int nrings, nringsx, nringsy, pack_type, symm;
   double pitch, pitchx, pitchy;
   bool global_ids, back_mesh;
-  std::string outfile;
+  std::string outfile, core_info;
   int nassys; // the number of mesh files
   int tot_assys; // total no. of assms forming core
   int set_DIM; // default is 3D
@@ -125,8 +125,8 @@ private:
   
   // file related
   std::ifstream file_input;    // File Input
-  std::ofstream make_file;    // File Output
-  std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc;
+  std::ofstream make_file, info_file;    // File Output
+  std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc, infofile;
   int linenumber;
   std::string card,geom_type, meshfile, mf_alias, temp_alias;
   std::vector<std::string> assm_alias;
