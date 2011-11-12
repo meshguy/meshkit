@@ -34,7 +34,7 @@ int main(int argc, char **argv)
   const char *output_filename = NULL;
   int whole_geom = 1;
   int n_interval[3] = {10, 10, 10};
-  double box_increase = .2;
+  double box_increase = .03;
   int vol_frac_res = 0;
 
   if (argc > 2 && argc < 10) {
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     if (argc > 8) vol_frac_res = atoi(argv[8]);
   }
   else {
-    std::cout << "Usage: " << argv[0] << "<input_geom_filename> <whole_geom> {x: # of intervals} {y: # of intervals} {z: # of intervals} {output_mesh_filename} {#_add_layer} {vol_frac_res}" << std::endl;
+    std::cout << "Usage: " << argv[0] << "<input_geom_filename> <whole_geom> {x: # of intervals} {y: # of intervals} {z: # of intervals} {output_mesh_filename} {box_size_increase} {vol_frac_res}" << std::endl;
     std::cout << "<input_geom_filename> : input geometry file name" << std::endl;
     std::cout << "<whole_geom> : make mesh for whole geom or individually(1/0), default whole geom(1)" << std::endl;
     std::cout << "{x/y/z: # ofintervals} : optional argument. # of intervals. if it is not set, set to 10." << std::endl;

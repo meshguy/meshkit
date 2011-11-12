@@ -244,12 +244,12 @@ private:
   EBMesher &operator=(const EBMesher &);
 
   iBase_TagHandle m_elemStatusTag, m_edgeCutFracLengthTag,
-    m_edgeCutFracTag, m_matFracIDTag, m_volFracTag, m_bbTag;
+    m_edgeCutFracTag, m_volFracLengthTag, m_volFracHandleTag, m_volFracTag, m_bbTag;
   iMesh_Instance m_mesh;
   iBase_EntitySetHandle m_hRootSet;
   std::vector<IntersectDist> m_vIntersection;
   int m_nTri, m_nHex, m_iInter, m_nFraction, m_iStartHex, m_nMove, m_nAddLayer,
-    m_nIteration, m_iOverlap, m_iElem, m_nNode[3], m_nDiv[3], m_nVolFracDiv,
+    m_nIteration, m_iOverlap, m_iElem, m_nNode[3], m_nDiv[3],
     m_iFirstP, m_iSecondP;
   double m_dFirstP, m_dSecondP, m_curPnt, m_prevPnt, m_boxIncrease,
     m_dIntervalSize[3], m_origin_coords[3], m_dInputSize,

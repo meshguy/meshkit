@@ -76,8 +76,11 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
 
   int m_id = 1;
   const void *id = &m_id;
-  m_matFracIDTag = get_tag("MAT_FRAC_ID_TAG", sizeof(int),
-                           MB_TAG_SPARSE, MB_TYPE_INTEGER, id);
+  m_volFracLengthTag = get_tag("VOL_FRAC_LENGTH_TAG", sizeof(int),
+                               MB_TAG_SPARSE, MB_TYPE_INTEGER, id);
+  
+  m_volFracHandleTag = get_various_length_tag("VOL_FRAC_HANDLE_TAG",
+                                          MB_TAG_SPARSE, MB_TYPE_INTEGER);
 
   m_volFracTag = get_various_length_tag("VOL_FRAC_TAG",
                                         MB_TAG_SPARSE, MB_TYPE_DOUBLE);
@@ -1712,7 +1715,7 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
   double dTotEdgeElem = 0.;
   for (i = 0; i < 3; i++) {
     rayMaxEnd[i] = m_origin_coords[i] + m_nDiv[i]*m_dIntervalSize[i];
-    dTotEdgeElem += m_dIntervalSize[i]*(m_nVolFracDiv + 1)*(m_nVolFracDiv + 1);
+    dTotEdgeElem += m_dIntervalSize[i]*(vol_frac_div + 1)*(vol_frac_div + 1);
   }
 
   // get all hexes
@@ -1729,6 +1732,7 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
                                                    m_elemStatusTag, &hex_status[0]);
   */
   int error;
+  std::vector<int> frac_length;
   int* hex_status = new int[hex_size];
   int hex_status_alloc = sizeof(int)*hex_size;
   int hex_status_size = 0;
@@ -1823,17 +1827,17 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
                         VolFrac temp_vf(dDistance, bClosed);
                         vol_fraction[parents[l]] = temp_vf;
                         //std::cout << "iHex=" << iHex << ", vh="
-                        //  << parents[l] << ", dir=" << dir << ", dDistance1="
-                        //  << dDistance << ", vol="
-                        //  << temp_vf.vol << std::endl;
+                        //        << parents[l] << ", dir=" << dir << ", dDistance1="
+                        //        << dDistance << ", vol="
+                        //        << temp_vf.vol << std::endl;
                       }
                       else {
                         vf_iter->second.vol += dDistance;
                         vf_iter->second.closed = bClosed;
                         //std::cout << "iHex=" << iHex << ", vh="
-                        //  << vf_iter->first << ", dir=" << dir << ", dDistance1="
-                        //  << dDistance << ", vol="
-                        //  << vf_iter->second.vol << std::endl;
+                        //        << vf_iter->first << ", dir=" << dir << ", dDistance1="
+                        //                         << dDistance << ", vol="
+                        //        << vf_iter->second.vol << std::endl;
                       }
                     }
                   }
@@ -1897,17 +1901,17 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
                     VolFrac temp_vf(dDistance, bClosed);
                     vol_fraction[parents[0]] = temp_vf;
                     //std::cout << "iHex=" << iHex << ", vh="
-                    //      << parents[0] << ", dir=" << dir << ", dDistance3="
-                    //      << dDistance << ", vol="
-                    //      << temp_vf.vol << std::endl;
+                    //        << parents[0] << ", dir=" << dir << ", dDistance3="
+                    //        << dDistance << ", vol="
+                    //        << temp_vf.vol << std::endl;
                   }
                   else {
                     vf_iter->second.vol += dDistance;
                     vf_iter->second.closed = bClosed;
                     //std::cout << "iHex=" << iHex << ", vh="
-                    //      << vf_iter->first << ", dir=" << dir << ", dDistance3="
-                    //      << dDistance << ", vol="
-                    //      << vf_iter->second.vol << std::endl;
+                    //        << vf_iter->first << ", dir=" << dir << ", dDistance3="
+                    //        << dDistance << ", vol="
+                    //        << vf_iter->second.vol << std::endl;
                   }
                 }
               }
@@ -1927,9 +1931,9 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
                   if (!make_edge(ePnt, edge_handles)) return iBase_FAILURE;
                   */
                   //std::cout << "iHex=" << iHex << ", vh="
-                  //    << vf_iter->first << ", dir=" << dir << ", dDistance4="
-                  //    << m_dIntervalSize[dir] << ", vol="
-                  //    << vf_iter->second.vol << std::endl;
+                  //        << vf_iter->first << ", dir=" << dir << ", dDistance4="
+                  //        << m_dIntervalSize[dir] << ", vol="
+                  //        << vf_iter->second.vol << std::endl;
                 }
               }
             }
@@ -1954,17 +1958,17 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
                     VolFrac temp_vf(m_dIntervalSize[dir], true);
                     vol_fraction[parent_entity] = temp_vf;
                     //std::cout << "iHex=" << iHex << ", vh="
-                    //      << parents[0] << ", dir=" << dir << ", dDistance5="
-                    //      << dDistance << ", vol="
-                    //      << temp_vf.vol << std::endl;
+                    //        << parents[0] << ", dir=" << dir << ", dDistance5="
+                    //                             << dDistance << ", vol="
+                    //        << temp_vf.vol << std::endl;
                   }
                   else {
                     vf_iter->second.vol += m_dIntervalSize[dir];
                     vf_iter->second.closed = bClosed;
                     //std::cout << "iHex=" << iHex << ", vh="
-                    //      << vf_iter->first << ", dir=" << dir << ", dDistance5="
-                    //      << dDistance << ", vol="
-                    //      << vf_iter->second.vol << std::endl;
+                    //        << vf_iter->first << ", dir=" << dir << ", dDistance5="
+                    //                         << dDistance << ", vol="
+                    //        << vf_iter->second.vol << std::endl;
                   }
                 }
               }
@@ -1972,17 +1976,42 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
           }
         }
       }
-      /*
+
+      int vol_frac_length = vol_fraction.size();
+      std::vector<int> vol_frac_id(vol_frac_length);
+      std::vector<double> vol_frac(vol_frac_length);
+      int vol_frac_id_size = vol_frac_length*sizeof(int);
+      int vol_frac_size = vol_frac_length*sizeof(double);
       vf_iter = vol_fraction.begin();
       vf_end_iter = vol_fraction.end();
-      for (; vf_iter != vf_end_iter; vf_iter++) {
-        std::cout << "iHex=" << iHex << ", i=" << index[0]
-                  << ", j=" << index[1] << ", k=" << index[2]
-                  << ", vol_handle=" << vf_iter->first
-                  << ", vol=" << vf_iter->second.vol
-                  << ", vol_fraction=" << vf_iter->second.vol/dTotEdgeElem
-                  << std::endl;
-                  }*/
+      for (int m = 0; vf_iter != vf_end_iter; vf_iter++, m++) {
+        vol_frac_id[m] = vf_iter->first;
+        vol_frac[m] = vf_iter->second.vol/dTotEdgeElem;
+        //std::cout << "iHex=" << iHex << ", i=" << index[0]
+        //        << ", j=" << index[1] << ", k=" << index[2]
+        //        << ", vol_handle=" << vf_iter->first
+        //        << ", vol=" << vf_iter->second.vol
+        //        << ", vol_fraction=" << vf_iter->second.vol/dTotEdgeElem
+        //        << std::endl;
+      }
+      const void* vol_frac_ids = &vol_frac_id[0];
+      const void* vol_fracs = &vol_frac[0];
+
+      // set volume fraction information as tag
+      rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_volFracLengthTag),
+                                           reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
+                                           1, &vol_frac_length);
+      MBERRCHK(rval, mk_core()->moab_instance());
+
+      rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_volFracHandleTag),
+                                           reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
+                                           1, &vol_frac_ids, &vol_frac_id_size);
+      MBERRCHK(rval, mk_core()->moab_instance());
+
+      rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_volFracTag),
+                                           reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
+                                           1, &vol_fracs, &vol_frac_size);
+      MBERRCHK(rval, mk_core()->moab_instance());
     }
   }  
 
