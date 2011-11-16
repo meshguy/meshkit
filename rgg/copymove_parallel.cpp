@@ -203,13 +203,6 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
       CMatrix<double> dx_orig(assys.size(), 3);
       dx_orig.Set(0.0);
 
-      // get the copy/expand sets
-      int num_etags = 3, num_ctags = 1;
-      const char     *etag_names[] = { "MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET" };
-      const char *etag_vals[] = { NULL, NULL, NULL };
-      const char *ctag_names[] = { "GEOM_DIMENSION" };
-      const char *ctag_vals[] = { (const char*) &set_DIM };
-
       for (unsigned int i = 0; i < assys.size(); i++) {
 	flags[i]=0;
 	err = get_expand_sets(cm[i], assys[i], etag_names, etag_vals, num_etags);

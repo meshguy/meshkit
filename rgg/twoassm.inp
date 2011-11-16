@@ -20,7 +20,7 @@ MergeTolerance 1e-3              ! Default value of merge tolerance is 1e-9
 !
 Background test_sodium_all.cub	 ! Background mesh file 
 !
-OutputFileName twoassm_out.ccm   ! twoassm_out.h5m is the desired o/p file name 
+OutputFileName twoassm_out.h5m   ! twoassm_out.h5m is the desired o/p file name 
 !
 Info ON
 !
