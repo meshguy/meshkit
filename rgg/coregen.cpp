@@ -76,6 +76,9 @@ int main(int argc, char *argv[]) {
 	err = TheCore.load_meshes_parallel(rank, nprocs);
 	ERRORR("Failed to load meshes.", 1);
 
+#ifdef USE_MPI
+    MPI::COMM_WORLD.Barrier();
+#endif
 	if(nprocs > (int) TheCore.files.size()){
 	  // if there are more procs than files distribute the copy/move work on each proc
 	  err = TheCore.distribute_mesh(rank, nprocs);

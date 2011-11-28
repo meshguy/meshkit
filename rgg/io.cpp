@@ -1828,6 +1828,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 	continue;
       }
       // find that pincell
+      ++m_nTotalPincells;
       for(int b=1; b<=m_nPincells; b++){
 	m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
 	if(m_Assembly(m,n) == szVolAlias)
@@ -1949,7 +1950,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
 	m_Pincell(1).GetPitch(dPX, dPY, dPZ);
 	continue;
       }	  
-
+      ++m_nTotalPincells;
       // now create the pincell in the location found
       std::cout << "\n--------------------------------------------------"<<std::endl;
       std::cout << " m = " << m <<" n = " << n << std::endl;
@@ -2135,7 +2136,7 @@ int CNrgen::Subtract_Pins()
 {
   if (m_nDimensions >0 && in_pins.size()>0){
     SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
-    std::cout <<"Total number of pins in the model = " <<  in_pins.size()/m_nDuct << std::endl;
+    std::cout <<"Total number of pins in the model = " << m_nTotalPincells << std::endl;
 
     int num_inpins = in_pins.size()/m_nDuct;
     CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, num_inpins);
@@ -2306,8 +2307,9 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
   iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
 
   // name tag handle
-  iBase_TagHandle this_tag= NULL;
+  iBase_TagHandle this_tag= NULL, pin_tag = NULL;
   char* tag_name = (char*)"NAME";
+  char* tag_pin = (char*)"PIN";
 
   std::string sMatName = "";
   std::string sMatName1 = "";
@@ -2316,6 +2318,9 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
   iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
   CHECK("getTagHandle failed");
       
+  // iGeom_createTag(geom, tag_pin, 1, iBase_INTEGER, &pin_tag, &err, 3);
+  // CHECK("createTagHandle failed");
+
   // get cell material
   m_Pincell(i).GetCellMatSize(nCells);
   SimpleArray<iBase_EntityHandle> cells(nCells);

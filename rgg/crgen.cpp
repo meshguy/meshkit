@@ -142,7 +142,7 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   pc->resolve_shared_sets( nssets, nstag );
 
 #ifdef HAVE_MOAB
-  int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
+  int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
   if(rval != moab::MB_SUCCESS) {
     std::cerr<<"Writing output file failed Code:";
     std::string foo = ""; mbImpl()->get_last_error(foo);
@@ -452,7 +452,7 @@ int CCrgen::close()
   return 0;
 }
 
-int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
+int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 // -----------------------------------------------------------------------------------
 // Function: Obtains file names and opens input/output files and then read/write them
 // Input:    command line arguments
@@ -462,7 +462,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
   bool bDone = false;
   do {
     if (2 == argc) {
-      if (argv[1][0] == '-' && myID == 0) {
+      if (argv[1][0] == '-' && nrank == 0) {
 	if (argv[1][1] == 'h') {
 	  std::cout
 	    << "Usage: coregen [-t -m -h] <coregen input file>"
@@ -493,7 +493,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
 	if (argv[i][0] == '-') {
 	  switch (argv[i][1]) {
 	  case 'm': {
-	    if (myID == 0) {
+	    if (nrank == 0) {
 	      std::cout << "Creating Makefile Only" << std::endl;
 	    }
 	    // only makefile creation specified
@@ -514,7 +514,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
 	    break;
 	  }
 	  case 'h': {
-	    if (myID == 0) {
+	    if (nrank == 0) {
 	      std::cout
 		<< "Usage: coregen [-t -m -h] <coregen input file>"
 		<< std::endl;
@@ -538,7 +538,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
 	}
       }
     } else { //default case
-      if (myID == 0) {
+      if (nrank == 0) {
 	std::cerr << "Usage: " << argv[0]
 		  << " <input file> WITHOUT EXTENSION" << std::endl;
 	std::cout << "  No file specified.  Defaulting to: "
@@ -550,12 +550,13 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
       outfile = temp + ".h5m";
       mfile = temp + ".makefile";
       infofile = temp + "_info.csv";
+      minfofile = temp + "_mesh_info"; 
     }
 
     // open the file
     file_input.open(ifile.c_str(), std::ios::in);
     if (!file_input) {
-      if (myID == 0) {
+      if (nrank == 0) {
 	std::cout << "Unable to open file" << std::endl;
 	std::cout << "Usage: coregen [-t -m -h] <coregen input file>"
 		  << std::endl;
@@ -581,7 +582,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
   do {
     make_file.open(mfile.c_str(), std::ios::out);
     if (!make_file) {
-      if (myID == 0) {
+      if (nrank == 0) {
 	std::cout << "Unable to open makefile for writing" << std::endl;
       }
       make_file.clear();
@@ -589,7 +590,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
       bDone = true; // file opened successfully
   } while (!bDone);
 
-  if (myID == 0) {
+  if (nrank == 0) {
     std::cout << "\nEntered input file name: " << ifile << std::endl;
   }
 
@@ -606,7 +607,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
     do {
       info_file.open(infofile.c_str(), std::ios::out);
       if (!info_file) {
-	if (myID == 0) {
+	if (nrank == 0) {
 	  std::cout << "Unable to open makefile for writing" << std::endl;
 	}
 	info_file.clear();
@@ -617,7 +618,23 @@ int CCrgen::prepareIO(int argc, char *argv[], int myID, int nprocs)
 
     info_file << "assm index"  << " \t" << "assm number" << " \t" << "dX" << " \t" << "dY" << " \t" << "dZ"  << " \t" << "rank" << std::endl;
   }
-  if (myID == 0) {
+
+  // open mesh info file
+  if(strcmp(core_info.c_str(),"on") == 0){
+    do {
+      minfo_file.open(minfofile.c_str(), std::ios::out);
+      if (!info_file) {
+	if (nrank == 0) {
+	  std::cout << "Unable to open makefile for writing" << std::endl;
+	}
+	minfo_file.clear();
+      } else
+	bDone = true; // file opened successfully
+      std::cout << "Created core info file: " << infofile << std::endl;
+    } while (!bDone);
+    minfo_file << "assm index"  << " \t" << "assm number" << " \t" << "dX" << " \t" << "dY" << " \t" << "dZ"  << " \t" << "rank" << std::endl;
+  }
+  if (nrank == 0) {
     err = write_makefile();
     ERRORR("Failed to write a makefile.", 1);
   }
