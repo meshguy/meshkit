@@ -25,6 +25,7 @@ CNrgen::CNrgen ()
   szComment = "!";
   MAXCHARS = 300;
   pi = M_PI;
+  m_nTotalPincells = 0;
   m_dRadialSize = -1.0;
   m_dAxialSize = -1.0;
   m_dTetMeshSize = -1.0;
