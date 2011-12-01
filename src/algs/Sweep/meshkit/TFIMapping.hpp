@@ -98,12 +98,15 @@ private:
 	int SurfMapping(ModelEnt *ent);
 
 	//calculate the parameter r and s
-	int ParameterCalculate(double &r, double &s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3], double *pts);
+	int ParameterCalculate(double &r, double &s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3], double *pts, ModelEnt *ent);
 
 	//calculate the intersection or shortest distance between 2 3D lines
 	bool LineLineIntersect(double p1[3], double p2[3], double p3[3], double p4[3], double *pa, double *pb, double &mua, double &mub);
 
 	void SurfImprove(iBase_EntityHandle surface, iBase_EntitySetHandle surfMesh, iBase_EntityType entity_type);
+	
+	//smooth the quadrilateral mesh on the linking surface	
+	void SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vector<iBase_EntityHandle> &List_ii, std::vector<iBase_EntityHandle> &List_j, std::vector<iBase_EntityHandle> &List_jj, std::vector<iBase_EntityHandle> &InteriorNodes, std::vector<iBase_EntityHandle> &quads, iBase_TagHandle &taghandle, ModelEnt *ent);
 	
 };
 
