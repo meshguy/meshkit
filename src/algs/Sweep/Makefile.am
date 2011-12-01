@@ -10,7 +10,8 @@ SUBDIRS =
 libSweep_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-libSweep_la_SOURCES = OneToOneSwept.cpp \
+libSweep_la_SOURCES = Global.hpp \
+        OneToOneSwept.cpp \
         TFIMapping.cpp \
         EquipotentialSmooth.cpp \
         EquipotentialSmooth.hpp

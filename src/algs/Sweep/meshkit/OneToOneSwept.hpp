@@ -23,10 +23,15 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "moab/ReadUtilIface.hpp"
+//#include "meshkit/MesquiteOpt.hpp"
+#include "Global.hpp"
 #include <iMesh.h>
+#include <iGeom.h>
 #include <set>
 #include <iRel.h>
 #include <vector>
+#include <set>
+#include <list>
 
 #include "meshkit/MeshScheme.hpp"
 
@@ -43,47 +48,6 @@ namespace MeshKit
    * to the target surface
    */
 //===========================================================================//
-
-struct Point2D
-{
-	double pu;
-	double pv;	
-};
-struct Point3D
-{
-	double px;
-	double py;
-	double pz;
-};
-struct Vertex
-{
-   	Vertex() { onBoundary = 0; }
-   	int    id;
-	int index;
-   	bool   onBoundary;
-   	bool   onCorner;
-   	double uCoord, uvCoords[2], xyzCoords[3];
-	iBase_EntityHandle gVertexHandle;
-};
-struct Edge
-{
-  	Vertex* connect[2];
-	int  EdgeID;
-	int index;
-	bool onBoundary;
-	iBase_EntityHandle gEdgeHandle;
-};
-
-struct Face
-{
-    	int  getNumNodes() const { return connect.size(); }
-    	Vertex* getVertex(int i) const { return connect[i]; }
-    	vector<Vertex*> connect;
-	vector<Edge*> connEdges;
-    	int FaceID;
-	int index;
-	iBase_EntityHandle gFaceHandle;
-};
 
 class OneToOneSwept :  public MeshScheme
 {	
@@ -125,7 +89,7 @@ public:
          * \return array terminated with \c moab::MBMAXTYPE
          */
         virtual const moab::EntityType* mesh_types_arr() const
-          { return output_types(); }
+          { return output_types();}
 
 
 	//specify the source surface for OneToOneSwept class
@@ -171,12 +135,33 @@ private:
 
 	//create the hexahedral elements between the source surface and target surface
 	int CreateElements(vector<vector <Vertex> > &linkVertexList);
+
+
+	//detect the first geometrical edge on the outer boundary loop
+	void DetectFirstEdge();
+
+	//calculate the transformation matrix for all the boundary loop
+	void CalculateMatrices(std::vector< std::vector<double> > &matrix, std::vector<Point2D> &src_center, std::vector<Point2D> &tar_center);
+
+
+
+	//calculate the coefficiences for mesh edges
+	void CalculateCoeffs(std::vector<double> &ConstCoeffs, std::vector< std::vector<double> > coords, std::vector< std::vector<int> > list_edge, std::vector< std::vector<int> > triangles);
+
+	//target surface mesh by Mesquite
+	void SurfMeshOptimization();
+
+
 private://private member variable
 	iBase_EntityHandle sourceSurface;
 	iBase_EntityHandle targetSurface;
 	std::vector<Edge> gsEdgeList;  //geometrical edges on the source surfaces
+	std::vector< std::list<int> > gBoundaries; //store geometrical boundary loops
+
 	std::vector<Edge> gtEdgeList;  //geometrical edges on the target surfaces
 	std::vector<Vertex> NodeList;  //mesh nodes on the source surface
+	std::vector< std::set<int> > nBoundaries;//store the mesh boundary loops
+	std::vector< std::set<int> > nBndEdges;
 	map<int, int> edgePairs;  //store the relationship between the  edge id on the source surface and target surface
 	map<int, int> cornerPairs; ////store the relationship between the corner vertex id on the source surface and target surface	
 	std::vector<Vertex> gsVertexList;// geometrical vertices on the source surface
@@ -194,9 +179,10 @@ private://private member variable
 	iBase_EntitySetHandle geom_root_set, mesh_root_set;
 	iBase_EntityHandle volEntity;
 	iBase_EntitySetHandle volumeSet;
-	int index_src, index_tar;	
+	int index_src, index_tar;
 
-	
+	std::vector< std::vector<double> > A_Matrix;
+	std::vector<Point2D> src_center, tar_center;	
 	
 };
 
