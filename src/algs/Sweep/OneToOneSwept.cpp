@@ -2107,7 +2107,7 @@ int OneToOneSwept::TargetSurfProjection()
 		//{
 			//int test_id;
 			//m_err = mk_core()->imesh_instance()->getIntData(nodes_tar[j], mesh_id_tag, test_id);		
-			//IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the taTargetSurfProrget surface.");
+			//IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the target surface.");
 			//std::cout << "int data for node " << j << "\ttest_id = " << test_id << std::endl;
 
 
@@ -2435,7 +2435,11 @@ int OneToOneSwept::TargetSurfProjection()
 		IBERRCHK(g_err, "Trouble set the association between the target surface entity and mesh entity set.");	
 	}
 
+#ifdef HAVE_MESQUITE
+
 	SurfMeshOptimization();   
+
+#endif
 
 	return 1;
 }
