@@ -24,7 +24,7 @@
 #include "meshkit/SizingFunction.hpp"
 #include "moab/ReadUtilIface.hpp"
 //#include "meshkit/MesquiteOpt.hpp"
-#include "Global.hpp"
+//#include "Global.hpp"
 #include <iMesh.h>
 #include <iGeom.h>
 #include <set>
@@ -39,6 +39,56 @@ using namespace std;
 
 namespace MeshKit
 {
+
+struct Point2D
+{
+  double pu;
+  double pv;
+};
+struct Point3D
+{
+  double px;
+  double py;
+  double pz;
+};
+struct Vertex
+{
+    Vertex() { onBoundary = 0; }
+    int    id;
+  int index;
+    bool   onBoundary;
+    bool   onCorner;
+    double uCoord, uvCoords[2], xyzCoords[3], pre[2];
+  iBase_EntityHandle gVertexHandle;
+};
+struct Edge
+{
+    Vertex* connect[2];
+  int  EdgeID;
+  int index;
+  bool onBoundary;
+  iBase_EntityHandle gEdgeHandle;
+};
+
+struct Face
+{
+      int  getNumNodes() const { return connect.size(); }
+      Vertex* getVertex(int i) const { return connect[i]; }
+      vector<Vertex*> connect;
+  vector<Edge*> connEdges;
+      int FaceID;
+  int index;
+  iBase_EntityHandle gFaceHandle;
+};
+
+struct Matrix2D
+{
+  int index;
+  int index_x;
+  int index_y;
+  double value[4];
+};
+
 //===========================================================================//
   /*!
    * \class OneToOneSwept
