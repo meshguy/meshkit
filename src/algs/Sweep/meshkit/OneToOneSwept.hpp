@@ -148,9 +148,10 @@ private:
 	//calculate the coefficiences for mesh edges
 	void CalculateCoeffs(std::vector<double> &ConstCoeffs, std::vector< std::vector<double> > coords, std::vector< std::vector<int> > list_edge, std::vector< std::vector<int> > triangles);
 
+#ifdef HAVE_MESQUITE
 	//target surface mesh by Mesquite
 	void SurfMeshOptimization();
-
+#endif
 
 private://private member variable
 	iBase_EntityHandle sourceSurface;

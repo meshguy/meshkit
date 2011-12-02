@@ -5,7 +5,9 @@
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/TFIMapping.hpp"
 #include "meshkit/SimpleArray.hpp"
+#ifdef HAVE_MESQUITE
 #include "meshkit/MeshImprove.hpp"
+#endif
 #include <iostream>
 #include <algorithm>
 #include <math.h>
@@ -2691,7 +2693,7 @@ void OneToOneSwept::CalculateCoeffs(std::vector<double> &ConstCoeffs, std::vecto
 	}
 
 }
-
+#ifdef HAVE_MESQUITE
 //target surface mesh smoothing by Mesquite
 void OneToOneSwept::SurfMeshOptimization()
 {
@@ -2739,7 +2741,7 @@ void OneToOneSwept::SurfMeshOptimization()
 	IBERRCHK(m_err, "Trouble set a new coordinates for nodes on the target surface");
     } 
 }
-
+#endif
 
 }
 
