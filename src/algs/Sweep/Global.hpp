@@ -41,12 +41,9 @@ using namespace std;
    * 
    */
 //===========================================================================//
-
-struct Point2D
+namespace MeshKit
 {
-	double pu;
-	double pv;	
-};
+
 struct Point3D
 {
 	double px;
@@ -83,12 +80,6 @@ struct Face
 	iBase_EntityHandle gFaceHandle;
 };
 
-struct Matrix2D
-{
-	int index;
-	int index_x;
-	int index_y;
-	double value[4];
-};
+}
 
 #endif
