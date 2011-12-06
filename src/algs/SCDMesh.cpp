@@ -16,6 +16,8 @@
 #include "moab/Range.hpp"
 #include "moab/Interface.hpp"
 #include "moab/ScdInterface.hpp"
+#include "moab/OrientedBoxTreeTool.hpp"
+#include "moab/CartVect.hpp"
 
 namespace MeshKit
 {
@@ -31,6 +33,7 @@ namespace MeshKit
     : MeshScheme(mk_core, me_vec)
   {
     boxIncrease = 0.0;
+    useMeshGeom = false;
 
     // set bounding box size tag
     double bb_default[6] = { 0., 0., 0., 0., 0., 0. };
@@ -117,9 +120,45 @@ void SCDMesh::setup_this()
 // set the Cartesian bounding box dimension for the entire geometry
   void SCDMesh::set_cart_box_all()
   {
-    gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
-                                                  maxCoord[0], maxCoord[1], maxCoord[2]);
-    IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
+    if (!useMeshGeom) {
+      gerr = mk_core()->igeom_instance()->getBoundBox(minCoord[0], minCoord[1], minCoord[2],
+                                                      maxCoord[0], maxCoord[1], maxCoord[2]);
+      IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
+    }
+    else { // use mesh format geometry
+      moab::GeomTopoTool* gtt = new moab::GeomTopoTool(mk_core()->moab_instance());
+      rval = gtt->construct_obb_trees(true);
+      MBERRCHK(rval, mk_core()->moab_instance());
+      moab::OrientedBoxTreeTool* obtt = gtt->obb_tree();
+      moab::EntityHandle tree_root = gtt->get_one_vol_root();
+      moab::CartVect box_center, box_axis1, box_axis2, box_axis3;
+      for (int i = 0; i < 3; i++) {
+        minCoord[i] = HUGE_VAL;
+        maxCoord[i] = 0.;
+      }
+      moab::ErrorCode rval = obtt->box(tree_root, box_center.array(),
+                                       box_axis1.array(), box_axis2.array(),
+                                       box_axis3.array());
+      MBERRCHK(rval, mk_core()->moab_instance());
+      
+      // cartesian box corners
+      moab::CartVect corners[8] = {box_center + box_axis1 + box_axis2 + box_axis3,
+                                   box_center + box_axis1 + box_axis2 - box_axis3,
+                                   box_center + box_axis1 - box_axis2 + box_axis3,
+                                   box_center + box_axis1 - box_axis2 - box_axis3,
+                                   box_center - box_axis1 + box_axis2 + box_axis3,
+                                   box_center - box_axis1 + box_axis2 - box_axis3,
+                                   box_center - box_axis1 - box_axis2 + box_axis3,
+                                   box_center - box_axis1 - box_axis2 - box_axis3};
+      
+      // get the max, min cartesian box corners
+      for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 3; j++) {
+          if (corners[i][j] < minCoord[j]) minCoord[j] = corners[i][j];
+          if (corners[i][j] > maxCoord[j]) maxCoord[j] = corners[i][j];
+        }
+      }
+    }
 
     // increase box size
     double box_size;
@@ -129,7 +168,7 @@ void SCDMesh::setup_this()
       maxCoord[i] += box_size*boxIncrease; 
     }
   }
-
+  
 //---------------------------------------------------------------------------//
 // set the Cartesian bounding box dimension for an individual volume
   void SCDMesh::set_cart_box_individual(ModelEnt *this_me)

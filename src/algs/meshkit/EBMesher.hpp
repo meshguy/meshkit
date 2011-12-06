@@ -230,6 +230,11 @@ public:
    * \param use if mesh for whole geometry at once
    */
   void use_whole_geom(int use);
+
+  /** \brief set if mesh based geometry is used
+   * \param use if mesh based geometry is used
+   */
+  void use_mesh_geometry(bool use);
   
 protected:
   
@@ -255,7 +260,7 @@ private:
     m_dIntervalSize[3], m_origin_coords[3], m_dInputSize,
     m_min[3], m_max[3];
   EdgeStatus m_nStatus;
-  bool m_bMovedOnce, m_bUseGeom, m_bUseWholeGeom;
+  bool m_bMovedOnce, m_bUseGeom, m_bUseWholeGeom, m_bUseMeshGeom;
   std::vector<iBase_EntityHandle> m_vhVertex;
   std::vector<int> m_vnHexStatus;
   std::map<int, CutFraction> m_mdCutFraction;
@@ -486,6 +491,11 @@ inline void EBMesher::increase_box(double box_increase)
 inline void EBMesher::use_whole_geom(int use)
 {
   m_bUseWholeGeom = use;
+}
+
+inline void EBMesher::use_mesh_geometry(bool use)
+{
+  m_bUseMeshGeom = use;
 }
 }
 

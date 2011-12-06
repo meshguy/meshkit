@@ -20,6 +20,7 @@
 #include "moab/Range.hpp"
 #include "moab/Interface.hpp"
 #include "moab/ScdInterface.hpp"
+#include "moab/GeomTopoTool.hpp"
 
 namespace MeshKit
 {
@@ -112,6 +113,8 @@ namespace MeshKit
     moab::Range hex_range;
 
     moab::Tag bb_tag;
+
+    bool useMeshGeom;
 
   public:
 
@@ -254,6 +257,11 @@ namespace MeshKit
      */ 
     void set_box_increase_ratio(double box_increase = .03);
 
+    /*! 
+     * \brief Set if mesh based geometry is used 
+     */ 
+    void use_mesh_geometry(bool use);
+
 
   private:
 
@@ -365,6 +373,11 @@ namespace MeshKit
   inline void SCDMesh::set_box_increase_ratio(double box_increase) 
   { 
     boxIncrease = box_increase; 
+  }
+
+  inline void SCDMesh::use_mesh_geometry(bool use) 
+  { 
+    useMeshGeom = use;
   }
 
 } // end namespace MeshKit

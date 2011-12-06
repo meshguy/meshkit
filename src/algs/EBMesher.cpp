@@ -168,6 +168,9 @@ void EBMesher::setup_this()
   if (m_bUseWholeGeom) sm->set_geometry_scheme(SCDMesh::all);
   else sm->set_geometry_scheme(SCDMesh::individual);
 
+  // use mesh based geometry in SCDMesh
+  if (m_bUseMeshGeom) sm->use_mesh_geometry(true);
+
   // set # of intervals for 3 directions
   std::vector<int> fine_i (m_nDiv[0], 1);
   sm->set_coarse_i_grid(m_nDiv[0]);
@@ -2012,6 +2015,15 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
                                            reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
                                            1, &vol_fracs, &vol_frac_size);
       MBERRCHK(rval, mk_core()->moab_instance());
+
+      if (debug_ebmesh) {
+        for (int v = 0; v < vol_frac_length; v++) {
+          std::cout << "#_boundary=" << b << ",hex_handles=" << hex_handles[n]
+                    << ",vol_frac_handle[" << v << "]=" << vol_frac_id[v]
+                    << ",vol_fracs[" << v << "]=" << vol_frac[v]
+                    << std::endl;
+        }
+      }
     }
   }  
 

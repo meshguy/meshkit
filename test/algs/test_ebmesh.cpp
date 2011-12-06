@@ -24,7 +24,7 @@ const bool debug_ebmesher = false;
 
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,
-		  int whole_geom, int* n_intervals,
+		  int whole_geom, int* n_intervals, int mesh_based_geom,
                   double box_increase, int vol_frac_res);
 
 int main(int argc, char **argv) 
@@ -34,24 +34,27 @@ int main(int argc, char **argv)
   const char *output_filename = NULL;
   int whole_geom = 1;
   int n_interval[3] = {10, 10, 10};
+  int mesh_based_geom = 0;
   double box_increase = .03;
   int vol_frac_res = 0;
 
-  if (argc > 2 && argc < 10) {
+  if (argc > 2 && argc < 11) {
     input_filename += argv[1];
     if (argc > 2) whole_geom = atoi(argv[2]);
     if (argc > 3) n_interval[0] = atoi(argv[3]);
     if (argc > 4) n_interval[1] = atoi(argv[4]);
     if (argc > 5) n_interval[2] = atoi(argv[5]);
-    if (argc > 6) output_filename = argv[6];
-    if (argc > 7) box_increase = atof(argv[7]);
-    if (argc > 8) vol_frac_res = atoi(argv[8]);
+    if (argc > 6) mesh_based_geom = atoi(argv[6]);
+    if (argc > 7) output_filename = argv[7];
+    if (argc > 8) box_increase = atof(argv[8]);
+    if (argc > 9) vol_frac_res = atoi(argv[9]);
   }
   else {
-    std::cout << "Usage: " << argv[0] << "<input_geom_filename> <whole_geom> {x: # of intervals} {y: # of intervals} {z: # of intervals} {output_mesh_filename} {box_size_increase} {vol_frac_res}" << std::endl;
+    std::cout << "Usage: " << argv[0] << "<input_geom_filename> <whole_geom> {x: # of intervals} {y: # of intervals} {z: # of intervals} {mesh_based_geom} {output_mesh_filename} {box_size_increase} {vol_frac_res}" << std::endl;
     std::cout << "<input_geom_filename> : input geometry file name" << std::endl;
     std::cout << "<whole_geom> : make mesh for whole geom or individually(1/0), default whole geom(1)" << std::endl;
     std::cout << "{x/y/z: # ofintervals} : optional argument. # of intervals. if it is not set, set to 10." << std::endl;
+    std::cout << "<mesh_based_geom> : use mesh based geometry(1/0), default not-use(0)" << std::endl;
     std::cout << "{output_mesh_filename} : optional argument. if it is not set, dosn't export. can output mesh file (e.g. output.vtk.)" << std::endl;
     std::cout << "{box size increase} : optional argument. Cartesian mesh box increase form geometry. default 0.03" << std::endl;
     std::cout << "{vol_frac_res} : optional argument, volume fraction resolution of boundary cells for each material, you can specify it as # of divisions (e.g. 4)." << std::endl;
@@ -65,14 +68,14 @@ int main(int argc, char **argv)
   }
   
   if (load_and_mesh(input_filename.c_str(), output_filename,
-		    whole_geom, n_interval, box_increase, vol_frac_res)) return 1;
+		    whole_geom, n_interval, mesh_based_geom, box_increase, vol_frac_res)) return 1;
   
   return 0;
 }
 
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,
-                  int whole_geom, int* n_interval,
+                  int whole_geom, int* n_interval, int mesh_based_geom,
                   double box_increase, int vol_frac_res)
 {
   bool result;
@@ -96,6 +99,7 @@ int load_and_mesh(const char *input_filename,
   // make EBMesher
   EBMesher *ebm = (EBMesher*) mk.construct_meshop("EBMesher", vols);
   ebm->use_whole_geom(whole_geom);
+  ebm->use_mesh_geometry(mesh_based_geom);
   ebm->set_num_interval(n_interval);
   ebm->increase_box(box_increase);
 
