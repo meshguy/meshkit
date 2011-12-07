@@ -2018,7 +2018,7 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
 
       if (debug_ebmesh) {
         for (int v = 0; v < vol_frac_length; v++) {
-          std::cout << "#_boundary=" << b << ",hex_handles=" << hex_handles[n]
+          std::cout << "#_boundary_hex_handles=" << hex_handles[n]
                     << ",vol_frac_handle[" << v << "]=" << vol_frac_id[v]
                     << ",vol_fracs[" << v << "]=" << vol_frac[v]
                     << std::endl;
