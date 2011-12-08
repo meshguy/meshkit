@@ -148,11 +148,13 @@ class iMesh : public iMeshBase {
     inline Error initEntIter( EntitySetHandle set,
                               EntityType requested_type,
                               EntityTopology requested_topo,
+                              int resilient,
                               EntIter& iter );
     inline Error initEntArrIter( EntitySetHandle set,
                                  EntityType requested_type,
                                  EntityTopology requested_topo,
                                  int requested_array_size,
+                                 int resilient,
                                  EntArrIter& iter );
     
     inline Error getEntTopo( EntityHandle handle, EntityTopology& topo_out ) const;
@@ -521,11 +523,12 @@ inline iMesh::Error
 iMesh::initEntIter( EntitySetHandle set,
                     EntityType requested_type,
                     EntityTopology requested_topo,
+                       int resilient,
                     iMesh::EntIter& iter )
 {
   int err;
   iter.mInstance = mInstance;
-  iMesh_initEntIter( mInstance, set, requested_type, requested_topo,
+  iMesh_initEntIter( mInstance, set, requested_type, requested_topo, resilient,
                      &iter.mHandle, &err );
   return (Error)err;
 }
@@ -535,13 +538,14 @@ iMesh::initEntArrIter( EntitySetHandle set,
                        EntityType requested_type,
                        EntityTopology requested_topo,
                        int requested_array_size,
+                       int resilient,
                        iMesh::EntArrIter& iter )
 {
   int err;
   iter.mInstance = mInstance;
   iter.mSize = requested_array_size;
   iMesh_initEntArrIter( mInstance, set, requested_type, requested_topo,
-                        requested_array_size, &iter.mHandle, &err );
+                        requested_array_size, resilient, &iter.mHandle, &err );
   return (Error)err;
 }
 

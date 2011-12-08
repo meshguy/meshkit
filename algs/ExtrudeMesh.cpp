@@ -76,8 +76,8 @@ void ExtrudeMesh::translate(iBase_EntitySetHandle src,
   iBase_EntitySetHandle ends[] = { src, dest };
   for(int i=0; i<2; i++) {
     iBase_EntityIterator iter;
-    iMesh_initEntIter(impl_, ends[i], iBase_FACE, iMesh_ALL_TOPOLOGIES, &iter,
-                      &err);
+    iMesh_initEntIter(impl_, ends[i], iBase_FACE, iMesh_ALL_TOPOLOGIES, 0,
+                      &iter, &err);
     check_error(impl_, err);
 
     iBase_EntityHandle face;
