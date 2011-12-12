@@ -613,7 +613,7 @@ MeshOp *MKCore::construct_meshop(MeshOpProxy* proxy, const MEntVector &me_vec)
 {
   return proxy->create( this, me_vec );
 }
-
+#if 0
 int MKCore::initialize_mesh_based_geometry()
 {
   // the mesh should be already loaded/transformed/split/cropped
@@ -624,7 +624,7 @@ int MKCore::initialize_mesh_based_geometry()
   int index = (int)iGeomInstances.size()-1;
   return index;
 }
-
+#endif
 void MKCore::remove_mesh_based_geometry(int index)
 {
   // first, check if the index does make sense

@@ -5,8 +5,6 @@
  */
 
 #include "iRel.h"
-#include "meshkit/iGeom.hpp"
-#include "meshkit/iMesh.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
@@ -34,7 +32,6 @@ typedef void* iBase_Instance;
  */
 class iRel {
 public:
-    
   typedef iBase_ErrorType Error;
 
   iRel( const char* options = 0 );
@@ -48,7 +45,9 @@ public:
   {IGEOM_IFACE = 0, 
    IMESH_IFACE, 
    IFIELD_IFACE, 
-   IREL_IFACE};
+   IREL_IFACE,
+   FBIGEOM_IFACE};
+   
 
   enum RelationType 
   {ENTITY = 0, 
@@ -59,6 +58,10 @@ public:
   {ACTIVE = 0, 
    INACTIVE, 
    NOTEXIST};
+
+  inline iRel::IfaceType iface_type() const {
+    return iRel::IREL_IFACE;
+  }
 
 /** \class PairHandle iRel.hpp "iRel.hpp"
  * \brief Class for storing, querying and modifying relations data.
@@ -222,6 +225,16 @@ public:
     /*in*/ const RelationStatus status2,
     /*out*/ PairHandle *&pair);
 
+  template<typename T, typename U>
+  Error createPair (
+    /*in*/ T &iface1,
+    /*in*/ const RelationType ent_or_set1,
+    /*in*/ const RelationStatus status1,
+    /*in*/ U &iface2,
+    /*in*/ const RelationType ent_or_set2,
+    /*in*/ const RelationStatus status2,
+    /*out*/ PairHandle *&pair);
+
   Error findPairs (
     /*in*/ iBase_Instance iface,
     /*inout*/ std::vector<PairHandle *> &pairs);
@@ -300,6 +313,24 @@ inline iRel::Error iRel::createPair (
                               iface2, ent_or_set2, iface_type2, status2);
   return (Error)iBase_SUCCESS;
 }
+
+template<typename T, typename U>
+inline iRel::Error iRel::createPair (
+    /*in*/ T &iface1,
+    /*in*/ const RelationType ent_or_set1,
+    /*in*/ const RelationStatus status1,
+    /*in*/ U &iface2,
+    /*in*/ const RelationType ent_or_set2,
+    /*in*/ const RelationStatus status2,
+    /*out*/ PairHandle *&pair) 
+{
+  pair = new PairHandle(this, iface1.instance(), ent_or_set1,
+                              iface1.iface_type(), status1,
+                              iface2.instance(), ent_or_set2,
+                              iface2.iface_type(), status2);
+  return (Error)iBase_SUCCESS;
+}
+
 
 inline iRel::Error iRel::findPairs (
     /*in*/ iBase_Instance iface,

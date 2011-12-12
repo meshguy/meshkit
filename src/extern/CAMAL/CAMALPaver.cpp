@@ -38,7 +38,7 @@ void CAMALPaver::execute_this()
   if (mentSelection.empty())
   {
     // create model ents from previous op
-    create_model_ents_from_previous_ops();
+//    create_model_ents_from_previous_ops();
     // now look at the latest SizingFunction, and set it or each model ent
     int latestIndexSF = 0; // maybe we would need to set it right
     for (MEntSelection::iterator sit = mentSelection.begin();

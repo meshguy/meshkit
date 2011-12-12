@@ -434,7 +434,7 @@ public:
        * accordingly, with the geometry implied from moab sets and tags
        * it returns the index of FBiGeom in iGeomInstances vector
        */
-  int initialize_mesh_based_geometry();
+//  int initialize_mesh_based_geometry();
 
   /** \brief remove mesh-based geometry instance
      *

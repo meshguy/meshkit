@@ -57,8 +57,8 @@ void meshFB()
 {
   mk = new MKCore;
   // just for debugging
-  mk->print_graph();
-  FBiGeom * fbiGeom = new FBiGeom(mk, true); // true for smooth, false for linear
+  FBiGeom * fbiGeom = new FBiGeom(); // true for smooth, false for linear
+  unsigned int ix = mk->add_igeom_instance(fbiGeom);
 
   // this will do the reading of the moab db in memory
 

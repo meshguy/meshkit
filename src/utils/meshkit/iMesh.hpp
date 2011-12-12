@@ -6,6 +6,7 @@
 
 #include "moab/EntityType.hpp"
 #include "iMesh.h"
+#include "iRel.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
@@ -29,6 +30,10 @@
  */
 class iMesh : public iMeshBase {
   public:
+    inline iRel::IfaceType iface_type() const {
+        return iRel::IMESH_IFACE;
+    }
+
 
   /* map to MB's entity type from TSTT's entity topology */
   static const moab::EntityType mb_topology_table[iMesh_ALL_TOPOLOGIES+1];

@@ -12,12 +12,11 @@ libMeshKitutils_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libMeshKitutils_la_SOURCES = \
-	iMesh.cpp  FBiGeom.cpp 
+	iMesh.cpp 
 
 # The list of header files which are to be installed
 nobase_libMeshKitutils_la_include_HEADERS = \
-	meshkit/FBiGeom.hpp \
-	meshkit/iBase.hpp \
+    meshkit/iBase.hpp \
 	meshkit/iGeom.hpp \
 	meshkit/iMesh.hpp \
 	meshkit/iRel.hpp \
@@ -25,6 +24,11 @@ nobase_libMeshKitutils_la_include_HEADERS = \
 	meshkit/LocalTag.hpp \
 	meshkit/RegisterMeshOp.hpp \
 	meshkit/SimpleArray.hpp 
+if HAVE_FBIGEOM
+nobase_libMeshKitutils_la_include_HEADERS += \
+	meshkit/FBiGeom.hpp 
+endif
+	
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

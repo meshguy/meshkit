@@ -146,9 +146,11 @@ void extrudeQuads()
   clock_t start_time = clock();
   mk = new MKCore;
   iBase_ErrorType err;
-  FBiGeom * fbiGeom = new FBiGeom(mk, true); // true for smooth, false for linear
+  FBiGeom * fbiGeom = new FBiGeom(); // true for smooth, false for linear
+  unsigned int ix = mk->add_igeom_instance(fbiGeom);
   // read initial mesh (quad mesh surface bottom)
-  err = fbiGeom->load(top_filename.c_str());// loading the top surface , as geometry
+  char opts[]="SMOOTH;";
+  err = fbiGeom->load(top_filename.c_str(), opts);// loading the top surface , as geometry
   IBERRCHK(err, "Failure to load smooth geometry.");
   clock_t load_time1 = clock();// load fb file (expensive),
   // load here the quads from bottom

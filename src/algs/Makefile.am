@@ -24,14 +24,17 @@ libMeshKitalgs_la_SOURCES = \
 	EBMesher.cpp \
 	CopyMesh.cpp \
 	CopyGeom.cpp \
-        MergeMesh.cpp \
+    MergeMesh.cpp \
 	ExtrudeMesh.cpp \
 	CESets.cpp \
 	Transform.cpp \
 	CopyUtils.cpp \
-	CopyUtils.hpp \
+	CopyUtils.hpp 
+if HAVE_FBIGEOM
+libMeshKitalgs_la_SOURCES += \
   MBGeomOp.cpp \
   MBSplitOp.cpp
+endif
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
@@ -45,10 +48,12 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/ExtrudeMesh.hpp \
 	meshkit/CESets.hpp \
 	meshkit/TransformBase.hpp \
-	meshkit/Transform.hpp \
+	meshkit/Transform.hpp 
+if HAVE_FBIGEOM
+nobase_libMeshKitalgs_la_include_HEADERS += \
 	meshkit/MBGeomOp.hpp \
 	meshkit/MBSplitOp.hpp
-
+endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

@@ -5,6 +5,7 @@
  */
 
 #include "iGeom.h"
+#include "iRel.hpp"
 
 #include <string.h>
 #include <stdlib.h>
@@ -29,6 +30,9 @@ class iGeom {
 	protected:
 		iGeom_Instance mInstance;
 	public:
+        virtual inline iRel::IfaceType iface_type() const {
+            return iRel::IGEOM_IFACE;
+        }
 
 		typedef iBase_EntitySetHandle EntitySetHandle;
 		typedef iBase_EntityHandle EntityHandle;

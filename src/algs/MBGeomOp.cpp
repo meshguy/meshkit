@@ -82,7 +82,6 @@ void MBGeomOp::execute_this()
 
   // now, maybe we should not initialize new geometry
   // entities at this point are just moab sets
-  // int  indx = mk_core()->initialize_mesh_based_geometry();
 
   // at this moment, we have model entities with geom index indx,
   //  for the mesh-based geometry

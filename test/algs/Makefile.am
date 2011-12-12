@@ -26,13 +26,16 @@ TESTS = test_edgemesh \
         test_copygeom \
         test_extrudemesh \
         test_qslim \
-        test_fbgeom \
         test_ebmesh \
         test_assygen \
-        test_TriangleMesher \
+        test_TriangleMesher 
+if HAVE_FBIGEOM
+TESTS += \
+        test_fbgeom \
         test_MBGeomOp \
         test_MBSplitOp \
         test_SetPnt2Quad
+endif
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
@@ -56,9 +59,12 @@ test_qslim_SOURCES = test_qslim.cpp
 test_jaalquad_SOURCES = test_jaalquad.cpp
 test_assygen_SOURCES = test_assygen.cpp
 test_TriangleMesher_SOURCES = test_TriangleMesher.cpp
+if HAVE_FBIGEOM
+test_fbgeom_SOURCES = test_fbgeom.cpp
 test_MBGeomOp_SOURCES = test_MBGeomOp.cpp
 test_MBSplitOp_SOURCES = test_MBSplitOp.cpp
 test_SetPnt2Quad_SOURCES = test_SetPnt2Quad.cpp
+endif
 
 # Utility target: build but don't run tests
 build-check:

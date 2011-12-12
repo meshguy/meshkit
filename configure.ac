@@ -151,13 +151,18 @@ SF="$DISTCHECK_CONFIGURE_FLAGS"
 
 AC_ARG_WITH(itaps,
 [AC_HELP_STRING([--with-itaps=DIR], 
-                [specify same dir for --with-imesh, --with-igeom, --with-irel])],
+                [specify same dir for --with-imesh, --with-igeom, --with-fbigeom, --with-irel])],
 [ITAPS_DIR="$withval"; SF="$SF --with-itaps=$withval"],[ITAPS_DIR=])
 
 AC_ARG_WITH(igeom,
 [AC_HELP_STRING([--with-igeom=DIR],[Directory containing iGeom implementation])],
 [IGEOM_DIR=$withval; SF="$SF --with-igeom=$withval"],
 [IGEOM_DIR="$ITAPS_DIR"; IGEOM_OKAY_IF_MISSING=yes])
+
+AC_ARG_WITH(fbigeom,
+[AC_HELP_STRING([--with-fbigeom=DIR],[Directory containing FBiGeom implementation])],
+[FBIGEOM_DIR=$withval; SF="$SF --with-fbigeom=$withval"],
+[FBIGEOM_DIR="$ITAPS_DIR"; FBIGEOM_OKAY_IF_MISSING=yes])
 
 AC_ARG_WITH(imesh,
 [AC_HELP_STRING([--with-imesh=DIR],[Directory containing iMesh implementation])],
@@ -233,6 +238,7 @@ AM_CONDITIONAL( HAVE_$2, [test "xyes" == "x$HAVE_$2"] )
 ])
 
 CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may fail] )
+CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabled] )
 
@@ -893,6 +899,7 @@ if test "x$WITH_MESQUITE" != "xno"; then
   AC_SUBST([MESQUITE_CPPFLAGS])
   AC_SUBST([MESQUITE_LIBS])
   AM_CONDITIONAL(HAVE_MESQUITE, [test $HAVE_MESQUITE = yes])
+
 fi
 
 

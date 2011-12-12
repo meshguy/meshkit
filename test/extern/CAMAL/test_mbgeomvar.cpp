@@ -77,7 +77,8 @@ int main(int argc, char **argv)
 void meshFBvar()
 {
   mk = new MKCore;
-  FBiGeom * fbiGeom = new FBiGeom(mk, true); // true for smooth, false for linear
+  FBiGeom * fbiGeom = new FBiGeom(); // true for smooth, false for linear
+  unsigned int ix = mk->add_igeom_instance(fbiGeom);
 
   // this will do the reading of the moab db in memory
 

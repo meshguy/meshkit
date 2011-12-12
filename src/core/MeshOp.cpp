@@ -117,7 +117,7 @@ void MeshOp::mesh_types(std::vector<moab::EntityType> &mesh_types)
   for (int i = 0; types[i] != moab::MBMAXTYPE; ++i)
     mesh_types.push_back(types[i]);
 }
-
+#if 0
 void MeshOp::create_model_ents_from_previous_ops()
 {
   // model ents are empty so far...
@@ -174,7 +174,7 @@ void MeshOp::create_model_ents_from_previous_ops()
   // executed, so no worries*/
 
 }
-
+#endif
 }
 
   
