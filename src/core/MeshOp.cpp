@@ -4,7 +4,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 
-#include "meshkit/FBiGeom.hpp"
+//#include "meshkit/FBiGeom.hpp"
 
 namespace MeshKit 
 {

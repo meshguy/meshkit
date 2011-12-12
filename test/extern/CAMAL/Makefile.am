@@ -42,8 +42,8 @@ test_mbgeom_SOURCES = test_mbgeom.cpp
 test_mbgeom_DEPENDENCIES = $(LDADD)
 test_mbgeomvar_SOURCES = test_mbgeomvar.cpp
 test_mbgeomvar_DEPENDENCIES = $(LDADD)
-test_mb2_SOURCES= test_mb2.cpp
-test_mb2_DEPENDENCIES = $(LDADD)
+#test_mb2_SOURCES= test_mb2.cpp
+#test_mb2_DEPENDENCIES = $(LDADD)
 TESTS += test_mbgeom test_mbgeomvar 
 # test_mb2 is broken for the time being
 endif

@@ -1,7 +1,9 @@
 #include "meshkit/iGeom.hpp"
 #include "meshkit/iMesh.hpp"
 #include "meshkit/iRel.hpp"
+#if HAVE_FBIGEOM
 #include "meshkit/FBiGeom.hpp"
+#endif
 #include "moab/Core.hpp"
 #include "MBiMesh.hpp"
 #include "moab/CN.hpp"
@@ -625,6 +627,8 @@ int MKCore::initialize_mesh_based_geometry()
   return index;
 }
 #endif
+
+#if HAVE_FBIGEOM
 void MKCore::remove_mesh_based_geometry(int index)
 {
   // first, check if the index does make sense
@@ -640,6 +644,7 @@ void MKCore::remove_mesh_based_geometry(int index)
   }
   iGeomInstances.resize(sz-1);
 }
+#endif
 
 void MKCore::delete_model_entities()
 {

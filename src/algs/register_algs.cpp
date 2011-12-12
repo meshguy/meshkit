@@ -13,9 +13,10 @@
 #include "meshkit/QuadMesh.hpp"
 #include "meshkit/AssyGen.hpp"
 #include "meshkit/TriangleMesher.hpp"
+#ifdef HAVE_FBIGEOM
 #include "meshkit/MBGeomOp.hpp"
 #include "meshkit/MBSplitOp.hpp"
-
+#endif
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
 #ifdef HAVE_PARALLEL_CGM
@@ -50,8 +51,10 @@ REGISTER_MESH_OP(QslimMesher);
 REGISTER_MESH_OP(QuadMesher);
 REGISTER_MESH_OP(AssyGen);
 REGISTER_MESH_OP(TriangleMesher);
+#ifdef HAVE_FBIGEOM
 REGISTER_MESH_OP(MBGeomOp);
 REGISTER_MESH_OP(MBSplitOp);
+#endif
 
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
