@@ -940,7 +940,7 @@ inline FBiGeom::Error FBiGeom::getEntClosestPtTrimmed(EntityHandle entity, doubl
                                           double near_y, double near_z, double& on_x, double& on_y, double& on_z) const
 {
     int err=0;
-    // TODO FBiGeom_getEntClosestPtTrimmed(mInstance, entity, near_x, near_y, near_z, &on_x, &on_y, &on_z, &err);
+    FBiGeom_getEntClosestPtTrimmed(mInstance, entity, near_x, near_y, near_z, &on_x, &on_y, &on_z, &err);
     return (Error) err;    
 }
 
@@ -1016,8 +1016,8 @@ inline FBiGeom::Error FBiGeom::getFcCvtrXYZ(EntityHandle face, double x, double 
                                         double& k2) const
 {
      int err=0;
-     // TODO  FBiGeom_getFcCvtrXYZ(mInstance, face, x, y, z, &i1, &j1, &k1, &i2, &j2, &k2,
-             //           &err);
+     FBiGeom_getFcCvtrXYZ(mInstance, face, x, y, z, &i1, &j1, &k1, &i2, &j2, &k2,
+                        &err);
      return (Error) err;
 }
 
@@ -1025,7 +1025,7 @@ inline FBiGeom::Error FBiGeom::getEgCvtrXYZ(EntityHandle edge, double x, double 
                                         double z, double& i, double& j, double& k) const
 {
      int err=0;
-     // TODO FBiGeom_getEgCvtrXYZ(mInstance, edge, x, y, z, &i, &j, &k, &err);
+     FBiGeom_getEgCvtrXYZ(mInstance, edge, x, y, z, &i, &j, &k, &err);
      return (Error) err;
 }
 
@@ -1033,9 +1033,9 @@ inline FBiGeom::Error FBiGeom::getEntArrCvtrXYZ(const EntityHandle* entities,
           int entities_size, StorageOrder order, const double* xyz, int xyz_size,
           double* cvtr_1, double* cvtr_2) const
 {
-     int err=0;//, alloc = std::max(xyz_size, 3 * entities_size), size = 0;
-     /*FBiGeom_getEntArrCvtrXYZ(mInstance, entities, entities_size, order, xyz,
-                            xyz_size, &cvtr_1, &alloc, &size, &cvtr_2, &alloc, &size, &err);*/
+     int err=0, alloc = std::max(xyz_size, 3 * entities_size), size = 0;
+     FBiGeom_getEntArrCvtrXYZ(mInstance, entities, entities_size, order, xyz,
+                            xyz_size, &cvtr_1, &alloc, &size, &cvtr_2, &alloc, &size, &err);
      return (Error) err;
 }
 
@@ -1045,8 +1045,8 @@ inline FBiGeom::Error FBiGeom::getEgEvalXYZ(EntityHandle edge, double x, double 
                                         double& cvtr_k) const
 {
      int err=0;
-     /*FBiGeom_getEgEvalXYZ(mInstance, edge, x, y, z, &on_x, &on_y, &on_z, &tngt_i,
-                        &tngt_j, &tngt_k, &cvtr_i, &cvtr_j, &cvtr_k, &err);*/
+     FBiGeom_getEgEvalXYZ(mInstance, edge, x, y, z, &on_x, &on_y, &on_z, &tngt_i,
+                        &tngt_j, &tngt_k, &cvtr_i, &cvtr_j, &cvtr_k, &err);
      return (Error) err;
 }
 
@@ -1056,9 +1056,9 @@ inline FBiGeom::Error FBiGeom::getFcEvalXYZ(EntityHandle face, double x, double 
                                         double& cvtr1_k, double& cvtr2_i, double& cvtr2_j, double& cvtr2_k) const
 {
      int err=0;
-    /* FBiGeom_getFcEvalXYZ(mInstance, face, x, y, z, &on_x, &on_y, &on_z, &tngt_i,
+     FBiGeom_getFcEvalXYZ(mInstance, face, x, y, z, &on_x, &on_y, &on_z, &tngt_i,
                         &tngt_j, &tngt_k, &cvtr1_i, &cvtr1_j, &cvtr1_k, &cvtr2_i, &cvtr2_j,
-                        &cvtr2_k, &err);*/
+                        &cvtr2_k, &err);
      return (Error) err;
 }
 
@@ -1066,10 +1066,10 @@ inline FBiGeom::Error FBiGeom::getArrEgEvalXYZ(const EntityHandle* edges,
           int edges_size, StorageOrder order, const double* near_coords,
           int near_coords_size, double* on_coords, double* tangent, double* curvature) const
 {
-     int err=0; //, alloc = std::max(near_coords_size, 3 * edges_size), size = 0;
-     /*FBiGeom_getArrEgEvalXYZ(mInstance, edges, edges_size, order, near_coords,
+     int err=0, alloc = std::max(near_coords_size, 3 * edges_size), size = 0;
+     FBiGeom_getArrEgEvalXYZ(mInstance, edges, edges_size, order, near_coords,
                            near_coords_size, &on_coords, &alloc, &size, &tangent, &alloc, &size,
-                           &curvature, &alloc, &size, &err);*/
+                           &curvature, &alloc, &size, &err);
      return (Error) err;
 }
 
@@ -1078,10 +1078,10 @@ inline FBiGeom::Error FBiGeom::getArrFcEvalXYZ(const EntityHandle* faces,
           int near_coords_size, double* on_coords, double* tangent,
           double* curvature1, double* curvature2) const
 {
-     int err=0; //, alloc = std::max(near_coords_size, 3 * faces_size), size = 0;
-     /*FBiGeom_getArrFcEvalXYZ(mInstance, faces, faces_size, order, near_coords,
+     int err=0, alloc = std::max(near_coords_size, 3 * faces_size), size = 0;
+     FBiGeom_getArrFcEvalXYZ(mInstance, faces, faces_size, order, near_coords,
                            near_coords_size, &on_coords, &alloc, &size, &tangent, &alloc, &size,
-                           &curvature1, &alloc, &size, &curvature2, &alloc, &size, &err);*/
+                           &curvature1, &alloc, &size, &curvature2, &alloc, &size, &err);
      return (Error) err;
 }
 
@@ -1585,7 +1585,7 @@ inline FBiGeom::Error FBiGeom::isFcArrDegenerate(const EntityHandle* faces,
 inline FBiGeom::Error FBiGeom::getTolerance(int& type_out, double& tolerance_out) const
 {
      int err=0;
-     //FBiGeom_getTolerance(mInstance, &type_out, &tolerance_out, &err);
+     FBiGeom_getTolerance(mInstance, &type_out, &tolerance_out, &err);
      return (Error) err;
 }
 
@@ -1593,7 +1593,7 @@ inline FBiGeom::Error FBiGeom::getEntTolerance(EntityHandle entity,
           double& tolerance) const
 {
      int err=0;
-     /*FBiGeom_getEntTolerance(mInstance, entity, &tolerance, &err);*/
+     FBiGeom_getEntTolerance(mInstance, entity, &tolerance, &err);
      return (Error) err;
 }
 
