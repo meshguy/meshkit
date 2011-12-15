@@ -427,6 +427,7 @@ public:
      */
   void remove_sizing_function(int index, bool delete_too = true);
   
+#ifdef HAVE_FBIGEOM
   /** \brief interpret mesh-based geometry
        *
        * This function interprets the mesh from a moab db as mesh based geometry
@@ -434,7 +435,8 @@ public:
        * accordingly, with the geometry implied from moab sets and tags
        * it returns the index of FBiGeom in iGeomInstances vector
        */
-//  int initialize_mesh_based_geometry();
+
+  int initialize_mesh_based_geometry(moab::EntityHandle modelRootSet = 0);
 
   /** \brief remove mesh-based geometry instance
      *
@@ -443,7 +445,7 @@ public:
      * the geom topo model intact
      */
   void remove_mesh_based_geometry(int index);
-
+#endif
   /** \brief retrieve number of iGeom instances
      *
      * This function returns number of igeom instances, to be used

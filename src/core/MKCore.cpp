@@ -1,9 +1,6 @@
 #include "meshkit/iGeom.hpp"
 #include "meshkit/iMesh.hpp"
 #include "meshkit/iRel.hpp"
-#if HAVE_FBIGEOM
-#include "meshkit/FBiGeom.hpp"
-#endif
 #include "moab/Core.hpp"
 #include "MBiMesh.hpp"
 #include "moab/CN.hpp"
@@ -17,7 +14,13 @@
 #include "MeshOpSet.hpp"
 #include "meshkit/MeshOpProxy.hpp"
 #include "meshkit/VertexMesher.hpp"
-
+#if HAVE_FBIGEOM
+#include "meshkit/FBiGeom.hpp"
+// this is defined in moab library...
+extern void FBiGeom_newGeomFromMesh( iMesh_Instance mesh, iBase_EntitySetHandle set,
+                          const char *options, FBiGeom_Instance *geom,
+                          int *err, int options_len);
+#endif
 namespace MeshKit 
 {
 
@@ -615,20 +618,33 @@ MeshOp *MKCore::construct_meshop(MeshOpProxy* proxy, const MEntVector &me_vec)
 {
   return proxy->create( this, me_vec );
 }
-#if 0
-int MKCore::initialize_mesh_based_geometry()
-{
-  // the mesh should be already loaded/transformed/split/cropped
-  FBiGeom * fbiGeom = new FBiGeom(this, true);
-  fbiGeom->Init();
-  // the index of FBiGeom in the iGeom instances is size()-1  because this
-  // instance was the last added
-  int index = (int)iGeomInstances.size()-1;
-  return index;
-}
-#endif
-
 #if HAVE_FBIGEOM
+// this method takes the model from moab modelRootSet (0 by default means all)
+// also, assumes the first moab instance from MKCore, and the first iMesh instance
+int MKCore::initialize_mesh_based_geometry(moab::EntityHandle modelRootSet)
+{
+  // initialize the FBiGeom, in a different way
+  iMesh * imeshMK = imesh_instance(); // this is MeshKit::iMesh class
+  iMesh_Instance mesh = imeshMK->instance();
+  FBiGeom_Instance geom;
+
+  iBase_EntitySetHandle root_set = reinterpret_cast<iBase_EntitySetHandle>(modelRootSet);
+  std::string opts("SMOOTH;");
+     // new constructor
+  int err;
+  // this does the initialization of smoothing (heavy duty computation)
+  FBiGeom_newGeomFromMesh(mesh, root_set, opts.c_str(), &geom, &err, opts.length());
+  if (err!=0)
+    return -1; // error
+  FBiGeom * fbigeom = new FBiGeom(geom);
+
+  int index = add_igeom_instance((iGeom*)fbigeom);
+  // use this index to populate
+  populate_model_ents(index, 0, -1, true);
+  return index;
+
+}
+
 void MKCore::remove_mesh_based_geometry(int index)
 {
   // first, check if the index does make sense

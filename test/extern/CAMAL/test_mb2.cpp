@@ -56,9 +56,9 @@ int main(int argc, char **argv)
 void meshFB2()
 {
   mk = new MKCore;
-  // just for debugging
+
   mk->load_mesh(file_name.c_str(), NULL, 0, 0, 0, false, false);
-  //int indx=  mk->initialize_mesh_based_geometry();
+  int indx=  mk->initialize_mesh_based_geometry(0);
 
   moab::Range tris;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(
