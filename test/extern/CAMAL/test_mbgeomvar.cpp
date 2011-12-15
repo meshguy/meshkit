@@ -86,8 +86,9 @@ void meshFBvar()
   // we do not want to do it in the constructor
   // this should also populate ModelEnts in MKCore
   std::string opts( "SMOOTH;");
-  fbiGeom->load(file_name.c_str(), opts.c_str());
-  mk->populate_model_ents(ix, 0, -1, true);
+  mk->load_geometry(file_name.c_str(), opts.c_str(), ix, 0, -1, false, true);
+  /*fbiGeom->load(file_name.c_str(), opts.c_str());
+  mk->populate_model_ents(ix, 0, -1, true);*/
 
   moab::Range tris;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(

@@ -393,7 +393,7 @@ void MKCore::load_geometry(const char *filename, const char *options, int geom_i
     IBERRCHK(err, "Failed to infer relations.");
   }
   
-  if (populate_too) populate_model_ents(geom_index, mesh_index, irel_index);
+  if (populate_too) populate_model_ents(geom_index, mesh_index, irel_index, true);// only geometry
 }
 
 void MKCore::load_mesh(const char *filename, const char *options, 
