@@ -25,21 +25,24 @@ int main(int argc, char **argv)
   
   num_fail += RUN_TEST(test_brick);
 
-#if HAVE_OCC
-  return 0;
-#else
   return num_fail;
-#endif
   
 }
 
 void test_brick()
 {
+#if HAVE_OCC
+  std::string gfile_name = TestDir + "/brick.stp";
+  std::string mfile_name = TestDir + "/sf.h5m";
+
+  //load the geometry and the source face mesh
+  mk->load_geometry_mesh(gfile_name.c_str(), mfile_name.c_str());
+#else
 	std::string file_name = TestDir + "/BrickWithSrcMeshed.cub";
 	
 	//load the geometry
 	mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
-
+#endif
 	// get the volumes
 	MEntVector vols, surfs, curves, vertices;
 	mk->get_entities_by_dimension(3, vols);
@@ -62,8 +65,13 @@ void test_brick()
 	//make a one-to-one sweeping
 	OneToOneSwept *sw = (OneToOneSwept*) mk->construct_meshop("OneToOneSwept", vols);
 
+#if HAVE_OCC
+	sw->SetSourceSurface(0);
+	sw->SetTargetSurface(1);
+#else
 	sw->SetSourceSurface(1);
 	sw->SetTargetSurface(0);
+#endif
 
 	//set up the size
 	SizingFunction swSize(mk, 6, -1);
@@ -74,9 +82,9 @@ void test_brick()
 
 	//check the number of cells after OneToOneSwept
 	moab::Range hex;
-  	moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, hex);
-  	CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  	CHECK_EQUAL(600, (int)hex.size());
+  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 3, hex);
+  CHECK_EQUAL(moab::MB_SUCCESS, rval);
+  CHECK_EQUAL(600, (int)hex.size());
 
 	mk->save_mesh("OneToOneSwept.vtk");
 

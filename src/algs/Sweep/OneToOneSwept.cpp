@@ -79,8 +79,8 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 		NodeList[entity_index-1].gVertexHandle = Nodes[i];
 		NodeList[entity_index-1].index = entity_index - 1;
 		
-		m_err = mk_core()->imesh_instance()->getIntData(Nodes[i], mesh_id_tag, NodeList[entity_index-1].id);		
-		IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the source surface.");
+		/*m_err = mk_core()->imesh_instance()->getIntData(Nodes[i], mesh_id_tag, NodeList[entity_index-1].id);
+		IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the source surface.");*/
 
 				
 		m_err = mk_core()->imesh_instance()->getVtxCoord(Nodes[i], NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]);
@@ -113,8 +113,8 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 			NodeList[entity_index-1].gVertexHandle = Nodes[j];
 			NodeList[entity_index-1].index = entity_index-1;
 
-			m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], mesh_id_tag, NodeList[entity_index-1].id);		
-			IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the source edge.");
+			/*m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], mesh_id_tag, NodeList[entity_index-1].id);
+			IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the source edge.");*/
 
 			m_err = mk_core()->imesh_instance()->getVtxCoord(Nodes[j], NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]);
 			IBERRCHK(m_err, "Trouble get the node coordinates from mesh node entity handle.");
@@ -146,8 +146,8 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 			NodeList[entity_index-1].gVertexHandle = Nodes[j];
 			NodeList[entity_index-1].index = entity_index-1;
 			
-			m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], mesh_id_tag, NodeList[entity_index-1].id);		
-			IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the source edge.");
+			/*m_err = mk_core()->imesh_instance()->getIntData(Nodes[j], mesh_id_tag, NodeList[entity_index-1].id);
+			IBERRCHK(m_err, "Trouble get the int data for mesh nodes on the source edge.");*/
 			
 			m_err = mk_core()->imesh_instance()->getVtxCoord(Nodes[j], NodeList[entity_index-1].xyzCoords[0], NodeList[entity_index-1].xyzCoords[1], NodeList[entity_index-1].xyzCoords[2]);
 			IBERRCHK(m_err, "Trouble get the nodes' coordinates from node handle.");
@@ -176,8 +176,8 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 	{
 		EdgeList[i].gEdgeHandle = Edges[i];
 		EdgeList[i].index = i;
-		m_err = mk_core()->imesh_instance()->getIntData(Edges[i], mesh_id_tag, EdgeList[i].EdgeID);
-		IBERRCHK(m_err, "Trouble get the int data from the mesh edges.");
+		/*m_err = mk_core()->imesh_instance()->getIntData(Edges[i], mesh_id_tag, EdgeList[i].EdgeID);
+		IBERRCHK(m_err, "Trouble get the int data from the mesh edges.");*/
 
 		m_err = mk_core()->imesh_instance()->setIntData(Edges[i], taghandle, i);
 		IBERRCHK(m_err, "Trouble set the int data from the mesh edges.");
@@ -246,8 +246,8 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 			
 			EdgeList[entity_index].gEdgeHandle = Edges[j];
 			EdgeList[entity_index].index = entity_index;
-			m_err = mk_core()->imesh_instance()->getIntData(Edges[j], mesh_id_tag, EdgeList[entity_index].EdgeID);
-			IBERRCHK(m_err, "Trouble get the int data from the mesh edges.");
+			/*m_err = mk_core()->imesh_instance()->getIntData(Edges[j], mesh_id_tag, EdgeList[entity_index].EdgeID);
+			IBERRCHK(m_err, "Trouble get the int data from the mesh edges.");*/
 
 			m_err = mk_core()->imesh_instance()->setIntData(Edges[j], taghandle, entity_index);
 			IBERRCHK(m_err, "Trouble set the int data from the mesh edges.");
@@ -290,8 +290,8 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 	{
 		FaceList[i].gFaceHandle = Faces[i];
 		FaceList[i].index = i;
-		m_err = mk_core()->imesh_instance()->getIntData(Faces[i], mesh_id_tag, FaceList[i].FaceID);
-		IBERRCHK(m_err, "Trouble get the int data from mesh face entity.");
+		/*m_err = mk_core()->imesh_instance()->getIntData(Faces[i], mesh_id_tag, FaceList[i].FaceID);
+		IBERRCHK(m_err, "Trouble get the int data from mesh face entity.");*/
 
 		//get the nodes on the face elements
 		Nodes.clear();
