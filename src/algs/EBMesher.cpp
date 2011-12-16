@@ -53,6 +53,7 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   m_nStatus = OUTSIDE;
   m_iStartHex = 0;
   m_hObbTree = NULL;
+  m_hTreeRoot = NULL;
 
 #ifdef HAVE_MOAB
   // create tags with MOAB for dense tags
@@ -168,8 +169,11 @@ void EBMesher::setup_this()
   if (m_bUseWholeGeom) sm->set_geometry_scheme(SCDMesh::all);
   else sm->set_geometry_scheme(SCDMesh::individual);
 
-  // use mesh based geometry in SCDMesh
-  if (m_bUseMeshGeom) sm->use_mesh_geometry(true);
+  // use mesh based geometry in SCDMesh and make tree to get box dimension
+  if (m_bUseMeshGeom) {
+    sm->use_mesh_geometry(true);
+    sm->set_cart_box_min_max(m_minCoord, m_maxCoord, m_boxIncrease);
+  }
 
   // set # of intervals for 3 directions
   std::vector<int> fine_i (m_nDiv[0], 1);
@@ -203,7 +207,7 @@ void EBMesher::execute_this()
   }
 
   time(&time1);
-  if (m_bUseGeom) { // construct obb tree for geometry surfaces and volumes by GeomTopoTool
+  if (m_bUseGeom && !m_bUseMeshGeom) { // construct obb tree for geometry surfaces and volumes by GeomTopoTool
     rval = m_GeomTopoTool->construct_obb_trees(m_bUseWholeGeom);
     MBERRCHK(rval, mk_core()->moab_instance());
   }
@@ -272,7 +276,9 @@ void EBMesher::set_tree_root(ModelEnt* me)
     if (m_hObbTree == NULL) {
       m_hObbTree = m_GeomTopoTool->obb_tree();
     }
-    if (m_bUseWholeGeom) m_hTreeRoot = m_GeomTopoTool->get_one_vol_root();
+    if (m_bUseWholeGeom) {
+      if (!m_bUseMeshGeom) m_hTreeRoot = m_GeomTopoTool->get_one_vol_root();
+    }
     else {
       rval = m_GeomTopoTool->get_root(me->mesh_handle(), m_hTreeRoot);
       MBERRCHK(rval, mk_core()->moab_instance());
@@ -299,6 +305,7 @@ void EBMesher::set_tree_root(ModelEnt* me)
 
 void EBMesher::find_intersections()
 {
+  std::cout << "starting to find intersections." << std::endl;
   int i, err;
   //m_vnHexStatus.resize(m_nHex, 1); // initialize all hex as outside
   m_vnHexStatus.resize(m_nHex, 0); // initialize all hex as inside
@@ -309,6 +316,7 @@ void EBMesher::find_intersections()
     m_vnEdgeStatus[i].resize(m_nDiv[i]*m_nDiv[(i + 1)%3]*m_nDiv[(i + 2)%3], INSIDE);
     fire_rays(i);
   }
+  std::cout << "finished to find intersections." << std::endl;
 }
 
 void EBMesher::export_mesh(const char* file_name, bool separate)
@@ -400,11 +408,11 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
   else {
     write_mesh(file_name, 3, &hex_handles[0], hex_size);
     time3 = clock();
-    if (true) {
+    if (debug_ebmesh) {
       std::cout << "hex_handle_get_time: "
-                << (double) (time2 - time1)/CLOCKS_PER_SEC
+                << difftime(time2, time1)
                 << ", actual_write_time: "
-                << (double) (time3 - time2)/CLOCKS_PER_SEC
+                << difftime(time3, time2)
                 << std::endl;
     }
   }
@@ -515,7 +523,8 @@ EdgeStatus EBMesher::get_edge_status(const double dP, int& iSkip)
                m_vIntersection[m_iInter - 1].distance < 1e-7 &&
                (unsigned int) (m_iInter + 1) < m_vIntersection.size()) m_iInter++;
 
-        return BOUNDARY;
+        if (m_prevPnt < m_dSecondP) return BOUNDARY;
+        else return OUTSIDE;
       }
     }
   }
@@ -1014,17 +1023,21 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
     }
     std::sort(m_vIntersection.begin(), m_vIntersection.end(), less_intersect);
 
-    if (nIntersect > 1) { // when ray intersect shared edge of triangles
+    if (nIntersect > 1) {
       bool bMoveOnce;
       m_nIteration = 0;
       m_iOverlap = 0;
-
-      if (is_ray_move_and_set_overlap_surf(bMoveOnce)) {
+      
+      if (m_bUseGeom) { // if there are geometry info
+        remove_intersection_duplicates();
+      }
+      else if (is_ray_move_and_set_overlap_surf(bMoveOnce)) { // facet geom case
         if (!move_ray(nIntersect, startPnt, endPnt, tol, dir, bMoveOnce)) {
           std::cerr << "Number of Intersection between edges and ray should be even." << std::endl;
           return false;
         }
       }
+      nIntersect = m_vIntersection.size();
     }
   }
   
@@ -1705,8 +1718,39 @@ bool EBMesher::is_ray_move_and_set_overlap_surf(bool& bSpecialCase)
   return false;
 }
 
+void EBMesher::remove_intersection_duplicates()
+{
+  int ind = 0;
+  int nInter = m_vIntersection.size() - 1;
+
+  while (ind < nInter) {
+    if (m_vIntersection[ind + 1].distance - m_vIntersection[ind].distance < 1e-7) {
+      moab::EntityHandle h1 = m_vhInterSurf[m_vIntersection[ind].index];
+      moab::EntityHandle h2 = m_vhInterSurf[m_vIntersection[ind + 1].index];
+      
+      if (h1 != h2) { // overlapped/shared surfaces
+        std::vector<iBase_EntitySetHandle> parents_out1, parents_out2;
+        int err = mk_core()->imesh_instance()->getPrnts(reinterpret_cast<iBase_EntitySetHandle> (h1), 1, parents_out1);
+        IBERRCHK(err, "Failed to get number of surface parents.\n");
+        err = mk_core()->imesh_instance()->getPrnts(reinterpret_cast<iBase_EntitySetHandle> (h2), 1, parents_out2);
+        IBERRCHK(err, "Failed to get number of surface parents.\n");
+        if (parents_out1.size() == 1 && parents_out2.size() == 1) {
+          if (parents_out1[0] != parents_out2[0]) { // parent volues are also different
+            m_mhOverlappedSurf[h1] = 0;
+            m_mhOverlappedSurf[h2] = 0;
+          }
+        }
+      }
+      m_vIntersection.erase(m_vIntersection.begin() + ind + 1);
+      nInter--;
+    }
+    else ind++;
+  }
+}
+
 bool EBMesher::get_volume_fraction(int vol_frac_div)
 {
+  std::cout << "starting get_volume_fraction." << std::endl;
   int i, j, k, l, n, iHex, dir, nIntersect, rayIndex[3], index[3],
     otherDir1, otherDir2, err, nParent;
   double tolerance = 1e-12, dDistance, elem_origin[3],
@@ -2027,6 +2071,7 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
     }
   }  
 
+  std::cout << "end get_volume_fraction." << std::endl;
   delete [] hex_status;
 
   return true;
@@ -2053,6 +2098,45 @@ bool EBMesher::is_same_direct_to_ray(int i, int dir)
   normal.normalize();
 
   return angle(normal, ray_dir) < .5*PI;
+}
+
+void EBMesher::set_obb_tree_box_dimension()
+{
+  std::cout << "starting to construct obb tree." << std::endl;
+  moab::ErrorCode rval = m_GeomTopoTool->construct_obb_trees(m_bUseWholeGeom);
+  MBERRCHK(rval, mk_core()->moab_instance());
+
+  m_hObbTree = m_GeomTopoTool->obb_tree();
+  m_hTreeRoot = m_GeomTopoTool->get_one_vol_root();
+
+  moab::CartVect box_center, box_axis1, box_axis2, box_axis3;
+  for (int i = 0; i < 3; i++) {
+    m_minCoord[i] = HUGE_VAL;
+    m_maxCoord[i] = 0.;
+  }
+  rval = m_hObbTree->box(m_hTreeRoot, box_center.array(),
+                         box_axis1.array(), box_axis2.array(),
+                         box_axis3.array());
+  MBERRCHK(rval, mk_core()->moab_instance());
+  
+  // cartesian box corners
+  moab::CartVect corners[8] = {box_center + box_axis1 + box_axis2 + box_axis3,
+                               box_center + box_axis1 + box_axis2 - box_axis3,
+                               box_center + box_axis1 - box_axis2 + box_axis3,
+                               box_center + box_axis1 - box_axis2 - box_axis3,
+                               box_center - box_axis1 + box_axis2 + box_axis3,
+                               box_center - box_axis1 + box_axis2 - box_axis3,
+                               box_center - box_axis1 - box_axis2 + box_axis3,
+                               box_center - box_axis1 - box_axis2 - box_axis3};
+  
+  // get the max, min cartesian box corners
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (corners[i][j] < m_minCoord[j]) m_minCoord[j] = corners[i][j];
+      if (corners[i][j] > m_maxCoord[j]) m_maxCoord[j] = corners[i][j];
+    }
+  }
+  std::cout << "finished to construct obb tree." << std::endl;
 }
 #endif
 } // namespace MeshKit

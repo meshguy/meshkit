@@ -262,6 +262,11 @@ namespace MeshKit
      */ 
     void use_mesh_geometry(bool use);
 
+    /*! 
+     * \brief Set if mesh based geometry is used 
+     */
+    void set_cart_box_min_max(double* min, double* max, double box_increase);
+
 
   private:
 

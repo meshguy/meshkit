@@ -235,6 +235,10 @@ public:
    * \param use if mesh based geometry is used
    */
   void use_mesh_geometry(bool use);
+
+  /** \brief construct obb tree with faceted geometry and set the box max/min coordinates
+   */
+  void set_obb_tree_box_dimension();
   
 protected:
   
@@ -353,6 +357,8 @@ private:
    * \return bool if is working correctly
    */
   bool is_ray_move_and_set_overlap_surf(bool& bMoveOnce);
+
+  void remove_intersection_duplicates();
 
   // test function 1 for debugging
   bool export_fraction_edges(std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan >& rmdCutCellSurfEdge);
@@ -480,6 +486,8 @@ private:
   std::map<MBEntityHandle, int> m_mhOverlappedSurf;
 
   std::map<MBEntityHandle, MBEntityHandle>  m_mRootSets;
+
+  double m_minCoord[3], m_maxCoord[3];
 #endif
 };
 

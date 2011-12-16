@@ -10,6 +10,7 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/ModelEnt.hpp"
 
+#include "CGMApp.hpp"
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
@@ -85,6 +86,7 @@ int load_and_mesh(const char *input_filename,
   // start up MK and load the geometry
   MKCore mk;
   time(&start_time);
+  CGMApp::instance()->attrib_manager()->auto_flag( CUBIT_TRUE );
   mk.load_mesh(input_filename, NULL, 0, 0, 0, true);
   time(&load_time);
 
@@ -102,6 +104,7 @@ int load_and_mesh(const char *input_filename,
   ebm->use_mesh_geometry(mesh_based_geom);
   ebm->set_num_interval(n_interval);
   ebm->increase_box(box_increase);
+  if (mesh_based_geom) ebm->set_obb_tree_box_dimension();
 
   // mesh embedded boundary mesh, by calling execute
   mk.setup_and_execute();
@@ -123,7 +126,7 @@ int load_and_mesh(const char *input_filename,
   }
   time(&export_time);
 
-  if (whole_geom) {
+  if (whole_geom && debug_ebmesher) {
     // techX query function test
     double boxMin[3], boxMax[3];
     int nDiv[3];
@@ -161,14 +164,15 @@ int load_and_mesh(const char *input_filename,
               << difftime(export_time, vol_frac_time) << " secs";
   }
 
-  if (whole_geom) {
+  if (whole_geom && debug_ebmesher) {
     std::cout << ", TechX query time: "
               << difftime(query_time_techX, export_time)
               << " secs, multiple intersection fraction query (elems, edge-cut fractions): "
               << difftime(query_time, query_time_techX) << " secs.";
   }
-  std::cout << std::endl;
 
+  std::cout << std::endl;
   mk.clear_graph();
+
   return 0;
 }

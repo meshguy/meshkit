@@ -125,40 +125,6 @@ void SCDMesh::setup_this()
                                                       maxCoord[0], maxCoord[1], maxCoord[2]);
       IBERRCHK(gerr, "ERROR: couldn't get geometry bounding box");
     }
-    else { // use mesh format geometry
-      moab::GeomTopoTool* gtt = new moab::GeomTopoTool(mk_core()->moab_instance());
-      rval = gtt->construct_obb_trees(true);
-      MBERRCHK(rval, mk_core()->moab_instance());
-      moab::OrientedBoxTreeTool* obtt = gtt->obb_tree();
-      moab::EntityHandle tree_root = gtt->get_one_vol_root();
-      moab::CartVect box_center, box_axis1, box_axis2, box_axis3;
-      for (int i = 0; i < 3; i++) {
-        minCoord[i] = HUGE_VAL;
-        maxCoord[i] = 0.;
-      }
-      moab::ErrorCode rval = obtt->box(tree_root, box_center.array(),
-                                       box_axis1.array(), box_axis2.array(),
-                                       box_axis3.array());
-      MBERRCHK(rval, mk_core()->moab_instance());
-      
-      // cartesian box corners
-      moab::CartVect corners[8] = {box_center + box_axis1 + box_axis2 + box_axis3,
-                                   box_center + box_axis1 + box_axis2 - box_axis3,
-                                   box_center + box_axis1 - box_axis2 + box_axis3,
-                                   box_center + box_axis1 - box_axis2 - box_axis3,
-                                   box_center - box_axis1 + box_axis2 + box_axis3,
-                                   box_center - box_axis1 + box_axis2 - box_axis3,
-                                   box_center - box_axis1 - box_axis2 + box_axis3,
-                                   box_center - box_axis1 - box_axis2 - box_axis3};
-      
-      // get the max, min cartesian box corners
-      for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 3; j++) {
-          if (corners[i][j] < minCoord[j]) minCoord[j] = corners[i][j];
-          if (corners[i][j] > maxCoord[j]) maxCoord[j] = corners[i][j];
-        }
-      }
-    }
 
     // increase box size
     double box_size;
@@ -192,6 +158,17 @@ void SCDMesh::setup_this()
     rval = mk_core()->moab_instance()->tag_set_data(bb_tag, &meshset, 1,
                                                     box_min_max);
   }
+
+//---------------------------------------------------------------------------//
+// set the Cartesian bounding box dimension
+void SCDMesh::set_cart_box_min_max(double* min, double* max, double box_increase)
+{
+  for (int i = 0; i < 3; i++) {
+    double box_size = max[i] - min[i];
+    minCoord[i] = min[i] - box_size*box_increase;
+    maxCoord[i] = max[i] + box_size*box_increase;
+  }
+}
 
 //---------------------------------------------------------------------------//
 // get the axis cartesian bounding box edges if cfmesh has been chosen
