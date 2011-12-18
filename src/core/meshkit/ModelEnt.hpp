@@ -451,6 +451,9 @@ public:
   int iGeomIndex()
    {return igeomIndex;}
 
+  int iRelPairIndex()
+   {return irelIndex;}
+
 private:
 
     /** \brief Return the next entity in the loop, using winding number
@@ -483,7 +486,7 @@ private:
     //! MOAB instance index associated with this model entity
   int meshIndex;
 
-    //! iRel instance index associated with this model entity
+    //! iRel pair index associated with this model entity
   int irelIndex;
 
     //! Geometry entity for this model entity

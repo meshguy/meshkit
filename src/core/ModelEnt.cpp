@@ -193,7 +193,7 @@ void ModelEnt::create_mesh_set(int ordered_flag)
   {
     iRel::Error merr;
     if (iGeomEnt) {
-      merr = mkCore->irel_pair()->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
+      merr = mkCore->irel_pair(irelIndex)->setEntSetRelation(iGeomEnt, IBSH(moabEntSet));
     }
     else {
       merr = mkCore->group_set_pair()->setSetSetRelation(iGeomSet, IBSH(moabEntSet));

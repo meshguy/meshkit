@@ -110,13 +110,15 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 		g_err = ent->igeom_instance()->createTag("TFIMapping", 1, iBase_INTEGER, taghandle);
 		IBERRCHK(g_err, "Trouble create the taghandle for the surface.");
 	}
+	// irel pair could be different from 1, for FBiGeom geometry
+	int irelPairIndex = ent->iRelPairIndex();
 	
 	//it has already been checked that there are 4 edges bounding a surface in the execute function
 	std::vector<iBase_EntitySetHandle> EdgeMeshSets(4);
 	std::vector<int>  num(edges.size());
 	//get the edge mesh entity sets for 4 edges
 	for (unsigned int i = 0; i < edges.size(); i++){
-		iRel::Error r_err = mk_core()->irel_pair()->getEntSetRelation(edges[i], 0, EdgeMeshSets[i]);
+		iRel::Error r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(edges[i], 0, EdgeMeshSets[i]);
 		IBERRCHK(r_err, "Trouble get@ the mesh entity set of geometrical edge.");
 		//get the number of line segments on each individual geometric edge
 		iMesh::Error m_err = mk_core()->imesh_instance()->getNumOfType(EdgeMeshSets[i], iBase_EDGE, num[i]);
@@ -315,36 +317,36 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	//note: if we use getEntEntArrRelation, nodes and edges will be returned. It will return all the mesh entities related to mesh entity
 	iBase_EntitySetHandle TmpSet;
 
-	iRel::Error r_err = mk_core()->irel_pair()->getEntSetRelation(edges[0], 0, TmpSet);
+	iRel::Error r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(edges[0], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical edge 0.");	
 	iMesh::Error m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, NodeList_i);	
 	IBERRCHK(m_err, "Trouble get the mesh node list from the geometrical edge 0.");
 
-	r_err = mk_core()->irel_pair()->getEntSetRelation(edges[edgePair[0]], 0, TmpSet);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(edges[edgePair[0]], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical edge opposite to edge 0.");
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, NodeList_ii);	
 	IBERRCHK(m_err, "Trouble get the mesh node list from the geometrical edge opposite to edge 0.");
 
-	r_err = mk_core()->irel_pair()->getEntSetRelation(edges[adjEdgesOfNode[0]], 0, TmpSet);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(edges[adjEdgesOfNode[0]], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical edge adjacent to node 0.");
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, NodeList_j);	
 	IBERRCHK(m_err, "Trouble get the mesh node list from the geometrical edge adjacent to node 0.");
 
-	r_err = mk_core()->irel_pair()->getEntSetRelation(edges[adjEdgesOfNode[1]], 0, TmpSet);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(edges[adjEdgesOfNode[1]], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical edge adjacent to node 1.");
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, NodeList_jj);	
 	IBERRCHK(m_err, "Trouble get the mesh node list from the geometrical edge adjacent to node 1.");
 
 	//get mesh nodes from four corners
 	std::vector<iBase_EntityHandle> tmpNodeHandle;
-	r_err = mk_core()->irel_pair()->getEntSetRelation(gNode[node_index_a], 0, TmpSet);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(gNode[node_index_a], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical corner 0.");
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, tmpNodeHandle);	
 	IBERRCHK(m_err, "Trouble get the mesh node from the geometrical corner 0.");
 	assert(tmpNodeHandle.size()==1);	
 	corner[0] = tmpNodeHandle[0];
 
-	r_err = mk_core()->irel_pair()->getEntSetRelation(gNode[node_index_c], 0, TmpSet);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(gNode[node_index_c], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical corner 1.");
 	tmpNodeHandle.clear();
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, tmpNodeHandle);	
@@ -352,7 +354,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	assert(tmpNodeHandle.size()==1);	
 	corner[1] = tmpNodeHandle[0];
 
-	r_err = mk_core()->irel_pair()->getEntSetRelation(gNode[oppNodeOfNode[node_index_a]], 0, TmpSet);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(gNode[oppNodeOfNode[node_index_a]], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical corner 2.");
 	tmpNodeHandle.clear();
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, tmpNodeHandle);	
@@ -360,7 +362,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	assert(tmpNodeHandle.size()==1);	
 	corner[2] = tmpNodeHandle[0];
 
-	r_err = mk_core()->irel_pair()->getEntSetRelation(gNode[oppNodeOfNode[node_index_c]], 0, TmpSet);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(gNode[oppNodeOfNode[node_index_c]], 0, TmpSet);
 	IBERRCHK(r_err, "Trouble get the mesh entity set from the geometrical corner 3.");
 	tmpNodeHandle.clear();
 	m_err = mk_core()->imesh_instance()->getEntities(TmpSet, iBase_VERTEX, iMesh_POINT, tmpNodeHandle);	
@@ -370,16 +372,16 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	
 	//get the sense of vertex pair with respect to edge
 	std::vector<int> senses(4);
-	g_err = mk_core()->igeom_instance()->getEgVtxSense(edges[0], gNode[node_index_a], gNode[node_index_c], senses[0]);
+	g_err = ent->igeom_instance()->getEgVtxSense(edges[0], gNode[node_index_a], gNode[node_index_c], senses[0]);
 	IBERRCHK(g_err, "Trouble get the sense of vertex pair with respect to edge 0.");
 
-	g_err = mk_core()->igeom_instance()->getEgVtxSense(edges[adjEdgesOfNode[0]], gNode[node_index_a], gNode[oppNodeOfNode[node_index_a]], senses[1]);
+	g_err = ent->igeom_instance()->getEgVtxSense(edges[adjEdgesOfNode[0]], gNode[node_index_a], gNode[oppNodeOfNode[node_index_a]], senses[1]);
 	IBERRCHK(g_err, "Trouble get the sense of vertex pair with respect to adjacent edge of node 0.");
 
-	g_err = mk_core()->igeom_instance()->getEgVtxSense(edges[adjEdgesOfNode[1]], gNode[node_index_c], gNode[oppNodeOfNode[node_index_c]], senses[2]);
+	g_err = ent->igeom_instance()->getEgVtxSense(edges[adjEdgesOfNode[1]], gNode[node_index_c], gNode[oppNodeOfNode[node_index_c]], senses[2]);
 	IBERRCHK(g_err, "Trouble get the sense of vertex pair with respect to adjacent edge of node 0.");
 
-	g_err = mk_core()->igeom_instance()->getEgVtxSense(edges[edgePair[0]], gNode[oppNodeOfNode[node_index_a]], gNode[oppNodeOfNode[node_index_c]], senses[3]);
+	g_err = ent->igeom_instance()->getEgVtxSense(edges[edgePair[0]], gNode[oppNodeOfNode[node_index_a]], gNode[oppNodeOfNode[node_index_c]], senses[3]);
 	IBERRCHK(g_err, "Trouble get the sense of vertex pair with respect to adjacent edge of node 0.");
 	
 	//reorgainize the node list based on its sense
@@ -449,9 +451,9 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
 			parametricTFI3D(&pts[0], s, r, coords_j, coords_jj, coords_i, coords_ii);
 
-			g_err = mk_core()->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
+			g_err = ent->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
 			if (g_err){
-			    g_err = mk_core()->igeom_instance()->getEntClosestPt(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
+			    g_err = ent->igeom_instance()->getEntClosestPt(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
 			}
 			IBERRCHK(g_err, "Trouble get the closest xyz coordinates on the linking surface.");	
 
@@ -462,13 +464,13 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
 	//finish creating the interior nodes
 	iBase_EntitySetHandle entityset;
-	r_err = mk_core()->irel_pair()->getEntSetRelation(ent->geom_handle(), 0, entityset);
+	r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(ent->geom_handle(), 0, entityset);
 	if (r_err){
 		//create the entityset
 		iMesh::Error m_err = mk_core()->imesh_instance()->createEntSet(true, entityset);
 		IBERRCHK(m_err, "Trouble create the entity set.");
 
-		r_err = mk_core()->irel_pair()->setEntSetRelation(ent->geom_handle(), entityset);
+		r_err = mk_core()->irel_pair(irelPairIndex)->setEntSetRelation(ent->geom_handle(), entityset);
 		IBERRCHK(r_err, "Trouble create the association between the geometry and mesh entity set.");
 	}
 	
@@ -515,7 +517,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	//create the quads
 	int isReversed = 0;
 	int face_sense;
-	g_err = mk_core()->igeom_instance()->getEgFcSense(edges[0], ent->geom_handle(), face_sense);
+	g_err = ent->igeom_instance()->getEgFcSense(edges[0], ent->geom_handle(), face_sense);
 	IBERRCHK(m_err, "Trouble get the edge sense with respect to a geometrical face.");
 	isReversed = face_sense*senses[0];
 	std::cout << "is reversed or not = " << isReversed << std::endl;
@@ -729,8 +731,11 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 	mk_core()->save_mesh("InitialMapping.vtk");
 
 #ifdef HAVE_MESQUITE
-	MeshImprove meshopt(mk_core(), true, false, false, false);
+	if (ent->iGeomIndex()==0)
+	{
+	  MeshImprove meshopt(mk_core(), true, false, false, false);
     meshopt.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
+	}
 
 #endif
 	//mk_core()->save_mesh("AfterLaplace.vtk");	
@@ -740,8 +745,11 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
 	mk_core()->save_mesh("AfterWinslow.vtk");
 #ifdef HAVE_MESQUITE
-	MeshImprove shapesmooth(mk_core(), false, false, true, false);
+	if (ent->iGeomIndex()==0)
+	{
+	  MeshImprove shapesmooth(mk_core(), false, false, true, false);
     shapesmooth.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
+	}
 
 #endif
 
@@ -788,7 +796,7 @@ void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vec
 
 	bool isParameterized = false;
 
-	iGeom::Error g_err = mk_core()->igeom_instance()->isEntParametric(ent->geom_handle(), isParameterized);
+	iGeom::Error g_err = ent->igeom_instance()->isEntParametric(ent->geom_handle(), isParameterized);
 	IBERRCHK(g_err, "Trouble check whether the surface is parameterized or not.");
 	isParameterized = false;
 	
@@ -811,7 +819,7 @@ void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vec
 	    IBERRCHK(m_err, "Trouble get the vertex coordinates.");
 		if (isParameterized){
 			double uv[2];
-			g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[List_i.size()+i][0], coords[List_i.size()+i][1], coords[List_i.size()+i][2], uv[0], uv[1]);
+			g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[List_i.size()+i][0], coords[List_i.size()+i][1], coords[List_i.size()+i][2], uv[0], uv[1]);
 			IBERRCHK(g_err, "Trouble get the uv from xyz.");
 			coords[List_i.size()+i][0] = uv[0];
 			coords[List_i.size()+i][1] = uv[1];
@@ -974,11 +982,11 @@ void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vec
 		if (!isBnd[i]){
 			double tmp_coord[3] = {coords[i][0], coords[i][1], coords[i][2]};
 			if (!isParameterized){
-				iGeom::Error g_err = mk_core()->igeom_instance()->getEntClosestPt(ent->geom_handle(), coords[i][0], coords[i][1], coords[i][2], tmp_coord[0], tmp_coord[1], tmp_coord[2]);
+				iGeom::Error g_err = ent->igeom_instance()->getEntClosestPt(ent->geom_handle(), coords[i][0], coords[i][1], coords[i][2], tmp_coord[0], tmp_coord[1], tmp_coord[2]);
 				IBERRCHK(g_err, "Trouble get a closest point on the linking surface.");
 			}
 			else{
-				iGeom::Error g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[i][0], coords[i][1], tmp_coord[0], tmp_coord[1], tmp_coord[2]);
+				iGeom::Error g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), coords[i][0], coords[i][1], tmp_coord[0], tmp_coord[1], tmp_coord[2]);
 				IBERRCHK(g_err, "Trouble get the xyz from uv.");
 
 			}
@@ -1010,18 +1018,18 @@ int TFIMapping::ParameterCalculate(double &r, double &s, double pt_0s[3], double
     s = 0; r = 0;
     double pt_s[3], pt_r[3];
 	bool isParameterized = false;
-	iGeom::Error g_err = mk_core()->igeom_instance()->isEntParametric(ent->geom_handle(), isParameterized);
+	iGeom::Error g_err = ent->igeom_instance()->isEntParametric(ent->geom_handle(), isParameterized);
 	IBERRCHK(g_err, "Trouble check whether the surface is parameterized or not.");
 	isParameterized = false;
 	if (isParameterized){
 		double uv_0s[3] = {0.0, 0.0, 0.0}, uv_1s[3] = {0.0, 0.0, 0.0}, uv_r0[3] = {0.0, 0.0, 0.0}, uv_r1[3] = {0.0, 0.0, 0.0}; 
-		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_0s[0], pt_0s[1], pt_0s[2], uv_0s[0], uv_0s[1]);
+		g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_0s[0], pt_0s[1], pt_0s[2], uv_0s[0], uv_0s[1]);
 		IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
-		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_1s[0], pt_1s[1], pt_1s[2], uv_1s[0], uv_1s[1]);
+		g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_1s[0], pt_1s[1], pt_1s[2], uv_1s[0], uv_1s[1]);
 		IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
-		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_r0[0], pt_r0[1], pt_r0[2], uv_r0[0], uv_r0[1]);
+		g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_r0[0], pt_r0[1], pt_r0[2], uv_r0[0], uv_r0[1]);
 		IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
-		g_err = mk_core()->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_r1[0], pt_r1[1], pt_r1[2], uv_r1[0], uv_r1[1]);
+		g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_r1[0], pt_r1[1], pt_r1[2], uv_r1[0], uv_r1[1]);
 		IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
 		
 		if (!LineLineIntersect(uv_0s, uv_1s, uv_r0, uv_r1, &pt_s[0], &pt_r[0], s, r)){      
@@ -1032,7 +1040,7 @@ int TFIMapping::ParameterCalculate(double &r, double &s, double pt_0s[3], double
 		for (int i = 0; i < 3; i++)
 			uv[i] = (pt_s[i] + pt_r[i])/2;
 
-		g_err = mk_core()->igeom_instance()->getEntUVtoXYZ(ent->geom_handle(), uv[0], uv[1], pts[0], pts[1], pts[2]);
+		g_err = ent->igeom_instance()->getEntUVtoXYZ(ent->geom_handle(), uv[0], uv[1], pts[0], pts[1], pts[2]);
 		IBERRCHK(g_err, "Trouble get the xyz from UV coordinates.");
 		
 

@@ -113,7 +113,7 @@ private:
 	int TargetSurfProjection();
 
 	//function for obtaining the x,y,z coordinates from parametric coordinates
-	int getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, double uv[2]);
+	//int getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, double uv[2]);
 
 	//interpolate linearly between x0 and x1
 	double linear_interpolation(double r, double x0, double x1);

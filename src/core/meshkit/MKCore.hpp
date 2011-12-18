@@ -335,11 +335,16 @@ public:
      */
   iRel *irel_instance(unsigned index = 0);
 
+    /** \brief Return the index of irel_pair added
+       * \param pair iRel::PairHandle pointer to be added
+      */
+  inline unsigned int add_irel_pair(iRel::PairHandle * pair);
+
     /** \brief Return the iRel pair handle used to relate geometry/mesh entities
      */
   iRel::PairHandle *irel_pair(unsigned index = 0);
 
-    /** \brief Return the iRel pair handle used to relate geometry sets to mesh entity sets
+  /** \brief Return the iRel pair handle used to relate geometry sets to mesh entity sets
      */
   iRel::PairHandle *group_set_pair(unsigned index = 0);
 
@@ -558,6 +563,12 @@ inline iRel::PairHandle *MKCore::irel_pair(unsigned index)
     throw Error(MK_BAD_INPUT, "No pair of that index.");
 
   return iRelPairs[index];
+}
+
+inline unsigned int MKCore::add_irel_pair(iRel::PairHandle * pair)
+{
+  iRelPairs.push_back(pair);
+  return iRelPairs.size()-1;
 }
 
 inline iRel::PairHandle *MKCore::group_set_pair(unsigned index)
