@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 
   mk = new MKCore();
   mk->load_mesh(filename);
-  //int indx=  mk->initialize_mesh_based_geometry();
+
   MEntVector  selection;
   mk->get_entities_by_dimension(2, selection);
   //selection.push_back(*dum.rbegin());// push just the last one retrieved from core

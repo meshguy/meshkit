@@ -621,19 +621,19 @@ MeshOp *MKCore::construct_meshop(MeshOpProxy* proxy, const MEntVector &me_vec)
 #if HAVE_FBIGEOM
 // this method takes the model from moab modelRootSet (0 by default means all)
 // also, assumes the first moab instance from MKCore, and the first iMesh instance
-int MKCore::initialize_mesh_based_geometry(moab::EntityHandle modelRootSet)
+int MKCore::initialize_mesh_based_geometry(iBase_EntitySetHandle modelRootSet)
 {
   // initialize the FBiGeom, in a different way
   iMesh * imeshMK = imesh_instance(); // this is MeshKit::iMesh class
   iMesh_Instance mesh = imeshMK->instance();
   FBiGeom_Instance geom;
 
-  iBase_EntitySetHandle root_set = reinterpret_cast<iBase_EntitySetHandle>(modelRootSet);
+  //iBase_EntitySetHandle root_set = reinterpret_cast<iBase_EntitySetHandle>(modelRootSet);
   std::string opts("SMOOTH;");
      // new constructor
   int err;
   // this does the initialization of smoothing (heavy duty computation)
-  FBiGeom_newGeomFromMesh(mesh, root_set, opts.c_str(), &geom, &err, opts.length());
+  FBiGeom_newGeomFromMesh(mesh, modelRootSet, opts.c_str(), &geom, &err, opts.length());
   if (err!=0)
     return -1; // error
   FBiGeom * fbigeom = new FBiGeom(geom);
@@ -645,6 +645,10 @@ int MKCore::initialize_mesh_based_geometry(moab::EntityHandle modelRootSet)
 
 }
 
+int MKCore::convert_db_to_mesh_based_geometry()
+{
+  return initialize_mesh_based_geometry((iBase_EntitySetHandle)0);
+}
 void MKCore::remove_mesh_based_geometry(int index)
 {
   // first, check if the index does make sense

@@ -24,7 +24,8 @@ mk.delete_model_entities()
 
 # moab model is still loaded, interpret it as geometry
 
-indx = mk.initialize_mesh_based_geometry()
+# here it is a little oxymoron; pass a set we know it is empty
+indx = mk.convert_db_to_mesh_based_geometry()
 
 surfs.clear()
 mk.get_entities_by_dimension(2, surfs)
@@ -32,7 +33,7 @@ mk.get_entities_by_dimension(2, surfs)
 print "surfs size:" , surfs.size()
 mk.construct_meshop("CAMALPaver", surfs)
 
-esize = SizingFunction(mk, -1, 200)
+esize = SizingFunction(mk, -1, 100)
 
 # we know only one surface
 surfs[0].sizing_function_index(esize.core_index())

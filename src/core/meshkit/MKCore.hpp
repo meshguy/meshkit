@@ -432,7 +432,7 @@ public:
      */
   void remove_sizing_function(int index, bool delete_too = true);
   
-#ifdef HAVE_FBIGEOM
+#if 1
   /** \brief interpret mesh-based geometry
        *
        * This function interprets the mesh from a moab db as mesh based geometry
@@ -441,8 +441,12 @@ public:
        * it returns the index of FBiGeom in iGeomInstances vector
        */
 
-  int initialize_mesh_based_geometry(moab::EntityHandle modelRootSet = 0);
+  int initialize_mesh_based_geometry(iBase_EntitySetHandle modelSet);
 
+  /** \brief convert a whole moab db to mesh based geometry
+   *
+   */
+  int convert_db_to_mesh_based_geometry();
   /** \brief remove mesh-based geometry instance
      *
      * This function removes the FBiGeom instance and clears some memory
