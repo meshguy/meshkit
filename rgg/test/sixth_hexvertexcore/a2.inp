@@ -18,5 +18,6 @@ P1
 RadialMeshSize 0.5
 MaterialSet_StartId 200
 NeumannSet_StartId 200
+EdgeInterval 13
 Center
 END ! This is a must

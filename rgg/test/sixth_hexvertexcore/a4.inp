@@ -20,6 +20,7 @@ Assembly 2
 RadialMeshSize 0.5
 MaterialSet_StartId 400
 NeumannSet_StartId 400
+EdgeInterval 13
 Center
 Section Y 0
 END ! This is a must

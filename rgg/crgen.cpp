@@ -1735,7 +1735,7 @@ int CCrgen::create_neumannset() {
     iMesh_getTagHandle(impl, global_id1, &gtag1, &err, 9);
     ERRORR("Trouble getting handle.", err);
 
-    iMesh_createEntSet(impl,0, &set, &err);
+    iMesh_createEntSet(impl,0, &set, &err); // for all other sides
     ERRORR("Trouble creating set handle.", err);
 
     if (set_DIM == 3) { // sets for collecting top and bottom surface
@@ -1805,9 +1805,9 @@ int CCrgen::create_neumannset() {
 	  // filter the sidesets based on their x and y coords
 
 	  for(int k=0; k<num_nsside; k++){
-	    if ( abs((coords[0])*nsx[k] + (coords[1])*nsy[k] + nsc[k]) <= merge_tol
-		 && abs((coords[3])*nsx[k] + (coords[4])*nsy[k] + nsc[k]) <= merge_tol
-		 && abs((coords[6])*nsx[k] + (coords[7])*nsy[k] + nsc[k]) <= merge_tol) {
+	    if ( fabs((coords[0])*nsx[k] + (coords[1])*nsy[k] + nsc[k]) <= merge_tol
+		 && fabs((coords[3])*nsx[k] + (coords[4])*nsy[k] + nsc[k]) <= merge_tol
+		 && fabs((coords[6])*nsx[k] + (coords[7])*nsy[k] + nsc[k]) <= merge_tol) {
 	      iMesh_addEntToSet(impl, (iBase_EntityHandle)(*rit), (iBase_EntitySetHandle) set_side[k], &err);
 	      ERRORR("Trouble getting number of entities after merge.", err);
 	      continue;

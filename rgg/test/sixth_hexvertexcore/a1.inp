@@ -20,6 +20,7 @@ Assembly 2
 RadialMeshSize 0.5
 MaterialSet_StartId 100
 NeumannSet_StartId 100
+EdgeInterval 13
 Center
 Section Y 0
 Rotate Z 30

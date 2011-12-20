@@ -14,5 +14,9 @@ Lattice 3			! 'Lattice' card defines arrangement of assemblies in core
 A1 &
 A2 &
 A3 A2 A4
+NeumannSet Top 1001
+NeumannSet Bot 2001
+NeumannSet Side 3001 x 1.7320508 y -1 c 0
+NeumannSet Side 3002 x 0 y 1 c 0
 END				! 'END' card is a MUST marks the end of file for the file reader
 
