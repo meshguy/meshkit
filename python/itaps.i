@@ -20,6 +20,15 @@
 %typemap(in)  iRel_Instance  { $1 = ((iRel_Object*) $input)->handle; }
 %typemap(out) iRel_Instance  { $result = iRel_FromInstance ($1); }
 
+%typemap(in)  iBase_EntityHandle { $1 = ((iBaseEntity_Object*) $input)->handle; }
+%typemap(out) iBase_EntityHandle { $result = iBaseEntity_FromHandle($1); }
+
+%typemap(in)  iBase_EntitySetHandle { $1 = ((iBaseEntitySet_Object*) $input)->handle; }
+%typemap(out) iBase_EntitySetHandle { $result = iBaseEntitySet_FromHandle($1); }
+
+%typemap(in)  iBase_TagHandle { $1 = ((iBaseTag_Object*) $input)->handle; }
+%typemap(out) iBase_TagHandle { $result = iBaseTag_FromHandle($1); }
+
 /* C++ ITAPS typemaps */
 %typemap(out) iGeom* { $result = iGeom_FromInstance($1->instance()); }
 %typemap(out) iMesh* { $result = iMesh_FromInstance($1->instance()); }
