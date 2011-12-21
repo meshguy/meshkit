@@ -47,6 +47,8 @@ void test_ice()
 	    fbiGeom->instance(), iRel::ENTITY, iRel::FBIGEOM_IFACE, iRel::ACTIVE,
 	    mk->imesh_instance()->instance(), iRel::SET, iRel::IMESH_IFACE, iRel::ACTIVE, pair);
 
+	CHECK_EQUAL(0, (int)err);
+
 	int ixrel = mk->add_irel_pair(pair);
 	char opts[]="SMOOTH;";                                  // relate , populate
 	mk->load_geometry(file_name.c_str(), opts, ix, 0, ixrel, false, true);
@@ -69,7 +71,6 @@ void test_ice()
 	this_vol->get_adjacencies(0, vertices);
 	CHECK_EQUAL(8, (int)vertices.size());
 
-#if 1
 	//make a one-to-one sweeping
 	OneToOneSwept *sw = (OneToOneSwept*) mk->construct_meshop("OneToOneSwept", vols);
 
@@ -79,7 +80,6 @@ void test_ice()
 
 	this_vol->sizing_function_index(swSize.core_index());
 
-#endif
 	MEntVector s1;
 	s1.push_back(surfs[0]);
 	CAMALPaver * cmp = (CAMALPaver*)mk->construct_meshop("CAMALPaver", s1);

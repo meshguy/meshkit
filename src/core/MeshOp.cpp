@@ -117,7 +117,8 @@ void MeshOp::mesh_types(std::vector<moab::EntityType> &mesh_types)
   for (int i = 0; types[i] != moab::MBMAXTYPE; ++i)
     mesh_types.push_back(types[i]);
 }
-#if 0
+
+#ifdef HAVE_FBIGEOM
 void MeshOp::create_model_ents_from_previous_ops()
 {
   // model ents are empty so far...
@@ -149,11 +150,8 @@ void MeshOp::create_model_ents_from_previous_ops()
   // the model ents have no model tag on the sets!!
   iGeom::EntitySetHandle rootSet = (iGeom::EntitySetHandle) prevModelSet[0];
 
-  FBiGeom * fbiGeom = new FBiGeom(mk_core(), true);//
-  fbiGeom->Init(rootSet);
-  int latestGeomIndex = mk_core()->number_of_igeom_instances()-1;
+  int latestGeomIndex = mk_core()->initialize_mesh_based_geometry(rootSet);
 
-  mk_core()->populate_model_ents(latestGeomIndex, 0, -1, true); // only geometry
   MEntVector model_ents;
   // get the model entities of dimension 2, created with the latest FBiGeom!!!
   mk_core()->get_entities_by_dimension(2, model_ents, latestGeomIndex);
@@ -175,6 +173,7 @@ void MeshOp::create_model_ents_from_previous_ops()
 
 }
 #endif
+
 }
 
   

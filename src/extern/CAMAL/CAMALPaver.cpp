@@ -35,10 +35,12 @@ void CAMALPaver::setup_this()
 
 void CAMALPaver::execute_this()
 {
+
+#ifdef HAVE_FBIGEOM
   if (mentSelection.empty())
   {
     // create model ents from previous op
-//    create_model_ents_from_previous_ops();
+    create_model_ents_from_previous_ops();
     // now look at the latest SizingFunction, and set it or each model ent
     int latestIndexSF = 0; // maybe we would need to set it right
     for (MEntSelection::iterator sit = mentSelection.begin();
@@ -56,6 +58,7 @@ void CAMALPaver::execute_this()
     // created during setup... not very clean code;
     mk_core()->execute_before((GraphNode *) this);
   }
+#endif
   for (MEntSelection::iterator sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
       // make a me, for convenience
     ModelEnt *me = (*sit).first;
