@@ -645,10 +645,6 @@ int MKCore::initialize_mesh_based_geometry(iBase_EntitySetHandle modelRootSet)
 
 }
 
-int MKCore::convert_db_to_mesh_based_geometry()
-{
-  return initialize_mesh_based_geometry((iBase_EntitySetHandle)0);
-}
 void MKCore::remove_mesh_based_geometry(int index)
 {
   // first, check if the index does make sense

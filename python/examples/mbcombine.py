@@ -24,8 +24,8 @@ mk.delete_model_entities()
 
 # moab model is still loaded, interpret it as geometry
 
-# here it is a little oxymoron; pass a set we know it is empty
-indx = mk.convert_db_to_mesh_based_geometry()
+# pass the root set
+indx = mk.initialize_mesh_based_geometry(0)
 
 surfs.clear()
 mk.get_entities_by_dimension(2, surfs)
