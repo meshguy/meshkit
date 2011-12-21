@@ -43,7 +43,6 @@ closed = 1
 qm.set_options(gid, direction[0], direction[1], direction[2], closed)
 qm.add_points(537200,  7680200,  -2000.)
 qm.add_points(537800,  7680100,  -2000.)
-
 qm.add_points(537700,  7680980,  -2000.)
 qm.add_points(537400 , 7680930 , -2000.)
 qm.add_points(537100 ,7680900 , -2000.)
@@ -56,7 +55,7 @@ surfs.clear()
 mk.delete_model_entities()
 
 # here, we should be done with splitting
-indx = mk.initialize_mesh_based_geometry()
+indx = mk.initialize_mesh_based_geometry(0)
 
 mk.get_entities_by_dimension(2, surfs)
 # we should have 2 surfaces, one internal

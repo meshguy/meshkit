@@ -5,7 +5,7 @@ mk = MKCore()
 filename="../data/volIce.h5m"
 mk.load_mesh(filename, "", 0, 0, 0, False, False);
 
-indx = mk.initialize_mesh_based_geometry()
+indx = mk.initialize_mesh_based_geometry(0)
 
 vols = MEntVector()
 mk.get_entities_by_dimension(3, vols)
