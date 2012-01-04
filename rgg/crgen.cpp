@@ -487,6 +487,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
       outfile = iname + ".h5m";
       mfile = iname + ".makefile";
       infofile = iname + "_info.csv";
+      minfofile = iname + "_mesh_info.csv"; 
     } else if (3 == argc) {
       int i = 1;// will loop through arguments, and process them
       for (i = 1; i < argc - 1; i++) {
@@ -494,7 +495,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 	  switch (argv[i][1]) {
 	  case 'm': {
 	    if (nrank == 0) {
-	      std::cout << "Creating Makefile Only" << std::endl;
+	      std::cout << "Creating Make/Info file Only" << std::endl;
 	    }
 	    // only makefile creation specified
 	    iname = argv[2];
@@ -502,6 +503,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 	    outfile = iname + ".h5m";
 	    mfile = iname + ".makefile";
 	    infofile = iname + "_info.csv";
+	    minfofile = iname + "_mesh_info.csv"; 
 	    break;
 	  }
 	  case 't': {
@@ -511,6 +513,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 	    outfile = iname + ".h5m";
 	    mfile = iname + ".makefile";
 	    infofile = iname + "_info.csv";
+	    minfofile = iname + "_mesh_info.csv"; 
 	    break;
 	  }
 	  case 'h': {
@@ -550,7 +553,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
       outfile = temp + ".h5m";
       mfile = temp + ".makefile";
       infofile = temp + "_info.csv";
-      minfofile = temp + "_mesh_info"; 
+      minfofile = temp + "_mesh_info.csv"; 
     }
 
     // open the file
@@ -603,7 +606,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 
 
   // open info file
-  if(strcmp(core_info.c_str(),"on") == 0){
+  if(strcmp(core_info.c_str(),"on") == 0 && nrank == 0){
     do {
       info_file.open(infofile.c_str(), std::ios::out);
       if (!info_file) {
@@ -620,7 +623,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
   }
 
   // open mesh info file
-  if(strcmp(core_info.c_str(),"on") == 0){
+  if(strcmp(core_info.c_str(),"on") == 0 && nrank == 0){
     do {
       minfo_file.open(minfofile.c_str(), std::ios::out);
       if (!info_file) {
@@ -630,9 +633,9 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 	minfo_file.clear();
       } else
 	bDone = true; // file opened successfully
-      std::cout << "Created core info file: " << infofile << std::endl;
+      std::cout << "Created mesh details info file: " << minfofile << std::endl;
     } while (!bDone);
-    minfo_file << "assm index"  << " \t" << "assm number" << " \t" << "dX" << " \t" << "dY" << " \t" << "dZ"  << " \t" << "rank" << std::endl;
+    minfo_file << "assm index"  << " \t" << "assm number" << " \t" << "dX" << " \t" << "dY" << " \t" << "dZ" << std::endl;
   }
   if (nrank == 0) {
     err = write_makefile();
@@ -1267,6 +1270,16 @@ int CCrgen::banner()
     << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     << '\n';
   return iBase_SUCCESS;
+}
+int CCrgen::write_minfofile()
+// ---------------------------------------------------------------------------
+// Function: write the excel mesh info file based on inputs read from mesh & input file
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  std::cout << "Writing mesh info file.." << std::endl;
+  return 0;
 }
 
 int CCrgen::write_makefile()
