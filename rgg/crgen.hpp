@@ -55,6 +55,7 @@ public:
   int read_inputs_phase1 ();
   int read_inputs_phase2 ();
   int write_makefile ();
+  int write_minfofile ();
   int find_assm(const int i, int &assm_index);
   int banner();
   int copymove(const int nrank, const int numprocs);
