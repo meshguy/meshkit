@@ -701,7 +701,8 @@ else
   AC_LANG_PUSH([C++])
 
   AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([#include "nglib.h"],
+    [AC_LANG_PROGRAM([#include <cstddef>
+                      #include "nglib.h"],
         [Ng_Mesh mesh])],
     [NETGEN_LIBS="$NETGEN_LDFLAGS -lnglib"] [HAVE_NETGEN=yes],
     [AC_MSG_WARN([libnglib is not installed.])])
