@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
   }
 
   splitOp->set_options( /* int globalId*/ 1, direction[0], direction[1],
-      direction[2], /* int closed*/ 1);
+      direction[2], /* int closed*/ 1, /*min_dot*/ 0.8);
 
   for (int k=0 ; k<sizePolygon; k++)
     splitOp->add_points(xyz[3*k], xyz[3*k+1], xyz[3*k+2]);

@@ -23,7 +23,7 @@ public:
   //  globalId: to identify / single out the gface to be split
   // the gface will be found among gfaces in the mentSelection
   void set_options(int globalId,
-      double dirx, double diry, double dirz, int closed);
+      double dirx, double diry, double dirz, int closed, double min_dot);
 
   void add_points(double x, double y, double z);
   //set up the splitting of a gface, with a polyline or loop
@@ -71,7 +71,8 @@ private:
   int _globalId;
   std::vector<double>_polyline;
   double _direction[3];
-  double _closed;
+  int _closed;
+  double _min_dot;
 };
 
 }

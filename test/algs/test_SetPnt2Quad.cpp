@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
   // we know we will split a face with id 1; there should be only one so far
   //  !!!
   splitOp->set_options( /* int globalId*/ 1, dirSplit[0], dirSplit[1],
-      dirSplit[2], /* int closed*/ 1);
+      dirSplit[2], /* int closed*/ 1, /*min_dot*/ 0.8);
 
   for (int k=0 ; k<sizePolygon; k++)
       splitOp->add_points(xyz[3*k], xyz[3*k+1], xyz[3*k+2]);

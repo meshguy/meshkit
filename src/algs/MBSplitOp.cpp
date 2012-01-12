@@ -26,6 +26,11 @@ const moab::EntityType* MBSplitOp::output_types()
 MBSplitOp::MBSplitOp(MKCore *mk_core, const MEntVector &me_vec) :
   MeshScheme(mk_core, me_vec)
 {
+  _globalId = -1;
+  _direction[0]=_direction[1]=0.;
+  _direction[2]=1.0;
+  _closed = 1;
+  _min_dot = 0.8;// acos(0.8)~= 36 degrees
 }
 
 MBSplitOp::~MBSplitOp()
@@ -34,7 +39,7 @@ MBSplitOp::~MBSplitOp()
 
 //set up the crop/split of a mesh based surface
 void MBSplitOp::set_options(int globalId, double dirx, double diry,
-    double dirz, int closed)
+    double dirz, int closed, double min_dot)
 {
   _globalId = globalId;
   /*for (int i=0; i<nPoints*3; i++)
@@ -44,6 +49,7 @@ void MBSplitOp::set_options(int globalId, double dirx, double diry,
   _direction[1] = diry;
   _direction[2] = dirz;
   _closed = closed;
+  _min_dot = min_dot;
   return;
 }
 void MBSplitOp::add_points(double x, double y, double z)
@@ -147,8 +153,8 @@ void MBSplitOp::execute_this()
   // the mset will be split according to the rule
 
   moab::EntityHandle newFace;
-  rval = pFacet->split_surface_with_direction(mset, _polyline, _direction,
-      newFace, _closed);
+  rval = pFacet->split_surface_with_direction(mset, _polyline, _direction, _closed, _min_dot,
+      newFace);
 
   MBERRCHK(rval, MBI);
 
