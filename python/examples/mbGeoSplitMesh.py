@@ -40,7 +40,8 @@ direction = [0.,  0.,  1. ]
 # we know we have one surface () with gid 1
 gid = 1
 closed = 1
-qm.set_options(gid, direction[0], direction[1], direction[2], closed)
+min_dot = 0.8
+qm.set_options(gid, direction[0], direction[1], direction[2], closed, min_dot)
 qm.add_points(537200,  7680200,  -2000.)
 qm.add_points(537800,  7680100,  -2000.)
 qm.add_points(537700,  7680980,  -2000.)
