@@ -12,6 +12,7 @@
 #define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/twoassm"
 
 #include "crgen.hpp"
+#include "moab/CartVect.hpp"
 #include "utils.hpp"
 #include <string.h>
 /* ==================================================================
@@ -635,7 +636,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 	bDone = true; // file opened successfully
       std::cout << "Created mesh details info file: " << minfofile << std::endl;
     } while (!bDone);
-    minfo_file << "assm index"  << " \t" << "assm number" << " \t" << "dX" << " \t" << "dY" << " \t" << "dZ" << std::endl;
+    minfo_file << "pin_number"  << " \t" << "x_centroid" << " \t" << "y_centroid" << " \t" << "z_centroid" << std::endl;
   }
   if (nrank == 0) {
     err = write_makefile();
@@ -1239,7 +1240,7 @@ int CCrgen::find_assm(const int i, int &assm_index)
 // ---------------------------------------------------------------------------
 {
   int flag = 0;
-  for (int j = 0; j < nassys; j++)
+ for (int j = 0; j < nassys; j++)
     if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
       assm_index = j;
       flag = 1;
@@ -1270,16 +1271,6 @@ int CCrgen::banner()
     << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     << '\n';
   return iBase_SUCCESS;
-}
-int CCrgen::write_minfofile()
-// ---------------------------------------------------------------------------
-// Function: write the excel mesh info file based on inputs read from mesh & input file
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
-  std::cout << "Writing mesh info file.." << std::endl;
-  return 0;
 }
 
 int CCrgen::write_makefile()
@@ -1894,4 +1885,79 @@ void CCrgen::IOErrorHandler (ErrorStates ECode) const
   std::cerr << '\n' << "Error reading input file, line : " << linenumber;
   std::cerr << std::endl;
   exit (1);
+}
+
+
+
+
+
+int CCrgen::write_minfofile()
+// ---------------------------------------------------------------------------
+// Function: write the excel mesh info file based on inputs read from mesh & input file
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  std::cout << "Writing mesh info file indicating elements and pin number" << std::endl;
+
+  moab::Tag ntag;
+  mbImpl()->tag_get_handle(NAME_TAG_NAME, NAME_TAG_SIZE, MB_TYPE_OPAQUE, ntag);
+  moab::Tag mattag;
+  mbImpl()->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+  int rval = 0;
+  moab::Range matsets;
+  std::vector <EntityHandle> set_ents;
+
+    mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+
+  moab::Range::iterator set_it;
+  for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+    moab::EntityHandle this_set = *set_it;
+
+    // get the id for this set
+    int set_id;
+    rval = mbImpl()->tag_get_data(mattag, &this_set, 1, &set_id);
+    char name[NAME_TAG_SIZE];
+    rval = mbImpl()->tag_get_data(ntag, &this_set, 1, &name);
+
+    // check for the special block _xp created in AssyGen stage 
+    // now print out elements for each pin on the mesh info file
+    if(name[0]=='_' && name[1]=='x' && name[2] == 'p'){
+
+    // get the entities in the set, recursively
+    rval = mbImpl()->get_entities_by_dimension(this_set, 3, set_ents, true);
+
+    std::cout << "Block: " << set_id << " has " 
+	      << set_ents.size() << " entities. Name = " << name;
+
+    // loop thro' all the elements in all the sets
+    for (int i=0;i<int(set_ents.size());i++){
+	
+	std::vector<EntityHandle> conn;
+	EntityHandle handle = set_ents[i];
+
+	// get the connectivity of this element
+	rval = mbImpl()->get_connectivity(&handle, 1, conn);
+	double coords[3];
+	double x_sum = 0.0, y_sum = 0.0, z_sum = 0.0;
+	for (int j = 0; j<int(conn.size()); ++j){
+	  rval = mbImpl()->get_coords(&conn[j], 1, coords);
+	  x_sum+=coords[0];
+	  y_sum+=coords[1];
+	  z_sum+=coords[2];
+	}
+	int p = 3;
+        while(name[p]!='\0'){
+	  minfo_file << name[p];
+	  ++p;
+	}
+	minfo_file << " \t" << x_sum/conn.size() << " \t" << y_sum/conn.size() << " \t" <<  z_sum/conn.size() <<  std::endl;
+    }
+    std::cout << ". Deleting block " << set_id << std::endl;
+    mbImpl()->delete_entities(&this_set, 1);
+    set_ents.clear();
+  }
+
+  }
+  return 0;
 }

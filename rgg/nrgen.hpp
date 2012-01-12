@@ -100,7 +100,7 @@ private:
   // integers for vectors sizes, err etc
   int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
     m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag, m_nTotalPincells; 
-  int m_edgeInterval;
+  int m_edgeInterval, m_nStartpinid;
   // doubles for pincell pitch, pi and mesh sizes resp.
   double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize, m_dMergeTol;      
  

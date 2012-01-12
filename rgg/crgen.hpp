@@ -29,6 +29,7 @@ CCrgen class declaration
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
+#include "MBTagConventions.hpp"
 #endif
 
 
@@ -88,7 +89,7 @@ public:
 
   bool extrude_flag;
   bool mem_tflag;
-  std::string prob_type, savefiles;
+  std::string prob_type, savefiles, core_info;
   std::vector<std::string> files, mk_files;
   std::vector<int> assm_meshfiles;
   std::vector< std::vector<int> > assm_location;
@@ -114,7 +115,7 @@ private:
   int nrings, nringsx, nringsy, pack_type, symm;
   double pitch, pitchx, pitchy;
   bool global_ids, back_mesh;
-  std::string outfile, core_info, mesh_info;
+  std::string outfile, mesh_info;
   int nassys; // the number of mesh files
   int tot_assys; // total no. of assms forming core
   int set_DIM; // default is 3D
