@@ -10,6 +10,7 @@ CNrgen class definition.
 
 #include <fstream>
 #include <iostream>
+#include <vector>
 #include <math.h>
 #include "vectortemplate.hpp"
 #include "matrixtemplate.hpp"
@@ -74,6 +75,8 @@ private:
 
   // string for file names
   std::string m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo;    
+
+   std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
 
   // matrix for holding pincell arrangement
   CMatrix<std::string> m_Assembly; 

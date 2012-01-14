@@ -281,6 +281,10 @@ int CNrgen::ReadInputPhase1 ()
       "m" << " \t" << "n" << " \t" << "dX" << " \t" << 
       "dY" << " \t" << "dZ"  << std::endl;
   }
+	// set the size of cp_inpins matrix
+//	cp_inpins.resize(m_nDuct);
+	for (int j=0; j<m_nDuct ; j++)
+		cp_inpins.push_back(std::vector<iBase_EntityHandle>());
   return 0;
 }
 
@@ -1396,7 +1400,8 @@ int CNrgen::CreateCubitJournal()
 
   std::cout << "Schemes file created: " << m_szSchFile << std::endl;
   std::cout << "Cubit journal file created: " << m_szJouFile << std::endl;
-  std::cout << "Assembly info file created: " << m_szAssmInfo << std::endl;
+  if(strcmp(m_szInfo.c_str(),"on") == 0)
+	std::cout << "Assembly info file created: " << m_szAssmInfo << std::endl;
 
   return 0;
 }
@@ -1997,8 +2002,8 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
   std::cout << "\n--------------------------------------------------"<<std::endl;
 
   // get all the entities (in pins)defined so far, in an entity set - for subtraction later
-  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
-  CHECK( "ERROR : getRootSet failed!" );
+//  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
+//  CHECK( "ERROR : getRootSet failed!" );
 
 	
   if(m_nDimensions > 0){
@@ -2152,42 +2157,44 @@ int CNrgen::Subtract_Pins()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  if (m_nDimensions >0 && in_pins.size()>0){
-    SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
+  if (m_nDimensions >0 &&  cp_inpins[0].size() > 0){
+//    SimpleArray<iBase_EntityHandle> copy_inpins(in_pins.size());
     std::cout <<"Total number of pins in the model = " << m_nTotalPincells << std::endl;
 
-    int num_inpins = in_pins.size()/m_nDuct;
-    CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, num_inpins);
-
+//    int num_inpins = in_pins.size()/m_nDuct;
+//    CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, num_inpins);
+	
     for (int k=1; k<=m_nDuct; k++){
 
       // put all the in pins in a matrix of size duct for subtraction with ducts
-      for (int i=0; i<num_inpins;i++){
-	iGeom_copyEnt(geom, in_pins[ k - 1 + m_nDuct*i], &cp_inpins(k,i+1), &err);
+	std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size());
+      for (int i=0; i< (int) cp_inpins[k-1].size();i++){
+ 	iGeom_copyEnt(geom, cp_inpins[k-1][i], &pin_copy[i], &err);
 	CHECK("Couldn't copy inner duct wall prism.");	
       }
-    
+  
       iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
       tmp_vol = assms[(k-1)*m_nDimensions];
 
       // subtract the innermost hex from the pins
-      std::cout << "Duct no.: " << k << " subtracting " << num_inpins << " pins from the duct .. " << std::endl;
+     std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
       // if there are more than one pins
-      if((in_pins.size()/m_nDuct) > 1){
+      if( cp_inpins[1].size() > 1){
 
-	iGeom_uniteEnts(geom, &cp_inpins(k,1), num_inpins, &unite, &err); 
+        iGeom_uniteEnts(geom, &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err); 
 	CHECK( "uniteEnts failed!" ); 
 
 	iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
 	CHECK("Couldn't subtract pins from block.");
 	
 	tmp_vol = tmp_new1;
+
 	unite = NULL;
 	tmp_new1=NULL;
       }
       else{ // only one pin in in_pins
-	iGeom_subtractEnts(geom, tmp_vol, in_pins[k-1], &tmp_new1, &err);
+	iGeom_subtractEnts(geom, tmp_vol, cp_inpins[0][0], &tmp_new1, &err);
 	CHECK("Couldn't subtract pins from block.");	
       }
     }
@@ -2195,7 +2202,7 @@ int CNrgen::Subtract_Pins()
   }
   else{
     std::cout <<"Nothing to subtract" << std::endl;
-  }
+   }
   return 0;
 }
 
@@ -2323,7 +2330,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
   CVector<double> dVCylZPos(2), dVCylXYPos(2), dVStartZ, dVEndZ;;
   CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
   iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
-
+  std::vector<iBase_EntityHandle> cp_in;
   // name tag handle
   iBase_TagHandle this_tag= NULL;
   char* tag_name = (char*)"NAME";
@@ -2403,6 +2410,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  }
 	}
 
+	cp_in.push_back(cell);
 	std::cout << "created: " << sMatName << std::endl;	
 	iGeom_setData(geom, cell, this_tag,
 		      sMatName.c_str(), sMatName.size(), &err);
@@ -2471,6 +2479,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	}
 	tmp_vol1=cyls[0]; //inner most cyl
 
+	 cp_in.push_back(tmp_vol1);
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
@@ -2502,6 +2511,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	    }
 	  }
 	  std::cout << "created: " << sMatName << std::endl;
+	 cp_in.push_back(tmp_new);
 	  // set the name of the annulus
 	  iGeom_setData(geom, tmp_new, this_tag,
 			sMatName.c_str(),sMatName.size(), &err);
@@ -2518,6 +2528,11 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  cyls[b-1] = tmp_new;
 	}
       }
+
+        for (int count = 0; count < (int) cp_in.size(); count++)
+                cp_inpins[n-1].push_back(cp_in[count]);
+        cp_in.clear();
+
     }
   }
   // this branch of the routine is responsible for creating cylinders with '0' cells
@@ -2584,6 +2599,8 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	std::cout << "created: " << sMatName << std::endl;
 	tmp_vol1=cyls[0]; //inner most cyl
 
+         cp_in.push_back(tmp_vol1);
+
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
@@ -2612,6 +2629,9 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	    }
 	  }
 	  std::cout << m_nPincells <<"created: " << sMatName << std::endl;
+
+         cp_in.push_back(tmp_new);
+
 	  // set the name of the annulus
 	  iGeom_setData(geom, tmp_new, this_tag,
 			sMatName.c_str(),sMatName.size(), &err);
@@ -2629,6 +2649,12 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  cyls[b-1] = tmp_new;
 	}
       }
+
+	for (int count = 0; count < (int) cp_in.size(); count++)
+ 	        cp_inpins[n-1].push_back(cp_in[count]);
+	cp_in.clear();
+
+
     }
   }
   return 0;
@@ -2648,6 +2674,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
   CVector<double> dVCylZPos(2), dVCylXYPos(2), dVEndZ, dVStartZ;
   CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
   iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol1= NULL, tmp_new= NULL, cell_copy = NULL, intersec = NULL;
+  std::vector<iBase_EntityHandle> cp_in;
 
   // name tag handle
   iBase_TagHandle this_tag= NULL;
@@ -2775,6 +2802,9 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	    sMatName = m_szAssmMat(p);
 	  }
 	}
+
+         cp_in.push_back(tmp_vol1);
+	
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
@@ -2802,6 +2832,9 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	  }
 	}
 	std::cout << "created: " << sMatName << std::endl;
+
+         cp_in.push_back(tmp_new);
+
 	// set the name of the annulus
 	iGeom_setData(geom, tmp_new, this_tag,
 		      sMatName.c_str(),sMatName.size(), &err);
@@ -2831,6 +2864,9 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	    }
 	  }
 	  std::cout << "created: " << sMatName << std::endl;
+
+         cp_in.push_back(tmp_new);
+
 	  // set the name of the annulus
 	  iGeom_setData(geom, tmp_new, this_tag,
 			sMatName.c_str(),sMatName.size(), &err);
@@ -2848,6 +2884,10 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
 	}
       }
+        for (int count = 0; count < (int) cp_in.size(); count++)
+                cp_inpins[n-1].push_back(cp_in[count]);
+        cp_in.clear();
+
     }
   }
   // this branch of the routine is responsible for creating cylinders with '0' cells
@@ -2936,6 +2976,9 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	    sMatName = m_szAssmMat(p);
 	  }
 	}
+
+         cp_in.push_back(tmp_vol1);
+
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
@@ -2970,6 +3013,9 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	    }
 	  }
 	  std::cout << "created: " << sMatName << std::endl;
+
+         cp_in.push_back(tmp_new);
+
 	  // set the name of the annulus
 	  iGeom_setData(geom, tmp_new, this_tag,
 			sMatName.c_str(),sMatName.size(), &err);
@@ -2987,6 +3033,9 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
 	}
       }
+        for (int count = 0; count < (int) cp_in.size(); count++)
+                cp_inpins[n-1].push_back(cp_in[count]);
+        cp_in.clear();
 
     }
   }
