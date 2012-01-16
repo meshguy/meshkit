@@ -22,6 +22,7 @@
 #ifdef HAVE_PARALLEL_CGM
 #include "meshkit/ParallelMesher.hpp"
 #include "meshkit/ParExchangeMesh.hpp"
+#include "meshkit/ParPostRecv.hpp"
 #endif
 #endif
 #endif
@@ -61,6 +62,7 @@ REGISTER_MESH_OP(MBSplitOp);
 #ifdef HAVE_PARALLEL_CGM
 REGISTER_MESH_OP(ParallelMesher);
 REGISTER_MESH_OP(ParExchangeMesh);
+REGISTER_MESH_OP(ParPostRecv);
 #endif
 #endif
 #endif

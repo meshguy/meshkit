@@ -72,8 +72,8 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
 if PARALLEL
 if HAVE_PARALLEL_MOAB
 if HAVE_PARALLEL_CGM
-  libMeshKitalgs_la_SOURCES += ParallelMesher.cpp ParExchangeMesh.cpp
-  nobase_libMeshKitalgs_la_include_HEADERS += meshkit/ParallelMesher.hpp meshkit/ParExchangeMesh.hpp
+  libMeshKitalgs_la_SOURCES += ParallelMesher.cpp ParExchangeMesh.cpp ParPostRecv.cpp
+  nobase_libMeshKitalgs_la_include_HEADERS += meshkit/ParallelMesher.hpp meshkit/ParExchangeMesh.hpp meshkit/ParPostRecv.hpp
   AM_CPPFLAGS += -I$(srcdir)/../../extern/CAMAL
 endif
 endif

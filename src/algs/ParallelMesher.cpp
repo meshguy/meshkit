@@ -38,7 +38,9 @@ ParallelMesher::ParallelMesher(MKCore *mkcore, const MEntVector &me_vec)
   iMesh::Error err = mk_core()->imesh_instance()->createTag("PARALLEL_UNIQUE_ID", 1, iBase_INTEGER, m_mPuniqueIDTag);
   IBERRCHK(err, "Trouble create a parallel unique id tag handle.");
 
-  m_sEntity.resize(7);
+  m_sEntity.resize(8);
+
+  if (debug_parallelmesher) m_mpcomm->set_debug_verbosity(5);
 }
 
 ParallelMesher::~ParallelMesher()
@@ -68,6 +70,9 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
   else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE ||
            type == EXCHANGE_SURF) {
     proxy = MKCore::meshop_proxy("ParExchangeMesh");
+  }
+  else if (type == POST_RECV) {
+    proxy = MKCore::meshop_proxy("ParPostRecv");
   }
 
   if (proxy == NULL) throw Error(MK_FAILURE, "Couldn't find a MeshOp capable of producing the given mesh type.");
@@ -115,6 +120,7 @@ void ParallelMesher::setup_this()
   add_parallel_mesh_op(EXCHANGE_VERTEX);
   add_parallel_mesh_op(MESH_EDGE);
   add_parallel_mesh_op(EXCHANGE_EDGE);
+  add_parallel_mesh_op(POST_RECV);
   add_parallel_mesh_op(MESH_SURF);
   add_parallel_mesh_op(EXCHANGE_SURF);
   add_parallel_mesh_op(MESH_VOLUME);
@@ -134,6 +140,7 @@ void ParallelMesher::check_partition(TDParallel* td_par, ModelEnt* me, int dim)
   int charge_p = td_par->get_charge_proc();
   if (m_rank == charge_p) { // charge processor
     if (dim == 2) {
+      m_sEntity[POST_RECV].insert(me);
       m_sEntity[MESH_SURF].insert(me);
       m_sEntity[EXCHANGE_SURF].insert(me);
     }
@@ -153,6 +160,7 @@ void ParallelMesher::check_partition(TDParallel* td_par, ModelEnt* me, int dim)
     for (int i = 0; i < n_shared; i++) {
       if (m_rank == shared_procs->get_and_step()) { // shared processor
         if (dim == 2) {
+          m_sEntity[POST_RECV].insert(me);
           m_sEntity[EXCHANGE_SURF].insert(me);
         }
         else if (dim == 1) {

@@ -1,9 +1,9 @@
-// It exchanges entities and sets
-// calls moab::ParallelComm::exchange_owned_meshs
+// Posts MPI_Irecv before surface meshing
+// calls moab::ParallelComm::post_irecv
 // 
 
-#ifndef PAR_EXCHANGE_MESH_HPP
-#define PAR_EXCHANGE_MESH_HPP
+#ifndef PAR_POST_RECV_HPP
+#define PAR_POST_RECV_HPP
 
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"
@@ -13,17 +13,17 @@ namespace MeshKit
 {
 using namespace moab;
 
-class ParExchangeMesh : public MeshScheme
+class ParPostRecv : public MeshScheme
 {
 public:
 
-  ParExchangeMesh(MKCore *mkcore, const MEntVector &me_vec);
+  ParPostRecv(MKCore *mkcore, const MEntVector &me_vec);
 
-  virtual ~ParExchangeMesh();
+  virtual ~ParPostRecv();
 
   /**\brief Get class name */
   static const char* name() 
-    { return "ParExchangeMesh"; }
+    { return "ParPostRecv"; }
 
   /**\brief Function returning whether this scheme can mesh entities of t
    *        the specified dimension.
@@ -60,22 +60,13 @@ public:
    */
   virtual void execute_this();
 
-  // debug function
-  void print_mesh();
-
 private:
 
   ParallelComm* m_mpcomm; // mesh parallel communication
 
-  unsigned int m_rank, m_proc_size, m_master;
-
-  iBase_TagHandle m_mPuniqueIDTag;
-
-  std::vector< Range* > m_shared_entities;
+  unsigned int m_rank;
 
   std::vector< unsigned int > m_shared_procs;
-
-  std::vector< MPI_Request > m_recv_reqs, m_recv_remoteh_reqs;
 
   int get_shared_list(const int to_proc);
 };

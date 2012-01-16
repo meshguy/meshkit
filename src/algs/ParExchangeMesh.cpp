@@ -1,10 +1,11 @@
 #include "meshkit/ParExchangeMesh.hpp"
+#include "meshkit/ParPostRecv.hpp"
 #include "moab/Range.hpp"
 #include "moab/Types.hpp"
 #include "RefEntity.hpp"
 #include "TDParallel.hpp"
 
-const bool debug_broadcast_entity = false;
+const bool debug_par_exchange_mesh = false;
 
 namespace MeshKit 
 {
@@ -88,14 +89,35 @@ void ParExchangeMesh::execute_this()
   }
 
   // exchange shared entities
-  moab::ErrorCode rval = m_mpcomm->exchange_owned_meshs(m_shared_procs, m_shared_entities,
-                                                        true, false);
-  MBERRCHK(rval, mk_core()->moab_instance());
+  if (debug_par_exchange_mesh) {
+    std::cout << "m_shared_procs_size=" << m_shared_procs.size() << std::endl;
+    for (int i = 0; i < m_shared_procs.size(); i++) {
+      std::cout << "m_shared_procs[" << i << "]=" << m_shared_procs[i] << std::endl;
+    }
+    std::cout << "m_shared_entities_size=" << m_shared_entities.size() << std::endl;
+    for (int i = 0; i < m_shared_entities.size(); i++) {
+      std::cout << "m_shared_entities_range[" << i << "]_size=" << m_shared_entities[i]->size() << std::endl;
+    }
+  }
 
+  int dim = mentSelection.begin()->first->dimension();
+  moab::ErrorCode rval = m_mpcomm->exchange_owned_meshs(m_shared_procs,
+                                                        m_shared_entities,
+                                                        m_recv_reqs,
+                                                        m_recv_remoteh_reqs,
+                                                        true, false, false, dim);
+  MBERRCHK(rval, mk_core()->moab_instance());
+  
   // set the model ent mesh with received mesh
   int n_meshed = meshed_mes.size();
   for (int i = 0; i < n_meshed; i++) {
     meshed_mes[i]->set_meshed_state(COMPLETE_MESH);
+  }
+
+  if (debug_par_exchange_mesh) {
+    int dim = -1;
+    if (mentSelection.size() > 0) dim = mentSelection.begin()->first->dimension();
+    std::cout << "Parallel_exchange_execution_time(dim:" << dim << ")=" << t2 - t1 << std::endl;
   }
 }
 
