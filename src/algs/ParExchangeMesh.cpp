@@ -113,12 +113,6 @@ void ParExchangeMesh::execute_this()
   for (int i = 0; i < n_meshed; i++) {
     meshed_mes[i]->set_meshed_state(COMPLETE_MESH);
   }
-
-  if (debug_par_exchange_mesh) {
-    int dim = -1;
-    if (mentSelection.size() > 0) dim = mentSelection.begin()->first->dimension();
-    std::cout << "Parallel_exchange_execution_time(dim:" << dim << ")=" << t2 - t1 << std::endl;
-  }
 }
 
 int ParExchangeMesh::get_shared_list(const int proc)
