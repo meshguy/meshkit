@@ -33,7 +33,8 @@ libMeshKitalgs_la_SOURCES = \
 if HAVE_FBIGEOM
 libMeshKitalgs_la_SOURCES += \
   MBGeomOp.cpp \
-  MBSplitOp.cpp
+  MBSplitOp.cpp \
+  MBVolOp.cpp
 endif
 
 # The list of header files which are to be installed
@@ -52,7 +53,8 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 if HAVE_FBIGEOM
 nobase_libMeshKitalgs_la_include_HEADERS += \
 	meshkit/MBGeomOp.hpp \
-	meshkit/MBSplitOp.hpp
+	meshkit/MBSplitOp.hpp \
+	meshkit/MBVolOp.hpp
 endif
 
 # Boilerplate stuff that doesn't depend on what the targets are

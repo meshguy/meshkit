@@ -362,6 +362,10 @@ void ModelEnt::commit_mesh(moab::EntityHandle *mesh_ents,
 void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const 
 {
   std::vector<iGeom::EntityHandle> gents;
+  // this call assumes that we have geometry. Is that always true?
+  // it would be possible to have ModelEnt without geometry  (geometry handle null),
+  // so then we should get adjacencies from mesh based geometry model.
+  //we should really check if (igeomIndex>=0);
   iGeom::Error err = igeom_instance()->getEntAdj(geom_handle(), (iBase_EntityType)dim, gents);
   IBERRCHK(err, "Trouble getting geom adjacencies.");
   adjs.resize(gents.size());

@@ -34,7 +34,7 @@ TESTS += \
         test_fbgeom \
         test_MBGeomOp \
         test_MBSplitOp \
-        test_SetPnt2Quad test_volIce
+        test_SetPnt2Quad test_volIce test_MBVolOp
 endif
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
@@ -65,6 +65,7 @@ test_MBGeomOp_SOURCES = test_MBGeomOp.cpp
 test_MBSplitOp_SOURCES = test_MBSplitOp.cpp
 test_SetPnt2Quad_SOURCES = test_SetPnt2Quad.cpp
 test_volIce_SOURCES = test_volIce.cpp
+test_MBVolOp = test_MBVolOp.cpp
 endif
 
 # Utility target: build but don't run tests

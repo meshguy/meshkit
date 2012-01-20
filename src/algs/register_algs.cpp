@@ -16,6 +16,7 @@
 #ifdef HAVE_FBIGEOM
 #include "meshkit/MBGeomOp.hpp"
 #include "meshkit/MBSplitOp.hpp"
+#include "meshkit/MBVolOp.hpp"
 #endif
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
@@ -55,6 +56,7 @@ REGISTER_MESH_OP(TriangleMesher);
 #ifdef HAVE_FBIGEOM
 REGISTER_MESH_OP(MBGeomOp);
 REGISTER_MESH_OP(MBSplitOp);
+REGISTER_MESH_OP(MBVolOp);
 #endif
 
 #ifdef USE_MPI

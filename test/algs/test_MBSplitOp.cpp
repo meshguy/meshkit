@@ -21,12 +21,17 @@ MKCore *mk;
 std::string usage_string =
 " <input file>      input file.\n"
 " <polyline file> file with the direction and polyline for cropping\n"
+" <closed loop>   1 or 0 for closed or not \n"
+" <surface_id>    global id of the surface to split \n"
+" <min_dot>       min dot for max angle allowed betwen consecutive edges"
 " <output file >   output moab database \n";
 
 std::string filenameS;
 std::string filename_out;
 std::string polygon_file_name;
-
+int closed = 0;
+int surfId = 1;// surface id to split
+double min_dot = 0.8;
 
 int main(int argc, char* argv[])
 {
@@ -34,6 +39,10 @@ int main(int argc, char* argv[])
   const char *filename = 0;
   const char *file_poly = 0;
   const char *outfile = 0;
+  closed = 1;// to split or not
+  surfId = 1;
+  min_dot = 0;
+
 
   filenameS = TestDir + "/PB.h5m";
   polygon_file_name = TestDir + "/polyPB.txt";
@@ -43,16 +52,19 @@ int main(int argc, char* argv[])
   {
     std::cout<<usage_string;
     std::cout << "\n\n";
-    std::cout<< "default arguments: ../../data/PB.h5m ../../data/polyPB.txt PB_new.h5m \n";
+    std::cout<< "default arguments: ../../data/PB.h5m ../../data/polyPB.txt 1 1 0.8 PB_new.h5m \n";
     filename = filenameS.c_str();
     file_poly = polygon_file_name.c_str();
     outfile = 0; // do not output if default, do not save the db
   }
-  else if (argc==4)
+  else if (argc==7)
   {
     filename = argv[1];
     file_poly = argv[2];
-    outfile = argv[3];
+    closed = atoi(argv[3]);
+    surfId = atoi(argv[4]);
+    min_dot = atof(argv[5]);
+    outfile = argv[6];
   }
   else
   {
@@ -81,13 +93,13 @@ int main(int argc, char* argv[])
 
   }
   int sizePolygon = (int)xyz.size()/3;
-  if (sizePolygon < 3) {
+  if ((closed && sizePolygon < 3 ) || (!closed&& sizePolygon<2)) {
     std::cerr << " Not enough points in the polygon" << std::endl;
     return 1;
   }
 
-  splitOp->set_options( /* int globalId*/ 1, direction[0], direction[1],
-      direction[2], /* int closed*/ 1, /*min_dot*/ 0.8);
+  splitOp->set_options( /* int globalId*/ surfId, direction[0], direction[1],
+      direction[2], /* int closed*/ closed, /*min_dot*/ min_dot);
 
   for (int k=0 ; k<sizePolygon; k++)
     splitOp->add_points(xyz[3*k], xyz[3*k+1], xyz[3*k+2]);

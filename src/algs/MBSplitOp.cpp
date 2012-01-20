@@ -127,6 +127,7 @@ void MBSplitOp::execute_this()
     // get the globalId tag
 
     rval = MBI->tag_get_data(gid, &mset, 1, &id);
+    MBERRCHK(rval, MBI);
     if (_globalId == id)
       break;
   }
