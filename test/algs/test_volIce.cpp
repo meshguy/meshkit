@@ -75,7 +75,7 @@ void test_ice()
 	OneToOneSwept *sw = (OneToOneSwept*) mk->construct_meshop("OneToOneSwept", vols);
 
 	sw->SetSourceSurface(0);
-	sw->SetTargetSurface(2);
+	sw->SetTargetSurface(1);
 	SizingFunction swSize(mk, 5, -1);
 
 	this_vol->sizing_function_index(swSize.core_index());
