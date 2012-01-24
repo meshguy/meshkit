@@ -37,7 +37,7 @@ public:
 	void SetupCages(vector<vector<double> > cageNodes, vector< vector<int> > cageFaces, vector<vector<double> > normal);
 	~GreenCoordinates3D();
 	void Execute();
-	void GetDeformedVertices(vector< vector<double> > nodes);
+	void GetDeformedVertices(vector< vector<double> > nodes, vector< vector<double> > norm, vector<vector<double> > &ReturnNodes);
 
 private:
 	double GCTriInt(vector<double> p, vector<double> v1, vector<double> v2, vector<double> iNodes);

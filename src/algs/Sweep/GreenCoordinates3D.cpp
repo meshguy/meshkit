@@ -70,6 +70,7 @@ void GreenCoordinates3D::Execute()
 	}
 
 	//Main Loop--Calculate the weight for cage nodes and cage face normal
+	//From the appendix of the paper: Green Coordinates, Yaron Lipman, David Levin, Daniel Cohen-Or
 	for (unsigned int i = 0; i < InteriorNodes.size(); i++){
 		for (unsigned int j = 0; j < CageFaces.size(); j++){
 			vector<vector<double> > node(3, vector<double>(3));
@@ -121,7 +122,7 @@ void GreenCoordinates3D::Execute()
 			w[2] = I_scalar*Normals[j][2] + N[0][2]*I_scalar*I[0] + N[1][2]*I_scalar*I[1] + N[2][2]*I_scalar*I[2];
 
 			double w_mag = sqrt(pow(w[0],2)+pow(w[1],2)+pow(w[2],2));
-			if (w_mag > error)
+			if (w_mag > error)//this guarantees the local deformation property
 				for (int k = 0; k < 3; k++)
 					weight_v[i][CageFaces[j][k]] += (N[(k+1)%3][0]*w[0]+N[(k+1)%3][1]*w[1]+N[(k+1)%3][2]*w[2])/(N[(k+1)%3][0]*node[k][0]+N[(k+1)%3][1]*node[k][1]+N[(k+1)%3][2]*node[k][2]);
 				
@@ -160,10 +161,25 @@ double GreenCoordinates3D::GCTriInt(vector<double> p, vector<double> v1, vector<
 }
 
 
-//input new cage and calculate deformed interior points
-void GreenCoordinates3D::GetDeformedVertices(vector< vector<double> > nodes)
+//input new cage and calculate deformed interior points based on the existing weights for cage vertices and cage face normals
+void GreenCoordinates3D::GetDeformedVertices(vector< vector<double> > nodes, vector< vector<double> > norm, vector<vector<double> > &ReturnNodes)
 {
-	//for 
+	ReturnNodes.resize(InteriorNodes.size());
+	//loop over the interior nodes
+	for (unsigned int i = 0; i < InteriorNodes.size(); i++){
+		ReturnNodes[i].resize(3);
+		for (int j = 0; j < 3; j++)
+			ReturnNodes[i][j] = 0.0;
+		//consider the effect of cage nodes		
+		for (unsigned int j = 0; j < nodes.size(); j++)
+			for (int k = 0; k < 3; k++)
+				ReturnNodes[i][k] += weight_v[i][j]*nodes[j][k];
+		
+		//consider the effect of cage face normals
+		for (unsigned int j = 0; j < norm.size(); j++)
+			for (int k = 0; k < 3; k++)
+				ReturnNodes[i][k] += weight_t[i][j]*norm[j][k];
+	}
 }
 
 GreenCoordinates3D::~GreenCoordinates3D()
