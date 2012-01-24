@@ -14,7 +14,9 @@ libSweep_la_SOURCES = Global.hpp \
         OneToOneSwept.cpp \
         TFIMapping.cpp \
         EquipotentialSmooth.cpp \
-        EquipotentialSmooth.hpp
+        EquipotentialSmooth.hpp \
+        GreenCoordinates3D.cpp \
+        GreenCoordinates3D.hpp
 #        HarmonicMap.cpp \
 #        HarmonicMap.hpp \
 #        MatrixOp.hpp \
