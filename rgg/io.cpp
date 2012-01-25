@@ -2339,12 +2339,13 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
   std::string sMatName = "";
   std::string sMatName1 = "";
 
-  std::string pin_name = "_xp";
-  std::ostringstream os;
-  os << (m_nTotalPincells + m_nStartpinid - 1);
-  os << "_";
-  std::string pid = os.str(); //retrieve as a string
-  pin_name+=pid;
+  if(strcmp(m_szInfo.c_str(),"on") == 0){
+    std::ostringstream os;
+    os << (m_nTotalPincells + m_nStartpinid - 1);
+    os << "_";
+    std::string pid = os.str(); //retrieve as a string
+    pin_name+=pid;
+  }
 
   // get tag handle for 'NAME' tag, already created as iGeom instance is created
   iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
@@ -2414,9 +2415,11 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), sMatName.size(), &err);
 	CHECK("setData failed");
 
-	iGeom_setData(geom, cell, this_tag,
-		      pin_name.c_str(), pin_name.size(), &err);
-	std::cout << "Naming pin body :" <<  pin_name << std::endl;
+	if(strcmp(m_szInfo.c_str(),"on") == 0){
+	  iGeom_setData(geom, cell, this_tag,
+			pin_name.c_str(), pin_name.size(), &err);
+	  std::cout << "Naming pin body :" <<  pin_name << std::endl;
+	}
 
 
 	Name_Faces(sMatName, cell, this_tag);
@@ -2481,11 +2484,11 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
-
-	iGeom_setData(geom, tmp_vol1, this_tag,
-		      pin_name.c_str(), pin_name.size(), &err);
-	std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-
+	if(strcmp(m_szInfo.c_str(),"on") == 0){
+	  iGeom_setData(geom, tmp_vol1, this_tag,
+			pin_name.c_str(), pin_name.size(), &err);
+	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	}
 
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
 	ERRORR("Error in function Name_Faces", err);
@@ -2515,10 +2518,11 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 
-	  iGeom_setData(geom, tmp_new, this_tag,
-			pin_name.c_str(), pin_name.size(), &err);
-	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-
+	  if(strcmp(m_szInfo.c_str(),"on") == 0){
+	    iGeom_setData(geom, tmp_new, this_tag,
+			  pin_name.c_str(), pin_name.size(), &err);
+	    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	  }
 	  err= Name_Faces(sMatName, tmp_new, this_tag);
 	  ERRORR("Error in function Name_Faces", err);
 
@@ -2600,9 +2604,11 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
 
-	iGeom_setData(geom, tmp_vol1, this_tag,
-		      pin_name.c_str(), pin_name.size(), &err);
-	std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	if(strcmp(m_szInfo.c_str(),"on") == 0){
+	  iGeom_setData(geom, tmp_vol1, this_tag,
+			pin_name.c_str(), pin_name.size(), &err);
+	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	}
 
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
 	ERRORR("Error in function Name_Faces", err);
@@ -2623,7 +2629,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	      sMatName =  m_szAssmMat(p);
 	    }
 	  }
-	  std::cout << m_nPincells <<"created: " << sMatName << std::endl;
+	  std::cout <<"created: " << sMatName << std::endl;
 
 	  cp_in.push_back(tmp_new);
 
@@ -2632,10 +2638,11 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 
-	  iGeom_setData(geom, tmp_new, this_tag,
-			pin_name.c_str(), pin_name.size(), &err);
-	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-	
+	  if(strcmp(m_szInfo.c_str(),"on") == 0){
+	    iGeom_setData(geom, tmp_new, this_tag,
+			  pin_name.c_str(), pin_name.size(), &err);
+	    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	  }
 
 	  err= Name_Faces(sMatName, tmp_new, this_tag);
 	  ERRORR("Error in function Name_Faces", err);
@@ -2676,13 +2683,13 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
   std::string sMatName0 = "";
   std::string sMatName1 = "";
 
-
-  std::string pin_name = "_xp";
-  std::ostringstream os;
-  os << (m_nTotalPincells + m_nStartpinid - 1);
-  os << "_";
-  std::string pid = os.str(); //retrieve as a string
-  pin_name+=pid;
+  if(strcmp(m_szInfo.c_str(),"on") == 0){
+    std::ostringstream os;
+    os << (m_nTotalPincells + m_nStartpinid - 1);
+    os << "_";
+    std::string pid = os.str(); //retrieve as a string
+    pin_name+=pid;
+  }
 
   // get tag handle for 'NAME' tag, already created as iGeom instance is created
   iGeom_getTagHandle(geom, tag_name, &this_tag, &err, 4);
@@ -2801,10 +2808,11 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
 	    
-	iGeom_setData(geom, tmp_vol1, this_tag,
-		      pin_name.c_str(), pin_name.size(), &err);
-	std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-	
+	if(strcmp(m_szInfo.c_str(),"on") == 0){
+	  iGeom_setData(geom, tmp_vol1, this_tag,
+			pin_name.c_str(), pin_name.size(), &err);
+	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	}
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
 	ERRORR("Error in function Name_Faces", err);
 	 
@@ -2864,10 +2872,11 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
 
-	  iGeom_setData(geom, tmp_new, this_tag,
-			pin_name.c_str(), pin_name.size(), &err);
-	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-	
+	  if(strcmp(m_szInfo.c_str(),"on") == 0){
+	    iGeom_setData(geom, tmp_new, this_tag,
+			  pin_name.c_str(), pin_name.size(), &err);
+	    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	  }
 	  err = Name_Faces(sMatName, tmp_new, this_tag);
 	  ERRORR("Error in function Name_Faces", err);
 
@@ -2973,11 +2982,13 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	iGeom_setData(geom, tmp_vol1, this_tag,
 		      sMatName.c_str(), 10, &err);
 	CHECK("setData failed");
-	    
-	iGeom_setData(geom, tmp_vol1, this_tag,
-		      pin_name.c_str(), pin_name.size(), &err);
-	std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-	
+
+	if(strcmp(m_szInfo.c_str(),"on") == 0){
+	  iGeom_setData(geom, tmp_vol1, this_tag,
+			pin_name.c_str(), pin_name.size(), &err);
+	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	}
+
 	err= Name_Faces(sMatName, tmp_vol1, this_tag);
 	ERRORR("Error in function Name_Faces", err);
 
@@ -3011,11 +3022,12 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	  iGeom_setData(geom, tmp_new, this_tag,
 			sMatName.c_str(),sMatName.size(), &err);
 	  CHECK("setData failed");
+	  if(strcmp(m_szInfo.c_str(),"on") == 0){
+	    iGeom_setData(geom, tmp_new, this_tag,
+			  pin_name.c_str(), pin_name.size(), &err);
+	    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	  }
 
-	  iGeom_setData(geom, tmp_new, this_tag,
-			pin_name.c_str(), pin_name.size(), &err);
-	  std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-	
 	  err = Name_Faces(sMatName, tmp_new, this_tag);
 	  ERRORR("Error in function Name_Faces", err);
 
