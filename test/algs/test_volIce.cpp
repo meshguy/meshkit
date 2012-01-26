@@ -27,12 +27,7 @@ int main(int argc, char **argv)
   
   num_fail += RUN_TEST(test_ice);
 
-#if HAVE_OCC
-  return 0;
-#else
   return num_fail;
-#endif
-  
 }
 
 void test_ice()
