@@ -57,7 +57,7 @@ struct Vertex
 	int index;
    	bool   onBoundary;
    	bool   onCorner;
-   	double uCoord, uvCoords[2], xyzCoords[3], pre[2];
+   	double uCoord, xyzCoords[3];
 	iBase_EntityHandle gVertexHandle;
 };
 struct Edge
