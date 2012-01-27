@@ -118,9 +118,6 @@ private:
 	//interpolate linearly between x0 and x1
 	double linear_interpolation(double r, double x0, double x1);
 
-	//implement the transfinite interpolation between (pt_0s, pt_1s) and (pt_r0, pt_r1)
-	double parametricTFI2D(double r, double s, double pt_0s, double pt_1s, double pt_r0, double pt_r1);
-
 	//generate the mesh on the linking surface
 	int LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList);
 

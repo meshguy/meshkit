@@ -411,6 +411,8 @@ void OneToOneSwept::setup_this()
       else
         throw Error(MK_INCOMPLETE_MESH_SPECIFICATION,  "Sizing function for edge had neither positive size nor positive intervals.");
     }
+    // this can be moved here; preprocess mesh not, but it has to be changed
+    PreprocessGeom(me);
   }
 
 
@@ -979,10 +981,6 @@ void OneToOneSwept::execute_this()
     		ModelEnt *me = mit -> first;
 		if (me->get_meshed_state() >= COMPLETE_MESH)
 			continue;
-
-		PreprocessGeom(me);		
-
-		me->boundary(0, nodes);
 		
 		PreprocessMesh(me);
 
@@ -1784,27 +1782,6 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	
 	return 1;
 }
-
-
-
-//****************************************************************************//
-// function   : parametricTFI2D
-// Author     : Shengyong Cai
-// Date       : Feb 15, 2011
-// Description: do the transfinite interpolation in (pt_0s, pt_1s), (pt_r0, pt_r1)
-//***************************************************************************//
-double OneToOneSwept::parametricTFI2D(double r, double s, double pt_0s, double pt_1s, double pt_r0, double pt_r1)
-{
-	assert(r>= 0 && r <= 1.0);
-	assert(s>= 0 && s <= 1.0);
-	double pt_rs;
-
-	//interpolate the pt_rs based on pt_r0, pt_r1, pt_0s and pt_1s
-	pt_rs = 0.5*((1-s)*pt_r0 + s*pt_r1 + (1-r)*pt_0s + r*pt_1s);
-
-	return pt_rs;
-}
-
 
 //****************************************************************************//
 // function   : linear_interpolation 
