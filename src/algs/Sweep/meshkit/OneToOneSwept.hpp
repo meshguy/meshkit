@@ -170,8 +170,6 @@ private://private member variable
 	std::vector<Edge> gLinkSides;  //geometrical edges for linking sides between source and target
 	int numLayers;
 	iBase_TagHandle  geom_id_tag, mesh_id_tag;
-	iBase_EntitySetHandle geom_root_set, mesh_root_set;
-	iBase_EntityHandle volEntity;
 	iBase_EntitySetHandle volumeSet;
 	int index_src, index_tar;
 

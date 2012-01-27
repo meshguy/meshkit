@@ -422,17 +422,16 @@ void OneToOneSwept::setup_this()
 //      the relation between the source surface and target surface
 void OneToOneSwept::PreprocessGeom(ModelEnt *me)
 {
-	//get geometry root set	
-	geom_root_set = me->igeom_instance()->getRootSet();
 
+  iGeom::EntityHandle geomHandle = me->geom_handle();
 	//get the geom_id_tag
 	const char *tag = "GLOBAL_ID";
 	iGeom::Error g_err = me->igeom_instance()->getTagHandle(tag, geom_id_tag);
 	IBERRCHK(g_err, "Trouble get the geom_id_tag for 'GLOBAL_ID'.");
 	
 	std::vector<iBase_EntityHandle> gFaces;
-	g_err = me->igeom_instance()->getEntities(geom_root_set, iBase_FACE, gFaces);
-	IBERRCHK(g_err, "Trouble get the geometrical faces from geom_root_set.");
+	g_err = me->igeom_instance()->getEntAdj(geomHandle, iBase_FACE, gFaces);
+	IBERRCHK(g_err, "Trouble get the geometrical adjacent to the solid");
 
 	std::vector<iBase_EntityHandle> gVertices;	
 	for (unsigned int i = 0; i < gFaces.size(); i++)
@@ -571,8 +570,8 @@ void OneToOneSwept::PreprocessGeom(ModelEnt *me)
 
 	//initialize the edges on the linking faces
 	gEdges.clear();
-	//get all the edges in the whole model
-	g_err = me->igeom_instance()->getEntities(geom_root_set, iBase_EDGE, gEdges);
+	//get all the edges adjacent to the volume
+	g_err = me->igeom_instance()->getEntAdj(geomHandle, iBase_EDGE, gEdges);
 	IBERRCHK(g_err, "Trouble get the adjacent vertices of edge on the target surface.");
 	int index = 0;	
 	for (unsigned int i = 0; i < gEdges.size(); i++)
