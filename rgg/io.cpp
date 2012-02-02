@@ -899,6 +899,7 @@ int CNrgen::CreateCubitJournal()
   m_SchemesFile << "#{MAP = \"map\"}" << std::endl;
   m_SchemesFile << "#{SWEEP = \"sweep\"}" << std::endl; 
   m_SchemesFile << "#{TET = \"tetmesh\"}" << std::endl;
+  m_SchemesFile << "#{TOP_EDGE_INTERVAL = " << m_edgeInterval << " }" << std::endl;
   m_SchemesFile << "## Dimensions" << std::endl;
   if(m_szGeomType == "hexagonal"){
     if(m_nDimensions > 0){
@@ -1168,7 +1169,7 @@ int CNrgen::CreateCubitJournal()
 
       if (p==1 && m_edgeInterval != 99){
 	m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge'"<< std::endl;
-	m_FileOutput << "curve in edges interval " << m_edgeInterval << std::endl;
+	m_FileOutput << "curve in edges interval {TOP_EDGE_INTERVAL}" << std::endl;
       }
 
       //    m_FileOutput << "mesh surface in " << szGrp << "\n#" << std::endl;   
@@ -2094,10 +2095,10 @@ int CNrgen::CreateOuterCovering ()
 	iGeom_getEntBoundBox(geom, edges[i],&xmin,&ymin,&zmin,
 			     &xmax,&ymax,&zmax, &err);
 	CHECK("getEntBoundBox failed."); 
-	double dTol = 1e-2; // tolerance for comparing coordinates
+	double dTol = 1e-5; // tolerance for comparing coordinates
 
-	if(abs(zmax - m_dMZAssm(nTemp, 2)) <  dTol){ 
-	  if(abs(zmax-zmin) < dTol){
+	if(fabs(zmax - m_dMZAssm(nTemp, 2)) <  dTol){ 
+	  if(fabs(zmax-zmin) < dTol){
 
 	    //we have a corner edge - name it
 	    sMatName="side_edge";
@@ -2165,7 +2166,7 @@ int CNrgen::Subtract_Pins()
     for (int k=1; k<=m_nDuct; k++){
 
       // put all the in pins in a matrix of size duct for subtraction with ducts
-      std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size());
+      std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
       for (int i=0; i< (int) cp_inpins[k-1].size();i++){
  	iGeom_copyEnt(geom, cp_inpins[k-1][i], &pin_copy[i], &err);
 	CHECK("Couldn't copy inner duct wall prism.");	
@@ -2267,7 +2268,7 @@ int CNrgen::Create2DSurf ()
 
   // find the number of surfaces 't' for array allocation
   int nTemp = 1;
-  double dTol = 1e-3;
+  double dTol = 1e-5;
   double dtop = m_dMZAssm(nTemp, 2);
   for (int i = 0; i < surfs.size(); ++i){ 
     if((abs(max_corn[3*i+2] -  dtop) < dTol) && (abs(min_corn[3*i+2] - dtop)<dTol))
@@ -2408,8 +2409,6 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	    sMatName = m_szAssmMat(p);
 	  }
 	}
-
-	cp_in.push_back(cell);
 	std::cout << "created: " << sMatName << std::endl;	
 	iGeom_setData(geom, cell, this_tag,
 		      sMatName.c_str(), sMatName.size(), &err);
@@ -2472,6 +2471,8 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  cyls[nRadii-1]=tmp_vol;
 
 	}
+	cp_in.push_back(tmp_new);
+
 	//set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
 	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	  if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
@@ -2534,7 +2535,6 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
       for (int count = 0; count < (int) cp_in.size(); count++)
 	cp_inpins[n-1].push_back(cp_in[count]);
       cp_in.clear();
-
     }
   }
   // this branch of the routine is responsible for creating cylinders with '0' cells
