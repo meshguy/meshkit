@@ -118,9 +118,9 @@ int main( int argc, char *argv[] )
     options = "PARTITION=GEOM_DIMENSION;PARTITION_VAL=3;PARTITION_DISTRIBUTE;";
   }
 
-
   if (load_and_mesh(geom_filename.c_str(), mesh_filename,
                     options.c_str(), mesh_size, mesh_interval, rank)) return 1;
+
   return 0;
 }
 
@@ -160,7 +160,7 @@ int load_and_mesh(const char *geom_filename,
     IBERRCHK(err, "Couldn't save mesh.");
     double t4 = MPI_Wtime();
     std::cout << "Export_time="
-              << (double) (t4 - t3)/CLOCKS_PER_SEC << std::endl;
+              << t4 - t3 << std::endl;
   }
 
   MPI_Barrier(MPI_COMM_WORLD);

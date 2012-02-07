@@ -38,7 +38,7 @@ ParallelMesher::ParallelMesher(MKCore *mkcore, const MEntVector &me_vec)
   iMesh::Error err = mk_core()->imesh_instance()->createTag("PARALLEL_UNIQUE_ID", 1, iBase_INTEGER, m_mPuniqueIDTag);
   IBERRCHK(err, "Trouble create a parallel unique id tag handle.");
 
-  m_sEntity.resize(8);
+  m_sEntity.resize(10);
 
   if (debug_parallelmesher) m_mpcomm->set_debug_verbosity(5);
 }
@@ -59,7 +59,7 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
     mk_core()->meshop_by_mesh_type(moab::MBEDGE, proxies);
     proxy = *proxies.begin();
   }
-  else if (type == MESH_SURF) {
+  else if (type == MESH_INTER_SURF || type == MESH_NINTER_SURF) {
     mk_core()->meshop_by_mesh_type(moab::MBTRI, proxies);
     proxy = *proxies.begin();
   }
@@ -67,12 +67,17 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
     mk_core()->meshop_by_mesh_type(moab::MBTET, proxies);
     proxy = *proxies.begin();
   }
-  else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE ||
-           type == EXCHANGE_SURF) {
+  else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE) {
     proxy = MKCore::meshop_proxy("ParExchangeMesh");
   }
   else if (type == POST_RECV) {
     proxy = MKCore::meshop_proxy("ParPostRecv");
+  }
+  else if (type == SEND_POST_SURF_MESH) {
+    proxy = MKCore::meshop_proxy("ParSendPostSurfMesh");
+  }
+  else if (type == RECV_SURF_MESH) {
+    proxy = MKCore::meshop_proxy("ParRecvSurfMesh");
   }
 
   if (proxy == NULL) throw Error(MK_FAILURE, "Couldn't find a MeshOp capable of producing the given mesh type.");
@@ -99,9 +104,21 @@ void ParallelMesher::setup_this()
     if (m_rank == charge_proc) {
       m_sEntity[MESH_VOLUME].insert(me_vol); // volume
       if (debug_parallelmesher) print_geom_info(me_vol, 3, true);
+
+      // get non-interface surfaces
+      children.clear();
+      me_vol->get_adjacencies(2, children);
+      for (MEntVector::iterator cit = children.begin(); cit != children.end(); cit++) {
+        RefEntity* child = reinterpret_cast< RefEntity* > ((*cit)->geom_handle());
+        TDParallel *td_par_child = (TDParallel *) child->get_TD(&TDParallel::is_parallel);
+        if (td_par_child == NULL) {
+          m_sEntity[MESH_NINTER_SURF].insert(*cit);
+        }
+      }
     }
 
-    for (int i = 2; i > -1; i--) { // child entities
+    // get child interface entities
+    for (int i = 2; i > -1; i--) {
       children.clear();
       me_vol->get_adjacencies(i, children);
       
@@ -120,9 +137,10 @@ void ParallelMesher::setup_this()
   add_parallel_mesh_op(EXCHANGE_VERTEX);
   add_parallel_mesh_op(MESH_EDGE);
   add_parallel_mesh_op(EXCHANGE_EDGE);
-  add_parallel_mesh_op(POST_RECV);
-  add_parallel_mesh_op(MESH_SURF);
-  add_parallel_mesh_op(EXCHANGE_SURF);
+  add_parallel_mesh_op(MESH_INTER_SURF);
+  add_parallel_mesh_op(SEND_POST_SURF_MESH);
+  add_parallel_mesh_op(MESH_NINTER_SURF);
+  add_parallel_mesh_op(RECV_SURF_MESH);
   add_parallel_mesh_op(MESH_VOLUME);
 
   if (debug_parallelmesher) {
@@ -140,9 +158,9 @@ void ParallelMesher::check_partition(TDParallel* td_par, ModelEnt* me, int dim)
   int charge_p = td_par->get_charge_proc();
   if (m_rank == charge_p) { // charge processor
     if (dim == 2) {
-      m_sEntity[POST_RECV].insert(me);
-      m_sEntity[MESH_SURF].insert(me);
-      m_sEntity[EXCHANGE_SURF].insert(me);
+      m_sEntity[MESH_INTER_SURF].insert(me);
+      m_sEntity[SEND_POST_SURF_MESH].insert(me);
+      m_sEntity[RECV_SURF_MESH].insert(me);
     }
     else if (dim == 1) {
       m_sEntity[MESH_EDGE].insert(me);
@@ -160,8 +178,8 @@ void ParallelMesher::check_partition(TDParallel* td_par, ModelEnt* me, int dim)
     for (int i = 0; i < n_shared; i++) {
       if (m_rank == shared_procs->get_and_step()) { // shared processor
         if (dim == 2) {
-          m_sEntity[POST_RECV].insert(me);
-          m_sEntity[EXCHANGE_SURF].insert(me);
+          m_sEntity[SEND_POST_SURF_MESH].insert(me);
+          m_sEntity[RECV_SURF_MESH].insert(me);
         }
         else if (dim == 1) {
           m_sEntity[EXCHANGE_EDGE].insert(me);

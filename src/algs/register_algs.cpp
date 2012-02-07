@@ -23,7 +23,8 @@
 #ifdef HAVE_PARALLEL_CGM
 #include "meshkit/ParallelMesher.hpp"
 #include "meshkit/ParExchangeMesh.hpp"
-#include "meshkit/ParPostRecv.hpp"
+#include "meshkit/ParSendPostSurfMesh.hpp"
+#include "meshkit/ParRecvSurfMesh.hpp"
 #endif
 #endif
 #endif
@@ -64,7 +65,8 @@ REGISTER_MESH_OP(MBVolOp);
 #ifdef HAVE_PARALLEL_CGM
 REGISTER_MESH_OP(ParallelMesher);
 REGISTER_MESH_OP(ParExchangeMesh);
-REGISTER_MESH_OP(ParPostRecv);
+REGISTER_MESH_OP(ParSendPostSurfMesh);
+REGISTER_MESH_OP(ParRecvSurfMesh);
 #endif
 #endif
 #endif

@@ -1,9 +1,5 @@
-// Posts MPI_Irecv before surface meshing
-// calls moab::ParallelComm::post_irecv
-// 
-
-#ifndef PAR_POST_RECV_HPP
-#define PAR_POST_RECV_HPP
+#ifndef PAR_RECV_SURF_MESH_HPP
+#define PAR_RECV_SURF_MESH_HPP
 
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"
@@ -13,17 +9,17 @@ namespace MeshKit
 {
 using namespace moab;
 
-class ParPostRecv : public MeshScheme
+class ParRecvSurfMesh : public MeshScheme
 {
 public:
 
-  ParPostRecv(MKCore *mkcore, const MEntVector &me_vec);
+  ParRecvSurfMesh(MKCore *mkcore, const MEntVector &me_vec);
 
-  virtual ~ParPostRecv();
+  virtual ~ParRecvSurfMesh();
 
   /**\brief Get class name */
   static const char* name() 
-    { return "ParPostRecv"; }
+    { return "ParRecvSurfMesh"; }
 
   /**\brief Function returning whether this scheme can mesh entities of t
    *        the specified dimension.
@@ -65,6 +61,8 @@ private:
   ParallelComm* m_mpcomm; // mesh parallel communication
 
   unsigned int m_rank;
+
+  std::vector< Range* > m_shared_entities;
 
   std::vector< unsigned int > m_shared_procs;
 
