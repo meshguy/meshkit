@@ -60,9 +60,7 @@ void CAMALTetMesher::setup_this()
     bool inserted = false;
 
     for (MEntVector::iterator vit = surfs.begin(); vit != surfs.end(); vit++) {
-      meshops.clear();
-      (*vit)->get_meshops(meshops);
-      if (meshops.empty()) {
+      if ((*vit)->is_meshops_list_empty()) {
           // get a tri mesher if we haven't already
         if (!tri_mesher) tri_mesher = get_tri_mesher();
         

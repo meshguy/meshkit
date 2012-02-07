@@ -36,7 +36,7 @@ public:
   void clear_graph();
   
     //! print the graph
-  void print_graph();
+  void print_graph(const char * filename = NULL);
   
     //! print the bfs graph
   void print_bfs_graph();

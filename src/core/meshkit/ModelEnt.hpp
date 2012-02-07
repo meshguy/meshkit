@@ -413,6 +413,15 @@ public:
      */
   void get_meshops(std::vector<MeshOp*> &meshops);
 
+  /** \brief decide if there is a meshop defined for this model entity
+       *
+       * return true if the list of meshops is not empty
+       */
+  bool is_meshops_list_empty()
+  {
+    return meshOps.empty();
+  }
+
     /**@}*/
 
     /** \name Interfaces, entities

@@ -39,7 +39,7 @@ void MKGraph::clear_graph()
     mkGraph.addArc(rootNode->get_node(), leafNode->get_node());*/
 }
 
-void MKGraph::print_graph() 
+void MKGraph::print_graph(const char * filename)
 {
   for (lemon::ListDigraph::NodeIt nit(mkGraph); nit != lemon::INVALID; ++nit) {
     std::cout << "Node: " << mkGraph.id(nit) << " ";
@@ -82,7 +82,13 @@ void MKGraph::print_graph()
     }
   }
 
-  graphToEps(mkGraph, "graph.eps").coords(coords).nodeTexts(label).
+  std::string filen;
+  if (filename)
+    filen=std::string(filename);
+  else
+    filen = "graph.eps";
+
+  graphToEps(mkGraph, filen).coords(coords).nodeTexts(label).
       nodeTextSize(3).drawArrows().run();
 
 }

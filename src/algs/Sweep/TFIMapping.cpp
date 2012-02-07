@@ -117,6 +117,8 @@ void TFIMapping::setup_this()
               // still, a mesh count from opposing edge is very powerful
               mesh_count = sfe->intervals();
           }
+          // push it to the list if it is not setup to another mesh op (edge mesher) already
+          //if (oppEdges[j]->is_meshops_list_empty())// it will create an EdgeMesher later
           edgesToMesh.push_back(oppEdges[j]);
         }
       }
@@ -137,12 +139,14 @@ void TFIMapping::setup_this()
         {
           edgesToMesh[j]->mesh_intervals(mesh_count);
           edgesToMesh[j]->interval_firmness(HARD);
+          edgesToMesh[j]->add_meshop(em);
         }
         mk_core()->insert_node(em, (MeshOp*) this);
 
       }
     } // end loop over pair of opposite edges
   }// end loop over surfaces
+  mk_core()->print_graph("AfterTFISetup.eps");
 }
 
 //---------------------------------------------------------------------------//

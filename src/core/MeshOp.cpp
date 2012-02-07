@@ -39,9 +39,7 @@ void MeshOp::setup_boundary()
     MEntVector children;
     this_ent->get_adjacencies(dim-1, children);
     for (MEntVector::iterator chit = children.begin(); chit != children.end(); chit++) {
-      MOpVector chops;
-      (*chit)->get_meshops(chops);
-      if (chops.empty()) {
+      if ((*chit)->is_meshops_list_empty()) {
           // no meshop, need to get one associated with this
         if (!this_op[dim-1]) {
           this_op[dim-1] = mk_core()->construct_meshop(dim-1);

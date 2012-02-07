@@ -443,6 +443,7 @@ void OneToOneSwept::setup_this()
     mk_core()->insert_node(tm, (MeshOp*) this);
   }
 
+  mk_core()->print_graph("AfterOneSetup.eps");
 
 }
 
