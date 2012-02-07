@@ -161,15 +161,6 @@ void OneToOneSwept::PreprocessMesh(ModelEnt *me)
 		m_err = mk_core()->imesh_instance()->setIntData(Edges[i], taghandle, i);
 		IBERRCHK(m_err, "Trouble set the int data from the mesh edges.");
 
-		//test  888888888888888888888888888888888888888888888888888
-		//int test;
-		//m_err = mk_core()->imesh_instance()->getIntData(Edges[i], taghandle, test);
-		//IBERRCHK(m_err, "Trouble get the int data from the mesh edges");
-		//std::cout << "-----------\nindex = " << i << "\ttest index = " << test << std::endl;
-
-		//test  888888888888888888888888888888888888888888888888888
-
-		//get the nodes for the edge[i], use the function iMesh_isEntContained
 		Nodes.clear();
 		m_err = mk_core()->imesh_instance()->getEntAdj(Edges[i], iBase_VERTEX, Nodes);
 		IBERRCHK(m_err, "Trouble get the adjacent nodes from the mesh edges.");
@@ -374,6 +365,9 @@ void OneToOneSwept::setup_this()
   {
     ModelEnt *me = mit->first;
 
+    int geom_index = me->iGeomIndex();
+
+    iGeom * igeom_inst = mk_core()->igeom_instance(geom_index);
       //first check to see whether entity is meshed
     if (me->get_meshed_state() >= COMPLETE_MESH || me->mesh_intervals() > 0)
       continue;
@@ -413,6 +407,40 @@ void OneToOneSwept::setup_this()
     }
     // this can be moved here; preprocess mesh not, but it has to be changed
     PreprocessGeom(me);
+
+    int numIntervals = me->mesh_intervals();
+    if (!sf || sf->intervals() != numIntervals)
+    {
+      sf = new SizingFunction(mk_core(), numIntervals, -1.);
+    }
+
+    MEntVector linkingSurfaces;
+    int index_id_src, index_id_tar;
+    iGeom::Error g_err = igeom_inst->getIntData(sourceSurface, geom_id_tag, index_id_src);
+    IBERRCHK(g_err, "Trouble get the int data for source surface.");
+    g_err = igeom_inst->getIntData(targetSurface, geom_id_tag, index_id_tar);
+    IBERRCHK(g_err, "Trouble get the int data for target surface.");
+
+    MEntVector surfs;
+    me->get_adjacencies(2, surfs);// all surfaces adjacent to the volume
+    for (unsigned int i = 0; i < surfs.size(); i++)
+    {
+      int index_id_link;
+      g_err = igeom_inst->getIntData(surfs[i]->geom_handle(), geom_id_tag, index_id_link);
+      IBERRCHK(g_err, "Trouble get the int data for linking surface.");
+      if ((index_id_link != index_id_src) && (index_id_link != index_id_tar))
+      {
+        linkingSurfaces.push_back(surfs[i]);
+      }
+    }
+    // now create a TFI mapping
+    // this will trigger edge meshers for linking edges, and for target surface edges
+    TFIMapping *tm = (TFIMapping*)mk_core()->construct_meshop("TFIMapping", linkingSurfaces);
+    for (unsigned int i=0; i<linkingSurfaces.size(); i++)
+    {
+      linkingSurfaces[i]->sizing_function_index(sf->core_index());
+    }
+    mk_core()->insert_node(tm, (MeshOp*) this);
   }
 
 
@@ -894,8 +922,8 @@ void OneToOneSwept::DetectFirstEdge()
 
 	//data structure for linking surface
 	//	connect[2]----------connEdges[3]----------connect[3]
-	//	   |					                     |
-	//  connEdges[1]				              connEdges[2]
+	//	   |					                               |
+	//  connEdges[1]				                     connEdges[2]
 	//     |                                         |
 	//	connect[0]----------connEdges[0]----------connect[1]
 	if (int(gBoundaries.size())==1)
@@ -966,15 +994,6 @@ void OneToOneSwept::execute_this()
 {
 	std::vector<double> coords;
 	std::vector<moab::EntityHandle> nodes;
-
-	//set up the adjTable
-	
-	//adjTable[1][1] = (iBase::AdjacencyCost)1;
-	
-	
-	//iMesh_setAdjTable(mk_core()->imesh_instance(), adjTable, 16, &err);
-	
-	//assert(!err);
 	
 	for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
   	{
@@ -984,8 +1003,8 @@ void OneToOneSwept::execute_this()
 		
 		PreprocessMesh(me);
 
-    	//resize the coords based on the interval setting
-    	numLayers = me->mesh_intervals();		
+    //resize the coords based on the interval setting
+    numLayers = me->mesh_intervals();
 
 		//necessary steps for setting up the source surface and target surfaces    		
 		TargetSurfProjection();
@@ -1496,7 +1515,8 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
 	IBERRCHK(m_err, "Trouble get tag handle of the source surface.");
 	
-	
+	// this assumes that the model has no other surfaces than the ones from one volume
+	// WRONG !!!!!!!!!!!!!
 
 	//Prepare to do the TFIMapping for linking surface
 	MEntVector surfs, link_surfs;
@@ -1524,23 +1544,6 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			continue;		
 		}
 	}
-
-	//Loop over the linking surface, and check whether the two linking edges are meshed or not
-	for (unsigned int i = 0; i < link_surfs.size(); i++)
-	{	
-		MEntVector curves;
-		curves.clear();
-		link_surfs[i]->get_adjacencies(1, curves);
-		
-		//initialize the size function to prepare for generating the edge mesh for linking edges
-		SizingFunction esize(mk_core(), numLayers, -1);
-	  	link_surfs[i]->sizing_function_index(esize.core_index());
-		EdgeMesher *em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", curves);
-
-		em->setup_this();
-		em->execute_this();
-	}
-	//oK we are done with the edge mesh for linking edges
 
 	
 	//extract the edge mesh for linking edge
@@ -1597,12 +1600,6 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			}
 		}
 	}
-
-	TFIMapping *tm = (TFIMapping*)mk_core()->construct_meshop("TFIMapping", link_surfs);
-	tm->setup_this();
-	tm->execute_this();
-	//finish the meshing for linking surface
-
 
 	//extract the surface mesh from the linking surface
 	for (unsigned int i = 0; i < gLinkFaceList.size(); i++)
@@ -1832,16 +1829,6 @@ int OneToOneSwept::TargetSurfProjection()
 	iGeom::Error g_err;
 	iRel::Error r_err;
 
-	//first check whether the target surface is meshed or not
-	/*
-	if (me->get_meshed_state() >= COMPLETE_MESH)
-	{
-		//get the node list, edge list, face list
-		//find the corresponding edges, nodes
-		return 1;
-	}
-	*/
-	
 	//get the tag handle for source surface
 	iBase_TagHandle taghandle;
 	m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
@@ -1857,9 +1844,7 @@ int OneToOneSwept::TargetSurfProjection()
 	ModelEnt *target_surf;	
 	for (unsigned int i = 0; i < surfs.size(); i++)
 	{
-		//int index_id = -1;
-		//g_err = mk_core()->igeom_instance()->getIntData(surfs[i]->geom_handle(), geom_id_tag, index_id);
-		//IBERRCHK(g_err, "Trouble get the int data for surfaces.");		
+
 		if (surfs[i]->geom_handle() == targetSurface)
 		{
 			target_surf = surfs[i];
@@ -1893,40 +1878,6 @@ int OneToOneSwept::TargetSurfProjection()
 		int num_lines;
 		m_err = mk_core()->imesh_instance()->getNumOfType(mEdgeSet, iBase_EDGE, num_lines);
 		IBERRCHK(m_err, "Trouble get the number of line segments from mesh entity sets.");
-
-		
-		//initial size functon for edges, get the number of edges and assign it to the edge
-
-		//do the edge mesher 
-		SizingFunction esize(mk_core(), num_lines, -1);
-  		target_surf->sizing_function_index(esize.core_index());
-
-		//detect the edge on the target surface which corresponds to gsEdgeList[i]
-		MEntVector edge_curve;
-		edge_curve.resize(1);
-		for (unsigned int j = 0; j < curves.size(); j++)
-		{
-			int index_id;
-			g_err = igeom_inst->getIntData(curves[j]->geom_handle(), geom_id_tag, index_id);
-			IBERRCHK(g_err, "Trouble get the int data for the edge on the target surface.");
-			if (index_id == gtEdgeList[edgePairs[i]].EdgeID)
-			{	
-				edge_curve[0] = curves[j];
-				break;
-			}
-		}
-		EdgeMesher *em = (EdgeMesher*) mk_core()->construct_meshop("EdgeMesher", edge_curve);
-		//mk_core()->setup_and_execute();
-		em->setup_this();
-		em->execute_this();
-		//done with the meshing for edge i on the target surface
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//std::cout << "edge " << i << "\tnode 0 x=" << gsEdgeList[i].connect[0]->xyzCoords[0] << "\ty=" << gsEdgeList[i].connect[0]->xyzCoords[1] << "\tz=" << gsEdgeList[i].connect[0]->xyzCoords[2] << "\tnode 1 x=" << gsEdgeList[i].connect[1]->xyzCoords[0] << "\ty=" << gsEdgeList[i].connect[1]->xyzCoords[1] << "\tz=" << gsEdgeList[i].connect[1]->xyzCoords[2] << std::endl;
-		
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 		//assign the edge mesh to the list: TVertexList, TEdgeList
