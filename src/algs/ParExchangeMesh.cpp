@@ -1,5 +1,4 @@
 #include "meshkit/ParExchangeMesh.hpp"
-#include "meshkit/ParPostRecv.hpp"
 #include "moab/Range.hpp"
 #include "moab/Types.hpp"
 #include "RefEntity.hpp"
