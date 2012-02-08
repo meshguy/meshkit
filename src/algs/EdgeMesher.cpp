@@ -97,8 +97,32 @@ void EdgeMesher::setup_this()
     }
   }
 
-    // now call setup_boundary to treat vertices
-  setup_boundary();
+  // now call setup_boundary to treat vertices
+   // Wrong!!!!!!!!!
+  // setup_boundary();
+  /* this is not enough to ensure that vertex mesher will be called before
+    "this" edge mesher
+    the case that fell through the cracks was if the end nodes were already setup
+   then the this_op[0] would not be retrieved, and not inserted "before" the edge mesher MeshOp
+  */
+  int dim=0;
+  MeshOp * vm = (MeshOp*) mk_core()->construct_meshop(dim);
+
+  for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
+  {
+    ModelEnt *me = mit->first;
+    MEntVector children;
+    me->get_adjacencies(0, children);
+    for (unsigned int i=0; i<children.size(); i++)
+      if (children[i]->is_meshops_list_empty())
+      {
+        vm->add_modelent(children[i]);
+      }
+  }
+  // in any case, make sure that the vertex mesher is inserted before this edge mesher
+  mk_core()->insert_node(vm, this, mk_core()->root_node());
+
+
 }
 
 //---------------------------------------------------------------------------//
