@@ -24,7 +24,6 @@ ParRecvSurfMesh::ParRecvSurfMesh(MKCore *mkcore, const MEntVector &me_vec)
 
 ParRecvSurfMesh::~ParRecvSurfMesh()
 {
-  delete m_mpcomm;
   std::vector<Range*>::iterator vit;
   for (vit = m_shared_entities.begin(); vit != m_shared_entities.end(); vit++)
     delete (*vit);
