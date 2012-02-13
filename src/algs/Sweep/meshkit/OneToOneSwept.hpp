@@ -100,17 +100,24 @@ public:
 
 
 private:
-	//determine whether a mesh edge is on the boundary or not
-	int isEdgeBoundary(iBase_EntityHandle gEdgeHandle);	
 
-	//find the corner node list, inner node list and edge node list for the mesh on the source surface
-	void PreprocessMesh(ModelEnt *me);
+	void BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::EntityHandle> & layers);
 
-	//preprocess the geometry for sweeping
-	void PreprocessGeom(ModelEnt *me);
+	moab::ErrorCode NodeAbove(moab::Interface * mb, moab::EntityHandle node1, moab::EntityHandle node2,
+	    moab::Range & quadsOnLateralSurfaces, moab::EntityHandle & node3,
+	    moab::EntityHandle & node4);
+
+	moab::ErrorCode FourthNodeInQuad(moab::Interface * mb, moab::EntityHandle node1,
+	    moab::EntityHandle node2, moab::EntityHandle node3,
+	    moab::Range & quadsOnLateralSurfaces, moab::EntityHandle & node4);
 	
 	//function for all-quad meshing on the target surface
-	int TargetSurfProjection();
+	int TargetSurfProjection(std::vector<moab::EntityHandle> & boundLayers);
+
+	// to compute node positions in the interior of volume, numLayers-1 times
+	// use similar code to TargetSurfProjection, but do not project on surface...
+	int ProjectInteriorLayers(std::vector<moab::EntityHandle> & boundLayers,
+	    vector<vector <Vertex> > &linkVertexList);
 
 	//function for obtaining the x,y,z coordinates from parametric coordinates
 	//int getXYZCoords(iBase_EntityHandle gFaceHandle, Point3D &pts3, double uv[2]);
@@ -118,25 +125,8 @@ private:
 	//interpolate linearly between x0 and x1
 	double linear_interpolation(double r, double x0, double x1);
 
-	//generate the mesh on the linking surface
-	int LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList);
-
-	//generate the all-hex mesh by sweeping in the interior
-	int InnerLayerMeshing();
-
-	//generate the nodes between the Source surface and target surface.
-	int InnerNodesProjection(vector<vector <Vertex> > &linkVertexList);
-
 	//create the hexahedral elements between the source surface and target surface
 	int CreateElements(vector<vector <Vertex> > &linkVertexList);
-
-
-	//detect the first geometrical edge on the outer boundary loop
-	void DetectFirstEdge();
-
-
-	//calculate the coefficiences for mesh edges
-	void CalculateCoeffs(std::vector<double> &ConstCoeffs, std::vector< std::vector<double> > coords, std::vector< std::vector<int> > list_edge, std::vector< std::vector<int> > triangles);
 
 #ifdef HAVE_MESQUITE
 	//target surface mesh by Mesquite
@@ -146,31 +136,20 @@ private:
 private://private member variable
 	iBase_EntityHandle sourceSurface;
 	iBase_EntityHandle targetSurface;
-	std::vector<Edge> gsEdgeList;  //geometrical edges on the source surfaces
-	std::vector< std::list<int> > gBoundaries; //store geometrical boundary loops
-
-	std::vector<Edge> gtEdgeList;  //geometrical edges on the target surfaces
-	std::vector<Vertex> NodeList;  //mesh nodes on the source surface
-	std::vector< std::set<int> > nBoundaries;//store the mesh boundary loops
-	std::vector< std::set<int> > nBndEdges;
-	map<int, int> edgePairs;  //store the relationship between the  edge id on the source surface and target surface
-	map<int, int> cornerPairs; ////store the relationship between the corner vertex id on the source surface and target surface	
-	std::vector<Vertex> gsVertexList;// geometrical vertices on the source surface
-	std::vector<Vertex> gtVertexList;// geometrical vertices on the target surface	
-	std::vector<Vertex> gVertexList; //geometrical vertex
-	std::vector<Face> gLinkFaceList;  //geometrical face list for linking surface
-	std::vector<Vertex> TVertexList;
-	std::vector<Edge> TEdgeList;
-	std::vector<Face> TFaceList;
-	std::vector<Edge> EdgeList;
-	std::vector<Face> FaceList;
-	std::vector<Edge> gLinkSides;  //geometrical edges for linking sides between source and target
+	moab::Tag markTag;
+	moab::Interface *mb;
 	int numLayers;
-	iBase_TagHandle  geom_id_tag, mesh_id_tag;
-	iBase_EntitySetHandle volumeSet;
-	int index_src, index_tar;
+	int numLoops;
+	iGeom * igeom_inst;
+  int index_src, index_tar;
+  iBase_TagHandle  geom_id_tag;
 
-	std::vector< std::vector<double> > A_Matrix;
+	std::vector<Vertex> NodeList;    //mesh nodes on the source surface
+	std::vector<Vertex> TVertexList; //mesh nodes on the target surface
+
+	std::vector<Face> FaceList;
+	iBase_EntitySetHandle volumeSet;
+
 	std::vector<Point3D> src_center, tar_center;	
 	
 };
