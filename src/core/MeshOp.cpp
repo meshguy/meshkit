@@ -35,6 +35,8 @@ void MeshOp::setup_boundary()
     ModelEnt *this_ent = (*mit).first;
     int dim = this_ent->dimension();
     if (0 == dim) continue;
+    if (this_ent->get_meshed_state()>=COMPLETE_MESH)
+      continue;
 
     MEntVector children;
     this_ent->get_adjacencies(dim-1, children);

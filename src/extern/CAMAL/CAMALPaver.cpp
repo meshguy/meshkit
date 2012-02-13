@@ -63,6 +63,8 @@ void CAMALPaver::execute_this()
       // make a me, for convenience
     ModelEnt *me = (*sit).first;
 
+    if(me->get_meshed_state()>=COMPLETE_MESH)
+      continue;
       // create a surface evaluator for this modelent, and a size evaluator
     CAMALSurfEval cse(me);
 

@@ -66,6 +66,16 @@ void test_ice()
 	this_vol->get_adjacencies(0, vertices);
 	//CHECK_EQUAL(8, (int)vertices.size());
 
+	MEntVector s1;
+  s1.push_back(surfs[0]);
+  CAMALPaver * cmp = (CAMALPaver*)mk->construct_meshop("CAMALPaver", s1);
+  //set up the size
+  SizingFunction * pavSize = new SizingFunction(mk, -1, 600);
+
+  s1[0]->sizing_function_index(pavSize->core_index());
+
+  mk->setup_and_execute();
+
 	//make a one-to-one sweeping
 	OneToOneSwept *sw = (OneToOneSwept*) mk->construct_meshop("OneToOneSwept", vols);
 
@@ -75,15 +85,9 @@ void test_ice()
 
 	this_vol->sizing_function_index(swSize.core_index());
 
-	MEntVector s1;
-	s1.push_back(surfs[0]);
-	CAMALPaver * cmp = (CAMALPaver*)mk->construct_meshop("CAMALPaver", s1);
-	//set up the size
-	SizingFunction pavSize(mk, -1, 600);
 
-	s1[0]->sizing_function_index(pavSize.core_index());
 
-	mk->add_arc(cmp, sw);
+	//mk->add_arc( cmp, sw);// it means paver will be setup first?
 	//set up for the sweeping and sweep
 	mk->setup_and_execute();
 

@@ -11,6 +11,8 @@ void MeshScheme::constrain_even()
 
   for (MEntSelection::iterator sit = mentSelection.begin(); sit != mentSelection.end(); sit++)
   {
+    if ( (*sit).first->get_meshed_state()>=COMPLETE_MESH)
+      continue;
     MEntVector edges;
     (*sit).first->get_adjacencies(1, edges);
 
