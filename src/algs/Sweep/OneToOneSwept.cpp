@@ -1331,7 +1331,8 @@ void OneToOneSwept::SurfMeshOptimization()
     iRel::Error r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(targetSurface, 0, surfSets);
     IBERRCHK(r_err, "Trouble get the mesh entity set for the target surface.");
     //call the MeshImprove class to smooth the target surface mesh by using Mesquite
-    MeshImprove meshopt(mk_core(), false, true, true, true);
+    // Iulian: temporarily, disable SizeAdaptShapeWrapper; it is giving a weird tag missing error, hard to debug
+    MeshImprove meshopt(mk_core(), false, true, true, false);
     meshopt.SurfMeshImprove(targetSurface, surfSets, iBase_FACE);
 
     //update the new position for nodes on the target surfacce
@@ -1340,7 +1341,7 @@ void OneToOneSwept::SurfMeshOptimization()
 	if (!((TVertexList[i].onBoundary)||(TVertexList[i].onCorner))){
 	    m_err = mk_core()->imesh_instance()->getVtxCoord(TVertexList[i].gVertexHandle, coords[0], coords[1], coords[2]);
 	    IBERRCHK(m_err, "Trouble get the node's coordinates on the target surface");
-	    
+
 	    for (int j = 0; j < 3; j++)
 		TVertexList[i].xyzCoords[j] = coords[j];
 	}
@@ -1348,7 +1349,7 @@ void OneToOneSwept::SurfMeshOptimization()
     for (unsigned int i = 0; i < TVertexList.size(); i++){
 	m_err = mk_core()->imesh_instance()->setVtxCoord(TVertexList[i].gVertexHandle, TVertexList[i].xyzCoords[0], TVertexList[i].xyzCoords[1], TVertexList[i].xyzCoords[2]);
 	IBERRCHK(m_err, "Trouble set a new coordinates for nodes on the target surface");
-    } 
+    }
 }
 #endif
 
