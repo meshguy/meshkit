@@ -712,31 +712,30 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   for (unsigned int i = 0; i < NodeList.size(); i++) {
     if (!(NodeList[i].onBoundary /*|| NodeList[i].onCorner*/)) {
       double xyz[3];
-      for (int j = 0; j < 3; j++) {
+      for (int j = 0; j < 3; j++)
         xyz[j] = transMatrix[j][0] * (NodeList[i].xyzCoords[0] - 2
             * sPtsCenter[0] + tPtsCenter[0]) + transMatrix[j][1]
             * (NodeList[i].xyzCoords[1] - 2 * sPtsCenter[1] + tPtsCenter[1])
             + transMatrix[j][2] * (NodeList[i].xyzCoords[2] - 2 * sPtsCenter[2]
                 + tPtsCenter[2]) + sPtsCenter[j];
-        //calculate the closest point on the target surface with respect to the projected point
-        //std::cout << "index = " << i << "\tx = " << xyz[0] << "\ty = " << xyz[1] << "\tz = " << xyz[2] << std::endl;
+      //calculate the closest point on the target surface with respect to the projected point
+      //std::cout << "index = " << i << "\tx = " << xyz[0] << "\ty = " << xyz[1] << "\tz = " << xyz[2] << std::endl;
 
-        iGeom::Error g_err = igeom_inst->getEntClosestPt(targetSurface, xyz[0],
-            xyz[1], xyz[2], TVertexList[i].xyzCoords[0],
-            TVertexList[i].xyzCoords[1], TVertexList[i].xyzCoords[2]);
-        IBERRCHK(g_err, "Trouble get the closest point on the targets surface.");
+      iGeom::Error g_err = igeom_inst->getEntClosestPt(targetSurface, xyz[0],
+          xyz[1], xyz[2], TVertexList[i].xyzCoords[0],
+          TVertexList[i].xyzCoords[1], TVertexList[i].xyzCoords[2]);
+      IBERRCHK(g_err, "Trouble get the closest point on the targets surface.");
 
-        //create the node entities
-        iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(
-            TVertexList[i].xyzCoords[0], TVertexList[i].xyzCoords[1],
-            TVertexList[i].xyzCoords[2], TVertexList[i].gVertexHandle);
-        IBERRCHK(m_err, "Trouble create the node entity.");
+      //create the node entities
+      iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(
+          TVertexList[i].xyzCoords[0], TVertexList[i].xyzCoords[1],
+          TVertexList[i].xyzCoords[2], TVertexList[i].gVertexHandle);
+      IBERRCHK(m_err, "Trouble create the node entity.");
 
-        TVertexList[i].onBoundary = false;
-        TVertexList[i].onCorner = false;
+      TVertexList[i].onBoundary = false;
+      TVertexList[i].onCorner = false;
 
-        newNodehandle.push_back(TVertexList[i].gVertexHandle);
-      }
+      newNodehandle.push_back(TVertexList[i].gVertexHandle);
     }
   }
 
