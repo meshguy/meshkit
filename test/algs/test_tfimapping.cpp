@@ -30,12 +30,8 @@ int main(int argc, char **argv)
 
   //num_fail += RUN_TEST(test_TFImappingcubit);
 
-
-#if HAVE_OCC
-  return 0;
-#else
   return num_fail;
-#endif 
+
 }
 
 void test_TFImappingcubit()
@@ -83,9 +79,15 @@ void test_TFImapping()
 {
   mk = new MKCore();
 
+
+#if HAVE_OCC
+  std::string file_name_geo = TestDir + "/square.stp";
+  std::string file_name_edgeMeshOnly=TestDir + "/squareEdge.h5m";
+  mk->load_geometry_mesh(file_name_geo.c_str(), file_name_edgeMeshOnly.c_str());
+#else
   std::string file_name = TestDir + "/SquareWithOneEdgeMeshed.cub";
   mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
-
+#endif
   // get the surface
   MEntVector surfs, curves, loops;
   mk->get_entities_by_dimension(2, surfs);
@@ -107,8 +109,11 @@ void test_TFImapping()
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 2,
       faces);
   CHECK_EQUAL(moab::MB_SUCCESS, rval);
+#if HAVE_OCC
+  CHECK_EQUAL(100, (int)faces.size());
+#else
   CHECK_EQUAL(60, (int)faces.size());
-
+#endif
   //output the mesh to vtk file
   mk->save_mesh("TFIMapping.vtk");
   //delete mk->vertex_mesher();
