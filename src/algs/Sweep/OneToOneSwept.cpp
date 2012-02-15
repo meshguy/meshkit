@@ -586,7 +586,7 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   // we know that the first layer of nodes (on the source)
   int sizeBLayer = (int)bLayers.size()/(numLayers+1); // this could be a member data...
   // the first 0 , 1, ..., sizeBlayer - 1 are on bottom, were bdyNodes before
-  // get the
+  //
   for (int i = 0; i<sizeBLayer; i++)
   {
     iBase_EntityHandle sBNode = (iBase_EntityHandle)bLayers[i];
@@ -604,11 +604,11 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   }
 
   iBase_EntitySetHandle entityset;  //this entityset is for storing the inner nodes on the target surface
-  vector<iBase_EntityHandle>  newNodehandle(0), newEdgeHandle(0);
+  vector<iBase_EntityHandle>  newNodehandle;
 
 
   r_err = mk_core()->irel_pair(irelIndx)->getEntSetRelation(targetSurface, 0, entityset);
-  if (r_err) //there is no entityset associated with targetSurface
+  if (r_err) //there is no entityset associated with targetSurface; this should be an error
   {
     m_err = mk_core()->imesh_instance()->createEntSet(1, entityset);
     IBERRCHK(m_err, "Trouble create the entity set");
@@ -767,7 +767,7 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   if (bLayers[numLayers*sizeBLayer+prevIndex] == node2)
     sense_out = -1;
   else if (bLayers[numLayers*sizeBLayer+nextIndex] == node2)
-    sense_out = -1;
+    sense_out = 1;
   else
     MBERRCHK(moab::MB_FAILURE, mb);// serious error in the logic, can't decide orientation
 
@@ -795,34 +795,10 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   }
   m_err = mk_core()->imesh_instance()->createEntArr(iMesh_QUADRILATERAL, &connect[0], connect.size(), &mFaceHandle[0]);
   IBERRCHK(m_err, "Trouble create the quadrilateral mesh.");
-/*
-
-    //add the face elements on the target surface to the list
-  for (unsigned int i=0; i < FaceList.size(); i++)
-  {
-    TFaceList[i].index = FaceList[i].index;
-    TFaceList[i].gFaceHandle = mFaceHandle[i];
-    TFaceList[i].connect.resize(4);
-    for (int j=0; j < FaceList[i].getNumNodes(); j++)
-    {
-      TFaceList[i].connect[j] = &TVertexList[FaceList[i].connect[j]->index];
-    }
-  }
-
-*/
-
 
   //add the inner face elements to the entityset
   m_err = mk_core()->imesh_instance()->addEntArrToSet(&mFaceHandle[0], FaceList.size(), entityset);
   IBERRCHK(m_err, "Trouble add an array of quadrilateral entities to the entity set.");
-
-  //build the association
-  r_err = mk_core()->irel_pair(irelIndx)->getEntSetRelation(targetSurface, 0, entityset);
-  if (r_err) //there is no entityset associated with region[0]
-  {
-    r_err = mk_core()->irel_pair(irelIndx)->setEntSetRelation(targetSurface, entityset);
-    IBERRCHK(r_err, "Trouble set the association between the target surface entity and mesh entity set.");
-  }
 
   mk_core()->save_mesh("BeforeHex.vtk");
 #ifdef HAVE_MESQUITE
