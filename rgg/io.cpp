@@ -2164,7 +2164,8 @@ int CNrgen::Subtract_Pins()
     std::cout <<"Total number of pins in the model = " << m_nTotalPincells << std::endl;
 
     for (int k=1; k<=m_nDuct; k++){
-
+      if(cp_inpins[k-1].size() ==0)
+	continue;
       // put all the in pins in a matrix of size duct for subtraction with ducts
       std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
       for (int i=0; i< (int) cp_inpins[k-1].size();i++){
@@ -2177,9 +2178,6 @@ int CNrgen::Subtract_Pins()
 
       // subtract the innermost hex from the pins
       std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
-
-      if(cp_inpins[k-1].size() ==0)
-	IOErrorHandler (EUNEQUAL);
 
       // if there are more than one pins
       if( cp_inpins[k-1].size() > 1){
