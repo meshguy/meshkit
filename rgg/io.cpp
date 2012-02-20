@@ -2160,7 +2160,7 @@ int CNrgen::Subtract_Pins()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  if (m_nDimensions >0 &&  cp_inpins[0].size() > 0){
+  if (m_nDimensions >0){
     std::cout <<"Total number of pins in the model = " << m_nTotalPincells << std::endl;
 
     for (int k=1; k<=m_nDuct; k++){
@@ -2337,6 +2337,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 
   std::string sMatName = "";
   std::string sMatName1 = "";
+  int nDuctIndex = -1;
 
   if(strcmp(m_szInfo.c_str(),"on") == 0){
     std::ostringstream os;
@@ -2365,9 +2366,15 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
     m_Pincell(i).GetNumCyl(nCyl);
 
     for(int n=1;n<=nCells; n++){
-
+      nDuctIndex = -1;
       dHeight = fabs(dVEndZ(n) - dVStartZ(n));  
-
+      // get the index for cp_inpins based on Z-heights
+      for (int dd = 1; dd <= m_nDuct; dd++){
+	if(fabs(m_dMZAssm(dd, 2)) >= fabs(dVEndZ(n)) && fabs(m_dMZAssm(dd, 1)) >= fabs(dVStartZ(n)))
+	  nDuctIndex = dd;
+	if (nDuctIndex != -1)
+	  break;
+      }
       if(m_szGeomType =="hexagonal"){
 	
 	m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
@@ -2531,7 +2538,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
       }
 
       for (int count = 0; count < (int) cp_in.size(); count++)
-	cp_inpins[n-1].push_back(cp_in[count]);
+	cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
       cp_in.clear();
     }
   }
@@ -2543,6 +2550,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
     nCells = nCyl;
 
     for(int n=1;n<=nCells; n++){
+      nDuctIndex = -1;
       if(m_szGeomType =="hexagonal"){
 	
 	m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
@@ -2569,7 +2577,16 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	m_Pincell(i).GetCylMat(n, szVCylMat);
 	m_Pincell(i).GetCylZPos(n, dVCylZPos);
 
-	dHeight = dVCylZPos(2)-dVCylZPos(1);
+	dHeight = dVCylZPos(2)-dVCylZPos(1);    
+
+	// get the index for cp_inpins based on Z-heights
+	for (int dd = 1; dd <= m_nDuct; dd++){
+	  if(fabs(m_dMZAssm(dd, 2)) >= fabs(dVCylZPos(2)) && fabs(m_dMZAssm(dd, 1)) >= fabs(dVCylZPos(1)))
+	    //	if(m_dMZAssm(dd, 2) == dVCylZPos(2) && dVCylZPos(1) == m_dMZAssm(dd, 1))
+	    nDuctIndex = dd;
+	  if (nDuctIndex != -1)
+	    break;
+	}
 
 	for (int m=1; m<=nRadii; m++){ 
  
@@ -2650,7 +2667,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	}
       }
       for (int count = 0; count < (int) cp_in.size(); count++)
-	cp_inpins[n-1].push_back(cp_in[count]);
+	cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
       cp_in.clear();
     }
   }
