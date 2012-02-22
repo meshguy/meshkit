@@ -32,7 +32,7 @@ class MeshImprove
 {	
 public:
 	//public function
-	MeshImprove(MKCore* core, bool isLaplacian = false, bool isUntangle = true, bool isShapeImprove = true, bool isSizeAdapt = true);
+	MeshImprove(MKCore* core, bool isLaplacian = false, bool isUntangle = true, bool isShapeImprove = true, bool isSizeAdapt = true, iGeom * geom_inst = NULL);
 	~MeshImprove();
 	void SurfMeshImprove(iBase_EntityHandle surface, iBase_EntitySetHandle surfMesh, iBase_EntityType entity_type);
 	void VolumeMeshImprove(iBase_EntitySetHandle volMesh, iBase_EntityType entity_type);
@@ -44,6 +44,7 @@ private:
 	iBase_EntitySetHandle mesh_root_set;
 	iBase_TagHandle mesh_id_tag;
 	bool IsLaplacian, IsUntangle, IsShapeImprove, IsSizeAdapt;
+	iGeom * igeom_inst;
 };
 
 }

@@ -196,11 +196,12 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   std::vector<moab::EntityHandle> nList;
   /*
    corner[2]     NodeList_ii ->   corner[3]
-
+     ^                                ^
+     |                                |
    NodeList_j                    NodeList_jj
-   ^                             ^
-   |                             |
-   corner[0]     NodeList_i  ->  corner[1]
+     ^                                ^
+     |                                |
+   corner[0]     NodeList_i  ->   corner[1]
    */
   //get the nodes on each edge
   // we want the start of node list i and j to be the same (corner 0)
@@ -245,11 +246,11 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
       * (List_i.size() - 2));
   for (unsigned int j = 1; j < (List_j.size() - 1); j++)
   {
-    //                             Node 2 (List_ii)
+    //                     Node 2 (List_ii)
     //		  		 |
     //	Node 0 (List_j)---------Node------------Node 1 (List_jj)
     //		  	 	 |
-    //		               Node 3 (List_i)
+    //		                  Node 3 (List_i)
     double coords_i[3], coords_ii[3], coords_j[3], coords_jj[3], coords[3];
 
     g_err = mk_core()->imesh_instance()->getVtxCoord(List_j[j], coords_j[0],
@@ -532,11 +533,11 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   mk_core()->save_mesh("InitialMapping.vtk");
 
 #ifdef HAVE_MESQUITE
-  if (ent->iGeomIndex()==0)
-  {
-    MeshImprove meshopt(mk_core(), true, false, false, false);
-    meshopt.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
-  }
+
+  iGeom * ig_inst = mk_core()->igeom_instance(ent->iGeomIndex());
+
+  MeshImprove meshopt(mk_core(),  true, false, false, false, ig_inst);
+  meshopt.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
 
 #endif
   //mk_core()->save_mesh("AfterLaplace.vtk");
@@ -547,11 +548,9 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
   mk_core()->save_mesh("AfterWinslow.vtk");
 #ifdef HAVE_MESQUITE
-  if (ent->iGeomIndex()==0)
-  {
-    MeshImprove shapesmooth(mk_core(), false, false, true, false);
-    shapesmooth.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
-  }
+
+  MeshImprove shapesmooth(mk_core(), false, false, true, false, ig_inst);
+  shapesmooth.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
 
 #endif
 

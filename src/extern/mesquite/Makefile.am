@@ -14,7 +14,9 @@ libMeshKitmesquite_la_includedir = $(includedir)
 libMeshKitmesquite_la_SOURCES = \
 	MesquiteOpt.cpp \
 	FreeSmoothDomain.cpp \
-	FreeSmoothDomain.hpp
+	FreeSmoothDomain.hpp \
+	MsqFBiGeom.cpp \
+	MsqFBiGeom.hpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitmesquite_la_include_HEADERS = \

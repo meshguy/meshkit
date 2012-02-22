@@ -53,6 +53,7 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir)/utils 
 
 if HAVE_MESQUITE
+AM_CPPFLAGS += -I$(srcdir)/../../extern/mesquite 
 AM_CPPFLAGS += $(MESQUITE_CPPFLAGS) -DHAVE_MESQUITE
 LIBS += $(MESQUITE_LIBS)
 

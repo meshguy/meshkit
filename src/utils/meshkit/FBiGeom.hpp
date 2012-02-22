@@ -514,6 +514,8 @@ class FBiGeom : public iGeom {
 				EntityHandle& value_out) const;
 		virtual inline Error getESHData(EntityHandle entity_handle, TagHandle tag_handle,
 				EntitySetHandle& value_out) const;
+
+		virtual bool isFBiGeom() {return true;}
 		// end copy from iBaseVirtual.hpp
 		/** \class EntArrIter FBiGeom.hpp "FBiGeom.hpp"
 		 * \brief Class for iterating over %FBiGeom entity arrays.

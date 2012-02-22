@@ -1281,6 +1281,7 @@ void OneToOneSwept::SurfMeshOptimization()
   MEntSelection::iterator mit = mentSelection.begin();
   ModelEnt *me = mit -> first;
   int irelPairIndex = me->iRelPairIndex();
+  iGeom * igeom_inst = mk_core()->igeom_instance(me->iGeomIndex());
     //create a tag to attach the coordinates to nodes
     iBase_TagHandle mapped_tag = 0;
     iMesh::Error m_err = mk_core()->imesh_instance()->getTagHandle("MsqAltCoords", mapped_tag);
@@ -1306,7 +1307,7 @@ void OneToOneSwept::SurfMeshOptimization()
     iRel::Error r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(targetSurface, 0, surfSets);
     IBERRCHK(r_err, "Trouble get the mesh entity set for the target surface.");
     //call the MeshImprove class to smooth the target surface mesh by using Mesquite
-    MeshImprove meshopt(mk_core(), false, true, true, true);
+    MeshImprove meshopt(mk_core(), false, true, true, true, igeom_inst);
     meshopt.SurfMeshImprove(targetSurface, surfSets, iBase_FACE);
 
     //update the new position for nodes on the target surfacce
