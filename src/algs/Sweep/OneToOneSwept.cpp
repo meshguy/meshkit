@@ -137,7 +137,18 @@ void OneToOneSwept::setup_this()
     IBERRCHK(g_err, "Trouble get the int data for source surface.");
     g_err = igeom_inst->getIntData(targetSurface, geom_id_tag, index_id_tar);
     IBERRCHK(g_err, "Trouble get the int data for target surface.");
+    std::cout<<" source Global ID: " << index_id_src << " target Global ID: " << index_id_tar << "\n";
 
+    for (unsigned int i = 0; i < gFaces.size(); i++)
+    {
+      int gid;
+      g_err = igeom_inst->getIntData(gFaces[i], geom_id_tag, gid);
+      IBERRCHK(g_err, "Trouble get the int data for source surface.");
+      std::vector<iBase_EntityHandle> gEdges;
+      g_err = igeom_inst->getEntAdj(gFaces[i], iBase_EDGE, gEdges);
+      IBERRCHK(g_err, "Trouble get the geometrical edges adjacent to the surface");
+      std::cout << " face index " << i << " with ID: " << gid << " has " << gEdges.size() << " edges\n";
+    }
     MEntVector surfs;
     me->get_adjacencies(2, surfs);// all surfaces adjacent to the volume
     for (unsigned int i = 0; i < surfs.size(); i++)
@@ -147,6 +158,11 @@ void OneToOneSwept::setup_this()
       IBERRCHK(g_err, "Trouble get the int data for linking surface.");
       if ((index_id_link != index_id_src) && (index_id_link != index_id_tar))
       {
+        MEntVector edges;
+        surfs[i]->get_adjacencies(1, edges);// all surfaces adjacent to the volume
+        std::cout<< " linking surface with global ID: " << index_id_link << " has " << edges.size() << " edges\n";
+        assert((int)edges.size()==4);
+
         linkingSurfaces.push_back(surfs[i]);
       }
     }
