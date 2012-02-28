@@ -914,9 +914,9 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
         double s;
         iBase_EntityHandle nodeHandle;
 
-        spts = sA * (NodeList[j].xyz - 2 * sPtsCenter + PtsCenter[i]);
+        spts = sA * (NodeList[j].xyz - 2 * sPtsCenter + PtsCenter[i])+sPtsCenter;
 
-        tpts = tA * (TVertexList[j].xyz - 2 * tPtsCenter + PtsCenter[i]);
+        tpts = tA * (TVertexList[j].xyz - 2 * tPtsCenter + PtsCenter[i])+tPtsCenter;
 
         s = (i + 1) / double(numLayers);
         for (int k = 0; k < 3; k++)
@@ -951,98 +951,86 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
 
   vector<iBase_EntityHandle> mVolumeHandle(FaceList.size());
 
-  for (int m = 0; m < numLayers - 1; m++)
+  // first decide orientation, based on the FaceList orientation, and first node above
+  // take one face on source, and first node above in layer 1
+  Vertex * v1 = FaceList[0].connect[0];
+  Vertex * v2 = FaceList[0].connect[1];
+  Vertex * v3 = FaceList[0].connect[2];
+  // vertex 4 is on layer 1, above vertex 1
+  int ind1 = v1->index;
+  Vertex & v4 = linkVertexList[0][ind1];// this is the node above vertex 1 in layer 1
+
+  Vector3D normal1 = (v2->xyz-v1->xyz)*(v3->xyz-v1->xyz);
+  double vol6= normal1 % (v4.xyz-v1->xyz);
+  std::cout << "Orientation is ";
+  int skip = 0;
+  if (vol6 < 0)
   {
-    if (m == 0)
+    std::cout <<"negative\n";
+    skip=4;
+  }
+  else
+    std::cout <<"positive\n";
+
+  for (int m = 0; m < numLayers; m++)
+  {
+    if (m == 0) // first layer, above source
     {
       for (unsigned int i = 0; i < FaceList.size(); i++)
       {
         vector<iBase_EntityHandle> connect(8);
 
-        connect[0] = NodeList[(FaceList[i].getVertex(0))->index].gVertexHandle;
-        connect[1] = NodeList[(FaceList[i].getVertex(1))->index].gVertexHandle;
-        connect[2] = linkVertexList[m][(FaceList[i].getVertex(1))->index].gVertexHandle;
-        connect[3] = linkVertexList[m][(FaceList[i].getVertex(0))->index].gVertexHandle;
-
-        connect[4] = NodeList[(FaceList[i].getVertex(3))->index].gVertexHandle;
-        connect[5] = NodeList[(FaceList[i].getVertex(2))->index].gVertexHandle;
-        connect[6] = linkVertexList[m][(FaceList[i].getVertex(2))->index].gVertexHandle;
-        connect[7] = linkVertexList[m][(FaceList[i].getVertex(3))->index].gVertexHandle;
+        for (int k=0; k<4; k++)
+        {
+          connect[k+skip]=NodeList[(FaceList[i].connect[k])->index].gVertexHandle;
+          connect[(k+skip+4)%8] = linkVertexList[m][(FaceList[i].connect[k])->index].gVertexHandle;
+        }
         m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
-        IBERRCHK(m_err, "Trouble create the hexahedral elements.");
+        IBERRCHK(m_err, "Trouble create the hexahedral element.");
       }
       m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
       IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
-      if (m == (numLayers - 2))
-      {
-        for (unsigned int i = 0; i < FaceList.size(); i++)
-        {
-          vector<iBase_EntityHandle> connect(8);
-
-          connect[0] = linkVertexList[m][(FaceList[i].getVertex(0))->index].gVertexHandle;
-          connect[1] = linkVertexList[m][(FaceList[i].getVertex(1))->index].gVertexHandle;
-          connect[2] = TVertexList[(FaceList[i].getVertex(1))->index].gVertexHandle;
-          connect[3] = TVertexList[(FaceList[i].getVertex(0))->index].gVertexHandle;
-
-          connect[4] = linkVertexList[m][(FaceList[i].getVertex(3))->index].gVertexHandle;
-          connect[5] = linkVertexList[m][(FaceList[i].getVertex(2))->index].gVertexHandle;
-          connect[6] = TVertexList[(FaceList[i].getVertex(2))->index].gVertexHandle;
-          connect[7] = TVertexList[(FaceList[i].getVertex(3))->index].gVertexHandle;
-
-          m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
-          IBERRCHK(m_err, "Trouble create the hexahedral elements.");
-        }
-        m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
-        IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
-      }
     }
-    else
+    else if (m == (numLayers - 1)) // the top layer, below target
     {
       for (unsigned int i = 0; i < FaceList.size(); i++)
       {
         vector<iBase_EntityHandle> connect(8);
 
-        connect[0] = linkVertexList[m - 1][(FaceList[i].getVertex(0))->index].gVertexHandle;
-        connect[1] = linkVertexList[m - 1][(FaceList[i].getVertex(1))->index].gVertexHandle;
-        connect[2] = linkVertexList[m][(FaceList[i].getVertex(1))->index].gVertexHandle;
-        connect[3] = linkVertexList[m][(FaceList[i].getVertex(0))->index].gVertexHandle;
+        for (int k=0; k<4; k++)
+        {
+          connect[k+skip]=linkVertexList[m-1][(FaceList[i].connect[k])->index].gVertexHandle;
+          connect[(k+skip+4)%8] = TVertexList[(FaceList[i].connect[k])->index].gVertexHandle;
+        }
 
-        connect[4] = linkVertexList[m - 1][(FaceList[i].getVertex(3))->index].gVertexHandle;
-        connect[5] = linkVertexList[m - 1][(FaceList[i].getVertex(2))->index].gVertexHandle;
-        connect[6] = linkVertexList[m][(FaceList[i].getVertex(2))->index].gVertexHandle;
-        connect[7] = linkVertexList[m][(FaceList[i].getVertex(3))->index].gVertexHandle;
         m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
         IBERRCHK(m_err, "Trouble create the hexahedral elements.");
       }
       m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
       IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
-      if (m == (numLayers - 2))
+    }
+    else // intermediate layers, m is between 0 and num_layers-2
+    {
+      for (unsigned int i = 0; i < FaceList.size(); i++)
       {
-        for (unsigned int i = 0; i < FaceList.size(); i++)
+        vector<iBase_EntityHandle> connect(8);
+
+        for (int k=0; k<4; k++)
         {
-          vector<iBase_EntityHandle> connect(8);
-
-          connect[0] = linkVertexList[m][(FaceList[i].getVertex(0))->index].gVertexHandle;
-          connect[1] = linkVertexList[m][(FaceList[i].getVertex(1))->index].gVertexHandle;
-          connect[2] = TVertexList[(FaceList[i].getVertex(1))->index].gVertexHandle;
-          connect[3] = TVertexList[(FaceList[i].getVertex(0))->index].gVertexHandle;
-
-          connect[4] = linkVertexList[m][(FaceList[i].getVertex(3))->index].gVertexHandle;
-          connect[5] = linkVertexList[m][(FaceList[i].getVertex(2))->index].gVertexHandle;
-          connect[6] = TVertexList[(FaceList[i].getVertex(2))->index].gVertexHandle;
-          connect[7] = TVertexList[(FaceList[i].getVertex(3))->index].gVertexHandle;
-          m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
-          IBERRCHK(m_err, "Trouble create the hexahedral elements.");
+          connect[k+skip]=linkVertexList[m-1][(FaceList[i].connect[k])->index].gVertexHandle;
+          connect[(k+skip+4)%8] = linkVertexList[m][(FaceList[i].connect[k])->index].gVertexHandle;
         }
-        m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
-        IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
+
+        m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
+        IBERRCHK(m_err, "Trouble create the hexahedral elements.");
       }
+      m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
+      IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
     }
   }
 
   return 1;
 }
-
 //****************************************************************************//
 // function   : linear_interpolation 
 // Author     : Shengyong Cai
