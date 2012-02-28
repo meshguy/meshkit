@@ -204,6 +204,11 @@ void OneToOneSwept::execute_this()
 
     CreateElements(linkVertexList);
 
+
+#if HAVE_MESQUITE
+    MeshImprove meshImpr(mk_core());
+    meshImpr.VolumeMeshImprove(volumeSet, iBase_REGION);
+#endif
     me->commit_mesh(mit->second, COMPLETE_MESH);
   }
 
@@ -683,7 +688,7 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
     if (!NodeList[i].onBoundary)
     {
       Vector3D xyz;
-      xyz = transMatrix * (NodeList[i].xyz - 2 * sPtsCenter + tPtsCenter);
+      xyz = transMatrix * (NodeList[i].xyz - 2 * sPtsCenter + tPtsCenter)+sPtsCenter;
       //calculate the closest point on the target surface with respect to the projected point
       //std::cout << "index = " << i << "\tx = " << xyz[0] << "\ty = " << xyz[1] << "\tz = " << xyz[2] << std::endl;
 
@@ -764,9 +769,6 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   mk_core()->save_mesh("BeforeHex.vtk");
 #ifdef HAVE_MESQUITE
 
-  // this test is here because mesquite assumes that the first igeom instance is used
-  // so, we will skip mesquite until we fix this
-  if (target_surf->iGeomIndex() == 0)
   SurfMeshOptimization();
 
 #endif
