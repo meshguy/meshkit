@@ -627,11 +627,11 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   {
     if (NodeList[i].onBoundary)
     {
-      num_pts++;
       sPtsCenter += NodeList[i].xyz;
       tPtsCenter += TVertexList[i].xyz;
-      sBndNodes[i] = NodeList[i].xyz;
-      tBndNodes[i] = TVertexList[i].xyz;
+      sBndNodes[num_pts] = NodeList[i].xyz;
+      tBndNodes[num_pts] = TVertexList[i].xyz;
+      num_pts++;
     }
   }
   if (sizeBLayer != num_pts)
@@ -647,25 +647,16 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   for (int i = 0; i < num_pts; i++)
   {
     //temporarily store the boundary nodes' coordinates on the source surface and target surface
-
-    sBNodes[i] = sBndNodes[i];
-    tBNodes[i] = tBndNodes[i];
     //transform the boundary nodes
-    sBNodes[i] = sBNodes[i] - 2 * sPtsCenter + tPtsCenter;
-    tBNodes[i] = tBNodes[i] - sPtsCenter;
+    sBNodes[i] = sBndNodes[i] - 2 * sPtsCenter + tPtsCenter;
+    tBNodes[i] = tBndNodes[i] - sPtsCenter;
   }
 
   //calculate the transformation matrix: transform the nodes on the source surface to the target surface in the physical space
   for (int i = 0; i < num_pts; i++)
   {
-    //3 row entries in the temporary matrix
-    for (int j = 0; j < 3; j++)
-      for (int k = 0; k < 3; k++)
-        tmpMatrix(j, k) = tmpMatrix(j, k) + sBNodes[i][j] * sBNodes[i][k];
-
-    for (int j = 0; j < 3; j++)
-      for (int k = 0; k < 3; k++)
-        bMatrix(j, k) = bMatrix(j, k) + tBNodes[i][j] * sBNodes[i][k];
+    tmpMatrix = tmpMatrix + sBNodes[i]*transpose(sBNodes[i]);
+    bMatrix = bMatrix + tBNodes[i]*transpose(sBNodes[i]);
   }
 
   //first determine the affine mapping matrix is singular or not
@@ -676,11 +667,9 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   Matrix<3, 3> InvMatrix = inverse(tmpMatrix);
 
   Matrix<3, 3> transMatrix;
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++)
-      transMatrix(i, j) = InvMatrix(j, 0) * bMatrix(i, 0) + InvMatrix(j, 1) * bMatrix(i, 1) + InvMatrix(j, 2) * bMatrix(i, 2);
   //finish calculating the interior nodes' location
 
+  transMatrix = transpose ( InvMatrix* transpose(bMatrix) );
 
   //calculate the inner nodes on the target surface
   for (unsigned int i = 0; i < NodeList.size(); i++)
@@ -689,8 +678,6 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
     {
       Vector3D xyz;
       xyz = transMatrix * (NodeList[i].xyz - 2 * sPtsCenter + tPtsCenter)+sPtsCenter;
-      //calculate the closest point on the target surface with respect to the projected point
-      //std::cout << "index = " << i << "\tx = " << xyz[0] << "\ty = " << xyz[1] << "\tz = " << xyz[2] << std::endl;
 
       iGeom::Error g_err = igeom_inst->getEntClosestPt(targetSurface, xyz[0], xyz[1], xyz[2], TVertexList[i].xyz[0],
           TVertexList[i].xyz[1], TVertexList[i].xyz[2]);
@@ -859,37 +846,25 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
     //transform the coordinates
     for (int j = 0; j < numPts; j++)
     {
-      //transform the coordinates on the source suface
-      sBNodes[j] = sBoundaryNodes[j];
-
-      tBNodes[j] = tBoundaryNodes[j];
-
-      //from the source surface to layer j
-      isBNodes[i][j] = iBoundaryNodes[i][j];
-
-      //from the target surface to layer j
-      itBNodes[i][j] = iBoundaryNodes[i][j];
-
-      sBNodes[j] = sBNodes[j] - 2 * sPtsCenter + PtsCenter[i];
-      tBNodes[j] = tBNodes[j] - 2 * tPtsCenter + PtsCenter[i];
+      sBNodes[j] = sBoundaryNodes[j] - 2 * sPtsCenter + PtsCenter[i];
+      tBNodes[j] = tBoundaryNodes[j] - 2 * tPtsCenter + PtsCenter[i];
 
       //transform the coordinates on the different layers
-      isBNodes[i][j] = isBNodes[i][j] - sPtsCenter;
-
-      itBNodes[i][j] = itBNodes[i][j] - tPtsCenter;
+      isBNodes[i][j] = iBoundaryNodes[i][j] - sPtsCenter;
+      itBNodes[i][j] = iBoundaryNodes[i][j] - tPtsCenter;
     }
 
     //calculate the temporary matrix
     for (int j = 0; j < numPts; j++)
     {
       stransMatrix = stransMatrix + sBNodes[j] * transpose(sBNodes[j]);
-      //transform matrix: from the target surface to layer j
+      //transform matrix: from the target surface to layer i
       ttransMatrix = ttransMatrix + tBNodes[j] * transpose(tBNodes[j]);
 
-      //transform matrix: from the source surface to layer j
+      //transform matrix: from the source surface to layer i
       sb = sb + isBNodes[i][j] * transpose(sBNodes[j]);
 
-      //transform matrix: from the target surface to layer j
+      //transform matrix: from the target surface to layer i
       tb = tb + itBNodes[i][j] * transpose(tBNodes[j]);
     }
 
@@ -901,11 +876,9 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
     assert(pow(tdetMatrix, 2)>1.0e-20);
 
     sInvMatrix = inverse(stransMatrix);
-
-    //projection from the target surface
     tInvMatrix = inverse(ttransMatrix);
-    sA = sInvMatrix * transpose(sb);
-    tA = tInvMatrix * transpose(tb);
+    sA = transpose(sInvMatrix * transpose(sb));
+    tA = transpose(tInvMatrix * transpose(tb));
 
     //calculate the inner nodes for different layers
     for (unsigned int j = 0; j < NodeList.size(); j++)
