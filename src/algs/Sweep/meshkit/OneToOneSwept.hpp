@@ -47,6 +47,7 @@ namespace MeshKit {
 //===========================================================================//
 
 typedef Vector<3> Vector3D;
+typedef Matrix<3, 3> Matrix3D;
 
 class OneToOneSwept: public MeshScheme {
 public:
@@ -124,6 +125,12 @@ private:
 
   //create the hexahedral elements between the source surface and target surface
   int CreateElements(vector<vector<Vertex> > &linkVertexList);
+
+  // input: list of nodes on source, boundary center, list of nodes on target, target center
+  // output: 3x3 matrix A such that
+  //  target= A * ( source - 2*sc + tc) + sc
+  void computeTransformationFromSourceToTarget(std::vector<Vector3D> & sNodes, Vector3D & sc,
+      std::vector<Vector3D> & tNodes, Vector3D & tc, Matrix3D & transMatrix);
 
 #ifdef HAVE_MESQUITE
   //target surface mesh by Mesquite

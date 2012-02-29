@@ -204,7 +204,7 @@ void OneToOneSwept::execute_this()
 
     CreateElements(linkVertexList);
 
-
+    mk_core()->save_mesh("BeforeVolumeImprove.h5m");
 #if HAVE_MESQUITE
     MeshImprove meshImpr(mk_core());
     meshImpr.VolumeMeshImprove(volumeSet, iBase_REGION);
@@ -622,7 +622,7 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   Vector3D sPtsCenter(0.0), tPtsCenter(0.0);
   std::vector<Vector3D> sBndNodes(sizeBLayer), tBndNodes(sizeBLayer);
   int num_pts = 0;
-  //calculate the barycenter for the outmost boundary
+  //calculate the barycenters for the source and target boundaries
   for (unsigned int i = 0; i < NodeList.size(); i++)
   {
     if (NodeList[i].onBoundary)
@@ -640,36 +640,9 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   tPtsCenter = tPtsCenter / num_pts;
   //done with the barycenter calculation
 
-  Matrix<3, 3> tmpMatrix(0.0);
-  Matrix<3, 3> bMatrix(0.0);
-  //transform the coordinates
-  std::vector<Vector3D> sBNodes(num_pts), tBNodes(num_pts);
-  for (int i = 0; i < num_pts; i++)
-  {
-    //temporarily store the boundary nodes' coordinates on the source surface and target surface
-    //transform the boundary nodes
-    sBNodes[i] = sBndNodes[i] - 2 * sPtsCenter + tPtsCenter;
-    tBNodes[i] = tBndNodes[i] - sPtsCenter;
-  }
-
-  //calculate the transformation matrix: transform the nodes on the source surface to the target surface in the physical space
-  for (int i = 0; i < num_pts; i++)
-  {
-    tmpMatrix = tmpMatrix + sBNodes[i]*transpose(sBNodes[i]);
-    bMatrix = bMatrix + tBNodes[i]*transpose(sBNodes[i]);
-  }
-
-  //first determine the affine mapping matrix is singular or not
-  double detValue = det(tmpMatrix);
-  assert(pow(detValue, 2)>1.0e-20);
-
-  //solve the affine mapping matrix, make use of inverse matrix to get affine mapping matrix
-  Matrix<3, 3> InvMatrix = inverse(tmpMatrix);
-
-  Matrix<3, 3> transMatrix;
-  //finish calculating the interior nodes' location
-
-  transMatrix = transpose ( InvMatrix* transpose(bMatrix) );
+  // compute transformation matrix from source boundary to target boundary
+  Matrix3D transMatrix;
+  computeTransformationFromSourceToTarget(sBndNodes, sPtsCenter, tBndNodes, tPtsCenter, transMatrix);
 
   //calculate the inner nodes on the target surface
   for (unsigned int i = 0; i < NodeList.size(); i++)
@@ -762,6 +735,37 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
 
   return 1;
 }
+void OneToOneSwept::computeTransformationFromSourceToTarget(std::vector<Vector3D> & sNodes, Vector3D & sc,
+      std::vector<Vector3D> & tNodes, Vector3D & tc, Matrix3D & transMatrix)
+{
+  Matrix3D tmpMatrix(0.0);
+  Matrix3D bMatrix(0.0);
+  //transform the coordinates
+  int size = (int)sNodes.size();
+  assert(sNodes.size() == tNodes.size());
+  for (int i = 0; i < size; i++)
+  {
+    //transform the boundary nodes
+    sNodes[i] = sNodes[i] - 2 * sc + tc;
+    tNodes[i] = tNodes[i] - sc;
+  }
+
+  //calculate the transformation matrix: transform the nodes on the source surface to the target surface in the physical space
+  for (int i = 0; i < size; i++)
+  {
+    tmpMatrix = tmpMatrix + sNodes[i]*transpose(sNodes[i]);
+    bMatrix = bMatrix + tNodes[i]*transpose(sNodes[i]);
+  }
+
+  //first determine the affine mapping matrix is singular or not
+  double detValue = det(tmpMatrix);
+  assert(pow(detValue, 2)>1.0e-20);
+
+  //solve the affine mapping matrix, make use of inverse matrix to get affine mapping matrix
+  Matrix3D InvMatrix = inverse(tmpMatrix);
+  transMatrix = transpose ( InvMatrix* transpose(bMatrix) );
+
+}
 // use similar code to TargetSurfProjection, but do not project on surface...
 int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & boundLayers, vector<vector<Vertex> > & linkVertexList)
 {
@@ -777,8 +781,7 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
   IBERRCHK(m_err, "Trouble getting the source tag handle");
 
   std::vector<vector<Vector3D> > iBoundaryNodes(numLayers - 1, std::vector<Vector3D>(sizeBLayer));
-  // we should use moab::CartVect, or MeshKit::Matrix<3,1> = MeshKit::Vector<3>
-  // Vector3D does not know how to do anything
+
   std::vector<Vector3D> latCoords;
   latCoords.resize(boundLayers.size() - 2 * sizeBLayer);// to store the coordinates of the lateral points
   // (exclude the source and target, they are already in NodeList and TVertexList)...
@@ -830,56 +833,28 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
   for (int i = 0; i < numLayers - 1; i++)
     PtsCenter[i] = PtsCenter[i] / numPts;
 
-  std::vector<Vector3D> sBNodes(numPts); //boundary nodes on the source surface
-  std::vector<Vector3D> tBNodes(numPts); //boundary nodes on the target surface
-  std::vector<std::vector<Vector3D> > isBNodes(numLayers - 1, std::vector<Vector3D>(numPts)), itBNodes(numLayers - 1, vector<
-      Vector3D> (numPts)); //boundary nodes on the different layer
+  std::vector<Vector3D> sNodes(numPts); //boundary nodes on the source surface
+  std::vector<Vector3D> tNodes(numPts); //boundary nodes on the target surface
+  std::vector<Vector3D> isBNodes(numPts), itBNodes(numPts); //boundary nodes on the different layers
 
   //loop over different layers
   for (int i = 0; i < numLayers - 1; i++)
   {
-    Matrix<3, 3> sA(0.), tA(0.);
-    Matrix<3, 3> stransMatrix(0.), ttransMatrix(0.);
-    Matrix<3, 3> sInvMatrix, tInvMatrix;
-    Matrix<3, 3> sb(0.), tb(0.);
-
-    //transform the coordinates
     for (int j = 0; j < numPts; j++)
     {
-      sBNodes[j] = sBoundaryNodes[j] - 2 * sPtsCenter + PtsCenter[i];
-      tBNodes[j] = tBoundaryNodes[j] - 2 * tPtsCenter + PtsCenter[i];
+      sNodes[j] = sBoundaryNodes[j];
+      tNodes[j] = tBoundaryNodes[j];
 
-      //transform the coordinates on the different layers
-      isBNodes[i][j] = iBoundaryNodes[i][j] - sPtsCenter;
-      itBNodes[i][j] = iBoundaryNodes[i][j] - tPtsCenter;
+      //coordinates on the different layers
+      isBNodes[j] = iBoundaryNodes[i][j];
+      itBNodes[j] = iBoundaryNodes[i][j];
     }
 
-    //calculate the temporary matrix
-    for (int j = 0; j < numPts; j++)
-    {
-      stransMatrix = stransMatrix + sBNodes[j] * transpose(sBNodes[j]);
-      //transform matrix: from the target surface to layer i
-      ttransMatrix = ttransMatrix + tBNodes[j] * transpose(tBNodes[j]);
-
-      //transform matrix: from the source surface to layer i
-      sb = sb + isBNodes[i][j] * transpose(sBNodes[j]);
-
-      //transform matrix: from the target surface to layer i
-      tb = tb + itBNodes[i][j] * transpose(tBNodes[j]);
-    }
-
-    //first determine the affine mapping matrix is singular or not
-    double sdetMatrix = det(stransMatrix);
-    double tdetMatrix = det(ttransMatrix);
-
-    assert(pow(sdetMatrix, 2)>1.0e-20);
-    assert(pow(tdetMatrix, 2)>1.0e-20);
-
-    sInvMatrix = inverse(stransMatrix);
-    tInvMatrix = inverse(ttransMatrix);
-    sA = transpose(sInvMatrix * transpose(sb));
-    tA = transpose(tInvMatrix * transpose(tb));
-
+    Matrix3D sA, tA;
+    // from source to layer i
+    computeTransformationFromSourceToTarget(sNodes, sPtsCenter, isBNodes, PtsCenter[i], sA);
+    // from target to layer i
+    computeTransformationFromSourceToTarget(tNodes, tPtsCenter, itBNodes, PtsCenter[i], tA);
     //calculate the inner nodes for different layers
     for (unsigned int j = 0; j < NodeList.size(); j++)
     {
@@ -888,11 +863,8 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
         Vector3D spts, tpts, pts;
         double s;
         iBase_EntityHandle nodeHandle;
-
         spts = sA * (NodeList[j].xyz - 2 * sPtsCenter + PtsCenter[i])+sPtsCenter;
-
         tpts = tA * (TVertexList[j].xyz - 2 * tPtsCenter + PtsCenter[i])+tPtsCenter;
-
         s = (i + 1) / double(numLayers);
         for (int k = 0; k < 3; k++)
           pts[k] = linear_interpolation(s, spts[k], tpts[k]);
@@ -1056,25 +1028,6 @@ void OneToOneSwept::SurfMeshOptimization()
   //call the MeshImprove class to smooth the target surface mesh by using Mesquite
   MeshImprove meshopt(mk_core(), false, true, true, true, igeom_inst);
   meshopt.SurfMeshImprove(targetSurface, surfSets, iBase_FACE);
-
-  //update the new position for nodes on the target surfacce
-  for (unsigned int i = 0; i < TVertexList.size(); i++)
-  {
-    double coords[3];
-    if (!(TVertexList[i].onBoundary))
-    {
-      m_err = mk_core()->imesh_instance()->getVtxCoord(TVertexList[i].gVertexHandle, coords[0], coords[1], coords[2]);
-      IBERRCHK(m_err, "Trouble get the node's coordinates on the target surface");
-
-      for (int j = 0; j < 3; j++)
-      TVertexList[i].xyz[j] = coords[j];
-    }
-  }
-  for (unsigned int i = 0; i < TVertexList.size(); i++)
-  {
-    m_err = mk_core()->imesh_instance()->setVtxCoord(TVertexList[i].gVertexHandle, TVertexList[i].xyz[0], TVertexList[i].xyz[1], TVertexList[i].xyz[2]);
-    IBERRCHK(m_err, "Trouble set a new coordinates for nodes on the target surface");
-  }
 }
 #endif
 
