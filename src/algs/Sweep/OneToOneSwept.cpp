@@ -467,9 +467,9 @@ moab::ErrorCode OneToOneSwept::NodeAbove(moab::EntityHandle node1, moab::EntityH
     MBERRCHK(moab::MB_FAILURE, mb);
   if (node2 == conn4[(index1 + 1) % 4]) // quad is oriented node1, node2, node4, node3
   {
-    node3 = conn4[(index1 - 1) % 4];
+    node3 = conn4[(index1 + 3) % 4];
   }
-  else if (node2 == conn4[(index1 - 1) % 4]) // quad is oriented node2, node1, node3, node4
+  else if (node2 == conn4[(index1 +3) % 4]) // quad is oriented node2, node1, node3, node4
   {
     node3 = conn4[(index1 + 1) % 4];
   }
@@ -728,7 +728,7 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
   if (index == sizeBLayer)
     MBERRCHK(moab::MB_FAILURE, mb);
 
-  int prevIndex = (index - 1) % sizeBLayer;
+  int prevIndex = (index + sizeBLayer -1) % sizeBLayer;
   int nextIndex = (index + 1) % sizeBLayer;
   if (bLayers[numLayers * sizeBLayer + prevIndex] == node2)
     sense_out = -1;
