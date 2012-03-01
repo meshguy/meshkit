@@ -197,7 +197,7 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
 
     if(numprocs <= (int) files.size()){
       // no distribution of task for copy/move; each file loaded only once 
-      int flags[assys.size()], move_index;
+      int flags[assys.size()], move_index = -1;
       double dx[3] = { 0.0, 0.0, 0.0 };
       double dx_move[3] = { 0.0, 0.0, 0.0 };
       CMatrix<double> dx_orig(assys.size(), 3);
@@ -346,7 +346,7 @@ int CCrgen::copymove_all(const int nrank, const int numprocs)
     int new_ents_alloc, new_ents_size;
 
     // no distribution of task for copy/move; each file loaded only once 
-    int flags[assys.size()], move_index;
+    int flags[assys.size()], move_index = -1;
     double dx[3] = { 0.0, 0.0, 0.0 };
     double dx_move[3] = { 0.0, 0.0, 0.0 };
     CMatrix<double> dx_orig(assys.size(), 3);

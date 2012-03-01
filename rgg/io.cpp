@@ -2370,7 +2370,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
       dHeight = fabs(dVEndZ(n) - dVStartZ(n));  
       // get the index for cp_inpins based on Z-heights
       for (int dd = 1; dd <= m_nDuct; dd++){
-	if(fabs(m_dMZAssm(dd, 2)) >= fabs(dVEndZ(n)) && fabs(m_dMZAssm(dd, 1)) >= fabs(dVStartZ(n)))
+	if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))  
 	  nDuctIndex = dd;
 	if (nDuctIndex != -1)
 	  break;
@@ -2581,8 +2581,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 
 	// get the index for cp_inpins based on Z-heights
 	for (int dd = 1; dd <= m_nDuct; dd++){
-	  if(fabs(m_dMZAssm(dd, 2)) >= fabs(dVCylZPos(2)) && fabs(m_dMZAssm(dd, 1)) >= fabs(dVCylZPos(1)))
-	    //	if(m_dMZAssm(dd, 2) == dVCylZPos(2) && dVCylZPos(1) == m_dMZAssm(dd, 1))
+	  if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))	 
 	    nDuctIndex = dd;
 	  if (nDuctIndex != -1)
 	    break;
@@ -2697,6 +2696,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
   std::string sMatName = "";
   std::string sMatName0 = "";
   std::string sMatName1 = "";
+  int nDuctIndex = -1;
 
   if(strcmp(m_szInfo.c_str(),"on") == 0){
     std::ostringstream os;
@@ -2727,8 +2727,14 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
     for(int n=1;n<=nCells; n++){
 
-      dHeight = dVEndZ(n) - dVStartZ(n);  
-
+      dHeight = fabs(dVEndZ(n) - dVStartZ(n));  
+      // get the index for cp_inpins based on Z-heights
+      for (int dd = 1; dd <= m_nDuct; dd++){
+	if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))  
+	  nDuctIndex = dd;
+	if (nDuctIndex != -1)
+	  break;
+      }
       if(m_szGeomType =="hexagonal"){
 	
 	m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
@@ -2901,7 +2907,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	}
       }
       for (int count = 0; count < (int) cp_in.size(); count++)
-	cp_inpins[n-1].push_back(cp_in[count]);
+	cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
       cp_in.clear();
     }
   }
@@ -2958,6 +2964,14 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	m_Pincell(i).GetCylMat(n, szVCylMat);
+
+	// get the index for cp_inpins based on Z-heights
+	for (int dd = 1; dd <= m_nDuct; dd++){
+	  if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))	 
+	    nDuctIndex = dd;
+	  if (nDuctIndex != -1)
+	    break;
+	}
 
 	for (int m=1; m<=nRadii; m++){ 
  
@@ -3052,7 +3066,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	}
       }
       for (int count = 0; count < (int) cp_in.size(); count++)
-	cp_inpins[n-1].push_back(cp_in[count]);
+	cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
       cp_in.clear();
     }
   }
