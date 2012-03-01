@@ -120,9 +120,6 @@ private:
   // use similar code to TargetSurfProjection, but do not project on surface...
   int ProjectInteriorLayers(std::vector<moab::EntityHandle> & boundLayers, vector<vector<Vertex> > &linkVertexList);
 
-  //interpolate linearly between x0 and x1
-  double linear_interpolation(double r, double x0, double x1);
-
   //create the hexahedral elements between the source surface and target surface
   int CreateElements(vector<vector<Vertex> > &linkVertexList);
 

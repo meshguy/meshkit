@@ -763,24 +763,20 @@ void OneToOneSwept::computeTransformationFromSourceToTarget(std::vector<Vector3D
 
   //solve the affine mapping matrix, make use of inverse matrix to get affine mapping matrix
   Matrix3D InvMatrix = inverse(tmpMatrix);
-  transMatrix = transpose ( InvMatrix* transpose(bMatrix) );
+  transMatrix = bMatrix*InvMatrix;
 
 }
 // use similar code to TargetSurfProjection, but do not project on surface...
 int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & boundLayers, vector<vector<Vertex> > & linkVertexList)
 {
-
   iMesh::Error m_err;
   Vector3D sPtsCenter(0.), tPtsCenter(0.);
   std::vector<Vector3D> PtsCenter(numLayers - 1);
   std::vector<Vector3D> sBoundaryNodes(0), tBoundaryNodes(0);
 
-  // this could be saved, the tag handle for source...
   iBase_TagHandle taghandle = 0;
   m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
   IBERRCHK(m_err, "Trouble getting the source tag handle");
-
-  std::vector<vector<Vector3D> > iBoundaryNodes(numLayers - 1, std::vector<Vector3D>(sizeBLayer));
 
   std::vector<Vector3D> latCoords;
   latCoords.resize(boundLayers.size() - 2 * sizeBLayer);// to store the coordinates of the lateral points
@@ -791,9 +787,8 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
 
   //calculate the center coordinates
   for (int i = 0; i < numLayers - 1; i++)
-  {
     PtsCenter[i].set(0.);
-  }
+
   int numPts = sizeBLayer;// a lot of repetition ; do we really need
   sBoundaryNodes.resize(numPts);// another useless copy
   tBoundaryNodes.resize(numPts);// another useless copy
@@ -817,10 +812,6 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
       int indexNodeOnSide = lay * sizeBLayer + j;// all p3d will be above index i
       Vector3D & p3d = latCoords[indexNodeOnSide];
       PtsCenter[lay] += p3d;
-
-      iBoundaryNodes[lay][j] = p3d;
-
-      // another copy that is redundant
       linkVertexList[lay][i].xyz = p3d;
       linkVertexList[lay][i].gVertexHandle = (iBase_EntityHandle) boundLayers[indexNodeOnSide + sizeBLayer];
     }
@@ -844,10 +835,8 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
     {
       sNodes[j] = sBoundaryNodes[j];
       tNodes[j] = tBoundaryNodes[j];
-
       //coordinates on the different layers
-      isBNodes[j] = iBoundaryNodes[i][j];
-      itBNodes[j] = iBoundaryNodes[i][j];
+      isBNodes[j] = itBNodes[j] = latCoords[i*sizeBLayer + j];
     }
 
     Matrix3D sA, tA;
@@ -856,18 +845,17 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
     // from target to layer i
     computeTransformationFromSourceToTarget(tNodes, tPtsCenter, itBNodes, PtsCenter[i], tA);
     //calculate the inner nodes for different layers
+    double s = (i + 1) / double(numLayers); // interpolation factor
     for (unsigned int j = 0; j < NodeList.size(); j++)
     {
       if (!(NodeList[j].onBoundary))
       {
         Vector3D spts, tpts, pts;
-        double s;
         iBase_EntityHandle nodeHandle;
         spts = sA * (NodeList[j].xyz - 2 * sPtsCenter + PtsCenter[i])+sPtsCenter;
         tpts = tA * (TVertexList[j].xyz - 2 * tPtsCenter + PtsCenter[i])+tPtsCenter;
-        s = (i + 1) / double(numLayers);
-        for (int k = 0; k < 3; k++)
-          pts[k] = linear_interpolation(s, spts[k], tpts[k]);
+        // interpolate the 2 results
+        pts = (1-s) * spts + s * tpts;
 
         linkVertexList[i][j].xyz = pts;
 
@@ -879,7 +867,6 @@ int OneToOneSwept::ProjectInteriorLayers(std::vector<moab::EntityHandle> & bound
       }
     }
   }
-
   return 1;
 }
 
@@ -895,9 +882,7 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
   //create the quadrilateral elements on the different layers
   //it is not necessary to create the quadrilateral elements on the different layers. Hex element can be created based on the eight nodes
   iMesh::Error m_err;
-
   vector<iBase_EntityHandle> mVolumeHandle(FaceList.size());
-
   // first decide orientation, based on the FaceList orientation, and first node above
   // take one face on source, and first node above in layer 1
   Vertex * v1 = FaceList[0].connect[0];
@@ -919,14 +904,13 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
   else
     std::cout <<"positive\n";
 
+  vector<iBase_EntityHandle> connect(8);
   for (int m = 0; m < numLayers; m++)
   {
     if (m == 0) // first layer, above source
     {
       for (unsigned int i = 0; i < FaceList.size(); i++)
       {
-        vector<iBase_EntityHandle> connect(8);
-
         for (int k=0; k<4; k++)
         {
           connect[k+skip]=NodeList[(FaceList[i].connect[k])->index].gVertexHandle;
@@ -942,14 +926,11 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
     {
       for (unsigned int i = 0; i < FaceList.size(); i++)
       {
-        vector<iBase_EntityHandle> connect(8);
-
         for (int k=0; k<4; k++)
         {
           connect[k+skip]=linkVertexList[m-1][(FaceList[i].connect[k])->index].gVertexHandle;
           connect[(k+skip+4)%8] = TVertexList[(FaceList[i].connect[k])->index].gVertexHandle;
         }
-
         m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
         IBERRCHK(m_err, "Trouble create the hexahedral elements.");
       }
@@ -960,14 +941,11 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
     {
       for (unsigned int i = 0; i < FaceList.size(); i++)
       {
-        vector<iBase_EntityHandle> connect(8);
-
         for (int k=0; k<4; k++)
         {
           connect[k+skip]=linkVertexList[m-1][(FaceList[i].connect[k])->index].gVertexHandle;
           connect[(k+skip+4)%8] = linkVertexList[m][(FaceList[i].connect[k])->index].gVertexHandle;
         }
-
         m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
         IBERRCHK(m_err, "Trouble create the hexahedral elements.");
       }
@@ -975,20 +953,7 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
       IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
     }
   }
-
   return 1;
-}
-//****************************************************************************//
-// function   : linear_interpolation 
-// Author     : Shengyong Cai
-// Date       : Feb 15, 2011
-// Description: interpolate linearly between x0 and x1
-//***************************************************************************//
-double OneToOneSwept::linear_interpolation(double r, double x0, double x1)
-{
-  assert(r >=0 && r <= 1.0);
-  double pt = (1 - r) * x0 + r * x1;
-  return pt;
 }
 
 #ifdef HAVE_MESQUITE
@@ -1030,6 +995,5 @@ void OneToOneSwept::SurfMeshOptimization()
   meshopt.SurfMeshImprove(targetSurface, surfSets, iBase_FACE);
 }
 #endif
-
 }
 
