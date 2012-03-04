@@ -20,6 +20,7 @@
 #include <limits.h>
 
 #include <iGeom.h>
+#include "Global.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "moab/ReadUtilIface.hpp"
@@ -92,21 +93,16 @@ public:
 
 private:
 
-  //interpolate linearly between x0 and x1
-  double linear_interpolation(double r, double x0, double x1);
-
   //implement the transfinite interpolation between (pt_0s, pt_1s) and (pt_r0, pt_r1)
   void parametricTFI3D(double *pts, double r, double s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3]);
 
   //generate the mesh on the linking surface
   int SurfMapping(ModelEnt *ent);
 
-  //calculate the parameter r and s
-  int ParameterCalculate(double &r, double &s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3], double *pts,
-      ModelEnt *ent);
-
-  //calculate the intersection or shortest distance between 2 3D lines
-  bool LineLineIntersect(double p1[3], double p2[3], double p3[3], double p4[3], double *pa, double *pb, double &mua, double &mub);
+  // transform from source line to target line, such that
+  // target= A * ( source - 2*sc + tc) + sc
+  void computeTransformation(Vector3D & A, Vector3D & B, Vector3D & C, Vector3D & D,
+      Matrix3D & transMatrix);
 
   void SurfImprove(iBase_EntityHandle surface, iBase_EntitySetHandle surfMesh, iBase_EntityType entity_type);
 

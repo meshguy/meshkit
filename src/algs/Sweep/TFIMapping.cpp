@@ -3,7 +3,6 @@
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/SizingFunction.hpp"
-#include "meshkit/RegisterMeshOp.hpp"
 #include "moab/ReadUtilIface.hpp"
 #include "EquipotentialSmooth.hpp"
 #ifdef HAVE_MESQUITE
@@ -201,6 +200,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   // we want the start of node list i and j to be the same (corner 0)
   boundEdges[0]->get_mesh(0, nList, true); // include start and end vertices (corners)
   unsigned int ix = 0;
+  int size_i=(int)nList.size();
   for (ix = 0; ix < nList.size(); ix++)
     List_i.push_back((iBase_EntityHandle) nList[ix]);
   // if sense is reverse for edge 0, reverse  list,
@@ -209,6 +209,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   // so we know for sure corner 0 is at NodeList_i[0]!!
   nList.clear();
   boundEdges[1]->get_mesh(0, nList, true);
+  int size_j=(int)nList.size();
   for (ix = 0; ix < nList.size(); ix++)
     List_jj.push_back((iBase_EntityHandle) nList[ix]);
   if (senses[1] == -1)
@@ -234,40 +235,67 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
     ECERRCHK(MK_FAILURE, "opposite edges have different mesh count, abort");
   //ok, done with all the initializations
 
-  //calculate the interior nodes based on TFI
-  iGeom::Error g_err;
+  // get all the vectors in 3d
+  std::vector<Vector3D> pos_ii(List_ii.size());
+  std::vector<Vector3D> pos_i(List_i.size());
+  std::vector<Vector3D> pos_j(List_j.size());
+  std::vector<Vector3D> pos_jj(List_jj.size());
+  // iBase_INTERLEAVED
+  /*getVtxArrCoords( const EntityHandle* vertex_handles,
+                                   int vertex_handles_size,
+                                   StorageOrder storage_order,
+                                   double* coords_out ) const*/
+  iGeom::Error g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_ii[0]), List_ii.size(), iBase_INTERLEAVED, &(pos_ii[0][0]));
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
+  g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_i[0]), List_i.size(), iBase_INTERLEAVED, &(pos_i[0][0]));
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
+  g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_j[0]), List_j.size(), iBase_INTERLEAVED, &(pos_j[0][0]));
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
+  g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_jj[0]), List_jj.size(), iBase_INTERLEAVED, &(pos_jj[0][0]));
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
+  //calculate the interior nodes based on transforming the top and bottom edges in position
   std::vector<iBase_EntityHandle> InteriorNodes((List_j.size() - 2) * (List_i.size() - 2));
-  for (unsigned int j = 1; j < (List_j.size() - 1); j++)
+  // reminder
+  /*
+     corner[2]     NodeList_ii ->   corner[3]
+     ^                                ^
+     |                                |
+     NodeList_j                    NodeList_jj
+     ^                                ^
+     |                                |
+     corner[0]     NodeList_i  ->   corner[1]
+  */
+  Vector3D c0=pos_i[0], c1=pos_i[size_i-1], c2 = pos_ii[0], c3=pos_ii[size_i-1];
+
+  Vector3D bc = 0.5*c0+0.5*c1;
+  Vector3D tc = 0.5*c2+0.5*c3;
+  for (unsigned int j = 1; j < (List_j.size() - 1); j++) // compute layer by layer
+    // we will start from source (layer 0) to layer j (j>1, j< J-1)
+    // also , we will look at the target, layer J-1 to layer j
   {
     //                     Node 2 (List_ii)
     //		  		 |
     //	Node 0 (List_j)---------Node------------Node 1 (List_jj)
     //		  	 	 |
     //		                  Node 3 (List_i)
-    double coords_i[3], coords_ii[3], coords_j[3], coords_jj[3], coords[3];
+    // transformation from c0 and c1 to layer j
+    Matrix3D tr1 , tr2;
+    //target= A * ( source - 2*sc + tc) + sc
+    Vector3D cj = 0.5*pos_j[j]+0.5*pos_jj[j]; // center of layer j
+    computeTransformation(c0, c1, pos_j[j], pos_jj[j], tr1);
+    computeTransformation(c2, c3, pos_j[j], pos_jj[j], tr2);
 
-    g_err = mk_core()->imesh_instance()->getVtxCoord(List_j[j], coords_j[0], coords_j[1], coords_j[2]);
-    IBERRCHK(g_err, "Trouble get the xyz coordinates for node 0.");
-
-    g_err = mk_core()->imesh_instance()->getVtxCoord(List_jj[j], coords_jj[0], coords_jj[1], coords_jj[2]);
-    IBERRCHK(g_err, "Trouble get the xyz coordinates for node 1.");
+    double interpolationFactor = j/(size_j-1.);
 
     for (unsigned int i = 1; i < (List_i.size() - 1); i++)
     {
-      g_err = mk_core()->imesh_instance()->getVtxCoord(List_i[i], coords_i[0], coords_i[1], coords_i[2]);
-      IBERRCHK(g_err, "Trouble get the xyz coordinates for node 3.");
-
-      g_err = mk_core()->imesh_instance()->getVtxCoord(List_ii[i], coords_ii[0], coords_ii[1], coords_ii[2]);
-      IBERRCHK(g_err, "Trouble get the xyz coordinates for node 2.");
-
-      //calculate the parameter based on the distance
-      double r, s, pts[3];
-      ParameterCalculate(r, s, coords_j, coords_jj, coords_i, coords_ii, pts, ent);
-
-      std::cout << "r = " << r << "\ts = " << s << std::endl;
-
-      parametricTFI3D(&pts[0], s, r, coords_j, coords_jj, coords_i, coords_ii);
-
+      // transformation from bottom to layer j; source is b, target is j
+      Vector3D res1= tr1*(pos_i[i] -2*bc+cj)+bc;
+      // transformation from top to layer j; source is t, target is j
+      Vector3D res2= tr2*(pos_ii[i] -2*tc+cj)+tc;
+      // interpolate this result
+      Vector3D pts = res1*(1-interpolationFactor) + res2*interpolationFactor;
+      Vector3D coords;
       g_err = ent->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1],
           coords[2]);
       if (g_err)
@@ -278,7 +306,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
       iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(coords[0], coords[1], coords[2], InteriorNodes[(j - 1)
           * (List_i.size() - 2) + i - 1]);
-      IBERRCHK(m_err, "Trouble get create the interior node.");
+      IBERRCHK(m_err, "Trouble create the interior node.");
     }
   }
 
@@ -537,7 +565,33 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
   return 1;
 }
+void TFIMapping::computeTransformation(Vector3D & A, Vector3D & B, Vector3D & C, Vector3D & D,
+    Matrix3D & transMatrix)
+{
+  Matrix3D tmpMatrix(0.0);
+  Matrix3D bMatrix(0.0);
+  Vector3D c1=0.5*A+0.5*B;
+  Vector3D c2=0.5*C+0.5*D;
+  Vector3D normal=(c2-c1)*(A-B);// this should be not modified by the transformation
+  // we add this just to increase the rank of tmpMatrix
+  // the normal to the "plane" of interest should not be rotated at all
+  // as if we say that we want A*normal = normal
+  Vector3D s1=A-2*c1+c2;
+  Vector3D s2=B-2*c1+c2;
+  Vector3D t1=C-c1;
+  Vector3D t2=D-c1;
 
+  tmpMatrix = s1*transpose(s1)+s2*transpose(s2) + normal*transpose(normal);
+  bMatrix = t1*transpose(s1) + t2*transpose(s2) + normal*transpose(normal);
+
+  double detValue = det(tmpMatrix);
+  assert(detValue*detValue>1.e-20);
+
+  //solve the affine mapping matrix, make use of inverse matrix to get affine mapping matrix
+  Matrix3D InvMatrix = inverse(tmpMatrix);
+  transMatrix = bMatrix*InvMatrix;
+
+}
 //smooth the quadrilateral mesh on the linking surface
 void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vector<iBase_EntityHandle> &List_ii, std::vector<
     iBase_EntityHandle> &List_j, std::vector<iBase_EntityHandle> &List_jj, std::vector<iBase_EntityHandle> &InteriorNodes,
@@ -789,167 +843,6 @@ void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vec
   IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
   //m_err = mk_core()->imesh_instance()->destroyTag(taghandle, 1);
   //IBERRCHK(m_err, "Trouble destroy a tag.");
-}
-
-//****************************************************************************//
-// function   : ParameterCalculate
-// Date       : Feb 15, 2011
-// Description: calculate the parameters for TFI mapping
-//***************************************************************************//
-int TFIMapping::ParameterCalculate(double &r, double &s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3],
-    double *pts, ModelEnt *ent)
-{
-  // equations P_0s + s*(P_1s - P_0s) = P_r0 + t*(P_r1 - P_r0)
-
-  assert(((fabs(pt_0s[0]-pt_1s[0])>1.0e-5)||(fabs(pt_0s[1]-pt_1s[1]) > 1.0e-5)||(fabs(pt_0s[2]-pt_1s[2]) > 1.0e-5)));
-  assert(((fabs(pt_r0[0]-pt_r1[0])>1.0e-5)||(fabs(pt_r0[1]-pt_r1[1]) > 1.0e-5)||(fabs(pt_r0[2]-pt_1s[2]) > 1.0e-5)));
-  s = 0;
-  r = 0;
-  double pt_s[3], pt_r[3];
-  bool isParameterized = false;
-  iGeom::Error g_err = ent->igeom_instance()->isEntParametric(ent->geom_handle(), isParameterized);
-  IBERRCHK(g_err, "Trouble check whether the surface is parameterized or not.");
-  isParameterized = false;
-  if (isParameterized)
-  {
-    double uv_0s[3] = { 0.0, 0.0, 0.0 }, uv_1s[3] = { 0.0, 0.0, 0.0 }, uv_r0[3] = { 0.0, 0.0, 0.0 }, uv_r1[3] = { 0.0, 0.0, 0.0 };
-    g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_0s[0], pt_0s[1], pt_0s[2], uv_0s[0], uv_0s[1]);
-    IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
-    g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_1s[0], pt_1s[1], pt_1s[2], uv_1s[0], uv_1s[1]);
-    IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
-    g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_r0[0], pt_r0[1], pt_r0[2], uv_r0[0], uv_r0[1]);
-    IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
-    g_err = ent->igeom_instance()->getEntXYZtoUV(ent->geom_handle(), pt_r1[0], pt_r1[1], pt_r1[2], uv_r1[0], uv_r1[1]);
-    IBERRCHK(g_err, "Trouble get the UV coordinates from xyz.");
-
-    if (!LineLineIntersect(uv_0s, uv_1s, uv_r0, uv_r1, &pt_s[0], &pt_r[0], s, r))
-    {
-      throw Error(1, "2 3D lines don't intersect at a point.");
-
-    }
-    double uv[3];
-    for (int i = 0; i < 3; i++)
-      uv[i] = (pt_s[i] + pt_r[i]) / 2;
-
-    g_err = ent->igeom_instance()->getEntUVtoXYZ(ent->geom_handle(), uv[0], uv[1], pts[0], pts[1], pts[2]);
-    IBERRCHK(g_err, "Trouble get the xyz from UV coordinates.");
-
-    return 1;
-
-  }
-  else
-  {
-    if (!LineLineIntersect(pt_0s, pt_1s, pt_r0, pt_r1, &pt_s[0], &pt_r[0], s, r))
-    {
-      throw Error(1, "2 3D lines don't intersect at a point.");
-
-    }
-    for (int i = 0; i < 3; i++)
-      pts[i] = (pt_s[i] + pt_r[i]) / 2;
-
-    return 1;
-  }
-
-}
-
-//****************************************************************************//
-// function   : SurfMeshImprove
-// Date       : Oct 20, 2011
-// Desription :
-//   Calculate the line segment PaPb that is the shortest route between
-//   two lines P1P2 and P3P4. Calculate also the values of mua and mub where
-//      Pa = P1 + mua (P2 - P1)
-//      Pb = P3 + mub (P4 - P3)
-//   Return FALSE if no solution exists.
-//****************************************************************************//
-bool TFIMapping::LineLineIntersect(double p1[3], double p2[3], double p3[3], double p4[3], double *pa, double *pb, double &mua,
-    double &mub)
-{
-  double p13[3], p43[3], p21[3];
-  double d1343, d4321, d1321, d4343, d2121;
-  double numer, denom;
-
-  for (int i = 0; i < 3; i++)
-  {
-    p13[i] = p1[i] - p3[i];
-    p43[i] = p4[i] - p3[i];
-  }
-  if ((fabs(p43[0]) < EPS) && (fabs(p43[1]) < EPS) && (fabs(p43[2]) < EPS))
-    return false;
-
-  for (int i = 0; i < 3; i++)
-    p21[i] = p2[i] - p1[i];
-  if ((fabs(p21[0]) < EPS) && (fabs(p21[1]) < EPS) && (fabs(p21[2]) < EPS))
-    return false;
-
-  d1343 = p13[0] * p43[0] + p13[1] * p43[1] + p13[2] * p43[2];
-  d4321 = p43[0] * p21[0] + p43[1] * p21[1] + p43[2] * p21[2];
-  d1321 = p13[0] * p21[0] + p13[1] * p21[1] + p13[2] * p21[2];
-  d4343 = p43[0] * p43[0] + p43[1] * p43[1] + p43[2] * p43[2];
-  d2121 = p21[0] * p21[0] + p21[1] * p21[1] + p21[2] * p21[2];
-
-  denom = d2121 * d4343 - d4321 * d4321;
-  if (fabs(denom) < EPS)
-    return false;
-  numer = d1343 * d4321 - d1321 * d4343;
-
-  mua = numer / denom;
-  mub = (d1343 + d4321 * (mua)) / d4343;
-
-  for (int i = 0; i < 3; i++)
-  {
-    pa[i] = p1[i] + mua * p21[i];
-    pb[i] = p3[i] + mub * p43[i];
-  }
-
-  return true;
-}
-
-//****************************************************************************//
-// function   : SurfMeshImprove
-// Date       : Oct 20, 2011
-// Description: smooth the surface mesh on the linking surface by using Mesquite
-// Because the linking surface is convex in general, the Laplace is used to smooth
-// the surface mesh on the linking surface
-//***************************************************************************//
-void TFIMapping::SurfImprove(iBase_EntityHandle surface, iBase_EntitySetHandle surfMesh, iBase_EntityType entity_type)
-{
-#ifdef HAVE_MESQUITE
-
-#endif
-
-}
-
-//****************************************************************************//
-// function   : parametricTFI2D
-// Date       : Feb 15, 2011
-// Description: do the transfinite interpolation in (pt_0s, pt_1s), (pt_r0, pt_r1)
-//***************************************************************************//
-void TFIMapping::parametricTFI3D(double *pts, double r, double s, double pt_0s[3], double pt_1s[3], double pt_r0[3],
-    double pt_r1[3])
-{
-  //                             pt_r1
-  //		  		 |
-  //		pt_0s---------Node------------pt_1s
-  //		  	 	 |
-  //		               pt_r0
-  //assert(r>= 0 && r <= 1.0);
-  //assert(s>= 0 && s <= 1.0);
-
-  for (int i = 0; i < 3; i++)//interpolate the pt_rs based on pt_r0, pt_r1, pt_0s and pt_1s
-    pts[i] = 0.5 * (linear_interpolation(s, pt_r0[i], pt_r1[i]) + linear_interpolation(r, pt_0s[i], pt_1s[i]));
-}
-
-//****************************************************************************//
-// function   : linear_interpolation 
-// Date       : Feb 15, 2011
-// Description: interpolate linearly between x0 and x1
-//***************************************************************************//
-double TFIMapping::linear_interpolation(double r, double x0, double x1)
-{
-  //assert(r >=0 && r <= 1.0);
-  double pt = (1 - r) * x0 + r * x1;
-  return pt;
 }
 
 }

@@ -46,9 +46,6 @@ namespace MeshKit {
  */
 //===========================================================================//
 
-typedef Vector<3> Vector3D;
-typedef Matrix<3, 3> Matrix3D;
-
 class OneToOneSwept: public MeshScheme {
 public:
 

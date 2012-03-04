@@ -20,13 +20,13 @@
 
 #include <iGeom.h>
 #include "meshkit/Matrix.hpp"
-#include <set>
 #include <vector>
 #include <set>
 #include <list>
 
 using namespace std;
-
+typedef MeshKit::Vector<3> Vector3D;
+typedef MeshKit::Matrix<3, 3> Matrix3D;
 
 //===========================================================================//
   /*!
@@ -46,16 +46,8 @@ struct Vertex {
   int id;
   int index;
   bool onBoundary;
-  double uCoord;
-  Vector<3> xyz;
+  Vector3D xyz;
   iBase_EntityHandle gVertexHandle;
-};
-struct Edge {
-  Vertex* connect[2];
-  int EdgeID;
-  int index;
-  bool onBoundary;
-  iBase_EntityHandle gEdgeHandle;
 };
 
 struct Face {
@@ -68,9 +60,6 @@ struct Face {
     return connect[i];
   }
   vector<Vertex*> connect;
-  vector<Edge*> connEdges;
-  int FaceID;
-  int index;
   iBase_EntityHandle gFaceHandle;
 };
 

@@ -328,7 +328,7 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
   {
     iBase_EntityHandle currentFace = (iBase_EntityHandle) quads[i];//
     FaceList[i].gFaceHandle = currentFace;
-    FaceList[i].index = i;
+    //FaceList[i].index = i;
 
     //get the nodes on the face elements
     std::vector<iBase_EntityHandle> Nodes;
@@ -345,8 +345,8 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
       FaceList[i].connect[j] = &NodeList[tmpIndex];// why not store tmp Index directly?
     }
 
-    m_err = mk_core()->imesh_instance()->setIntData(currentFace, taghandle, i);
-    IBERRCHK(m_err, "Trouble set the int data for quad mesh on the source surface.");
+   /* m_err = mk_core()->imesh_instance()->setIntData(currentFace, taghandle, i);
+    IBERRCHK(m_err, "Trouble set the int data for quad mesh on the source surface.");*/
   }
 
   std::copy(bdyNodes.begin(), bdyNodes.end(), std::back_inserter(layers));
@@ -735,6 +735,9 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
 
   return 1;
 }
+// input: list of nodes on source, boundary center, list of nodes on target, target center
+// output: 3x3 matrix A such that
+//  target= A * ( source - 2*sc + tc) + sc
 void OneToOneSwept::computeTransformationFromSourceToTarget(std::vector<Vector3D> & sNodes, Vector3D & sc,
       std::vector<Vector3D> & tNodes, Vector3D & tc, Matrix3D & transMatrix)
 {
