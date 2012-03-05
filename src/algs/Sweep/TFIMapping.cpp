@@ -269,25 +269,22 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
 
   Vector3D bc = 0.5*c0+0.5*c1;
   Vector3D tc = 0.5*c2+0.5*c3;
-  for (unsigned int j = 1; j < (List_j.size() - 1); j++) // compute layer by layer
+  for (int j = 1; j < size_j - 1; j++) // compute layer by layer
     // we will start from source (layer 0) to layer j (j>1, j< J-1)
     // also , we will look at the target, layer J-1 to layer j
   {
-    //                     Node 2 (List_ii)
-    //		  		 |
-    //	Node 0 (List_j)---------Node------------Node 1 (List_jj)
-    //		  	 	 |
-    //		                  Node 3 (List_i)
+
     // transformation from c0 and c1 to layer j
     Matrix3D tr1 , tr2;
     //target= A * ( source - 2*sc + tc) + sc
     Vector3D cj = 0.5*pos_j[j]+0.5*pos_jj[j]; // center of layer j
     computeTransformation(c0, c1, pos_j[j], pos_jj[j], tr1);
+    // transformation from top, c2 and c3 to layer j
     computeTransformation(c2, c3, pos_j[j], pos_jj[j], tr2);
 
     double interpolationFactor = j/(size_j-1.);
 
-    for (unsigned int i = 1; i < (List_i.size() - 1); i++)
+    for (int i = 1; i < (size_i - 1); i++)
     {
       // transformation from bottom to layer j; source is b, target is j
       Vector3D res1= tr1*(pos_i[i] -2*bc+cj)+bc;
@@ -305,7 +302,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
       IBERRCHK(g_err, "Trouble get the closest xyz coordinates on the linking surface.");
 
       iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(coords[0], coords[1], coords[2], InteriorNodes[(j - 1)
-          * (List_i.size() - 2) + i - 1]);
+          * (size_i - 2) + i - 1]);
       IBERRCHK(m_err, "Trouble create the interior node.");
     }
   }
@@ -326,6 +323,10 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   iMesh::Error m_err = mk_core()->imesh_instance()->addEntArrToSet(&InteriorNodes[0], InteriorNodes.size(), entityset);
   IBERRCHK(m_err, "Trouble add an array of entities to the mesh entity set.");
 
+  // copy nodes in a vector to create the quads easier
+  // they will be arranged in layers, from bottom (j=0) towards top (j=size_j-1)
+  std::vector<iBase_EntityHandle> Nodes(size_j * size_i);
+
   //create the int data for mesh nodes on the linking surface
   iBase_TagHandle mesh_tag;
   m_err = mk_core()->imesh_instance()->getTagHandle("MeshTFIMapping", mesh_tag);
@@ -335,142 +336,64 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
     IBERRCHK(m_err, "Trouble create the mesh_tag for the surface.");
   }
   int intdata = -1;
-  for (unsigned int i = 0; i < List_i.size(); i++)
+  for (int i = 0; i < size_i; i++)
   {
     intdata++;
     m_err = mk_core()->imesh_instance()->setIntData(List_i[i], mesh_tag, intdata);
     IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+    // bottom row, j=0
+    Nodes[i]=List_i[i];
 
-    m_err = mk_core()->imesh_instance()->setIntData(List_ii[i], mesh_tag, intdata + List_i.size());
+    m_err = mk_core()->imesh_instance()->setIntData(List_ii[i], mesh_tag, intdata + size_i);
     IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+    // top row, j = size_j-1
+    Nodes[ (size_i)*(size_j-1)+i] = List_ii[i];
   }
-  intdata = 2 * List_i.size() - 1;
-  if (List_j.size() > 2)
+  intdata = 2 * size_i - 1;
+  for (int j = 1; j < size_j - 1; j++)
   {
-    for (unsigned int i = 1; i < List_j.size() - 1; i++)
-    {
-      intdata++;
-      m_err = mk_core()->imesh_instance()->setIntData(List_j[i], mesh_tag, intdata);
-      IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+    intdata++;
+    m_err = mk_core()->imesh_instance()->setIntData(List_j[j], mesh_tag, intdata);
+    IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+    // right column, i=0
+    Nodes[size_i*j] = List_j[j];
 
-      m_err = mk_core()->imesh_instance()->setIntData(List_jj[i], mesh_tag, intdata + List_j.size() - 2);
-      IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
-    }
+    m_err = mk_core()->imesh_instance()->setIntData(List_jj[j], mesh_tag, intdata + size_j - 2);
+    IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+    // left column, i = size_i -1
+    Nodes[size_i*j + size_i-1] = List_jj[j];
   }
-  intdata = 2 * List_i.size() + 2 * (List_j.size() - 2) - 1;
-  if (InteriorNodes.size() > 0)
-  {
-    for (unsigned int i = 0; i < InteriorNodes.size(); i++)
-    {
-      intdata++;
-      m_err = mk_core()->imesh_instance()->setIntData(InteriorNodes[i], mesh_tag, intdata);
-      IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
-    }
 
+  intdata = 2 * size_i + 2 * (size_j - 2) - 1;
+  // it is clear that (size_i-2 > 0 and size_j-2 > 0) iff (InteriorNodes.size()>0)
+  for (unsigned int ii = 0; ii < InteriorNodes.size(); ii++)
+  {
+    intdata++;
+    m_err = mk_core()->imesh_instance()->setIntData(InteriorNodes[ii], mesh_tag, intdata);
+    IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+    int j = ii/(size_i-2) + 1;
+    int i = (ii -(j-1)*(size_i-2)) + 1;
+    // copy
+    Nodes[ j*size_i + i] = InteriorNodes[ii];
+    // compute the row and column
   }
 
   // we will always create them in the positive orientation, because we already reversed the Lists
   // with nodes
 
-  std::vector<iBase_EntityHandle> Quads((List_j.size() - 1) * (List_i.size() - 1));
-  for (unsigned int j = 0; j < (List_j.size() - 1); j++)
+  std::vector<iBase_EntityHandle> qNodes(4);// a generic quad
+  std::vector<iBase_EntityHandle> Quads((size_j - 1) * (size_i - 1));
+  for (int j=0; j <size_j-1; j++)
   {
-    std::vector<iBase_EntityHandle> qNodes(4);
-    if (j == 0)
-    {//starting row boundary
-
-      qNodes[0] = List_i[0];
-      qNodes[1] = List_i[1];
-      qNodes[2] = InteriorNodes[0];
-      qNodes[3] = List_j[1];
-      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[0]);
-      IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-
-      for (unsigned int i = 1; i < (List_i.size() - 2); i++)
-      {
-
-        qNodes[0] = List_i[i];
-        qNodes[1] = List_i[i + 1];
-        qNodes[2] = InteriorNodes[i];
-        qNodes[3] = InteriorNodes[i - 1];
-        m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j * (List_i.size() - 1) + i]);
-        IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-      }
-      // the last one in first row
-      qNodes[0] = List_i[List_i.size() - 2];
-      qNodes[1] = List_jj[0];
-      qNodes[2] = List_jj[1];
-      qNodes[3] = InteriorNodes[List_i.size() - 3];
-
-      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[List_i.size() - 2]);
-      IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-    }
-
-    else if (j == List_j.size() - 2)
-    {//ending row boundary
-      qNodes[0] = List_j[j];
-      qNodes[1] = InteriorNodes[(j - 1) * (List_i.size() - 2)];
-      qNodes[2] = List_ii[1];
-      qNodes[3] = List_j[j + 1]; // == List_ii[0]!
-      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j * (List_i.size() - 1)]);
-      IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-
-      for (unsigned int i = 1; i < (List_i.size() - 2); i++)
-      {
-
-        qNodes[0] = InteriorNodes[(j - 1) * (List_i.size() - 2) + i - 1];
-        qNodes[1] = InteriorNodes[(j - 1) * (List_i.size() - 2) + i];
-        qNodes[2] = List_ii[i + 1];
-        qNodes[3] = List_ii[i];
-
-        m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j * (List_i.size() - 1) + i]);
-        IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-      }
-      // last one , top row
-      qNodes[0] = InteriorNodes[(j - 1) * (List_i.size() - 2) + List_i.size() - 3];// the last interior node
-      qNodes[1] = List_jj[List_jj.size() - 2];
-      qNodes[2] = List_jj[List_jj.size() - 1];
-      qNodes[3] = List_ii[List_ii.size() - 2];
-
-      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[(List_j.size() - 1) * (List_i.size()
-          - 1) - 1]);
-      IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-
-    }
-    else
+    for (int i=0; i< size_i-1; i++)
     {
-
-      qNodes[0] = List_j[j];
-      qNodes[1] = InteriorNodes[(j - 1) * (List_i.size() - 2)];
-      qNodes[2] = InteriorNodes[j * (List_i.size() - 2)];
-      qNodes[3] = List_j[j + 1];
-
-      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j * (List_i.size() - 1)]);
-      IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-      for (unsigned int i = 1; i < (List_i.size() - 2); i++)
-      {
-
-        qNodes[0] = InteriorNodes[(j - 1) * (List_i.size() - 2) + i - 1];
-        qNodes[1] = InteriorNodes[(j - 1) * (List_i.size() - 2) + i];
-        qNodes[2] = InteriorNodes[j * (List_i.size() - 2) + i];
-        qNodes[3] = InteriorNodes[j * (List_i.size() - 2) + i - 1];
-
-        m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j * (List_i.size() - 1) + i]);
-        IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
-      }
-
-      //end column
-
-      qNodes[0] = InteriorNodes[(j - 1) * (List_i.size() - 2) + List_i.size() - 3];
-      qNodes[1] = List_jj[j];
-      qNodes[2] = List_jj[j + 1];
-      qNodes[3] = InteriorNodes[j * (List_i.size() - 2) + List_i.size() - 3];
-
-      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j * (List_i.size() - 1)
-          + List_i.size() - 2]);
-      IBERRCHK(m_err, "Trouble create the quadrilateral elements.");
+      qNodes[0] = Nodes[   j  *size_i+i  ];
+      qNodes[1] = Nodes[   j  *size_i+i+1];
+      qNodes[2] = Nodes[ (j+1)*size_i+i+1];
+      qNodes[3] = Nodes[ (j+1)*size_i+i  ];
+      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[j*(size_i-1)+i]);
+      IBERRCHK(m_err, "Trouble create the quadrilateral element.");
     }
-
   }
 
   //finish creating the quads
@@ -566,13 +489,13 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   return 1;
 }
 void TFIMapping::computeTransformation(Vector3D & A, Vector3D & B, Vector3D & C, Vector3D & D,
-    Matrix3D & transMatrix)
+    Matrix3D & M)
 {
-  Matrix3D tmpMatrix(0.0);
-  Matrix3D bMatrix(0.0);
+  Matrix3D tmpMatrix;
+  Matrix3D bMatrix;
   Vector3D c1=0.5*A+0.5*B;
   Vector3D c2=0.5*C+0.5*D;
-  Vector3D normal=(c2-c1)*(A-B);// this should be not modified by the transformation
+  Vector3D normal=(A-D)*(B-C);// this should be not modified by the transformation
   // we add this just to increase the rank of tmpMatrix
   // the normal to the "plane" of interest should not be rotated at all
   // as if we say that we want A*normal = normal
@@ -580,16 +503,28 @@ void TFIMapping::computeTransformation(Vector3D & A, Vector3D & B, Vector3D & C,
   Vector3D s2=B-2*c1+c2;
   Vector3D t1=C-c1;
   Vector3D t2=D-c1;
+  // so we are looking for M such that
+  /*
+   *  M*s1 = t1
+   *  M*s2 = t2
+   *  M*n  = n
+   *
+   *  In simple cases, M is identity
+   */
 
-  tmpMatrix = s1*transpose(s1)+s2*transpose(s2) + normal*transpose(normal);
-  bMatrix = t1*transpose(s1) + t2*transpose(s2) + normal*transpose(normal);
+  tmpMatrix.set_column(0, s1);
+  tmpMatrix.set_column(1, s2);
+  tmpMatrix.set_column(2, normal);
+  bMatrix.set_column(0, t1);
+  bMatrix.set_column(1, t2);
+  bMatrix.set_column(2, normal);
 
   double detValue = det(tmpMatrix);
   assert(detValue*detValue>1.e-20);
 
   //solve the affine mapping matrix, make use of inverse matrix to get affine mapping matrix
   Matrix3D InvMatrix = inverse(tmpMatrix);
-  transMatrix = bMatrix*InvMatrix;
+  M = bMatrix*InvMatrix;
 
 }
 //smooth the quadrilateral mesh on the linking surface
@@ -637,7 +572,6 @@ void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vec
       IBERRCHK(g_err, "Trouble get the uv from xyz.");
       coords[List_i.size() + i][0] = uv[0];
       coords[List_i.size() + i][1] = uv[1];
-
     }
 
     nodes[List_i.size() + i] = List_ii[i];
@@ -845,5 +779,5 @@ void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vec
   //IBERRCHK(m_err, "Trouble destroy a tag.");
 }
 
-}
+} // namespace MeshKit
 
