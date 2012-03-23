@@ -38,8 +38,7 @@ CPincell::~CPincell ()
 
 void CPincell::SetLineOne (std::string szVolId, std::string szVolAlias, int nInputLines)
 // ---------------------------------------------------------------------------
-// Function: sets the first line of pin input
-// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Function: sets the first line of pin input// Input:    volume id of the pin, alias and total no. of lines in the pin input
 // Output:   none
 // ---------------------------------------------------------------------------
 {
@@ -157,6 +156,16 @@ void CPincell::SetCylRadii(int nCyl, CVector<double> dVRadii)
 // ---------------------------------------------------------------------------
 {
   m_VCyl(nCyl).SetRadii(dVRadii);
+}
+
+void CPincell::SetCellType(int nCyl, int nType)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  m_VCyl(nCyl).SetType(nType);
 }
 
 
@@ -306,6 +315,17 @@ void CPincell::GetCylRadii(int &nCyl, CVector<double> &dVRadii)
 // ---------------------------------------------------------------------------
 {
   m_VCyl(nCyl).GetRadii(dVRadii);
+}
+
+
+void CPincell::GetCellType(int &nCyl, int &nType)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  m_VCyl(nCyl).GetType(nType);
 }
 
 void CPincell::GetCylMat(int &nCyl, CVector<std::string> &szVMat)

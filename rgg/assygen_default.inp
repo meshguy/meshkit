@@ -17,16 +17,13 @@ Pincells 1
 PWR_RF_01 RF 3
 Pitch  4.0 4.0 40.0 
 Cylinder 1 0.0 0.0  0.0 40.0   1.6 M3  
-Cylinder 1 0.0 0.0  40.0 80.0   1.6 M3 
+Frustum 1 0.0 0.0  40.0 80.0   1.6 0.5 M3 
 !
 Assembly 4 4 
 RF RF RF RF
 XX XX XX XX
 XX XX XX XX
 RF RF RF RF
-Center Z
-Center Y
-Center X
 TetMeshSize 1.0
 CreateSideset No
 MergeTolerance 1e-6

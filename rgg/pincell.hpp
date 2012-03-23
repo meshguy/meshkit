@@ -29,6 +29,7 @@ public:
   void GetNumCyl(const int &nCyl);
   void GetCylSizes(int &nCyl,int &nRadii);
   void GetCylRadii(int &nCyl, CVector<double>&);
+  void GetCellType(int &nCyl, int &nType);
   void GetCylZPos(int &nCyl, CVector<double>&);
   void GetCylPos(int &nCyl, CVector<double>&);
   void GetCylMat(int &nCyl, CVector<std::string>&);
@@ -49,6 +50,7 @@ public:
   void SetCylSizes(int nCyl,int nRadii);
   void SetCylZPos(int nCyl, CVector<double>);
   void SetCylRadii(int nCyl, CVector<double>);
+  void SetCellType(int nCyl, int nType);
   void SetCylPos(int nCyl, CVector<double>);
   void SetCylMat(int nCyl, CVector<std::string>);
   //cell

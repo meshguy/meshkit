@@ -211,7 +211,7 @@ int CNrgen::ReadInputPhase1 ()
 	  if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString, 
 				   MAXCHARS, szComment))
 	    IOErrorHandler (INVALIDINPUT);
-	  if (szInputString.substr(0,8) == "cylinder"){
+	  if (szInputString.substr(0,8) == "cylinder" || szInputString.substr(0,7) == "frustum"){
 	    ++nCyl;
 	  }
 	  if (szInputString.substr(0,12) == "cellmaterial"){
@@ -371,9 +371,10 @@ int CNrgen::ReadPinCellData (int i)
 	  IOErrorHandler(INVALIDINPUT);	
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 	m_Pincell(i).SetCylPos(nCyl, dVCoor);
+	m_Pincell(i).SetCellType(nCyl, 0);
 
 	//set local array
-	dVCylRadii.SetSize(nRadii);
+	dVCylRadii.SetSize(2*nRadii);
 	szVCylMat.SetSize(nRadii);
 	dVCylZPos.SetSize(2);
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);
@@ -389,6 +390,49 @@ int CNrgen::ReadPinCellData (int i)
 	// reading Radii
 	for(int l=1; l<= nRadii; l++){
 	  szFormatString >> dVCylRadii(l);
+	  if( dVCylRadii(l) < 0  || szFormatString.fail())
+	    IOErrorHandler(ENEGATIVE);
+	}
+	m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+
+	// reading Material alias
+	for(int m=1; m<= nRadii; m++){
+	  szFormatString >> szVCylMat(m);
+	  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())  
+	    IOErrorHandler(EALIAS);
+	}
+	m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+      }
+      if (szInputString.substr(0,7) == "frustum"){
+
+	++nCyl;
+	std::cout << "\ngetting frustum data";
+	std::istringstream szFormatString (szInputString);
+	szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+	if(szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);	
+	m_Pincell(i).SetCylSizes(nCyl, nRadii);
+	m_Pincell(i).SetCylPos(nCyl, dVCoor);
+	m_Pincell(i).SetCellType(nCyl, 1);
+
+	//set local array
+	dVCylRadii.SetSize(2*nRadii);
+	szVCylMat.SetSize(nRadii);
+	dVCylZPos.SetSize(2);
+	m_Pincell(i).SetCylSizes(nCyl, nRadii);
+
+	// reading ZCoords
+	for(int k=1; k<=2; k++){
+	  szFormatString >> dVCylZPos(k);
+	  if(szFormatString.fail())
+	    IOErrorHandler(INVALIDINPUT);	
+	}
+	m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+
+	// reading Radii
+	for(int l=1; l<= 2*nRadii; l++){
+	  szFormatString >> dVCylRadii(l);
+	  std::cout << l << " -- " << dVCylRadii(l) << std::endl;
 	  if( dVCylRadii(l) < 0  || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
@@ -490,9 +534,10 @@ int CNrgen::ReadPinCellData (int i)
 	  IOErrorHandler(INVALIDINPUT);
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 	m_Pincell(i).SetCylPos(nCyl, dVCoor);
+	m_Pincell(i).SetCellType(nCyl, 0);
 
 	//set local array
-	dVCylRadii.SetSize(nRadii);
+	dVCylRadii.SetSize(2*nRadii);
 	szVCylMat.SetSize(nRadii);
 	dVCylZPos.SetSize(2);
 	//
@@ -505,8 +550,11 @@ int CNrgen::ReadPinCellData (int i)
 
 	// reading Radii
 	for(int l=1; l<= nRadii; l++){
-	  szFormatString >> dVCylRadii(l);
-	  if( dVCylRadii(l) < 0 || szFormatString.fail())
+	  std::cout << "here " << std::endl;
+	  szFormatString >> dVCylRadii(2*l-1);
+	  // set minor radii equal to major for cylinder
+	  dVCylRadii(2*l) = dVCylRadii(2*l-1); 
+	  if( dVCylRadii(2*l-1) < 0 || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
 	m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
@@ -518,6 +566,49 @@ int CNrgen::ReadPinCellData (int i)
 	    IOErrorHandler(EALIAS);
 	}
 
+	m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+      }
+      if (szInputString.substr(0,7) == "frustum"){
+
+	++nCyl;
+	std::cout << "\ngetting frustum data";
+	std::istringstream szFormatString (szInputString);
+	szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+	if(szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);	
+	m_Pincell(i).SetCylSizes(nCyl, nRadii);
+	m_Pincell(i).SetCylPos(nCyl, dVCoor);
+	m_Pincell(i).SetCellType(nCyl, 0);
+
+	//set local array
+	dVCylRadii.SetSize(2*nRadii);
+	szVCylMat.SetSize(nRadii);
+	dVCylZPos.SetSize(2);
+	m_Pincell(i).SetCylSizes(nCyl, nRadii);
+
+	// reading ZCoords
+	for(int k=1; k<=2; k++){
+	  szFormatString >> dVCylZPos(k);
+	  if(szFormatString.fail())
+	    IOErrorHandler(INVALIDINPUT);	
+	}
+	m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+
+	// reading Radii
+	for(int l=1; l<= 2*nRadii; l++){
+	  szFormatString >> dVCylRadii(l);
+	  std::cout << l << " -- " << dVCylRadii(l) << std::endl;
+	  if( dVCylRadii(l) < 0  || szFormatString.fail())
+	    IOErrorHandler(ENEGATIVE);
+	}
+	m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+
+	// reading Material alias
+	for(int m=1; m<= nRadii; m++){
+	  szFormatString >> szVCylMat(m);
+	  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())  
+	    IOErrorHandler(EALIAS);
+	}
 	m_Pincell(i).SetCylMat(nCyl, szVCylMat);
       }
       if (szInputString.substr(0,12) == "cellmaterial"){
@@ -2437,23 +2528,31 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	SimpleArray<iBase_EntityHandle> cyls(nRadii);
 
 	//declare variables
-	CVector<double> dVCylRadii(nRadii);
+	CVector<double> dVCylRadii(2*nRadii);
 	CVector<std::string> szVMat(nRadii);
 	CVector<std::string> szVCylMat(nRadii);
- 
+	int nType = 0;
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	m_Pincell(i).GetCylMat(n, szVCylMat);
 	m_Pincell(i).GetCylZPos(n, dVCylZPos);
+	m_Pincell(i).GetCellType(n, nType);
+
 	dHeight = dVCylZPos(2)-dVCylZPos(1);
 
 	for (int m=1; m<=nRadii; m++){ 
- 
-	  iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
-			       &cyl, &err);
-	  CHECK("Couldn't create fuel rod.");
-
+	  
+	  if (nType == 0){
+	    iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+				 &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
+	  else{
+	    iGeom_createCone(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
+			     &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
 	  // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
 	  dCylMoveX = dVCylXYPos(1)+dX;
 	  dCylMoveY = dVCylXYPos(2)+dY;
@@ -2569,15 +2668,16 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	SimpleArray<iBase_EntityHandle> cyls(nRadii);
 
 	//declare variables
-	CVector<double> dVCylRadii(nRadii);
+	CVector<double> dVCylRadii(2*nRadii);
 	CVector<std::string> szVMat(nRadii);
 	CVector<std::string> szVCylMat(nRadii);
- 
+	int nType = 0;
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	m_Pincell(i).GetCylMat(n, szVCylMat);
 	m_Pincell(i).GetCylZPos(n, dVCylZPos);
+	m_Pincell(i).GetCellType(n, nType);
 
 	dHeight = dVCylZPos(2)-dVCylZPos(1);    
 
@@ -2590,10 +2690,16 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	}
 
 	for (int m=1; m<=nRadii; m++){ 
- 
-	  iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
-			       &cyl, &err);
-	  CHECK("Couldn't create fuel rod.");
+ 	  if (nType == 0){
+	    iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+				 &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
+	  else{
+	    iGeom_createCone(geom, dHeight, dVCylRadii(2*m - 1), dVCylRadii(2*m - 1), dVCylRadii(2*m),
+			     &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
 
 	  // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
 	  dCylMoveX = dVCylXYPos(1)+dX;
@@ -2779,22 +2885,30 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	SimpleArray<iBase_EntityHandle> intersec_main(nRadii);
 	iBase_EntityHandle  tmp_intersec;
 	//declare variables
-	CVector<double> dVCylRadii(nRadii);
+	CVector<double> dVCylRadii(2*nRadii);
 	CVector<std::string> szVMat(nRadii);
 	CVector<std::string> szVCylMat(nRadii);
-	
+	int nType = 0;
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	m_Pincell(i).GetCylMat(n, szVCylMat);
 	m_Pincell(i).GetCylZPos(n, dVCylZPos);
+	m_Pincell(i).GetCellType(n, nType);
+
 	dHeight = dVCylZPos(2)-dVCylZPos(1);
 
 	for (int m=1; m<=nRadii; m++){ 
- 
-	  iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
-			       &cyl, &err);
-	  CHECK("Couldn't create fuel rod.");
+  	  if (nType == 0){
+	    iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+				 &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
+	  else{
+	    iGeom_createCone(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
+			     &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
 
 	  // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
 	  dCylMoveX = dVCylXYPos(1)+dX;
@@ -2959,13 +3073,15 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	//declare variables
 	SimpleArray<iBase_EntityHandle> cyls(nRadii), cell_copys(nRadii), intersec_main(nRadii), intersec_copy(nRadii);
 	iBase_EntityHandle  tmp_intersec;
-	CVector<double> dVCylRadii(nRadii);
+	CVector<double> dVCylRadii(2*nRadii);
 	CVector<std::string> szVMat(nRadii), szVCylMat(nRadii);
-	
+	int nType = 0;
 	//get values
 	m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	m_Pincell(i).GetCylMat(n, szVCylMat);
+	m_Pincell(i).GetCellType(n, nType);
+
 
 	// get the index for cp_inpins based on Z-heights
 	for (int dd = 1; dd <= m_nDuct; dd++){
@@ -2976,10 +3092,16 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	}
 
 	for (int m=1; m<=nRadii; m++){ 
- 
-	  iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
-			       &cyl, &err);
-	  CHECK("Couldn't create fuel rod.");
+   	  if (nType == 0){
+	    iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+				 &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
+	  else{
+	    iGeom_createCone(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
+			     &cyl, &err);
+	    CHECK("Couldn't create fuel rod.");
+	  }
 
 	  // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
 	  dCylMoveX = dVCylXYPos(1)+dX;
