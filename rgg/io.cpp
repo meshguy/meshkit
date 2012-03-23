@@ -2366,6 +2366,8 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
     m_Pincell(i).GetNumCyl(nCyl);
 
     for(int n=1;n<=nCells; n++){
+      // get cylinder locations
+      m_Pincell(i).GetCylZPos(n, dVCylZPos);
       nDuctIndex = -1;
       dHeight = fabs(dVEndZ(n) - dVStartZ(n));  
       // get the index for cp_inpins based on Z-heights
