@@ -432,7 +432,6 @@ int CNrgen::ReadPinCellData (int i)
 	// reading Radii
 	for(int l=1; l<= 2*nRadii; l++){
 	  szFormatString >> dVCylRadii(l);
-	  std::cout << l << " -- " << dVCylRadii(l) << std::endl;
 	  if( dVCylRadii(l) < 0  || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
@@ -569,7 +568,7 @@ int CNrgen::ReadPinCellData (int i)
 	m_Pincell(i).SetCylMat(nCyl, szVCylMat);
       }
       if (szInputString.substr(0,7) == "frustum"){
-
+  
 	++nCyl;
 	std::cout << "\ngetting frustum data";
 	std::istringstream szFormatString (szInputString);
@@ -578,7 +577,7 @@ int CNrgen::ReadPinCellData (int i)
 	  IOErrorHandler(INVALIDINPUT);	
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);
 	m_Pincell(i).SetCylPos(nCyl, dVCoor);
-	m_Pincell(i).SetCellType(nCyl, 0);
+	m_Pincell(i).SetCellType(nCyl, 1);
 
 	//set local array
 	dVCylRadii.SetSize(2*nRadii);
@@ -597,7 +596,6 @@ int CNrgen::ReadPinCellData (int i)
 	// reading Radii
 	for(int l=1; l<= 2*nRadii; l++){
 	  szFormatString >> dVCylRadii(l);
-	  std::cout << l << " -- " << dVCylRadii(l) << std::endl;
 	  if( dVCylRadii(l) < 0  || szFormatString.fail())
 	    IOErrorHandler(ENEGATIVE);
 	}
@@ -668,7 +666,6 @@ int CNrgen::ReadAndCreate()
       else  if(m_szGeomType == "rectangular")
 	m_nSides = 4;
     }
-
 
     if (szInputString.substr(0,8) == "geometry"){
       std::string outfile;
@@ -2149,13 +2146,13 @@ int CNrgen::CreateOuterCovering ()
   iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
 
   // name the innermost outer covering common for both rectangular and hexagonal assembliees   
-  if(m_nDimensions >0){
-    int tag_no;
+  if(m_nDimensions >0){ 
+    //    int tag_no = 0;
     for (int nTemp1 = 1; nTemp1 <=m_nDuct; nTemp1++){
       for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	if(strcmp ( m_szMMAlias(nTemp1, 1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
 	  sMatName =  m_szAssmMat(p);
-	  tag_no=p;
+	  //	  tag_no=p;
 	}
       }
 
@@ -2493,8 +2490,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	}
       }
       
-      dZMove = (dVEndZ(n)+dVEndZ(n-1))/2.0;
-
+      dZMove = (dVStartZ(n)+dVEndZ(n))/2.0;
       if(nCells > 0){
 	// position the brick in assembly
 	iGeom_moveEnt(geom, cell, dX, dY, dZMove, &err); 
@@ -2611,10 +2607,10 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 	  CHECK("Subtract of inner from outer failed.");
   
 	  // now search for the full name of the abbreviated Cell Mat
-	  int tag_no;
+	  //	  int tag_no;
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	    if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      tag_no = p;
+	      //	      tag_no = p;
 	      sMatName =  m_szAssmMat(p);
 	    }
 	  }
@@ -2869,7 +2865,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	}
       }
       
-      dZMove = (dVEndZ(n)+dVEndZ(n-1))/2.0;
+      dZMove = (dVStartZ(n)+dVEndZ(n))/2.0;
 
       if(nCells > 0){
 	// position the brick in assembly
@@ -2961,10 +2957,10 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	iGeom_subtractEnts(geom, cells[n-1], tmp_intersec, &tmp_new, &err);
 	CHECK("Subtract of inner from outer failed.");
 	// now search for the full name of the abbreviated Cell Mat
-	int tag_no;
+	//	int tag_no;
 	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	  if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	    tag_no = p;
+	    //	    tag_no = p;
 	    sMatName =  m_szAssmMat(p);
 	  }
 	}
@@ -2993,10 +2989,10 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	  CHECK("Subtract of inner from outer failed.");
 
 	  // now search for the full name of the abbreviated Cell Mat
-	  int tag_no;
+	  //	  int tag_no;
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	    if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      tag_no = p;
+	      //	      tag_no = p;
 	      sMatName =  m_szAssmMat(p);
 	    }
 	  }
@@ -3160,10 +3156,10 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 	  CHECK("Subtract of inner from outer failed.");
 
 	  // now search for the full name of the abbreviated Cell Mat
-	  int tag_no;
+	  //	  int tag_no;
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	    if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      tag_no = p;
+	      //	      tag_no = p;
 	      sMatName =  m_szAssmMat(p);
 	    }
 	  }
