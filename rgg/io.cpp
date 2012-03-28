@@ -1068,15 +1068,26 @@ int CNrgen::CreateCubitJournal()
   for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
     szGrp = "g_"+ m_szAssmMat(p);
     m_szAssmMat(p);
-    m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+    if(m_nPlanar ==1){
+      m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+    }
+    else{
+      m_FileOutput << "group \"" << szGrp << "\" add volume name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+    }
   }
   for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
     szBlock = "b_"+ m_szAssmMat(p);
     szGrp = "g_"+ m_szAssmMat(p);
     m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
     m_FileOutput << "#{Ifndef(nb" << p << ")}" << "\n" << "#{else}" << std::endl;
-    m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
-    m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
+    if(m_nPlanar ==1){
+      m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
+    }
+    else{
+      m_FileOutput << "block " << m_nMaterialSetId + p << " volume in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
+    }    
     m_FileOutput << "#{endif}" << std::endl;
   }
   m_FileOutput << "#" << std::endl;
