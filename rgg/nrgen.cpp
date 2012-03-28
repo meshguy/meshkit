@@ -42,7 +42,7 @@ CNrgen::CNrgen ()
   m_edgeInterval = 99;
   m_nStartpinid = 1;
   m_szInfo = "off";
-  pin_name = "_xp";
+  pin_name = "";
 }
 
 CNrgen::~CNrgen ()

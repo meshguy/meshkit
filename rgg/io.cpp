@@ -932,7 +932,7 @@ int CNrgen::ReadAndCreate()
       
       if ( m_nJouFlag == 0){
 	// impring merge before saving
-	// Imprint_Merge();
+	//	Imprint_Merge();
  
 	// save .sat file
 	iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
@@ -1061,15 +1061,36 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
   m_FileOutput << "#" << std::endl;
 
+  // block creation dumps
+  m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
+  // group creation dumps. each material has a group
+  m_FileOutput << "#Creating groups" << std::endl;  
+  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+    szGrp = "g_"+ m_szAssmMat(p);
+    m_szAssmMat(p);
+    m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+  }
+  for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
+    szBlock = "b_"+ m_szAssmMat(p);
+    szGrp = "g_"+ m_szAssmMat(p);
+    m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
+    m_FileOutput << "#{Ifndef(nb" << p << ")}" << "\n" << "#{else}" << std::endl;
+    m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
+    m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
+    m_FileOutput << "#{endif}" << std::endl;
+  }
+  m_FileOutput << "#" << std::endl;
+
   if(m_szMeshType == "hex"){
     // imprint
+    m_FileOutput << "#Imprint geometry" << std::endl;
+    m_FileOutput << "imprint all" << std::endl;
+    m_FileOutput << "#" << std::endl;
+    // merge
+
     m_FileOutput << "Merge Tolerance " << m_dMergeTol << std::endl;
     m_FileOutput << "#" << std::endl;      
-    //    m_FileOutput << "#Imprint geometry" << std::endl;
-    //    m_FileOutput << "imprint all" << std::endl;
-    //    m_FileOutput << "#" << std::endl;
 
-    // merge
     m_FileOutput << "#Merge geometry" << std::endl; 
     m_FileOutput << "merge all" << std::endl;
     m_FileOutput << "#" << std::endl;
@@ -1083,57 +1104,26 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "#" << std::endl;
     for (int i=0; i<m_nTotalPincells; i++){
       m_FileOutput << "group 'g"<< i+m_nStartpinid << "' add body with name '_xp" << i+m_nStartpinid << "_'" << std::endl;
-
+      
+      m_FileOutput << "#{nbody" << i+1 << " =NumInGrp('g" <<i+m_nStartpinid << "')}" << std::endl;
+      m_FileOutput << "#{Ifndef(nbody" << i+1 << ")}" << "\n" << "#{else}" << std::endl;
       m_FileOutput << "block " << temp+i << " body in group g" << i+m_nStartpinid << std::endl;
       m_FileOutput << "block " << temp+i << " name '_xp" << i+m_nStartpinid << "'" << std::endl;
+      m_FileOutput << "#{endif}" << std::endl;
     }
   }
-  
-  if(m_szSideset == "yes"){
-    // top surface sidesets
-    m_FileOutput << "#Creating top surface sidesets" << std::endl; 
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-      ++nSideset;
-      szSurfTop = m_szAssmMat(p)+"_top";
-      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-      m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;    
-    }
-    m_FileOutput << "#" << std::endl;
-  }
-
+ 
   //surface only
   if(m_nPlanar ==1){ 
-    m_FileOutput << "# Pointing surface normals to 0.0, 0.0, -1.0 or -ve Z or correct STAR-CCM+ cell-face orientation" << std::endl;
+    m_FileOutput << "# Pointing surface normals to 0.0, 0.0, -1.0 or -ve Z or correct STARCCM+ cell-face orientation" << std::endl;
     m_FileOutput << "surface all normal opposite" << std::endl;
-
-    // group creation dumps. each material surface  has a group
-    m_FileOutput << "#Creating groups" << std::endl;  
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-      szGrp = "g_"+ m_szAssmMat(p);
-      m_szAssmMat(p);
-      m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
-    }
-    m_FileOutput << "#" << std::endl;
-
-    // block creation dumps
-    m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
-    for(int p=1; p <= m_szAssmMatAlias.GetSize();p++){
-      szBlock = "b_"+ m_szAssmMat(p);
-      szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
-      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
-    }
     m_FileOutput << "#" << std::endl;
   }
-
   // volume only
   else{ 
     if(m_szSideset == "yes"){
-      // bottom surface sidesets
-      m_FileOutput << "#Creating bot and side surface sidesets" << std::endl; 
-    
-      // rename the skin surfaces, so that they don't appear as sidesets
 
+      // rename the skin surfaces, so that they don't appear as sidesets
       for (int p=1; p<=m_nDuct; p++){
 	for(int q=1;q<=m_nSides; q++){
 	  m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge" 
@@ -1145,7 +1135,6 @@ int CNrgen::CreateCubitJournal()
 	}
       }
   
-
       // creating groups for vertices on the top surface of the duct
       for (int p=1; p<=m_nDuct; p++){
 	for(int q=1;q<=m_nSides; q++){
@@ -1190,40 +1179,12 @@ int CNrgen::CreateCubitJournal()
 
 	}
       }	
-      if(m_szSideset == "yes"){
-	// now create top and bot sideset
-	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	  szSurfTop = m_szAssmMat(p)+"_bot";
-	  szSurfSide = m_szAssmMat(p)+"_side";  
-
-	  m_FileOutput << "#" << std::endl;
-
-	  ++nSideset;
-	  m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-	  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
-
-	  ++nSideset;
-	  m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfSide  << "\"" << std::endl;
-	  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp" << std::endl;
-	}
-	m_FileOutput << "#" << std::endl;
-      }
     }
     // group creation dumps. each material surface  has a group
     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
       szGrp = "g_"+ m_szAssmMat(p);
       m_szAssmMat(p);
       m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
-    }
-    m_FileOutput << "#" << std::endl;
-
-    // block creation dumps
-    m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
-    for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
-      szBlock = "b_"+ m_szAssmMat(p);
-      szGrp = "g_"+ m_szAssmMat(p);
-      m_FileOutput << "block " <<  m_nMaterialSetId + p << " body in " << szGrp  << std::endl;
-      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     m_FileOutput << "#" << std::endl;
 
@@ -1318,7 +1279,6 @@ int CNrgen::CreateCubitJournal()
       }
     }
   
-
     // creating groups for vertices on the top surface of the duct
     for (int p=1; p<=m_nDuct; p++){
       for(int q=1;q<=m_nSides; q++){
@@ -1405,11 +1365,11 @@ int CNrgen::CreateCubitJournal()
       }
     }	
     // imprint
+    m_FileOutput << "#Imprint geometry" << std::endl;
+    m_FileOutput << "imprint all" << std::endl;
+    m_FileOutput << "#" << std::endl;
     m_FileOutput << "Merge Tolerance " << m_dMergeTol << std::endl;
     m_FileOutput << "#" << std::endl;      
-    //    m_FileOutput << "#Imprint geometry" << std::endl;
-    //    m_FileOutput << "imprint all" << std::endl;
-    //    m_FileOutput << "#" << std::endl;
 
     // merge
     m_FileOutput << "#Merge geometry" << std::endl; 
@@ -1457,6 +1417,69 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "# Mesh all volumes now" << std::endl;
     m_FileOutput << "mesh vol all" << std::endl;
   }
+  
+  // create and sidesets after meshing
+ 
+  if(m_szSideset == "yes"){
+    // top surface sidesets
+    m_FileOutput << "#Creating top surface sidesets" << std::endl; 
+    m_FileOutput << "create group 'surfall'" << std::endl;
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      ++nSideset;
+      szSurfTop = m_szAssmMat(p)+"_top";
+      m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+      m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
+      m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
+      // Avoid creation if empty sideset   
+      m_FileOutput << "#{nsurf=NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf)}" << "\n"
+		   << "#{else}" << std::endl;
+      m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
+      m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;    
+      m_FileOutput << "#{endif}" << std::endl;
+    }
+    m_FileOutput << "#" << std::endl;
+  }
+
+  if(m_nPlanar ==0){ 
+    if(m_szSideset == "yes"){
+      // now create bot and side sideset
+      m_FileOutput << "#Creating bot/side surface sidesets" << std::endl; 
+      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	szSurfTop = m_szAssmMat(p)+"_bot";
+	szSurfSide = m_szAssmMat(p)+"_side";  
+	m_FileOutput << "#" << std::endl;
+	++nSideset;
+
+	m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+	m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
+	m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
+	// Avoid creation if empty sideset   
+	m_FileOutput << "#{nsurf=NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf)}" << "\n"
+		     << "#{else}" << std::endl;
+	m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
+	m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;    
+	m_FileOutput << "#{endif}" << std::endl;
+	++nSideset;
+
+	m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfSide  << "\"" << std::endl;
+	m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
+	m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
+	// Avoid creation if empty sideset   
+	m_FileOutput << "#{nsurf=NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf)}" << "\n"
+		     << "#{else}" << std::endl;
+	m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
+	m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;    
+	m_FileOutput << "#{endif}" << std::endl;
+      }
+      m_FileOutput << "#" << std::endl;
+    }
+    m_FileOutput << "#Creating sideset for outer most side surfaces" << std::endl; 
+    ++nSideset;
+
+    m_FileOutput << "group 'tmpgrp' equals surf with name 'side_surface'" << std::endl;
+    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+  }
+
   // color now
   m_FileOutput << "#Set color for different parts" << std::endl; 
   if(m_nPlanar == 0){ // volumes only
@@ -2301,17 +2324,17 @@ int CNrgen::Imprint_Merge()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  // getting all entities for merge and imprint
-  SimpleArray<iBase_EntityHandle> entities;
-  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
-  CHECK( "ERROR : getRootSet failed!" );
+  // // getting all entities for merge and imprint
+  // SimpleArray<iBase_EntityHandle> entities;
+  // iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
+  // CHECK( "ERROR : getRootSet failed!" );
   
   //  //  now imprint
   //  std::cout << "\n\nImprinting...." << std::endl;
   //  iGeom_imprintEnts(geom, ARRAY_IN(entities),&err);
   //  CHECK("Imprint failed.");
   //  std::cout << "\n--------------------------------------------------"<<std::endl;
-  //
+  
   //   // merge tolerance
   //   double dTol = 1e-4;
   //   // now  merge
@@ -2429,6 +2452,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 
   if(strcmp(m_szInfo.c_str(),"on") == 0){
     std::ostringstream os;
+    pin_name = "_xp";
     os << (m_nTotalPincells + m_nStartpinid - 1);
     os << "_";
     std::string pid = os.str(); //retrieve as a string
@@ -2804,6 +2828,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
   if(strcmp(m_szInfo.c_str(),"on") == 0){
     std::ostringstream os;
+    pin_name = "_xp";
     os << (m_nTotalPincells + m_nStartpinid - 1);
     os << "_";
     std::string pid = os.str(); //retrieve as a string

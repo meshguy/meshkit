@@ -25,7 +25,7 @@ XX XX XX XX
 XX XX XX XX
 RF RF RF RF
 TetMeshSize 1.0
-CreateSideset No
+CreateSideset Yes
 MergeTolerance 1e-6
 Info On
 END     ! This is a must  
