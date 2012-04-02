@@ -1072,7 +1072,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
     }
     else{
-      m_FileOutput << "group \"" << szGrp << "\" add volume name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+      m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
     }
   }
   for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
@@ -1085,7 +1085,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }
     else{
-      m_FileOutput << "block " << m_nMaterialSetId + p << " volume in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p << " body in " << szGrp  << std::endl;
       m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
     }    
     m_FileOutput << "#{endif}" << std::endl;
