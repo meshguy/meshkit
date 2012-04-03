@@ -241,7 +241,7 @@ int CNrgen::ReadInputPhase1 ()
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
     // breaking condition
-    if(szInputString.substr(0,3) == "end"){
+    if(szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
       std::istringstream szFormatString (szInputString);
       break;
     }
@@ -927,7 +927,7 @@ int CNrgen::ReadAndCreate()
       std::cout <<"--------------------------------------------------"<<std::endl;
 
     }
-    if (szInputString.substr(0,3) == "end"){
+    if (szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
  
       
       if ( m_nJouFlag == 0){
@@ -1442,7 +1442,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
       m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
       // Avoid creation if empty sideset   
-      m_FileOutput << "#{nsurf=NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf)}" << "\n"
+      m_FileOutput << "#{nsurf"<< nSideset << " = NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf"<< nSideset << ")}" << "\n"
 		   << "#{else}" << std::endl;
       m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
       m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;    
@@ -1465,7 +1465,7 @@ int CNrgen::CreateCubitJournal()
 	m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
 	m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
 	// Avoid creation if empty sideset   
-	m_FileOutput << "#{nsurf=NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf)}" << "\n"
+	m_FileOutput << "#{nsurf"<< nSideset << " = NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf"<< nSideset << ")}" << "\n"
 		     << "#{else}" << std::endl;
 	m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
 	m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;    
@@ -1476,7 +1476,7 @@ int CNrgen::CreateCubitJournal()
 	m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
 	m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
 	// Avoid creation if empty sideset   
-	m_FileOutput << "#{nsurf=NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf)}" << "\n"
+	m_FileOutput << "#{nsurf"<< nSideset << " = NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf"<< nSideset << ")}" << "\n"
 		     << "#{else}" << std::endl;
 	m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
 	m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;    
