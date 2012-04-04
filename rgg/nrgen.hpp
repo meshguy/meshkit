@@ -115,7 +115,7 @@ private:
   // parsing related
   std::string szInputString;
   std::string szComment;
-  int MAXCHARS;
+  int MAXCHARS, MAXLINES;
   
   // error handlers
   void IOErrorHandler (ErrorStates) const;
