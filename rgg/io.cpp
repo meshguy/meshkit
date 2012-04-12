@@ -1457,7 +1457,6 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "#Creating bot/side surface sidesets" << std::endl; 
       for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	szSurfTop = m_szAssmMat(p)+"_bot";
-	szSurfSide = m_szAssmMat(p)+"_side";  
 	m_FileOutput << "#" << std::endl;
 	++nSideset;
 
@@ -1470,8 +1469,10 @@ int CNrgen::CreateCubitJournal()
 	m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
 	m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;    
 	m_FileOutput << "#{endif}" << std::endl;
+      }
+      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	szSurfSide = m_szAssmMat(p)+"_side";  
 	++nSideset;
-
 	m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfSide  << "\"" << std::endl;
 	m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
 	m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;

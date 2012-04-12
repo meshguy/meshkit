@@ -24,6 +24,7 @@ CNrgen::CNrgen ()
   root_set= NULL;
   szComment = "!";
   MAXCHARS = 300;
+  MAXLINES = 10000;
   pi = M_PI;
   m_nTotalPincells = 0;
   m_dRadialSize = -1.0;
