@@ -98,7 +98,12 @@ fi
 # Paths should be relative to top source directory.
 DOXYGEN_SRC_PATH="src/core src/utils src/algs src/extern/register_extern.cpp test/core test/algs"
 
-# Old versions of autoconf (automake?) don't define this
+# Old versions of autoconf (2.59) (automake?) don't define docdir
+if test "x$docdir" = "x"; then
+  docdir='${prefix}/share/doc/${PACKAGE_TARNAME}'
+  AC_SUBST(docdir)
+fi
+
 if test "x$htmldir" = "x"; then
   htmldir="$docdir"
   AC_SUBST(htmldir)
