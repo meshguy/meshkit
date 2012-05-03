@@ -54,6 +54,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       m_szJouFile = m_szFile+".jou";
       m_szSchFile = m_szFile+".template.jou";
       m_szAssmInfo = m_szFile + "_info.csv";
+      m_szLogFile = m_szFile + ".log";
     }
     else if (3 == argc) {
       int i=1;// will loop through arguments, and process them
@@ -70,6 +71,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
 		m_szJouFile = m_szFile+".jou";
 		m_szSchFile = m_szFile+".template.jou";
 		m_szAssmInfo = m_szFile + "_info.csv";
+		m_szLogFile = m_szFile + ".log";
 		break;
 	      }	
 	    case 'h': 
@@ -104,6 +106,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
       m_szJouFile+=".jou";
       m_szSchFile = m_szFile+".template.jou";
       m_szAssmInfo = m_szFile + "_info.csv";
+      m_szLogFile = m_szFile + ".log";
 
       std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
 		<< "  " << m_szJouFile << std::endl;
@@ -958,7 +961,7 @@ int CNrgen::CreateCubitJournal()
 			   "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
 			   "gold", "orange", "brown", "pink", "khaki", "black", "aquamurine", "mediumslateblue"};
 
-  // if creating only journal file load the geometry file
+  // if creating only journal file load the geometry file to compute bounding box for automatic size specification
   if(m_nJouFlag == 1){
     iGeom_load(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
     CHECK("Failed to load geometry.");
@@ -1048,17 +1051,16 @@ int CNrgen::CreateCubitJournal()
     }
   }   
   // writing schemes .jou file ends, now write the main journal file.
-
-
   // stuff common to both surface and volume
   m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
   m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
   m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
   m_FileOutput << "#" << std::endl;
-  
+  m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
+  m_FileOutput << "Timer Start" << std::endl;
   // import the geometry file
   m_FileOutput << "# Import geometry file " << std::endl;
-  m_FileOutput << "import '" << m_szGeomFile <<"'" <<std::endl;
+  m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
   m_FileOutput << "#" << std::endl;
 
   // block creation dumps
@@ -1527,6 +1529,7 @@ int CNrgen::CreateCubitJournal()
   if(strcmp(m_szInfo.c_str(),"on") == 0)
     std::cout << "Assembly info file created: " << m_szAssmInfo << std::endl;
 
+  m_FileOutput << "Timer Stop" << std::endl;
   return 0;
 }
   
