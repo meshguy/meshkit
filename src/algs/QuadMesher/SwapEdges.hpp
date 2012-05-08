@@ -91,7 +91,7 @@ private:
           for( int i = 0; i < 3; i++) {
                Vertex *v = f->getNodeAt(i);
                v->getAttribute("Layer", lid );
-               if( lid == INT_MAX) return 1;
+               if( lid == std::numeric_limits< int >::max()) return 1;
           }
           return 0;
      }

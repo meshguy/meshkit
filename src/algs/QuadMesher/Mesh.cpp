@@ -2,7 +2,7 @@
 
 #include "Mesh.hpp"
 #include "basic_math.hpp"
-
+#include <limits>
 using namespace std;
 using namespace Jaal;
 
@@ -528,7 +528,7 @@ Face::getAspectRatio()
 {
      int nSize = connect.size();
 
-     double minlen = MAXDOUBLE;
+     double minlen = std::numeric_limits< double >::max();
      double maxlen = 0.0;
 
      for (int i = 0; i < nSize; i++) {
@@ -2266,7 +2266,7 @@ Mesh::nearest_neighbour(const Vertex *myself, double &mindist)
      Vertex* nearest;
      assert(getAdjTable(0, 0));
 
-     mindist = MAXDOUBLE;
+     mindist = std::numeric_limits< double >::max();
      nearest = NULL;
 
      NodeSequence neighs;
@@ -3525,7 +3525,7 @@ Mesh::getSurfaceArea()
      double facearea, sumArea = 0.0;
 
      size_t numfaces = getSize(2);
-     double minarea = MAXDOUBLE;
+     double minarea = std::numeric_limits< double >::max();
      double maxarea = 0.0;
      for (size_t i = 0; i < numfaces; i++) {
           Face *face = getFaceAt(i);
@@ -3856,14 +3856,14 @@ Mesh::get_quality_statistics(const string &fname)
 ///////////////////////////////////////////////////////////////////////////////
 double Vertex::getFeatureLength() const
 {
-     if (!isBoundary()) return MAXDOUBLE;
+     if (!isBoundary()) return std::numeric_limits< double >::max();
 
      NodeSequence vneighs;
      getRelations( vneighs );
 
      assert(!vneighs.empty());
 
-     double minlen = MAXDOUBLE;
+     double minlen = std::numeric_limits< double >::max();
 
      int  nSize = vneighs.size();
      for (int j = 0; j < nSize; j++) {
@@ -3896,7 +3896,7 @@ Mesh::setFeatureLength()
         if (vertex->isBoundary())
         {
             vneighs = vertex->getRelations0();
-            double minlen = MAXDOUBLE;
+            double minlen = std::numeric_limits< double >::max();
             for (int j = 0; j < vneighs.size(); j++)
             {
                 if (vneighs[j]->isBoundary())
@@ -5323,7 +5323,7 @@ void Jaal::advancing_front_triangle_cleanup( Mesh *mesh)
                v->setAttribute("Layer", 0);
                currlayer.push_back(v);
           } else
-               v->setAttribute("Layer", INT_MAX);
+               v->setAttribute("Layer",std::numeric_limits< int >::max());
      }
 
      Jaal::MeshOptimization mopt;
@@ -5380,11 +5380,11 @@ void Jaal::advancing_front_triangle_cleanup( Mesh *mesh)
                                    if( ov2 == v ) ov3 = ov1;
                                    assert( ov3 );
                                    ov3->getAttribute("Layer", l0);
-                                   if( l0 == INT_MAX) {
+                                   if( l0 == std::numeric_limits< int >::max()) {
                                         int numSegments = ideal_degree - curr_degree + 1;
                                         mesh->refine_tri_edge( v0, v1, numSegments, newnodes, newfaces);
                                         for( size_t k = 0; k < newnodes.size(); k++)
-                                             newnodes[k]->setAttribute("Layer", INT_MAX );
+                                             newnodes[k]->setAttribute("Layer", std::numeric_limits< double >::max());
                                         break;
                                    }
                               }
@@ -5410,7 +5410,7 @@ void Jaal::advancing_front_triangle_cleanup( Mesh *mesh)
                                    v1  = v1faces[j]->getNodeAt( pos + 2 );
                                    v0->getAttribute("Layer", l0);
                                    v1->getAttribute("Layer", l1);
-                                   if( l0 == INT_MAX && l1 == INT_MAX) {
+                                   if( l0 == std::numeric_limits< int >::max() && l1 == std::numeric_limits< int >::max()) {
                                         Mesh::getRelations112( v0, v1, edgeneighs);
                                         assert( edgeneighs.size() == 2 );
                                         ov1 = Face::opposite_node(edgeneighs[0], v0, v1);
@@ -5421,7 +5421,7 @@ void Jaal::advancing_front_triangle_cleanup( Mesh *mesh)
                                         if( ov2 == v ) ov3 = ov1;
                                         assert( ov3 );
                                         ov3->getAttribute("Layer", l0);
-                                        if( l0 == INT_MAX) {
+                                        if( l0 == std::numeric_limits< int >::max()) {
                                              mesh->collapse_tri_edge(v0, v1);
                                              break;
                                         }

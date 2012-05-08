@@ -1,6 +1,6 @@
 #include "DijkstraShortestPath.hpp"
 #include "StopWatch.hpp"
-
+#include <limits>
 ///////////////////////////////////////////////////////////////////////////////
 
 int DijkstraShortestPath::atomicOp(LVertex &currnode)
@@ -31,7 +31,7 @@ int DijkstraShortestPath::atomicOp(LVertex &currnode)
           assert( !vj->isRemoved() );
           miter = vmap.find( vj );
           if( miter == vmap.end()) {
-               lv.distance = MAXDOUBLE;
+               lv.distance = std::numeric_limits< double >:: max();
                lv.vertex   = vj;
                lv.previous = vi;
                vmap.insert(make_pair(vj,lv));

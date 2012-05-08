@@ -337,7 +337,7 @@ int SwapTriEdges :: apply_advance_front_rule()
                v->setAttribute("Layer", 0);
                currlayer.push_back(v);
           } else
-               v->setAttribute("Layer",INT_MAX);
+	    v->setAttribute("Layer",std::numeric_limits< int >::max());
      }
 
      Jaal::MeshOptimization mopt;

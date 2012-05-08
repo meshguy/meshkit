@@ -6,7 +6,7 @@
 #include <fstream>
 #include <math.h>
 #include <string>
-#include <values.h>
+#include <limits>
 
 #include <vector>
 #include <list>
