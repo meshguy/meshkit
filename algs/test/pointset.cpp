@@ -2,7 +2,10 @@
 
 #include <fstream>
 #include <vector>
-#define DEFAULT_TEST_FILE "gridData.txt"
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/gridData.txt"
 #define DEFAULT_OUT_FILE "output.h5m"
 
 #include "moab/Core.hpp"

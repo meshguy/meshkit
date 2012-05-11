@@ -567,11 +567,11 @@ void MKCore::set_default_meshop(MeshOpProxy* mesh_op, unsigned short dims)
 void MKCore::meshop_by_mesh_type(moab::EntityType tp, std::vector<MeshOpProxy*> &ops) 
 {
   unsigned dim = moab::CN::Dimension(tp);
-  const MeshOpSet::OpList& list = MeshOpSet::instance().mesh_ops( dim );
-  for (MeshOpSet::iterator i = list.begin(); i != list.end(); ++i) {
-    const moab::EntityType* list = (*i)->output_types();
-    for (int j = 0; list[j] != moab::MBMAXTYPE; ++j) {
-      if (list[j] == tp) {
+  const MeshOpSet::OpList& listOps = MeshOpSet::instance().mesh_ops( dim );
+  for (MeshOpSet::iterator i = listOps.begin(); i != listOps.end(); ++i) {
+    const moab::EntityType* listTypes = (*i)->output_types();
+    for (int j = 0; listTypes[j] != moab::MBMAXTYPE; ++j) {
+      if (listTypes[j] == tp) {
         ops.push_back(*i);
         break;
       }
