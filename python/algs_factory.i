@@ -8,6 +8,7 @@
 #include "meshkit/CESets.hpp"
 #include "meshkit/QslimOptions.hpp"
 
+#include "meshkit/AssyGen.hpp"
 #include "meshkit/CopyGeom.hpp"
 #include "meshkit/CopyMesh.hpp"
 #include "meshkit/EBMesher.hpp"
@@ -28,6 +29,7 @@
 %}
 
 %factory(MeshKit::MeshOp * MeshKit::MKCore::construct_meshop,
+         MeshKit::AssyGen,
          MeshKit::CopyGeom,
          MeshKit::CopyMesh,
          MeshKit::EBMesher,

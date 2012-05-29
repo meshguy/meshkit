@@ -35,7 +35,7 @@
 #include "../AssyGen/matrixtemplate.hpp"
 #include "../AssyGen/pincell.hpp"
 #include "../AssyGen/parser.hpp"
-#include "SimpleArray.hpp"
+#include "../../utils/SimpleArray.hpp"
 #include "../AssyGen/clock.hpp"
 
 

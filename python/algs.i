@@ -28,7 +28,7 @@
 %include "meshkit/CESets.hpp"
 %include "meshkit/QslimOptions.hpp"
 
-// TODO: AssyGen
+%include "meshkit/AssyGen.hpp"
 %include "meshkit/CopyGeom.hpp"
 %include "meshkit/EBMesher.hpp"
 %include "meshkit/EdgeMesher.hpp"
