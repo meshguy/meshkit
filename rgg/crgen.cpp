@@ -18,8 +18,6 @@
 /* ==================================================================
    ======================= CCrgen class =============================
    ================================================================== */
-
-
 int CCrgen::save_mesh(int nrank) {
   // export proc- nrank mesh
   std::ostringstream os;
@@ -143,7 +141,8 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   pc->resolve_shared_sets( nssets, nstag );
 
 #ifdef HAVE_MOAB
-  int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
+  //  int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
+  int rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
   if(rval != moab::MB_SUCCESS) {
     std::cerr<<"Writing output file failed Code:";
     std::string foo = ""; mbImpl()->get_last_error(foo);
@@ -414,7 +413,8 @@ CCrgen::CCrgen()
   savefiles = "one";
   num_nsside = 0;
   linenumber = 0;
-  core_info = "off";
+  info = "off";
+  minfo = "off";  
 }
 
 CCrgen::~CCrgen()
@@ -607,7 +607,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
 
 
   // open info file
-  if(strcmp(core_info.c_str(),"on") == 0 && nrank == 0){
+  if(strcmp(info.c_str(),"on") == 0 && nrank == 0){
     do {
       info_file.open(infofile.c_str(), std::ios::out);
       if (!info_file) {
@@ -624,7 +624,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
   }
 
   // open mesh info file
-  if(strcmp(core_info.c_str(),"on") == 0 && nrank == 0){
+  if(strcmp(minfo.c_str(),"on") == 0 && nrank == 0){
     do {
       minfo_file.open(minfofile.c_str(), std::ios::out);
       if (!info_file) {
@@ -818,7 +818,14 @@ int CCrgen::read_inputs_phase1() {
     // info flag
     if (input_string.substr(0, 4) == "info") {
       std::istringstream formatString(input_string);
-      formatString >> card >> core_info;
+      formatString >> card >> info;
+      if(formatString.fail())
+	IOErrorHandler (INVALIDINPUT);
+    }
+    // info flag
+    if (input_string.substr(0, 8) == "meshinfo") {
+      std::istringstream formatString(input_string);
+      formatString >> card >> minfo;
       if(formatString.fail())
 	IOErrorHandler (INVALIDINPUT);
     }
@@ -1886,10 +1893,6 @@ void CCrgen::IOErrorHandler (ErrorStates ECode) const
   std::cerr << std::endl;
   exit (1);
 }
-
-
-
-
 
 int CCrgen::write_minfofile()
 // ---------------------------------------------------------------------------

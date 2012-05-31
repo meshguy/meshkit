@@ -245,6 +245,10 @@ int main(int argc, char *argv[]) {
 #ifdef USE_MPI
       MPI::COMM_WORLD.Barrier();
 #endif
+
+      if(TheCore.minfo == "on")
+	TheCore.write_minfofile();
+      
       /*********************************************/
       // save
       /*********************************************/
