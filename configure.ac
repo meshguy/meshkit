@@ -343,7 +343,7 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
                          [ENABLE_TOOLS=$enableval],[ENABLE_TOOLS=] )
   # Individual tools
 MK_OPTIONAL_TOOL([algs],   [yes])
-MK_OPTIONAL_TOOL([rgg],    [yes])
+MK_OPTIONAL_TOOL([rgg],    [no])
 MK_OPTIONAL_TOOL([utils],  [yes])
 MK_OPTIONAL_TOOL([src],    [no])
 MK_OPTIONAL_TOOL([python], [no])
