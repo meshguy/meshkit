@@ -228,6 +228,7 @@ if test "xyes" = "x$HAVE_$2"; then
                       [$2_DEFINES=])
   $2_DIR=$itaps_dir 
   AC_SUBST($2_DIR)
+  AC_SUBST([HAVE_$2])
 fi
 
 if test "xyes" = "x$HAVE_$2"; then 

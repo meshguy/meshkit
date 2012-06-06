@@ -17,7 +17,7 @@ libMeshKitmesquite_la_SOURCES = \
 	FreeSmoothDomain.hpp 
 
 if HAVE_FBIGEOM 
-	libMeshKitmesquite_la_SOURCES+=	\
+libMeshKitmesquite_la_SOURCES+=	\
 		MsqFBiGeom.cpp \
 		MsqFBiGeom.hpp
 endif
