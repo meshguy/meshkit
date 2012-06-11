@@ -34,7 +34,11 @@ TESTS += \
         test_fbgeom \
         test_MBGeomOp \
         test_MBSplitOp \
-        test_SetPnt2Quad test_volIce test_MBVolOp
+        test_MBVolOp
+# some of these tests require CAMAL and FBiGeom, too
+if HAVE_CAMAL_PAVER
+TESTS += test_SetPnt2Quad test_volIce
+endif
 endif
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
