@@ -6,6 +6,8 @@ INPUTDIR = $(top_srcdir)/rgg
 # Subdirectories to build
 SUBDIRS = 
 
+bin_PROGRAMS = assygen coregen
+
 # Things to build
 lib_LTLIBRARIES = libMKrgg.la
 
