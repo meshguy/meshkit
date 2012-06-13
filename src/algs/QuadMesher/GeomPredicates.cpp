@@ -128,6 +128,7 @@
 /*   however, INEXACT should be defined to be nothing.  ("#define INEXACT".) */
 
 /* #define INEXACT */ /* Nothing */
+namespace QM{
 #define INEXACT volatile 
 
 #define REAL double                      /* float or double */
@@ -4120,4 +4121,5 @@ REAL insphere(REAL *pa, REAL *pb, REAL *pc, REAL *pd, REAL *pe)
 
   return insphereadapt(pa, pb, pc, pd, pe, permanent);
 }
+}//end namespace QM
 

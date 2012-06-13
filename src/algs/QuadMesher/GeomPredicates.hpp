@@ -1,6 +1,7 @@
 #ifndef  SHEWCHUK_H
 #define  SHEWCHUK_H
 
+namespace QM{
 void     exactinit();
 
 double   orient2d(double *pa, double *pb, double *pc);
@@ -13,6 +14,6 @@ double   incirclefast(double *pa, double *pb, double *pc, double *pd);
 
 double   insphere(double *pa, double *pb, double *pc, double *pd, double *pe);
 double   inspherefast(double *pa, double *pb, double *pc, double *pd, double *pe);
-                                                                   
+}//end namespace QM                                                            
 #endif
     
