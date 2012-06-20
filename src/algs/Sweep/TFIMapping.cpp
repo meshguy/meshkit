@@ -31,6 +31,7 @@ const moab::EntityType* TFIMapping::output_types()
 TFIMapping::TFIMapping(MKCore *mk_core, const MEntVector &me_vec) :
   MeshScheme(mk_core, me_vec)
 {
+  _shapeImprove=true;
   //buildAssociation();
 }
 
@@ -445,27 +446,27 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   //SurfImprove(ent->geom_handle(), entityset, iBase_FACE);
   mk_core()->save_mesh("InitialMapping.vtk");
 
+  if (_shapeImprove)
+  {
 #ifdef HAVE_MESQUITE
 
-  iGeom * ig_inst = mk_core()->igeom_instance(ent->iGeomIndex());
+    iGeom * ig_inst = mk_core()->igeom_instance(ent->iGeomIndex());
 
-  MeshImprove meshopt(mk_core(), true, false, false, false, ig_inst);
-  meshopt.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
+    MeshImprove meshopt(mk_core(), true, false, false, false, ig_inst);
+    meshopt.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
 
 #endif
-  //mk_core()->save_mesh("AfterLaplace.vtk");
+    //mk_core()->save_mesh("AfterLaplace.vtk");
 
-  //if there is the parametric space, let Winslow smooth inside the parametric space
-  SmoothWinslow(List_i, List_ii, List_j, List_jj, InteriorNodes, Quads, mesh_tag, ent);
+    //if there is the parametric space, let Winslow smooth inside the parametric space
+    SmoothWinslow(List_i, List_ii, List_j, List_jj, InteriorNodes, Quads, mesh_tag, ent);
 
-  mk_core()->save_mesh("AfterWinslow.vtk");
+    mk_core()->save_mesh("AfterWinslow.vtk");
 #ifdef HAVE_MESQUITE
-
-  MeshImprove shapesmooth(mk_core(), false, false, true, false, ig_inst);
-  shapesmooth.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
-
+    MeshImprove shapesmooth(mk_core(), false, false, true, false, ig_inst);
+    shapesmooth.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
 #endif
-
+  }
   //remove the mesh tag
   m_err = mk_core()->imesh_instance()->rmvArrTag(&Quads[0], Quads.size(), mesh_tag);
   IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");

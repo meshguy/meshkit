@@ -90,9 +90,14 @@ public:
   {
     return output_types();
   }
+  void skip_improve()
+  {
+    _shapeImprove = false;// by default it is true, but sometimes we need to skip it
+  }
 
 private:
 
+  bool _shapeImprove;
   //implement the transfinite interpolation between (pt_0s, pt_1s) and (pt_r0, pt_r1)
   void parametricTFI3D(double *pts, double r, double s, double pt_0s[3], double pt_1s[3], double pt_r0[3], double pt_r1[3]);
 

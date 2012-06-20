@@ -41,8 +41,8 @@ using namespace std;
 class EdgeMesher : public MeshScheme
 {
 public:
-	//Four schemes for edge meshing
-	enum EdgeSchemeType {EQUAL=0, BIAS, DUAL, CURVATURE, VARIABLE};
+	//six schemes for edge meshing
+	enum EdgeSchemeType {EQUAL=0, BIAS, DUAL, CURVATURE, VARIABLE, EQUIGNOMONIC};
 
 	
 public:
@@ -140,6 +140,9 @@ private:
 	//create the mesh for edges based on variable size from SizingFunction (var)
 	void VariableMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords);
 
+	//create the edge mesh on the edge on a cube, such that the
+	// dihedral angles from the center of the cube are equal (for gnomonic equi angle mesh on the sphere)
+	void EquiAngleGnomonic(ModelEnt *ent, int num_edges, std::vector<double> &coords);
 	//compute the distance between the parametric coordinate ustart and parametric coordinate uend.
 	//double measure(iGeom::EntityHandle ent, double ustart, double uend) const;
 

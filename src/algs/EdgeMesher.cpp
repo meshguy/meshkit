@@ -183,6 +183,9 @@ void EdgeMesher::execute_this()
       case VARIABLE: // use a var size from sizing function
           VariableMeshing(me, num_edges, coords);
           break;
+      case EQUIGNOMONIC: // used to generate HOMME type meshes on a sphere
+          EquiAngleGnomonic(me, num_edges, coords);
+          break;
       default:
           break;			
     }
@@ -710,8 +713,40 @@ void EdgeMesher::VariableMeshing(ModelEnt *ent, int &num_edges, std::vector<doub
   return;
 
 }
+// number of edges is input here
+//  equal angles are formed at the center of the sphere/cube mesh
+// it is close to bias meshing, but not quite
+void EdgeMesher::EquiAngleGnomonic(ModelEnt *ent, int num_edges, std::vector<double> &coords)
+{
+  const double MY_PI=3.14159265;
+  double deltaAngle=MY_PI/num_edges/2;
+ // double length=ent->measure();// this is an edge
+  double umin, umax;
 
+  //get the u range for the edge
+  iGeom::Error gerr = ent->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
+  IBERRCHK(gerr, "Trouble get parameter range for edge.");
 
+  if (umin == umax) throw Error(MK_BAD_GEOMETRIC_EVALUATION, "Edge evaluated to some parameter umax and umin.");
+
+  // consider that the parametrization is very linear
+  // most of the time u will be from 0 to length of edge, for a cube
+  double deltau = umax - umin;
+
+  double u = umin;// u will get different values,
+  // start at u
+  for (int i = 1; i < num_edges; i++)
+    {
+      double betak=i*deltaAngle;
+      double alfak = MY_PI/4-betak;
+      double tang_alfak = tan(alfak);
+      u = umin+deltau/2*(1-tang_alfak);
+
+      gerr = ent->igeom_instance()->getEntUtoXYZ(ent->geom_handle(), u, coords[3*i], coords[3*i+1], coords[3*i+2]);
+      IBERRCHK(gerr, "Trouble getting U from XYZ along the edge.");
+    }
+  return;
+}
 //---------------------------------------------------------------------------//
 // Rapid sorting the mesh nodes on the edge based on the parametric coordinates. This is a recursive
 // process
