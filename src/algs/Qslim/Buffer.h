@@ -29,7 +29,7 @@ template<class T>
 inline int buffer<T>::add(const T& t)
 {
     if( fill == array<T>::len )
-	resize(  array<T>::len*2 );
+	array<T>::resize(  array<T>::len*2 );
 
      array<T>::data[fill] = t;
 
