@@ -81,7 +81,7 @@ public:
   iGeom_Instance geom;
   
 #ifdef HAVE_MOAB
-  MBInterface* mbImpl() {return reinterpret_cast<MBiMesh*> (impl)->mbImpl;};
+  moab::Interface* mbImpl() {return reinterpret_cast<MBiMesh*> (impl)->mbImpl;};
 #ifdef USE_MPI
   moab::ParallelComm *pc;
 #endif

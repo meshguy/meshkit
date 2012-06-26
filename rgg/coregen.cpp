@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 	  ERRORR("Failed to load meshes.", 1);
 	}
   	//Get a pcomm object
-	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl());
+	TheCore.pc = new moab::ParallelComm(TheCore.mbImpl(), MPI::COMM_WORLD, &err);
 #endif
       }
 

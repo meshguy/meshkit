@@ -4,23 +4,21 @@
 !
 GeometryType Rectangular
 !
-Materials 2 Ma1 M1 Coolant_1 C1
+Materials 2 Mat1 M1 Coolant_1 C1
 !
-Dimensions 1 0.0 0.0 0 10.0 10.0 10.0  C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Duct 1 0.0 0.0 0 10.0 5.0 5.0  C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
 Pincells 1 
 !
 ! Standard fuel cell (1)
-PWR_FC_01 FC 2
-Pitch  5.0 5.0 10.0 
-Cylinder 1 0.0 0.0  0.0 10.0   2.0  M1
+PWR_FC_01 FC 1
+Cylinder 1 0.0 0.0  0.0 10.0   1.0  M1
 !
-!
-Assembly 2 2
-FC FC
-FC FC
+Assembly 1 1
+FC 
 Center
-RadialMeshSize 10.0
+EdgeInterval 2
+RadialMeshSize 5.0
 AxialMeshSize 10.0
 MaterialSet_StartId 1
 NeumannSet_StartId 1
