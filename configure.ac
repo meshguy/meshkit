@@ -937,6 +937,7 @@ AC_CONFIG_FILES([Makefile
                  testdir.h
                  algs/Makefile
                  algs/test/Makefile
+                 algs/make_watertight/Makefile
                  python/setup.py
                  python/Makefile
                  rgg/Makefile
