@@ -1610,7 +1610,7 @@ MBErrorCode get_geom_size_after_sealing( const MBRange geom_sets[],
 
     clock_t start_time = clock();
     const bool debug = false;
-    const bool check_geom_size = true;
+    const bool check_geom_size = false;
 
     // check input args
     if(2>argc || 3<argc) {
