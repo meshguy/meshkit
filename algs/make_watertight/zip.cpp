@@ -32,7 +32,7 @@ namespace zip {
     //std::cout << "t_joint: tris.size()=" << tris.size() << std::endl;
     //MBI()->list_entities( tris );
 
-    triangles joints[tris.size()];
+    std::vector <triangles> joints(tris.size());
     for(unsigned int i=0; i<tris.size(); i++) {
       joints[i].before_tri = tris[i];
 
