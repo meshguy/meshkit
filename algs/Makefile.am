@@ -1,8 +1,10 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = test make_watertight
-#make_watertight
+SUBDIRS = test 
+if HAVE_DAGMC_MOAB
+  SUBDIRS += make_watertight
+endif
 
 # Things to build
 lib_LTLIBRARIES = libMKalgs.la
