@@ -3,10 +3,6 @@
 #include "MBOrientedBoxTreeTool.hpp"
 
 namespace zip {
-  MBErrorCode t_joint( MBTag normal_tag,
-                       const MBEntityHandle vert0,
-                       const MBEntityHandle vert1,
-                       const MBEntityHandle vert2 ) {
     struct triangles {
       MBEntityHandle before_tri;
       const MBEntityHandle *before;
@@ -17,6 +13,11 @@ namespace zip {
       MBCartVect     after1_norm;
       MBEntityHandle surf_set;
     };   
+
+  MBErrorCode t_joint( MBTag normal_tag,
+                       const MBEntityHandle vert0,
+                       const MBEntityHandle vert1,
+                       const MBEntityHandle vert2 ) {
 
     // Get all of the old information before changing anything. 
     // This is important because once the
