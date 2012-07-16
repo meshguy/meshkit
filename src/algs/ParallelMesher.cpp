@@ -31,7 +31,7 @@ ParallelMesher::ParallelMesher(MKCore *mkcore, const MEntVector &me_vec)
 {
   // get information related to MOAB parallel communication
   m_mpcomm = moab::ParallelComm::get_pcomm(mk_core()->moab_instance(), 0);
-  if (NULL == m_mpcomm) m_mpcomm = new ParallelComm(mk_core()->moab_instance());
+  if (NULL == m_mpcomm) m_mpcomm = new moab::ParallelComm(mk_core()->moab_instance(), MPI_COMM_WORLD);
   m_rank = m_mpcomm->proc_config().proc_rank();
 
   // create tag
