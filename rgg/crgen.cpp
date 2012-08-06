@@ -917,6 +917,7 @@ int CCrgen::read_inputs_phase2()
 	  if(formatString.fail())
 	    IOErrorHandler (INVALIDINPUT);
 
+	  all_meshfiles.push_back(meshfile);
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -974,6 +975,9 @@ int CCrgen::read_inputs_phase2()
 	  formatString >> meshfile >> mf_alias;
 	  if(formatString.fail())
 	    IOErrorHandler (INVALIDINPUT);
+
+          all_meshfiles.push_back(meshfile);
+
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -1027,6 +1031,9 @@ int CCrgen::read_inputs_phase2()
 	  formatString >> meshfile >> mf_alias;
 	  if(formatString.fail())
 	    IOErrorHandler (INVALIDINPUT);
+
+          all_meshfiles.push_back(meshfile);
+
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -1078,6 +1085,9 @@ int CCrgen::read_inputs_phase2()
 	  formatString >> meshfile >> mf_alias;
 	  if(formatString.fail())
 	    IOErrorHandler (INVALIDINPUT);
+
+          all_meshfiles.push_back(meshfile);
+
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -1130,6 +1140,9 @@ int CCrgen::read_inputs_phase2()
 	  formatString >> meshfile >> mf_alias;
 	  if(formatString.fail())
 	    IOErrorHandler (INVALIDINPUT);
+
+          all_meshfiles.push_back(meshfile);
+
 	  if (iname == DEFAULT_TEST_FILE){
 	    meshfile = DIR + meshfile;
 	  }
@@ -1175,6 +1188,9 @@ int CCrgen::read_inputs_phase2()
       formatString >> card >> back_meshfile;
       if(formatString.fail())
 	IOErrorHandler (INVALIDINPUT);
+
+      all_meshfiles.push_back(back_meshfile);
+
       if (iname == DEFAULT_TEST_FILE){
 	back_meshfile = DIR + back_meshfile;
       }
@@ -1315,7 +1331,7 @@ int CCrgen::write_makefile()
       filename = files[i];
     }
     mk_files.push_back(filename);
-    make_file << mk_files[i] << "  ";
+    make_file << all_meshfiles[i] << "  ";
   }
 
   // get file names without extension
@@ -1362,7 +1378,7 @@ int CCrgen::write_makefile()
   make_file << "\n\n" << outfile << " : ${MESH_FILES} " << ifile << std::endl;
   make_file << "\t" << "${COREGEN} " << iname << std::endl;
   for (unsigned int i = 0; i < mk_files.size(); i++) {
-    make_file << mk_files[i] << " : " << f_sat[i] << "  " << f_jou[i]
+    make_file << all_meshfiles[i] << " : " << f_sat[i] << "  " << f_jou[i]
 	      << "  " << f_injou[i] << std::endl;
     make_file << "\t" << "${CUBIT} -batch " << f_jou[i] << "\n"
 	      << std::endl;
