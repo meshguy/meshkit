@@ -720,7 +720,7 @@ int CCrgen::load_geometries()
 
     iGeom_load(geom, files[i].c_str(), NULL, &err,
 	       strlen(files[i].c_str()), 0);
-    ERRORR("Couldn't read mesh file.", err);
+    ERRORR("Couldn't read geometry file.", err);
 
     iBase_EntityHandle *entities = NULL;
     int entities_ehsize = 0, entities_ehallocated = 0;
