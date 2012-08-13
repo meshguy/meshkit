@@ -44,6 +44,7 @@ public:
   int Create_HexAssm(std::string &);
   int Create_CartAssm(std::string &);
   int CreateOuterCovering();
+  int CreateAssyGenInputFiles();
   int Imprint_Merge ();
   int Subtract_Pins ();
   int Create2DSurf();
@@ -99,6 +100,7 @@ private:
   std::string m_szGeomType;       
   std::string m_szMeshType;
   std::string m_szSideset; 
+  int m_nAssyGenInputFiles;
   std::string pin_name;
   // integers for vectors sizes, err etc
   int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 

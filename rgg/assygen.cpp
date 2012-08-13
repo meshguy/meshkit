@@ -42,6 +42,10 @@ int main (int argc, char *argv[])
   TheNR.CreateCubitJournal();
   ERRORR("Error in function CreateCubitJournal", err);
 
+  // create other assygen input files if requested
+  TheNR.CreateAssyGenInputFiles();
+  ERRORR("Error in creating AssyGen input files", err);
+
   // get the current date and time
   Timer.GetDateTime (szDateTime);
   std::cout << "Ending at : " << szDateTime;

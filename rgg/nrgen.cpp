@@ -39,6 +39,7 @@ CNrgen::CNrgen ()
   m_nDuctNum = 0;
   m_nJouFlag = 0;
   m_szSideset = "yes";
+  m_nAssyGenInputFiles = 0;
   m_dMergeTol = 1e-4;
   m_edgeInterval = 99;
   m_nStartpinid = 1;

@@ -262,7 +262,7 @@ int CNrgen::ReadInputPhase1 ()
   //  OCC ENGINE
   //  if (m_szEngine == "occ"){
   m_szGeomFile = m_szFile+".stp";
-  //  }
+  //  }o
 #endif
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
@@ -874,6 +874,12 @@ int CNrgen::ReadAndCreate()
       szFormatString >> card >> m_szSideset;
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
+    // Create specified number of files with varying material ids                                                                                                                                   
+    if (szInputString.substr(0,11) == "createfiles"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_nAssyGenInputFiles;
+      std::cout <<"--------------------------------------------------"<<std::endl;
+    }
     // specify a merge tolerance value for cubit journal file
     if (szInputString.substr(0,14) == "mergetolerance"){
       std::istringstream szFormatString (szInputString);
@@ -945,6 +951,101 @@ int CNrgen::ReadAndCreate()
       break;
     }
   }
+  return 0;
+}
+
+int CNrgen::CreateAssyGenInputFiles()
+//---------------------------------------------------------------------------                                                                                                                       
+//Function: Create Cubit Journal File for generating mesh                                                                                                                                           
+//Input:    none                                                                                                                                                                                    
+//Output:   none                                                                                                                                                                                    
+//---------------------------------------------------------------------------
+{
+  // create file names
+  std::ostringstream os;
+  std::string file, temp, temp1;
+  for(int i=1; i<=m_nAssyGenInputFiles; i++){
+    // form the name of the AssyGen input file
+    os << m_szFile << i << ".inp";
+    std::ofstream ofs;
+    // open input file 
+    
+    std::cout << os.str() << std::endl;
+    bool bDone = false;
+    do{
+      file = os.str();
+      ofs.open (file.c_str(), std::ios::out);
+      if(!ofs){
+	ofs.clear();
+	std::cout << "Unable to open AssyGen Input File(s) for writing" << std::endl;
+	exit(1);
+      }
+      else {
+	bDone = true;
+	std::cout << "File Opened" << std::endl;
+      }
+      os.str("");
+
+      // write the input deck
+      ofs << "! ## This is an automatically created AssyGen Input File: "<< file << std::endl;
+      ofs << "MeshType " << m_szMeshType << std::endl;
+      ofs << "GeomEngine " << m_szEngine << std::endl;
+      ofs << "GeometryType " << m_szGeomType << std::endl;
+      ofs << "Materials " << m_nAssemblyMat;
+
+      // list all materials and alias with subscripts
+      for (int j =1;j<=m_nAssemblyMat; j++){
+	os << m_szAssmMat(j) << "_" << (i-1)*m_nAssemblyMat + j;
+	temp = os.str();
+	
+	ofs << "  " << temp << " " << m_szAssmMatAlias(j);
+	os.str("");
+      }
+      ofs << "\n";
+
+      //Rewind the input file                                                                  
+      int nDumpAllLinesAfter = 0, nMid = 0;
+      m_FileInput.clear (std::ios_base::goodbit);
+      m_FileInput.seekg (0L, std::ios::beg);
+      m_nLineNumber = 0;
+      CParser Parse;
+      std::string card;
+
+      // start reading the input file break when encounter end                                 
+      for(;;){
+	if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+				 MAXCHARS, szComment))
+	  IOErrorHandler (INVALIDINPUT);
+	// dump all the lines after duct command, limiting the format for writing AssyGen Files
+	if( (szInputString.substr(0,10) == "dimensions") ||
+	    (szInputString.substr(0,4) == "duct") ){
+	  ofs << szInputString << std::endl;
+	  nDumpAllLinesAfter = m_nLineNumber;
+	}
+	else if ((szInputString.substr(0,19) == "materialset_startid") ){
+	  nMid = (i-1)*m_nAssemblyMat + 1;
+	  ofs << "MaterialSet_StartId " << nMid << std::endl;
+	}
+        else if ((szInputString.substr(0,18) == "neumannset_startid") ){
+          nMid = (i-1)*m_nAssemblyMat + 1;
+          ofs << "NeumannSet_StartId " << nMid << std::endl;
+        }
+	else if((szInputString.substr(0,11) == "createfiles")){
+	  //skip this line
+	}
+	else if (nDumpAllLinesAfter > 0 && m_nLineNumber > nDumpAllLinesAfter){
+	  ofs << szInputString << std::endl;
+	}
+
+	if (szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
+	  break;
+	}
+      }
+      ofs.close();
+    } while(!bDone);
+  }
+
+
   return 0;
 }
 
@@ -1083,12 +1184,12 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
     m_FileOutput << "#{Ifndef(nb" << p << ")}" << "\n" << "#{else}" << std::endl;
     if(m_nPlanar ==1){
-      m_FileOutput << "block " << m_nMaterialSetId + p << " surface in " << szGrp  << std::endl;
-      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " surface in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
     }
     else{
-      m_FileOutput << "block " << m_nMaterialSetId + p << " body in " << szGrp  << std::endl;
-      m_FileOutput << "block " << m_nMaterialSetId + p << " name \"" << szBlock <<"\""<< std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " body in " << szGrp  << std::endl;
+      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
     }    
     m_FileOutput << "#{endif}" << std::endl;
   }
@@ -1253,7 +1354,7 @@ int CNrgen::CreateCubitJournal()
    
     if(m_nPlanar == 0){ // volumes only
       if (m_nDuct == 1){
-	m_FileOutput << "surface with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
+	m_FileOutput << "surf with z_coord > {Z_MID -.1*Z_HEIGHT}" <<
 	  " and z_coord < {Z_MID + .1*Z_HEIGHT} size {AXIAL_MESH_SIZE}" << std::endl ;
 	m_FileOutput << "mesh vol all" << std::endl;
       }
@@ -1261,13 +1362,13 @@ int CNrgen::CreateCubitJournal()
 	m_FileOutput << "### Setting Z intervals on ducts and meshing along Z " << std::endl;
 	for( int p=m_nDuct; p>= 1; p--){
 	  if(dMid == 0){ // z - centered
-	    m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
+	    m_FileOutput << "surf with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
 			 << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
 	    m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1) - dHeight/2.0
 			 << " and z_coord < " << m_dMZAssm(p, 2) - dHeight/2.0 << std::endl;
 	  }
 	  else{
-	    m_FileOutput << "surface with z_coord  > " << m_dMZAssm(p, 1)
+	    m_FileOutput << "surf with z_coord  > " << m_dMZAssm(p, 1)
 			 << " and z_coord < " << m_dMZAssm(p, 2) << " interval " << "{BLOCK" << p << "_Z_INTERVAL}" << std::endl;
 	    m_FileOutput << "mesh vol with z_coord  > " << m_dMZAssm(p, 1)
 			 << " and z_coord < " << m_dMZAssm(p, 2) << std::endl;
@@ -1486,12 +1587,13 @@ int CNrgen::CreateCubitJournal()
 	m_FileOutput << "#{endif}" << std::endl;
       }
       m_FileOutput << "#" << std::endl;
-    }
-    m_FileOutput << "#Creating sideset for outer most side surfaces" << std::endl; 
-    ++nSideset;
+    
+      m_FileOutput << "#Creating sideset for outer most side surfaces" << std::endl; 
+      ++nSideset;
 
-    m_FileOutput << "group 'tmpgrp' equals surf with name 'side_surface'" << std::endl;
-    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+      m_FileOutput << "group 'tmpgrp' equals surf with name 'side_surface'" << std::endl;
+      m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+    }
   }
 
   // color now
