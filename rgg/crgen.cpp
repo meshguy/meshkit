@@ -1912,7 +1912,7 @@ void CCrgen::IOErrorHandler (ErrorStates ECode) const
 
 int CCrgen::write_minfofile()
 // ---------------------------------------------------------------------------
-// Function: write the excel mesh info file based on inputs read from mesh & input file
+// Function: write the spreadsheet mesh info file based on inputs read from mesh & input file
 // Input:    none
 // Output:   none
 // ---------------------------------------------------------------------------
@@ -1927,7 +1927,7 @@ int CCrgen::write_minfofile()
   moab::Range matsets;
   std::vector <EntityHandle> set_ents;
 
-    mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+  mbImpl()->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
 
   moab::Range::iterator set_it;
   for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
