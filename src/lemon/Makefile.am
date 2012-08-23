@@ -22,7 +22,10 @@ EXTRA_DIST = \
 #pkgconfigdir = $(srcdir)
 #pkgconfig_DATA = lemon.pc
 
-noinst_LTLIBRARIES = libemon.la 
+lib_LTLIBRARIES = libemon.la 
+
+# The directory in which to install headers
+libemon_la_includedir = $(includedir)
 
 libemon_la_SOURCES = \
 	arg_parser.cc \
@@ -41,7 +44,6 @@ lemon_libemon_la_CXXFLAGS = \
 
 libemon_la_LDFLAGS = 
 
-libemon_la_includedir = lemon
 nobase_libemon_la_include_HEADERS = \
 	lemon/adaptors.h \
 	lemon/arg_parser.h \
