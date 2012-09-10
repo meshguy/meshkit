@@ -1,6 +1,7 @@
 from MeshKit import *
 from itaps import iBase
 import math
+import random
 
 def cart2sph(x,y,z):
     XsqPlusYsq = x**2 + y**2
@@ -12,7 +13,7 @@ def cart2sph(x,y,z):
 # this is the length of the side of the enclosed cube
 length = 6.
 # each edge of the cube will be divided using this meshcount
-meshcount = 9
+meshcount = 11
 
 # circumscribed sphere radius
 radius = length * math.sqrt(3) /2
@@ -88,8 +89,10 @@ mk.save_mesh(mesh_file3)
 
 time=0.05
 # rotate an extra 360/(4*meshcount) around z, so the deformation will be bigger 
-rA = math.pi/(4*meshcount)*1.5
-
+rA = math.pi/(4*meshcount)*2.5
+# something random
+# mesh size is about 2*radius*PI/(4*meshcount)
+meshSize = 2*radius*math.pi/(4*meshcount)
 for node in nodes:
   x, y, z = mesh.getVtxCoords(node)
   [vx, vy, vz] = vectag[node]
@@ -100,6 +103,9 @@ for node in nodes:
   y2 = x * Sin(rA) + y*Cos(rA) 
   x = x2
   y = y2
+  x=x+0.2*random.random()
+  y=y+0.2*random.random()
+  z=z+0.2*random.random()
   dist1 = math.sqrt( x*x + y*y + z*z )
   ratio = radius/dist1
   x1 = x*ratio
