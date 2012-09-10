@@ -12,7 +12,7 @@ def cart2sph(x,y,z):
 # this is the length of the side of the enclosed cube
 length = 6.
 # each edge of the cube will be divided using this meshcount
-meshcount = 20
+meshcount = 9
 
 # circumscribed sphere radius
 radius = length * math.sqrt(3) /2
@@ -83,16 +83,23 @@ for node in nodes:
 
 mesh_file2="../data/Homme3.h5m"
 mk.save_mesh(mesh_file2)
-mesh_file3="../data/Homme3.vtk"
+mesh_file3="../data/eulerHomme.vtk"
 mk.save_mesh(mesh_file3)
 
-time=0.03
+time=0.05
+# rotate an extra 360/(4*meshcount) around z, so the deformation will be bigger 
+rA = math.pi/(4*meshcount)*1.5
+
 for node in nodes:
   x, y, z = mesh.getVtxCoords(node)
   [vx, vy, vz] = vectag[node]
   x = x + vx*time
   y = y + vy*time
   z = z + vz*time
+  x2 = x * Cos(rA) - y*Sin(rA)
+  y2 = x * Sin(rA) + y*Cos(rA) 
+  x = x2
+  y = y2
   dist1 = math.sqrt( x*x + y*y + z*z )
   ratio = radius/dist1
   x1 = x*ratio
@@ -101,7 +108,7 @@ for node in nodes:
   mesh.setVtxCoords(node, [x1, y1, z1])
 
 
-mesh_file4="../data/HommeDefor.vtk"
+mesh_file4="../data/lagrangeHomme.vtk"
 mk.save_mesh(mesh_file4)
 
   
