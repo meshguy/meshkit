@@ -505,7 +505,7 @@ class FBiGeom : public iGeom {
 		virtual inline Error getData(EntityHandle entity_handle, TagHandle tag_handle,
 				void* tag_value_out) const;
 		virtual inline Error getFacets(EntityHandle entity_handle, double dist_tolerance,
-				double *point, int *facets) const;
+        std::vector<double> &point, std::vector<int> &facets) const;
 		virtual inline Error getIntData(EntityHandle entity_handle, TagHandle tag_handle,
 				int& value_out) const;
 		virtual inline Error getDblData(EntityHandle entity_handle, TagHandle tag_handle,
