@@ -123,6 +123,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 	std::vector<moab::EntityHandle> edges;
 	moab::ErrorCode rval = mb->get_adjacencies(vlist, 2, 1, false, edges,
 			moab::Interface::UNION);
+	if (moab::MB_SUCCESS != rval) return rval;
 	if (opts.useDelayedDeletion)
 		filterValid(mb, edges);
 	if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
@@ -186,6 +187,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			std::vector<moab::EntityHandle> tris;
 			rval = mb->get_adjacencies(&ev0v1, 1, 2, false, tris,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			filterValid(mb, tris);
 			if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 				*opts.logfile << "Triangles adjacent to found edge:"
@@ -199,6 +201,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				std::vector<moab::EntityHandle> localEdges;
 				rval = mb->get_adjacencies(&triangleThatCollapses, 1, 1, false,
 						localEdges, moab::Interface::UNION);
+                                        if (moab::MB_SUCCESS != rval) return rval;
 				filterValid(mb, localEdges);
 				if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 					*opts.logfile << "Triangle " << mb->id_from_handle(
@@ -276,6 +279,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 							std::vector<moab::EntityHandle> localEdges;
 							rval = mb->get_adjacencies(&tr, 1, 1, false,
 									localEdges, moab::Interface::UNION);
+                                                                      if (moab::MB_SUCCESS != rval) return rval;
 							filterValid(mb, localEdges);
 							*opts.logfile << "Triangle t"
 									<< mb->id_from_handle(tr)
@@ -295,6 +299,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 									<< "  to: v";
 						}
 						rval = mb->set_connectivity(tr, connNew, 3);
+                                                            if (moab::MB_SUCCESS != rval) return rval;
 						if (opts.logfile && opts.selected_output
 								& OUTPUT_CONTRACTIONS) {
 							*opts.logfile << mb->id_from_handle(connNew[0])
@@ -309,6 +314,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			}
 			validFaceCount -= tris.size();
 			rval = mb->tag_set_data(validTag, &ev0v1, 1, &invalid);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			// invalidate the edges connected for sure to v1
 			if (edgesWithV1.size()>0)
                            mb->tag_set_data(validTag, &edgesWithV1[0],
@@ -339,6 +345,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 									<< mb->id_from_handle(conn[1]) << "  to: ";
 						}
 						rval = mb->set_connectivity(e1, connNew, 2);
+                                                            if (moab::MB_SUCCESS != rval) return rval;
 						if (opts.logfile && opts.selected_output
 								& OUTPUT_CONTRACTIONS) {
 							*opts.logfile << mb->id_from_handle(connNew[0])
@@ -358,6 +365,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				moab::EntityHandle tr = trisChanged[i];
 				rval = mb->get_adjacencies(&tr, 1, 1, false, localEdges,
 						moab::Interface::UNION);
+                                        if (moab::MB_SUCCESS != rval) return rval;
 				filterValid(mb, localEdges);
 				if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 					*opts.logfile << "Triangle t" << mb->id_from_handle(tr)
@@ -388,12 +396,14 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			std::vector<moab::EntityHandle> edges0;
 			rval = mb->get_adjacencies(&v0, 1, 1, false, edges0,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			filterValid(mb, edges0);
 
 			// get edges connected to vertex v1
 			std::vector<moab::EntityHandle> edges1;
 			rval = mb->get_adjacencies(&v1, 1, 1, false, edges1,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			filterValid(mb, edges1);
 			// find all edges that will be merged, of type v0-v2 v1-v2 (so that they have a
 			// common vertex v2
@@ -442,6 +452,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			std::vector<moab::EntityHandle> tri1;
 			rval = mb->get_adjacencies(&v1, 1, 2, false, tri1,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			// start copy tri reconnect
 			unsigned int i = 0;
 			for (i=0; i < tri1.size(); i++) {
@@ -464,6 +475,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 						connNew[2] = conn3[2];
 						connNew[j] = v0;
 						rval = mb->set_connectivity(tr, connNew, 3);
+                                                            if (moab::MB_SUCCESS != rval) return rval;
 						if (opts.logfile && opts.selected_output
 								& OUTPUT_CONTRACTIONS) {
 							*opts.logfile << mb->id_from_handle(connNew[0])
@@ -495,6 +507,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 						connNew[1] = conn3[1];
 						connNew[j] = v0;
 						rval = mb->set_connectivity(e1, connNew, 2);
+                                                            if (moab::MB_SUCCESS != rval) return rval;
 
 					}
 				}
@@ -504,6 +517,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			//
 			rval = mb->get_adjacencies(&v0, 1, 2, false, changed,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			filterValid(mb, changed);
 
 		}
@@ -518,6 +532,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			std::vector<moab::EntityHandle> tris;
 			rval = mb->get_adjacencies(&ev0v1, 1, 2, false, tris,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			// find all edges that will be merged ( xv0, xv1, etc)
 			if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 				*opts.logfile << "Triangles adjacent to found edge:"
@@ -532,6 +547,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				std::vector<moab::EntityHandle> localEdges;
 				rval = mb->get_adjacencies(&triangleThatCollapses, 1, 1, false,
 						localEdges, moab::Interface::UNION);
+                                        if (moab::MB_SUCCESS != rval) return rval;
 				if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 					*opts.logfile << "Triangle " << mb->id_from_handle(
 							triangleThatCollapses) << " Edges: "
@@ -571,6 +587,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			// the tag on v1 will be deleted too, and we do not want that, at least until
 			// after the merging of edges, and deleting the pair
 			rval = mb->merge_entities(v0, v1, false, false);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			// merge edgePairsToMerge // now, v0 and v1 should be collapsed!
 			for (unsigned int j = 0; j < edgePairsToMerge.size(); j += 2) {
 				// will also delete edges that contained v1 before
@@ -590,6 +607,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				*opts.logfile << std::endl;
 			}
 			rval = mb->delete_entities(&(tris[0]), tris.size());
+                              if (moab::MB_SUCCESS != rval) return rval;
 			if (iniSet)
 			  mb->remove_entities(iniSet, &(tris[0]), tris.size());
 			validFaceCount -= tris.size();
@@ -599,6 +617,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 				*opts.logfile << "Edge invalidated"
 						<< mb->id_from_handle(ev0v1) << std::endl;
 			rval = mb->delete_entities(&ev0v1, 1);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			if (iniSet)
 			  mb->remove_entities(iniSet, &ev0v1, 1);// it may not be part of it, but
 			// delete it anyway
@@ -630,11 +649,13 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			std::vector<moab::EntityHandle> edges0;
 			rval = mb->get_adjacencies(&v0, 1, 1, false, edges0,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 
 			// get edges connected to vertex v1
 			std::vector<moab::EntityHandle> edges1;
 			rval = mb->get_adjacencies(&v1, 1, 1, false, edges1,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			// find all edges that will be merged, of type v0-v2 v1-v2 (so that they have a
 			// common vertex v2
 			// in that case, we will have to merge them as before, and delete the
@@ -683,6 +704,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			// the tag on v1 will be deleted too, and we do not want that, at least until
 			// after the merging of edges, and deleting the pair
 			rval = mb->merge_entities(v0, v1, false, false);
+                              if (moab::MB_SUCCESS != rval) return rval;
 			// merge edgePairsToMerge // now, v0 and v1 should be collapsed!
 			for (unsigned int j = 0; j < edgePairsToMerge.size(); j += 2) {
 				// will also delete edges that contained v1 before
@@ -693,6 +715,7 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			//
 			rval = mb->get_adjacencies(&v0, 1, 2, false, changed,
 					moab::Interface::UNION);
+                              if (moab::MB_SUCCESS != rval) return rval;
 
 		}
 	}

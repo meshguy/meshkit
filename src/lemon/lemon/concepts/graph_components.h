@@ -107,10 +107,6 @@ namespace lemon {
 
           i1 = i2 = i3;
 
-          bool b;
-          b = (ia == ib) && (ia != ib);
-          b = (ia == INVALID) && (ib != INVALID);
-          b = (ia < ib);
         }
 
         const _GraphItem &ia;
@@ -487,8 +483,6 @@ namespace lemon {
           checkConcept<GraphItem<>, _GraphItemIt>();
           _GraphItemIt it1(g);
           _GraphItemIt it2;
-          _GraphItemIt it3 = it1;
-          _GraphItemIt it4 = INVALID;
 
           it2 = ++it1;
           ++it2 = it1;
@@ -575,8 +569,6 @@ namespace lemon {
           checkConcept<GraphItem<sel>, _GraphIncIt>();
           _GraphIncIt it1(graph, node);
           _GraphIncIt it2;
-          _GraphIncIt it3 = it1;
-          _GraphIncIt it4 = INVALID;
 
           it2 = ++it1;
           ++it2 = it1;

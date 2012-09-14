@@ -258,7 +258,7 @@ void MKCore::populate_model_ents(int geom_index,
         err = igeom_instance(geom_index)->getData(*eit, iGeomModelTags[geom_index], &this_me);
         if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
             // construct a new ModelEnt and set the geom ent to point to it
-          this_me = new ModelEnt(this, *eit, geom_index, NULL, mesh_index, irel_index);
+          this_me = new ModelEnt(this, *eit, geom_index, 0, mesh_index, irel_index);
           modelEnts[dim].push_back(this_me);
 
           //check whether there is the mesh related to this model entity
@@ -286,7 +286,7 @@ void MKCore::populate_model_ents(int geom_index,
       err = igeom_instance(geom_index)->getEntSetData(*vit, iGeomModelTags[geom_index], &this_me);
       if (NULL == this_me || iBase_TAG_NOT_FOUND == err) {
           // construct a new ModelEnt and set the geom ent to point to it
-        this_me = new ModelEnt(this, *vit, geom_index, NULL, mesh_index, irel_index);
+        this_me = new ModelEnt(this, *vit, geom_index, 0, mesh_index, irel_index);
         modelEnts[4].push_back(this_me);
       }
     }

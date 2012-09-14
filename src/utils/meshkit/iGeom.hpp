@@ -506,7 +506,7 @@ class iGeom {
 		virtual inline Error getData(EntityHandle entity_handle, TagHandle tag_handle,
 				void* tag_value_out) const;
 		virtual inline Error getFacets(EntityHandle entity_handle, double dist_tolerance,
-				double *point, int *facets) const;
+                                                   std::vector<double> &point, std::vector<int> &facets) const;
 		virtual inline Error getIntData(EntityHandle entity_handle, TagHandle tag_handle,
 				int& value_out) const;
 		virtual inline Error getDblData(EntityHandle entity_handle, TagHandle tag_handle,
@@ -2382,14 +2382,44 @@ iGeom::getIntArrData( const EntityHandle* entity_handles,
 }
 
 iGeom::Error iGeom::getFacets(EntityHandle entity_handle, double dist_tolerance,
-                              double *point, int *facets) const
+                              std::vector<double> &points, std::vector<int> &facets) const
 {
-     int err, alloc_f = std::numeric_limits<int>::max(),
-                        alloc_p = std::numeric_limits<double>::max(), size_f, size_p;
-     iGeom_getFacets(mInstance, entity_handle, dist_tolerance, &point, &alloc_p, &size_p,
-                     &facets, &alloc_f, &size_f, &err);
+  // try getting results using whatever space input vector has allocated
+  bool already_allocd = false;
+  int err, points_size = 0, points_alloc = points.capacity(), 
+    facets_size = 0, facets_alloc = facets.capacity();
+  if (points_alloc && !facets_alloc) points_alloc = 0;
+  else if (!points_alloc && facets_alloc) facets_alloc = 0;
+  if (points_alloc && facets_alloc) already_allocd = true;
+  double *points_ptr = (points_alloc ? &points[0] : NULL);
+  int *facets_ptr = (facets_alloc ? &facets[0] : NULL);
+  iGeom_getFacets(mInstance, entity_handle, dist_tolerance, 
+		  &points_ptr, &points_alloc, &points_size, 
+		  &facets_ptr, &facets_alloc, &facets_size, &err);
 
-     return (Error)err;
+  if (iBase_SUCCESS == err && already_allocd) {
+    points.resize(points_size);
+    facets.resize(facets_size);
+    return (Error)err;
+  }
+  else if (iBase_BAD_ARRAY_DIMENSION == err || iBase_BAD_ARRAY_SIZE == err) {
+  // if input vector was too small, try again requesting allocation
+    points_alloc = 0; points_ptr = NULL;
+    facets_alloc = 0; facets_ptr = NULL;
+    iGeom_getFacets(mInstance, entity_handle, dist_tolerance, 
+		    &points_ptr, &points_alloc, &points_size, 
+		    &facets_ptr, &facets_alloc, &facets_size, &err);
+  }
+
+  if (iBase_SUCCESS == err) {
+    points.resize(points_size);
+    std::copy(points_ptr, points_ptr+points_size, points.begin());
+    facets.resize(facets_size);
+    std::copy(facets_ptr, facets_ptr+facets_size, facets.begin());
+    free(points_ptr); free(facets_ptr);
+  }
+
+  return (Error)err;
 }
 
 iGeom::Error

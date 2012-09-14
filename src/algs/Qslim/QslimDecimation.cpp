@@ -503,7 +503,7 @@ void do_contract(pair_info *pair) {
       computeTrianglePlane(mb, changed[i]);
     }
   }
-  assert (moab::MB_SUCCESS == rval1);
+  assert (moab::MB_SUCCESS == rval1 || moab::MB_MULTIPLE_ENTITIES_FOUND == rval1);
 
 #ifdef SUPPORT_VCOLOR
   //
@@ -558,6 +558,7 @@ void do_contract(pair_info *pair) {
   // maybe we will delete at the end all that are invalid ??
   int invalid = 0;
   moab::ErrorCode rval = mb->tag_set_data(validTag, &v1, 1, &invalid);
+  assert (moab::MB_SUCCESS == rval);
 
   if (opts.plotCost) {
     double cost_at_v0 = 0; // maybe it is already set before

@@ -69,12 +69,12 @@ void QuadMesher::setup_this()
 
 void QuadMesher::execute_this()
 {
+/*
   Jaal::Tri2Quads t2quad;
   JaalMoabConverter meshconverter;
 
   iMesh_Instance imesh = mk_core()->imesh_instance()->instance();
   MEntSelection::iterator i;
-/*
   for (i = me_selection().begin(); i != me_selection().end(); ++i) {
     ModelEnt* ent = i->first;
     std::auto_ptr<Jaal::Mesh> trimesh(meshconverter.fromMOAB( imesh, (iBase_EntitySetHandle)ent->mesh_handle() ));

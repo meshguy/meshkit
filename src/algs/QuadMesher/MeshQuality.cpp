@@ -9,7 +9,7 @@ void quality_values( const vector<double> &quality)
    cout << "   Mean Value   : " << quality[quality.size()/2] << endl;
    size_t nSize = quality.size();
    double sum = 0.0;
-   for( int i = 0; i < nSize; i++)
+   for( unsigned int i = 0; i < nSize; i++)
         sum += quality[i];
    cout << "   Avg Value    : " << sum/(double)quality.size() << endl;
 }
@@ -56,7 +56,7 @@ void print_histogram( const vector<double> &quality, const string &header, int n
     ofile.open( filename.c_str(), ios::out);
     if( ofile.fail() ) return;
 
-    for( int i = 0; i < quality.size(); i++)
+    for( unsigned int i = 0; i < quality.size(); i++)
         ofile << i << " " << quality[i] << endl;
 
 }
