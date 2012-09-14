@@ -2383,7 +2383,7 @@ FBiGeom::getIntArrData( const EntityHandle* entity_handles,
 FBiGeom::Error FBiGeom::getFacets(EntityHandle entity_handle, double dist_tolerance,
 				  std::vector<double> &point, std::vector<int> &facets) const
 {
-     int err=MB_FAILURE; //, alloc_f = std::numeric_limits<int>::max(),
+     int err=1; //, alloc_f = std::numeric_limits<int>::max(),
                         //alloc_p = std::numeric_limits<double>::max(), size_f, size_p;
      /*FBiGeom_getFacets(mInstance, entity_handle, dist_tolerance, &point, &alloc_p, &size_p,
                      &facets, &alloc_f, &size_f, &err);*/
