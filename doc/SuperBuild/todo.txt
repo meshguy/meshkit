@@ -1,0 +1,10 @@
+ToDO:
+1. Enable --with-vtk to Moab, which means including vtk in superbuild
+2. moab can be built with cgm support?? --with-cgm
+3. Add MPI back into the mix
+4. Make more stuff optional ( tetgen, triangle, OCE, etc )
+5. Add a test step to everything to make sure the projects are properly built
+
+
+Notes:
+1. autoconf step requires autoconf to be installed and libtool to be installed
