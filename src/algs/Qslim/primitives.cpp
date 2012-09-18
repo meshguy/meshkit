@@ -231,9 +231,11 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 					if (conn2[0] == v0 || conn2[1] == v0) {
 						// this is the edge that will be kept, the other one collapsed
 						edgePairs.push_back(e[j]);
-						j = (j + 1) % 2;// the other one
-						edgePairs.push_back(e[j]);
-						edgesWithV1.push_back(e[j]);
+						//j = (j + 1) % 2;// the other one
+						int j1 = (j + 1) % 2; //  do not modify j, as someone might do something crazy
+						// with that index in a for_loop (optimizations?)
+						edgePairs.push_back(e[j1]);
+						edgesWithV1.push_back(e[j1]);
 						break; // no need to check the other one. it
 						// will contain v1
 					}
@@ -242,9 +244,15 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			// look at all triangles that are adjacent
 			// invalidate first tris
 			unsigned char invalid = 0;
-			if (tris.size()>0)
-		          mb->tag_set_data(validTag, &(tris[0]), tris.size(),
-							&invalid);
+			if (tris.size() > 0)
+      {
+        // set the invalid tag one by one, we do not want to create an array of invalids
+        for (unsigned int k = 0; k < tris.size(); k++)
+        {
+          moab::EntityHandle ct = tris[k];
+          mb->tag_set_data(validTag, &ct, 1, &invalid);
+        }
+      }
 			if (opts.logfile && opts.selected_output & OUTPUT_CONTRACTIONS) {
 				*opts.logfile << "Triangles invalidated: " << tris.size()
 						<< ":";
@@ -316,9 +324,14 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 			rval = mb->tag_set_data(validTag, &ev0v1, 1, &invalid);
                               if (moab::MB_SUCCESS != rval) return rval;
 			// invalidate the edges connected for sure to v1
-			if (edgesWithV1.size()>0)
-                           mb->tag_set_data(validTag, &edgesWithV1[0],
-					edgesWithV1.size(), &invalid);
+      if (edgesWithV1.size() > 0)
+      {
+        for(unsigned int k=0; k<edgesWithV1.size(); k++)
+        {
+          moab::EntityHandle eV1=edgesWithV1[k];
+          mb->tag_set_data(validTag, &eV1, 1, &invalid);
+        }
+      }
 			// reset the connectivity of some edges (from v1 to v0)
 			for (unsigned int i = 0; i < edges.size(); i++) {
 				moab::EntityHandle e1 = edges[i];
@@ -576,8 +589,9 @@ moab::ErrorCode contract(moab::Interface * mb, moab::EntityHandle v0, moab::Enti
 					if (conn2[0] == v0 || conn2[1] == v0) {
 						// this is the edge that will be kept, the other one collapsed
 						edgePairsToMerge.push_back(e[j]);
-						j = (j + 1) % 2;// the other one
-						edgePairsToMerge.push_back(e[j]);
+						//j = (j + 1) % 2;
+            int j1 = (j + 1)%2;// do not modify original j
+						edgePairsToMerge.push_back(e[j1]);
 						break; // no need to check the other one. it
 						// will contain v1
 					}
