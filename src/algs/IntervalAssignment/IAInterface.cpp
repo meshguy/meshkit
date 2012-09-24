@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdio>
 #include <assert.h>
+#include <math.h>
 
 namespace MeshKit 
 {
@@ -262,15 +263,16 @@ void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
 
     */
 
+   // placeholder - just make one subproblem
   IASolver *sub_problem = new IASolver();
   VariableSet::iterator vit;
   for (vit = variables.begin(); vit != variables.end(); vit++) 
   {
-    IAVariable *v = index_to_variable( *vit );
-    if ( vit->get_firmness() != IAVariable::HARD )
+    IAVariable *v = *vit;
+    if ( v->get_firmness() != IAVariable::HARD )
     {
       // add the goals
-      sub_problem->I.push_back( vit->goal );
+      sub_problem->I.push_back( v->goal );
     }
   }
 
@@ -278,22 +280,22 @@ void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
   unsigned int i;
   for (i = 0; i < sumEqualConstraints1.size(); i++)
   {
-    IAVariableVec *s1 = &sumEqualConstraints1[i];
-    IAVariableVec *s2 = &sumEqualConstraints2[i];
+    VariableSet *s1 = &sumEqualConstraints1[i];
+    VariableSet *s2 = &sumEqualConstraints2[i];
     std::vector<int> side_1, side_2;
     int rhs(0);
     
-    for (int j = 0; j < s1->size(); ++j )
+    for (VariableSet::iterator j = s1->begin(); j != s1->end(); ++j)
     {
-      IAVariable *v = s1[j];
+      IAVariable *v = *j;
       if (v->get_firmness() == IAVariable::HARD )
         rhs -= floor( v->get_goal() + 0.5 ); // goal should be integer already for hardsets
       else
         side_1.push_back( v->ia_index );
     }
-    for (int j = 0; j < s2->size(); ++j )
+    for (VariableSet::iterator j = s2->begin(); j != s2->end(); ++j)
     {
-      IAVariable *v = s2[j];
+      IAVariable *v = *j;
       if (v->get_firmness() == IAVariable::HARD )
         rhs += v->get_goal();
       else
@@ -303,15 +305,15 @@ void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
   }
   
   // convert even constraints to IASolver  
-  for (ConstraintSet::const_iterator i = sub_even_constraints.begin(); i != sub_even_constraints.end() )
+  for (i = 0; i < sumEvenConstraints.size(); ++i)
   {
-    IAVariableVec *s = &sumEvenConstraints[i];
+    VariableSet *s = &sumEvenConstraints[i];
     std::vector<int> side;
     int rhs(0);
     
-    for (int j = 0; j < s->size(); ++j )
+    for (VariableSet::iterator j = s->begin(); j != s->end(); ++j)
     {
-      IAVariable *v = s[j];
+      IAVariable *v = *j;
       if (v->get_firmness() == IAVariable::HARD )
         rhs -= floor( v->get_goal() + 0.5 ); // goal should be integer already for hardsets
       else
@@ -325,19 +327,33 @@ void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
 
 bool IAInterface::solve_subproblem( IASolver *subproblem )
 {
-/*
-  for (int i=subproblems.size()-1; i>=0; --i)
-  {
-    delete subproblems[i];
-  }
-  subproblems.clear();
-*/
-
-  return false;
+  return subproblem->solve();
 }
 
 void IAInterface::assign_solution( IASolver *subproblem )
 {
+  // assign solution value from subproblem to model entities
+}
+
+bool IAInterface::execute_this()
+{
+  bool all_success = true;
+  std::vector<IASolver*> subproblems;
+  subdivide_problem(subproblems);
+  for (unsigned int i = 0; i < subproblems.size(); ++i)
+  {
+    IASolver* p = subproblems[i];
+    if ( solve_subproblem(p) )
+      assign_solution(p);
+    else
+    {
+      all_success = false;
+      ; // some error statement
+    }
+    delete p;
+  }
+  subproblems.clear();
+  return all_success;
 }
 
 } // namespace MeshKit

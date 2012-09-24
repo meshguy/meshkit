@@ -13,8 +13,6 @@ libIntervalAssignment_la_includedir = $(includedir)
 libIntervalAssignment_la_SOURCES = \
 IAData.hpp \
 IAInterface.cpp \
-IAMINlp.cpp \
-IAMINlp.hpp \
 IANlp.cpp \
 IANlp.hpp \
 IARoundingNLP.cpp \
@@ -22,8 +20,6 @@ IARoundingNLP.hpp \
 IASolution.hpp \
 IASolver.cpp \
 IASolver.hpp \
-IASolverEven.cpp \
-IASolverEven.hpp \
 IASolverInt.cpp \
 IASolverInt.hpp \
 IASolverRelaxed.cpp \

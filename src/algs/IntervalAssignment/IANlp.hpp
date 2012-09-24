@@ -49,7 +49,8 @@
 class IAData;
 class IASolution;
 
-#include "IpTNLP.hpp"
+//#include "IpTNLP.hpp"
+#include "/Users/samitch/meshkit/ipopt/CoinIpopt/include/coin/IpTNLP.hpp"
 using namespace Ipopt;
 
 class IANlp : public TNLP
@@ -132,6 +133,7 @@ private:
   static const int p_norm;
   // solution data
   IASolution *solution;
+  int neleJac;
   
   const bool debugging;
   const bool verbose; // verbose debugging
@@ -161,8 +163,6 @@ private:
   static Number eval_S_i(const Number& I_i, const Number& x_i); 
   static Number eval_grad_S_i(const Number& I_i, const Number& x_i); 
   static Number eval_hess_S_i(const Number& I_i, const Number& x_i); 
-  
-  int neleJac;
   
 
 };

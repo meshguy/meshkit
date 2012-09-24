@@ -5,7 +5,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/Types.hpp"
 #include "meshkit/VecUtil.hpp"
-#include "meshkit/IAVariable.hpp"
+#include "/Users/samitch/meshkit/meshkit/trunk/src/algs/IntervalAssignment/meshkit/IAVariable.hpp"
 #include "moab/GeomTopoTool.hpp"
 #include "moab/CN.hpp"
 #include "RefEntity.hpp"

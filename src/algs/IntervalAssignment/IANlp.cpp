@@ -117,12 +117,12 @@ bool IANlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
   }
   
   // constraint bounds
-  for (int i = 0; i<data->constraints.size(); ++i)
+  for (unsigned int i = 0; i<data->constraints.size(); ++i)
   {
     g_l[i] = data->constraints[i].lowerBound; 
     g_u[i] = data->constraints[i].upperBound; 
   }
-  for (int i = 0; i<data->sumEvenConstraints.size(); ++i)
+  for (unsigned int i = 0; i<data->sumEvenConstraints.size(); ++i)
   {
     const int j = i + (int) data->constraints.size();
     g_l[j] = 4;
@@ -151,7 +151,7 @@ bool IANlp::get_starting_point(Index n, bool init_x, Number* x_init,
   assert(data->num_variables()==data->I.size());
   
   // initialize x to the goals
-  for (int i = 0; i<data->I.size(); ++i)
+  for (unsigned int i = 0; i<data->I.size(); ++i)
   {
     x_init[i]=data->I[i];
   }
@@ -350,21 +350,21 @@ bool IANlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
   assert(n == data->num_variables());
   assert(m == data->constraints.size()+data->sumEvenConstraints.size());
   
-  for (Index i = 0; i<data->constraints.size(); ++i)
+  for (unsigned int i = 0; i<data->constraints.size(); ++i)
   {
     //double g_i = constraints[i].rhs;
     double g_i = 0.;
-    for (Index j = 0; j < data->constraints[i].M.size(); ++j)
+    for (unsigned int j = 0; j < data->constraints[i].M.size(); ++j)
     {
       g_i += x[ data->constraints[i].M[j].col ] * data->constraints[i].M[j].val;
     }
     g[i] = g_i;
   }
-  for (Index i = 0; i<data->sumEvenConstraints.size(); ++i)
+  for (unsigned int i = 0; i<data->sumEvenConstraints.size(); ++i)
   {
     const int k = (int) data->constraints.size() + i;
     double g_k = data->sumEvenConstraints[i].rhs;
-    for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+    for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
     {
       g_k += x[ data->sumEvenConstraints[i].M[j].col ] * data->sumEvenConstraints[i].M[j].val;
     }
@@ -386,18 +386,18 @@ bool IANlp::eval_jac_g(Index n, const Number* x, bool new_x,
   if (values == NULL) {
     // return the structure of the jacobian
     Index k=0;
-    for (Index i = 0; i<data->constraints.size(); ++i)
+    for (unsigned int i = 0; i<data->constraints.size(); ++i)
     {
-      for (Index j = 0; j < data->constraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->constraints[i].M.size(); ++j)
       {
     		iRow[k] = i;
         jCol[k] = data->constraints[i].M[j].col;
         ++k;
       }
     }
-    for (Index i = 0; i< data->sumEvenConstraints.size(); ++i)
+    for (unsigned int i = 0; i< data->sumEvenConstraints.size(); ++i)
     {
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
     		iRow[k] = i + (int) data->constraints.size();
         jCol[k] = data->sumEvenConstraints[i].M[j].col;
@@ -410,16 +410,16 @@ bool IANlp::eval_jac_g(Index n, const Number* x, bool new_x,
     // return the values of the jacobian of the constraints
     assert(nele_jac == neleJac);
     Index k=0;
-    for (Index i = 0; i < data->constraints.size(); ++i)
+    for (unsigned int i = 0; i < data->constraints.size(); ++i)
     {
-      for (Index j = 0; j < data->constraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->constraints[i].M.size(); ++j)
       {
         values[k++] = data->constraints[i].M[j].val;
       }
     }
-    for (Index i = 0; i < data->sumEvenConstraints.size(); ++i)
+    for (unsigned int i = 0; i < data->sumEvenConstraints.size(); ++i)
     {
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
         values[k++] = data->sumEvenConstraints[i].M[j].val;
       }
@@ -449,7 +449,7 @@ bool IANlp::eval_h(Index n, const Number* x, bool new_x,
     // the hessian for this constraints are actually empty
     
     // Since the objective function is separable, only the diagonal is non-zero
-    for (Index idx=0; idx<data->num_variables(); ++idx)
+    for (int idx=0; idx<data->num_variables(); ++idx)
     {
       iRow[idx] = idx;
       jCol[idx] = idx;
@@ -464,7 +464,7 @@ bool IANlp::eval_h(Index n, const Number* x, bool new_x,
     // the hessian for this problem is actually empty
 
     // fill the objective portion
-    for (Index idx=0; idx<data->num_variables(); ++idx)
+    for (int idx=0; idx<data->num_variables(); ++idx)
     {
       values[idx] = obj_factor * eval_hess_R_i(data->I[idx], x[idx]);
     }
@@ -486,7 +486,7 @@ void IANlp::finalize_solution(SolverReturn status,
 
   // copy solution into local storage x_solution
   // ensure storage is the right size
-  if (solution->x_solution.size() != n)
+  if ( solution->x_solution.size() != (unsigned) n)
   {
     solution->x_solution.clear(); // clear contents
     std::vector<double>(solution->x_solution).swap(solution->x_solution); // zero capacity
@@ -513,7 +513,7 @@ void IANlp::finalize_solution(SolverReturn status,
       if (0)
       {
         printf("legend: coeff x_i (solution, goal, ratio; f(x), f'(x); F(x), F'(x) )\n");
-        for (int j = 0; j < data->constraints.size(); ++j)
+        for (unsigned int j = 0; j < data->constraints.size(); ++j)
         {
           printf("constraint %d: ", j);
           const IAData::constraintRow & c = data->constraints[j];
@@ -556,7 +556,7 @@ void IANlp::finalize_solution(SolverReturn status,
       printf("\nFinal value of the constraints, zero if satisfied:\n");
       printf("sum-equal:\n");
       for (Index i=0; i<m ;i++) {
-        if (i==data->constraints.size())
+        if ((unsigned) i == data->constraints.size())
           printf("sum-even:\n");
         printf("g(%d) = %e\n", i, g[i]);
       }

@@ -189,7 +189,7 @@ void IASolver::print_solution() // IPData &ip_data
     else
       printf("%e NON-INTEGER\n",x_solution[i]);
   }
-  for (int i=0; i< sumEvenConstraints.size(); ++i)
+  for (unsigned int i=0; i< sumEvenConstraints.size(); ++i)
   {
     double d = IASolverEven::sum_even_value(i, this, this);
     printf("%d sum-even = %d (%e)",i, (int) floor(d+0.5), d);

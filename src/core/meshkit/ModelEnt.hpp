@@ -65,7 +65,8 @@ public:
            moab::EntityHandle mesh_ent = NULL,
            int mesh_index = -1,
            int irel_index = -1,
-           int sizing_index = -1);
+           int sizing_index = -1,
+           IAVariable *ia_var = NULL);
 
     /** \brief Destructor
      */

@@ -8,7 +8,7 @@
 #include <math.h>
 #include <limits.h>
 
-#include "IpIpoptApplication.hpp"
+#include "/Users/samitch/meshkit/ipopt/CoinIpopt/include/coin/IpIpoptApplication.hpp"
 
 IASolverRelaxed::IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution) : 
 iaData(ia_data), relaxedSolution(relaxed_solution), p_norm(3), debugging(true) {}
@@ -24,7 +24,7 @@ double IASolverRelaxed::check_constraint(const int i, const IAData * ia_data, co
   {
     if (solution)
     {
-      for (int j = 0; j < ia_data->constraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < ia_data->constraints[i].M.size(); ++j)
       {
         g_i += solution->x_solution[ ia_data->constraints[i].M[j].col ] * ia_data->constraints[i].M[j].val;
       }
@@ -32,7 +32,7 @@ double IASolverRelaxed::check_constraint(const int i, const IAData * ia_data, co
     if (print_me)
     {
       printf("constraint %d:", i);
-      for (int j = 0; j < ia_data->constraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < ia_data->constraints[i].M.size(); ++j)
       {
         printf( " %f x_%d", ia_data->constraints[i].M[j].val, ia_data->constraints[i].M[j].col );
         if (solution)
@@ -46,14 +46,14 @@ double IASolverRelaxed::check_constraint(const int i, const IAData * ia_data, co
   {
     if (solution)
     {
-      for (int j = 0; j < ia_data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < ia_data->sumEvenConstraints[i].M.size(); ++j)
       {
         g_i += solution->x_solution[ ia_data->sumEvenConstraints[i].M[j].col ] * ia_data->sumEvenConstraints[i].M[j].val;
       }
       if (print_me)
       {
         printf("sum-constraint %d:", i);
-        for (int j = 0; j < ia_data->sumEvenConstraints[i].M.size(); ++j)
+        for (unsigned int j = 0; j < ia_data->sumEvenConstraints[i].M.size(); ++j)
         {
           printf( " %f x_%d", ia_data->sumEvenConstraints[i].M[j].val, ia_data->sumEvenConstraints[i].M[j].col );
           if (solution) 
@@ -76,7 +76,7 @@ bool IASolverRelaxed::constraints_satisfied( const IAData * ia_data, const IASol
   // does the same thing with the data in ipopt format
 
   bool satisfied = true;
-  for (int i = 0; i<ia_data->constraints.size(); ++i)
+  for (unsigned int i = 0; i<ia_data->constraints.size(); ++i)
   {
     double g_i = check_constraint(i, ia_data, solution, false, false);
     if (g_i + 1.e-2 < ia_data->constraints[i].lowerBound || g_i - 1.e-2 > ia_data->constraints[i].upperBound)
@@ -91,7 +91,7 @@ bool IASolverRelaxed::constraints_satisfied( const IAData * ia_data, const IASol
   }
   
   sum_even_satisfied = true;
-  for (Index i = 0; i<ia_data->sumEvenConstraints.size(); ++i)
+  for (unsigned int i = 0; i<ia_data->sumEvenConstraints.size(); ++i)
   {
     double g_k = check_constraint(i, ia_data, solution, true, false);
     int g = floor(g_k + 1.e-2);
