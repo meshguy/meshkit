@@ -12,13 +12,13 @@ libIntervalAssignment_la_includedir = $(includedir)
 # The list of source files, and any header files that do not need to be installed
 libIntervalAssignment_la_SOURCES = \
 IAData.hpp \
-IAIntWaveNlp.cpp \
-IAIntWaveNlp.hpp \
 IAInterface.cpp \
 IAMINlp.cpp \
 IAMINlp.hpp \
 IANlp.cpp \
 IANlp.hpp \
+IARoundingNLP.cpp \
+IARoundingNLP.hpp \
 IASolution.hpp \
 IASolver.cpp \
 IASolver.hpp \
@@ -35,3 +35,13 @@ IPData.hpp
 nobase_libIntervalAssignment_la_include_HEADERS = \
         meshkit/IAInterface.hpp
 		meshkit/IAVariable.hpp
+
+AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
+              -I$(top_srcdir)/src/core \
+              -I$(top_srcdir)/src/utils \
+              -I$(top_srcdir) \
+              -I$(top_builddir) \
+              -I$(top_srcdir)/src/lemon \
+              -I$(top_srcdir)/src/algs/QuadMesher \
+              -I$(top_srcdir)/src/algs/Sweep \
+	      -I$(top_srcdir)/src/algs/AssyGen

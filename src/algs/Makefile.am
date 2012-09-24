@@ -12,6 +12,14 @@ libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
                            AssyGen/libAssyGen.la \
                            Triangle/libMKTriangle.la
 
+if ENABLE_intassign
+  SUBDIRS += IntervalAssignment
+  AM_CPPFLAGS += -I$(top_srcdir)/src/algs/IntervalAssignment $(IPOPT_CPPFLAGS)
+  libMeshKitalgs_la_LIBADD += libIntervalAssignment.la
+  AM_LDFLAGS += $(IPOPT_LDFLAGS)
+  LIBS += $(IPOPT_LIBS)
+endif
+
 # The directory in which to install headers
 libMeshKitalgs_la_includedir = $(includedir)
 

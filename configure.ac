@@ -351,6 +351,7 @@ MK_OPTIONAL_TOOL([rgg],    [no])
 MK_OPTIONAL_TOOL([utils],  [yes])
 MK_OPTIONAL_TOOL([src],    [no])
 MK_OPTIONAL_TOOL([python], [no])
+MK_OPTIONAL_TOOL([intassign], [no])
 
 
 ################################################################################
@@ -798,6 +799,53 @@ AM_CONDITIONAL(HAVE_TRIANGLE, [test "x$HAVE_TRIANGLE" = "xyes"])
 
 
 ################################################################################
+#                           IPOPT
+################################################################################
+AC_MSG_CHECKING([if IPOPT support is enabled])
+AC_ARG_WITH(ipopt, 
+[AC_HELP_STRING([--with-ipopt=DIR], [Specify IPOPT location])
+AC_HELP_STRING([--without-ipopt], [Disable support for IPOPT file format])],
+[IPOPT_ARG=$withval
+DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-ipopt=\"${withval}\""
+]
+, [IPOPT_ARG=])
+if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+fi
+
+ # if IPOPT support is enabled
+AC_MSG_CHECKING([if IPOPT support available])
+AC_MSG_RESULT([])
+HAVE_IPOPT=no
+if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
+  HAVE_IPOPT=yes
+
+    # if a path is specified, update LIBS and INCLUDES accordingly
+  if test "xyes" != "x$IPOPT_ARG" && test "x" != "x$IPOPT_ARG"; then
+    if test -d "$IPOPT_ARG/lib"; then
+      IPOPT_LDFLAGS="-L$IPOPT_ARG/lib"
+    elif test -d "$IPOPT_ARG"; then
+      IPOPT_LDFLAGS="-L$IPOPT_ARG"
+    else
+      AC_MSG_ERROR("$IPOPT_ARG is not a directory.")
+    fi
+    if test -d "$IPOPT_ARG/include/coin"; then
+      IPOPT_CPPFLAGS="-I$IPOPT_ARG/include/coin"
+    elif test -d "$IPOPT_ARG/include"; then
+      IPOPT_CPPFLAGS="-I$IPOPT_ARG/include"
+    elif test -d "$IPOPT_ARG"; then
+      IPOPT_CPPFLAGS="-I$IPOPT_ARG"
+    fi
+  fi
+  
+  AC_SUBST([IPOPT_LDFLAGS])
+  AC_SUBST([IPOPT_CPPFLAGS])
+  AC_SUBST([IPOPT_LIBS])
+fi
+
+################################################################################
 #                           Mesquite
 ################################################################################
 
@@ -948,6 +996,7 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src/core/Makefile
                  src/algs/Makefile
+		 src/algs/IntervalAssignment/Makefile
                  src/algs/QuadMesher/Makefile
                  src/algs/Sweep/Makefile
                  src/algs/AssyGen/Makefile

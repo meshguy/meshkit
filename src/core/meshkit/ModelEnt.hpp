@@ -13,6 +13,7 @@ namespace MeshKit {
 
 class ModelEnt;
 class MKCore;
+class IAVariable;
 
 /** \class ModelEnt ModelEnt.hpp "meshkit/ModelEnt.hpp"
  * \brief The class used in MeshKit for referring to model entities and mesh associated with them.
@@ -463,6 +464,10 @@ public:
   int iRelPairIndex()
    {return irelIndex;}
 
+  IAVariable *ia_var() {return iaVariable;}
+  const IAVariable *ia_var() const {return iaVariable;}
+  void ia_var(IAVariable *var) {iaVariable = var;}
+
 private:
 
     /** \brief Return the next entity in the loop, using winding number
@@ -525,6 +530,8 @@ private:
     //! MeshOps pointing to this entity
   std::vector<MeshOp*> meshOps;
 
+    //! interval assignment variable
+  IAVariable *iaVariable;
 };
 
 inline MKCore *ModelEnt::mk_core() const

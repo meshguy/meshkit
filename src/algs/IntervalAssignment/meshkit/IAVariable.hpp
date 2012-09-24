@@ -7,14 +7,17 @@
 
 #include <cstring>
 
-class ModelEntity;
+namespace MeshKit 
+{
+
+class ModelEnt;
 
 class IAVariable
 {
 public:
   
-  void set_model_entity(ModelEntity* me);
-  ModelEntity *get_model_entity() const;
+  void set_model_entity(ModelEnt* me);
+  ModelEnt *get_model_entity() const;
   
   enum Firmness {UNSET, SOFT, HARD};
   
@@ -35,22 +38,23 @@ public:
   // so we leave "set_solution" out of the public interface
   
   //void IAVariable();
-  IAVariable(ModelEntity *model_entity = NULL, Firmness set_firmness = SOFT, double goal_value = 0. );
+  IAVariable(ModelEnt *model_entity = NULL, Firmness set_firmness = SOFT, double goal_value = 0. );
   
   
 private:
   Firmness firmness;
   double goal; 
   int solution; // <0 notsolved, >=1 solved
-  ModelEntity *modelEntity; // NULL is OK
+  ModelEnt *modelEnt; // NULL is OK
   
   friend class IAInterface;
   int ia_index; // zzyk- remove this used during solution process, could replace with a temporary map is memory is an issue
 };
 
 inline
-IAVariable::IAVariable(ModelEntity *model_entity, Firmness set_firmness, double goal_value )
-: modelEntity(model_entity), goal(goal_value), firmness(set_firmness), solution(0)
+IAVariable::IAVariable(ModelEnt *model_entity, Firmness set_firmness, double goal_value )
+  : firmness(set_firmness), goal(goal_value), solution(0), modelEnt(model_entity)
 {}
 
+} // namespace MeshKit
 #endif

@@ -2,11 +2,7 @@
 // Interval Assignment for Meshkit
 //
 #include "IASolverInt.hpp"
-#include "IAMINlp.hpp"
 #include "IARoundingNlp.hpp"
-#include "IARoundingFarNlp.hpp"
-#include "IARoundingFar3StepNlp.hpp"
-#include "IARoundingHeuristicMINLP.hpp"
 #include "IASolverRelaxed.hpp"
 // #include "IAMilp.hpp" // glpk based solution too slow
 
@@ -297,10 +293,10 @@ bool IASolverInt::solve_minlp()
   
   // problem setup
   // a couple of different models, simplest to more complex
-  // IARoundingNlp *myianlp = new IARoundingNlp(iaData, &ipData, this);
+  IARoundingNlp *myianlp = new IARoundingNlp(iaData, &ipData, this);
   // IARoundingFarNlp *myianlp = new IARoundingFarNlp(iaData, &ipData, this);
   // IARoundingFar3StepNlp *myianlp = new IARoundingFar3StepNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
-  IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
+  // IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
   SmartPtr<TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
 
   bool try_again = true;

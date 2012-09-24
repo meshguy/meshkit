@@ -99,7 +99,7 @@ void IAData::constrain_sum_even(const std::vector<int> &curve_indices, const int
   sumEvenConstraints.push_back( sumEvenConstraintRow() );
   sumEvenConstraints.back().M.reserve(curve_indices.size());
   sumEvenConstraints.back().rhs = rhs;
-  for (int j = 0; j < curve_indices.size(); ++j)
+  for (unsigned int j = 0; j < curve_indices.size(); ++j)
   {
     sumEvenConstraints.back().M.push_back( sparseEntry( curve_indices[j], 1. ) );
   }
@@ -117,11 +117,11 @@ void IAData::constrain_opposite_side_equal(const std::vector<int> &side_1, const
   constraints.back().M.reserve( num_curves );
   constraints.back().upperBound = rhs;
   constraints.back().lowerBound = rhs;
-  for (int j = 0; j < side_1.size(); ++j)
+  for (unsigned int j = 0; j < side_1.size(); ++j)
   {
     constraints.back().M.push_back( sparseEntry( side_1[j], 1. ) );
   }
-  for (int j = 0; j < side_2.size(); ++j)
+  for (unsigned int j = 0; j < side_2.size(); ++j)
   {
     constraints.back().M.push_back( sparseEntry( side_2[j], -1. ) );
   }

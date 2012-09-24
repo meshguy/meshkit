@@ -69,7 +69,7 @@ test_MBGeomOp_SOURCES = test_MBGeomOp.cpp
 test_MBSplitOp_SOURCES = test_MBSplitOp.cpp
 test_SetPnt2Quad_SOURCES = test_SetPnt2Quad.cpp
 test_volIce_SOURCES = test_volIce.cpp
-test_MBVolOp = test_MBVolOp.cpp
+test_MBVolOp_SOURCES = test_MBVolOp.cpp
 endif
 
 # Utility target: build but don't run tests

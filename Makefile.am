@@ -21,6 +21,12 @@ if ENABLE_src
   SUBDIRS += src
   AM_CPPFLAGS += -I$(top_srcdir)/src 
 endif
+if ENABLE_intassign
+  AM_CPPFLAGS += -I$(top_srcdir)/src/algs/IntervalAssignment $(IPOPT_CPPFLAGS)
+  AM_LDFLAGS += $(IPOPT_LDFLAGS)
+  LIBS += $(IPOPT_LIBS)
+endif
+
 #if HAVE_CAMAL
 #  SUBDIRS += camal
 #  AM_CPPFLAGS += -I$(top_srcdir)/camal

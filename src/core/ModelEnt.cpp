@@ -5,6 +5,7 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/Types.hpp"
 #include "meshkit/VecUtil.hpp"
+#include "meshkit/IAVariable.hpp"
 #include "moab/GeomTopoTool.hpp"
 #include "moab/CN.hpp"
 #include "RefEntity.hpp"
@@ -23,7 +24,7 @@ ModelEnt::ModelEnt(MKCore *mk,
           iGeomEnt(geom_ent), iGeomSet(NULL),
           moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
           meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false),
-          meshedState(NO_MESH)
+          meshedState(NO_MESH), iaVariable(NULL)
 {
     // mark the geometry entity with this modelEnt
   if (-1 != igeomIndex && geom_ent) {
@@ -63,12 +64,13 @@ ModelEnt::ModelEnt(MKCore *mk,
                    moab::EntityHandle mesh_ent,
                    int mesh_index,
                    int irel_index,
-                   int sizing_index)
+                   int sizing_index,
+                   IAVariable *ia_var)
         : mkCore(mk), igeomIndex(geom_index), meshIndex(mesh_index), irelIndex(irel_index),
           iGeomEnt(NULL), iGeomSet(geom_ent),
           moabEntSet(mesh_ent), sizingFunctionIndex(sizing_index),
           meshIntervals(-1), intervalFirmness(DEFAULT), constrainEven(false),
-          meshedState(NO_MESH)
+          meshedState(NO_MESH), iaVariable(ia_var)
 {
     // mark the geometry entity with this modelEnt
   if (-1 != igeomIndex && geom_ent) {
@@ -124,6 +126,11 @@ ModelEnt::~ModelEnt()
     moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_delete_data(
           mkCore->moab_model_tag(meshIndex), &moabEntSet, 1);
     IBERRCHK(err, "Failed to set moab ModelEnt tag.");
+  }
+
+  if (iaVariable) {
+    delete iaVariable;
+    iaVariable = NULL;
   }
 }
 
