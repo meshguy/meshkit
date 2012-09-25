@@ -1,5 +1,14 @@
-include(MeshKitExternalProject)
+include(ExternalProject)
 include(CMakeParseArguments)
+
+#Add ability to use autoconf
+function(ExternalProject_AutoConf_Step name)
+  ExternalProject_Add_Step(${name} ${name}-autoconf
+    COMMAND autoreconf -i <SOURCE_DIR>
+    DEPENDEES update
+    DEPENDERS configure
+  )
+endfunction()
 
 # Function to provide an option only if a set of other variables are ON.
 # Example invocation:
@@ -32,12 +41,13 @@ function(dependent_option option doc default depends force)
     endif()
   else()
     set(${option} "${${option}_ISSET}")
-  endif() 
+  endif()
 endfunction()
 
 function(add_project name)
-  cmake_parse_arguments(arg "REQUIRED;DEFAULT_OFF" "" "DEPENDS" ${ARGN})
+  cmake_parse_arguments(arg "REQUIRED;DEFAULT_OFF;SYSTEM" "" "DEPENDS" ${ARGN})
   string(TOUPPER ${name} UNAME)
+
   if (arg_REQUIRED)
     set(ENABLE_${UNAME} ON CACHE INTERNAL "Project '${name}'" FORCE)
   else()
@@ -47,6 +57,12 @@ function(add_project name)
       option(ENABLE_${UNAME} "Enable sub-project '${name}'" OFF)
     endif()
     mark_as_advanced(ENABLE_${UNAME})
+  endif()
+
+ if (ENABLE_${UNAME} AND arg_SYSTEM)
+    #we have the option to use a system version
+    #don't display this option if they don't want to build the project
+    option(USE_SYSTEM_${UNAME} "Use System ${UNAME}" OFF)
   endif()
 
   if (ENABLE_${UNAME})
@@ -63,15 +79,32 @@ function(add_project name)
     endforeach()
   endif()
 
-  if (ENABLE_${UNAME})
+  if (ENABLE_${UNAME} AND NOT USE_SYSTEM_${UNAME})
     # check for platform specific file. It none exists, try the default file.
     include("${name}" RESULT_VARIABLE rv)
+    message(STATUS "Using configuration ${rv}")
+  elseif(ENABLE_${UNAME})
+    # we call the custom System_Name which will add a custom target
+    include("System_${name}" RESULT_VARIABLE rv)
     message(STATUS "Using configuration ${rv}")
   else ()
     # add dummy target to dependencies work even with subproject is disabled.
     add_custom_target(${name})
     SET (NO_${UNAME} TRUE)
   endif()
+endfunction()
+
+function(add_dummy_external_project name)
+
+  ExternalProject_Add(${name}
+  DOWNLOAD_COMMAND ""
+  SOURCE_DIR ""
+  UPDATE_COMMAND ""
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  )
+
 endfunction()
 
 function(add_external_project name)
@@ -94,7 +127,7 @@ function(add_external_project name)
     endif()
   endforeach()
 
-  MKExternalProject_Add(${name} ${ARGN}
+  ExternalProject_Add(${name} ${ARGN}
     PREFIX ${name}
     DOWNLOAD_DIR ${download_location}
     INSTALL_DIR ${install_location}
@@ -102,27 +135,45 @@ function(add_external_project name)
     # add url/mdf/git-repo etc. specified in versions.cmake
     ${${name}_revision}
 
-    PROCESS_ENVIRONMENT
-      LDFLAGS "${ldflags}"
-      CPPFLAGS "${cppflags}"
-      CXXFLAGS "${cxxflags}"
-      CFLAGS "${cflags}"
-      LD_LIBRARY_PATH "${ld_library_path}"
-      CMAKE_PREFIX_PATH "${prefix_path}"
     CMAKE_ARGS
       -DCMAKE_INSTALL_PREFIX:PATH=${prefix_path}
-      -DCMAKE_PREFIX_PATH:PATH=${prefix_path} 
+      -DCMAKE_PREFIX_PATH:PATH=${prefix_path}
       -DCMAKE_C_FLAGS:STRING=${cflags}
       -DCMAKE_CXX_FLAGS:STRING=${cppflags}
       -DCMAKE_SHARED_LINKER_FLAGS:STRING=${ldflags}
       ${cmake_params}
     )
   if(arg_USE_AUTOCONF)
-    MKExternalProject_AutoConf_Step(${name})
+    ExternalProject_AutoConf_Step(${name})
   endif()
+
+  ExternalProject_Get_Property(${name} install_dir)
+  set_include_dir(${name} ${install_dir}/include)
+
+
 endfunction()
 
 function(add_revision name)
   set(${name}_revision "${ARGN}" CACHE INTERNAL
       "Revision for ${name}")
+endfunction()
+
+function(set_include_dir target value)
+  #set up a property on the passed in target
+  set_property(TARGET ${target} PROPERTY PROJ_INCLUDE_DIRS ${value})
+endfunction()
+
+function(get_include_dir target variable)
+  get_property(property TARGET ${target} PROPERTY PROJ_INCLUDE_DIRS)
+  set(${variable} ${property} PARENT_SCOPE)
+endfunction()
+
+function(set_libraries target value)
+  #set up a property on the passed in target
+  set_property(TARGET ${target} PROPERTY PROJ_LIBRARIES ${value})
+endfunction()
+
+function(get_libraries target variable)
+  get_property(property TARGET ${target} PROPERTY PROJ_LIBRARIES)
+  set(${variable} ${property} PARENT_SCOPE)
 endfunction()
