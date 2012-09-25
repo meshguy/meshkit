@@ -832,7 +832,9 @@ if test "x${ENABLE_intassign}" != "xno"; then
   
       # if a path is specified, update LIBS and INCLUDES accordingly
     if test "xyes" != "x$IPOPT_ARG" && test "x" != "x$IPOPT_ARG"; then
-      if test -d "$IPOPT_ARG/lib"; then
+      if test -d "$IPOPT_ARG/lib/coin"; then
+        IPOPT_LDFLAGS="-L$IPOPT_ARG/lib/coin"
+      elif test -d "$IPOPT_ARG/lib"; then
         IPOPT_LDFLAGS="-L$IPOPT_ARG/lib"
       elif test -d "$IPOPT_ARG"; then
         IPOPT_LDFLAGS="-L$IPOPT_ARG"
