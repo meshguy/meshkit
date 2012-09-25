@@ -33,8 +33,8 @@ const int IANlp::p_norm = 3;
 
 // constructor
 IANlp::IANlp(const IAData *data_ptr, IASolution *solution_ptr): 
-data(data_ptr), solution(solution_ptr), neleJac(0),
-debugging(true), verbose(false) // true
+data(data_ptr), solution(solution_ptr), 
+neleJac(0), debugging(true), verbose(false) // true
 {
 
   assert(p_norm >= 2); // needed for continuity of derivatives anyway
@@ -101,7 +101,7 @@ bool IANlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
 
   // The n and m we gave IPOPT in get_nlp_info are passed back to us.
   assert(n == data->num_variables());
-  assert(m == data->constraints.size() + data->sumEvenConstraints.size());
+  assert(m == (int)(data->constraints.size() + data->sumEvenConstraints.size()));
 
   // future interval upper and lower bounds:
   //   for midpoint subdivision, the lower bound may be 2 instead
@@ -147,8 +147,8 @@ bool IANlp::get_starting_point(Index n, bool init_x, Number* x_init,
   assert(init_z == false);
   assert(init_lambda == false);
 
-  assert(n==data->I.size());
-  assert(data->num_variables()==data->I.size());
+  assert(n==(int)data->I.size());
+  assert(data->num_variables()==(int)data->I.size());
   
   // initialize x to the goals
   for (unsigned int i = 0; i<data->I.size(); ++i)
@@ -348,7 +348,7 @@ bool IANlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
   //printf("F ");
 
   assert(n == data->num_variables());
-  assert(m == data->constraints.size()+data->sumEvenConstraints.size());
+  assert(m == (int)(data->constraints.size()+data->sumEvenConstraints.size()));
   
   for (unsigned int i = 0; i<data->constraints.size(); ++i)
   {
@@ -381,7 +381,7 @@ bool IANlp::eval_jac_g(Index n, const Number* x, bool new_x,
 {
   //printf("G ");
 
-  assert(m == data->constraints.size() + data->sumEvenConstraints.size());
+  assert(m == (int)(data->constraints.size() + data->sumEvenConstraints.size()));
   
   if (values == NULL) {
     // return the structure of the jacobian
@@ -421,7 +421,7 @@ bool IANlp::eval_jac_g(Index n, const Number* x, bool new_x,
     {
       for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
-        values[k++] = data->sumEvenConstraints[i].M[j].val;
+        values[k++] = (int)data->sumEvenConstraints[i].M[j].val;
       }
     }
     assert(nele_jac==k);
@@ -486,7 +486,7 @@ void IANlp::finalize_solution(SolverReturn status,
 
   // copy solution into local storage x_solution
   // ensure storage is the right size
-  if ( solution->x_solution.size() != (unsigned) n)
+  if ((int)solution->x_solution.size() != n)
   {
     solution->x_solution.clear(); // clear contents
     std::vector<double>(solution->x_solution).swap(solution->x_solution); // zero capacity
@@ -497,7 +497,7 @@ void IANlp::finalize_solution(SolverReturn status,
   {
     solution->x_solution[i] = x[i];  // values of new solution
   }
-  assert( solution->x_solution.size() == n );
+  assert( (int)solution->x_solution.size() == n );
   solution->obj_value = obj_value;
   // while the following assert holds for this base problem, the objectives are different for 
   // problems that use this as a base problem for imnplentation, so don't try the asert
@@ -556,7 +556,7 @@ void IANlp::finalize_solution(SolverReturn status,
       printf("\nFinal value of the constraints, zero if satisfied:\n");
       printf("sum-equal:\n");
       for (Index i=0; i<m ;i++) {
-        if ((unsigned) i == data->constraints.size())
+        if (i==(int)data->constraints.size())
           printf("sum-even:\n");
         printf("g(%d) = %e\n", i, g[i]);
       }

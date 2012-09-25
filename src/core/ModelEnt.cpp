@@ -5,7 +5,6 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/Types.hpp"
 #include "meshkit/VecUtil.hpp"
-#include "/Users/samitch/meshkit/meshkit/trunk/src/algs/IntervalAssignment/meshkit/IAVariable.hpp"
 #include "moab/GeomTopoTool.hpp"
 #include "moab/CN.hpp"
 #include "RefEntity.hpp"
@@ -126,11 +125,6 @@ ModelEnt::~ModelEnt()
     moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_delete_data(
           mkCore->moab_model_tag(meshIndex), &moabEntSet, 1);
     IBERRCHK(err, "Failed to set moab ModelEnt tag.");
-  }
-
-  if (iaVariable) {
-    delete iaVariable;
-    iaVariable = NULL;
   }
 }
 

@@ -101,7 +101,7 @@ bool IAMINlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
 
   // The n and m we gave IPOPT in get_nlp_info are passed back to us.
   assert(n == data->num_variables());
-  assert(m == data->constraints.size() + data->sumEvenConstraints.size());
+  assert(m == (int)(data->constraints.size() + data->sumEvenConstraints.size()));
 
   // future interval upper and lower bounds:
   //   for midpoint subdivision, the lower bound may be 2 instead
@@ -147,12 +147,12 @@ bool IAMINlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
   }
   
   // constraint bounds
-  for (int i = 0; i<data->constraints.size(); ++i)
+  for (unsigned int i = 0; i<data->constraints.size(); ++i)
   {
     g_l[i] = data->constraints[i].lowerBound; 
     g_u[i] = data->constraints[i].upperBound; 
   }
-  for (int i = 0; i<data->sumEvenConstraints.size(); ++i)
+  for (unsigned int i = 0; i<data->sumEvenConstraints.size(); ++i)
   {
     const int j = i + (int) data->constraints.size();
     g_l[j] = 4;
@@ -177,18 +177,18 @@ bool IAMINlp::get_starting_point(Index n, bool init_x, Number* x_init,
   assert(init_z == false);
   assert(init_lambda == false);
 
-  assert(n==data->I.size());
-  assert(data->num_variables()==data->I.size());
+  assert(n==(int)data->I.size());
+  assert(data->num_variables()==(int)data->I.size());
   
   // initialize x to the goals
   if (ip_data->varIntegerBound.size() == 0)
-    for (int i = 0; i<data->I.size(); ++i)
+    for (unsigned int i = 0; i<data->I.size(); ++i)
     {
       x_init[i]=data->I[i];
     }
   // initialize x to the prior solution
   else
-    for (int i = 0; i<data->I.size(); ++i)
+    for (unsigned int i = 0; i<data->I.size(); ++i)
     {
       // todo: test if we need to modify this for x violating the variable bounds?
       x_init[i]= solution->x_solution[i]; 
@@ -387,25 +387,25 @@ bool IAMINlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
   //printf("F ");
 
   assert(n == data->num_variables());
-  assert(m == data->constraints.size() + data->sumEvenConstraints.size());
+  assert(m == (int)(data->constraints.size() + data->sumEvenConstraints.size()));
   
   
-  for (Index i = 0; i<data->constraints.size(); ++i)
+  for (Index i = 0; i<(int)data->constraints.size(); ++i)
   {
     //double g_i = constraints[i].rhs;
     double g_i = 0.;
-    for (Index j = 0; j < data->constraints[i].M.size(); ++j)
+    for (Index j = 0; j < (int)data->constraints[i].M.size(); ++j)
     {
       g_i += x[ data->constraints[i].M[j].col ] * data->constraints[i].M[j].val;
     }
     g[i] = g_i;
   }
-  for (Index i = 0; i<data->sumEvenConstraints.size(); ++i)
+  for (Index i = 0; i<(int)data->sumEvenConstraints.size(); ++i)
   {
     //double g_i = constraints[i].rhs;
     const int k = (int) data->constraints.size() + i;
     double g_k = 0.;
-    for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+    for (Index j = 0; j < (int)data->sumEvenConstraints[i].M.size(); ++j)
     {
       g_k += x[ data->sumEvenConstraints[i].M[j].col ] * data->sumEvenConstraints[i].M[j].val;
     }
@@ -422,23 +422,23 @@ bool IAMINlp::eval_jac_g(Index n, const Number* x, bool new_x,
 {
   //printf("G ");
 
-  assert(m == data->constraints.size() + data->sumEvenConstraints.size());
+  assert(m == (int)(data->constraints.size() + data->sumEvenConstraints.size()));
   
   if (values == NULL) {
     // return the structure of the jacobian
     Index k=0;
-    for (Index i = 0; i<data->constraints.size(); ++i)
+    for (Index i = 0; i<(int)data->constraints.size(); ++i)
     {
-      for (Index j = 0; j < data->constraints[i].M.size(); ++j)
+      for (Index j = 0; j < (int)data->constraints[i].M.size(); ++j)
       {
     		iRow[k] = i;
         jCol[k] = data->constraints[i].M[j].col;
         ++k;
       }
     }
-    for (Index i = 0; i< data->sumEvenConstraints.size(); ++i)
+    for (Index i = 0; i< (int)data->sumEvenConstraints.size(); ++i)
     {
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (Index j = 0; j < (int)data->sumEvenConstraints[i].M.size(); ++j)
       {
     		iRow[k] = i + (int) data->constraints.size();
         jCol[k] = data->sumEvenConstraints[i].M[j].col;
@@ -450,16 +450,16 @@ bool IAMINlp::eval_jac_g(Index n, const Number* x, bool new_x,
   else {
     // return the values of the jacobian of the constraints
     Index k=0;
-    for (Index i = 0; i < data->constraints.size(); ++i)
+    for (Index i = 0; i < (int)data->constraints.size(); ++i)
     {
-      for (Index j = 0; j < data->constraints[i].M.size(); ++j)
+      for (Index j = 0; j < (int)data->constraints[i].M.size(); ++j)
       {
         values[k++] = data->constraints[i].M[j].val;
       }
     }
-    for (Index i = 0; i < data->sumEvenConstraints.size(); ++i)
+    for (Index i = 0; i < (int)data->sumEvenConstraints.size(); ++i)
     {
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (Index j = 0; j < (int)data->sumEvenConstraints[i].M.size(); ++j)
       {
         values[k++] = data->sumEvenConstraints[i].M[j].val;
       }
@@ -531,7 +531,7 @@ void IAMINlp::finalize_solution(SolverReturn status,
   {
     solution->x_solution.push_back( x[i] );  // values of new solution
   }
-  assert( solution->x_solution.size() == n );
+  assert( (int)solution->x_solution.size() == n );
   solution->obj_value = obj_value;
   assert(obj_value >= 0.);
   
@@ -543,7 +543,7 @@ void IAMINlp::finalize_solution(SolverReturn status,
     if (verbose)
     {
       printf("legend: coeff x_i (solution, goal, ratio; f(x), f'(x); F(x), F'(x) )\n");
-      for (int j = 0; j < data->constraints.size(); ++j)
+      for (unsigned int j = 0; j < data->constraints.size(); ++j)
       {
         printf("constraint %d: ", j);
         const IAData::constraintRow & c = data->constraints[j];

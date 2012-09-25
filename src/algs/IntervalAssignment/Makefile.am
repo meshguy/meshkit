@@ -6,6 +6,11 @@ noinst_LTLIBRARIES = libIntervalAssignment.la
          
 SUBDIRS = 
 
+if HAVE_IPOPT
+  AM_CPPFLAGS += $(IPOPT_CPPFLAGS)
+  LDFLAGS += $(IPOPT_LDFLAGS)
+endif
+
 # The directory in which to install headers
 libIntervalAssignment_la_includedir = $(includedir)
 
@@ -15,8 +20,8 @@ IAData.hpp \
 IAInterface.cpp \
 IANlp.cpp \
 IANlp.hpp \
-IARoundingNLP.cpp \
-IARoundingNLP.hpp \
+IARoundingNlp.cpp \
+IARoundingNlp.hpp \
 IASolution.hpp \
 IASolver.cpp \
 IASolver.hpp \

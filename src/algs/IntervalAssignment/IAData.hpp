@@ -12,6 +12,7 @@
 #define MESHKIT_IA_IADATA_HP
 
 #include <vector>
+#include <cstddef>
 #include <assert.h>
 
 const double MESHKIT_IA_upperUnbound = 2e19; // above 1e19, ipopt specific

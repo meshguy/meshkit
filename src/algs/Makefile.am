@@ -15,7 +15,7 @@ libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
 if ENABLE_intassign
   SUBDIRS += IntervalAssignment
   AM_CPPFLAGS += -I$(top_srcdir)/src/algs/IntervalAssignment $(IPOPT_CPPFLAGS)
-  libMeshKitalgs_la_LIBADD += libIntervalAssignment.la
+  libMeshKitalgs_la_LIBADD += IntervalAssignment/libIntervalAssignment.la
   AM_LDFLAGS += $(IPOPT_LDFLAGS)
   LIBS += $(IPOPT_LIBS)
 endif
@@ -66,7 +66,7 @@ nobase_libMeshKitalgs_la_include_HEADERS += \
 endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
-AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
+AM_CPPFLAGS += $(DEFINES) \
               -I$(srcdir)/../core \
               -I$(srcdir)/../utils \
               -I$(top_srcdir) \

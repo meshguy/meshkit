@@ -74,7 +74,7 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   // find min an max of input
   double fabs_min_weight = std::numeric_limits<double>::max();
   double fabs_max_weight = 0.;
-  for (int i = 0; i < weights.size(); ++i)
+  for (unsigned int i = 0; i < weights.size(); ++i)
   {
     const double w = weights[i];
     const double fabsw = fabs(w);
@@ -99,7 +99,7 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   double s = output_range / input_range; // could be nan, so limit in next line
   if ( s > 1.e8 )
     s = 1.e8;
-  for (int i = 0; i < weights.size(); ++i)
+  for (unsigned int i = 0; i < weights.size(); ++i)
   {
     const double fabsw = lo + ( (fabs(weights[i]) - fabs_min_weight) * s );
     weights[i] = weights[i] > 0. ? fabsw : -fabsw;
@@ -127,7 +127,7 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   
   srand(9384757);
   double prior_fw = 0.;
-  for (int i = 0; i < weights.size(); ++i)
+  for (unsigned int i = 0; i < weights.size(); ++i)
   {
     // detect consecutive identical weights and modify the later one
     const int j = sorted_fabs_weights[i]; // index of weight in weights
@@ -148,7 +148,7 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   {
     // assume minimum is lo, ignoring the random bit we added
     const double s = output_range / ( prior_fw - lo );
-    for (int i = 0; i < weights.size(); ++i)
+    for (unsigned int i = 0; i < weights.size(); ++i)
     {
       double w = (fabs(weights[i]) - lo) * s + lo;
       assert( w >= 0. );
@@ -166,7 +166,7 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   if (1) // debug
   {
     printf("unique weights with fabs in [%e, %e]\n", lo, hi);
-    for (int i = 0; i < weights.size(); ++i)
+    for (unsigned int i = 0; i < weights.size(); ++i)
     {
       const int j = sorted_fabs_weights[i]; // index of weight in weights
       const double w = weights[j];

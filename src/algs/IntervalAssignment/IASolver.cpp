@@ -8,6 +8,7 @@
 #include "IASolverInt.hpp"
 #include "IASolverEven.hpp"
 
+#include <cstdlib>
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>

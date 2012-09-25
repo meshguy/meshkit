@@ -49,8 +49,8 @@
 class IAData;
 class IASolution;
 
-//#include "IpTNLP.hpp"
-#include "/Users/samitch/meshkit/ipopt/CoinIpopt/include/coin/IpTNLP.hpp"
+#include "MKVersion.h"
+#include "IpTNLP.hpp"
 using namespace Ipopt;
 
 class IANlp : public TNLP

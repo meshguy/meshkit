@@ -70,14 +70,14 @@ private:
   
   // solution sub-methods
   // return the position of var in variables, from 0 .. n-1
-  int variable_to_index(const IAVariable* var);
+  int variable_to_index(const IAVariable* var) const;
+  IAVariable *index_to_variable(int ind) const;
   typedef std::set<int> IndexSet;
   typedef std::vector< IndexSet > IndexSetVec;
   void make_0_to_nm1( IndexSet &index_set, const int k); // populate index_set with 0..n-1
   
   
   // for subdivide_problem
-  int variable_to_index(const IAVariable* var) const;
   void get_constraint_variable_indices( IndexSetVec &constraint_variables, 
                                        IndexSetVec &variable_constraints,
                                        const int i_start, 

@@ -177,7 +177,7 @@ bool IASolverEven::find_one_non_integer(int &i_nonint, int &x_bound)
   printf("sum_strategy=%d ", sum_strategy);
   double biggest_non_even_value = 0.;
   int biggest_non_even_i = -1;
-  for (int i = 0; i < iaData->sumEvenConstraints.size(); ++i)
+  for (unsigned int i = 0; i < iaData->sumEvenConstraints.size(); ++i)
   {
     const double d = distance_to_even(i);
     if (d > 0.)
@@ -202,7 +202,7 @@ bool IASolverEven::find_one_non_integer(int &i_nonint, int &x_bound)
     printf("curve_strategy=%d\n", curve_strategy);
     int num_found = 0;
     double smallest_increase = std::numeric_limits<double>::max();
-    for (int i = 0; i < iaData->sumEvenConstraints[c].M.size(); ++i)
+    for (unsigned int i = 0; i < iaData->sumEvenConstraints[c].M.size(); ++i)
     {
       int j = iaData->sumEvenConstraints[c].M[i].col;
       assert( iaData->sumEvenConstraints[c].M[i].val == 1. );
@@ -227,7 +227,7 @@ bool IASolverEven::find_one_non_integer(int &i_nonint, int &x_bound)
     // if no non-even curves were found, pick an odd one
     if (i_nonint == -1)
     {
-      for (int i = 0; i < iaData->sumEvenConstraints[c].M.size(); ++i)
+      for (unsigned int i = 0; i < iaData->sumEvenConstraints[c].M.size(); ++i)
       {
         int j = iaData->sumEvenConstraints[c].M[i].col;
         assert( iaData->sumEvenConstraints[c].M[i].val == 1. );

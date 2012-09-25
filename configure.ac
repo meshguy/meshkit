@@ -88,7 +88,15 @@ AC_CHECK_HEADER([ieeefp.h],[DEFINES="$DEFINES -DHAVE_IEEEFP_H"] )
 if test "xyes" = "x$enable_debug"; then
   AC_CHECK_HEADER( [valgrind/memcheck.h], [CPPFLAGS="$CPPFLAGS -DVALGRIND"] )
 fi
+AC_CHECK_HEADER([cstddef],   [AC_DEFINE(HAVE_CSTDDEF,    [], [HAVE_CSTDDEF])   ])
+AC_CHECK_HEADER([stddef.h],   [AC_DEFINE(HAVE_STDDEF_H,    [], [HAVE_STDDEF_H])   ])
+AC_CHECK_HEADER([stdio.h],   [AC_DEFINE(HAVE_STDIO_H,    [], [HAVE_STDIO_H])   ])
+AC_CHECK_HEADER([cstdio],   [AC_DEFINE(HAVE_CSTDIO,    [], [HAVE_CSTDIO])   ])
 
+# Need this here, 'cuz MKVersion.h is needed for a later check
+AC_CONFIG_HEADERS([MKVersion.h])
+
+AC_OUTPUT
 
 #################################################################################
 #                             Doxygen Documentation
@@ -799,51 +807,81 @@ AM_CONDITIONAL(HAVE_TRIANGLE, [test "x$HAVE_TRIANGLE" = "xyes"])
 
 
 ################################################################################
-#                           IPOPT
+#                           IPOPT, BUT ONLY IF ENABLE_intassign is true
 ################################################################################
-AC_MSG_CHECKING([if IPOPT support is enabled])
-AC_ARG_WITH(ipopt, 
-[AC_HELP_STRING([--with-ipopt=DIR], [Specify IPOPT location])
-AC_HELP_STRING([--without-ipopt], [Disable support for IPOPT file format])],
-[IPOPT_ARG=$withval
-DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-ipopt=\"${withval}\""
-]
-, [IPOPT_ARG=])
-if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
-  AC_MSG_RESULT([yes])
-else
-  AC_MSG_RESULT([no])
-fi
-
- # if IPOPT support is enabled
-AC_MSG_CHECKING([if IPOPT support available])
-AC_MSG_RESULT([])
-HAVE_IPOPT=no
-if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
-  HAVE_IPOPT=yes
-
-    # if a path is specified, update LIBS and INCLUDES accordingly
-  if test "xyes" != "x$IPOPT_ARG" && test "x" != "x$IPOPT_ARG"; then
-    if test -d "$IPOPT_ARG/lib"; then
-      IPOPT_LDFLAGS="-L$IPOPT_ARG/lib"
-    elif test -d "$IPOPT_ARG"; then
-      IPOPT_LDFLAGS="-L$IPOPT_ARG"
-    else
-      AC_MSG_ERROR("$IPOPT_ARG is not a directory.")
-    fi
-    if test -d "$IPOPT_ARG/include/coin"; then
-      IPOPT_CPPFLAGS="-I$IPOPT_ARG/include/coin"
-    elif test -d "$IPOPT_ARG/include"; then
-      IPOPT_CPPFLAGS="-I$IPOPT_ARG/include"
-    elif test -d "$IPOPT_ARG"; then
-      IPOPT_CPPFLAGS="-I$IPOPT_ARG"
-    fi
+if test "x${ENABLE_intassign}" != "xno"; then
+  AC_MSG_CHECKING([if IPOPT support is enabled])
+  AC_ARG_WITH(ipopt, 
+  [AC_HELP_STRING([--with-ipopt=DIR], [Specify IPOPT location])
+  AC_HELP_STRING([--without-ipopt], [Disable support for IPOPT file format])],
+  [IPOPT_ARG=$withval
+  DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-ipopt=\"${withval}\""
+  ]
+  , [IPOPT_ARG=])
+  if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_RESULT([no])
   fi
   
-  AC_SUBST([IPOPT_LDFLAGS])
-  AC_SUBST([IPOPT_CPPFLAGS])
-  AC_SUBST([IPOPT_LIBS])
+   # if IPOPT support is enabled
+  AC_MSG_CHECKING([if IPOPT support available])
+  HAVE_IPOPT=no
+  if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
+    HAVE_IPOPT=yes
+  
+      # if a path is specified, update LIBS and INCLUDES accordingly
+    if test "xyes" != "x$IPOPT_ARG" && test "x" != "x$IPOPT_ARG"; then
+      if test -d "$IPOPT_ARG/lib"; then
+        IPOPT_LDFLAGS="-L$IPOPT_ARG/lib"
+      elif test -d "$IPOPT_ARG"; then
+        IPOPT_LDFLAGS="-L$IPOPT_ARG"
+      else
+        AC_MSG_ERROR("$IPOPT_ARG is not a directory.")
+      fi
+      if test -d "$IPOPT_ARG/include/coin"; then
+        IPOPT_CPPFLAGS="-I$IPOPT_ARG/include/coin"
+      elif test -d "$IPOPT_ARG/include"; then
+        IPOPT_CPPFLAGS="-I$IPOPT_ARG/include"
+      elif test -d "$IPOPT_ARG"; then
+        IPOPT_CPPFLAGS="-I$IPOPT_ARG"
+      fi
+
+      old_LIBS="$LIBS"
+      old_LDFLAGS="$LDFLAGS"
+      old_CPPFLAGS="$CPPFLAGS"
+      LDFLAGS="$LDFLAGS $IPOPT_LDFLAGS -lipopt"
+      CPPFLAGS="$CPPFLAGS $IPOPT_CPPFLAGS"
+      AC_LANG_PUSH([C++])
+
+      AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([#include "MKVersion.h"
+                          #include "IpTNLP.hpp"],
+            [])],
+        [IPOPT_LIBS="$IPOPT_LDFLAGS -lipopt"] [HAVE_IPOPT=yes],
+        [AC_MSG_WARN([libipopt is not installed.])] )
+
+      AC_LANG_POP([C++])
+      LIBS="$old_LIBS"
+      LDFLAGS="$old_LDFLAGS"
+      CPPFLAGS="$old_CPPFLAGS"
+
+    fi
+    
+  fi
+
+  if test "x$HAVE_IPOPT" = "xyes"; then
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_ERROR([no])
+  fi
+
 fi
+
+AC_SUBST([IPOPT_LDFLAGS])
+AC_SUBST([IPOPT_CPPFLAGS])
+AC_SUBST([IPOPT_LIBS])
+AM_CONDITIONAL(HAVE_IPOPT, [test "x$HAVE_IPOPT" = "xyes"])
 
 ################################################################################
 #                           Mesquite
@@ -983,7 +1021,6 @@ AC_SUBST([AM_CFLAGS])
 AC_SUBST([DISTCHECK_CONFIGURE_FLAGS])
 
 AC_ARG_VAR([FC], [FORTRAN compiler command])
-AC_CONFIG_HEADERS([MKVersion.h])
 AC_CONFIG_FILES([Makefile 
                  meshkit.make 
                  testdir.h

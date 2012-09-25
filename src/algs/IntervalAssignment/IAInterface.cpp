@@ -85,6 +85,14 @@ int IAInterface::variable_to_index(const IAVariable* var) const
   return v;
 }
 
+IAVariable *IAInterface::index_to_variable(int ind) const
+{
+  assert(ind < (int)variables.size());
+  VariableSet::const_iterator var_pos = variables.begin();
+  for (int i = 0; i < ind; i++) var_pos++;
+  return *var_pos;
+}
+
 void IAInterface::get_constraint_variable_indices( IndexSetVec &constraint_variables, 
                                                   IndexSetVec &variable_constraints,
                                                   const int i_start, 
@@ -265,14 +273,15 @@ void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
 
    // placeholder - just make one subproblem
   IASolver *sub_problem = new IASolver();
+
+    /*
   VariableSet::iterator vit;
   for (vit = variables.begin(); vit != variables.end(); vit++) 
   {
-    IAVariable *v = *vit;
-    if ( v->get_firmness() != IAVariable::HARD )
+    if ( (*vit)->get_firmness() != IAVariable::HARD )
     {
       // add the goals
-      sub_problem->I.push_back( v->goal );
+      sub_problem->I.push_back( (*vit)->goal );
     }
   }
 
@@ -321,6 +330,7 @@ void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
     }
     sub_problem->constrain_sum_even(side, rhs );   
   }
+    */
 
   subproblems.push_back(sub_problem);
 }

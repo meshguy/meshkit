@@ -15,7 +15,7 @@ class IASolution;
 #include "IANlp.hpp"
 
 // #include "IpTNLP.hpp"
-#include "/Users/samitch/meshkit/ipopt/CoinIpopt/include/coin/IpTNLP.hpp"
+#include "IpTNLP.hpp"
 
 using namespace Ipopt;
 

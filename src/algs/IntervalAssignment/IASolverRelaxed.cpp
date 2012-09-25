@@ -8,7 +8,7 @@
 #include <math.h>
 #include <limits.h>
 
-#include "/Users/samitch/meshkit/ipopt/CoinIpopt/include/coin/IpIpoptApplication.hpp"
+#include "IpIpoptApplication.hpp"
 
 IASolverRelaxed::IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution) : 
 iaData(ia_data), relaxedSolution(relaxed_solution), p_norm(3), debugging(true) {}

@@ -4,16 +4,17 @@
 #include "IASolverInt.hpp"
 #include "IARoundingNlp.hpp"
 #include "IASolverRelaxed.hpp"
+#include "IAMINlp.hpp"
 // #include "IAMilp.hpp" // glpk based solution too slow
 
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>
 
-#include "/Users/samitch/meshkit/ipopt/CoinIpopt/include/coin/IpIpoptApplication.hpp"
+#include "IpIpoptApplication.hpp"
 
 IASolverInt::IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr) 
-  : iaData(ia_data_ptr), debugging(true) 
+: iaData(ia_data_ptr), debugging(true)
 { 
   ipData.initialize(relaxed_solution_ptr->x_solution);
 }
@@ -134,7 +135,6 @@ void IASolverInt::cleanup()
 {
   ;
 }
-
 
 bool IASolverInt::solve()
 {
