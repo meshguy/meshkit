@@ -15,6 +15,9 @@
 #include <cstddef>
 #include <assert.h>
 
+namespace MeshKit 
+{
+    
 const double MESHKIT_IA_upperUnbound = 2e19; // above 1e19, ipopt specific
 const double MESHKIT_IA_lowerUnbound = -2e19; // below -1e19, ipopt specific 
 
@@ -129,5 +132,6 @@ void IAData::constrain_opposite_side_equal(const std::vector<int> &side_1, const
   assert( constraints.back().M.size() == num_curves );
 }
 
+} // namespace MeshKit 
 
 #endif

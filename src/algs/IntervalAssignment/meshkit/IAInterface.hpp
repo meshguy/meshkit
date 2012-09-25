@@ -6,8 +6,6 @@
 #define MESHKIT_IA_INTERFACE_HP
 
 // #include "ModelEnt.hpp"
-class ModelEnt;
-class IASolver;
 #include "meshkit/IAVariable.hpp"
 // class IAVariable;
 #include <set>
@@ -23,6 +21,9 @@ class IASolver;
 // most efficient interface: add variable as a constraint is added
 
 namespace MeshKit {
+
+class ModelEnt;
+class IASolver;
 
 class IAInterface // todo: derive from MeshScheme, register it with SchemeFactory
 // todo: provide methods: setup_this, execute_this

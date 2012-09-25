@@ -6,13 +6,15 @@
 // #include "IAMilp.hpp"
 #include "IASolverRelaxed.hpp"
 #include "IASolverInt.hpp"
-#include "IASolverEven.hpp"
 
 #include <cstdlib>
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>
 
+namespace MeshKit 
+{
+    
 IASolver::IASolver() : debugging(true) {}
 
 /** default destructor */
@@ -20,16 +22,16 @@ IASolver::~IASolver() {}
 
 void IASolver::set_test_problem()
 {
-  /* test problem 0 
+    // test problem 0 
   // trivial 2-sided mapping problem
   printf("constructing decoupled test problem.");
-  int num_pairs = 40; // each pair of sides is decoupled from all other pairs.
+  int num_pairs = 1; // each pair of sides is decoupled from all other pairs.
   // test scalability, relaxed nlp: 100,000 constraints in 1 second. milp: 40 variables in 1 second, grows exponentially!
   for (int i = 0; i<num_pairs; ++i)
   { 
     // goals x_{2i} = 2, x_{2i+1} = 2
     I.push_back( i + 1); // x_{2i}
-    I.push_back( i + 4); // x_{2i+1}
+    I.push_back( i + 3); // x_{2i+1}
     
     // constrain x0 - x1 = 0
     constraints.push_back( constraintRow() );
@@ -37,7 +39,6 @@ void IASolver::set_test_problem()
     constraints.back().M.push_back( sparseEntry(2*i,1.) );
     constraints.back().M.push_back( sparseEntry(2*i+1,-1.) );
   }
-  */
    
   
   /*
@@ -80,7 +81,7 @@ void IASolver::set_test_problem()
    } 
    */
   
-  
+    /*  
   // test problem 3, sides with more than one variable, with random goals
   printf("constructing coupled test problem - long chain\n");
   srand(10234);
@@ -133,7 +134,7 @@ void IASolver::set_test_problem()
     }
   }
   //add also some sum-even constraints
-  
+  */  
   
   // sum-even constraints test problems
 /*
@@ -192,9 +193,9 @@ void IASolver::print_solution() // IPData &ip_data
   }
   for (unsigned int i=0; i< sumEvenConstraints.size(); ++i)
   {
-    double d = IASolverEven::sum_even_value(i, this, this);
+    double d = IASolver::sum_even_value(i, this, this);
     printf("%d sum-even = %d (%e)",i, (int) floor(d+0.5), d);
-    if (!IASolverEven::is_even(d))
+    if (!IASolver::is_even(d))
       printf(" NON-EVEN\n");
     else
       printf("\n");
@@ -240,9 +241,6 @@ bool IASolver::solve_even()
 bool IASolver::solve()
 {
   
-  // debug
-  set_test_problem();
-
   // todo: subdivide problem into independent sub-problems for speed
   
   bool relaxed_succeeded = solve_relaxed();
@@ -283,3 +281,38 @@ bool IASolver::solve()
 	  
   return even_succeeded;
 }
+
+double IASolver::sum_even_value(int i, const IAData *ia_data, const IASolution *current_solution)
+{
+  // number of non-zeros (coefficients) in the constraint
+  const int nnz = (int) ia_data->sumEvenConstraints[i].M.size();
+  double sum = - ia_data->sumEvenConstraints[i].rhs;
+  for (int j = 0; j<nnz; ++j)
+  {
+    // if x is near integer, force it to be exactly integer to avoid an accumulation of roundoff that 
+    // would cause us to not recognize that we already have an (even) integer solution.
+    double x = current_solution->x_solution[ ia_data->sumEvenConstraints[i].M[j].col ];
+    if (fabs(x - floor( x + 0.5 )) < 1.e-2)
+      x = floor(x + 0.5);
+    sum += x * ia_data->sumEvenConstraints[i].M[j].val;
+  }
+  return sum;
+}
+
+double IASolver::sum_even_value(int i)
+{
+  return sum_even_value(i, this, this);
+}
+
+
+bool IASolver::is_even(double y)
+{
+  int e = floor( y + 0.5 );
+  if (e % 2) 
+    return false;
+  if ( fabs( y - e ) < 1.0e-4 )
+    return true;
+  return false;
+}
+
+} // namespace MeshKit

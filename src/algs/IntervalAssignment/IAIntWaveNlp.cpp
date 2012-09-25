@@ -44,7 +44,8 @@ using namespace Ipopt;
  cosine wave for each sum-even constraint, forcing integrality
  */
 
-
+namespace MeshKit {
+    
 // constructor
 IAIntWaveNlp::IAIntWaveNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr): 
 data(data_ptr), ipData(ip_data_ptr), solution(solution_ptr), baseNlp(data_ptr, solution_ptr),
@@ -416,3 +417,5 @@ void IAIntWaveNlp::finalize_solution(SolverReturn status,
   
   zzyk also report on how close the integer and sum-even constraints were satisfied!
 }
+
+} // namespace MeshKit

@@ -9,13 +9,17 @@
 #ifndef MESHKIT_IA_IAINTWAVENLP_HP
 #define MESHKIT_IA_IAINTWAVENLP_HP
 
-class IAData;
-class IPData;
-class IASolution;
 #include "IANlp.hpp"
 
 #include "IpTNLP.hpp"
 using namespace Ipopt;
+
+namespace MeshKit 
+{
+    
+class IAData;
+class IPData;
+class IASolution;
 
 class IAIntWaveNlp : public TNLP
 {
@@ -147,5 +151,7 @@ private:
 	int get_hessian_k( int i, int j ) const;
 
 };
+
+} // namespace MeshKit
 
 #endif

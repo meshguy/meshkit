@@ -18,6 +18,9 @@ class IANlp;
 #include "IpTNLP.hpp"
 using namespace Ipopt;
 
+namespace MeshKit 
+{
+
 class IAMINlp : public TNLP
 {
 public:
@@ -129,5 +132,7 @@ private:
   
 
 };
+
+} // namespace MeshKit 
 
 #endif

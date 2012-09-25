@@ -7,7 +7,8 @@
  
 #include <vector>
 
-
+namespace MeshKit {
+    
 class IASolution
 {
 public:
@@ -23,4 +24,5 @@ public:
 
 // default constructors and destructors are fine
 
+} // namespace MeshKit
 #endif

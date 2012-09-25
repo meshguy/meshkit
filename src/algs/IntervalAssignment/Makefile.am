@@ -46,3 +46,11 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir)/src/algs/QuadMesher \
               -I$(top_srcdir)/src/algs/Sweep \
 	      -I$(top_srcdir)/src/algs/AssyGen
+
+TESTS = test_intassign
+check_PROGRAMS = $(TESTS)
+
+LDADD = $(top_builddir)/src/libMeshKit.la
+
+test_intassign_SOURCES = ia_main.cpp
+test_intassign_DEPENDENCIES = $(LDADD)

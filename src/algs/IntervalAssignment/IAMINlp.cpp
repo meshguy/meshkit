@@ -31,6 +31,9 @@
 
 using namespace Ipopt;
 
+namespace MeshKit 
+{
+    
 double p_norm = 3; // remove this, we use linear objectives here
 
 // constructor
@@ -591,3 +594,5 @@ void IAMINlp::finalize_solution(SolverReturn status,
     
   }
 }
+
+} // namespace MeshKit

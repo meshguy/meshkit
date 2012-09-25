@@ -33,6 +33,9 @@
 
 using namespace Ipopt;
 
+namespace MeshKit 
+{
+
 // generate integers from 0..n-1
 struct c_unique {
   int current;
@@ -373,3 +376,5 @@ void IARoundingNlp::finalize_solution(SolverReturn status,
 {
   baseNlp.finalize_solution(status, n, x, z_L, z_U, m, g, lambda, obj_value, ip_data, ip_cq);
 }
+
+} // namespace MeshKit

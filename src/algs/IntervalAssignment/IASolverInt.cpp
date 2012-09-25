@@ -13,6 +13,9 @@
 
 #include "IpIpoptApplication.hpp"
 
+namespace MeshKit 
+{
+    
 IASolverInt::IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr) 
 : iaData(ia_data_ptr), debugging(true)
 { 
@@ -154,3 +157,4 @@ bool IASolverInt::solve()
   return success;
 }
 
+} // namespace MeshKit

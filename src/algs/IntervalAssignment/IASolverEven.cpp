@@ -12,6 +12,9 @@
 
 #include "IpIpoptApplication.hpp"
 
+namespace MeshKit 
+{
+    
 IASolverEven::IASolverEven(const IAData *ia_data, const IASolution *int_solution) :
 iaData(ia_data), debugging(true) 
 { 
@@ -21,39 +24,6 @@ iaData(ia_data), debugging(true)
 /** default destructor */
 IASolverEven::~IASolverEven() { iaData=NULL; }
 
-
-double IASolverEven::sum_even_value(int i, const IAData *ia_data, const IASolution *current_solution)
-{
-  // number of non-zeros (coefficients) in the constraint
-  const int nnz = (int) ia_data->sumEvenConstraints[i].M.size();
-  double sum = - ia_data->sumEvenConstraints[i].rhs;
-  for (int j = 0; j<nnz; ++j)
-  {
-    // if x is near integer, force it to be exactly integer to avoid an accumulation of roundoff that 
-    // would cause us to not recognize that we already have an (even) integer solution.
-    double x = current_solution->x_solution[ ia_data->sumEvenConstraints[i].M[j].col ];
-    if (fabs(x - floor( x + 0.5 )) < 1.e-2)
-      x = floor(x + 0.5);
-    sum += x * ia_data->sumEvenConstraints[i].M[j].val;
-  }
-  return sum;
-}
-
-double IASolverEven::sum_even_value(int i)
-{
-  return sum_even_value(i, iaData, this);
-}
-
-
-bool IASolverEven::is_even(double y)
-{
-  int e = floor( y + 0.5 );
-  if (e % 2) 
-    return false;
-  if ( fabs( y - e ) < 1.0e-4 )
-    return true;
-  return false;
-}
 
 double IASolverEven::distance_to_even(int i)
 {
@@ -567,3 +537,4 @@ bool IASolverEven::solve()
   
 }
 
+} // namespace MeshKit

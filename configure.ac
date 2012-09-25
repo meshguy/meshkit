@@ -852,7 +852,7 @@ if test "x${ENABLE_intassign}" != "xno"; then
       old_LIBS="$LIBS"
       old_LDFLAGS="$LDFLAGS"
       old_CPPFLAGS="$CPPFLAGS"
-      LDFLAGS="$LDFLAGS $IPOPT_LDFLAGS -lipopt"
+      LDFLAGS="$LDFLAGS $IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"
       CPPFLAGS="$CPPFLAGS $IPOPT_CPPFLAGS"
       AC_LANG_PUSH([C++])
 

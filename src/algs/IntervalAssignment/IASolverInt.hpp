@@ -12,6 +12,8 @@
 
 #include <map> 
 
+namespace MeshKit {
+
 class IASolverInt: public IASolution
 {
 public:
@@ -69,5 +71,7 @@ private:
 
 
 };
+
+} // namespace MeshKit 
 
 #endif

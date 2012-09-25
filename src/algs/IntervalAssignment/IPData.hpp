@@ -12,6 +12,9 @@
 
 #include <vector>
 
+namespace MeshKit 
+{
+
 class IPData
 {
 public:
@@ -54,5 +57,7 @@ public:
 // inline IPData::IPData() {} 
 
 // default destructor OK
+
+} // namespace MeshKit 
 
 #endif

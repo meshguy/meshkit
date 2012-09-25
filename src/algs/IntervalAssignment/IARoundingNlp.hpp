@@ -9,15 +9,18 @@
 #ifndef MESHKIT_IA_IAROUNDINGNLP_HP
 #define MESHKIT_IA_IAROUNDINGNLP_HP
 
-class IAData;
-class IPData;
-class IASolution;
 #include "IANlp.hpp"
 
 // #include "IpTNLP.hpp"
 #include "IpTNLP.hpp"
 
 using namespace Ipopt;
+
+namespace MeshKit {
+
+class IAData;
+class IPData;
+class IASolution;
 
 class IARoundingNlp : public TNLP
 {
@@ -116,5 +119,7 @@ private:
   const bool verbose; // verbose debugging
   
 };
+
+} // namespace MeshKit 
 
 #endif

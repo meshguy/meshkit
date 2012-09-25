@@ -12,6 +12,9 @@
 
 #include <map> //todo move this data to an auxillary class
 
+namespace MeshKit 
+{
+
 class IANlp;
 class IAMINlp;
 class IPData;
@@ -27,10 +30,6 @@ public:
   
   bool solve();
   // return true if solved; false if not solved (e.g. infeasible)
-
-  // some utility functions
-  static bool is_even(double y);
-  static double sum_even_value(int i, const IAData *ia_data_ptr, const IASolution *solution);
 
 private:  
   // hide untrusted default methods
@@ -68,7 +67,6 @@ private:
   void back_off(RoundingMap &rounding_map);
   void report_many_non_integer(RoundingMap &rounding_map);
 
-  double sum_even_value(int i);
   double distance_to_even(int i);
   
   // data
@@ -83,5 +81,7 @@ private:
   void print_solution(IPData &ip_data);
   
 };
+
+} // namespace MeshKit
 
 #endif

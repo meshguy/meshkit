@@ -11,6 +11,8 @@
 
 #include <map> 
 
+namespace MeshKit {
+
 class IANlp;
 class IPData;
 
@@ -52,4 +54,5 @@ private:
   
 };
 
+} // namespace MeshKit
 #endif

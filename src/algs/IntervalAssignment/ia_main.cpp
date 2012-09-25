@@ -13,8 +13,10 @@
 
 int main(int argv, char* argc[])
 {
-  IASolver ia_solver;
+  MeshKit::IASolver ia_solver;
   // setup
+  ia_solver.set_test_problem();
+
   bool status = ia_solver.solve();
 
   return (int) status;

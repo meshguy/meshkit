@@ -29,6 +29,8 @@
 
 using namespace Ipopt;
 
+namespace MeshKit {
+
 const int IANlp::p_norm = 3; 
 
 // constructor
@@ -567,3 +569,5 @@ void IANlp::finalize_solution(SolverReturn status,
     
   }
 }
+
+} // namespace MeshKit

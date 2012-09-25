@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <assert.h>
 
+namespace MeshKit {
+
 void IPData::initialize(const std::vector<double> &relaxed_solution)
 {
   const std::size_t num_variables = relaxed_solution.size();
@@ -102,3 +104,4 @@ void IPData::get_kp( int i, double x, int &kp_integer, double &kp_frac ) const
   get_frac( get_kp(i,x), kp_integer, kp_frac);
 }
 
+} // namespace MeshKit
