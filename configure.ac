@@ -887,6 +887,9 @@ AC_SUBST([IPOPT_CPPFLAGS])
 AC_SUBST([IPOPT_LIBS])
 # make the conditional intassign instead of ipopt
 AM_CONDITIONAL(HAVE_INTASSIGN, [test "x$HAVE_IPOPT" = "xyes"])
+if test "xyes" = "x$HAVE_IPOPT"; then 
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_INTASSIGN"
+fi
 
 ################################################################################
 #                           Mesquite

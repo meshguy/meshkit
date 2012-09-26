@@ -60,7 +60,7 @@ public:
      * \param MKCore instance
      * \param MEntVector 
      */
-  IAInterface(MKCore *mkcore, const MEntVector &me_vec = MEntVector());
+  IAInterface(MKCore *mkcore, const MEntVector &me_vec = MEntVector()) : MeshScheme(mkcore, me_vec){}
 
       /** \brief Destructor, destroys IAVariables
      */
