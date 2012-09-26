@@ -56,6 +56,17 @@ IAVariable *IAInterface::create_variable( ModelEnt* model_entity, IAVariable::Fi
   return ia_var;
 }
 
+IAInterface::IAVariableVec IAInterface::make_constraint_group( const MEVec &model_entity_vec )
+{
+  IAVariableVec result( model_entity_vec.size() );
+  for (unsigned int i = 0; i < model_entity_vec.size(); ++i)
+  {
+    assert(model_entity_vec[i]);
+    result[i] = model_entity_vec[i]->ia_var();
+  }
+  return result;
+}
+
 void IAInterface::destroy_variable( IAVariable* ia_variable )
 {
   if (!ia_variable)

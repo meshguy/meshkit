@@ -111,7 +111,7 @@ public:
      * MEVec is an indirect way of specifying the model entities's variables.
      */   
     // convert vector of ModelEntities into vector of IAVariables
-  IAVariableVec make_constraint_group( const MEVec &model_entity_vec ); //todo implement this
+  IAVariableVec make_constraint_group( const MEVec &model_entity_vec );
   
       /** \brief Constrain that the sum of the number of intervals 
       * on one side is equal to the number on the other side. E.g. when mapping a surface,
