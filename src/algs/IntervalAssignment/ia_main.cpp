@@ -6,12 +6,13 @@
 
 #include "meshkit/IAInterface.hpp"
 #include "meshkit/IAVariable.hpp"
+#include "meshkit/TFIMapping.hpp"
 
 #include <stdio.h>
 #include <iostream>
 
 bool check_solution_correctness( MeshKit::IAInterface *ia_interface, 
-  			                     std::vector< std::pair<int,int> > &correct_solution)
+                                 std::vector< std::pair<int,int> > &correct_solution)
 {
   const bool verbose_output = true;
   const bool debug = false;
@@ -238,7 +239,46 @@ void test_one_pair()
   ia_interface->execute_this(); 
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
   CHECK( solution_correct );
-  // todo: ask tim how to destruct mk?
+  delete mk;
+}
+
+void mapping_test() 
+{
+  MeshKit::MKCore *mk = new MeshKit::MKCore();
+  MeshKit::IAInterface *ia_interface =
+    (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
+
+  std::string file_name = TestDir + "/quadface.stp";
+  mk->load_geometry_mesh(file_name.c_str(), NULL);
+
+  //check the number of geometrical edges
+  MEntVector surfs, curves, loops;
+  mk->get_entities_by_dimension(2, surfs);
+  ModelEnt *this_surf = (*surfs.rbegin());
+
+    // request a specific size
+  mk->sizing_function(0.1, true);
+  
+  this_surf->ModelEnt::boundary(1, curves);
+  CHECK_EQUAL(4, (int)curves.size());
+
+  for (MEntVector::iterator vit = curves.begin(); 
+
+  MEVec side1, side2;
+  side1.push_back(curves[0]); side2.push_back(curves[1]);
+  ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1), 
+                                    ia_interface->make_constraint_group(side2));
+  side1.clear(); side2.clear();
+  side1.push_back(curves[2]); side2.push_back(curves[3]);
+  ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1), 
+                                    ia_interface->make_constraint_group(side2));
+
+  //now, do the TFIMapping
+  TFIMapping *tm = (TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
+
+  mk->setup_and_execute();
+
+  delete mk;
 }
 
 int main(int argv, char* argc[])
@@ -247,10 +287,9 @@ int main(int argv, char* argc[])
 //  int abrt = RUN_TEST(test_abort);
 //  int expt = RUN_TEST(test_exception);
 //  int succ = RUN_TEST(test_success);
+
+  int map_res = RUN_TEST(mapping_test);
   
-  if (one_pair) 
-    std::cerr << "IntervalAssignment failed for one_pair!" << std::endl;
-  
-  int success = one_pair; // + !abrt + !expt + succ;
+  int success = one_pair + map_res; // + !abrt + !expt + succ;
   return success;
 }
