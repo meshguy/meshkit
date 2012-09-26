@@ -10,7 +10,52 @@
 #include <stdio.h>
 #include <iostream>
 
-void set_decoupled_pairs(MeshKit::IAInterface &ia_interface, int num_pairs, int goal1, int goal2)
+bool check_solution_correctness( MeshKit::IAInterface *ia_interface, 
+  			                     std::vector< std::pair<int,int> > &correct_solution)
+{
+  const bool verbose_output = true;
+  const bool debug = false;
+  bool all_correct = true;
+  MeshKit::IAInterface::VariableSet::const_iterator b = ia_interface->variables_begin();
+  MeshKit::IAInterface::VariableSet::const_iterator e = ia_interface->variables_end();
+  MeshKit::IAInterface::VariableSet::const_iterator i = b;
+  unsigned int c = 0;
+  if (debug)
+    std::cout << "Checking Solution Correctness" << std::endl;
+  for ( ; i != e; ++i, ++c )
+  {
+    const MeshKit::IAVariable *v = *i;
+    assert(v);
+    const int x = v->get_solution();
+    assert(c < correct_solution.size() );
+    const int lo = correct_solution[c].first;
+    const int hi = correct_solution[c].second;
+    if (debug)
+      std::cout << "Checking variable " << c << " solution " << x << " in " 
+              << "[" << lo << "," << hi << "]?" << std::endl;
+    if (x < lo)
+    {
+      if (verbose_output)
+        std::cout << "ERROR: Variable " << c << " solution " << x << " ABOVE " 
+             << "[" << lo << "," << hi << "]" << std::endl;
+      all_correct = false;
+    }
+    if (x > hi)
+    {
+      if (verbose_output)
+        std::cout << "ERROR: Variable " << c << " solution " << x << " BELOW " 
+             << "[" << lo << "," << hi << "]" << std::endl;
+      all_correct = false;
+    }
+  }
+  if (debug)
+    std::cout << "done checking solution correctness." << std::endl;
+  return all_correct;
+}
+
+void set_decoupled_pairs(MeshKit::IAInterface *ia_interface, 
+				         int num_pairs, int goal1, int goal2,
+				         std::vector< std::pair<int,int> > &correct_solution)
 {
   // trivial 2-sided mapping problem
   // we can make multiple pairs, each pair is independent, 
@@ -22,14 +67,21 @@ void set_decoupled_pairs(MeshKit::IAInterface &ia_interface, int num_pairs, int 
   { 
     // goals x_{2i} = 2, x_{2i+1} = 2
     // x_{2i}, goal: i + goal1
-    MeshKit::IAVariable *v1 = ia_interface.create_variable( NULL, MeshKit::IAVariable::SOFT, i + goal1);
-    MeshKit::IAVariable *v2 = ia_interface.create_variable( NULL, MeshKit::IAVariable::SOFT, i + goal2);
+    const double g1 = i + goal1;
+    const double g2 = i + goal2;
+    MeshKit::IAVariable *v1 = ia_interface->create_variable( NULL, MeshKit::IAVariable::SOFT, g1);
+    MeshKit::IAVariable *v2 = ia_interface->create_variable( NULL, MeshKit::IAVariable::SOFT, g2);
+    const double compromise = sqrt( g1 * g2 );
+    const double lo = floor(compromise); // force error
+    const double hi = ceil(compromise);
+    correct_solution.push_back( std::make_pair( lo, hi ) );
+    correct_solution.push_back( std::make_pair( lo, hi ) );
 
     // constrain x_{2i} - x_{2i+1} = 0
     MeshKit::IAInterface::IAVariableVec side1, side2;
     side1.push_back(v1);
     side2.push_back(v2);
-    ia_interface.constrain_sum_equal(side1, side2);
+    ia_interface->constrain_sum_equal(side1, side2);
   }
 }
 
@@ -180,11 +232,13 @@ void test_one_pair()
   MeshKit::MKCore *mk = new MeshKit::MKCore();
   MeshKit::IAInterface *ia_interface =
     (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
-
-  set_decoupled_pairs(*ia_interface, 1, 1, 3);
+ 
+  std::vector< std::pair<int,int> > correct_solution;
+  set_decoupled_pairs(ia_interface, 1, 1, 3, correct_solution);
   ia_interface->execute_this(); 
-  //todo: also check that the solution value for each variable is 2
-  // CHECK(success); 
+  bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
+  CHECK( solution_correct );
+  // todo: ask tim how to destruct mk?
 }
 
 int main(int argv, char* argc[])

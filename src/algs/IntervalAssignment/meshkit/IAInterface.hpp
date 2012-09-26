@@ -14,23 +14,10 @@
 #include <set>
 #include <vector>
 
-// to add an entity or variable to interval assignment 
-// create an IAVariable object, with or without 
-
-
-// IAInterface - owns an IAVariable, for creation and deletion.
-// But the ModelEnt can request a variable for itself, and lets the interface know when it is no longer wanted.
-// ModelEnt keeps handles (pointers) to the variables it cares about.
-// most efficient interface: add variable as a constraint is added
-
 namespace MeshKit {
 
 class ModelEnt;
 class IASolver;
-
- // Define a variable for interval assignment
-// Data object shared between Meshkit and Interval Assignment
-
 
 /** \class IAInterface IAInterface.hpp "meshkit/IAInterface.hpp"
  * \brief The class used in MeshKit for Interval Assignment.
@@ -45,6 +32,10 @@ class IASolver;
  *
  * Construction of IAInterface does not cause the construction of variables.
  * Destruction of IAInterface does destroy the underlying variables.
+ * IAInterface owns an IAVariable, for creation and deletion.
+ * But the ModelEnt can request a variable for itself, and lets the interface know when 
+ * it is no longer wanted.
+ * ModelEnt keeps handles (pointers) to the variables it cares about.
  * \nosubgrouping
  */
  
@@ -55,7 +46,7 @@ public:
      */
     /**@{*/
 
-    /** \brief Constructor; mesh entity can be missing, in which case it's retrieved or created
+    /** \brief Constructor; model entity can be missing, in which case it's retrieved or created
      *
      * \param MKCore instance
      * \param MEntVector 
@@ -95,6 +86,12 @@ public:
      */
   // there is a reason we don't provide default parameters here, don't combine with above version.
   IAVariable *create_variable( ModelEnt* model_entity, IAVariable::Firmness set_firmness, double goal_value);
+  
+    /** \brief Get const_iterators over the variables. May be slow to iterate.
+	*/
+  typedef std::set<IAVariable*> VariableSet;
+  VariableSet::const_iterator variables_begin() const {return variables.begin();}
+  VariableSet::const_iterator variables_end() const {return variables.end();}
   
      /** \brief Destroy a variable. If a variable is not explicitly destroyed, it will be
      * destroyed on IAInterface tool destruction.
@@ -183,7 +180,6 @@ private:
   /** \brief Internal representation of the data specifying the Interval Assignment problem.
    */
   // data
-  typedef std::set<IAVariable*> VariableSet;
   VariableSet variables;
   typedef std::vector< IAVariable* > VariableVec;
   typedef std::vector< VariableVec > VariableVecVec;
