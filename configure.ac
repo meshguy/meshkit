@@ -854,7 +854,7 @@ if test "x${ENABLE_intassign}" != "xno"; then
       old_LIBS="$LIBS"
       old_LDFLAGS="$LDFLAGS"
       old_CPPFLAGS="$CPPFLAGS"
-      LDFLAGS="$LDFLAGS $IPOPT_LDFLAGS -lipopt -lcoinhsl -llapack -lblas -lm -ldl"
+      LDFLAGS="$LDFLAGS $IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"
       CPPFLAGS="$CPPFLAGS $IPOPT_CPPFLAGS"
       AC_LANG_PUSH([C++])
 
@@ -862,7 +862,7 @@ if test "x${ENABLE_intassign}" != "xno"; then
         [AC_LANG_PROGRAM([#include "MKVersion.h"
                           #include "IpTNLP.hpp"],
             [])],
-        [IPOPT_LIBS="$IPOPT_LDFLAGS -lipopt -lcoinhsl -llapack -lblas -lm -ldl"] [HAVE_IPOPT=yes],
+        [IPOPT_LIBS="$IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"] [HAVE_IPOPT=yes],
         [AC_MSG_WARN([libipopt is not installed.])] )
 
       AC_LANG_POP([C++])

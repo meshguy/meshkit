@@ -26,9 +26,7 @@ public:
   bool solve();
   // return true if solved; false if not solved (e.g. infeasible)
   
-  void set_test_problem();
-
-  // some utility functions
+  // utility functions, todo move
   static bool is_even(double y);
   static double sum_even_value(int i, const IAData *ia_data_ptr, const IASolution *solution);
 

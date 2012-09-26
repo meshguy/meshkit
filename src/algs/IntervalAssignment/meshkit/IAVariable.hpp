@@ -16,8 +16,8 @@ class IAVariable
 {
 public:
   
-  void set_model_entity(ModelEnt* me);
-  ModelEnt *get_model_entity() const;
+  void set_model_ent(ModelEnt* me) {modelEnt = me;}
+  ModelEnt *get_model_ent() const {return modelEnt;}
   
   enum Firmness {UNSET, SOFT, HARD};
   

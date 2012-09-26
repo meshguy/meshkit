@@ -13,9 +13,14 @@
 namespace MeshKit 
 {
 
-moab::EntityType types[] = { moab::MBMAXTYPE};
+moab::EntityType IAInterface_types[] = {moab::MBMAXTYPE};
 const moab::EntityType* IAInterface::output_types() 
-  { return types; }
+  { return IAInterface_types; }
+    
+void IAInterface::setup_this()
+{
+  ; //nothing for now
+}
     
 IAVariable *IAInterface::create_variable( ModelEnt* model_entity )
 {
@@ -29,28 +34,6 @@ IAVariable *IAInterface::create_variable( ModelEnt* model_entity )
   return create_variable( model_entity, IAVariable::SOFT, 0. );  
 }
 
-void IAInterface::destroy_variable( IAVariable* ia_variable )
-{
-  if (!ia_variable)
-    return;
-  // model_entity shouldn't point to ia_variable anymore
-  if (ia_variable->get_model_entity() && ia_variable->get_model_entity()->ia_var() == ia_variable)
-    ia_variable->get_model_entity()->ia_var(NULL);
-  
-  variables.erase( ia_variable );
-  delete ia_variable;    
-}
-
-IAInterface::~IAInterface()
-{
-  // destroy remaining variables
-  // in reverse order for efficiency
-  while (!variables.empty())
-  {
-    destroy_variable( * variables.rbegin() );
-  }
-
-}
 
 IAVariable *IAInterface::create_variable( ModelEnt* model_entity, IAVariable::Firmness set_firm, double goal_value)
 {
@@ -73,6 +56,40 @@ IAVariable *IAInterface::create_variable( ModelEnt* model_entity, IAVariable::Fi
   return ia_var;
 }
 
+void IAInterface::destroy_variable( IAVariable* ia_variable )
+{
+  if (!ia_variable)
+    return;
+  // model_entity shouldn't point to ia_variable anymore
+  ModelEnt *me = ia_variable->get_model_ent();
+  if (me && me->ia_var() == ia_variable)
+    me->ia_var(NULL);
+  
+  variables.erase( ia_variable );
+  delete ia_variable;    
+}
+
+IAInterface::~IAInterface()
+{
+  // destroy remaining variables
+  // in reverse order for efficiency
+  while (!variables.empty())
+  {
+    destroy_variable( * variables.rbegin() );
+  }
+
+}
+
+void IAInterface::constrain_sum_even( const IAVariableVec &sum_even_vars )
+{
+  sumEvenConstraints.push_back( sum_even_vars ); // vector copy
+}
+
+void IAInterface::constrain_sum_equal( const IAVariableVec &side_one, const IAVariableVec &side_two )
+{
+  sumEqualConstraints1.push_back(side_one); //vector copy of side_one
+  sumEqualConstraints2.push_back(side_two); //vector copy of side_two
+}
 
 void IAInterface::make_0_to_nm1( IndexSet &index_set, const int k )
 {
@@ -100,15 +117,16 @@ IAVariable *IAInterface::index_to_variable(int ind) const
 void IAInterface::get_constraint_variable_indices( IndexSetVec &constraint_variables, 
                                                   IndexSetVec &variable_constraints,
                                                   const int i_start, 
-                                                  const VariableSetVec &variable_set_vec )
+                                                  const VariableVecVec &variable_vec_vec )
 {
   unsigned int j;
   int i;
-  for (j = 0, i = i_start; j < variable_set_vec.size(); ++j, ++i)
+  for (j = 0, i = i_start; j < variable_vec_vec.size(); ++j, ++i)
   {
-    for (VariableSet::const_iterator k = variable_set_vec[j].begin(); k != variable_set_vec[j].end(); ++k)
+    for (unsigned int k = 0; k < variable_vec_vec[j].size(); ++k )
     {
-      int v = variable_to_index(*k); 
+      const IAVariable *var = variable_vec_vec[j][k];
+      const int v = variable_to_index( var ); 
       constraint_variables[i].insert( v );        
       assert( v < (int)variable_constraints.size() );
       variable_constraints[v].insert( i );
@@ -167,176 +185,51 @@ void IAInterface::find_constraint_dependent_set( const int constraint_i,
 
 void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
 {
-    /*
-  // find independent subproblems, by index of constraint and variable
-  // put all the constraints together, for generality
-  //typedef std::set<int> IndexSet;
-  IndexSet constraint_set, variable_set;
-  IndexSet sub_constraints, sub_variables;
-  assert( sumEqualConstraints1.size() == sumEqualConstraints2.size() );
-  const int sum_equal_start = sumEqualConstraints1.size();
-  make_0_to_nm1( constraint_set, sumEqualConstraints1.size() + sumEvenConstraints.size() );
-  make_0_to_nm1( variable_set, variables.size() );
-  IndexSetVec constraint_variables(constraint_set.size()), variable_constraints( variable_set.size() );
-  get_constraint_variable_indices( constraint_variables, variable_constraints, 0, sumEqualConstraints1 );
-  get_constraint_variable_indices( constraint_variables, variable_constraints, 0, sumEqualConstraints2 );
-  get_constraint_variable_indices( constraint_variables, variable_constraints, sum_equal_start, sumEvenConstraints );
-  
 
-  while ( !constraint_set.empty() || !variable_set.empty())
-  {
-    // define a sub-problem by indices
-    IndexSet sub_constraint_set, sub_variable_set;
-    if ( !constraint_set.empty() )
-    {
-      find_constraint_dependent_set( *constraint_set.begin(), constraint_variables, variable_constraints, 
-                                    constraint_set, variable_set, sub_constraints, sub_variables);
-    }
-    else 
-    {
-      assert( !variable_set.empty() );
-      find_variable_dependent_set( *variable_set.begin(), constraint_variables, variable_constraints, 
-                                    constraint_set, variable_set, sub_constraints, sub_variables);
-    }
-
-    // create a new sub-prolem, with data from those indices
-    IASolver *sub_problem = new IASolver();
-
-    
-  //    -- zzyk: makes sure the below makes sense given the above problem description
-  //  need to go from indices back to ia variables...
-    // remove ia_index
-    
-  // convert the set into an IASolver, add data
-  
-  // number the variables from 0..n, by setting ia_index
-    int j;
-    ConstraintSet::const_iterator i;
-    for (j = 0, i = sub_variables.begin(); i != sub_variables.end(); ++i, ++j)
-  {
-    IAVariable *v = index_to_variable( *i );
-    if ( i->get_firmness() != IAVariable::HARD )
-    {
-      // add the goals
-      sub_problem->I.push_back( i->goal );
-      assert( sub_problem->num_variables() == j+1 );
-    }
-  }
-  
-  
-  // convert equality constraints to IASolver  
-  for (ConstraintSet::const_iterator i = sub_sum_equal_constraints.begin(); i != sub_sum_equal_constraints.end() )
-  {
-    IAVariableVec *s1 = &sumEqualConstraints1[*i];
-    IAVariableVec *s2 = &sumEqualConstraints2[*i];
-    std::vector<int> side_1, side_2;
-    int rhs(0);
-    
-    for (int j = 0; j < s1->size(); ++j )
-    {
-      IAVariable *v = s1[j];
-      if (v->get_firmness() == IAVariable::HARD )
-        rhs -= floor( v->get_goal() + 0.5 ); // goal should be integer already for hardsets
-      else
-        side_1.push_back( v->ia_index );
-    }
-    for (int j = 0; j < s2->size(); ++j )
-    {
-      IAVariable *v = s2[j];
-      if (v->get_firmness() == IAVariable::HARD )
-        rhs += v->get_goal();
-      else
-        side_2.push_back( v->ia_index );
-    }
-    sub_problem->constrain_opposite_side_equal(side_1, side_2, rhs );   
-  }
-  
-  // convert even constraints to IASolver  
-  for (ConstraintSet::const_iterator i = sub_even_constraints.begin(); i != sub_even_constraints.end() )
-  {
-    IAVariableVec *s = &sumEvenConstraints[i];
-    std::vector<int> side;
-    int rhs(0);
-    
-    for (int j = 0; j < s->size(); ++j )
-    {
-      IAVariable *v = s[j];
-      if (v->get_firmness() == IAVariable::HARD )
-        rhs -= floor( v->get_goal() + 0.5 ); // goal should be integer already for hardsets
-      else
-        side.push_back( v->ia_index );
-    }
-    sub_problem->constrain_sum_even(side, rhs );   
-  }
-  
-  //todo: find any variables that didn't have any constraints, solve those by simply rounding to the nearest integer.
-  // for example, curves in triangle scheme sides
-  }
-
-    */
+    /* todo: get subdivision working from src code in progress and copy it over */
 
    // placeholder - just make one subproblem
   IASolver *sub_problem = new IASolver();
-
-    /*
-  VariableSet::iterator vit;
-  for (vit = variables.begin(); vit != variables.end(); vit++) 
-  {
-    if ( (*vit)->get_firmness() != IAVariable::HARD )
-    {
-      // add the goals
-      sub_problem->I.push_back( (*vit)->goal );
-    }
-  }
-
-  // convert equality constraints to IASolver  
-  unsigned int i;
-  for (i = 0; i < sumEqualConstraints1.size(); i++)
-  {
-    VariableSet *s1 = &sumEqualConstraints1[i];
-    VariableSet *s2 = &sumEqualConstraints2[i];
-    std::vector<int> side_1, side_2;
-    int rhs(0);
-    
-    for (VariableSet::iterator j = s1->begin(); j != s1->end(); ++j)
-    {
-      IAVariable *v = *j;
-      if (v->get_firmness() == IAVariable::HARD )
-        rhs -= floor( v->get_goal() + 0.5 ); // goal should be integer already for hardsets
-      else
-        side_1.push_back( v->ia_index );
-    }
-    for (VariableSet::iterator j = s2->begin(); j != s2->end(); ++j)
-    {
-      IAVariable *v = *j;
-      if (v->get_firmness() == IAVariable::HARD )
-        rhs += v->get_goal();
-      else
-        side_2.push_back( v->ia_index );
-    }
-    sub_problem->constrain_opposite_side_equal(side_1, side_2, rhs );   
-  }
-  
-  // convert even constraints to IASolver  
-  for (i = 0; i < sumEvenConstraints.size(); ++i)
-  {
-    VariableSet *s = &sumEvenConstraints[i];
-    std::vector<int> side;
-    int rhs(0);
-    
-    for (VariableSet::iterator j = s->begin(); j != s->end(); ++j)
-    {
-      IAVariable *v = *j;
-      if (v->get_firmness() == IAVariable::HARD )
-        rhs -= floor( v->get_goal() + 0.5 ); // goal should be integer already for hardsets
-      else
-        side.push_back( v->ia_index );
-    }
-    sub_problem->constrain_sum_even(side, rhs );   
-  }
-    */
-
   subproblems.push_back(sub_problem);
+
+  // this grabs the whole problem and converts it
+  // variables numbered 0..n
+  for(VariableSet::const_iterator i = variables.begin(); i != variables.end(); ++i)
+  {
+    IAVariable *v = *i;
+    sub_problem->I.push_back( v->goal );
+  }
+  // equal constraints
+  for (unsigned int i = 0; i < sumEqualConstraints1.size(); ++i)
+  {
+    std::vector<int> side_1, side_2;
+    for (unsigned int j = 0; j < sumEqualConstraints1[i].size(); ++j)
+    {
+      IAVariable *v = sumEqualConstraints1[i][j];
+      int index = variable_to_index(v);
+      side_1.push_back(index);
+    }
+    for (unsigned int j = 0; j < sumEqualConstraints2[i].size(); ++j)
+    {
+      IAVariable *v = sumEqualConstraints2[i][j];
+      int index = variable_to_index(v);
+      side_2.push_back(index);
+    }
+    sub_problem->constrain_opposite_side_equal(side_1, side_2, 0.);
+  }
+  // even constraints
+  for (unsigned int i = 0; i < sumEvenConstraints.size(); ++i)
+  {
+    std::vector<int> side;
+    for (unsigned int j = 0; j < sumEvenConstraints[i].size(); ++j)
+    {
+      IAVariable *v = sumEvenConstraints[i][j];
+      int index = variable_to_index(v);
+      side.push_back(index);
+    }
+    sub_problem->constrain_sum_even(side, 0.);
+  }
+
 }
 
 bool IAInterface::solve_subproblem( IASolver *subproblem )
@@ -347,6 +240,15 @@ bool IAInterface::solve_subproblem( IASolver *subproblem )
 void IAInterface::assign_solution( IASolver *subproblem )
 {
   // assign solution value from subproblem to model entities
+  for (unsigned int i = 0; i < subproblem->x_solution.size(); ++i)
+  {
+    const double x = subproblem->x_solution[i];
+    // map index i to IAVariable, which will be different when we have non-full subproblems
+    IAVariable *v = index_to_variable( i );
+    assert(v);
+    assert( x > 0. );
+    v->solution = floor( x + 0.5 );
+  }
 }
 
 void IAInterface::execute_this()

@@ -39,8 +39,7 @@ bool IASolverInt::solve_minlp()
 
   
   // solver setup  
-  using namespace Ipopt;
-  SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+  SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
   
   // convergence parameters
   // see $IPOPTDIR/Ipopt/src/Interfaces/IpIpoptApplication.cpp
@@ -65,9 +64,9 @@ bool IASolverInt::solve_minlp()
   // app->Options()->SetStringValue("option_file_name", "IA.opt");
   
   // Intialize the IpoptApplication and process the options
-  ApplicationReturnStatus status;
+  Ipopt::ApplicationReturnStatus status;
   status = app->Initialize();
-  if (status != Solve_Succeeded) {
+  if (status != Ipopt::Solve_Succeeded) {
     printf("\n\n*** Error during initialization!\n");
     return (int) status;
   }
@@ -78,7 +77,7 @@ bool IASolverInt::solve_minlp()
   // IARoundingFarNlp *myianlp = new IARoundingFarNlp(iaData, &ipData, this);
   // IARoundingFar3StepNlp *myianlp = new IARoundingFar3StepNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
   // IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
-  SmartPtr<TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
+  Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
 
   bool try_again = true;
   int iter = 0;
@@ -86,7 +85,7 @@ bool IASolverInt::solve_minlp()
     // Ask Ipopt to solve the problem
     status = app->OptimizeTNLP(mynlp); // the inherited IANlp
     
-    if (status == Solve_Succeeded) {
+    if (status == Ipopt::Solve_Succeeded) {
       printf("\n\n*** The problem solved!\n");
     }
     else {
@@ -130,7 +129,7 @@ bool IASolverInt::solve_minlp()
   // As the SmartPtrs go out of scope, the reference count
   // will be decremented and the objects will automatically
   // be deleted.  
-  return status == Solve_Succeeded;
+  return status == Ipopt::Solve_Succeeded;
   
 }
 

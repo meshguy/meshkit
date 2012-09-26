@@ -47,15 +47,15 @@
  */
 
 #include "MKVersion.h"
+
 #include "IpTNLP.hpp"
+using namespace Ipopt;
 
 namespace MeshKit 
 {
     
 class IAData;
 class IASolution;
-
-using namespace Ipopt;
 
 class IANlp : public TNLP
 {

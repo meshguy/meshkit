@@ -15,6 +15,7 @@ class IASolution;
 class IANlp;
 
 #include "MKVersion.h"
+
 #include "IpTNLP.hpp"
 using namespace Ipopt;
 

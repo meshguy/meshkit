@@ -385,7 +385,6 @@ void IASolverEven::cleanup()
 
 bool IASolverEven::solve()
 {
-  using namespace Ipopt;
   
   // solve the nlp to get a non-integral solution, which we hope is close to a good integer solution    
   // =======================================
@@ -406,9 +405,9 @@ bool IASolverEven::solve()
   // app->Options()->SetStringValue("option_file_name", "IA.opt");
   
   // Intialize the IpoptApplication and process the options
-  ApplicationReturnStatus status;
+  Ipopt::ApplicationReturnStatus status;
   status = app->Initialize();
-  if (status != Solve_Succeeded) {
+  if (status != Ipopt::Solve_Succeeded) {
     printf("\n\n*** Error during initialization!\n");
     cleanup();
     return (int) status;
@@ -458,7 +457,7 @@ bool IASolverEven::solve()
     {
       try_again = false;
       status = app->OptimizeTNLP(mynlp); // double-check that resolving works, w/out initialize, etc 
-      if (status != Solve_Succeeded && status != Solved_To_Acceptable_Level)
+      if (status != Ipopt::Solve_Succeeded && status != Ipopt::Solved_To_Acceptable_Level)
       {
         back_off(rounding_map);
         try_again = rounding_map.size();
@@ -500,7 +499,7 @@ bool IASolverEven::solve()
     const double g = iaData->I[i];
     const double x = x_solution[i];
     assert(b >= g && x + 1.e-2 >= b || b < g && x <= b + 1.e-2); // assert the new constraint was satisfied, one-at-a-time
-    if ((status != Solve_Succeeded && status != Solved_To_Acceptable_Level) || 
+    if ((status != Ipopt::Solve_Succeeded && status != Ipopt::Solved_To_Acceptable_Level) || 
         ! (b >= g && x + 1.e-2 >= b || b < g && x <= b + 1.e-2))
     {
       // see ipopt/CoinIpopt/Ipopt/src/Interfaces/IpReturnCodes_inc.h for the enum of possible values
@@ -519,7 +518,7 @@ bool IASolverEven::solve()
     // todo: quit at an iteration limit? but a single variable could be increased several times...
   }
   
-  if (status != Solve_Succeeded)
+  if (status != Ipopt::Solve_Succeeded)
     printf("***Integer Fail!***\n");
   else
   {
@@ -533,7 +532,7 @@ bool IASolverEven::solve()
   // will be decremented and the objects will automatically
   // be deleted. 
   cleanup();
-  return status == Solve_Succeeded;
+  return status == Ipopt::Solve_Succeeded;
   
 }
 

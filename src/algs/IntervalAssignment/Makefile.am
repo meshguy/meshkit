@@ -56,3 +56,4 @@ LDADD = $(top_builddir)/src/libMeshKit.la
 
 test_intassign_SOURCES = ia_main.cpp
 test_intassign_DEPENDENCIES = $(LDADD)
+test_intassign_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/test
