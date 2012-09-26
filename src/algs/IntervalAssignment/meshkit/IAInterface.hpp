@@ -7,7 +7,12 @@
 
 // #include "ModelEnt.hpp"
 #include "meshkit/IAVariable.hpp"
-// class IAVariable;
+#include "meshkit/Types.hpp"
+#include "meshkit/Error.hpp"
+#include "meshkit/MeshScheme.hpp"
+#include "meshkit/ModelEnt.hpp"
+#include "moab/Interface.hpp"
+
 #include <set>
 #include <vector>
 
@@ -25,10 +30,14 @@ namespace MeshKit {
 class ModelEnt;
 class IASolver;
 
-class IAInterface // todo: derive from MeshScheme, register it with SchemeFactory
+class IAInterface : public MeshScheme // register it with SchemeFactory
 // todo: provide methods: setup_this, execute_this
 {
 public:
+  // constructor/destructor
+  virtual ~IAInterface();
+  IAInterface(MKCore *mkcore, const MEntVector &me_vec = MEntVector());
+  
   // create a variable, without an associated constraint (yet)
   IAVariable *create_variable( ModelEnt* model_entity = NULL );
   // there is a reason we don't provide default parameters here
@@ -48,18 +57,45 @@ public:
   //... additional constraint types...
 
   // Main function that graph calls
-  bool setup_this();
+  virtual void setup_this();
 
   // Main function that graph calls graph
   // find solution satisfying all the constraints
   // assign the solution to the variables
   // return true if successful
-  bool execute_this();
+  virtual void execute_this();
   
-  // constructor/destructor
-  virtual ~IAInterface();
-  IAInterface();
-  
+  /**\brief Get class name */
+  static const char* name() 
+    { return "IntervalAssignment"; }
+
+  /**\brief Function returning whether this scheme can mesh entities of t
+   *        the specified dimension.
+   *\param dim entity dimension
+   */
+  static bool can_mesh(iBase_EntityType dim)
+    { return iBase_VERTEX <= dim && iBase_REGION >= dim; }
+
+  /** \brief Function returning whether this scheme can mesh the specified entity
+   * 
+   * Used by MeshOpFactory to find scheme for an entity.
+   * \param model_ent ModelEnt being queried
+   * \return If true, this scheme can mesh the specified ModelEnt
+   */
+  static bool can_mesh(ModelEnt *model_ent)
+      { return can_mesh((iBase_EntityType)model_ent->dimension()); }
+    
+  /**\brief Get list of mesh entity types that can be generated.
+   *\return array terminated with \c moab::MBMAXTYPE
+   */
+  static const moab::EntityType* output_types();
+
+  /** \brief Return the mesh entity types operated on by this scheme
+   * \return array terminated with \c moab::MBMAXTYPE
+   */
+  virtual const moab::EntityType* mesh_types_arr() const
+    { return output_types(); }
+
 private:
   // data
   typedef std::set<IAVariable*> VariableSet;

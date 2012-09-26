@@ -13,6 +13,10 @@
 namespace MeshKit 
 {
 
+moab::EntityType types[] = { moab::MBMAXTYPE};
+const moab::EntityType* IAInterface::output_types() 
+  { return types; }
+    
 IAVariable *IAInterface::create_variable( ModelEnt* model_entity )
 {
   // already exists?
@@ -345,9 +349,8 @@ void IAInterface::assign_solution( IASolver *subproblem )
   // assign solution value from subproblem to model entities
 }
 
-bool IAInterface::execute_this()
+void IAInterface::execute_this()
 {
-  bool all_success = true;
   std::vector<IASolver*> subproblems;
   subdivide_problem(subproblems);
   for (unsigned int i = 0; i < subproblems.size(); ++i)
@@ -357,13 +360,12 @@ bool IAInterface::execute_this()
       assign_solution(p);
     else
     {
-      all_success = false;
       ; // some error statement
     }
     delete p;
   }
   subproblems.clear();
-  return all_success;
+  return;
 }
 
 } // namespace MeshKit

@@ -28,6 +28,9 @@
 #endif
 #endif
 #endif
+#ifdef HAVE_INTASSIGN
+#include "meshkit/IAInterface.hpp"
+#endif
 
 namespace MeshKit {
 
@@ -70,5 +73,9 @@ REGISTER_MESH_OP(ParRecvSurfMesh);
 #endif
 #endif
 #endif
+
+#ifdef HAVE_INTASSIGN
+REGISTER_MESH_OP(IAInterface);
+#endif    
 
 } // namespace MeshKit

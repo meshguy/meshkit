@@ -6,13 +6,15 @@ noinst_LTLIBRARIES = libIntervalAssignment.la
          
 SUBDIRS = 
 
-if HAVE_IPOPT
+if HAVE_INTASSIGN
   AM_CPPFLAGS += $(IPOPT_CPPFLAGS)
   LDFLAGS += $(IPOPT_LDFLAGS)
 endif
 
 # The directory in which to install headers
 libIntervalAssignment_la_includedir = $(includedir)
+
+libIntervalAssignment_la_LIBADD = $(IPOPT_LIBS)
 
 # The list of source files, and any header files that do not need to be installed
 libIntervalAssignment_la_SOURCES = \
