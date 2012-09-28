@@ -37,14 +37,14 @@ bool check_solution_correctness( MeshKit::IAInterface *ia_interface,
     if (x < lo)
     {
       if (verbose_output)
-        std::cout << "ERROR: Variable " << c << " solution " << x << " ABOVE " 
+        std::cout << "ERROR: Variable " << c << " solution " << x << " BELOW " 
              << "[" << lo << "," << hi << "]" << std::endl;
       all_correct = false;
     }
     if (x > hi)
     {
       if (verbose_output)
-        std::cout << "ERROR: Variable " << c << " solution " << x << " BELOW " 
+        std::cout << "ERROR: Variable " << c << " solution " << x << " ABOVE " 
              << "[" << lo << "," << hi << "]" << std::endl;
       all_correct = false;
     }
@@ -70,8 +70,8 @@ void set_decoupled_pairs(MeshKit::IAInterface *ia_interface,
     // x_{2i}, goal: i + goal1
     const double g1 = i + goal1;
     const double g2 = i + goal2;
-    MeshKit::IAVariable *v1 = ia_interface->create_variable( NULL, MeshKit::IAVariable::SOFT, g1);
-    MeshKit::IAVariable *v2 = ia_interface->create_variable( NULL, MeshKit::IAVariable::SOFT, g2);
+    MeshKit::IAVariable *v1 = ia_interface->create_variable( NULL, MeshKit::SOFT, g1);
+    MeshKit::IAVariable *v2 = ia_interface->create_variable( NULL, MeshKit::SOFT, g2);
     const double compromise = sqrt( g1 * g2 );
     const double lo = floor(compromise); // force error
     const double hi = ceil(compromise);
@@ -239,43 +239,71 @@ void test_one_pair()
   ia_interface->execute_this(); 
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
   CHECK( solution_correct );
+  // delete mk;
+}
+
+void test_many_pairs()
+{
+  MeshKit::MKCore *mk = new MeshKit::MKCore();
+  MeshKit::IAInterface *ia_interface =
+    (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
+ 
+  std::vector< std::pair<int,int> > correct_solution;
+  set_decoupled_pairs(ia_interface, 8, 3.2, 12.1, correct_solution);
+  set_decoupled_pairs(ia_interface, 8, 7.7, 4.2, correct_solution);
+  set_decoupled_pairs(ia_interface, 40, 1.1, 5.2, correct_solution);
+  set_decoupled_pairs(ia_interface, 40, 1.6, 4.5, correct_solution);
+  set_decoupled_pairs(ia_interface, 4, 1.5, 1.5, correct_solution);
+  set_decoupled_pairs(ia_interface, 4, 1, 1, correct_solution);
+  
+  ia_interface->execute_this(); 
+  
+  bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
+  CHECK( solution_correct );
   delete mk;
 }
 
 void mapping_test() 
 {
   MeshKit::MKCore *mk = new MeshKit::MKCore();
-  MeshKit::IAInterface *ia_interface =
-    (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
+  MeshKit::IAInterface *ia_interface = (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
 
   std::string file_name = TestDir + "/quadface.stp";
   mk->load_geometry_mesh(file_name.c_str(), NULL);
 
   //check the number of geometrical edges
-  MEntVector surfs, curves, loops;
+  MeshKit::MEntVector surfs, loops;
   mk->get_entities_by_dimension(2, surfs);
-  ModelEnt *this_surf = (*surfs.rbegin());
+  MeshKit::ModelEnt *this_surf = (*surfs.rbegin());
 
     // request a specific size
   mk->sizing_function(0.1, true);
   
-  this_surf->ModelEnt::boundary(1, curves);
+  moab::Range curves;
+  this_surf->boundary(1, curves); // Moab? Find the right function call
   CHECK_EQUAL(4, (int)curves.size());
+  // assume curves are ordered 0 to 3 contiguously around the surface
+  //   or perhaps 0, 1 are opposite, and 2, 3 are opposite?
+  // for (MeshKit::MEntVector::iterator vit = curves.begin(); ...
 
-  for (MEntVector::iterator vit = curves.begin(); 
-
-  MEVec side1, side2;
-  side1.push_back(curves[0]); side2.push_back(curves[1]);
+  MeshKit::ModelEnt* me_curves[4] = {0,0,0,0};
+  // convert moab entity handles to ModelEnt* and place in me_curves... ask Tim how
+  
+  MeshKit::MEntVector side1, side2;
+  side1.push_back(me_curves[0]); side2.push_back(me_curves[2]);
   ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1), 
                                     ia_interface->make_constraint_group(side2));
   side1.clear(); side2.clear();
-  side1.push_back(curves[2]); side2.push_back(curves[3]);
+  side1.push_back(me_curves[1]); side2.push_back(me_curves[3]);
   ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1), 
                                     ia_interface->make_constraint_group(side2));
 
+  // if there are loops, and the loops have strictly less than 4 curves, then
+  // ia_interface->constrain_sum_even( ia_interface->make_constraint_group(curves in loop) );
+  
   //now, do the TFIMapping
-  TFIMapping *tm = (TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
-
+  // MeshKit::TFIMapping *tm =    // tm unused
+  (MeshKit::TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
   mk->setup_and_execute();
 
   delete mk;
@@ -283,13 +311,15 @@ void mapping_test()
 
 int main(int argv, char* argc[])
 {
-  int one_pair = RUN_TEST(test_one_pair);
-//  int abrt = RUN_TEST(test_abort);
+  // currently unable to create more than one mk called IntervalAssignment
+
+  int one_pair; // = RUN_TEST(test_one_pair);
+  int many_pairs = RUN_TEST(test_many_pairs);
 //  int expt = RUN_TEST(test_exception);
 //  int succ = RUN_TEST(test_success);
 
   int map_res = RUN_TEST(mapping_test);
   
-  int success = one_pair + map_res; // + !abrt + !expt + succ;
+  int success = one_pair + many_pairs + map_res; // + !abrt + !expt + succ;
   return success;
 }

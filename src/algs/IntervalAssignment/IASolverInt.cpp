@@ -16,8 +16,9 @@
 namespace MeshKit 
 {
     
-IASolverInt::IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr) 
-: iaData(ia_data_ptr), debugging(true)
+IASolverInt::IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr, 
+  const bool set_silent) 
+: iaData(ia_data_ptr), silent(set_silent), debugging(false)
 { 
   ipData.initialize(relaxed_solution_ptr->x_solution);
 }
@@ -33,13 +34,13 @@ bool IASolverInt::solve_minlp()
 
   if (debugging)
   {
-    printf("IASolver::solve_minlp() - ");        
+    printf("IASolverInt::solve_minlp() - ");        
     printf("Attempting to find a naturally-integer solution to an NLP.\n");
   }
 
   
   // solver setup  
-  SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
+  Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
   
   // convergence parameters
   // see $IPOPTDIR/Ipopt/src/Interfaces/IpIpoptApplication.cpp
@@ -57,7 +58,9 @@ bool IASolverInt::solve_minlp()
   app->Options()->SetNumericValue("acceptable_tol", 1e-1 ); //as "tol"
 
   app->Options()->SetStringValue("mu_strategy", "adaptive");
-  app->Options()->SetIntegerValue("print_level", 1);  // 0 to 12, most. Default is 5
+  // print level 0 to 12, Ipopt default is 5
+  const int print_level = (silent) ? 0 : 1; 
+  app->Options()->SetIntegerValue("print_level", print_level);  
   // uncomment next line to write the solution to an output file
   // app->Options()->SetStringValue("output_file", "IA.out");  
   // The following overwrites the default name (ipopt.opt) of the options file
@@ -67,13 +70,14 @@ bool IASolverInt::solve_minlp()
   Ipopt::ApplicationReturnStatus status;
   status = app->Initialize();
   if (status != Ipopt::Solve_Succeeded) {
-    printf("\n\n*** Error during initialization!\n");
+    if (!silent)
+      printf("\n\n*** Error during initialization!\n");
     return (int) status;
   }
   
   // problem setup
   // a couple of different models, simplest to more complex
-  IARoundingNlp *myianlp = new IARoundingNlp(iaData, &ipData, this);
+  IARoundingNlp *myianlp = new IARoundingNlp(iaData, &ipData, this, silent);
   // IARoundingFarNlp *myianlp = new IARoundingFarNlp(iaData, &ipData, this);
   // IARoundingFar3StepNlp *myianlp = new IARoundingFar3StepNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
   // IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
@@ -85,12 +89,14 @@ bool IASolverInt::solve_minlp()
     // Ask Ipopt to solve the problem
     status = app->OptimizeTNLP(mynlp); // the inherited IANlp
     
-    if (status == Ipopt::Solve_Succeeded) {
-      printf("\n\n*** The problem solved!\n");
-    }
-    else {
-      printf("\n\n*** The problem FAILED!\n");
-      return false;
+    if (!silent)
+    {
+      if (status == Ipopt::Solve_Succeeded) {
+        printf("\n\n*** The problem solved!\n");
+      }
+      else {
+        printf("\n\n*** The problem FAILED!\n");
+      }
     }
     
     // The problem should have been feasible, but it is possible that it had no integer solution.
@@ -100,7 +106,8 @@ bool IASolverInt::solve_minlp()
     
     // debug
     bool sum_even_sat;
-    bool constraints_sat = IASolverRelaxed::constraints_satisfied( iaData, this, sum_even_sat, true );
+    // bool constraints_sat = 
+    IASolverRelaxed::constraints_satisfied( iaData, this, sum_even_sat, true );
     
     IASolution nlp_solution;
     nlp_solution.x_solution = x_solution; // vector copy
@@ -144,7 +151,8 @@ bool IASolverInt::solve()
   bool success = solution_is_integer();
   if (success)
   {
-    printf("minlp produced integer solution\n");
+    if (!silent)
+      printf("minlp produced integer solution\n");
   }
   else
   {

@@ -31,7 +31,6 @@
 # endif
 #endif
 
-using namespace Ipopt;
 
 namespace MeshKit 
 {
@@ -166,7 +165,7 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
     }
   }
   
-  if (1) // debug
+  if (0) // debugging
   {
     printf("unique weights with fabs in [%e, %e]\n", lo, hi);
     for (unsigned int i = 0; i < weights.size(); ++i)
@@ -196,13 +195,17 @@ double IARoundingNlp::f_x_value( double I_i, double x_i )
 }
 
 // constructor
-IARoundingNlp::IARoundingNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr): 
-data(data_ptr), ipData(ip_data_ptr), solution(solution_ptr), baseNlp(data_ptr, solution_ptr),
-debugging(true), verbose(true) // true
+IARoundingNlp::IARoundingNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr,
+  const bool set_silent): 
+data(data_ptr), ipData(ip_data_ptr), solution(solution_ptr), baseNlp(data_ptr, solution_ptr, set_silent),
+silent(set_silent), debugging(false), verbose(true) // true
 {
-  printf("\nIARoundingNLP Problem size:\n");
-  printf("  number of variables: %lu\n", data->I.size());
-  printf("  number of constraints: %lu\n\n", data->constraints.size());
+  if (!silent)
+  { 
+    printf("\nIARoundingNLP Problem size:\n");
+    printf("  number of variables: %lu\n", data->I.size());
+    printf("  number of constraints: %lu\n\n", data->constraints.size());
+  }
   
   weights.resize(data->num_variables());
   if (0 && debugging)

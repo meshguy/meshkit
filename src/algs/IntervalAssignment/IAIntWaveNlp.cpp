@@ -31,8 +31,6 @@
 # endif
 #endif
 
-using namespace Ipopt;
-
 /* structure
  
  as base problem: objective function is f, same

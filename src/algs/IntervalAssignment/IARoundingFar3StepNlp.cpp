@@ -31,8 +31,6 @@
 # endif
 #endif
 
-using namespace Ipopt;
-
 /* Idea: a form of IARoundingNlp with larger variable bounds, but still with a natural integer solution.
  x in [1..inf]
  xr = x optimal relaxed solution with objective function fnlp, see IANlp.xpp 

@@ -11,8 +11,8 @@
 
 #include "IANlp.hpp"
 
+// from Ipopt
 #include "IpTNLP.hpp"
-using namespace Ipopt;
 
 namespace MeshKit 
 {

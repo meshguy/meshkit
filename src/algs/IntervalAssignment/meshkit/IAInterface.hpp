@@ -74,7 +74,7 @@ public:
      *  meaning to the caller, and the caller will have to keep track of the variable 
      *  in order to access its solution value later.
      */
-  IAVariable *create_variable( ModelEnt* model_entity = NULL );
+  IAVariable *get_variable( ModelEnt* model_entity = NULL, bool create_if_missing = true );
      /** \brief Create a variable and assign it a firmness and goal
      * \param IAVariable::Firmness The required fidelity of the solution to the goal. 
      * If HARD, then it is required that the solution equals the goal; goal should be integer.
@@ -105,13 +105,14 @@ public:
 
      /** \brief Containers for variables for specifying constraints.
      */  
-  typedef std::vector<ModelEnt*> MEVec;
+  //typedef std::vector<ModelEnt*> MEVec;
+  // Types.hpp defines std::vector<ModelEnt*> MeshKit::MEntVector
   typedef std::vector<IAVariable*> IAVariableVec;
      /** \brief Convert container of ModelEnts to a container of IAVariables.
      * MEVec is an indirect way of specifying the model entities's variables.
      */   
     // convert vector of ModelEntities into vector of IAVariables
-  IAVariableVec make_constraint_group( const MEVec &model_entity_vec );
+  IAVariableVec make_constraint_group( const MEntVector &model_entity_vec );
   
       /** \brief Constrain that the sum of the number of intervals 
       * on one side is equal to the number on the other side. E.g. when mapping a surface,

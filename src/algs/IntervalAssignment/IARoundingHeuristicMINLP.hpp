@@ -48,7 +48,6 @@ class IASolution;
 
 #include "IpTNLP.hpp"
 #include "IANlp.hpp"
-using namespace Ipopt;
 
 class IARoundingHeuristicMINLP : public TNLP
 {

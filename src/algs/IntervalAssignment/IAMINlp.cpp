@@ -29,8 +29,6 @@
 # endif
 #endif
 
-using namespace Ipopt;
-
 namespace MeshKit 
 {
     

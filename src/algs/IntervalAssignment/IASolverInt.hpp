@@ -18,7 +18,7 @@ class IASolverInt: public IASolution
 {
 public:
   /** default constructor */
-  IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr);
+  IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr, const bool set_silent = true);
 
   /** default destructor */
   virtual ~IASolverInt();
@@ -36,6 +36,7 @@ private:
   IPData ipData; // stores relaxed solution
   const IAData *iaData;
     // debug
+  const bool silent;
   const bool debugging;  
 
 

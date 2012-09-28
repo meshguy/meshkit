@@ -12,8 +12,10 @@
 
 namespace MeshKit {
     
-IASolverRelaxed::IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution) : 
-iaData(ia_data), relaxedSolution(relaxed_solution), p_norm(3), debugging(true) {}
+IASolverRelaxed::IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution,   
+                                 const bool set_silent) : 
+iaData(ia_data), relaxedSolution(relaxed_solution), p_norm(3), 
+silent(set_silent), debugging(true) {}
 
 /** default destructor */
 IASolverRelaxed::~IASolverRelaxed() { iaData = NULL; relaxedSolution=NULL;}
@@ -115,7 +117,6 @@ bool IASolverRelaxed::constraints_satisfied( const IAData * ia_data, const IASol
 
 bool IASolverRelaxed::solve()
 {
-  using namespace Ipopt;
   
   // solve the nlp to get a non-integral solution, which we hope is close to a good integer solution    
   // adapted from HS071 ipopt example
@@ -123,37 +124,43 @@ bool IASolverRelaxed::solve()
   // p_norm set in constructor. 3 seems to work well, comes close to lex-max-min
   // smaller p has the effect of valuing the fidelity of shorter curves over longer curves more
   // larger p approaches min max
-  IANlp *myianlp = new IANlp(iaData, relaxedSolution);
-  SmartPtr<TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
+  IANlp *myianlp = new IANlp(iaData, relaxedSolution, silent);
+  Ipopt::SmartPtr<TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
   
-  SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+  Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
   app->Options()->SetNumericValue("tol", 1e-7); // 2 seems close enough, could do less, say .1
   app->Options()->SetStringValue("mu_strategy", "adaptive");
-  app->Options()->SetIntegerValue("print_level", 1);  // 0 to 12, most. Default is 5
+  // print level 0 to 12, most. Ipopt Default is 5
+  int print_level = (silent) ? 0 : 1;
+  app->Options()->SetIntegerValue("print_level", print_level);  
   // uncomment next line to write the solution to an output file
   // app->Options()->SetStringValue("output_file", "IA.out");  
   // The following overwrites the default name (ipopt.opt) of the options file
   // app->Options()->SetStringValue("option_file_name", "IA.opt");
   
   // Intialize the IpoptApplication and process the options
-  ApplicationReturnStatus status;
+  Ipopt::ApplicationReturnStatus status;
   status = app->Initialize();
-  if (status != Solve_Succeeded) {
-    printf("\n\n*** Error during ipopt initialization!\n");
+  if (status != Ipopt::Solve_Succeeded) {
+    if (!silent)
+      printf("\n\n*** Error during ipopt initialization!\n");
     return (int) status;
   }
   
   // Ask Ipopt to solve the problem
   status = app->OptimizeTNLP(mynlp); // the inherited IANlp
   
-  if (status == Solve_Succeeded) {
-    printf("\n\n*** The relaxed problem solved!\n");
+  if (!silent)
+  {
+    if (status == Ipopt::Solve_Succeeded) {
+      printf("\n\n*** The relaxed problem solved!\n");
+    }
+    else {
+      printf("\n\n*** The relaxed problem FAILED!\n");
+    }
   }
-  else {
-    printf("\n\n*** The relaxed problem FAILED!\n");
-    return false;
-  }
-  return true;
+  // todo: also check for a valid solution even if ! Solve_Succeeded, such as a sub-optimal time-out
+  return (status == Ipopt::Solve_Succeeded);
 }  
 
 } // namespace MeshKit

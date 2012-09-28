@@ -29,8 +29,6 @@
 # endif
 #endif
 
-using namespace Ipopt;
-
 // constructor
 IARoundingHeuristicMINLP::IARoundingHeuristicMINLP(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr): 
 data(data_ptr), ip_data(ip_data_ptr), solution(solution_ptr),

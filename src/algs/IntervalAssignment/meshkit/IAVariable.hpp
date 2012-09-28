@@ -4,7 +4,7 @@
 #ifndef MESHKIT_IA_VARIABLE_HP
 #define MESHKIT_IA_VARIABLE_HP
 
-#include <cstring>
+#include "meshkit/Types.hpp" // for Firmness
 
 namespace MeshKit 
 {
@@ -34,16 +34,17 @@ public:
   
   /** \brief Get/Set the firmness, the required fidelity of the solution to the goal.
   */
-  enum Firmness {UNSET, SOFT, HARD};
+  // enum Firmness {DEFAULT, SOFT, HARD}; //defined already in Types.hpp
+  typedef MeshKit::Firmness Firmness;
   
   void set_firmness(Firmness set_firm) { firmness = set_firm; }
   Firmness get_firmness() const {return firmness;}
   void set_hard() {firmness = HARD;}
   void set_soft() {firmness = SOFT;}
-  void unset()    {firmness = UNSET;} 
+  void unset()    {firmness = DEFAULT;} 
   bool is_soft() const  {return firmness == SOFT;}
   bool is_hard() const  {return firmness == HARD;} 
-  bool is_unset() const {return firmness == UNSET;}
+  bool is_default() const {return firmness == DEFAULT;}
   
   /** \brief Get/Set the goal, the number of intervals we'd like this variable to have in
   * the solution.

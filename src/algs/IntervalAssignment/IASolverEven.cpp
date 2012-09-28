@@ -153,8 +153,8 @@ bool IASolverEven::find_one_non_integer(int &i_nonint, int &x_bound)
     if (d > 0.)
     {
       ++num_noneven_found;
-      if (sum_strategy == 0 && d > biggest_non_even_value || 
-          sum_strategy == 1 && (rand() % num_noneven_found == 0))
+      if ((sum_strategy == 0 && d > biggest_non_even_value) || 
+          (sum_strategy == 1 && (rand() % num_noneven_found == 0)))
       {
         biggest_non_even_value = d;
         biggest_non_even_i = i;
@@ -184,8 +184,8 @@ bool IASolverEven::find_one_non_integer(int &i_nonint, int &x_bound)
         double obj_increase;
         if (calculate_sumeven_value(j, obj_increase, y_int))
         {
-          if (curve_strategy == 0 && obj_increase < smallest_increase || 
-              curve_strategy == 1 && (rand() % num_found == 0))
+          if ((curve_strategy == 0 && obj_increase < smallest_increase) || 
+              (curve_strategy == 1 && (rand() % num_found == 0)))
           {
             i_nonint = j;
             x_bound = y_int;
@@ -468,7 +468,8 @@ bool IASolverEven::solve()
       break;
       
     // to do: what to do if status != Solve_Succeeded ?
-    // assert(b >= I[i] && x_solution[i] >= b || b < I[i] && x_solution[i] <= b); // assert the new constraint was satisfied, one-at-a-time
+    // assert the new constraint was satisfied, one-at-a-time
+    // assert( (b >= I[i] && x_solution[i] >= b) || (b < I[i] && x_solution[i] <= b)); 
     if (debugging)
     {
       // report_one_non_integer(i, b);
@@ -498,9 +499,9 @@ bool IASolverEven::solve()
     // to do: what to do if status != Solve_Succeeded ?
     const double g = iaData->I[i];
     const double x = x_solution[i];
-    assert(b >= g && x + 1.e-2 >= b || b < g && x <= b + 1.e-2); // assert the new constraint was satisfied, one-at-a-time
+    assert((b >= g && x + 1.e-2 >= b) || (b < g && x <= b + 1.e-2)); // assert the new constraint was satisfied, one-at-a-time
     if ((status != Ipopt::Solve_Succeeded && status != Ipopt::Solved_To_Acceptable_Level) || 
-        ! (b >= g && x + 1.e-2 >= b || b < g && x <= b + 1.e-2))
+        ! ((b >= g && x + 1.e-2 >= b) || (b < g && x <= b + 1.e-2)))
     {
       // see ipopt/CoinIpopt/Ipopt/src/Interfaces/IpReturnCodes_inc.h for the enum of possible values
       // status = Infeasible_Problem_Detected; 

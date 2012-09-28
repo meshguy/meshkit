@@ -27,23 +27,22 @@
 # endif
 #endif
 
-using namespace Ipopt;
-
 namespace MeshKit {
 
 const int IANlp::p_norm = 3; 
 
 // constructor
-IANlp::IANlp(const IAData *data_ptr, IASolution *solution_ptr): 
+IANlp::IANlp(const IAData *data_ptr, IASolution *solution_ptr, const bool set_silent): 
 data(data_ptr), solution(solution_ptr), 
-neleJac(0), debugging(true), verbose(false) // true
+neleJac(0), silent(set_silent), debugging(false), verbose(false) // true
 {
-
   assert(p_norm >= 2); // needed for continuity of derivatives anyway
-  
-  printf("\nIANLP problem size:\n");
-  printf("  number of variables: %lu\n", data->I.size());
-  printf("  number of constraints: %lu\n\n", data->constraints.size());
+  if (!silent)
+  {
+    printf("\nIANlp problem size:\n");
+    printf("  number of variables: %lu\n", data->I.size());
+    printf("  number of constraints: %lu\n\n", data->constraints.size());
+  }
 }
 
 

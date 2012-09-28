@@ -15,7 +15,6 @@ class IASolution;
 #include "IANlp.hpp"
 
 #include "IpTNLP.hpp"
-using namespace Ipopt;
 
 class IARoundingFarNlp : public TNLP
 {

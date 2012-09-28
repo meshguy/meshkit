@@ -22,7 +22,7 @@ public:
   /** default constructor */
   // ia_data contains the problem specification
   // relaxed_solution contains the relaxed solution after solve()
-  IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution);  
+  IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution, const bool set_silent = true);  
 
   /** default destructor */
   virtual ~IASolverRelaxed();
@@ -50,6 +50,7 @@ private:
   bool constraints_satisfied() { bool junk; return constraints_satisfied(iaData, relaxedSolution, junk, debugging); }
 
   // debug
+  const bool silent;
   const bool debugging;
   
 };

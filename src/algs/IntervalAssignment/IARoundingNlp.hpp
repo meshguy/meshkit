@@ -12,7 +12,6 @@
 #include "IANlp.hpp"
 
 #include "IpTNLP.hpp"
-using namespace Ipopt;
 
 namespace MeshKit {
 
@@ -25,7 +24,8 @@ class IARoundingNlp : public TNLP
   // first set of functions required by TNLP
 public:
   /** default constructor */
-  IARoundingNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr); 
+  IARoundingNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr,
+    const bool set_silent = true); 
 
   /** default destructor */
   virtual ~IARoundingNlp();
@@ -113,6 +113,8 @@ private:
   
   double f_x_value( double I_i, double x_i );
 
+  // debug
+  const bool silent;
   const bool debugging;
   const bool verbose; // verbose debugging
   

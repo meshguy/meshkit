@@ -6,6 +6,8 @@
 #include "IASolver.hpp"
 #include "meshkit/ModelEnt.hpp" // from MeshKit
 #include <vector>
+#include <iterator>
+#include <set>
 #include <cstdio>
 #include <assert.h>
 #include <math.h>
@@ -22,7 +24,7 @@ void IAInterface::setup_this()
   ; //nothing for now
 }
     
-IAVariable *IAInterface::create_variable( ModelEnt* model_entity )
+IAVariable *IAInterface::get_variable( ModelEnt* model_entity, bool create_if_missing )
 {
   // already exists?
   if (model_entity && model_entity->ia_var())
@@ -30,8 +32,30 @@ IAVariable *IAInterface::create_variable( ModelEnt* model_entity )
     // return without setting values
     return model_entity->ia_var();
   }
- 
-  return create_variable( model_entity, IAVariable::SOFT, 0. );  
+  
+  if (model_entity && create_if_missing) 
+  {
+    // default values
+    double goal(1.);
+    Firmness firm(DEFAULT);
+    
+    const Firmness me_firm( model_entity->interval_firmness() );
+    const double me_edge_size( model_entity->mesh_interval_size() );
+    if ( me_firm == DEFAULT || me_edge_size <= 0.) 
+    {
+      // ModelEnt was unset, so use default values
+      ;
+    }
+    else
+    {
+      const double me_size = model_entity->measure();
+      assert(me_edge_size > 0.);
+      goal = me_size / me_edge_size;
+      firm = model_entity->interval_firmness(); 
+    }
+    return create_variable( model_entity, firm, goal);  
+  }
+  return NULL;
 }
 
 
@@ -50,19 +74,22 @@ IAVariable *IAInterface::create_variable( ModelEnt* model_entity, IAVariable::Fi
   }
       
   ia_var = new IAVariable(model_entity, set_firm, goal_value);
-  // add to set, giving the end of the set as a hint of where it goes
-  variables.insert( ia_var);
+  // add to set, giving a forward iterator at the last element of the set
+  // as a hint that it goes right after it.
+  VariableSet::iterator last = variables.rbegin().base();
+  variables.insert( last, ia_var );
 
   return ia_var;
 }
 
-IAInterface::IAVariableVec IAInterface::make_constraint_group( const MEVec &model_entity_vec )
+IAInterface::IAVariableVec IAInterface::make_constraint_group( const MEntVector &model_entity_vec )
 {
   IAVariableVec result( model_entity_vec.size() );
   for (unsigned int i = 0; i < model_entity_vec.size(); ++i)
   {
     assert(model_entity_vec[i]);
-    result[i] = model_entity_vec[i]->ia_var();
+    IAVariable *v = get_variable( model_entity_vec[i], true );
+    result[i] = v;
   }
   return result;
 }
@@ -258,7 +285,12 @@ void IAInterface::assign_solution( IASolver *subproblem )
     IAVariable *v = index_to_variable( i );
     assert(v);
     assert( x > 0. );
-    v->solution = floor( x + 0.5 );
+    const int x_int = (int) floor( x + 0.5 );
+    v->solution = x_int;
+    if (v->get_model_ent())
+    {
+      v->get_model_ent()->mesh_intervals(x_int);
+    }
   }
 }
 

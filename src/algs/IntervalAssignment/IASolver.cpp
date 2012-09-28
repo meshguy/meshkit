@@ -48,7 +48,7 @@ void IASolver::print_solution() // IPData &ip_data
 
 bool IASolver::solve_relaxed()
 {
-  IASolverRelaxed relaxed(this,this);
+  IASolverRelaxed relaxed(this,this,debugging); 
   bool succeeded=relaxed.solve();
   return succeeded;
 }  
@@ -66,7 +66,7 @@ bool IASolver::solve_int()
 bool IASolver::solve_int()
 {
   // set relaxed solution to this's solution (from solve_relaxed)
-  IASolverInt solver_int(this,this);
+  IASolverInt solver_int(this,this,debugging);
   bool succeeded=solver_int.solve();
   // replace the solution with the int solution
   x_solution = solver_int.x_solution; // vector copy

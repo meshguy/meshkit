@@ -40,16 +40,20 @@
  * g' = sum of non-zero coefficients of the constraints, since they are all linear.
  * g'' = 0
  *
- * Class hierarchy: The Meshkit layers are supposed to be independent, except they all 
- * depend on shared IAData. Implemented using a tower of classes, but multiple virtual 
- * inheritance would be closer to the conceptual model.
  *
  */
 
 #include "MKVersion.h"
 
 #include "IpTNLP.hpp"
-using namespace Ipopt;
+//using namespace Ipopt;
+using Ipopt::Index;
+using Ipopt::Number;
+using Ipopt::SolverReturn;
+using Ipopt::IpoptData;
+using Ipopt::IpoptCalculatedQuantities;
+using Ipopt::TNLP;
+// IndexStyleEnum defined by Ipopt in global space
 
 namespace MeshKit 
 {
@@ -61,11 +65,11 @@ class IANlp : public TNLP
 {
 public:
   /** default constructor */
-  IANlp(const IAData *data_ptr, IASolution *solution_ptr); 
+  IANlp(const IAData *data_ptr, IASolution *solution_ptr, const bool set_silent = true); 
 
   /** default destructor */
   virtual ~IANlp();
-
+  
   /**@name Overloaded from TNLP */
   //@{
   /** Method to return some info about the nlp */
@@ -139,6 +143,7 @@ private:
   IASolution *solution;
   int neleJac;
   
+  const bool silent;
   const bool debugging;
   const bool verbose; // verbose debugging
   
