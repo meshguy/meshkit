@@ -15,6 +15,9 @@
 namespace MeshKit 
 {
 
+//static IAVariable counter
+unsigned int IAVariable::numVariables(0);
+  
 moab::EntityType IAInterface_types[] = {moab::MBMAXTYPE};
 const moab::EntityType* IAInterface::output_types() 
   { return IAInterface_types; }
@@ -74,10 +77,9 @@ IAVariable *IAInterface::create_variable( ModelEnt* model_entity, IAVariable::Fi
   }
       
   ia_var = new IAVariable(model_entity, set_firm, goal_value);
-  // add to set, giving a forward iterator at the last element of the set
-  // as a hint that it goes right after it.
-  VariableSet::iterator last = variables.rbegin().base();
-  variables.insert( last, ia_var );
+  assert( ia_var->uniqueId + 1 == IAVariable::numVariables );
+  variables.push_back(ia_var);
+  assert( IAVariable::numVariables == variables.size() );
 
   return ia_var;
 }
@@ -103,19 +105,22 @@ void IAInterface::destroy_variable( IAVariable* ia_variable )
   if (me && me->ia_var() == ia_variable)
     me->ia_var(NULL);
   
-  variables.erase( ia_variable );
+  variables[ ia_variable->uniqueId ] = NULL;
   delete ia_variable;    
 }
 
 IAInterface::~IAInterface()
 {
   // destroy remaining variables
-  // in reverse order for efficiency
-  while (!variables.empty())
+  for (unsigned int i = 0; i < variables.size(); ++i)
   {
-    destroy_variable( * variables.rbegin() );
+    if ( variables[i] )
+    {
+      assert( variables[i]->uniqueId == i);
+      destroy_variable( variables[i] );
+    }
   }
-
+  variables.clear();
 }
 
 void IAInterface::constrain_sum_even( const IAVariableVec &sum_even_vars )
@@ -137,19 +142,13 @@ void IAInterface::make_0_to_nm1( IndexSet &index_set, const int k )
 
 int IAInterface::variable_to_index(const IAVariable* var) const
 {
-  VariableSet::const_iterator var_pos = variables.find( const_cast<IAVariable*>(var) );
-  int v = std::distance(variables.begin(), var_pos);
-  assert( v >= 0 );
-  assert( v < (int)variables.size() ); // == size means it wasn't found
-  return v;
+  return var->uniqueId;
 }
 
 IAVariable *IAInterface::index_to_variable(int ind) const
 {
-  assert(ind < (int)variables.size());
-  VariableSet::const_iterator var_pos = variables.begin();
-  for (int i = 0; i < ind; i++) var_pos++;
-  return *var_pos;
+  assert(ind < (int) variables.size());
+  return variables[ind];
 }
 
 void IAInterface::get_constraint_variable_indices( IndexSetVec &constraint_variables, 
@@ -232,7 +231,7 @@ void IAInterface::subdivide_problem(std::vector<IASolver*> &subproblems)
 
   // this grabs the whole problem and converts it
   // variables numbered 0..n
-  for(VariableSet::const_iterator i = variables.begin(); i != variables.end(); ++i)
+  for(VariableVec::const_iterator i = variables.begin(); i != variables.end(); ++i)
   {
     IAVariable *v = *i;
     sub_problem->I.push_back( v->goal );

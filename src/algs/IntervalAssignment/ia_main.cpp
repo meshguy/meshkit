@@ -14,12 +14,12 @@
 bool check_solution_correctness( MeshKit::IAInterface *ia_interface, 
                                  std::vector< std::pair<int,int> > &correct_solution)
 {
-  const bool verbose_output = true;
+  const bool verbose_output = false;
   const bool debug = false;
   bool all_correct = true;
-  MeshKit::IAInterface::VariableSet::const_iterator b = ia_interface->variables_begin();
-  MeshKit::IAInterface::VariableSet::const_iterator e = ia_interface->variables_end();
-  MeshKit::IAInterface::VariableSet::const_iterator i = b;
+  MeshKit::IAInterface::VariableVec::const_iterator b = ia_interface->variables_begin();
+  MeshKit::IAInterface::VariableVec::const_iterator e = ia_interface->variables_end();
+  MeshKit::IAInterface::VariableVec::const_iterator i = b;
   unsigned int c = 0;
   if (debug)
     std::cout << "Checking Solution Correctness" << std::endl;
@@ -313,7 +313,7 @@ int main(int argv, char* argc[])
 {
   // currently unable to create more than one mk called IntervalAssignment
 
-  int one_pair; // = RUN_TEST(test_one_pair);
+  int one_pair = RUN_TEST(test_one_pair);
   int many_pairs = RUN_TEST(test_many_pairs);
 //  int expt = RUN_TEST(test_exception);
 //  int succ = RUN_TEST(test_success);

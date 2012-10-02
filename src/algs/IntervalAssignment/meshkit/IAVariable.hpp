@@ -84,14 +84,16 @@ private:
   ModelEnt *modelEnt;
     /**@}*/
         
-  /** \brief IAInterface is friend class to it can set the solution.
+  /** \brief IAInterface is friend class to it can set the solution, and use its index.
   */
+  static unsigned int numVariables;
+  unsigned int uniqueId;
   friend class IAInterface;
 };
 
 inline
 IAVariable::IAVariable(ModelEnt *model_entity, Firmness set_firmness, double goal_value )
-  : firmness(set_firmness), goal(goal_value), solution(0), modelEnt(model_entity)
+  : firmness(set_firmness), goal(goal_value), solution(0), modelEnt(model_entity), uniqueId(numVariables++)
 {}
 
 } // namespace MeshKit

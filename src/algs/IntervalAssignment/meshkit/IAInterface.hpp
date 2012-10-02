@@ -89,9 +89,9 @@ public:
   
     /** \brief Get const_iterators over the variables. May be slow to iterate.
 	*/
-  typedef std::set<IAVariable*> VariableSet;
-  VariableSet::const_iterator variables_begin() const {return variables.begin();}
-  VariableSet::const_iterator variables_end() const {return variables.end();}
+  typedef std::vector< IAVariable* > VariableVec;
+  VariableVec::const_iterator variables_begin() const {return variables.begin();}
+  VariableVec::const_iterator variables_end() const {return variables.end();}
   
      /** \brief Destroy a variable. If a variable is not explicitly destroyed, it will be
      * destroyed on IAInterface tool destruction.
@@ -181,8 +181,7 @@ private:
   /** \brief Internal representation of the data specifying the Interval Assignment problem.
    */
   // data
-  VariableSet variables;
-  typedef std::vector< IAVariable* > VariableVec;
+  VariableVec variables;
   typedef std::vector< VariableVec > VariableVecVec;
   VariableVecVec sumEqualConstraints1, sumEqualConstraints2; // one for each side
   VariableVecVec sumEvenConstraints;

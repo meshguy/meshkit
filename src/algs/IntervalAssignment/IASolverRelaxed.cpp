@@ -15,7 +15,7 @@ namespace MeshKit {
 IASolverRelaxed::IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution,   
                                  const bool set_silent) : 
 iaData(ia_data), relaxedSolution(relaxed_solution), p_norm(3), 
-silent(set_silent), debugging(true) {}
+silent(set_silent), debugging(false) {}
 
 /** default destructor */
 IASolverRelaxed::~IASolverRelaxed() { iaData = NULL; relaxedSolution=NULL;}
