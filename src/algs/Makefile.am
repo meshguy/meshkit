@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen Triangle Sweep
+SUBDIRS =  QuadMesher Qslim AssyGen Triangle Sweep Pbl
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
@@ -10,7 +10,9 @@ libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
                            QuadMesher/libJaalQuadMesher.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
-                           Triangle/libMKTriangle.la
+                           Pbl/libPbl.la \
+                           Triangle/libMKTriangle.la 
+                       
 
 if ENABLE_intassign
   SUBDIRS += IntervalAssignment
@@ -32,7 +34,7 @@ libMeshKitalgs_la_SOURCES = \
 	EBMesher.cpp \
 	CopyMesh.cpp \
 	CopyGeom.cpp \
-    MergeMesh.cpp \
+        MergeMesh.cpp \
 	ExtrudeMesh.cpp \
 	CESets.cpp \
 	Transform.cpp \
@@ -76,7 +78,8 @@ AM_CPPFLAGS += $(DEFINES) \
               -I$(srcdir)/../lemon \
               -I$(srcdir)/QuadMesher \
               -I$(srcdir)/Sweep \
-	      -I$(srcdir)/AssyGen
+              -I$(srcdir)/AssyGen \
+	      -I$(srcdir)/Pbl
 
 
 if PARALLEL

@@ -28,7 +28,8 @@ TESTS = test_edgemesh \
         test_qslim \
         test_ebmesh \
         test_assygen \
-        test_TriangleMesher 
+        test_TriangleMesher \
+        test_pbl
 if HAVE_FBIGEOM
 TESTS += \
         test_fbgeom \
@@ -62,6 +63,7 @@ test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslim_SOURCES = test_qslim.cpp
 test_jaalquad_SOURCES = test_jaalquad.cpp
 test_assygen_SOURCES = test_assygen.cpp
+test_pbl_SOURCES = test_pbl.cpp
 test_TriangleMesher_SOURCES = test_TriangleMesher.cpp
 if HAVE_FBIGEOM
 test_fbgeom_SOURCES = test_fbgeom.cpp
