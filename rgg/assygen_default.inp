@@ -25,7 +25,7 @@ XX XX XX XX
 XX XX XX XX
 RF RF RF RF
 TetMeshSize 1.0
-CreateSideset Yes
+CreateSideset No
 MaterialSet_StartId 1
 MergeTolerance 1e-6
 CreateFiles 2
