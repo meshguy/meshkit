@@ -243,6 +243,12 @@ int CNrgen::ReadInputPhase1 ()
       szFormatString >> card >> m_szInfo;
       std::cout <<"--------------------------------------------------"<<std::endl;
     }
+    // hex block along z
+    if (szInputString.substr(0,6) == "hblock"){
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> card >> m_nHblock >> m_dZstart >> m_dZend;
+      std::cout <<"--------------------------------------------------"<<std::endl;
+    }
     // breaking condition
     if(szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
       std::istringstream szFormatString (szInputString);
@@ -1164,37 +1170,38 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
   m_FileOutput << "#" << std::endl;
 
-  // block creation dumps
-  m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
-  // group creation dumps. each material has a group
-  m_FileOutput << "#Creating groups" << std::endl;  
-  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-    szGrp = "g_"+ m_szAssmMat(p);
-    m_szAssmMat(p);
-    if(m_nPlanar ==1){
-      m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+  if(m_nHblock == -1){ // if more blocks are needed axially, create'em using hexes and the end
+    // block creation dumps
+    m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
+    // group creation dumps. each material has a group
+    m_FileOutput << "#Creating groups" << std::endl;  
+    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_szAssmMat(p);
+      if(m_nPlanar ==1){
+	m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+      }
+      else{
+	m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+      }
     }
-    else{
-      m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+    for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
+      szBlock = "b_"+ m_szAssmMat(p);
+      szGrp = "g_"+ m_szAssmMat(p);
+      m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
+      m_FileOutput << "#{Ifndef(nb" << p << ")}" << "\n" << "#{else}" << std::endl;
+      if(m_nPlanar ==1){
+	m_FileOutput << "block " << m_nMaterialSetId + p -1 << " surface in " << szGrp  << std::endl;
+	m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
+      }
+      else{
+	m_FileOutput << "block " << m_nMaterialSetId + p -1 << " body in " << szGrp  << std::endl;
+	m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
+      }    
+      m_FileOutput << "#{endif}" << std::endl;
     }
+    m_FileOutput << "#" << std::endl;
   }
-  for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
-    szBlock = "b_"+ m_szAssmMat(p);
-    szGrp = "g_"+ m_szAssmMat(p);
-    m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
-    m_FileOutput << "#{Ifndef(nb" << p << ")}" << "\n" << "#{else}" << std::endl;
-    if(m_nPlanar ==1){
-      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " surface in " << szGrp  << std::endl;
-      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
-    }
-    else{
-      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " body in " << szGrp  << std::endl;
-      m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
-    }    
-    m_FileOutput << "#{endif}" << std::endl;
-  }
-  m_FileOutput << "#" << std::endl;
-
   if(m_szMeshType == "hex"){
     // imprint
     m_FileOutput << "#Imprint geometry" << std::endl;
@@ -1294,13 +1301,6 @@ int CNrgen::CreateCubitJournal()
 	}
       }	
     }
-    // group creation dumps. each material surface  has a group
-    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-      szGrp = "g_"+ m_szAssmMat(p);
-      m_szAssmMat(p);
-      m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
-    }
-    m_FileOutput << "#" << std::endl;
 
     if(m_szMeshType == "hex"){
 
@@ -1595,7 +1595,67 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
     }
   }
-
+  if(m_nHblock != -1){ // if more blocks are needed axially, create'em using hexes and the end
+    // block creation dumps
+    m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl; 
+    // group creation dumps. each material has a group
+    m_FileOutput << "#Creating groups" << std::endl;  
+    if(m_szMeshType == "hex"){
+      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+	szGrp = "g_"+ m_szAssmMat(p);
+	m_szAssmMat(p);
+	if(m_nPlanar ==1){
+	  m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+	}
+	else{
+    
+	  m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+	}
+      }
+      for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
+	szBlock = "b_"+ m_szAssmMat(p);
+	szGrp = "g_"+ m_szAssmMat(p);
+	m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
+	m_FileOutput << "#{Ifndef(nb" << p << ")}" << "\n" << "#{else}" << std::endl;
+	if(m_nPlanar ==1){
+	  m_FileOutput << "block " << m_nMaterialSetId + p -1 << " surface in " << szGrp  << std::endl;
+	  m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
+	}
+	else{
+	  m_FileOutput << "block " << m_nMaterialSetId + p -1 << " hex in body in " << szGrp  << std::endl;
+	  m_FileOutput << "block " << m_nMaterialSetId + p -1 << " name \"" << szBlock <<"\""<< std::endl;
+	}    
+	m_FileOutput << "#{endif}" << std::endl;
+      }
+      m_FileOutput << "#" << std::endl;
+    }
+    else{
+      std::cout << "Error: Terminating journal file writing. \n Hex block (Hblock keyword) is not supported for a tet mesh." << std::endl;
+      exit(1);
+    }
+  }
+  
+  // now dump the commands for making hex layers as blocks and subtracting from original
+  double delta = (m_dZend - m_dZstart)/m_nHblock;
+  for(int i=0; i<m_szAssmMatAlias.GetSize(); i++){
+    m_FileOutput << "## BLOCK CREATION USING HEXES" << std::endl;
+    for(int j=0; j<m_nHblock; j++){
+      m_FileOutput << "group 'tmpgrp" << j+1 << "' equals hex in block " <<  m_nMaterialSetId + i 
+		   << " with z_coord < " << m_dZstart + (j+1)*delta << " and z_coord > " 
+		   << m_dZstart + j*delta << std::endl;
+    }
+    for(int j=0; j<m_nHblock; j++){
+      m_FileOutput << "block " <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << " remove" << std::endl;
+    }
+    for(int j=0; j<m_nHblock; j++){
+      if(m_szAssmMatAlias.GetSize() < 10)
+	m_FileOutput << "block " << j+1 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl; 
+      else
+	m_FileOutput << "block " << (j+1)*10 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl; 	
+    }
+  }
+  if(m_nMaterialSetId != 1)
+    m_FileOutput << "renumber hex all start_id " << MAXLINES*m_nMaterialSetId << std::endl;
   // color now
   m_FileOutput << "#Set color for different parts" << std::endl; 
   if(m_nPlanar == 0){ // volumes only

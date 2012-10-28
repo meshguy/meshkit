@@ -45,6 +45,7 @@ CNrgen::CNrgen ()
   m_nStartpinid = 1;
   m_szInfo = "off";
   pin_name = "";
+  m_nHblock = -1;
 }
 
 CNrgen::~CNrgen ()

@@ -12,11 +12,12 @@ Pincells 0
 Assembly 1 1
 XX
 Center
-RadialMeshSize 5.0
-AxialMeshSize 10.0
+RadialMeshSize 2.0
+AxialMeshSize 2.0
 EdgeInterval 2
 MaterialSet_StartId 100
 NeumannSet_StartId 100
+HBlock 5 0 10.0
 END     ! This is a must                  
                                                                                          
 
