@@ -46,7 +46,10 @@ private:
   
   // debugging
   const bool debugging;
-  void print_solution();
+  void print_solution() const;
+  void print_problem() const;
+  void print(const bool do_print_solution, const bool do_print_constraints) const;
+
   
 };
 

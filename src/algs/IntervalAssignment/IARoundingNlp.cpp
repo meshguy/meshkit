@@ -47,7 +47,7 @@ class FabsWeightComparer
 {
 public: 
   std::vector<double> *w;
-  FabsWeightComparer(std::vector<double> *weights) {w = weights;}
+  FabsWeightComparer(std::vector<double> *weightvec) {w = weightvec;}
   bool operator() (const int lhs, const int rhs)
   {
     return fabs((*w)[lhs]) < fabs((*w)[rhs]);
@@ -68,7 +68,7 @@ double IARoundingNlp::rand_excluded_middle()
   return d;
 }
 
-void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double lo, const double hi)
+void IARoundingNlp::uniquify_weights(std::vector<double> & weightvec, const double lo, const double hi)
 {
   assert( hi >= lo );
   assert( lo >= 0. );
@@ -76,9 +76,9 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   // find min an max of input
   double fabs_min_weight = std::numeric_limits<double>::max();
   double fabs_max_weight = 0.;
-  for (unsigned int i = 0; i < weights.size(); ++i)
+  for (unsigned int i = 0; i < weightvec.size(); ++i)
   {
-    const double w = weights[i];
+    const double w = weightvec[i];
     const double fabsw = fabs(w);
     if (fabsw < fabs_min_weight)
       fabs_min_weight = fabsw;
@@ -92,7 +92,7 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   const double output_range = hi - lo;
   assert( output_range >= 0.);
   
-  // scale the weights so | max | is 1.e4, and min is 1
+  // scale the weightvec so | max | is 1.e4, and min is 1
   // the range should be well below the ipopt solver tolerance, which is 1.0e-7
   // "typically" the raw weights are between 1.e-4 and 10
   if (fabs_max_weight < 1.)
@@ -101,18 +101,18 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   double s = output_range / input_range; // could be nan, so limit in next line
   if ( s > 1.e8 )
     s = 1.e8;
-  for (unsigned int i = 0; i < weights.size(); ++i)
+  for (unsigned int i = 0; i < weightvec.size(); ++i)
   {
-    const double fabsw = lo + ( (fabs(weights[i]) - fabs_min_weight) * s );
-    weights[i] = weights[i] > 0. ? fabsw : -fabsw;
+    const double fabsw = lo + ( (fabs(weightvec[i]) - fabs_min_weight) * s );
+    weightvec[i] = weightvec[i] > 0. ? fabsw : -fabsw;
 
     /* was
-    weights[i] *= s;
-    if (fabs(weights[i]) < 1.)
-      if (weights[i] < 0.)
-        weights[i] = -1.;
+    weightvec[i] *= s;
+    if (fabs(weightvec[i]) < 1.)
+      if (weightvec[i] < 0.)
+        weightvec[i] = -1.;
       else
-        weights[i] = 1.;
+        weightvec[i] = 1.;
      */
   }
   
@@ -122,44 +122,44 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   // We randomize rather than make a deterministict fraction.
   
   // get the indices of the sorted order of the weights
-  std::vector<int> sorted_fabs_weights(weights.size());
+  std::vector<int> sorted_fabs_weights(weightvec.size());
   std::generate(sorted_fabs_weights.begin(), sorted_fabs_weights.end(), UniqueNumber );
-  std::sort( sorted_fabs_weights.begin(), sorted_fabs_weights.end(), FabsWeightComparer(&weights) );
+  std::sort( sorted_fabs_weights.begin(), sorted_fabs_weights.end(), FabsWeightComparer(&weightvec) );
   
   
   srand(9384757);
   double prior_fw = 0.;
-  for (unsigned int i = 0; i < weights.size(); ++i)
+  for (unsigned int i = 0; i < weightvec.size(); ++i)
   {
     // detect consecutive identical weights and modify the later one
     const int j = sorted_fabs_weights[i]; // index of weight in weights
-    double w = weights[j];
+    double w = weightvec[j];
     double fw = fabs(w);
     if (fw - prior_fw < lo * 0.01) // relative tolerance
     {
       const double eps = lo * (0.01 + 0.02 * ((double) rand() / RAND_MAX));
       fw = prior_fw + eps; // use prior_fw rather than fw to ensure a min gap, uniform in [0.01, 0.03]
-      weights[j] = w = (w<0.) ? -fw : fw;
+      weightvec[j] = w = (w<0.) ? -fw : fw;
     }
     prior_fw = fw;
-    //printf("%d: w_%d %10.4f\n", i, j, weights[j]); 
+    //printf("%d: w_%d %10.4f\n", i, j, weightvec[j]); 
   }
   
   // scale again if max was exceeded
   if (prior_fw > hi)
   {
     // assume minimum is lo, ignoring the random bit we added
-    const double s = output_range / ( prior_fw - lo );
-    for (unsigned int i = 0; i < weights.size(); ++i)
+    const double ss = output_range / ( prior_fw - lo );
+    for (unsigned int i = 0; i < weightvec.size(); ++i)
     {
-      double w = (fabs(weights[i]) - lo) * s + lo;
+      double w = (fabs(weightvec[i]) - lo) * ss + lo;
       assert( w >= 0. );
       // with roundoff, could be slightly above hi, force it
       if ( w > hi )
         w = hi;
       if ( w < lo )
         w = lo;
-      weights[i] = (weights[i] < 0.) ? -w : w; 
+      weightvec[i] = (weightvec[i] < 0.) ? -w : w; 
       assert( w <= hi );
       assert( w >= lo );
     }
@@ -168,10 +168,10 @@ void IARoundingNlp::uniquify_weights(std::vector<double> & weights, const double
   if (0) // debugging
   {
     printf("unique weights with fabs in [%e, %e]\n", lo, hi);
-    for (unsigned int i = 0; i < weights.size(); ++i)
+    for (unsigned int i = 0; i < weightvec.size(); ++i)
     {
-      const int j = sorted_fabs_weights[i]; // index of weight in weights
-      const double w = weights[j];
+      const int j = sorted_fabs_weights[i]; // index of weight in weightvec
+      const double w = weightvec[j];
       printf("%d: w_%d %10.4f\n", i, j, w); 
       assert( fabs(w) <= hi );
       assert( fabs(w) >= lo );

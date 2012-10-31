@@ -1,10 +1,10 @@
-// IAInterface.cpp
+// IAInterfaceStub.cpp stubbed version, without most of meshkit
 // Interval Assignment Data for Meshkit
 // Interface to the rest of Meshkit
 
-#include "meshkit/IAInterface.hpp"
+#include "IAInterface.hpp" // the one in stubs = this dir
 #include "IASolver.hpp"
-#include "meshkit/ModelEnt.hpp" // from MeshKit
+// stubbed #include "meshkit/ModelEnt.hpp" // from MeshKit
 #include <vector>
 #include <iterator>
 #include <set>
@@ -15,14 +15,18 @@
 namespace MeshKit 
 {
   
-const bool IAInterface::debugging = false;
+// stub
+int ModelEnt::max_stub_id = 0;
+  
+const bool IAInterface::debugging = true;
   
 //static IAVariable counter
 unsigned int IAVariable::numVariables(0);
 
-moab::EntityType IAInterface_types[] = {moab::MBMAXTYPE};
-const moab::EntityType* IAInterface::output_types() 
-  { return IAInterface_types; }
+// stubbed  
+//moab::EntityType IAInterface_types[] = {moab::MBMAXTYPE};
+//const moab::EntityType* IAInterface::output_types() 
+//  { return IAInterface_types; }
     
 void IAInterface::setup_this()
 {

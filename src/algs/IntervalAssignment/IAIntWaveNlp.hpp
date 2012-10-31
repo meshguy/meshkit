@@ -138,7 +138,7 @@ private:
 	  
 	  SparseMatrixEntry(const int iset, const int jset, const int kset) 
 	  : i(iset), j(jset), k(kset) { assert(j <= i); } 
-	  SparseMatrixEntry() : i(-1), j(-1), kP(-1) {} // bad values if unspecified
+	  SparseMatrixEntry() : i(-1), j(-1), k(-1) {} // bad values if unspecified
 	};
 	
 	typedef std::map<int, SparseMatrixEntry> SparseMatrixMap; 

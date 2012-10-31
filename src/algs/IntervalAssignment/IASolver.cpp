@@ -15,34 +15,74 @@
 namespace MeshKit 
 {
     
-IASolver::IASolver() : debugging(false) {}
+IASolver::IASolver() : debugging(true) {}
 
 /** default destructor */
 IASolver::~IASolver() {}
 
-void IASolver::print_solution() // IPData &ip_data
+void IASolver::print_solution() const
 {
-  printf("\nIA solution:\n");
+  print( true, false );
+}
+
+void IASolver::print_problem() const
+{
+  print( false, true );
+}
+
+void IASolver::print(const bool do_print_solution, const bool do_print_constraints ) const
+// IPData &ip_data
+{
+  if (do_print_solution)
+    printf("\nIA solution:\n");
+  else
+    printf("\nIA problem definition:\n");
+  printf("%d vars\n", num_variables());
   for (int i=0; i<num_variables(); ++i)
   {
     printf("%d x (goal %e) ",i,I[i]);
-    //printf(" relaxed %e solution ", ip_data.relaxedSolution[i]);
-    int x_int = floor( x_solution[i] + 0.5);
-    if (fabs( x_int - x_solution[i])<1.0e-2)
-      printf("%d\n",x_int);
+    if (do_print_solution)
+    {
+      //printf(" relaxed %e solution ", ip_data.relaxedSolution[i]);
+      int x_int = floor( x_solution[i] + 0.5);
+      if (fabs( x_int - x_solution[i])<1.0e-2)
+        printf("%d\n",x_int);
+      else
+        printf("%e NON-INTEGER\n",x_solution[i]);
+    }
     else
-      printf("%e NON-INTEGER\n",x_solution[i]);
-  }
-  for (unsigned int i=0; i< sumEvenConstraints.size(); ++i)
-  {
-    double d = IASolver::sum_even_value(i, this, this);
-    printf("%d sum-even = %d (%e)",i, (int) floor(d+0.5), d);
-    if (!IASolver::is_even(d))
-      printf(" NON-EVEN\n");
-    else
+    {
       printf("\n");
+    }
   }
-  printf("objective function value %e\n", obj_value);
+  if (do_print_constraints)
+  {
+    printf("%lu equality constraints:\n", constraints.size());
+    for (unsigned int i = 0; i<constraints.size(); ++i)
+    {
+      // double g_i = 
+      IASolverRelaxed::check_constraint(i, this, 
+        do_print_solution ? this : NULL, false, true);
+    }
+  }
+  if (do_print_constraints)
+  {
+    printf("%lu even constraints:\n", sumEvenConstraints.size());
+    for (unsigned int i=0; i< sumEvenConstraints.size(); ++i)
+    {
+      double d = IASolver::sum_even_value(i, this, this);
+      if (do_print_solution)
+      {
+        printf("%d sum-even = %d (%e)",i, (int) floor(d+0.5), d);
+        if (!IASolver::is_even(d))
+          printf(" NON-EVEN\n");
+        else
+          printf("\n");
+      }
+    }
+  }
+  if (do_print_solution)
+    printf("objective function value %e\n", obj_value);
   printf("\n");
 }
 
@@ -82,6 +122,12 @@ bool IASolver::solve_even()
 
 bool IASolver::solve()
 {
+
+  if (debugging)
+  {
+    printf("Solving subproblem %p\n", this);
+    print_problem();
+  }
   
   // todo: subdivide problem into independent sub-problems for speed
   

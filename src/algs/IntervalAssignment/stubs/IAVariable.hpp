@@ -7,12 +7,40 @@
 #include <cstring>
 #include <vector>
 
-#include "meshkit/Types.hpp" // for Firmness
+// stubbed #include "meshkit/Types.hpp" // for Firmness
 
 namespace MeshKit 
 {
 
-class ModelEnt;
+enum Firmness {DEFAULT, SOFT, HARD}; // subbed
+
+class IAVariable; // subbed
+class ModelEnt // stubbed ;
+  {
+  public: 
+    static int max_stub_id;
+    int stub_id;
+
+    IAVariable *iaVar;    
+    IAVariable *ia_var() const {return iaVar;}
+    void ia_var(IAVariable *v) {iaVar = v;}
+
+    double meshIntervalSize;
+    double mesh_interval_size() const {return meshIntervalSize;}
+    
+    double entMeasure;
+    double measure() const {return entMeasure;}
+    
+    int meshIntervals;
+    void mesh_intervals( const int set_mesh_int ) { meshIntervals = set_mesh_int; }
+    
+    Firmness entFirmness;
+    Firmness interval_firmness() const {return entFirmness;}
+    
+    ModelEnt() : stub_id(max_stub_id++), iaVar(NULL), 
+      meshIntervalSize(1.), entMeasure(1.), meshIntervals(1), entFirmness(SOFT) {}
+  };
+typedef std::vector<ModelEnt*> MEntVector;
 
 /** \class IAVariable IAVariable.hpp "meshkit/IAVariable.hpp"
  * \brief Class defining a variable for interval assignment.

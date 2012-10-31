@@ -1,34 +1,28 @@
-// ia_main.cpp
-// test IntervalMatching interface IAInterface for MeshKit
-
-#include "TestUtil.hpp"
-#include "meshkit/MKCore.hpp"
-
-#include "meshkit/IAInterface.hpp"
-#include "meshkit/IAVariable.hpp"
-#include "meshkit/TFIMapping.hpp"
-
+// main file for stubbed version of interval assignment
 #include <stdio.h>
 #include <iostream>
+#include <assert.h>
+#include <cmath>
 
-MeshKit::MKCore *mk;
+#include "IAInterface.hpp"  // from stubs
+#include "IAVariable.hpp" // from stubs
+
 MeshKit::IAInterface *new_ia_interface()
 {
-  return  
-    (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
+  return new MeshKit::IAInterface;
 }
 
-void delete_ia_interface(MeshKit::IAInterface *)
+void delete_ia_interface(MeshKit::IAInterface * iainterface)
 {
-  //nada, mk takes care of it
-  ;
+  delete iainterface;
 }
+
 
 bool check_solution_correctness( MeshKit::IAInterface *ia_interface, 
                                  std::vector< std::pair<int,int> > &correct_solution)
 {
   const bool verbose_output = true;
-  const bool debug = false;
+  const bool debug = true;
   bool all_correct = true;
   MeshKit::IAInterface::VariableVec::const_iterator b = ia_interface->variables_begin();
   MeshKit::IAInterface::VariableVec::const_iterator e = ia_interface->variables_end();
@@ -245,18 +239,20 @@ void IASolver::set_test_problem()
   }
   }
  */
+  
 
 void test_one_pair()
 {
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   ia_interface->destroy_data();
+
  
   std::vector< std::pair<int,int> > correct_solution;
   set_decoupled_pairs(ia_interface, 1, 1, 3, correct_solution);
 //  set_decoupled_pairs(ia_interface, 1, 3.2, 12.1, correct_solution);
   ia_interface->execute_this(); 
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
-  CHECK( solution_correct );
+  assert( solution_correct );
 }
 
 void test_many_pairs()
@@ -276,35 +272,23 @@ void test_many_pairs()
   ia_interface->execute_this(); 
   
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
-  CHECK( solution_correct );
+  assert( solution_correct );
   
   delete_ia_interface( ia_interface );
 }
 
 void mapping_test() 
 {
+  
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   ia_interface->destroy_data();
 
-  std::string file_name = TestDir + "/quadface.stp";
-  mk->load_geometry_mesh(file_name.c_str(), NULL);
-
-  //check the number of geometrical edges
-  MeshKit::MEntVector surfs, loops;
-  mk->get_entities_by_dimension(2, surfs);
-  MeshKit::ModelEnt *this_surf = (*surfs.rbegin());
-
-    // request a specific size
-  mk->sizing_function(0.1, true);
-  
-  moab::Range curves;
-  this_surf->boundary(1, curves); // Moab? Find the right function call
-  CHECK_EQUAL(4, (int)curves.size());
-  // assume curves are ordered 0 to 3 contiguously around the surface
-  //   or perhaps 0, 1 are opposite, and 2, 3 are opposite?
-  // for (MeshKit::MEntVector::iterator vit = curves.begin(); ...
-
   MeshKit::ModelEnt* me_curves[4] = {0,0,0,0};
+  // stubbed
+  me_curves[0] = new MeshKit::ModelEnt();
+  me_curves[1] = new MeshKit::ModelEnt();
+  me_curves[2] = new MeshKit::ModelEnt();
+  me_curves[3] = new MeshKit::ModelEnt();
   // convert moab entity handles to ModelEnt* and place in me_curves... ask Tim how
   
   MeshKit::MEntVector side1, side2;
@@ -319,30 +303,15 @@ void mapping_test()
   // if there are loops, and the loops have strictly less than 4 curves, then
   // ia_interface->constrain_sum_even( ia_interface->make_constraint_group(curves in loop) );
   
-  //now, do the TFIMapping
-  // MeshKit::TFIMapping *tm =    // tm unused
-  (MeshKit::TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
-  mk->setup_and_execute();
-
   delete_ia_interface( ia_interface );
 }
 
 int main(int argv, char* argc[])
 {
-  // currently unable to create more than one mk called IntervalAssignment
-  mk = new MeshKit::MKCore();
+  // stubbed  
+  test_one_pair();
+  test_many_pairs();
+  mapping_test();
 
-  int one_pair = RUN_TEST(test_one_pair);
-  // run same test twice to check data clearing integrity
-  int one_pair2 = RUN_TEST(test_one_pair);
-  int many_pairs = RUN_TEST(test_many_pairs);
-//  int expt = RUN_TEST(test_exception);
-//  int succ = RUN_TEST(test_success);
-
-  int map_res = RUN_TEST(mapping_test);
-  
-  delete mk;
-  
-  int success = one_pair + one_pair2 + many_pairs + map_res; // + !abrt + !expt + succ;
-  return success;
+  return 0;
 }

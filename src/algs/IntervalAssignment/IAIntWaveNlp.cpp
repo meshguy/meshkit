@@ -57,8 +57,8 @@ PI( 2. * acos(0.0) ),
 debugging(true), verbose(true) // true
 {
   printf("\nIAIntWaveNLP Problem size:\n");
-  printf("  number of variables: %lu\n", problem_n);
-  printf("  number of constraints: %lu\n\n", problem_m);  
+  printf("  number of variables: %d\n", problem_n);
+  printf("  number of constraints: %d\n\n", problem_m);  
 }
 
 IAIntWaveNlp::~IAIntWaveNlp() {data = NULL; ipData = NULL;}
@@ -98,7 +98,7 @@ bool IAIntWaveNlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
 {
   const bool base_ok = baseNlp.get_bounds_info(n, x_l, x_u, m, g_l, g_u);
 
-  for (int i = 0; i < data->sumEvenConstraints.size(); ++i)
+  for (unsigned int i = 0; i < data->sumEvenConstraints.size(); ++i)
   {
     // cos( pi * sum_evens) == 1
     const int k = i+sum_even_constraint_start;
@@ -157,11 +157,11 @@ bool IAIntWaveNlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number*
   bool base_ok = baseNlp.eval_g(base_n, x, new_x, base_m, g);
   
   // cos( pi * sum_evens) == 1
-  for (int i = 0; i < data->sumEvenConstraints.size(); ++i)
+  for (unsigned int i = 0; i < data->sumEvenConstraints.size(); ++i)
   {
     const int k = i+sum_even_constraint_start;
     double s = data->sumEvenConstraints[i].rhs;
-    for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+    for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
     {
       s += x[ data->sumEvenConstraints[i].M[j].col ] * data->sumEvenConstraints[i].M[j].val;
     }
@@ -196,9 +196,9 @@ bool IAIntWaveNlp::eval_jac_g(Index n, const Number* x, bool new_x,
 
     // g = cos( pi * sum_evens) == 1
     // g' = -pi * sin ( pi * sum_evens ), for each of the variables contributing to the sum
-    for (Index i = 0; i< data->sumEvenConstraints.size(); ++i)
+    for (unsigned int i = 0; i< data->sumEvenConstraints.size(); ++i)
     {
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
     		iRow[k] = i + (int) data->constraints.size();
         jCol[k] = data->sumEvenConstraints[i].M[j].col;
@@ -221,15 +221,15 @@ bool IAIntWaveNlp::eval_jac_g(Index n, const Number* x, bool new_x,
     
     // g = cos( pi * sum_evens) == 1
     // g' = -pi * sin ( pi * sum_evens ), for each of the variables contributing to the sum
-    for (Index i = 0; i< data->sumEvenConstraints.size(); ++i)
+    for (unsigned int i = 0; i< data->sumEvenConstraints.size(); ++i)
     {
       double s = data->sumEvenConstraints[i].rhs;
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
         s += x[ data->sumEvenConstraints[i].M[j].col ] * data->sumEvenConstraints[i].M[j].val;
       }
       const double jac_gk = -PI * cos( PI * s );
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
         values[k++] = jac_gk;
       }
@@ -260,8 +260,8 @@ void IAIntWaveNlp::add_hessian_entry( int i, int j, int &k )
   {
     hessian_vector.push_back( sme );
     ++k;
-    assert( hessian_vector.size() == k );
-    assert( hessian_map.size() == k );
+    assert( (int) hessian_vector.size() == k );
+    assert( (int) hessian_map.size() == k );
   }
   // else it was already inserted, nothing to do
 }
@@ -288,12 +288,12 @@ void IAIntWaveNlp::build_hessian()
     // g' = -pi * sin ( pi * sum_evens ), for each of the variables contributing to the sum
     // g''= -pi^2 cos ( pi * sum_evens ), for each pair of variables contributing to the sum
     // assuming all the coefficients are 1    
-  for (int c = 0; c< data->sumEvenConstraints.size(); ++c)
+  for (unsigned int c = 0; c< data->sumEvenConstraints.size(); ++c)
   {
-    for (Index i = 0; i < data->sumEvenConstraints[i].M.size(); ++i)
+    for (unsigned int i = 0; i < data->sumEvenConstraints[i].M.size(); ++i)
     {
       int ii = data->sumEvenConstraints[c].M[i].col;
-      for (Index j = 0; j <=i; ++j)
+      for (unsigned int j = 0; j <=i; ++j)
       {
         int jj = data->sumEvenConstraints[c].M[j].col;
         add_hessian_entry( ii, jj, kk );
@@ -336,10 +336,10 @@ bool IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x,
   // This is a symmetric matrix, fill the lower left triangle only.
   if (values == NULL) {
     // return the structure. 
-    for (int k = 0; k < hessian_vector.size(); ++k)
+    for (unsigned int kk = 0; kk < hessian_vector.size(); ++kk)
     {
-      iRow[k] = hessian_vector[k].i;
-      jCol[k] = hessian_vector[k].j;
+      iRow[kk] = hessian_vector[kk].i;
+      jCol[kk] = hessian_vector[kk].j;
     }
   }
   else {
@@ -348,11 +348,11 @@ bool IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x,
     // g' = -pi * sin ( pi * sum_evens ), for each of the variables contributing to the sum
     // g''= -pi^2 cos ( pi * sum_evens ), for each pair of variables contributing to the sum
     // assuming all the coefficients are 1
-    for (Index i = 0; i< data->sumEvenConstraints.size(); ++i)
+    for (unsigned int i = 0; i< data->sumEvenConstraints.size(); ++i)
     {
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
-        double contribution = 
+        // double contribution = 
         iRow[k] = i + sum_even_constraint_start;
         jCol[k] = data->sumEvenConstraints[i].M[j].col;
         k++;
@@ -361,10 +361,10 @@ bool IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x,
     // g = cos( pi * sum_evens) == 1
     // g' = -pi * sin ( pi * sum_evens ), for each of the variables contributing to the sum
     // g''= -pi^2 cos ( pi * sum_evens ), for each pair of variables contributing to the sum
-    for (Index i = 0; i< data->sumEvenConstraints.size(); ++i)
+    for (unsigned int i = 0; i< data->sumEvenConstraints.size(); ++i)
     {
       double s = data->sumEvenConstraints[i].rhs;
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
         s += x[ data->sumEvenConstraints[i].M[j].col ] * data->sumEvenConstraints[i].M[j].val;
       }
@@ -372,7 +372,7 @@ bool IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x,
     zzyk , take trig function of s
     zzyk add that entry times lambda into each of the hessian entries
       const double jac_gk = -PI * cos( PI * s );
-      for (Index j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+      for (unsigned int = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
       {
         values[k++] = jac_gk;
       }

@@ -19,10 +19,10 @@ class IPData
 {
 public:
   /** default constructor */
-  IPData() {};
+  IPData() {}
   
   /** default destructor */
-  virtual ~IPData() {};
+  virtual ~IPData() {}
   
   // lower or upper integer bounds that try to force an integer solution 
   // compare to the goal to tell if it is an upper or lower bound

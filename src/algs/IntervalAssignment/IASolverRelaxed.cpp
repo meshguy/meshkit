@@ -15,7 +15,8 @@ namespace MeshKit {
 IASolverRelaxed::IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solution,   
                                  const bool set_silent) : 
 iaData(ia_data), relaxedSolution(relaxed_solution), p_norm(3), 
-silent(set_silent), debugging(false) {}
+//silent(set_silent), debugging(false) {}
+silent(false), debugging(true) {}
 
 /** default destructor */
 IASolverRelaxed::~IASolverRelaxed() { iaData = NULL; relaxedSolution=NULL;}
@@ -43,7 +44,7 @@ double IASolverRelaxed::check_constraint(const int i, const IAData * ia_data, co
           printf(" (%f)", 
                  solution->x_solution[ ia_data->constraints[i].M[j].col ] * ia_data->constraints[i].M[j].val );
       }
-      printf("\n");
+      printf(" in [%f, %f]\n", ia_data->constraints[i].lowerBound, ia_data->constraints[i].upperBound);
     }
   }
   else
@@ -56,7 +57,7 @@ double IASolverRelaxed::check_constraint(const int i, const IAData * ia_data, co
       }
       if (print_me)
       {
-        printf("sum-constraint %d:", i);
+        printf("even constraint %d:", i);
         for (unsigned int j = 0; j < ia_data->sumEvenConstraints[i].M.size(); ++j)
         {
           printf( " %f x_%d", ia_data->sumEvenConstraints[i].M[j].val, ia_data->sumEvenConstraints[i].M[j].col );
@@ -132,6 +133,7 @@ bool IASolverRelaxed::solve()
   app->Options()->SetStringValue("mu_strategy", "adaptive");
   // print level 0 to 12, most. Ipopt Default is 5
   int print_level = (silent) ? 0 : 1;
+  // int print_level = 5;
   app->Options()->SetIntegerValue("print_level", print_level);  
   // uncomment next line to write the solution to an output file
   // app->Options()->SetStringValue("output_file", "IA.out");  

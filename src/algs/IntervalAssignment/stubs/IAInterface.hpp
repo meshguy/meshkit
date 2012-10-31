@@ -1,15 +1,20 @@
-// IAInterface.hpp
+// IAInterface.hpp stubbed version
 
 #ifndef MESHKIT_IA_INTERFACE_HP
 #define MESHKIT_IA_INTERFACE_HP
 
 // #include "ModelEnt.hpp"
+/* stubbed 
 #include "meshkit/IAVariable.hpp"
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "moab/Interface.hpp"
+*/
+
+// stubbed
+#include "IAVariable.hpp" // the one from stubs
 
 #include <set>
 #include <vector>
@@ -39,7 +44,7 @@ class IASolver;
  * \nosubgrouping
  */
  
-class IAInterface : public MeshScheme // register it with SchemeFactory
+class IAInterface //stubbed : public MeshScheme // register it with SchemeFactory
 {
 public:
    /** \name Constructor/destructor
@@ -51,7 +56,7 @@ public:
      * \param MKCore instance
      * \param MEntVector 
      */
-  IAInterface(MKCore *mkcore, const MEntVector &me_vec = MEntVector()) : MeshScheme(mkcore, me_vec){}
+// stubbed  IAInterface(MKCore *mkcore, const MEntVector &me_vec = MEntVector()) : MeshScheme(mkcore, me_vec){}
 
       /** \brief Destructor, destroys IAVariables
      */
@@ -154,8 +159,9 @@ public:
    *        the specified dimension.
    *\param dim entity dimension
    */
-  static bool can_mesh(iBase_EntityType dim)
-    { return iBase_VERTEX <= dim && iBase_REGION >= dim; }
+  // stubbed
+//  static bool can_mesh(iBase_EntityType dim)
+//    { return iBase_VERTEX <= dim && iBase_REGION >= dim; }
 
   /** \brief Function returning whether this scheme can mesh the specified entity
    * 
@@ -163,19 +169,22 @@ public:
    * \param model_ent ModelEnt being queried
    * \return If true, this scheme can mesh the specified ModelEnt
    */
-  static bool can_mesh(ModelEnt *model_ent)
-      { return can_mesh((iBase_EntityType)model_ent->dimension()); }
+  // stubbed
+//  static bool can_mesh(ModelEnt *model_ent)
+//      { return can_mesh((iBase_EntityType)model_ent->dimension()); }
     
   /**\brief Get list of mesh entity types that can be generated.
    *\return array terminated with \c moab::MBMAXTYPE
    */
-  static const moab::EntityType* output_types();
+  // stubbed
+//  static const moab::EntityType* output_types();
 
   /** \brief Return the mesh entity types operated on by this scheme
    * \return array terminated with \c moab::MBMAXTYPE
    */
-  virtual const moab::EntityType* mesh_types_arr() const
-    { return output_types(); }
+  // stubbed
+//  virtual const moab::EntityType* mesh_types_arr() const
+//    { return output_types(); }
 
   /** \brief Print the problem that was defined
    */
@@ -299,7 +308,7 @@ private:
     void find_constraint_dependent_set( const int constraint_i, 
                                         const VariableConstraintDependencies &var_con_dep, 
                                         ProblemSets &subsets );
-                                        
+    
     void print() const; // debug
   };
   /** \brief Initialize the global set defining the global problem.
@@ -366,3 +375,4 @@ Should there be just one IAInterface, or many?
 
 - Scott
 */
+

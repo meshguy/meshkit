@@ -31,7 +31,7 @@ void IPData::constrain_integer(const int i_nonint, const int x_bound)
 
 void IPData::round_solution(std::vector<double> &solution)
 {
-  for (int i = 0; i < solution.size(); ++i )
+  for (unsigned int i = 0; i < solution.size(); ++i )
   {
     solution[i] = floor( solution[i] + 0.5 );
   }
@@ -48,7 +48,7 @@ bool IPData::is_integer(double x)
 bool IPData::solution_is_integer(const std::vector<double> &solution)
 {
   bool all_int = true;
-  for (int i = 0; i<solution.size(); ++i)
+  for (unsigned int i = 0; i<solution.size(); ++i)
   {
     if (!is_integer(solution[i]))
     {

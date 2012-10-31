@@ -26,10 +26,10 @@ class IAData
 {
 public:
   /** default constructor */
-  IAData() {};
+  IAData() {}
 
   /** default destructor */
-  virtual ~IAData() {};
+  virtual ~IAData() {}
 
   // ipopt solver forces the use of smartpointers which causes uncontrollable memory management and 
   // hard to track memory bugs, so we have IANlp point to our data instead of inheriting this as a base class
@@ -65,7 +65,7 @@ public:
     std::vector<sparseEntry> M; // non-zeros in the constraint row
     // double rhs; // righthand side constant incorporated into upper and lower bound
     double upperBound, lowerBound;  // upper and lower bounds. equality for equal
-    constraintRow() : upperBound(0.), lowerBound(0.) {};
+    constraintRow() : upperBound(0.), lowerBound(0.) {}
     // or upperBound( MESHKIT_IA_upperUnbound), lowerBound(MESHKIT_IA_lowerUnbound) {}
   };
     

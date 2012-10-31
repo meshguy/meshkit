@@ -13,10 +13,10 @@ class IASolution
 {
 public:
   /** default constructor */
-  IASolution() {};
+  IASolution() {}
 
   /** default destructor */
-  virtual ~IASolution() {};
+  virtual ~IASolution() {}
 
   std::vector<double> x_solution; // intervalSolution, the thing we're solving for.
   double obj_value; // relative measure of the goodness of the solution. Smaller is better.
