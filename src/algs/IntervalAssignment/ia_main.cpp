@@ -286,7 +286,9 @@ void mapping_test()
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   ia_interface->destroy_data();
 
-  std::string file_name = TestDir + "/quadface.stp";
+  std::string file_name = TestDir + "/../../../data/quadface.stp";
+  //std::string file_name = TestDir + "/../../../data/brick.stp";
+  printf("opening %s\n", file_name.c_str());
   mk->load_geometry_mesh(file_name.c_str(), NULL);
 
   //check the number of geometrical edges
