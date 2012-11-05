@@ -55,17 +55,17 @@ bool IASolverInt::solve_minlp()
   // convergence parameters
   // see $IPOPTDIR/Ipopt/src/Interfaces/IpIpoptApplication.cpp
   // our real criteria are: all integer, constraints satisfied. How to test the "all_integer" part?
-  app->Options()->SetNumericValue("tol", 1e-2); //"converged" if NLP error<this, default is 1e-7. Obj are scaled to be >1, so e-2 is plenty
+  app->Options()->SetNumericValue("tol", 1e-6); //"converged" if NLP error<this, default is 1e-7. Obj are scaled to be >1, so e-2 is plenty // was 1e-2
   app->Options()->SetNumericValue("max_cpu_time", sqrt( iaData->num_variables() ) ); // max time allowed in seconds
   app->Options()->SetIntegerValue("max_iter", 3 * iaData->num_variables() ); // max number of iterations
   // app->Options()->SetNumericValue("primal_inf_tol", 1e-2 ); 
-  app->Options()->SetNumericValue("dual_inf_tol", 1e-2 ); // how close to infeasibility?
+  app->Options()->SetNumericValue("dual_inf_tol", 1e-6 ); // how close to infeasibility? // was 1e-2
   app->Options()->SetNumericValue("constr_viol_tol", 1e-6 ); // by how much can constraints be violated?
-  app->Options()->SetNumericValue("compl_inf_tol", 1e-2 ); // max norm of complementary condition
+  app->Options()->SetNumericValue("compl_inf_tol", 1e-6 ); // max norm of complementary condition // was 1e-2
 
   // second criteria convergence parameters: quit if within this tol for many iterations
-  app->Options()->SetIntegerValue("acceptable_iter", 4 + sqrt( iaData->num_variables() ) ); //as "tol"
-  app->Options()->SetNumericValue("acceptable_tol", 1e-1 ); //as "tol"
+// was  app->Options()->SetIntegerValue("acceptable_iter", 4 + sqrt( iaData->num_variables() ) ); //as "tol"
+  app->Options()->SetNumericValue("acceptable_tol", 1e-6 ); //as "tol" was 1e-1
 
   app->Options()->SetStringValue("mu_strategy", "adaptive");
   // print level 0 to 12, Ipopt default is 5
@@ -125,6 +125,8 @@ bool IASolverInt::solve_minlp()
              integer_sat ? "integer" : "NON-INTEGER",
              equal_sat ? "satisfied" : "VIOLATED", 
              even_sat ? "satisfied" : "VIOLATED" );
+      if (!integer_sat)
+        printf("investigate this\n");
     }
     
     IASolution nlp_solution;

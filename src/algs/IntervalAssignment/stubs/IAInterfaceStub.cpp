@@ -21,7 +21,7 @@ namespace MeshKit
   
 int ModelEnt::max_stub_id = 0;   // stubbed
   
-const bool IAInterface::debugging = true;
+const bool IAInterface::debugging = false;
   
 //static IAVariable counter
 unsigned int IAVariable::numVariables(0);

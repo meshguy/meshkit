@@ -115,7 +115,7 @@ void IAWeights::uniquify(const double lo, const double hi)
   std::sort( sorted_fabs_weights.begin(), sorted_fabs_weights.end(), FabsWeightComparer(this) );
   
   
-  srand(9384757);
+  srand(9384757); 
   double prior_fw = 0.;
   for (unsigned int i = 0; i < size(); ++i)
   {

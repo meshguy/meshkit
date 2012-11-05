@@ -289,10 +289,18 @@ void mapping_test()
 int main(int argv, char* argc[])
 {
   // stubbed  
+  /*
   test_one_pair();
   test_many_pairs();
   test_growing_chain();
   test_long_chain();
+
+/* 100 long chain test
+  srand(9384757); // debug
+  for (int i = 0; i < 100; ++i)
+    test_long_chain();
+*/
+  
   mapping_test();
 
   return 0;

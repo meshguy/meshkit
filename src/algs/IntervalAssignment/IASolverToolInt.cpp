@@ -49,8 +49,29 @@ void IASolverToolInt::round_solution()
 bool IASolverToolInt::solution_is_integer(const bool print_non_integer)
 {
   assert( iaSolution );
-  bool first_print = true;
-  bool all_int = true;
+  
+  int num_non_int = 0;
+  class NonInt
+  {
+  public:
+    double x;
+    int i;
+    double dist () const
+    {
+      double xm = fabs( x - floor(x));
+      double xp = fabs( floor(x) - x);
+      if (xm > xp)
+        return xp;
+      else
+        return xm;
+    }
+    NonInt() : x(0.), i(-1) {}
+    NonInt(const double x_val, const unsigned int i_val) : x(x_val), i( (int) i_val ) {}
+  };
+  
+  NonInt worst_non_int;
+  
+  bool all_int = true;  
   for (unsigned int i = 0; i<iaSolution->x_solution.size(); ++i)
   {
     const double x = iaSolution->x_solution[i];
@@ -59,16 +80,30 @@ bool IASolverToolInt::solution_is_integer(const bool print_non_integer)
       all_int = false;
       if (print_non_integer)
       {
-        if (first_print)
+        NonInt xnon(x,i);
+        if (xnon.dist() > worst_non_int.dist())
+          worst_non_int = xnon;
+        if (num_non_int++ == 0)
         {
           printf("\nChecking solution integrality\n");
-          first_print = false;
         }
         printf(" x %d is %f NON-INTEGER\n", i, x);
       }
       // shortcut return if we're not printing anything
       else
         return false; 
+    }
+  }
+  if (print_non_integer)
+  {
+    if (num_non_int == 0)
+    {
+      printf("all integer\n");
+    }
+    else
+    {
+      printf("%d of %lu NON-INTEGERS\n", num_non_int, iaSolution->x_solution.size());
+      printf("worst was x_%d = %g\n", worst_non_int.i, worst_non_int.x );
     }
   }
   return all_int;
