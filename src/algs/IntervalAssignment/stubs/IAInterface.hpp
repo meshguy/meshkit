@@ -3,8 +3,7 @@
 #ifndef MESHKIT_IA_INTERFACE_HP
 #define MESHKIT_IA_INTERFACE_HP
 
-// #include "ModelEnt.hpp"
-/* stubbed 
+/* stubbed includes
 #include "meshkit/IAVariable.hpp"
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
@@ -13,16 +12,15 @@
 #include "moab/Interface.hpp"
 */
 
-// stubbed
-#include "IAVariable.hpp" // the one from stubs
+#include "IAVariable.hpp" // the one from stubs, also defines ModelEnt
 
 #include <set>
 #include <vector>
 
 namespace MeshKit {
 
-class ModelEnt;
-class IASolver;
+class IAData;
+class IASolution;
 
 /** \class IAInterface IAInterface.hpp "meshkit/IAInterface.hpp"
  * \brief The class used in MeshKit for Interval Assignment.
@@ -159,7 +157,7 @@ public:
    *        the specified dimension.
    *\param dim entity dimension
    */
-  // stubbed
+// stubbed
 //  static bool can_mesh(iBase_EntityType dim)
 //    { return iBase_VERTEX <= dim && iBase_REGION >= dim; }
 
@@ -169,20 +167,20 @@ public:
    * \param model_ent ModelEnt being queried
    * \return If true, this scheme can mesh the specified ModelEnt
    */
-  // stubbed
+// stubbed
 //  static bool can_mesh(ModelEnt *model_ent)
 //      { return can_mesh((iBase_EntityType)model_ent->dimension()); }
     
   /**\brief Get list of mesh entity types that can be generated.
    *\return array terminated with \c moab::MBMAXTYPE
    */
-  // stubbed
+// stubbed
 //  static const moab::EntityType* output_types();
 
   /** \brief Return the mesh entity types operated on by this scheme
    * \return array terminated with \c moab::MBMAXTYPE
    */
-  // stubbed
+// stubbed
 //  virtual const moab::EntityType* mesh_types_arr() const
 //    { return output_types(); }
 
@@ -308,43 +306,45 @@ private:
     void find_constraint_dependent_set( const int constraint_i, 
                                         const VariableConstraintDependencies &var_con_dep, 
                                         ProblemSets &subsets );
-    
+
     void print() const; // debug
   };
   /** \brief Initialize the global set defining the global problem.
   */
   void make_global_set(ProblemSets &problem_sets);
-  /** \brief Convert set-based definition of problem into an IASolver based representation.
-  */
-  void fill_problem( ProblemSets &sub_sets, IASolver *sub_problem, IndexVec &global_var_map ) const;
 
   /** \brief Convert a globally-indexed constraint into a locally-indexed constraint
   */
   void global_to_sub_side( const VariableVec &global_constraint, IndexVec &global_var_map, 
                            IndexVec &local_constraint, int &rhs ) const;
 
-
-  /** \brief Represent a subproblem, its IAData (IASolver) and its mapping back to the global problem
+  /** \brief Represent a subproblem, its IAData and its mapping back to the global problem
   */
   struct SubProblem
   {
-    IASolver *solver;
+    IAData *data;
     ProblemSets problemSets;
+    IASolution *solution;
     void print() const; // debug
+    SubProblem();
+    virtual ~SubProblem();
   };
   typedef std::vector<SubProblem*> SubProblemVec;
   
-    /** \brief Build independent subproblems
+  /** \brief Convert set-based definition of problem into an IAData based representation.
+  */
+  void fill_problem( ProblemSets &sub_sets, SubProblem *sub_problem, IndexVec &global_var_map ) const;
+
+  /** \brief Build independent subproblems
   */
   void subdivide_problem(SubProblemVec &subproblems);
-  void subdivide_problem_one(std::vector<IASolver*> &subproblems); // just make one problem
+  void subdivide_problem_one(std::vector<IAData*> &subproblems); // just make one problem
   
-
   /**@}*/
 
   /** \brief For a subproblem, find a solution for the number of intervals for each variable.
   */
-  bool solve_subproblem( IASolver *subproblem );
+  bool solve_subproblem( SubProblem *subproblem );
   
   /** \brief Assign the found solution to the IAVariables.
   */

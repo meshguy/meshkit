@@ -105,107 +105,56 @@ void set_decoupled_pairs(MeshKit::IAInterface *ia_interface,
   }
 }
 
-/*
-void IASolver::set_test_problem()
+
+void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides, 
+                       const bool grow_goal_by_i,
+                       const int goal_m1, const int goal_m2, 
+                       const int num_curve_min, const int num_curve_max )
 {
-*/
-  
-  /*
-   // test problem 1
-   printf("constructing decoupled test problem.");
-   int num_sides = 160; // test scalability, 100,000 constraints in 1 second
-   for (int i = 0; i<num_sides; ++i)
-   { 
-     // goals x_{2i} = 1, x_{2i+1} = 4
-     // 1 and 4 result in a natural integer solution of 2, which MILP verifies very quickly
-     I.push_back(1.1);
-     I.push_back(12);
-   
-     // constrain x0 - x1 = 0
-     constraints.push_back( constraintRow() );
-     constraints.back().upperBound = constraints.back().lowerBound = 0.; // equality
-     constraints.back().M.push_back( sparseEntry(2*i,1.) );
-     constraints.back().M.push_back( sparseEntry(2*i+1,-1.) );
-   }
-    */
-  
-  
-  /*
-   // test problem 2
-   printf("constructing coupled test problem - long chain");
-   int num_sides = 16; // test scalability: results is 100,000 constraints in 1 second, for relaxed nlp
-   for (int i = 0; i<num_sides; ++i)
-   { 
-     // goals x_{i} = i+1;
-     I.push_back(i+1);
-   
-     // constrain x0 - x1 = 0
-     if (i>0)
-     {
-       constraints.push_back( constraintRow() );
-       constraints.back().upperBound = constraints.back().lowerBound = 0.; // equality
-       constraints.back().M.push_back( sparseEntry(i-1,  1.) );
-       constraints.back().M.push_back( sparseEntry(i  , -1.) );
-     }
-   } 
-   */
-  
-    /*  
   // test problem 3, sides with more than one variable, with random goals
-  printf("constructing coupled test problem - long chain\n");
+  printf("constructing coupled test problem - mapping chain\n");
   srand(10234);
-  int num_sides = 16000; // test scalability: 20000 gives 20,000 constraints, 100,000 variables in 1 second relaxed solution
-  int curve_id =0;
-  std::vector<int> test_sum_even;
+  MeshKit::IAInterface::IAVariableVec side1, side2;
+  int num_vars = 0;
   for (int i = 0; i<num_sides; ++i)
   { 
-    bool is_prior_constraint = constraints.size() > 0;
-    // add a new forward constraint
-    bool is_current_constraint = (i<num_sides-1);
-    if (is_current_constraint)
-    {
-      constraints.push_back( IAData::constraintRow() );
-      constraints.back().upperBound = constraints.back().lowerBound = 0.; // equality
-    }
-    std::vector<IAData::constraintRow>::iterator current_constraint = constraints.end();
-    std::vector<IAData::constraintRow>::iterator prior_constraint = constraints.end();
-    if (is_current_constraint)
-      current_constraint = constraints.end() - 1;
-    if (is_prior_constraint) 
-      prior_constraint = current_constraint -1;
-    
-    int num_curves = 2 + (rand() % 9); // 
-    if (i==0)
-    {
-      printf("sum-even side: ");
-    }
+    // move side2 to side1
+    side2.swap( side1 );
+
+    // create new side2
+    side2.clear();
+    assert( num_curve_min > 0 );
+    int num_curves = num_curve_min;
+    if ( num_curve_max > num_curve_min )
+      num_curves += (rand() % (1 + num_curve_max - num_curve_min) ); 
     for (int j = 0; j < num_curves; j++)
     {
-      // add a sum-even constraint for the first side
-      if (i==0)
-      {
-        test_sum_even.push_back(curve_id);
-        printf(" %d", curve_id);
-      }
-      if (is_prior_constraint)
-        prior_constraint->M.push_back( IAData::sparseEntry(curve_id, -1.) );
-      if (is_current_constraint)
-        current_constraint->M.push_back( IAData::sparseEntry(curve_id, 1.) );
-      int goal_intervals = (1 + (rand() % 3)) * (1 + (rand() % 15)); // 1 -- 32, was 4, 8
-      I.push_back(goal_intervals);
-      ++curve_id;
+      int goal_intervals = (1 + (rand() % goal_m1)) * (1 + (rand() % goal_m2)); 
+      if (grow_goal_by_i)
+        goal_intervals += num_vars;
+      MeshKit::IAVariable *v = ia_interface->create_variable( NULL, MeshKit::SOFT, goal_intervals);
+      side2.push_back(v);
     }
+
+    // if we have two non-trivial opposite sides, then constrain them to be equal
+    if (side1.size() && side2.size())
+    {
+      ia_interface->constrain_sum_equal(side1, side2);
+    }
+
+    // add a sum-even constraint
     if (i==0)
     {
-      constrain_sum_even(test_sum_even,1);
-      test_sum_even.clear();
-      printf("\n");
+      // printf("sum-even side: %d", i);
+      assert( side2.size() );
+      ia_interface->constrain_sum_even(side2);
     }
+
+    // todo: try some hard-sets and non-trivial rhs
   }
-  //add also some sum-even constraints
-  */  
-  
-  // sum-even constraints test problems
+}
+
+// sum-even constraints test problems
 /*
   // test problem 4, a simple sum-even constraint
   int num_surfaces = 12; // 12
@@ -243,14 +192,13 @@ void IASolver::set_test_problem()
     //  goal += 1.;
     I.push_back(goal);
   }
-  }
- */
+*/
 
 void test_one_pair()
 {
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   ia_interface->destroy_data();
- 
+
   std::vector< std::pair<int,int> > correct_solution;
   set_decoupled_pairs(ia_interface, 1, 1, 3, correct_solution);
 //  set_decoupled_pairs(ia_interface, 1, 3.2, 12.1, correct_solution);
@@ -277,6 +225,41 @@ void test_many_pairs()
   
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
   CHECK( solution_correct );
+  
+  delete_ia_interface( ia_interface );
+}
+
+void test_long_chain()
+{
+  MeshKit::IAInterface *ia_interface = new_ia_interface();
+  ia_interface->destroy_data();
+  
+  // test scalability: 20000 gives 20,000 constraints, 100,000 variables in 1 second relaxed solution
+  set_mapping_chain(ia_interface, 16000, false, 3, 15, 2, 11);
+  // goal distribution is gaussian in [1, 32]
+
+  ia_interface->execute_this(); 
+  
+  // bool solution_defined = check_solution( ia_interface );
+
+  delete_ia_interface( ia_interface );
+}
+
+
+void test_growing_chain()
+{
+  // test problem 2
+  // printf("constructing growing chain, coupled test problem\n");
+  MeshKit::IAInterface *ia_interface = new_ia_interface();
+  ia_interface->destroy_data();
+  
+  // goals are 1, 2, 3, 4, ... 16
+  // one curve per side
+  set_mapping_chain(ia_interface, 16, true, 1, 1, 1, 1);
+
+  ia_interface->execute_this(); 
+  
+  // bool solution_defined = check_solution( ia_interface );
   
   delete_ia_interface( ia_interface );
 }
@@ -338,13 +321,17 @@ int main(int argv, char* argc[])
   // run same test twice to check data clearing integrity
   int one_pair2 = RUN_TEST(test_one_pair);
   int many_pairs = RUN_TEST(test_many_pairs);
+  
+  int growing_chain = RUN_TEST(test_growing_chain);
+  int long_chain = RUN_TEST(test_long_chain);
+
 //  int expt = RUN_TEST(test_exception);
 //  int succ = RUN_TEST(test_success);
 
-  int map_res = RUN_TEST(mapping_test);
+  int map_res = 0; // RUN_TEST(mapping_test);
   
   delete mk;
   
-  int success = one_pair + one_pair2 + many_pairs + map_res; // + !abrt + !expt + succ;
+  int success = one_pair + one_pair2 + many_pairs + growing_chain + long_chain + map_res; // + !abrt + !expt + succ;
   return success;
 }

@@ -6,19 +6,21 @@
 #ifndef MESHKIT_IA_IASOLVERINT_HP
 #define MESHKIT_IA_IASOLVERINT_HP
 
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IASolution.hpp"
+#include <map>
 
-#include <map> 
+#include "IASolverToolInt.hpp"
+#include "IPData.hpp"
 
 namespace MeshKit {
+  
+class IAData;
+class IASolution;
 
-class IASolverInt: public IASolution
+class IASolverInt : public IASolverToolInt
 {
 public:
   /** default constructor */
-  IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr, const bool set_silent = true);
+  IASolverInt(const IAData * ia_data_ptr, IASolution *relaxed_solution_ptr, const bool set_silent = true);
 
   /** default destructor */
   virtual ~IASolverInt();
@@ -33,9 +35,7 @@ private:
   IASolverInt& operator=(const IASolverInt&);
   //@}
   
-  IPData ipData; // stores relaxed solution
-  const IAData *iaData;
-    // debug
+  // debug
   const bool silent;
   const bool debugging;  
 
@@ -44,7 +44,6 @@ private:
   
   // top level
   bool solve_minlp();
-  bool solution_is_integer() {return IPData::solution_is_integer(this->x_solution);}
   
   // mixed-integer solution stuff. 
   // MI NLP - solve a mixed integer nlp that we hope has an integer solution near the relaxed solution.
@@ -52,15 +51,6 @@ private:
   // rounding heuristic
   // find a varaible that isn't integer yet, and whether we should increase or decrease its value
   // takes care of the remaining problem
-  
-  
-  // to do, remove some of this stuff
-  
-  bool calculate_sumeven_value(const int i, double &obj_increase, int &y_int );
-  // assumes x[i] is already an integer
-  // y_int = what x[i] should be rounded to, in order to help satisfy a sum-even constraint
-  // obj_increase is the increase in the objective function value if x[i] changes to y_int
-
 
   // value of objective function increase if x is rounded to the next farther integer, and index of x
   typedef std::pair<int,int> RoundingX;  // x index, x bound

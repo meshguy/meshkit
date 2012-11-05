@@ -34,23 +34,6 @@ public:
   
   void constrain_integer(const int i_nonint, const int x_bound);
   
-  static void round_solution(std::vector<double> &solution);
-
-  // standardize epsilon for determining if x is an integer solution
-  static bool solution_is_integer(const std::vector<double> &solution);
-  static bool is_integer(double x); 
-
-  // measures how far above or below floor( relaxed solution ) x is, in whole integers and fractional
-  static void get_frac( double x, int &integer, double &frac);
-  double get_xl( int i ) const; // floor of relaxed solution
-  double get_xh( int i ) const; // xl + 1
-
-  double get_km( int i, double x ) const;  // how much bigger x is than xh, or zero if less
-  double get_kp( int i, double x ) const;  // xl - x, or zero if negative
-  void get_km( int i, double x, int &km_integer, double &km_frac ) const; // split into integer and fractional part
-  void get_kp( int i, double x, int &kp_integer, double &kp_frac ) const;
-
-
 };
 
 // default constructors for object and its members OK

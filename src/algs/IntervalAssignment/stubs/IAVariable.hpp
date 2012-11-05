@@ -1,4 +1,4 @@
-// IAVariable.hpp
+// IAVariable.hpp stubbed version
 // Data object shared between Meshkit and Interval Assignment
 
 #ifndef MESHKIT_IA_VARIABLE_HP
@@ -12,11 +12,11 @@
 namespace MeshKit 
 {
 
-enum Firmness {DEFAULT, SOFT, HARD}; // subbed
+enum Firmness {DEFAULT, SOFT, HARD}; // stubbed 
 
-class IAVariable; // subbed
+class IAVariable; // forward declare for stubbed ModelEnt
 class ModelEnt // stubbed ;
-  {
+{
   public: 
     static int max_stub_id;
     int stub_id;
@@ -39,7 +39,7 @@ class ModelEnt // stubbed ;
     
     ModelEnt() : stub_id(max_stub_id++), iaVar(NULL), 
       meshIntervalSize(1.), entMeasure(1.), meshIntervals(1), entFirmness(SOFT) {}
-  };
+};
 typedef std::vector<ModelEnt*> MEntVector;
 
 /** \class IAVariable IAVariable.hpp "meshkit/IAVariable.hpp"

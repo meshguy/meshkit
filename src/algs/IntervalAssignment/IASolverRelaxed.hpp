@@ -6,17 +6,11 @@
 #ifndef MESHKIT_IA_IASOLVER_RELAXED_HP
 #define MESHKIT_IA_IASOLVER_RELAXED_HP
 
-#include "IAData.hpp"
-#include "IASolution.hpp"
-
-#include <map> 
+#include "IASolverTool.hpp"
 
 namespace MeshKit {
 
-class IANlp;
-class IPData;
-
-class IASolverRelaxed
+class IASolverRelaxed : public IASolverTool
 {
 public:
   /** default constructor */
@@ -29,14 +23,9 @@ public:
   
   bool solve();
   // return true if solved; false if not solved (e.g. infeasible)
-  
-  static double check_constraint(const int i, const IAData * ia_data, const IASolution *solution, bool sum_even, bool print_me );
-  static bool constraints_satisfied( const IAData * ia_data, const IASolution *solution, bool &sum_even_satisfied, bool print_me );
-  
+
 private:  
-  const IAData *iaData;
-  IASolution *relaxedSolution;
-  
+ 
   // data
   int p_norm;
   
@@ -47,7 +36,7 @@ private:
   IASolverRelaxed& operator=(const IASolverRelaxed&);
   //@}
 
-  bool constraints_satisfied() { bool junk; return constraints_satisfied(iaData, relaxedSolution, junk, debugging); }
+  bool constraints_satisfied();
 
   // debug
   const bool silent;

@@ -13,6 +13,7 @@ class IAData;
 class IPData;
 class IASolution;
 #include "IANlp.hpp"
+#include "IAWeights.hpp"
 
 #include "IpTNLP.hpp"
 
@@ -24,10 +25,6 @@ public:
 
   /** default destructor */
   virtual ~IARoundingFar3StepNlp();
-
-  // extra for IA, not for TNLP
-  bool randomize_weights_of_non_int();
-  // return true if any weights were changed
   
   /**@name Overloaded from TNLP */
   //@{
@@ -97,10 +94,9 @@ private:
   // input data
   const IAData *data;
   const IPData *ipData;
-  // std::vector<double> weights;
-  std::vector<double> h0; // h0, as weights in IARoundingNLP
-  std::vector<double> hp; // h+
-  std::vector<double> hm; // h-
+  IAWeights h0; // h0, as weights in IARoundingNLP
+  IAWeights hp; // h+
+  IAWeights hm; // h-
   // model variables indices
   const int x01_start;
   const int xp_start;

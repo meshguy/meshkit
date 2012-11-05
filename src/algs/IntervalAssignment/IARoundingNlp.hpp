@@ -10,6 +10,7 @@
 #define MESHKIT_IA_IAROUNDINGNLP_HP
 
 #include "IANlp.hpp"
+#include "IAWeights.hpp"
 
 #include "IpTNLP.hpp"
 
@@ -29,6 +30,7 @@ public:
 
   /** default destructor */
   virtual ~IARoundingNlp();
+  
 
   /**@name Overloaded from TNLP */
   //@{
@@ -86,11 +88,8 @@ public:
   //@}
 
 // extra stuff not required by TNLP
-  // rescale and randomize so fabs of weights are in [lo, hi], and different from each other
-  static void uniquify_weights(std::vector<double> & weightvec, const double lo, const double hi);
-  //generate double in [-1,-0.5] U [.5,1]
-  static double rand_excluded_middle(); 
-  
+  bool randomize_weights_of_non_int();
+
 private:  
   // hide untrusted default methods
   //@{
@@ -103,14 +102,17 @@ private:
   // input data
   const IAData *data;
   const IPData *ipData;
-  std::vector<double> weights;
+  
   // solution data
   IASolution *solution;
   
   
   // implemented using an overlay over an IANlp
   IANlp baseNlp;  
-  
+
+  // defining / weighting objective function
+  IAWeights weights;
+
   double f_x_value( double I_i, double x_i );
 
   // debug

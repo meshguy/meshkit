@@ -1,10 +1,14 @@
-// IAInterface.cpp
+// IAInterface.cpp MeshKit version
 // Interval Assignment Data for Meshkit
 // Interface to the rest of Meshkit
 
 #include "meshkit/IAInterface.hpp"
 #include "IASolver.hpp"
+#include "IADataBuilder.hpp"
+#include "IASolution.hpp"
+
 #include "meshkit/ModelEnt.hpp" // from MeshKit
+
 #include <vector>
 #include <iterator>
 #include <set>
@@ -374,10 +378,11 @@ void IAInterface::VariableConstraintDependencies::print() const
 
   
 void IAInterface::fill_problem( ProblemSets &sub_sets, 
-  IASolver *sub_problem, IndexVec &global_var_map ) const
+  SubProblem *sub_problem, IndexVec &global_var_map ) const
 {
+  IADataBuilder data_builder( sub_problem->data ); 
   // number the variables from 0..n, by setting ia_index
-  sub_problem->I.reserve(sub_sets.variableSet.size());
+  sub_problem->data->I.reserve(sub_sets.variableSet.size());
   sub_sets.varMap.reserve(sub_sets.variableSet.size());
   for (IndexSet::const_iterator i = sub_sets.variableSet.begin(); i != sub_sets.variableSet.end(); ++i)
   {
@@ -390,7 +395,7 @@ void IAInterface::fill_problem( ProblemSets &sub_sets,
       sub_sets.varMap.push_back( (int) index );
 
       // add the goals
-      sub_problem->I.push_back( v->goal );
+      data_builder.add_variable( v->goal );
     }
     else
     {
@@ -410,7 +415,7 @@ void IAInterface::fill_problem( ProblemSets &sub_sets,
       global_to_sub_side( sumEqualConstraints1[c], global_var_map, side_1, rhs_1 );
       global_to_sub_side( sumEqualConstraints2[c], global_var_map, side_2, rhs_2 );
       
-      sub_problem->constrain_opposite_side_equal(side_1, side_2, rhs_1 - rhs_2 );   
+      data_builder.constrain_opposite_side_equal(side_1, side_2, rhs_1 - rhs_2 );   
       // todo check should be rhs_2 - rhs_1 ?
     }
     else // even 
@@ -422,7 +427,7 @@ void IAInterface::fill_problem( ProblemSets &sub_sets,
       IndexVec side;
       int rhs(0);
       global_to_sub_side( sumEvenConstraints[c], global_var_map, side, rhs ); // todo check if should be -rhs?
-      sub_problem->constrain_sum_even(side, rhs );   
+      data_builder.constrain_sum_even(side, rhs );   
     }
   }
 }
@@ -443,7 +448,6 @@ void IAInterface::subdivide_problem(SubProblemVec &subproblems)
   {
     // define a sub-problem by indices
     SubProblem *subproblem = new SubProblem;
-    subproblem->solver = new IASolver;
     subproblems.push_back( subproblem );
     global_prob_set.find_dependent_set(var_con_dep, subproblem->problemSets);
     
@@ -457,24 +461,25 @@ void IAInterface::subdivide_problem(SubProblemVec &subproblems)
     
     // Fill in solver with data from those indices    
     // convert the set into an IASolver, add data
-    fill_problem( subproblem->problemSets, subproblem->solver, global_prob_set.varMap );
+    fill_problem( subproblem->problemSets, subproblem, global_prob_set.varMap );
     if (debugging)
       subproblem->print();
   }    
 }
 
-void IAInterface::subdivide_problem_one(std::vector<IASolver*> &subproblems)
+void IAInterface::subdivide_problem_one(std::vector<IAData*> &subproblems)
 {
    // placeholder - just make one subproblem
-  IASolver *sub_problem = new IASolver();
+  IAData *sub_problem = new IAData();
   subproblems.push_back(sub_problem);
+  IADataBuilder data_builder( sub_problem ); // data  
 
   // this grabs the whole problem and converts it
   // variables numbered 0..n
   for(VariableVec::const_iterator i = variables.begin(); i != variables.end(); ++i)
   {
     IAVariable *v = *i;
-    sub_problem->I.push_back( v->goal );
+    data_builder.add_variable( v->goal );
   }
   // equal constraints
   for (unsigned int i = 0; i < sumEqualConstraints1.size(); ++i)
@@ -484,6 +489,8 @@ void IAInterface::subdivide_problem_one(std::vector<IASolver*> &subproblems)
     {
       IAVariable *v = sumEqualConstraints1[i][j];
       int index = variable_to_index(v);
+      // sanity check that the indexing was correct
+      assert( sub_problem->I[index] == v->goal ); 
       side_1.push_back(index);
     }
     for (unsigned int j = 0; j < sumEqualConstraints2[i].size(); ++j)
@@ -492,7 +499,7 @@ void IAInterface::subdivide_problem_one(std::vector<IASolver*> &subproblems)
       int index = variable_to_index(v);
       side_2.push_back(index);
     }
-    sub_problem->constrain_opposite_side_equal(side_1, side_2, 0.);
+    data_builder.constrain_opposite_side_equal(side_1, side_2, 0.);
   }
   // even constraints
   for (unsigned int i = 0; i < sumEvenConstraints.size(); ++i)
@@ -504,7 +511,7 @@ void IAInterface::subdivide_problem_one(std::vector<IASolver*> &subproblems)
       int index = variable_to_index(v);
       side.push_back(index);
     }
-    sub_problem->constrain_sum_even(side, 0.);
+    data_builder.constrain_sum_even(side, 0.);
   }
 
 }
@@ -517,20 +524,22 @@ void IAInterface::print_problem() const
 
 void IAInterface::SubProblem::print() const
 {
+  IASolverTool solver_tool(data,solution);
+  solver_tool.print();
   // describe variables
   // describe constraints
 }
 
-
-bool IAInterface::solve_subproblem( IASolver *subproblem )
+bool IAInterface::solve_subproblem( SubProblem *subproblem )
 {
-  return subproblem->solve();
+  IASolver solver( subproblem->data, subproblem->solution );
+  return solver.solve();
 }
 
 void IAInterface::assign_solution( SubProblem *subproblem )
 {
   // assign solution value from subproblem to model entities
-  std::vector<double> &x_solution = subproblem->solver->x_solution; // shorthand
+  std::vector<double> &x_solution = subproblem->solution->x_solution; // shorthand
   for (unsigned int i = 0; i < x_solution.size(); ++i)
   {
     const double x = x_solution[i];
@@ -554,18 +563,31 @@ void IAInterface::execute_this()
   for (unsigned int i = 0; i < subproblems.size(); ++i)
   {
     SubProblem *p = subproblems[i];
-    IASolver* s = p->solver;
-    if ( solve_subproblem(s) )
+    if ( solve_subproblem(p) )
       assign_solution(p);
     else
     {
       ; // some error statement
     }
-    delete s;
     delete p;
   }
   subproblems.clear();
   return;
+}
+
+  
+IAInterface::SubProblem::SubProblem()
+{
+  data = new IAData;
+  solution = new IASolution;
+}
+  
+IAInterface::SubProblem::~SubProblem()
+{
+  delete data;
+  data = NULL;
+  delete solution;
+  solution = NULL;
 }
 
 } // namespace MeshKit

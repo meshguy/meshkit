@@ -87,10 +87,6 @@ public:
   //@}
 
 // extra stuff not required by TNLP
-  // rescale and randomize so fabs of weights are in [lo, hi], and different from each other
-  static void uniquify_weights(std::vector<double> & weights, const double lo, const double hi);
-  //generate double in [-1,-0.5] U [.5,1]
-  static double rand_excluded_middle(); 
   
 private:  
   // hide untrusted default methods

@@ -1,10 +1,14 @@
-// IASolver.cpp
+// IASolverInt.cpp
 // Interval Assignment for Meshkit
 //
 #include "IASolverInt.hpp"
+#include "IAData.hpp"
+#include "IPData.hpp"
+#include "IASolution.hpp"
 #include "IARoundingNlp.hpp"
 #include "IASolverRelaxed.hpp"
 #include "IAMINlp.hpp"
+
 // #include "IAMilp.hpp" // glpk based solution too slow
 
 #include <stdio.h>
@@ -16,15 +20,21 @@
 namespace MeshKit 
 {
     
-IASolverInt::IASolverInt(const IAData * ia_data_ptr, const IASolution *relaxed_solution_ptr, 
+IASolverInt::IASolverInt(const IAData * ia_data_ptr, IASolution *relaxed_solution_ptr, 
   const bool set_silent) 
-: iaData(ia_data_ptr), silent(set_silent), debugging(false)
+  : IASolverToolInt(ia_data_ptr, relaxed_solution_ptr, true), 
+  silent(set_silent), debugging(true)
 { 
-  ipData.initialize(relaxed_solution_ptr->x_solution);
+  ip_data(new IPData);
+  // initialize copies relaxed solution, then we can overwrite relaxed_solution_pointer
+  ip_data()->initialize(relaxed_solution_ptr->x_solution); 
 }
 
 /** default destructor */
-IASolverInt::~IASolverInt() { iaData = NULL;}
+IASolverInt::~IASolverInt() 
+{
+  delete ip_data();
+}
 
 
 bool IASolverInt::solve_minlp()
@@ -77,15 +87,17 @@ bool IASolverInt::solve_minlp()
   
   // problem setup
   // a couple of different models, simplest to more complex
-  IARoundingNlp *myianlp = new IARoundingNlp(iaData, &ipData, this, silent);
-  // IARoundingFarNlp *myianlp = new IARoundingFarNlp(iaData, &ipData, this);
-  // IARoundingFar3StepNlp *myianlp = new IARoundingFar3StepNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
-  // IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, &ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
+  IARoundingNlp *myianlp = new IARoundingNlp(iaData, ipData, iaSolution, silent);
+  // IARoundingFarNlp *myianlp = new IARoundingFarNlp(iaData, ipData, this);
+  // IARoundingFar3StepNlp *myianlp = new IARoundingFar3StepNlp(iaData, ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
+  // IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
   Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
 
   bool try_again = true;
   int iter = 0;
   do {
+    printf("%d rounding iteration\n", iter );
+    
     // Ask Ipopt to solve the problem
     status = app->OptimizeTNLP(mynlp); // the inherited IANlp
     
@@ -102,32 +114,53 @@ bool IASolverInt::solve_minlp()
     // The problem should have been feasible, but it is possible that it had no integer solution.
     // figure out which variables are still integer
     
-    // check solution for integrality
-    
-    // debug
-    bool sum_even_sat;
-    // bool constraints_sat = 
-    IASolverRelaxed::constraints_satisfied( iaData, this, sum_even_sat, true );
+    // check solution for integrality and constraint satified    
+    if (debugging)
+    {
+      printf("\nChecking Natural (non-rounded) solution.\n");
+      bool integer_sat = solution_is_integer(true);
+      bool even_sat = even_constraints( false, true);
+            bool equal_sat = equal_constraints( false, true );
+      printf("Natural solution summary, %s, equal-constraints %s, even-constraints %s.\n", 
+             integer_sat ? "integer" : "NON-INTEGER",
+             equal_sat ? "satisfied" : "VIOLATED", 
+             even_sat ? "satisfied" : "VIOLATED" );
+    }
     
     IASolution nlp_solution;
-    nlp_solution.x_solution = x_solution; // vector copy
-    IPData::round_solution(nlp_solution.x_solution);
-    bool sum_even_sat2;
-    if (IASolverRelaxed::constraints_satisfied(iaData, &nlp_solution, sum_even_sat2, debugging))
+    nlp_solution.x_solution = ia_solution()->x_solution; // vector copy
+    IASolverToolInt sti( ia_data(), &nlp_solution );
+    sti.round_solution();
+    if (debugging)
+      printf("Checking rounded solution, ignoring even constraints.\n");
+    if (sti.equal_constraints(false, debugging))
     {
+      // also even constraints
+      if (debugging)
+        printf("Rounding worked.\n");
+
       // rounding was a valid integer solution
-      x_solution = nlp_solution.x_solution;
+      ia_solution()->x_solution.swap( nlp_solution.x_solution );
+      // ia_solution()->obj_value is no longer accurate, as it was for the non-rounded solution
       return true;
     }
 
     // find out which vars were not integer, 
     // try rounding their weights and resolving
     // bool int_sat = solution_is_integer();
- //   myianlp->randomize_weights_of_non_int(); // try again? debug
-    
     ++iter;
     try_again = iter < 4 + sqrt(iaData->num_variables());
-    try_again = false; // debug
+    if (try_again)
+    {
+      if (debugging)
+        printf("rounding failed, randomizing weights\n");
+    
+      myianlp->randomize_weights_of_non_int(); // try again? debug
+    }
+    else if (debugging)
+      printf("giving up on rounding to non-integer solution\n");
+
+    // try_again = false; // debug
   } while (try_again);
 
   

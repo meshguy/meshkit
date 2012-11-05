@@ -6,19 +6,18 @@
 #ifndef MESHKIT_IA_IASOLVER_HP
 #define MESHKIT_IA_IASOLVER_HP
 
-#include "IAData.hpp"
-#include "IASolution.hpp"
+#include "IASolverToolInt.hpp"
 
 namespace MeshKit {
 
-class IANlp;
-class IPData;
+class IAData;
+class IASolution;
 
-class IASolver: public IAData, public IASolution 
+class IASolver: public IASolverToolInt
 {
 public:
   /** default constructor */
-  IASolver();
+  IASolver(IAData *ia_data, IASolution *ia_solution);
 
   /** default destructor */
   virtual ~IASolver();
@@ -26,10 +25,6 @@ public:
   bool solve();
   // return true if solved; false if not solved (e.g. infeasible)
   
-  // utility functions, todo move
-  static bool is_even(double y);
-  static double sum_even_value(int i, const IAData *ia_data_ptr, const IASolution *solution);
-
 private:  
   // hide untrusted default methods
   //@{
@@ -46,11 +41,7 @@ private:
   
   // debugging
   const bool debugging;
-  void print_solution() const;
-  void print_problem() const;
-  void print(const bool do_print_solution, const bool do_print_constraints) const;
-
-  
+ 
 };
 
 } // namespace MeshKit 

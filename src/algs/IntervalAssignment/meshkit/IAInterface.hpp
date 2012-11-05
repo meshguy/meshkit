@@ -1,9 +1,8 @@
-// IAInterface.hpp
+// IAInterface.hpp MeshKit version
 
 #ifndef MESHKIT_IA_INTERFACE_HP
 #define MESHKIT_IA_INTERFACE_HP
 
-// #include "ModelEnt.hpp"
 #include "meshkit/IAVariable.hpp"
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
@@ -16,8 +15,8 @@
 
 namespace MeshKit {
 
-class ModelEnt;
-class IASolver;
+class IAData;
+class IASolution;
 
 /** \class IAInterface IAInterface.hpp "meshkit/IAInterface.hpp"
  * \brief The class used in MeshKit for Interval Assignment.
@@ -299,43 +298,45 @@ private:
     void find_constraint_dependent_set( const int constraint_i, 
                                         const VariableConstraintDependencies &var_con_dep, 
                                         ProblemSets &subsets );
-                                        
+
     void print() const; // debug
   };
   /** \brief Initialize the global set defining the global problem.
   */
   void make_global_set(ProblemSets &problem_sets);
-  /** \brief Convert set-based definition of problem into an IASolver based representation.
-  */
-  void fill_problem( ProblemSets &sub_sets, IASolver *sub_problem, IndexVec &global_var_map ) const;
 
   /** \brief Convert a globally-indexed constraint into a locally-indexed constraint
   */
   void global_to_sub_side( const VariableVec &global_constraint, IndexVec &global_var_map, 
                            IndexVec &local_constraint, int &rhs ) const;
 
-
-  /** \brief Represent a subproblem, its IAData (IASolver) and its mapping back to the global problem
+  /** \brief Represent a subproblem, its IAData and its mapping back to the global problem
   */
   struct SubProblem
   {
-    IASolver *solver;
+    IAData *data;
     ProblemSets problemSets;
+    IASolution *solution;
     void print() const; // debug
+    SubProblem();
+    virtual ~SubProblem();
   };
   typedef std::vector<SubProblem*> SubProblemVec;
   
-    /** \brief Build independent subproblems
+  /** \brief Convert set-based definition of problem into an IAData based representation.
+  */
+  void fill_problem( ProblemSets &sub_sets, SubProblem *sub_problem, IndexVec &global_var_map ) const;
+
+  /** \brief Build independent subproblems
   */
   void subdivide_problem(SubProblemVec &subproblems);
-  void subdivide_problem_one(std::vector<IASolver*> &subproblems); // just make one problem
+  void subdivide_problem_one(std::vector<IAData*> &subproblems); // just make one problem
   
-
   /**@}*/
 
   /** \brief For a subproblem, find a solution for the number of intervals for each variable.
   */
-  bool solve_subproblem( IASolver *subproblem );
+  bool solve_subproblem( SubProblem *subproblem );
   
   /** \brief Assign the found solution to the IAVariables.
   */
@@ -366,3 +367,4 @@ Should there be just one IAInterface, or many?
 
 - Scott
 */
+

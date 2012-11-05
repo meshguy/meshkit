@@ -198,24 +198,25 @@ debugging(true), verbose(true) // true
     // idea, dynamically scale this based on the problem size, h0_hi = 2*num_variables;
     const double hpm_lo = h0_hi + 1.;
     const double hpm_hi = 1.e5;
-    IARoundingNlp::uniquify_weights(h0, h0_lo, h0_hi);
+    h0.uniquify(h0_lo, h0_hi);
     
     // uniquify and scale hp hm to come after h0
-    std::vector<double> hpm( hp );                 // hpm = hp
-    hpm.insert( hpm.end(), hm.begin(), hm.end() ); // hmp += hm
-    IARoundingNlp::uniquify_weights(hpm, hpm_lo, hpm_hi); 
-    hp.assign(hpm.begin(), hpm.begin()+hp.size()); // extract hp
-    hm.assign(hpm.begin()+hp.size(), hpm.end());   // extract hm
+    IAWeights hpm;
+    hpm.weightvec = hp.weightvec;                  // hpm = hp
+    hpm.weightvec.insert( hpm.weightvec.end(), hm.weightvec.begin(), hm.weightvec.end() ); // hmp += hm
+    hpm.uniquify_weights(hpm_lo, hpm_hi); 
+    hp.weightvec.assign(hpm.weightvec.begin(), hpm.weightvec.begin()+hp.size()); // extract hp
+    hm.weightvec.assign(hpm.weightvec.begin()+hp.weightvec.size(), hpm.weightvec.end());   // extract hm
   }
   // uniquify lumping h0 with hm and hp
   else {
-    IARoundingNlp::uniquify_weights(h0, h0_lo, h0_hi);
+    h0.uniquify(h0, h0_lo, h0_hi);
     
     // uniquify and scale hp hm to come after h0
-    std::vector<double> h0pm( h0 );                  // h0pm = h0
+    IAWeights h0pm( h0 );                  // h0pm = h0
     h0pm.insert( h0pm.end(), hp.begin(), hp.end() ); // h0pm += hp
     h0pm.insert( h0pm.end(), hm.begin(), hm.end() ); // h0pm += hm
-    IARoundingNlp::uniquify_weights(h0pm, h0_lo, h0_hi); 
+    h0pm.uniquify_weights(h0_lo, h0_hi); 
     const size_t sz = data->num_variables();
     h0.assign(h0pm.begin(),      h0pm.begin()+sz);   // extract h0
     hp.assign(h0pm.begin()+sz,   h0pm.begin()+2*sz); // extract hp
@@ -236,21 +237,15 @@ debugging(true), verbose(true) // true
 
 bool IARoundingFar3StepNlp::randomize_weights_of_non_int()
 {
+  // either they all will be true or they all will be false, because
+  // true means a solution value was non-integer
+  IASolverToolInt sti(data, solution);
+  bool changed = 
+  	randomize_weights_of_non_int( h0,  0.03124234 ) &&
+    randomize_weights_of_non_int( hm,  0.02894834 ) &&
+	randomize_weights_of_non_int( hp,  0.02745675 );
   
-  for (int i=0; i<solution->x_solution.size(); ++i) 
-  {
-    const double x = solution->x_solution[i];
-    if (!IPData::is_integer(x))
-    {
-      double d = IARoundingNlp::rand_excluded_middle();
-      h0[i] *= 1. + 0.03124234 * d;
-      d = IARoundingNlp::rand_excluded_middle();
-      hm[i] *= 1. + 0.02894834 * d;
-      d = IARoundingNlp::rand_excluded_middle();
-      hp[i] *= 1. + 0.02745675 * d;
-    }
-  }
-  return true;
+  return changed;
 }
 
 

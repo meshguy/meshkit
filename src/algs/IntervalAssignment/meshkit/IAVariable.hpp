@@ -1,4 +1,4 @@
-// IAVariable.hpp
+// IAVariable.hpp Meshkit Version
 // Data object shared between Meshkit and Interval Assignment
 
 #ifndef MESHKIT_IA_VARIABLE_HP

@@ -23,6 +23,8 @@
 
 #include <vector>
 
+#incude "IAWeights.hpp"
+
 // forward declarations
 class IAData;
 class IASolution;
@@ -58,8 +60,8 @@ private:
   
   // scratch space
   // objective weights of deltas
-  std::vector<double> weights_plus;
-  std::vector<double> weights_minus;
+  IAWeights weights_plus;
+  IAWeights weights_minus;
   
   const bool debugging;
 

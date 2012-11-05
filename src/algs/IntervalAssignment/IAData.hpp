@@ -80,57 +80,10 @@ public:
   
   std::vector<sumEvenConstraintRow> sumEvenConstraints;
   
-  // index of variables that must sum to even
-  // to do: associate curves with some unique tag, and add an interface function that takes those tags.
-  // then at solve-time associate an index in sequence with that tag.
-  void constrain_sum_even(const std::vector<int> &curve_indices, const int rhs=0); 
-  // here side_1 - side_2 = rhs, so fixed-size curves of side_1 subtract from rhs. rhs may be negative.
-  void constrain_opposite_side_equal(const std::vector<int> &side_1, const std::vector<int> &side_2, 
-                                     const int rhs=0 ); 
-  
 };
 
 // default constructors for object and its members OK
 // inline IAData::IAData() {} 
-
-// default destructor OK
-// to do, make a .cc file and add this there
-inline
-void IAData::constrain_sum_even(const std::vector<int> &curve_indices, const int rhs)
-{
-  if (!curve_indices.size())
-    return;
-  sumEvenConstraints.push_back( sumEvenConstraintRow() );
-  sumEvenConstraints.back().M.reserve(curve_indices.size());
-  sumEvenConstraints.back().rhs = rhs;
-  for (unsigned int j = 0; j < curve_indices.size(); ++j)
-  {
-    sumEvenConstraints.back().M.push_back( sparseEntry( curve_indices[j], 1. ) );
-  }
-  assert( sumEvenConstraints.back().M.size() == curve_indices.size() );
-}
-
-inline
-void IAData::constrain_opposite_side_equal(const std::vector<int> &side_1, const std::vector<int> &side_2, 
-                                           const int rhs )
-{
-  const size_t num_curves = side_1.size() + side_2.size();
-  if (!num_curves)
-    return;
-  constraints.push_back( constraintRow() );
-  constraints.back().M.reserve( num_curves );
-  constraints.back().upperBound = rhs;
-  constraints.back().lowerBound = rhs;
-  for (unsigned int j = 0; j < side_1.size(); ++j)
-  {
-    constraints.back().M.push_back( sparseEntry( side_1[j], 1. ) );
-  }
-  for (unsigned int j = 0; j < side_2.size(); ++j)
-  {
-    constraints.back().M.push_back( sparseEntry( side_2[j], -1. ) );
-  }
-  assert( constraints.back().M.size() == num_curves );
-}
 
 } // namespace MeshKit 
 

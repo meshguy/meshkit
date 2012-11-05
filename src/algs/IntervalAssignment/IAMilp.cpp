@@ -424,8 +424,6 @@ bool IAMilp::weight_deltas_1()
     return false;
 
   // attach weights based on passed in nlp x_solution *and* original problem goals
-  weights_minus.clear();
-  weights_plus.clear();
   weights_minus.resize(data->num_variables());
   weights_plus.resize(data->num_variables());
   

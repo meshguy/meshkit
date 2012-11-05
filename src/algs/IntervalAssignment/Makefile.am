@@ -19,6 +19,8 @@ libIntervalAssignment_la_LIBADD = $(IPOPT_LIBS)
 # The list of source files, and any header files that do not need to be installed
 libIntervalAssignment_la_SOURCES = \
 IAData.hpp \
+IADataBuilder.cpp \
+IADataBuilder.hpp \
 IAInterface.cpp \
 IANlp.cpp \
 IANlp.hpp \
@@ -27,12 +29,20 @@ IARoundingNlp.hpp \
 IASolution.hpp \
 IASolver.cpp \
 IASolver.hpp \
+IASolverTool.cpp \
+IASolverTool.hpp \
+IASolverToolInt.cpp \
+IASolverToolInt.hpp \
 IASolverInt.cpp \
 IASolverInt.hpp \
 IASolverRelaxed.cpp \
 IASolverRelaxed.hpp \
+IAWeights.cpp \
+IAWeights.hpp \
+IAWeights.cpp \
 IPData.cpp \
 IPData.hpp 
+
 
 # The list of header files which are to be installed
 nobase_libIntervalAssignment_la_include_HEADERS = \
