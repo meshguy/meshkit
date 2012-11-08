@@ -22,6 +22,8 @@ IAData.hpp \
 IADataBuilder.cpp \
 IADataBuilder.hpp \
 IAInterface.cpp \
+IAIntWaveNlp.cpp \
+IAIntWaveNlp.hpp \
 IANlp.cpp \
 IANlp.hpp \
 IARoundingNlp.cpp \

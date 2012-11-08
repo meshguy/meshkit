@@ -19,6 +19,7 @@
 		D2C19E1C1642FDF400A76AC7 /* IADataBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E1A1642FDF400A76AC7 /* IADataBuilder.cpp */; };
 		D2C19E1F1643064B00A76AC7 /* IASolverToolInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E1D1643064A00A76AC7 /* IASolverToolInt.cpp */; };
 		D2C19E221644534D00A76AC7 /* IAWeights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E201644534D00A76AC7 /* IAWeights.cpp */; };
+		D2ECD1C416487822007AC560 /* IAIntWaveNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -63,6 +64,8 @@
 		D2C19E1E1643064B00A76AC7 /* IASolverToolInt.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolverToolInt.hpp; path = ../../IASolverToolInt.hpp; sourceTree = "<group>"; };
 		D2C19E201644534D00A76AC7 /* IAWeights.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAWeights.cpp; path = ../../IAWeights.cpp; sourceTree = "<group>"; };
 		D2C19E211644534D00A76AC7 /* IAWeights.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAWeights.hpp; path = ../../IAWeights.hpp; sourceTree = "<group>"; };
+		D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAIntWaveNlp.cpp; path = ../../IAIntWaveNlp.cpp; sourceTree = "<group>"; };
+		D2ECD1C316487822007AC560 /* IAIntWaveNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAIntWaveNlp.hpp; path = ../../IAIntWaveNlp.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,9 +92,12 @@
 				D2C19E201644534D00A76AC7 /* IAWeights.cpp */,
 				D2C19E171642F44200A76AC7 /* IASolverTool.hpp */,
 				D2C19E181642F45200A76AC7 /* IASolverTool.cpp */,
+				D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */,
+				D2ECD1C316487822007AC560 /* IAIntWaveNlp.hpp */,
 				D2C19E1D1643064A00A76AC7 /* IASolverToolInt.cpp */,
 				D2C19E1E1643064B00A76AC7 /* IASolverToolInt.hpp */,
 				D2C19DF116407BEA00A76AC7 /* IANlp.cpp */,
+				D2C19DF216407BEA00A76AC7 /* IANlp.hpp */,
 				D2C19DFB16407C0B00A76AC7 /* IARoundingNlp.hpp */,
 				D2C19DFA16407C0B00A76AC7 /* IARoundingNlp.cpp */,
 				D2C19E0416407C3400A76AC7 /* IASolverRelaxed.cpp */,
@@ -101,7 +107,6 @@
 				D2C19DFE16407C1D00A76AC7 /* IASolver.cpp */,
 				D2C19DFF16407C1D00A76AC7 /* IASolver.hpp */,
 				D2C19E131640867000A76AC7 /* MKVersion.h */,
-				D2C19DF216407BEA00A76AC7 /* IANlp.hpp */,
 				D2C19DE516407B9E00A76AC7 /* IAInterface.hpp */,
 				D2C19DE616407B9E00A76AC7 /* IAInterfaceStub.cpp */,
 				D2C19DE716407B9E00A76AC7 /* IAVariable.hpp */,
@@ -186,6 +191,7 @@
 				D2C19E1C1642FDF400A76AC7 /* IADataBuilder.cpp in Sources */,
 				D2C19E1F1643064B00A76AC7 /* IASolverToolInt.cpp in Sources */,
 				D2C19E221644534D00A76AC7 /* IAWeights.cpp in Sources */,
+				D2ECD1C416487822007AC560 /* IAIntWaveNlp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,6 +332,7 @@
 				D2C19DE316407B7800A76AC7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

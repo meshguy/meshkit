@@ -453,9 +453,9 @@ void IAInterface::subdivide_problem(SubProblemVec &subproblems)
     
     if (debugging)
     {
-      printf("subproblem peeled out:");
-      subproblem->problemSets.print();
-      printf("remaining global problem:");
+      printf("subproblem peeled out:\n");
+      subproblem->print();
+      printf("\nremaining global problem:\n");
       global_prob_set.print();
     }
     
@@ -524,6 +524,8 @@ void IAInterface::print_problem() const
 
 void IAInterface::SubProblem::print() const
 {
+  printf("subproblem %d:\n", id);
+  problemSets.print();
   IASolverTool solver_tool(data,solution);
   solver_tool.print();
   // describe variables
@@ -563,6 +565,8 @@ void IAInterface::execute_this()
   for (unsigned int i = 0; i < subproblems.size(); ++i)
   {
     SubProblem *p = subproblems[i];
+    if (debugging)
+      printf("Solving subproblem %d\n", p->id);
     if ( solve_subproblem(p) )
       assign_solution(p);
     else
@@ -575,8 +579,11 @@ void IAInterface::execute_this()
   return;
 }
 
-  
+
+int IAInterface::SubProblem::max_id = 0;
+
 IAInterface::SubProblem::SubProblem()
+  : id( max_id++ )
 {
   data = new IAData;
   solution = new IASolution;

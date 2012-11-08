@@ -12,6 +12,7 @@
 #include "IANlp.hpp"
 #include "IAWeights.hpp"
 
+// from Ipopot
 #include "IpTNLP.hpp"
 
 namespace MeshKit {

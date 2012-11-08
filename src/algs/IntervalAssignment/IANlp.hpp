@@ -125,7 +125,14 @@ public:
                                  IpoptCalculatedQuantities* ip_cq);
   //@}
   
+  // Common routines, could be used by other Nlp's 
   int get_neleJac() const { return neleJac; }
+  
+	// return the value of the ith sum-even constraint, given current values of x
+  double eval_even_sum(const int i, const Number* x) const;
+  
+	// return the value of the ith sum-equal constraint, given current values of x
+  double eval_equal_sum(const int i, const Number* x) const;
 
 private:  
   // hide untrusted default methods

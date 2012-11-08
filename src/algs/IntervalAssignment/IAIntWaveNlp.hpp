@@ -5,6 +5,10 @@
 // The idea is the optimal solution will be an integer one, if one exists
 // Define some region around the relaxed solution and search for an integer solution
 //
+// use a sine-"wave" function as a constraint, so that the only feasible solutions are integer
+// use a sine-"wave" with twice the period to enforce the evenality constraints
+// use the normal non-linear objective functions
+// Start with the relaxed solution as the initial guess, and search in a neighborhood for a feasible solution.
 
 #ifndef MESHKIT_IA_IAINTWAVENLP_HP
 #define MESHKIT_IA_IAINTWAVENLP_HP
@@ -13,6 +17,9 @@
 
 // from Ipopt
 #include "IpTNLP.hpp"
+
+#include <vector>
+#include <map>
 
 namespace MeshKit 
 {
@@ -26,7 +33,8 @@ class IAIntWaveNlp : public TNLP
   // first set of functions required by TNLP
 public:
   /** default constructor */
-  IAIntWaveNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr); 
+  IAIntWaveNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr,
+               const bool set_silent = true); 
 
   /** default destructor */
   virtual ~IAIntWaveNlp();
@@ -110,12 +118,13 @@ private:
   
   const int base_n, base_m;
   const int problem_n, problem_m;
-  const int sum_even_constraint_start;
-  const int x_int_constraint_start;
+  const int wave_even_constraint_start;
+  const int wave_int_constraint_start;
   const double PI;
   
   double f_x_value( double I_i, double x_i );
 
+  const bool silent;
   const bool debugging;
   const bool verbose; // verbose debugging
   
@@ -132,8 +141,7 @@ private:
 	  static int n; // matrix is n x n
 	  int key() const { return i * n + j; }
 	  
-	  SparseMatrixEntry(const int iset, const int jset, const int kset) 
-	  : i(iset), j(jset), k(kset) { assert(j <= i); } 
+	  SparseMatrixEntry(const int iset, const int jset, const int kset);
 	  SparseMatrixEntry() : i(-1), j(-1), k(-1) {} // bad values if unspecified
 	};
 	
@@ -141,10 +149,11 @@ private:
 	
 	SparseMatrixMap hessian_map;  // sorted by key
 	std::vector< SparseMatrixEntry > hessian_vector; // from 0..k
-	
+
 	void add_hessian_entry( int i, int j, int &k );
 	void build_hessian();
-	int get_hessian_k( int i, int j ) const;
+	int get_hessian_k( int i, int j );
+  void print_hessian(); // debug
 
 };
 

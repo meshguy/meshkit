@@ -44,6 +44,7 @@ private:
   
   // top level
   bool solve_minlp();
+  bool solve_intwave();
   
   // mixed-integer solution stuff. 
   // MI NLP - solve a mixed integer nlp that we hope has an integer solution near the relaxed solution.

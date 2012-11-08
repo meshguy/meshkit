@@ -314,6 +314,8 @@ private:
   */
   struct SubProblem
   {
+    static int max_id;
+    int id;
     IAData *data;
     ProblemSets problemSets;
     IASolution *solution;

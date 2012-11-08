@@ -65,11 +65,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/stubs/IAInterfaceStub.cpp"
-         timestampString = "373593514.548697"
+         timestampString = "374022893.204784"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "576"
-         endingLineNumber = "576"
+         startingLineNumber = "580"
+         endingLineNumber = "580"
          landmarkName = "IAInterface::execute_this()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -79,11 +79,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/stubs/IAInterfaceStub.cpp"
-         timestampString = "373593514.548697"
+         timestampString = "374022893.204784"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "579"
-         endingLineNumber = "579"
+         startingLineNumber = "583"
+         endingLineNumber = "583"
          landmarkName = "IAInterface::execute_this()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -107,11 +107,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373593514.548697"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "107"
-         endingLineNumber = "107"
+         startingLineNumber = "315"
+         endingLineNumber = "315"
          landmarkName = "IASolverInt::solve_minlp()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -121,11 +121,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373593514.548697"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "102"
-         endingLineNumber = "102"
+         startingLineNumber = "310"
+         endingLineNumber = "310"
          landmarkName = "IASolverInt::solve_minlp()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -189,11 +189,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/stubs/IAInterfaceStub.cpp"
-         timestampString = "373594663.475647"
+         timestampString = "374021252.686518"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "566"
-         endingLineNumber = "566"
+         startingLineNumber = "568"
+         endingLineNumber = "568"
          landmarkName = "IAInterface::execute_this()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -203,11 +203,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/stubs/IAInterfaceStub.cpp"
-         timestampString = "373594667.435532"
+         timestampString = "374022893.204784"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "570"
-         endingLineNumber = "570"
+         startingLineNumber = "574"
+         endingLineNumber = "574"
          landmarkName = "IAInterface::execute_this()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -287,11 +287,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373841571.08835"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "45"
-         endingLineNumber = "45"
+         startingLineNumber = "253"
+         endingLineNumber = "253"
          landmarkName = "IASolverInt::solve_minlp()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -301,11 +301,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373841856.557395"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "120"
-         endingLineNumber = "120"
+         startingLineNumber = "328"
+         endingLineNumber = "328"
          landmarkName = "IASolverInt::solve_minlp()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -315,11 +315,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373841880.030369"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "124"
-         endingLineNumber = "124"
+         startingLineNumber = "332"
+         endingLineNumber = "332"
          landmarkName = "IASolverInt::solve_minlp()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -329,16 +329,16 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373846014.769549"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "132"
-         endingLineNumber = "132"
+         startingLineNumber = "340"
+         endingLineNumber = "340"
          landmarkName = "IASolverInt::solve_minlp()"
          landmarkType = "5">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "Yes"
+         shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          isPathRelative = "0"
@@ -352,7 +352,7 @@
          landmarkType = "5">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "Yes"
+         shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          isPathRelative = "0"
@@ -371,11 +371,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373844848.96119"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "101"
-         endingLineNumber = "101"
+         startingLineNumber = "309"
+         endingLineNumber = "309"
          landmarkName = "IASolverInt::solve_minlp()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -427,11 +427,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "cpp"
-         timestampString = "373845448.618019"
+         timestampString = "373855558.102447"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "298"
-         endingLineNumber = "298"
+         startingLineNumber = "297"
+         endingLineNumber = "297"
          landmarkName = "main(int argv, char* argc[])"
          landmarkType = "7">
       </FileBreakpoint>
@@ -450,7 +450,7 @@
          landmarkType = "5">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "Yes"
+         shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          isPathRelative = "0"
@@ -469,12 +469,430 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
-         timestampString = "373846011.64573"
+         timestampString = "374023450.206681"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "129"
-         endingLineNumber = "129"
-         landmarkName = "IASolverInt::solve_minlp()"
+         startingLineNumber = "337"
+         endingLineNumber = "337"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/stubs/IAInterfaceStub.cpp"
+         timestampString = "373848354.214545"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "10"
+         endingLineNumber = "10">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "373855608.039813"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "292"
+         endingLineNumber = "292"
+         landmarkName = "main(int argv, char* argc[])"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "373855608.767831"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "293"
+         endingLineNumber = "293"
+         landmarkName = "main(int argv, char* argc[])"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "373855609.399739"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "294"
+         endingLineNumber = "294"
+         landmarkName = "main(int argv, char* argc[])"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "373855610.072133"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "295"
+         endingLineNumber = "295"
+         landmarkName = "main(int argv, char* argc[])"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
+         timestampString = "373855668.22609"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "42"
+         endingLineNumber = "42"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
+         timestampString = "374023450.206681"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "86"
+         endingLineNumber = "86"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "85"
+         endingLineNumber = "85"
+         landmarkName = "IAIntWaveNlp::get_nlp_info(Index&amp; n, Index&amp; m, Index&amp; nnz_jac_g, Index&amp; nnz_h_lag, IndexStyleEnum&amp; index_style)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "156"
+         endingLineNumber = "156"
+         landmarkName = "IAIntWaveNlp::get_starting_point(Index n, bool init_x, Number* x_init, bool init_z, Number* z_L, Number* z_U, Index m, bool init_lambda, Number* lambda)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "189"
+         endingLineNumber = "189"
+         landmarkName = "IAIntWaveNlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
+         timestampString = "374023450.206681"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "168"
+         endingLineNumber = "168"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
+         timestampString = "374023450.206681"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "179"
+         endingLineNumber = "179"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "155"
+         endingLineNumber = "155"
+         landmarkName = "IAIntWaveNlp::get_starting_point(Index n, bool init_x, Number* x_init, bool init_z, Number* z_L, Number* z_U, Index m, bool init_lambda, Number* lambda)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "72"
+         endingLineNumber = "72"
+         landmarkName = "IAIntWaveNlp::get_nlp_info(Index&amp; n, Index&amp; m, Index&amp; nnz_jac_g, Index&amp; nnz_h_lag, IndexStyleEnum&amp; index_style)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "127"
+         endingLineNumber = "127"
+         landmarkName = "IAIntWaveNlp::get_bounds_info(Index n, Number* x_l, Number* x_u, Index m, Number* g_l, Number* g_u)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "145"
+         endingLineNumber = "145"
+         landmarkName = "IAIntWaveNlp::get_bounds_info(Index n, Number* x_l, Number* x_u, Index m, Number* g_l, Number* g_u)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "119"
+         endingLineNumber = "119"
+         landmarkName = "IAIntWaveNlp::get_nlp_info(Index&amp; n, Index&amp; m, Index&amp; nnz_jac_g, Index&amp; nnz_h_lag, IndexStyleEnum&amp; index_style)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "166"
+         endingLineNumber = "166"
+         landmarkName = "IAIntWaveNlp::get_starting_point(Index n, bool init_x, Number* x_init, bool init_z, Number* z_L, Number* z_U, Index m, bool init_lambda, Number* lambda)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "221"
+         endingLineNumber = "221"
+         landmarkName = "IAIntWaveNlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "238"
+         endingLineNumber = "238"
+         landmarkName = "IAIntWaveNlp::eval_jac_g(Index n, const Number* x, bool new_x, Index m, Index nele_jac, Index* iRow, Index *jCol, Number* values)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "352"
+         endingLineNumber = "352"
+         landmarkName = "IAIntWaveNlp::eval_jac_g(Index n, const Number* x, bool new_x, Index m, Index nele_jac, Index* iRow, Index *jCol, Number* values)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "491"
+         endingLineNumber = "491"
+         landmarkName = "IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x, Number obj_factor, Index m, const Number* lambda, bool new_lambda, Index nele_hess, Index* iRow, Index* jCol, Number* values)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IAIntWaveNlp.cpp"
+         timestampString = "374005367.274247"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "595"
+         endingLineNumber = "595"
+         landmarkName = "IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x, Number obj_factor, Index m, const Number* lambda, bool new_lambda, Index nele_hess, Index* iRow, Index* jCol, Number* values)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "374017339.255073"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "199"
+         endingLineNumber = "199"
+         landmarkName = "test_one_pair()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
+         timestampString = "374023450.206681"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "227"
+         endingLineNumber = "227"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
+         timestampString = "374023450.206681"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "228"
+         endingLineNumber = "228"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverInt.cpp"
+         timestampString = "374023450.206681"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "235"
+         endingLineNumber = "235"
+         landmarkName = "IASolverInt::solve_intwave()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "374017883.087063"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "217"
+         endingLineNumber = "217"
+         landmarkName = "test_many_pairs()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/stubs/IAInterfaceStub.cpp"
+         timestampString = "374018019.708236"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "459"
+         endingLineNumber = "459"
+         landmarkName = "IAInterface::subdivide_problem(SubProblemVec &amp;subproblems)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverToolInt.cpp"
+         timestampString = "374022926.038484"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "90"
+         endingLineNumber = "90"
+         landmarkName = "IASolverToolInt::solution_is_integer(const bool print_non_integer)"
          landmarkType = "5">
       </FileBreakpoint>
    </FileBreakpoints>

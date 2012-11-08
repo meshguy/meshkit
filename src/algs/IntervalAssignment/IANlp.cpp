@@ -353,22 +353,14 @@ bool IANlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
   
   for (unsigned int i = 0; i<data->constraints.size(); ++i)
   {
-    //double g_i = constraints[i].rhs;
-    double g_i = 0.;
-    for (unsigned int j = 0; j < data->constraints[i].M.size(); ++j)
-    {
-      g_i += x[ data->constraints[i].M[j].col ] * data->constraints[i].M[j].val;
-    }
-    g[i] = g_i;
+    const unsigned int k = i;
+    const double g_k = eval_equal_sum(i, x);
+    g[k] = g_k;
   }
   for (unsigned int i = 0; i<data->sumEvenConstraints.size(); ++i)
   {
-    const int k = (int) data->constraints.size() + i;
-    double g_k = data->sumEvenConstraints[i].rhs;
-    for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
-    {
-      g_k += x[ data->sumEvenConstraints[i].M[j].col ] * data->sumEvenConstraints[i].M[j].val;
-    }
+    const size_t k = data->constraints.size() + i;
+    const double g_k = eval_even_sum(i, x);
     g[k] = g_k;
   }
 
@@ -472,6 +464,44 @@ bool IANlp::eval_h(Index n, const Number* x, bool new_x,
   }
 
   return true;
+}
+  
+double IANlp::eval_even_sum(const int i, const Number* x) const
+{
+  if (debugging)
+  {
+    printf(" sum-even row %d: ", i);
+  }
+  double s = data->sumEvenConstraints[i].rhs;
+  for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
+  {
+    const int xi = data->sumEvenConstraints[i].M[j].col;
+    const double  coeff = data->sumEvenConstraints[i].M[j].val;
+    assert( coeff == 1. ); // hessian is incorrect for non-one coefficients
+    const double contribution = x[ xi ] * coeff;
+    s += contribution;
+    if (debugging)
+    {
+      printf(" + %f x_%d(%f)", coeff, xi, contribution);
+    }
+  }
+  if (debugging)
+  {
+    printf(" = %f\n", s);    
+  }
+  return s;
+}
+  
+double IANlp::eval_equal_sum(const int i, const Number* x) const
+{
+  // rhs is incorporated into the upper and lower bounds instead: 
+  // const double g_i = data->constraints[i].rhs; 
+  double g_i = 0.;
+  for (unsigned int j = 0; j < data->constraints[i].M.size(); ++j)
+  {
+    g_i += x[ data->constraints[i].M[j].col ] * data->constraints[i].M[j].val;
+  }
+  return g_i;
 }
 
 void IANlp::finalize_solution(SolverReturn status,
