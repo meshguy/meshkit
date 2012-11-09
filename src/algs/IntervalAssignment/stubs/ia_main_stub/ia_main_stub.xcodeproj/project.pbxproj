@@ -20,6 +20,8 @@
 		D2C19E1F1643064B00A76AC7 /* IASolverToolInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E1D1643064A00A76AC7 /* IASolverToolInt.cpp */; };
 		D2C19E221644534D00A76AC7 /* IAWeights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E201644534D00A76AC7 /* IAWeights.cpp */; };
 		D2ECD1C416487822007AC560 /* IAIntWaveNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */; };
+		D2ECD1C8164C280B007AC560 /* IAIntParabolaNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECD1C6164C280B007AC560 /* IAIntParabolaNlp.cpp */; };
+		D2ECD1CE164C33EE007AC560 /* IAIntCosNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECD1CC164C33EE007AC560 /* IAIntCosNlp.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -66,6 +68,10 @@
 		D2C19E211644534D00A76AC7 /* IAWeights.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAWeights.hpp; path = ../../IAWeights.hpp; sourceTree = "<group>"; };
 		D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAIntWaveNlp.cpp; path = ../../IAIntWaveNlp.cpp; sourceTree = "<group>"; };
 		D2ECD1C316487822007AC560 /* IAIntWaveNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAIntWaveNlp.hpp; path = ../../IAIntWaveNlp.hpp; sourceTree = "<group>"; };
+		D2ECD1C6164C280B007AC560 /* IAIntParabolaNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAIntParabolaNlp.cpp; path = ../../IAIntParabolaNlp.cpp; sourceTree = "<group>"; };
+		D2ECD1C7164C280B007AC560 /* IAIntParabolaNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAIntParabolaNlp.hpp; path = ../../IAIntParabolaNlp.hpp; sourceTree = "<group>"; };
+		D2ECD1CC164C33EE007AC560 /* IAIntCosNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAIntCosNlp.cpp; path = ../../IAIntCosNlp.cpp; sourceTree = "<group>"; };
+		D2ECD1CD164C33EE007AC560 /* IAIntCosNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAIntCosNlp.hpp; path = ../../IAIntCosNlp.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +100,10 @@
 				D2C19E181642F45200A76AC7 /* IASolverTool.cpp */,
 				D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */,
 				D2ECD1C316487822007AC560 /* IAIntWaveNlp.hpp */,
+				D2ECD1CC164C33EE007AC560 /* IAIntCosNlp.cpp */,
+				D2ECD1CD164C33EE007AC560 /* IAIntCosNlp.hpp */,
+				D2ECD1C6164C280B007AC560 /* IAIntParabolaNlp.cpp */,
+				D2ECD1C7164C280B007AC560 /* IAIntParabolaNlp.hpp */,
 				D2C19E1D1643064A00A76AC7 /* IASolverToolInt.cpp */,
 				D2C19E1E1643064B00A76AC7 /* IASolverToolInt.hpp */,
 				D2C19DF116407BEA00A76AC7 /* IANlp.cpp */,
@@ -192,6 +202,8 @@
 				D2C19E1F1643064B00A76AC7 /* IASolverToolInt.cpp in Sources */,
 				D2C19E221644534D00A76AC7 /* IAWeights.cpp in Sources */,
 				D2ECD1C416487822007AC560 /* IAIntWaveNlp.cpp in Sources */,
+				D2ECD1C8164C280B007AC560 /* IAIntParabolaNlp.cpp in Sources */,
+				D2ECD1CE164C33EE007AC560 /* IAIntCosNlp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

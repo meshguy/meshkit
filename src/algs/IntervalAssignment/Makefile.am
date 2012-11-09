@@ -24,6 +24,8 @@ IADataBuilder.hpp \
 IAInterface.cpp \
 IAIntWaveNlp.cpp \
 IAIntWaveNlp.hpp \
+IAIntParabolaNlp.cpp \
+IAIntParabolaNlp.hpp \
 IANlp.cpp \
 IANlp.hpp \
 IARoundingNlp.cpp \

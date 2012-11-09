@@ -1,59 +1,34 @@
 // IAIntWaveNlp.cpp
 // Interval Assignment for Meshkit
 //
-// Adapted from
-// Copyright (C) 2005, 2006 International Business Machines and others.
-// All Rights Reserved.
-// This code is published under the Eclipse Public License.
-//
-// $Id: hs071_nlp.cpp 1864 2010-12-22 19:21:02Z andreasw $
-//
-// Authors:  Carl Laird, Andreas Waechter     IBM    2005-08-16
-
 #include "IAIntWaveNlp.hpp"
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IASolution.hpp"
-#include "IANlp.hpp"
 
 #include <math.h>
 #include <limits>
-#include <algorithm>
 
-// for printf
-#ifdef HAVE_CSTDIO
-# include <cstdio>
-#else
-# ifdef HAVE_STDIO_H
-#  include <stdio.h>
-# else
-#  error "don't have header file for stdio"
-# endif
-#endif
+#include "IAData.hpp"
+#include "IPData.hpp"
+#include "IASolution.hpp"
 
 /* structure
  
- as base problem: objective function is f, same
- as base problem: sum-equal constraints, sum-even > 4 constraints
- 
- new constraints:
+ constraints:
  cosine wave for each sum-even constraint, forcing integrality
  cosine wave for each primal variable, forcing integrality
  */
 
 namespace MeshKit {
-    
+  
 // constructor
 IAIntWaveNlp::IAIntWaveNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr, bool set_silent): 
-data(data_ptr), ipData(ip_data_ptr), solution(solution_ptr), baseNlp(data_ptr, solution_ptr),
-problem_n((int)data_ptr->I.size()), 
-problem_m((int)(data_ptr->constraints.size() + 2*data_ptr->sumEvenConstraints.size() + data_ptr->num_variables())),
-wave_even_constraint_start((int)(data_ptr->constraints.size() + data_ptr->sumEvenConstraints.size())),
-wave_int_constraint_start((int)(data_ptr->constraints.size() + 2*data_ptr->sumEvenConstraints.size())),
-base_n((int)data_ptr->num_variables()),
-base_m((int)(data_ptr->constraints.size() + data_ptr->sumEvenConstraints.size())),
-PI( 2. * acos(0.0) ),
-silent(set_silent), debugging(true), verbose(true) // true
+  data(data_ptr), ipData(ip_data_ptr), solution(solution_ptr), baseNlp(data_ptr, solution_ptr),
+  problem_n((int)data_ptr->I.size()), 
+  problem_m((int)(data_ptr->constraints.size() + 2*data_ptr->sumEvenConstraints.size() + data_ptr->num_variables())),
+  wave_even_constraint_start((int)(data_ptr->constraints.size() + data_ptr->sumEvenConstraints.size())),
+  wave_int_constraint_start((int)(data_ptr->constraints.size() + 2*data_ptr->sumEvenConstraints.size())),
+  base_n((int)data_ptr->num_variables()),
+  base_m((int)(data_ptr->constraints.size() + data_ptr->sumEvenConstraints.size())),
+  silent(set_silent), debugging(true), verbose(true) // true
 {
   printf("\nIAIntWaveNLP Problem size:\n");
   printf("  number of variables: %d\n", problem_n);
@@ -63,11 +38,12 @@ silent(set_silent), debugging(true), verbose(true) // true
   printf("  total constraints: %d\n\n", problem_m);  
 }
 
+
 IAIntWaveNlp::~IAIntWaveNlp() {data = NULL; ipData = NULL;}
 
 // returns the size of the problem
 bool IAIntWaveNlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                             Index& nnz_h_lag, IndexStyleEnum& index_style)
+                           Index& nnz_h_lag, IndexStyleEnum& index_style)
 {
   bool base_ok = baseNlp.get_nlp_info(n, m, nnz_jac_g, nnz_h_lag, index_style);
   
@@ -92,24 +68,24 @@ bool IAIntWaveNlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
   int num_even_entries = 0;
   for (std::vector<IAData::sumEvenConstraintRow>::const_iterator i=data->sumEvenConstraints.begin(); i != data->sumEvenConstraints.end(); ++i)
   {
-  	num_even_entries += i->M.size();
+    num_even_entries += i->M.size();
   }
   nnz_jac_g += num_even_entries;
-
+  
   // wave x-integer constraints
   nnz_jac_g += data->num_variables();
-
+  
   if (debugging)
   {
     printf("nnz_jac_g = %d: base = %d, wave even = %d, wave int = %d\n", 
            nnz_jac_g, base_nnz_jac_g, num_even_entries, data->num_variables());
   }
-
+  
   // hessian elements, second derivatives of objective and constraints
   // objectives are double counted, so we do = here rather than +=
   build_hessian();
   nnz_h_lag = (Index) hessian_vector.size();
-    
+  
   if (debugging)
   {
     printf("IAIntWaveNlp::get_nlp_info");
@@ -119,13 +95,13 @@ bool IAIntWaveNlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
   return true && base_ok;
   // need to change this if there are more variables, such as delta-minuses
 }
-
+  
 // returns the variable bounds
 bool IAIntWaveNlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
-                                Index m, Number* g_l, Number* g_u)
+                                   Index m, Number* g_l, Number* g_u)
 {
   const bool base_ok = baseNlp.get_bounds_info(n, x_l, x_u, base_m, g_l, g_u);
-
+  
   for (unsigned int i = 0; i < data->sumEvenConstraints.size(); ++i)
   {
     // cos( pi * sum_evens) == 1
@@ -144,36 +120,36 @@ bool IAIntWaveNlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
   }
   return true && base_ok;
 }
-
-// returns the initial point for the problem
+  
+  // returns the initial point for the problem
 bool IAIntWaveNlp::get_starting_point(Index n, bool init_x, Number* x_init,
-                                   bool init_z, Number* z_L, Number* z_U,
-                                   Index m, bool init_lambda,
-                                   Number* lambda)
+                                      bool init_z, Number* z_L, Number* z_U,
+                                      Index m, bool init_lambda,
+                                      Number* lambda)
 {
   // Minimal info is starting values for x, x_init
   // Improvement: we can provide starting values for the dual variables if we wish
   assert(init_x == true);
   assert(init_z == false);
   assert(init_lambda == false);
-
+  
   // initialize x to the relaxed solution
   for (Index i=0; i<n; ++i) 
   {
     x_init[i] = ipData->relaxedSolution[i];
   }
-
+  
   return true;
 }
-
-
+  
+  
 // returns the value of the objective function
 bool IAIntWaveNlp::eval_f(Index n, const Number* x, bool new_x, Number& obj_value)
 {
   baseNlp.eval_f(base_n,x,new_x,obj_value);
   return true;
 }
-
+  
 // return the gradient of the objective function grad_{x} f(x)
 bool IAIntWaveNlp::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
 {
@@ -193,7 +169,7 @@ bool IAIntWaveNlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number*
   {
     const int k = i + wave_even_constraint_start;
     double s = baseNlp.eval_even_sum(i,x);
-    const double gk = cos( PI * s );
+    const double gk = eval_g_int_s(s); // e.g. cos( PI * s );
     g[k] = gk;    
     if (debugging)
     {
@@ -206,7 +182,7 @@ bool IAIntWaveNlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number*
   for (int i = 0; i < data->num_variables(); ++i)
   {
     const int k = i + wave_int_constraint_start;
-    const double gk = cos( 2. * PI * x[i] );
+    const double gk = eval_g_int_x(x[i]); // e.g. cos( 2. * PI * x[i] );
     g[k] = gk;
     if (debugging)
     {
@@ -312,7 +288,7 @@ bool IAIntWaveNlp::eval_jac_g(Index n, const Number* x, bool new_x,
     for (unsigned int i = 0; i< data->sumEvenConstraints.size(); ++i)
     {
       const double s = baseNlp.eval_equal_sum(i, x);
-      const double jac_gk = -PI * cos( PI * s );
+      const double jac_gk = eval_jac_int_s(s); // e.g. -PI * cos( PI * s );
       if (debugging)
         printf("\n%d even wave: ", i);
       for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
@@ -337,7 +313,7 @@ bool IAIntWaveNlp::eval_jac_g(Index n, const Number* x, bool new_x,
     }
     for (int i=0; i<data->num_variables(); ++i)
     {
-      const double jac_gk = -2. * PI * sin( 2. * PI * x[i] );
+      const double jac_gk = eval_jac_int_x(x[i]); // e.g. -2. * PI * sin( 2. * PI * x[i] );
       values[k++] = jac_gk;
       if (debugging)
       {
@@ -537,7 +513,8 @@ bool IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x,
         const int k = i + wave_even_constraint_start; // index of the constraint in the problem, = lambda to use
         
         const double s = baseNlp.eval_even_sum(i, x); // sum of the variable values
-        const double wavepp = ( -PI * PI * cos( PI * s ) ); // second derivative of wave function, assume coefficients of one
+        // second derivative of wave function, assuming coefficients of one
+        const double wavepp = eval_hess_int_s(s); // e.g. ( -PI * PI * cos( PI * s ) ); 
         const double h_value = lambda[k] * wavepp;        
         // assign that value to all pairs, weighted by coeff_i * coeff_j
         for (unsigned int ii = 0; ii < data->sumEvenConstraints[i].M.size(); ++ii)
@@ -579,7 +556,7 @@ bool IAIntWaveNlp::eval_h(Index n, const Number* x, bool new_x,
         const int k = i + wave_int_constraint_start;
         // diagonal entries, again
         
-        const double hg_ii = -4. * PI * PI * cos( 2. * PI * x[i] );
+        const double hg_ii = eval_hess_int_x(x[i]); // e.g. -4. * PI * PI * cos( 2. * PI * x[i] );
         values[i] += lambda[k] * hg_ii;
 
         if (debugging)

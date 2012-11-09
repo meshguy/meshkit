@@ -5,13 +5,10 @@
 // The idea is the optimal solution will be an integer one, if one exists
 // Define some region around the relaxed solution and search for an integer solution
 //
-// use a sine-"wave" function as a constraint, so that the only feasible solutions are integer
-// use a sine-"wave" with twice the period to enforce the evenality constraints
-// use the normal non-linear objective functions
-// Start with the relaxed solution as the initial guess, and search in a neighborhood for a feasible solution.
+// use some non-linear function as a constraint, so that the only feasible solutions are integer
 
-#ifndef MESHKIT_IA_IAINTWAVENLP_HP
-#define MESHKIT_IA_IAINTWAVENLP_HP
+#ifndef MESHKIT_IA_IAINTHESSNLP_HP
+#define MESHKIT_IA_IAINTHESSNLP_HP
 
 #include "IANlp.hpp"
 
@@ -105,6 +102,7 @@ private:
   IAIntWaveNlp& operator=(const IAIntWaveNlp&);
   //@}
   
+protected:
   // input data
   const IAData *data;
   const IPData *ipData;
@@ -120,7 +118,6 @@ private:
   const int problem_n, problem_m;
   const int wave_even_constraint_start;
   const int wave_int_constraint_start;
-  const double PI;
   
   double f_x_value( double I_i, double x_i );
 
@@ -154,6 +151,15 @@ private:
 	void build_hessian();
 	int get_hessian_k( int i, int j );
   void print_hessian(); // debug
+  
+  // derived classes must define these
+  // the first two should have a max of 1 for integer/even values, and be less than that elsewhere
+  virtual double eval_g_int_x( const double x ) = 0;
+  virtual double eval_g_int_s( const double s ) = 0;
+  virtual double eval_jac_int_x( const double x ) = 0;
+  virtual double eval_jac_int_s( const double s ) = 0;
+  virtual double eval_hess_int_x( const double x ) = 0;
+  virtual double eval_hess_int_s( const double s ) = 0;
 
 };
 

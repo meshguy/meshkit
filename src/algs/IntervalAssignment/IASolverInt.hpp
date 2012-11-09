@@ -15,6 +15,7 @@ namespace MeshKit {
   
 class IAData;
 class IASolution;
+class IAIntWaveNlp;
 
 class IASolverInt : public IASolverToolInt
 {
@@ -44,8 +45,12 @@ private:
   
   // top level
   bool solve_minlp();
-  bool solve_intwave();
-  
+  bool solve_cos();
+  bool solve_parabola();
+
+  // workhorse
+  bool solve_intwave(IAIntWaveNlp *mynlp);
+
   // mixed-integer solution stuff. 
   // MI NLP - solve a mixed integer nlp that we hope has an integer solution near the relaxed solution.
   // gets most of the variables integer

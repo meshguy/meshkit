@@ -8,7 +8,8 @@
 #include "IARoundingNlp.hpp"
 #include "IASolverRelaxed.hpp"
 #include "IAMINlp.hpp"
-#include "IAIntWaveNlp.hpp"
+#include "IAIntCosNlp.hpp"
+#include "IAIntParabolaNlp.hpp"
 
 // #include "IAMilp.hpp" // glpk based solution too slow
 
@@ -37,7 +38,7 @@ IASolverInt::~IASolverInt()
   delete ip_data();
 }
     
-bool IASolverInt::solve_intwave()
+bool IASolverInt::solve_intwave(IAIntWaveNlp *mynlp)
 {
   if (debugging)
   {
@@ -83,9 +84,6 @@ bool IASolverInt::solve_intwave()
     return (int) status;
   }
   
-  IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, ipData, iaSolution, silent);
-  Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
-
   bool try_again = true;
   int iter = 0;
   
@@ -388,14 +386,33 @@ void IASolverInt::cleanup()
   ;
 }
 
+bool IASolverInt::solve_cos()
+{
+    IAIntWaveNlp *myianlp = new IAIntCosNlp(iaData, ipData, iaSolution, silent);
+    Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
+    if (debugging) printf("Cosine wave\n");
+    return solve_intwave( myianlp );
+  }
+
+bool IASolverInt::solve_parabola()
+{
+    IAIntWaveNlp *myianlp = new IAIntParabolaNlp(iaData, ipData, iaSolution, silent);
+    Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
+    if (debugging) printf("Parabola wave\n");
+    return solve_intwave( myianlp );
+  }
+
 bool IASolverInt::solve()
 {
   
   // debug, try solve_intwave instead 
   // longer term, use intwave as a backup when the faster and simpler milp doesn't work.
   // unfortunately, it appears to find local minima that are far from optimal, even when starting in a well
-  // return solve_intwave();
   
+  // return solve_cos();
+  return solve_parabola();
+  
+
   // todo: add a simple rounding term for the even-constraints to minlp  
   solve_minlp();
   bool success = solution_is_integer();
