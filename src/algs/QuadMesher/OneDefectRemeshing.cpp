@@ -836,11 +836,12 @@ int OneDefectPatch::remesh_5_sided_patch()
 bool OneDefectPatch::is_quad_breakable_at(const Vertex *ta)
 {
      // Landmark nodes on the boundary. There are seven such nodes.
-     Vertex *c0, *c1, *c2, *c3, *tb, *tc;
+     Vertex *c0, *c1, *tb, *tc;
+     //     Vertex  *c2, *c3;
      c0 = bound_nodes[ cornerPos[0] ];
      c1 = bound_nodes[ cornerPos[1] ];
-     c2 = bound_nodes[ cornerPos[2] ];
-     c3 = bound_nodes[ cornerPos[3] ];
+     //     c2 = bound_nodes[ cornerPos[2] ];
+     //     c3 = bound_nodes[ cornerPos[3] ];
 
      get_bound_nodes(c0, ta, a1nodes);
      get_bound_nodes(ta, c1, a2nodes);
@@ -893,11 +894,12 @@ bool OneDefectPatch::is_4_sided_convex_loop_quad_meshable()
      if (segSize[0] < 3) return 0;
 
      // Landmark nodes on the boundary. There are seven such nodes.
-     Vertex *c0, *c1, *c2, *c3, *ta, *tb, *tc;
+     Vertex *c0, *c1, *ta, *tb, *tc;
+     //     Vertex *c2, *c3;
      c0 = bound_nodes[ cornerPos[0] ];
      c1 = bound_nodes[ cornerPos[1] ];
-     c2 = bound_nodes[ cornerPos[2] ];
-     c3 = bound_nodes[ cornerPos[3] ];
+     //     c2 = bound_nodes[ cornerPos[2] ];
+     //     c3 = bound_nodes[ cornerPos[3] ];
 
      // First let us prioritieze vertices on the first segment that will
      // be tried for splitting the region. First of all, if #of irregular

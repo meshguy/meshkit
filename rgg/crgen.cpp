@@ -1233,25 +1233,17 @@ int CCrgen::read_inputs_phase2()
   }
   // set some variables
   assm_meshfiles.resize(nassys);
-
-  int flag = 0;
   assm_location.resize(nassys);
+
   for(int i = 0; i < tot_assys; i++){
     for (int j = 0; j < nassys; j++){
       if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
 	assm_meshfiles[j]+=1;
 	assm_location[j].push_back(i);
-	flag = 1;
 	break;
       }
     }
   }
-  // for(int i = 0; i < nassys; i++){
-  //   for (int j = 0; j < (int) assm_location[i].size(); j++){
-  //     //      std::cout << assm_location[i][j]<<std::endl;
-  //   }
-  // }
-
   return iBase_SUCCESS;
 }
 
@@ -1733,7 +1725,7 @@ int CCrgen::create_neumannset() {
 
 #ifdef HAVE_MOAB  
     int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
-    double z1 = 0.0, z2 = 0.0;
+    double z1 = 0.0;
     iBase_TagHandle ntag1, gtag1;
     iBase_EntityHandle *ents = NULL;
     iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
@@ -1823,7 +1815,6 @@ int CCrgen::create_neumannset() {
 	    ERRORR("Trouble getting number of entities after merge.", err);
 	  }
 	  else {
-	    z2 = ztemp;
 	    iMesh_addEntToSet(impl, (iBase_EntityHandle)(*rit), set_z2, &err);
 	    ERRORR("Trouble getting number of entities after merge.", err);
 	  }
@@ -1936,9 +1927,20 @@ int CCrgen::write_minfofile()
     // get the id for this set
     int set_id;
     rval = mbImpl()->tag_get_data(mattag, &this_set, 1, &set_id);
+    if(rval != moab::MB_SUCCESS) {
+      std::cerr<<"getting tag data failed Code:";
+      std::string foo = ""; mbImpl()->get_last_error(foo);
+      std::cerr<<"File Error: "<<foo<<std::endl;
+      return 1;
+    }
     char name[NAME_TAG_SIZE];
     rval = mbImpl()->tag_get_data(ntag, &this_set, 1, &name);
-
+    if(rval != moab::MB_SUCCESS) {
+      std::cerr<<"getting tag data failed Code:";
+      std::string foo = ""; mbImpl()->get_last_error(foo);
+      std::cerr<<"File Error: "<<foo<<std::endl;
+      return 1;
+    }
     // check for the special block _xp created in AssyGen stage 
     // now print out elements for each pin on the mesh info file
     if(name[0]=='_' && name[1]=='x' && name[2] == 'p'){

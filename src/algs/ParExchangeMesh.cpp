@@ -54,7 +54,7 @@ void ParExchangeMesh::execute_this()
     iBase_EntitySetHandle entityset = reinterpret_cast<iBase_EntitySetHandle> (me->mesh_handle());
     TDParallel *td_par = (TDParallel *) entity->get_TD(&TDParallel::is_parallel);
     if (td_par == NULL) ECERRCHK(MK_FAILURE, "Exchange entity should have partitioned information.");
-    int charge_p = td_par->get_charge_proc();
+    unsigned int charge_p = td_par->get_charge_proc();
 
     if (m_rank == charge_p) { // send proc
       // get all child meshes
@@ -69,7 +69,7 @@ void ParExchangeMesh::execute_this()
       proc_list->reset();
       
       for (int i = 0; i < n_proc_list; i++) {
-        int proc = proc_list->get_and_step();
+        unsigned int proc = proc_list->get_and_step();
         if (proc != m_rank) {
           int ind = get_shared_list(proc);
           int n_entity = entities.size(); 
@@ -89,11 +89,11 @@ void ParExchangeMesh::execute_this()
   // exchange shared entities
   if (debug_par_exchange_mesh) {
     std::cout << "m_shared_procs_size=" << m_shared_procs.size() << std::endl;
-    for (int i = 0; i < m_shared_procs.size(); i++) {
+    for (unsigned int i = 0; i < m_shared_procs.size(); i++) {
       std::cout << "m_shared_procs[" << i << "]=" << m_shared_procs[i] << std::endl;
     }
     std::cout << "m_shared_entities_size=" << m_shared_entities.size() << std::endl;
-    for (int i = 0; i < m_shared_entities.size(); i++) {
+    for (unsigned int i = 0; i < m_shared_entities.size(); i++) {
       std::cout << "m_shared_entities_range[" << i << "]_size=" << m_shared_entities[i]->size() << std::endl;
     }
   }
@@ -140,7 +140,7 @@ void ParExchangeMesh::print_mesh()
 
   for (moab::EntityType type = MBVERTEX; type != MBMAXTYPE; type++) {
     entities.clear();
-    rval = mk_core()->moab_instance()->get_entities_by_type(NULL, type, entities);
+    rval = mk_core()->moab_instance()->get_entities_by_type(0, type, entities);
     MBERRCHK(rval, mk_core()->moab_instance());
 
     for (moab::Range::iterator rit = entities.begin(); rit != entities.end(); rit++) {
@@ -158,7 +158,7 @@ void ParExchangeMesh::print_mesh()
         std::vector<moab::EntityHandle> connect;
         rval = mk_core()->moab_instance()->get_connectivity(&(*rit), 1, connect);
         MBERRCHK(rval, mk_core()->moab_instance());
-        int n_conn = connect.size();
+	//        int n_conn = connect.size();
         //std::cout << ", connect=";
         //for (int j = 0; j < n_conn; j++) {
         //std::cout << connect[j] << " ";

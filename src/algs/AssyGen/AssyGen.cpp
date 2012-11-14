@@ -1974,12 +1974,10 @@ namespace MeshKit
 
     // name the innermost outer covering common for both rectangular and hexagonal assembliees
     if(m_nDimensions >0){
-      int tag_no;
       for (int nTemp1 = 1; nTemp1 <=m_nDuct; nTemp1++){
 	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	  if(strcmp ( m_szMMAlias(nTemp1, 1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
 	    sMatName =  m_szAssmMat(p);
-	    tag_no=p;
 	  }
 	}
 
@@ -2382,10 +2380,8 @@ namespace MeshKit
 
 
 	    // now search for the full name of the abbreviated Cell Mat
-	    int tag_no;
 	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		tag_no = p;
 		sMatName =  m_szAssmMat(p);
 	      }
 	    }
@@ -2643,10 +2639,8 @@ namespace MeshKit
 
 
 	  // now search for the full name of the abbreviated Cell Mat
-	  int tag_no;
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	    if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      tag_no = p;
 	      sMatName =  m_szAssmMat(p);
 	    }
 	  }
@@ -2666,10 +2660,8 @@ namespace MeshKit
 
 
 	    // now search for the full name of the abbreviated Cell Mat
-	    int tag_no;
 	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		tag_no = p;
 		sMatName =  m_szAssmMat(p);
 	      }
 	    }
@@ -2788,10 +2780,8 @@ namespace MeshKit
 
 
 	    // now search for the full name of the abbreviated Cell Mat
-	    int tag_no;
 	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		tag_no = p;
 		sMatName =  m_szAssmMat(p);
 	      }
 	    }

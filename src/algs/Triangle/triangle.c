@@ -11705,6 +11705,7 @@ vertex endpoint2;
   vertex newvertex;
   enum insertvertexresult success;
   enum finddirectionresult collinear;
+  (void) collinear;
   REAL ex, ey;
   REAL tx, ty;
   REAL etx, ety;
@@ -13182,7 +13183,7 @@ struct behavior *b;
 {
   struct osub subsegloop;
   int dummy;
-
+  (void) dummy;
   traversalinit(&m->subsegs);
   subsegloop.ssorient = 0;
   subsegloop.ss = subsegtraverse(m);
@@ -13255,6 +13256,7 @@ int triflaws;
   REAL multiplier, divisor;
   int acuteorg, acuteorg2, acutedest, acutedest2;
   int dummy;
+  (void) dummy;
   int i;
   triangle ptr;                     /* Temporary variable used by stpivot(). */
   subseg sptr;                        /* Temporary variable used by snext(). */

@@ -561,6 +561,8 @@ namespace arc {
       int n_before = candidate_curves.size();
       candidate_curves.erase( *i );
       int n_after = candidate_curves.size();
+      (void) n_before;
+      (void) n_after;
       //if(gen::error(n_before!=n_after+1,"could not erase curve")) {
       //  return MB_FAILURE;
       //}

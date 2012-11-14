@@ -689,6 +689,7 @@ int IntersectMesh::compute(iMesh_Instance outMesh, iBase_EntitySetHandle set) {
    unsigned char used = 1;
    unsigned char unused = 0; // for red flags
    MBErrorCode rval;
+   (void) rval;
    while (!blueQueue.empty()) {
       // flags for the side : 0 means a red triangle not found on side
       // a paired red not found yet for the neighbors of blue

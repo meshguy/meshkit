@@ -155,7 +155,7 @@ void ParallelMesher::setup_this()
 void ParallelMesher::check_partition(TDParallel* td_par, ModelEnt* me, int dim)
 {
   bool b_partitioned = false;
-  int charge_p = td_par->get_charge_proc();
+  unsigned int charge_p = td_par->get_charge_proc();
   if (m_rank == charge_p) { // charge processor
     if (dim == 2) {
       m_sEntity[MESH_INTER_SURF].insert(me);
@@ -176,7 +176,7 @@ void ParallelMesher::check_partition(TDParallel* td_par, ModelEnt* me, int dim)
     DLIList<int>* shared_procs = td_par->get_shared_proc_list();
     int n_shared = shared_procs->size();
     for (int i = 0; i < n_shared; i++) {
-      if (m_rank == shared_procs->get_and_step()) { // shared processor
+      if (m_rank == (unsigned int)shared_procs->get_and_step()) { // shared processor
         if (dim == 2) {
           m_sEntity[SEND_POST_SURF_MESH].insert(me);
           m_sEntity[RECV_SURF_MESH].insert(me);
@@ -269,7 +269,7 @@ void ParallelMesher::print_mesh()
 
   for (moab::EntityType type = MBVERTEX; type != MBMAXTYPE; type++) {
     entities.clear();
-    rval = mk_core()->moab_instance()->get_entities_by_type(NULL, type, entities);
+    rval = mk_core()->moab_instance()->get_entities_by_type(0, type, entities);
     MBERRCHK(rval, mk_core()->moab_instance());
 
     for (moab::Range::iterator rit = entities.begin(); rit != entities.end(); rit++) {

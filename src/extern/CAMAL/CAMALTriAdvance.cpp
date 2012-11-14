@@ -88,7 +88,7 @@ void CAMALTriAdvance::execute_this()
     assert(num_pts >= (int)bdy_vrange.size());
     if (num_pts > (int)bdy_vrange.size()) {
       coords.resize(3*(num_pts-bdy_vrange.size()));
-      int pts_returned = triadv.get_points_buf(coords.size(), &coords[0], bdy_vrange.size());
+      unsigned int pts_returned = triadv.get_points_buf(coords.size(), &coords[0], bdy_vrange.size());
       if (pts_returned != num_pts-bdy_vrange.size()) 
         ECERRCHK(MK_FAILURE, "Number of new points returned from TriAdv doesn't agree with previous value output.");
     
@@ -103,7 +103,7 @@ void CAMALTriAdvance::execute_this()
     MBERRCHK(rval, mk_core()->moab_instance());		
 
       //create the tris, get a direct ptr to connectivity
-    moab::EntityHandle starth, *connect, *tmp_connect;
+    moab::EntityHandle starth, *connect;
     rval = iface->get_element_connect(num_tris, 3, moab::MBTRI, 1, starth, connect);
     MBERRCHK(rval, mk_core()->moab_instance());
 
@@ -137,7 +137,7 @@ void CAMALTriAdvance::print_debug(ModelEnt *me, std::vector<double> &coords,
   std::cout << "Surface_bounadry_mesh: mesh_size = "
             << me->mesh_interval_size() << std::endl;
   
-  for (int i = 0; i < bdy_vrange.size(); i++) {
+  for (int i = 0; i < (int) bdy_vrange.size(); i++) {
     std::cout << coords[3 * i] << "  " << coords[3 * i + 1]
               << "  " << coords[3 * i + 2] << std::endl;
   }
@@ -146,7 +146,7 @@ void CAMALTriAdvance::print_debug(ModelEnt *me, std::vector<double> &coords,
             << ", group_size:" << group_sizes.size() << std::endl;
   
   int index = 0;
-  for (int i = 0; i < group_sizes.size(); i++) {
+  for (int i = 0; i < (int) group_sizes.size(); i++) {
     int g_size = group_sizes[i];
     std::cout << "boundary_order_group" << i + 1 << ", group_size="
               << g_size << std::endl;

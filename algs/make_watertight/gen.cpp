@@ -47,6 +47,7 @@ namespace gen {
     MBErrorCode result;
     double coords[3];
     int n_precision = 20;
+    (void) n_precision;
     result = MBI()->get_coords( &vertex, 1, coords );
     if(MB_SUCCESS!=result) std::cout << "vert=" << vertex << std::endl;
     assert(MB_SUCCESS == result);

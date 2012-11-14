@@ -1363,6 +1363,7 @@ int Mesh::refine_tri_edge( Vertex *v0, Vertex *v1, int numSegments,
      assert( getAdjTable(0,2) );
 
      size_t nSize;
+     (void) nSize;
      newnodes.clear();
      newfaces.clear();
      assert( numSegments >= 2);

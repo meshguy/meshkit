@@ -8,8 +8,8 @@ using namespace Jaal;
 int
 QuadCleanUp::automatic()
 {
-     int err;
-
+  int err;
+  (void) err;
 //  ****************************************************************************
 // If the mesh is triangular first convert it into Quad mesh ....
 //  ****************************************************************************
@@ -322,6 +322,7 @@ QuadCleanUp::search_flat_quads()
      FaceSequence flatQ, neighs;
 
      int edgefaces[4];
+     (void) edgefaces;
      for (size_t iface = 0; iface < numfaces; iface++) {
           Face *face = mesh->getFaceAt(iface);
           assert(face);

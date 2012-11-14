@@ -84,6 +84,7 @@ void MeshImporter ::readTriFaces( const string &fname)
 
   int id, numfaces, numelemnodes, boundflag, bmark;
   int n0, n1, n2, n3, facetype;
+  (void) facetype;
   
   infile >> numfaces >> numelemnodes >> boundflag;
 

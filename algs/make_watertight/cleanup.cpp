@@ -188,6 +188,7 @@ namespace cleanup {
 	  assert(3 <= adj_edges0.size());
 	  MBRange adj_skin_edges0 = intersect( adj_edges0, skin_edges );
 	  bool endpt0_is_skin;
+	  (void) endpt0_is_skin;
 	  if(adj_skin_edges0.empty()) endpt0_is_skin = false;
 	  else endpt0_is_skin = true;
 

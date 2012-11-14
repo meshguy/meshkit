@@ -147,7 +147,7 @@ namespace MeshKit
 	
 	// check to see if this node is already dealt with
 	int tmp = 0;
-	for(int n=0; n<nodes.size(); n++){
+	for(int n=0; n< (int) nodes.size(); n++){
 	  if(nodes[n] == qconn[i]){
 	    tmp = n;
 	  }

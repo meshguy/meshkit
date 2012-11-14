@@ -256,7 +256,7 @@ EdgeMesher::~EdgeMesher()
 void EdgeMesher::EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> &coords)
 {
   double umin, umax, measure;
-
+  (void) measure;
     //get the u range for the edge
   iGeom::Error gerr =  ent->igeom_instance()->getEntURange(ent->geom_handle(), umin, umax);
   IBERRCHK(gerr, "Trouble get parameter range for edge.");
@@ -286,6 +286,7 @@ void EdgeMesher::EqualMeshing(ModelEnt *ent, int num_edges, std::vector<double> 
 void EdgeMesher::CurvatureMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords)
 {
   double umin, umax, measure;
+  (void) measure;
   //store the initial edge size, the edge size may be changed during meshing
   int initial_num_edges = num_edges;
 
@@ -549,6 +550,7 @@ void EdgeMesher::DivideIntoMore(ModelEnt *ent, Point3D p0, Point3D pMid, Point3D
 void EdgeMesher::VariableMeshing(ModelEnt *ent, int &num_edges, std::vector<double> &coords)
 {
   double umin, umax, measure;
+  (void) measure;
   // because of that, keep track of the first node position and last node position
   // first node position does not change, but the last node position do change
   // coords will contain all nodes, including umax in Urecord!

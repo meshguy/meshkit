@@ -45,15 +45,14 @@ const moab::EntityType* EBMesher::output_types()
 
 EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
                    double size, bool use_geom, int add_layer)
-  : MeshScheme(mkcore, me_vec), m_dInputSize(size),
-    m_nAddLayer(add_layer), m_bUseGeom(use_geom)
+  : MeshScheme(mkcore, me_vec), m_nAddLayer(add_layer),  m_dInputSize(size), m_bUseGeom(use_geom)
 {
   m_mesh = mkcore->imesh_instance()->instance();
   m_hRootSet = mkcore->imesh_instance()->getRootSet();
   m_nStatus = OUTSIDE;
   m_iStartHex = 0;
   m_hObbTree = NULL;
-  m_hTreeRoot = NULL;
+  m_hTreeRoot = 0;
 
 #ifdef HAVE_MOAB
   // create tags with MOAB for dense tags
@@ -286,7 +285,7 @@ void EBMesher::set_tree_root(ModelEnt* me)
   }
   else { // facet data input case
     MBEntityHandle meshset;
-    if (m_bUseWholeGeom) meshset = NULL;
+    if (m_bUseWholeGeom) meshset = 0;
     else meshset = me->mesh_handle();
 
     // get triangles
@@ -306,7 +305,7 @@ void EBMesher::set_tree_root(ModelEnt* me)
 void EBMesher::find_intersections()
 {
   std::cout << "starting to find intersections." << std::endl;
-  int i, err;
+  int i;
   //m_vnHexStatus.resize(m_nHex, 1); // initialize all hex as outside
   m_vnHexStatus.resize(m_nHex, 0); // initialize all hex as inside
 
@@ -355,6 +354,7 @@ void EBMesher::export_mesh(const char* file_name, bool separate)
     int n_outside_hex = 0;
     int n_boundary_hex = 0;
     int hex_stat;
+    (void) hex_stat;
     std::vector<iBase_EntityHandle> insideHex, outsideHex, bndrHex;
     for (i = 0; i < hex_size; i++) {
       if (hex_status[i] == 0) {
@@ -710,6 +710,7 @@ int EBMesher::make_scd_hexes()
   // create vertex and hex sequences
   int i;
   double max_coords[3];
+  (void) max_coords;
   for (i = 0; i < 3; i++) {
     max_coords[i] = m_origin_coords[i] + m_nDiv[i]*m_dIntervalSize[i];
   }
@@ -860,6 +861,9 @@ void EBMesher::fire_rays(int dir)
   double startPnt[3], endPnt[3];
   int otherDir1 = (dir + 1)%3;
   int otherDir2 = (dir + 2)%3;
+ // harmless as this expression (does nothing) so that a compiler sees it is used.
+  (void) iNodeEnd;
+  (void) nNodeSlice;
 
   for (j = 1; j < m_nNode[otherDir2] - 1; j++) {
     for (i = 1; i < m_nNode[otherDir1] - 1; i++) {
@@ -1542,7 +1546,6 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
 
 bool EBMesher::make_edge(double ePnt[6], std::vector<iBase_EntityHandle>& edge_handles)
 {
-  int status;
   iBase_ErrorType err;
   iBase_EntityHandle vertex_handle[2], edge_handle;
   iBase_EntityHandle* pVertexHandle = &vertex_handle[0];
@@ -1753,6 +1756,8 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
   std::cout << "starting get_volume_fraction." << std::endl;
   int i, j, k, l, n, iHex, dir, nIntersect, rayIndex[3], index[3],
     otherDir1, otherDir2, err, nParent;
+  (void) otherDir1;
+  (void) otherDir2;
   double tolerance = 1e-12, dDistance, elem_origin[3],
     elem_interval_size[3], startPnt[3], endPnt[3], rayMaxEnd[3];
   moab::ErrorCode rval;
