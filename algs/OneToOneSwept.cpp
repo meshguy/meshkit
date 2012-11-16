@@ -2676,7 +2676,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 					assert(!err);
 							
 			
-					if ((j==0))
+					if (j==0)
 					{
 						if (k==0)
 						{

@@ -10,7 +10,7 @@ using namespace std;
 
 template <class T>
 class ObjectPool {
-    class Pool;
+    struct Pool;
 public:
 
     ObjectPool() {

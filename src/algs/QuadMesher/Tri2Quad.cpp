@@ -326,7 +326,7 @@ void Tri2Quads::matchnode(BinaryNode* v)
           return;
      }
 
-     if ((degree == 3)) {
+     if (degree == 3) {
 
           if (required_topology == ALL_QUADS) {
                BinaryNode *vsib = v->getSibling();

@@ -115,7 +115,7 @@ int Jaal::dijkstra_shortest_path_test()
                id = i;
           }
           size_t id;
-          bool pass( const Vertex *v) {
+          bool pass( const Vertex *v) const{
                return v->getID() != id;
           }
      };
