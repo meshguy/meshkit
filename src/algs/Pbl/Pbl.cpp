@@ -7,7 +7,7 @@
 #endif
 namespace MeshKit
 {
-  bool debug =false;
+  bool debug =true;
   // static registration of this mesh scheme
   moab::EntityType Pbl_tps[] = { moab::MBTRI,
 				 moab::MBHEX,
@@ -25,6 +25,8 @@ namespace MeshKit
       // Output:   none
       // ---------------------------------------------------------------------------
   {
+    m_SurfId = -1;
+    m_NeumannSet = -1;
     m_nLineNumber = 0;
     szComment = "!";
     MAXCHARS = 300;
@@ -92,36 +94,68 @@ namespace MeshKit
     MBERRCHK(mb->tag_get_handle("MATERIAL_SET", 1, moab::MB_TYPE_INTEGER, MTag),mb);
     MBERRCHK(mb->tag_get_handle("GLOBAL_ID", 1, moab::MB_TYPE_INTEGER, GIDTag),mb);
 
-    moab::Range sets, verts;
+    moab::Range sets, verts, n_sets;
     int geom_dim = 2;
-    // const void* gid[] = { &m_SurfId };
     const void* gdim[] = {&geom_dim};
     
     // get all the entity sets with Geom Dimension=2
-    MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &GDTag, gdim, 1 , sets, moab::Interface::INTERSECT, false),mb);
+    MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &GDTag, gdim, 1 , sets, moab::Interface::INTERSECT, false), mb);
 
+    MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &NTag, 0, 1 , n_sets),mb);
+
+    moab::Range::iterator set_it;
+    moab::EntityHandle this_set;
+    for (set_it = n_sets.begin(); set_it != n_sets.end(); set_it++)  {
+      
+      this_set = *set_it;
+      
+      // get the id for this set
+      int set_id;
+      MBERRCHK(mb->tag_get_data(NTag, &this_set, 1, &set_id), mb);
+      if(set_id == m_NeumannSet)
+	break;
+      this_set = NULL;
+    }
+    if (debug)
+      std::cout << "Looking for NS with id " << m_NeumannSet << ". Total NS found are: "<< n_sets.size() << std::endl;
+
+    
     // get the quads for the surface with input global ids
     moab::EntityHandle s1;
     MBRange quads, nodes;
     int dims; // variable to store global id of all sets with GD=2
 
-    // from the input surface get the quads and nodes in a range
-    for(MBRange::iterator rit=sets.begin(); rit != sets.end(); ++rit){
-      s1 = *rit;
-      MBERRCHK(mb->tag_get_data(GIDTag, &s1, 1, &dims),mb);
-      if(dims == m_SurfId){
-	MBERRCHK(mb->get_entities_by_type(s1, moab::MBQUAD, quads),mb);
-	MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, MBInterface::UNION),mb);
-	if (debug) {
-	  std::cout << "Found surface with id : " << m_SurfId <<  std::endl;
-	  std::cout << "#Quads in this surface: " << quads.size() << std::endl;
-	  std::cout << "#Nodes in this surface: " << nodes.size() << std::endl;
+
+    if(m_NeumannSet != -1){
+      MBERRCHK(mb->get_entities_by_type(this_set, moab::MBQUAD, quads),mb);
+      MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, MBInterface::UNION),mb);
+      if (debug) {
+	std::cout << "Found NeumannSet with id : " << m_NeumannSet <<  std::endl;
+	std::cout << "#Quads in this surface: " << quads.size() << std::endl;
+	std::cout << "#Nodes in this surface: " << nodes.size() << std::endl;
+      }
+    }
+    else{
+      // from the input surface get the quads and nodes in a range
+      for(MBRange::iterator rit=sets.begin(); rit != sets.end(); ++rit){
+	s1 = *rit;
+	MBERRCHK(mb->tag_get_data(GIDTag, &s1, 1, &dims),mb);
+
+	if(dims == m_SurfId && m_SurfId != -1){
+	  MBERRCHK(mb->get_entities_by_type(s1, moab::MBQUAD, quads),mb);
+	  MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, MBInterface::UNION),mb);
+	  if (debug) {
+	    std::cout << "Found surface with id : " << m_SurfId <<  std::endl;
+	    std::cout << "#Quads in this surface: " << quads.size() << std::endl;
+	    std::cout << "#Nodes in this surface: " << nodes.size() << std::endl;
+	  }
 	}
       }
     }
+ 
 
     //call extrude and extrude these quads 
-    std::vector <bool> node_status(false);
+    std::vector <bool> node_status(false); // size of verts of bl surface
     node_status.resize(nodes.size());
     MBRange edges, hexes, hex_edge, quad_verts, adj_quads;  
     std::vector<EntityHandle> conn(m_Intervals*8), qconn(4), new_vert(m_Intervals*nodes.size()), old_hex, old_hex_conn(8);
@@ -159,8 +193,7 @@ namespace MeshKit
 	  // another loop to number of boundary layers
 	  for(int j=0; j< m_Intervals; j++){
 	    
-	    // now compute the coords of 4 new points that the quad for the new hex
-	    
+	    // now compute the coords of the new vertex
 	    coords_new_quad[0] = coords_bl_quad [0]-(j+1)*m_Thickness*xdisp;
 	    coords_new_quad[1] = coords_bl_quad [1]-(j+1)*m_Thickness*ydisp;
 	    coords_new_quad[2] = coords_bl_quad [2]-(j+1)*m_Thickness*zdisp;
@@ -191,18 +224,21 @@ namespace MeshKit
 	  }
 	}
       }
-
+      if (debug) 
+	std::cout << "set connectivity of the old_hex " << std::endl;
       // set connectivity of the old_hex
       for(int p=0; p<8; p++){
-	for(int q=0; q<4; q++){
+	for(int q=0; q<4; q++){ 
 	  if (old_hex_conn[p] == qconn[q]){
 	    old_hex_conn[p] = conn[8*(m_Intervals-1) + q];
 	  }
 	}
       }
+      
       MBERRCHK(mb->set_connectivity(old_hex[0], &old_hex_conn[0], 8), mb); 
       old_hex.clear();
-
+      if (debug) 
+	std::cout << "create boundary layer hexes" << std::endl;
       // create boundary layer hexes
       for(int j=0; j< m_Intervals; j++){
 	MBERRCHK(mb->create_element(MBHEX, &conn[j*8], 8, hex),mb);
@@ -289,6 +325,15 @@ namespace MeshKit
 	  IOErrorHandler(INVALIDINPUT);
 	std::cout  << m_Card << " read: "<< m_SurfId <<std::endl;
       }
+      // Get BL surface via neumann set or sideset
+      if (szInputString.substr(0,10) == "neumannset"){
+	std::istringstream szFormatString (szInputString);
+	szFormatString >> m_Card >> m_NeumannSet;
+	if(m_NeumannSet < 0 || szFormatString.fail())
+	  IOErrorHandler(INVALIDINPUT);
+	std::cout  << m_Card << " read: "<< m_NeumannSet <<std::endl;
+      }
+ 
       // Get thickness
       if (szInputString.substr(0,9) == "thickness"){
 	std::istringstream szFormatString (szInputString);
