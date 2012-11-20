@@ -131,7 +131,7 @@ namespace MeshKit {
     
     // variables to parse
     std::string m_InputFile, m_MeshFile, m_OutFile;
-    int m_SurfId;
+    int m_SurfId, m_NeumannSet;
     double m_Thickness;
     int m_Intervals;
     double m_Bias;
