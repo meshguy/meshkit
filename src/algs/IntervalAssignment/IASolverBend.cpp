@@ -447,13 +447,13 @@ void IASolverBend::initialize_ip_bends()
       bend.numDeltaMinus = 1;      
     }
 
-    /**/
+    /*
     // debug, test negative deltas by starting with an xl that's too high
     x += 2.;
     xl = bend.xl = floor(x);
     bend.numDeltaPlus = 1;
     bend.numDeltaMinus = 1;      
-    /**/
+    */
 
     // avoid minus deltas that allow the x solution to be less than 1
     if (bend.numDeltaMinus > xl - 1. )
