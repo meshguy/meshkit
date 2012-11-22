@@ -46,7 +46,7 @@ bool IASolverTool::is_integer(const double x) const
   
 bool IASolverTool::valid_solution() const
 {
-  return (iaSolution && iaData && (iaSolution->x_solution.size() == iaData->I.size()));
+  return (iaSolution && iaData && (iaSolution->x_solution.size() >= iaData->I.size())); // could be bigger if deltas are retained
 }
   
     
@@ -215,6 +215,18 @@ double IASolverTool::even_value(const int i) const
   return g_i;
 }
 
+void IASolverTool::even_floor_ceil(double s, double &s_floor, double &s_ceil) const
+{
+  s_floor = 2. * floor(s / 2);
+  s_ceil = s_floor + 2.;
+}
+  
+void IASolverTool::int_floor_ceil(double x, double &x_floor, double &x_ceil) const
+{
+  x_floor = floor(x);
+  x_ceil = x_floor + 1.;
+}
+  
   // compare to 
   // bool IANlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
   // does the same thing with the data in ipopt format

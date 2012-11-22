@@ -44,28 +44,12 @@ private:
   void cleanup();
   
   // top level
-  bool solve_minlp();
-  bool solve_cos();
-  bool solve_parabola();
-
-  // workhorse
-  bool solve_intwave(IAIntWaveNlp *mynlp);
-
-  // mixed-integer solution stuff. 
-  // MI NLP - solve a mixed integer nlp that we hope has an integer solution near the relaxed solution.
-  // gets most of the variables integer
-  // rounding heuristic
-  // find a varaible that isn't integer yet, and whether we should increase or decrease its value
-  // takes care of the remaining problem
-
-  // value of objective function increase if x is rounded to the next farther integer, and index of x
-  typedef std::pair<int,int> RoundingX;  // x index, x bound
-  typedef std::multimap<double, RoundingX> RoundingMap; // obj value increase, roundingX
-  bool find_many_non_integer(RoundingMap &rounding_map);
-  bool constrain_many_non_integer(RoundingMap &rounding_map);
-  void back_off(RoundingMap &rounding_map);
-  void report_many_non_integer(RoundingMap &rounding_map);
-
+  // several different problem formulations and their solutions are possible
+  enum SolverType {ROUNDING, BEND, COS, PARABOLA};
+  bool solve_round();
+  bool solve_wave(const SolverType solver_type);
+  // workhorse, lower level routines
+  bool solve_wave_workhorse(IAIntWaveNlp *mynlp);
 
 };
 

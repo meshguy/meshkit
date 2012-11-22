@@ -60,6 +60,9 @@ public:
   // the even one rounds nearly-integer x to integer x
   double equal_value(int i) const;
   double even_value(int i) const;
+
+  void even_floor_ceil(double s, double &s_floor, double &s_ceil) const;
+  void int_floor_ceil(double x, double &x_floor, double &x_ceil) const;
   
   // first is true if constraint is satisfied
   // second contains the value of the constraint

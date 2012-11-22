@@ -386,7 +386,7 @@ void IAIntWaveNlp::build_hessian()
     // assuming all the coefficients are 1    
   for (unsigned int c = 0; c< data->sumEvenConstraints.size(); ++c)
   {
-    for (unsigned int i = 0; i < data->sumEvenConstraints[i].M.size(); ++i)
+    for (unsigned int i = 0; i < data->sumEvenConstraints[c].M.size(); ++i)
     {
       int ii = data->sumEvenConstraints[c].M[i].col;
       for (unsigned int j = 0; j <=i; ++j)

@@ -1,3 +1,5 @@
+
+
 // main file for stubbed version of interval assignment
 #include <stdio.h>
 #include <iostream>
@@ -128,6 +130,7 @@ void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides,
       MeshKit::IAVariable *v = ia_interface->create_variable( NULL, MeshKit::SOFT, goal_intervals);
       side2.push_back(v);
     }
+    num_vars += num_curves;
 
     // if we have two non-trivial opposite sides, then constrain them to be equal
     if (side1.size() && side2.size())
@@ -136,9 +139,9 @@ void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides,
     }
 
     // add a sum-even constraint
-    if (i==0)
+    if (1 && i==0)
     {
-      // printf("sum-even side: %d", i);
+      printf("sum-even side: %d", i);
       assert( side2.size() );
       ia_interface->constrain_sum_even(side2);
     }
@@ -197,7 +200,7 @@ void test_one_pair()
 //  set_decoupled_pairs(ia_interface, 1, 3.2, 12.1, correct_solution);
   ia_interface->execute_this(); 
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
-  // zzyk assert( solution_correct );
+  assert( solution_correct );
 }
 
 void test_many_pairs()
@@ -259,10 +262,10 @@ void test_growing_chain()
 
 void mapping_test() 
 {
-
+  
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   ia_interface->destroy_data();
-
+  
   MeshKit::ModelEnt* me_curves[4] = {0,0,0,0};
   // stubbed
   me_curves[0] = new MeshKit::ModelEnt();
@@ -279,9 +282,44 @@ void mapping_test()
   side1.push_back(me_curves[1]); side2.push_back(me_curves[3]);
   ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1), 
                                     ia_interface->make_constraint_group(side2));
-
+  
   // if there are loops, and the loops have strictly less than 4 curves, then
   // ia_interface->constrain_sum_even( ia_interface->make_constraint_group(curves in loop) );
+  
+  ia_interface->execute_this(); 
+  
+  delete_ia_interface( ia_interface );
+}
+
+
+void paving_test() 
+{
+  
+  MeshKit::IAInterface *ia_interface = new_ia_interface();
+  ia_interface->destroy_data();
+    
+  MeshKit::ModelEnt* me_curves[4] = {0,0,0,0};
+  // stubbed
+  me_curves[0] = new MeshKit::ModelEnt();
+  me_curves[1] = new MeshKit::ModelEnt();
+  me_curves[2] = new MeshKit::ModelEnt();
+  me_curves[3] = new MeshKit::ModelEnt();
+  // convert moab entity handles to ModelEnt* and place in me_curves... ask Tim how
+  for (int i = 0; i < 4; ++i)
+  {
+    me_curves[i]->meshIntervalSize = 1.; 
+    me_curves[i]->entMeasure = 6. + (i==0 ? 1 : 0); //force odd
+    me_curves[i]->meshIntervals = me_curves[i]->entMeasure / me_curves[i]->meshIntervalSize;
+  }
+  
+  MeshKit::MEntVector loop1;
+  loop1.push_back(me_curves[0]); 
+  loop1.push_back(me_curves[1]);
+  loop1.push_back(me_curves[2]); 
+  loop1.push_back(me_curves[3]);
+  ia_interface->constrain_sum_even(ia_interface->make_constraint_group(loop1));
+  
+  ia_interface->execute_this(); 
   
   delete_ia_interface( ia_interface );
 }
@@ -289,10 +327,11 @@ void mapping_test()
 int main(int argv, char* argc[])
 {
   // stubbed  
-  test_one_pair();
-  test_many_pairs();
-  test_growing_chain();
-  test_long_chain();
+  // test_one_pair();
+  // test_many_pairs();
+//  test_growing_chain();
+  // test_long_chain(); ma27 has memory issues
+  paving_test();
 
 /* 100 long chain test
   srand(9384757); // debug

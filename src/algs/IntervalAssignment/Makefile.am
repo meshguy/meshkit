@@ -45,7 +45,13 @@ IAWeights.cpp \
 IAWeights.hpp \
 IAWeights.cpp \
 IPData.cpp \
-IPData.hpp 
+IPData.hpp \
+IPBend.cpp \
+IPBend.hpp \
+IASolverBend.cpp \
+IASolverBend.hpp \
+IABendNlp.cpp \
+IABendNlp.hpp
 
 
 # The list of header files which are to be installed

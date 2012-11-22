@@ -34,7 +34,7 @@ const int IANlp::p_norm = 3;
 // constructor
 IANlp::IANlp(const IAData *data_ptr, IASolution *solution_ptr, const bool set_silent): 
 data(data_ptr), solution(solution_ptr), 
-neleJac(0), silent(set_silent), debugging(true), verbose(false) // true
+neleJac(0), silent(set_silent), debugging(true), verbose(true) // true
 {
   assert(p_norm >= 2); // needed for continuity of derivatives anyway
   if (!silent)
@@ -472,6 +472,7 @@ double IANlp::eval_even_sum(const int i, const Number* x) const
   {
     printf(" sum-even row %d: ", i);
   }
+  assert( i < (int) data->sumEvenConstraints.size() );
   double s = data->sumEvenConstraints[i].rhs;
   for (unsigned int j = 0; j < data->sumEvenConstraints[i].M.size(); ++j)
   {
@@ -497,6 +498,7 @@ double IANlp::eval_equal_sum(const int i, const Number* x) const
   // rhs is incorporated into the upper and lower bounds instead: 
   // const double g_i = data->constraints[i].rhs; 
   double g_i = 0.;
+  assert( i < (int) data->constraints.size() );
   for (unsigned int j = 0; j < data->constraints[i].M.size(); ++j)
   {
     g_i += x[ data->constraints[i].M[j].col ] * data->constraints[i].M[j].val;
@@ -585,10 +587,16 @@ void IANlp::finalize_solution(SolverReturn status,
       }
       */
       printf("\nFinal value of the constraints, zero if satisfied:\n");
-      printf("sum-equal:\n");
-      for (Index i=0; i<m ;i++) {
-        if (i==(int)data->constraints.size())
+      for (Index i=0; i<m ;i++) 
+      {
+        // header constraint type
+        if ((i==0) && (data->constraints.size() > 0))
+          printf("sum-equal:\n");
+        if ( (i== (int) data->constraints.size()) && (data->sumEvenConstraints.size() > 0) )
           printf("sum-even:\n");
+        if ( i== (int) data->constraints.size() + (int) data->sumEvenConstraints.size() )
+          printf("other types:\n");
+
         printf("g(%d) = %e\n", i, g[i]);
       }
     }

@@ -15,3 +15,9 @@ MKVersion.h   #made by config
 
     ~/Documents/meshkit/
 /moab/MOAB/src/moab/Interface.hpp
+
+
+------
+long chain returns:
+MA27BD retrurned iflag=-4 and requires more memory.
+ Increase liw from 7328020 to 7328020 and la from 6885430 to 68855210 and factorize again.

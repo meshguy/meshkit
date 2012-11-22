@@ -1,3 +1,4 @@
+
 // IASolverInt.cpp
 // Interval Assignment for Meshkit
 //
@@ -7,7 +8,8 @@
 #include "IASolution.hpp"
 #include "IARoundingNlp.hpp"
 #include "IASolverRelaxed.hpp"
-#include "IAMINlp.hpp"
+#include "IASolverBend.hpp"
+// #include "IAMINlp.hpp"
 #include "IAIntCosNlp.hpp"
 #include "IAIntParabolaNlp.hpp"
 
@@ -38,12 +40,12 @@ IASolverInt::~IASolverInt()
   delete ip_data();
 }
     
-bool IASolverInt::solve_intwave(IAIntWaveNlp *mynlp)
+bool IASolverInt::solve_wave_workhorse(IAIntWaveNlp *mynlp)
 {
   if (debugging)
   {
-    printf("IASolverInt::solve_intwave() - ");        
-    printf("Attempting to enforce an integer and even solution to the relaxed NLP by adding sine-wave constraints.\n");
+    printf("IASolverInt::solve_wave() - ");        
+    printf("Attempting to enforce an integer and even solution to the relaxed NLP by adding constraints that repeat wave-like at each integer lattice point.\n");
   }
   
   // solver setup  
@@ -243,15 +245,14 @@ bool IASolverInt::solve_intwave(IAIntWaveNlp *mynlp)
 }
 
 
-bool IASolverInt::solve_minlp()
+bool IASolverInt::solve_round()
 {
   // set up and call the separate IARoundingNlp, which has a linear objective to get a natural integer solution 
   // the intuition is this will solve integrality for  most variables all at once
 
   if (debugging)
   {
-    printf("IASolverInt::solve_minlp() - ");        
-    printf("Attempting to find a naturally-integer solution to an NLP.\n");
+    printf("IASolverInt::solve_bend_workhorse() - ");        
   }
 
   
@@ -291,13 +292,25 @@ bool IASolverInt::solve_minlp()
     return (int) status;
   }
   
+  
+  Ipopt::TNLP *tnlp = NULL;
+
+  IARoundingNlp *myianlp = new IARoundingNlp(iaData, ipData, iaSolution, silent);
+  if (debugging) 
+  {          
+    printf("ROUNDING problem formulation\n");
+    printf("Attempting to find a naturally-integer solution by linearizing the objective function.\n");
+    printf("Variables are constrained within [floor,ceil] of relaxed solution.\n");
+  }
+  
   // problem setup
   // a couple of different models, simplest to more complex
-  IARoundingNlp *myianlp = new IARoundingNlp(iaData, ipData, iaSolution, silent);
   // IARoundingFarNlp *myianlp = new IARoundingFarNlp(iaData, ipData, this);
   // IARoundingFar3StepNlp *myianlp = new IARoundingFar3StepNlp(iaData, ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
   // IAIntWaveNlp *myianlp = new IAIntWaveNlp(iaData, ipData, this); // haven't tested this. It compiles and runs but perhaps isn't correct
-  Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
+
+  tnlp = myianlp;
+  Ipopt::SmartPtr<Ipopt::TNLP> mynlp = tnlp; // Ipopt requires the use of smartptrs!
 
   bool try_again = true;
   int iter = 0;
@@ -386,47 +399,71 @@ void IASolverInt::cleanup()
   ;
 }
 
-bool IASolverInt::solve_cos()
+bool IASolverInt::solve_wave(const SolverType solver_type)
 {
-    IAIntWaveNlp *myianlp = new IAIntCosNlp(iaData, ipData, iaSolution, silent);
-    Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
-    if (debugging) printf("Cosine wave\n");
-    return solve_intwave( myianlp );
+  IAIntWaveNlp *myianlp = NULL;
+  if (solver_type == COS) 
+  {
+    if (debugging) printf("Cosine wave.\n");
+    myianlp= new IAIntCosNlp(iaData, ipData, iaSolution, silent);
   }
-
-bool IASolverInt::solve_parabola()
-{
-    IAIntWaveNlp *myianlp = new IAIntParabolaNlp(iaData, ipData, iaSolution, silent);
-    Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
-    if (debugging) printf("Parabola wave\n");
-    return solve_intwave( myianlp );
+  else if (solver_type == PARABOLA)
+  {
+    if (debugging) printf("Parabola wave.\n");
+    myianlp = new IAIntParabolaNlp(iaData, ipData, iaSolution, silent);
   }
+  else
+  {
+    if (debugging) printf("Invalid wave type.\n");
+    return false;
+  }
+    
+  Ipopt::SmartPtr<Ipopt::TNLP> mynlp = myianlp; // Ipopt requires the use of smartptrs!
+  return solve_wave_workhorse( myianlp );
+}
 
 bool IASolverInt::solve()
 {
+  
+  SolverType solver_type = BEND; // BEND;
   
   // debug, try solve_intwave instead 
   // longer term, use intwave as a backup when the faster and simpler milp doesn't work.
   // unfortunately, it appears to find local minima that are far from optimal, even when starting in a well
   
-  // return solve_cos();
-  return solve_parabola();
-  
+  bool solved = false;
+  switch (solver_type) {
+    case COS:
+    case PARABOLA:
+      solved = solve_wave(solver_type);
+      break;
+    case ROUNDING:
+      solved = solve_round();
+      break;
+    case BEND:
+      {
+        IASolverBend sb(iaData, iaSolution, silent);
+        solved = sb.solve();
+      }
+      break;
+    default:
+      solved = false;
+      break;
+  }
 
-  // todo: add a simple rounding term for the even-constraints to minlp  
-  solve_minlp();
   bool success = solution_is_integer();
+  // also check constraints and evenality
   if (success)
   {
     if (!silent)
-      printf("minlp produced integer solution\n");
+      printf("IASolverInt produced integer solution\n");
   }
   else
   {
     // todo: rather than applying the rounding heuristic, implement a form of IARoundingNlp with larger variable bounds, but still with a natural integer solution, by extending x to also depend on a delta_plus and delta_minus extending x beyond xl and xl+1, i.e. x = xl (const) + xh (0-1 var) + delta_plus - delta_minus. With linear objective with weight for xh as before, but weight for delta_plus to be f( xl + 2 ) - f (xl + 1), delta_minus f( xl - 2) - f(xl -1)
     return false; // debug;
     // solve_rounding_heuristic();
-    success = solution_is_integer();
+    // success = solution_is_integer();
   }
   return success;
 }

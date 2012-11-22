@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D2045513164DA8B200A6C803 /* IABendNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2045511164DA8B200A6C803 /* IABendNlp.cpp */; };
+		D2045517164DA8C200A6C803 /* IASolverBend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2045515164DA8C200A6C803 /* IASolverBend.cpp */; };
+		D204551A164DA8D100A6C803 /* IPBend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2045518164DA8D100A6C803 /* IPBend.cpp */; };
 		D2C19DE816407B9E00A76AC7 /* ia_main_stub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DE416407B9E00A76AC7 /* ia_main_stub.cpp */; };
 		D2C19DE916407B9E00A76AC7 /* IAInterfaceStub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DE616407B9E00A76AC7 /* IAInterfaceStub.cpp */; };
 		D2C19DF616407BEA00A76AC7 /* IANlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DF116407BEA00A76AC7 /* IANlp.cpp */; };
@@ -37,6 +40,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D2045511164DA8B200A6C803 /* IABendNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IABendNlp.cpp; path = ../../IABendNlp.cpp; sourceTree = "<group>"; };
+		D2045512164DA8B200A6C803 /* IABendNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IABendNlp.hpp; path = ../../IABendNlp.hpp; sourceTree = "<group>"; };
+		D2045515164DA8C200A6C803 /* IASolverBend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IASolverBend.cpp; path = ../../IASolverBend.cpp; sourceTree = "<group>"; };
+		D2045516164DA8C200A6C803 /* IASolverBend.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolverBend.hpp; path = ../../IASolverBend.hpp; sourceTree = "<group>"; };
+		D2045518164DA8D100A6C803 /* IPBend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IPBend.cpp; path = ../../IPBend.cpp; sourceTree = "<group>"; };
+		D2045519164DA8D100A6C803 /* IPBend.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IPBend.hpp; path = ../../IPBend.hpp; sourceTree = "<group>"; };
 		D2C19DD816407B7800A76AC7 /* ia_main_stub */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ia_main_stub; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2C19DDE16407B7800A76AC7 /* ia_main_stub.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ia_main_stub.1; sourceTree = "<group>"; };
 		D2C19DE416407B9E00A76AC7 /* ia_main_stub.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ia_main_stub.cpp; path = ../../ia_main_stub.cpp; sourceTree = "<group>"; };
@@ -120,6 +129,12 @@
 				D2C19DE516407B9E00A76AC7 /* IAInterface.hpp */,
 				D2C19DE616407B9E00A76AC7 /* IAInterfaceStub.cpp */,
 				D2C19DE716407B9E00A76AC7 /* IAVariable.hpp */,
+				D2045518164DA8D100A6C803 /* IPBend.cpp */,
+				D2045519164DA8D100A6C803 /* IPBend.hpp */,
+				D2045515164DA8C200A6C803 /* IASolverBend.cpp */,
+				D2045516164DA8C200A6C803 /* IASolverBend.hpp */,
+				D2045511164DA8B200A6C803 /* IABendNlp.cpp */,
+				D2045512164DA8B200A6C803 /* IABendNlp.hpp */,
 				D2C19DDB16407B7800A76AC7 /* ia_main_stub */,
 				D2C19DD916407B7800A76AC7 /* Products */,
 			);
@@ -204,6 +219,9 @@
 				D2ECD1C416487822007AC560 /* IAIntWaveNlp.cpp in Sources */,
 				D2ECD1C8164C280B007AC560 /* IAIntParabolaNlp.cpp in Sources */,
 				D2ECD1CE164C33EE007AC560 /* IAIntCosNlp.cpp in Sources */,
+				D2045513164DA8B200A6C803 /* IABendNlp.cpp in Sources */,
+				D2045517164DA8C200A6C803 /* IASolverBend.cpp in Sources */,
+				D204551A164DA8D100A6C803 /* IPBend.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
