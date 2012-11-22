@@ -67,7 +67,7 @@ protected:
   }
   virtual double eval_jac_int_s( const double s )
   {
-    double d = nearest_even(s);
+    double d = delta_s(s);
     return -2. * d; // d' is 1
   }
   virtual double eval_hess_int_x( const double x )

@@ -215,7 +215,7 @@ bool IABendNlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
       // equality makes ipopt think it is overdetermined, so use inequality :) 
       const int k = i + wave_even_constraint_start;
       assert(k < m);
-      g_l[k] = 1.; // 1.
+      g_l[k] = 0.99; // 1.
       g_u[k] = MESHKIT_IA_upperUnbound; // 1.
       // the actual value of g will be below 1, so this contrains it to be 1 just as well
     }
