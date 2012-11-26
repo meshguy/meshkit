@@ -1,7 +1,7 @@
 MeshFile cube.cub
 Surfaces 1
-Thickness 0.05
-Intervals 4
-Bias 1.0
+Thickness 0.3
+Intervals 2
+Bias 0.5
 Outfile outpbl.h5m
 END

@@ -1241,7 +1241,7 @@ void EBMesher::get_grid_and_edges_techX(double* boxMin, double* boxMax, int* nDi
     dFrac[1] = get_edge_fraction(iHex + 1, 1);
     dFrac[2] = get_edge_fraction(iHex + m_nDiv[0], 0);
 
-    if (dFrac[0] > 0. || dFrac[1] > 0. || dFrac[22] > 0. || dFrac[3] > 0.) { // if surface is cut
+    if (dFrac[0] > 0. || dFrac[1] > 0. || dFrac[2] > 0. || dFrac[3] > 0.) { // if surface is cut
       CutCellSurfEdgeKey surfKey(ii, jj, kk, 2);
       std::vector<double> edges;
       if (dFrac[0] < 0.) dFrac[0] = get_uncut_edge_fraction(ii, jj, kk, 0);
