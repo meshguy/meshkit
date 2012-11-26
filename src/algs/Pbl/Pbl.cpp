@@ -7,7 +7,7 @@
 #endif
 namespace MeshKit
 {
-  bool debug =true;
+  bool debug =false;
   // static registration of this mesh scheme
   moab::EntityType Pbl_tps[] = { moab::MBTRI,
 				 moab::MBHEX,
@@ -114,7 +114,7 @@ namespace MeshKit
       MBERRCHK(mb->tag_get_data(NTag, &this_set, 1, &set_id), mb);
       if(set_id == m_NeumannSet)
 	break;
-      this_set = NULL;
+      this_set = 0;
     }
     if (debug)
       std::cout << "Looking for NS with id " << m_NeumannSet << ". Total NS found are: "<< n_sets.size() << std::endl;
