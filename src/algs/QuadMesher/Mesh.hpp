@@ -976,7 +976,6 @@ struct MeshFilter {
           cout << "Warning: passing the base " << endl;
           return 1;
      }
-     virtual ~MeshFilter();
      virtual bool pass(const Face * v) const {
           return 1;
      };
