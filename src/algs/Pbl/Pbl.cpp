@@ -1,10 +1,13 @@
+#include <math.h>
 #include "../meshkit/Pbl.hpp"
 #ifdef HAVE_MOAB
 #include "MBSkinner.hpp"
 #include "MBAdaptiveKDTree.hpp"
 #include "MBRange.hpp"
 #include "MBCartVect.hpp"
+#include "moab/Matrix3.hpp"
 #endif
+
 namespace MeshKit
 {
   bool debug =false;
@@ -109,14 +112,14 @@ namespace MeshKit
       
       this_set = *set_it;
       
-      // get the id for this set
+      // get entity handle of NS specified in the input file
       int set_id;
       MBERRCHK(mb->tag_get_data(NTag, &this_set, 1, &set_id), mb);
       if(set_id == m_NeumannSet)
 	break;
       this_set = 0;
     }
-    if (debug)
+    if (debug && m_NeumannSet != -1)
       std::cout << "Looking for NS with id " << m_NeumannSet << ". Total NS found are: "<< n_sets.size() << std::endl;
 
     
@@ -124,7 +127,6 @@ namespace MeshKit
     moab::EntityHandle s1;
     MBRange quads, nodes;
     int dims; // variable to store global id of all sets with GD=2
-
 
     if(m_NeumannSet != -1){
       MBERRCHK(mb->get_entities_by_type(this_set, moab::MBQUAD, quads),mb);
@@ -153,8 +155,6 @@ namespace MeshKit
       }
     }
  
-
-    //call extrude and extrude these quads 
     std::vector <bool> node_status(false); // size of verts of bl surface
     node_status.resize(nodes.size());
     MBRange edges, hexes, hex_edge, quad_verts, adj_quads;  
@@ -166,9 +166,7 @@ namespace MeshKit
     for (Range::iterator kter = quads.begin(); kter != quads.end(); ++kter){
       qcount++;
       MBERRCHK(mb->get_connectivity(&(*kter), 1, qconn),mb);
-      
-      // MBERRCHK(mb->get_adjacencies(&quads[qcount], 1, false, adj_quads, MBInterface::UNION),mb);
-    
+   
       get_normal_quad (qconn, xdisp, ydisp, zdisp); 
       if (debug) 
 	std::cout << "\n\n*** QUAD: " << qcount << "\n\ndirection vector: " << xdisp << " " << ydisp << " " << zdisp << " " << std::endl;
@@ -189,14 +187,18 @@ namespace MeshKit
 	if (debug) 
 	  std::cout << "Working on Node : " << tmp << std::endl;
 	if(node_status[tmp] == false){
-
+	  double num = m_Thickness*(1-(1/m_Bias));
+	  double deno =    (1-(1/(pow(m_Bias,m_Intervals))));
+	  double temp = num/deno;
 	  // another loop to number of boundary layers
 	  for(int j=0; j< m_Intervals; j++){
 	    
+	    double move = temp/pow(m_Bias,j);
+	
 	    // now compute the coords of the new vertex
-	    coords_new_quad[0] = coords_bl_quad [0]-(j+1)*m_Thickness*xdisp;
-	    coords_new_quad[1] = coords_bl_quad [1]-(j+1)*m_Thickness*ydisp;
-	    coords_new_quad[2] = coords_bl_quad [2]-(j+1)*m_Thickness*zdisp;
+	    coords_new_quad[0] = coords_bl_quad [0]-(j+1)*move*xdisp;
+	    coords_new_quad[1] = coords_bl_quad [1]-(j+1)*move*ydisp;
+	    coords_new_quad[2] = coords_bl_quad [2]-(j+1)*move*zdisp;
 	    
 	    // TODO: Check to see if this vertex is possible?
 	    int nid = tmp*m_Intervals+j;
@@ -234,13 +236,25 @@ namespace MeshKit
 	  }
 	}
       }
-      
+      double j_old_hex = 0.0;
+      get_det_jacobian(old_hex_conn, 0, j_old_hex);
+      if (j_old_hex <= 0){
+	std::cout << "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
+	exit(0);
+      }
+	
       MBERRCHK(mb->set_connectivity(old_hex[0], &old_hex_conn[0], 8), mb); 
       old_hex.clear();
       if (debug) 
 	std::cout << "create boundary layer hexes" << std::endl;
       // create boundary layer hexes
       for(int j=0; j< m_Intervals; j++){
+	double j_hex = 0.0;
+	get_det_jacobian(conn, j*8, j_hex);
+	if (j_old_hex <= 0){
+	  std::cout << "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
+	  exit(0);
+	}
 	MBERRCHK(mb->create_element(MBHEX, &conn[j*8], 8, hex),mb);
       }
     }
@@ -405,6 +419,47 @@ namespace MeshKit
     y = normal[1];
     z = normal[2];
   }
+
+  void Pbl::get_det_jacobian(std::vector<EntityHandle>conn, int offset, double &detJ)
+  // ---------------------------------------------------------------------------
+  // Function: get normal of a quad
+  // Input:    conn
+  // Output:   vector x, y and z
+  // ---------------------------------------------------------------------------
+  {
+    CartVect vertex[8], xi(0.0);
+    MBERRCHK(mb->get_coords(&conn[offset], 8, (double*) &vertex[0]), mb);
+    
+    double corner[8][3] = { { -1, -1, -1 },
+			    {  1, -1, -1 },
+			    {  1,  1, -1 },
+			    { -1,  1, -1 },
+			    { -1, -1,  1 },
+			    {  1, -1,  1 },
+			    {  1,  1,  1 },
+			    { -1,  1,  1 } };
+    Matrix3 J(0.0);
+    for (unsigned i = 0; i < 8; ++i) {
+      const double   xi_p = 1 + xi[0]*corner[i][0];
+      const double  eta_p = 1 + xi[1]*corner[i][1];
+      const double zeta_p = 1 + xi[2]*corner[i][2];
+      const double dNi_dxi   = corner[i][0] * eta_p * zeta_p;
+      const double dNi_deta  = corner[i][1] *  xi_p * zeta_p;
+      const double dNi_dzeta = corner[i][2] *  xi_p *  eta_p;
+      J(0,0) += dNi_dxi   * vertex[i][0];
+      J(1,0) += dNi_dxi   * vertex[i][1];
+      J(2,0) += dNi_dxi   * vertex[i][2];
+      J(0,1) += dNi_deta  * vertex[i][0];
+      J(1,1) += dNi_deta  * vertex[i][1];
+      J(2,1) += dNi_deta  * vertex[i][2];
+      J(0,2) += dNi_dzeta * vertex[i][0];
+      J(1,2) += dNi_dzeta * vertex[i][1];
+      J(2,2) += dNi_dzeta * vertex[i][2];
+    }
+    J *= 0.125;
+    detJ = J.determinant();
+  }
+
 } // namespace MeshKit
 
 

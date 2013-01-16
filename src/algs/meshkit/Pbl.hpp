@@ -111,9 +111,10 @@ namespace MeshKit {
      */
     void get_normal_quad (std::vector<EntityHandle>conn, double &x, double &y, double &z);
 
-    /** \brief Read the command based text input file
-     *  input file
+    /** \brief compute determinant of jacobian of a hex element
+     *  input connectivity array
      */
+    void get_det_jacobian (std::vector<EntityHandle> conn, int offset, double &detJ);
 
   private:
     // iGeom Impl for calling geometry creation/manipulation operations
