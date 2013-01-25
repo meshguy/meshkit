@@ -60,12 +60,12 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
     proxy = *proxies.begin();
   }
   else if (type == MESH_INTER_SURF || type == MESH_NINTER_SURF) {
-    mk_core()->meshop_by_mesh_type(moab::MBTRI, proxies);
-    proxy = *proxies.begin();
+    //mk_core()->meshop_by_mesh_type(moab::MBTRI, proxies);
+    proxy = MKCore::meshop_proxy("CAMALTriAdvance");
   }
   else if (type == MESH_VOLUME) {
-    mk_core()->meshop_by_mesh_type(moab::MBTET, proxies);
-    proxy = *proxies.begin();
+    //mk_core()->meshop_by_mesh_type(moab::MBTET, proxies);
+    proxy = MKCore::meshop_proxy("CAMALTetMesher");
   }
   else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE) {
     proxy = MKCore::meshop_proxy("ParExchangeMesh");
