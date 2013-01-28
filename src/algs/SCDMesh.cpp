@@ -37,9 +37,9 @@ namespace MeshKit
 
     // set bounding box size tag
     double bb_default[6] = { 0., 0., 0., 0., 0., 0. };
-    rval = mk_core->moab_instance()->tag_create("BOUNDING_BOX_SIZE",
-                                                6*sizeof(double), moab::MB_TAG_SPARSE,
-                                                moab::MB_TYPE_DOUBLE, bb_tag, bb_default, true);
+    rval = mk_core->moab_instance()->tag_get_handle("BOUNDING_BOX_SIZE",
+                                                6, moab::MB_TYPE_DOUBLE,
+            bb_tag, moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT, bb_default);
     if (moab::MB_SUCCESS != rval && moab::MB_ALREADY_ALLOCATED != rval) 
       MBERRCHK(rval, mk_core->moab_instance());
   }

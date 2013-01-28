@@ -1635,30 +1635,30 @@ MBErrorCode get_geom_size_after_sealing( const MBRange geom_sets[],
     clock_t load_time = clock();    
     MBTag geom_tag, id_tag, normal_tag, merge_tag, faceting_tol_tag, 
       geometry_resabs_tag, size_tag, orig_curve_tag;
-    result = MBI()->tag_create( GEOM_DIMENSION_TAG_NAME, sizeof(int), MB_TAG_DENSE,
-				MB_TYPE_INTEGER, geom_tag, 0, true );
+    result = MBI()->tag_get_handle( GEOM_DIMENSION_TAG_NAME, 1,
+				MB_TYPE_INTEGER, geom_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
     assert( MB_SUCCESS == result );
-    result = MBI()->tag_create( GLOBAL_ID_TAG_NAME, sizeof(int), MB_TAG_DENSE,
-				MB_TYPE_INTEGER, id_tag, 0, true );
+    result = MBI()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1,
+				MB_TYPE_INTEGER, id_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
     assert( MB_SUCCESS == result );
-    result = MBI()->tag_create( "NORMAL", sizeof(MBCartVect), MB_TAG_DENSE,
-                                MB_TYPE_OPAQUE, normal_tag, 0, true );
+    result = MBI()->tag_get_handle( "NORMAL", sizeof(MBCartVect), MB_TYPE_OPAQUE,
+        normal_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
     assert( MB_SUCCESS == result );
-    result = MBI()->tag_create( "MERGE", sizeof(MBEntityHandle), MB_TAG_SPARSE,
-                                MB_TYPE_HANDLE, merge_tag, 0, true );
+    result = MBI()->tag_get_handle( "MERGE", 1, MB_TYPE_HANDLE,
+        merge_tag, moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT );
     assert( MB_SUCCESS == result );  
-    result = MBI()->tag_create( "FACETING_TOL", sizeof(double), MB_TAG_SPARSE,
-                                MB_TYPE_DOUBLE, faceting_tol_tag, 0, true );
+    result = MBI()->tag_get_handle( "FACETING_TOL", 1, MB_TYPE_DOUBLE,
+        faceting_tol_tag , moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT );
     assert( MB_SUCCESS == result );  
-    result = MBI()->tag_create( "GEOMETRY_RESABS", sizeof(double), MB_TAG_SPARSE,
-                                MB_TYPE_DOUBLE, geometry_resabs_tag, 0, true );
+    result = MBI()->tag_get_handle( "GEOMETRY_RESABS", 1,     MB_TYPE_DOUBLE,
+                             geometry_resabs_tag, moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT  );
     assert( MB_SUCCESS == result );  
-    result = MBI()->tag_create( "GEOM_SIZE", sizeof(double), MB_TAG_DENSE,
-				MB_TYPE_DOUBLE, size_tag, 0, true );
-    assert( MB_SUCCESS == result );
+    result = MBI()->tag_get_handle( "GEOM_SIZE", 1, MB_TYPE_DOUBLE,
+				 size_tag, moab::MB_TAG_DENSE  );
+    assert( MB_SUCCESS == result |moab::MB_TAG_CREAT );
     int true_int = 1;    
-    result = MBI()->tag_create( "ORIG_CURVE", sizeof(int), MB_TAG_DENSE,
-				MB_TYPE_INTEGER, orig_curve_tag, &true_int, true );
+    result = MBI()->tag_get_handle( "ORIG_CURVE", 1,
+				MB_TYPE_INTEGER, orig_curve_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT, &true_int );
     assert( MB_SUCCESS == result );
 
     // PROBLEM: MOAB is not consistent with file_set behavior. The tag may not be

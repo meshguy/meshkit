@@ -99,7 +99,7 @@ void CAMALTriAdvance::execute_this()
 
       // for tris, pre-allocate connectivity
     moab::ReadUtilIface *iface;
-    rval = mk_core()-> moab_instance() -> query_interface("ReadUtilIface", (void**)&iface);
+    rval = mk_core()-> moab_instance() -> query_interface(iface);
     MBERRCHK(rval, mk_core()->moab_instance());		
 
       //create the tris, get a direct ptr to connectivity

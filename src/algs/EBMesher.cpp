@@ -58,13 +58,13 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   // create tags with MOAB for dense tags
   int outside = 1;
   const void *out = &outside;
-  m_elemStatusTag = get_tag("ELEM_STATUS_TAG", sizeof(int),
+  m_elemStatusTag = get_tag("ELEM_STATUS_TAG", 1,
                             MB_TAG_DENSE, MB_TYPE_INTEGER, out);
   
   int length = 1;
   const void *leng = &length;
   m_edgeCutFracLengthTag = get_tag("EDGE_CUT_FRAC_LENGTH_TAG", // # of fractions
-                                   3*sizeof(int),
+                                   3,
                                    //MB_TAG_SPARSE, // using dense for hdf5 exporting performance
                                    MB_TAG_DENSE,
                                    MB_TYPE_INTEGER, leng);
@@ -76,7 +76,7 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
 
   int m_id = 1;
   const void *id = &m_id;
-  m_volFracLengthTag = get_tag("VOL_FRAC_LENGTH_TAG", sizeof(int),
+  m_volFracLengthTag = get_tag("VOL_FRAC_LENGTH_TAG", 1,
                                MB_TAG_SPARSE, MB_TYPE_INTEGER, id);
   
   m_volFracHandleTag = get_various_length_tag("VOL_FRAC_HANDLE_TAG",
@@ -87,7 +87,7 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   
   // set bounding box size tag
   double bb_default[6] = { 0., 0., 0., 0., 0., 0. };
-  m_bbTag = get_tag("BOUNDING_BOX_SIZE", 6*sizeof(double),
+  m_bbTag = get_tag("BOUNDING_BOX_SIZE", 6,
                     MB_TAG_SPARSE, MB_TYPE_DOUBLE, bb_default);
   
   m_GeomTopoTool = new moab::GeomTopoTool( moab_instance() );
@@ -756,14 +756,19 @@ int EBMesher::make_scd_hexes()
 }
 
 iBase_TagHandle EBMesher::get_tag(const char* name, int size,
-                                     MBTagType store, MBDataType type,
+                                     unsigned store, MBDataType type,
                                      const void* def_value,
                                      bool create_if_missing) 
 {
   MBTag retval = 0;
-  moab::ErrorCode result = moab_instance()->tag_create(name, size, store, type,
+  /*moab::ErrorCode result = moab_instance()->tag_create(name, size, store, type,
                                                    retval, def_value,
-                                                   create_if_missing);
+                                                   create_if_missing);*/
+  store = store | moab::MB_TAG_CREAT;
+  if(!create_if_missing)
+    store = store | moab::MB_TAG_EXCL;
+  moab::ErrorCode result = moab_instance()->tag_get_handle(name, size, type, retval, store,
+                                                      def_value);
   if (create_if_missing && MB_SUCCESS != result) {
     std::cerr << "Couldn't find nor create tag named " << name << std::endl;
   }
@@ -772,11 +777,12 @@ iBase_TagHandle EBMesher::get_tag(const char* name, int size,
 }
 
 iBase_TagHandle EBMesher::get_various_length_tag(const char* name,
-                                                    MBTagType store, MBDataType type)
+                                                    unsigned store, MBDataType type)
 {
   MBTag retval = 0;
+  store = store | moab::MB_TAG_VARLEN | moab::MB_TAG_CREAT;
   moab::ErrorCode result = moab_instance()->
-    tag_create_variable_length( name, store, type, retval);
+    tag_get_handle( name, 1, type, retval, store);
   if (MB_SUCCESS != result) {
     std::cerr << "Couldn't find nor create tag named " << name << std::endl;
   }
@@ -841,7 +847,7 @@ void EBMesher::set_tag_info()
                                                    frac_leng);
   IBERRCHK(err, "Failed to set cut fraction sizes to hex.");
 
-  moab::ErrorCode rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_edgeCutFracTag),
+  moab::ErrorCode rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<MBTag> (m_edgeCutFracTag),
                                                    reinterpret_cast<moab::EntityHandle*> (&hvBndrHex[0]),
                                                    nBndrHex, &frac_data_pointer[0], frac_size);
   MBERRCHK(rval, mk_core()->moab_instance());
@@ -2055,12 +2061,12 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
                                            1, &vol_frac_length);
       MBERRCHK(rval, mk_core()->moab_instance());
 
-      rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_volFracHandleTag),
+      rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<MBTag> (m_volFracHandleTag),
                                            reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
                                            1, &vol_frac_ids, &vol_frac_id_size);
       MBERRCHK(rval, mk_core()->moab_instance());
 
-      rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_volFracTag),
+      rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<MBTag> (m_volFracTag),
                                            reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
                                            1, &vol_fracs, &vol_frac_size);
       MBERRCHK(rval, mk_core()->moab_instance());

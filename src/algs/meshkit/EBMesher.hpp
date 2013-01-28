@@ -387,7 +387,7 @@ private:
    * \param create_if_missing create Tag if it is missed (flag)
    * \return Tag handle
    */
-  iBase_TagHandle get_tag(const char* name, int size, MBTagType store, MBDataType type,
+  iBase_TagHandle get_tag(const char* name, int size, unsigned flags, MBDataType type,
                           const void* def_value = NULL, bool create_if_missing = true);
   
   /** \brief get MOAB's various length Tag
@@ -397,7 +397,7 @@ private:
    * \return Tag handle
    */
   iBase_TagHandle get_various_length_tag(const char* name,
-                                         MBTagType store, MBDataType type);
+                                         unsigned store, MBDataType type);
 
   /** \brief construct hexes in MOAB structured mesh format
    * \return int if is working correctly
