@@ -89,11 +89,11 @@ void MesquiteOpt::set_fixed_tag( const char* name )
     moab::Tag t;
     moab::ErrorCode rval;
     int zero = 0;
-    rval = mk_core()->moab_instance()->tag_create( name, 
-                                                   sizeof(int), 
-                                                   moab::MB_TAG_DENSE,
+    rval = mk_core()->moab_instance()->tag_get_handle( name,
+                                                   1,
                                                    moab::MB_TYPE_INTEGER,
                                                    t,
+                                                   moab::MB_TAG_DENSE|moab::MB_TAG_CREAT,
                                                    &zero );
     MBERRCHK(rval,mk_core()->moab_instance());
     
@@ -112,11 +112,11 @@ void MesquiteOpt::create_byte_tag()
         // We do it here only so we can make it a dense tag.
     moab::Tag t;
     unsigned char zero = 0;
-    mk_core()->moab_instance()->tag_create( Mesquite::VERTEX_BYTE_TAG_NAME, 
-                                            sizeof(int), 
-                                            moab::MB_TAG_DENSE,
+    mk_core()->moab_instance()->tag_get_handle( Mesquite::VERTEX_BYTE_TAG_NAME,
+                                            1,
                                             moab::MB_TYPE_INTEGER,
                                             t,
+                                            moab::MB_TAG_DENSE|moab::MB_TAG_CREAT,
                                             &zero );
     createdByteTag = true;
   }

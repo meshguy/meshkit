@@ -1655,7 +1655,7 @@ MBErrorCode get_geom_size_after_sealing( const MBRange geom_sets[],
     assert( MB_SUCCESS == result );  
     result = MBI()->tag_get_handle( "GEOM_SIZE", 1, MB_TYPE_DOUBLE,
 				 size_tag, moab::MB_TAG_DENSE  );
-    assert( MB_SUCCESS == result |moab::MB_TAG_CREAT );
+    assert( (MB_SUCCESS == result) |moab::MB_TAG_CREAT );
     int true_int = 1;    
     result = MBI()->tag_get_handle( "ORIG_CURVE", 1,
 				MB_TYPE_INTEGER, orig_curve_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT, &true_int );

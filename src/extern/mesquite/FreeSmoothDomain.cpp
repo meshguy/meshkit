@@ -37,12 +37,12 @@ FreeSmoothDomain::FreeSmoothDomain( MKCore* core, const MEntVector& entities )
     // Create a tag to store geometry handles on mesh entities
   assert( sizeof(iBase_EntityHandle) == sizeof(moab::EntityHandle) );
   const moab::EntityHandle zero = 0;
-  moab::ErrorCode rval = moabIface->tag_create( 0, 
-                                          sizeof(EntityHandle),
-                                          MB_TAG_DENSE,
+  moab::ErrorCode rval = moabIface->tag_get_handle( 0, 
+                                          1,
                                           MB_TYPE_HANDLE,
                                           entGeomRel,
-                                          zero );
+                                          moab::MB_TAG_DENSE|moab::MB_TAG_CREAT,
+                                          &zero );
   MBERRCHK( rval, moabIface );
   haveEntGeomRelTag = true;
 
