@@ -1,4 +1,5 @@
 #include <math.h>
+#include <iomanip>
 #include "../meshkit/Pbl.hpp"
 #ifdef HAVE_MOAB
 #include "MBSkinner.hpp"
@@ -30,6 +31,7 @@ namespace MeshKit
     {
         m_SurfId = -1;
         m_NeumannSet = -1;
+	m_Material = 999;
         m_nLineNumber = 0;
         szComment = "!";
         MAXCHARS = 300;
@@ -64,6 +66,7 @@ namespace MeshKit
         
         if (debug) {
             std::cout << "\nIn setup this : " <<  "\n";
+            m_LogFile <<  "\nIn setup this : " <<  "\n";
         }
         
     }
@@ -75,21 +78,25 @@ namespace MeshKit
     // Output:   none
     // ---------------------------------------------------------------------------
     {
+      std::cout << "\nIn execute this : creating boundary layer elements.." <<  "\n";
+      m_LogFile << "\nIn execute this : creating boundary layer elements.." <<  "\n";
         // start the timer
         CClock Timer;
         clock_t sTime = clock();
         std::string szDateTime;
         Timer.GetDateTime (szDateTime);
-        std::cout << "\nStarting out at : " << szDateTime << "\n";
-        
+
+        std::cout << "\nStarting out at : " << szDateTime << "\n";   
         std::cout << "\n Loading meshfile: " << m_MeshFile << ".." << std::endl;
+        m_LogFile <<  "\nStarting out at : " << szDateTime << "\n";
+        m_LogFile <<  "\n Loading meshfile: " << m_MeshFile << ".." << std::endl;
+
         //load specified mesh file
         IBERRCHK(imesh->load(0, m_MeshFile.c_str(),0), *imesh);
         m_GD = imesh->getGeometricDimension();
+        m_LogFile << "Geometric dimension of meshfile = "<< m_GD <<std::endl;
         std::cout  <<"Geometric dimension of meshfile = "<< m_GD <<std::endl;
-        if (debug) {
-            std::cout << "\nIn execute this : " <<  "\n";
-        }
+ 
         // obtain the boundary layer surface faces
         moab::Tag GDTag, GIDTag, NTag, MTag;
         MBERRCHK(mb->tag_get_handle("GEOM_DIMENSION", 1, moab::MB_TYPE_INTEGER, GDTag),mb);
@@ -97,15 +104,19 @@ namespace MeshKit
         MBERRCHK(mb->tag_get_handle("MATERIAL_SET", 1, moab::MB_TYPE_INTEGER, MTag),mb);
         MBERRCHK(mb->tag_get_handle("GLOBAL_ID", 1, moab::MB_TYPE_INTEGER, GIDTag),mb);
         
-        moab::Range sets, verts, n_sets;
+        moab::Range sets, verts, n_sets, m_sets;
         int geom_dim = 2;
         const void* gdim[] = {&geom_dim};
         
         // get all the entity sets with Geom Dimension=2
-        MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &GDTag, gdim, 1 , sets, moab::Interface::INTERSECT, false), mb);
+        MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &GDTag, 
+						  gdim, 1 , sets, moab::Interface::INTERSECT, false), mb);
         
         MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &NTag, 0, 1 , n_sets),mb);
+
+        MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &MTag, 0, 1 , m_sets),mb);
         
+	// Handling NeumannSets
         moab::Range::iterator set_it;
         moab::EntityHandle this_set;
         for (set_it = n_sets.begin(); set_it != n_sets.end(); set_it++)  {
@@ -119,30 +130,71 @@ namespace MeshKit
                 break;
             this_set = 0;
         }
-        if (debug && m_NeumannSet != -1)
-            std::cout << "Looking for NS with id " << m_NeumannSet << ". Total NS found are: "<< n_sets.size() << std::endl;
-        
-        
+        if (debug && m_NeumannSet != -1 && this_set != 0){
+            std::cout << "Looking for NS with id " << m_NeumannSet << 
+	      ". Total NS found are: "<< n_sets.size() << std::endl;
+            m_LogFile <<  "Looking for NS with id " << m_NeumannSet << 
+	      ". Total NS found are: "<< n_sets.size() << std::endl;
+	}
+
+	// Handling MaterialSet
+	moab::Range::iterator mset_it;
+        moab::EntityHandle mthis_set;
+	int mset_id = 0, found = 0;
+        for (mset_it = m_sets.begin(); mset_it != m_sets.end(); mset_it++)  {
+            
+            mthis_set = *mset_it;
+            
+            // get entity handle of MS specified in the input file
+            MBERRCHK(mb->tag_get_data(MTag, &mthis_set, 1, &mset_id), mb);
+            if(mset_id == m_Material){
+	      found = 1;
+	      break;
+	    }
+            mthis_set = 0;
+        }
+	if(found == 1 && m_Material !=999){
+	  std::cout << "Found material set with id " << m_Material << std::endl;
+	  m_LogFile << "Found material set with id " << m_Material << std::endl;
+	}
+	else{
+	  // create this material set 
+	  std::cout << "Creating material set with id " << m_Material << std::endl;
+	  m_LogFile << "Creating material set with id " << m_Material << std::endl; 
+	  MBERRCHK(mb->create_meshset(moab::MESHSET_SET, mthis_set, 1), mb);
+	  MBERRCHK(mb->tag_set_data(MTag, &mthis_set, 1, &m_Material), mb);
+	}
+
         // get the quads for the surface with input global ids
         moab::EntityHandle s1;
         MBRange quads, nodes;
         int dims; // variable to store global id of all sets with GD=2
-        
-        if(m_NeumannSet != -1){
-            MBERRCHK(mb->get_entities_by_type(this_set, moab::MBQUAD, quads),mb);
+
+        if(m_NeumannSet != -1 && this_set != 0){
+	  MBERRCHK(mb->get_entities_by_type(this_set, moab::MBQUAD, quads,true),mb);
+	    if (quads.size() <=0){
+	      std::cout << " No quads found, aborting.. " << std::endl;
+	      m_LogFile <<  " No quads found, aborting.. " << std::endl;
+	      exit(0);
+	    }
             MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, MBInterface::UNION),mb);
             if (debug) {
                 std::cout << "Found NeumannSet with id : " << m_NeumannSet <<  std::endl;
                 std::cout << "#Quads in this surface: " << quads.size() << std::endl;
                 std::cout << "#Nodes in this surface: " << nodes.size() << std::endl;
+		std::cout << "#New Nodes to be created:" << m_Intervals*nodes.size() << std::endl;
+                m_LogFile <<  "Found NeumannSet with id : " << m_NeumannSet <<  std::endl;
+                m_LogFile <<  "#Quads in this surface: " << quads.size() << std::endl;
+                m_LogFile <<  "#Nodes in this surface: " << nodes.size() << std::endl;
+		m_LogFile << "#New nodes to be created:" << m_Intervals*nodes.size() << std::endl;
             }
         }
-        else{
+        else if (m_SurfId !=-1){
             // from the input surface get the quads and nodes in a range
             for(MBRange::iterator rit=sets.begin(); rit != sets.end(); ++rit){
                 s1 = *rit;
                 MBERRCHK(mb->tag_get_data(GIDTag, &s1, 1, &dims),mb);
-                
+
                 if(dims == m_SurfId && m_SurfId != -1){
                     MBERRCHK(mb->get_entities_by_type(s1, moab::MBQUAD, quads),mb);
                     MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, MBInterface::UNION),mb);
@@ -150,15 +202,26 @@ namespace MeshKit
                         std::cout << "Found surface with id : " << m_SurfId <<  std::endl;
                         std::cout << "#Quads in this surface: " << quads.size() << std::endl;
                         std::cout << "#Nodes in this surface: " << nodes.size() << std::endl;
+			std::cout << "#New Nodes to be created:" << m_Intervals*nodes.size() << std::endl;
+                        m_LogFile <<  "Found surface with id : " << m_SurfId <<  std::endl;
+                        m_LogFile <<  "#Quads in this surface: " << quads.size() << std::endl;
+                        m_LogFile <<  "#Nodes in this surface: " << nodes.size() << std::endl;
+			m_LogFile << "#New nodes to be created:" << m_Intervals*nodes.size() << std::endl;
                     }
                 }
             }
         }
-        
+	else {
+	  std::cout << "Invalid boundary layer specification, aborting.." << std::endl;
+	  m_LogFile <<  "Invalid boundary layer specification, aborting.." <<  std::endl; 
+	  exit(0);
+        }
+	
         std::vector <bool> node_status(false); // size of verts of bl surface
         node_status.resize(nodes.size());
         MBRange edges, hexes, hex_edge, quad_verts, adj_quads;
-        std::vector<EntityHandle> conn(m_Intervals*8), qconn(4), new_vert(m_Intervals*nodes.size()), old_hex, old_hex_conn(8);
+        std::vector<EntityHandle> conn(m_Intervals*8), qconn(4), 
+	  new_vert(m_Intervals*nodes.size()), old_hex, old_hex_conn(8);
         double coords_bl_quad[3], coords_new_quad[3], xdisp = 0.0, ydisp = 0.0, zdisp = 0.0;
         EntityHandle hex;
         int qcount = 0;
@@ -168,8 +231,12 @@ namespace MeshKit
             MBERRCHK(mb->get_connectivity(&(*kter), 1, qconn),mb);
             
             get_normal_quad (qconn, xdisp, ydisp, zdisp);
-            if (debug)
-                std::cout << "\n\n*** QUAD: " << qcount << "\n\ndirection vector: " << xdisp << " " << ydisp << " " << zdisp << " " << std::endl;
+            if (debug){
+                std::cout << "\n\n*** QUAD: " << qcount << "\n\ndirection vector: " << xdisp 
+			  << " " << ydisp << " " << zdisp << " " << std::endl;
+                m_LogFile <<  "\n\n*** QUAD: " << qcount << "\n\ndirection vector: " << xdisp 
+			  << " " << ydisp << " " << zdisp << " " << std::endl;
+	    }
             //adj_quads.clear();
             MBERRCHK(mb->get_adjacencies(&(*kter), 1, 3, false, old_hex),mb);
             MBERRCHK(mb->get_connectivity(&old_hex[0], 1, old_hex_conn),mb);
@@ -182,29 +249,48 @@ namespace MeshKit
                 for(int n=0; n< (int) nodes.size(); n++){
                     if(nodes[n] == qconn[i]){
                         tmp = n;
+			break;
                     }
                 }
-                if (debug)
-                    std::cout << "Working on Node : " << tmp << std::endl;
+                if (debug){
+                    std::cout << "\n*Working on Node: " << tmp << " coords: " << coords_bl_quad[0] 
+				    << ", " << coords_bl_quad[1] << ", " << coords_bl_quad[2]  << std::endl;
+                    m_LogFile <<  "\n*Working on Node: " << tmp << " coords: " << coords_bl_quad[0] 
+				    << ", " << coords_bl_quad[1] << ", " << coords_bl_quad[2]  << std::endl;
+		}
+		double temp;
+
                 if(node_status[tmp] == false){
-                    double num = m_Thickness*(1-(1/m_Bias));
-                    double deno =    (1-(1/(pow(m_Bias,m_Intervals))));
-                    double temp = num/deno;
+                    double num = m_Thickness*(m_Bias-1)*(pow(m_Bias, m_Intervals -1));
+                    double deno = pow(m_Bias, m_Intervals) - 1;
+	            if (deno !=0)
+                    	temp = num/deno;
+		    else
+			temp = m_Thickness/m_Intervals;
                     // another loop to number of boundary layers
+		    double move = 0.0;
                     for(int j=0; j< m_Intervals; j++){
                         
-                        double move = temp/pow(m_Bias,j);
-                        
+                        move+= temp/pow(m_Bias,j);
+			if (debug){
+			  std::cout <<  " move :" << move;
+			  m_LogFile <<  " move:" << move;
+			}
                         // now compute the coords of the new vertex
-                        coords_new_quad[0] = coords_bl_quad [0]-(j+1)*move*xdisp;
-                        coords_new_quad[1] = coords_bl_quad [1]-(j+1)*move*ydisp;
-                        coords_new_quad[2] = coords_bl_quad [2]-(j+1)*move*zdisp;
-                        
-                        // TODO: Check to see if this vertex is possible?
+                        coords_new_quad[0] = coords_bl_quad[0]-move*xdisp;
+                        coords_new_quad[1] = coords_bl_quad[1]-move*ydisp;
+                        coords_new_quad[2] = coords_bl_quad[2]-move*zdisp;
+
                         int nid = tmp*m_Intervals+j;
                         mb->create_vertex(coords_new_quad, new_vert[nid]);
-                        if (debug)
-                            std::cout << tmp << ": created vert:" << nid << " of " << new_vert.size() << std::endl;
+                        if (debug){
+			  std::cout << std::setprecision (3) << std::scientific << " : created node:" << nid 
+				    << " of " << new_vert.size() << " new nodes:- coords: " << coords_new_quad[0] 
+				    << ", " << coords_new_quad[1] << ", " << coords_new_quad[2]  << std::endl;
+			  m_LogFile << std::setprecision (3) << std::scientific << " : created node:" << nid 
+				    << " of " << new_vert.size() << " new nodes:- coords: " << coords_new_quad[0] 
+				    << ", " << coords_new_quad[1] << ", " << coords_new_quad[2]  << std::endl;
+			}
                         if(j==0) // set connectivity of boundary layer hex
                             conn[8*j + i+4] = qconn[i];
                         else
@@ -227,7 +313,10 @@ namespace MeshKit
                 }
             }
             if (debug)
-                std::cout << "set connectivity of the old_hex " << std::endl;
+	      {
+                m_LogFile <<  "\nsetting connectivity of the old BL hex " << std::endl;
+                std::cout << "\nsetting connectivity of the old BL hex " << std::endl;
+	      }
             // set connectivity of the old_hex
             for(int p=0; p<8; p++){
                 for(int q=0; q<4; q++){
@@ -240,37 +329,47 @@ namespace MeshKit
             get_det_jacobian(old_hex_conn, 0, j_old_hex);
             if (j_old_hex <= 0){
                 std::cout << "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
+		m_LogFile <<  "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
                 exit(0);
             }
             
             MBERRCHK(mb->set_connectivity(old_hex[0], &old_hex_conn[0], 8), mb);
             old_hex.clear();
-            if (debug)
-                std::cout << "create boundary layer hexes" << std::endl;
+            if (debug){
+                std::cout << "creating new boundary layer hexes" << std::endl;
+                m_LogFile <<  "creating new boundary layer hexes" << std::endl;
+	    }
             // create boundary layer hexes
             for(int j=0; j< m_Intervals; j++){
                 double j_hex = 0.0;
                 get_det_jacobian(conn, j*8, j_hex);
                 if (j_old_hex <= 0){
                     std::cout << "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
+                    m_LogFile <<  "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
                     exit(0);
                 }
                 MBERRCHK(mb->create_element(MBHEX, &conn[j*8], 8, hex),mb);
+		// add this hex to a block
+		MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
             }
         }
         
         //save the final boundary layer mesh
         MBERRCHK(mb->write_mesh(m_OutFile.c_str()),mb);
-        std::cout << "Wrote Mesh File: " << m_OutFile << std::endl;
+        std::cout << "\n\nWrote Mesh File: " << m_OutFile << std::endl;
+        m_LogFile <<  "\n\nWrote Mesh File: " << m_OutFile << std::endl;
         // get the current date and time
         Timer.GetDateTime (szDateTime);
         std::cout << "Ending at : " << szDateTime;
-        
-        // compute the elapsed time
+	m_LogFile <<  "Ending at : " << szDateTime;
+        // report/compute the elapsed time
         std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
         << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
-        
-        std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
+        m_LogFile <<  "Elapsed wall clock time: " << Timer.DiffTime ()
+        << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
+	std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
+        << " seconds" << std::endl;        
+        m_LogFile <<  "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
         << " seconds" << std::endl;
     }
     
@@ -283,32 +382,56 @@ namespace MeshKit
     {
         std::cout << '\n';
         std::cout << "\t\t---------------------------------------------------------" << '\n';
-        std::cout << "\t         Tool to generate postmesh boundary layers      " << '\n';
+        std::cout << "\t\t         Tool to generate Post-mesh Boundary Layers      " << '\n';
         std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
         std::cout << "\t\t\t\t        2012         " << '\n';
         std::cout << "\t\t---------------------------------------------------------" << '\n';
         std::cout << "\nsee README file for using the program and details on various cards.\n"<< std::endl;
-        
         // set and open input output files
         bool bDone = false;
         do{
             if (2 == argc) {
                 m_InputFile = argv[1];
+		m_LogName = m_InputFile + ".log";
             }
             else if (1 == argc){
                 std::cout << "\nRunning default case:\n" << std::endl;
+                m_LogFile << "\nRunning default case:\n" << std::endl;
+
                 m_InputFile = TestDir + "/" + (char *)DEFAULT_TEST_PBL;
+		m_LogName = m_InputFile + ".log";
             }
             
-            // open the file
+            // open input file for reading
             m_FileInput.open (m_InputFile.c_str(), std::ios::in);
             if (!m_FileInput){
                 std::cout << "Unable to open file: " << m_InputFile << std::endl;
+                m_LogFile << "Unable to open file: " << m_InputFile << std::endl;
+
                 m_FileInput.clear ();
                 exit(1);
             }
             else
                 bDone = true; // file opened successfully
+
+	    // open the log file for dumping debug/output statements
+            m_LogFile.open (m_LogName.c_str(), std::ios::out);
+            if (!m_LogFile){
+                std::cout << "Unable to open file: " << m_LogName << std::endl;
+                m_LogFile <<  "Unable to open file: " << m_LogName << std::endl;
+                m_LogFile.clear ();
+                exit(1);
+            }
+            else
+                bDone = true; // file opened successfully
+	    m_LogFile <<  '\n';
+	    m_LogFile <<  "\t\t---------------------------------------------------------" << '\n';
+	    m_LogFile <<  "\t\t         Tool to generate Post-mesh Boundary Layers      " << '\n';
+	    m_LogFile <<  "\t\t\t\tArgonne National Laboratory" << '\n';
+	    m_LogFile <<  "\t\t\t\t        2012         " << '\n';
+	    m_LogFile <<  "\t\t---------------------------------------------------------" << '\n';
+	    m_LogFile <<  "\nsee README file for using the program and details on various cards.\n"<< std::endl;
+	    
         }while (!bDone);
         
         // Get the meshfile name, surface(s), thickness, intervals and bias
@@ -327,6 +450,7 @@ namespace MeshKit
                 if(szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout << m_Card << " name read: "<< m_MeshFile << std::endl;
+                m_LogFile <<  m_Card << " name read: "<< m_MeshFile << std::endl;
                 if (argc == 1){
                     m_MeshFile = TestDir + "/" + m_MeshFile;
                 }
@@ -338,6 +462,7 @@ namespace MeshKit
                 if(m_SurfId < 0 || szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout  << m_Card << " read: "<< m_SurfId <<std::endl;
+                m_LogFile <<  m_Card << " read: "<< m_SurfId <<std::endl;
             }
             // Get BL surface via neumann set or sideset
             if (szInputString.substr(0,10) == "neumannset"){
@@ -346,8 +471,18 @@ namespace MeshKit
                 if(m_NeumannSet < 0 || szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout  << m_Card << " read: "<< m_NeumannSet <<std::endl;
+                m_LogFile <<  m_Card << " read: "<< m_NeumannSet <<std::endl;
             }
-            
+              // Get BL material (block) number
+            if (szInputString.substr(0,8) == "material"){
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> m_Card >> m_Material;
+                if(m_Material < 0 || szFormatString.fail())
+                    IOErrorHandler(INVALIDINPUT);
+                std::cout  << m_Card << " read: "<< m_Material <<std::endl;
+                m_LogFile <<  m_Card << " read: "<< m_Material <<std::endl;
+            }
+                      
             // Get thickness
             if (szInputString.substr(0,9) == "thickness"){
                 std::istringstream szFormatString (szInputString);
@@ -355,6 +490,7 @@ namespace MeshKit
                 if(m_Thickness < 0 || szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout  << m_Card << " read: "<< m_Thickness <<std::endl;
+                m_LogFile <<  m_Card << " read: "<< m_Thickness <<std::endl;
             }
             // Get intervals
             if (szInputString.substr(0,9) == "intervals"){
@@ -363,6 +499,7 @@ namespace MeshKit
                 if(m_Intervals < 0 || szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout  << m_Card << " read: "<< m_Intervals <<std::endl;
+                m_LogFile <<  m_Card << " read: "<< m_Intervals <<std::endl;
             }
             // Get bias
             if (szInputString.substr(0,4) == "bias"){
@@ -371,6 +508,7 @@ namespace MeshKit
                 if(m_Bias < 0 || szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout  << m_Card << " read: "<< m_Bias <<std::endl;
+                m_LogFile <<  m_Card << " read: "<< m_Bias <<std::endl;
             }
             // Output file name
             if (szInputString.substr(0,7) == "outfile"){
@@ -379,6 +517,7 @@ namespace MeshKit
                 if(m_Bias < 0 || szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout  << m_Card << " name read: "<< m_OutFile <<std::endl;
+                m_LogFile <<  m_Card << " name read: "<< m_OutFile <<std::endl;
             }
             if (szInputString.substr(0,3) == "end"){
                 break;

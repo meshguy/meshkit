@@ -126,13 +126,14 @@ namespace MeshKit {
     // parser related
       // file Input
     std::ifstream m_FileInput; 
+    std::ofstream m_LogFile;
     std::string szInputString;
     std::string szComment;
     int MAXCHARS, m_nLineNumber;
     
     // variables to parse
-    std::string m_InputFile, m_MeshFile, m_OutFile;
-    int m_SurfId, m_NeumannSet;
+    std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName;
+    int m_SurfId, m_NeumannSet, m_Material;
     double m_Thickness;
     int m_Intervals;
     double m_Bias;
