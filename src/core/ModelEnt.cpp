@@ -640,6 +640,9 @@ void ModelEnt::boundary(int dim,
     MEntVector group_stack, this_group;
     group_stack.push_back(b_ents.front());
     
+    int current_senses_size = 0;
+    if (senses)
+      current_senses_size= senses->size();
       // while there are still entities on the stack
     while (!group_stack.empty()) {
       
@@ -711,7 +714,7 @@ void ModelEnt::boundary(int dim,
               // need to get the sense of the first appearance in list
             MEntVector::iterator vit = std::find(this_group.begin(), this_group.end(), this_entity);
             assert(vit != this_group.end());
-            int other_sense = (*senses)[vit-this_group.begin()];
+            int other_sense = (*senses)[current_senses_size + vit-this_group.begin()];
             this_sense = SENSE_REVERSE*other_sense;
           }
         }
