@@ -124,6 +124,7 @@ namespace MeshKit {
     iMesh *imesh;
     MBInterface *mb;
     // parser related
+    bool debug;
       // file Input
     std::ifstream m_FileInput; 
     std::ofstream m_LogFile;

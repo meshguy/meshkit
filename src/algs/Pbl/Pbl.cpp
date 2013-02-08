@@ -11,7 +11,7 @@
 
 namespace MeshKit
 {
-    bool debug =false;
+
     // static registration of this mesh scheme
     moab::EntityType Pbl_tps[] = { moab::MBTRI,
         moab::MBHEX,
@@ -30,6 +30,7 @@ namespace MeshKit
     // ---------------------------------------------------------------------------
     {
         m_SurfId = -1;
+	debug = false;
         m_NeumannSet = -1;
 	m_Material = 999;
         m_nLineNumber = 0;
@@ -116,7 +117,7 @@ namespace MeshKit
 
         MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &MTag, 0, 1 , m_sets),mb);
         
-	// Handling NeumannSets
+	// Handling NeumannSets (if BL surf in input via NS)
         moab::Range::iterator set_it;
         moab::EntityHandle this_set;
         for (set_it = n_sets.begin(); set_it != n_sets.end(); set_it++)  {
@@ -137,39 +138,12 @@ namespace MeshKit
 	      ". Total NS found are: "<< n_sets.size() << std::endl;
 	}
 
-	// Handling MaterialSet
-	moab::Range::iterator mset_it;
-        moab::EntityHandle mthis_set;
-	int mset_id = 0, found = 0;
-        for (mset_it = m_sets.begin(); mset_it != m_sets.end(); mset_it++)  {
-            
-            mthis_set = *mset_it;
-            
-            // get entity handle of MS specified in the input file
-            MBERRCHK(mb->tag_get_data(MTag, &mthis_set, 1, &mset_id), mb);
-            if(mset_id == m_Material){
-	      found = 1;
-	      break;
-	    }
-            mthis_set = 0;
-        }
-	if(found == 1 && m_Material !=999){
-	  std::cout << "Found material set with id " << m_Material << std::endl;
-	  m_LogFile << "Found material set with id " << m_Material << std::endl;
-	}
-	else{
-	  // create this material set 
-	  std::cout << "Creating material set with id " << m_Material << std::endl;
-	  m_LogFile << "Creating material set with id " << m_Material << std::endl; 
-	  MBERRCHK(mb->create_meshset(moab::MESHSET_SET, mthis_set, 1), mb);
-	  MBERRCHK(mb->tag_set_data(MTag, &mthis_set, 1, &m_Material), mb);
-	}
-
-        // get the quads for the surface with input global ids
+        // get the  all the quads and nodes in a range
         moab::EntityHandle s1;
         MBRange quads, nodes;
         int dims; // variable to store global id of all sets with GD=2
 
+	// INPUT by NeumannSet
         if(m_NeumannSet != -1 && this_set != 0){
 	  MBERRCHK(mb->get_entities_by_type(this_set, moab::MBQUAD, quads,true),mb);
 	    if (quads.size() <=0){
@@ -189,8 +163,8 @@ namespace MeshKit
 		m_LogFile << "#New nodes to be created:" << m_Intervals*nodes.size() << std::endl;
             }
         }
+	// INPUT by surface id 
         else if (m_SurfId !=-1){
-            // from the input surface get the quads and nodes in a range
             for(MBRange::iterator rit=sets.begin(); rit != sets.end(); ++rit){
                 s1 = *rit;
                 MBERRCHK(mb->tag_get_data(GIDTag, &s1, 1, &dims),mb);
@@ -217,15 +191,45 @@ namespace MeshKit
 	  exit(0);
         }
 	
+	// Handling MaterialSet
+	moab::Range::iterator mset_it;
+        moab::EntityHandle mthis_set;
+	int mset_id = 0, found = 0;
+        for (mset_it = m_sets.begin(); mset_it != m_sets.end(); mset_it++)  {
+            
+            mthis_set = *mset_it;
+            
+            // get entity handle of MS specified in the input file
+            MBERRCHK(mb->tag_get_data(MTag, &mthis_set, 1, &mset_id), mb);
+            if(mset_id == m_Material){
+	      found = 1;
+	      break;
+	    }
+            mthis_set = 0;
+        }
+	if(found == 1 && m_Material !=999){
+	  std::cout << "Found material set with id " << m_Material << std::endl;
+	  m_LogFile << "Found material set with id " << m_Material << std::endl;
+	}
+	else{
+	  // No material set found, creating material set 999 for BL elements
+	  std::cout << "Creating material set with id " << m_Material << std::endl;
+	  m_LogFile << "Creating material set with id " << m_Material << std::endl; 
+	  MBERRCHK(mb->create_meshset(moab::MESHSET_SET, mthis_set, 1), mb);
+	  MBERRCHK(mb->tag_set_data(MTag, &mthis_set, 1, &m_Material), mb);
+	}
+
         std::vector <bool> node_status(false); // size of verts of bl surface
         node_status.resize(nodes.size());
-        MBRange edges, hexes, hex_edge, quad_verts, adj_quads;
+        MBRange edges, hexes, hex_edge, quad_verts, adj_quads, adj_hexes1;
         std::vector<EntityHandle> conn(m_Intervals*8), qconn(4), 
-	  new_vert(m_Intervals*nodes.size()), old_hex, old_hex_conn(8);
+	  new_vert(m_Intervals*nodes.size()), old_hex, old_hex_conn(8), adj_hexes;
         double coords_bl_quad[3], coords_new_quad[3], xdisp = 0.0, ydisp = 0.0, zdisp = 0.0;
         EntityHandle hex;
         int qcount = 0;
         int ncount = 0;
+
+	// Now start creating New elements
         for (Range::iterator kter = quads.begin(); kter != quads.end(); ++kter){
             qcount++;
             MBERRCHK(mb->get_connectivity(&(*kter), 1, qconn),mb);
@@ -261,26 +265,35 @@ namespace MeshKit
 		double temp;
 
                 if(node_status[tmp] == false){
-                    double num = m_Thickness*(m_Bias-1)*(pow(m_Bias, m_Intervals -1));
-                    double deno = pow(m_Bias, m_Intervals) - 1;
-	            if (deno !=0)
-                    	temp = num/deno;
-		    else
-			temp = m_Thickness/m_Intervals;
-                    // another loop to number of boundary layers
-		    double move = 0.0;
+		  adj_hexes.clear();
+		  MBERRCHK(mb->get_adjacencies(&qconn[i], 1, 3, true, adj_hexes, MBInterface::UNION), mb);
+		  if (adj_hexes.size() == 3){
+		    std::cout << " found " << adj_hexes.size() << " adjacent hexes, aborting .." << std::endl;
+		    m_LogFile << " found " << adj_hexes.size() << " adjacent hexes, aborting .." << std::endl;
+		    exit(0);
+		  }
+		  if(debug)
+		    std::cout << "Found Adjacent Hex # " << adj_hexes.size() << std::endl;
+		  double num = m_Thickness*(m_Bias-1)*(pow(m_Bias, m_Intervals -1));
+		  double deno = pow(m_Bias, m_Intervals) - 1;
+		  if (deno !=0)
+		    temp = num/deno;
+		  else
+		    temp = m_Thickness/m_Intervals;
+		  // another loop to number of boundary layers
+		  double move = 0.0;
                     for(int j=0; j< m_Intervals; j++){
-                        
-                        move+= temp/pow(m_Bias,j);
-			if (debug){
-			  std::cout <<  " move :" << move;
+		      
+		      move+= temp/pow(m_Bias,j);
+		      if (debug){
+			std::cout <<  " move :" << move;
 			  m_LogFile <<  " move:" << move;
-			}
-                        // now compute the coords of the new vertex
-                        coords_new_quad[0] = coords_bl_quad[0]-move*xdisp;
-                        coords_new_quad[1] = coords_bl_quad[1]-move*ydisp;
-                        coords_new_quad[2] = coords_bl_quad[2]-move*zdisp;
-
+		      }
+		      // now compute the coords of the new vertex
+		      coords_new_quad[0] = coords_bl_quad[0]-move*xdisp;
+		      coords_new_quad[1] = coords_bl_quad[1]-move*ydisp;
+		      coords_new_quad[2] = coords_bl_quad[2]-move*zdisp;
+		      
                         int nid = tmp*m_Intervals+j;
                         mb->create_vertex(coords_new_quad, new_vert[nid]);
                         if (debug){
@@ -311,7 +324,8 @@ namespace MeshKit
                         conn[8*j +i] = new_vert[nid];
                     }
                 }
-            }
+            } // Loop thru 4 nodes of a quad ends
+
             if (debug)
 	      {
                 m_LogFile <<  "\nsetting connectivity of the old BL hex " << std::endl;
@@ -352,7 +366,7 @@ namespace MeshKit
 		// add this hex to a block
 		MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
             }
-        }
+        } // Loop thru quads ends
         
         //save the final boundary layer mesh
         MBERRCHK(mb->write_mesh(m_OutFile.c_str()),mb);
@@ -514,10 +528,19 @@ namespace MeshKit
             if (szInputString.substr(0,7) == "outfile"){
                 std::istringstream szFormatString (szInputString);
                 szFormatString >> m_Card >> m_OutFile;
-                if(m_Bias < 0 || szFormatString.fail())
+                if(szFormatString.fail())
                     IOErrorHandler(INVALIDINPUT);
                 std::cout  << m_Card << " name read: "<< m_OutFile <<std::endl;
                 m_LogFile <<  m_Card << " name read: "<< m_OutFile <<std::endl;
+            }
+            // Debug flag
+            if (szInputString.substr(0,5) == "debug"){
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> m_Card >> debug;
+                if(szFormatString.fail())
+                    IOErrorHandler(INVALIDINPUT);
+                std::cout  << m_Card << " name read: "<< debug <<std::endl;
+                m_LogFile <<  m_Card << " name read: "<< debug <<std::endl;
             }
             if (szInputString.substr(0,3) == "end"){
                 break;
