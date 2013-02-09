@@ -342,11 +342,12 @@ class iGeom {
 				double z);
 		virtual inline Error rotateEnt(EntityHandle entity, double angle,
 				double axis_x, double axis_y, double axis_z);
+#if 0
 		virtual inline Error reflectEnt(EntityHandle entity, double norm_x,
 				double norm_y, double norm_z);
 		virtual inline Error scaleEnt(EntityHandle entity, double x_factor,
 				double y_factor, double z_factor);
-
+#endif
 		virtual inline Error uniteEnts(const EntityHandle* entities,
 				int entities_size, EntityHandle& result_entity);
 		virtual inline Error subtractEnts(EntityHandle blank, EntityHandle tool,
@@ -1767,7 +1768,7 @@ inline iGeom::Error iGeom::rotateEnt(EntityHandle entity, double angle,
      iGeom_rotateEnt(mInstance, entity, angle, axis_x, axis_y, axis_z, &err);
      return (Error) err;
 }
-
+#if 0
 inline iGeom::Error iGeom::reflectEnt(EntityHandle entity, double norm_x,
                                       double norm_y, double norm_z)
 {
@@ -1783,7 +1784,7 @@ inline iGeom::Error iGeom::scaleEnt(EntityHandle entity, double x_factor,
      iGeom_scaleEnt(mInstance, entity, x_factor, y_factor, z_factor, &err);
      return (Error) err;
 }
-
+#endif
 inline iGeom::Error iGeom::uniteEnts(const EntityHandle* entities,
                                      int entities_size, EntityHandle& result_entity)
 {
