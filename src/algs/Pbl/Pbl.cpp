@@ -221,9 +221,9 @@ namespace MeshKit
 
         std::vector <bool> node_status(false); // size of verts of bl surface
         node_status.resize(nodes.size());
-        MBRange edges, hexes, hex_edge, quad_verts, adj_quads, adj_hexes1;
+        MBRange edges, hexes, hex_edge, quad_verts, adj_quads, adj_hex_nodes;
         std::vector<EntityHandle> conn(m_Intervals*8), qconn(4), 
-	  new_vert(m_Intervals*nodes.size()), old_hex, old_hex_conn(8), adj_hexes;
+	  new_vert(m_Intervals*nodes.size()), old_hex, old_hex_conn(8), adj_hexes, adj_hex_nodes1;
         double coords_bl_quad[3], coords_new_quad[3], xdisp = 0.0, ydisp = 0.0, zdisp = 0.0;
         EntityHandle hex;
         int qcount = 0;
@@ -244,7 +244,7 @@ namespace MeshKit
             //adj_quads.clear();
             MBERRCHK(mb->get_adjacencies(&(*kter), 1, 3, false, old_hex),mb);
             MBERRCHK(mb->get_connectivity(&old_hex[0], 1, old_hex_conn),mb);
-            
+	    
             for (int i=0; i<4; i++){
                 MBERRCHK(mb->get_coords(&qconn[i], 1, coords_bl_quad),mb);
                 
@@ -267,13 +267,8 @@ namespace MeshKit
                 if(node_status[tmp] == false){
 		  adj_hexes.clear();
 		  MBERRCHK(mb->get_adjacencies(&qconn[i], 1, 3, true, adj_hexes, MBInterface::UNION), mb);
-		  if (adj_hexes.size() == 3){
-		    std::cout << " found " << adj_hexes.size() << " adjacent hexes, aborting .." << std::endl;
-		    m_LogFile << " found " << adj_hexes.size() << " adjacent hexes, aborting .." << std::endl;
-		    exit(0);
-		  }
-		  if(debug)
-		    std::cout << "Found Adjacent Hex # " << adj_hexes.size() << std::endl;
+		  std::cout << adj_hexes.size() << " - adjacent hexes found " << std::endl;
+
 		  double num = m_Thickness*(m_Bias-1)*(pow(m_Bias, m_Intervals -1));
 		  double deno = pow(m_Bias, m_Intervals) - 1;
 		  if (deno !=0)
@@ -324,6 +319,40 @@ namespace MeshKit
                         conn[8*j +i] = new_vert[nid];
                     }
                 }
+		// if a hex does have a quad on BL, but, has a node or edge on the boundary layer
+		for(int k=0; k < (int) adj_hexes.size(); k++){
+		  adj_hex_nodes1.clear();		    
+		  MBERRCHK(mb->get_connectivity(&adj_hexes[k], 1, adj_hex_nodes1), mb);
+		  std::vector<EntityHandle> inodes;
+		  int var = 0;
+		  for(int n = 0; n < nodes.size(); n++){
+		    for(int m = 0; m < 8; m++){
+		      if(nodes[n] == adj_hex_nodes1[m]){
+			inodes.push_back(adj_hex_nodes1[m]);
+			var++;
+		      }
+		    }
+		  }
+		  // doesn't have a quad or when inodes is 0 it mean this is a newly created hex
+		  if(inodes.size() != 4 && inodes.size() != 0){
+		    if(debug){
+		      std::cout << "Hex on BL surface is connected by a node or edge" <<
+			"\n nodes on BL - " << inodes.size() << " aborting .." << std::endl;
+		      m_LogFile << "Hex on BL surface is connected by a node or edge" <<  
+			"\n nodes on BL - " << inodes.size() << " aborting .." <<std::endl;
+		    }
+		    // TODO: mark this hex and set it's connectivity later
+		    int t = 0;
+		    for(int p = 0; p < 8; p++){
+			if(qconn[i] == adj_hex_nodes1[p]){
+			    adj_hex_nodes1[p] = conn[8*(m_Intervals-1)+i];
+		      }
+		    }	  
+		    MBERRCHK(mb->set_connectivity(adj_hexes[k], &adj_hex_nodes1[0], 8), mb);
+		  }
+		    inodes.clear();
+		}
+		
             } // Loop thru 4 nodes of a quad ends
 
             if (debug)
@@ -349,6 +378,9 @@ namespace MeshKit
             
             MBERRCHK(mb->set_connectivity(old_hex[0], &old_hex_conn[0], 8), mb);
             old_hex.clear();
+	    
+	    // handle 3 or 4 hex adjacency cases, set connectivity of non BL hexes.
+	    
             if (debug){
                 std::cout << "creating new boundary layer hexes" << std::endl;
                 m_LogFile <<  "creating new boundary layer hexes" << std::endl;
@@ -375,7 +407,7 @@ namespace MeshKit
         // get the current date and time
         Timer.GetDateTime (szDateTime);
         std::cout << "Ending at : " << szDateTime;
-	m_LogFile <<  "Ending at : " << szDateTime;
+	m_LogFile << "Ending at : " << szDateTime;
         // report/compute the elapsed time
         std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
         << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
