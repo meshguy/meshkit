@@ -5,7 +5,7 @@
 Geometry Volume		   		! 'Geometry' card defines if the meshes are volume or surface
 ProblemType Mesh
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
-GeomEngine OCC
+GeomEngine ACIS
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
 Assemblies 2 23.5 23.5			! 'Assemblies' card defines the number of assembly mesh files and pitch
 assygen_default1.cub S1                  !  Meshfile name followed by alias 
@@ -13,16 +13,8 @@ assygen_default2.cub S2
 Lattice 2 2 
 S1 S2 &
 S2 S1 
-NeumannSet Top  100                     ! 'NeumannSet' card followed by 'location of NeumannSet'  'Id of NeumannSet'
-NeumannSet Bot  101                     !  Values 'top', 'bot' and 'side' are acceptable for second parameter. 
-NeumannSet Side 102 x 0 y 1 c 35.25
-NeumannSet Side 103 x 0 y 1 c -11.75
-NeumannSet Side 104 x 1 y 0 c -35.25
-NeumannSet Side 105 x 1 y 0 c 11.75
+NeumannSet Side 105 x 41 y 0 c 11.75
 MergeTolerance 1e-1
-SaveParallel Both
-Info ON
-MeshInfo ON
-OutputFileName cgd.h5m                  !  cgd.h5m is the desired o/p file name 
+OutputFileName cgd.exo                  !  cgd.h5m is the desired o/p file name 
 end					! 'END' card is a MUST; Marks the end of file for the file reader
 

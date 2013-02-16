@@ -14,7 +14,7 @@ using namespace MeshKit;
 #include "TestUtil.hpp"
 
 MKCore *mk = NULL;
-bool save_mesh = false;
+bool save_mesh = true;
 
 void threeholecube_test();
 void simpletet_test();
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
 void simpletet_test() 
 {
-  mesh_test("simpletet");
+  mesh_test("t");
 }
 
 void threeholecube_test() 
