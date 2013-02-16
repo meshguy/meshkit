@@ -12,7 +12,7 @@
 #include "meshkit/QslimMesher.hpp"
 #include "meshkit/QuadMesh.hpp"
 #include "meshkit/AssyGen.hpp"
-#include "meshkit/Pbl.hpp"
+#include "meshkit/PostBL.hpp"
 #include "meshkit/TriangleMesher.hpp"
 #ifdef HAVE_FBIGEOM
 #include "meshkit/MBGeomOp.hpp"
@@ -57,7 +57,7 @@ REGISTER_MESH_OP(EBMesher);
 REGISTER_MESH_OP(QslimMesher);
 REGISTER_MESH_OP(QuadMesher);
 REGISTER_MESH_OP(AssyGen);
-REGISTER_MESH_OP(Pbl);
+REGISTER_MESH_OP(PostBL);
 REGISTER_MESH_OP(TriangleMesher);
 #ifdef HAVE_FBIGEOM
 REGISTER_MESH_OP(MBGeomOp);

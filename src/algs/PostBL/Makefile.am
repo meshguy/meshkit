@@ -7,13 +7,13 @@ noinst_LTLIBRARIES = libPostBL.la
 SUBDIRS = 
 
 # The directory in which to install headers
-libPbl_la_includedir = $(includedir)
+libPostBL_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-libPbl_la_SOURCES =  \
+libPostBL_la_SOURCES =  \
         ./PostBL.cpp
 # The list of header files which are to be installed
-nobase_libPbl_la_include_HEADERS = \
+nobase_libPostBL_la_include_HEADERS = \
         ../meshkit/PostBL.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are

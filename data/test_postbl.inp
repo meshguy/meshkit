@@ -1,0 +1,10 @@
+MeshFile 5b.cub
+NeumannSet 55
+!Surfaces 11
+Material 55	
+Thickness 0.3
+Intervals 2
+Bias 1.0
+Outfile 5bout.exo	
+debug 1
+END

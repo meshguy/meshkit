@@ -29,7 +29,7 @@ TESTS = test_edgemesh \
         test_ebmesh \
         test_assygen \
         test_TriangleMesher \
-        test_pbl
+        test_postbl
 if HAVE_FBIGEOM
 TESTS += \
         test_fbgeom \

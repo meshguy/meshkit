@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen Triangle Sweep Pbl
+SUBDIRS =  QuadMesher Qslim AssyGen Triangle Sweep PostBL
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
@@ -10,7 +10,7 @@ libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
                            QuadMesher/libJaalQuadMesher.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
-                           Pbl/libPbl.la \
+                           PostBL/libPostBL.la \
                            Triangle/libMKTriangle.la 
                        
 
@@ -79,7 +79,7 @@ AM_CPPFLAGS += $(DEFINES) \
               -I$(srcdir)/QuadMesher \
               -I$(srcdir)/Sweep \
               -I$(srcdir)/AssyGen \
-	      -I$(srcdir)/Pbl
+	      -I$(srcdir)/PostBL
 
 
 if PARALLEL
