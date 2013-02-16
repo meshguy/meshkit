@@ -9,20 +9,17 @@ Symmetry 6			 ! 'Symmetry' card defines the desired symmetry in the model
 !
 GeometryType hexflat    	 ! 'GeometryType' card can take values Hexagonal Cartesian and Default
 !
-Assemblies 2 15.685     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
+Assemblies 1 15.685     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
 pin1.cub  A1      	         ! Meshfile name followed by alias 
-pin2.cub  A2
 !
 Lattice 2           	         ! 'Lattice' card defines core had 2 rings next define these rings based on Aliases
 A1 &
-A1 A2 	        	         ! Assembly arrangement must be in one line, Note the usage of '&' sign, it signals continuation of input in the next line
+A1 A1 	        	         ! Assembly arrangement must be in one line, Note the usage of '&' sign, it signals continuation of input in the next line
 !
 MergeTolerance 1e-3              ! Default value of merge tolerance is 1e-9
 !
 Background test_sodium_all.cub	 ! Background mesh file 
 !
-!NeumannSet Top  100                     ! 'NeumannSet' card followed by 'location of NeumannSet'  'Id of NeumannSet'
-!NeumannSet Bot  101                     !  Values 'top', 'bot' and 'side' are acceptable for second parameter. 
 OutputFileName twoassm_out.h5m   ! twoassm_out.h5m is the desired o/p file name 
 !
 Info ON

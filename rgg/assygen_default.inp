@@ -2,7 +2,7 @@
 ! Default input file used in make check for assygen program
 ! #############################################################################################################
 !
-MeshType HEX
+MeshType Tet	
 GeomEngine ACIS
 GeometryType Rectangular 
 !

@@ -4,7 +4,7 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit -nographics
+CUBIT = cubit
 
 COREGEN = ../../coregen
 
