@@ -12,9 +12,8 @@
 namespace MeshKit
 {
 
-  // static registration of this mesh scheme
-  moab::EntityType PostBL_tps[] = { moab::MBTRI,
-				 moab::MBHEX,
+  // ! static registration of this mesh scheme
+  moab::EntityType PostBL_tps[] = {moab::MBHEX,
 				 moab::MBMAXTYPE};
   const moab::EntityType* PostBL::output_types()
   { return PostBL_tps; }
@@ -40,7 +39,7 @@ namespace MeshKit
   }
     
   PostBL::~PostBL()
-  // ---------------------------------------------------------------------------
+  //! ---------------------------------------------------------------------------
   // Function: Obtains parameters for post meshing boundary layer and load mesh file
   // Input:    command line arguments
   // Output:   none
