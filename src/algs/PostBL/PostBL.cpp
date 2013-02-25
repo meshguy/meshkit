@@ -12,9 +12,9 @@
 namespace MeshKit
 {
 
-  // ! static registration of this mesh scheme
+  // static registration of this mesh scheme
   moab::EntityType PostBL_tps[] = {moab::MBHEX,
-				 moab::MBMAXTYPE};
+				   moab::MBMAXTYPE};
   const moab::EntityType* PostBL::output_types()
   { return PostBL_tps; }
     
@@ -23,9 +23,9 @@ namespace MeshKit
       igeom(mk->igeom_instance()), imesh(mk->imesh_instance()),
       mb (mk->moab_instance())
       // ---------------------------------------------------------------------------
-      // Function: Obtains parameters for post meshing boundary layer and load mesh file
-      // Input:    command line arguments
-      // Output:   none
+      //! Function: Constructor \n
+      //! Input:    Initialize mesh and geometry instances and parameters \n
+      //! Output:   none
       // ---------------------------------------------------------------------------
   {
     m_SurfId = -1;
@@ -35,22 +35,25 @@ namespace MeshKit
     m_nLineNumber = 0;
     szComment = "!";
     MAXCHARS = 300;
+    m_JacCalls = 0;
+    m_JLo = 0.0;
+    m_JHi = 0.0;
     err = 0;
   }
     
   PostBL::~PostBL()
-  //! ---------------------------------------------------------------------------
-  // Function: Obtains parameters for post meshing boundary layer and load mesh file
-  // Input:    command line arguments
-  // Output:   none
+  // ---------------------------------------------------------------------------
+  //! Function: Destructor, does nothing..\n
+  //! Input:    none \n
+  //! Output:   none \n
   // ---------------------------------------------------------------------------
   {}
     
   bool PostBL::add_modelent(ModelEnt *model_ent)
   // ---------------------------------------------------------------------------
-  // Function: Obtains parameters for post meshing boundary layer and load mesh file
-  // Input:    command line arguments
-  // Output:   none
+  //! Function: Adds entities for PosBL graph node.\n
+  //! Input:    ModelEnt \n
+  //! Output:   none \n
   // ---------------------------------------------------------------------------
   {
     return MeshOp::add_modelent(model_ent);
@@ -58,9 +61,9 @@ namespace MeshKit
     
   void PostBL::setup_this()
   // ---------------------------------------------------------------------------
-  // Function: Obtains parameters for post meshing boundary layer and load mesh file
-  // Input:    command line arguments
-  // Output:   none
+  //! Function: Setup the graph node for PostBL \n
+  //! Input:    none \n
+  //! Output:   none \n
   // ---------------------------------------------------------------------------
   {
         
@@ -73,9 +76,9 @@ namespace MeshKit
     
   void PostBL::execute_this()
   // ---------------------------------------------------------------------------
-  // Function: Obtains parameters for post meshing boundary layer and load mesh file
-  // Input:    command line arguments
-  // Output:   none
+  //! Function: Read user input from file and run the PostBL algorithm \n
+  //! Input:     Uses the file name (.inp) with keywords predefined by PosBL algorithm. \n
+  //! Output:    Resulting mesh file is saved. \n
   // ---------------------------------------------------------------------------
   {
     std::cout << "\nIn execute this : creating boundary layer elements.." <<  "\n";
@@ -91,7 +94,7 @@ namespace MeshKit
     m_LogFile <<  "\nStarting out at : " << szDateTime << "\n";
     m_LogFile <<  "\n Loading meshfile: " << m_MeshFile << ".." << std::endl;
 
-    //load specified mesh file
+    // load specified mesh file
     IBERRCHK(imesh->load(0, m_MeshFile.c_str(),0), *imesh);
     m_GD = imesh->getGeometricDimension();
     m_LogFile << "Geometric dimension of meshfile = "<< m_GD <<std::endl;
@@ -351,11 +354,11 @@ namespace MeshKit
 	  if(inodes.size() != 4 && inodes.size() != 0){
 	    if(debug){
 	      std::cout << "Hex on BL surface is connected by a node or edge" <<
-		"\n nodes on BL - " << inodes.size() << " aborting .." << std::endl;
+		"\n nodes on BL - " << inodes.size() << std::endl;
 	      m_LogFile << "Hex on BL surface is connected by a node or edge" <<  
-		"\n nodes on BL - " << inodes.size() << " aborting .." <<std::endl;
+		"\n nodes on BL - " << inodes.size() << std::endl;
 	    }
-	    // TODO: mark this hex and set it's connectivity later
+	    // mark this hex and set it's connectivity later
 	    for(int p = 0; p < 8; p++){
 	      if(qconn[i] == adj_hex_nodes1[p]){
 		adj_hex_nodes1[p] = conn[8*(m_Intervals-1)+i];
@@ -364,11 +367,6 @@ namespace MeshKit
 	    MBERRCHK(mb->set_connectivity(adj_hexes[k], &adj_hex_nodes1[0], 8), mb);
 	    double j_ahex = 0.0;
 	    get_det_jacobian(adj_hex_nodes1, 0, j_ahex);
-	    if (j_ahex <= 0){
-	      std::cout << "\n ERRROR: Negative Jacobian of adj sp hex\n Bailing out.. ";
-	      m_LogFile <<  "\n ERRROR: Negative Jacobian of adj sp hex\n Bailing out.. ";
-	      exit(0);
-	    }
 	  }
 	  inodes.clear();
 	}
@@ -389,13 +387,7 @@ namespace MeshKit
 	}
       }
       double j_old_hex = 0.0;
-      get_det_jacobian(old_hex_conn, 0, j_old_hex);
-      if (j_old_hex <= 0){
-	std::cout << "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
-	m_LogFile <<  "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
-	exit(0);
-      }
-            
+      get_det_jacobian(old_hex_conn, 0, j_old_hex);        
       MBERRCHK(mb->set_connectivity(old_hex[0], &old_hex_conn[0], 8), mb);
       old_hex.clear();
 	    
@@ -409,18 +401,16 @@ namespace MeshKit
       for(int j=0; j< m_Intervals; j++){
 	double j_hex = 0.0;
 	get_det_jacobian(conn, j*8, j_hex);
-	if (j_hex <= 0){
-	  std::cout << "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
-	  m_LogFile <<  "\n ERRROR: Negative Jacobian of old hex\n Bailing out.. ";
-	  exit(0);
-	}
 	MBERRCHK(mb->create_element(MBHEX, &conn[j*8], 8, hex),mb);
 	// add this hex to a block
 	MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
       }
     } // Loop thru quads ends
-        
-    //save the final boundary layer mesh
+
+    std::cout << "\nTotal Jacobian calls/Min/Max: " << m_JacCalls << ", " << m_JLo << ", " << m_JHi << std::endl;
+    m_LogFile << "\nTotal Jacobian calls/Min/Max: " << m_JacCalls << ", " << m_JLo << ", " << m_JHi << std::endl;     
+
+    // save the final boundary layer mesh
     MBERRCHK(mb->write_mesh(m_OutFile.c_str()),mb);
     std::cout << "\n\nWrote Mesh File: " << m_OutFile << std::endl;
     m_LogFile <<  "\n\nWrote Mesh File: " << m_OutFile << std::endl;
@@ -441,9 +431,9 @@ namespace MeshKit
     
   void PostBL::PrepareIO (int argc, char *argv[], std::string  TestDir)
   // ---------------------------------------------------------------------------
-  // Function: Obtains parameters for post meshing boundary layer and load mesh file
-  // Input:    command line arguments
-  // Output:   none
+  //! Function: Parser for reading the PostBL specification (.inp) file. \n
+  //! Input:    Command line arguments. \n
+  //! Output:   none \n
   // ---------------------------------------------------------------------------
   {
     std::cout << '\n';
@@ -601,9 +591,9 @@ namespace MeshKit
   }
   void PostBL::IOErrorHandler (ErrorStates ECode) const
   // ---------------------------------------------------------------------------
-  // Function: displays error messages related to input data
-  // Input:    error code
-  // Output:   none
+  //! Function: Displays error messages related to input data \n
+  //! Input:    Error code \n
+  //! Output:   none \n
   // ---------------------------------------------------------------------------
   {
     std::cerr << '\n';
@@ -618,9 +608,9 @@ namespace MeshKit
   }
   void PostBL::get_normal_quad (std::vector<EntityHandle>conn, CartVect &v)
   // ---------------------------------------------------------------------------
-  // Function: get normal of a quad
-  // Input:    conn
-  // Output:   vector x, y and z
+  //! Function: Get normal of a quad \n
+  //! Input:    conn \n
+  //! Output:   vector x, y and z \n
   // ---------------------------------------------------------------------------
   {
     CartVect coords[3];
@@ -632,14 +622,16 @@ namespace MeshKit
     v = normal;
   }
     
-  void PostBL::get_det_jacobian(std::vector<EntityHandle>conn, int offset, double &detJ)
+  void PostBL::get_det_jacobian(std::vector<EntityHandle> conn, int offset, double &AvgJ)
   // ---------------------------------------------------------------------------
-  // Function: get normal of a quad
-  // Input:    conn
-  // Output:   vector x, y and z
+  //! Function: Get determinant of jacobian \n
+  //! Input:    conn \n
+  //! Output:   vector x, y and z \n
   // ---------------------------------------------------------------------------
   {
-    CartVect vertex[8], xi(0.0);
+    ++m_JacCalls;
+    CartVect vertex[8], xi;
+
     MBERRCHK(mb->get_coords(&conn[offset], 8, (double*) &vertex[0]), mb);
         
     double corner[8][3] = { { -1, -1, -1 },
@@ -650,28 +642,51 @@ namespace MeshKit
 			    {  1, -1,  1 },
 			    {  1,  1,  1 },
 			    { -1,  1,  1 } };
-    Matrix3 J(0.0);
-    for (unsigned i = 0; i < 8; ++i) {
-      const double   xi_p = 1 + xi[0]*corner[i][0];
-      const double  eta_p = 1 + xi[1]*corner[i][1];
-      const double zeta_p = 1 + xi[2]*corner[i][2];
-      const double dNi_dxi   = corner[i][0] * eta_p * zeta_p;
-      const double dNi_deta  = corner[i][1] *  xi_p * zeta_p;
-      const double dNi_dzeta = corner[i][2] *  xi_p *  eta_p;
-      J(0,0) += dNi_dxi   * vertex[i][0];
-      J(1,0) += dNi_dxi   * vertex[i][1];
-      J(2,0) += dNi_dxi   * vertex[i][2];
-      J(0,1) += dNi_deta  * vertex[i][0];
-      J(1,1) += dNi_deta  * vertex[i][1];
-      J(2,1) += dNi_deta  * vertex[i][2];
-      J(0,2) += dNi_dzeta * vertex[i][0];
-      J(1,2) += dNi_dzeta * vertex[i][1];
-      J(2,2) += dNi_dzeta * vertex[i][2];
+
+    for (unsigned j = 0; j < 8; ++j) {
+      xi[0] = corner[j][0];
+      xi[1] = corner[j][1];
+      xi[2] = corner[j][2];
+      Matrix3 J(0.0);
+      double detJ = 0;
+      for (unsigned i = 0; i < 8; ++i) {
+	const double   xi_p = 1 + xi[0]*corner[i][0];
+	const double  eta_p = 1 + xi[1]*corner[i][1];
+	const double zeta_p = 1 + xi[2]*corner[i][2];
+	const double dNi_dxi   = corner[i][0] * eta_p * zeta_p;
+	const double dNi_deta  = corner[i][1] *  xi_p * zeta_p;
+	const double dNi_dzeta = corner[i][2] *  xi_p *  eta_p;
+	J(0,0) += dNi_dxi   * vertex[i][0];
+	J(1,0) += dNi_dxi   * vertex[i][1];
+	J(2,0) += dNi_dxi   * vertex[i][2];
+	J(0,1) += dNi_deta  * vertex[i][0];
+	J(1,1) += dNi_deta  * vertex[i][1];
+	J(2,1) += dNi_deta  * vertex[i][2];
+	J(0,2) += dNi_dzeta * vertex[i][0];
+	J(1,2) += dNi_dzeta * vertex[i][1];
+	J(2,2) += dNi_dzeta * vertex[i][2];
+      }
+      J *= 0.125;  
+      detJ = J.determinant();
+      if(detJ <= 0.0){
+	std::cout << "We've negative jacobian at the hex corner: "<< j+1 << std::endl;
+	m_LogFile << "We've negative jacobian at the hex corner: "<< j+1 << std::endl;
+	exit(0);
+      }
+      AvgJ+=detJ;
     }
-    J *= 0.125;
-    detJ = J.determinant();
+    AvgJ/=8;
+    if(m_JacCalls == 1){
+      m_JLo = AvgJ;
+      m_JHi = AvgJ;
+    }
+    else if(AvgJ < m_JLo){
+      m_JLo = AvgJ;
+    }
+    else if(AvgJ > m_JHi){
+      m_JHi = AvgJ;
+    }
   }
-    
 } // namespace MeshKit
 
 

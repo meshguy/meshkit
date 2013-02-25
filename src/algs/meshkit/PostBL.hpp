@@ -35,23 +35,23 @@
 #endif
 
 //===========================================================================//
-  /*!
-   * \class PostBL
-   * \brief Options and Keywords Used in PostBL Algorithm
-
-   *  RUNNING: Postmesh Boundary Layer Tool can be run using the test_postbl executable in test/algs directory
-              example:-  test_postbl <name>.inp, where, <name> is the name of the input file containing the keywords below:
-       - bias         <double>    bias b/w different layers of boundary layer is always greater than zero.
-       - meshfile     <string>    filename of mesh file that can be read by moab
-       - surfaces     <integer>   id of the surface on which boundary layer needs to be created
-       - neumannset   <integer>   id of the neumann set on which boundary layer needs to be created
-       - material     <integer>   material id to which the newly created hexes will be assigned, default is same as original.
-       - thickness    <double>    boundary layer thickness
-       - debug        <1 or 0>    print all the debug o/p if 0
-       - outfile      <string>    name of output mesh file, can be all format's supported by maob
-       - end                      this marks the end of input file for boundary layer generation  
-       - Sample keyword file can be found here: data/test_postbl.inp
- */
+/*!
+ * \class PostBL
+ * \brief Options and Keywords Used in PostBL Algorithm
+ * 
+ *  RUNNING: Postmesh Boundary Layer Tool can be run using the test_postbl executable in test/algs directory
+ example:-  test_postbl <name>.inp, where, <name> is the name of the input file containing the keywords below:
+ - bias    \verbatim      <double>    bias b/w different layers of boundary layer is always greater than zero. \endverbatim
+ - meshfile \verbatim     <string>    input mesh file name support by moab reader. \endverbatim
+ - surfaces  \verbatim    <integer>   id of the surface on which boundary layer needs to be created.  \endverbatim
+ - neumannset  \verbatim  <integer>   id of the neumann set on which boundary layer needs to be created.  \endverbatim
+ - material    \verbatim  <integer>   material id to which the newly created hexes will be assigned, default is 999. \endverbatim
+ - thickness  \verbatim   <double>    boundary layer thickness. \endverbatim
+ - debug     \verbatim    <1 or 0>    print all the debug o/p if set to 1. A .log file is always created.  \endverbatim
+ - outfile   \verbatim    <string>    name of output mesh file, can be any format that is supported by moab.  \endverbatim
+ - end        \verbatim               this marks the end of input file for boundary layer generation.  \endverbatim
+ - Sample keyword file can be found here: data/test_postbl.inp 
+*/
 
 namespace MeshKit {
 
@@ -107,7 +107,7 @@ namespace MeshKit {
     //! Setup is a no-op, but must be provided since it's pure virtual
     virtual void setup_this();
 
-    //! The only setup/execute function we need, since meshing vertices is trivial
+    //! execute PostBL graph node
     virtual void execute_this();
 
     /** \brief Prepare input/output files for reading/writing
@@ -152,9 +152,9 @@ namespace MeshKit {
     std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName;
     int m_SurfId, m_NeumannSet, m_Material;
     double m_Thickness;
-    int m_Intervals;
-    double m_Bias;
-
+    int m_Intervals, m_JacCalls;
+    double m_Bias, m_JLo, m_JHi;
+    
     int m_GD;
     std::string m_Card;
     int err;

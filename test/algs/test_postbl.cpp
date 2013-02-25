@@ -1,4 +1,4 @@
-/** \file test_pbl.cpp
+/** \file test_postbl.cpp
  *
  * Test PostBL
  *
@@ -22,6 +22,7 @@ void test_PostBL_default(int argc, char **argv);
 int main(int argc, char *argv[])
 {
   mk = new MKCore();
+  //! run the default test case
   test_PostBL_default(argc, argv);
   delete mk;
   return 0;
@@ -29,14 +30,14 @@ int main(int argc, char *argv[])
 
 void test_PostBL_default(int argc, char **argv)
 {
-  // create a model entity vector for construting PostBL meshop, note that NO model entities are required for PostBL meshop.
+  //! create a model entity vector for construting PostBL meshop, note that model entities(mesh) input for PostBL meshop is read from a file.
   MEntVector volso;
 
-  // construct the meshop and set name
+  //! construct the meshop and set name
   PostBL *ag = (PostBL*) mk->construct_meshop("PostBL", volso);
    ag->set_name("PostBL");
 
-  // setup input/output PostBL files for creating the 'Reactor Assembly' geometry
+  //!setup and execute PostBL graph node, point the executable to PostBL input file, 
   ag->PrepareIO(argc, argv, TestDir);
   ag->setup_this();
   ag->execute_this();
