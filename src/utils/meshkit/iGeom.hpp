@@ -342,8 +342,16 @@ class iGeom {
 				double z);
 		virtual inline Error rotateEnt(EntityHandle entity, double angle,
 				double axis_x, double axis_y, double axis_z);
-#if 0
-		virtual inline Error reflectEnt(EntityHandle entity, double norm_x,
+#if IBASE_VERSION_GE(1,4,1)
+		virtual inline Error reflectEnt(EntityHandle entity, double x,
+                                double y, double z, double norm_x,
+                                double norm_y, double norm_z);
+		virtual inline Error scaleEnt(EntityHandle entity, double x,
+                                double y, double z, double x_factor,
+				double y_factor, double z_factor);
+#else
+		virtual inline Error reflectEnt(EntityHandle entity, double x,
+                                double y, double z, double norm_x,
 				double norm_y, double norm_z);
 		virtual inline Error scaleEnt(EntityHandle entity, double x_factor,
 				double y_factor, double z_factor);
@@ -1768,7 +1776,25 @@ inline iGeom::Error iGeom::rotateEnt(EntityHandle entity, double angle,
      iGeom_rotateEnt(mInstance, entity, angle, axis_x, axis_y, axis_z, &err);
      return (Error) err;
 }
-#if 0
+#if IBASE_VERSION_GE(1,4,1)
+inline iGeom::Error iGeom::reflectEnt(EntityHandle entity, double x,
+                                      double y, double z, double norm_x,
+                                      double norm_y, double norm_z)
+{
+     int err;
+     iGeom_reflectEnt(mInstance, entity, x, y, z, norm_x, norm_y, norm_z, &err);
+     return (Error) err;
+}
+
+inline iGeom::Error iGeom::scaleEnt(EntityHandle entity, double x,
+                                      double y, double z, double x_factor,
+                                      double y_factor, double z_factor)
+{
+     int err;
+     iGeom_scaleEnt(mInstance, entity, x, y, z, x_factor, y_factor, z_factor, &err);
+     return (Error) err;
+}
+#else
 inline iGeom::Error iGeom::reflectEnt(EntityHandle entity, double norm_x,
                                       double norm_y, double norm_z)
 {
