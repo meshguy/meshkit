@@ -350,8 +350,7 @@ class iGeom {
                                 double y, double z, double x_factor,
 				double y_factor, double z_factor);
 #else
-		virtual inline Error reflectEnt(EntityHandle entity, double x,
-                                double y, double z, double norm_x,
+		virtual inline Error reflectEnt(EntityHandle entity, double norm_x,
 				double norm_y, double norm_z);
 		virtual inline Error scaleEnt(EntityHandle entity, double x_factor,
 				double y_factor, double z_factor);
