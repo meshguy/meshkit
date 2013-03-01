@@ -10,7 +10,7 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/ModelEnt.hpp"
 
-#include "CGMApp.hpp"
+//#include "CGMApp.hpp"
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
@@ -86,7 +86,7 @@ int load_and_mesh(const char *input_filename,
   // start up MK and load the geometry
   MKCore mk;
   time(&start_time);
-  CGMApp::instance()->attrib_manager()->auto_flag( CUBIT_TRUE );
+//  CGMApp::instance()->attrib_manager()->auto_flag( CUBIT_TRUE );
   mk.load_mesh(input_filename, NULL, 0, 0, 0, true);
   time(&load_time);
 
