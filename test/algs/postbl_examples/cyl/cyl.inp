@@ -1,0 +1,10 @@
+MeshFile cyl.cub
+!NeumannSet 11
+Surfaces 1
+Material 54
+Thickness 4.5
+Intervals 2
+Bias 0.8
+Outfile oc.h5m
+DEBUG 1
+END	
