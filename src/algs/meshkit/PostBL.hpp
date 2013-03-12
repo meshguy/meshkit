@@ -26,7 +26,7 @@
 #include "SimpleArray.hpp"
 #include "../AssyGen/parser.hpp"
 #include "../AssyGen/clock.hpp"
-
+#include "../PostBL/mstream.hpp"
 #ifdef HAVE_MOAB
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
@@ -34,7 +34,6 @@
 #include "MBCartVect.hpp"
 #endif
 
-//===========================================================================//
 /*!
  * \class PostBL
  * \brief Options and Keywords Used in PostBL Algorithm
@@ -56,6 +55,7 @@
 namespace MeshKit {
 
 #define DEFAULT_TEST_POSTBL  "test_postbl.inp"
+
   class MKCore;
 
   class PostBL : public MeshScheme
@@ -143,18 +143,19 @@ namespace MeshKit {
     bool debug;
     // !! file Input
     std::ifstream m_FileInput; 
-    std::ofstream m_LogFile;
+   // std::ofstream m_LogFile;
     std::string szInputString;
     std::string szComment;
     int MAXCHARS, m_nLineNumber;
     
     // ! variables to parse
-    std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName;
+    std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName, m_MeshType;
     int m_SurfId, m_NeumannSet, m_Material;
     double m_Thickness;
     int m_Intervals, m_JacCalls;
     double m_Bias, m_JLo, m_JHi;
-    
+    // ! variable for hex and tet meshes
+    int m_Conn, m_Face;
     int m_GD;
     std::string m_Card;
     int err;

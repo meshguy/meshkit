@@ -46,7 +46,7 @@ public:
   ModelEnt(MKCore *mk,
            iGeom::EntityHandle geom_ent,
            int geom_index,
-           moab::EntityHandle mesh_ent = NULL,
+           moab::EntityHandle mesh_ent = 0,
            int mesh_index = -1,
            int irel_index = -1,
            int sizing_index = -1);
@@ -62,7 +62,7 @@ public:
   ModelEnt(MKCore *mk,
            iGeom::EntitySetHandle geom_set,
            int geom_index,
-           moab::EntityHandle mesh_ent = NULL,
+           moab::EntityHandle mesh_ent = 0,
            int mesh_index = -1,
            int irel_index = -1,
            int sizing_index = -1,
