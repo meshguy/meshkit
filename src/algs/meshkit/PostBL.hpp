@@ -120,7 +120,13 @@ namespace MeshKit {
      * \param conn connectivity array type EntityHandle
      *	\param v return normal vector
      */
-    void get_normal_quad (std::vector<EntityHandle>conn, CartVect &v);
+    void get_normal_quad (std::vector<EntityHandle>conn, CartVect &v)   ;
+
+    /** \brief get the normals given connectivity of a quad
+     * \param conn connectivity array type EntityHandle
+     *	\param v return normal vector
+     */
+    void get_normal_edge (std::vector<EntityHandle>conn, CartVect AB, CartVect &v);
 
     /** \brief compute determinant of jacobian of a hex element
      *  \param conn connectivity array
@@ -143,7 +149,7 @@ namespace MeshKit {
     bool debug;
     // !! file Input
     std::ifstream m_FileInput; 
-   // std::ofstream m_LogFile;
+    mstream m_LogFile;
     std::string szInputString;
     std::string szComment;
     int MAXCHARS, m_nLineNumber;
@@ -155,8 +161,8 @@ namespace MeshKit {
     int m_Intervals, m_JacCalls;
     double m_Bias, m_JLo, m_JHi;
     // ! variable for hex and tet meshes
-    int m_Conn, m_Face;
-    int m_GD;
+    int m_Conn, m_BElemNodes;
+    int m_GD, m_BLDim;
     std::string m_Card;
     int err;
 

@@ -1,0 +1,10 @@
+MeshFile q.cub
+!NeumannSet 9
+Surfaces 13
+Material 4
+Thickness 0.1
+Intervals 2
+Bias 1.0
+Outfile o-2dquad.exo
+debug 1
+END

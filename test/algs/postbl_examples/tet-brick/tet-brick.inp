@@ -1,11 +1,10 @@
-MeshType Tet
 MeshFile tbr.cub
 !NeumannSet 9
 Surfaces 1
 Material 4
 Thickness 0.3
-Intervals 6
+Intervals 2
 Bias 1.0
 Outfile o-tet-brick.h5m
-debug 0
+debug 1
 END
