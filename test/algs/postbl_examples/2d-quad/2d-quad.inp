@@ -1,6 +1,6 @@
 MeshFile q.cub
-!NeumannSet 9
-Surfaces 13
+NeumannSet 2
+!Surfaces 2
 Material 4
 Thickness 0.1
 Intervals 2

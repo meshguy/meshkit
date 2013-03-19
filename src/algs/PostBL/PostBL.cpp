@@ -32,6 +32,7 @@ namespace MeshKit
     m_BElemNodes = 0;
     m_SurfId = -1;
     debug = false;
+    hybrid = false; // when moab supports hybrid meshes in future
     m_NeumannSet = -1;
     m_Material = 999;
     m_nLineNumber = 0;
@@ -260,27 +261,50 @@ namespace MeshKit
             if(mb->type_from_handle(old_hex[0]) == MBHEX){
                 m_Conn = 8;
                 m_BElemNodes = 4;
+                m_HConn = 8;
+                //allocating based on element type
+                conn.resize(m_Intervals*m_Conn), qconn.resize(m_BElemNodes), adj_qconn.resize(m_BElemNodes),
+                    old_hex_conn.resize(m_Conn), adj_hex_nodes1.resize(m_Conn);
               }
             else if(mb->type_from_handle(old_hex[0]) == MBTET){
                 m_Conn = 4;
+                m_HConn = 4;
                 m_BElemNodes = 3;
+                //allocating based on element type - thrice the number of elements
+                if(hybrid)
+                  conn.resize(m_Intervals*6);
+                else
+                  conn.resize(3*m_Intervals*m_Conn);
+                qconn.resize(m_BElemNodes), adj_qconn.resize(m_BElemNodes),
+                    old_hex_conn.resize(m_Conn), adj_hex_nodes1.resize(m_Conn);
               }
             else if(mb->type_from_handle(old_hex[0]) == MBQUAD){
                 m_Conn = 4;
+                m_HConn = 4;
                 m_BElemNodes = 2;
+                //allocating based on element type
+                conn.resize(m_Intervals*m_Conn), qconn.resize(m_BElemNodes), adj_qconn.resize(m_BElemNodes),
+                    old_hex_conn.resize(m_Conn), adj_hex_nodes1.resize(m_Conn);
               }
             else if(mb->type_from_handle(old_hex[0]) == MBTRI){
                 m_Conn = 3;
+                m_HConn = 3;
                 m_BElemNodes = 2;
+                //allocating based on element type - twice the number of elements
+                if(hybrid){
+                    m_HConn = 4;
+                    conn.resize(m_Intervals*m_HConn);
+                  }
+                else{
+                    conn.resize(2*m_Intervals*m_Conn);
+                  }
+                qconn.resize(m_BElemNodes), adj_qconn.resize(m_BElemNodes),
+                    old_hex_conn.resize(m_Conn), adj_hex_nodes1.resize(m_Conn);
               }
             else if(m_Conn == 0 || m_BElemNodes == 0){
                 m_LogFile << "MeshType is not supported by this tool" << std::endl;
                 exit(0);
               }
-
-            //Before allocating this determine the element type
-            conn.resize(m_Intervals*m_Conn), qconn.resize(m_BElemNodes), adj_qconn.resize(m_BElemNodes),
-                old_hex_conn.resize(m_Conn), adj_hex_nodes1.resize(m_Conn);
           }
         MBERRCHK(mb->get_connectivity(&(*kter), 1, qconn),mb);
         MBERRCHK(mb->get_connectivity(&old_hex[0], 1, old_hex_conn),mb);
@@ -316,6 +340,7 @@ namespace MeshKit
                 MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_BLDim, false, adj_quads, MBInterface::UNION), mb);
 
                 CartVect rt(0.0, 0.0, 0.0), v(3);
+                // TODO: Add feature to add element on both sides of the boundary layer
                 // find the normal direction where new nodes are to be created - xdisp, ydisp and zdisp
                 for (int q=0; q < (int) quads.size(); q++){
                     for(int r=0; r < (int) adj_quads.size(); r++){
@@ -355,6 +380,7 @@ namespace MeshKit
                     coords_new_quad[2] = coords_bl_quad[2]-move*zdisp;
 
                     int nid = blNodeId*m_Intervals+j;
+                    // TODO: Check if this vertex is possible (detect possible collision with geometry)
                     mb->create_vertex(coords_new_quad, new_vert[nid]);
                     if (debug){
                         m_LogFile << std::setprecision (3) << std::scientific << " : created node:" << (nid + 1)
@@ -383,6 +409,23 @@ namespace MeshKit
                       conn[m_Conn*j + m_BElemNodes + 1 - i] = new_vert[nid-1];
                     conn[m_Conn*j +i] = new_vert[nid];
                   }
+                if(m_Conn == 4 && m_BElemNodes == 4 && hybrid == true){ // make wedges aka prisms
+                    int nid = blNodeId*m_Intervals+j;
+                    if(j==0) // set connectivity of boundary layer hex
+                      conn[m_HConn*j + i+m_BElemNodes] = qconn[i];
+                    else
+                      conn[m_HConn*j + i+m_BElemNodes] = new_vert[nid-1];
+                    conn[m_HConn*j +i] = new_vert[nid];
+                  }
+                else if(m_Conn == 3 && m_BElemNodes == 2 && hybrid ==true){ // make quads
+                    int nid = blNodeId*m_Intervals+j;
+                    if(j==0) // set connectivity of boundary layer hex
+                      conn[m_HConn*j + i+m_BElemNodes] = qconn[m_BElemNodes-i-1];
+                    else
+                      conn[m_HConn*j + m_BElemNodes + 1 - i] = new_vert[nid-1];
+                    conn[m_HConn*j +i] = new_vert[nid];
+                  }
+                //TODO: Set Connectivity of tet's and tri meshes. Another loop is required.
               }
 
             // if a hex does have a quad on BL, but, has a node or edge on the boundary layer
@@ -400,7 +443,7 @@ namespace MeshKit
                       }
                   }
                 // doesn't have a quad or when inodes is 0 it mean this is a newly created hex
-                if(inodes.size() != m_BElemNodes && inodes.size() != 0){
+                if((int) inodes.size() != m_BElemNodes && (int) inodes.size() != 0){
                     if(debug){
                         m_LogFile << "Hex on BL surface is connected by a node or edge" <<
                                      "\n nodes on BL - " << inodes.size() << std::endl;
@@ -408,7 +451,7 @@ namespace MeshKit
                     // mark this hex and set it's connectivity later
                     for(int p = 0; p < m_Conn; p++){
                         if(qconn[i] == adj_hex_nodes1[p]){
-                            adj_hex_nodes1[p] = conn[m_Conn*(m_Intervals-1)+i];
+                            adj_hex_nodes1[p] = conn[m_HConn*(m_Intervals-1)+i];
                           }
                       }
                     MBERRCHK(mb->set_connectivity(adj_hexes[k], &adj_hex_nodes1[0], m_Conn), mb);
@@ -419,7 +462,6 @@ namespace MeshKit
                 MBERRCHK(mb->add_entities(smooth_set, &adj_hexes[k], 1), mb);
                 inodes.clear();
               }
-
           } // Loop thru 4 nodes of a quad ends
 
         if (debug)
@@ -430,7 +472,7 @@ namespace MeshKit
         for(int p=0; p<m_Conn; p++){
             for(int q=0; q<m_BElemNodes; q++){
                 if (old_hex_conn[p] == qconn[q]){
-                    old_hex_conn[p] = conn[m_Conn*(m_Intervals-1) + q];
+                    old_hex_conn[p] = conn[m_HConn*(m_Intervals-1) + q];
                   }
               }
           }
@@ -442,7 +484,6 @@ namespace MeshKit
         // mark entities for smoothing
         MBERRCHK(mb->add_entities(smooth_set, &old_hex[0], 1), mb);
 
-
         if (debug){
             m_LogFile <<  "creating new boundary layer hexes" << std::endl;
           }
@@ -450,21 +491,28 @@ namespace MeshKit
         for(int j=0; j< m_Intervals; j++){
             double j_hex = 0.0;
             get_det_jacobian(conn, j*m_Conn, j_hex);
-            if(m_Conn == 8)
-              MBERRCHK(mb->create_element(MBHEX, &conn[j*m_Conn], m_Conn, hex),mb);
-            else if(m_Conn==4 && m_GD ==3)
-              MBERRCHK(mb->create_element(MBTET, &conn[j*m_Conn], m_Conn, hex),mb);
-            else if(m_Conn==4 && m_GD ==2)
-              MBERRCHK(mb->create_element(MBQUAD, &conn[j*m_Conn], m_Conn, hex),mb);
-            else if(m_Conn==3 && m_GD ==2)
-              MBERRCHK(mb->create_element(MBTRI, &conn[j*m_Conn], m_Conn, hex),mb);
+            if(m_Conn == 8){
+                MBERRCHK(mb->create_element(MBHEX, &conn[j*m_Conn], m_Conn, hex),mb);
+              }
+            else if(m_Conn==4 && m_GD ==3 && hybrid == true){
+                MBERRCHK(mb->create_element(MBPRISM, &conn[j*6], 6, hex),mb);
+              }
+            else if(m_Conn==4 && m_GD ==2){
+                MBERRCHK(mb->create_element(MBQUAD, &conn[j*m_Conn], m_Conn, hex),mb);
+              }
+            else if(m_Conn==4 && m_GD ==2 && hybrid == true){
+                MBERRCHK(mb->create_element(MBQUAD, &conn[j*m_HConn], m_HConn, hex),mb);
+              }
             // add this hex to a block
             MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
 
             // mark entities for smoothing
             MBERRCHK(mb->add_entities(smooth_set, &hex, 1), mb);
+            // TODO: Add Local Smooting
           }
       } // Loop thru quads ends
+
+    // TODO: Add Global Smoothing Option
 
     m_LogFile << "\nTotal Jacobian calls/Min/Max: " << m_JacCalls << ", " << m_JLo << ", " << m_JHi << std::endl;
 

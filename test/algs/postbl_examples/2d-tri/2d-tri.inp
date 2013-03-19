@@ -2,7 +2,7 @@ MeshFile t.cub
 !NeumannSet 9
 Surfaces 13
 Material 4
-Thickness 0.1
+Thickness 0.4
 Intervals 2
 Bias 1.0
 Outfile o-2dtri.exo

@@ -37,7 +37,7 @@
 /*!
  * \class PostBL
  * \brief Options and Keywords Used in PostBL Algorithm
- * 
+ *
  *  RUNNING: Postmesh Boundary Layer Tool can be run using the test_postbl executable in test/algs directory
  example:-  test_postbl <name>.inp, where, <name> is the name of the input file containing the keywords below:
  - bias    \verbatim      <double>    bias b/w different layers of boundary layer is always greater than zero. \endverbatim
@@ -49,7 +49,7 @@
  - debug     \verbatim    <1 or 0>    print all the debug o/p if set to 1. A .log file is always created.  \endverbatim
  - outfile   \verbatim    <string>    name of output mesh file, can be any format that is supported by moab.  \endverbatim
  - end        \verbatim               this marks the end of input file for boundary layer generation.  \endverbatim
- - Sample keyword file can be found here: data/test_postbl.inp 
+ - Sample keyword file can be found here: data/test_postbl.inp
 */
 
 namespace MeshKit {
@@ -146,9 +146,9 @@ namespace MeshKit {
     MBInterface *mb;
 
     // ! parser related
-    bool debug;
+    bool debug, hybrid;
     // !! file Input
-    std::ifstream m_FileInput; 
+    std::ifstream m_FileInput;
     mstream m_LogFile;
     std::string szInputString;
     std::string szComment;
@@ -156,7 +156,7 @@ namespace MeshKit {
     
     // ! variables to parse
     std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName, m_MeshType;
-    int m_SurfId, m_NeumannSet, m_Material;
+    int m_SurfId, m_NeumannSet, m_Material, m_HConn;
     double m_Thickness;
     int m_Intervals, m_JacCalls;
     double m_Bias, m_JLo, m_JHi;

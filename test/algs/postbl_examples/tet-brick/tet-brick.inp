@@ -5,6 +5,6 @@ Material 4
 Thickness 0.3
 Intervals 2
 Bias 1.0
-Outfile o-tet-brick.h5m
+Outfile o-tet-brick.exo
 debug 1
 END
