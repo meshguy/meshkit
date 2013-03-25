@@ -158,7 +158,7 @@ namespace MeshKit {
     std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName, m_MeshType;
     int m_SurfId, m_NeumannSet, m_Material, m_HConn;
     double m_Thickness;
-    int m_Intervals, m_JacCalls;
+    int m_Intervals, m_JacCalls, tri_sch;
     double m_Bias, m_JLo, m_JHi;
     // ! variable for hex and tet meshes
     int m_Conn, m_BElemNodes;

@@ -1,10 +1,12 @@
 MeshFile t.cub
 !NeumannSet 9
+TriScheme 2
+Hybrid 0
 Surfaces 13
 Material 4
-Thickness 0.4
-Intervals 2
+Thickness 0.3
+Intervals 3
 Bias 1.0
-Outfile o-2dtri.exo
+Outfile o-2dtri.vtk
 debug 1
 END
