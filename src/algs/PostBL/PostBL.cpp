@@ -108,12 +108,15 @@ namespace MeshKit
     m_LogFile << "Geometric dimension of meshfile = "<< m_GD <<std::endl;
 
     // obtain the boundary layer surface faces
-    moab::Tag GDTag, GIDTag, NTag, MTag, STag;
+    moab::Tag GDTag, GIDTag, NTag, MTag, STag, FTag;
     MBERRCHK(mb->tag_get_handle("GEOM_DIMENSION", 1, moab::MB_TYPE_INTEGER, GDTag),mb);
     MBERRCHK(mb->tag_get_handle("NEUMANN_SET", 1, moab::MB_TYPE_INTEGER, NTag),mb);
     MBERRCHK(mb->tag_get_handle("MATERIAL_SET", 1, moab::MB_TYPE_INTEGER, MTag),mb);
     MBERRCHK(mb->tag_get_handle("GLOBAL_ID", 1, moab::MB_TYPE_INTEGER, GIDTag),mb);
     MBERRCHK(mb->tag_get_handle("SMOOTHSET", 1, moab::MB_TYPE_INTEGER, STag,
+                                moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT),mb);
+    //create fixed tag for mesquite
+    MBERRCHK(mb->tag_get_handle("fixed", 1, moab::MB_TYPE_INTEGER, FTag,
                                 moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT),mb);
 
     moab::Range sets, n_sets, m_sets;
@@ -197,10 +200,15 @@ namespace MeshKit
               }
           }
       }
+
     if (quads.size() == 0 || nodes.size() == 0) {
         m_LogFile <<  "Invalid boundary layer specification, aborting.." <<  std::endl;
         exit(0);
       }
+    // set fixed tag on all the BL nodes
+    int node_data = 1;
+    const void* data[] = {&node_data};
+    MBERRCHK(mb->tag_set_data(FTag, nodes, data), mb);
 
     // Handling MaterialSet
     moab::Range::iterator mset_it;
@@ -233,6 +241,18 @@ namespace MeshKit
     int s_id = 100;
     MBERRCHK(mb->create_meshset(moab::MESHSET_SET, smooth_set, 1), mb);
     MBERRCHK(mb->tag_set_data(STag, &smooth_set, 1, &s_id), mb);
+
+    // placeholder for storing gd on new entities
+    moab::EntityHandle geom_set;
+    MBERRCHK(mb->create_meshset(moab::MESHSET_SET, geom_set, 1), mb);
+    MBERRCHK(mb->tag_set_data(GDTag, &geom_set, 1, &m_GD), mb);
+
+    // placeholder for storing fixed tag entities
+    moab::EntityHandle fixed_set;
+    int f_id = 1;
+    // add fixed tag to all BL nodes
+    MBERRCHK(mb->create_meshset(moab::MESHSET_SET, fixed_set, 1), mb);
+    MBERRCHK(mb->tag_set_data(FTag, &fixed_set, 1, &f_id), mb);
 
     std::vector <bool> node_status(false); // size of verts of bl surface
     node_status.resize(nodes.size());
@@ -343,8 +363,9 @@ namespace MeshKit
             double temp;
             //create new nodes
             if(node_status[blNodeId] == false){
+                MBERRCHK(mb->add_entities(fixed_set, &qconn[i], 1), mb);
                 adj_hexes.clear();
-                MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_GD, true, adj_hexes, MBInterface::UNION), mb);
+                MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_GD, false, adj_hexes, MBInterface::UNION), mb);
                 MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_BLDim, false, adj_quads, MBInterface::UNION), mb);
 
                 CartVect rt(0.0, 0.0, 0.0), v(3);
@@ -399,7 +420,7 @@ namespace MeshKit
                 node_status[blNodeId] = true;
               }
 
-            //set the connectivity after creating nodes for this BL node
+            //populate the connectivity after creating nodes for this BL node
             for(int j=0; j< m_Intervals; j++){
                 if(m_Conn == 8 && m_BElemNodes == 4){
                     int nid = blNodeId*m_Intervals+j;
@@ -461,7 +482,19 @@ namespace MeshKit
                             adj_hex_nodes1[p] = conn[m_HConn*(m_Intervals-1)+i];
                           }
                       }
-                    // TODO: delete lower dimension mesh entities
+                    // check to see if this node position change also changes lower dimension entities
+                    std::vector<EntityHandle> adj1, adj2;
+                    EntityHandle one = qconn[i];
+                    EntityHandle two = adj_hexes[k];
+                    std::vector<EntityHandle> from_entities;
+                    from_entities.push_back(one);
+                    from_entities.push_back(two);
+                    if(m_BLDim == 2){
+                        MBERRCHK(mb->get_adjacencies(&from_entities[0], 2, 1, false, adj1), mb);
+                        MBERRCHK(mb->delete_entities(&adj1[0], (int) adj1.size()), mb);
+                      }
+                    MBERRCHK(mb->get_adjacencies(&from_entities[0], 2, m_BLDim, false, adj2), mb);
+                    MBERRCHK(mb->delete_entities(&adj2[0], (int) adj2.size()), mb);
                     MBERRCHK(mb->set_connectivity(adj_hexes[k], &adj_hex_nodes1[0], m_Conn), mb);
                   }
                 double j_ahex = 0.0;
@@ -470,9 +503,9 @@ namespace MeshKit
                 MBERRCHK(mb->add_entities(smooth_set, &adj_hexes[k], 1), mb);
                 inodes.clear();
               }
-          } // Loop thru 4 nodes of a quad ends
+          } // Loop thru BL element nodes ends
 
-        //TODO: Set Connectivity of tet's, break  3, Another loop is required.
+        //TODO: Set Connectivity of tet's, break prisms into 3 tets, Another loop is required.
         if(m_Conn == 3 && m_BElemNodes == 2 && hybrid == false){
             for(int c=0; c<m_Intervals; c++){
                 if(tri_sch == 1){
@@ -507,12 +540,24 @@ namespace MeshKit
             for(int q=0; q<m_BElemNodes; q++){
                 if (old_hex_conn[p] == qconn[q]){
                     old_hex_conn[p] = conn[m_HConn*(m_Intervals-1) + q];
+                    // check to see if this node position change also changes lower dimension entities
+                    std::vector<EntityHandle> adj1, adj2;
+                    EntityHandle one = qconn[q];
+                    EntityHandle two = old_hex[0];
+                    std::vector<EntityHandle> from_entities;
+                    from_entities.push_back(one);
+                    from_entities.push_back(two);
+                    if(m_BLDim == 2){
+                        MBERRCHK(mb->get_adjacencies(&from_entities[0], 2, 1, false, adj1), mb);
+                        MBERRCHK(mb->delete_entities(&adj1[0], (int) adj1.size()), mb);
+                      }
+                    MBERRCHK(mb->get_adjacencies(&from_entities[0], 2, m_BLDim, false, adj2), mb);
+                    MBERRCHK(mb->delete_entities(&adj2[0], (int) adj2.size()), mb);
                   }
               }
           }
         double j_old_hex = 0.0;
         get_det_jacobian(old_hex_conn, 0, j_old_hex);
-        // TODO: delete lower dimension mesh entities
         MBERRCHK(mb->set_connectivity(old_hex[0], &old_hex_conn[0], m_Conn), mb);
         old_hex.clear();
 
@@ -545,11 +590,11 @@ namespace MeshKit
                 MBERRCHK(mb->add_entities(smooth_set, &hex1, 1), mb);
               }
             // add this hex to a block
-            if(hex!=0){ MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
-
-                // mark entities for smoothing
-                MBERRCHK(mb->add_entities(smooth_set, &hex, 1), mb);
-              }
+            MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
+            // mark entities for smoothing
+            MBERRCHK(mb->add_entities(smooth_set, &hex, 1), mb);
+            // add geom dim tag
+            MBERRCHK(mb->add_entities(geom_set, &hex, 1), mb);
             // TODO: Add Local Smooting
           }
       } // Loop thru quads ends
@@ -784,6 +829,7 @@ namespace MeshKit
   //! Output:   vector x, y and z \n
   // ---------------------------------------------------------------------------
   {
+    //TODO: Add quality check for tri/quad and pyramids
     if(m_Conn ==8){
         ++m_JacCalls;
         CartVect vertex[8], xi;
