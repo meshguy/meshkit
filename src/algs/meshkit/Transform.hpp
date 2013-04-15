@@ -4,7 +4,7 @@
 #include "meshkit/Error.hpp"
 #include "meshkit/iMesh.hpp"
 #include "meshkit/Matrix.hpp"
-#include "meshkit/TransformBase.hpp"
+#include "TransformBase.hpp"
 #include <vector>
 
 namespace MeshKit {

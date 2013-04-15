@@ -12,7 +12,7 @@
 #include "meshkit/MeshScheme.hpp"
 #include "meshkit/ModelEnt.hpp"
 
-#include "meshkit/CESets.hpp"
+#include "CESets.hpp"
 #include "meshkit/LocalTag.hpp"
 #include "meshkit/Matrix.hpp"
 
