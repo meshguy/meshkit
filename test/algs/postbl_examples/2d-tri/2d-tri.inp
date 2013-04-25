@@ -1,8 +1,8 @@
 MeshFile t.cub
-NeumannSet 13
+!NeumannSet 13
 TriScheme 2
 Hybrid 0
-!Surfaces 13
+Surfaces 13
 Material 4
 Thickness 0.3
 Intervals 1

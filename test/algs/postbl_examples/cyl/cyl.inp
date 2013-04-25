@@ -5,6 +5,6 @@ Material 54
 Thickness 4.0
 Intervals 1
 Bias 0.8
-Outfile oc.h5m
+Outfile oc.exo
 DEBUG 1
 END	

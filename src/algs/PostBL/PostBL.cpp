@@ -153,7 +153,7 @@ namespace MeshKit
 
     // For specified surface: get the  all the quads and nodes in a range
     moab::EntityHandle s1;
-    MBRange quads, nodes;
+    MBRange quads, nodes, fixmat_ents;
     int dims; // variable to store global id of boundary layer specified in the input file
 
     // Method 1: INPUT by NeumannSet
@@ -224,6 +224,9 @@ namespace MeshKit
             found = 1;
             break;
           }
+        else if(mset_id == fixmat){
+            MBERRCHK(mb->get_entities_by_dimension(mthis_set, m_GD, fixmat_ents ,true),mb);
+          }
         mthis_set = 0;
       }
     if(found == 1 && m_Material !=999){
@@ -280,6 +283,17 @@ namespace MeshKit
         if((int) old_hex.size() == 0){
             m_LogFile << "unable to find adjacent hex for BL quad, aborting...";
             exit(0);
+          }
+
+        // if fixmat specified, filter old hex, we don't have to correct both sides of the boundary
+        if (fixmat !=0 && (int) old_hex.size() > 1){
+            moab::EntityHandle old_hex_set;
+            MBERRCHK(mb->create_meshset(moab::MESHSET_SET, old_hex_set, 1), mb);
+            MBERRCHK(mb->add_entities(old_hex_set,&old_hex[0], (int) old_hex.size()), mb);
+            MBERRCHK(mb->remove_entities(old_hex_set, fixmat_ents), mb);
+            old_hex.clear();
+            old_hex.empty();
+            MBERRCHK(mb->get_entities_by_dimension(old_hex_set, m_GD, old_hex), mb);
           }
 
         if(qcount ==1){
@@ -340,7 +354,6 @@ namespace MeshKit
         // get the normal to the plane of the 2D mesh
         if(m_GD==2 && qcount == 1)
           get_normal_quad (old_hex_conn, surf_normal);
-
         for (int i=0; i<m_BElemNodes; i++){
             MBERRCHK(mb->get_coords(&qconn[i], 1, coords_bl_quad),mb);
 
@@ -368,6 +381,20 @@ namespace MeshKit
                 MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_GD, false, adj_hexes, MBInterface::UNION), mb);
                 MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_BLDim, false, adj_quads, MBInterface::UNION), mb);
 
+                // if fixmat specified, filter old hex, we don't have to correct both sides of the boundary
+                if (fixmat !=0 && (int) adj_hexes.size() > 1){
+                    moab::EntityHandle adj_hex_set;
+                    MBERRCHK(mb->create_meshset(moab::MESHSET_SET, adj_hex_set, 1), mb);
+                    MBERRCHK(mb->add_entities(adj_hex_set,&adj_hexes[0], (int) adj_hexes.size()), mb);
+                    MBERRCHK(mb->remove_entities(adj_hex_set, fixmat_ents), mb);
+                    adj_hexes.clear();
+                    adj_hexes.empty();
+                    MBERRCHK(mb->get_entities_by_dimension(adj_hex_set, m_GD, adj_hexes), mb);
+                  }
+
+                int side_number = 0, sense = 1, offset = 0;
+                MBERRCHK(mb->side_number(old_hex[0], (*kter), side_number, sense, offset), mb);
+
                 CartVect rt(0.0, 0.0, 0.0), v(3);
                 // TODO: Add feature to add element on both sides of the boundary layer
                 // find the normal direction where new nodes are to be created - xdisp, ydisp and zdisp
@@ -376,10 +403,18 @@ namespace MeshKit
                         if (adj_quads[r] == quads[q]){
                             // it's a BL quad, get the normal and prepare to compute average
                             MBERRCHK(mb->get_connectivity(&adj_quads[r], 1, adj_qconn),mb);
-                            if(m_GD==3)
-                              get_normal_quad (adj_qconn, v);
-                            else if(m_GD==2)
-                              get_normal_edge(adj_qconn, surf_normal, v);
+                            if(m_GD==3){
+                                get_normal_quad (adj_qconn, v);
+                                if (sense == -1)
+                                  v=-v;
+                              }
+                            else if(m_GD==2){
+                                if(sense == 1)
+                                  get_normal_edge(adj_qconn, surf_normal, v);
+                                else
+                                  get_normal_edge(adj_qconn, -surf_normal, v);
+                              }
+                            //TODO: Check to make sure that normal is inwards
                             rt = rt + v;
                             xdisp=rt[0]/rt.length();
                             ydisp=rt[1]/rt.length();
@@ -535,7 +570,7 @@ namespace MeshKit
           {
             m_LogFile <<  "\nsetting connectivity of the old BL hex " << std::endl;
           }
-        //            // First replace BL nodes (part of old hex) with newly created nodes, then set connectivity of the old_hex
+        // First replace BL nodes (part of old hex) with newly created nodes, then set connectivity of the old_hex
         for(int p=0; p<m_Conn; p++){
             for(int q=0; q<m_BElemNodes; q++){
                 if (old_hex_conn[p] == qconn[q]){
@@ -691,6 +726,14 @@ namespace MeshKit
               IOErrorHandler(INVALIDINPUT);
             m_LogFile <<  m_Card << " name read: "<< hybrid << std::endl;
           }
+        // Get hybrid
+        if (szInputString.substr(0,6) == "fixmat"){
+            std::istringstream szFormatString (szInputString);
+            szFormatString >> m_Card >> fixmat;
+            if(szFormatString.fail())
+              IOErrorHandler(INVALIDINPUT);
+            m_LogFile <<  m_Card << " name read: "<< fixmat << std::endl;
+          }
         // Get MeshFile name
         if (szInputString.substr(0,8) == "meshfile"){
             std::istringstream szFormatString (szInputString);
@@ -795,7 +838,7 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   //! Function: Get normal of a quad \n
   //! Input:    conn \n
-  //! Output:   vector x, y and z \n
+  //! Output:   CartVect v \n
   // ---------------------------------------------------------------------------
   {
     CartVect coords[3];
@@ -811,7 +854,7 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   //! Function: Get normal of a edge along its quad \n
   //! Input:    conn of edge, normal to the surf \n
-  //! Output:   vector x, y and z \n
+  //! Output:   CartVect v \n
   // ---------------------------------------------------------------------------
   {
     CartVect coords[2];
@@ -829,65 +872,65 @@ namespace MeshKit
   //! Output:   vector x, y and z \n
   // ---------------------------------------------------------------------------
   {
-    //TODO: Add quality check for tri/quad and pyramids
-    if(m_Conn ==8){
-        ++m_JacCalls;
-        CartVect vertex[8], xi;
-        mstream m_LogFile;
-        MBERRCHK(mb->get_coords(&conn[offset], 8, (double*) &vertex[0]), mb);
+    //    //TODO: Add quality check for tri/quad and pyramids
+    //    if(m_Conn ==8){
+    //        ++m_JacCalls;
+    //        CartVect vertex[8], xi;
+    //        mstream m_LogFile;
+    //        MBERRCHK(mb->get_coords(&conn[offset], 8, (double*) &vertex[0]), mb);
 
-        double corner[8][3] = { { -1, -1, -1 },
-                                {  1, -1, -1 },
-                                {  1,  1, -1 },
-                                { -1,  1, -1 },
-                                { -1, -1,  1 },
-                                {  1, -1,  1 },
-                                {  1,  1,  1 },
-                                { -1,  1,  1 } };
+    //        double corner[8][3] = { { -1, -1, -1 },
+    //                                {  1, -1, -1 },
+    //                                {  1,  1, -1 },
+    //                                { -1,  1, -1 },
+    //                                { -1, -1,  1 },
+    //                                {  1, -1,  1 },
+    //                                {  1,  1,  1 },
+    //                                { -1,  1,  1 } };
 
-        for (unsigned j = 0; j < 8; ++j) {
-            xi[0] = corner[j][0];
-            xi[1] = corner[j][1];
-            xi[2] = corner[j][2];
-            Matrix3 J(0.0);
-            double detJ = 0;
-            for (unsigned i = 0; i < 8; ++i) {
-                const double   xi_p = 1 + xi[0]*corner[i][0];
-                const double  eta_p = 1 + xi[1]*corner[i][1];
-                const double zeta_p = 1 + xi[2]*corner[i][2];
-                const double dNi_dxi   = corner[i][0] * eta_p * zeta_p;
-                const double dNi_deta  = corner[i][1] *  xi_p * zeta_p;
-                const double dNi_dzeta = corner[i][2] *  xi_p *  eta_p;
-                J(0,0) += dNi_dxi   * vertex[i][0];
-                J(1,0) += dNi_dxi   * vertex[i][1];
-                J(2,0) += dNi_dxi   * vertex[i][2];
-                J(0,1) += dNi_deta  * vertex[i][0];
-                J(1,1) += dNi_deta  * vertex[i][1];
-                J(2,1) += dNi_deta  * vertex[i][2];
-                J(0,2) += dNi_dzeta * vertex[i][0];
-                J(1,2) += dNi_dzeta * vertex[i][1];
-                J(2,2) += dNi_dzeta * vertex[i][2];
-              }
-            J *= 0.125;
-            detJ = J.determinant();
-            if(detJ <= 0.0){
-                m_LogFile << "We've negative jacobian at the hex corner: "<< j+1 << std::endl;
-                exit(0);
-              }
-            AvgJ+=detJ;
-          }
-        AvgJ/=8;
-        if(m_JacCalls == 1){
-            m_JLo = AvgJ;
-            m_JHi = AvgJ;
-          }
-        else if(AvgJ < m_JLo){
-            m_JLo = AvgJ;
-          }
-        else if(AvgJ > m_JHi){
-            m_JHi = AvgJ;
-          }
-      }
+    //        for (unsigned j = 0; j < 8; ++j) {
+    //            xi[0] = corner[j][0];
+    //            xi[1] = corner[j][1];
+    //            xi[2] = corner[j][2];
+    //            Matrix3 J(0.0);
+    //            double detJ = 0;
+    //            for (unsigned i = 0; i < 8; ++i) {
+    //                const double   xi_p = 1 + xi[0]*corner[i][0];
+    //                const double  eta_p = 1 + xi[1]*corner[i][1];
+    //                const double zeta_p = 1 + xi[2]*corner[i][2];
+    //                const double dNi_dxi   = corner[i][0] * eta_p * zeta_p;
+    //                const double dNi_deta  = corner[i][1] *  xi_p * zeta_p;
+    //                const double dNi_dzeta = corner[i][2] *  xi_p *  eta_p;
+    //                J(0,0) += dNi_dxi   * vertex[i][0];
+    //                J(1,0) += dNi_dxi   * vertex[i][1];
+    //                J(2,0) += dNi_dxi   * vertex[i][2];
+    //                J(0,1) += dNi_deta  * vertex[i][0];
+    //                J(1,1) += dNi_deta  * vertex[i][1];
+    //                J(2,1) += dNi_deta  * vertex[i][2];
+    //                J(0,2) += dNi_dzeta * vertex[i][0];
+    //                J(1,2) += dNi_dzeta * vertex[i][1];
+    //                J(2,2) += dNi_dzeta * vertex[i][2];
+    //              }
+    //            J *= 0.125;
+    //            detJ = J.determinant();
+    //            if(detJ <= 0.0){
+    //                m_LogFile << "We've negative jacobian at the hex corner: "<< j+1 << std::endl;
+    //                exit(0);
+    //              }
+    //            AvgJ+=detJ;
+    //          }
+    //        AvgJ/=8;
+    //        if(m_JacCalls == 1){
+    //            m_JLo = AvgJ;
+    //            m_JHi = AvgJ;
+    //          }
+    //        else if(AvgJ < m_JLo){
+    //            m_JLo = AvgJ;
+    //          }
+    //        else if(AvgJ > m_JHi){
+    //            m_JHi = AvgJ;
+    //          }
+    //      }
   }
 } // namespace MeshKit
 
