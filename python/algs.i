@@ -29,6 +29,7 @@
 %include "meshkit/QslimOptions.hpp"
 
 %include "meshkit/AssyGen.hpp"
+%include "meshkit/PostBL.hpp"
 %include "meshkit/CopyGeom.hpp"
 %include "meshkit/EBMesher.hpp"
 %include "meshkit/EdgeMesher.hpp"

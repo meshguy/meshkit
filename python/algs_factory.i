@@ -7,8 +7,8 @@
 #include "meshkit/Transform.hpp"
 #include "meshkit/CESets.hpp"
 #include "meshkit/QslimOptions.hpp"
-
 #include "meshkit/AssyGen.hpp"
+#include "meshkit/PostBL.hpp"
 #include "meshkit/CopyGeom.hpp"
 #include "meshkit/CopyMesh.hpp"
 #include "meshkit/EBMesher.hpp"
@@ -19,10 +19,6 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/TFIMapping.hpp"
 #include "meshkit/VertexMesher.hpp"
-
-#include "meshkit/CAMALPaver.hpp"
-#include "meshkit/CAMALTetMesher.hpp"
-#include "meshkit/CAMALTriAdvance.hpp"
 #include "meshkit/TriangleMesher.hpp"
 #include "meshkit/MBGeomOp.hpp"
 #include "meshkit/MBSplitOp.hpp"
@@ -30,6 +26,7 @@
 
 %factory(MeshKit::MeshOp * MeshKit::MKCore::construct_meshop,
          MeshKit::AssyGen,
+         MeshKit::PostBL,
          MeshKit::CopyGeom,
          MeshKit::CopyMesh,
          MeshKit::EBMesher,
@@ -43,7 +40,8 @@
 
          MeshKit::CAMALPaver,
          MeshKit::CAMALTetMesher,
-         MeshKit::CAMALTriAdvance, 
+         MeshKit::CAMALTriAdvance,  
+
          MeshKit::TriangleMesher,
          MeshKit::MBGeomOp, 
          MeshKit::MBSplitOp);

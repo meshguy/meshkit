@@ -1,11 +1,11 @@
 #include <math.h>
 #include <iomanip>
 #include "../meshkit/PostBL.hpp"
-#ifdef HAVE_MOAB
-#include "MBSkinner.hpp"
-#include "MBAdaptiveKDTree.hpp"
-#include "MBRange.hpp"
-#include "MBCartVect.hpp"
+
+#include "moab/Skinner.hpp"
+#include "moab/AdaptiveKDTree.hpp"
+#include "moab/Range.hpp"
+#include "moab/CartVect.hpp"
 #include "moab/Matrix3.hpp"
 #endif
 
@@ -96,7 +96,7 @@ namespace MeshKit
     // load specified mesh file
     IBERRCHK(imesh->load(0, m_MeshFile.c_str(),0), *imesh);
     // m_GD = imesh->getGeometricDimension(); Doesn't work !
-    MBRange all_elems;
+    moab::Range all_elems;
     MBERRCHK(mb->get_entities_by_dimension(0, 3, all_elems,true),mb);
     if (all_elems.size() == 0)
       m_GD = 2;
@@ -153,7 +153,7 @@ namespace MeshKit
 
     // For specified surface: get the  all the quads and nodes in a range
     moab::EntityHandle s1;
-    MBRange quads, nodes, fixmat_ents;
+    moab::Range quads, nodes, fixmat_ents;
     int dims; // variable to store global id of boundary layer specified in the input file
 
     // Method 1: INPUT by NeumannSet
@@ -169,7 +169,7 @@ namespace MeshKit
             m_BElemNodes = 3;
           }
 
-        MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, MBInterface::UNION),mb);
+        MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, moab::Interface::UNION),mb);
         if (debug) {
             m_LogFile <<  "Found NeumannSet with id : " << m_NeumannSet <<  std::endl;
             m_LogFile <<  "#Quads in this surface: " << quads.size() << std::endl;
@@ -179,7 +179,7 @@ namespace MeshKit
       }
     // Method 2: INPUT by surface id
     else if (m_SurfId !=-1){
-        for(MBRange::iterator rit=sets.begin(); rit != sets.end(); ++rit){
+        for(moab::Range::iterator rit=sets.begin(); rit != sets.end(); ++rit){
             s1 = *rit;
             MBERRCHK(mb->tag_get_data(GIDTag, &s1, 1, &dims),mb);
 
@@ -190,7 +190,7 @@ namespace MeshKit
                     exit(0);
                   }
 
-                MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, MBInterface::UNION),mb);
+                MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, moab::Interface::UNION),mb);
                 if (debug) {
                     m_LogFile <<  "Found surface with id : " << m_SurfId <<  std::endl;
                     m_LogFile <<  "#Quads in this surface: " << quads.size() << std::endl;
@@ -259,16 +259,16 @@ namespace MeshKit
 
     std::vector <bool> node_status(false); // size of verts of bl surface
     node_status.resize(nodes.size());
-    MBRange edges, hexes, hex_edge, quad_verts;
+    moab::Range edges, hexes, hex_edge, quad_verts;
 
     double coords_bl_quad[3], coords_new_quad[3], xdisp = 0.0, ydisp = 0.0, zdisp = 0.0;
-    EntityHandle hex, hex1;
+    moab::EntityHandle hex, hex1;
     int qcount = 0;
 
     //size of the following is based on element type
-    std::vector<EntityHandle> conn, qconn, adj_qconn, tri_conn,
+    std::vector<moab::EntityHandle> conn, qconn, adj_qconn, tri_conn,
         new_vert(m_Intervals*nodes.size()), old_hex_conn, adj_hexes, adj_quads, adj_hex_nodes1;
-    CartVect surf_normal(3);
+    moab::CartVect surf_normal(3);
 
     // Now start creating New elements
     for (Range::iterator kter = quads.begin(); kter != quads.end(); ++kter){
@@ -278,7 +278,7 @@ namespace MeshKit
             m_LogFile <<  "\n\n*** QUAD: " << qcount << std::endl;
           }
 
-        std::vector<EntityHandle> old_hex;
+        std::vector<moab::EntityHandle> old_hex;
         MBERRCHK(mb->get_adjacencies(&(*kter), 1, m_GD, false, old_hex),mb);
         if((int) old_hex.size() == 0){
             m_LogFile << "unable to find adjacent hex for BL quad, aborting...";
@@ -378,8 +378,8 @@ namespace MeshKit
             if(node_status[blNodeId] == false){
                 MBERRCHK(mb->add_entities(fixed_set, &qconn[i], 1), mb);
                 adj_hexes.clear();
-                MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_GD, false, adj_hexes, MBInterface::UNION), mb);
-                MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_BLDim, false, adj_quads, MBInterface::UNION), mb);
+                MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_GD, false, adj_hexes, moab::Interface::UNION), mb);
+                MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_BLDim, false, adj_quads, moab::Interface::UNION), mb);
 
                 // if fixmat specified, filter old hex, we don't have to correct both sides of the boundary
                 if (fixmat !=0 && (int) adj_hexes.size() > 1){
@@ -395,7 +395,7 @@ namespace MeshKit
                 int side_number = 0, sense = 1, offset = 0;
                 MBERRCHK(mb->side_number(old_hex[0], (*kter), side_number, sense, offset), mb);
 
-                CartVect rt(0.0, 0.0, 0.0), v(3);
+                moab::CartVect rt(0.0, 0.0, 0.0), v(3);
                 // TODO: Add feature to add element on both sides of the boundary layer
                 // find the normal direction where new nodes are to be created - xdisp, ydisp and zdisp
                 for (int q=0; q < (int) quads.size(); q++){
@@ -834,33 +834,33 @@ namespace MeshKit
     exit (1);
   }
 
-  void PostBL::get_normal_quad (std::vector<EntityHandle>conn, CartVect &v)
+  void PostBL::get_normal_quad (std::vector<EntityHandle>conn, moab::CartVect &v)
   // ---------------------------------------------------------------------------
   //! Function: Get normal of a quad \n
   //! Input:    conn \n
-  //! Output:   CartVect v \n
+  //! Output:   moab::CartVect v \n
   // ---------------------------------------------------------------------------
   {
-    CartVect coords[3];
+    moab::CartVect coords[3];
     MBERRCHK(mb->get_coords(&conn[0], 3, (double*) &coords[0]), mb);
-    CartVect AB(coords[1] - coords[0]);
-    CartVect BC(coords[2] - coords[1]);
-    CartVect normal = AB*BC;
+    moab::CartVect AB(coords[1] - coords[0]);
+    moab::CartVect BC(coords[2] - coords[1]);
+    moab::CartVect normal = AB*BC;
     normal = normal/normal.length();
     v = normal;
   }
 
-  void PostBL::get_normal_edge (std::vector<EntityHandle>conn, CartVect BC, CartVect &v)
+  void PostBL::get_normal_edge (std::vector<EntityHandle>conn, moab::CartVect BC, moab::CartVect &v)
   // ---------------------------------------------------------------------------
   //! Function: Get normal of a edge along its quad \n
   //! Input:    conn of edge, normal to the surf \n
-  //! Output:   CartVect v \n
+  //! Output:   moab::CartVect v \n
   // ---------------------------------------------------------------------------
   {
-    CartVect coords[2];
+    moab::CartVect coords[2];
     MBERRCHK(mb->get_coords(&conn[0], 2, (double*) &coords[0]), mb);
-    CartVect AB(coords[1] - coords[0]);
-    CartVect normal = AB*BC;
+    moab::CartVect AB(coords[1] - coords[0]);
+    moab::CartVect normal = AB*BC;
     normal = normal/normal.length();
     v = normal;
   }
@@ -875,7 +875,7 @@ namespace MeshKit
     //    //TODO: Add quality check for tri/quad and pyramids
     //    if(m_Conn ==8){
     //        ++m_JacCalls;
-    //        CartVect vertex[8], xi;
+    //        moab::CartVect vertex[8], xi;
     //        mstream m_LogFile;
     //        MBERRCHK(mb->get_coords(&conn[offset], 8, (double*) &vertex[0]), mb);
 

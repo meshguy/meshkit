@@ -23,16 +23,16 @@
 #include "meshkit/iGeom.hpp"
 #include "MBCN.h"
 
-#include "SimpleArray.hpp"
+#include "../../utils/SimpleArray.hpp"
 #include "../AssyGen/parser.hpp"
 #include "../AssyGen/clock.hpp"
 #include "../PostBL/mstream.hpp"
-#ifdef HAVE_MOAB
+
 #include "MBiMesh.hpp"
-#include "MBInterface.hpp"
-#include "MBRange.hpp"
-#include "MBCartVect.hpp"
-#endif
+#include "moab/Interface.hpp"
+#include "moab/Range.hpp"
+#include "moab/CartVect.hpp"
+
 
 /*!
  * \class PostBL
@@ -120,20 +120,20 @@ namespace MeshKit {
      * \param conn connectivity array type EntityHandle
      *	\param v return normal vector
      */
-    void get_normal_quad (std::vector<EntityHandle>conn, CartVect &v)   ;
+    void get_normal_quad (std::vector<moab::EntityHandle>conn, moab::CartVect &v)   ;
 
     /** \brief get the normals given connectivity of a quad
-     * \param conn connectivity array type EntityHandle
+     * \param conn connectivity array type moab::EntityHandle
      *	\param v return normal vector
      */
-    void get_normal_edge (std::vector<EntityHandle>conn, CartVect AB, CartVect &v);
+    void get_normal_edge (std::vector<moab::EntityHandle>conn, moab::CartVect AB, moab::CartVect &v);
 
     /** \brief compute determinant of jacobian of a hex element
      *  \param conn connectivity array
      *	\param offset passed when conn array has connectivity of more than one element
      *  \param	detJ is returned
      */
-    void get_det_jacobian (std::vector<EntityHandle> conn, int offset, double &detJ);
+    void get_det_jacobian (std::vector<moab::EntityHandle> conn, int offset, double &detJ);
 
   private:
     //! iGeom Impl for calling geometry creation/manipulation operations
@@ -143,7 +143,7 @@ namespace MeshKit {
     iMesh *imesh;
 
     //! MOAB Impl for calling mesh creation/manipulation operations
-    MBInterface *mb;
+    moab::Interface *mb;
 
     // ! parser related
     bool debug, hybrid;
