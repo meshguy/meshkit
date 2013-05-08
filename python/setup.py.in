@@ -10,7 +10,7 @@ irel_base    = '@IREL_DIR@'
 meshkit_base = os.path.abspath('@top_srcdir@')
 
 meshkit_dirs = ['src/core', 'src/utils', 'src/lemon', 'src/algs',
--                'src/extern/CAMAL', 'src/algs/Sweep']
+                'src/extern/CAMAL', 'src/algs/Sweep']
 
 include_dirs = [os.path.join(imesh_base, 'include'),
                 os.path.join(igeom_base, 'include'),
