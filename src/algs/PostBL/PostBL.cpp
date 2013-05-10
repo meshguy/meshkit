@@ -95,7 +95,7 @@ namespace MeshKit
     // load specified mesh file
     IBERRCHK(imesh->load(0, m_MeshFile.c_str(),0), *imesh);
     // m_GD = imesh->getGeometricDimension(); Doesn't work !
-    moab::Range all_elems;
+    moab::Range all_elems, all_verts;
     MBERRCHK(mb->get_entities_by_dimension(0, 3, all_elems,true),mb);
     if (all_elems.size() == 0)
       m_GD = 2;
@@ -117,7 +117,6 @@ namespace MeshKit
     //create fixed tag for mesquite
     MBERRCHK(mb->tag_get_handle("fixed", 1, moab::MB_TYPE_INTEGER, FTag,
                                 moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT),mb);
-
     moab::Range sets, n_sets, m_sets;
     m_BLDim = m_GD - 1;
 
@@ -204,10 +203,11 @@ namespace MeshKit
         m_LogFile <<  "Invalid boundary layer specification, aborting.." <<  std::endl;
         exit(0);
       }
+
     // set fixed tag on all the BL nodes
-    int node_data = 1;
-    const void *data[] = {&node_data};
-    MBERRCHK(mb->tag_set_data(FTag, nodes, &node_data), mb);
+    MBERRCHK(mb->get_entities_by_dimension(0, 0, all_verts, true),mb);
+    std::vector<int> all_node_data(all_verts.size(), 0);
+    MBERRCHK(mb->tag_set_data(FTag, all_verts, &all_node_data[0]), mb);
 
     // Handling MaterialSet
     moab::Range::iterator mset_it;
@@ -248,13 +248,6 @@ namespace MeshKit
     moab::EntityHandle geom_set;
     MBERRCHK(mb->create_meshset(moab::MESHSET_SET, geom_set, 1), mb);
     MBERRCHK(mb->tag_set_data(GDTag, &geom_set, 1, &m_GD), mb);
-
-    // placeholder for storing fixed tag entities
-    moab::EntityHandle fixed_set;
-    int f_id = 1;
-    // add fixed tag to all BL nodes
-    MBERRCHK(mb->create_meshset(moab::MESHSET_SET, fixed_set, 1), mb);
-    MBERRCHK(mb->tag_set_data(FTag, &fixed_set, 1, &f_id), mb);
 
     std::vector <bool> node_status(false); // size of verts of bl surface
     node_status.resize(nodes.size());
@@ -375,7 +368,6 @@ namespace MeshKit
             double temp;
             //create new nodes
             if(node_status[blNodeId] == false){
-                MBERRCHK(mb->add_entities(fixed_set, &qconn[i], 1), mb);
                 adj_hexes.clear();
                 MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_GD, false, adj_hexes, moab::Interface::UNION), mb);
                 MBERRCHK(mb->get_adjacencies(&qconn[i], 1, m_BLDim, false, adj_quads, moab::Interface::UNION), mb);
@@ -444,7 +436,7 @@ namespace MeshKit
 
                     int nid = blNodeId*m_Intervals+j;
                     // TODO: Check if this vertex is possible (detect possible collision with geometry)
-                    mb->create_vertex(coords_new_quad, new_vert[nid]);
+                    MBERRCHK(mb->create_vertex(coords_new_quad, new_vert[nid]), mb);
                     if (debug){
                         m_LogFile << std::setprecision (3) << std::scientific << " : created node:" << (nid + 1)
                                   << " of " << new_vert.size() << " new nodes:- coords: " << coords_new_quad[0]
@@ -488,6 +480,11 @@ namespace MeshKit
                       conn[m_HConn*j + m_BElemNodes + 1 - i] = new_vert[nid-1];
                     conn[m_HConn*j +i] = new_vert[nid];
                   }
+
+                // Another block for setting up fixed tag for smoothing using Mesquite
+                int fix0 = 0;
+                int nid = blNodeId*m_Intervals+j;
+                MBERRCHK(mb->tag_set_data(FTag, &new_vert[nid], 1, &fix0), mb);
               }
 
             // if a hex does have a quad on BL, but, has a node or edge on the boundary layer
@@ -633,7 +630,20 @@ namespace MeshKit
           }
       } // Loop thru quads ends
 
-    // TODO: Add Global Smoothing Option
+    // TODO: Global smoothing works after PostBL step; make global smoothing available as an option inside
+    // get the skin of the entities
+    moab::Range skin_verts;
+    all_elems.clear();
+    MBERRCHK(mb->get_entities_by_dimension(0, 3, all_elems,true),mb);
+
+    moab::Skinner skinner(mb);
+    skinner.find_skin(all_elems, 0, skin_verts);
+
+    m_LogFile << "setting 'fixed'' tag = 1 on verts in the skin = " <<  skin_verts.size() << std::endl;
+
+    // set fixed tag = 1 on all skin verts
+    std::vector<int> all_skin_data(skin_verts.size(), 1);
+    MBERRCHK(mb->tag_set_data(FTag, skin_verts, &all_skin_data[0]), mb);
 
     m_LogFile << "\nTotal Jacobian calls/Min/Max: " << m_JacCalls << ", " << m_JLo << ", " << m_JHi << std::endl;
 
