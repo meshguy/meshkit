@@ -7,7 +7,6 @@
 #include "moab/Range.hpp"
 #include "moab/CartVect.hpp"
 #include "moab/Matrix3.hpp"
-#endif
 
 namespace MeshKit
 {
@@ -207,8 +206,8 @@ namespace MeshKit
       }
     // set fixed tag on all the BL nodes
     int node_data = 1;
-    const void* data[] = {&node_data};
-    MBERRCHK(mb->tag_set_data(FTag, nodes, data), mb);
+    const void *data[] = {&node_data};
+    MBERRCHK(mb->tag_set_data(FTag, nodes, &node_data), mb);
 
     // Handling MaterialSet
     moab::Range::iterator mset_it;
