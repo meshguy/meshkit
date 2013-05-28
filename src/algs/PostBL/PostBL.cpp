@@ -31,6 +31,7 @@ namespace MeshKit
     m_Conn = 0;
     m_BElemNodes = 0;
     m_SurfId = -1;
+    check_bl_edge_length = true;
     debug = false;
     hybrid = false;
     m_NeumannSet = -1;
@@ -106,28 +107,27 @@ namespace MeshKit
     all_elems.clear();
     m_LogFile << "Geometric dimension of meshfile = "<< m_GD <<std::endl;
 
-    // obtain the boundary layer surface faces
+    // obtain existing tag handles
     moab::Tag GDTag, GIDTag, NTag, MTag, STag, FTag;
     MBERRCHK(mb->tag_get_handle("GEOM_DIMENSION", 1, moab::MB_TYPE_INTEGER, GDTag),mb);
     MBERRCHK(mb->tag_get_handle("NEUMANN_SET", 1, moab::MB_TYPE_INTEGER, NTag),mb);
     MBERRCHK(mb->tag_get_handle("MATERIAL_SET", 1, moab::MB_TYPE_INTEGER, MTag),mb);
     MBERRCHK(mb->tag_get_handle("GLOBAL_ID", 1, moab::MB_TYPE_INTEGER, GIDTag),mb);
+    // create smoothset and fixed tag for mesquite
     MBERRCHK(mb->tag_get_handle("SMOOTHSET", 1, moab::MB_TYPE_INTEGER, STag,
                                 moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT),mb);
-    //create fixed tag for mesquite
     MBERRCHK(mb->tag_get_handle("fixed", 1, moab::MB_TYPE_INTEGER, FTag,
                                 moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT),mb);
+
+    // get all the entity sets with boundary layer geom dimension, neumann sets and material sets
     moab::Range sets, n_sets, m_sets;
     m_BLDim = m_GD - 1;
 
     const void* gdim[] = {&m_BLDim};
 
-    // get all the entity sets with boundary layer dimension
     MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &GDTag,
                                               gdim, 1 , sets, moab::Interface::INTERSECT, false), mb);
-
     MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &NTag, 0, 1 , n_sets),mb);
-
     MBERRCHK(mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &MTag, 0, 1 , m_sets),mb);
 
     // Handling NeumannSets (if BL surf in input via NS)
@@ -175,7 +175,7 @@ namespace MeshKit
             m_LogFile << "#New nodes to be created:" << m_Intervals*nodes.size() << std::endl;
           }
       }
-    // Method 2: INPUT by surface id
+    // Method 2: INPUT by surface id (geom dimension)
     else if (m_SurfId !=-1){
         for(moab::Range::iterator rit=sets.begin(); rit != sets.end(); ++rit){
             s1 = *rit;
@@ -249,10 +249,10 @@ namespace MeshKit
     MBERRCHK(mb->create_meshset(moab::MESHSET_SET, geom_set, 1), mb);
     MBERRCHK(mb->tag_set_data(GDTag, &geom_set, 1, &m_GD), mb);
 
+    // declare variables before starting BL creation
     std::vector <bool> node_status(false); // size of verts of bl surface
     node_status.resize(nodes.size());
     moab::Range edges, hexes, hex_edge, quad_verts;
-
     double coords_bl_quad[3], coords_new_quad[3], xdisp = 0.0, ydisp = 0.0, zdisp = 0.0;
     moab::EntityHandle hex, hex1;
     int qcount = 0;
@@ -287,7 +287,7 @@ namespace MeshKit
             old_hex.empty();
             MBERRCHK(mb->get_entities_by_dimension(old_hex_set, m_GD, old_hex), mb);
           }
-
+        // allocate space for connectivity/adjacency during the first pass of this loop
         if(qcount ==1){
             if(mb->type_from_handle(old_hex[0]) == MBHEX){
                 m_Conn = 8;
@@ -387,6 +387,7 @@ namespace MeshKit
                 MBERRCHK(mb->side_number(old_hex[0], (*kter), side_number, sense, offset), mb);
 
                 moab::CartVect rt(0.0, 0.0, 0.0), v(3);
+                moab::Range adj_qconn_r;
                 // TODO: Add feature to add element on both sides of the boundary layer
                 // find the normal direction where new nodes are to be created - xdisp, ydisp and zdisp
                 for (int q=0; q < (int) quads.size(); q++){
@@ -411,8 +412,31 @@ namespace MeshKit
                             ydisp=rt[1]/rt.length();
                             zdisp=rt[2]/rt.length();
                           }
+                        else{
+                            // it's not a BL quad, instead of shooting the normal find the max. BL distance allowable
+                            if(check_bl_edge_length){
+                                MBERRCHK(mb->get_connectivity(&adj_quads[r],1,adj_qconn_r), mb);
+                                find_min_edge_length(adj_qconn_r, qconn[i], nodes, m_MinEdgeLength);
+                              }
+                          }
+                        adj_qconn_r.clear();
                       }
                   }
+                // TODO: shoot normal in direction xdisp, yd.. from point coords_bl_quad
+                // and find the point of intersection and distance with existing mesh
+                // range nodes, coords_bl_quad and the nodes of the hex of interest here is old_hex_conn
+
+                // Half check of thickness validity
+                if(m_Thickness > m_MinEdgeLength && m_MinEdgeLength > 0){
+                    // This BL creation might fail
+                    m_LogFile << "Specified thickess is " << m_Thickness
+                              << " and BL elements edge length is " << m_MinEdgeLength
+                              << "  BL creation might fail, "
+                              << "\n Set check_bl_edge_length to false to avoid this check, aborting.. " << std::endl;
+                    exit(0);
+                  }
+
+
                 adj_quads.clear();
                 double num = m_Thickness*(m_Bias-1)*(pow(m_Bias, m_Intervals -1));
                 double deno = pow(m_Bias, m_Intervals) - 1;
@@ -435,7 +459,16 @@ namespace MeshKit
                     coords_new_quad[2] = coords_bl_quad[2]-move*zdisp;
 
                     int nid = blNodeId*m_Intervals+j;
-                    // TODO: Check if this vertex is possible (detect possible collision with geometry)
+                    // Possible TODO's
+                    //TODO: Check if this vertex is possible (detect possible collision with geometry)
+                    // TODO: See posibility of using ray tracing
+                    // TODO: Parallize: Profile T-junction model and try to device an algorithm
+                    // TODO: Modularize node creation part and use doxygen for all code and design of code, python design and test cases - current functions in code:
+                    // Setup this, Execute this -- break info sub functions and classes,
+                    // prepareIO --make this optional when using python,
+                    // get normal (2d and 3d) -- can be combined to one function
+                    // get det jacobian (hex elements) --needs check for other elements
+                    //
                     MBERRCHK(mb->create_vertex(coords_new_quad, new_vert[nid]), mb);
                     if (debug){
                         m_LogFile << std::setprecision (3) << std::scientific << " : created node:" << (nid + 1)
@@ -874,7 +907,38 @@ namespace MeshKit
     v = normal;
   }
 
-  void PostBL::get_det_jacobian(std::vector<EntityHandle> conn, int offset, double &AvgJ)
+  void PostBL::find_min_edge_length(moab::Range adj_qn, moab::EntityHandle node , moab::Range bl_nodes, double &e_len)
+  // ---------------------------------------------------------------------------
+  //! Function: Get minimum edge length from several adjacent quads/edges specified \n
+  //! Input:    verts of quads, BL vert \n
+  //! Output:   distance b/w BL vert and inner vert \n
+  // ---------------------------------------------------------------------------
+  {
+    // get nodes adj(a) to BL node
+    moab::CartVect coords[1];
+    double len = 0; e_len = 0;
+    MBERRCHK(mb->get_coords(&node, 1, (double*) &coords[0]), mb);
+    moab::Range non_bl;
+    non_bl = subtract(adj_qn, bl_nodes);
+    int n_non_bl = (int) non_bl.size();
+
+    // if there are no bl nodes - this case has already been dealt with
+    if(non_bl.size() > 0){
+        moab::CartVect non_bl_coords[4];
+        for(int i=0; i< n_non_bl; i++){
+            MBERRCHK(mb->get_coords(non_bl,(double*) &non_bl_coords[0]), mb);
+            moab::CartVect edge(coords[0] - non_bl_coords[0]);
+            len = edge.length();
+            if(i==0)
+              e_len = len;
+            if(len < e_len)
+              e_len = len;
+          }
+      }
+    // m_LogFile << " node minimum edge length" << e_len << std::endl;
+  }
+
+  void PostBL::get_det_jacobian(std::vector<moab::EntityHandle> conn, int offset, double &AvgJ)
   // ---------------------------------------------------------------------------
   //! Function: Get determinant of jacobian \n
   //! Input:    conn \n

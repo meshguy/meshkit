@@ -2,10 +2,10 @@ MeshFile mid.cub
 NeumannSet 1
 !Surfaces 1
 Material 3
-FIXMAT 1
+FIXMAT 2
 Thickness 0.3
 Intervals 5
 Bias 1.0
-Outfile omid.vtk
+Outfile omid.h5m
 debug 1
 END

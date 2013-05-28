@@ -2,9 +2,9 @@ MeshFile 5b.cub
 NeumannSet 55
 !Surfaces 11
 Material 55	
-Thickness 0.3
+Thickness 8
 Intervals 2
 Bias 1.0
-Outfile 5bout.h5m	
+Outfile 5bout.h5m
 debug 1
 END

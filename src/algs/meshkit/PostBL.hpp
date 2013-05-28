@@ -135,6 +135,13 @@ namespace MeshKit {
      */
     void get_det_jacobian (std::vector<moab::EntityHandle> conn, int offset, double &detJ);
 
+    /** \brief compute edge length from the vertex specified
+     *  \param vector of quads/edges
+     *	\param vertex specified
+     *  \param	o/p edge length
+     */
+    void find_min_edge_length (moab::Range, moab::EntityHandle, moab::Range, double &e_len);
+
   private:
     //! iGeom Impl for calling geometry creation/manipulation operations
     iGeom *igeom;
@@ -146,7 +153,7 @@ namespace MeshKit {
     moab::Interface *mb;
 
     // ! parser related
-    bool debug, hybrid;
+    bool debug, hybrid, check_bl_edge_length;
     // !! file Input
     std::ifstream m_FileInput;
     mstream m_LogFile;
@@ -157,7 +164,7 @@ namespace MeshKit {
     // ! variables to parse
     std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName, m_MeshType;
     int m_SurfId, m_NeumannSet, m_Material, m_HConn;
-    double m_Thickness;
+    double m_Thickness, m_MinEdgeLength;
     int m_Intervals, m_JacCalls, tri_sch, fixmat;
     double m_Bias, m_JLo, m_JHi;
     // ! variable for hex and tet meshes
