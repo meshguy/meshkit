@@ -5,7 +5,7 @@
 
 <b>External dependencies:</b> (none)
 
-<b>Input:</b> None.
+<b>Input:</b> None
 
 <b>Output:</b> A brick has been created.
 
