@@ -34,6 +34,7 @@ libMeshKitalgs_la_SOURCES = \
 	EBMesher.cpp \
 	CopyMesh.cpp \
 	CopyGeom.cpp \
+	MeshOpTemplate.cpp \
         MergeMesh.cpp \
 	ExtrudeMesh.cpp \
 	CESets.cpp \
@@ -55,6 +56,7 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EBMesher.hpp \
 	meshkit/CopyMesh.hpp \
 	meshkit/CopyGeom.hpp \
+	meshkit/MeshOpTemplate.hpp \
 	meshkit/MergeMesh.hpp \
 	meshkit/ExtrudeMesh.hpp \
 	meshkit/CESets.hpp \
