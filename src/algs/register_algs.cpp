@@ -14,6 +14,7 @@
 #include "meshkit/AssyGen.hpp"
 #include "meshkit/PostBL.hpp"
 #include "meshkit/TriangleMesher.hpp"
+#include "meshkit/MeshOpTemplate.hpp"
 #ifdef HAVE_FBIGEOM
 #include "meshkit/MBGeomOp.hpp"
 #include "meshkit/MBSplitOp.hpp"
@@ -59,6 +60,7 @@ REGISTER_MESH_OP(QuadMesher);
 REGISTER_MESH_OP(AssyGen);
 REGISTER_MESH_OP(PostBL);
 REGISTER_MESH_OP(TriangleMesher);
+REGISTER_MESH_OP(MeshOpTemplate); // might need FBIGEOM?
 #ifdef HAVE_FBIGEOM
 REGISTER_MESH_OP(MBGeomOp);
 REGISTER_MESH_OP(MBSplitOp);
