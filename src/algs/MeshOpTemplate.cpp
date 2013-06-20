@@ -51,10 +51,10 @@ void MeshOpTemplate::execute_this()
   printf("Made a brick!\n");
 }
 
-// set the target location - m_x
+// set the size of the brick - s_x
 void MeshOpTemplate::set_size(const Vector<3> &dx)
 {
-  m_x = dx;
+  s_x = dx;
 }
 
 void MeshOpTemplate::tag_copied_sets(const char **tag_names, const char **tag_vals,

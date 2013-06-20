@@ -24,6 +24,7 @@ TESTS = test_edgemesh \
         test_scdmesh \
         test_copymesh \
         test_copygeom \
+        test_meshoptemplate \
         test_extrudemesh \
         test_qslim \
         test_ebmesh \

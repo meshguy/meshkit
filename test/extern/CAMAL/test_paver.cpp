@@ -19,6 +19,7 @@ bool save_mesh = false;
 void holysurf_test();
 void singleholesurf_test();
 void singleholesurfimprinted_test();
+void baseballfield_test();
 void mesh_test(std::string filebase);
 
 #ifdef HAVE_ACIS
@@ -39,6 +40,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(holysurf_test);
   num_fail += RUN_TEST(singleholesurf_test);
   num_fail += RUN_TEST(singleholesurfimprinted_test);
+  num_fail += RUN_TEST(baseballfield_test);
   return num_fail;
 }
 
@@ -55,6 +57,11 @@ void singleholesurf_test()
 void singleholesurfimprinted_test()
 {
   mesh_test("singleholesurfimprinted");
+}
+
+void baseballfield_test()
+{
+  mesh_test("baseballfield");
 }
 
 void mesh_test(std::string filebase)

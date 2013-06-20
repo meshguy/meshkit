@@ -6,18 +6,16 @@
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
-#include "meshkit/EBMesher.hpp"
-#include "meshkit/ModelEnt.hpp"
 #include "meshkit/MeshOpTemplate.hpp"
-#include "meshkit/VertexMesher.hpp"
-#include "meshkit/EdgeMesher.hpp"
 #include "meshkit/TFIMapping.hpp"
-#include "meshkit/CAMALPaver.hpp"
 #include "meshkit/OneToOneSwept.hpp"
-#include "meshkit/SizingFunctionVar.hpp"
-#include <iostream>
-using std::cout;
-using std::endl;
+
+//#include "meshkit/EBMesher.hpp"
+//#include "meshkit/ModelEnt.hpp"
+//#include "meshkit/VertexMesher.hpp"
+//#include "meshkit/EdgeMesher.hpp"
+//#include "meshkit/SizingFunctionVar.hpp"
+//#include "meshkit/CAMALPaver.hpp"
 
 using namespace MeshKit;
 
@@ -41,77 +39,45 @@ int main(int argc, char **argv)
 void test_mesh_op_template()
 {
   MEntVector vols, surfs;
-// Make the brick!
-  // Add mot to the graph
+
+  // Make the brick!
   MeshOpTemplate *mot = (MeshOpTemplate*) mk->construct_meshop("MeshOpTemplate", surfs);
-  // Initialize if any?
   mot->set_name("MeshOpTemplate");
-  // Run it
+  Vector<3> a;
   mk->setup_and_execute();
-  // Save Pre-liminary Geometry
-  mk->save_geometry("mot1.sat");
-  // Populate Entities
   mk->populate_model_ents();
-  // Remove mot from the graph (delete or clear both work)
-  delete mot;
-  
-//  mk->clear_graph();
-
-// Mesh the brick!
-  // GET THE SURFACE!
-  mk->get_entities_by_dimension(2, surfs);
-  /*for (int i = 0; i < 5; i++) {
-    printf("Doing GEBD(%d)\n", i);
-    mk->get_entities_by_dimension(i, surfs);
-    if (surfs.size())
-      printf("We have entities!\n");
-  }*/
-
-  // Surface Mesh 1 face
-
-  printf("construct%d\n", (int)surfs.size());
-  surfs.resize(1);
-  TFIMapping *cp = (TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
-  SizingFunction esize(mk, 3, .5);
-  surfs[0]->sizing_function_index(esize.core_index());
-  printf("setup\n");
-  mk->setup();
-  printf("execute\n");
-  mk->execute();
-  printf("after\n");
   mk->clear_graph();
-  mk->populate_model_ents();
 
-
-
-  printf("construct\n");
+  // Mesh 1 Surface
+  mk->get_entities_by_dimension(2, surfs);
   mk->get_entities_by_dimension(3, vols);
-  ModelEnt *some_vol = (*vols.rbegin());
+  surfs.resize(1);
+  TFIMapping *tfi = (TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
+  tfi->set_name("TFIMapping");
+
+  // Sweep
   OneToOneSwept *oto = (OneToOneSwept*) mk->construct_meshop("OneToOneSwept", vols);
+  oto->set_name("OneToOneSwept");
   oto->SetSourceSurface(0);
   oto->SetTargetSurface(1);
+  ModelEnt *some_vol = (*vols.rbegin());
   SizingFunction wsize(mk, 3, -1);
   some_vol->sizing_function_index(wsize.core_index());
-  printf("setup\n");
-  mk->setup();
-  printf("execute\n");
-  mk->execute();
-  printf("after\n");
 
-  
+  // Do work!
+  mk->setup_and_execute();
+  mk->clear_graph();
 
-
-  if(1) {
+  if(0) {
     #ifdef HAVE_ACIS
-    mk->save_geometry("mot2.sat");
-    mk->save_mesh("motmesh.exo");
+    mk->save_geometry("un_meshed_brick.sat");
+    mk->save_mesh("meshed_brick.exo");
     #elif defined(HAVE_OCC)
     mk->save_geometry("meshoptemplate.stp");
-    mk->save_mesh("idunno.whatevs");
+//    mk->save_mesh("idunno.whatevs");
     #endif
   }
 
-  // delete the mot instance
-  mk->clear_graph();
+  return;
 }
 

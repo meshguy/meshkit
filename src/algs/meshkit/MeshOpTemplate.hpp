@@ -1,11 +1,10 @@
-#ifndef MESHKIT_MAKE_BRICK_HPP
-#define MESHKIT_MAKE_BRICK_HPP
+#ifndef MESHKIT_MESH_OP_TEMPLATE_HPP
+#define MESHKIT_MESH_OP_TEMPLATE_HPP
 
 #include <cassert>
 #include <string>
 #include <vector>
 #include <set>
-
 
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
@@ -75,10 +74,9 @@ public:
   //! The only setup/execute function we need, since meshing vertices is trivial
   virtual void execute_this();
 
-  /* \brief set location
+  /* \brief set size
    *
-   * before copy moving
-   * \param vector with x y z coords
+   * \param vector with x y z size
    */
   void set_size(const Vector<3> &dx);
 
