@@ -84,7 +84,7 @@ public:
                        const int num_tags);
 private:
   iGeom *igeomImpl;
-  Vector<3> m_x;
+  Vector<3> s_x;
 };
 
 inline const char* MeshOpTemplate::name()

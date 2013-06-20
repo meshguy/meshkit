@@ -27,9 +27,9 @@ MeshOpTemplate::MeshOpTemplate(MKCore *mkcore, const MEntVector &me_vec)
 : MeshScheme(mkcore, me_vec),
   igeomImpl(mkcore->igeom_instance())
 {
-  m_x[0] = 1.0;
-  m_x[1] = 1.0;
-  m_x[2] = 1.0;
+  s_x[0] = 1.0;
+  s_x[1] = 1.0;
+  s_x[2] = 1.0;
 }
 
 MeshOpTemplate::~MeshOpTemplate()
@@ -47,7 +47,7 @@ void MeshOpTemplate::setup_this()
 void MeshOpTemplate::execute_this()
 {
   iBase_EntityHandle_Private * argf = NULL;
-  igeomImpl->createBrick(m_x[0], m_x[1], m_x[2], argf);
+  igeomImpl->createBrick(s_x[0], s_x[1], s_x[2], argf);
   printf("Made a brick!\n");
 }
 
