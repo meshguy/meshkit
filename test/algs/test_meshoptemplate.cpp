@@ -22,7 +22,7 @@ using namespace MeshKit;
 #include "TestUtil.hpp"
 
 MKCore *mk;
-
+bool save_mesh = true;
 void test_mesh_op_template();
 
 int main(int argc, char **argv)
@@ -68,12 +68,13 @@ void test_mesh_op_template()
   mk->setup_and_execute();
   mk->clear_graph();
 
-  if(0) {
+  if(save_mesh) {
     #ifdef HAVE_ACIS
     mk->save_geometry("un_meshed_brick.sat");
     mk->save_mesh("meshed_brick.exo");
     #elif defined(HAVE_OCC)
     mk->save_geometry("meshoptemplate.stp");
+    mk->save_mesh("meshed_brick.exo");
 //    mk->save_mesh("idunno.whatevs");
     #endif
   }

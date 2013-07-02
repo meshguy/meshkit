@@ -10,12 +10,18 @@
 
 #include <stdio.h>
 #include <iostream>
+#ifdef HAVE_ACIS
+#define INTASSIGN_TEST_FILE "quadface.sat"
+#elif defined(HAVE_OCC)
+#define INTASSIGN_TEST_FILE "quadface.stp"
+#endif
 
 MeshKit::MKCore *mk;
+
 MeshKit::IAInterface *new_ia_interface()
 {
-  return  
-    (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
+  return
+      (MeshKit::IAInterface*) mk->construct_meshop("IntervalAssignment");
 }
 
 void delete_ia_interface(MeshKit::IAInterface *)
@@ -37,79 +43,79 @@ bool check_solution_correctness( MeshKit::IAInterface *ia_interface,
   if (debug)
     std::cout << "Checking Solution Correctness" << std::endl;
   for ( ; i != e; ++i, ++c )
-  {
-    const MeshKit::IAVariable *v = *i;
-    assert(v);
-    const int x = v->get_solution();
-    assert(c < correct_solution.size() );
-    const int lo = correct_solution[c].first;
-    const int hi = correct_solution[c].second;
-    if (debug)
-      std::cout << "Checking variable " << c << " solution " << x << " in " 
-              << "[" << lo << "," << hi << "]?" << std::endl;
-    if (x < lo)
     {
-      if (verbose_output)
-        std::cout << "ERROR: Variable " << c << " solution " << x << " BELOW " 
-             << "[" << lo << "," << hi << "]" << std::endl;
-      all_correct = false;
+      const MeshKit::IAVariable *v = *i;
+      assert(v);
+      const int x = v->get_solution();
+      assert(c < correct_solution.size() );
+      const int lo = correct_solution[c].first;
+      const int hi = correct_solution[c].second;
+      if (debug)
+        std::cout << "Checking variable " << c << " solution " << x << " in "
+                  << "[" << lo << "," << hi << "]?" << std::endl;
+      if (x < lo)
+        {
+          if (verbose_output)
+            std::cout << "ERROR: Variable " << c << " solution " << x << " BELOW "
+                      << "[" << lo << "," << hi << "]" << std::endl;
+          all_correct = false;
+        }
+      if (x > hi)
+        {
+          if (verbose_output)
+            std::cout << "ERROR: Variable " << c << " solution " << x << " ABOVE "
+                      << "[" << lo << "," << hi << "]" << std::endl;
+          all_correct = false;
+        }
     }
-    if (x > hi)
-    {
-      if (verbose_output)
-        std::cout << "ERROR: Variable " << c << " solution " << x << " ABOVE " 
-             << "[" << lo << "," << hi << "]" << std::endl;
-      all_correct = false;
-    }
-  }
   if (debug)
     std::cout << "done checking solution correctness." << std::endl;
   return all_correct;
 }
 
 void set_decoupled_pairs(MeshKit::IAInterface *ia_interface, 
-				         int num_pairs, double goal1, double goal2,
-				         std::vector< std::pair<int,int> > &correct_solution)
+			 int num_pairs, double goal1, double goal2,
+			 std::vector< std::pair<int,int> > &correct_solution)
 {
   // trivial 2-sided mapping problem
-  // we can make multiple pairs, each pair is independent, 
+  // we can make multiple pairs, each pair is independent,
   // and pair i (in 0..num_pairs-1) has sides with one curve each with goals
-  // i+goal1 and i+goal2, 
+  // i+goal1 and i+goal2,
   //
   // test scalability, relaxed nlp: 100,000 constraints in 1 second. milp: 40 variables in 1 second, grows exponentially!
   for (int i = 0; i<num_pairs; ++i)
-  { 
-    // goals x_{2i} = 2, x_{2i+1} = 2
-    // x_{2i}, goal: i + goal1
-    const double g1 = i + goal1;
-    const double g2 = i + goal2;
-    MeshKit::IAVariable *v1 = ia_interface->create_variable( NULL, MeshKit::SOFT, g1);
-    MeshKit::IAVariable *v2 = ia_interface->create_variable( NULL, MeshKit::SOFT, g2);
-    const double compromise = sqrt( g1 * g2 );
-    double lo = floor(compromise); 
-    if ( ( compromise - lo ) < 0.1 )
-      --lo;
-    if ( lo < 1. )
-      lo = 1.;
-    double hi = ceil(compromise);
-    if ( (hi - compromise) < 0.1 )
-      ++hi;
-    correct_solution.push_back( std::make_pair( lo, hi ) );
-    correct_solution.push_back( std::make_pair( lo, hi ) );
+    {
+      // goals x_{2i} = 2, x_{2i+1} = 2
+      // x_{2i}, goal: i + goal1
+      const double g1 = i + goal1;
+      const double g2 = i + goal2;
+      MeshKit::IAVariable *v1 = ia_interface->create_variable( NULL, MeshKit::SOFT, g1);
+      MeshKit::IAVariable *v2 = ia_interface->create_variable( NULL, MeshKit::SOFT, g2);
+      const double compromise = sqrt( g1 * g2 );
+      double lo = floor(compromise);
+      if ( ( compromise - lo ) < 0.1 )
+        --lo;
+      if ( lo < 1. )
+        lo = 1.;
+      double hi = ceil(compromise);
+      if ( (hi - compromise) < 0.1 )
+        ++hi;
+      correct_solution.push_back( std::make_pair( lo, hi ) );
+      correct_solution.push_back( std::make_pair( lo, hi ) );
 
-    // constrain x_{2i} - x_{2i+1} = 0
-    MeshKit::IAInterface::IAVariableVec side1, side2;
-    side1.push_back(v1);
-    side2.push_back(v2);
-    ia_interface->constrain_sum_equal(side1, side2);
-  }
+      // constrain x_{2i} - x_{2i+1} = 0
+      MeshKit::IAInterface::IAVariableVec side1, side2;
+      side1.push_back(v1);
+      side2.push_back(v2);
+      ia_interface->constrain_sum_equal(side1, side2);
+    }
 }
 
 
 void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides, 
-                       const bool grow_goal_by_i,
-                       const int goal_m1, const int goal_m2, 
-                       const int num_curve_min, const int num_curve_max )
+                        const bool grow_goal_by_i,
+                        const int goal_m1, const int goal_m2,
+                        const int num_curve_min, const int num_curve_max )
 {
   // test problem 3, sides with more than one variable, with random goals
   printf("constructing coupled test problem - mapping chain\n");
@@ -117,41 +123,41 @@ void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides,
   MeshKit::IAInterface::IAVariableVec side1, side2;
   int num_vars = 0;
   for (int i = 0; i<num_sides; ++i)
-  { 
-    // move side2 to side1
-    side2.swap( side1 );
-
-    // create new side2
-    side2.clear();
-    assert( num_curve_min > 0 );
-    int num_curves = num_curve_min;
-    if ( num_curve_max > num_curve_min )
-      num_curves += (rand() % (1 + num_curve_max - num_curve_min) ); 
-    for (int j = 0; j < num_curves; j++)
     {
-      int goal_intervals = (1 + (rand() % goal_m1)) * (1 + (rand() % goal_m2)); 
-      if (grow_goal_by_i)
-        goal_intervals += num_vars;
-      MeshKit::IAVariable *v = ia_interface->create_variable( NULL, MeshKit::SOFT, goal_intervals);
-      side2.push_back(v);
-    }
+      // move side2 to side1
+      side2.swap( side1 );
 
-    // if we have two non-trivial opposite sides, then constrain them to be equal
-    if (side1.size() && side2.size())
-    {
-      ia_interface->constrain_sum_equal(side1, side2);
-    }
+      // create new side2
+      side2.clear();
+      assert( num_curve_min > 0 );
+      int num_curves = num_curve_min;
+      if ( num_curve_max > num_curve_min )
+        num_curves += (rand() % (1 + num_curve_max - num_curve_min) );
+      for (int j = 0; j < num_curves; j++)
+        {
+          int goal_intervals = (1 + (rand() % goal_m1)) * (1 + (rand() % goal_m2));
+          if (grow_goal_by_i)
+            goal_intervals += num_vars;
+          MeshKit::IAVariable *v = ia_interface->create_variable( NULL, MeshKit::SOFT, goal_intervals);
+          side2.push_back(v);
+        }
 
-    // add a sum-even constraint
-    if (i==0)
-    {
-      // printf("sum-even side: %d", i);
-      assert( side2.size() );
-      ia_interface->constrain_sum_even(side2);
-    }
+      // if we have two non-trivial opposite sides, then constrain them to be equal
+      if (side1.size() && side2.size())
+        {
+          ia_interface->constrain_sum_equal(side1, side2);
+        }
 
-    // todo: try some hard-sets and non-trivial rhs
-  }
+      // add a sum-even constraint
+      if (i==0)
+        {
+          // printf("sum-even side: %d", i);
+          assert( side2.size() );
+          ia_interface->constrain_sum_even(side2);
+        }
+
+      // todo: try some hard-sets and non-trivial rhs
+    }
 }
 
 // sum-even constraints test problems
@@ -201,8 +207,8 @@ void test_one_pair()
 
   std::vector< std::pair<int,int> > correct_solution;
   set_decoupled_pairs(ia_interface, 1, 1, 3, correct_solution);
-//  set_decoupled_pairs(ia_interface, 1, 3.2, 12.1, correct_solution);
-  ia_interface->execute_this(); 
+  //  set_decoupled_pairs(ia_interface, 1, 3.2, 12.1, correct_solution);
+  ia_interface->execute_this();
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
   CHECK( solution_correct );
 }
@@ -221,7 +227,7 @@ void test_many_pairs()
   set_decoupled_pairs(ia_interface, 4, 1.5, 1.5, correct_solution);
   set_decoupled_pairs(ia_interface, 4, 1, 1, correct_solution);
   
-  ia_interface->execute_this(); 
+  ia_interface->execute_this();
   
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
   CHECK( solution_correct );
@@ -238,7 +244,7 @@ void test_long_chain()
   set_mapping_chain(ia_interface, 16000, false, 3, 15, 2, 11);
   // goal distribution is gaussian in [1, 32]
 
-  ia_interface->execute_this(); 
+  ia_interface->execute_this();
   
   // bool solution_defined = check_solution( ia_interface );
 
@@ -257,7 +263,7 @@ void test_growing_chain()
   // one curve per side
   set_mapping_chain(ia_interface, 16, true, 1, 1, 1, 1);
 
-  ia_interface->execute_this(); 
+  ia_interface->execute_this();
   
   // bool solution_defined = check_solution( ia_interface );
   
@@ -269,8 +275,7 @@ void mapping_test()
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   ia_interface->destroy_data();
 
-  std::string file_name = TestDir + "/../../../data/quadface.stp";
-  //std::string file_name = TestDir + "/../../../data/brick.stp";
+  std::string file_name = TestDir + "/" + INTASSIGN_TEST_FILE;
   printf("opening %s\n", file_name.c_str());
   mk->load_geometry_mesh(file_name.c_str(), NULL);
 
@@ -279,36 +284,33 @@ void mapping_test()
   mk->get_entities_by_dimension(2, surfs);
   MeshKit::ModelEnt *this_surf = (*surfs.rbegin());
 
-    // request a specific size
-  mk->sizing_function(0.1, true);
-  
-  moab::Range curves;
-  this_surf->boundary(1, curves); // Moab? Find the right function call
+  // request a specific size
+  //mk->sizing_function(0.1, true);
+  MeshKit::MEntVector curves;
+  std::vector<int> senses, loop_sizes;
+  this_surf->boundary(1, curves, &senses, &loop_sizes);
   CHECK_EQUAL(4, (int)curves.size());
-  // assume curves are ordered 0 to 3 contiguously around the surface
-  //   or perhaps 0, 1 are opposite, and 2, 3 are opposite?
-  // for (MeshKit::MEntVector::iterator vit = curves.begin(); ...
 
-  MeshKit::ModelEnt* me_curves[4] = {0,0,0,0};
-  // convert moab entity handles to ModelEnt* and place in me_curves... ask Tim how
-  
+  MeshKit::SizingFunction esize(mk, -1, -1);
+  surfs[0]->sizing_function_index(esize.core_index());
+
   MeshKit::MEntVector side1, side2;
-  side1.push_back(me_curves[0]); side2.push_back(me_curves[2]);
-  ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1), 
+  side1.push_back(curves[0]); side2.push_back(curves[2]);
+  ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1),
                                     ia_interface->make_constraint_group(side2));
   side1.clear(); side2.clear();
-  side1.push_back(me_curves[1]); side2.push_back(me_curves[3]);
-  ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1), 
+  side1.push_back(curves[1]); side2.push_back(curves[3]);
+  ia_interface->constrain_sum_equal(ia_interface->make_constraint_group(side1),
                                     ia_interface->make_constraint_group(side2));
 
   // if there are loops, and the loops have strictly less than 4 curves, then
   // ia_interface->constrain_sum_even( ia_interface->make_constraint_group(curves in loop) );
   
   //now, do the TFIMapping
-  // MeshKit::TFIMapping *tm =    // tm unused
   (MeshKit::TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
   mk->setup_and_execute();
-
+  mk->save_mesh("intassign.exo");
+  //
   delete_ia_interface( ia_interface );
 }
 
@@ -321,17 +323,14 @@ int main(int argv, char* argc[])
   // run same test twice to check data clearing integrity
   int one_pair2 = RUN_TEST(test_one_pair);
   int many_pairs = RUN_TEST(test_many_pairs);
-  
+  int map_test =  RUN_TEST(mapping_test);
   int growing_chain = RUN_TEST(test_growing_chain);
-  int long_chain = RUN_TEST(test_long_chain);
+  // int long_chain = RUN_TEST(test_long_chain);
 
-//  int expt = RUN_TEST(test_exception);
-//  int succ = RUN_TEST(test_success);
+  //  int expt = RUN_TEST(test_exception);
+  //  int succ = RUN_TEST(test_success);
 
-  int map_res = 0; // RUN_TEST(mapping_test);
-  
   delete mk;
-  
-  int success = one_pair + one_pair2 + many_pairs + growing_chain + long_chain + map_res; // + !abrt + !expt + succ;
+  int success = one_pair + one_pair2 + many_pairs + map_test + growing_chain; // + !abrt + !expt + succ;
   return success;
 }

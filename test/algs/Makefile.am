@@ -43,6 +43,10 @@ TESTS += test_SetPnt2Quad test_volIce
 endif
 endif
 
+if ENABLE_intassign
+TESTS += test_intassign
+endif
+
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
 MOSTLYCLEANFILES = SCDmesh1.vtk SCDmesh2.vtk SCDmesh3.vtk SCDmesh.h5m
@@ -53,6 +57,7 @@ endif
 
 # Tests and such
 
+test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesh_SOURCES = test_edgemesh.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
@@ -74,6 +79,9 @@ test_MBSplitOp_SOURCES = test_MBSplitOp.cpp
 test_SetPnt2Quad_SOURCES = test_SetPnt2Quad.cpp
 test_volIce_SOURCES = test_volIce.cpp
 test_MBVolOp_SOURCES = test_MBVolOp.cpp
+endif
+if ENABLE_intassign
+test_intassign_SOURCES = test_intassign.cpp
 endif
 
 # Utility target: build but don't run tests
