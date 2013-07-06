@@ -196,7 +196,6 @@ namespace MeshKit
     moab::Range nssets;
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
     pc->resolve_shared_sets( nssets, nstag );
-    iMesh_setEntSetIntData;
 
 #ifdef HAVE_MOAB
     //  int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
