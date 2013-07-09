@@ -1,5 +1,6 @@
 /*!
   \page usingmeshkit Using %MeshKit: The 2-Minute Introduction
+  \ingroup userguide
   In its simplest form, %MeshKit can be used by specifying the geometry, a mesh scheme,
   and a desired mesh size, then executing the meshing operation.  In code, this looks like:
   \code

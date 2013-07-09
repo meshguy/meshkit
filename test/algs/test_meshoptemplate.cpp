@@ -1,6 +1,10 @@
-/** \file test_meshoptemplate.cpp
- *
+/*!
+ * \file test_meshoptemplate.cpp
+ * \test This file contains 1 test(s). Algorithms tested include: MeshOpTemplate.
+ * 
  * Test MeshOpTemplate
+ * Author: Brett Rhodes
+ * Date: 9-13-2013
  *
  */
 

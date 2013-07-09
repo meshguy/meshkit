@@ -21,7 +21,6 @@
   - \ref interfaces
   - \ref api
   - <a href="../MeshKitAlgorithms.html"> MeshKit Algorithms</a>
-  - \ref meshkitalgorithmtests
 
 - Developer's Guide
   - \ref styleguide
