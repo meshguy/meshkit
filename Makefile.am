@@ -32,7 +32,7 @@ endif
 #  AM_CPPFLAGS += -I$(top_srcdir)/camal
 #endif
 
-SUBDIRS += test doc
+SUBDIRS += example test doc
 
 # Some variables
 AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)

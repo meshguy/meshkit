@@ -1067,6 +1067,7 @@ AC_CONFIG_FILES([Makefile
                  utils/Makefile
                  doc/Makefile
                  doc/meshkit.dox
+                 example/Makefile
                  ])
 
 AC_OUTPUT
