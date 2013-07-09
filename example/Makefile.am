@@ -18,13 +18,13 @@ AM_CPPFLAGS += -I$(top_srcdir)/example \
 
 BROKEN_EXAMPLES = 
 
-EXAMPLES = example_basic
+TESTS = example_basic
 
 if ENABLE_intassign
-EXAMPLES += test_intassign
+TESTS += 
 endif
 
-check_PROGRAMS = $(EXAMPLES) $(BROKEN_EXAMPLES)
+check_PROGRAMS = $(TESTS) $(BROKEN_EXAMPLES)
 
 MOSTLYCLEANFILES = 
 
