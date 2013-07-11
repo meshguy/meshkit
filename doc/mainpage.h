@@ -1,6 +1,6 @@
-/*! \mainpage %MeshKit: A Library for Mesh Generation
+/*! \mainpage MeshKit: A Library for Mesh Generation
 
- %MeshKit is a library for geometry-based 2d and 3d mesh generation.  This library has two main purposes:
+MeshKit is a library for geometry-based 2d and 3d mesh generation.  This library has two main purposes:
  - to provide a useful collection of open-source mesh generation functions
  - to provide infrastructure (geometry, lower-dimensional entity meshing, etc.) for implementing new
    meshing functionality
@@ -12,7 +12,8 @@
  rest of %MeshKit functionality.
 
  This manual is divided into the following sections:
-- User's Guide
+
+- \subpage userguide
   - \ref usingmeshkit
   - \ref datamodel
   - \ref thegraph
@@ -22,9 +23,10 @@
   - \ref api
   - <a href="../MeshKitAlgorithms.html"> MeshKit Algorithms</a>
 
-- Developer's Guide
+- \subpage devguide
   - \ref styleguide
   - \ref devinterfaces
   - \ref newmeshop
   - \ref faq
+
  */

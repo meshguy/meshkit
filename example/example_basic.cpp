@@ -1,6 +1,9 @@
-/** \file test_meshoptemplate.cpp
+/** \file example_basic.cpp
  *
- * Test MeshOpTemplate
+ * Basic Example
+
+
+  Some testing text!
  *
  */
 
@@ -22,8 +25,8 @@
 using namespace MeshKit;
 
 MKCore *mk;
+int output = 0;
 
-bool save_mesh = true;
 void test_mesh_op_template();
 
 int main(int argc, char **argv)
@@ -80,7 +83,41 @@ void test_mesh_op_template()
   printf("Pre-Clear\n");
   mk->clear_graph();
 
-  if(save_mesh) {
+//  mk->imesh_instance()->createTag("TAG_SET_A", 1, iBase_INTEGER, mesh_tag);
+/*
+  // Tag things!
+  int err;
+  moab::Interface * mb = mk->moab_instance();
+//  iBase_TagHandle mesh_tag;
+  moab::Tag neu, mat;
+  moab::Range tagged_ents;
+  std::vector<moab::EntityHandle> ent_list;
+  mb->tag_get_handle("MATERIAL_SET", mat);
+  mb->get_entities_by_dimension(mb->get_root_set(), 3, ent_list, true);
+  for (int i = 0; (unsigned int)i < ent_list.size(); i++) {
+    iMesh_setEntSetIntData(mk->imesh_instance()->instance(), (iBase_EntitySetHandle)ent_list[i],
+                            (iBase_TagHandle)mat, 1, &err);
+    if (!err)
+      printf("i = %d\n", i);
+  }
+
+  ent_list.resize(0);
+  mb->tag_get_handle("NEUMANN_SET", neu);
+  mb->get_entities_by_dimension(mb->get_root_set(), 2, ent_list, true);
+  mb->tag_set_data(neu, ent_list, ent_list.size(), );
+  for (int i = 0; (unsigned int)i < ent_list.size(); i++) {
+    iMesh_setEntSetIntData(mk->imesh_instance()->instance(), iBase_EntitySetHandle(ent_list[i]),
+                            (iBase_TagHandle)neu, 1, &err);
+    if (!err)
+      printf("i = %d\n", i);
+  }
+
+  mk->moab_instance()->tag_get_handle("NEUMANN_SET", &neu);
+  mk->moab_instance()->get_entities_by_dimension(2, ent_list);
+  mk->moab_instance()->iMesh_setEntSetIntData(mk->imesh_instance(), ent_list, neu, 1, new int);
+  */
+
+  if(1) {
     #ifdef HAVE_ACIS
       mk->save_geometry("un_meshed_brick.sat");
       mk->save_mesh("meshed_brick.exo");
@@ -92,4 +129,3 @@ void test_mesh_op_template()
 
   return;
 }
-

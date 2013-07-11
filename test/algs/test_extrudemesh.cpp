@@ -1,4 +1,4 @@
-/** \file test_copymesh.cpp
+/** \file test_copymesh.cpp \test
  *
  * Test CopyMesh
  *

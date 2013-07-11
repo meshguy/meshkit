@@ -53,6 +53,7 @@ them easy to detect and avoid.
 relevant dependencies between meshing operations.
 
 A more detailed example of graph traversal is given \subpage detailedtraversal "here".
+Some more graph-based meshing examples are found \subpage graphexamples "here".
 
 \page detailedtraversal A more detailed example of graph traversal
 
