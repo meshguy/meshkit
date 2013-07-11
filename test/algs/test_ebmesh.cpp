@@ -1,4 +1,4 @@
-/** \file test_ebmesh.cpp
+/** \file test_ebmesh.cpp \test
  *
  * Test the EBMesher
  *

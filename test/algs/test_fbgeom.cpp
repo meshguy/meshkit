@@ -1,5 +1,5 @@
 /**
- * \file test_fbgeom.cpp
+ * \file test_fbgeom.cpp \test
  *
  * \brief from one mesh file, with quads, on bottom, generate 
  *  hexa meshes, by extrusion, in the z direction

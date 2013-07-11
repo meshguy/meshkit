@@ -1,5 +1,5 @@
 
-/** \file test_copygeom.cpp
+/** \file test_copygeom.cpp \test
  *
  * Test CopyGeom
  *

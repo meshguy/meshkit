@@ -1,4 +1,4 @@
-/** \file test_TFIMapping.cpp
+/** \file test_TFIMapping.cpp \test
  *
  * Test the TFIMapping for a few challenging examples.
  *

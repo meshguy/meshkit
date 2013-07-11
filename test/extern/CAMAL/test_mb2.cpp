@@ -1,4 +1,4 @@
-/** \file test_mbgeom.cpp
+/** \file test_mbgeom.cpp \test
  *
  * Test the mesh based geometry in meshkit, without FBiGeom instance in test
  *

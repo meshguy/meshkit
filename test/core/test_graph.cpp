@@ -1,4 +1,4 @@
-/** \file test_graph.cpp
+/** \file test_graph.cpp \test
  *
  * Test the MeshOp graph code in MeshKit.  Do this by building a graph
  * which looks like:

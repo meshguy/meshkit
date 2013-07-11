@@ -1,3 +1,9 @@
+/*! \file test_MBSplitOp.cpp \test
+ *
+ * test_MBSplitOp.cpp
+ *
+ */
+
 #include <iostream>
 #include <fstream>
 

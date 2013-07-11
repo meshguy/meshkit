@@ -1,3 +1,9 @@
+/*! \file test_parallelmesher.cpp \test
+ *
+ * test_parallelmesher.cpp
+ *
+ */
+
 // Test file for parallel mesh generation
 // It reads geometry in parallel with CGM and meshed by camal in parallel.
 #include <iostream>

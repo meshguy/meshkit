@@ -1,3 +1,9 @@
+/*! \file test_qslim.cpp \test
+ *
+ * test_qslim.cpp
+ *
+ */
+
 #include <iostream>
 
 #include <time.h>

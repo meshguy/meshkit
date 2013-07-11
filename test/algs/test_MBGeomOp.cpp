@@ -1,3 +1,9 @@
+/*! \file test_MBGeomOp.cpp \test
+ *
+ * test_MBGeomOp.cpp
+ *
+ */
+
 #include <iostream>
 
 #include <time.h>

@@ -1,4 +1,4 @@
-/** \file test_postbl.cpp
+/** \file test_postbl.cpp \test
  *
  * Test PostBL
  *

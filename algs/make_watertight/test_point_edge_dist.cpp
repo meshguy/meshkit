@@ -1,3 +1,9 @@
+/*! \file test_point_edge_dist.cpp \test
+ *
+ * test_point_edge_dist.cpp
+ *
+ */
+
 #include <iostream>
 #include <math.h>
 

@@ -1,4 +1,4 @@
-/** \file test_paver.cpp
+/** \file test_paver.cpp \test
  *
  * Test the CAMALPaver for a few challenging examples.
  *

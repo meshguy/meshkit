@@ -1,4 +1,4 @@
-/** \file test_assygen.cpp
+/** \file test_assygen.cpp \test
  *
  * Test AssyGen
  *

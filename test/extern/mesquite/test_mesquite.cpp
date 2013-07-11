@@ -1,3 +1,9 @@
+/*! \file test_mesquite.cpp \test
+ *
+ * test_mesquite.cpp
+ *
+ */
+
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/MesquiteOpt.hpp"

@@ -1,4 +1,4 @@
-/** \file test_edgemesh.cpp
+/** \file test_edgemesh.cpp \test
  *
  * Test the EdgeMesher for a few challenging examples.
  *

@@ -1,4 +1,10 @@
-// ia_main.cpp
+/*! \file test_intassign.cpp \test
+ *
+ * test_intassign.cpp
+ *
+ */
+
+// ia_main.cpp 
 // test IntervalMatching interface IAInterface for MeshKit
 
 #include "TestUtil.hpp"

@@ -1,9 +1,9 @@
-//---------------------------------------------------------------------------//
-// \file test/algs/test_scdmesh.cpp
+/**--------------------------------------------------------------------------//
+// \file test/algs/test_scdmesh.cpp \test
 // \author Stuart R. Slattery
 // \date Friday February 4 18:4:54 2011
 // \brief Unit test for SCDMesh MeshOp
-//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------*/
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SCDMesh.hpp"

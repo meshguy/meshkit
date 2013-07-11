@@ -1,4 +1,4 @@
-/** \file test_triadvance.cpp
+/** \file test_triadvance.cpp \test
  *
  * Test the CAMALTriAdvance for a few challenging examples.
  *
