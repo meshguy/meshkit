@@ -106,7 +106,7 @@ AC_OUTPUT
 
 # List of source directories to conditionally search.
 # Paths should be relative to top source directory.
-DOXYGEN_SRC_PATH="src/core src/utils src/algs src/extern/register_extern.cpp test/core test/algs"
+DOXYGEN_SRC_PATH="src/core src/utils src/algs src/extern/register_extern.cpp test/core test/algs example"
 
 # Old versions of autoconf (2.59) (automake?) don't define docdir
 if test "x$docdir" = "x"; then

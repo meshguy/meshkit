@@ -1,12 +1,28 @@
-/** \file example_basic.cpp
- *
- * Basic Example
+/*!
+\example example_basic.cpp
 
+\section title Basic Example
 
-  Some testing text!
- *
- */
+\subsection inf Misc. Information
+\author Brett Rhodes
+\date 7-12-2013
+\bug Currently requires multiple setup/execute cycles.
+\warning This example is not currently complete.
 
+\subsection goal Goal
+The goal of this is example is to start from no input and create a meshed geometry with proper Neumann and material sets.
+
+\subsection cw Code Walkthrough
+Code is subject to change, this will be written at a later point.
+
+\subsection in Input
+There is no input.
+
+\subsection out Output
+\image html example_basic.out.jpg
+
+\subsection src Source Code
+*/
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
 #include "meshkit/MeshOpTemplate.hpp"
@@ -25,7 +41,7 @@
 using namespace MeshKit;
 
 MKCore *mk;
-int output = 0;
+bool save_mesh = true;
 
 void test_mesh_op_template();
 
@@ -117,7 +133,7 @@ void test_mesh_op_template()
   mk->moab_instance()->iMesh_setEntSetIntData(mk->imesh_instance(), ent_list, neu, 1, new int);
   */
 
-  if(1) {
+  if(save_mesh) {
     #ifdef HAVE_ACIS
       mk->save_geometry("un_meshed_brick.sat");
       mk->save_mesh("meshed_brick.exo");
