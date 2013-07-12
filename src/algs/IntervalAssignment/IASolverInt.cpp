@@ -27,7 +27,9 @@ namespace MeshKit
 IASolverInt::IASolverInt(const IAData * ia_data_ptr, IASolution *relaxed_solution_ptr, 
   const bool set_silent) 
   : IASolverToolInt(ia_data_ptr, relaxed_solution_ptr, true), 
-  silent(set_silent), debugging(true)
+  silent(false),
+//  silent(set_silent), 
+  debugging(true)
 { 
   ip_data(new IPData);
   // initialize copies relaxed solution, then we can overwrite relaxed_solution_pointer

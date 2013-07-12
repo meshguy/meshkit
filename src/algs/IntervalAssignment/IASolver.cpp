@@ -12,12 +12,17 @@
 #include <math.h>
 #include <limits.h>
 
+// timing tests
+#include <time.h> //zzyk
+#include <iostream>
+
 namespace MeshKit 
 {
     
 IASolver::IASolver(IAData *ia_data_ptr, IASolution *ia_solution_ptr)
   : IASolverToolInt( ia_data_ptr, ia_solution_ptr ),
-  debugging(true) 
+   debugging(true) 
+  // debugging(false) 
   {}
 
 /** default destructor */
@@ -66,9 +71,21 @@ bool IASolver::solve()
   }
   
   // todo: subdivide problem into independent sub-problems for speed
-  
+  //zzyk
+  clock_t t = clock();
   bool relaxed_succeeded = solve_relaxed();
+  print_solution();
+
+  t = clock()-t;
+  float seconds = ((float)t)/CLOCKS_PER_SEC;
+  std::cout << "relaxed solution " << ((relaxed_succeeded) ? "succeeded" : "failed") <<  " took " << seconds << " seconds" << std::endl;
+
+  t = clock();
   bool int_succeeded = relaxed_succeeded && solve_int();
+  t = clock()-t;
+  seconds = ((float)t)/CLOCKS_PER_SEC;
+  std::cout << "integer solution " << ((int_succeeded) ? "succeeded" : "failed") << " took " << seconds << " seconds" << std::endl;
+
   bool even_succeeded = int_succeeded && solve_even();
   
   if (debugging)

@@ -34,7 +34,9 @@ const int IANlp::p_norm = 3;
 // constructor
 IANlp::IANlp(const IAData *data_ptr, IASolution *solution_ptr, const bool set_silent): 
 data(data_ptr), solution(solution_ptr), 
-neleJac(0), silent(set_silent), debugging(true), verbose(true) // true
+neleJac(0), 
+//  silent(set_silent), debugging(true), verbose(true) // true
+  silent(set_silent), debugging(false), verbose(false) // true
 {
   assert(p_norm >= 2); // needed for continuity of derivatives anyway
   if (!silent)

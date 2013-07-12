@@ -16,12 +16,15 @@
 #include <assert.h>
 #include <math.h>
 
+// zzyk
+#include <iostream.h>
+
 namespace MeshKit 
 {
   
 int ModelEnt::max_stub_id = 0;   // stubbed
   
-const bool IAInterface::debugging = true;
+const bool IAInterface::debugging = false;
   
 //static IAVariable counter
 unsigned int IAVariable::numVariables(0);
@@ -563,6 +566,9 @@ void IAInterface::assign_solution( SubProblem *subproblem )
 
 void IAInterface::execute_this()
 {
+  //zzyk
+  clock_t t = clock();
+
   SubProblemVec subproblems;
   subdivide_problem(subproblems);
   for (unsigned int i = 0; i < subproblems.size(); ++i)
@@ -579,6 +585,13 @@ void IAInterface::execute_this()
     delete p;
   }
   subproblems.clear();
+
+  //zzyk
+  t = clock()-t;
+  float seconds = ((float)t)/CLOCKS_PER_SEC;
+  std::cout << "total IA time " << seconds << std::endl;
+
+  
   return;
 }
 

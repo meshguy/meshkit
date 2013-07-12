@@ -65,7 +65,8 @@ IABendNlp::IABendNlp(const IAData *data_ptr, const IPData *ip_data_ptr, const IP
                      problem_n(data_ptr->num_variables() + (int) weight_ptr->size()),
                      problem_m( (int)(data_ptr->constraints.size() + data_ptr->num_variables() + ( evenConstraintsActive ? 2 : 1) * data_ptr->sumEvenConstraints.size())),  
                      weights( weight_ptr ),
-                     silent(set_silent), debugging(true), verbose(true) // true
+//  silent(set_silent), debugging(true), verbose(true) // true
+                    silent(set_silent), debugging(false), verbose(false) // true
 {
   if (!silent)
   { 

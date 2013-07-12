@@ -16,8 +16,8 @@ IASolverRelaxed::IASolverRelaxed(const IAData *ia_data, IASolution *relaxed_solu
                                  const bool set_silent) : 
   IASolverTool( ia_data, relaxed_solution, true ),  // debug
   p_norm(3), 
-//silent(set_silent), debugging(false) {}
-silent(false), debugging(true) {}
+silent(set_silent), debugging(false) {}
+//silent(false), debugging(true) {}
 
 /** default destructor */
 IASolverRelaxed::~IASolverRelaxed() {}

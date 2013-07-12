@@ -20,7 +20,8 @@ namespace MeshKit
 IASolverBend::IASolverBend(const IAData * ia_data_ptr, IASolution *relaxed_solution_ptr, 
   const bool set_silent) 
   : IASolverToolInt(ia_data_ptr, relaxed_solution_ptr, true), evenConstraintsActive(false),
-  silent(set_silent), debugging(true)
+  //  silent(set_silent), debugging(true)
+    silent(set_silent), debugging(false)
 { 
   ip_data(new IPData);
   // initialize copies relaxed solution, then we can overwrite relaxed_solution_pointer with our integer solution 
@@ -45,6 +46,19 @@ bool IASolverBend::solve_nlp() // IABendNlp *mynlp
   
   // solver setup  
   Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
+
+  //  jac_d_constant
+  if (evenConstraintsActive && !ia_data()->sumEvenConstraints.empty() )
+  {
+    app->Options()->SetStringValue("jac_d_constant", "no"); // default
+  }
+  else
+  {
+    app->Options()->SetStringValue("jac_d_constant", "yes");
+  }
+  // even with the even-constraints, the hessian is constant
+  app->Options()->SetStringValue("hessian_constant", "yes"); // no by default
+
 /* try leaving defaults
   // convergence parameters
   // see $IPOPTDIR/Ipopt/src/Interfaces/IpIpoptApplication.cpp
@@ -436,16 +450,17 @@ void IASolverBend::initialize_ip_bends()
     double xl = bend.xl = floor(x);
     assert(xl >= 1.);
     // to do, experimenting with starting with +2, -1 
-    if ( x - floor(x) > 0.5 )
+//    if ( x - floor(x) > 0.5 )
     {
       bend.numDeltaPlus = 2;
       bend.numDeltaMinus = 1; 
     }
-    else
-    {
-      bend.numDeltaPlus = 1;
-      bend.numDeltaMinus = 1;      
-    }
+    // just one bend, two deltas, is a bad idea, because it can lead to an unbounded objective funtion
+//    else
+//    {
+//      bend.numDeltaPlus = 1;
+//      bend.numDeltaMinus = 1;      
+//    }
 
     /*
     // debug, test negative deltas by starting with an xl that's too high
@@ -606,7 +621,7 @@ bool IASolverBend::solve()
   // set initial ip bends from relaxed solution
   initialize_ip_bends();
 
-  int iter = 0;
+  int iter = 0, bend_updates = 0;
   bool try_again = true;
   bool success = false;
   evenConstraintsActive = false;
@@ -626,6 +641,7 @@ bool IASolverBend::solve()
       bool changed = update_ip_bends();
       if (changed)
       {
+        ++bend_updates;
         try_again = true;
       }
       // try again if sum-evens not already satisfied
@@ -645,7 +661,10 @@ bool IASolverBend::solve()
     
   }
   while (try_again);
-    
+
+  //zzyk debug performance
+  std::cout << iter << " bend iterations, " << bend_updates << " bend updates" << std::endl;
+
   cleanup();
   
   success = solution_is_integer() && all_constraints();

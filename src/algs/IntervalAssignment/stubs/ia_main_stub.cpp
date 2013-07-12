@@ -108,14 +108,15 @@ void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides,
 {
   // test problem 3, sides with more than one variable, with random goals
   printf("constructing coupled test problem - mapping chain\n");
-  srand(10234);
+//  srand(10234); // for scaling by curves
+// srand(6893498); // for scaling by faces when the other results in a bend
   MeshKit::IAInterface::IAVariableVec side1, side2;
   int num_vars = 0;
   for (int i = 0; i<num_sides; ++i)
   { 
     // move side2 to side1
     side2.swap( side1 );
-
+    
     // create new side2
     side2.clear();
     assert( num_curve_min > 0 );
@@ -131,24 +132,62 @@ void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides,
       side2.push_back(v);
     }
     num_vars += num_curves;
-
+    
     // if we have two non-trivial opposite sides, then constrain them to be equal
     if (side1.size() && side2.size())
     {
       ia_interface->constrain_sum_equal(side1, side2);
     }
-
+    
     // add a sum-even constraint
-    if (1 && i==0)
+    if (0 && i==0)
     {
       printf("sum-even side: %d", i);
       assert( side2.size() );
       ia_interface->constrain_sum_even(side2);
     }
-
+    
     // todo: try some hard-sets and non-trivial rhs
   }
+  printf("problem size: %d variables, %d equal constraints\n", num_vars, num_sides-1);
+
 }
+
+void set_mapping_face( MeshKit::IAInterface *ia_interface )
+{
+  // test problem 3, sides with more than one variable, with random goals
+  printf("constructing mapping face with several curves per side\n");
+  srand(10234);
+  MeshKit::IAInterface::IAVariableVec side1, side2; 
+
+  int num_vars[] = {1, 2};
+  int goals[] = {10, 100, 50};
+
+  int num_curves = num_vars[0];
+  for (int j = 0; j < num_curves; j++)
+  {
+    int goal_intervals = goals[j];
+    MeshKit::IAVariable *v = ia_interface->create_variable( NULL, MeshKit::SOFT, goal_intervals);
+    side1.push_back(v);
+  }
+
+  num_curves = num_vars[1];
+  for (int j = 0; j < num_curves; j++)
+  {
+    int goal_intervals = goals[num_vars[0] + j];
+    MeshKit::IAVariable *v = ia_interface->create_variable( NULL, MeshKit::SOFT, goal_intervals);
+    side2.push_back(v);
+  }
+
+  
+    // if we have two non-trivial opposite sides, then constrain them to be equal
+    if (side1.size() && side2.size())
+    {
+      ia_interface->constrain_sum_equal(side1, side2);
+    }
+    
+}
+
 
 // sum-even constraints test problems
 /*
@@ -190,13 +229,327 @@ void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides,
   }
 */
 
+void set_mapping_side( MeshKit::IAInterface *ia_interface, 
+                      unsigned int num_curves, MeshKit::IAInterface::IAVariableVec &side, std::vector<double> &goals )
+{
+  // see set_mapping_face below for usage  
+  int num_new_curves = (int) num_curves - (int) side.size(); 
+  if (num_new_curves < 0)
+    num_new_curves = 0;
+  for (int j = 0; j < num_new_curves; j++)
+  {
+    double goal_intervals = 1.; // default
+    if (j < (int) goals.size())
+      goal_intervals = goals[j]; // use the passed in goals
+    else
+      goals.push_back(goal_intervals); // pass back the assigned goals
+    MeshKit::IAVariable *v = ia_interface->create_variable( NULL, MeshKit::SOFT, goal_intervals);
+    side.push_back(v);
+  }
+}
+
+
+void set_mapping_face( MeshKit::IAInterface *ia_interface, 
+                      unsigned int num_curves_1, MeshKit::IAInterface::IAVariableVec &side_1, std::vector<double> &goals_1,
+                      unsigned int num_curves_2, MeshKit::IAInterface::IAVariableVec &side_2, std::vector<double> &goals_2) 
+{
+  // create a mapping face, with num_curves_? one each side.
+  // two uses, independent for each side:
+  // 1. Use the passed-in goals to create and fill in the ia_variables (so they can be used in the other form)
+  // 2. Use the passed-in ia_variables, so to get two faces sharing a side or part of a side
+  // a third use is a blend: re-use some variables and create some new ones. 
+  // Goals default to 1 if unspecified or not enough are passed in.
+  
+//  printf("set mapping face with %u and %u opposite curves.\n", num_curves_1, num_curves_2);
+//  printf("side_1: re-using %lu variables and creating %lu new ones\n", side_1.size(), num_curves_1 - side_1.size());
+//  printf("side_2: re-using %lu variables and creating %lu new ones\n", side_2.size(), num_curves_2 - side_2.size());
+  
+  // MeshKit::IAInterface::IAVariableVec side1, side2; 
+  
+  set_mapping_side( ia_interface, num_curves_1, side_1, goals_1 );
+  set_mapping_side( ia_interface, num_curves_2, side_2, goals_2 );
+
+  // if we have two non-trivial opposite sides, then constrain them to be equal
+  if (side_1.size() && side_2.size())
+  {
+    ia_interface->constrain_sum_equal(side_1, side_2);
+  }
+  
+}
+
+
+void set_half_integer(  MeshKit::IAInterface *ia_interface, int version)
+{
+  MeshKit::IAInterface::IAVariableVec side_1, side_2;
+  std::vector<double> goals_1, goals_2;
+
+  switch (version) {
+    // loop, pointed
+    case 0:
+    {
+      const double g1 = 107; // the one-curve side
+      const double g2 =  53.5; // the multi-curve looping side
+      // gives 1/2-integer solution
+      
+      goals_1.push_back(g1);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 2, side_2, goals_2);
+
+      MeshKit::IAInterface::IAVariableVec first_side_1 = side_1;
+      MeshKit::IAVariable *common_0 = side_2[0];
+      MeshKit::IAVariable *common_1 = side_2[1];
+   
+      side_1.clear();
+      side_2.clear();
+      side_1.push_back(common_0);
+      goals_2.clear();
+      goals_2.push_back(g2);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
+      
+      side_1.clear();
+      goals_1.clear();
+      goals_1.push_back(g2);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
+
+      side_2.clear();
+      side_2.push_back(common_1);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
+      
+      // need to have many replicates of the single side, in order to have its integer weight overcome the opposite half-integer weights
+      // MeshKit::IAVariable *weight_me = side_1[0]; 
+      for (int r = 0; r < 7; r++)
+      {
+        side_2.clear();
+        goals_2.clear();
+        goals_2.push_back(g1);
+        set_mapping_face(ia_interface, 1, first_side_1, goals_1, 1, side_2, goals_2);
+      }
+
+    }
+      break;
+
+    // loop, flat with extra curve for slack
+    case 1:
+    {
+      const double g1 = 107; // the one-curve side
+      const double g2 =  52.5; // the multi-curve looping side
+      const double g3 =  2; // the multi-curve looping side
+      // note the 8's below
+      // Bend solution fails, returns bad values?
+
+      goals_1.push_back(g1);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      goals_2.push_back(g3); // the slack curve
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 3, side_2, goals_2);
+      
+      MeshKit::IAInterface::IAVariableVec first_side_1 = side_1;
+      MeshKit::IAVariable *common_0 = side_2[0];
+      MeshKit::IAVariable *common_1 = side_2[1];
+      
+      side_1.clear();
+      side_2.clear();
+      side_1.push_back(common_0);
+      goals_2.clear();
+      goals_2.push_back(8);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
+      
+      side_1.clear();
+      goals_1.clear();
+      goals_1.push_back(8);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
+      
+      side_2.clear();
+      side_2.push_back(common_1);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
+      
+      for (int r = 0; r < 7; r++)
+      {
+        side_2.clear();
+        goals_2.clear();
+        goals_2.push_back(g1);
+        set_mapping_face(ia_interface, 1, first_side_1, goals_1, 1, side_2, goals_2);
+      }
+
+    }
+      break;
+      
+      // loop, pointed, but two curves per side around the loop
+    case 2:
+    {
+      const double g1 = 107; // the one-curve side
+      const double g2 =  26.75; // the multi-curve looping side 
+      // above set to 26.3, 70 replicates makes some 26 and some 27
+      // using 700 replicates with 26.75 gives a 1/2-integer (26.6) solution
+
+      goals_1.push_back(g1);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 4, side_2, goals_2);
+      
+      MeshKit::IAInterface::IAVariableVec first_side_1 = side_1;
+      MeshKit::IAVariable *common_0  = side_2[0];
+      MeshKit::IAVariable *common_0a = side_2[1];
+      MeshKit::IAVariable *common_1  = side_2[2];
+      MeshKit::IAVariable *common_1a = side_2[3];
+      
+      side_1.clear();
+      side_1.push_back(common_0);
+      side_1.push_back(common_0a);
+      side_2.clear();
+      goals_2.clear();
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      set_mapping_face(ia_interface, 2, side_1, goals_1, 2, side_2, goals_2);
+      
+      side_1.clear();
+      goals_1.clear();
+      goals_1.push_back(g2);
+      goals_1.push_back(g2);
+      set_mapping_face(ia_interface, 2, side_1, goals_1, 2, side_2, goals_2);
+      
+      side_2.clear();
+      side_2.push_back(common_1);
+      side_2.push_back(common_1a);
+      set_mapping_face(ia_interface, 2, side_1, goals_1, 2, side_2, goals_2);
+      
+      for (int r = 0; r < 700; r++)
+      {
+        side_2.clear();
+        goals_2.clear();
+        goals_2.push_back(g1);
+        set_mapping_face(ia_interface, 1, first_side_1, goals_1, 1, side_2, goals_2);
+      }
+
+    }
+      break;
+
+      // loop, flat with extra curve for slack, and two curves per side around the loop
+    case 3:
+    {
+      const double g1 = 107; // the one-curve side
+      const double g2 =  26.5; // the multi-curve looping side 
+      const double g3 =  2; // the multi-curve looping side 
+
+      goals_1.push_back(g1);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      goals_2.push_back(g3); // the slack curve
+      set_mapping_face(ia_interface, 1, side_1, goals_1, 5, side_2, goals_2);
+      // todo, fiddle with weights to get 1/2-integer solution
+      
+      MeshKit::IAInterface::IAVariableVec first_side_1 = side_1;
+      MeshKit::IAVariable *common_0  = side_2[0];
+      MeshKit::IAVariable *common_0a = side_2[1];
+      MeshKit::IAVariable *common_1  = side_2[2];
+      MeshKit::IAVariable *common_1a = side_2[3];
+      
+      side_1.clear();
+      side_1.push_back(common_0);
+      side_1.push_back(common_0a);
+      side_2.clear();
+      goals_2.clear();
+      goals_2.push_back(g2);
+      goals_2.push_back(g2);
+      set_mapping_face(ia_interface, 2, side_1, goals_1, 2, side_2, goals_2);
+      
+      side_1.clear();
+      goals_1.clear();
+      goals_1.push_back(g2);
+      goals_1.push_back(g2);
+      set_mapping_face(ia_interface, 2, side_1, goals_1, 2, side_2, goals_2);
+      
+      side_2.clear();
+      side_2.push_back(common_1);
+      side_2.push_back(common_1a);
+      set_mapping_face(ia_interface, 2, side_1, goals_1, 2, side_2, goals_2);
+
+      side_1 = first_side_1;
+      for (int r = 0; r < 0; r++) // no replicates needed to get 1/2 integer solution
+      {
+        side_2.clear();
+        goals_2.clear();
+        goals_2.push_back(g1);
+        set_mapping_face(ia_interface, 1, first_side_1, goals_1, 1, side_2, goals_2);
+      }
+
+    }
+      break;
+
+    default:
+      break;
+  }
+}
+
+void test_half_integer()
+{
+  // create interface
+  MeshKit::IAInterface *ia_interface = new_ia_interface();
+  
+  for (int v=3; v<4; ++v) // 0 <= v < 4
+  {
+    ia_interface->destroy_data();
+  
+    // set up model
+    set_half_integer(ia_interface, v);
+    printf("test problem %d\n", v);
+  
+    // solve ia
+    ia_interface->execute_this(); 
+  }
+  
+  delete_ia_interface( ia_interface );
+}
+
+void test_scaling_by_curves()
+{
+ 
+  int num_tests = 6;
+  int num_curves = 1000;
+  double factor = sqrt(10); // 10./3.;
+
+  for (int i = 0; i < num_tests; ++i)
+  {
+    MeshKit::IAInterface *ia_interface = new_ia_interface();
+    ia_interface->destroy_data();
+
+//    void set_mapping_chain( MeshKit::IAInterface *ia_interface, const int num_sides, 
+//                           const bool grow_goal_by_i,
+//                           const int goal_m1, const int goal_m2, 
+//                           const int num_curve_min, const int num_curve_max )
+
+    set_mapping_chain( ia_interface, 2, false, 3, 15, num_curves, num_curves);
+    ia_interface->execute_this(); 
+    
+    delete_ia_interface( ia_interface );
+    num_curves *= factor;
+  }
+  
+}
+
+void test_map_skew()
+{
+  MeshKit::IAInterface *ia_interface = new_ia_interface();
+  ia_interface->destroy_data();
+  
+  std::vector< std::pair<int,int> > correct_solution;
+  set_mapping_face(ia_interface);
+  //  set_decoupled_pairs(ia_interface, 1, 3.2, 12.1, correct_solution);
+  ia_interface->execute_this(); 
+}
+
 void test_one_pair()
 {
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   ia_interface->destroy_data();
 
   std::vector< std::pair<int,int> > correct_solution;
-  set_decoupled_pairs(ia_interface, 1, 1, 3, correct_solution);
+  set_decoupled_pairs(ia_interface, 1, 10., 1000., correct_solution);
 //  set_decoupled_pairs(ia_interface, 1, 3.2, 12.1, correct_solution);
   ia_interface->execute_this(); 
   bool solution_correct = check_solution_correctness( ia_interface, correct_solution );
@@ -227,18 +580,35 @@ void test_many_pairs()
 
 void test_long_chain()
 {
-  MeshKit::IAInterface *ia_interface = new_ia_interface();
-  ia_interface->destroy_data();
   
   // test scalability: 20000 gives 20,000 constraints, 100,000 variables in 1 second relaxed solution
-  set_mapping_chain(ia_interface, 16000, false, 3, 15, 2, 11);
-  // goal distribution is gaussian in [1, 32]
+//  set_mapping_chain(ia_interface, 16000, false, 3, 15, 2, 11);
+  // IANLP paper: 160, 160*3.3333, 1600, 1600*3.3333, 
+  int num_curves = 160;
+  int num_factors = 5; // 0, 1, 2, 3, 4, 5, 6
+  int srandseed[] = {10234, 6893498, 10234, 102, 102, 72346};
+  //                 0       1       2      3      4      5
+  for (int i = 0; i < num_factors; ++i)
+  {
+    MeshKit::IAInterface *ia_interface = new_ia_interface();
+    ia_interface->destroy_data();
 
-  ia_interface->execute_this(); 
+    //  srand(10234); // for scaling by curves
+    // srand(6893498); // for scaling by faces when the other results in a bend
+    srand( srandseed[i] );
+    std::cout << " i = " << i << " seed = " << srandseed[i] << std::endl;
+
+    set_mapping_chain(ia_interface, num_curves, false, 3, 15, 2, 11);
+    // goal distribution is gaussian in [1, 32]
+
+    ia_interface->execute_this(); 
   
-  // bool solution_defined = check_solution( ia_interface );
+    // bool solution_defined = check_solution( ia_interface );
 
-  delete_ia_interface( ia_interface );
+    delete_ia_interface( ia_interface );
+    
+    num_curves *= sqrt(10.);
+  }
 }
 
 
@@ -327,11 +697,22 @@ void paving_test()
 int main(int argv, char* argc[])
 {
   // stubbed  
-  // test_one_pair();
+  
+  // 2013 solution for implicit non-one coefficients 
+  test_half_integer();
+  
+  // 2013 solution for explicit sum-even's
+  
+  // For NLIA paper
+//  test_map_skew();
+//  test_scaling_by_curves();
+//     test_long_chain(); // ma27 has memory issues over 50,000 constraints
+
+//  test_one_pair();
   // test_many_pairs();
 //  test_growing_chain();
-  // test_long_chain(); ma27 has memory issues
-  paving_test();
+  
+  //paving_test();
 
 /* 100 long chain test
   srand(9384757); // debug
@@ -339,7 +720,7 @@ int main(int argv, char* argc[])
     test_long_chain();
 */
   
-  mapping_test();
+ // mapping_test();
 
   return 0;
 }
