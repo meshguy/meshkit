@@ -1,4 +1,4 @@
-/** \file test_mbgeom.cpp \test
+/** \file test_mbgeomvar.cpp \test
  *
  * Test the mesh based geometry in meshkit
  *

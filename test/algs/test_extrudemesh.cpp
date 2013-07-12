@@ -1,6 +1,6 @@
-/** \file test_copymesh.cpp /test
+/** \file test_extrudemesh.cpp \test
  *
- * Test CopyMesh
+ * Test Extrude Mesh
  *
  */
 

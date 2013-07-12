@@ -1,4 +1,4 @@
-/** \file test_tetmesher.cpp \test
+/** \file test_ngtetmesher.cpp \test
  *
  * Test the NGTetMesher for a few challenging examples.
  *

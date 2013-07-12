@@ -1,5 +1,5 @@
-/*
- * test_MBVolOp.cpp \test
+/**
+ * \file test_MBVolOp.cpp \test
  *
  *  Started on: Jan 13, 2012
  *  test for volume creation operation

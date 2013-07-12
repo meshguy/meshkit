@@ -1,6 +1,6 @@
-/*! \file test_SetPnt2Quard.cpp.cpp \test
+/*! \file test_SetPnt2Quad.cpp \test
  *
- * test_SetPnt2Quard.cpp.cpp
+ * test_SetPnt2Quad.cpp
  *
  */
 
