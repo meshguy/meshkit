@@ -8,8 +8,6 @@
 # Date: 7/12/2013                                                             #
 ###############################################################################
 
-
-
 #Max height of images allowed
 MAX_H=480
 #Max width of images allowed
