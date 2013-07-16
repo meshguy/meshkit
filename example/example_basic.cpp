@@ -5,7 +5,7 @@
 
 \subsection example_basic_cpp_inf Misc. Information
 \author Brett Rhodes
-\date 7-12-2013
+\date 7-16-2013
 \bug Currently requires multiple setup/execute cycles.
 \warning This example is not currently complete.
 
@@ -29,14 +29,6 @@ There is no input.
 #include "meshkit/TFIMapping.hpp"
 #include "meshkit/OneToOneSwept.hpp"
 #include "meshkit/EdgeMesher.hpp"
-#include <algorithm>
-
-//#include "meshkit/EBMesher.hpp"
-//#include "meshkit/ModelEnt.hpp"
-//#include "meshkit/VertexMesher.hpp"
-//#include "meshkit/EdgeMesher.hpp"
-//#include "meshkit/SizingFunctionVar.hpp"
-//#include "meshkit/CAMALPaver.hpp"
 
 using namespace MeshKit;
 
@@ -65,7 +57,7 @@ void test_mesh_op_template()
   // Make the brick!                                                           // v Don't need this
   MeshOpTemplate *mot = (MeshOpTemplate*) mk->construct_meshop("MeshOpTemplate", MEntVector());
   mot->set_name("MeshOpTemplate");
-  Vector<3> a;
+  //Vector<3> a;
   mk->setup_and_execute();
   mk->populate_model_ents();
   mk->clear_graph();
@@ -98,41 +90,34 @@ void test_mesh_op_template()
   mk->execute();
   printf("Pre-Clear\n");
   mk->clear_graph();
+  printf("are we good?\n");
 
-//  mk->imesh_instance()->createTag("TAG_SET_A", 1, iBase_INTEGER, mesh_tag);
-/*
-  // Tag things!
-  int err;
-  moab::Interface * mb = mk->moab_instance();
-//  iBase_TagHandle mesh_tag;
-  moab::Tag neu, mat;
-  moab::Range tagged_ents;
-  std::vector<moab::EntityHandle> ent_list;
-  mb->tag_get_handle("MATERIAL_SET", mat);
-  mb->get_entities_by_dimension(mb->get_root_set(), 3, ent_list, true);
-  for (int i = 0; (unsigned int)i < ent_list.size(); i++) {
-    iMesh_setEntSetIntData(mk->imesh_instance()->instance(), (iBase_EntitySetHandle)ent_list[i],
-                            (iBase_TagHandle)mat, 1, &err);
-    if (!err)
-      printf("i = %d\n", i);
-  }
+  // Some declarations for tags
+  moab::Interface *mb = mk->moab_instance();
+  moab::Tag matTag, neuTag;
+  moab::Range matEnts, neuEnts;
+  moab::EntityHandle matEntSet, neuEntSet;
+  int matVal = 2, neuVal = 4; // these values are arbitrary
 
-  ent_list.resize(0);
-  mb->tag_get_handle("NEUMANN_SET", neu);
-  mb->get_entities_by_dimension(mb->get_root_set(), 2, ent_list, true);
-  mb->tag_set_data(neu, ent_list, ent_list.size(), );
-  for (int i = 0; (unsigned int)i < ent_list.size(); i++) {
-    iMesh_setEntSetIntData(mk->imesh_instance()->instance(), iBase_EntitySetHandle(ent_list[i]),
-                            (iBase_TagHandle)neu, 1, &err);
-    if (!err)
-      printf("i = %d\n", i);
-  }
+// Tag the material set
+  // Collect the entites into a set
+  mb->create_meshset(moab::MESHSET_SET, matEntSet);
+  mb->get_entities_by_dimension(mb->get_root_set(), 3, matEnts, true);
+  mb->add_entities(matEntSet, matEnts);
+  
+  // Grab a tag and attach it to the set
+  mb->tag_get_handle("MATERIAL_SET", matTag);
+  mb->tag_set_data(matTag, &matEntSet, 1, (void*) &matVal);
 
-  mk->moab_instance()->tag_get_handle("NEUMANN_SET", &neu);
-  mk->moab_instance()->get_entities_by_dimension(2, ent_list);
-  mk->moab_instance()->iMesh_setEntSetIntData(mk->imesh_instance(), ent_list, neu, 1, new int);
-  */
+// The same thing for the Neumann set!
+  mb->create_meshset(moab::MESHSET_SET, neuEntSet);
+  mb->get_entities_by_dimension(mb->get_root_set(), 2, neuEnts, true);
+  mb->add_entities(neuEntSet, neuEnts);
 
+  mb->tag_get_handle("NEUMANN_SET", neuTag);
+  mb->tag_set_data(neuTag, &neuEntSet, 1, (void*) &neuVal);
+
+  // Possibly output our hard work!
   if(save_mesh) {
     #ifdef HAVE_ACIS
       mk->save_geometry("un_meshed_brick.sat");

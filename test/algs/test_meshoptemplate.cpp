@@ -15,13 +15,6 @@
 #include "meshkit/EdgeMesher.hpp"
 #include <algorithm>
 
-//#include "meshkit/EBMesher.hpp"
-//#include "meshkit/ModelEnt.hpp"
-//#include "meshkit/VertexMesher.hpp"
-//#include "meshkit/EdgeMesher.hpp"
-//#include "meshkit/SizingFunctionVar.hpp"
-//#include "meshkit/CAMALPaver.hpp"
-
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
