@@ -59,7 +59,8 @@ bool IASolverToolInt::solution_is_integer(const bool print_non_integer)
     double dist () const
     {
       double xm = fabs( x - floor(x));
-      double xp = fabs( floor(x) - x);
+      double xp = fabs( floor(x) + 1. - x);
+      // printf("dist: x %f floor %f xm %f xp %f\n", x, floor(x), xm, xp); // debug
       if (xm > xp)
         return xp;
       else

@@ -8,6 +8,7 @@
 #define MESHKIT_IA_IPBEND_HP
 
 #include <vector>
+#include <limits>
 
 namespace MeshKit 
 {
@@ -38,6 +39,8 @@ public:
   // x = xl + sum ( deltas_plus ) - sum (deltas_minus );
   // delta_plus[k] for k < numDeltaPlus + 1 is in [0,1], last is [0,infinity]
   
+  static int num_deltas_max() 
+  { return std::numeric_limits<int>::max()/2 - 2; }
   
 };
 

@@ -176,10 +176,13 @@ bool IABendNlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
       //    if (debugging)
       //      printf("x %d (%f) delta+_%d in [%d,%d]\n", *i, x, j, (int) x_l[k], (int) x_u[k]);
     }
-    // last delta is unlimitted
+    // last delta is unlimitted in theory, 
+    // but in practice to avoid an unbounded above solution arising from the flattening, 
+    // bound it by some large but reasonable value compared to the number of deltas
     const int last_plus_k = i->deltaIStart + i->numDeltaPlus - 1;
     assert(last_plus_k < n);
-    x_u[ last_plus_k ] = MESHKIT_IA_upperUnbound;
+    // x_u[ last_plus_k ] = MESHKIT_IA_upperUnbound; // too big
+    x_u[ last_plus_k ] = i->numDeltaPlus + 4.5; 
 
     for (int j = 0; j < i->numDeltaMinus; ++j)
     {
@@ -190,12 +193,17 @@ bool IABendNlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
       //    if (debugging)
       //      printf("x %d (%f) delta+_%d in [%d,%d]\n", *i, x, j, (int) x_l[k], (int) x_u[k]);
     }
-    // last delta is only limited by x > 1.
+    // last delta is only limited by x >= 1 in theory,
+    // but in practice to avoid an unbounded below solution arising from the flattening, 
+    // bound it by some large but reasonable value compared to the number of deltas
     const int last_minus_k = i->deltaIStart + i->numDeltaPlus + i->numDeltaMinus - 1;
     assert(last_minus_k < n);
-    x_u[ last_minus_k ] = i->xl - i->numDeltaMinus;
-    
-    // or MESHKIT_IA_upperUnbound;
+    // bound by the min of the next two values
+    const double max_dm_by_relative_change = i->numDeltaMinus + 4.5;
+    const double max_dm_by_x_above_1 = i->xl - i->numDeltaMinus;
+    const double max_dm = (max_dm_by_relative_change < max_dm_by_x_above_1) ? max_dm_by_relative_change : max_dm_by_x_above_1;
+    x_u[ last_minus_k ] = max_dm;
+   
   }
   
   // delta constraint bounds : they are equality constraints

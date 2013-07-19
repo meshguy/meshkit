@@ -20,8 +20,8 @@ namespace MeshKit
 IASolverBend::IASolverBend(const IAData * ia_data_ptr, IASolution *relaxed_solution_ptr, 
   const bool set_silent) 
   : IASolverToolInt(ia_data_ptr, relaxed_solution_ptr, true), evenConstraintsActive(false),
-  //  silent(set_silent), debugging(true)
-    silent(set_silent), debugging(false)
+    silent(set_silent), debugging(true)
+//    silent(set_silent), debugging(false)
 { 
   ip_data(new IPData);
   // initialize copies relaxed solution, then we can overwrite relaxed_solution_pointer with our integer solution 
@@ -143,8 +143,9 @@ bool IASolverBend::solve_nlp() // IABendNlp *mynlp
 
     bool solved_full = false;
     bool solved_partial = false;
-    bool solver_failed = false;
-    bool bad_problem = false;
+    bool solved_failure = false;
+    bool problem_bad = false;
+    bool problem_unbounded = false;
 
     switch (status) {
       case Ipopt::Solve_Succeeded:
@@ -155,6 +156,7 @@ bool IASolverBend::solve_nlp() // IABendNlp *mynlp
       case Ipopt::Maximum_Iterations_Exceeded:
       case Ipopt::User_Requested_Stop:
       case Ipopt::Maximum_CpuTime_Exceeded:
+      case Ipopt::Search_Direction_Becomes_Too_Small:
         solved_partial = true;
         break;
       case Ipopt::Infeasible_Problem_Detected:
@@ -162,17 +164,19 @@ bool IASolverBend::solve_nlp() // IABendNlp *mynlp
       case Ipopt::Invalid_Problem_Definition:
       case Ipopt::Invalid_Option:
       case Ipopt::Invalid_Number_Detected:
-        bad_problem = true;
+        problem_bad = true;
         break;
-      case Ipopt::Search_Direction_Becomes_Too_Small:
-      case Ipopt::Restoration_Failed:
       case Ipopt::Diverging_Iterates:
+        problem_unbounded = true;
+        solved_partial = true;
+        break;
+      case Ipopt::Restoration_Failed:
       case Ipopt::Error_In_Step_Computation:
       case Ipopt::Unrecoverable_Exception:
       case Ipopt::NonIpopt_Exception_Thrown:
       case Ipopt::Insufficient_Memory:
       case Ipopt::Internal_Error:        
-        solver_failed = true;
+        solved_failure = true;
         break;
         
       default:
@@ -183,6 +187,9 @@ bool IASolverBend::solve_nlp() // IABendNlp *mynlp
     {
       if (solved_full) {
         printf("\n\n*** BendNlp solved!\n");
+      }
+      else if (solved_partial) {
+        printf("\n\n*** BendNlp partial success!\n");
       }
       else {
         printf("\n\n*** BendNlp FAILED!\n");
@@ -308,7 +315,7 @@ void IASolverBend::add_bend_sum_weights(unsigned int i, const double factor)
   const double s = even_value(i);
   const double g = s/2.;
 
-  // plusses
+  // pluses
   for (int j = 0; j < bend.numDeltaPlus; ++j)
   {
     double w = bendData.maxActiveVarWeight;
@@ -350,7 +357,7 @@ void IASolverBend::add_bend_weights(unsigned int i)
   // current x solution for finding active weight
   const double x = iaSolution->x_solution[i]; 
 
-  // plusses
+  // pluses
   for (int j = 0; j < bend.numDeltaPlus; ++j)
   {
     double xlit = xl + j;
@@ -536,7 +543,8 @@ bool IASolverBend::update_ip_bends()
     {
       const int di = bend.deltaIStart + j;
       const double xp = iaSolution->x_solution[ di ];
-      if (!is_integer(xp))
+      // the last one might be non-integer but at its limit, so only bother with it if it is less than 1.
+      if ( (j < bend.numDeltaPlus-1 || xp < 1.) && !is_integer(xp))
       {
         dp_non_int.push_back(j);
       }        
@@ -545,35 +553,87 @@ bool IASolverBend::update_ip_bends()
     {
       const int di = bend.deltaIStart + bend.numDeltaPlus + j;
       const double xm = iaSolution->x_solution[ di ];
-      if (!is_integer(xm))
+      // the last one might be non-integer but at its limit, so only bother with it if it is less than 1.
+      if ((j < bend.numDeltaMinus-1 || xm < 1.) && !is_integer(xm))
       {
         dm_non_int.push_back(j);
       }        
     }
-
+    if (debugging && (dp_non_int.size() + dm_non_int.size()) )
+    {
+      printf("%lu non-integer deltas in solution, %lu plus and %lu minus\n", dp_non_int.size() + dm_non_int.size(), dp_non_int.size(), dm_non_int.size());
+    }
     
     // delta > 1? 
     // add more deltas
+    const int num_delta_plus_old = bend.numDeltaPlus;
+    const int num_delta_minus_old = bend.numDeltaMinus;
     if (bend.numDeltaPlus > 0)
     {
-      const int di = bend.deltaIStart + bend.numDeltaPlus - 1;
+      const int di = bend.deltaIStart + num_delta_plus_old - 1;
       const double xp = iaSolution->x_solution[ di ]; 
       if (xp > 1.01)
       {
-        bend.numDeltaPlus += floor(xp + 0.1);
-        new_bend = true;
+        double num_dp_added = floor(xp + 0.1);
+
+        // sanity bound checks
+        // at most double the number of delta pluses
+        // there are two to start with, so this adds at least two
+        double max_add = bend.numDeltaPlus;
+        if (num_dp_added > max_add)
+          num_dp_added = max_add;
+        if (bend.numDeltaPlus > bend.num_deltas_max() - num_dp_added)
+          num_dp_added = bend.num_deltas_max() - bend.numDeltaPlus;
+        
+        bend.numDeltaPlus += num_dp_added;
+        
+        if (bend.numDeltaPlus > num_delta_plus_old)
+          new_bend = true;
+
+        if (debugging)
+        {
+          const double xl = bend.xl; // relaxed solution
+          const double g = iaData->I[i]; // goal
+//          printf("%f delta_plus[%d] -> %d more delta pluses. x[%d]=%f, relaxed %f, goal %f\n", xp, old_num_delta_plus-1, num_dp_added, i, iaSolution->x_solution[i], xl, g );
+          printf("%d x (goal %f relaxed_floor %g) %f delta_plus[%d]=%f -> %g more delta pluses.\n", i, g, xl, iaSolution->x_solution[i], num_delta_plus_old-1, xp, num_dp_added );
+        }
       }
     }
     if (bend.numDeltaMinus > 0)
     {
-      const int di = bend.deltaIStart + bend.numDeltaPlus + bend.numDeltaMinus - 1;
+      const int di = bend.deltaIStart + num_delta_plus_old + num_delta_minus_old - 1;
       const double xm = iaSolution->x_solution[ di ]; 
       if (xm > 1.01 && bend.numDeltaMinus < bend.xl - 1)
       {
-        bend.numDeltaMinus += floor(xm + .1);
+        double num_dm_added = floor(xm + 0.1);
+        
+        // sanity bound checks
+        // at most double +1 the number of delta minuses
+        // there is one to start with, so this adds at least two
+        double max_add = bend.numDeltaMinus+1;
+        if (num_dm_added > max_add)
+          num_dm_added = max_add;
+        if (bend.numDeltaMinus > bend.num_deltas_max() - num_dm_added)
+          num_dm_added = bend.num_deltas_max() - bend.numDeltaMinus;
+
+        // don't let x go below 1
+        bend.numDeltaMinus += num_dm_added;
         if ( bend.numDeltaMinus > bend.xl - 1 )
-          bend.numDeltaMinus = bend.xl - 1;          
-        new_bend = true;
+        {
+          bend.numDeltaMinus = bend.xl - 1;      
+          num_dm_added = bend.numDeltaMinus - num_delta_minus_old;
+        }
+
+        if (bend.numDeltaMinus > num_delta_minus_old)
+          new_bend = true;
+
+        if (debugging)
+        {
+          const double xl = bend.xl; // relaxed solution
+          const double g = iaData->I[i]; // goal
+//          printf("%f delta_minus[%d] -> %d more delta minuses. x[%d]=%f, relaxed %f, goal %f\n", xm, num_delta_minus_old-1, num_dm_added, i, iaSolution->x_solution[i], xl, g );
+          printf("%d x (goal %f relaxed_floor %g) %f delta_minus[%d]=%f -> %g more delta minuses.\n", i, g, xl, iaSolution->x_solution[i], num_delta_minus_old-1, xm, num_dm_added );
+        }
       }
     }
 
@@ -599,7 +659,7 @@ bool IASolverBend::update_ip_bends()
       weights[ k ] *= 1. + 0.2 * IAWeights::rand_excluded_middle();
     }
     
-
+    // todo: check that weights are still increasing with increasing k
   }
   
    weights.uniquify(1., 1e6); // 1e4?

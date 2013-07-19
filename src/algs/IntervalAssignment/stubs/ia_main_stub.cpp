@@ -335,8 +335,6 @@ void set_half_integer(  MeshKit::IAInterface *ia_interface, int version)
       const double g1 = 107; // the one-curve side
       const double g2 =  52.5; // the multi-curve looping side
       const double g3 =  2; // the multi-curve looping side
-      // note the 8's below
-      // Bend solution fails, returns bad values?
 
       goals_1.push_back(g1);
       goals_2.push_back(g2);
@@ -352,12 +350,12 @@ void set_half_integer(  MeshKit::IAInterface *ia_interface, int version)
       side_2.clear();
       side_1.push_back(common_0);
       goals_2.clear();
-      goals_2.push_back(8);
+      goals_2.push_back(g2); // 8, for a different test problem testing flattening leading to an unbounded solution
       set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
       
       side_1.clear();
       goals_1.clear();
-      goals_1.push_back(8);
+      goals_1.push_back(g2); // 8
       set_mapping_face(ia_interface, 1, side_1, goals_1, 1, side_2, goals_2);
       
       side_2.clear();
@@ -491,7 +489,7 @@ void test_half_integer()
   // create interface
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   
-  for (int v=3; v<4; ++v) // 0 <= v < 4
+  for (int v=1; v<2; ++v) // 0 <= v < 4
   {
     ia_interface->destroy_data();
   
