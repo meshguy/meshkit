@@ -28,7 +28,6 @@ There is no input.
 #include "meshkit/MeshOpTemplate.hpp"
 #include "meshkit/TFIMapping.hpp"
 #include "meshkit/OneToOneSwept.hpp"
-#include "meshkit/EdgeMesher.hpp"
 
 using namespace MeshKit;
 
@@ -56,6 +55,7 @@ void test_mesh_op_template()
                                                                                // | Geometry Op,
   // Make the brick!                                                           // v Don't need this
   MeshOpTemplate *mot = (MeshOpTemplate*) mk->construct_meshop("MeshOpTemplate", MEntVector());
+  printf("Got here fine\n");
   mot->set_name("MeshOpTemplate");
   //Vector<3> a;
   mk->setup_and_execute();
@@ -90,7 +90,6 @@ void test_mesh_op_template()
   mk->execute();
   printf("Pre-Clear\n");
   mk->clear_graph();
-  printf("are we good?\n");
 
   // Some declarations for tags
   moab::Interface *mb = mk->moab_instance();
@@ -117,7 +116,7 @@ void test_mesh_op_template()
   mb->tag_get_handle("NEUMANN_SET", neuTag);
   mb->tag_set_data(neuTag, &neuEntSet, 1, (void*) &neuVal);
 
-  // Possibly output our hard work!
+  // Possibly output (as files) our hard work!
   if(save_mesh) {
     #ifdef HAVE_ACIS
       mk->save_geometry("un_meshed_brick.sat");

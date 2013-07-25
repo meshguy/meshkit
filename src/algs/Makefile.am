@@ -35,7 +35,7 @@ libMeshKitalgs_la_SOURCES = \
 	CopyMesh.cpp \
 	CopyGeom.cpp \
 	MeshOpTemplate.cpp \
-        MergeMesh.cpp \
+	MergeMesh.cpp \
 	ExtrudeMesh.cpp \
 	CESets.cpp \
 	Transform.cpp \

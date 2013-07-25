@@ -46,6 +46,8 @@ dnl This doesn't appear to be defined anywhere. - j.kraftcheck 2010-8-13
 dnl MK_TEMPLATE_SPECIALIZATION
 dnl DEFINES="$DEFINES $TEMPLATE_SPECIALIZATION"
 
+AC_CONFIG_SRCDIR([meshkit.make.in])
+
 FATHOM_CHECK_CXX_WORKS([], [AC_MSG_ERROR([Cannot build without C++ compiler])])
 
 ################################################################################

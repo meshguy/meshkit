@@ -36,6 +36,7 @@ endif
 # The list of header files which are to be installed
 nobase_libSweep_la_include_HEADERS = \
         meshkit/OneToOneSwept.hpp \
+        Global.hpp \
         meshkit/TFIMapping.hpp
 
 if HAVE_MESQUITE

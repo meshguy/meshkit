@@ -57,7 +57,7 @@ void test_PostBL_default(int argc, char **argv)
    ag->set_name("PostBL");
 
   //!setup and execute PostBL graph node, point the executable to PostBL input file, 
-  ag->PrepareIO(argc, argv, TestDir);
+  //ag->PrepareIO(argc, argv, TestDir);
   ag->setup_this();
   ag->execute_this();
 

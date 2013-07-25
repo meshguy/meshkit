@@ -1,3 +1,4 @@
+
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 # Don't loose the autoconf include path
@@ -55,5 +56,5 @@ cfg_DATA = meshkit.make
 # 'make prefix=/foo install', we don't know the correct install
 # directory until we're doing the install.
 install-data-hook:
-	echo "MESHKIT_LIBDIR=${libdir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
-	echo "MESHKIT_INCLUDEDIR=${includedir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
+	echo "MESHKIT_LIBS=-L${libdir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
+	echo "MESHKIT_INCLUDES=-I${includedir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
