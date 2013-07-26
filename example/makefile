@@ -2,8 +2,8 @@
 # to work only under the simplest configure with the basic example.
 
 # MESHKIT_DIR points to top-level install dir, below which MESHKIT's lib/ and include/ are located
-include ${MESHKIT_DIR}/lib/meshkit.make
-#include /homes/brsquared/lib/meshkit/lib/meshkit.make
+#include ${MESHKIT_DIR}/lib/meshkit.make
+include /homes/brsquared/lib/meshkit/lib/meshkit.make
 #include ${MESHKIT_DIR}/lib/iMesh-Defs.inc
 
 .SUFFIXES: .o .cpp .F90
@@ -11,13 +11,11 @@ include ${MESHKIT_DIR}/lib/meshkit.make
 # MESH_DIR is the top-level MESHKIT source directory, used to locate mesh files that come with MESHKIT source
 MESH_DIR="../data"
 
-basic : basic.o
-	${MESHKIT_CXX} -o $@ $< ${MESHKIT_LIBS_LINK}
+EXAMPLES = assygen basic copygeom copymesh ebmesh edgemesh extrudemesh fbgeom graph intassign jaalquad mb2 mbgeom MBGeomOp mbgeomvar MBSplitOp MBVolOp meshoptemplate mesquite ngtetmesher onetooneswept parallelmesher paver postbl qslim scdmesh SetPnt2Quad tetmesher tfimapping triadvance TriangleMesher volIce
 
-copygeom : copygeom.o
-	${MESHKIT_CXX} -o $@ $< ${MESHKIT_LIBS_LINK}
+all:: $(EXAMPLES)
 
-postbl : postbl.o
+$(EXAMPLES): %: %.o
 	${MESHKIT_CXX} -o $@ $< ${MESHKIT_LIBS_LINK}
 
 .cpp.o :
@@ -25,4 +23,8 @@ postbl : postbl.o
 
 .F90.o :
 	${IMESH_FC} ${IMESH_FCFLAGS} ${IMESH_INCLUDES} ${IMESH_FCDEFS} -DMESH_DIR=\"${MESH_DIR}\" -c $<
+
+#removes any files that does not contain "cpp" or "makefile"
+clean:
+	rm `ls | grep -v 'cpp\|makefile'` -f
 
