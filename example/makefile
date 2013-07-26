@@ -2,9 +2,7 @@
 # to work only under the simplest configure with the basic example.
 
 # MESHKIT_DIR points to top-level install dir, below which MESHKIT's lib/ and include/ are located
-#include ${MESHKIT_DIR}/lib/meshkit.make
-include /homes/brsquared/lib/meshkit/lib/meshkit.make
-#include ${MESHKIT_DIR}/lib/iMesh-Defs.inc
+include ${MESHKIT_DIR}/lib/meshkit.make
 
 .SUFFIXES: .o .cpp .F90
 
