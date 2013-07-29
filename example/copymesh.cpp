@@ -1,26 +1,26 @@
 /*!
-\example example_copymesh.cpp
+\example copymesh.cpp
 
-\section example_copymesh_cpp_title <pretty-name-of-this-file>
+\section copymesh_cpp_title <pretty-name-of-this-file>
 
-\subsection example_copymesh_cpp_inf Misc. Information
+\subsection copymesh_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_copymesh_cpp_goal Goal
+\subsection copymesh_cpp_goal Goal
 
-\subsection example_copymesh_cpp_cw Code Walkthrough
+\subsection copymesh_cpp_cw Code Walkthrough
 
-\subsection example_copymesh_cpp_in Input
-\image html example_copymesh.in.jpg
+\subsection copymesh_cpp_in Input
+\image html copymesh.in.jpg
 There is no input.
 
-\subsection example_copymesh_cpp_out Output
-\image html example_copymesh.out.jpg
+\subsection copymesh_cpp_out Output
+\image html copymesh.out.jpg
 
-\subsection example_copymesh_cpp_src Source Code
+\subsection copymesh_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"

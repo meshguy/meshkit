@@ -1,26 +1,26 @@
 /*!
-\example example_SetPnt2Quad.cpp
+\example SetPnt2Quad.cpp
 
-\section example_SetPnt2Quad_cpp_title <pretty-name-of-this-file>
+\section SetPnt2Quad_cpp_title <pretty-name-of-this-file>
 
-\subsection example_SetPnt2Quad_cpp_inf Misc. Information
+\subsection SetPnt2Quad_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_SetPnt2Quad_cpp_goal Goal
+\subsection SetPnt2Quad_cpp_goal Goal
 
-\subsection example_SetPnt2Quad_cpp_cw Code Walkthrough
+\subsection SetPnt2Quad_cpp_cw Code Walkthrough
 
-\subsection example_SetPnt2Quad_cpp_in Input
-\image html example_SetPnt2Quad.in.jpg
+\subsection SetPnt2Quad_cpp_in Input
+\image html SetPnt2Quad.in.jpg
 There is no input.
 
-\subsection example_SetPnt2Quad_cpp_out Output
-\image html example_SetPnt2Quad.out.jpg
+\subsection SetPnt2Quad_cpp_out Output
+\image html SetPnt2Quad.out.jpg
 
-\subsection example_SetPnt2Quad_cpp_src Source Code
+\subsection SetPnt2Quad_cpp_src Source Code
 */
 
 #include <iostream>

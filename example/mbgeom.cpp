@@ -1,26 +1,26 @@
 /*!
-\example example_mbgeom.cpp
+\example mbgeom.cpp
 
-\section example_mbgeom_cpp_title <pretty-name-of-this-file>
+\section mbgeom_cpp_title <pretty-name-of-this-file>
 
-\subsection example_mbgeom_cpp_inf Misc. Information
+\subsection mbgeom_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_mbgeom_cpp_goal Goal
+\subsection mbgeom_cpp_goal Goal
 
-\subsection example_mbgeom_cpp_cw Code Walkthrough
+\subsection mbgeom_cpp_cw Code Walkthrough
 
-\subsection example_mbgeom_cpp_in Input
-\image html example_mbgeom.in.jpg
+\subsection mbgeom_cpp_in Input
+\image html mbgeom.in.jpg
 There is no input.
 
-\subsection example_mbgeom_cpp_out Output
-\image html example_mbgeom.out.jpg
+\subsection mbgeom_cpp_out Output
+\image html mbgeom.out.jpg
 
-\subsection example_mbgeom_cpp_src Source Code
+\subsection mbgeom_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

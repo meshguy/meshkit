@@ -1,26 +1,26 @@
 /*!
-\example example_qslim.cpp
+\example qslim.cpp
 
-\section example_qslim_cpp_title <pretty-name-of-this-file>
+\section qslim_cpp_title <pretty-name-of-this-file>
 
-\subsection example_qslim_cpp_inf Misc. Information
+\subsection qslim_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_qslim_cpp_goal Goal
+\subsection qslim_cpp_goal Goal
 
-\subsection example_qslim_cpp_cw Code Walkthrough
+\subsection qslim_cpp_cw Code Walkthrough
 
-\subsection example_qslim_cpp_in Input
-\image html example_qslim.in.jpg
+\subsection qslim_cpp_in Input
+\image html qslim.in.jpg
 There is no input.
 
-\subsection example_qslim_cpp_out Output
-\image html example_qslim.out.jpg
+\subsection qslim_cpp_out Output
+\image html qslim.out.jpg
 
-\subsection example_qslim_cpp_src Source Code
+\subsection qslim_cpp_src Source Code
 */
 
 #include <iostream>

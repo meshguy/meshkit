@@ -1,26 +1,26 @@
 /*!
-\example example_edgemesh.cpp
+\example edgemesh.cpp
 
-\section example_edgemesh_cpp_title <pretty-name-of-this-file>
+\section edgemesh_cpp_title <pretty-name-of-this-file>
 
-\subsection example_edgemesh_cpp_inf Misc. Information
+\subsection edgemesh_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_edgemesh_cpp_goal Goal
+\subsection edgemesh_cpp_goal Goal
 
-\subsection example_edgemesh_cpp_cw Code Walkthrough
+\subsection edgemesh_cpp_cw Code Walkthrough
 
-\subsection example_edgemesh_cpp_in Input
-\image html example_edgemesh.in.jpg
+\subsection edgemesh_cpp_in Input
+\image html edgemesh.in.jpg
 There is no input.
 
-\subsection example_edgemesh_cpp_out Output
-\image html example_edgemesh.out.jpg
+\subsection edgemesh_cpp_out Output
+\image html edgemesh.out.jpg
 
-\subsection example_edgemesh_cpp_src Source Code
+\subsection edgemesh_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/EdgeMesher.hpp"

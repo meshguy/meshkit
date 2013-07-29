@@ -1,26 +1,26 @@
 /*!
-\example example_tetmesher.cpp
+\example tetmesher.cpp
 
-\section example_tetmesher_cpp_title <pretty-name-of-this-file>
+\section tetmesher_cpp_title <pretty-name-of-this-file>
 
-\subsection example_tetmesher_cpp_inf Misc. Information
+\subsection tetmesher_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_tetmesher_cpp_goal Goal
+\subsection tetmesher_cpp_goal Goal
 
-\subsection example_tetmesher_cpp_cw Code Walkthrough
+\subsection tetmesher_cpp_cw Code Walkthrough
 
-\subsection example_tetmesher_cpp_in Input
-\image html example_tetmesher.in.jpg
+\subsection tetmesher_cpp_in Input
+\image html tetmesher.in.jpg
 There is no input.
 
-\subsection example_tetmesher_cpp_out Output
-\image html example_tetmesher.out.jpg
+\subsection tetmesher_cpp_out Output
+\image html tetmesher.out.jpg
 
-\subsection example_tetmesher_cpp_src Source Code
+\subsection tetmesher_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

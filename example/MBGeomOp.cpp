@@ -1,26 +1,26 @@
 /*!
-\example example_MBGeomOp.cpp
+\example MBGeomOp.cpp
 
-\section example_MBGeomOp_cpp_title <pretty-name-of-this-file>
+\section MBGeomOp_cpp_title <pretty-name-of-this-file>
 
-\subsection example_MBGeomOp_cpp_inf Misc. Information
+\subsection MBGeomOp_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_MBGeomOp_cpp_goal Goal
+\subsection MBGeomOp_cpp_goal Goal
 
-\subsection example_MBGeomOp_cpp_cw Code Walkthrough
+\subsection MBGeomOp_cpp_cw Code Walkthrough
 
-\subsection example_MBGeomOp_cpp_in Input
-\image html example_MBGeomOp.in.jpg
+\subsection MBGeomOp_cpp_in Input
+\image html MBGeomOp.in.jpg
 There is no input.
 
-\subsection example_MBGeomOp_cpp_out Output
-\image html example_MBGeomOp.out.jpg
+\subsection MBGeomOp_cpp_out Output
+\image html MBGeomOp.out.jpg
 
-\subsection example_MBGeomOp_cpp_src Source Code
+\subsection MBGeomOp_cpp_src Source Code
 */
 
 #include <iostream>

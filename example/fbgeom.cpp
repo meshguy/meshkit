@@ -1,26 +1,26 @@
 /*!
-\example example_fbgeom.cpp
+\example fbgeom.cpp
 
-\section example_fbgeom_cpp_title <pretty-name-of-this-file>
+\section fbgeom_cpp_title <pretty-name-of-this-file>
 
-\subsection example_fbgeom_cpp_inf Misc. Information
+\subsection fbgeom_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_fbgeom_cpp_goal Goal
+\subsection fbgeom_cpp_goal Goal
 
-\subsection example_fbgeom_cpp_cw Code Walkthrough
+\subsection fbgeom_cpp_cw Code Walkthrough
 
-\subsection example_fbgeom_cpp_in Input
-\image html example_fbgeom.in.jpg
+\subsection fbgeom_cpp_in Input
+\image html fbgeom.in.jpg
 There is no input.
 
-\subsection example_fbgeom_cpp_out Output
-\image html example_fbgeom.out.jpg
+\subsection fbgeom_cpp_out Output
+\image html fbgeom.out.jpg
 
-\subsection example_fbgeom_cpp_src Source Code
+\subsection fbgeom_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/FBiGeom.hpp"
@@ -243,7 +243,7 @@ void extrudeQuads()
   // double factorFloating = (1.-937./1026.);
   for (j = 0; j < numNodes; j++) {
     //dArr[j] = xyz[j * 3 + 2];
-    dArr[j] = 0; // no intersection example_fbgeom_cpp_situation, marked by 0
+    dArr[j] = 0; // no intersection fbgeom_cpp_situation, marked by 0
     // for a point, see if it is inside the polygon, with winding number
 
     iBase_StorageOrder order=iBase_INTERLEAVED;
@@ -259,10 +259,10 @@ void extrudeQuads()
     // get the first coordinate
     if (err != 0 || entities_out.size() < 1)
       continue;// we should bail out
-    //double zTop = points_out[2]; // the z of the top, intersection example_fbgeom_cpp_computation
+    //double zTop = points_out[2]; // the z of the top, intersection fbgeom_cpp_computation
 
-    // consider only the first intersection example_fbgeom_cpp_point
-    dArr[j] = params_out[0]; // the first intersection example_fbgeom_cpp_only
+    // consider only the first intersection fbgeom_cpp_point
+    dArr[j] = params_out[0]; // the first intersection fbgeom_cpp_only
     numRaysIntersected++;
 
   }

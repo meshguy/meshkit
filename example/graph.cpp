@@ -1,26 +1,26 @@
 /*!
-\example example_graph.cpp
+\example graph.cpp
 
-\section example_graph_cpp_title <pretty-name-of-this-file>
+\section graph_cpp_title <pretty-name-of-this-file>
 
-\subsection example_graph_cpp_inf Misc. Information
+\subsection graph_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_graph_cpp_goal Goal
+\subsection graph_cpp_goal Goal
 
-\subsection example_graph_cpp_cw Code Walkthrough
+\subsection graph_cpp_cw Code Walkthrough
 
-\subsection example_graph_cpp_in Input
-\image html example_graph.in.jpg
+\subsection graph_cpp_in Input
+\image html graph.in.jpg
 There is no input.
 
-\subsection example_graph_cpp_out Output
-\image html example_graph.out.jpg
+\subsection graph_cpp_out Output
+\image html graph.out.jpg
 
-\subsection example_graph_cpp_src Source Code
+\subsection graph_cpp_src Source Code
 */
 
 /* \file test_graph.cpp \test

@@ -1,26 +1,26 @@
 /*!
-\example example_paver.cpp
+\example paver.cpp
 
-\section example_paver_cpp_title <pretty-name-of-this-file>
+\section paver_cpp_title <pretty-name-of-this-file>
 
-\subsection example_paver_cpp_inf Misc. Information
+\subsection paver_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_paver_cpp_goal Goal
+\subsection paver_cpp_goal Goal
 
-\subsection example_paver_cpp_cw Code Walkthrough
+\subsection paver_cpp_cw Code Walkthrough
 
-\subsection example_paver_cpp_in Input
-\image html example_paver.in.jpg
+\subsection paver_cpp_in Input
+\image html paver.in.jpg
 There is no input.
 
-\subsection example_paver_cpp_out Output
-\image html example_paver.out.jpg
+\subsection paver_cpp_out Output
+\image html paver.out.jpg
 
-\subsection example_paver_cpp_src Source Code
+\subsection paver_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

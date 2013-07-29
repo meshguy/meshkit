@@ -1,26 +1,26 @@
 /*!
-\example example_copygeom.cpp
+\example copygeom.cpp
 
-\section example_copygeom_cpp_title <pretty-name-of-this-file>
+\section copygeom_cpp_title <pretty-name-of-this-file>
 
-\subsection example_copygeom_cpp_inf Misc. Information
+\subsection copygeom_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_copygeom_cpp_goal Goal
+\subsection copygeom_cpp_goal Goal
 
-\subsection example_copygeom_cpp_cw Code Walkthrough
+\subsection copygeom_cpp_cw Code Walkthrough
 
-\subsection example_copygeom_cpp_in Input
-\image html example_copygeom.in.jpg
+\subsection copygeom_cpp_in Input
+\image html copygeom.in.jpg
 There is no input.
 
-\subsection example_copygeom_cpp_out Output
-\image html example_copygeom.out.jpg
+\subsection copygeom_cpp_out Output
+\image html copygeom.out.jpg
 
-\subsection example_copygeom_cpp_src Source Code
+\subsection copygeom_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

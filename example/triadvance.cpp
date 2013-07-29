@@ -1,26 +1,26 @@
 /*!
-\example example_triadvance.cpp
+\example triadvance.cpp
 
-\section example_triadvance_cpp_title <pretty-name-of-this-file>
+\section triadvance_cpp_title <pretty-name-of-this-file>
 
-\subsection example_triadvance_cpp_inf Misc. Information
+\subsection triadvance_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_triadvance_cpp_goal Goal
+\subsection triadvance_cpp_goal Goal
 
-\subsection example_triadvance_cpp_cw Code Walkthrough
+\subsection triadvance_cpp_cw Code Walkthrough
 
-\subsection example_triadvance_cpp_in Input
-\image html example_triadvance.in.jpg
+\subsection triadvance_cpp_in Input
+\image html triadvance.in.jpg
 There is no input.
 
-\subsection example_triadvance_cpp_out Output
-\image html example_triadvance.out.jpg
+\subsection triadvance_cpp_out Output
+\image html triadvance.out.jpg
 
-\subsection example_triadvance_cpp_src Source Code
+\subsection triadvance_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

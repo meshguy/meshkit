@@ -1,26 +1,26 @@
 /*!
-\example example_MBVolOp.cpp
+\example MBVolOp.cpp
 
-\section example_MBVolOp_cpp_title <pretty-name-of-this-file>
+\section MBVolOp_cpp_title <pretty-name-of-this-file>
 
-\subsection example_MBVolOp_cpp_inf Misc. Information
+\subsection MBVolOp_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_MBVolOp_cpp_goal Goal
+\subsection MBVolOp_cpp_goal Goal
 
-\subsection example_MBVolOp_cpp_cw Code Walkthrough
+\subsection MBVolOp_cpp_cw Code Walkthrough
 
-\subsection example_MBVolOp_cpp_in Input
-\image html example_MBVolOp.in.jpg
+\subsection MBVolOp_cpp_in Input
+\image html MBVolOp.in.jpg
 There is no input.
 
-\subsection example_MBVolOp_cpp_out Output
-\image html example_MBVolOp.out.jpg
+\subsection MBVolOp_cpp_out Output
+\image html MBVolOp.out.jpg
 
-\subsection example_MBVolOp_cpp_src Source Code
+\subsection MBVolOp_cpp_src Source Code
 */
 /*
  * \file test_MBVolOp.cpp \test

@@ -1,26 +1,26 @@
 /*!
-\example example_scdmesh.cpp
+\example scdmesh.cpp
 
-\section example_scdmesh_cpp_title <pretty-name-of-this-file>
+\section scdmesh_cpp_title <pretty-name-of-this-file>
 
-\subsection example_scdmesh_cpp_inf Misc. Information
+\subsection scdmesh_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_scdmesh_cpp_goal Goal
+\subsection scdmesh_cpp_goal Goal
 
-\subsection example_scdmesh_cpp_cw Code Walkthrough
+\subsection scdmesh_cpp_cw Code Walkthrough
 
-\subsection example_scdmesh_cpp_in Input
-\image html example_scdmesh.in.jpg
+\subsection scdmesh_cpp_in Input
+\image html scdmesh.in.jpg
 There is no input.
 
-\subsection example_scdmesh_cpp_out Output
-\image html example_scdmesh.out.jpg
+\subsection scdmesh_cpp_out Output
+\image html scdmesh.out.jpg
 
-\subsection example_scdmesh_cpp_src Source Code
+\subsection scdmesh_cpp_src Source Code
 */
 
 /*--------------------------------------------------------------------------//

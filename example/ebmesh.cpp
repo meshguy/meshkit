@@ -1,26 +1,26 @@
 /*!
-\example example_ebmesh.cpp
+\example ebmesh.cpp
 
-\section example_ebmesh_cpp_title <pretty-name-of-this-file>
+\section ebmesh_cpp_title <pretty-name-of-this-file>
 
-\subsection example_ebmesh_cpp_inf Misc. Information
+\subsection ebmesh_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_ebmesh_cpp_goal Goal
+\subsection ebmesh_cpp_goal Goal
 
-\subsection example_ebmesh_cpp_cw Code Walkthrough
+\subsection ebmesh_cpp_cw Code Walkthrough
 
-\subsection example_ebmesh_cpp_in Input
-\image html example_ebmesh.in.jpg
+\subsection ebmesh_cpp_in Input
+\image html ebmesh.in.jpg
 There is no input.
 
-\subsection example_ebmesh_cpp_out Output
-\image html example_ebmesh.out.jpg
+\subsection ebmesh_cpp_out Output
+\image html ebmesh.out.jpg
 
-\subsection example_ebmesh_cpp_src Source Code
+\subsection ebmesh_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
@@ -155,7 +155,7 @@ int load_and_mesh(const char *input_filename,
                                   mdCutCellSurfEdge, vnInsideCellTechX);
     time(&query_time_techX);
     
-    // multiple intersection example_ebmesh_cpp_fraction query test
+    // multiple intersection ebmesh_cpp_fraction query test
     std::map< CutCellSurfEdgeKey, std::vector<double>, LessThan > mdCutCellEdge;
     std::vector<int> vnInsideCell;
     result = ebm->get_grid_and_edges(boxMin, boxMax, nDiv,
@@ -185,7 +185,7 @@ int load_and_mesh(const char *input_filename,
   if (whole_geom && debug_ebmesher) {
     std::cout << ", TechX query time: "
               << difftime(query_time_techX, export_time)
-              << " secs, multiple intersection example_ebmesh_cpp_fraction query (elems, edge-cut fractions): "
+              << " secs, multiple intersection ebmesh_cpp_fraction query (elems, edge-cut fractions): "
               << difftime(query_time, query_time_techX) << " secs.";
   }
 

@@ -1,26 +1,26 @@
 /*!
-\example example_mb2.cpp
+\example mb2.cpp
 
-\section example_mb2_cpp_title <pretty-name-of-this-file>
+\section mb2_cpp_title <pretty-name-of-this-file>
 
-\subsection example_mb2_cpp_inf Misc. Information
+\subsection mb2_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_mb2_cpp_goal Goal
+\subsection mb2_cpp_goal Goal
 
-\subsection example_mb2_cpp_cw Code Walkthrough
+\subsection mb2_cpp_cw Code Walkthrough
 
-\subsection example_mb2_cpp_in Input
-\image html example_mb2.in.jpg
+\subsection mb2_cpp_in Input
+\image html mb2.in.jpg
 There is no input.
 
-\subsection example_mb2_cpp_out Output
-\image html example_mb2.out.jpg
+\subsection mb2_cpp_out Output
+\image html mb2.out.jpg
 
-\subsection example_mb2_cpp_src Source Code
+\subsection mb2_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

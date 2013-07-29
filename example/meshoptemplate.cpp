@@ -1,26 +1,26 @@
 /*!
-\example example_meshoptemplate.cpp
+\example meshoptemplate.cpp
 
-\section example_meshoptemplate_cpp_title <pretty-name-of-this-file>
+\section meshoptemplate_cpp_title <pretty-name-of-this-file>
 
-\subsection example_meshoptemplate_cpp_inf Misc. Information
+\subsection meshoptemplate_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_meshoptemplate_cpp_goal Goal
+\subsection meshoptemplate_cpp_goal Goal
 
-\subsection example_meshoptemplate_cpp_cw Code Walkthrough
+\subsection meshoptemplate_cpp_cw Code Walkthrough
 
-\subsection example_meshoptemplate_cpp_in Input
-\image html example_meshoptemplate.in.jpg
+\subsection meshoptemplate_cpp_in Input
+\image html meshoptemplate.in.jpg
 There is no input.
 
-\subsection example_meshoptemplate_cpp_out Output
-\image html example_meshoptemplate.out.jpg
+\subsection meshoptemplate_cpp_out Output
+\image html meshoptemplate.out.jpg
 
-\subsection example_meshoptemplate_cpp_src Source Code
+\subsection meshoptemplate_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

@@ -1,26 +1,26 @@
 /*!
-\example example_jaalquad.cpp
+\example jaalquad.cpp
 
-\section example_jaalquad_cpp_title <pretty-name-of-this-file>
+\section jaalquad_cpp_title <pretty-name-of-this-file>
 
-\subsection example_jaalquad_cpp_inf Misc. Information
+\subsection jaalquad_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_jaalquad_cpp_goal Goal
+\subsection jaalquad_cpp_goal Goal
 
-\subsection example_jaalquad_cpp_cw Code Walkthrough
+\subsection jaalquad_cpp_cw Code Walkthrough
 
-\subsection example_jaalquad_cpp_in Input
-\image html example_jaalquad.in.jpg
+\subsection jaalquad_cpp_in Input
+\image html jaalquad.in.jpg
 There is no input.
 
-\subsection example_jaalquad_cpp_out Output
-\image html example_jaalquad.out.jpg
+\subsection jaalquad_cpp_out Output
+\image html jaalquad.out.jpg
 
-\subsection example_jaalquad_cpp_src Source Code
+\subsection jaalquad_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"

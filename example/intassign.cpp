@@ -1,26 +1,26 @@
 /*!
-\example example_intassign.cpp
+\example intassign.cpp
 
-\section example_intassign_cpp_title <pretty-name-of-this-file>
+\section intassign_cpp_title <pretty-name-of-this-file>
 
-\subsection example_intassign_cpp_inf Misc. Information
+\subsection intassign_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_intassign_cpp_goal Goal
+\subsection intassign_cpp_goal Goal
 
-\subsection example_intassign_cpp_cw Code Walkthrough
+\subsection intassign_cpp_cw Code Walkthrough
 
-\subsection example_intassign_cpp_in Input
-\image html example_intassign.in.jpg
+\subsection intassign_cpp_in Input
+\image html intassign.in.jpg
 There is no input.
 
-\subsection example_intassign_cpp_out Output
-\image html example_intassign.out.jpg
+\subsection intassign_cpp_out Output
+\image html intassign.out.jpg
 
-\subsection example_intassign_cpp_src Source Code
+\subsection intassign_cpp_src Source Code
 */
 /*! \file test_intassign.cpp \test
  *

@@ -1,26 +1,26 @@
 /*!
-\example example_MBSplitOp.cpp
+\example MBSplitOp.cpp
 
-\section example_MBSplitOp_cpp_title <pretty-name-of-this-file>
+\section MBSplitOp_cpp_title <pretty-name-of-this-file>
 
-\subsection example_MBSplitOp_cpp_inf Misc. Information
+\subsection MBSplitOp_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_MBSplitOp_cpp_goal Goal
+\subsection MBSplitOp_cpp_goal Goal
 
-\subsection example_MBSplitOp_cpp_cw Code Walkthrough
+\subsection MBSplitOp_cpp_cw Code Walkthrough
 
-\subsection example_MBSplitOp_cpp_in Input
-\image html example_MBSplitOp.in.jpg
+\subsection MBSplitOp_cpp_in Input
+\image html MBSplitOp.in.jpg
 There is no input.
 
-\subsection example_MBSplitOp_cpp_out Output
-\image html example_MBSplitOp.out.jpg
+\subsection MBSplitOp_cpp_out Output
+\image html MBSplitOp.out.jpg
 
-\subsection example_MBSplitOp_cpp_src Source Code
+\subsection MBSplitOp_cpp_src Source Code
 */
 
 #include <iostream>

@@ -22,7 +22,6 @@ $(EXAMPLES): %: %.o
 .F90.o :
 	${IMESH_FC} ${IMESH_FCFLAGS} ${IMESH_INCLUDES} ${IMESH_FCDEFS} -DMESH_DIR=\"${MESH_DIR}\" -c $<
 
-#removes any files that does not contain "cpp" or "makefile"
 clean:
-	rm `ls | grep -v 'cpp\|makefile'` -f
+	rm ${EXAMPLES:%=%.o} ${EXAMPLES} -f
 

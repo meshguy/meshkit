@@ -1,26 +1,26 @@
 /*!
-\example example_tfimapping.cpp
+\example tfimapping.cpp
 
-\section example_tfimapping_cpp_title <pretty-name-of-this-file>
+\section tfimapping_cpp_title <pretty-name-of-this-file>
 
-\subsection example_tfimapping_cpp_inf Misc. Information
+\subsection tfimapping_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_tfimapping_cpp_goal Goal
+\subsection tfimapping_cpp_goal Goal
 
-\subsection example_tfimapping_cpp_cw Code Walkthrough
+\subsection tfimapping_cpp_cw Code Walkthrough
 
-\subsection example_tfimapping_cpp_in Input
-\image html example_tfimapping.in.jpg
+\subsection tfimapping_cpp_in Input
+\image html tfimapping.in.jpg
 There is no input.
 
-\subsection example_tfimapping_cpp_out Output
-\image html example_tfimapping.out.jpg
+\subsection tfimapping_cpp_out Output
+\image html tfimapping.out.jpg
 
-\subsection example_tfimapping_cpp_src Source Code
+\subsection tfimapping_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

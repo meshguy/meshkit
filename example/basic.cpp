@@ -1,27 +1,27 @@
 /*!
-\example example_basic.cpp
+\example basic.cpp
 
-\section example_basic_cpp_title Basic Example
+\section basic_cpp_title Basic Example
 
-\subsection example_basic_cpp_inf Misc. Information
+\subsection basic_cpp_inf Misc. Information
 \author Brett Rhodes
 \date 7-16-2013
 \bug Currently requires multiple setup/execute cycles.
 \warning This example is not currently complete.
 
-\subsection example_basic_cpp_goal Goal
+\subsection basic_cpp_goal Goal
 The goal of this is example is to start from no input and create a meshed geometry with proper Neumann and material sets.
 
-\subsection example_basic_cpp_cw Code Walkthrough
+\subsection basic_cpp_cw Code Walkthrough
 Code is subject to change, this will be written at a later point.
 
-\subsection example_basic_cpp_in Input
+\subsection basic_cpp_in Input
 There is no input.
 
-\subsection example_basic_cpp_out Output
-\image html example_basic.out.jpg
+\subsection basic_cpp_out Output
+\image html basic.out.jpg
 
-\subsection example_basic_cpp_src Source Code
+\subsection basic_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"

@@ -1,26 +1,26 @@
 /*!
-\example example_assygen.cpp
+\example assygen.cpp
 
-\section example_assygen_cpp_title Assembly Gen
+\section assygen_cpp_title Assembly Gen
 
-\subsection example_assygen_cpp_inf Misc. Information
+\subsection assygen_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning Currently requires multiple setup/execute cycles.
 
-\subsection example_assygen_cpp_goal Goal
+\subsection assygen_cpp_goal Goal
 
-\subsection example_assygen_cpp_cw Code Walkthrough
+\subsection assygen_cpp_cw Code Walkthrough
 
-\subsection example_assygen_cpp_in Input
-\image html example_assygen.in.jpg
+\subsection assygen_cpp_in Input
+\image html assygen.in.jpg
 There is no input.
 
-\subsection example_assygen_cpp_out Output
-\image html example_assygen.out.jpg
+\subsection assygen_cpp_out Output
+\image html assygen.out.jpg
 
-\subsection example_assygen_cpp_src Source Code
+\subsection assygen_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"
@@ -59,7 +59,7 @@ void test_assygen_default(int argc, char **argv)
   ag->PrepareIO(argc, argv, TestDir);
 
   if(save_mesh)
-	  ag->save_mesh("example_assygen.in.exo");
+	  ag->save_mesh("assygen.in.exo");
   ag->setup_this();
   ag->execute_this();
 
@@ -89,7 +89,7 @@ void test_assygen_default(int argc, char **argv)
   // TODO: mesh using camal and parallel mesher
 
   if(save_mesh)
-    mk->save_mesh("example_assygen.out.exo");
+    mk->save_mesh("assygen.out.exo");
 
   delete cg;
   delete ag;

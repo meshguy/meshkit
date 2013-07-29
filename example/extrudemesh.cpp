@@ -1,26 +1,26 @@
 /*!
-\example example_extrudemesh.cpp
+\example extrudemesh.cpp
 
-\section example_extrudemesh_cpp_title <pretty-name-of-this-file>
+\section extrudemesh_cpp_title <pretty-name-of-this-file>
 
-\subsection example_extrudemesh_cpp_inf Misc. Information
+\subsection extrudemesh_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_extrudemesh_cpp_goal Goal
+\subsection extrudemesh_cpp_goal Goal
 
-\subsection example_extrudemesh_cpp_cw Code Walkthrough
+\subsection extrudemesh_cpp_cw Code Walkthrough
 
-\subsection example_extrudemesh_cpp_in Input
-\image html example_extrudemesh.in.jpg
+\subsection extrudemesh_cpp_in Input
+\image html extrudemesh.in.jpg
 There is no input.
 
-\subsection example_extrudemesh_cpp_out Output
-\image html example_extrudemesh.out.jpg
+\subsection extrudemesh_cpp_out Output
+\image html extrudemesh.out.jpg
 
-\subsection example_extrudemesh_cpp_src Source Code
+\subsection extrudemesh_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"

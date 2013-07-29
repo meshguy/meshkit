@@ -1,26 +1,26 @@
 /*!
-\example example_volIce.cpp
+\example volIce.cpp
 
-\section example_volIce_cpp_title <pretty-name-of-this-file>
+\section volIce_cpp_title <pretty-name-of-this-file>
 
-\subsection example_volIce_cpp_inf Misc. Information
+\subsection volIce_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_volIce_cpp_goal Goal
+\subsection volIce_cpp_goal Goal
 
-\subsection example_volIce_cpp_cw Code Walkthrough
+\subsection volIce_cpp_cw Code Walkthrough
 
-\subsection example_volIce_cpp_in Input
-\image html example_volIce.in.jpg
+\subsection volIce_cpp_in Input
+\image html volIce.in.jpg
 There is no input.
 
-\subsection example_volIce_cpp_out Output
-\image html example_volIce.out.jpg
+\subsection volIce_cpp_out Output
+\image html volIce.out.jpg
 
-\subsection example_volIce_cpp_src Source Code
+\subsection volIce_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

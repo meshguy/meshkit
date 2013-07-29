@@ -1,26 +1,26 @@
 /*!
-\example example_mesquite.cpp
+\example mesquite.cpp
 
-\section example_mesquite_cpp_title <pretty-name-of-this-file>
+\section mesquite_cpp_title <pretty-name-of-this-file>
 
-\subsection example_mesquite_cpp_inf Misc. Information
+\subsection mesquite_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection example_mesquite_cpp_goal Goal
+\subsection mesquite_cpp_goal Goal
 
-\subsection example_mesquite_cpp_cw Code Walkthrough
+\subsection mesquite_cpp_cw Code Walkthrough
 
-\subsection example_mesquite_cpp_in Input
-\image html example_mesquite.in.jpg
+\subsection mesquite_cpp_in Input
+\image html mesquite.in.jpg
 There is no input.
 
-\subsection example_mesquite_cpp_out Output
-\image html example_mesquite.out.jpg
+\subsection mesquite_cpp_out Output
+\image html mesquite.out.jpg
 
-\subsection example_mesquite_cpp_src Source Code
+\subsection mesquite_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"
