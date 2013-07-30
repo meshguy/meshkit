@@ -16,9 +16,14 @@ namespace MeshKit
 class IPBend
 {
 public:
+  // index of delta, magnitude of tilt = weight multiplier
+  // note tilt is applied to that delta and all subsequent ones
+  typedef std::pair<unsigned int, double> IPTilt;
+  
   /** constructor */
   IPBend() :
-    deltaIStart(0), numDeltaPlus(1), numDeltaMinus(1)
+    deltaIStart(0), numDeltaPlus(1), numDeltaMinus(1), 
+    plusTilts(), minusTilts()  // usually these vecs are empty
   {}
   
   /** default destructor */
@@ -41,6 +46,9 @@ public:
   
   static int num_deltas_max() 
   { return std::numeric_limits<int>::max()/2 - 2; }
+  
+  // sorted tilts, for x > g and x < g
+  std::vector< IPTilt > plusTilts, minusTilts; 
   
 };
 

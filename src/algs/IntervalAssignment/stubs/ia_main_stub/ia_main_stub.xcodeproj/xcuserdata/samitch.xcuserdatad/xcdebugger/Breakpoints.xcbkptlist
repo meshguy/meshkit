@@ -789,11 +789,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395868818.800064"
+         timestampString = "396835086.473849"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "457"
-         endingLineNumber = "457"
+         startingLineNumber = "550"
+         endingLineNumber = "550"
          landmarkName = "IASolverBend::initialize_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -901,16 +901,16 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "688"
-         endingLineNumber = "688"
+         startingLineNumber = "875"
+         endingLineNumber = "875"
          landmarkName = "IASolverBend::solve()"
          landmarkType = "5">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "Yes"
+         shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          isPathRelative = "0"
@@ -971,11 +971,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395868818.800064"
+         timestampString = "396835086.473849"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "468"
-         endingLineNumber = "468"
+         startingLineNumber = "561"
+         endingLineNumber = "561"
          landmarkName = "IASolverBend::initialize_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -985,11 +985,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395868818.800064"
+         timestampString = "396835086.473849"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "462"
-         endingLineNumber = "462"
+         startingLineNumber = "555"
+         endingLineNumber = "555"
          landmarkName = "IASolverBend::initialize_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1013,11 +1013,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395868818.800064"
+         timestampString = "396835086.473849"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "476"
-         endingLineNumber = "476"
+         startingLineNumber = "569"
+         endingLineNumber = "569"
          landmarkName = "IASolverBend::initialize_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1041,11 +1041,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "699"
-         endingLineNumber = "699"
+         startingLineNumber = "886"
+         endingLineNumber = "886"
          landmarkName = "IASolverBend::solve()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1055,25 +1055,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395868818.800064"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "530"
-         endingLineNumber = "530"
-         landmarkName = "IASolverBend::update_ip_bends()"
-         landmarkType = "5">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         isPathRelative = "0"
-         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "604"
-         endingLineNumber = "604"
+         startingLineNumber = "723"
+         endingLineNumber = "723"
          landmarkName = "IASolverBend::update_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1167,11 +1153,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "697"
-         endingLineNumber = "697"
+         startingLineNumber = "884"
+         endingLineNumber = "884"
          landmarkName = "IASolverBend::solve()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1204,7 +1190,7 @@
          landmarkType = "5">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "Yes"
+         shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          isPathRelative = "0"
@@ -1349,11 +1335,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "694"
-         endingLineNumber = "694"
+         startingLineNumber = "881"
+         endingLineNumber = "881"
          landmarkName = "IASolverBend::solve()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1433,11 +1419,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "704"
-         endingLineNumber = "704"
+         startingLineNumber = "891"
+         endingLineNumber = "891"
          landmarkName = "IASolverBend::solve()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1601,11 +1587,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395868818.800064"
+         timestampString = "396835086.473849"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "518"
-         endingLineNumber = "518"
+         startingLineNumber = "611"
+         endingLineNumber = "611"
          landmarkName = "IASolverBend::initialize_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1629,11 +1615,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "701"
-         endingLineNumber = "701"
+         startingLineNumber = "888"
+         endingLineNumber = "888"
          landmarkName = "IASolverBend::solve()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1643,11 +1629,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "641"
-         endingLineNumber = "641"
+         startingLineNumber = "833"
+         endingLineNumber = "833"
          landmarkName = "IASolverBend::update_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1657,11 +1643,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "665"
-         endingLineNumber = "665"
+         startingLineNumber = "852"
+         endingLineNumber = "852"
          landmarkName = "IASolverBend::update_ip_bends()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -1671,13 +1657,181 @@
          continueAfterRunningActions = "No"
          isPathRelative = "0"
          filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
-         timestampString = "395873989.747549"
+         timestampString = "396836382.347953"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "593"
-         endingLineNumber = "593"
+         startingLineNumber = "713"
+         endingLineNumber = "713"
          landmarkName = "IASolverBend::update_ip_bends()"
          landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396836382.347953"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "679"
+         endingLineNumber = "679"
+         landmarkName = "IASolverBend::update_ip_bends()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396836382.347953"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "765"
+         endingLineNumber = "765"
+         landmarkName = "IASolverBend::update_ip_bends()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396836382.347953"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "829"
+         endingLineNumber = "829"
+         landmarkName = "IASolverBend::update_ip_bends()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396836382.347953"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "801"
+         endingLineNumber = "801"
+         landmarkName = "IASolverBend::update_ip_bends()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396836382.347953"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "811"
+         endingLineNumber = "811"
+         landmarkName = "IASolverBend::update_ip_bends()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396835369.148493"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "383"
+         endingLineNumber = "383"
+         landmarkName = "IASolverBend::add_bend_weights(unsigned int i)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396835371.263805"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "402"
+         endingLineNumber = "402"
+         landmarkName = "IASolverBend::add_bend_weights(unsigned int i)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396835376.032884"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "456"
+         endingLineNumber = "456"
+         landmarkName = "IASolverBend::add_bend_weights(unsigned int i)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396835378.418035"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "475"
+         endingLineNumber = "475"
+         landmarkName = "IASolverBend::add_bend_weights(unsigned int i)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "396835792.5343"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "501"
+         endingLineNumber = "501"
+         landmarkName = "test_half_integer()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "0"
+         filePath = "/Users/samitch/Documents/meshkit/meshkit/trunk/src/algs/IntervalAssignment/IASolverBend.cpp"
+         timestampString = "396836382.347953"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "889"
+         endingLineNumber = "889"
+         landmarkName = "IASolverBend::solve()"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "cpp"
+         timestampString = "396835869.226792"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "504"
+         endingLineNumber = "504"
+         landmarkName = "test_half_integer()"
+         landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>
 </Bucket>

@@ -373,6 +373,50 @@ void IASolverBend::add_bend_weights(unsigned int i)
     const double flit = f_x_value(g, xlit); 
     const double fbig = f_x_value(g, xbig);
     double w = fpow(fbig) - fpow(flit); 
+    
+    
+    // now modify weights based on tilts
+    // this is slow and could be sped up by saving prior calculations
+    for (std::vector<IPBend::IPTilt>::iterator t = bend.plusTilts.begin();
+         t != bend.plusTilts.end(); ++t)
+    {
+      double tbig = t->first;
+      double tlit = tbig - 1;
+      if (tlit < g)
+        tlit = g;
+      const double ftlit = f_x_value(g, tlit); 
+      const double ftbig = f_x_value(g, tbig);
+      double slope = fpow(ftbig) - fpow(ftlit); 
+      slope *= t->second;
+      
+      if (xbig >= tbig)
+      {
+        assert(w>0.);
+        assert(slope>0.);
+        w += fabs(slope);
+      }
+    }
+    for (std::vector<IPBend::IPTilt>::iterator t = bend.minusTilts.begin();
+         t != bend.minusTilts.end(); ++t)
+    {
+      double tbig = t->first;
+      double tlit = tbig + 1;
+      if (tlit > g)
+        tlit = g;
+      const double ftlit = f_x_value(g, tlit); 
+      const double ftbig = f_x_value(g, tbig);
+      double slope = fpow(ftbig) - fpow(ftlit); // always positive
+      slope *= t->second;
+      
+      if (xlit <= tbig)
+      {
+        assert(w<0.);
+        assert(slope>0.);
+        w -= fabs(slope);
+      }
+    }
+    // done with tilts
+
     weights.push_back(w);
 
     // active? or nearly active
@@ -402,6 +446,52 @@ void IASolverBend::add_bend_weights(unsigned int i)
     const double flit = f_x_value(g, xlit); 
     const double fbig = f_x_value(g, xbig);
     double w = - fpow(fbig) + fpow(flit);
+    
+    
+    // now modify weights based on tilts
+    // this is slow and could be sped up by saving prior calculations
+    for (std::vector<IPBend::IPTilt>::iterator t = bend.plusTilts.begin();
+         t != bend.plusTilts.end(); ++t)
+    {
+      double tbig = t->first;
+      double tlit = tbig - 1;
+      if (tlit < g)
+        tlit = g;
+      const double ftlit = f_x_value(g, tlit); 
+      const double ftbig = f_x_value(g, tbig);
+      double slope = fpow(ftbig) - fpow(ftlit); 
+      slope *= t->second;
+      
+      if (xbig >= tbig)
+      {
+        assert(w<0.);
+        assert(slope>0.);
+        w -= fabs(slope);
+      }
+    }
+    for (std::vector<IPBend::IPTilt>::iterator t = bend.minusTilts.begin();
+         t != bend.minusTilts.end(); ++t)
+    {
+      double tbig = t->first;
+      double tlit = tbig + 1;
+      if (tlit > g)
+        tlit = g;
+      const double ftlit = f_x_value(g, tlit); 
+      const double ftbig = f_x_value(g, tbig);
+      double slope = fpow(ftbig) - fpow(ftlit); // always positive
+      slope *= t->second;
+      
+      if (xlit <= tbig)
+      {
+        assert(w>0.);
+        assert(slope>0.);
+        w += fabs(slope);
+      }
+    }
+    // done with tilts
+
+    
+    
     weights.push_back(w);
 
     // active? or nearly active
@@ -412,6 +502,9 @@ void IASolverBend::add_bend_weights(unsigned int i)
         bendData.maxActiveVarWeight = fabs(w);
     }
   }
+  
+  
+
 
 }
   
@@ -527,43 +620,70 @@ void IASolverBend::initialize_ip_bends()
 bool IASolverBend::update_ip_bends()
 {
 
-  int d_start = iaData->num_variables();
-  weights.clear();
-  bool new_bend = false;
+  // ===============
+  // check that the structure of the deltas is as expected
+  // 1, 1, 1, 0.5, 0, 0, 0   or 
+  // 1, 1, 1,   1, 1, 1, 3
+  if (debugging)
+  {
+    for (int i = 0; i < iaData->num_variables(); ++i)
+    {
+      IPBend &bend = bendData.bendVec[i]; // shorthand
+      
+      bool plus_deltas = false;
+      double xprior = 1.;
+      for (int j = 0; j < bend.numDeltaPlus-1; ++j)
+      {
+        const int di = bend.deltaIStart + j;
+        const double xp = iaSolution->x_solution[ di ];
+        assert(xp <= xprior + 0.1 );
+        xprior = xp;
+        if (xprior < 0.9)
+          xprior = 0.;
+        if (xp > 0.1) 
+          plus_deltas = true;
+      }
+      const int diplast = bend.deltaIStart + bend.numDeltaPlus-1;
+      const double xp = iaSolution->x_solution[ diplast ];
+      assert( xprior > 0.9 || xp < 1. );
+      if ( xp > 0.1 )
+        plus_deltas = true;
+      
+      bool minus_deltas = false;
+      xprior = 1.;
+      for (int j = 0; j < bend.numDeltaMinus-1; ++j)
+      {
+        const int di = bend.deltaIStart + bend.numDeltaPlus + j;
+        const double xm = iaSolution->x_solution[ di ];
+        assert( xm <= xprior + 0.1);
+        xprior = xm;
+        if (xprior < 0.9)
+          xprior = 0.;
+        if (xm > 0.1)
+          minus_deltas = true;
+      }
+      const int dimlast = bend.deltaIStart + bend.numDeltaPlus + bend.numDeltaMinus-1;
+      const double xm = iaSolution->x_solution[ dimlast ];
+      assert( xprior > 0.9 || xm < 1. );
+      if (xm > 0.1)
+        minus_deltas = true;
+      assert( ! (plus_deltas && minus_deltas) );
+    }
+  }
+  // ===============
+  
+  
+  // real algorithm
+
+  // ====== new bends
+  bool new_bend = false; // was at least one new bend added?
   bool randomized = false;
   
+  int d_start = iaData->num_variables();
   for (int i = 0; i < iaData->num_variables(); ++i)
   {
     IPBend &bend = bendData.bendVec[i]; // shorthand
 
-    std::vector<int> dp_non_int, dm_non_int;
-    
-    // delta non-integer? 
-    for (int j = 0; j < bend.numDeltaPlus; ++j)
-    {
-      const int di = bend.deltaIStart + j;
-      const double xp = iaSolution->x_solution[ di ];
-      // the last one might be non-integer but at its limit, so only bother with it if it is less than 1.
-      if ( (j < bend.numDeltaPlus-1 || xp < 1.) && !is_integer(xp))
-      {
-        dp_non_int.push_back(j);
-      }        
-    }
-    for (int j = 0; j < bend.numDeltaMinus; ++j)
-    {
-      const int di = bend.deltaIStart + bend.numDeltaPlus + j;
-      const double xm = iaSolution->x_solution[ di ];
-      // the last one might be non-integer but at its limit, so only bother with it if it is less than 1.
-      if ((j < bend.numDeltaMinus-1 || xm < 1.) && !is_integer(xm))
-      {
-        dm_non_int.push_back(j);
-      }        
-    }
-    if (debugging && (dp_non_int.size() + dm_non_int.size()) )
-    {
-      printf("%lu non-integer deltas in solution, %lu plus and %lu minus\n", dp_non_int.size() + dm_non_int.size(), dp_non_int.size(), dm_non_int.size());
-    }
-    
     // delta > 1? 
     // add more deltas
     const int num_delta_plus_old = bend.numDeltaPlus;
@@ -594,7 +714,6 @@ bool IASolverBend::update_ip_bends()
         {
           const double xl = bend.xl; // relaxed solution
           const double g = iaData->I[i]; // goal
-//          printf("%f delta_plus[%d] -> %d more delta pluses. x[%d]=%f, relaxed %f, goal %f\n", xp, old_num_delta_plus-1, num_dp_added, i, iaSolution->x_solution[i], xl, g );
           printf("%d x (goal %f relaxed_floor %g) %f delta_plus[%d]=%f -> %g more delta pluses.\n", i, g, xl, iaSolution->x_solution[i], num_delta_plus_old-1, xp, num_dp_added );
         }
       }
@@ -631,41 +750,109 @@ bool IASolverBend::update_ip_bends()
         {
           const double xl = bend.xl; // relaxed solution
           const double g = iaData->I[i]; // goal
-//          printf("%f delta_minus[%d] -> %d more delta minuses. x[%d]=%f, relaxed %f, goal %f\n", xm, num_delta_minus_old-1, num_dm_added, i, iaSolution->x_solution[i], xl, g );
           printf("%d x (goal %f relaxed_floor %g) %f delta_minus[%d]=%f -> %g more delta minuses.\n", i, g, xl, iaSolution->x_solution[i], num_delta_minus_old-1, xm, num_dm_added );
         }
       }
     }
-
-    // generate new deltas and weights
-    add_bend_weights(i);
-
     bend.deltaIStart = d_start;
-    assert( bend.deltaIStart + bend.num_deltas() == (int) weights.size() + iaData->num_variables());
+    
     d_start += bend.num_deltas();
-    
-    // if delta non-integer? 
-    // randomize weight w/ excluded middle
-    for (unsigned int j = 0; j < dp_non_int.size(); ++j)
-    {
-      int k = bend.deltaIStart - iaData->num_variables() + dp_non_int[j];
-      // this might make weights tend to zero. Revisit later
-      weights[ k ] *= 1. + 0.2 * IAWeights::rand_excluded_middle();
-    }
-    for (unsigned int j = 0; j < dm_non_int.size(); ++j)
-    {
-      int k = bend.deltaIStart + bend.numDeltaPlus - iaData->num_variables() + dm_non_int[j];
-      // this might make weights tend to zero. Revisit later
-      weights[ k ] *= 1. + 0.2 * IAWeights::rand_excluded_middle();
-    }
-    
-    // todo: check that weights are still increasing with increasing k
   }
+  
+  // ======= new tilts
+  // check for fractional deltas 
+  // only do this if no new bends were added
+  bool new_tilt = false; // was at least one new tilt added?
+  if (!new_bend)
+  {
+    // the weight indices being current relies on there being no new bends added in the prior loop
+    IAWeights::iterator wi = weights.begin();
+
+    int num_new_tilts = 0;
+    for (int i = 0; i < iaData->num_variables(); ++i)
+    {
+
+      const double x = iaSolution->x_solution[i]; // current solution
+      if (!is_integer(x))
+      {
+        IPBend &bend = bendData.bendVec[i]; // shorthand
+
+        const double g = iaData->I[i]; // goal
+        
+        const int xf = floor(x); // int below x
+        const int xc = xf+1.;  // int above x
+        
+        IPBend::IPTilt tilt;
+
+        double r = ((double) rand() / RAND_MAX); // in 0,1
+        tilt.second =  1.8 + r/2.;
+        
+        // if we are on a very flat part of the curve, straddling a goal,
+        // increase the slope by a lot more
+        if (fabs(x-g) < 1.1)
+          tilt.second *= 3.756;
+        
+        // xc is farther from the goal, checks for case that the interval straddles the goal
+        // tilt the positive branch
+        if (xc - g > g - xf)
+        {
+          tilt.first = xc;
+          tilt.second += x - xf;
+          bend.plusTilts.push_back(tilt);
+          
+          std::sort( bend.plusTilts.begin(), bend.plusTilts.end() ); // sorts by .first
+        }
+        // tilt the negative branch
+        else
+        {
+          tilt.first = xf;
+          tilt.second += xc - x;
+          
+          bend.minusTilts.push_back(tilt);
+          std::sort( bend.minusTilts.begin(), bend.minusTilts.end() ); // sorts by .first
+        }
+        ++num_new_tilts;
+      }
+    } // for i
+    new_tilt = (num_new_tilts > 0);
+    if (debugging && num_new_tilts)
+    {
+      printf("%d stubborn non-integer delta in solution\n", num_new_tilts);
+    }
+  }
+  
+  // if nothing changed, no need to redo weights, unless randomizing
+  if ( !(new_bend || new_tilt || randomized) )
+    return false;
+      
+  // generate new deltas and weights
+  weights.clear();
+  for (int i = 0; i < iaData->num_variables(); ++i)
+  {
+    add_bend_weights(i);
+  }
+  
+    // if delta non-integer, apply tilts
+    // randomize weight w/ excluded middle
+//    for (unsigned int j = 0; j < dp_non_int.size(); ++j)
+//    {
+//      int k = bend.deltaIStart - iaData->num_variables() + dp_non_int[j];
+//      // this might make weights tend to zero. Revisit later
+//      weights[ k ] *= 1. + 0.2 * IAWeights::rand_excluded_middle();
+//    }
+//    for (unsigned int j = 0; j < dm_non_int.size(); ++j)
+//    {
+//      int k = bend.deltaIStart + bend.numDeltaPlus - iaData->num_variables() + dm_non_int[j];
+//      // this might make weights tend to zero. Revisit later
+//      weights[ k ] *= 1. + 0.2 * IAWeights::rand_excluded_middle();
+//    }
+//    
+    // todo: check that weights are still increasing with increasing k
   
    weights.uniquify(1., 1e6); // 1e4?
 
   // return if something changed
-  return new_bend || randomized;
+  return new_bend || new_tilt || randomized;
 
 }
   

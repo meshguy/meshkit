@@ -489,7 +489,7 @@ void test_half_integer()
   // create interface
   MeshKit::IAInterface *ia_interface = new_ia_interface();
   
-  for (int v=1; v<2; ++v) // 0 <= v < 4
+  for (int v=0; v<4; ++v) // 0 <= v < 4
   {
     ia_interface->destroy_data();
   
