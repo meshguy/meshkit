@@ -347,6 +347,191 @@ void IASolverBend::add_bend_sum_weights(unsigned int i, const double factor)
   
  */
   
+  /*
+  deltapluses
+  // now modify weights based on tilts
+  for (std::vector<IPBend::IPTilt>::iterator t = bend.plusTilts.begin();
+       t != bend.plusTilts.end(); ++t)
+  {
+    double tbig = t->first;
+    double tlit = tbig - 1;
+    if (tlit < g)
+      tlit = g;
+      const double ftlit = f_x_value(g, tlit); 
+      const double ftbig = f_x_value(g, tbig);
+      double slope = fpow(ftbig) - fpow(ftlit); 
+      slope *= t->second;
+      
+      if (xbig >= tbig) //if +1
+      {
+        assert(w>0.);
+        assert(slope>0.);
+        w += fabs(slope);
+      }
+  }
+  for (std::vector<IPBend::IPTilt>::iterator t = bend.minusTilts.begin();
+       t != bend.minusTilts.end(); ++t)
+  {
+    double tbig = t->first;
+    double tlit = tbig + 1;
+    if (tlit > g)
+      tlit = g;
+      const double ftlit = f_x_value(g, tlit); 
+      const double ftbig = f_x_value(g, tbig);
+      double slope = fpow(ftbig) - fpow(ftlit); // always positive
+      slope *= t->second;
+      
+      if (xlit <= tbig)
+      {
+        assert(w<0.);
+        assert(slope>0.);
+        w -= fabs(slope);
+      }
+  }
+   deltaminuses
+  // done with tilts
+   // now modify weights based on tilts
+   // this is slow and could be sped up by saving prior calculations
+   for (std::vector<IPBend::IPTilt>::iterator t = bend.plusTilts.begin();
+   t != bend.plusTilts.end(); ++t)
+   {
+   double tbig = t->first;
+   double tlit = tbig - 1;
+   if (tlit < g)
+   tlit = g;
+   const double ftlit = f_x_value(g, tlit); 
+   const double ftbig = f_x_value(g, tbig);
+   double slope = fpow(ftbig) - fpow(ftlit); 
+   slope *= t->second;
+   
+   if (xbig >= tbig)
+   {
+   assert(w<0.);
+   assert(slope>0.);
+   w -= fabs(slope);
+   }
+   }
+   for (std::vector<IPBend::IPTilt>::iterator t = bend.minusTilts.begin();
+   t != bend.minusTilts.end(); ++t)
+   {
+   double tbig = t->first;
+   double tlit = tbig + 1;
+   if (tlit > g)
+   tlit = g;
+   const double ftlit = f_x_value(g, tlit); 
+   const double ftbig = f_x_value(g, tbig);
+   double slope = fpow(ftbig) - fpow(ftlit); // always positive
+   slope *= t->second;
+   
+   if (xlit <= tbig)
+   {
+   assert(w>0.);
+   assert(slope>0.);
+   w += fabs(slope);
+   }
+   }
+   // done with tilts
+   
+
+  */
+ 
+void IASolverBend::merge_tilts(IPBend::TiltVec &tilts)
+{
+  if (tilts.size() < 2)
+    return;
+  
+  std::sort( tilts.begin(), tilts.end() ); // sorts by .first
+
+  // copy into a new vec
+  IPBend::TiltVec new_tilts;
+  new_tilts.reserve(tilts.size());
+  
+  // multiply tilts for the same index together, increasing them faster than additively
+  for (unsigned int t = 0; t < tilts.size()-1; )
+  {
+    unsigned int u = t + 1;
+    while (u < tilts.size() && tilts[t].first == tilts[u].first)
+    {
+      tilts[t].second *= tilts[u].second;
+      u++;
+    }
+    t = u;
+  }
+  tilts.swap(new_tilts);  
+}
+  
+void IASolverBend::tilt_weight(const IPBend::TiltVec &tilts, const int tilt_direction, const double g, const double xlit, const double xbig, const int delta_direction, double &w)
+{
+  // O( num_deltas * num_tilts)
+  // this could be sped up some by saving prior calculations or
+  // by using the sorted order of the tilts to skip some deltas.
+  for (IPBend::TiltVec::const_iterator t = tilts.begin();
+       t != tilts.end(); ++t)
+  {
+    if (0 && debugging)
+    {
+      printf("  tilt (%d) %f at %d\n", tilt_direction, t->second, t->first);
+    }
+    double tbig = t->first;                   
+    double tlit = tbig - tilt_direction;
+    // if tilt_direction is negative, then tlit index is larger than tbig, 
+    // but always tlit has smaller f value than tbig
+    double slope = (tilt_direction > 0) ? raw_weight(g, tlit, tbig) : -raw_weight(g, tbig, tlit);
+    assert(slope > 0. ); // always defined this way because of tilt_direction
+    assert(t->second > 0.);
+    
+    slope *= t->second;
+    
+    // impose an absolute minimum slope of 0.1, to get out of flat regions around g
+    
+    if (tilt_direction > 0 && (xbig >= tbig))
+    {
+      if (delta_direction > 0)
+      {
+        assert(w>0.);
+        w += fabs(slope);
+      }
+      else 
+      {
+        assert(w<0.);
+        w -= fabs(slope); 
+      }
+    }
+    else if (tilt_direction < 0 && (xlit <= tbig))
+    {
+      if (delta_direction > 0)
+      {
+        assert(w<0.);
+        w -= fabs(slope);
+      }          
+      else {
+        assert(w>0.);
+        w += fabs(slope);
+      }
+    }
+  }
+}
+  
+double IASolverBend::raw_weight( const double g, double xlit, double xbig)
+{
+  assert(xlit < xbig);
+  // special handling when crossing goal to avoid zero slope
+  if ( xlit < g && xbig > g )
+  {
+    if ( g - xlit < xbig - g) 
+      xlit = g;
+    else
+      xbig = g;
+  }
+  assert( xbig >= 1.);
+  assert( xlit >= 1.);
+
+  const double flit = f_x_value(g, xlit); 
+  const double fbig = f_x_value(g, xbig);
+  const double w = fpow(fbig) - fpow(flit);
+  return w;
+}
+  
 void IASolverBend::add_bend_weights(unsigned int i)
 {
   // shorthands
@@ -362,60 +547,20 @@ void IASolverBend::add_bend_weights(unsigned int i)
   {
     double xlit = xl + j;
     double xbig = xlit + 1.;
-    // special handling when crossing goal to avoid zero slope
-    if ( xlit < g && xbig > g )
+    double w = raw_weight( g, xlit, xbig );
+        
+    if (0 && debugging)
     {
-      if ( g - xlit < xbig - g) 
-        xlit = g;
-      else
-        xbig = g;
+      printf("x[%u], g %f, xl %f, dplus[%u] raw_w %f\n", i, g, xl, j, w);
     }
-    const double flit = f_x_value(g, xlit); 
-    const double fbig = f_x_value(g, xbig);
-    double w = fpow(fbig) - fpow(flit); 
-    
-    
     // now modify weights based on tilts
-    // this is slow and could be sped up by saving prior calculations
-    for (std::vector<IPBend::IPTilt>::iterator t = bend.plusTilts.begin();
-         t != bend.plusTilts.end(); ++t)
+    tilt_weight(bend.plusTilts, 1, g, xlit, xbig, 1, w);
+    tilt_weight(bend.minusTilts, -1, g, xlit, xbig, 1, w);
+    if (0 && debugging)
     {
-      double tbig = t->first;
-      double tlit = tbig - 1;
-      if (tlit < g)
-        tlit = g;
-      const double ftlit = f_x_value(g, tlit); 
-      const double ftbig = f_x_value(g, tbig);
-      double slope = fpow(ftbig) - fpow(ftlit); 
-      slope *= t->second;
-      
-      if (xbig >= tbig)
-      {
-        assert(w>0.);
-        assert(slope>0.);
-        w += fabs(slope);
-      }
+      if ( bend.plusTilts.size() || bend.minusTilts.size() )
+        printf("              tilted_w %f\n", w);
     }
-    for (std::vector<IPBend::IPTilt>::iterator t = bend.minusTilts.begin();
-         t != bend.minusTilts.end(); ++t)
-    {
-      double tbig = t->first;
-      double tlit = tbig + 1;
-      if (tlit > g)
-        tlit = g;
-      const double ftlit = f_x_value(g, tlit); 
-      const double ftbig = f_x_value(g, tbig);
-      double slope = fpow(ftbig) - fpow(ftlit); // always positive
-      slope *= t->second;
-      
-      if (xlit <= tbig)
-      {
-        assert(w<0.);
-        assert(slope>0.);
-        w -= fabs(slope);
-      }
-    }
-    // done with tilts
 
     weights.push_back(w);
 
@@ -435,62 +580,20 @@ void IASolverBend::add_bend_weights(unsigned int i)
     double xlit = xbig - 1.;
     assert(xlit >= 1.); // if this fails, then the numDeltaMinus is too large
     
-    // special handling when crossing goal to avoid zero slope
-    if ( xlit < g && xbig > g )
+    double w = - raw_weight( g, xlit, xbig );
+    
+    if (0 && debugging)
     {
-      if ( g - xlit < xbig - g) 
-        xlit = g;
-      else
-        xbig = g;
+      printf("x[%u], g %f, xl %f, dminus[%u] raw_w %f\n", i, g, xl, j, w);
     }
-    const double flit = f_x_value(g, xlit); 
-    const double fbig = f_x_value(g, xbig);
-    double w = - fpow(fbig) + fpow(flit);
-    
-    
     // now modify weights based on tilts
-    // this is slow and could be sped up by saving prior calculations
-    for (std::vector<IPBend::IPTilt>::iterator t = bend.plusTilts.begin();
-         t != bend.plusTilts.end(); ++t)
+    tilt_weight(bend.plusTilts, 1, g, xlit, xbig, -1, w);
+    tilt_weight(bend.minusTilts, -1, g, xlit, xbig, -1, w);    
+    if (0 && debugging)
     {
-      double tbig = t->first;
-      double tlit = tbig - 1;
-      if (tlit < g)
-        tlit = g;
-      const double ftlit = f_x_value(g, tlit); 
-      const double ftbig = f_x_value(g, tbig);
-      double slope = fpow(ftbig) - fpow(ftlit); 
-      slope *= t->second;
-      
-      if (xbig >= tbig)
-      {
-        assert(w<0.);
-        assert(slope>0.);
-        w -= fabs(slope);
-      }
+      if ( bend.plusTilts.size() || bend.minusTilts.size() )
+        printf("             tilted_w %f\n", w);
     }
-    for (std::vector<IPBend::IPTilt>::iterator t = bend.minusTilts.begin();
-         t != bend.minusTilts.end(); ++t)
-    {
-      double tbig = t->first;
-      double tlit = tbig + 1;
-      if (tlit > g)
-        tlit = g;
-      const double ftlit = f_x_value(g, tlit); 
-      const double ftbig = f_x_value(g, tbig);
-      double slope = fpow(ftbig) - fpow(ftlit); // always positive
-      slope *= t->second;
-      
-      if (xlit <= tbig)
-      {
-        assert(w>0.);
-        assert(slope>0.);
-        w += fabs(slope);
-      }
-    }
-    // done with tilts
-
-    
     
     weights.push_back(w);
 
@@ -502,9 +605,6 @@ void IASolverBend::add_bend_weights(unsigned int i)
         bendData.maxActiveVarWeight = fabs(w);
     }
   }
-  
-  
-
 
 }
   
@@ -800,7 +900,7 @@ bool IASolverBend::update_ip_bends()
           tilt.second += x - xf;
           bend.plusTilts.push_back(tilt);
           
-          std::sort( bend.plusTilts.begin(), bend.plusTilts.end() ); // sorts by .first
+          merge_tilts(bend.plusTilts);
         }
         // tilt the negative branch
         else
@@ -810,6 +910,7 @@ bool IASolverBend::update_ip_bends()
           
           bend.minusTilts.push_back(tilt);
           std::sort( bend.minusTilts.begin(), bend.minusTilts.end() ); // sorts by .first
+          merge_tilts(bend.minusTilts);
         }
         ++num_new_tilts;
       }
@@ -899,6 +1000,9 @@ bool IASolverBend::solve()
       if (!changed || (iter > max_first_iter))
       {
         evenConstraintsActive = true;
+        // zzyk switch over to the augmented problem, 
+        // with linear constraints and standard goals for the sum-even variables.
+        
       }
     }
     // avoid infinite loop if the method isn't working

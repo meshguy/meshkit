@@ -57,6 +57,15 @@ private:
   // update them based on fractional solutions, large deltas
   bool update_ip_bends();
   
+  // return the weight (slope) between xbig and xlit given g
+  double raw_weight( const double g, double xlit, double xbig);
+  
+  // combine tilts for the same exact interval into a much larger tilt, to try to address the problem more quickly. Basically doubling the tilt rather than adding to it.
+  void merge_tilts(IPBend::TiltVec &tilts);
+  
+  // actually change the weight of the delta based on the tilt
+  void tilt_weight(const IPBend::TiltVec &tilts, const int tilt_direction, const double g, const double xlit, const double xbig, const int delta_direction, double &w);
+  
   // call the nlp solver
   bool solve_nlp();
 

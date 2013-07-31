@@ -88,7 +88,8 @@ bool IASolverToolInt::solution_is_integer(const bool print_non_integer)
         {
           printf("\nChecking solution integrality\n");
         }
-        printf(" x %d is %f NON-INTEGER\n", i, x);
+        const double goal = iaData->I[i];
+        printf(" x %d (g %f) is %f NON-INTEGER\n", i, goal, x);
       }
       // shortcut return if we're not printing anything
       else

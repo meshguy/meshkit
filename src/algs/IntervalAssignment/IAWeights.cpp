@@ -60,7 +60,7 @@ void IAWeights::uniquify(const double lo, const double hi)
 {
   assert( hi >= lo );
   assert( lo >= 0. );
-  
+
   // find min an max of input
   double fabs_min_weight = std::numeric_limits<double>::max();
   double fabs_max_weight = 0.;
@@ -166,6 +166,19 @@ void IAWeights::uniquify(const double lo, const double hi)
     }
   }
   // exit(1); //zzyk
+}
+
+// debug
+void IAWeights::print() const
+{
+  printf("weights:\n");
+  for (unsigned int i = 0; i < size(); ++i)
+  {
+    const double w = (*this)[i];
+    printf("w[%u] = %f\n", i, w);
+  }
+  printf("\n");
+
 }
 
 } // namespace MeshKit

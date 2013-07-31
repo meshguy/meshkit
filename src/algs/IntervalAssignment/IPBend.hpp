@@ -19,6 +19,7 @@ public:
   // index of delta, magnitude of tilt = weight multiplier
   // note tilt is applied to that delta and all subsequent ones
   typedef std::pair<unsigned int, double> IPTilt;
+  typedef std::vector< IPTilt > TiltVec;
   
   /** constructor */
   IPBend() :
@@ -48,7 +49,7 @@ public:
   { return std::numeric_limits<int>::max()/2 - 2; }
   
   // sorted tilts, for x > g and x < g
-  std::vector< IPTilt > plusTilts, minusTilts; 
+  TiltVec plusTilts, minusTilts; 
   
 };
 
