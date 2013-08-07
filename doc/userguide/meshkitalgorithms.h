@@ -268,6 +268,122 @@ brief info</td></tr>
 
 </tbody></table></center>
 
+<br><br><big><big>  The Algorithms That Escaped Documentation  </big></big><br><br>
+
+<center><table width=80% bgcolor=black style="text-align: center;" border="0" cellpadding="5" cellspacing="2"><tbody>
+
+<tr bgcolor=darkgray> <td>
+Algorithm</td><td>
+Related Examples</td><td>
+Related Tests</td><td>
+Brief Info</td></tr>
+
+<tr bgcolor=white> <td colspan="4"> <big><b>  XD Algorithms </b></big> </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_edgemesh                           \htmlonly </td> <td> \endhtmlonly
+\ref example_edgemesh.cpp                         \htmlonly </td> <td> \endhtmlonly
+\ref test_edgemesh.cpp                            \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_fbgeom                             \htmlonly </td> <td> \endhtmlonly
+\ref example_fbgeom.cpp                           \htmlonly </td> <td> \endhtmlonly
+\ref test_fbgeom.cpp                              \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_graph                              \htmlonly </td> <td> \endhtmlonly
+\ref example_graph.cpp                            \htmlonly </td> <td> \endhtmlonly
+\ref test_graph.cpp                               \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_intassign                          \htmlonly </td> <td> \endhtmlonly
+\ref example_intassign.cpp                        \htmlonly </td> <td> \endhtmlonly
+\ref test_intassign.cpp                           \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_mb2                                \htmlonly </td> <td> \endhtmlonly
+\ref example_mb2.cpp                              \htmlonly </td> <td> \endhtmlonly
+\ref test_mb2.cpp                                 \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_mbgeom                             \htmlonly </td> <td> \endhtmlonly
+\ref example_mbgeom.cpp                           \htmlonly </td> <td> \endhtmlonly
+\ref test_mbgeom.cpp                              \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_mbgeomop                           \htmlonly </td> <td> \endhtmlonly
+\ref example_mbgeomop.cpp                         \htmlonly </td> <td> \endhtmlonly
+\ref test_mbgeomop.cpp                            \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_mbgeomvar                          \htmlonly </td> <td> \endhtmlonly
+\ref example_mbgeomvar.cpp                        \htmlonly </td> <td> \endhtmlonly
+\ref test_mbgeomvar.cpp                           \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_mbsplitop                          \htmlonly </td> <td> \endhtmlonly
+\ref example_mbsplitop.cpp                        \htmlonly </td> <td> \endhtmlonly
+\ref test_mbsplitop.cpp                           \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_mbvolop                            \htmlonly </td> <td> \endhtmlonly
+\ref example_mbvolop.cpp                          \htmlonly </td> <td> \endhtmlonly
+\ref test_mbvolop.cpp                             \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_parallelmesher                     \htmlonly </td> <td> \endhtmlonly
+\ref example_parallelmesher.cpp                   \htmlonly </td> <td> \endhtmlonly
+\ref test_parallelmesher.cpp                      \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_paver                              \htmlonly </td> <td> \endhtmlonly
+\ref example_paver.cpp                            \htmlonly </td> <td> \endhtmlonly
+\ref test_paver.cpp                               \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_postbl                             \htmlonly </td> <td> \endhtmlonly
+\ref example_postbl.cpp                           \htmlonly </td> <td> \endhtmlonly
+\ref test_postbl.cpp                              \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_setpnt2quad                        \htmlonly </td> <td> \endhtmlonly
+\ref example_setpnt2quad.cpp                      \htmlonly </td> <td> \endhtmlonly
+\ref test_setpnt2quad.cpp                         \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_tfimapping                         \htmlonly </td> <td> \endhtmlonly
+\ref example_tfimapping.cpp                       \htmlonly </td> <td> \endhtmlonly
+\ref test_tfimapping.cpp                          \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_trianglemesher                     \htmlonly </td> <td> \endhtmlonly
+\ref example_trianglemesher.cpp                   \htmlonly </td> <td> \endhtmlonly
+\ref test_trianglemesher.cpp                      \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
+\ref algorithm_volice                             \htmlonly </td> <td> \endhtmlonly
+\ref example_volice.cpp                           \htmlonly </td> <td> \endhtmlonly
+\ref test_volice.cpp                              \htmlonly </td> <td> \endhtmlonly
+<a brief description, objective, short>           \htmlonly </td> </tr>
+
+<tbody></table></center>
+
 \endhtmlonly
 
 */

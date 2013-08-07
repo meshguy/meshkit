@@ -1,5 +1,5 @@
 /*!
-\example TriangleMesher.cpp
+\example trianglemesher.cpp
 
 \section TriangleMesher_cpp_title <pretty-name-of-this-file>
 

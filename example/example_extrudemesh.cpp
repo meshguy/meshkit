@@ -1,5 +1,5 @@
 /*!
-\example ExtrudeMesh.cpp
+\example extrudemesh.cpp
 
 \section ExtrudeMesh_cpp_title <pretty-name-of-this-file>
 

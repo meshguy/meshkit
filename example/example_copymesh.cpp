@@ -1,5 +1,5 @@
 /*!
-\example example_CopyMesh.cpp
+\example example_copymesh.cpp
 
 \section example_CopyMesh_cpp_title <pretty-name-of-this-file>
 

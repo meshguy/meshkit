@@ -1,5 +1,5 @@
 /*!
-\example SetPnt2Quad.cpp
+\example setpnt2quad.cpp
 
 \section SetPnt2Quad_cpp_title <pretty-name-of-this-file>
 

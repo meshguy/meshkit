@@ -1,5 +1,5 @@
 /*!
-\example example_CopyGeom.cpp
+\example example_copygeom.cpp
 
 \section example_CopyGeom_cpp_title <pretty-name-of-this-file>
 
