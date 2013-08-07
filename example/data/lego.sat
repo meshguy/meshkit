@@ -1,0 +1,212 @@
+1900 0 3 0           
+10 Cubit 13.1 17 ACIS 21.0.1 Linux 24 Mon Jul 29 14:59:47 2013 
+1 9.9999999999999995e-07 1e-10 
+body $3 -1 -1 $-1 $4 $-1 $5 T -1 -1 -2 1 1 2 #
+body $6 -1 -1 $-1 $7 $-1 $8 T -0.5 1 0.5 0.5 2 1.5 #
+body $9 -1 -1 $-1 $10 $-1 $11 T -0.5 1 -1.5 0.5 2 -0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $0 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
+lump $12 -1 -1 $-1 $-1 $13 $0 T -1 -1 -2 1 1 2 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 3 #
+lump $14 -1 -1 $-1 $-1 $15 $1 T -0.5 1 0.5 0.5 2 1.5 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 4 #
+lump $16 -1 -1 $-1 $-1 $17 $2 T -0.5 1 -1.5 0.5 2 -0.5 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $4 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
+shell $-1 -1 -1 $-1 $-1 $-1 $18 $-1 $4 T -1 -1 -2 1 1 2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $7 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 3 #
+shell $-1 -1 -1 $-1 $-1 $-1 $19 $-1 $7 T -0.5 1 0.5 0.5 2 1.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $10 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 4 #
+shell $-1 -1 -1 $-1 $-1 $-1 $20 $-1 $10 T -0.5 1 -1.5 0.5 2 -0.5 #
+face $21 -1 -1 $-1 $22 $23 $13 $-1 $24 reversed single T -1 1 -2 1 1 2 F #
+face $25 -1 -1 $-1 $26 $27 $15 $-1 $28 forward single T -0.5 1 0.5 0.5 2 1.5 F #
+face $29 -1 -1 $-1 $30 $31 $17 $-1 $32 forward single T -0.5 1 -1.5 0.5 2 -0.5 F #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $18 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 19 #
+face $33 -1 -1 $-1 $34 $35 $13 $-1 $24 reversed single T -0.5 1 -1.5 0.5 1 -0.5 F #
+loop $-1 -1 -1 $-1 $36 $37 $18 T -0.5 1 0.5 0.5 1 1.5 unknown #
+plane-surface $-1 -1 -1 $-1 0 1 0 0 -1 0 0 0 -1 forward_v I I I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $19 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 13 #
+face $38 -1 -1 $-1 $39 $40 $15 $-1 $41 forward single T -0.5 2 0.5 0.5 2 1.5 F #
+loop $-1 -1 -1 $-1 $42 $43 $19 T -0.5 2 0.5 0.5 2 1.5 unknown #
+cone-surface $-1 -1 -1 $-1 0 1.5 1 0 -1 6.1232339957367648e-17 0.5 0 0 1 I I 0 1 0.5 forward I I I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $20 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 16 #
+face $44 -1 -1 $-1 $45 $46 $17 $-1 $47 forward single T -0.5 2 -1.5 0.5 2 -0.5 F #
+loop $-1 -1 -1 $-1 $48 $49 $20 T -0.5 2 -1.5 0.5 2 -0.5 unknown #
+cone-surface $-1 -1 -1 $-1 0 1.5 -1 0 -1 6.1232339957367648e-17 0.5 0 0 1 I I 0 1 0.5 forward I I I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $22 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 18 #
+face $50 -1 -1 $-1 $51 $52 $13 $-1 $53 forward single T -1 -1 2 1 1 2 F #
+loop $-1 -1 -1 $-1 $-1 $54 $22 T -0.5 1 -1.5 0.5 1 -0.5 unknown #
+loop $-1 -1 -1 $-1 $55 $56 $18 T -1 1 -2 1 1 2 unknown #
+coedge $-1 -1 -1 $-1 $37 $37 $57 $58 reversed $23 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $26 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
+face $59 -1 -1 $-1 $-1 $60 $15 $-1 $61 forward single T -0.5 1 0.5 0.5 1 1.5 F #
+loop $-1 -1 -1 $-1 $-1 $62 $26 T -0.5 2 0.5 0.5 2 1.5 unknown #
+plane-surface $-1 -1 -1 $-1 0 2 1 0 1 -6.1232339957367648e-17 -1 0 0 forward_v I I I I #
+loop $-1 -1 -1 $-1 $-1 $63 $19 T -0.5 1 0.5 0.5 1 1.5 unknown #
+coedge $-1 -1 -1 $-1 $43 $43 $62 $64 reversed $27 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $30 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 17 #
+face $65 -1 -1 $-1 $-1 $66 $17 $-1 $67 forward single T -0.5 1 -1.5 0.5 1 -0.5 F #
+loop $-1 -1 -1 $-1 $-1 $68 $30 T -0.5 2 -1.5 0.5 2 -0.5 unknown #
+plane-surface $-1 -1 -1 $-1 0 2 -1 0 1 -6.1232339957367648e-17 -1 0 0 forward_v I I I I #
+loop $-1 -1 -1 $-1 $-1 $69 $20 T -0.5 1 -1.5 0.5 1 -0.5 unknown #
+coedge $-1 -1 -1 $-1 $49 $49 $68 $70 reversed $31 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $34 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 7 #
+face $71 -1 -1 $-1 $72 $73 $13 $-1 $74 reversed single T -1 -1 -2 1 1 -2 F #
+loop $-1 -1 -1 $-1 $-1 $75 $34 T -1 -1 2 1 1 2 unknown #
+plane-surface $-1 -1 -1 $-1 0 0 2 0 0 1 1 0 0 forward_v I I I I #
+coedge $-1 -1 -1 $-1 $54 $54 $76 $77 forward $35 $-1 #
+loop $-1 -1 -1 $-1 $-1 $76 $18 T -0.5 1 -1.5 0.5 1 -0.5 unknown #
+coedge $-1 -1 -1 $-1 $78 $79 $80 $81 forward $36 $-1 #
+coedge $-1 -1 -1 $-1 $57 $57 $37 $58 forward $82 $-1 #
+edge $83 -1 -1 $-1 $84 0 $84 6.2831853071795862 $57 $85 forward @7 unknown T -0.5 1 0.5 0.5 1 1.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $39 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
+loop $-1 -1 -1 $-1 $-1 $86 $39 T -0.5 1 0.5 0.5 1 1.5 unknown #
+plane-surface $-1 -1 -1 $-1 0 1 1 0 -1 6.1232339957367648e-17 1 0 0 forward_v I I I I #
+coedge $-1 -1 -1 $-1 $62 $62 $43 $64 forward $40 $-1 #
+coedge $-1 -1 -1 $-1 $63 $63 $86 $87 reversed $42 $-1 #
+edge $88 -1 -1 $-1 $89 0 $89 6.2831853071795862 $62 $90 forward @7 unknown T -0.5 2 0.5 0.5 2 1.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $45 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 18 #
+loop $-1 -1 -1 $-1 $-1 $91 $45 T -0.5 1 -1.5 0.5 1 -0.5 unknown #
+plane-surface $-1 -1 -1 $-1 0 1 -1 0 -1 6.1232339957367648e-17 1 0 0 forward_v I I I I #
+coedge $-1 -1 -1 $-1 $68 $68 $49 $70 forward $46 $-1 #
+coedge $-1 -1 -1 $-1 $69 $69 $91 $92 reversed $48 $-1 #
+edge $93 -1 -1 $-1 $94 0 $94 6.2831853071795862 $68 $95 forward @7 unknown T -0.5 2 -1.5 0.5 2 -0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $51 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 8 #
+face $96 -1 -1 $-1 $97 $98 $13 $-1 $99 reversed single T -1 -1 -2 1 -1 2 F #
+loop $-1 -1 -1 $-1 $-1 $100 $51 T -1 -1 -2 1 1 -2 unknown #
+plane-surface $-1 -1 -1 $-1 0 0 -2 0 0 1 1 0 0 forward_v I I I I #
+coedge $-1 -1 -1 $-1 $101 $102 $103 $104 forward $52 $-1 #
+coedge $-1 -1 -1 $-1 $76 $76 $54 $77 reversed $55 $-1 #
+edge $105 -1 -1 $-1 $106 0 $106 6.2831853071795862 $54 $107 forward @7 unknown T -0.5 1 -1.5 0.5 1 -0.5 #
+coedge $-1 -1 -1 $-1 $108 $56 $109 $110 reversed $36 $-1 #
+coedge $-1 -1 -1 $-1 $56 $108 $101 $111 reversed $36 $-1 #
+coedge $-1 -1 -1 $-1 $103 $112 $56 $81 reversed $113 $-1 #
+edge $114 -1 -1 $-1 $115 -2 $116 2 $80 $117 forward @7 unknown T 1 1 -2 1 1 2 #
+loop $-1 -1 -1 $-1 $-1 $57 $118 T -0.5 1 0.5 0.5 1 1.5 unknown #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $58 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 32 #
+vertex $119 -1 -1 $-1 $58 $120 #
+ellipse-curve $-1 -1 -1 $-1 0 1 1 0 1 0 0.5 0 0 1 I I #
+coedge $-1 -1 -1 $-1 $86 $86 $63 $87 forward $60 $-1 #
+edge $121 -1 -1 $-1 $122 0 $122 6.2831853071795862 $86 $123 forward @7 unknown T -0.5 1 0.5 0.5 1 1.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $64 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 31 #
+vertex $124 -1 -1 $-1 $64 $125 #
+ellipse-curve $-1 -1 -1 $-1 0 2 1 0 1 -6.1232339957367648e-17 0.5 0 0 1 I I #
+coedge $-1 -1 -1 $-1 $91 $91 $69 $92 forward $66 $-1 #
+edge $126 -1 -1 $-1 $127 0 $127 6.2831853071795862 $91 $128 forward @7 unknown T -0.5 1 -1.5 0.5 1 -0.5 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $70 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 33 #
+vertex $129 -1 -1 $-1 $70 $130 #
+ellipse-curve $-1 -1 -1 $-1 0 2 -1 0 1 -6.1232339957367648e-17 0.5 0 0 1 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $72 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 9 #
+face $131 -1 -1 $-1 $118 $132 $13 $-1 $133 reversed single T -1 -1 -2 -1 1 2 F #
+loop $-1 -1 -1 $-1 $-1 $134 $72 T -1 -1 -2 1 -1 2 unknown #
+plane-surface $-1 -1 -1 $-1 0 -1 0 0 1 0 0 0 1 forward_v I I I I #
+coedge $-1 -1 -1 $-1 $135 $109 $112 $136 forward $73 $-1 #
+coedge $-1 -1 -1 $-1 $137 $75 $79 $111 forward $52 $-1 #
+coedge $-1 -1 -1 $-1 $75 $137 $138 $139 forward $52 $-1 #
+coedge $-1 -1 -1 $-1 $140 $80 $75 $104 reversed $113 $-1 #
+edge $141 -1 -1 $-1 $142 -1 $115 1 $103 $143 forward @7 unknown T 1 -1 2 1 1 2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $77 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 34 #
+vertex $144 -1 -1 $-1 $77 $145 #
+ellipse-curve $-1 -1 -1 $-1 0 1 -1 0 1 0 0.5 0 0 1 I I #
+coedge $-1 -1 -1 $-1 $79 $78 $146 $147 reversed $36 $-1 #
+coedge $-1 -1 -1 $-1 $100 $148 $78 $110 forward $73 $-1 #
+edge $149 -1 -1 $-1 $150 -1 $116 1 $78 $151 forward @7 unknown T -1 1 -2 1 1 -2 #
+edge $152 -1 -1 $-1 $115 -1 $153 1 $79 $154 forward @7 unknown T -1 1 2 1 1 2 #
+coedge $-1 -1 -1 $-1 $80 $140 $100 $136 reversed $113 $-1 #
+loop $-1 -1 -1 $-1 $-1 $140 $155 T 1 -1 -2 1 1 2 unknown #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $81 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 24 #
+vertex $156 -1 -1 $-1 $104 $157 #
+vertex $158 -1 -1 $-1 $136 $159 #
+straight-curve $-1 -1 -1 $-1 1 1 0 0 0 -1 I I #
+face $160 -1 -1 $-1 $155 $82 $13 $-1 $24 reversed single T -0.5 1 0.5 0.5 1 1.5 F #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $84 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 31 #
+point $-1 -1 -1 $-1 0.5 1 1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $87 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 32 #
+vertex $161 -1 -1 $-1 $87 $162 #
+ellipse-curve $-1 -1 -1 $-1 0 1 1 0 -1 6.1232339957367648e-17 0.5 0 0 1 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $89 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 30 #
+point $-1 -1 -1 $-1 0.5 2 1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $92 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 34 #
+vertex $163 -1 -1 $-1 $92 $164 #
+ellipse-curve $-1 -1 -1 $-1 0 1 -1 0 -1 6.1232339957367648e-17 0.5 0 0 1 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $94 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 32 #
+point $-1 -1 -1 $-1 0.5 2 -1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $97 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 10 #
+loop $-1 -1 -1 $-1 $-1 $146 $97 T -1 -1 -2 -1 1 2 unknown #
+plane-surface $-1 -1 -1 $-1 -1 0 0 1 0 0 0 0 -1 forward_v I I I I #
+coedge $-1 -1 -1 $-1 $165 $138 $166 $167 forward $98 $-1 #
+coedge $-1 -1 -1 $-1 $148 $100 $165 $168 forward $73 $-1 #
+edge $169 -1 -1 $-1 $116 -1 $170 1 $112 $171 forward @7 unknown T 1 -1 -2 1 1 -2 #
+coedge $-1 -1 -1 $-1 $102 $101 $172 $173 forward $52 $-1 #
+coedge $-1 -1 -1 $-1 $134 $174 $102 $139 reversed $98 $-1 #
+edge $175 -1 -1 $-1 $176 -1 $142 1 $138 $177 forward @7 unknown T -1 -1 2 1 -1 2 #
+coedge $-1 -1 -1 $-1 $112 $103 $174 $178 forward $113 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $104 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 13 #
+vertex $179 -1 -1 $-1 $104 $180 #
+straight-curve $-1 -1 -1 $-1 1 0 2 0 1 0 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $106 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 33 #
+point $-1 -1 -1 $-1 0.5 1 -1 #
+coedge $-1 -1 -1 $-1 $181 $172 $108 $147 forward $132 $-1 #
+edge $182 -1 -1 $-1 $153 -2 $150 2 $108 $183 forward @7 unknown T -1 1 -2 -1 1 2 #
+coedge $-1 -1 -1 $-1 $109 $135 $181 $184 forward $73 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $110 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 20 #
+vertex $185 -1 -1 $-1 $110 $186 #
+straight-curve $-1 -1 -1 $-1 0 1 -2 1 0 0 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $111 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
+vertex $187 -1 -1 $-1 $111 $188 #
+straight-curve $-1 -1 -1 $-1 0 1 2 -1 0 0 I I #
+face $189 -1 -1 $-1 $-1 $113 $13 $-1 $190 reversed single T 1 -1 -2 1 1 2 F #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $115 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 10 #
+point $-1 -1 -1 $-1 1 1 2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $116 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 13 #
+point $-1 -1 -1 $-1 1 1 -2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $118 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $122 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 31 #
+point $-1 -1 -1 $-1 0.5 1 1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $127 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 33 #
+point $-1 -1 -1 $-1 0.5 1 -1 #
+coedge $-1 -1 -1 $-1 $174 $134 $135 $168 reversed $98 $-1 #
+coedge $-1 -1 -1 $-1 $172 $181 $134 $167 reversed $132 $-1 #
+edge $191 -1 -1 $-1 $176 -2 $192 2 $166 $193 forward @7 unknown T -1 -1 -2 -1 -1 2 #
+edge $194 -1 -1 $-1 $170 -1 $192 1 $165 $195 forward @7 unknown T -1 -1 -2 1 -1 -2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $136 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 17 #
+vertex $196 -1 -1 $-1 $178 $197 #
+straight-curve $-1 -1 -1 $-1 1 0 -2 0 -1 0 I I #
+coedge $-1 -1 -1 $-1 $146 $166 $137 $173 reversed $132 $-1 #
+edge $198 -1 -1 $-1 $153 -1 $176 1 $172 $199 forward @7 unknown T -1 -1 2 -1 1 2 #
+coedge $-1 -1 -1 $-1 $138 $165 $140 $178 reversed $98 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $139 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 16 #
+vertex $200 -1 -1 $-1 $173 $201 #
+straight-curve $-1 -1 -1 $-1 0 -1 2 1 0 0 I I #
+edge $202 -1 -1 $-1 $142 -2 $170 2 $140 $203 forward @7 unknown T 1 -1 -2 1 -1 2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $142 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 9 #
+point $-1 -1 -1 $-1 1 -1 2 #
+coedge $-1 -1 -1 $-1 $166 $146 $148 $184 reversed $132 $-1 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $147 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 23 #
+straight-curve $-1 -1 -1 $-1 -1 1 0 0 0 -1 I I #
+edge $204 -1 -1 $-1 $192 -1 $150 1 $181 $205 forward @7 unknown T -1 -1 -2 -1 1 -2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $150 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 16 #
+point $-1 -1 -1 $-1 -1 1 -2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $153 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 11 #
+point $-1 -1 -1 $-1 -1 1 2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $155 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 12 #
+plane-surface $-1 -1 -1 $-1 1 0 0 -1 0 0 0 0 1 forward_v I I I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $167 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 21 #
+vertex $206 -1 -1 $-1 $184 $207 #
+straight-curve $-1 -1 -1 $-1 -1 -1 0 0 0 -1 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $168 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 18 #
+straight-curve $-1 -1 -1 $-1 0 -1 -2 -1 0 0 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $170 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
+point $-1 -1 -1 $-1 1 -1 -2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $173 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
+straight-curve $-1 -1 -1 $-1 -1 0 2 0 -1 0 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $176 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 12 #
+point $-1 -1 -1 $-1 -1 -1 2 #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $178 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 22 #
+straight-curve $-1 -1 -1 $-1 1 -1 0 0 0 -1 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $184 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 19 #
+straight-curve $-1 -1 -1 $-1 -1 0 -2 0 1 0 I I #
+integer_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $192 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 15 #
+point $-1 -1 -1 $-1 -1 -1 -2 #
+End-of-ACIS-data 

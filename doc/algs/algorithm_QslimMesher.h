@@ -1,5 +1,5 @@
 /*!
- \page algorithm_QslimMesher QslimMesher
+ \page algorithm_qslimmesher QslimMesher
 
 <b>Name:</b> QslimMesher
 

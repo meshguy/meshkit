@@ -1,5 +1,5 @@
 /*!
- \page algorithm_CopyMesh CopyMesh
+ \page algorithm_copymesh CopyMesh
 
 <b>Name:</b> CopyMesh
 

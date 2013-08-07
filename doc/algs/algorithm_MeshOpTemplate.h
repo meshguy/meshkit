@@ -1,5 +1,5 @@
 /*!
- \page algorithm_MeshOpTemplate MeshOpTemplate
+ \page algorithm_meshoptemplate MeshOpTemplate
 
 <b>Name:</b> MeshOpTemplate
 

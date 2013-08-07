@@ -1,5 +1,5 @@
 /*!
- \page algorithm_ExtrudeMesh ExtrudeMesh
+ \page algorithm_extrudemesh ExtrudeMesh
 
 <b>Name:</b> ExtrudeMesh
 

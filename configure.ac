@@ -739,6 +739,7 @@ fi
 
 if test "x$HAVE_NETGEN" = "xyes"; then
   AC_MSG_RESULT([Netgen is found.])
+  DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/netgen test/extern/netgen"
 elif test "x$NETGEN_VAL" != "xno"; then
   AC_MSG_ERROR([Netgen not found or not usable.])
 fi
@@ -995,6 +996,7 @@ if test "x$WITH_MESQUITE" != "xno"; then
     if test "x" != "x$WITH_MESQUITE"; then
       AC_MSG_ERROR([Mesquite not found or not usable])
     fi
+  else
     DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/mesquite test/extern/mesquite"
   fi
 

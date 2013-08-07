@@ -1,5 +1,5 @@
 /*!
- \page algorithm_CAMALTetMesher CAMAL Tet mesher
+ \page algorithm_camaltetmesher CAMAL Tet mesher
 
 <b>Name:</b> CAMALTetMesher
 

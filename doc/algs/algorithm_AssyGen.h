@@ -1,5 +1,5 @@
 /*!
- \page algorithm_AssyGen Assembly Geometry and Mesh Script Generator
+ \page algorithm_assygen Assembly Geometry and Mesh Script Generator
 
 <b>Name:</b> %AssyGen
 

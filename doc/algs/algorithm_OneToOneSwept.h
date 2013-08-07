@@ -1,5 +1,5 @@
 /*!
- \page algorithm_OneToOneSwept One To One Sweeper
+ \page algorithm_onetooneswept One To One Sweeper
 
 <b>Name:</b> OneToOneSwept
 

@@ -1,5 +1,5 @@
 /*!
- \page algorithm_CopyGeom CopyGeom
+ \page algorithm_copygeom CopyGeom
 
 <b>Name:</b> CopyGeom
 

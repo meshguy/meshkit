@@ -1,5 +1,5 @@
 /*!
- \page algorithm_EBMesh Embedded Boundary Mesher
+ \page algorithm_ebmesh Embedded Boundary Mesher
 
 <b>Name:</b> EBMesh
 

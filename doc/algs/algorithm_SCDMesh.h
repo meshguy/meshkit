@@ -1,5 +1,5 @@
 /*!
- \page algorithm_SCDMesh Structured Block Mesher
+ \page algorithm_scdmesh Structured Block Mesher
 
 <b>Name:</b> SCDMesh
 

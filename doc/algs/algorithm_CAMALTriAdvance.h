@@ -1,5 +1,5 @@
 /*!
- \page algorithm_CAMALTriAdvance CAMAL TriAdvance advancing front mesher
+ \page algorithm_camaltriadvance CAMAL TriAdvance advancing front mesher
 
 <b>Name:</b> CAMALTriAdvance
 

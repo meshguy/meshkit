@@ -1,4 +1,4 @@
-/*!\page algorithm_MesquiteOpt MesquiteOpt
+/*!\page algorithm_mesquiteopt MesquiteOpt
 
 <b>Name:</b> MesquiteOpt
 

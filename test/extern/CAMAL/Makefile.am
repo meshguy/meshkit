@@ -26,34 +26,34 @@ endif
 
 # Tests and such
 if HAVE_CAMAL_TRIADV
-test_triadvance_SOURCES = test_triadvance.cpp
-test_triadvance_DEPENDENCIES = \
+test_camaltriadvance_SOURCES = test_camaltriadvance.cpp
+test_camaltriadvance_DEPENDENCIES = \
 	$(LDADD)
-TESTS += test_triadvance
+TESTS += test_camaltriadvance
 endif
 
 if HAVE_CAMAL_PAVER
-test_paver_SOURCES = test_paver.cpp
-test_paver_DEPENDENCIES = \
+test_camalpaver_SOURCES = test_camalpaver.cpp
+test_camalpaver_DEPENDENCIES = \
 	$(LDADD)
-TESTS += test_paver
+TESTS += test_camalpaver
 if HAVE_FBIGEOM
-test_mbgeom_SOURCES = test_mbgeom.cpp
-test_mbgeom_DEPENDENCIES = $(LDADD)
-test_mbgeomvar_SOURCES = test_mbgeomvar.cpp
-test_mbgeomvar_DEPENDENCIES = $(LDADD)
-test_mb2_SOURCES= test_mb2.cpp
-test_mb2_DEPENDENCIES = $(LDADD)
-TESTS += test_mbgeom test_mbgeomvar test_mb2
-# test_mb2 is broken for the time being
+test_camalmbgeom_SOURCES = test_camalmbgeom.cpp
+test_camalmbgeom_DEPENDENCIES = $(LDADD)
+test_camalmbgeomvar_SOURCES = test_camalmbgeomvar.cpp
+test_camalmbgeomvar_DEPENDENCIES = $(LDADD)
+test_camalmb2_SOURCES= test_camalmb2.cpp
+test_camalmb2_DEPENDENCIES = $(LDADD)
+TESTS += test_camalmbgeom test_camalmbgeomvar test_camalmb2
+# test_camalmb2 is broken for the time being
 endif
 endif
 
 if HAVE_CAMAL_TET
-test_tetmesher_SOURCES = test_tetmesher.cpp
-test_tetmesher_DEPENDENCIES = \
+test_camaltetmesher_SOURCES = test_camaltetmesher.cpp
+test_camaltetmesher_DEPENDENCIES = \
 	$(LDADD)
-TESTS += test_tetmesher
+TESTS += test_camaltetmesher
 endif
 
 # Utility target: build but don't run tests

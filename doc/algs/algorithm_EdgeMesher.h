@@ -1,5 +1,5 @@
 /*!
- \page algorithm_EdgeMesher EdgeMesher
+ \page algorithm_edgemesher EdgeMesher
 
 <b>Name:</b> EdgeMesher
 

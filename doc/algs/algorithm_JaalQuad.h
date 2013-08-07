@@ -1,5 +1,5 @@
 /*!
- \page algorithm_JaalQuad Jaal Quad Mesher
+ \page algorithm_jaalquad Jaal Quad Mesher
 
 <b>Name:</b> QuadMesher
 

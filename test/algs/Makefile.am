@@ -26,7 +26,7 @@ TESTS = test_edgemesh \
         test_copygeom \
         test_meshoptemplate \
         test_extrudemesh \
-        test_qslim \
+        test_qslimmesher \
         test_ebmesh \
         test_assygen \
         test_TriangleMesher \
@@ -67,7 +67,7 @@ test_copymesh_SOURCES = test_copymesh.cpp
 test_copygeom_SOURCES = test_copygeom.cpp
 test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
-test_qslim_SOURCES = test_qslim.cpp
+test_qslimmesher_SOURCES = test_qslimmesher.cpp
 test_jaalquad_SOURCES = test_jaalquad.cpp
 test_assygen_SOURCES = test_assygen.cpp
 test_postbl_SOURCES = test_postbl.cpp

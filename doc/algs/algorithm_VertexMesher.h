@@ -1,5 +1,5 @@
 /*!
- \page algorithm_VertexMesher VertexMesher
+ \page algorithm_vertexmesher VertexMesher
 
 <b>Name:</b> VertexMesher
 

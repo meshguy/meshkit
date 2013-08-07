@@ -1,5 +1,5 @@
 /*!
- \page algorithm_MergeMesh MergeMesh
+ \page algorithm_mergemesh MergeMesh
 
 <b>Name:</b> MergeMesh
 

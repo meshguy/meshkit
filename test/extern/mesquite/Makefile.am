@@ -15,10 +15,10 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils \
                $(MESQUITE_DEFINES) \
                $(MESQUITE_CPPFLAGS)
-TESTS = test_mesquite
+TESTS = test_mesquiteopt
 check_PROGRAMS = $(TESTS)
-test_mesquite_SOURCES = test_mesquite.cpp
-test_mesquite_LDADD = ../../../src/libMeshKit.la
+test_mesquiteopt_SOURCES = test_mesquiteopt.cpp
+test_mesquiteopt_LDADD = ../../../src/libMeshKit.la
 
 MOSTLYCLEANFILES = 
 

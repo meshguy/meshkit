@@ -1,5 +1,5 @@
 /*!
- \page algorithm_NGTetMesher Netgen Tet mesher
+ \page algorithm_ngtetmesher Netgen Tet mesher
 
 <b>Name:</b> NGTetMesher
 
