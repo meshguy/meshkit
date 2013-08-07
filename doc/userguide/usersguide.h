@@ -8,8 +8,8 @@
   - \ref graphexamples
 - \subpage interfaces
 - \subpage api
-- <a href="../MeshKitAlgorithms.html"> MeshKit Algorithms</a>
 - \subpage meshkitalgorithms
+- <a href="examples.html"><b>Examples</a>
 
 
 */
