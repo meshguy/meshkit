@@ -18,7 +18,7 @@ bool save_mesh = true;
 
 void threeholecube_test();
 void simpletet_test();
-void mesh_test(std::string filebase);
+void mesh_test(std::string filebase, double size);
 
 #ifdef HAVE_ACIS
 std::string extension = ".sat";
@@ -36,22 +36,22 @@ int main(int argc, char **argv)
   if (argc == 2) save_mesh = true;
   
   num_fail += RUN_TEST(simpletet_test);
-  //  num_fail += RUN_TEST(threeholecube_test);
+  num_fail += RUN_TEST(threeholecube_test);
   
   return num_fail;
 }
 
 void simpletet_test() 
 {
-  mesh_test("simpletet");
+  mesh_test("simpletet", 0.25);
 }
 
 void threeholecube_test() 
 {
-  mesh_test("threeholecube");
+  mesh_test("threeholecube", 0.1);
 }
 
-void mesh_test(std::string filebase)
+void mesh_test(std::string filebase, double size)
 {
   std::string file_name = TestDir + "/" + filebase + extension;
   mk->load_geometry(file_name.c_str());
@@ -63,7 +63,7 @@ void mesh_test(std::string filebase)
   NGTetMesher *tm = (NGTetMesher*) mk->construct_meshop("NGTetMesher", vols);
 
     // make a sizing function and set it on the surface
-  SizingFunction esize(mk, -1, 0.25);
+  SizingFunction esize(mk, -1, size);
   vols[0]->sizing_function_index(esize.core_index());
   
     // mesh the surface, by calling execute
