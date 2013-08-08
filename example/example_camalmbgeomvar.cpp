@@ -1,26 +1,27 @@
 /*!
-\example mb2.cpp
+\example example_camalmbgeomvar.cpp
 
-\section mb2_cpp_title <pretty-name-of-this-file>
+\section mbgeomvar_cpp_title <pretty-name-of-this-file>
 
-\subsection mb2_cpp_in Input
-\image html mb2.in.jpg
+\subsection mbgeomvar_cpp_in Input
+\image html mbgeomvar.in.jpg
 There is no input.
 
-\subsection mb2_cpp_out Output
-\image html mb2.out.jpg
+\subsection mbgeomvar_cpp_out Output
+\image html mbgeomvar.out.jpg
 
-\subsection mb2_cpp_inf Misc. Information
+\subsection mbgeomvar_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection mb2_cpp_src Source Code
+\subsection mbgeomvar_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/SizingFunction.hpp"
+#include "meshkit/FBiGeom.hpp"
+#include "meshkit/SizingFunctionVar.hpp"
 #include "meshkit/ModelEnt.hpp"
 
 using namespace MeshKit;
@@ -31,10 +32,12 @@ bool quadMesh = true;
 double mesh_size = 0.3;
 std::string file_name; //="shell.h5m";
 std::string output_file; //="output.h5m";
+double fixedPoint[3] = {0., 0., 0.};
+double a=0.1, b=0.1, c=0.1; // so size will vary from 0.3 to about 0.6, for the default model
 
 
 
-void meshFB2();
+void meshFBvar();
 
 int main(int argc, char **argv)
 {
@@ -45,12 +48,13 @@ int main(int argc, char **argv)
 
   file_name = TestDir + "/" + "shell.h5m";// default test file
   output_file = "output.h5m";
-
   if (argc < 5) {
     {
-      std::cout << "Usage : filename  output  < q, t >  <mesh_size> \n";
-      std::cout << "use default options: " << file_name << " " << output_file <<
-          (quadMesh ? " q " : " t " ) << mesh_size << "\n";
+      std::cout << "Usage : filename outfile < q, t >  <mesh_size>  x0  y0  z0  a  b  c \n";
+      std::cout <<  " mesh size is variable with formula: \n size(x, y, z) = mesh_size+a(x-x0)+b(y-y0)+c(z-z0)\n";
+      std::cout << "use default options: " << file_name << " " << output_file << " "<<
+          (quadMesh ? "q " : "t " ) << mesh_size ;
+      std::cout << " 0. 0. 0. 0.1 0.1 0.1 \n";
     }
   }
   else
@@ -61,24 +65,50 @@ int main(int argc, char **argv)
       quadMesh = false;
     mesh_size = atof(argv[4]);
     save_mesh = true;
+    // give some linear coefficients to the var size case
+    if (argc==11)
+    {
+      fixedPoint[0] = atof(argv[5]);
+      fixedPoint[1] = atof(argv[6]);
+      fixedPoint[2] = atof(argv[7]);
+      a = atof(argv[8]);
+      b = atof(argv[9]);
+      c = atof(argv[10]);
+    }
+    else
+    {
+      std::cout<<" wrong number of arguments: argc=" << argc << "\n";
+      return 1; // fail;
+    }
+
   }
 
   int num_fail = 0;
-  meshFB2();
+  meshFBvar();
 
   return num_fail;
 }
-void meshFB2()
+
+void meshFBvar()
 {
   mk = new MKCore;
+  FBiGeom * fbiGeom = new FBiGeom(); // true for smooth, false for linear
+  unsigned int ix = mk->add_igeom_instance(fbiGeom);
 
-  mk->load_mesh(file_name.c_str(), NULL, 0, 0, 0, false, false);
-  int indx=  mk->initialize_mesh_based_geometry(0);
+  // this will do the reading of the moab db in memory
+
+  //this also will do heavy stuff, like smoothing
+  // we do not want to do it in the constructor
+  // this should also populate ModelEnts in MKCore
+  std::string opts( "SMOOTH;");
+  mk->load_geometry(file_name.c_str(), opts.c_str(), ix, 0, -1, false, true);
+  /*fbiGeom->load(file_name.c_str(), opts.c_str());
+  mk->populate_model_ents(ix, 0, -1, true);*/
 
   moab::Range tris;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(
-      (moab::EntityHandle)0 , 2,
-      tris);
+      (moab::EntityHandle)fbiGeom->getRootSet() , 2,
+      tris, /*recursive*/ true);
 
   int nbInitial = tris.size();
   tris.clear();
@@ -97,17 +127,17 @@ void meshFB2()
     mk->construct_meshop("CAMALTriAdvance", surfs);
 
 
+
   // size the mesh
-  SizingFunction *sf = new SizingFunction(mk, -1, mesh_size);
+  SizingFunctionVar *sf = new SizingFunctionVar(mk, -1, mesh_size);
   for (unsigned int i = 0; i < surfs.size(); i++)
     surfs[i]->sizing_function_index(sf->core_index());
 
+  double coeff[4] = {a, b, c, mesh_size};
+  sf->set_linear_coeff(fixedPoint, coeff);
+
   // now mesh them
   mk->setup_and_execute();
-
-  std::cout<<" after execute:\n";
-  // just for debugging
-  mk->print_graph();
 
   // report the number of triangles generated
   // put it in a new set in moab
@@ -117,7 +147,8 @@ void meshFB2()
   std::string elem =(quadMesh? " quads ": " triangles");
   std::cout << tris.size() - nbInitial << elem << " generated." << std::endl;
 
-  mk->remove_mesh_based_geometry(indx);
+  delete fbiGeom;// this will trigger also deletion of FBEngine tags, etc
+
   if (save_mesh) {
     // output mesh for surfaces (implicitly for edges too, as edges are children of surface sets)
     mk->save_mesh_from_model_ents(output_file.c_str(), surfs);

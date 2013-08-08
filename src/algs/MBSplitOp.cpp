@@ -1,5 +1,5 @@
 /*
- * MBSplitOp.cpp
+ * \file MBSplitOp.cpp
  *
  *  Created on: Oct 2, 2011
  *      Author: iulian

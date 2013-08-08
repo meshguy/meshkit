@@ -1,26 +1,25 @@
 /*!
-\example mbgeom.cpp
+\example example_camalmb2.cpp
 
-\section mbgeom_cpp_title <pretty-name-of-this-file>
+\section mb2_cpp_title <pretty-name-of-this-file>
 
-\subsection mbgeom_cpp_in Input
-\image html mbgeom.in.jpg
+\subsection mb2_cpp_in Input
+\image html mb2.in.jpg
 There is no input.
 
-\subsection mbgeom_cpp_out Output
-\image html mbgeom.out.jpg
+\subsection mb2_cpp_out Output
+\image html mb2.out.jpg
 
-\subsection mbgeom_cpp_inf Misc. Information
+\subsection mb2_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection mbgeom_cpp_src Source Code
+\subsection mb2_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/FBiGeom.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/ModelEnt.hpp"
 
@@ -35,7 +34,7 @@ std::string output_file; //="output.h5m";
 
 
 
-void meshFB();
+void meshFB2();
 
 int main(int argc, char **argv)
 {
@@ -46,9 +45,10 @@ int main(int argc, char **argv)
 
   file_name = TestDir + "/" + "shell.h5m";// default test file
   output_file = "output.h5m";
-  if (argc < 4) {
+
+  if (argc < 5) {
     {
-      std::cout << "Usage : filename < q, t >  <mesh_size> \n";
+      std::cout << "Usage : filename  output  < q, t >  <mesh_size> \n";
       std::cout << "use default options: " << file_name << " " << output_file <<
           (quadMesh ? " q " : " t " ) << mesh_size << "\n";
     }
@@ -64,32 +64,21 @@ int main(int argc, char **argv)
   }
 
   int num_fail = 0;
-  meshFB();
+  meshFB2();
 
   return num_fail;
 }
-void meshFB()
+void meshFB2()
 {
   mk = new MKCore;
-  // just for debugging
-  FBiGeom * fbiGeom = new FBiGeom(); // true for smooth, false for linear
-  unsigned int ix = mk->add_igeom_instance(fbiGeom);
 
-  // this will do the reading of the moab db in memory
-
-  //this also will do heavy stuff, like smoothing
-  // we do not want to do it in the constructor
-  // this should also populate ModelEnts in MKCore
-  std::string opts( "SMOOTH;");
-  mk->load_geometry(file_name.c_str(), opts.c_str(), ix, 0, -1, false, true);
-  /*fbiGeom->load(file_name.c_str(), opts.c_str());
-
-  mk->populate_model_ents(ix, 0, -1, true);*/
+  mk->load_mesh(file_name.c_str(), NULL, 0, 0, 0, false, false);
+  int indx=  mk->initialize_mesh_based_geometry(0);
 
   moab::Range tris;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(
-      (moab::EntityHandle)fbiGeom->getRootSet() , 2,
-      tris, /*recursive*/ true);
+      (moab::EntityHandle)0 , 2,
+      tris);
 
   int nbInitial = tris.size();
   tris.clear();
@@ -107,9 +96,6 @@ void meshFB()
   else
     mk->construct_meshop("CAMALTriAdvance", surfs);
 
-
-  // just for debugging
-  mk->print_graph();
 
   // size the mesh
   SizingFunction *sf = new SizingFunction(mk, -1, mesh_size);
@@ -131,8 +117,7 @@ void meshFB()
   std::string elem =(quadMesh? " quads ": " triangles");
   std::cout << tris.size() - nbInitial << elem << " generated." << std::endl;
 
-  delete fbiGeom;// this will trigger also deletion of FBEngine tags, etc
-
+  mk->remove_mesh_based_geometry(indx);
   if (save_mesh) {
     // output mesh for surfaces (implicitly for edges too, as edges are children of surface sets)
     mk->save_mesh_from_model_ents(output_file.c_str(), surfs);

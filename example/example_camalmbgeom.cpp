@@ -1,27 +1,27 @@
 /*!
-\example mbgeomvar.cpp
+\example example_camalmbgeom.cpp
 
-\section mbgeomvar_cpp_title <pretty-name-of-this-file>
+\section mbgeom_cpp_title <pretty-name-of-this-file>
 
-\subsection mbgeomvar_cpp_in Input
-\image html mbgeomvar.in.jpg
+\subsection mbgeom_cpp_in Input
+\image html mbgeom.in.jpg
 There is no input.
 
-\subsection mbgeomvar_cpp_out Output
-\image html mbgeomvar.out.jpg
+\subsection mbgeom_cpp_out Output
+\image html mbgeom.out.jpg
 
-\subsection mbgeomvar_cpp_inf Misc. Information
+\subsection mbgeom_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection mbgeomvar_cpp_src Source Code
+\subsection mbgeom_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/FBiGeom.hpp"
-#include "meshkit/SizingFunctionVar.hpp"
+#include "meshkit/SizingFunction.hpp"
 #include "meshkit/ModelEnt.hpp"
 
 using namespace MeshKit;
@@ -32,12 +32,10 @@ bool quadMesh = true;
 double mesh_size = 0.3;
 std::string file_name; //="shell.h5m";
 std::string output_file; //="output.h5m";
-double fixedPoint[3] = {0., 0., 0.};
-double a=0.1, b=0.1, c=0.1; // so size will vary from 0.3 to about 0.6, for the default model
 
 
 
-void meshFBvar();
+void meshFB();
 
 int main(int argc, char **argv)
 {
@@ -48,13 +46,11 @@ int main(int argc, char **argv)
 
   file_name = TestDir + "/" + "shell.h5m";// default test file
   output_file = "output.h5m";
-  if (argc < 5) {
+  if (argc < 4) {
     {
-      std::cout << "Usage : filename outfile < q, t >  <mesh_size>  x0  y0  z0  a  b  c \n";
-      std::cout <<  " mesh size is variable with formula: \n size(x, y, z) = mesh_size+a(x-x0)+b(y-y0)+c(z-z0)\n";
-      std::cout << "use default options: " << file_name << " " << output_file << " "<<
-          (quadMesh ? "q " : "t " ) << mesh_size ;
-      std::cout << " 0. 0. 0. 0.1 0.1 0.1 \n";
+      std::cout << "Usage : filename < q, t >  <mesh_size> \n";
+      std::cout << "use default options: " << file_name << " " << output_file <<
+          (quadMesh ? " q " : " t " ) << mesh_size << "\n";
     }
   }
   else
@@ -65,33 +61,17 @@ int main(int argc, char **argv)
       quadMesh = false;
     mesh_size = atof(argv[4]);
     save_mesh = true;
-    // give some linear coefficients to the var size case
-    if (argc==11)
-    {
-      fixedPoint[0] = atof(argv[5]);
-      fixedPoint[1] = atof(argv[6]);
-      fixedPoint[2] = atof(argv[7]);
-      a = atof(argv[8]);
-      b = atof(argv[9]);
-      c = atof(argv[10]);
-    }
-    else
-    {
-      std::cout<<" wrong number of arguments: argc=" << argc << "\n";
-      return 1; // fail;
-    }
-
   }
 
   int num_fail = 0;
-  meshFBvar();
+  meshFB();
 
   return num_fail;
 }
-
-void meshFBvar()
+void meshFB()
 {
   mk = new MKCore;
+  // just for debugging
   FBiGeom * fbiGeom = new FBiGeom(); // true for smooth, false for linear
   unsigned int ix = mk->add_igeom_instance(fbiGeom);
 
@@ -103,6 +83,7 @@ void meshFBvar()
   std::string opts( "SMOOTH;");
   mk->load_geometry(file_name.c_str(), opts.c_str(), ix, 0, -1, false, true);
   /*fbiGeom->load(file_name.c_str(), opts.c_str());
+
   mk->populate_model_ents(ix, 0, -1, true);*/
 
   moab::Range tris;
@@ -127,17 +108,20 @@ void meshFBvar()
     mk->construct_meshop("CAMALTriAdvance", surfs);
 
 
+  // just for debugging
+  mk->print_graph();
 
   // size the mesh
-  SizingFunctionVar *sf = new SizingFunctionVar(mk, -1, mesh_size);
+  SizingFunction *sf = new SizingFunction(mk, -1, mesh_size);
   for (unsigned int i = 0; i < surfs.size(); i++)
     surfs[i]->sizing_function_index(sf->core_index());
 
-  double coeff[4] = {a, b, c, mesh_size};
-  sf->set_linear_coeff(fixedPoint, coeff);
-
   // now mesh them
   mk->setup_and_execute();
+
+  std::cout<<" after execute:\n";
+  // just for debugging
+  mk->print_graph();
 
   // report the number of triangles generated
   // put it in a new set in moab

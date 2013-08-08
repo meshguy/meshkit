@@ -1,5 +1,5 @@
 /*!
-\example mbsplitop.cpp
+\example example_mbsplitop.cpp
 
 \section MBSplitOp_cpp_title <pretty-name-of-this-file>
 

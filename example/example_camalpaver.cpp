@@ -1,5 +1,5 @@
 /*!
-\example paver.cpp
+\example example_camalpaver.cpp
 
 \section paver_cpp_title <pretty-name-of-this-file>
 
