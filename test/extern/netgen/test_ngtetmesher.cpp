@@ -36,7 +36,7 @@ int main(int argc, char **argv)
   if (argc == 2) save_mesh = true;
   
   num_fail += RUN_TEST(simpletet_test);
-  num_fail += RUN_TEST(threeholecube_test);
+  //  num_fail += RUN_TEST(threeholecube_test);
   
   return num_fail;
 }
