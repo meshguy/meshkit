@@ -14,7 +14,7 @@ using namespace MeshKit;
 #include "TestUtil.hpp"
 
 MKCore *mk = NULL;
-bool save_mesh = false;
+bool save_mesh = true;
 
 void threeholecube_test();
 void simpletet_test();
@@ -34,8 +34,11 @@ int main(int argc, char **argv)
   int num_fail = 0;
   
   if (argc == 2) save_mesh = true;
-  
+  // Test 1
   num_fail += RUN_TEST(simpletet_test);
+  // delete all for running next test case
+  mk->delete_all();
+  // Test 2
   num_fail += RUN_TEST(threeholecube_test);
 
   return num_fail;
@@ -63,7 +66,7 @@ void mesh_test(std::string filebase, double size)
   mk->construct_meshop("CAMALTetMesher", vols);
 
     // make a sizing function and set it on the surface
-  SizingFunction esize(mk, -1, 0.05);
+  SizingFunction esize(mk, -1, size);
   vols[0]->sizing_function_index(esize.core_index());
   
     // mesh the surface, by calling execute

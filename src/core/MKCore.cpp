@@ -674,6 +674,15 @@ void MKCore::delete_model_entities()
   }
 }
 
+void MKCore::delete_all()
+{
+  // clear mk, geometry and mesh
+  clear_graph();
+  delete_model_entities();
+  moab_instance()->delete_mesh();
+  igeom_instance()->deleteAll();
+}
+
 void MKCore::create_mbg_model_entities(moab::EntityHandle modelRootSet, bool geometry)
 {
   if (geometry)

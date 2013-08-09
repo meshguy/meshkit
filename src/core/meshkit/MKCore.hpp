@@ -467,6 +467,13 @@ public:
        * more careful with the lifecycles.
        */
   void delete_model_entities();
+  /** \brief delete all
+   *
+   * This function clears memory occupied by model entities,
+   * deletes graph,
+   * deletes mesh and geometry
+   */
+  void delete_all();
     /**@}*/
 
 private:
