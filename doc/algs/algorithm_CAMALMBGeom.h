@@ -1,7 +1,7 @@
 /*!
- \page algorithm_camalmbgeomvar mbgeomvar
+ \page algorithm_camalmbgeom CAMAL MBGeom
 
-<b>Name:</b> mbgeomvar
+<b>Name:</b> mbgeom
 
 <b>External dependencies:</b> (none)
 

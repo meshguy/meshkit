@@ -1,7 +1,7 @@
 /*!
- \page algorithm_edgemesh edgemesh
+ \page algorithm_mbgeomop MBGeomOp
 
-<b>Name:</b> edgemesh
+<b>Name:</b> mbgeomop
 
 <b>External dependencies:</b> (none)
 

@@ -1,4 +1,4 @@
-/*!
+/*! 
 \example example_Basic.cpp
 
 \section example_Basic_cpp_title Basic Example

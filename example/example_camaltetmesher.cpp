@@ -1,5 +1,5 @@
 /*!
-\example camaltetmesher.cpp
+\example example_camaltetmesher.cpp
 
 \section camaltetmesher_cpp_title <pretty-name-of-this-file>
 

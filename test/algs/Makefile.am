@@ -18,7 +18,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
 
 BROKEN_TESTS = test_jaalquad test_assygen
 
-TESTS = test_edgemesh \
+TESTS = test_edgemesher \
         test_tfimapping \
         test_onetooneswept \
         test_scdmesh \
@@ -29,17 +29,17 @@ TESTS = test_edgemesh \
         test_qslimmesher \
         test_ebmesh \
         test_assygen \
-        test_TriangleMesher \
+        test_trianglemesher \
         test_postbl
 if HAVE_FBIGEOM
 TESTS += \
         test_fbgeom \
-        test_MBGeomOp \
-        test_MBSplitOp \
-        test_MBVolOp
+        test_mbgeomop \
+        test_mbsplitop \
+        test_mbvolop
 # some of these tests require CAMAL and FBiGeom, too
 if HAVE_CAMAL_PAVER
-TESTS += test_SetPnt2Quad test_volIce
+TESTS += test_setpnt2quad test_volice
 endif
 endif
 
@@ -58,7 +58,7 @@ endif
 # Tests and such
 
 test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
-test_edgemesh_SOURCES = test_edgemesh.cpp
+test_edgemesher_SOURCES = test_edgemesher.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
 test_ebmesh_SOURCES = test_ebmesh.cpp
@@ -71,14 +71,14 @@ test_qslimmesher_SOURCES = test_qslimmesher.cpp
 test_jaalquad_SOURCES = test_jaalquad.cpp
 test_assygen_SOURCES = test_assygen.cpp
 test_postbl_SOURCES = test_postbl.cpp
-test_TriangleMesher_SOURCES = test_TriangleMesher.cpp
+test_trianglemesher_SOURCES = test_trianglemesher.cpp
 if HAVE_FBIGEOM
 test_fbgeom_SOURCES = test_fbgeom.cpp
-test_MBGeomOp_SOURCES = test_MBGeomOp.cpp
-test_MBSplitOp_SOURCES = test_MBSplitOp.cpp
-test_SetPnt2Quad_SOURCES = test_SetPnt2Quad.cpp
-test_volIce_SOURCES = test_volIce.cpp
-test_MBVolOp_SOURCES = test_MBVolOp.cpp
+test_mbgeomop_SOURCES = test_mbgeomop.cpp
+test_mbsplitop_SOURCES = test_mbsplitop.cpp
+test_setpnt2quad_SOURCES = test_setpnt2quad.cpp
+test_volice_SOURCES = test_volice.cpp
+test_mbvolop_SOURCES = test_mbvolop.cpp
 endif
 if ENABLE_intassign
 test_intassign_SOURCES = test_intassign.cpp

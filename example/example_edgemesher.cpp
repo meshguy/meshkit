@@ -1,5 +1,5 @@
 /*!
-\example edgemesher.cpp
+\example example_edgemesher.cpp
 
 \section edgemesher_cpp_title <pretty-name-of-this-file>
 

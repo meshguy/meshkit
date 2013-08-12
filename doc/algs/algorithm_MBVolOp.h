@@ -1,5 +1,5 @@
 /*!
- \page algorithm_MBVolOp mbvolop
+ \page algorithm_mbvolop mbvolop
 
 <b>Name:</b> mbvolop
 

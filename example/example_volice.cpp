@@ -1,5 +1,5 @@
 /*!
-\example volice.cpp
+\example example_volice.cpp
 
 \section volIce_cpp_title <pretty-name-of-this-file>
 

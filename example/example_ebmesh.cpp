@@ -1,5 +1,5 @@
 /*!
-\example ebmesh.cpp
+\example example_ebmesh.cpp
 
 \section EBMesh_cpp_title <pretty-name-of-this-file>
 

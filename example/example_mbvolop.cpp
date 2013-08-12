@@ -1,5 +1,5 @@
 /*!
-\example mbvolop.cpp
+\example example_mbvolop.cpp
 
 \section MBVolOp_cpp_title <pretty-name-of-this-file>
 

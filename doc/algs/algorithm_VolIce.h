@@ -1,7 +1,7 @@
 /*!
- \page algorithm_MBGeomOp mbgeomop
+ \page algorithm_volice volIce
 
-<b>Name:</b> mbgeomop
+<b>Name:</b> volice
 
 <b>External dependencies:</b> (none)
 

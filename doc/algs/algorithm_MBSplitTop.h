@@ -1,7 +1,7 @@
 /*!
- \page algorithm_graph graph
+ \page algorithm_mbsplitop MBSplitOp
 
-<b>Name:</b> graph
+<b>Name:</b> mbsplitop
 
 <b>External dependencies:</b> (none)
 

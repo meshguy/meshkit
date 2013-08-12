@@ -1,7 +1,7 @@
 /*!
- \page algorithm_camalpaver paver
+ \page algorithm_trianglemesher trianglemesher
 
-<b>Name:</b> paver
+<b>Name:</b> trianglemesher
 
 <b>External dependencies:</b> (none)
 

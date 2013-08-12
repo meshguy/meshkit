@@ -22,7 +22,7 @@ MeshKit is a library for geometry-based 2d and 3d mesh generation.  This library
   - \ref interfaces
   - \ref api
   - \ref meshkitalgorithms
-  - <a href="examples.html"><b>Examples</a>
+  - <a href="examples.html"><b>Examples</b></a>
 
 - \subpage devguide
   - \ref styleguide

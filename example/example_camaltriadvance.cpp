@@ -1,5 +1,5 @@
 /*!
-\example camaltriadvance.cpp
+\example example_camaltriadvance.cpp
 
 \section camaltriadvance_cpp_title <pretty-name-of-this-file>
 

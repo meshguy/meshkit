@@ -1,5 +1,5 @@
 /*!
-\example mbgeomop.cpp
+\example example_mbgeomop.cpp
 
 \section MBGeomOp_cpp_title <pretty-name-of-this-file>
 

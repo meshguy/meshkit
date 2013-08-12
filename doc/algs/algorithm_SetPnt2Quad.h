@@ -1,7 +1,7 @@
 /*!
- \page algorithm_camalmbgeom mbgeom
+ \page algorithm_setpnt2quad SetPnt2Quad
 
-<b>Name:</b> mbgeom
+<b>Name:</b> setpnt2quah
 
 <b>External dependencies:</b> (none)
 

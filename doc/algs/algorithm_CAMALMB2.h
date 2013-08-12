@@ -1,7 +1,7 @@
 /*!
- \page algorithm_volIce volice
+ \page algorithm_camalmb2 CAMAL MB2
 
-<b>Name:</b> volice
+<b>Name:</b> mb2
 
 <b>External dependencies:</b> (none)
 
