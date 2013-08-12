@@ -84,7 +84,7 @@ Brief Info</td></tr>
 \subpage algorithm_vertexmesher                   \htmlonly </td> <td> \endhtmlonly
 (none)                                            \htmlonly </td> <td> \endhtmlonly
 (none)                                            \htmlonly </td> <td> \endhtmlonly
-<a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
+meshes vertices                                   \htmlonly </td> </tr>
 
 <tr bgcolor=white> <td colspan="4"> <big><b>  1D algorithms </b></big> </td> </tr>
 
@@ -92,7 +92,7 @@ Brief Info</td></tr>
 \subpage algorithm_edgemesher                     \htmlonly </td> <td> \endhtmlonly
 \ref example_edgemesher.cpp                       \htmlonly </td> <td> \endhtmlonly
 \ref test_edgemesher.cpp                          \htmlonly </td> <td> \endhtmlonly
-<a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
+meshes curves                                     \htmlonly </td> </tr>
 
 <tr bgcolor=white> <td colspan="4"> <big><b>  2D algorithms </b></big> </td> </tr>
 

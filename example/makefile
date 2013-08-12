@@ -9,7 +9,7 @@ include ${MESHKIT_DIR}/lib/meshkit.make
 # MESH_DIR is the top-level MESHKIT source directory, used to locate mesh files that come with MESHKIT source
 MESH_DIR="../data"
 
-EXAMPLES = assygen basic copygeom copymesh ebmesh edgemesh extrudemesh fbgeom graph intassign jaalquad mb2 mbgeom MBGeomOp mbgeomvar MBSplitOp MBVolOp meshoptemplate mesquite ngtetmesher onetooneswept parallelmesher paver postbl qslim scdmesh SetPnt2Quad tetmesher tfimapping triadvance TriangleMesher volIce
+EXAMPLES = example_assygen example_basic example_copygeom example_copymesh example_ebmesh example_edgemesher example_extrudemesh example_fbgeom example_graph example_intassign example_jaalquad example_mb2 example_mbgeom example_MBGeomOp example_mbgeomvar example_MBSplitOp example_MBVolOp example_meshoptemplate example_mesquite example_ngtetmesher example_onetooneswept example_parallelmesher example_paver example_postbl example_qslim example_scdmesh example_SetPnt2Quad example_tetmesher example_tfimapping example_triadvance example_TriangleMesher example_volIce
 
 all:: $(EXAMPLES)
 

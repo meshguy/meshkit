@@ -1,14 +1,13 @@
 /*!
-\example meshoptemplate.cpp
+\example example_meshoptemplate.cpp
 
 \section meshoptemplate_cpp_title <pretty-name-of-this-file>
 
 \subsection meshoptemplate_cpp_in Input
-\image html meshoptemplate.in.jpg
-There is no input.
+(none)
 
 \subsection meshoptemplate_cpp_out Output
-\image html meshoptemplate.out.jpg
+\image html meshoptemplate_out.jpg
 
 \subsection meshoptemplate_cpp_inf Misc. Information
 \author <your-name-here>
