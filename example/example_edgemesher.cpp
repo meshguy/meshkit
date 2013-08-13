@@ -12,7 +12,6 @@
 \subsection edgemesher_cpp_inf Misc. Information
 \author Brett Rhodes
 \date 9-12-2013
-\bug Output created is interesting.
 
 \subsection edgemesher_cpp_src Source Code
 */
@@ -27,10 +26,9 @@
 
 using namespace MeshKit;
 
-MKCore *mk = NULL;
 const int NUM_INTERVALS = 10; // on our curve, we want 10 intervals
 const int INTERVAL_SIZE = -1; // in sizing functions, -1 means not specified
-const bool save_mesh = true;
+const bool save_mesh = false;
 
 #ifdef HAVE_ACIS
 std::string extension = ".sat";
@@ -60,7 +58,7 @@ int main(int argc, char **argv)
 
 // Save stuff
   if (save_mesh)
-    mk->save_mesh("edgemesher_out.h5m"); // save the meshed file for the curve we just meshed
+    mk->save_mesh("edgemesher_out.vtk"); // save the meshed file for the curve we just meshed
 
   return 0;
 }

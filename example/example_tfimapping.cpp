@@ -1,20 +1,18 @@
 /*!
-\example tfimapping.cpp
+\example example_tfimapping.cpp
 
-\section tfimapping_cpp_title <pretty-name-of-this-file>
+\section tfimapping_cpp_title TFI Mapping
 
 \subsection tfimapping_cpp_in Input
-\image html tfimapping.in.jpg
-There is no input.
+\image html tfimapping_in.jpg
 
 \subsection tfimapping_cpp_out Output
-\image html tfimapping.out.jpg
+\image html tfimapping_out.jpg
 
 \subsection tfimapping_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+\author Brett Rhodes
+\date 9-12-2013
+\warning Possible changes when Interval assignment is integrated
 
 \subsection tfimapping_cpp_src Source Code
 */
@@ -25,112 +23,53 @@ There is no input.
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/Matrix.hpp"
 #include "meshkit/EdgeMesher.hpp"
+#include "example_utils.hpp"
 
 using namespace MeshKit;
 
+const int NUM_INTERVALS = -1; // on our curve, we want 10 intervals
+const int INTERVAL_SIZE = 0.5; // in sizing functions, -1 means not specified
+const bool save_mesh = false;
 
-
-MKCore *mk = NULL;
-
-void test_TFImapping();
-void test_TFImappingcubit();
+#ifdef HAVE_ACIS
+string extension = ".sat";
+#elif HAVE_OCC
+string extension = ".stp";
+#endif
 
 int main(int argc, char **argv)
 {
+  MKCore * mk;
+  MEntVector curves;
+  MEntVector surfaces;
+  EdgeMesher * em;
+  TFIMapping * tfi;
 
-  // start up MK and load the geometry
-  int num_fail = 0;
+// Prepare MK
+  mk = new MKCore(); // Start up MK
+  mk->load_geometry( (example_dir + string("rectangle") + extension).c_str() ); // Load the geometry and mesh
 
-  test_TFImapping();
+// Prepare EdgeMesher (TFIMapping requires that 1 edge be meshed)
+  mk->get_entities_by_dimension(1, curves); // get all 1D entites and store into "curves" (we need to mesh side of the rectangle in order for TFI to suceed)
+  curves.resize(1); // We only need to mesh one curve
+  em = (EdgeMesher*) mk->construct_meshop("EdgeMesher", curves); // create an EdgeMesher to mesh 1 side
 
-  test_TFImappingcubit();
+// Prepare TFIMapping
+  mk->get_entities_by_dimension(2, surfaces); // get all 2D entities and store into "surfaces" (we only have 1)
+  tfi = (TFIMapping*) mk->construct_meshop("TFIMapping", surfaces); // create the TFIMapping MeshOp instance, will operate on the entities stored in surfaces
+  mk->get_graph().addArc(em->get_node(), tfi->get_node()); // TFIMapping depends on EdgeMesher (tfi needs a meshed edge)
 
-  return num_fail;
+// Specify Sizes
+  SizingFunction sf(mk, NUM_INTERVALS, INTERVAL_SIZE); // create a sizing function
+  surfaces[0]->sizing_function_index(sf.core_index()); // and apply it to our curve (we know curves[0] is our curve, because we only have 1)
 
-}
+// Execute
+  mk->setup(); // calls setup_this() on all nodes in the graph
+  mk->execute(); // calls execute_this() on all nodes in the graph
 
-void test_TFImappingcubit()
-{
-  mk = new MKCore();
+// Save
+  if (save_mesh)
+    mk->save_mesh("tfimapping_out.exo");
 
-  std::string file_name = TestDir + "/SquareWithEdgesMeshed.cub";
-  mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
-
-  //check the number of geometrical edges
-  MEntVector surfs, curves, loops;
-  mk->get_entities_by_dimension(2, surfs);
-  ModelEnt *this_surf = (*surfs.rbegin());
-
-  this_surf->get_adjacencies(1, curves);
-
-  CHECK_EQUAL(4, (int)curves.size());
-
-  //check the number of mesh line segments
-  moab::Range edges;
-  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 1,
-      edges);
-  CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  CHECK_EQUAL(40, (int)edges.size());
-
-  //now, do the TFIMapping
-  TFIMapping *tm = (TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
-  mk->setup_and_execute();
-
-  //check the number of quads
-  moab::Range faces;
-  rval = mk->moab_instance()->get_entities_by_dimension(0, 2, faces);
-  CHECK_EQUAL(moab::MB_SUCCESS, rval);
-  CHECK_EQUAL(100, (int)faces.size());
-
-  mk->save_mesh("TFIMappingFromCubit.vtk");
-
-  delete tm;
-
-  delete mk;
-
-}
-
-void test_TFImapping()
-{
-  mk = new MKCore();
-
-
-#if HAVE_OCC
-  std::string file_name_geo = TestDir + "/square.stp";
-  std::string file_name_edgeMeshOnly=TestDir + "/squareEdge.h5m";
-  mk->load_geometry_mesh(file_name_geo.c_str(), file_name_edgeMeshOnly.c_str());
-#else
-  std::string file_name = TestDir + "/SquareWithOneEdgeMeshed.cub";
-  mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
-#endif
-  // get the surface
-  MEntVector surfs, curves, loops;
-  mk->get_entities_by_dimension(2, surfs);
-  CHECK_EQUAL(1, (int)surfs.size());
-
-  // make an edge mesher
-  mk->get_entities_by_dimension(1, curves);
-  //test there are 4 edges bounding the surface
-  CHECK_EQUAL(4, (int)curves.size());
-
-  SizingFunction * esize = new SizingFunction(mk, 6, -1);
-  surfs[0]->sizing_function_index(esize->core_index());
-
-  /*TFIMapping *tm = (TFIMapping*) */mk->construct_meshop("TFIMapping", surfs);
-  mk->setup_and_execute();
-
-  //check whether we got the right number of quads after TFIMapping
-  moab::Range faces;
-  moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 2,
-      faces);
-  CHECK_EQUAL(moab::MB_SUCCESS, rval);
-#if HAVE_OCC
-  CHECK_EQUAL(100, (int)faces.size());
-#else
-  CHECK_EQUAL(60, (int)faces.size());
-#endif
-  //output the mesh to vtk file
-  mk->save_mesh("TFIMapping.vtk");
-  //delete mk->vertex_mesher();
-  delete mk;
+  return 0;
 }
