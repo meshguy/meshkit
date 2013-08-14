@@ -38,9 +38,9 @@ std::string extension = ".stp";
 
 int main(int argc, char **argv) 
 {
-  MKCore * mk;        // Is the handle for the instance of meshkit
-  MEntVector curves;  // Is the handle for the curve we need to retrieve, is a vector
-  EdgeMesher * em;    // Is the handle for our MeshOp that we will create
+  MKCore * mk;       // handle for the instance of MeshKit
+  MEntVector curves; // handle for the curve we need to retrieve, is a vector
+  EdgeMesher * em;   // handle for our MeshOp that we will create
 
 // Prepare MK
   mk = new MKCore();  // Start up MK

@@ -11,6 +11,8 @@ MESH_DIR="../data"
 
 EXAMPLES = example_assygen example_basic example_copygeom example_copymesh example_ebmesh example_edgemesher example_extrudemesh example_fbgeom example_graph example_intassign example_jaalquad example_mb2 example_mbgeom example_MBGeomOp example_mbgeomvar example_MBSplitOp example_MBVolOp example_meshoptemplate example_mesquite example_ngtetmesher example_onetooneswept example_parallelmesher example_paver example_postbl example_qslim example_scdmesh example_SetPnt2Quad example_tetmesher example_tfimapping example_triadvance example_TriangleMesher example_volIce
 
+MOSTLY_CLEAN_FILES = AfterTFISetup.eps AfterWinslow.vtk InitialMapping.vtk mesquite.gpt tfimapping_out.exo
+
 all:: $(EXAMPLES)
 
 $(EXAMPLES): %: %.o
@@ -23,5 +25,5 @@ $(EXAMPLES): %: %.o
 	${IMESH_FC} ${IMESH_FCFLAGS} ${IMESH_INCLUDES} ${IMESH_FCDEFS} -DMESH_DIR=\"${MESH_DIR}\" -c $<
 
 clean:
-	rm ${EXAMPLES:%=%.o} ${EXAMPLES} -f
+	rm ${MOSTLY_CLEAN_FILES} ${EXAMPLES:%=%.o} ${EXAMPLES} -f
 

@@ -1,13 +1,13 @@
 /*!
- \page algorithm_tfimapping tfimapping
+ \page algorithm_tfimapping TFIMapping
 
-<b>Name:</b> tfimapping
+<b>Name:</b> TFIMapping
 
 <b>External dependencies:</b> (none)
 
-<b>Input:</b> <text>
+<b>Input:</b> 2D ModelEnt's
 
-<b>Output:</b> <text>
+<b>Output:</b> Quad Meshed Entities
 
 <b>Interface(s) used:</b> <interfaces>
 

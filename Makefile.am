@@ -50,7 +50,7 @@ EXTRA_DIST = MKDefines.h data
 cfgdir = $(libdir)
 cfg_DATA = meshkit.make
 
-# By default, moab.make will define these to $(srcdir).  We
+# By default, meshkit.make will define these to $(srcdir).  We
 # want to override that during the INSTALL of the file so
 # that the correct values are set (e.g. if someone does 
 # 'make prefix=/foo install', we don't know the correct install

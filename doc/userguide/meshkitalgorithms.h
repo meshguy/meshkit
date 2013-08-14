@@ -281,91 +281,91 @@ Brief Info</td></tr>
 <tr bgcolor=white> <td colspan="4"> <big><b>  XD Algorithms </b></big> </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_fbgeom                             \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_fbgeom                             \htmlonly </td> <td> \endhtmlonly
 \ref example_fbgeom.cpp                           \htmlonly </td> <td> \endhtmlonly
 \ref test_fbgeom.cpp                              \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_intassign                          \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_intassign                          \htmlonly </td> <td> \endhtmlonly
 \ref example_intassign.cpp                        \htmlonly </td> <td> \endhtmlonly
 \ref test_intassign.cpp                           \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=goldenrod>                                 <td> \endhtmlonly
-\ref algorithm_camalmb2                                \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_camalmb2                                \htmlonly </td> <td> \endhtmlonly
 \ref example_camalmb2.cpp                              \htmlonly </td> <td> \endhtmlonly
 \ref test_camalmb2.cpp                                 \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=goldenrod>                                 <td> \endhtmlonly
-\ref algorithm_camalmbgeom                             \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_camalmbgeom                             \htmlonly </td> <td> \endhtmlonly
 \ref example_camalmbgeom.cpp                           \htmlonly </td> <td> \endhtmlonly
 \ref test_camalmbgeom.cpp                              \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_mbgeomop                           \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_mbgeomop                           \htmlonly </td> <td> \endhtmlonly
 \ref example_mbgeomop.cpp                         \htmlonly </td> <td> \endhtmlonly
 \ref test_mbgeomop.cpp                            \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=goldenrod>                                 <td> \endhtmlonly
-\ref algorithm_camalmbgeomvar                          \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_camalmbgeomvar                          \htmlonly </td> <td> \endhtmlonly
 \ref example_camalmbgeomvar.cpp                        \htmlonly </td> <td> \endhtmlonly
 \ref test_camalmbgeomvar.cpp                           \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_mbsplitop                          \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_mbsplitop                          \htmlonly </td> <td> \endhtmlonly
 \ref example_mbsplitop.cpp                        \htmlonly </td> <td> \endhtmlonly
 \ref test_mbsplitop.cpp                           \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_mbvolop                            \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_mbvolop                            \htmlonly </td> <td> \endhtmlonly
 \ref example_mbvolop.cpp                          \htmlonly </td> <td> \endhtmlonly
 \ref test_mbvolop.cpp                             \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_parallelmesher                     \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_parallelmesher                     \htmlonly </td> <td> \endhtmlonly
 \ref example_parallelmesher.cpp                   \htmlonly </td> <td> \endhtmlonly
 \ref test_parallelmesher.cpp                      \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=goldenrod>                                 <td> \endhtmlonly
-\ref algorithm_camalpaver                              \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_camalpaver                              \htmlonly </td> <td> \endhtmlonly
 \ref example_camalpaver.cpp                            \htmlonly </td> <td> \endhtmlonly
 \ref test_camalpaver.cpp                               \htmlonly </td> <td> \endhtmlonly
 Unstructured Quad Mesher                          \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_postbl                             \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_postbl                             \htmlonly </td> <td> \endhtmlonly
 \ref example_postbl.cpp                           \htmlonly </td> <td> \endhtmlonly
 \ref test_postbl.cpp                              \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_setpnt2quad                        \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_setpnt2quad                        \htmlonly </td> <td> \endhtmlonly
 \ref example_setpnt2quad.cpp                      \htmlonly </td> <td> \endhtmlonly
 \ref test_setpnt2quad.cpp                         \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=springgreen>                          <td> \endhtmlonly
-\ref algorithm_tfimapping                         \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_tfimapping                         \htmlonly </td> <td> \endhtmlonly
 \ref example_tfimapping.cpp                       \htmlonly </td> <td> \endhtmlonly
 \ref test_tfimapping.cpp                          \htmlonly </td> <td> \endhtmlonly
 Structured Quad Mesher                            \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_trianglemesher                     \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_trianglemesher                     \htmlonly </td> <td> \endhtmlonly
 \ref example_trianglemesher.cpp                   \htmlonly </td> <td> \endhtmlonly
 \ref test_trianglemesher.cpp                      \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>
 
 <tr bgcolor=BBFFBB>                                 <td> \endhtmlonly
-\ref algorithm_volice                             \htmlonly </td> <td> \endhtmlonly
+\subpage algorithm_volice                             \htmlonly </td> <td> \endhtmlonly
 \ref example_volice.cpp                           \htmlonly </td> <td> \endhtmlonly
 \ref test_volice.cpp                              \htmlonly </td> <td> \endhtmlonly
 <a brief description, objective, short>           \n(this entry needs completed)\htmlonly </td> </tr>

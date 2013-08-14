@@ -27,9 +27,9 @@
 
 using namespace MeshKit;
 
-const int NUM_INTERVALS = -1; // on our curve, we want 10 intervals
-const int INTERVAL_SIZE = 0.5; // in sizing functions, -1 means not specified
-const bool save_mesh = false;
+const int NUM_INTERVALS = 3; // we want 3 intervals on each side (for no reason)
+const int INTERVAL_SIZE = -1; // in sizing functions, -1 means not specified
+const bool save_mesh = true;
 
 #ifdef HAVE_ACIS
 string extension = ".sat";
@@ -39,19 +39,19 @@ string extension = ".stp";
 
 int main(int argc, char **argv)
 {
-  MKCore * mk;
-  MEntVector curves;
-  MEntVector surfaces;
-  EdgeMesher * em;
-  TFIMapping * tfi;
+  MKCore * mk;         // handle for the instance of MeshKit
+  MEntVector curves;   // handle for the curve we need to retrieve, is a vector
+  MEntVector surfaces; // handle for the surface we need to retrieve, is a vector
+  EdgeMesher * em;     // handle for a MeshOp that helps fulfill a pre-req for TFIMapping
+  TFIMapping * tfi;    // handle for our TFIMapping MeshOp
 
 // Prepare MK
   mk = new MKCore(); // Start up MK
-  mk->load_geometry( (example_dir + string("rectangle") + extension).c_str() ); // Load the geometry and mesh
+  mk->load_geometry( (example_dir + string("rectangle") + extension).c_str() ); // Load the geometry
 
 // Prepare EdgeMesher (TFIMapping requires that 1 edge be meshed)
-  mk->get_entities_by_dimension(1, curves); // get all 1D entites and store into "curves" (we need to mesh side of the rectangle in order for TFI to suceed)
-  curves.resize(1); // We only need to mesh one curve
+  mk->get_entities_by_dimension(1, curves); // get all 1D entities and store into "curves"
+  curves.resize(1); // We need to mesh one curve for TFI to suceed
   em = (EdgeMesher*) mk->construct_meshop("EdgeMesher", curves); // create an EdgeMesher to mesh 1 side
 
 // Prepare TFIMapping
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 
 // Specify Sizes
   SizingFunction sf(mk, NUM_INTERVALS, INTERVAL_SIZE); // create a sizing function
-  surfaces[0]->sizing_function_index(sf.core_index()); // and apply it to our curve (we know curves[0] is our curve, because we only have 1)
+  surfaces[0]->sizing_function_index(sf.core_index()); // apply the same sizing function to them
 
 // Execute
   mk->setup(); // calls setup_this() on all nodes in the graph
