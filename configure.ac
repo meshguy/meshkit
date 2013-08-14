@@ -1047,7 +1047,7 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src/core/Makefile
                  src/algs/Makefile
-		 src/algs/IntervalAssignment/Makefile
+                 src/algs/IntervalAssignment/Makefile
                  src/algs/QuadMesher/Makefile
                  src/algs/Sweep/Makefile
                  src/algs/AssyGen/Makefile

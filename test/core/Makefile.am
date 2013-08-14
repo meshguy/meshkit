@@ -13,7 +13,7 @@ TESTS = test_graph list_meshops
 
 check_PROGRAMS = $(TESTS)
 
-MOSTLYCLEANFILES = 
+MOSTLYCLEANFILES = graph.eps
 
 # Tests and such
 

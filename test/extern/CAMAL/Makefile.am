@@ -18,7 +18,7 @@ TESTS =
 
 check_PROGRAMS = $(TESTS)
 
-MOSTLYCLEANFILES = 
+MOSTLYCLEANFILES = graph.eps simpletet.h5m threeholecube.h5m
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
