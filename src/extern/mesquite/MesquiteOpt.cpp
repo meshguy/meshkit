@@ -194,7 +194,7 @@ void MesquiteOpt::set_fixed_tag_on_skin( ModelEnt* ent, int value )
       
       moab::Range verts;
       moab::Skinner tool(mb);
-      moab::ErrorCode err = tool.find_skin( elems, 0, verts );
+      moab::ErrorCode err = tool.find_skin( 0, elems, 0, verts );
       MBERRCHK(rval,mk_core()->moab_instance());
      
       moab::Tag t = reinterpret_cast<moab::Tag>( get_fixed_tag() );

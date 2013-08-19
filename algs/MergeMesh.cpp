@@ -58,7 +58,7 @@ MBErrorCode MergeMesh::merge_entities(MBRange &elems,
   // get the skin of the entities
   MBSkinner skinner(mbImpl);
   MBRange skin_range;
-  MBErrorCode result = skinner.find_skin(elems, 0, skin_range);
+  MBErrorCode result = skinner.find_skin(0, elems, 0, skin_range);
   if (MB_SUCCESS != result) return result;
 
   // create a tag to mark merged-to entity; reuse tree_root

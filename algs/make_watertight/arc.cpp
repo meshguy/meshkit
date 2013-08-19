@@ -403,7 +403,7 @@ namespace arc {
     MBRange end_verts;
     MBSkinner tool(MBI());
     MBErrorCode result;
-    result = tool.find_skin( unordered_edges, 0, end_verts, false );
+    result = tool.find_skin( 0, unordered_edges, 0, end_verts, false );
     if(MB_SUCCESS != result) gen::print_range_of_edges( unordered_edges );
     assert(MB_SUCCESS == result);
 
