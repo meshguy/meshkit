@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <math.h>
+#include <iomanip>
 
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
@@ -33,6 +35,10 @@
 #include "moab/Range.hpp"
 #include "moab/CartVect.hpp"
 
+
+#include "moab/Skinner.hpp"
+#include "moab/AdaptiveKDTree.hpp"
+#include "moab/Matrix3.hpp"
 
 /*!
  * \class PostBL
@@ -109,6 +115,11 @@ namespace MeshKit {
 
     //! execute PostBL graph node
     virtual void execute_this();
+
+
+    /** \brief Improved algorithm
+     */
+    void Algo2 ();
 
     /** \brief Prepare input/output files for reading/writing
      *  command line args and testdir for default test case
