@@ -147,7 +147,7 @@ void extrudeQuads()
   mk = new MKCore;
   iBase_ErrorType err;
   FBiGeom * fbiGeom = new FBiGeom(); // true for smooth, false for linear
-  unsigned int ix = mk->add_igeom_instance(fbiGeom);
+  mk->add_igeom_instance(fbiGeom);
   // read initial mesh (quad mesh surface bottom)
   char opts[]="SMOOTH;";
   err = fbiGeom->load(top_filename.c_str(), opts);// loading the top surface , as geometry
@@ -348,7 +348,7 @@ void extrudeQuads()
   rval = mb->get_entities_by_type(0, moab::MBQUAD, iniQuads);
   moab::Skinner skinner(mb);
   moab::Range allQuads;
-  rval = skinner.find_skin(hexas, 2, allQuads);
+  rval = skinner.find_skin(0, hexas, 2, allQuads);
 
   moab::Range latQuads = subtract(allQuads, iniQuads);
 
