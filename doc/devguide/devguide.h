@@ -5,5 +5,6 @@
 - \subpage devinterfaces
 - \subpage newmeshop
 - \subpage faq
+- \subpage docguide
 
 */
