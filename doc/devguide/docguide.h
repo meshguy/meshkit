@@ -58,11 +58,11 @@ Below are some notes on using the template that follows after:
 
 Template:
 \verbatim
-<tr bgcolor=(color)>                              <td> \endhtmlonly
-(link to description i.e. \subpage alg_page)      \htmlonly </td> <td> \endhtmlonly
-(link to example i.e. \ref example_page)          \htmlonly </td> <td> \endhtmlonly
-(link to test i.e. \ref test_page)                \htmlonly </td> <td> \endhtmlonly
-(a brief description; objective and short)        \htmlonly </td> </tr>
+<tr bgcolor=(color)>                                  <td> \endhtmlonly
+(link to description i.e. \subpage alg_page "page")   \htmlonly </td> <td> \endhtmlonly
+(link to example i.e. \ref example_page)              \htmlonly </td> <td> \endhtmlonly
+(link to test i.e. \ref test_page)                    \htmlonly </td> <td> \endhtmlonly
+(a brief description; objective and short)            \htmlonly </td> </tr>
 \endverbatim
 
 

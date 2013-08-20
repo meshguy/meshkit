@@ -1,22 +1,22 @@
 /*!
-\example scdmesh.cpp
+\example example_scdmesh.cpp
 
-\section scdmesh_cpp_title <pretty-name-of-this-file>
+\section example_scdmesh_cpp_title <pretty-name-of-this-file>
 
-\subsection scdmesh_cpp_in Input
-\image html scdmesh.in.jpg
+\subsection example_scdmesh_cpp_in Input
+\image html example_scdmesh.in.jpg
 There is no input.
 
-\subsection scdmesh_cpp_out Output
-\image html scdmesh.out.jpg
+\subsection example_scdmesh_cpp_out Output
+\image html example_scdmesh.out.jpg
 
-\subsection scdmesh_cpp_inf Misc. Information
+\subsection example_scdmesh_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection scdmesh_cpp_src Source Code
+\subsection example_scdmesh_cpp_src Source Code
 */
 
 /*--------------------------------------------------------------------------//

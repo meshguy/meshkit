@@ -1,22 +1,22 @@
 /*!
-\example fbgeom.cpp
+\example example_fbgeom.cpp
 
-\section fbgeom_cpp_title <pretty-name-of-this-file>
+\section example_fbgeom_cpp_title <pretty-name-of-this-file>
 
-\subsection fbgeom_cpp_in Input
-\image html fbgeom.in.jpg
+\subsection example_fbgeom_cpp_in Input
+\image html example_fbgeom.in.jpg
 There is no input.
 
-\subsection fbgeom_cpp_out Output
-\image html fbgeom.out.jpg
+\subsection example_fbgeom_cpp_out Output
+\image html example_fbgeom.out.jpg
 
-\subsection fbgeom_cpp_inf Misc. Information
+\subsection example_fbgeom_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection fbgeom_cpp_src Source Code
+\subsection example_fbgeom_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
 #include "meshkit/FBiGeom.hpp"

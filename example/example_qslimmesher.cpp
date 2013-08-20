@@ -1,22 +1,22 @@
 /*!
-\example qslimmesher.cpp
+\example example_qslimmesher.cpp
 
-\section qslimmesher_cpp_title <pretty-name-of-this-file>
+\section example_qslimmesher_cpp_title <pretty-name-of-this-file>
 
-\subsection qslimmesher_cpp_in Input
-\image html qslimmesher.in.jpg
+\subsection example_qslimmesher_cpp_in Input
+\image html example_qslimmesher.in.jpg
 There is no input.
 
-\subsection qslimmesher_cpp_out Output
-\image html qslimmesher.out.jpg
+\subsection example_qslimmesher_cpp_out Output
+\image html example_qslimmesher.out.jpg
 
-\subsection qslimmesher_cpp_inf Misc. Information
+\subsection example_qslimmesher_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection qslimmesher_cpp_src Source Code
+\subsection example_qslimmesher_cpp_src Source Code
 */
 
 #include <iostream>

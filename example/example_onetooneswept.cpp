@@ -1,22 +1,22 @@
 /*!
-\example onetooneswept.cpp
+\example example_onetooneswept.cpp
 
-\section onetooneswept_cpp_title <pretty-name-of-this-file>
+\section example_onetooneswept_cpp_title <pretty-name-of-this-file>
 
-\subsection onetooneswept_cpp_in Input
-\image html onetooneswept.in.jpg
+\subsection example_onetooneswept_cpp_in Input
+\image html example_onetooneswept.in.jpg
 There is no input.
 
-\subsection onetooneswept_cpp_out Output
-\image html onetooneswept.out.jpg
+\subsection example_onetooneswept_cpp_out Output
+\image html example_onetooneswept.out.jpg
 
-\subsection onetooneswept_cpp_inf Misc. Information
+\subsection example_onetooneswept_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection onetooneswept_cpp_src Source Code
+\subsection example_onetooneswept_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"

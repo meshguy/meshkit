@@ -1,22 +1,22 @@
 /*!
-\example graph.cpp
+\example example_graph.cpp
 
-\section graph_cpp_title <pretty-name-of-this-file>
+\section example_graph_cpp_title <pretty-name-of-this-file>
 
-\subsection graph_cpp_in Input
-\image html graph.in.jpg
+\subsection example_graph_cpp_in Input
+\image html example_graph.in.jpg
 There is no input.
 
-\subsection graph_cpp_out Output
-\image html graph.out.jpg
+\subsection example_graph_cpp_out Output
+\image html example_graph.out.jpg
 
-\subsection graph_cpp_inf Misc. Information
+\subsection example_graph_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection graph_cpp_src Source Code
+\subsection example_graph_cpp_src Source Code
 */
 
 /* \file test_graph.cpp \test

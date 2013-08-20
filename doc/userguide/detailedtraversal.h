@@ -1,4 +1,4 @@
-/*
+/**
 \page detailedtraversal A more detailed example of graph traversal
 
 In this example, an example of meshing graph traversal is given where graph nodes create other graph nodes

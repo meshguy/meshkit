@@ -1,22 +1,22 @@
 /*!
-\example parallelmesher.cpp
+\example example_parallelmesher.cpp
 
-\section parallelmesher_cpp_title <pretty-name-of-this-file>
+\section example_parallelmesher_cpp_title <pretty-name-of-this-file>
 
-\subsection parallelmesher_cpp_in Input
-\image html parallelmesher.in.jpg
+\subsection example_parallelmesher_cpp_in Input
+\image html example_parallelmesher.in.jpg
 There is no input.
 
-\subsection parallelmesher_cpp_out Output
-\image html parallelmesher.out.jpg
+\subsection example_parallelmesher_cpp_out Output
+\image html example_parallelmesher.out.jpg
 
-\subsection parallelmesher_cpp_inf Misc. Information
+\subsection example_parallelmesher_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection parallelmesher_cpp_src Source Code
+\subsection example_parallelmesher_cpp_src Source Code
 */
 
 // Test file for parallel mesh generation

@@ -1,26 +1,26 @@
 /*!
-\example intassign.cpp
+\example example_intassign.cpp
 
-\section intassign_cpp_title <pretty-name-of-this-file>
+\section example_intassign_cpp_title <pretty-name-of-this-file>
 
-\subsection intassign_cpp_in Input
-\image html intassign.in.jpg
+\subsection example_intassign_cpp_in Input
+\image html example_intassign.in.jpg
 There is no input.
 
-\subsection intassign_cpp_out Output
-\image html intassign.out.jpg
+\subsection example_intassign_cpp_out Output
+\image html example_intassign.out.jpg
 
-\subsection intassign_cpp_inf Misc. Information
+\subsection example_intassign_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection intassign_cpp_src Source Code
+\subsection example_intassign_cpp_src Source Code
 */
-/*! \file test_intassign.cpp \test
+/*! \file test_example_intassign.cpp \test
  *
- * test_intassign.cpp
+ * test_example_intassign.cpp
  *
  */
 

@@ -1,22 +1,22 @@
 /*!
-\example postbl.cpp
+\example example_postbl.cpp
 
-\section postbl_cpp_title <pretty-name-of-this-file>
+\section example_postbl_cpp_title <pretty-name-of-this-file>
 
-\subsection postbl_cpp_in Input
-\image html postbl.in.jpg
+\subsection example_postbl_cpp_in Input
+\image html example_postbl.in.jpg
 There is no input.
 
-\subsection postbl_cpp_out Output
-\image html postbl.out.jpg
+\subsection example_postbl_cpp_out Output
+\image html example_postbl.out.jpg
 
-\subsection postbl_cpp_inf Misc. Information
+\subsection example_postbl_cpp_inf Misc. Information
 \author <your-name-here>
 \date 7-15-2013
 \bug <placeholder>
 \warning <placeholder>
 
-\subsection postbl_cpp_src Source Code
+\subsection example_postbl_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"
