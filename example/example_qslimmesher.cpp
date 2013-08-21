@@ -4,11 +4,11 @@
 \section example_qslimmesher_cpp_title <pretty-name-of-this-file>
 
 \subsection example_qslimmesher_cpp_in Input
-\image html example_qslimmesher.in.jpg
+\image html example_qslimmesher.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_qslimmesher_cpp_out Output
-\image html example_qslimmesher.out.jpg
+\image html example_qslimmesher.out.jpg "(description of image)"
 
 \subsection example_qslimmesher_cpp_inf Misc. Information
 \author <your-name-here>

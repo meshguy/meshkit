@@ -4,11 +4,11 @@
 \section mbgeom_cpp_title <pretty-name-of-this-file>
 
 \subsection mbgeom_cpp_in Input
-\image html mbgeom.in.jpg
+\image html mbgeom.in.jpg "(description of image)"
 There is no input.
 
 \subsection mbgeom_cpp_out Output
-\image html mbgeom.out.jpg
+\image html mbgeom.out.jpg "(description of image)"
 
 \subsection mbgeom_cpp_inf Misc. Information
 \author <your-name-here>

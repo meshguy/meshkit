@@ -4,10 +4,10 @@
 \section example_CopyGeom_cpp_title <pretty-name-of-this-file>
 
 \subsection example_CopyGeom_cpp_in Input
-\image html CopyGeom.in.jpg
+\image html CopyGeom.in.jpg "(description of image)"
 
 \subsection example_CopyGeom_cpp_out Output
-\image html CopyGeom.out.jpg
+\image html CopyGeom.out.jpg "(description of image)"
 
 \subsection example_CopyGeom_cpp_inf Misc. Information
 \author <your-name-here>

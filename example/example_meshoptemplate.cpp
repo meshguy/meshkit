@@ -7,7 +7,7 @@
 (none)
 
 \subsection meshoptemplate_cpp_out Output
-\image html meshoptemplate_out.jpg
+\image html meshoptemplate_out.jpg "(description of image)"
 
 \subsection meshoptemplate_cpp_inf Misc. Information
 \author <your-name-here>

@@ -6,10 +6,10 @@
 Some text explaining objectives
 
 \subsection example_AssyGen_cpp_in Input
-\image html AssyGen.in.jpg
+\image html AssyGen.in.jpg "(description of image)"
 
 \subsection example_AssyGen_cpp_out Output
-\image html AssyGen.out.jpg
+\image html AssyGen.out.jpg "(description of image)"
 
 \subsection example_AssyGen_cpp_inf Misc. Information
 \author <your-name-here>

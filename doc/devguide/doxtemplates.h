@@ -1,8 +1,8 @@
-/** \page docguide Documentation Guide
+/** \page doxtemplates Doxygen Algorithm Templates
 
 \tableofcontents
 
-\section mkalgs MeshKit Algorithms
+\section mkalgs MeshKit Algorithms Page
 
 In all templates:
 - Parentheses sections should be replaced
@@ -44,7 +44,6 @@ Brief Info</td></tr>
 \subsection mkalgs_entry Entry
 
 Each algorithm should have at least 1 entry on the Meshkit Algorithms page.
-This page contains a template to list each algorithm and it's related files.
 
 Below are some notes on using the template that follows after:
 - Color must be changed.
@@ -87,13 +86,14 @@ The purpose of this page is to give users a brief look at the algorithm and it's
 
 <b>Setup:</b>
 
-(any noteable calls during setup, or requirements for successful setup/execute belong here)
+(any noteable calls during setup, or requirements for successful setup/execute belong here [Pre-Setup])
 
 <b>Notes:</b>
 
 (any notes on using the algorithm belong here)
 */
 \endverbatim
+
 
 \section tests Tests
 At the top of every test there should be a doxygen section with some brief infromation.
@@ -107,21 +107,24 @@ Template:
 \endverbatim
 
 
-
-
-
-
 \section examples Examples
 
 At the top of every example there should be a doxygen section with some brief information.
-Examples should also contain many comments in the code so new users can follow along.
+Examples should also contain many C-style comments in the code so new users can follow along.
 
 Below are some notes on using the template that follows after:
 - Sections with "(myalg)" should be replaced by
   - A lowercase name of MeshOp if appropiate
   - A lowercase short name as a description of example otherwise
 - \\bug and \\warning can be removed if there are none
-- If there is no input or output, the \\image line should be replaced with "(none)"
+- \\image
+  - If there is no input or output, the line should be replaced with "(none)"
+  - You must add create and add the images to trunk/doc/figures/examples/
+  - There is a shell script that will resize images (trunk/dox/resize.sh)
+    - It has a default size built in appropiate for doxygen
+    - Modifies the original image
+    - Depends on the programs "convert", "expr", and "identify" being available
+
 
 Template:
 \verbatim
@@ -133,10 +136,10 @@ Template:
 (some text explaining objectives of example)
 
 \subsection example_(myalg)_cpp_in Input
-\image html (myalg).in.jpg
+\image html (myalg).in.jpg "(description of image)"
 
 \subsection example_myalg_cpp_out Output
-\image html (myalg).out.jpg
+\image html (myalg).out.jpg "(description of image)"
 
 \subsection example_(myalg)_cpp_inf Misc. Information
 \author (author's name)

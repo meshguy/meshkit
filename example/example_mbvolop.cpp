@@ -4,11 +4,11 @@
 \section MBVolOp_cpp_title <pretty-name-of-this-file>
 
 \subsection MBVolOp_cpp_in Input
-\image html MBVolOp.in.jpg
+\image html MBVolOp.in.jpg "(description of image)"
 There is no input.
 
 \subsection MBVolOp_cpp_out Output
-\image html MBVolOp.out.jpg
+\image html MBVolOp.out.jpg "(description of image)"
 
 \subsection MBVolOp_cpp_inf Misc. Information
 \author <your-name-here>

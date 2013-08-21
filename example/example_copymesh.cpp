@@ -4,11 +4,11 @@
 \section example_CopyMesh_cpp_title <pretty-name-of-this-file>
 
 \subsection example_CopyMesh_cpp_in Input
-\image html CopyMesh.in.jpg
+\image html CopyMesh.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_CopyMesh_cpp_out Output
-\image html CopyMesh.out.jpg
+\image html CopyMesh.out.jpg "(description of image)"
 
 \subsection example_CopyMesh_cpp_inf Misc. Information
 \author <your-name-here>

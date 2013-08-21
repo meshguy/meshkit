@@ -4,11 +4,11 @@
 \section EBMesh_cpp_title <pretty-name-of-this-file>
 
 \subsection EBMesh_cpp_in Input
-\image html EBMesh.in.jpg
+\image html EBMesh.in.jpg "(description of image)"
 There is no input.
 
 \subsection EBMesh_cpp_out Output
-\image html EBMesh.out.jpg
+\image html EBMesh.out.jpg "(description of image)"
 
 \subsection EBMesh_cpp_inf Misc. Information
 \author <your-name-here>

@@ -4,11 +4,11 @@
 \section TriangleMesher_cpp_title <pretty-name-of-this-file>
 
 \subsection TriangleMesher_cpp_in Input
-\image html TriangleMesher.in.jpg
+\image html TriangleMesher.in.jpg "(description of image)"
 There is no input.
 
 \subsection TriangleMesher_cpp_out Output
-\image html TriangleMesher.out.jpg
+\image html TriangleMesher.out.jpg "(description of image)"
 
 \subsection TriangleMesher_cpp_inf Misc. Information
 \author <your-name-here>

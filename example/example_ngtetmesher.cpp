@@ -4,11 +4,11 @@
 \section example_ngtetmesher_cpp_title <pretty-name-of-this-file>
 
 \subsection example_ngtetmesher_cpp_in Input
-\image html example_ngtetmesher.in.jpg
+\image html example_ngtetmesher.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_ngtetmesher_cpp_out Output
-\image html example_ngtetmesher.out.jpg
+\image html example_ngtetmesher.out.jpg "(description of image)"
 
 \subsection example_ngtetmesher_cpp_inf Misc. Information
 \author <your-name-here>

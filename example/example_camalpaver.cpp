@@ -5,11 +5,11 @@
 
 
 \subsection paver_cpp_in Input
-\image html paver.in.jpg
+\image html paver.in.jpg "(description of image)"
 There is no input.
 
 \subsection paver_cpp_out Output
-\image html paver.out.jpg
+\image html paver.out.jpg "(description of image)"
 
 \subsection paver_cpp_inf Misc. Information
 \author <your-name-here>

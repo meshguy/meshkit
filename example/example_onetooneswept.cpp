@@ -4,11 +4,11 @@
 \section example_onetooneswept_cpp_title <pretty-name-of-this-file>
 
 \subsection example_onetooneswept_cpp_in Input
-\image html example_onetooneswept.in.jpg
+\image html example_onetooneswept.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_onetooneswept_cpp_out Output
-\image html example_onetooneswept.out.jpg
+\image html example_onetooneswept.out.jpg "(description of image)"
 
 \subsection example_onetooneswept_cpp_inf Misc. Information
 \author <your-name-here>

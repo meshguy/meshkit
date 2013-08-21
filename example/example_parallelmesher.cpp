@@ -4,11 +4,11 @@
 \section example_parallelmesher_cpp_title <pretty-name-of-this-file>
 
 \subsection example_parallelmesher_cpp_in Input
-\image html example_parallelmesher.in.jpg
+\image html example_parallelmesher.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_parallelmesher_cpp_out Output
-\image html example_parallelmesher.out.jpg
+\image html example_parallelmesher.out.jpg "(description of image)"
 
 \subsection example_parallelmesher_cpp_inf Misc. Information
 \author <your-name-here>

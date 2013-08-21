@@ -4,11 +4,11 @@
 \section example_extrudemesh_cpp_title <pretty-name-of-this-file>
 
 \subsection example_extrudemesh_cpp_in Input
-\image html example_extrudemesh.in.jpg
+\image html example_extrudemesh.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_extrudemesh_cpp_out Output
-\image html example_extrudemesh.out.jpg
+\image html example_extrudemesh.out.jpg "(description of image)"
 
 \subsection example_extrudemesh_cpp_inf Misc. Information
 \author <your-name-here>

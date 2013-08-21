@@ -119,7 +119,15 @@ Many other functions are provided to simplify development of meshing operations:
  - Geometric evaluations are provided by ModelEnt::measure and ModelEnt::evaluate.  The scope of functions like this is
  intentionally narrow, to avoid duplication of the full geometric model interface available in iGeom.  iGeom can be used
  to perform other types of geometric or topoligical evaluations not directly available from ModelEnt.
- 
+
+\section relatedfiledoc Related Files and Documentation
+All Meshops should have:
+- An entry on the \ref meshkitalgorithms "MeshKit Algortihm's page" (in file trunk/doc/userguide/meshkitalgorithms.h)
+- A description of the algorithm (in directory trunk/doc/algs)
+- An example showing usage (in directory trunk/example)
+- A unit test (in directory trunk/test/)
+
+Necessary doxygen documentation templates can be found \ref doxtemplates "here".
 
 Top: \ref index Prev: \ref api Next: \ref styleguide
   

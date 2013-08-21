@@ -4,10 +4,10 @@
 \section tfimapping_cpp_title TFI Mapping
 
 \subsection tfimapping_cpp_in Input
-\image html tfimapping_in.jpg
+\image html tfimapping_in.jpg "a 2D rectangle"
 
 \subsection tfimapping_cpp_out Output
-\image html tfimapping_out.jpg
+\image html tfimapping_out.jpg "a meshed 2D rectangle"
 
 \subsection tfimapping_cpp_inf Misc. Information
 \author Brett Rhodes

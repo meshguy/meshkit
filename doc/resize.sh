@@ -9,9 +9,9 @@
 ###############################################################################
 
 #Max height of images allowed
-MAX_H=480
+MAX_H=360
 #Max width of images allowed
-MAX_W=960
+MAX_W=720
 
 #No file was given
 if [ $# -lt 1 ]

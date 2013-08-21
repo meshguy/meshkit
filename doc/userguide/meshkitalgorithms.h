@@ -94,7 +94,7 @@ meshes curves                                     \htmlonly </td> </tr>
 \subpage algorithm_onetooneswept "OneToOneSwept"                  \htmlonly </td> <td> \endhtmlonly
 \ref example_onetooneswept.cpp                    \htmlonly </td> <td> \endhtmlonly
 \ref test_onetooneswept.cpp                       \htmlonly </td> <td> \endhtmlonly
-Structured? Hex Mesher                             \n(this entry needs completed)\htmlonly </td> </tr>
+sweeper                                           \htmlonly </td> </tr>
 
 <tr bgcolor=springgreen>                          <td> \endhtmlonly
 \subpage algorithm_scdmesh "SCDMesh"                        \htmlonly </td> <td> \endhtmlonly

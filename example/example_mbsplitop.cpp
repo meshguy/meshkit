@@ -4,11 +4,11 @@
 \section MBSplitOp_cpp_title <pretty-name-of-this-file>
 
 \subsection MBSplitOp_cpp_in Input
-\image html MBSplitOp.in.jpg
+\image html MBSplitOp.in.jpg "(description of image)"
 There is no input.
 
 \subsection MBSplitOp_cpp_out Output
-\image html MBSplitOp.out.jpg
+\image html MBSplitOp.out.jpg "(description of image)"
 
 \subsection MBSplitOp_cpp_inf Misc. Information
 \author <your-name-here>

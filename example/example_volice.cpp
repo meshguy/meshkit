@@ -4,11 +4,11 @@
 \section volIce_cpp_title <pretty-name-of-this-file>
 
 \subsection volIce_cpp_in Input
-\image html volIce.in.jpg
+\image html volIce.in.jpg "(description of image)"
 There is no input.
 
 \subsection volIce_cpp_out Output
-\image html volIce.out.jpg
+\image html volIce.out.jpg "(description of image)"
 
 \subsection volIce_cpp_inf Misc. Information
 \author <your-name-here>

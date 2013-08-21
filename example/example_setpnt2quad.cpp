@@ -4,11 +4,11 @@
 \section SetPnt2Quad_cpp_title <pretty-name-of-this-file>
 
 \subsection SetPnt2Quad_cpp_in Input
-\image html SetPnt2Quad.in.jpg
+\image html SetPnt2Quad.in.jpg "(description of image)"
 There is no input.
 
 \subsection SetPnt2Quad_cpp_out Output
-\image html SetPnt2Quad.out.jpg
+\image html SetPnt2Quad.out.jpg "(description of image)"
 
 \subsection SetPnt2Quad_cpp_inf Misc. Information
 \author <your-name-here>

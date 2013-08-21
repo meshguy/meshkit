@@ -29,6 +29,6 @@ MeshKit is a library for geometry-based 2d and 3d mesh generation.  This library
   - \ref devinterfaces
   - \ref newmeshop
   - \ref faq
-  - \ref docguide
+  - \ref doxtemplates
 
  */

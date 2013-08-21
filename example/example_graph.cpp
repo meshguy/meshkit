@@ -4,11 +4,11 @@
 \section example_graph_cpp_title <pretty-name-of-this-file>
 
 \subsection example_graph_cpp_in Input
-\image html example_graph.in.jpg
+\image html example_graph.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_graph_cpp_out Output
-\image html example_graph.out.jpg
+\image html example_graph.out.jpg "(description of image)"
 
 \subsection example_graph_cpp_inf Misc. Information
 \author <your-name-here>

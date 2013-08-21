@@ -4,11 +4,11 @@
 \section camaltetmesher_cpp_title <pretty-name-of-this-file>
 
 \subsection camaltetmesher_cpp_in Input
-\image html camaltetmesher.in.jpg
+\image html camaltetmesher.in.jpg "(description of image)"
 There is no input.
 
 \subsection camaltetmesher_cpp_out Output
-\image html camaltetmesher.out.jpg
+\image html camaltetmesher.out.jpg "(description of image)"
 
 \subsection camaltetmesher_cpp_inf Misc. Information
 \author <your-name-here>

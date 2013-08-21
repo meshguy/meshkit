@@ -3,8 +3,6 @@
  * \test This file contains 1 test(s). Algorithms tested include: MeshOpTemplate.
  * 
  * Test MeshOpTemplate \n
- * Author: Brett Rhodes \n
- * Date: 9-13-2013 \n
  */
 
 #include "meshkit/MKCore.hpp"

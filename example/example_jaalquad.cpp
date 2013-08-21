@@ -4,11 +4,11 @@
 \section example_jaalquad_cpp_title <pretty-name-of-this-file>
 
 \subsection example_jaalquad_cpp_in Input
-\image html example_jaalquad.in.jpg
+\image html example_jaalquad.in.jpg "(description of image)"
 There is no input.
 
 \subsection example_jaalquad_cpp_out Output
-\image html example_jaalquad.out.jpg
+\image html example_jaalquad.out.jpg "(description of image)"
 
 \subsection example_jaalquad_cpp_inf Misc. Information
 \author <your-name-here>

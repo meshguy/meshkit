@@ -4,10 +4,10 @@
 \section edgemesher_cpp_title Edge Mesher
 
 \subsection edgemesher_cpp_in Input
-\image html edgemesher_in.jpg
+\image html edgemesher_in.jpg "a 1D line"
 
 \subsection edgemesher_cpp_out Output
-\image html edgemesher_out.jpg
+\image html edgemesher_out.jpg "a meshed 1D line"
 
 \subsection edgemesher_cpp_inf Misc. Information
 \author Brett Rhodes

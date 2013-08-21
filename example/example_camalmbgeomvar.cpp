@@ -4,11 +4,11 @@
 \section mbgeomvar_cpp_title <pretty-name-of-this-file>
 
 \subsection mbgeomvar_cpp_in Input
-\image html mbgeomvar.in.jpg
+\image html mbgeomvar.in.jpg "(description of image)"
 There is no input.
 
 \subsection mbgeomvar_cpp_out Output
-\image html mbgeomvar.out.jpg
+\image html mbgeomvar.out.jpg "(description of image)"
 
 \subsection mbgeomvar_cpp_inf Misc. Information
 \author <your-name-here>

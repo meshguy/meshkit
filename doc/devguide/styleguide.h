@@ -9,6 +9,7 @@ guide will result in severe berating and other verbal abuse.
  - doc: Documentation is put here, along with the input file for Doxygen.  Most %MeshKit documentation is doxygen-processed.
  - examples: Examples of %MeshKit usage, both small and large.  These programs are not meant to be used as unit tests, but
      rather as further documentation on %MeshKit usage.
+   - data: This directory contains geometry and mesh data files used in examples.
  - src
    - core: %MeshKit core classes; these classes should not change very often compared to the rest of %MeshKit.
    - algs: Meshing algorithms, both those that generate as well as modify mesh.

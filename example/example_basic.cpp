@@ -9,7 +9,7 @@ The goal of this is example is to start from no input and create a meshed geomet
 (none)
 
 \subsection example_Basic_cpp_out Output
-\image html Basic.out.jpg
+\image html Basic.out.jpg "(description of image)"
 
 \subsection example_Basic_cpp_inf Misc. Information
 \author Brett Rhodes

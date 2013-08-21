@@ -4,11 +4,11 @@
 \section camaltriadvance_cpp_title <pretty-name-of-this-file>
 
 \subsection camaltriadvance_cpp_in Input
-\image html camaltriadvance.in.jpg
+\image html camaltriadvance.in.jpg "(description of image)"
 There is no input.
 
 \subsection camaltriadvance_cpp_out Output
-\image html camaltriadvance.out.jpg
+\image html camaltriadvance.out.jpg "(description of image)"
 
 \subsection camaltriadvance_cpp_inf Misc. Information
 \author <your-name-here>
