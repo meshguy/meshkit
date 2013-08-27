@@ -79,11 +79,7 @@ namespace MeshKit
 
     //////////////ALGORITHM BEGINS /////////////
     /// Set algorithm number
-  //  int algo_no = 1;
-  int algo_no = 1;
-//    //////////
-//   std::cout << "Enter algo no." << std::endl;
-//   std::cin >> algo_no;
+  int algo_no = 2;
     if(algo_no == 1){
         m_LogFile << "\nIn execute this : creating boundary layer elements.." <<  std::endl;
         // start the timer
@@ -989,65 +985,65 @@ namespace MeshKit
   //! Output:   vector x, y and z \n
   // ---------------------------------------------------------------------------
   {
-    //    //TODO: Add quality check for tri/quad and pyramids
-    //    if(m_Conn ==8){
-    //        ++m_JacCalls;
-    //        moab::CartVect vertex[8], xi;
-    //        mstream m_LogFile;
-    //        MBERRCHK(mb->get_coords(&conn[offset], 8, (double*) &vertex[0]), mb);
+        //TODO: Add quality check for tri/quad and pyramids
+        if(m_Conn ==8){
+            ++m_JacCalls;
+            moab::CartVect vertex[8], xi;
+            mstream m_LogFile;
+            MBERRCHK(mb->get_coords(&conn[offset], 8, (double*) &vertex[0]), mb);
 
-    //        double corner[8][3] = { { -1, -1, -1 },
-    //                                {  1, -1, -1 },
-    //                                {  1,  1, -1 },
-    //                                { -1,  1, -1 },
-    //                                { -1, -1,  1 },
-    //                                {  1, -1,  1 },
-    //                                {  1,  1,  1 },
-    //                                { -1,  1,  1 } };
+            double corner[8][3] = { { -1, -1, -1 },
+                                    {  1, -1, -1 },
+                                    {  1,  1, -1 },
+                                    { -1,  1, -1 },
+                                    { -1, -1,  1 },
+                                    {  1, -1,  1 },
+                                    {  1,  1,  1 },
+                                    { -1,  1,  1 } };
 
-    //        for (unsigned j = 0; j < 8; ++j) {
-    //            xi[0] = corner[j][0];
-    //            xi[1] = corner[j][1];
-    //            xi[2] = corner[j][2];
-    //            Matrix3 J(0.0);
-    //            double detJ = 0;
-    //            for (unsigned i = 0; i < 8; ++i) {
-    //                const double   xi_p = 1 + xi[0]*corner[i][0];
-    //                const double  eta_p = 1 + xi[1]*corner[i][1];
-    //                const double zeta_p = 1 + xi[2]*corner[i][2];
-    //                const double dNi_dxi   = corner[i][0] * eta_p * zeta_p;
-    //                const double dNi_deta  = corner[i][1] *  xi_p * zeta_p;
-    //                const double dNi_dzeta = corner[i][2] *  xi_p *  eta_p;
-    //                J(0,0) += dNi_dxi   * vertex[i][0];
-    //                J(1,0) += dNi_dxi   * vertex[i][1];
-    //                J(2,0) += dNi_dxi   * vertex[i][2];
-    //                J(0,1) += dNi_deta  * vertex[i][0];
-    //                J(1,1) += dNi_deta  * vertex[i][1];
-    //                J(2,1) += dNi_deta  * vertex[i][2];
-    //                J(0,2) += dNi_dzeta * vertex[i][0];
-    //                J(1,2) += dNi_dzeta * vertex[i][1];
-    //                J(2,2) += dNi_dzeta * vertex[i][2];
-    //              }
-    //            J *= 0.125;
-    //            detJ = J.determinant();
-    //            if(detJ <= 0.0){
-    //                m_LogFile << "We've negative jacobian at the hex corner: "<< j+1 << std::endl;
-    //                exit(0);
-    //              }
-    //            AvgJ+=detJ;
-    //          }
-    //        AvgJ/=8;
-    //        if(m_JacCalls == 1){
-    //            m_JLo = AvgJ;
-    //            m_JHi = AvgJ;
-    //          }
-    //        else if(AvgJ < m_JLo){
-    //            m_JLo = AvgJ;
-    //          }
-    //        else if(AvgJ > m_JHi){
-    //            m_JHi = AvgJ;
-    //          }
-    //      }
+            for (unsigned j = 0; j < 8; ++j) {
+                xi[0] = corner[j][0];
+                xi[1] = corner[j][1];
+                xi[2] = corner[j][2];
+                Matrix3 J(0.0);
+                double detJ = 0;
+                for (unsigned i = 0; i < 8; ++i) {
+                    const double   xi_p = 1 + xi[0]*corner[i][0];
+                    const double  eta_p = 1 + xi[1]*corner[i][1];
+                    const double zeta_p = 1 + xi[2]*corner[i][2];
+                    const double dNi_dxi   = corner[i][0] * eta_p * zeta_p;
+                    const double dNi_deta  = corner[i][1] *  xi_p * zeta_p;
+                    const double dNi_dzeta = corner[i][2] *  xi_p *  eta_p;
+                    J(0,0) += dNi_dxi   * vertex[i][0];
+                    J(1,0) += dNi_dxi   * vertex[i][1];
+                    J(2,0) += dNi_dxi   * vertex[i][2];
+                    J(0,1) += dNi_deta  * vertex[i][0];
+                    J(1,1) += dNi_deta  * vertex[i][1];
+                    J(2,1) += dNi_deta  * vertex[i][2];
+                    J(0,2) += dNi_dzeta * vertex[i][0];
+                    J(1,2) += dNi_dzeta * vertex[i][1];
+                    J(2,2) += dNi_dzeta * vertex[i][2];
+                  }
+                J *= 0.125;
+                detJ = J.determinant();
+                if(detJ <= 0.0){
+                    m_LogFile << "We've negative jacobian at the hex corner: "<< j+1 << std::endl;
+                    exit(0);
+                  }
+                AvgJ+=detJ;
+              }
+            AvgJ/=8;
+            if(m_JacCalls == 1){
+                m_JLo = AvgJ;
+                m_JHi = AvgJ;
+              }
+            else if(AvgJ < m_JLo){
+                m_JLo = AvgJ;
+              }
+            else if(AvgJ > m_JHi){
+                m_JHi = AvgJ;
+              }
+          }
   }
 } // namespace MeshKit
 
