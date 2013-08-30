@@ -83,7 +83,7 @@ void PostBL:: Algo2(){
 
     // For specified surface: get the  all the quads and nodes in a range
     moab::EntityHandle s1;
-    moab::Range quads, nodes, fixmat_ents;
+    moab::Range quads, nodes,edges, fixmat_ents;
     int dims; // variable to store global id of boundary layer specified in the input file
 
     // Method 1: INPUT by NeumannSet
@@ -95,6 +95,9 @@ void PostBL:: Algo2(){
         }
 
         MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, moab::Interface::UNION),mb);
+        if(m_GD == 3)
+            MBERRCHK(mb->get_adjacencies(quads, 1, true, edges, moab::Interface::UNION),mb);
+
         if (debug) {
             m_LogFile <<  "Found NeumannSet with id : " << m_NeumannSet <<  std::endl;
             m_LogFile <<  "#Quads in this surface: " << quads.size() << std::endl;
@@ -116,6 +119,8 @@ void PostBL:: Algo2(){
                 }
 
                 MBERRCHK(mb->get_adjacencies(quads, 0, false, nodes, moab::Interface::UNION),mb);
+                if(m_GD == 3)
+                    MBERRCHK(mb->get_adjacencies(edges, 0, false, nodes, moab::Interface::UNION),mb);
                 if (debug) {
                     m_LogFile <<  "Found surface with id : " << m_SurfId <<  std::endl;
                     m_LogFile <<  "#Quads in this surface: " << quads.size() << std::endl;
@@ -145,7 +150,7 @@ void PostBL:: Algo2(){
     // declare variables before starting BL creation
     std::vector <bool> node_status(false); // size of verts of bl surface
     node_status.resize(nodes.size());
-    moab::Range edges, hexes, hex_edge, quad_verts;
+    moab::Range hexes, hex_edge, quad_verts;
     double coords_new_quad[3];
     moab::EntityHandle hex, hex1;
     int qcount = 0;
@@ -392,24 +397,29 @@ void PostBL:: Algo2(){
             for(Range::iterator qter = adj_for_norm.begin(); qter != adj_for_norm.end(); ++qter){
                 MBERRCHK(mb->get_connectivity(&(*qter), 1, adj_qconn),mb);
 
+                moab::Range this_quad_hex;
+                MBERRCHK(mb->get_adjacencies(&(*qter), 1, m_GD, false, this_quad_hex, moab::Interface::UNION),mb);
+                moab::Range quad_hex = intersect(fixmat_ents, this_quad_hex);
+
                 int side_number = 0, sense = 1, offset = 0;
-                MBERRCHK(mb->side_number(old_hex[0], (*qter), side_number, sense, offset), mb);
+                Range::iterator hexter = quad_hex.begin();
+                MBERRCHK(mb->side_number(*hexter, (*qter), side_number, sense, offset), mb);
 
                 if(m_GD==3){
                     get_normal_quad (adj_qconn, v);
-                    if(sense == 1 && side_number >= 0){
-                        // do nothing
+                    if(sense == 1 ){
+                        v=-v;
                     }
                     else{
-                        v=-v;
+                        // do nothing
                     }
                 }
                 else if(m_GD==2){
-                    if(sense == 1 && side_number >= 0){
-                        get_normal_edge(adj_qconn, surf_normal, v);
+                    if(sense == 1 ){
+                        get_normal_edge(adj_qconn, -surf_normal, v);
                     }
                     else{
-                        get_normal_edge(adj_qconn, -surf_normal, v);
+                        get_normal_edge(adj_qconn, surf_normal, v);
                     }
                 }
                 rt = rt + v;
@@ -431,13 +441,23 @@ void PostBL:: Algo2(){
             moab::Range adj_for_normal;
             int nEdgeDim = 1;
             MBERRCHK(mb->get_adjacencies(&(*kter), 1, nEdgeDim, true, adj_for_normal, Interface::UNION), mb);
-            moab::Range edge_normal = subtract(adj_for_normal, quads);
+            moab::Range edge_normal;
+            if(m_GD == 2)
+                edge_normal = subtract(adj_for_normal, quads);
+            else if(m_GD == 3)
+                edge_normal = subtract(adj_for_normal, edges);
+
 
             if(edge_normal.size() > 1){
-                m_LogFile << "MULTIPLE NORMALS ARE NEEDED" << std::endl;
+                double ncoord[3];
+                MBERRCHK(mb->get_coords(&(*kter), 1, ncoord),mb);
+
+                m_LogFile << "Work in progress !! :- MULTIPLE NORMALS ARE NEEDED AT" << ncoord[0]
+                          << ", " << ncoord[1] << ", " << ncoord[2] << " #normals " << edge_normal.size() << std::endl;
+                exit(0);
             }
             else{
-                m_LogFile << "We've one edge seperating materials 1 NORMAL IS NEEDED" << std::endl;
+                m_LogFile << "We've one edge seperating materials 1 NORMAL IS NEEDED" << edge_normal.size() << std::endl;
                 moab::Range edge_conn;
                 MBERRCHK(mb->get_connectivity(&(*edge_normal.begin()), 1, edge_conn),mb);
                 // now get the normal direction for this edge
@@ -462,7 +482,7 @@ void PostBL:: Algo2(){
             }
         }
         else if(all_bl[count] < 0 ){
-            m_LogFile << " Error, shouldn't have gotten here: " << count << std::endl;
+            m_LogFile << "Material must have associated with BLNode: Error, shouldn't have gotten here: " << count << std::endl;
         }
 
 
@@ -526,11 +546,12 @@ void PostBL:: Algo2(){
             MBERRCHK(mb->set_coords(&(*kter), 1, coords_new_quad),mb);
 
             MBERRCHK(mb->set_coords(&new_vert[nid], 1, coords_old_quad),mb);
-
-            m_LogFile << std::setprecision (3) << std::scientific << " : NID:" << (nid)
-                      << coords_old_quad[0]
-                      << ", " << coords_old_quad[1] << ", " << coords_old_quad[2] << " OLD:- coords: NEW" << coords_new_quad[0]
-                      << ", " << coords_new_quad[1] << ", " << coords_new_quad[2]  << std::endl;
+            if (debug) {
+                m_LogFile << std::setprecision (3) << std::scientific << " : NID:" << (nid)
+                          << coords_old_quad[0]
+                          << ", " << coords_old_quad[1] << ", " << coords_old_quad[2] << " OLD:- coords: NEW" << coords_new_quad[0]
+                          << ", " << coords_new_quad[1] << ", " << coords_new_quad[2]  << std::endl;
+            }
         }
         else if(all_bl[count] > 0 && fixmat != -1){ // node belongs to more than one material and fixmat specified
             // NODE B/W MATERIALS
@@ -546,7 +567,7 @@ void PostBL:: Algo2(){
 
             MBERRCHK(mb->set_coords(&new_vert[nid], 1, coords_old_quad),mb);
 
-            m_LogFile << std::setprecision (3) << std::scientific << " : NID:" << (nid)
+            m_LogFile << std::setprecision (3) << std::scientific << "FM : NID:" << (nid)
                       << coords_old_quad[0]
                       << ", " << coords_old_quad[1] << ", " << coords_old_quad[2] << " OLD:- coords: NEW" << coords_new_quad[0]
                       << ", " << coords_new_quad[1] << ", " << coords_new_quad[2]  << std::endl;
@@ -565,9 +586,12 @@ void PostBL:: Algo2(){
                     }
                 }
                 MBERRCHK(mb->set_connectivity(*fmter, &fmconn[0], fmconn.size()), mb);
+                //                MBERRCHK(mb->add_adjacencies((*fmter), hexes, true), mb);
+                //                MBERRCHK(mb->add_adjacencies((*fmter), fixmat_ents, true), mb);
+
             }
 
-            //         m_LogFile << " We're here in MM case, now go along the edge --- have fun in the process !!" << std::endl;
+            m_LogFile << " We're here in MM case, now go along the edge --- have fun in the process !!" << std::endl;
             // material boundary - get edge direction and length
 
             //  find_min_edge_length(adj_qconn_r, qconn[i], nodes, m_MinEdgeLength);
@@ -629,19 +653,19 @@ void PostBL:: Algo2(){
 
             int node_tag_id = 0;
             MBERRCHK(mb->tag_get_data(BLNodeIDTag, &qconn[i], 1, &node_tag_id) ,mb);
-            std::cout << "this is node id : " << node_tag_id << std::endl;
-
             MBERRCHK(mb->get_coords(&qconn[i], 1, one_node_in_quad),mb);
             m_LogFile << std::setprecision (3) << std::scientific << " new nodes:- coords: " << one_node_in_quad[0]
                       << ", " << one_node_in_quad[1] << ", " << one_node_in_quad[2]  << std::endl;
-
-
 
             //populate the connectivity after creating nodes for this BL node
             for(int j=0; j< m_Intervals; j++){
                 if(m_Conn == 8 && m_BElemNodes == 4){ // hex
                     int nid = node_tag_id*m_Intervals + j;
-                    if(j==0){
+                    if(m_Intervals == 1){
+                        conn[m_Conn*j +i] = qconn[i];
+                        conn[m_Conn*j + i+m_BElemNodes] = new_vert[nid];
+                    }
+                    else if(j==0){
                         conn[m_Conn*j +i] = qconn[i];
                         conn[m_Conn*j + i+m_BElemNodes] = new_vert[nid + m_Intervals - 2];
                     }
@@ -656,22 +680,30 @@ void PostBL:: Algo2(){
                 }
                 else if(m_Conn == 4 && m_BElemNodes == 2){ // Quads
                     int nid = node_tag_id*m_Intervals+j;
-                    if(j==0){
+                    if(m_Intervals == 1){
+                        conn[m_Conn*j +i] = new_vert[nid];
+                        conn[m_Conn*j + i+m_BElemNodes] = qconn[m_BElemNodes-i-1];
+                    }
+                    else if(j==0){
                         conn[m_Conn*j +i] = qconn[m_BElemNodes-i-1];
                         conn[m_Conn*j + i+m_BElemNodes] = new_vert[nid + m_Intervals - 2];
                     }
                     else if(j==(m_Intervals-1)){
-                        conn[m_Conn*j +i] = new_vert[nid - m_Intervals + 1];
-                        conn[m_Conn*j + m_BElemNodes + 1 -i] = new_vert[nid];
+                        conn[m_Conn*j +i] = new_vert[nid];
+                        conn[m_Conn*j + m_BElemNodes + 1 -i] = new_vert[nid - m_Intervals + 1];
                     }
                     else {
-                        conn[m_Conn*j +i] = new_vert[nid + m_Intervals - 2*j -1];
-                        conn[m_Conn*j + m_BElemNodes + 1 -i] = new_vert[nid + m_Intervals - 2*j -2];
+                        conn[m_Conn*j +i] = new_vert[nid + m_Intervals - 2*j -2];
+                        conn[m_Conn*j + m_BElemNodes + 1 -i] = new_vert[nid + m_Intervals - 2*j -1];
                     }
                 }
                 else if(m_Conn == 4 && m_BElemNodes == 3 && hybrid == true){ // make wedges aka prisms for tet mesh
                     int nid = node_tag_id*m_Intervals+j;
-                    if(j==0){
+                    if(m_Intervals == 1){
+                        conn[m_Conn*j +i] = qconn[i];
+                        conn[m_Conn*j + i+m_BElemNodes] = new_vert[nid];
+                    }
+                    else if(j==0){
                         conn[m_HConn*j +i] = qconn[i];
                         conn[m_HConn*j + i+m_BElemNodes] = new_vert[nid + m_Intervals - 2];
                     }
@@ -686,17 +718,21 @@ void PostBL:: Algo2(){
                 }
                 else if(m_Conn == 3 && m_BElemNodes == 2){ // make quads for tri mesh
                     int nid = node_tag_id*m_Intervals+j;
-                    if(j==0){
+                    if(m_Intervals == 1){
+                        conn[m_Conn*j +i] = new_vert[nid];
+                        conn[m_Conn*j + i+m_BElemNodes] = qconn[m_BElemNodes-i-1];
+                    }
+                    else if(j==0){
                         conn[m_HConn*j +i] = qconn[m_BElemNodes-i-1];
                         conn[m_HConn*j + i+m_BElemNodes] = new_vert[nid + m_Intervals - 2];
                     }
                     else if(j==(m_Intervals-1)){
-                        conn[m_HConn*j +i] = new_vert[nid - m_Intervals + 1];
-                        conn[m_HConn*j + m_BElemNodes + 1 - i] = new_vert[nid];
+                        conn[m_HConn*j +i] = new_vert[nid];
+                        conn[m_HConn*j + m_BElemNodes + 1 - i] = new_vert[nid - m_Intervals + 1];
                     }
                     else {
-                        conn[m_HConn*j +i] = new_vert[nid + m_Intervals - 2*j -1];
-                        conn[m_HConn*j + m_BElemNodes + 1 - i] = new_vert[nid + m_Intervals - 2*j -2];
+                        conn[m_HConn*j +i] = new_vert[nid + m_Intervals - 2*j -2];
+                        conn[m_HConn*j + m_BElemNodes + 1 - i] = new_vert[nid + m_Intervals - 2*j -1];
                     }
                 }
             }
@@ -707,23 +743,23 @@ void PostBL:: Algo2(){
             for(int c=0; c<m_Intervals; c++){
                 if(tri_sch == 1){
                     // lower triangle
-                    tri_conn[m_Conn*c*2] =     conn[c*m_HConn];
+                    tri_conn[m_Conn*c*2] =     conn[c*m_HConn + 0];
                     tri_conn[m_Conn*c*2 + 1] = conn[c*m_HConn + 1];
-                    tri_conn[m_Conn*c*2 + 2] = conn[c*m_HConn + 3];
-                    // upper triangle
-                    tri_conn[m_Conn*c*2 + 3] = conn[c*m_HConn + 1];
-                    tri_conn[m_Conn*c*2 + 4] = conn[c*m_HConn + 2];
-                    tri_conn[m_Conn*c*2 + 5] = conn[c*m_HConn + 3];
+                    tri_conn[m_Conn*c*2 + 2] = conn[c*m_HConn + 2];
+                    // upper triangl
+                    tri_conn[m_Conn*c*2 + 3] = conn[c*m_HConn + 2];
+                    tri_conn[m_Conn*c*2 + 4] = conn[c*m_HConn + 3];
+                    tri_conn[m_Conn*c*2 + 5] = conn[c*m_HConn + 0];
                 }
                 else if(tri_sch == 2){
                     // lower triangle
-                    tri_conn[m_Conn*c*2] =     conn[c*m_HConn];
+                    tri_conn[m_Conn*c*2] =     conn[c*m_HConn + 0];
                     tri_conn[m_Conn*c*2 + 1] = conn[c*m_HConn + 1];
                     tri_conn[m_Conn*c*2 + 2] = conn[c*m_HConn + 2];
                     // upper triangle
                     tri_conn[m_Conn*c*2 + 3] = conn[c*m_HConn + 2];
                     tri_conn[m_Conn*c*2 + 4] = conn[c*m_HConn + 3];
-                    tri_conn[m_Conn*c*2 + 5] = conn[c*m_HConn];
+                    tri_conn[m_Conn*c*2 + 5] = conn[c*m_HConn + 0];
                 }
             }
         }
@@ -751,13 +787,48 @@ void PostBL:: Algo2(){
                 //        MBERRCHK(mb->add_entities(smooth_set, &hex1, 1), mb);
             }
             // add this hex to a block
+            moab::Range adj_hex_for_mat;
+            // int hmat_id = 0;
+
             if(mthis_set == 0){
-                // here find the material set for this hex
-                m_LogFile << "Find out the material that this hex corresponds to?? bailing out" << std::endl;
-                exit(0);
+                //               std::vector<int> hmat_id(qconn.size(), 0);
+                //                MBERRCHK(mb->tag_get_data(MNTag, &qconn[0], 1, &hmat_id) ,mb);
+                //        MBERRCHK(mb->get_adjacencies(&qconn[0], 1, m_GD, false, adj_hex_for_mat, moab::Interface::INTERSECT), mb);
+                MBERRCHK(mb->get_adjacencies(&(*kter), 1, m_GD, false, adj_hex_for_mat, moab::Interface::INTERSECT), mb);
+                MBERRCHK(mb->add_adjacencies(hex, adj_hex_for_mat, true), mb);
+
+                std::vector<int> hmat_id(adj_hex_for_mat.size(), 0);
+
+                // this will lead to an error, so no error checking, new adj hexes don't have matidtag
+                mb->tag_get_data(MatIDTag, adj_hex_for_mat, &hmat_id[0]);//, mb);
+                for(int p=0; p< hmat_id.size(); p++){
+                    if(hmat_id[p] !=0){
+                        // this is our mat id for this hex
+                        moab::EntityHandle mat_set = 0;
+                        for (set_it = m_sets.begin(); set_it != m_sets.end(); set_it++)  {
+                            mat_set = *set_it;
+                            int set_id;
+                            MBERRCHK(mb->tag_get_data(MTag, &mat_set, 1, &set_id), mb);
+                            if(set_id == hmat_id[p])
+                                break;
+                        }
+                        MBERRCHK(mb->add_entities(mat_set, &hex, 1), mb);
+                        if(m_Conn==3 && m_GD ==2 && hybrid == false)
+                            MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
+                    }
+                }
+
+
+                //    here find the material set for this hex
+
+                //                m_LogFile << "Find out the material that this hex corresponds to?? bailing out" << std::endl;
+                //                exit(0);
             }
             else {
                 MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
+                if(m_Conn==3 && m_GD ==2 && hybrid == false)
+                    MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
+
             }
             // mark entities for smoothing
             //                MBERRCHK(mb->add_entities(smooth_set, &hex, 1), mb);
@@ -768,18 +839,18 @@ void PostBL:: Algo2(){
 
     }
 
-    all_elems.clear();
-    moab::Range skin_verts;
-    MBERRCHK(mb->get_entities_by_dimension(0, 3, all_elems,true),mb);
+    //    all_elems.clear();
+    //    moab::Range skin_verts;
+    //    MBERRCHK(mb->get_entities_by_dimension(0, 3, all_elems,true),mb);
 
-    moab::Skinner skinner(mb);
-    skinner.find_skin(0, all_elems, 0, skin_verts);
+    //    moab::Skinner skinner(mb);
+    //    skinner.find_skin(0, all_elems, 0, skin_verts);
 
-    m_LogFile << "setting 'fixed'' tag = 1 on verts in the skin = " <<  skin_verts.size() << std::endl;
+    //    m_LogFile << "setting 'fixed'' tag = 1 on verts in the skin = " <<  skin_verts.size() << std::endl;
 
-    // set fixed tag = 1 on all skin verts
-    std::vector<int> all_skin_data(skin_verts.size(), 1);
-    MBERRCHK(mb->tag_set_data(FTag, skin_verts, &all_skin_data[0]), mb);
+    //    // set fixed tag = 1 on all skin verts
+    //    std::vector<int> all_skin_data(skin_verts.size(), 1);
+    //    MBERRCHK(mb->tag_set_data(FTag, skin_verts, &all_skin_data[0]), mb);
 
     m_LogFile << "\nTotal Jacobian calls/Min/Max: " << m_JacCalls << ", " << m_JLo << ", " << m_JHi << std::endl;
 
