@@ -11,10 +11,10 @@ libPostBL_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libPostBL_la_SOURCES = \
-	mstream.hpp    PostBL.cpp    mstream.cpp  algorithm2.cpp
+        PostBL.cpp algorithm2.cpp
 # The list of header files which are to be installed
 nobase_libPostBL_la_include_HEADERS = \
-        ../meshkit/PostBL.hpp
+        meshkit/PostBL.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -27,3 +27,5 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
+
+LDADD = $(top_builddir)/src/libMeshKit.la

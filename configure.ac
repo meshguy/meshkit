@@ -1051,6 +1051,7 @@ AC_CONFIG_FILES([Makefile
                  src/algs/QuadMesher/Makefile
                  src/algs/Sweep/Makefile
                  src/algs/AssyGen/Makefile
+		 src/algs/CoreGen/Makefile
                  src/algs/PostBL/Makefile
                  src/algs/Qslim/Makefile
                  src/algs/Triangle/Makefile

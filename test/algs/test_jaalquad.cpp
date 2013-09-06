@@ -17,7 +17,7 @@ using namespace MeshKit;
 void test_simple_tri_to_quad();
 
 MKCore* core = 0;
-bool write_vtk = false;
+bool write_vtk = true;
 int main( int argc, char* argv[] )
 {
   for (int i = 1; i < argc; ++i) {

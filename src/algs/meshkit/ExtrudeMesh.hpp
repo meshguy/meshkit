@@ -118,6 +118,15 @@ namespace MeshKit {
     /* \brief Return reference to expand sets
      */
     CESets &expand_sets();
+
+    // - get structure
+    int getStructure(iMesh_Instance instance,
+                     iBase_EntitySetHandle set,
+                     std::vector<iBase_EntityHandle> &ents,
+                     std::vector<iBase_EntityHandle> &unique_adj,
+                     std::vector<int> &indices,
+                     std::vector<int> &offsets);
+
   private:
     void do_extrude(iMesh::EntitySetHandle set_handle);
 

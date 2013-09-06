@@ -11,28 +11,25 @@ libAssyGen_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libAssyGen_la_SOURCES = AssyGen.cpp \
-        vectortemplate.hpp \
-        matrixtemplate.hpp \
-        clock.cpp \
         cylinder.cpp \
-        pincell.cpp \
-        parser.cpp \
-        cylinder.hpp \
-        parser.hpp \
-        pincell.hpp \
-        clock.hpp
+        pincell.cpp
+
 # The list of header files which are to be installed
 nobase_libAssyGen_la_include_HEADERS = \
-        ../meshkit/AssyGen.hpp
+        meshkit/AssyGen.hpp \
+        meshkit/pincell.hpp \
+        meshkit/cylinder.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-              -I$(srcdir)/../../core \
-              -I$(srcdir)/../../lemon \
-              -I$(srcdir)/../../utils \
+              -I$(top_srcdir)/src/core \
+              -I$(top_srcdir)/src/utils \
+              -I$(top_srcdir) \
               -I$(top_builddir) \
-              -I$(top_srcdir)/utils 
+              -I$(top_srcdir)/src/lemon
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
+
+LDADD = $(top_builddir)/src/libMeshKit.la

@@ -11,15 +11,20 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/utils \
                -I$(top_srcdir)/src/core \
                -I$(top_srcdir)/src/algs \
+               -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils \
                -I$(top_srcdir)/src/extern/CAMAL
 
-TESTS = test_parallelmesher
+BROKEN_TESTS = test_coregen
+
+TESTS = test_parallelmesher test_coregen
 
 check_PROGRAMS = $(TESTS)
 
 test_parallelmesher_SOURCES = test_parallelmesher.cpp
+test_coregen_SOURCES = test_coregen.cpp
+
 
 # Utility target: build but don't run tests
 build-check:

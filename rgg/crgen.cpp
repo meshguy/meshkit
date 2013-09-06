@@ -1780,7 +1780,7 @@ int CCrgen::create_neumannset() {
     MBErrorCode result;
     MBRange::iterator rit;
 
-    result = skinner.find_skin(tmp_elems, set_DIM-1, skin_range);
+    result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
     if (MB_SUCCESS != result) return result;
 
     for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {

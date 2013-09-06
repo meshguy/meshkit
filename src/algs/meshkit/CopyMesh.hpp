@@ -130,6 +130,14 @@ namespace MeshKit {
                          iMesh::EntitySetHandle *&tagged_sets,
                          int &num_tagged_sets);
 
+    // - get structure
+    int getStructure(iMesh_Instance instance,
+                     iBase_EntitySetHandle set,
+                     std::vector<iBase_EntityHandle> &ents,
+                     std::vector<iBase_EntityHandle> &unique_adj,
+                     std::vector<int> &indices,
+                     std::vector<int> &offsets);
+
     iMesh *mesh;                // mesh instance
     LocalTag copyTag;           // tag storing copy-to tag
     Copy::Transform *transform; // transform function for copy-move

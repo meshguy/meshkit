@@ -19,16 +19,15 @@
 #include "meshkit/LocalSet.hpp"
 #include "meshkit/LocalTag.hpp"
 #include "meshkit/Matrix.hpp"
-#include "../CopyUtils.hpp"
 
 #include "meshkit/iMesh.hpp"
 #include "meshkit/iGeom.hpp"
 #include "MBCN.h"
 
-#include "../../utils/SimpleArray.hpp"
-#include "../AssyGen/parser.hpp"
-#include "../AssyGen/clock.hpp"
-#include "../PostBL/mstream.hpp"
+#include "meshkit/SimpleArray.hpp"
+#include "meshkit/parser.hpp"
+#include "meshkit/clock.hpp"
+#include "mstream.hpp"
 
 #include "MBiMesh.hpp"
 #include "moab/Interface.hpp"

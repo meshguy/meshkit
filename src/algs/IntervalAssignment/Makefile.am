@@ -56,7 +56,7 @@ IABendNlp.hpp
 
 # The list of header files which are to be installed
 nobase_libIntervalAssignment_la_include_HEADERS = \
-        meshkit/IAInterface.hpp
+        meshkit/IAInterface.hpp \
 		meshkit/IAVariable.hpp
 
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

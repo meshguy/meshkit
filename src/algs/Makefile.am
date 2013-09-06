@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen Triangle Sweep PostBL
+SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Triangle Sweep PostBL
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
@@ -10,6 +10,7 @@ libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
                            QuadMesher/libJaalQuadMesher.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
+			   CoreGen/libCoreGen.la \
                            PostBL/libPostBL.la \
                            Triangle/libMKTriangle.la 
                        
@@ -38,9 +39,7 @@ libMeshKitalgs_la_SOURCES = \
 	MergeMesh.cpp \
 	ExtrudeMesh.cpp \
 	CESets.cpp \
-	Transform.cpp \
-	CopyUtils.cpp \
-	CopyUtils.hpp 
+        Transform.cpp
 if HAVE_FBIGEOM
 libMeshKitalgs_la_SOURCES += \
   MBGeomOp.cpp \
@@ -61,7 +60,7 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/ExtrudeMesh.hpp \
 	meshkit/CESets.hpp \
 	meshkit/TransformBase.hpp \
-	meshkit/Transform.hpp 
+        meshkit/Transform.hpp
 if HAVE_FBIGEOM
 nobase_libMeshKitalgs_la_include_HEADERS += \
 	meshkit/MBGeomOp.hpp \
@@ -81,6 +80,7 @@ AM_CPPFLAGS += $(DEFINES) \
               -I$(srcdir)/QuadMesher \
               -I$(srcdir)/Sweep \
               -I$(srcdir)/AssyGen \
+	      -I$(srcdir)/CoreGen \
 	      -I$(srcdir)/PostBL
 
 

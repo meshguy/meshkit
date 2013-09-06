@@ -6,8 +6,6 @@
 #include "meshkit/LocalSet.hpp"
 #include "meshkit/ModelEnt.hpp"
 
-#include "CopyUtils.hpp"
-
 #include "iMesh_extensions.h"
 #include "MBCN.h"
 

@@ -12,6 +12,7 @@
 #include "meshkit/QslimMesher.hpp"
 #include "meshkit/QuadMesh.hpp"
 #include "meshkit/AssyGen.hpp"
+#include "meshkit/CoreGen.hpp"
 #include "meshkit/PostBL.hpp"
 #include "meshkit/TriangleMesher.hpp"
 #include "meshkit/MeshOpTemplate.hpp"
@@ -58,6 +59,7 @@ REGISTER_MESH_OP(EBMesher);
 REGISTER_MESH_OP(QslimMesher);
 REGISTER_MESH_OP(QuadMesher);
 REGISTER_MESH_OP(AssyGen);
+REGISTER_MESH_OP(CoreGen);
 REGISTER_MESH_OP(PostBL);
 REGISTER_MESH_OP(TriangleMesher);
 REGISTER_MESH_OP(MeshOpTemplate); // might need FBIGEOM?

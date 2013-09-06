@@ -4,7 +4,7 @@ Argonne National Laboratory
 
 CClock class definition.
 *********************************************/
-#include "clock.hpp"
+#include "meshkit/clock.hpp"
 
 CClock::CClock ()
 // ---------------------------------------------------------------------------

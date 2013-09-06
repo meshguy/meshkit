@@ -5,7 +5,7 @@ Argonne National Laboratory
 
 Pin Cylinder class definition.
 *********************************************/
-#include "cylinder.hpp"
+#include "meshkit/cylinder.hpp"
 
 CCylinder::CCylinder ()
 // ---------------------------------------------------------------------------

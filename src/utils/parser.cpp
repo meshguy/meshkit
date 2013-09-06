@@ -5,8 +5,7 @@ Argonne National Laboratory
 Contains CParser class implementation.
 *********************************************/
 #include <cctype>
-#include "parser.hpp"
-//#include <math.h>
+#include "meshkit/parser.hpp"
 #include <stdlib.h>
 
 CParser::CParser ()

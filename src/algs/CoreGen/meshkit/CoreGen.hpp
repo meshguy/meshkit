@@ -25,17 +25,16 @@
 #include "meshkit/LocalSet.hpp"
 #include "meshkit/LocalTag.hpp"
 #include "meshkit/Matrix.hpp"
-#include "../CopyUtils.hpp"
 
 #include "meshkit/iMesh.hpp"
 #include "meshkit/iGeom.hpp"
 #include "MBCN.h"
 
-#include "../AssyGen/vectortemplate.hpp"
-#include "../AssyGen/matrixtemplate.hpp"
-#include "../AssyGen/parser.hpp"
-#include "../../utils/SimpleArray.hpp"
-#include "../AssyGen/clock.hpp"
+#include "meshkit/vectortemplate.hpp"
+#include "meshkit/matrixtemplate.hpp"
+#include "meshkit/parser.hpp"
+#include "meshkit/SimpleArray.hpp"
+#include "meshkit/clock.hpp"
 
 #ifdef HAVE_MOAB
 #include "iMesh_extensions.h"
@@ -56,11 +55,11 @@
 #include "MBParallelConventions.h"
 #endif
 
-#include "CopyGeom.hpp"
-#include "CopyMesh.hpp"
-#include "MergeMesh.hpp"
-#include "ExtrudeMesh.hpp"
-#include "CESets.hpp"
+#include "../../meshkit/CopyGeom.hpp"
+#include "../../meshkit/CopyMesh.hpp"
+#include "../../meshkit/MergeMesh.hpp"
+#include "../../meshkit/ExtrudeMesh.hpp"
+#include "../../meshkit/CESets.hpp"
 
 namespace MeshKit {
 
@@ -122,7 +121,7 @@ namespace MeshKit {
     virtual void execute_this();
 
     enum ErrorStates {INVALIDINPUT, ENEGATIVE};
-    int prepareIO (int argc, char *argv[], int nrank, int numprocs);
+    int prepareIO (int argc, char *argv[], int nrank, int numprocs, std::string  TestDir);
     int load_meshes();
     int load_meshes_parallel(const int, int);
     int distribute_mesh(const int,  int);
@@ -176,12 +175,14 @@ namespace MeshKit {
     //! MOAB Impl for calling mesh creation/manipulation operations
     MBInterface *mb;
 
+    std::vector <CopyMesh*> cm;
+    std::vector <CopyGeom*> cg;
 
     iBase_EntitySetHandle root_set;
     std::vector<iBase_EntitySetHandle> assys;
     std::vector<int> assys_index;
     // declare variables read in the inputs
-    int err;
+    int rank, procs, err;
     int UNITCELL_DUCT, ASSY_TYPES ;
     int nrings, nringsx, nringsy, pack_type, symm;
     double pitch, pitchx, pitchy;
@@ -219,7 +220,10 @@ namespace MeshKit {
     //  MKUtils *mu;
     // error handler
     void IOErrorHandler (ErrorStates) const;
-
+    CClock Timer;
+    std::string szDateTime;
+    int run_flag;
+    clock_t sTime;
 #ifdef USE_MPI
     moab::ParallelComm *pc;
 #endif

@@ -4,7 +4,7 @@ PostBL: Post-Mesh BOundary Layer Improved Algorithms 2
 Argonne National Laboratory
 *********************************************/
 
-#include "../meshkit/PostBL.hpp"
+#include "meshkit/PostBL.hpp"
 using namespace MeshKit;
 #include <string.h>
 

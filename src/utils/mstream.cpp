@@ -1,4 +1,4 @@
-#include "mstream.hpp"
+#include "meshkit/mstream.hpp"
 mstream::mstream ()
 // ---------------------------------------------------------------------------
 // Function: default constructor

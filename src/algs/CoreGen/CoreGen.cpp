@@ -1,4 +1,4 @@
-#include "../meshkit/CoreGen.hpp"
+#include "meshkit/CoreGen.hpp"
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 namespace MeshKit
@@ -18,15 +18,12 @@ namespace MeshKit
       mb (mk->moab_instance())
   {
 
-    CopyMesh *cm = (CopyMesh*) mk->construct_meshop("CopyMesh", me_vec);
-    cm->set_name("copy_move_mesh");
+    //    CopyMesh *cm = (CopyMesh*) mk->construct_meshop("CopyMesh", me_vec);
+    //    cm->set_name("copy_move_mesh");
 
-    CopyGeom *cg = (CopyGeom*) mk->construct_meshop("CopyGeom", me_vec);
-    cg->set_name("copy_move_geom");
+    //    CopyGeom *cg = (CopyGeom*) mk->construct_meshop("CopyGeom", me_vec);
+    //    cg->set_name("copy_move_geom");
 
-    //accesses entities for merging directly from moab instance, vols are used for finding the dimension
-    MergeMesh *mm = (MergeMesh*) mk->construct_meshop("MergeMesh", me_vec);
-    mm->set_name("merge_mesh");
 
     err = 0;
     UNITCELL_DUCT = 0;
@@ -69,10 +66,241 @@ namespace MeshKit
 
   void CoreGen::setup_this()
   {
+    double ctload = 0;
+    clock_t tload = 0;
+    CClock ld_time;
+    int ld_t = 0, ld_tload = 0;
+    unsigned long mem1 = 0;
+    if (prob_type == "mesh") {
+        std::cout << "~~~~~PROCS" << procs<< std::endl;
+        if (procs == 1) {
+            err = load_meshes();
+            //ERRORR("Failed to load meshes.", 1);
+          }
+        else {
+#ifdef USE_MPI
+            err = load_meshes_parallel(rank, procs);
+            //ERRORR("Failed to load meshes.", 1);
+
+#ifdef USE_MPI
+            MPI::COMM_WORLD.Barrier();
+#endif
+            if(procs > (int) files.size()){
+                // if there are more procs than files distribute the copy/move work on each proc
+                err = distribute_mesh(rank, procs);
+                // ERRORR("Failed to load meshes.", 1);
+              }
+            //Get a pcomm object
+            pc = new moab::ParallelComm(mk_core()->moab_instance(), MPI::COMM_WORLD, &err);
+#endif
+          }
+
+        mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
+        ld_tload = ld_time.DiffTime();
+        tload = clock();
+        ctload = (double) (tload - sTime)/(60*CLOCKS_PER_SEC);
+
+        if (mem_tflag == true && procs == 1) {
+            std::cout << "\n" << " Clock time taken to load mesh files = " << ld_tload
+                      << " seconds" << std::endl;
+            std::cout << " CPU time = " << ctload << " mins" << std::endl;
+            std::cout << " Memory used: " << mem1/1e6 << " Mb\n" << std::endl;
+          }
+      }
+
+
+
+
+    /*********************************************/
+    // load geometry files
+    /*********************************************/
+    else if (prob_type == "geometry" && procs == 1) {
+        err = load_geometries();
+        //   ERRORR("Failed to load geometries", 1);
+      }
+    else if(prob_type == "geometry" && procs > 1){
+        std::cout << " Parallel mode not supported for problem-type: Geometry " << std::endl;
+        exit(1);
+      }
+    //    MEntVector vols;
+    //    //accesses entities for merging directly from moab instance, vols are used for finding the dimension
+    //    MergeMesh *mm = (MergeMesh*) mk_core()->construct_meshop("MergeMesh", vols);
+    //    mm->set_name("merge_mesh");
+
+        // put them in the graph
+//        if(prob_type == "mesh"){
+//            for(int i=0; i< (int) files.size(); i++){
+//                mk_core()->get_graph().addArc(mk_core()->root_node()->get_node(), cm[i]->get_node());
+//             //   mk_core()->get_graph().addArc(cm[i]->get_node(), mm->get_node());
+//              }
+//            mk_core()->get_graph().addArc(cm[files.size() - 1]->get_node(), mk_core()->leaf_node()->get_node());
+//          }
+//        else if(prob_type == "geometry"){
+//            for(int i=0; i< (int) files.size(); i++){
+//                mk_core()->get_graph().addArc(mk_core()->root_node()->get_node(), cg[i]->get_node());
+//              }
+//            // mk->get_graph().addArc(cm[i]->get_node(), mm->get_node());
+//          }
   }
 
   void CoreGen::execute_this()
   {
+    std::cout << "In execute this, di-graph is here" << std::endl;
+    mk_core()->print_graph();
+    double ctload = 0, ctcopymove = 0, ctmerge = 0, ctextrude = 0, ctns = 0, ctgid = 0, ctsave = 0;
+    clock_t tload = 0, tcopymove = 0, tmerge = 0, textrude = 0, tns = 0, tgid = 0, tsave = 0;
+
+    int err = 0;
+    int run_flag = 1;
+
+    // more memory/time related variables
+    int ld_t = 0, ld_tload = 0, ld_tcopymove = 0, ld_tsave = 0, ld_tgid = 0, ld_tmerge = 0, ld_tns = 0;
+    unsigned long mem1 = 0, mem2 = 0, mem3 = 0, mem4 = 0, mem5 = 0, mem6 = 0, mem7 = 0;
+
+    // if (run_flag == 1 ) {
+    /*********************************************/
+    // load mesh files
+    /*********************************************/
+
+#ifdef USE_MPI
+    MPI::COMM_WORLD.Barrier();
+#endif
+    /*********************************************/
+    // copy move
+    /*********************************************/
+    CClock ld_cm;
+    err = copymove(rank, procs);
+    //  ERRORR("Failed in copy move routine.", 1);
+
+    if (prob_type == "mesh"){
+        mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem2);
+        ld_tcopymove = ld_cm.DiffTime();
+        tcopymove = clock();
+        ctcopymove = (double) (tcopymove - tload)/(60*CLOCKS_PER_SEC);
+
+        if (mem_tflag == true && (strcmp(prob_type.c_str(), "mesh") == 0) && procs == 1) {
+            std::cout << "\n" << " Clock time taken to copy/move mesh files = " << ld_tcopymove
+                      << " seconds" << std::endl;
+            std::cout << " CPU time = " << ctcopymove << " mins" << std::endl;
+            std::cout << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
+          }
+      }
+#ifdef USE_MPI
+    MPI::COMM_WORLD.Barrier();
+#endif
+    if (prob_type == "mesh") {
+        /*********************************************/
+        // merge
+        /*********************************************/
+        CClock ld_mm;
+        if (procs == 1) {
+            std::cout << "Merging.." << std::endl;
+            err = merge_nodes();
+            //    ERRORR("Failed to merge nodes.", 1);
+          } else {
+            err = merge_nodes_parallel(rank, procs);
+            //       ERRORR("Failed to merge nodes in parallel.", 1);
+          }
+
+        mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem3);
+        ld_tmerge = ld_mm.DiffTime();
+        tmerge = clock();
+        ctmerge = (double) (tmerge - tcopymove)/(60*CLOCKS_PER_SEC);
+
+        if (mem_tflag == true && procs == 1 ) {
+            std::cout << "\n" << " Clock time taken to merge nodes = " << ld_tmerge
+                      << " seconds" << std::endl;
+            std::cout << " CPU time = " << ctmerge << " mins" << std::endl;
+            std::cout << " Memory used: " << mem3/1e6 << " Mb\n" << std::endl;
+          }
+#ifdef USE_MPI
+        MPI::COMM_WORLD.Barrier();
+#endif
+        /*********************************************/
+        // extrude
+        /*********************************************/
+        if(procs == 1){
+            if (extrude_flag == true) {
+
+                // assign global ids after copy/move step
+                if (rank == 0)
+                  err = assign_gids();
+
+                CClock ld_em;
+                err = extrude();
+                //     ERRORR("Failed to extrude.", 1);
+
+                mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
+                ld_t = ld_em.DiffTime();
+                textrude = clock();
+                ctextrude = (double) (textrude - tmerge)/(60*CLOCKS_PER_SEC);
+
+                if (mem_tflag == true && procs == 1) {
+                    std::cout << "\n" << " Clock time taken to extrude = " << ld_t
+                              << " seconds" << std::endl;
+                    std::cout << " CPU time = " << ctextrude << " mins" << std::endl;
+                    std::cout << " Memory used: " << mem4/1e6 << " Mb\n"
+                              << std::endl;
+                  }
+              }
+          }
+#ifdef USE_MPI
+        MPI::COMM_WORLD.Barrier();
+#endif
+        /*********************************************/
+        // assign gids
+        /*********************************************/
+        CClock ld_gid;
+        if (procs == 1) {
+            err = assign_gids();
+            //      ERRORR("Failed to assign global ids.", 1);
+          }
+        //        else{
+        //          // err = assign_gids_parallel(rank, procs);
+        //          // ERRORR("Failed to assign global ids.", 1);
+        //        }
+
+        mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem5);
+        ld_tgid = ld_gid.DiffTime();
+        tgid = clock();
+        ctgid = (double) (tgid-tmerge)/(60*CLOCKS_PER_SEC);
+
+        if (mem_tflag == true && procs == 1) {
+            std::cout << "\n" << " Clock time taken to assign gids = " << ld_tgid
+                      << " seconds" << std::endl;
+            std::cout << " CPU time = " << ctgid << " mins" << std::endl;
+            std::cout << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
+          }
+        /*********************************************/
+        // create neumann sets on the core model
+        /*********************************************/
+        if((nss_flag == true || nsb_flag == true
+            || nst_flag == true) && procs == 1){
+            CClock ld_ns;
+            err = create_neumannset();
+            //    ERRORR("Failed to create neumann set.", 1);
+
+            mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem6);
+            ld_tns = ld_ns.DiffTime();
+            tns = clock();
+            ctns = (double) (tns-tgid)/(60*CLOCKS_PER_SEC);
+            if (mem_tflag == true && procs == 1) {
+                std::cout << "\n" << " Clock time taken to create neumann sets = " << ld_tns
+                          << " seconds" << std::endl;
+                std::cout << " CPU time = " << ctns << " mins" << std::endl;
+                std::cout << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
+              }
+          }
+#ifdef USE_MPI
+        MPI::COMM_WORLD.Barrier();
+#endif
+
+      }
+
+
+
+
+
   }
 
   int CoreGen::save_mesh(int nrank) {
@@ -132,19 +360,19 @@ namespace MeshKit
 #ifdef USE_MPI
     // deallocate ... deallocate ... deallocate
     if (prob_type == "mesh") {
-//        for (unsigned int i = 0; i < assys.size(); i++) {
-//            delete cm[i];
-//          }
+        //        for (unsigned int i = 0; i < assys.size(); i++) {
+        //            delete cm[i];
+        //          }
 
-          iMesh_dtor(imesh->instance(), &err);
-          ERRORR("Failed in call iMesh_dtor", err);
+        iMesh_dtor(imesh->instance(), &err);
+        ERRORR("Failed in call iMesh_dtor", err);
 
       }
 
     if (prob_type == "geometry") {
-//        for (unsigned int i = 0; i < 1; i++) {
-//            delete cg[i];
-//          }
+        //        for (unsigned int i = 0; i < 1; i++) {
+        //            delete cg[i];
+        //          }
         iGeom_dtor(igeom->instance(), &err);
         ERRORR("Failed in call iGeom_dtor", err);
       }
@@ -422,16 +650,16 @@ namespace MeshKit
           }
 
         // create cm instances for each mesh file
-          //cm = new CopyMesh*[assys.size()];
-//        for (unsigned int i = 0; i < assys.size(); i++) {
-//            cm[i] = new CopyMesh(impl);
-//          }
+        //cm = new CopyMesh*[assys.size()];
+        //        for (unsigned int i = 0; i < assys.size(); i++) {
+        //            cm[i] = new CopyMesh(impl);
+        //          }
 #endif
       }
     return iBase_SUCCESS;
   }
 
-    int CoreGen::close()
+  int CoreGen::close()
   // ---------------------------------------------------------------------------
   // Function: dellocating
   // Input:    none
@@ -440,31 +668,55 @@ namespace MeshKit
   {
     // deallocate ... deallocate ... deallocate
     if (prob_type == "mesh") {
-//        for (unsigned int i = 0; i < files.size(); i++) {
-//            delete cm[i];
-//          }
+        //        for (unsigned int i = 0; i < files.size(); i++) {
+        //            delete cm[i];
+        //          }
 
         iMesh_dtor(imesh->instance(), &err);
         ERRORR("Failed in call iMesh_dtor", err);
 
       }
     if (prob_type == "geometry") {
-//        for (unsigned int i = 0; i < files.size(); i++) {
-//            delete cg[i];
-//          }
+        //        for (unsigned int i = 0; i < files.size(); i++) {
+        //            delete cg[i];
+        //          }
         iGeom_dtor(igeom->instance(), &err);
         ERRORR("Failed in call iGeom_dtor", err);
       }
     return 0;
   }
 
-  int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
+  int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::string  TestDir)
   // -----------------------------------------------------------------------------------
   // Function: Obtains file names and opens input/output files and then read/write them
   // Input:    command line arguments
   // Output:   none
   // -----------------------------------------------------------------------------------
   {
+    // set rank and total number of processors
+    std::cout << "@#!#  rank procs" << nrank << " " << nprocs << std::endl;
+    rank = nrank;
+    procs = nprocs;
+    sTime = clock();
+    /*********************************************/
+    // Print banner on standard output
+    /*********************************************/
+    if (rank == 0) {
+        err = banner();
+        ERRORR("Failed in creating banner", 1);
+
+        Timer.GetDateTime(szDateTime);
+        std::cout << "\nStarting out at : " << szDateTime << "\n";
+      }
+    if (argc > 1) {
+        if (argv[1][0] == '-' && argv[1][1] == 'm') {
+            // when run_flag = 1, program runs and does copy, move, merge, extrude, assign gids, save and close
+            run_flag = 0;
+            // when run_flag = 1, program only generates a makefile
+          }
+      }
+
+
     bool bDone = false;
     do {
         if (2 == argc) {
@@ -553,7 +805,7 @@ namespace MeshKit
                 std::cout << "  No file specified.  Defaulting to: "
                           << DEFAULT_TEST_FILE << std::endl;
               }
-            iname = DEFAULT_TEST_FILE;
+            iname = TestDir + "/" + DEFAULT_TEST_FILE;
             ifile = iname + ".inp";
             std::string temp = TEST_FILE_NAME;
             outfile = temp + ".h5m";
@@ -658,17 +910,17 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   {
     // make a mesh instance
-   // iMesh_newMesh("MOAB", imesh->instance(), &err, 4);
-   // ERRORR("Failed to create instance.", 1);
+    // iMesh_newMesh("MOAB", imesh->instance(), &err, 4);
+    // ERRORR("Failed to create instance.", 1);
 
-    iMesh_getRootSet(imesh->instance(), &root_set, &err);
-    ERRORR("Couldn't get the root set", err);
+//    iMesh_getRootSet(imesh->instance(), &root_set, &err);
+//    ERRORR("Couldn't get the root set", err);
 
     // create cm instances for each mesh file
-//    cm = new CopyMesh*[files.size()];
-//    for (unsigned int i = 0; i < files.size(); i++) {
-//        cm[i] = new CopyMesh(impl);
-//      }
+    cm.resize(files.size());
+    //    for (unsigned int i = 0; i < files.size(); i++) {
+    //        cm[i] = new CopyMesh(impl);
+    //      }
 
     iBase_EntitySetHandle orig_set;
 
@@ -676,11 +928,21 @@ namespace MeshKit
     for (unsigned int i = 0; i < files.size(); i++) {
         iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
         ERRORR("Couldn't create file set.", err);
-
-        iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(
-                     files[i].c_str()), 0);
+        std::cout << "Loading File: " << files[i].c_str() << std::endl;
+        iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(files[i].c_str()), 0);
         ERRORR("Couldn't read mesh file.", err);
+        //        mk_core()->load_mesh(files[i].c_str());
 
+        ModelEnt me(mk_core(), iBase_EntitySetHandle(0), /*igeom instance*/0, (moab::EntityHandle)orig_set);
+        MEntVector assm_set;
+        //assm_set.clear();
+        assm_set.push_back(&me);
+        //mk_core()->populate_model_ents();
+        //        ModelEnt v(mk_core(), 0, 0);
+        // v.mesh_handle() = (moab::EntityHandle) orig_set;
+        cm[i] = (CopyMesh*) mk_core()->construct_meshop("CopyMesh", assm_set);
+        cm[i]->set_name("copy_move_mesh");
+        cm[i]->copy_sets().add_set(orig_set);
         assys.push_back(orig_set);
         assys_index.push_back(i);
       }
@@ -698,17 +960,14 @@ namespace MeshKit
   {
     std::cout << "\n--Loading geometry files." << std::endl;
     // make a mesh instance
-//    iGeom_newGeom("GEOM", igeom->instance(), &err, 4);
-//    ERRORR("Failed to create instance.", 1);
+    //    iGeom_newGeom("GEOM", igeom->instance(), &err, 4);
+    //    ERRORR("Failed to create instance.", 1);
 
     iGeom_getRootSet(igeom->instance(), &root_set, &err);
     ERRORR("Couldn't get the root set", err);
 
     // create cm instances for each mesh file
-//    cg = new CopyGeom*[files.size()];
-//    for (unsigned int i = 0; i < files.size(); i++) {
-//        cg[i] = new CopyGeom(igeom->instance());
-//      }
+    cg.resize(files.size());
 
     iBase_EntitySetHandle orig_set, temp_set, temp_set1;
 
@@ -742,6 +1001,10 @@ namespace MeshKit
 
         iGeom_subtract(igeom->instance(), temp_set, temp_set1, &orig_set, &err);
         ERRORR( "Unable to subtract entity sets.", err );
+
+        MEntVector vols;
+        cg[i] = (CopyGeom*) mk_core()->construct_meshop("CopyGeom", vols);
+        cg[i]->set_name("copy_move_geom");
 
         assys.push_back(orig_set);
 
@@ -1280,15 +1543,15 @@ namespace MeshKit
   {
     std::cout << '\n';
     std::cout
-        << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         << '\n';
     std::cout
-        << "\t\tProgram to Assemble Nuclear Reactor Assembly Meshes and Form a Core     "
+        << "Program to Assemble Nuclear Reactor Assembly Meshes and Form a Core     "
         << '\n';
-    std::cout << "\t\t\t\t\tArgonne National Laboratory" << '\n';
-    std::cout << "\t\t\t\t\t        2009-2010         " << '\n';
+    std::cout << "\t\t\tArgonne National Laboratory" << '\n';
+    std::cout << "\t\t\t        2010-201X         " << '\n';
     std::cout
-        << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         << '\n';
     return iBase_SUCCESS;
   }
@@ -1457,7 +1720,7 @@ namespace MeshKit
     //get entities for merging
     iBase_EntityHandle *ents = NULL;
     int ents_alloc = 0, ents_size;
- //   mm = new MergeMesh(impl);
+    //   mm = new MergeMesh(impl);
     if (set_DIM == 2) { // if surface geometry specified
         iMesh_getEntities(imesh->instance(), root_set, iBase_FACE, iMesh_ALL_TOPOLOGIES,
                           &ents, &ents_alloc, &ents_size, &err);
@@ -1472,15 +1735,15 @@ namespace MeshKit
     iMesh_getNumOfType(imesh->instance(), root_set, iBase_VERTEX, &num1, &err);
     ERRORR("Trouble getting number of entities before merge.", err);
 
-//     merge now
-//    mm->merge_entities(ents, ents_size, merge_tol, do_merge, update_sets,
-//                       merge_tag);
+    //     merge now
+    //    mm->merge_entities(ents, ents_size, merge_tol, do_merge, update_sets,
+    //                       merge_tag);
 
     iMesh_getNumOfType(imesh->instance(), root_set, iBase_VERTEX, &num2, &err);
     ERRORR("Trouble getting number of entities after merge.", err);
 
     std::cout << "Merged " << num1 - num2 << " vertices." << std::endl;
-   //k delete mm;
+    //k delete mm;
     return iBase_SUCCESS;
   }
 
@@ -1491,14 +1754,14 @@ namespace MeshKit
     // Output:   none
     // ---------------------------------------------------------------------------
     // assign new global ids
-//    if (global_ids == true){
-//        std::cout << "Assigning global ids." << std::endl;
-//        mu = new MKUtils(impl);
-//        err = mu->assign_global_ids(root_set, 3, 1, true, false,
-//                                    "GLOBAL_ID");
-//        ERRORR("Error assigning global ids.", err);
-//      }
-//    delete mu;
+    //    if (global_ids == true){
+    //        std::cout << "Assigning global ids." << std::endl;
+    //        mu = new MKUtils(impl);
+    //        err = mu->assign_global_ids(root_set, 3, 1, true, false,
+    //                                    "GLOBAL_ID");
+    //        ERRORR("Error assigning global ids.", err);
+    //      }
+    //    delete mu;
     return iBase_SUCCESS;
 
 
@@ -1627,20 +1890,20 @@ namespace MeshKit
         ERRORR("Trouble getting neumann set.", err);
 
         // add only material set tag as extrude set
-      //  ext->extrude_sets().add_tag(mtag, NULL);
+        //  ext->extrude_sets().add_tag(mtag, NULL);
 
         // add 2d neumann set tag as copy tag to create-
         // -new neumann set for destination surfaces formed by extrusion
-   //     ext->copy_sets().add_tag(ntag, NULL);
+        //     ext->copy_sets().add_tag(ntag, NULL);
 
         double v[] = { 0, 0, z_height };
         int steps = z_divisions;
 
         // now extrude
-      //  ext->extrude(set, extrude::Translate(v, steps));
+        //  ext->extrude(set, extrude::Translate(v, steps));
 
         // update the copy sets, this creates the ent set for destination 2D quads.
-   //     ext->copy_sets().update_tagged_sets();
+        //     ext->copy_sets().update_tagged_sets();
 
         iMesh_destroyEntSet(imesh->instance(), set, &err);
         ERRORR("Error in destroying ent set of faces after extrusion is done.", err);
@@ -1785,7 +2048,7 @@ namespace MeshKit
         MBErrorCode result;
         MBRange::iterator rit;
 
-        result = skinner.find_skin(tmp_elems, set_DIM-1, skin_range);
+        result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
         if (MB_SUCCESS != result) return result;
 
         for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {

@@ -11,15 +11,10 @@ libCoreGen_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libCoreGen_la_SOURCES = CoreGen.cpp \
-        ../AssyGen/vectortemplate.hpp \
-        ../AssyGen/matrixtemplate.hpp \
-        ../AssyGen/clock.cpp \
-        ../AssyGen/parser.cpp \
-        ../AssyGen/parser.hpp \
-        ../AssyGen/clock.hpp
+        copymove_parallel.cpp
 # The list of header files which are to be installed
 nobase_libCoreGen_la_include_HEADERS = \
-        ../meshkit/CoreGen.hpp
+        meshkit/CoreGen.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -32,3 +27,5 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
+
+LDADD = $(top_builddir)/src/libMeshKit.la

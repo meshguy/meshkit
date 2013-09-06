@@ -19,6 +19,7 @@ QuadCleanUp::automatic()
           Mesh *quadmesh = t2quad.getQuadMesh( mesh, 1);
           delete mesh; // deletes the triangle mesh...
           mesh = quadmesh;
+          return 0;
      }
 
 // Throughout the cleaning process, euler characteristic should remain same

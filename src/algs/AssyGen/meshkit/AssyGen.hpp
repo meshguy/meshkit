@@ -25,18 +25,18 @@
 #include "meshkit/LocalSet.hpp"
 #include "meshkit/LocalTag.hpp"
 #include "meshkit/Matrix.hpp"
-#include "../CopyUtils.hpp"
 
 #include "meshkit/iMesh.hpp"
 #include "meshkit/iGeom.hpp"
 #include "MBCN.h"
 
-#include "../AssyGen/vectortemplate.hpp"
-#include "../AssyGen/matrixtemplate.hpp"
-#include "../AssyGen/pincell.hpp"
-#include "../AssyGen/parser.hpp"
-#include "../../utils/SimpleArray.hpp"
-#include "../AssyGen/clock.hpp"
+#include "meshkit/SimpleArray.hpp"
+
+#include "meshkit/vectortemplate.hpp"
+#include "meshkit/matrixtemplate.hpp"
+#include "pincell.hpp"
+#include "meshkit/parser.hpp"
+#include "meshkit/clock.hpp"
 
 
 namespace MeshKit {

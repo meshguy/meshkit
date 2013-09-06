@@ -4,7 +4,7 @@ Argonne National Laboratory
 
 CPincell class definition.
 *********************************************/
-#include "pincell.hpp"
+#include "meshkit/pincell.hpp"
 
 CPincell::CPincell ()
 // ---------------------------------------------------------------------------

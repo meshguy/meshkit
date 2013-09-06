@@ -1,4 +1,4 @@
-#include "../meshkit/AssyGen.hpp"
+#include "meshkit/AssyGen.hpp"
 
 namespace MeshKit
 {

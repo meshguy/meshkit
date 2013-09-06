@@ -107,7 +107,7 @@ void NGTetMesher::execute_this()
     nglib::Ng_Meshing_Parameters ngp;
     ngp.maxh = my_size;
     ngp.fineness = 0.5;
-    ngp.secondorder = 0;
+    ngp.second_order = 0;
     
     nglib::Ng_Result result = nglib::Ng_GenerateVolumeMesh(ngmesh, &ngp);
     if (nglib::NG_OK != result) ECERRCHK(MK_FAILURE, "Netgen mesher returned !ok.");

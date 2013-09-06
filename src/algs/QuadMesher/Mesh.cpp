@@ -2178,8 +2178,8 @@ Mesh::enumerate(int etype)
                Face *face = *fiter;
                if( face->isActive() ) {
                     face->setID(index++);
-                    for( int i  = 0; i < faces[i]->getSize(0); i++) {
-                         if( !faces[i]->getNodeAt(i)->isActive() )
+                    for( int i  = 0; i < face->getSize(0); i++) {
+                         if( !face->getNodeAt(i)->isActive() )
                               cout << "Error: Face is active, but one of the nodes is not" << endl;
                     }
                }

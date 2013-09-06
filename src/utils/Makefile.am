@@ -12,7 +12,11 @@ libMeshKitutils_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libMeshKitutils_la_SOURCES = \
-	iMesh.cpp 
+        iMesh.cpp \
+        clock.cpp \
+        mstream.cpp \
+        parser.cpp
+
 
 # The list of header files which are to be installed
 nobase_libMeshKitutils_la_include_HEADERS = \
@@ -23,7 +27,12 @@ nobase_libMeshKitutils_la_include_HEADERS = \
 	meshkit/LocalSet.hpp \
 	meshkit/LocalTag.hpp \
 	meshkit/RegisterMeshOp.hpp \
-	meshkit/SimpleArray.hpp 
+        meshkit/SimpleArray.hpp \
+        meshkit/parser.hpp \
+        meshkit/clock.hpp \
+        meshkit/vectortemplate.hpp \
+        meshkit/matrixtemplate.hpp \
+        meshkit/mstream.hpp
 if HAVE_FBIGEOM
 nobase_libMeshKitutils_la_include_HEADERS += \
 	meshkit/FBiGeom.hpp 
