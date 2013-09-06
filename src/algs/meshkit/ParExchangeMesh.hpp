@@ -67,7 +67,7 @@ private:
 
   ParallelComm* m_mpcomm; // mesh parallel communication
 
-  unsigned int m_rank, m_proc_size, m_master;
+  unsigned int m_rank, m_proc_size;
 
   iBase_TagHandle m_mPuniqueIDTag;
 

@@ -34,6 +34,12 @@ namespace MeshKit {
       /** \brief Clone this transform object
        */
       virtual Transform * clone() const = 0;
+
+        /** \brief Virtual destructor
+         */
+        virtual ~Transform ()
+        {
+        }
     };
 
     /** \class BasicTransform Transform.hpp "meshkit/Transform.hpp"
@@ -126,6 +132,12 @@ namespace MeshKit {
       /** \brief Clone this transform object
        */
       virtual Transform * clone() const = 0;
+
+        /** \brief Virtual destructor
+         */
+        virtual ~Transform ()
+        {
+        }
     };
 
     /** \class BasicTransform Transform.hpp "meshkit/Transform.hpp"

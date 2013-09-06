@@ -63,8 +63,8 @@
 
 namespace MeshKit {
 
-#define DEFAULT_TEST_FILE  "CoreGen_default"
-#define TEST_FILE_NAME "CoreGen_default"
+#define COREGEN_DEFAULT_TEST_FILE  "CoreGen_default"
+#define CTEST_FILE_NAME "CoreGen_default"
 
   class MKCore;
 

@@ -532,7 +532,7 @@ void do_contract(pair_info *pair) {
   for (i = 0; i < v1_info.pairs.length(); i++) {
     pair_info *p = v1_info.pairs(i);
 
-    moab::EntityHandle u;
+    moab::EntityHandle u = 0L;
     if (p->v0 == v1)
       u = p->v1;
     else if (p->v1 == v1)

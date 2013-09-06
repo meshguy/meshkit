@@ -39,10 +39,9 @@ public:
 private:
 	//member variables
 	MKCore* mk_core;
-	double max;
-	//MKCore *mk;
-	iBase_EntitySetHandle mesh_root_set;
-	iBase_TagHandle mesh_id_tag;
+//	double max;
+//	iBase_EntitySetHandle mesh_root_set;
+//	iBase_TagHandle mesh_id_tag;
 	bool IsLaplacian, IsUntangle, IsShapeImprove, IsSizeAdapt;
 	iGeom * igeom_inst;
 };

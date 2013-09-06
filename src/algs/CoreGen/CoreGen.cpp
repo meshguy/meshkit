@@ -803,11 +803,11 @@ namespace MeshKit
                 std::cerr << "Usage: " << argv[0]
                           << " <input file> WITHOUT EXTENSION" << std::endl;
                 std::cout << "  No file specified.  Defaulting to: "
-                          << DEFAULT_TEST_FILE << std::endl;
+                          << COREGEN_DEFAULT_TEST_FILE << std::endl;
               }
-            iname = TestDir + "/" + DEFAULT_TEST_FILE;
+            iname = TestDir + "/" + COREGEN_DEFAULT_TEST_FILE;
             ifile = iname + ".inp";
-            std::string temp = TEST_FILE_NAME;
+            std::string temp = CTEST_FILE_NAME;
             outfile = temp + ".h5m";
             mfile = temp + ".makefile";
             infofile = temp + "_info.csv";
@@ -1186,7 +1186,7 @@ namespace MeshKit
                       IOErrorHandler (INVALIDINPUT);
 
                     all_meshfiles.push_back(meshfile);
-                    if (iname == DEFAULT_TEST_FILE){
+                    if (iname == COREGEN_DEFAULT_TEST_FILE){
                         meshfile = DIR + meshfile;
                       }
                     files.push_back(meshfile);
@@ -1246,7 +1246,7 @@ namespace MeshKit
 
                     all_meshfiles.push_back(meshfile);
 
-                    if (iname == DEFAULT_TEST_FILE){
+                    if (iname == COREGEN_DEFAULT_TEST_FILE){
                         meshfile = DIR + meshfile;
                       }
                     files.push_back(meshfile);
@@ -1302,7 +1302,7 @@ namespace MeshKit
 
                     all_meshfiles.push_back(meshfile);
 
-                    if (iname == DEFAULT_TEST_FILE){
+                    if (iname == COREGEN_DEFAULT_TEST_FILE){
                         meshfile = DIR + meshfile;
                       }
                     files.push_back(meshfile);
@@ -1356,7 +1356,7 @@ namespace MeshKit
 
                     all_meshfiles.push_back(meshfile);
 
-                    if (iname == DEFAULT_TEST_FILE){
+                    if (iname == COREGEN_DEFAULT_TEST_FILE){
                         meshfile = DIR + meshfile;
                       }
                     files.push_back(meshfile);
@@ -1411,7 +1411,7 @@ namespace MeshKit
 
                     all_meshfiles.push_back(meshfile);
 
-                    if (iname == DEFAULT_TEST_FILE){
+                    if (iname == COREGEN_DEFAULT_TEST_FILE){
                         meshfile = DIR + meshfile;
                       }
                     files.push_back(meshfile);
@@ -1459,7 +1459,7 @@ namespace MeshKit
 
             all_meshfiles.push_back(back_meshfile);
 
-            if (iname == DEFAULT_TEST_FILE){
+            if (iname == COREGEN_DEFAULT_TEST_FILE){
                 back_meshfile = DIR + back_meshfile;
               }
             files.push_back(back_meshfile);

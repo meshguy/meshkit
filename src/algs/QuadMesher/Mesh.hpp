@@ -978,7 +978,10 @@ struct MeshFilter {
      }
      virtual bool pass(const Face * v) const {
           return 1;
-     };
+     }
+    virtual ~MeshFilter() {
+     }
+        ;
 };
 
 class Mesh {

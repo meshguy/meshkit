@@ -11,8 +11,8 @@ Jaal::set_singlet_tag(Mesh *mesh, const string &aname )
 
      int relexist = mesh->build_relations(0, 2);
 
-     if (!mesh->isBoundaryKnown());
-     mesh->search_boundary();
+     if (!mesh->isBoundaryKnown())
+        mesh->search_boundary();
 
      size_t ncount = 0;
      for (size_t i = 0; i < numnodes; i++) {
