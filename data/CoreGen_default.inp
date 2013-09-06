@@ -1,0 +1,13 @@
+Geometry Volume		   		! 'Geometry' card defines if the meshes are volume or surface
+ProblemType Mesh
+Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
+GeomEngine OCC
+GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
+Assemblies 1 10 10			! 'Assemblies' card defines the number of assembly mesh files and pitch
+../../data/c.exo c
+Lattice 2 2 
+C C &
+XX XX 
+OutputFileName ot.exo                  !  cgd.h5m is the desired o/p file name 
+end					! 'END' card is a MUST; Marks the end of file for the file reader
+
