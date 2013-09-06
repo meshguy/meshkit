@@ -27,7 +27,7 @@
 #include "meshkit/SimpleArray.hpp"
 #include "meshkit/parser.hpp"
 #include "meshkit/clock.hpp"
-#include "mstream.hpp"
+#include "meshkit/mstream.hpp"
 
 #include "MBiMesh.hpp"
 #include "moab/Interface.hpp"
