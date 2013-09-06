@@ -24,10 +24,9 @@ There is no input.
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/PostBL.hpp"
 
-#include "meshkit/CAMALTetMesher.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/CopyGeom.hpp"
-
+#include "example_utils.hpp"
 using namespace MeshKit;
 
 MKCore *mk;
@@ -53,7 +52,7 @@ void test_PostBL_default(int argc, char **argv)
    ag->set_name("PostBL");
 
   //!setup and execute PostBL graph node, point the executable to PostBL input file, 
-  //ag->PrepareIO(argc, argv, TestDir);
+  ag->PrepareIO(argc, argv, example);
   ag->setup_this();
   ag->execute_this();
 

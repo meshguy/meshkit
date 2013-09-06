@@ -25,8 +25,8 @@ Some text explaining objectives
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/AssyGen.hpp"
 
-#include "meshkit/CAMALTetMesher.hpp"
 #include "meshkit/CopyGeom.hpp"
+#include "example_utils.hpp"
 
 using namespace MeshKit;
 
@@ -53,10 +53,10 @@ void test_AssyGen_default(int argc, char **argv)
   ag->set_name("AssyGen");
 
   // setup input/output AssyGen files for creating the 'Reactor Assembly' geometry
-  ag->PrepareIO(argc, argv, TestDir);
+  ag->PrepareIO(argc, argv, example_dir);
 
-  if(save_mesh)
-	  ag->save_mesh("AssyGen.in.exo");
+//  if(save_mesh)
+//	  ag->save_mesh("AssyGen.in.exo");
   ag->setup_this();
   ag->execute_this();
 
