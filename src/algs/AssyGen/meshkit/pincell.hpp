@@ -8,7 +8,7 @@ CPincell class definition.
 #ifndef __RGG_PINCELL_H__
 #define __RGG_PINCELL_H__
 #include <iostream>
-#include "vectortemplate.hpp"
+#include "meshkit/vectortemplate.hpp"
 #include "cylinder.hpp"
 
 class CPincell

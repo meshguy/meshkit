@@ -8,7 +8,7 @@ Pin cylinder class definition.
 #ifndef __RGG_CYLINDER_H__
 #define __RGG_CYLINDER_H__
 #include <iostream>
-#include "vectortemplate.hpp"
+#include "meshkit/vectortemplate.hpp"
 
 
 class CCylinder
