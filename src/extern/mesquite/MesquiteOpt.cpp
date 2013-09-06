@@ -190,16 +190,16 @@ void MesquiteOpt::set_fixed_tag_on_skin( ModelEnt* ent, int value )
       moab::ErrorCode rval;
       moab::Range elems;
       rval = mb->get_entities_by_dimension( set, ent->dimension(), elems );
-      MBERRCHK(rval,mk_core()->moab_instance());
+      MBERRCHK(rval, mk_core()->moab_instance());
       
       moab::Range verts;
       moab::Skinner tool(mb);
       moab::ErrorCode err = tool.find_skin( 0, elems, 0, verts );
-      MBERRCHK(rval,mk_core()->moab_instance());
+      MBERRCHK(err, mk_core()->moab_instance());
      
       moab::Tag t = reinterpret_cast<moab::Tag>( get_fixed_tag() );
       err = mb->tag_clear_data( t, verts, &value );
-      MBERRCHK(rval,mk_core()->moab_instance());
+      MBERRCHK(err, mk_core()->moab_instance());
     }
   }
 }

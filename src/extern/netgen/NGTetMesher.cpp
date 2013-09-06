@@ -125,7 +125,7 @@ void NGTetMesher::execute_this()
     if (num_pts > (int)numvs) {
       coords.resize(3*(num_pts-numvs));
       
-      for (unsigned int i = numvs; i < num_pts; i++)
+      for (unsigned int i = (unsigned int) numvs; i < (unsigned int) num_pts; i++)
         nglib::Ng_GetPoint(ngmesh, i, &coords[3*(i-numvs)]);
       
         // create the new vertices' entities 
@@ -139,14 +139,14 @@ void NGTetMesher::execute_this()
     MBERRCHK(rval, mk_core()->moab_instance());		
 
       //create the tris, get a direct ptr to connectivity
-    int num_tets = nglib::Ng_GetNE(ngmesh);
-    moab::EntityHandle starth, *connect, *tmp_connect;
+    int num_tets = (int) nglib::Ng_GetNE(ngmesh);
+    moab::EntityHandle starth, *connect;
     rval = iface->get_element_connect(num_tets, 4, moab::MBTET, 1, starth, connect);
     MBERRCHK(rval, mk_core()->moab_instance());
 
       // read connectivity directly into that array, as int's
     int *connecti = (int*) connect;
-    for (unsigned int i = 0; i < num_tets; i++)
+    for (unsigned int i = 0; i < (unsigned int) num_tets; i++)
       nglib::Ng_GetVolumeElement(ngmesh, i+1, connecti+4*i);
 
       // put vertex handles into an indexible array
