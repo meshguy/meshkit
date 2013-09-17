@@ -1,10 +1,12 @@
 #include <iostream>
+#include <sstream>
 #include <iomanip> // for setprecision
 #include <limits>  // for double min/max
 #include <assert.h>
 #include <vector>
 #include "MBRange.hpp"
 #include "MBAdaptiveKDTree.hpp"
+#include "moab/FileOptions.hpp"
 #include "arc.hpp"
 #include "zip.hpp"
 #include "gen.hpp"
@@ -497,13 +499,14 @@ namespace arc {
 
     // add endpoints to kd-tree. Tree must track ownership to know when verts are
     // merged away (deleted).  
-    MBAdaptiveKDTree kdtree(MBI(), 0, MESHSET_TRACK_OWNER);                           
+    MBAdaptiveKDTree kdtree(MBI());
     MBEntityHandle root;                                                         
-    MBAdaptiveKDTree::Settings settings;                
-    settings.maxEntPerLeaf = 1;                                                     
-    settings.candidateSplitsPerDir = 1;                           
-    settings.candidatePlaneSet = MBAdaptiveKDTree::SUBDIVISION; 
-    result = kdtree.build_tree( endpoints, root, &settings);            
+    std::ostringstream ostr;
+    ostr << "CANDIDATE_PLANE_SET=SUBDIVISION;MAX_PER_LEAF=" << 1;
+    moab::FileOptions opts(ostr.str().c_str());
+
+    result = kdtree.build_tree(endpoints, &root, &opts);
+
     assert(MB_SUCCESS == result);                                               
     MBAdaptiveKDTreeIter tree_iter;                                     
     kdtree.get_tree_iterator( root, tree_iter );     
@@ -525,8 +528,9 @@ namespace arc {
       for(unsigned int j=0; j<2; j++) {                                  
 	//gen::print_vertex_coords( endpts[j] );
         result = MBI()->get_coords( &endpts[j], 1, endpt_coords.array());
-        assert(MB_SUCCESS == result);                                        
-        result = kdtree.leaves_within_distance( root, endpt_coords.array(), 
+        assert(MB_SUCCESS == result);
+
+        result = kdtree.distance_search( endpt_coords.array(),
                                                 facet_tol, leaves);
         assert(MB_SUCCESS == result);                                
         for(unsigned int k=0; k<leaves.size(); k++) {           

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <iomanip> // for setprecision
 #include <limits> // for min/max values
 #include <assert.h>
@@ -299,14 +300,20 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     const double SQR_TOL = tol*tol;
     // Clean up the created tree, and track verts so that if merged away they are
     // removed from the tree.
-    MBAdaptiveKDTree kdtree(MBI(), true, 0, MESHSET_TRACK_OWNER);
+    MBAdaptiveKDTree kdtree(MBI());
     MBEntityHandle root;
-    MBAdaptiveKDTree::Settings settings;
-    settings.maxEntPerLeaf = 6;
-    settings.maxTreeDepth  = 50;
-    settings.candidateSplitsPerDir = 1;
-    settings.candidatePlaneSet = MBAdaptiveKDTree::VERTEX_MEDIAN;
-    result = kdtree.build_tree( verts, root, &settings);
+    std::ostringstream ostr;
+    ostr << "CANDIDATE_PLANE_SET=VERTEX_MEDIAN;MAX_PER_LEAF=6";
+    ostr <<";SPLITS_PER_DIR=1;MAX_DEPTH=50;";
+    moab::FileOptions opts(ostr.str().c_str());
+
+    result = kdtree.build_tree(verts, &root, &opts);
+
+    // settings.maxEntPerLeaf = 6; // default
+    // settings.maxTreeDepth  = 50; // not default
+    // settings.candidateSplitsPerDir = 1;
+    // settings.candidatePlaneSet = MBAdaptiveKDTree::VERTEX_MEDIAN;
+    //result = kdtree.build_tree( verts, root, &settings);
     assert(MB_SUCCESS == result);
     MBAdaptiveKDTreeIter tree_iter;
     kdtree.get_tree_iterator( root, tree_iter );
@@ -318,7 +325,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       result = MBI()->get_coords( &(*i), 1, from_point);
       assert(MB_SUCCESS == result);
       std::vector<MBEntityHandle> leaves_out;
-      result = kdtree.leaves_within_distance( root, from_point, tol, leaves_out);
+      result = kdtree.distance_search( from_point, tol, leaves_out);
       assert(MB_SUCCESS == result);
       for(unsigned int j=0; j<leaves_out.size(); j++) {
 	std::vector<MBEntityHandle> leaf_verts;

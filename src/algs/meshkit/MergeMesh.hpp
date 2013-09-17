@@ -19,6 +19,7 @@
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
+#include "MBAdaptiveKDTree.hpp"
 #endif
 
 namespace MeshKit {
@@ -130,7 +131,7 @@ private:
 
     //- given a kdtree, set tag on vertices in leaf nodes with vertices
     //- to which they should be merged
-  MBErrorCode find_merged_to(MBEntityHandle &tree_root, MBTag merged_to);
+  MBErrorCode find_merged_to(MBAdaptiveKDTree & tree, MBEntityHandle &tree_root, MBTag merged_to);
 
   
   MBErrorCode merge_entities(MBRange &elems,

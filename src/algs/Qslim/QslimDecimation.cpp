@@ -1044,8 +1044,8 @@ int QslimDecimation::Init() {
         << opts.pair_selection_tolerance << "]." << std::endl;
     // use adaptive kd tree to find proximity vertices
     moab::EntityHandle tree_root = 0;
-    moab::AdaptiveKDTree kd(mb, true);
-    rval = kd.build_tree(verts, tree_root);
+    moab::AdaptiveKDTree kd(mb);
+    rval = kd.build_tree(verts, &tree_root);
     if (rval != moab::MB_SUCCESS) {
       std::cout << "Can't build tree for vertices" << std::endl;
       return 1;
@@ -1059,7 +1059,7 @@ int QslimDecimation::Init() {
       mb->get_coords(&v, 1, coords);
       //moab::CartVect v1(coords);
       std::vector<moab::EntityHandle> leaves; // sets of vertices close by
-      kd.leaves_within_distance(tree_root, coords,
+      kd.distance_search( coords,
           opts.pair_selection_tolerance, leaves);
       // add to the list of close vertices
       for (j = 0; j < leaves.size(); j++) {

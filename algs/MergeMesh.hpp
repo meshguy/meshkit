@@ -7,6 +7,7 @@
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
+#include "MBAdaptiveKDTree.hpp"
 #endif
 
 class MergeMesh 
@@ -43,7 +44,7 @@ private:
 
     //- given a kdtree, set tag on vertices in leaf nodes with vertices
     //- to which they should be merged
-  MBErrorCode find_merged_to(MBEntityHandle &tree_root, MBTag merged_to);
+  MBErrorCode find_merged_to(MBAdaptiveKDTree & tree, MBEntityHandle &tree_root, MBTag merge_tag);
   
   MBErrorCode merge_entities(MBRange &elems,
                              const int do_merge,

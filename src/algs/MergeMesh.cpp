@@ -149,12 +149,12 @@ namespace MeshKit
     else mbMergeTag = merge_tag;
   
     // build a kd tree with the vertices
-    MBAdaptiveKDTree kd(mbImpl, true);
-    result = kd.build_tree(skin_range, tree_root);
+    MBAdaptiveKDTree kd(mbImpl);
+    result = kd.build_tree(skin_range, &tree_root);
     if (MB_SUCCESS != result) return result;
 
     // find matching vertices, mark them
-    result = find_merged_to(tree_root, mbMergeTag);
+    result = find_merged_to(kd, tree_root, mbMergeTag);
     if (MB_SUCCESS != result) return result;
   
     // merge them if requested
@@ -190,10 +190,10 @@ namespace MeshKit
     return mbImpl->delete_entities(deadEnts);
   }
 
-  MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag) 
+  MBErrorCode MergeMesh::find_merged_to(MBAdaptiveKDTree & tree, MBEntityHandle &tree_root, MBTag merge_tag)
   {
     MBAdaptiveKDTreeIter iter;
-    MBAdaptiveKDTree tree(mbImpl);
+    //MBAdaptiveKDTree tree(mbImpl);
   
     // evaluate vertices in this leaf
     MBRange leaf_range, leaf_range2;
@@ -235,7 +235,7 @@ namespace MeshKit
 
 	// check close-by leaves too
 	leaves_out.clear();
-	result = tree.leaves_within_distance(tree_root, from.array(), mergeTol,
+	result = tree.distance_search( from.array(), mergeTol,
 					     leaves_out);
 	leaf_range2.clear();
 	for (std::vector<MBEntityHandle>::iterator vit = leaves_out.begin();

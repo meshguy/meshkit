@@ -3,7 +3,7 @@
 
 #ifdef HAVE_MOAB
 #include "MBSkinner.hpp"
-#include "MBAdaptiveKDTree.hpp"
+//#include "MBAdaptiveKDTree.hpp"
 #include "MBRange.hpp"
 #include "MBCartVect.hpp"
 #endif
@@ -75,12 +75,12 @@ MBErrorCode MergeMesh::merge_entities(MBRange &elems,
   else mbMergeTag = merge_tag;
   
   // build a kd tree with the vertices
-  MBAdaptiveKDTree kd(mbImpl, true);
-  result = kd.build_tree(skin_range, tree_root);
+  MBAdaptiveKDTree kd(mbImpl);
+  result = kd.build_tree(skin_range, &tree_root);
   if (MB_SUCCESS != result) return result;
 
   // find matching vertices, mark them
-  result = find_merged_to(tree_root, mbMergeTag);
+  result = find_merged_to(kd, tree_root, mbMergeTag);
   if (MB_SUCCESS != result) return result;
   
   // merge them if requested
@@ -116,10 +116,9 @@ MBErrorCode MergeMesh::perform_merge(MBTag merge_tag)
   return mbImpl->delete_entities(deadEnts);
 }
 
-MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag) 
+MBErrorCode MergeMesh::find_merged_to(MBAdaptiveKDTree & tree, MBEntityHandle &tree_root, MBTag merge_tag)
 {
   MBAdaptiveKDTreeIter iter;
-  MBAdaptiveKDTree tree(mbImpl);
   
   // evaluate vertices in this leaf
   MBRange leaf_range, leaf_range2;
@@ -161,7 +160,7 @@ MBErrorCode MergeMesh::find_merged_to(MBEntityHandle &tree_root, MBTag merge_tag
 
       // check close-by leaves too
       leaves_out.clear();
-      result = tree.leaves_within_distance(tree_root, from.array(), mergeTol,
+      result = tree.distance_search( from.array(), mergeTol,
                                            leaves_out);
       leaf_range2.clear();
       for (std::vector<MBEntityHandle>::iterator vit = leaves_out.begin();
