@@ -1167,7 +1167,15 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "Timer Start" << std::endl;
   // import the geometry file
   m_FileOutput << "# Import geometry file " << std::endl;
+  //ACIS ENGINE
+#ifdef HAVE_ACIS
   m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
+
+#elif defined(HAVE_OCC)
+  //  OCC ENGINE
+  m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
+#endif
+
   m_FileOutput << "#" << std::endl;
 
   if(m_nHblock == -1){ // if more blocks are needed axially, create'em using hexes and the end
@@ -2106,7 +2114,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
 {
   CParser Parse;
   std::string card, szVolId, szVolAlias;
-  int nInputLines, nTempPin = 1, t, nIFlag = 0;
+  int nInputLines, nTempPin = 1, t, nIFlag = 0, total_pincells = 0;
   double dX = 0.0, dY =0.0, dZ=0.0;
   double  dP, dH, dSide, dHeight;
   iBase_EntityHandle assm = NULL;
@@ -2134,6 +2142,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
       std::istringstream szFormatString1 (szInputString);
 
       for(int n=1; n<=(m_nPin + t - 1); n++){
+          ++total_pincells;
           szFormatString1 >> m_Assembly(m,n);
           if(szFormatString1.fail())
             IOErrorHandler (INVALIDINPUT);
@@ -2177,7 +2186,7 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
   // get all the entities (in pins)defined so far, in an entity set - for subtraction later
   iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
   CHECK( "ERROR : getRootSet failed!" );
-  std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
+  std::cout << "Expected pin definitions: " << total_pincells << "\n\nCreating surrounding outer hexes .." << std::endl;
 
   for (int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
       if(m_nDimensions >0){

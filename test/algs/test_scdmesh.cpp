@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
   num_fail += RUN_TEST(scd_test_1);
   num_fail += RUN_TEST(scd_test_2);
-  //num_fail += RUN_TEST(scd_test_3);
+  num_fail += RUN_TEST(scd_test_3);
 
   delete mk;
   return num_fail;
@@ -127,6 +127,7 @@ void scd_test_1()
 // *: Should produce the same mesh as test 1
 void scd_test_2()
 {
+  mk->delete_all();
   // load the test geometry
   std::string scd_geom = TestDir + "/" + DEFAULT_TEST_FILE_1;
   mk->load_geometry(scd_geom.c_str());
@@ -195,6 +196,7 @@ void scd_test_2()
 // *: Individual volumes meshed with their own grid
 void scd_test_3()
 {
+    mk->delete_all();
   // load the test geometry
   std::string scd_geom = TestDir + "/" + DEFAULT_TEST_FILE_2;
   mk->load_geometry(scd_geom.c_str());

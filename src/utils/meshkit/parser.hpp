@@ -1,12 +1,10 @@
-/*********************************************
-Dec,09
-Reactor Geometry Generator
-Argonne National Laboratory
-
-CParser class definition.
-*********************************************/
-#ifndef __RGG_PARSER_H__
-#define __RGG_PARSER_H__
+/*!
+ * \class parser
+ * \brief keyword parser template for reading input files
+ *
+ **/
+#ifndef __MESHKIT_PARSER_H__
+#define __MESHKIT_PARSER_H__
 
 #include <fstream>
 #include <string>

@@ -12,7 +12,7 @@ ASSYGEN = ../../assygen
 
 MESH_FILES = 0.cub  1.cub  2.cub  3.cub  4.cub  5.cub  6.cub  7.cub  8.cub  9.cub  10.cub  11.cub  
 
-GEOM_FILES = 0.sat  1.sat  2.sat  3.sat  4.sat  5.sat  6.sat  7.sat  8.sat  9.sat  10.sat  11.sat  
+GEOM_FILES = 0.stp  1.stp  2.stp  3.stp  4.stp  5.stp  6.stp  7.stp  8.stp  9.stp  10.stp  11.stp  
 
 JOU_FILES = 0.jou  1.jou  2.jou  3.jou  4.jou  5.jou  6.jou  7.jou  8.jou  9.jou  10.jou  11.jou  
 
@@ -22,75 +22,75 @@ ASSYGEN_FILES = 0.inp  1.inp  2.inp  3.inp  4.inp  5.inp  6.inp  7.inp  8.inp  9
 
 extruded_vhtr_assmebly.h5m : ${MESH_FILES} vhtr-hexvertex.inp
 	${COREGEN} vhtr-hexvertex
-0.cub : 0.sat  0.jou  0.template.jou
+0.cub : 0.stp  0.jou  0.template.jou
 	${CUBIT} -batch 0.jou
 
-0.sat 0.jou 0.template.jou : 0.inp
+0.stp 0.jou 0.template.jou : 0.inp
 	${ASSYGEN} 0
 
-1.cub : 1.sat  1.jou  1.template.jou
+1.cub : 1.stp  1.jou  1.template.jou
 	${CUBIT} -batch 1.jou
 
-1.sat 1.jou 1.template.jou : 1.inp
+1.stp 1.jou 1.template.jou : 1.inp
 	${ASSYGEN} 1
 
-2.cub : 2.sat  2.jou  2.template.jou
+2.cub : 2.stp  2.jou  2.template.jou
 	${CUBIT} -batch 2.jou
 
-2.sat 2.jou 2.template.jou : 2.inp
+2.stp 2.jou 2.template.jou : 2.inp
 	${ASSYGEN} 2
 
-3.cub : 3.sat  3.jou  3.template.jou
+3.cub : 3.stp  3.jou  3.template.jou
 	${CUBIT} -batch 3.jou
 
-3.sat 3.jou 3.template.jou : 3.inp
+3.stp 3.jou 3.template.jou : 3.inp
 	${ASSYGEN} 3
 
-4.cub : 4.sat  4.jou  4.template.jou
+4.cub : 4.stp  4.jou  4.template.jou
 	${CUBIT} -batch 4.jou
 
-4.sat 4.jou 4.template.jou : 4.inp
+4.stp 4.jou 4.template.jou : 4.inp
 	${ASSYGEN} 4
 
-5.cub : 5.sat  5.jou  5.template.jou
+5.cub : 5.stp  5.jou  5.template.jou
 	${CUBIT} -batch 5.jou
 
-5.sat 5.jou 5.template.jou : 5.inp
+5.stp 5.jou 5.template.jou : 5.inp
 	${ASSYGEN} 5
 
-6.cub : 6.sat  6.jou  6.template.jou
+6.cub : 6.stp  6.jou  6.template.jou
 	${CUBIT} -batch 6.jou
 
-6.sat 6.jou 6.template.jou : 6.inp
+6.stp 6.jou 6.template.jou : 6.inp
 	${ASSYGEN} 6
 
-7.cub : 7.sat  7.jou  7.template.jou
+7.cub : 7.stp  7.jou  7.template.jou
 	${CUBIT} -batch 7.jou
 
-7.sat 7.jou 7.template.jou : 7.inp
+7.stp 7.jou 7.template.jou : 7.inp
 	${ASSYGEN} 7
 
-8.cub : 8.sat  8.jou  8.template.jou
+8.cub : 8.stp  8.jou  8.template.jou
 	${CUBIT} -batch 8.jou
 
-8.sat 8.jou 8.template.jou : 8.inp
+8.stp 8.jou 8.template.jou : 8.inp
 	${ASSYGEN} 8
 
-9.cub : 9.sat  9.jou  9.template.jou
+9.cub : 9.stp  9.jou  9.template.jou
 	${CUBIT} -batch 9.jou
 
-9.sat 9.jou 9.template.jou : 9.inp
+9.stp 9.jou 9.template.jou : 9.inp
 	${ASSYGEN} 9
 
-10.cub : 10.sat  10.jou  10.template.jou
+10.cub : 10.stp  10.jou  10.template.jou
 	${CUBIT} -batch 10.jou
 
-10.sat 10.jou 10.template.jou : 10.inp
+10.stp 10.jou 10.template.jou : 10.inp
 	${ASSYGEN} 10
 
-11.cub : 11.sat  11.jou  11.template.jou
+11.cub : 11.stp  11.jou  11.template.jou
 	${CUBIT} -batch 11.jou
 
-11.sat 11.jou 11.template.jou : 11.inp
+11.stp 11.jou 11.template.jou : 11.inp
 	${ASSYGEN} 11
 

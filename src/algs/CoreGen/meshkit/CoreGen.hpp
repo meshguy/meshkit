@@ -9,6 +9,12 @@
 #ifndef MESHKIT_COREGEN_HPP
 #define MESHKIT_COREGEN_HPP
 
+
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+#define COREGEN_DEFAULT_TEST_FILE  "CoreGen_default"
+#define CTEST_FILE_NAME "CoreGen_default"
+
 #include <cassert>
 #include <string>
 #include <vector>
@@ -35,6 +41,7 @@
 #include "meshkit/parser.hpp"
 #include "meshkit/SimpleArray.hpp"
 #include "meshkit/clock.hpp"
+#include "meshkit/mstream.hpp"
 
 #ifdef HAVE_MOAB
 #include "iMesh_extensions.h"
@@ -43,6 +50,7 @@
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
 #include "MBTagConventions.hpp"
+#include "moab/MergeMesh.hpp"
 #endif
 
 
@@ -62,9 +70,6 @@
 #include "../../meshkit/CESets.hpp"
 
 namespace MeshKit {
-
-#define COREGEN_DEFAULT_TEST_FILE  "CoreGen_default"
-#define CTEST_FILE_NAME "CoreGen_default"
 
   class MKCore;
 
@@ -131,12 +136,10 @@ namespace MeshKit {
     int write_makefile ();
     int write_minfofile ();
     int find_assm(const int i, int &assm_index);
-    int banner();
+    void banner();
     int copymove(const int nrank, const int numprocs);
     int copymove_all(const int nrank, const int numprocs);
     int set_copymove_coords();
-    int merge_nodes();
-    int merge_nodes_parallel(const int nrank, const int numprocs);
     int assign_gids();
     int assign_gids_parallel(const int nrank, const int numprocs);
     int save_mesh();
@@ -164,7 +167,7 @@ namespace MeshKit {
     std::vector<std::string> core_alias;
     std::vector<double> nsx, nsy, nsc;
     int num_nsside;
-    std::string  DIR;
+
   private:
     //! iGeom Impl for calling geometry creation/manipulation operations
     iGeom *igeom;
@@ -176,6 +179,7 @@ namespace MeshKit {
     MBInterface *mb;
 
     std::vector <CopyMesh*> cm;
+    MergeMesh *mm;
     std::vector <CopyGeom*> cg;
 
     iBase_EntitySetHandle root_set;
@@ -196,14 +200,16 @@ namespace MeshKit {
     int z_divisions; // z_divisions for extruding surface mesh
     int nst_Id, nsb_Id;
     std::vector<int> nss_Id;
+    std::string testdir;
 
     // file related
     std::ifstream file_input;    // File Input
     std::ofstream make_file, info_file, minfo_file;    // File Output
-    std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc, infofile, minfofile;
+    std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc, infofile, minfofile, logfilename;
     int linenumber;
     std::string card,geom_type, meshfile, mf_alias, temp_alias;
     std::vector<std::string> assm_alias;
+    mstream logfile;
 
     // parsing related
     std::string input_string;
@@ -228,6 +234,13 @@ namespace MeshKit {
     moab::ParallelComm *pc;
 #endif
 
+    // timing related variables
+    double ctload, ctcopymove, ctmerge, ctextrude, ctns, ctgid, ctsave;
+    clock_t tload, tcopymove, tmerge, textrude, tns, tgid, tsave;
+
+    // more memory/time related variables
+    int ld_t, ld_tload, ld_tcopymove, ld_tsave, ld_tgid, ld_tmerge, ld_tns;
+    unsigned long mem1, mem2, mem3, mem4, mem5, mem6, mem7;
   };
 
   inline const char* CoreGen::name()

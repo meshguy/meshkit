@@ -1,11 +1,10 @@
-/*********************************************
-Reactor Geometry Generator
-Argonne National Laboratory
-
-Matrix template class
-*********************************************/
-#ifndef __RGG_MATRIXTEMPLATE_H__
-#define __RGG_MATRIXTEMPLATE_H__
+/*!
+ * \class matrixtemplate
+ * \brief for engineering style matrix starting from 1
+ *
+ **/
+#ifndef __MESHKIT_MATRIXTEMPLATE_H__
+#define __MESHKIT_MATRIXTEMPLATE_H__
 
 #include <string>
 #include <iostream>

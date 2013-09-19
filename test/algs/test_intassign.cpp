@@ -297,6 +297,7 @@ void mapping_test()
   this_surf->boundary(1, curves, &senses, &loop_sizes);
   CHECK_EQUAL(4, (int)curves.size());
 
+//  MeshKit::SizingFunction esize(mk, 3, 0.01);
   MeshKit::SizingFunction esize(mk, -1, -1);
   surfs[0]->sizing_function_index(esize.core_index());
 

@@ -48,31 +48,37 @@ bool CopyMesh::add_modelent(ModelEnt *model_ent)
 
 void CopyMesh::setup_this()
 {
-    std::cout<< "IN SETUPTHIS XOPUPMESH" << std::endl;
+    std::cout<< "Setting-up CopyMesh MeshOp" << std::endl;
 
 }
 
 void CopyMesh::execute_this()
 {
-    std::cout<< "IN EXECUTETHIS XOPYMESH" << std::endl;
+    std::cout<< "Executing CopyMesh MeshOp" << std::endl;
 
-    std::vector<iMesh::EntityHandle> orig_ents(mentSelection.size());
+    //std::vector<iMesh::EntityHandle> orig_ents(mentSelection.size());
 
-    int i = 0;
     iBase_EntitySetHandle t = NULL;
     for (MEntSelection::iterator mit = mentSelection.begin();
          mit != mentSelection.end(); mit++) {
         ModelEnt *me = mit->first;
-        orig_ents[i++] = reinterpret_cast<iBase_EntityHandle> (me->mesh_handle());
+        //orig_ents[i++] = reinterpret_cast<iBase_EntityHandle> (me->mesh_handle());
         t = reinterpret_cast<iBase_EntitySetHandle> (me->mesh_handle());
     }
 
     LocalSet set(this->mk_core());
     std::vector<iBase_EntityHandle> original;
+    original.clear();
+    iBase_EntityType type_t;
+    IBERRCHK(mesh->getEntType((iBase_EntityHandle)t, type_t), *mesh);
+    // check if this is a set(4)
+    if((int) type_t !=4){
+        std::cout << "Invalid model ent set, bailing out.." << std::endl;
+        exit(0);
+    }
+
     IBERRCHK(mesh->getEntities(t, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, original), *mesh);
     IBERRCHK(mesh->addEntArrToSet(&original[0], original.size(), set), *mesh);
-
-    // IBERRCHK(mesh->addEntArrToSet(&orig_ents[0], orig_ents.size(), set), *mesh);
     do_copy(set);
 }
 

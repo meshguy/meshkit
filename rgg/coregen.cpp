@@ -140,114 +140,114 @@ int main(int argc, char *argv[]) {
         MPI::COMM_WORLD.Barrier();
 #endif
         if (TheCore.prob_type == "mesh") {
-//            /*********************************************/
-//            // merge
-//            /*********************************************/
-//            CClock ld_mm;
-//            if (nprocs == 1) {
-//                std::cout << "Merging.." << std::endl;
-//                err = TheCore.merge_nodes();
-//                ERRORR("Failed to merge nodes.", 1);
-//            } else {
-//                err = TheCore.merge_nodes_parallel(rank, nprocs);
-//                ERRORR("Failed to merge nodes in parallel.", 1);
-//            }
+            /*********************************************/
+            // merge
+            /*********************************************/
+            CClock ld_mm;
+            if (nprocs == 1) {
+                std::cout << "Merging.." << std::endl;
+                err = TheCore.merge_nodes();
+                ERRORR("Failed to merge nodes.", 1);
+            } else {
+                err = TheCore.merge_nodes_parallel(rank, nprocs);
+                ERRORR("Failed to merge nodes in parallel.", 1);
+            }
 
-//            TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem3);
-//            ld_tmerge = ld_mm.DiffTime();
-//            tmerge = clock();
-//            ctmerge = (double) (tmerge - tcopymove)/(60*CLOCKS_PER_SEC);
+            TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem3);
+            ld_tmerge = ld_mm.DiffTime();
+            tmerge = clock();
+            ctmerge = (double) (tmerge - tcopymove)/(60*CLOCKS_PER_SEC);
 
-//            if (TheCore.mem_tflag == true && nprocs == 1 ) {
-//                std::cout << "\n" << " Clock time taken to merge nodes = " << ld_tmerge
-//                          << " seconds" << std::endl;
-//                std::cout << " CPU time = " << ctmerge << " mins" << std::endl;
-//                std::cout << " Memory used: " << mem3/1e6 << " Mb\n" << std::endl;
-//            }
-//#ifdef USE_MPI
-//            MPI::COMM_WORLD.Barrier();
-//#endif
-//            /*********************************************/
-//            // extrude
-//            /*********************************************/
-//            if(nprocs == 1){
-//                if (TheCore.extrude_flag == true) {
+            if (TheCore.mem_tflag == true && nprocs == 1 ) {
+                std::cout << "\n" << " Clock time taken to merge nodes = " << ld_tmerge
+                          << " seconds" << std::endl;
+                std::cout << " CPU time = " << ctmerge << " mins" << std::endl;
+                std::cout << " Memory used: " << mem3/1e6 << " Mb\n" << std::endl;
+            }
+#ifdef USE_MPI
+            MPI::COMM_WORLD.Barrier();
+#endif
+            /*********************************************/
+            // extrude
+            /*********************************************/
+            if(nprocs == 1){
+                if (TheCore.extrude_flag == true) {
 
-//                    // assign global ids after copy/move step
-//                    if (rank == 0)
-//                        err = TheCore.assign_gids();
+                    // assign global ids after copy/move step
+                    if (rank == 0)
+                        err = TheCore.assign_gids();
 
-//                    CClock ld_em;
-//                    err = TheCore.extrude();
-//                    ERRORR("Failed to extrude.", 1);
+                    CClock ld_em;
+                    err = TheCore.extrude();
+                    ERRORR("Failed to extrude.", 1);
 
-//                    TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem4);
-//                    ld_t = ld_em.DiffTime();
-//                    textrude = clock();
-//                    ctextrude = (double) (textrude - tmerge)/(60*CLOCKS_PER_SEC);
+                    TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem4);
+                    ld_t = ld_em.DiffTime();
+                    textrude = clock();
+                    ctextrude = (double) (textrude - tmerge)/(60*CLOCKS_PER_SEC);
 
-//                    if (TheCore.mem_tflag == true && nprocs == 1) {
-//                        std::cout << "\n" << " Clock time taken to extrude = " << ld_t
-//                                  << " seconds" << std::endl;
-//                        std::cout << " CPU time = " << ctextrude << " mins" << std::endl;
-//                        std::cout << " Memory used: " << mem4/1e6 << " Mb\n"
-//                                  << std::endl;
-//                    }
-//                }
-//            }
-//#ifdef USE_MPI
-//            MPI::COMM_WORLD.Barrier();
-//#endif
-//            /*********************************************/
-//            // assign gids
-//            /*********************************************/
-//            CClock ld_gid;
-//            if (nprocs == 1) {
-//                err = TheCore.assign_gids();
-//                ERRORR("Failed to assign global ids.", 1);
-//            }
-//            else{
-//                // err = TheCore.assign_gids_parallel(rank, nprocs);
-//                // ERRORR("Failed to assign global ids.", 1);
-//            }
+                    if (TheCore.mem_tflag == true && nprocs == 1) {
+                        std::cout << "\n" << " Clock time taken to extrude = " << ld_t
+                                  << " seconds" << std::endl;
+                        std::cout << " CPU time = " << ctextrude << " mins" << std::endl;
+                        std::cout << " Memory used: " << mem4/1e6 << " Mb\n"
+                                  << std::endl;
+                    }
+                }
+            }
+#ifdef USE_MPI
+            MPI::COMM_WORLD.Barrier();
+#endif
+            /*********************************************/
+            // assign gids
+            /*********************************************/
+            CClock ld_gid;
+            if (nprocs == 1) {
+                err = TheCore.assign_gids();
+                ERRORR("Failed to assign global ids.", 1);
+            }
+            else{
+                // err = TheCore.assign_gids_parallel(rank, nprocs);
+                // ERRORR("Failed to assign global ids.", 1);
+            }
 
-//            TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem5);
-//            ld_tgid = ld_gid.DiffTime();
-//            tgid = clock();
-//            ctgid = (double) (tgid-tmerge)/(60*CLOCKS_PER_SEC);
+            TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem5);
+            ld_tgid = ld_gid.DiffTime();
+            tgid = clock();
+            ctgid = (double) (tgid-tmerge)/(60*CLOCKS_PER_SEC);
 
-//            if (TheCore.mem_tflag == true && nprocs == 1) {
-//                std::cout << "\n" << " Clock time taken to assign gids = " << ld_tgid
-//                          << " seconds" << std::endl;
-//                std::cout << " CPU time = " << ctgid << " mins" << std::endl;
-//                std::cout << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
-//            }
-//            /*********************************************/
-//            // create neumann sets on the core model
-//            /*********************************************/
-//            if((TheCore.nss_flag == true || TheCore.nsb_flag == true
-//                || TheCore.nst_flag == true) && nprocs == 1){
-//                CClock ld_ns;
-//                err = TheCore.create_neumannset();
-//                ERRORR("Failed to create neumann set.", 1);
+            if (TheCore.mem_tflag == true && nprocs == 1) {
+                std::cout << "\n" << " Clock time taken to assign gids = " << ld_tgid
+                          << " seconds" << std::endl;
+                std::cout << " CPU time = " << ctgid << " mins" << std::endl;
+                std::cout << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
+            }
+            /*********************************************/
+            // create neumann sets on the core model
+            /*********************************************/
+            if((TheCore.nss_flag == true || TheCore.nsb_flag == true
+                || TheCore.nst_flag == true) && nprocs == 1){
+                CClock ld_ns;
+                err = TheCore.create_neumannset();
+                ERRORR("Failed to create neumann set.", 1);
 
-//                TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem6);
-//                ld_tns = ld_ns.DiffTime();
-//                tns = clock();
-//                ctns = (double) (tns-tgid)/(60*CLOCKS_PER_SEC);
-//                if (TheCore.mem_tflag == true && nprocs == 1) {
-//                    std::cout << "\n" << " Clock time taken to create neumann sets = " << ld_tns
-//                              << " seconds" << std::endl;
-//                    std::cout << " CPU time = " << ctns << " mins" << std::endl;
-//                    std::cout << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
-//                }
-//            }
-//#ifdef USE_MPI
-//            MPI::COMM_WORLD.Barrier();
-//#endif
+                TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem6);
+                ld_tns = ld_ns.DiffTime();
+                tns = clock();
+                ctns = (double) (tns-tgid)/(60*CLOCKS_PER_SEC);
+                if (TheCore.mem_tflag == true && nprocs == 1) {
+                    std::cout << "\n" << " Clock time taken to create neumann sets = " << ld_tns
+                              << " seconds" << std::endl;
+                    std::cout << " CPU time = " << ctns << " mins" << std::endl;
+                    std::cout << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
+                }
+            }
+#ifdef USE_MPI
+            MPI::COMM_WORLD.Barrier();
+#endif
 
-//            if(TheCore.minfo == "on")
-//                TheCore.write_minfofile();
+            if(TheCore.minfo == "on")
+                TheCore.write_minfofile();
 
             /*********************************************/
             // save

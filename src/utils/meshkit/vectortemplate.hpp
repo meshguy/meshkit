@@ -1,11 +1,10 @@
-/*********************************************
-Reactor Geometry Generator
-Argonne National Laboratory
-
-Vector template class definition.
-*********************************************/
-#ifndef __RGG_VECTORTEMPLATE_H__
-#define __RGG_VECTORTEMPLATE_H__
+/*!
+ * \class vectortemplate
+ * \brief for engineering style vector starting from 1
+ *
+ **/
+#ifndef __MESHKIT_VECTORTEMPLATE_H__
+#define __MESHKIT_VECTORTEMPLATE_H__
 
 #include <string>
 #include <iostream>
