@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Triangle Sweep PostBL
+SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
@@ -11,9 +11,7 @@ libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
 			   CoreGen/libCoreGen.la \
-                           PostBL/libPostBL.la \
-                           Triangle/libMKTriangle.la 
-                       
+                           PostBL/libPostBL.la                        
 
 if ENABLE_intassign
   SUBDIRS += IntervalAssignment

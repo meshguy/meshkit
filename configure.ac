@@ -791,7 +791,7 @@ else
         [#include "triangle.h"]
         ],
         [triangulateio dummy])],
-    [TRIANGLE_LIBS="$TRIANGLE_DIR/triangle.o"] [HAVE_TRIANGLE=yes],
+    [TRIANGLE_LIBS="$TRIANGLE_DIR/libtriangle.a"] [HAVE_TRIANGLE=yes],
     [AC_MSG_WARN([triangle.o is not installed.])])
 
   AC_LANG_POP([C++])
@@ -1054,13 +1054,13 @@ AC_CONFIG_FILES([Makefile
 		 src/algs/CoreGen/Makefile
                  src/algs/PostBL/Makefile
                  src/algs/Qslim/Makefile
-                 src/algs/Triangle/Makefile
                  src/utils/Makefile
                  src/lemon/Makefile
                  src/extern/Makefile
                  src/extern/CAMAL/Makefile
                  src/extern/netgen/Makefile
                  src/extern/mesquite/Makefile
+                 src/extern/triangle/Makefile
                  test/Makefile
                  test/core/Makefile
                  test/algs/Makefile
@@ -1068,6 +1068,7 @@ AC_CONFIG_FILES([Makefile
                  test/extern/CAMAL/Makefile
                  test/extern/mesquite/Makefile
                  test/extern/netgen/Makefile
+                 test/extern/triangle/Makefile
                  test/parallel/Makefile
                  utils/Makefile
                  doc/Makefile

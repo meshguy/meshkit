@@ -3,6 +3,9 @@ SUBDIRS = .
 LDADD = $(top_builddir)/src/libMeshKit.la
 
 DATADIR = $(top_srcdir)/data
+if HAVE_TRIANGLE
+AM_LDFLAGS += $(TRIANGLE_LIBS)
+endif
 
 AM_CPPFLAGS += -DDATADIR=$(DATADIR)
 
@@ -32,7 +35,6 @@ TESTS = test_edgemesher \
         test_qslimmesher \
         test_ebmesh \
         test_assygen \
-        test_trianglemesher \
         test_postbl
 if HAVE_FBIGEOM
 TESTS += \
@@ -42,13 +44,17 @@ TESTS += \
         test_mbvolop
 # some of these tests require CAMAL and FBiGeom, too
 if HAVE_CAMAL_PAVER
-TESTS += test_setpnt2quad test_volice
+TESTS += test_volice
+if HAVE_TRIANGLE
+TESTS += test_setpnt2quad
+endif
 endif
 endif
 
 if ENABLE_intassign
 TESTS += test_intassign
 endif
+
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
@@ -74,12 +80,13 @@ test_qslimmesher_SOURCES = test_qslimmesher.cpp
 test_jaalquad_SOURCES = test_jaalquad.cpp
 test_assygen_SOURCES = test_assygen.cpp
 test_postbl_SOURCES = test_postbl.cpp
-test_trianglemesher_SOURCES = test_trianglemesher.cpp
 if HAVE_FBIGEOM
 test_fbgeom_SOURCES = test_fbgeom.cpp
 test_mbgeomop_SOURCES = test_mbgeomop.cpp
 test_mbsplitop_SOURCES = test_mbsplitop.cpp
+if HAVE_TRIANGLE
 test_setpnt2quad_SOURCES = test_setpnt2quad.cpp
+endif
 test_volice_SOURCES = test_volice.cpp
 test_mbvolop_SOURCES = test_mbvolop.cpp
 endif

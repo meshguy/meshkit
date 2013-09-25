@@ -14,6 +14,11 @@
 #ifdef HAVE_MESQUITE
 #  include "meshkit/MesquiteOpt.hpp"
 #endif
+#ifdef HAVE_TRIANGLE
+#  include "meshkit/TriangleMesher.hpp"
+#endif
+
+
 
 namespace MeshKit {
 
@@ -38,6 +43,10 @@ extern int register_extern_mesh_ops() { return 1; }
   REGISTER_MESH_OP(CAMALTetMesher);
 #endif
 
+#endif
+
+#ifdef HAVE_TRIANGLE
+  REGISTER_MESH_OP(TriangleMesher);
 #endif
 
 #ifdef HAVE_NETGEN

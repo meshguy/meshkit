@@ -12,3 +12,7 @@ endif
 if HAVE_MESQUITE
 SUBDIRS += mesquite
 endif
+
+if HAVE_TRIANGLE
+SUBDIRS += triangle
+endif

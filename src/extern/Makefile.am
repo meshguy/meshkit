@@ -24,6 +24,14 @@ AM_CPPFLAGS += -I$(srcdir)/netgen $(NETGEN_CPPFLAGS) -DHAVE_NETGEN
 LIBS += $(NETGEN_LIBS)
 endif
 
+
+if HAVE_TRIANGLE
+SUBDIRS += triangle
+LIBADD += triangle/libMeshKittriangle.la
+AM_CPPFLAGS += -I$(srcdir)/triangle $(TRIANGLE_CPPFLAGS) -DHAVE_TRIANGLE
+LIBS += $(TRIANGLE_LIBS)
+endif
+
 if HAVE_MESQUITE
 SUBDIRS += mesquite
 LIBADD += mesquite/libMeshKitmesquite.la
