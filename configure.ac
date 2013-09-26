@@ -791,7 +791,7 @@ else
         [#include "triangle.h"]
         ],
         [triangulateio dummy])],
-    [TRIANGLE_LIBS="$TRIANGLE_DIR/libtriangle.a"] [HAVE_TRIANGLE=yes],
+    [TRIANGLE_LIBS="$TRIANGLE_DIR/triangle.o"] [HAVE_TRIANGLE=yes],
     [AC_MSG_WARN([triangle.o is not installed.])])
 
   AC_LANG_POP([C++])
