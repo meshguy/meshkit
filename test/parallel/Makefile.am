@@ -18,7 +18,11 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
 
 BROKEN_TESTS = test_coregen
 
-TESTS = test_parallelmesher test_coregen
+TESTS = test_coregen
+
+if HAVE_CAMAL
+TESTS += test_parallelmesher
+endif
 
 check_PROGRAMS = $(TESTS)
 
