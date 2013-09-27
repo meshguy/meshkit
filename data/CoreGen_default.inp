@@ -1,7 +1,6 @@
 Geometry Volume		   		! 'Geometry' card defines if the meshes are volume or surface
 ProblemType Mesh
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
-GeomEngine OCC
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
 Assemblies 1 10 10			! 'Assemblies' card defines the number of assembly mesh files and pitch
 c.exo c

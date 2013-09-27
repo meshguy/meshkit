@@ -4,8 +4,6 @@ LDADD = $(top_builddir)/src/libMeshKit.la $(top_builddir)/src/extern/libMeshKite
 
 DATADIR = $(top_srcdir)/data
 
-AM_LDFLAGS += $(TRIANGLE_LIBS)
-
 AM_CPPFLAGS += -DDATADIR=$(DATADIR)
 
 

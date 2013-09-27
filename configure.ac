@@ -762,6 +762,7 @@ AC_ARG_WITH(triangle,
  ], [TRIANGLE_VAL=no])
 
 TRIANGLE_CPPFLAGS=
+TRIANGLE_LDFLAGS=
 TRIANGLE_LIBS=
 
 # Check for TRIANGLE headers and libraries
@@ -778,10 +779,26 @@ else
     if ! test -d "$TRIANGLE_DIR"; then
       AC_MSG_ERROR([$TRIANGLE_DIR: not a directory])
     fi
-    TRIANGLE_CPPFLAGS="-I$TRIANGLE_DIR" 
-    
+
+    if test -d "$TRIANGLE_DIR/include"; then
+      TRIANGLE_CPPFLAGS="-I$TRIANGLE_DIR/include"
+    else
+      AC_MSG_WARN([$TRIANGLE_DIR/include: no such directory])
+      TRIANGLE_CPPFLAGS="-I$TRIANGLE_DIR"
+    fi
+
+    if test -d "$TRIANGLE_DIR/lib"; then
+      TRIANGLE_LDFLAGS="-L$TRIANGLE_DIR/lib"
+    else
+      AC_MSG_WARN([$TRIANGLE_DIR/lib: no such directory])
+      TRIANGLE_LDFLAGS="-L$TRIANGLE_DIR"
+    fi
   fi
+
+  old_LIBS="$LIBS"
+  old_LDFLAGS="$LDFLAGS"
   old_CPPFLAGS="$CPPFLAGS"
+  LDFLAGS="$LDFLAGS $TRIANGLE_LDFLAGS -ltriangle"
   CPPFLAGS="$CPPFLAGS $TRIANGLE_CPPFLAGS"
   AC_LANG_PUSH([C++])
 
@@ -791,10 +808,11 @@ else
         [#include "triangle.h"]
         ],
         [triangulateio dummy])],
-    [TRIANGLE_LIBS="$TRIANGLE_DIR/triangle.o"] [HAVE_TRIANGLE=yes],
-    [AC_MSG_WARN([triangle.o is not installed.])])
+    [TRIANGLE_LIBS="$TRIANGLE_LDFLAGS -ltriangle"] [HAVE_TRIANGLE=yes],
+    [AC_MSG_WARN([Triangle library is not installed correctly.])])
 
   AC_LANG_POP([C++])
+  LIBS="$old_LIBS"
   LDFLAGS="$old_LDFLAGS"
   CPPFLAGS="$old_CPPFLAGS"
 
@@ -802,11 +820,14 @@ fi
 
 if test "x$HAVE_TRIANGLE" = "xyes"; then
   AC_MSG_RESULT([Triangle is found.])
+  DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/triangle test/extern/triangle"
+
 elif test "x$TRIANGLE_VAL" != "xno"; then
   AC_MSG_ERROR([Triangle not found or not usable.])
 fi
 
 AC_SUBST([TRIANGLE_CPPFLAGS])
+AC_SUBST([TRIANGLE_LDFLAGS])
 AC_SUBST([TRIANGLE_LIBS])
 AC_SUBST([HAVE_TRIANGLE])
 
