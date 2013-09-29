@@ -1,22 +1,21 @@
 /*!
- \page algorithm_camalpaver CAMAL Paver
+ \page algorithm_camalpaver CAMALPaver
 
-<b>Name:</b> paver
+<b>Name:</b> CAMALPaver
 
-<b>External dependencies:</b> (none)
+<b>External dependencies:</b> CAMAL Library (https://cubit.sandia.gov/public/camal.html)
 
-<b>Input:</b> <text>
+<b>Input:</b> 3D ModelEnt's (geometry)
 
-<b>Output:</b> <text>
+<b>Output:</b> Quad mesh
 
-<b>Interface(s) used:</b> <interfaces>
+<b>Interface(s) used:</b> CGM, MOAB
 
 <b>Setup:</b> 
 
-<setup-text>
+Uses MeshKit-native EdgeMesher and VertexMesher algorithms
 
 <b>Notes:</b>
 
-<note-text>
 
 */

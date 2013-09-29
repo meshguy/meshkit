@@ -17,6 +17,6 @@
 
 <b>Notes:</b>
 
-<note-text>
+The TFIMapping algorithm generates an all-quad mesh by transfinite interpolation with I and j parameters.
 
 */

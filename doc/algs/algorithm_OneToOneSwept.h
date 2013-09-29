@@ -24,4 +24,5 @@ to compute interior vertex positions along the sweep.
 <em>This algorithm sometimes generates inverted mesh for non-simply-connected source/target surfaces, especially
 for large variations in the relative positions or sizes of internal loops between source and target surfaces.</em>
 
+See paper: http://link.springer.com/chapter/10.1007/978-3-319-02335-9_1
 */

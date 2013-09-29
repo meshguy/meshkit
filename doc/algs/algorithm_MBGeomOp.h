@@ -1,15 +1,15 @@
 /*!
  \page algorithm_mbgeomop MBGeomOp
 
-<b>Name:</b> mbgeomop
+<b>Name:</b> MBGeomOp
 
 <b>External dependencies:</b> (none)
 
-<b>Input:</b> <text>
+<b>Input:</b> QSlim file after decimation, 3 doubles for sweeping direction
 
-<b>Output:</b> <text>
+<b>Output: MOAB file.
 
-<b>Interface(s) used:</b> <interfaces>
+<b>Interface(s) used:</b> MOAB, FBiGeom
 
 <b>Setup:</b> 
 

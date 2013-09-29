@@ -1,22 +1,23 @@
 /*!
- \page algorithm_parallelmesher parallelmesher
+ \page algorithm_parallelmesher ParallelMesher
 
-<b>Name:</b> parallelmesher
+<b>Name:</b> ParallelMesher
 
-<b>External dependencies:</b> (none)
+<b>External dependencies:</b> CAMAL
 
-<b>Input:</b> <text>
+<b>Input:</b> 3D ModelEnt's (Partioned geometry file)
 
-<b>Output:</b> <text>
+<b>Output:</b> Output mesh file
 
-<b>Interface(s) used:</b> <interfaces>
+<b>Interface(s) used:</b> CGM, MOAB
 
 <b>Setup:</b> 
 
-<setup-text>
+Sets up all meshing algorithms internally.
 
 <b>Notes:</b>
 
-<note-text>
+Options and schemes for loading,parallel-strategy and saving available.
+The test depends of CAMALTriAdvance algorithm.
 
 */

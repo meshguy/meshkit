@@ -22,4 +22,7 @@ being even; if this number is odd, one triangle will remain after this algorithm
 This class implements quadrilateral mesh generation, based on triangle recombination.  Triangles can be
 generated with any algorithm.  Irregular nodes are removed using Bunin's algorithm.
 
+See paper:
+http://link.springer.com/chapter/10.1007/978-3-642-24734-7_28
+
 */

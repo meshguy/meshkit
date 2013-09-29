@@ -3,7 +3,7 @@
 
 <b>Name:</b> CAMALTetMesher
 
-<b>External dependencies:</b> \ref extern_camal
+<b>External dependencies:</b> CAMAL Library (https://cubit.sandia.gov/public/camal.html)
 
 <b>Input:</b> 3D ModelEnt's
 

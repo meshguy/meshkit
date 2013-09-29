@@ -1,4 +1,4 @@
-/** \file test_bloblol.cpp
+/** \file test_ngtetmesher.cpp
  *
  * Test the NGTetMesher for a few challenging examples.
  *

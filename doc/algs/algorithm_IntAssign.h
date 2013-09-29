@@ -1,9 +1,9 @@
 /*!
- \page algorithm_intassign intassign
+ \page algorithm_intassign IntervalAssignment
 
-<b>Name:</b> intassign
+<b>Name:</b> IntervalAssignment
 
-<b>External dependencies:</b> (none)
+<b>External dependencies:</b> Ipopt: An optimization library (https://projects.coin-or.org/Ipopt)
 
 <b>Input:</b> <text>
 
@@ -17,6 +17,6 @@
 
 <b>Notes:</b>
 
-<note-text>
+
 
 */
