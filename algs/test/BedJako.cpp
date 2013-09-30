@@ -18,6 +18,9 @@ extern "C" {
 #include "triangle.h"
 }
 
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
 #define DEFAULT_TEST_FILE "gridData.txt"
 #define DEFAULT_BED_FILE "output.smf"
 
@@ -43,9 +46,11 @@ int main(int argc, char* argv[]) {
       printf("Usage: %s <vertex_filename> <output> <fretting>\n", argv[0]);
       if (argc != 1)
          return 1;
-      printf("No file specified.  Defaulting to: %s %s 2.\n", DEFAULT_TEST_FILE,
-            DEFAULT_BED_FILE );
-      filename_data = DEFAULT_TEST_FILE;
+      //      printf("No file specified.  Defaulting to: %s %s 2.\n", DEFAULT_TEST_FILE,
+      //      DEFAULT_BED_FILE );
+      //      filename_data = DEFAULT_TEST_FILE;
+      filename_data = STRINGIFY(SRCDIR) "/gridData.txt";
+      std::cout << "No file specified.  Defaulting to: %s %s 2.\n" << filename_data << std::endl;
       output_bed_file = DEFAULT_BED_FILE;
       fretting = 2.; //
    }
