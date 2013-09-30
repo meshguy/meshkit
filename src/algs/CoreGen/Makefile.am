@@ -21,6 +21,7 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(srcdir)/../../core \
               -I$(srcdir)/../../lemon \
               -I$(srcdir)/../../utils \
+              -I$(srcdir)/../../algs \
               -I$(top_builddir) \
               -I$(top_srcdir)/utils 
 

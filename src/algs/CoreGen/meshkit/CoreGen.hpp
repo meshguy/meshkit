@@ -63,11 +63,11 @@
 #include "MBParallelConventions.h"
 #endif
 
-#include "../../meshkit/CopyGeom.hpp"
-#include "../../meshkit/CopyMesh.hpp"
-#include "../../meshkit/MergeMesh.hpp"
-#include "../../meshkit/ExtrudeMesh.hpp"
-#include "../../meshkit/CESets.hpp"
+#include "meshkit/CopyGeom.hpp"
+#include "meshkit/CopyMesh.hpp"
+#include "meshkit/MergeMesh.hpp"
+#include "meshkit/ExtrudeMesh.hpp"
+#include "meshkit/CESets.hpp"
 
 namespace MeshKit {
 
