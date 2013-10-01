@@ -1,20 +1,16 @@
 /*!
 \example example_extrudemesh.cpp
 
-\section example_extrudemesh_cpp_title <pretty-name-of-this-file>
+\section example_extrudemesh_cpp_title 10 Hex ExtrudeMesh Example
 
 \subsection example_extrudemesh_cpp_in Input
-\image html example_extrudemesh.in.jpg "(description of image)"
-There is no input.
-
+This example creates a face and extrudes it. \n
+Inputs are: coords of face, sides in the face, topology of the face and translation distance dx.
 \subsection example_extrudemesh_cpp_out Output
-\image html example_extrudemesh.out.jpg "(description of image)"
-
+Final mesh with 10 hex elements is saved
 \subsection example_extrudemesh_cpp_inf Misc. Information
 \author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+\date 9-30-2013
 
 \subsection example_extrudemesh_cpp_src Source Code
 */
@@ -30,77 +26,21 @@ using namespace MeshKit;
 
 MKCore *mk;
 
-void test_load_and_extrude();
-void test_extrude_quad();
-void test_extrude_tri();
-
-void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
-                            size_t nverts);
-
 int main(int argc, char **argv)
 {
   mk = new MKCore();
-  int num_fail = 0;
+  //input
+  size_t nverts = 4;
+  double coords[] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 1, 0
+  };
+  iMesh_EntityTopology topo = iMesh_QUADRILATERAL;
 
-  test_load_and_extrude();
-  test_extrude_quad();
-  test_extrude_tri();
-
-  delete mk;
-  return num_fail;
-}
-
-void clear_mesh(MKCore *mk)
-{
+  // working with imesh instance
   iMesh *mesh = mk->imesh_instance();
-  std::vector<iMesh::EntityHandle> ents;
-  mesh->getEntities(mesh->getRootSet(), iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES,
-                    ents);
-  mesh->deleteEntArr(&ents[0], ents.size());
-}
-
-void test_load_and_extrude()
-{
-  clear_mesh(mk);
-  std::string filename = TestDir + "/" + DEFAULT_TEST_FILE;
-  mk->load_mesh(filename.c_str());
-
-    // populate mesh with no attached geometry or relations
-  mk->populate_model_ents(-1, 0, -1);
-
-  // get the hexes
-  MEntVector vols;
-  mk->get_entities_by_dimension(2, vols);
-
-  ExtrudeMesh *em = (ExtrudeMesh*) mk->construct_meshop("ExtrudeMesh", vols);
-  em->set_name("extrude_mesh");
-
-  // some entity tag types are always copy or expand
-  em->expand_sets().add_tag("MATERIAL_SET");
-  em->expand_sets().add_tag("DIRICHLET_SET");
-  em->expand_sets().add_tag("NEUMANN_SET");
-
-  Vector<3> dx; dx[0] = 10; dx[1] = 0; dx[2] = 0;
-  em->set_transform(Extrude::Translate(dx, 5));
-
-  // put them in the graph
-  mk->get_graph().addArc(mk->root_node()->get_node(), em->get_node());
-  mk->get_graph().addArc(em->get_node(), mk->leaf_node()->get_node());
-
-  // mesh embedded boundary mesh, by calling execute
-  mk->setup_and_execute();
-
-  delete em;
-}
-
-
-void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
-                            size_t nverts)
-{
-  clear_mesh(mk);
-
-  iMesh *mesh = mk->imesh_instance();
-
   std::vector<iMesh::EntityHandle> verts(nverts);
   iMesh::EntityHandle face;
   iMesh::EntitySetHandle set;
@@ -132,59 +72,6 @@ void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
 
   // mesh embedded boundary mesh, by calling execute
   mk->setup_and_execute();
-
-  std::vector<iMesh::EntityHandle> new_verts;
-  std::vector<double> new_coords(nverts*3);
-  std::vector<iMesh::EntityHandle> new_face;
-  iMesh::EntitySetHandle copy_set;
-
-  mesh->getEntSetEHData(set, em->copy_tag(), (iMesh::EntityHandle&)copy_set);
-
-  mesh->getEntities(copy_set, iBase_ALL_TYPES, iMesh_ALL_TOPOLOGIES, new_face);
-  CHECK_EQUAL(new_face.size(), size_t(1));
-
-  mesh->getEntAdj(new_face[0], iBase_VERTEX, new_verts);
-  CHECK_EQUAL(new_verts.size(), nverts);
-
-  mesh->getVtxArrCoords(&new_verts[0], new_verts.size(), iBase_INTERLEAVED,
-                        &new_coords[0]);
-
-  for(size_t i=0; i<nverts; i++) {
-    CHECK_REAL_EQUAL(coords[i*3+0],    new_coords[i*3+0], 0.00001);
-    CHECK_REAL_EQUAL(coords[i*3+1],    new_coords[i*3+1], 0.00001);
-    CHECK_REAL_EQUAL(coords[i*3+2]+10, new_coords[i*3+2], 0.00001);
-  }
-
-  iMesh::EntitySetHandle extrude_set;
-  int n;
-  mesh->getEntSetEHData(set, em->extrude_tag(),
-                        (iMesh::EntityHandle&)extrude_set);
-  mesh->getNumOfType(extrude_set, iBase_ALL_TYPES, n);
-  CHECK_EQUAL(n, 10);
-
-
-  delete em;
-}
-
-void test_extrude_quad()
-{
-  double coords[] = {
-    0, 0, 0,
-    1, 0, 0,
-    1, 1, 0,
-    0, 1, 0
-  };
-
-  help_test_extrude_face(iMesh_QUADRILATERAL, coords, 4);
-}
-
-void test_extrude_tri()
-{
-  double coords[] = {
-    0, 0, 0,
-    1, 0, 0,
-    1, 1, 0
-  };
-
-  help_test_extrude_face(iMesh_TRIANGLE, coords, 3);
+  mk->save_mesh("out_em.exo");
+  return 0;
 }

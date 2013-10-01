@@ -1,20 +1,13 @@
 /*!
 \example example_ebmesh.cpp
-
-\section EBMesh_cpp_title <pretty-name-of-this-file>
+The EBMesh tool can generate Cartesian meshes for solvers that use embedded boundary algorithms. \n
+It uses a ray-tracing technique based on hierarchical oriented bounding boxes in MOAB.
+\section EBMesh_cpp_title EBMesher Tool With Options
 
 \subsection EBMesh_cpp_in Input
-\image html EBMesh.in.jpg "(description of image)"
-There is no input.
-
+Reads in an input geometry file from data directory (sphere),
 \subsection EBMesh_cpp_out Output
-\image html EBMesh.out.jpg "(description of image)"
-
-\subsection EBMesh_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+Exports a mesh file with CutCell data.
 
 \subsection EBMesh_cpp_src Source Code
 */
@@ -76,8 +69,8 @@ int main(int argc, char **argv)
     std::cout << std::endl;
     if (argc != 1) return 1;
     std::cout << "No file specified.  Defaulting to: " << DEFAULT_TEST_FILE << std::endl;
-    std::string file_name = TestDir + "/" + DEFAULT_TEST_FILE;
-    input_filename += TestDir;
+    std::string file_name = std::string(MESH_DIR) + "/" + DEFAULT_TEST_FILE;
+    input_filename += std::string(MESH_DIR);
     input_filename += "/";
     input_filename += DEFAULT_TEST_FILE;
   }
@@ -100,7 +93,6 @@ int load_and_mesh(const char *input_filename,
   // start up MK and load the geometry
   MKCore mk;
   time(&start_time);
-//  CGMApp::instance()->attrib_manager()->auto_flag( CUBIT_TRUE );
   mk.load_mesh(input_filename, NULL, 0, 0, 0, true);
   time(&load_time);
 

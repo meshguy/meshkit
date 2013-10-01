@@ -90,7 +90,7 @@ namespace MeshKit
     std::cout << "\t\t---------------------------------------------------------" << '\n';
     std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
     std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
-    std::cout << "\t\t\t\t        2009-2010         " << '\n';
+    std::cout << "\t\t\t\t        2010-2014         " << '\n';
     std::cout << "\t\t---------------------------------------------------------" << '\n';
     std::cout << "\nsee README file for using the program and details on various cards.\n"<< std::endl;
 
@@ -1579,7 +1579,6 @@ namespace MeshKit
     std::cout <<"\n";
 
   }
-
 
   void AssyGen::Center_Assm ( char &rDir)
   // ---------------------------------------------------------------------------

@@ -1,50 +1,33 @@
 /*!
 \example example_assygen.cpp
 
-\section example_AssyGen_cpp_title Assembly Gen
+\section example_assygen_cpp_title Assembly Geometry and Mesh Script Generator
+\subsection example_assygen_cpp_in Input
+Keyword-based text input file describing the assembly geometry.\n
+File can be found in data folder: assygen_default.inp
+\subsection example_assygen_cpp_out Output
+\image html assygen_out.jpg "Output toy assembly geometry"
+\subsection example_assygen_cpp_inf Misc. Information
+\author Rajeev Jain
+\date 09-30-2013
 
-Some text explaining objectives
-
-\subsection example_AssyGen_cpp_in Input
-\image html AssyGen.in.jpg "(description of image)"
-
-\subsection example_AssyGen_cpp_out Output
-\image html AssyGen.out.jpg "(description of image)"
-
-\subsection example_AssyGen_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning Currently requires multiple setup/execute cycles.
-
-\subsection example_AssyGen_cpp_src Source Code
+\subsection example_assygen_cpp_src Source Code
 */
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/MeshOp.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/AssyGen.hpp"
-
 #include "meshkit/CopyGeom.hpp"
-#include "example_utils.hpp"
 
 using namespace MeshKit;
 
 MKCore *mk;
 bool save_mesh = true;
 
-void test_AssyGen_default(int argc, char **argv);
-
 int main(int argc, char *argv[])
 {
   mk = new MKCore();
-  test_AssyGen_default(argc, argv);
-  delete mk;
-  return 0;
-}
-
-void test_AssyGen_default(int argc, char **argv)
-{
   // create a model entity vector for construting AssyGen meshop, note that NO model entities are required for AssyGen meshop.
   MEntVector volso;
 
@@ -53,44 +36,12 @@ void test_AssyGen_default(int argc, char **argv)
   ag->set_name("AssyGen");
 
   // setup input/output AssyGen files for creating the 'Reactor Assembly' geometry
-  ag->PrepareIO(argc, argv, example_dir);
+  ag->PrepareIO(argc, argv, MESH_DIR);
+  mk->setup_and_execute();
 
-//  if(save_mesh)
-//	  ag->save_mesh("AssyGen.in.exo");
-  ag->setup_this();
-  ag->execute_this();
+  // AssyGen MeshOp internally saves the resulting geometry with the name specified in input file
 
-  // now populate model ents to get the geometry created
-  mk->populate_model_ents(0, -1, -1);
-
-  MEntVector vols;
-  mk->get_entities_by_dimension(3, vols);
-
-  CopyGeom *cg = (CopyGeom*) mk->construct_meshop("CopyGeom", vols);
-  cg->set_name("copy_move_geom");
-
-  // set the location
-  Vector<3> dx; dx[0] = 23.5; dx[1] = 0; dx[2] = 0;
-  cg->set_location(dx);
-
-  cg->setup_this();
-  cg->execute_this();
-
-  // merge and imprint the o/p geometry
-  std::vector<iBase_EntityHandle> entities_out;
-  mk->igeom_instance()->getEntities(0, iBase_REGION, entities_out);
-  double dTol = 1.0e-2;
-  mk->igeom_instance()->mergeEnts(&entities_out[0],entities_out.size(), dTol);
-
-  //  mk->save_geometry("t.sat");
-  // TODO: mesh using camal and parallel mesher
-
-  if(save_mesh)
-    mk->save_mesh("AssyGen.out.exo");
-
-  delete cg;
-  delete ag;
+  delete mk;
+  return 0;
 }
-
-
 

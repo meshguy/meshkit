@@ -1,7 +1,7 @@
 /*! 
 \example example_basic.cpp
 
-\section example_basic_cpp_title basic Example
+\section example_basic_cpp_title Meshed Brick With Meta-data
 
 The goal of this is example is to start from no input and create a meshed geometry with proper Neumann and material sets.
 
@@ -9,14 +9,13 @@ The goal of this is example is to start from no input and create a meshed geomet
 (none)
 
 \subsection example_basic_cpp_out Output
-\image html basic.out.jpg "(description of image)"
+A meshed brick, MeshOps used are TFIMapping, OneToOneSwept and MeshOpTemplate
 
 \subsection example_basic_cpp_inf Misc. Information
 \author Brett Rhodes
 \date 7-16-2013
 \bug Currently requires multiple setup/execute cycles.
 \warning This example is not currently complete.
-
 \subsection example_basic_cpp_src Source Code
 */
 #include "meshkit/MKCore.hpp"
@@ -35,25 +34,13 @@ void test_mesh_op_template();
 int main(int argc, char **argv)
 {
   mk = new MKCore();
-  int num_fail = 0;
-
-  test_mesh_op_template();
-
-  delete mk;
-  return num_fail;
-}
-
-void test_mesh_op_template()
-{
   MEntVector all_curves, all_surfs, the_vol, tfi_surface;
   int source_surface = 0; // These are
   int target_surface = 1; //   chosen by magic!
-                                                                               // | Geometry Op,
-  // Make the brick!                                                           // v Don't need this
+
+  // Make the brick!
   MeshOpTemplate *mot = (MeshOpTemplate*) mk->construct_meshop("MeshOpTemplate", MEntVector());
-  printf("Got here fine\n");
   mot->set_name("MeshOpTemplate");
-  //Vector<3> a;
   mk->setup_and_execute();
   mk->populate_model_ents();
   mk->clear_graph();
@@ -94,17 +81,17 @@ void test_mesh_op_template()
   moab::EntityHandle matEntSet, neuEntSet;
   int matVal = 2, neuVal = 4; // these values are arbitrary
 
-// Tag the material set
+  // Tag the material set
   // Collect the entites into a set
   mb->create_meshset(moab::MESHSET_SET, matEntSet);
   mb->get_entities_by_dimension(mb->get_root_set(), 3, matEnts, true);
   mb->add_entities(matEntSet, matEnts);
-  
+
   // Grab a tag and attach it to the set
   mb->tag_get_handle("MATERIAL_SET", matTag);
   mb->tag_set_data(matTag, &matEntSet, 1, (void*) &matVal);
 
-// The same thing for the Neumann set!
+  // The same thing for the Neumann set!
   mb->create_meshset(moab::MESHSET_SET, neuEntSet);
   mb->get_entities_by_dimension(mb->get_root_set(), 2, neuEnts, true);
   mb->add_entities(neuEntSet, neuEnts);
@@ -114,14 +101,14 @@ void test_mesh_op_template()
 
   // Possibly output (as files) our hard work!
   if(save_mesh) {
-    #ifdef HAVE_ACIS
+#ifdef HAVE_ACIS
       mk->save_geometry("un_meshed_brick.sat");
       mk->save_mesh("meshed_brick.exo");
-    #elif defined(HAVE_OCC)
+#elif defined(HAVE_OCC)
       mk->save_geometry("un_meshed_brick.stp");
       mk->save_mesh("meshed_brick.exo");
-    #endif
-  }
+#endif
+    }
 
-  return;
+  return 0;
 }

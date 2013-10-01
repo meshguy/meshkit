@@ -41,7 +41,7 @@ Meshes curves                                                                   
 
 <tr bgcolor=springgreen>                                                                      <td> \endhtmlonly
 \subpage algorithm_tfimapping "TFIMapping"                          \n     \htmlonly </td> <td> \endhtmlonly
-\ref example_tfimapping.cpp                                                                   \htmlonly </td> <td> \endhtmlonly
+\ref example_tfimapping.cpp example_basic.cpp                                                                  \htmlonly </td> <td> \endhtmlonly
 \ref test_tfimapping.cpp                                                                      \htmlonly </td> <td> \endhtmlonly
 Mapping algorithm for quads                                                                        \htmlonly </td> </tr>
 
@@ -73,7 +73,7 @@ Delaunay-based tri mesher                          \n     \htmlonly </td> </tr>
 
 <tr bgcolor=springgreen>                                                                      <td> \endhtmlonly
 \subpage algorithm_onetooneswept "OneToOneSwept"                                              \htmlonly </td> <td> \endhtmlonly
-\ref example_onetooneswept.cpp                                                                \htmlonly </td> <td> \endhtmlonly
+\ref example_onetooneswept.cpp example_basic.cpp                                                               \htmlonly </td> <td> \endhtmlonly
 \ref test_onetooneswept.cpp                                                                   \htmlonly </td> <td> \endhtmlonly
 Sweeper creates an all hex mesh.                                                                        \htmlonly </td> </tr>
 
@@ -103,7 +103,7 @@ Extrudes 1D or 2D mesh.                          \n     \htmlonly </td> </tr>
 
 <tr bgcolor=springgreen>                                                                      <td> \endhtmlonly
 \subpage algorithm_meshoptemplate "MeshOpTemplate"                                            \htmlonly </td> <td> \endhtmlonly
-\ref example_meshoptemplate.cpp                                     \n     \htmlonly </td> <td> \endhtmlonly
+\ref example_meshoptemplate.cpp example_basic.cpp                                    \n     \htmlonly </td> <td> \endhtmlonly
 \ref test_meshoptemplate.cpp                                                                  \htmlonly </td> <td> \endhtmlonly
 A dummy algorithm template that creates geometry                         \n     \htmlonly </td> </tr>\
 
