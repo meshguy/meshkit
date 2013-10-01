@@ -24,7 +24,7 @@
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
-#include "ReadPolyLine.hpp"
+#include "meshkit/ReadPolyLine.hpp"
 
 MKCore *mk;
 
