@@ -65,7 +65,6 @@
 
 #include "meshkit/CopyGeom.hpp"
 #include "meshkit/CopyMesh.hpp"
-#include "meshkit/MergeMesh.hpp"
 #include "meshkit/ExtrudeMesh.hpp"
 #include "meshkit/CESets.hpp"
 
@@ -179,8 +178,8 @@ namespace MeshKit {
     MBInterface *mb;
 
     std::vector <CopyMesh*> cm;
-    MergeMesh *mm;
     std::vector <CopyGeom*> cg;
+    ExtrudeMesh *em;
 
     iBase_EntitySetHandle root_set;
     std::vector<iBase_EntitySetHandle> assys;

@@ -184,17 +184,17 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
 {
     if(prob_type == "mesh"){
         // get the copy/expand sets
-        int num_etags = 3, num_ctags = 1;
-        const char     *etag_names[] = { "MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET" };
-        const char *etag_vals[] = { NULL, NULL, NULL };
+//        int num_etags = 3, num_ctags = 1;
+//        const char     *etag_names[] = { "MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET" };
+//        const char *etag_vals[] = { NULL, NULL, NULL };
         const char *ctag_names[] = { "GEOM_DIMENSION" };
         const char *ctag_vals[] = { (const char*) &set_DIM };
 
         int flag = 1;
         int assm_index = -1;
         double dx_orig[3], dx[3];
-        iBase_EntityHandle *new_ents;
-        int new_ents_alloc, new_ents_size;
+//        iBase_EntityHandle *new_ents;
+//        int new_ents_alloc, new_ents_size;
 
         if(numprocs <= (int) files.size()){
             // no distribution of task for copy/move; each file loaded only once
@@ -266,10 +266,10 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         dx[1] =  y_coord[k] - dx_orig(move_index+1, 2);
                         dx[2] =  0.0;
 
-                        int orig_ents_alloc = 0, orig_ents_size;
-                        iBase_EntityHandle *orig_ents = NULL;
-                        new_ents = NULL;
-                        new_ents_alloc = 0;
+//                        int orig_ents_alloc = 0, orig_ents_size;
+//                        iBase_EntityHandle *orig_ents = NULL;
+//                        new_ents = NULL;
+//                        new_ents_alloc = 0;
                         cm[move_index]->set_transform(Copy::Translate(dx));
                         //  mk_core()->insert_node(cm[move_index], (MeshOp*) this);
                         //cm[move_index]->execute_this();
@@ -307,7 +307,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         std::cout << "Copy/moved A: " << assm_index
                                   <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
                         if(strcmp(info.c_str(),"on") == 0)
-                            info_file << assm_index << " \  t" << k  << " \t" << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
+                            info_file << assm_index << " " << k  << "  " << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
                         //	    free(new_ents);
                         //	    free(orig_ents);
                         cm[move_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
@@ -343,12 +343,12 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         dx[1] = y_coord[assm_index] - dx_orig[1];
                         dx[2] = 0.0;
 
-                        new_ents = NULL;
-                        new_ents_alloc = 0;
-                        new_ents_size = 0;
+//                        new_ents = NULL;
+//                        new_ents_alloc = 0;
+//                        new_ents_size = 0;
 
-                        int orig_ents_alloc = 0, orig_ents_size;
-                        iBase_EntityHandle *orig_ents = NULL;
+//                        int orig_ents_alloc = 0, orig_ents_size;
+//                        iBase_EntityHandle *orig_ents = NULL;
 
 
                         /*	    iMesh_getEntities(impl, assys[0], iBase_ALL_TYPES,
@@ -366,8 +366,8 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
 
                         //	    cm[0]->tag_copied_sets(ctag_names, ctag_vals, 1);
 
-                        free(new_ents);
-                        free(orig_ents);
+//                        free(new_ents);
+//                        free(orig_ents);
                     } else {
                         flag = 0;
                         dx_orig[0] = x_coord[assm_index];
@@ -386,8 +386,8 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
     }
     else{ // prob type is geometry
         int assm_index = -1;
-        iBase_EntityHandle *new_ents;
-        int new_ents_alloc, new_ents_size;
+//        iBase_EntityHandle *new_ents;
+//        int new_ents_alloc, new_ents_size;
 
         // no distribution of task for copy/move; each file loaded only once
         int flags[assys.size()], move_index = -1;
@@ -442,10 +442,10 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                     dx[1] =  y_coord[k] - dx_orig(move_index+1, 2);
                     dx[2] =  0.0;
 
-                    int orig_ents_alloc = 0, orig_ents_size;
-                    iBase_EntityHandle *orig_ents = NULL;
-                    new_ents = NULL;
-                    new_ents_alloc = 0;
+//                    int orig_ents_alloc = 0, orig_ents_size;
+//                    iBase_EntityHandle *orig_ents = NULL;
+//                    new_ents = NULL;
+//                    new_ents_alloc = 0;
 
                     //	  iGeom_getEntities(geom, assys[move_index], iBase_ALL_TYPES,
                     //			    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
@@ -453,11 +453,12 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
 
                     //	  cg[move_index]->copy(orig_ents,orig_ents_size, dx,
                     //			       &new_ents, &new_ents_alloc, &new_ents_size, false);
-
+                    cg[move_index]->set_location(dx);
+                    cg[move_index]->execute_this();
                     std::cout << "Copy/moved A: " << assm_index
                               <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
-                    free(new_ents);
-                    free(orig_ents);
+//                    free(new_ents);
+//                    free(orig_ents);
 
                 }
 

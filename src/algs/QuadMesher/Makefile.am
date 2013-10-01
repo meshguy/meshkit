@@ -71,6 +71,8 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_builddir) \
               -I$(top_srcdir)/utils 
 
+AM_CPPFLAGS += -DHAVE_BOOST
+
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif

@@ -13,7 +13,7 @@ namespace MeshKit
 
 //---------------------------------------------------------------------------//
 //Entity Type initialization for edge meshing
-moab::EntityType QslimMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBTRI, moab::MBMAXTYPE};
+moab::EntityType QslimMesher_tps[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBMAXTYPE};
 const moab::EntityType* QslimMesher::output_types()
   { return QslimMesher_tps; }
 

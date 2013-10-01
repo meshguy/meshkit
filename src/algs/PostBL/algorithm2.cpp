@@ -278,7 +278,7 @@ void PostBL:: Algo2(){
         std::vector<int> node_tag_data(mat_b_nodes.size(),-1);
         // don't error check, as it is supposed to give error when multiple material case is encountered
         mb->tag_get_data(MNTag, mat_b_nodes, &node_tag_data[0]);
-        for(int i=0; i<mat_b_nodes.size(); i++){
+        for(int i=0; i< (int)mat_b_nodes.size(); i++){
             // already a part of some material
             if(node_tag_data[i] != -1){
                 bl_node_data[i] = node_tag_data[i]+1;
@@ -579,7 +579,7 @@ void PostBL:: Algo2(){
             std::vector<moab::EntityHandle> fmconn;
             for(Range::iterator fmter = fmhex.begin(); fmter != fmhex.end(); ++fmter){
                 MBERRCHK(mb->get_connectivity(&(*fmter), 1, fmconn),mb);
-                for(int i=0; i < fmconn.size(); i++){
+                for(int i=0; i < (int)fmconn.size(); i++){
                     if((*kter) == fmconn[i]){
                         //we have a node to unswap or reset connectivity for fixmat
                         fmconn[i] = new_vert[nid];
@@ -801,7 +801,7 @@ void PostBL:: Algo2(){
 
                 // this will lead to an error, so no error checking, new adj hexes don't have matidtag
                 mb->tag_get_data(MatIDTag, adj_hex_for_mat, &hmat_id[0]);//, mb);
-                for(int p=0; p< hmat_id.size(); p++){
+                for(int p=0; p< (int)hmat_id.size(); p++){
                     if(hmat_id[p] !=0){
                         // this is our mat id for this hex
                         moab::EntityHandle mat_set = 0;
