@@ -18,11 +18,8 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/EdgeMesher.hpp"
 #include "meshkit/SizingFunction.hpp"
-#include "meshkit/SizingFunctionVar.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/Matrix.hpp"
-#include "meshkit/VertexMesher.hpp"
-#include "example_utils.hpp"
 
 using namespace MeshKit;
 
@@ -44,7 +41,7 @@ int main(int argc, char **argv)
 
 // Prepare MK
   mk = new MKCore();  // Start up MK
-  mk->load_geometry( (string(MESH_DIR) + string("spline") + extension).c_str() ); // Load the geometry
+  mk->load_geometry( (string(MESH_DIR) + "/" + string("spline") + extension).c_str() ); // Load the geometry
 
 // Prepare EdgeMesher
   mk->get_entities_by_dimension(1, curves); // get all 1D entites and store into "curves" (we only have 1)
