@@ -1,20 +1,13 @@
 /*!
 \example example_mbgeomop.cpp
 
-\section MBGeomOp_cpp_title <pretty-name-of-this-file>
+\section MBGeomOp_cpp_title MBGeomOp - Geometrized Surface Creation
 
 \subsection MBGeomOp_cpp_in Input
-\image html MBGeomOp.in.jpg "(description of image)"
-There is no input.
+Reads in a manifold surface mesh (partBed.smf)
 
 \subsection MBGeomOp_cpp_out Output
-\image html MBGeomOp.out.jpg "(description of image)"
-
-\subsection MBGeomOp_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+Final mesh with topology tags and sets.
 
 \subsection MBGeomOp_cpp_src Source Code
 */
@@ -56,7 +49,7 @@ int main(int argc, char* argv[])
   else
   {
     std::cout << usage_string ;
-    fstr=TestDir + "/partBed.smf";
+    fstr=(std::string) MESH_DIR +  "/partBed.smf";
     std::cout << "using default input file:" << fstr <<", no output\n";
     filename = fstr.c_str();
   }

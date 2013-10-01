@@ -1,20 +1,8 @@
 /*!
 \example example_coregen.cpp
 
-\section example_CoreGen_cpp_title Assembly Gen
+\section example_CoreGen_cpp_title CoreGen: Nuclear Reactor Core Model Creation MeshOp
 
-Some text explaining objectives
-
-\subsection example_CoreGen_cpp_in Input
-\image html CoreGen.in.jpg "(description of image)"
-
-\subsection example_CoreGen_cpp_out Output
-\image html CoreGen.out.jpg "(description of image)"
-
-\subsection example_CoreGen_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
 \warning Currently requires multiple setup/execute cycles.
 
 \subsection example_CoreGen_cpp_src Source Code
@@ -24,7 +12,6 @@ Some text explaining objectives
 #include "meshkit/MeshOp.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/CoreGen.hpp"
-#include "TestUtil.hpp"
 #include "mpi.h"
 using namespace MeshKit;
 
@@ -59,7 +46,7 @@ void test_coregen_default(int argc, char **argv)
     cg->set_name("coregen");
 
     // setup input/output files for creating the 'Reactor Core' model
-    cg->prepareIO(argc, argv, nrank, nprocs, TestDir);
+    cg->prepareIO(argc, argv, nrank, nprocs, std::string(MESH_DIR));
     mk->setup_and_execute();
     mk->save_mesh("cgd.h5m");
 #ifdef HAVE_PARALLEL_MOAB

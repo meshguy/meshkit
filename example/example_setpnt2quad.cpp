@@ -1,20 +1,8 @@
 /*!
 \example example_setpnt2quad.cpp
 
-\section SetPnt2Quad_cpp_title <pretty-name-of-this-file>
+\section SetPnt2Quad_cpp_title Converting Points to Quads Using Several MeshOps
 
-\subsection SetPnt2Quad_cpp_in Input
-\image html SetPnt2Quad.in.jpg "(description of image)"
-There is no input.
-
-\subsection SetPnt2Quad_cpp_out Output
-\image html SetPnt2Quad.out.jpg "(description of image)"
-
-\subsection SetPnt2Quad_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
 
 \subsection SetPnt2Quad_cpp_src Source Code
 */
@@ -45,7 +33,7 @@ There is no input.
 using namespace MeshKit;
 
 
-#include "ReadPolyLine.hpp"
+#include "meshkit/ReadPolyLine.hpp"
 
 MKCore *mk;
 
@@ -56,9 +44,9 @@ int main(int argc, char* argv[])
   const char *filename = 0;
   //const char *outfile = 0;
 
-  std::string fstr=TestDir+"/pts.h5m";
+  std::string fstr = std::string(MESH_DIR) + "/pts.h5m";
   filename = fstr.c_str();
-  std::string polyFile = TestDir +"/polyPB.txt";
+  std::string polyFile = (std::string) MESH_DIR + "/polyPB.txt";
   const char * file_poly = polyFile.c_str();
 
   char * opts  = (char *)("pc");
@@ -144,14 +132,7 @@ int main(int argc, char* argv[])
   // size the mesh
   double mesh_size = 50;
   /*SizingFunction *sf =*/ new SizingFunction(mk, -1, mesh_size);
-  // convention: will add the latest SizingFunction available to the model ents
-  // before the "setup" in execute
-  /*{
-    for (unsigned int i = 0; i < surfs.size(); i++)
-      surfs[i]->sizing_function_index(sf->core_index());
-  }*/
 
-  //mk->get_graph().addArc(splitOp->get_node(), camalPaver->get_node());
   // insert_node(GraphNode *inserted, GraphNode *before, GraphNode *after= NULL);
   mk->insert_node(camalPaver, mk->leaf_node(), splitOp);
 

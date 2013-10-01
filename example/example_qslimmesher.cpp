@@ -1,20 +1,7 @@
 /*!
 \example example_qslimmesher.cpp
 
-\section example_qslimmesher_cpp_title <pretty-name-of-this-file>
-
-\subsection example_qslimmesher_cpp_in Input
-\image html example_qslimmesher.in.jpg "(description of image)"
-There is no input.
-
-\subsection example_qslimmesher_cpp_out Output
-\image html example_qslimmesher.out.jpg "(description of image)"
-
-\subsection example_qslimmesher_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+\section example_qslimmesher_cpp_title Qslim Mesh Decimation
 
 \subsection example_qslimmesher_cpp_src Source Code
 */
@@ -84,7 +71,7 @@ int main(int argc, char* argv[])
   {
 	  std::cout<<usage_string;
 	  std::cout << "\n\n";
-	  fstr=TestDir + "/partBed.smf";
+      fstr=(std::string) MESH_DIR + "/partBed.smf";
 	  std::cout<< "default arguments: -s 4500 -B 1000 -p -o out.smf " << fstr <<" \n";
 	  options.face_target = 4500;
 	  options.will_constrain_boundaries = true;

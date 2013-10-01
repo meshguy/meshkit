@@ -1,21 +1,7 @@
 /*!
 \example example_camalpaver.cpp
 
-\section paver_cpp_title <pretty-name-of-this-file>
-
-
-\subsection paver_cpp_in Input
-\image html paver.in.jpg "(description of image)"
-There is no input.
-
-\subsection paver_cpp_out Output
-\image html paver.out.jpg "(description of image)"
-
-\subsection paver_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+\section paver_cpp_title CAMALPaver Tests
 
 \subsection paver_cpp_src Source Code
 */
@@ -82,7 +68,7 @@ void baseballfield_test()
 
 void mesh_test(std::string filebase)
 {
-  std::string file_name = TestDir + "/" + filebase + extension;
+  std::string file_name = (std::string) MESH_DIR + "/" + filebase + extension;
   mk->load_geometry(file_name.c_str());
 
     // get the surface
@@ -101,7 +87,6 @@ void mesh_test(std::string filebase)
     // report the number of quads
   moab::Range quads;
   moab::ErrorCode rval = mk->moab_instance()->get_entities_by_dimension(0, 2, quads);
-  CHECK_EQUAL(moab::MB_SUCCESS, rval);
   std::cout << quads.size() << " quads generated." << std::endl;
 
   if (save_mesh) {
@@ -109,7 +94,6 @@ void mesh_test(std::string filebase)
     std::string outfile = filebase + std::string(".vtk");
     moab::EntityHandle out_set = surfs[0]->mesh_handle();
     rval = mk->moab_instance()->write_file(outfile.c_str(), NULL, NULL, &out_set, 1);
-    MBERRCHK(rval, mk->moab_instance());
   }
 
   mk->clear_graph();

@@ -10,6 +10,7 @@ File can be found in data folder: assygen_default.inp
 \subsection example_assygen_cpp_inf Misc. Information
 \author Rajeev Jain
 \date 09-30-2013
+\warning The old design is more stable. Can be found: MeshKit/rgg/assygen
 
 \subsection example_assygen_cpp_src Source Code
 */

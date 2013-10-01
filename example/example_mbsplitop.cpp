@@ -1,20 +1,10 @@
 /*!
 \example example_mbsplitop.cpp
 
-\section MBSplitOp_cpp_title <pretty-name-of-this-file>
+\section MBSplitOp_cpp_title MBSplitOp: Edit, Crop and Split Surfaces
 
 \subsection MBSplitOp_cpp_in Input
-\image html MBSplitOp.in.jpg "(description of image)"
-There is no input.
-
-\subsection MBSplitOp_cpp_out Output
-\image html MBSplitOp.out.jpg "(description of image)"
-
-\subsection MBSplitOp_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+Reads in PB.h5m(geometry file) and polyPB.txt(polyline file).
 
 \subsection MBSplitOp_cpp_src Source Code
 */
@@ -31,11 +21,11 @@ There is no input.
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/MBSplitOp.hpp"
 
+#include "meshkit/ReadPolyLine.hpp"
 
 using namespace MeshKit;
 
 
-#include "ReadPolyLine.hpp"
 
 MKCore *mk;
 
@@ -65,8 +55,8 @@ int main(int argc, char* argv[])
   min_dot = 0;
 
 
-  filenameS = TestDir + "/PB.h5m";
-  polygon_file_name = TestDir + "/polyPB.txt";
+  filenameS = (std::string) MESH_DIR +  "/PB.h5m";
+  polygon_file_name = (std::string) MESH_DIR +  "/polyPB.txt";
   filename_out = "PB_new.h5m";
 
   if (argc<=1)

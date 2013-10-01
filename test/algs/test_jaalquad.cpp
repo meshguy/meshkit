@@ -28,6 +28,8 @@ MKCore* core = 0;
 bool write_vtk = false;
 int main( int argc, char* argv[] )
 {
+    core = new MKCore(); // Start up MK
+
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i],"-w"))
             write_vtk = true;
@@ -36,9 +38,6 @@ int main( int argc, char* argv[] )
         else
             std::cerr << "Invalid option: \"" << argv[i] << '"' << std::endl;
     }
-
-    MKCore my_core;
-    core = &my_core;
     int result = 0;
     result += RUN_TEST( test_simple_tri_to_quad );
     result += RUN_TEST( load_file );
@@ -298,7 +297,7 @@ void load_file()
     core->setup_and_execute();
 
     // removing tri's
-    moab::Range quads,tri;
+    moab::Range tri;
     moab->get_entities_by_type( 0, moab::MBTRI, tri );
     if(tri.size() != 0)
         moab->delete_entities(tri);

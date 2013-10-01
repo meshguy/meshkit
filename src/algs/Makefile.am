@@ -6,7 +6,7 @@ SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
-libMeshKitalgs_la_LIBADD = Qslim/libMKQslim.la \
+libMeshKitalgs_la_LIBADD = Qslim/libQslim.la \
                            QuadMesher/libJaalQuadMesher.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
@@ -79,8 +79,8 @@ AM_CPPFLAGS += $(DEFINES) \
               -I$(srcdir)/Sweep \
               -I$(srcdir)/AssyGen \
 	      -I$(srcdir)/CoreGen \
-	      -I$(srcdir)/PostBL
-
+	      -I$(srcdir)/PostBL \
+	      -I$(srcdir)/Qslim
 
 if PARALLEL
 if HAVE_PARALLEL_MOAB

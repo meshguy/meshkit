@@ -1,27 +1,12 @@
 /*!
 \example example_mbvolop.cpp
 
-\section MBVolOp_cpp_title <pretty-name-of-this-file>
+\section MBVolOp_cpp_title MBVolOp: Volume Creation From Top/Bottom Surfaces
 
-\subsection MBVolOp_cpp_in Input
-\image html MBVolOp.in.jpg "(description of image)"
-There is no input.
-
-\subsection MBVolOp_cpp_out Output
-\image html MBVolOp.out.jpg "(description of image)"
-
-\subsection MBVolOp_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
 
 \subsection MBVolOp_cpp_src Source Code
 */
 /*
- * \file test_MBVolOp.cpp \test
- *
- *  Started on: Jan 13, 2012
  *  test for volume creation operation
  *  volumes are created with 2 initial surfaces, top and bottom, one cropping line, and
  *  several splitting lines; also, a main direction for all operations, including weaving
@@ -44,7 +29,7 @@ There is no input.
 using namespace MeshKit;
 
 
-#include "ReadPolyLine.hpp"
+#include "meshkit/ReadPolyLine.hpp"
 
 MKCore *mk;
 
@@ -63,8 +48,8 @@ int main(int argc, char* argv[])
 {
   // check command line arg
 
-  filename_bot = TestDir + "/BedCropL3.h5m";
-  filename_top = TestDir + "/SurfCropL3.h5m";//"/polyPB.txt";
+  filename_bot = (std::string) MESH_DIR + "/BedCropL3.h5m";
+  filename_top = (std::string) MESH_DIR + "/SurfCropL3.h5m";//"/polyPB.txt";
 
   output_file_name = "volumesIce.h5m"; // output
 

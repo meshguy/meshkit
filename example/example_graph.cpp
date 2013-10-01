@@ -1,25 +1,12 @@
 /*!
 \example example_graph.cpp
 
-\section example_graph_cpp_title <pretty-name-of-this-file>
-
-\subsection example_graph_cpp_in Input
-\image html example_graph.in.jpg "(description of image)"
-There is no input.
-
-\subsection example_graph_cpp_out Output
-\image html example_graph.out.jpg "(description of image)"
-
-\subsection example_graph_cpp_inf Misc. Information
-\author <your-name-here>
-\date 7-15-2013
-\bug <placeholder>
-\warning <placeholder>
+\section example_graph_cpp_title Setup and Execute Graph Demo
 
 \subsection example_graph_cpp_src Source Code
 */
 
-/* \file test_graph.cpp \test
+/*
  *
  * Test the MeshOp graph code in MeshKit.  Do this by building a graph
  * which looks like:
