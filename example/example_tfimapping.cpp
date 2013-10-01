@@ -23,7 +23,6 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/Matrix.hpp"
 #include "meshkit/EdgeMesher.hpp"
-#include "example_utils.hpp"
 
 using namespace MeshKit;
 
@@ -47,7 +46,7 @@ int main(int argc, char **argv)
 
 // Prepare MK
   mk = new MKCore(); // Start up MK
-  mk->load_geometry( (example_dir + string("rectangle") + extension).c_str() ); // Load the geometry
+  mk->load_geometry( (string(MESH_DIR) + "/" + string("rectangle") + extension).c_str() ); // Load the geometry
 
 // Prepare EdgeMesher (TFIMapping requires that 1 edge be meshed)
   mk->get_entities_by_dimension(1, curves); // get all 1D entities and store into "curves"
