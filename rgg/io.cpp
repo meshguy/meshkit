@@ -2755,7 +2755,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
               for (int m=1; m<=nRadii; m++){
 
                   if (nType == 0){
-                      iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+                      iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
                                            &cyl, &err);
                       CHECK("Couldn't create fuel rod.");
                     }
@@ -2902,7 +2902,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 
               for (int m=1; m<=nRadii; m++){
                   if (nType == 0){
-                      iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+                      iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
                                            &cyl, &err);
                       CHECK("Couldn't create fuel rod.");
                     }
@@ -3112,7 +3112,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
               for (int m=1; m<=nRadii; m++){
                   if (nType == 0){
-                      iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+                      iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
                                            &cyl, &err);
                       CHECK("Couldn't create fuel rod.");
                     }
@@ -3305,7 +3305,7 @@ int CNrgen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
 
               for (int m=1; m<=nRadii; m++){
                   if (nType == 0){
-                      iGeom_createCylinder(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m),
+                      iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
                                            &cyl, &err);
                       CHECK("Couldn't create fuel rod.");
                     }

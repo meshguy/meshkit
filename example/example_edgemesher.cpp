@@ -25,7 +25,7 @@ using namespace MeshKit;
 
 const int NUM_INTERVALS = 10; // on our curve, we want 10 intervals
 const int INTERVAL_SIZE = -1; // in sizing functions, -1 means not specified
-const bool save_mesh = false;
+const bool save_mesh = true;
 
 #ifdef HAVE_ACIS
 std::string extension = ".sat";

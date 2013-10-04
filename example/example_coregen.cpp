@@ -3,7 +3,7 @@
 
 \section example_CoreGen_cpp_title CoreGen: Nuclear Reactor Core Model Creation MeshOp
 
-\warning Currently requires multiple setup/execute cycles.
+\warning The old design is more stable. Can be found: MeshKit/rgg/coregen
 
 \subsection example_CoreGen_cpp_src Source Code
 */
