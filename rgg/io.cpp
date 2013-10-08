@@ -558,11 +558,8 @@ int CNrgen::ReadPinCellData (int i)
 
               // reading Radii
               for(int l=1; l<= nRadii; l++){
-                  std::cout << "here " << std::endl;
-                  szFormatString >> dVCylRadii(2*l-1);
-                  // set minor radii equal to major for cylinder
-                  dVCylRadii(2*l) = dVCylRadii(2*l-1);
-                  if( dVCylRadii(2*l-1) < 0 || szFormatString.fail())
+                  szFormatString >> dVCylRadii(l);
+                  if( dVCylRadii(l) < 0 || szFormatString.fail())
                     IOErrorHandler(ENEGATIVE);
                 }
               m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
@@ -2758,6 +2755,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
                       iGeom_createCylinder(geom, dHeight, dVCylRadii(m), dVCylRadii(m),
                                            &cyl, &err);
                       CHECK("Couldn't create fuel rod.");
+                      std::cout << m << ": Creating cylinder with radii " << dVCylRadii(m) << std::endl;
                     }
                   else{
                       iGeom_createCone(geom, dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
@@ -2780,12 +2778,11 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
                   CHECK("Couldn't copy inner duct wall prism.");
 
                   // subtract outer most cyl from brick
-                  iGeom_subtractEnts(geom, cells[n-1], cyls[nRadii-1], &tmp_new, &err);
+                  iGeom_subtractEnts(geom, cells[n-1], tmp_vol, &tmp_new, &err);
                   CHECK("Subtract of inner from outer failed.");
 
                   // copy the new into the cyl array
                   cells[n-1] = tmp_new; cell = tmp_new;
-                  cyls[nRadii-1]=tmp_vol;
 
                 }
               cp_in.push_back(tmp_new);
@@ -2846,6 +2843,7 @@ int CNrgen::CreatePinCell(int i, double dX, double dY, double dZ)
 
                   // copy the new into the cyl array
                   cyls[b-1] = tmp_new;
+                  tmp_vol=NULL;
                 }
             }
 
