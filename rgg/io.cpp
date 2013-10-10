@@ -2119,6 +2119,8 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
     std::istringstream szFormatString (szInputString);
 
     szFormatString >> card >> m_nPin;
+    if(m_nPin <=0 )
+        IOErrorHandler (INVALIDINPUT);
 
     // width of the hexagon is n*n+1/2
     int nWidth =2*m_nPin -1;
@@ -2203,9 +2205,15 @@ int CNrgen::Create_HexAssm(std::string &szInputString)
                 iGeom_rotateEnt (geom, assm, 30, 0, 0, 1, &err);
                 CHECK("Rotation failed failed.");
 
-                m_Pincell(1).GetPitch(dP, dH);
-                dX = m_nPin*dP;
-                dY = -(m_nPin-1)*dP*sqrt(3.0)/2.0;
+                if(0 != m_Pincell.GetSize()){
+                    m_Pincell(1).GetPitch(dP, dH);
+                    dX = m_nPin*dP;
+                    dY = -(m_nPin-1)*dP*sqrt(3.0)/2.0;
+                }
+                else{
+                    dX = 0.0;
+                    dY = 0.0;
+                }
                 dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
 
                 // position the prism
@@ -2235,69 +2243,73 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
 
     std::istringstream szFormatString (szInputString);
     szFormatString >> card >> m_nPinX >> m_nPinY;
+    if(m_nPinX <=0 || m_nPinY <=0)
+        IOErrorHandler (INVALIDINPUT);
     m_Assembly.SetSize(m_nPinX,m_nPinY);
 
     if (m_nJouFlag == 1)
         return 0;
 
     //read the next line to get assembly info &store assembly info
-    for(int m=1; m<=m_nPinY; m++){
-        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                 MAXCHARS, szComment))
-            IOErrorHandler (INVALIDINPUT);
-        std::istringstream szFormatString1 (szInputString);
-
-        //store the line read in Assembly array and create / position the pin in the core
-        for(int n=1; n<=m_nPinX; n++){
-            szFormatString1 >> m_Assembly(m,n);
-            if(szFormatString1.fail())
+    if(0 != m_Pincell.GetSize()){
+        for(int m=1; m<=m_nPinY; m++){
+            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                     MAXCHARS, szComment))
                 IOErrorHandler (INVALIDINPUT);
+            std::istringstream szFormatString1 (szInputString);
+
+            //store the line read in Assembly array and create / position the pin in the core
+            for(int n=1; n<=m_nPinX; n++){
+                szFormatString1 >> m_Assembly(m,n);
+                if(szFormatString1.fail())
+                    IOErrorHandler (INVALIDINPUT);
 
 
-            // loop thro' all pins to get the type of pin
-            for(int b=1; b<=m_nPincells; b++){
-                m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-                if(m_Assembly(m,n) == szVolAlias)
-                    nTempPin = b;
-            }
+                // loop thro' all pins to get the type of pin
+                for(int b=1; b<=m_nPincells; b++){
+                    m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+                    if(m_Assembly(m,n) == szVolAlias)
+                        nTempPin = b;
+                }
 
-            //now compute the location where the pin needs to be placed
-            err = ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
-            ERRORR("Error in function ComputePinCentroid", err);
+                //now compute the location where the pin needs to be placed
+                err = ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+                ERRORR("Error in function ComputePinCentroid", err);
 
-            // if dummy pincell skip and continue
-            if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-                m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+                // if dummy pincell skip and continue
+                if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+                    m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+                    // dMoveX and dMoveY are stored for positioning the outer squares later
+                    if(m == m_nPinY && n ==m_nPinX){
+                        dMoveX = dX/2.0;
+                        dMoveY = -dY/2.0;
+                    }
+                    continue;
+                }
+                ++m_nTotalPincells;
+                // now create the pincell in the location found
+                std::cout << "\n--------------------------------------------------"<<std::endl;
+                std::cout << " m = " << m <<" n = " << n << std::endl;
+                std::cout << "creating pin: " << nTempPin;
+                std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
+
+                if(strcmp(m_szInfo.c_str(),"on") == 0)
+                    m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+
+                m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
+                if(nIFlag){
+                    err = CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
+                    ERRORR("Error in function CreatePinCell_Intersect", err);
+                }
+                else{
+                    err = CreatePinCell(nTempPin, dX, -dY, dZ);
+                    ERRORR("Error in function CreatePinCell", err);
+                }
                 // dMoveX and dMoveY are stored for positioning the outer squares later
                 if(m == m_nPinY && n ==m_nPinX){
                     dMoveX = dX/2.0;
                     dMoveY = -dY/2.0;
                 }
-                continue;
-            }
-            ++m_nTotalPincells;
-            // now create the pincell in the location found
-            std::cout << "\n--------------------------------------------------"<<std::endl;
-            std::cout << " m = " << m <<" n = " << n << std::endl;
-            std::cout << "creating pin: " << nTempPin;
-            std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
-
-            if(strcmp(m_szInfo.c_str(),"on") == 0)
-                m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
-
-            m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
-            if(nIFlag){
-                err = CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
-                ERRORR("Error in function CreatePinCell_Intersect", err);
-            }
-            else{
-                err = CreatePinCell(nTempPin, dX, -dY, dZ);
-                ERRORR("Error in function CreatePinCell", err);
-            }
-            // dMoveX and dMoveY are stored for positioning the outer squares later
-            if(m == m_nPinY && n ==m_nPinX){
-                dMoveX = dX/2.0;
-                dMoveY = -dY/2.0;
             }
         }
     }

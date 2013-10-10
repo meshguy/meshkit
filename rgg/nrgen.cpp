@@ -46,6 +46,7 @@ CNrgen::CNrgen ()
   m_szInfo = "off";
   pin_name = "";
   m_nHblock = -1;
+  m_nPincells = 0;
 }
 
 CNrgen::~CNrgen ()
