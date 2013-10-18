@@ -1034,6 +1034,175 @@ if test "x$WITH_MESQUITE" != "xno"; then
 
 fi
 
+################################################################################
+#                          LPSolver                                
+################################################################################
+AC_ARG_WITH(lpsolver,
+[AC_HELP_STRING([--with-lpsolver=DIR], [Specify location of LPSolver library.])],
+[LPSOLVER_VAL=$withval
+ DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-lpsolver=\"${withval}\""
+ ], [LPSOLVER_VAL=no])
+
+# define function that tries to find a no-arg constructor for
+# lpsolver object in specified lib.  Arguments are 1) class name, 2) library name,
+# 3) actions if success and 4) actions if not found
+LPSOLVER_CPPFLAGS=
+LPSOLVER_LDFLAGS=
+LPSOLVER_LIBS=
+old_LIBS="$LIBS"
+old_LDFLAGS="$LDFLAGS"
+old_CPPFLAGS="$CPPFLAGS"
+#check for lpsolver headers and libraries
+if test "xno" = "x$LPSOLVER_VAL"; then
+    HAVE_LPSOLVER=no
+else
+    LPSOLVER_DIR="$LPSOLVER_VAL"
+
+    if test "X" = "x$LPSOLVER_VAL"; then
+        LPSOLVER_DIR=yes
+    fi
+
+    if test "xyes" != "x$LPSOLVER_DIR"; then
+        if ! test -d "$LPSOLVER_DIR"; then
+            AC_MSG_ERROR([$LPSOLVER_DIR: not a directory])
+        fi
+
+        if test -d "$LPSOLVER_DIR/include"; then
+            LPSOLVER_CPPFLAGS="-I$LPSOLVER_DIR/include"
+        else
+            AC_MSG_WARN([$LPSOLVER_DIR/include: no such directory])
+            LPSOLVER_CPPFLAGS="-I$LPSOLVER_DIR"
+        fi
+
+        if test -d "$LPSOLVER_DIR/lib"; then
+            LPSOLVER_LDFLAGS="-L$LPSOLVER_DIR/lib"
+        else
+            AC_MSG_WARN([$LPSOLVER_DIR/lib: no such directory])
+            LPSOLVER_LDFLAGS="-L$LPSOLVER_DIR"
+        fi
+    fi
+
+    
+
+    LDFLAGS="$LDFLAGS $LPSOLVER_LDFLAGS -llpsolve55"
+    CPPFLAGS="$CPPFLAGS $LPSOLVER_CPPFLAGS"
+    
+    AC_LANG_PUSH([C++])
+
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([
+                        [#include <cstddef>]
+                        [#include "lp_lib.h"]
+                       ],
+                       [
+                        int a = 1;               
+                       ]
+                      )
+      ],
+      [LPSOLVER_LIBS="$LPSOLVER_LDFLAGS -llpsolve55"] [HAVE_LPSOLVER=yes],
+      [AC_MSG_WARN([liblpsolve55 is not installed.])])
+
+    AC_LANG_POP([C++])
+   
+fi
+
+if test "x$HAVE_LPSOLVER" = "xyes"; then
+    AC_MSG_RESULT([LPSolver is found.])
+elif test "x$LPSOLVER_VAL" != "xno"; then
+    AC_MSG_ERROR([LPSolver not found or not usable.])
+fi
+
+AC_SUBST([LPSOLVER_CPPFLAGS])
+AC_SUBST([LPSOLVER_LDFLAGS])
+AC_SUBST([LPSOLVER_LIBS])
+AC_SUBST([HAVE_LPSOLVER])
+
+AM_CONDITIONAL(HAVE_LPSOLVER, [test "x$HAVE_LPSOLVER" = "xyes"])
+
+################################################################################
+#                          ARMADILLO
+################################################################################
+AC_ARG_WITH(armadillo,
+[AC_HELP_STRING([--with-armadillo=DIR], [Specify location of Armadillo library.])],
+[ARMADILLO_VAL=$withval
+ DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-armadillo=\"${withval}\""
+ ], [ARMADILLO_VAL=no])
+
+# define function that tries to find a no-arg constructor for
+# armadillo object in specified lib.  Arguments are 1) class name, 2) library name,
+# 3) actions if success and 4) actions if not found
+ARMADILLO_CPPFLAGS=
+ARMADILLO_LDFLAGS=
+ARMADILLO_LIBS=
+old_LIBS="$LIBS"
+old_LDFLAGS="$LDFLAGS"
+old_CPPFLAGS="$CPPFLAGS"
+#check for armadillo headers and libraries
+if test "xno" = "x$ARMADILLO_VAL"; then
+    HAVE_ARMADILLO=no
+else
+    ARMADILLO_DIR="$ARMADILLO_VAL"
+
+    if test "X" = "x$ARMADILLO_VAL"; then
+        ARMADILLO_DIR=yes
+    fi
+
+    if test "xyes" != "x$ARMADILLO_DIR"; then
+        if ! test -d "$ARMADILLO_DIR"; then
+            AC_MSG_ERROR([$ARMADILLO_DIR: not a directory])
+        fi
+
+        if test -d "$ARMADILLO_DIR/include"; then
+            ARMADILLO_CPPFLAGS="-I$ARMADILLO_DIR/include"
+        else
+            AC_MSG_WARN([$ARMADILLO_DIR/include: no such directory])
+            ARMADILLO_CPPFLAGS="-I$ARMADILLO_DIR"
+        fi
+
+        if test -d "$ARMADILLO_DIR/lib"; then
+            ARMADILLO_LDFLAGS="-L$ARMADILLO_DIR/lib"
+        else
+            AC_MSG_WARN([$ARMADILLO_DIR/lib: no such directory])
+            ARMADILLO_LDFLAGS="-L$ARMADILLO_DIR"
+        fi
+    fi
+
+    
+
+    LDFLAGS="$LDFLAGS $ARMADILLO_LDFLAGS -larmadillo"
+    CPPFLAGS="$CPPFLAGS $ARMADILLO_CPPFLAGS"
+    
+    AC_LANG_PUSH([C++])
+
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([
+                        [#include <cstddef>]
+                        [#include <armadillo>]
+                       ],
+                       [
+                        int a = 1;               
+                       ]
+                      )
+      ],
+      [ARMADILLO_LIBS="$ARMADILLO_LDFLAGS -larmadillo"] [HAVE_ARMADILLO=yes],
+      [AC_MSG_WARN([libarmadillo is not installed.])])
+
+    AC_LANG_POP([C++])
+   
+fi
+
+if test "x$HAVE_ARMADILLO" = "xyes"; then
+    AC_MSG_RESULT([ARMADILLO is found.])
+elif test "x$ARMADILLO_VAL" != "xno"; then
+    AC_MSG_ERROR([ARMADILLO not found or not usable.])
+fi
+
+AC_SUBST([ARMADILLO_CPPFLAGS])
+AC_SUBST([ARMADILLO_LDFLAGS])
+AC_SUBST([ARMADILLO_LIBS])
+AC_SUBST([HAVE_ARMADILLO])
+
+AM_CONDITIONAL(HAVE_ARMADILLO, [test "x$HAVE_ARMADILLO" = "xyes"])
 
 
 ################################################################################
