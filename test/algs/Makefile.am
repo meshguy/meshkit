@@ -37,6 +37,11 @@ TESTS = test_edgemesher \
         test_ebmesh \
         test_assygen \
         test_postbl
+if HAVE_LPSOLVER
+TESTS += test_submapping
+endif
+
+
 if HAVE_FBIGEOM
 TESTS += \
         test_fbgeom \
@@ -71,6 +76,9 @@ test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesher_SOURCES = test_edgemesher.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
+if HAVE_LPSOLVER
+test_submapping_SOURCES = test_submapping.cpp
+endif
 test_ebmesh_SOURCES = test_ebmesh.cpp
 # test_ebmesh_LDADD = -lcubit_geom $(LDADD)
 test_copymesh_SOURCES = test_copymesh.cpp

@@ -23,9 +23,13 @@
 #include <vector>
 #include <set>
 #include <list>
+#define PI 3.1415926536
+
+
 
 using namespace std;
 typedef MeshKit::Vector<3> Vector3D;
+typedef MeshKit::Vector<2> Vector2D;
 typedef MeshKit::Matrix<3, 3> Matrix3D;
 
 //===========================================================================//
@@ -47,6 +51,8 @@ struct Vertex {
   int index;
   bool onBoundary;
   Vector3D xyz;
+  Vector2D uv;
+  bool onCorner;
   iBase_EntityHandle gVertexHandle;
 };
 
@@ -61,6 +67,22 @@ struct Face {
   }
   vector<Vertex*> connect;
   iBase_EntityHandle gFaceHandle;
+};
+
+struct Edge {
+  int getNumNodes() const
+  {
+    return connect.size();
+  }
+  Vertex* getVertex(int i) const
+  {
+    return connect[i];
+  }
+  vector<Vertex*> connect;//could be 1 or 2
+  iBase_EntityHandle gEdgeHandle;
+  int id;
+  int index;
+  int edge_type;//-1  corner, 0  side, 1  end, -2  reversal
 };
 
 }

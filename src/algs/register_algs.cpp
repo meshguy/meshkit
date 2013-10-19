@@ -33,7 +33,9 @@
 #ifdef HAVE_INTASSIGN
 #include "meshkit/IAInterface.hpp"
 #endif
-
+#ifdef HAVE_LPSOLVER
+#include "meshkit/SubMapping.hpp"
+#endif
 namespace MeshKit {
 
 /**\brief Dummy function to force load from static library */
@@ -49,6 +51,9 @@ REGISTER_MESH_OP(VertexMesher);
 REGISTER_MESH_OP(EdgeMesher);
 REGISTER_MESH_OP(OneToOneSwept);
 REGISTER_MESH_OP(TFIMapping);
+#ifdef HAVE_LPSOLVER
+REGISTER_MESH_OP(SubMapping);
+#endif
 REGISTER_MESH_OP(SCDMesh);
 REGISTER_MESH_OP(CopyMesh);
 REGISTER_MESH_OP(MergeMesh);

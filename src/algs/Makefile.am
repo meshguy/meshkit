@@ -44,6 +44,9 @@ libMeshKitalgs_la_SOURCES += \
   MBSplitOp.cpp \
   MBVolOp.cpp
 endif
+if HAVE_LPSOLVER
+AM_CPPFLAGS += $(LPSOLVER_CPPFLAGS) -DHAVE_LPSOLVER                             
+endif
 
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \

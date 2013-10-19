@@ -1052,6 +1052,7 @@ LPSOLVER_LIBS=
 old_LIBS="$LIBS"
 old_LDFLAGS="$LDFLAGS"
 old_CPPFLAGS="$CPPFLAGS"
+HAVE_LPSOLVER=yes
 #check for lpsolver headers and libraries
 if test "xno" = "x$LPSOLVER_VAL"; then
     HAVE_LPSOLVER=no
@@ -1116,8 +1117,8 @@ AC_SUBST([LPSOLVER_CPPFLAGS])
 AC_SUBST([LPSOLVER_LDFLAGS])
 AC_SUBST([LPSOLVER_LIBS])
 AC_SUBST([HAVE_LPSOLVER])
-
-AM_CONDITIONAL(HAVE_LPSOLVER, [test "x$HAVE_LPSOLVER" = "xyes"])
+AC_MSG_WARN([has_lpsolve=$HAVE_LPSOLVER])
+AM_CONDITIONAL(HAVE_LPSOLVER, [test $HAVE_LPSOLVER = yes])
 
 ################################################################################
 #                          ARMADILLO

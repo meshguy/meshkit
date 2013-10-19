@@ -16,7 +16,9 @@ libSweep_la_SOURCES = Global.hpp \
         EquipotentialSmooth.cpp \
         EquipotentialSmooth.hpp \
         GreenCoordinates3D.cpp \
-        GreenCoordinates3D.hpp
+        GreenCoordinates3D.hpp \
+		IsoLaplace.cpp \
+		IsoLaplace.hpp
 #        HarmonicMap.cpp \
 #        HarmonicMap.hpp \
 #        MatrixOp.hpp \
@@ -32,16 +34,25 @@ libSweep_la_SOURCES += SweepWrapper.hpp \
         SmartLaplaceWrapper.cpp
 endif
 
+if HAVE_LPSOLVER
+libSweep_la_SOURCES += SubMapping.cpp \
+					   LPSolveClass.hpp \
+					   LPSolveClass.cpp
+endif
 
 # The list of header files which are to be installed
 nobase_libSweep_la_include_HEADERS = \
         meshkit/OneToOneSwept.hpp \
         Global.hpp \
         meshkit/TFIMapping.hpp
+if HAVE_LPSOLVER
+nobase_libSweep_la_include_HEADERS += \
+									 meshkit/SubMapping.hpp
+endif
 
 if HAVE_MESQUITE
 nobase_libSweep_la_include_HEADERS += \
-        meshkit/MeshImprove.hpp 
+        meshkit/MeshImprove.hpp
 endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
@@ -57,11 +68,13 @@ if HAVE_MESQUITE
 AM_CPPFLAGS += -I$(srcdir)/../../extern/mesquite 
 AM_CPPFLAGS += $(MESQUITE_CPPFLAGS) -DHAVE_MESQUITE
 LIBS += $(MESQUITE_LIBS)
-
 AM_CPPFLAGS += $(MESQUITE_DEFINES) \
               $(MESQUITE_CPPFLAGS)
 
 AM_LDFLAGS += $(MESQUITE_LDFLAGS)
+endif
+if HAVE_LPSOLVER
+AM_CPPFLAGS += $(LPSOLVER_CPPFLAGS) -DHAVE_LPSOLVER
 endif
 
 if HAVE_MOAB
