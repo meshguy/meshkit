@@ -26,6 +26,11 @@ libSweep_la_SOURCES = Global.hpp \
 #        SmoothAngleBased.hpp \
 #        SmoothAngleBased.cpp
 
+if HAVE_ARMADILLO
+libSweep_la_SOURCES += TriharmonicRBF.hpp \
+					   TriharmonicRBF.cpp
+endif
+
 if HAVE_MESQUITE
 libSweep_la_SOURCES += SweepWrapper.hpp \
         SweepWrapper.cpp \

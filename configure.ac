@@ -1207,6 +1207,90 @@ AM_CONDITIONAL(HAVE_ARMADILLO, [test "x$HAVE_ARMADILLO" = "xyes"])
 
 
 ################################################################################
+#                          OpenBlas
+################################################################################
+AC_ARG_WITH(openblas,
+[AC_HELP_STRING([--with-openblas=DIR], [Specify location of OpenBlas library.])],
+[OPENBLAS_VAL=$withval
+ DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-openblas=\"${withval}\""
+ ], [OPENBLAS_VAL=no])
+
+# define function that tries to find a no-arg constructor for
+# OpenBlas object in specified lib.  Arguments are 1) class name, 2) library name,
+# 3) actions if success and 4) actions if not found
+OPENBLAS_CPPFLAGS=
+OPENBLAS_LDFLAGS=
+OPENBLAS_LIBS=
+old_LIBS="$LIBS"
+old_LDFLAGS="$LDFLAGS"
+old_CPPFLAGS="$CPPFLAGS"
+#check for openblas headers and libraries
+if test "xno" = "x$OPENBLAS_VAL"; then
+    HAVE_OPENBLAS=no
+else
+    OPENBLAS_DIR="$OPENBLAS_VAL"
+
+    if test "X" = "x$OPENBLAS_VAL"; then
+        OPENBLAS_DIR=yes
+    fi
+
+    if test "xyes" != "x$OPENBLAS_DIR"; then
+        if ! test -d "$OPENBLAS_DIR"; then
+            AC_MSG_ERROR([$OPENBLAS_DIR: not a directory])
+        fi
+
+        if test -d "$OPENBLAS_DIR/include"; then
+            OPENBLAS_CPPFLAGS="-I$OPENBLAS_DIR/include"
+        else
+            AC_MSG_WARN([$OPENBLAS_DIR/include: no such directory])
+            OPENBLAS_CPPFLAGS="-I$OPENBLAS_DIR"
+        fi
+        if test -d "$OPENBLAS_DIR/lib"; then
+            OPENBLAS_LDFLAGS="-L$OPENBLAS_DIR/lib"
+        else
+            AC_MSG_WARN([$OPENBLAS_DIR/lib: no such directory])
+            OPENBLAS_LDFLAGS="-L$OPENBLAS_DIR"
+        fi
+    fi
+
+
+
+    LDFLAGS="$LDFLAGS $OPENBLAS_LDFLAGS -lopenblas"
+    CPPFLAGS="$CPPFLAGS $OPENBLAS_CPPFLAGS"
+
+    AC_LANG_PUSH([C++])
+
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([
+                        [#include <cstddef>]
+                        [#include "openblas_config.h"]
+                       ],
+                       [
+                        int a = 1;
+                       ]
+                      )
+      ],
+      [OPENBLAS_LIBS="$OPENBLAS_LDFLAGS -lopenblas"] [HAVE_OPENBLAS=yes],
+      [AC_MSG_WARN([libopenblas is not installed.])])
+
+    AC_LANG_POP([C++])
+
+fi
+
+if test "x$HAVE_OPENBLAS" = "xyes"; then
+    AC_MSG_RESULT([OPENBLAS is found.])
+elif test "x$OPENBLAS_VAL" != "xno"; then
+    AC_MSG_ERROR([OPENBLAS not found or not usable.])
+fi
+
+AC_SUBST([OPENBLAS_CPPFLAGS])
+AC_SUBST([OPENBLAS_LDFLAGS])
+AC_SUBST([OPENBLAS_LIBS])
+AC_SUBST([HAVE_OPENBLAS])
+
+AM_CONDITIONAL(HAVE_OPENBLAS, [test "x$HAVE_OPENBLAS" = "xyes"])
+
+################################################################################
 #                           Output Files
 ################################################################################
 
