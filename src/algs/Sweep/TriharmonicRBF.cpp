@@ -3,9 +3,9 @@
 #include <math.h>
 #include <map>
 
-
+#ifdef HAVE_OPENBLAS
 extern "C" void openblas_set_num_threads(int);
-
+#endif
 
 
 namespace MeshKit {
@@ -103,7 +103,9 @@ void TriharmonicRBF::Execute()
     //MatrixXf coeffs_z = A.jacobiSvd(ComputeThinU | ComputeThinV).solve(b);
     //MatrixXf coeffs_z = A.householderQr().solve(b);
     std::cout << "Matrix size is " << vertex_size+4 << "*" << vertex_size+4 << "\n";
+#ifdef HAVE_OPENBLAS
     openblas_set_num_threads(4);
+#endif
     mat coeffs = solve(A,b);
     //MatrixXf coeffs = A.jacobiSvd(ComputeThinU | ComputeThinV).solve(b);
     

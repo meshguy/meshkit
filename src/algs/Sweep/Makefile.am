@@ -27,8 +27,10 @@ libSweep_la_SOURCES = Global.hpp \
 #        SmoothAngleBased.cpp
 
 if HAVE_ARMADILLO
+if HAVE_OPENBLAS
 libSweep_la_SOURCES += TriharmonicRBF.hpp \
 					   TriharmonicRBF.cpp
+endif
 endif
 
 if HAVE_MESQUITE
@@ -79,9 +81,11 @@ AM_CPPFLAGS += $(MESQUITE_DEFINES) \
 AM_LDFLAGS += $(MESQUITE_LDFLAGS)
 endif
 if HAVE_LPSOLVER
-AM_CPPFLAGS += $(LPSOLVER_CPPFLAGS) -DHAVE_LPSOLVER
+AM_CPPFLAGS += -DHAVE_LPSOLVER
 endif
-
+if HAVE_OPENBLAS
+AM_CPPFLAGS += -DHAVE_OPENBLAS
+endif
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif

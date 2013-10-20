@@ -1117,7 +1117,6 @@ AC_SUBST([LPSOLVER_CPPFLAGS])
 AC_SUBST([LPSOLVER_LDFLAGS])
 AC_SUBST([LPSOLVER_LIBS])
 AC_SUBST([HAVE_LPSOLVER])
-AC_MSG_WARN([has_lpsolve=$HAVE_LPSOLVER])
 AM_CONDITIONAL(HAVE_LPSOLVER, [test $HAVE_LPSOLVER = yes])
 
 ################################################################################
