@@ -19,8 +19,8 @@ add_revision(ftgl
   )
 
 add_revision(OCE
-  GIT_REPOSITORY "https://github.com/tpaviot/oce.git"
-  GIT_TAG "OCE-0.9.1"
+  GIT_REPOSITORY "https://github.com/robertmaynard/oce.git"
+  GIT_TAG "cgm_support"
   )
 
 add_revision(zlib
@@ -36,11 +36,13 @@ add_revision(hdf5
   URL_MD5 1196e668f5592bfb50d1de162eb16cff)
 
 add_revision(moab
-  SVN_REPOSITORY https://svn.mcs.anl.gov/repos/ITAPS/MOAB/trunk
+  GIT_REPOSITORY https://bitbucket.org/fathomteam/moab.git
+  GIT_TAG "b816be22a37644db0caa014406faec7e6ab57e3d"
   )
 
 add_revision(cgm
   SVN_REPOSITORY https://svn.mcs.anl.gov/repos/ITAPS/cgm/trunk
+  SVN_REVISION "-r6078"
   )
 
 add_revision(lasso
