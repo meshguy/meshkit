@@ -434,8 +434,7 @@ void compute_pair_info(pair_info *pair /* Model * pM0,*/) {
         << "," << uniqID(pairTop->v1) << ") " << pairTop->cost << std::endl;
   }
 }
-void recomputeChangedPairsCost(std::vector<moab::EntityHandle> & changed,/* Model *pM0, Vertex *v0,*/
-moab::EntityHandle v0) {
+void recomputeChangedPairsCost(std::vector<moab::EntityHandle> & changed, moab::EntityHandle v0) {
   //
   for (unsigned int i = 0; i < changed.size(); i++) {
 
