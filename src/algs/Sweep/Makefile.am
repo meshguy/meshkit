@@ -29,7 +29,9 @@ libSweep_la_SOURCES = Global.hpp \
 if HAVE_ARMADILLO
 if HAVE_OPENBLAS
 libSweep_la_SOURCES += TriharmonicRBF.hpp \
-					   TriharmonicRBF.cpp
+					   TriharmonicRBF.cpp \
+					   HarmonicMapper.hpp \
+					   HarmonicMapper.cpp
 endif
 endif
 

@@ -17,6 +17,7 @@
 #include <fstream>
 #include <string.h>
 #include <limits.h>
+#include "meshkit/SimpleArray.hpp"
 
 #include <iGeom.h>
 #include "meshkit/Matrix.hpp"
@@ -55,20 +56,6 @@ struct Vertex {
   bool onCorner;
   iBase_EntityHandle gVertexHandle;
 };
-
-struct Face {
-  int getNumNodes() const
-  {
-    return connect.size();
-  }
-  Vertex* getVertex(int i) const
-  {
-    return connect[i];
-  }
-  vector<Vertex*> connect;
-  iBase_EntityHandle gFaceHandle;
-};
-
 struct Edge {
   int getNumNodes() const
   {
@@ -83,6 +70,25 @@ struct Edge {
   int id;
   int index;
   int edge_type;//-1  corner, 0  side, 1  end, -2  reversal
+  double e;
+};
+
+struct Face {
+  int getNumNodes() const
+  {
+    return connect.size();
+  }
+  Vertex* getVertex(int i) const
+  {
+    return connect[i];
+  }
+  int index;
+  vector<Vertex*> connect;
+  vector<Edge*> connEdges;
+  vector<vector<int> > vertexloops;
+  vector<vector<int> > edgeloops;
+  iBase_EntityHandle gFaceHandle;
+  int src_tgt_link;//0--source, 1--target, 2--linking
 };
 
 }
