@@ -102,8 +102,8 @@ void HarmonicMapper::_iterative_map(double epsilon)
 	//boundary nodes are set to (0,0)
 	vector<int> interior;
 	for (std::vector<Vertex>::iterator it = vtx.begin(); it != vtx.end(); it++)
-		if (((*it).uv[0] == 0) && ((*it).uv[1] == 0))
-			interior.push_back((*it).index);	
+		if (it->onBoundary)
+			interior.push_back(it->index);	
 
 	while(true){
 		double error = -1.0e+10;		
