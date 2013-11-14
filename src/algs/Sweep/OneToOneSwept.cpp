@@ -348,6 +348,8 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
 
       FaceList[i].connect[j] = &NodeList[tmpIndex];// why not store tmp Index directly?
     }
+	m_err = mk_core()->imesh_instance()->setIntData(currentFace, taghandle, i);
+	IBERRCHK(m_err, "Trouble set the int data for quads on the source surface.");
 
    /* m_err = mk_core()->imesh_instance()->setIntData(currentFace, taghandle, i);
     IBERRCHK(m_err, "Trouble set the int data for quad mesh on the source surface.");*/
@@ -544,7 +546,7 @@ moab::ErrorCode OneToOneSwept::FourthNodeInQuad(moab::EntityHandle node1, moab::
 
 }
 #ifdef HAVE_ARMADILLO
-void OneToOneSwept::SurfMeshHarmonic(iBase_EntityHandle vol)
+void OneToOneSwept::SurfMeshHarmonic(iBase_EntityHandle vol, vector<iBase_EntityHandle> &newNodehandle)
 {
 	
 	SurfProHarmonicMap surf_pro(mk_core(), sourceSurface, targetSurface, vol);
@@ -559,23 +561,52 @@ void OneToOneSwept::SurfMeshHarmonic(iBase_EntityHandle vol)
 			continue;
 		m_err = mk_core()->imesh_instance()->createVtx(TVertexList[i].xyz[0], TVertexList[i].xyz[1], TVertexList[i].xyz[2], TVertexList[i].gVertexHandle);
 		IBERRCHK(m_err, "Trouble create a mesh nodes on the target surface!");
-	}
-
-	vector<iBase_EntityHandle> test_quads(FaceList.size());
-	for (unsigned int i = 0; i < FaceList.size(); i++){
-		vector<iBase_EntityHandle> tmp;
-		tmp.push_back(TVertexList[(FaceList[i].getVertex(0))->index].gVertexHandle);
-		tmp.push_back(TVertexList[(FaceList[i].getVertex(3))->index].gVertexHandle);
-		tmp.push_back(TVertexList[(FaceList[i].getVertex(2))->index].gVertexHandle);
-		tmp.push_back(TVertexList[(FaceList[i].getVertex(1))->index].gVertexHandle);
-		m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &tmp[0], 4, test_quads[i]);
-		IBERRCHK(m_err, "Trouble create a mesh nodes on the target surface!");
-	}
-	
-	mk_core()->save_mesh("harmonic_mesh.vtk");
-	
+		newNodehandle.push_back(TVertexList[i].gVertexHandle);
+	}	
 }
 #endif
+
+bool OneToOneSwept::isConcave()
+{
+	//use the quad mesh on the source surface to determine whether it is concave or not
+	iBase_TagHandle taghandle = 0;
+  	iMesh::Error m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
+  	IBERRCHK(m_err, "Trouble get the tag handle in the mesh instance.");
+	for (std::vector<Vertex>::iterator it = NodeList.begin(); it != NodeList.end(); it++){
+		if (!it->onBoundary)
+			continue;
+		//get the adjacent quads around a vertex
+		double angle = 0.0;
+		std::vector<iBase_EntityHandle> adj_quads;
+		m_err = mk_core()->imesh_instance()->getEntAdj(it->gVertexHandle, iBase_FACE, adj_quads);
+		IBERRCHK(m_err, "Trouble get the adjacent quads around a vertex!");
+		for (unsigned int i = 0; i < adj_quads.size(); i++){
+			int face_index = -1;
+			m_err = mk_core()->imesh_instance()->getIntData(adj_quads[i], taghandle, face_index);
+			if (m_err) continue;//this is a quad entity from the linking surface
+			int node_index, pre_index, next_index;
+			for (int j = 0; j < 4; j++)
+				if (FaceList[face_index].connect[j]->index == it->index){
+					node_index = j;
+					break;
+				}
+			Vector3D v1(0.0), v2(0.0);
+			pre_index = (FaceList[face_index].getVertex((node_index+4-1)%4))->index;
+			next_index = (FaceList[face_index].getVertex((node_index+1)%4))->index;
+			v1 = NodeList[pre_index].xyz - it->xyz;
+			v2 = NodeList[next_index].xyz - it->xyz;
+			double dotproduct = v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
+			angle += acos(dotproduct/sqrt((v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2])*(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2])));
+		}
+		if (angle > PI){
+			return true;	
+		}
+	}
+
+	return false;	
+}
+
+
 //****************************************************************************//
 // function   : TargetSurfProjection
 // Author     : Shengyong Cai
@@ -651,62 +682,67 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
     m_err = mk_core()->imesh_instance()->createEntSet(1, entityset);
     IBERRCHK(m_err, "Trouble create the entity set");
   }
+
+  bool condition_harmonic = isConcave();
+  bool is_exe_harmonic = false;
 #ifdef HAVE_ARMADILLO
   //target surface mesh projection based on harmonic mapping
-  bool condition_harmonic = true;
   if (condition_harmonic){
-	SurfMeshHarmonic(volume);
+	is_exe_harmonic = true;
+	SurfMeshHarmonic(volume, newNodehandle);
   }
 #endif
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Based on the transformation in the physical space, project the mesh nodes on the source surface to the target surface
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Vector3D sPtsCenter(0.0), tPtsCenter(0.0);
-  std::vector<Vector3D> sBndNodes(sizeBLayer), tBndNodes(sizeBLayer);
-  int num_pts = 0;
-  //calculate the barycenters for the source and target boundaries
-  for (unsigned int i = 0; i < NodeList.size(); i++)
-  {
-    if (NodeList[i].onBoundary)
-    {
-      sPtsCenter += NodeList[i].xyz;
-      tPtsCenter += TVertexList[i].xyz;
-      sBndNodes[num_pts] = NodeList[i].xyz;
-      tBndNodes[num_pts] = TVertexList[i].xyz;
-      num_pts++;
-    }
+
+   if (!is_exe_harmonic){
+	  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	  // Based on the transformation in the physical space, project the mesh nodes on the source surface to the target surface
+	  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	  Vector3D sPtsCenter(0.0), tPtsCenter(0.0);
+	  std::vector<Vector3D> sBndNodes(sizeBLayer), tBndNodes(sizeBLayer);
+	  int num_pts = 0;
+	  //calculate the barycenters for the source and target boundaries
+	  for (unsigned int i = 0; i < NodeList.size(); i++)
+	  {
+		if (NodeList[i].onBoundary)
+		{
+		  sPtsCenter += NodeList[i].xyz;
+		  tPtsCenter += TVertexList[i].xyz;
+		  sBndNodes[num_pts] = NodeList[i].xyz;
+		  tBndNodes[num_pts] = TVertexList[i].xyz;
+		  num_pts++;
+		}
+	  }
+	  if (sizeBLayer != num_pts)
+		MBERRCHK(moab::MB_FAILURE, mb);
+	  sPtsCenter = sPtsCenter / num_pts;
+	  tPtsCenter = tPtsCenter / num_pts;
+	  //done with the barycenter calculation
+
+	  // compute transformation matrix from source boundary to target boundary
+	  Matrix3D transMatrix;
+	  computeTransformationFromSourceToTarget(sBndNodes, sPtsCenter, tBndNodes, tPtsCenter, transMatrix);
+
+	  //calculate the inner nodes on the target surface
+	  for (unsigned int i = 0; i < NodeList.size(); i++)
+	  {
+		if (!NodeList[i].onBoundary)
+		{
+		  Vector3D xyz;
+		  xyz = transMatrix * (NodeList[i].xyz - 2 * sPtsCenter + tPtsCenter)+sPtsCenter;
+
+		  iGeom::Error g_err = igeom_inst->getEntClosestPt(targetSurface, xyz[0], xyz[1], xyz[2], TVertexList[i].xyz[0],
+		      TVertexList[i].xyz[1], TVertexList[i].xyz[2]);
+		  IBERRCHK(g_err, "Trouble get the closest point on the targets surface.");
+
+		  //create the node entities
+		  iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(TVertexList[i].xyz[0], TVertexList[i].xyz[1],
+		      TVertexList[i].xyz[2], TVertexList[i].gVertexHandle);
+		  IBERRCHK(m_err, "Trouble create the node entity.");
+		  TVertexList[i].onBoundary = false;
+		  newNodehandle.push_back(TVertexList[i].gVertexHandle);
+		}
+	  }
   }
-  if (sizeBLayer != num_pts)
-    MBERRCHK(moab::MB_FAILURE, mb);
-  sPtsCenter = sPtsCenter / num_pts;
-  tPtsCenter = tPtsCenter / num_pts;
-  //done with the barycenter calculation
-
-  // compute transformation matrix from source boundary to target boundary
-  Matrix3D transMatrix;
-  computeTransformationFromSourceToTarget(sBndNodes, sPtsCenter, tBndNodes, tPtsCenter, transMatrix);
-
-  //calculate the inner nodes on the target surface
-  for (unsigned int i = 0; i < NodeList.size(); i++)
-  {
-    if (!NodeList[i].onBoundary)
-    {
-      Vector3D xyz;
-      xyz = transMatrix * (NodeList[i].xyz - 2 * sPtsCenter + tPtsCenter)+sPtsCenter;
-
-      iGeom::Error g_err = igeom_inst->getEntClosestPt(targetSurface, xyz[0], xyz[1], xyz[2], TVertexList[i].xyz[0],
-          TVertexList[i].xyz[1], TVertexList[i].xyz[2]);
-      IBERRCHK(g_err, "Trouble get the closest point on the targets surface.");
-
-      //create the node entities
-      iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(TVertexList[i].xyz[0], TVertexList[i].xyz[1],
-          TVertexList[i].xyz[2], TVertexList[i].gVertexHandle);
-      IBERRCHK(m_err, "Trouble create the node entity.");
-      TVertexList[i].onBoundary = false;
-      newNodehandle.push_back(TVertexList[i].gVertexHandle);
-    }
-  }
-
   //add the inner nodes to the entityset
   m_err = mk_core()->imesh_instance()->addEntArrToSet(&newNodehandle[0], newNodehandle.size(), entityset);
   IBERRCHK(m_err, "Trouble add an array of nodes to the entityset.");

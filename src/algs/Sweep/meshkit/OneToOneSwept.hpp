@@ -102,8 +102,10 @@ public:
 
 private:
 #ifdef HAVE_ARMADILLO
-  void SurfMeshHarmonic(iBase_EntityHandle vol);
+  void SurfMeshHarmonic(iBase_EntityHandle vol, vector<iBase_EntityHandle> &newNodehandle);
 #endif
+  //determine whether the source surface is concave or multi-connected
+  bool isConcave();
 
   void BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::EntityHandle> & layers);
 

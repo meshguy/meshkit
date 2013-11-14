@@ -22,8 +22,9 @@ SurfProHarmonicMap::SurfProHarmonicMap(MKCore* core, iBase_EntityHandle s, iBase
   m_err = imesh_instance->getTagHandle("GLOBAL_ID", global_mesh_tag);
   IBERRCHK(m_err, "Trouble get the mesh_id_tag for 'GLOBAL_ID'.");
   g_err = igeom_instance->createTag("HARMONIC_SURF_PROJECTION", 1, iBase_INTEGER, harmonic_surf_pro);
-  IBERRCHK(m_err, "Trouble create the tag handle.");
+  IBERRCHK(g_err, "Trouble create the tag handle.");
   m_err = imesh_instance->createTag("HARMONIC_FACET_MESH", 1, iBase_INTEGER, facet_mesh_tag);
+  IBERRCHK(m_err, "Trouble create the tag handle.");
   preprocessing();
   getFacets();
 }
@@ -178,7 +179,11 @@ void SurfProHarmonicMap::cleanup(){
 	IBERRCHK(m_err, "Trouble remove the tag data!");
 	m_err = imesh_instance->deleteEntArr(&ents_to_del[0], ents_to_del.size());
 	IBERRCHK(m_err, "Trouble delete entities!");
-	
+	g_err = igeom_instance->destroyTag(harmonic_surf_pro, true);
+	IBERRCHK(g_err, "Trouble delete a tag!");
+	m_err = imesh_instance->destroyTag(facet_mesh_tag, true);
+	IBERRCHK(g_err, "Trouble delete a tag!");
+		
 }
 
 int SurfProHarmonicMap::findFacetTri(vector<Face> &facet_tri, Vector2D uv, Vector3D &uvw){
@@ -901,8 +906,6 @@ void SurfProHarmonicMap::getFacets()
 		src_facet_tri[i/3].connect.resize(3);
 		for (int k = 0; k < 3; k++)
 			src_facet_tri[i/3].connect[k] = &src_facet_v[src_facets[i+k]];
-		std::cout << "source facet index = " << i/3 << "\tvtx size = " << src_facet_tri[i/3].connect.size() << std::endl;
-
 	}
 	//facets on the target surface
 	iGeom_getFacets(igeom_instance->instance(), target.gFaceHandle, dist_tolerance, ARRAY_INOUT(tgt_coords), ARRAY_INOUT(tgt_facets), &err);
