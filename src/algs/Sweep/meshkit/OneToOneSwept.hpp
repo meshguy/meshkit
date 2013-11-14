@@ -101,6 +101,9 @@ public:
   void SetTargetSurface(int index);
 
 private:
+#ifdef HAVE_ARMADILLO
+  void SurfMeshHarmonic(iBase_EntityHandle vol);
+#endif
 
   void BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::EntityHandle> & layers);
 
@@ -135,6 +138,7 @@ private:
   //private member variable
   iBase_EntityHandle sourceSurface;
   iBase_EntityHandle targetSurface;
+  iBase_EntityHandle volume;
   moab::Tag markTag;
   moab::Interface *mb;
   int numLayers;

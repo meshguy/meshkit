@@ -12,6 +12,7 @@ HarmonicMapper::HarmonicMapper(MKCore* core, vector<Vertex> &v, vector<Face> &t,
   tri.insert(tri.begin(), t.begin(), t.end());
   edges.insert(edges.begin(), e.begin(), e.end());
   adj.insert(adj.begin(), a.begin(), a.end());
+  
 }
 
 void HarmonicMapper::execute()
@@ -28,6 +29,7 @@ void HarmonicMapper::getUV(vector<Vertex> &v)
 		if (it->onBoundary)  continue;
 		v[count].uv[0] = it->uv[0];
 		v[count].uv[1] = it->uv[1];
+		//std::cout << "HarmonicMapper index = " << count << "\tuv = {" << it->uv[0] << "," << it->uv[1] << "}\n";
 	}	
 
 }
@@ -102,8 +104,12 @@ void HarmonicMapper::_iterative_map(double epsilon)
 	//boundary nodes are set to (0,0)
 	vector<int> interior;
 	for (std::vector<Vertex>::iterator it = vtx.begin(); it != vtx.end(); it++)
-		if (it->onBoundary)
-			interior.push_back(it->index);	
+		if (!it->onBoundary){
+			interior.push_back(it->index);
+			it->uv[0] = 0.0;
+			it->uv[1] = 0.0;
+		}
+				
 
 	while(true){
 		double error = -1.0e+10;		

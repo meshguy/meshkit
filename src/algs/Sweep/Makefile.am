@@ -31,7 +31,9 @@ if HAVE_OPENBLAS
 libSweep_la_SOURCES += TriharmonicRBF.hpp \
 					   TriharmonicRBF.cpp \
 					   HarmonicMapper.hpp \
-					   HarmonicMapper.cpp
+					   HarmonicMapper.cpp \
+					   SurfProHarmonicMap.hpp \
+					   SurfProHarmonicMap.cpp
 endif
 endif
 
@@ -87,6 +89,9 @@ AM_CPPFLAGS += -DHAVE_LPSOLVER
 endif
 if HAVE_OPENBLAS
 AM_CPPFLAGS += -DHAVE_OPENBLAS
+endif
+if HAVE_ARMADILLO
+AM_CPPFLAGS += -DHAVE_ARMADILLO
 endif
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
