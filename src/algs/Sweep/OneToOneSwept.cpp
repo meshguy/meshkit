@@ -9,6 +9,9 @@
 #include <algorithm>
 #include <math.h>
 #include <map>
+#ifdef HAVE_ARMADILLO
+#include "SurfProHarmonicMap.hpp"
+#endif
 
 namespace MeshKit {
 
@@ -190,8 +193,9 @@ void OneToOneSwept::execute_this()
     std::vector<moab::EntityHandle> bLayers;
     BuildLateralBoundaryLayers(me, bLayers);
     //int sizeBLayer = bLayers.size()/(numLayers+1);
+    volume = me->geom_handle();
 
-    TargetSurfProjection(bLayers);// the top layer is the last list of nodes
+	TargetSurfProjection(bLayers);// the top layer is the last list of nodes
 
     //get the volume mesh entity set
     iRel::Error r_err = mk_core()->irel_pair(me->iRelPairIndex())->getEntSetRelation(me->geom_handle(), 0, volumeSet);
@@ -539,7 +543,39 @@ moab::ErrorCode OneToOneSwept::FourthNodeInQuad(moab::EntityHandle node1, moab::
   return moab::MB_SUCCESS;
 
 }
+#ifdef HAVE_ARMADILLO
+void OneToOneSwept::SurfMeshHarmonic(iBase_EntityHandle vol)
+{
+	
+	SurfProHarmonicMap surf_pro(mk_core(), sourceSurface, targetSurface, vol);
+	surf_pro.match();
+	surf_pro.setMeshData(NodeList, TVertexList, FaceList);
+	surf_pro.projection();
+	surf_pro.getMeshData(TVertexList);
 
+	iMesh::Error m_err;
+	for (unsigned int i = 0; i < TVertexList.size(); i++){
+		if (TVertexList[i].onBoundary)
+			continue;
+		m_err = mk_core()->imesh_instance()->createVtx(TVertexList[i].xyz[0], TVertexList[i].xyz[1], TVertexList[i].xyz[2], TVertexList[i].gVertexHandle);
+		IBERRCHK(m_err, "Trouble create a mesh nodes on the target surface!");
+	}
+
+	vector<iBase_EntityHandle> test_quads(FaceList.size());
+	for (unsigned int i = 0; i < FaceList.size(); i++){
+		vector<iBase_EntityHandle> tmp;
+		tmp.push_back(TVertexList[(FaceList[i].getVertex(0))->index].gVertexHandle);
+		tmp.push_back(TVertexList[(FaceList[i].getVertex(3))->index].gVertexHandle);
+		tmp.push_back(TVertexList[(FaceList[i].getVertex(2))->index].gVertexHandle);
+		tmp.push_back(TVertexList[(FaceList[i].getVertex(1))->index].gVertexHandle);
+		m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &tmp[0], 4, test_quads[i]);
+		IBERRCHK(m_err, "Trouble create a mesh nodes on the target surface!");
+	}
+	
+	mk_core()->save_mesh("harmonic_mesh.vtk");
+	
+}
+#endif
 //****************************************************************************//
 // function   : TargetSurfProjection
 // Author     : Shengyong Cai
@@ -615,7 +651,13 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
     m_err = mk_core()->imesh_instance()->createEntSet(1, entityset);
     IBERRCHK(m_err, "Trouble create the entity set");
   }
-
+#ifdef HAVE_ARMADILLO
+  //target surface mesh projection based on harmonic mapping
+  bool condition_harmonic = true;
+  if (condition_harmonic){
+	SurfMeshHarmonic(volume);
+  }
+#endif
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Based on the transformation in the physical space, project the mesh nodes on the source surface to the target surface
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

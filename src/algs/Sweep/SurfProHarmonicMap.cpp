@@ -42,11 +42,12 @@ void SurfProHarmonicMap::projection()
 		computeNormalTri(tgt_facet_tri[i], normal_tgt[i], target);
 		//std::cout << "target index = " << i << "\tnrml = {" << normal_tgt[i][0] << "," << normal_tgt[i][1] << "," << normal_tgt[i][2] << "}\n";
 	}
+
 	//loop over the interior nodes of quad mesh on the source surface and compute barycentric coordinates in the physical source surface
 	for (vector<Vertex>::iterator it = quad_mesh_src.begin(); it != quad_mesh_src.end(); it++){
 		if (it->onBoundary)
 			continue;
-        std::cout << "index=" << it->index  << "\tsrc quad node xyz = {" << it->xyz[0] << "," << it->xyz[1] << "," << it->xyz[2] << "}\n";
+        //std::cout << "index=" << it->index  << "\tsrc quad node xyz = {" << it->xyz[0] << "," << it->xyz[1] << "," << it->xyz[2] << "}\t";
         Vector3D bary_coord_src, bary_coord_tgt;
 		int tri_index = findFacetTri(src_facet_tri, normal_src, it->xyz, bary_coord_src);
 		//compute the positions of all the quad mesh nodes on the unit disk
@@ -65,19 +66,19 @@ void SurfProHarmonicMap::projection()
 				xyz[j] += bary_coord_tgt[i]*tgt_facet_tri[tri_index].connect[i]->xyz[j];
 		
 
-		g_err = igeom_instance->getEntClosestPt(target.gFaceHandle, xyz[0], xyz[1], xyz[2], quad_mesh_tgt[it->index].xyz[0], quad_mesh_tgt[it->index].xyz[1], quad_mesh_tgt[it->index].xyz[2]);
+		g_err = igeom_instance->getEntClosestPtTrimmed(target.gFaceHandle, xyz[0], xyz[1], xyz[2], quad_mesh_tgt[it->index].xyz[0], quad_mesh_tgt[it->index].xyz[1], quad_mesh_tgt[it->index].xyz[2]);
 		IBERRCHK(g_err, "Trouble get the trimmed closed point positions on the target surface!");
 
          //std::cout << "\t\ttgt uvw={" << bary_coord_tgt[0] << "," << bary_coord_tgt[1] << ","  << bary_coord_tgt[2] << "}  facet index=" << tri_index << "\tv1={" << tgt_facet_tri[tri_index].connect[0]->xyz[0] << "," << tgt_facet_tri[tri_index].connect[0]->xyz[1] << "," << tgt_facet_tri[tri_index].connect[0]->xyz[2] << "} v2={" << tgt_facet_tri[tri_index].connect[1]->xyz[0] << "," << tgt_facet_tri[tri_index].connect[1]->xyz[1] << "," << tgt_facet_tri[tri_index].connect[1]->xyz[2] << "} v3={" << tgt_facet_tri[tri_index].connect[2]->xyz[0] << "," << tgt_facet_tri[tri_index].connect[2]->xyz[1] << "," << tgt_facet_tri[tri_index].connect[2]->xyz[2] << "}\n";
-         std::cout << "\t\tprojected pts xyz = {" << quad_mesh_tgt[it->index].xyz[0] << "," << quad_mesh_tgt[it->index].xyz[1] << "," << quad_mesh_tgt[it->index].xyz[2] << "}\ttmp = {" << xyz[0] << "," << xyz[1] << "," << xyz[2] << "}\n";
+         //std::cout << "\t\tprojected pts xyz = {" << quad_mesh_tgt[it->index].xyz[0] << "," << quad_mesh_tgt[it->index].xyz[1] << "," << quad_mesh_tgt[it->index].xyz[2] << "}\ttmp = {" << xyz[0] << "," << xyz[1] << "," << xyz[2] << "}\n";
 	}
-	
-	vector<iBase_EntityHandle> nodes(quad_mesh_src.size());
+	/*
+	vector<iBase_EntityHandle> nodes(quad_mesh_tgt.size());
 	for (unsigned int i = 0; i < quad_mesh_src.size(); i++){
 		if (quad_mesh_src[i].onBoundary)
 			continue;
 		//create vtx
-		m_err = imesh_instance->createVtx(quad_mesh_src[i].uv[0], quad_mesh_src[i].uv[1], 200.0, nodes[i]);
+		m_err = imesh_instance->createVtx(quad_mesh_tgt[i].xyz[0], quad_mesh_tgt[i].xyz[1], quad_mesh_tgt[i].xyz[2], nodes[i]);
 		IBERRCHK(m_err, "Trouble create vtx ent!");
 	}
 
@@ -97,10 +98,30 @@ void SurfProHarmonicMap::projection()
 			IBERRCHK(m_err, "Trouble create an face entity!");						
 		}
 	}
-
-    test();
+	*/
 	cleanup();
-	mk_core->save_mesh("surfProharmonic.vtk");
+}
+
+bool SurfProHarmonicMap::ComputeBarycentric(Vector3D a, Vector3D b, Vector3D c, Vector3D xyz, Vector3D &uvw)
+{
+	//Compute vectors;
+	Vector3D v0 = b - a;
+	Vector3D v1 = c - a;
+	Vector3D v2 = xyz - a;
+	//compute dot products
+	double dot00 = v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2];
+	double dot01 = v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2];
+	double dot02 = v0[0]*v2[0] + v0[1]*v2[1] + v0[2]*v2[2];
+	double dot11 = v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2];
+	double dot12 = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+	//compute barycentric coordinates
+	double invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01);
+	uvw[1] = (dot11 * dot02 - dot01 * dot12) * invDenom;
+	uvw[2] = (dot00 * dot12 - dot01 * dot02) * invDenom;
+	uvw[0] = 1.0 - uvw[1] - uvw[2];
+
+	//check if the point is in the triangle
+	return (uvw[0]>=0)&&(uvw[1]>=0)&&(uvw[0]+uvw[1]<=1);
 }
 
 void SurfProHarmonicMap::test()
@@ -172,8 +193,8 @@ int SurfProHarmonicMap::findFacetTri(vector<Face> &facet_tri, Vector2D uv, Vecto
 bool SurfProHarmonicMap::ComputeBarycentric(Vector2D a, Vector2D b, Vector2D c, Vector2D xy, Vector3D &uvw)
 {
 	//Compute vectors;
-	Vector2D v0 = c - a;
-	Vector2D v1 = b - a;
+	Vector2D v0 = b - a;
+	Vector2D v1 = c - a;
 	Vector2D v2 = xy - a;
 	//compute dot products
 	double dot00 = v0[0]*v0[0] + v0[1]*v0[1];
@@ -183,31 +204,9 @@ bool SurfProHarmonicMap::ComputeBarycentric(Vector2D a, Vector2D b, Vector2D c, 
 	double dot12 = v1[0]*v2[0] + v1[1]*v2[1];
 	//compute barycentric coordinates
 	double invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01);
-	uvw[0] = (dot11 * dot02 - dot01 * dot12) * invDenom;
-	uvw[1] = (dot00 * dot12 - dot01 * dot02) * invDenom;
-	uvw[2] = 1.0 - uvw[0] - uvw[1];
-
-	//check if the point is in the triangle
-	return (uvw[0]>=0)&&(uvw[1]>=0)&&(uvw[0]+uvw[1]<=1);
-}
-
-bool SurfProHarmonicMap::ComputeBarycentric(Vector3D a, Vector3D b, Vector3D c, Vector3D xyz, Vector3D &uvw)
-{
-	//Compute vectors;
-	Vector3D v0 = c - a;
-	Vector3D v1 = b - a;
-	Vector3D v2 = xyz - a;
-	//compute dot products
-	double dot00 = v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2];
-	double dot01 = v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2];
-	double dot02 = v0[0]*v2[0] + v0[1]*v2[1] + v0[2]*v2[2];
-	double dot11 = v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2];
-	double dot12 = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
-	//compute barycentric coordinates
-	double invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01);
-	uvw[0] = (dot11 * dot02 - dot01 * dot12) * invDenom;
-	uvw[1] = (dot00 * dot12 - dot01 * dot02) * invDenom;
-	uvw[2] = 1.0 - uvw[0] - uvw[1];
+	uvw[1] = (dot11 * dot02 - dot01 * dot12) * invDenom;
+	uvw[2] = (dot00 * dot12 - dot01 * dot02) * invDenom;
+	uvw[0] = 1.0 - uvw[1] - uvw[2];
 
 	//check if the point is in the triangle
 	return (uvw[0]>=0)&&(uvw[1]>=0)&&(uvw[0]+uvw[1]<=1);
@@ -242,8 +241,19 @@ int SurfProHarmonicMap::findFacetTri(vector<Face> &facet_tri, vector<Vector3D> n
 	for (unsigned int i = 0; i < facet_tri.size(); i++){
 		Vector3D prj_pts;
 		prjPtsToTri(facet_tri[i], xyz, nrml[i], prj_pts);
-		if (ComputeBarycentric(facet_tri[i].connect[0]->xyz, facet_tri[i].connect[1]->xyz, facet_tri[i].connect[2]->xyz, xyz, uvw))
+		
+		//bool test_bool = ComputeBarycentric(facet_tri[i].connect[0]->xyz, facet_tri[i].connect[1]->xyz, facet_tri[i].connect[2]->xyz, prj_pts, uvw);
+		//std::cout << "\t\t\tindex = " << i << "\tbool = "<< test_bool << "\tbary uvw = {" << uvw[0] << "," << uvw[1] << "," << uvw[2] << "}\n";
+
+		if (ComputeBarycentric(facet_tri[i].connect[0]->xyz, facet_tri[i].connect[1]->xyz, facet_tri[i].connect[2]->xyz, prj_pts, uvw)){
+			//std::cout << "projected pts = {" << prj_pts[0] << "," << prj_pts[1] << "," << prj_pts[2] << "}\n";
+			//double x = uvw[0]*facet_tri[i].connect[0]->xyz[0]+uvw[1]*facet_tri[i].connect[1]->xyz[0]+uvw[2]*facet_tri[i].connect[2]->xyz[0];
+			//double y = uvw[0]*facet_tri[i].connect[0]->xyz[1]+uvw[1]*facet_tri[i].connect[1]->xyz[1]+uvw[2]*facet_tri[i].connect[2]->xyz[1];
+			//double z = uvw[0]*facet_tri[i].connect[0]->xyz[2]+uvw[1]*facet_tri[i].connect[1]->xyz[2]+uvw[2]*facet_tri[i].connect[2]->xyz[2];
+			//std::cout << "\t\t\tx = " << x << "  y = " << y << "  z = " << z << std::endl;
 			return i;
+
+		}
 	}
 
 	return -1;
@@ -272,7 +282,6 @@ void SurfProHarmonicMap::getMeshData(vector<Vertex> &v){
 		v[index].xyz[0] = it->xyz[0];
 		v[index].xyz[1] = it->xyz[1];
 		v[index].xyz[2] = it->xyz[2];
-		std::cout << "index = " << index << "\txyz = {" << v[index].xyz[0] << "," << v[index].xyz[1] << "," << v[index].xyz[2] << "}\n";
 	}
 
 }
@@ -294,7 +303,7 @@ void SurfProHarmonicMap::match()
 	hm_tgt.execute();
 	hm_tgt.getUV(tgt_facet_v);
 
-	test();
+	//test();
 }
 
 void SurfProHarmonicMap::LocateBoundaryNodesTarget()
