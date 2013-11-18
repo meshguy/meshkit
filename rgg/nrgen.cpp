@@ -23,12 +23,11 @@ CNrgen::CNrgen ()
   geom = NULL;
   root_set= NULL;
   szComment = "!";
-  MAXCHARS = 300;
+  MAXCHARS = 1000;
   MAXLINES = 10000;
   pi = M_PI;
   m_nTotalPincells = 0;
   m_dRadialSize = -1.0;
-  m_dAxialSize = -1.0;
   m_dTetMeshSize = -1.0;
   m_nDimensions = 0;
   m_nMaterialSetId = 1;
@@ -47,6 +46,7 @@ CNrgen::CNrgen ()
   pin_name = "";
   m_nHblock = -1;
   m_nPincells = 0;
+  m_bCreateMatFiles = false;
 }
 
 CNrgen::~CNrgen ()

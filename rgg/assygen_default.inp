@@ -26,9 +26,14 @@ XX XX XX XX
 RF RF RF RF
 TetMeshSize 2.0
 CreateSideset No
-MaterialSet_StartId 1
+list_materialset_startid 2 &
+1000 &
+5000
+list_neumannset_startid 2 &
+10 &
+50
 MergeTolerance 1e-6
-CreateFiles 2
+CreateMatFiles 2
 info on
 END     ! This is a must  
 

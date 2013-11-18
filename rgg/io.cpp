@@ -883,6 +883,13 @@ int CNrgen::ReadAndCreate()
             szFormatString >> card >> m_nAssyGenInputFiles;
             std::cout <<"--------------------------------------------------"<<std::endl;
         }
+        // Create specified number of files with varying material ids
+        if (szInputString.substr(0,14) == "creatematfiles"){
+            m_bCreateMatFiles = true;
+            std::istringstream szFormatString (szInputString);
+            szFormatString >> card >> m_nAssyGenInputFiles;
+            std::cout <<"--------------------------------------------------"<<std::endl;
+        }
         // specify a merge tolerance value for cubit journal file
         if (szInputString.substr(0,14) == "mergetolerance"){
             std::istringstream szFormatString (szInputString);
@@ -910,9 +917,13 @@ int CNrgen::ReadAndCreate()
         // Handle mesh size inputs
         if (szInputString.substr(0,13) == "axialmeshsize"){
             std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_dAxialSize;
-            if(m_dAxialSize < 0 || szFormatString.fail())
-                IOErrorHandler(ENEGATIVE);
+            szFormatString >> card;
+            m_dAxialSize.SetSize(m_nDuct);
+            for (int p = 1; p <= m_nDuct; p++){
+                szFormatString >> m_dAxialSize(p);
+                if(m_dAxialSize(p) < 0 || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+            }
             std::cout <<"--------------------------------------------------"<<std::endl;
 
         }
@@ -938,6 +949,28 @@ int CNrgen::ReadAndCreate()
                 IOErrorHandler(ENEGATIVE);
             std::cout <<"--------------------------------------------------"<<std::endl;
 
+        }
+       if ((szInputString.substr(0,23) == "list_neumannset_startid") ){
+            std::istringstream szFormatString (szInputString);
+            int num_nset_ids = 0;
+            szFormatString >> card >> num_nset_ids;
+            m_nListNeuSet.SetSize(num_nset_ids);
+            for (int p = 1; p <= num_nset_ids; p++){
+                szFormatString >> m_nListNeuSet(p);
+                if(m_nListNeuSet(p) < 0 || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+                }
+       }
+       if ((szInputString.substr(0,24) == "list_materialset_startid") ){
+           std::istringstream szFormatString (szInputString);
+           int num_mset_ids = 0;
+           szFormatString >> card >> num_mset_ids;
+           m_nListMatSet.SetSize(num_mset_ids);
+           for (int p = 1; p <= num_mset_ids; p++){
+               szFormatString >> m_nListMatSet(p);
+               if(m_nListMatSet(p) < 0 || szFormatString.fail())
+                   IOErrorHandler(ENEGATIVE);
+           }
         }
         if (szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
 
@@ -967,9 +1000,14 @@ int CNrgen::CreateAssyGenInputFiles()
     // create file names
     std::ostringstream os;
     std::string file, temp, temp1;
+    int counter_ms = 0;
+    int counter_ns = 0;
     for(int i=1; i<=m_nAssyGenInputFiles; i++){
         // form the name of the AssyGen input file
-        os << m_szFile << i << ".inp";
+        if(m_bCreateMatFiles)
+            os << m_nListMatSet(i) << ".inp";
+        else
+            os << m_szFile << i << ".inp";
         std::ofstream ofs;
         // open input file
 
@@ -998,11 +1036,16 @@ int CNrgen::CreateAssyGenInputFiles()
 
             // list all materials and alias with subscripts
             for (int j =1;j<=m_nAssemblyMat; j++){
-                os << m_szAssmMat(j) << "_" << (i-1)*m_nAssemblyMat + j;
-                temp = os.str();
+                if(!m_bCreateMatFiles){
+                    os << m_szAssmMat(j) << "_" << (i-1)*m_nAssemblyMat + j;
+                    temp = os.str();
 
-                ofs << "  " << temp << " " << m_szAssmMatAlias(j);
-                os.str("");
+                    ofs << "  " << temp << " " << m_szAssmMatAlias(j);
+                    os.str("");
+                }
+                else{
+                    ofs << "  " << m_szAssmMat(j) << " " << m_szAssmMatAlias(j);
+                }
             }
             ofs << "\n";
 
@@ -1033,7 +1076,18 @@ int CNrgen::CreateAssyGenInputFiles()
                     nMid = (i-1)*m_nAssemblyMat + 1;
                     ofs << "NeumannSet_StartId " << nMid << std::endl;
                 }
+                else if ((szInputString.substr(0,24) == "list_materialset_startid") ){
+                    ++counter_ms;
+                    ofs << "MaterialSet_StartId " << m_nListMatSet(counter_ms) << std::endl;
+                }
+                else if ((szInputString.substr(0,23) == "list_neumannset_startid") ){
+                    ++counter_ns;
+                    ofs << "NeumannSet_StartId " << m_nListNeuSet(counter_ns) << std::endl;
+                }
                 else if((szInputString.substr(0,11) == "createfiles")){
+                    //skip this line
+                }
+                else if((szInputString.substr(0,14) == "creatematfiles")){
                     //skip this line
                 }
                 else if (nDumpAllLinesAfter > 0 && m_nLineNumber > nDumpAllLinesAfter){
@@ -1063,7 +1117,7 @@ int CNrgen::CreateCubitJournal()
     int nColor;
     std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
                              "yellow", "royalblue", "magenta", "cyan", "lightsalmon", "springgreen",
-                             "gold", "orange", "brown", "pink", "khaki", "black", "aquamurine", "mediumslateblue"};
+                             "gold", "orange", "brown", "pink", "khaki", "black", "aquamarine", "mediumslateblue"};
 
     // if creating only journal file load the geometry file to compute bounding box for automatic size specification
     if(m_nJouFlag == 1){
@@ -1117,11 +1171,11 @@ int CNrgen::CreateCubitJournal()
     if (m_szMeshType == "hex"){
         // volume only
         if(m_nPlanar == 0 ){
-            if (-1.0 == m_dAxialSize){
+            if (m_dAxialSize.GetSize() == 0){
                 m_SchemesFile << "#{AXIAL_MESH_SIZE = 0.1*Z_HEIGHT}" << std::endl;
             }
             else {
-                m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_dAxialSize << "}" << std::endl;
+                m_SchemesFile << "#{AXIAL_MESH_SIZE = " << m_dAxialSize(1) << "}" << std::endl;
             }
 
             // create templates for specifying block z intervals
@@ -1129,7 +1183,8 @@ int CNrgen::CreateCubitJournal()
                 m_SchemesFile << "## Set interval along Z direction ## " << std::endl;
 
                 for( int p=1; p<= m_nDuct; p++){
-                    m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE}" << std::endl;
+                    m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "=" << m_dAxialSize(p) << "}" << std::endl;
+                    m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE" << p << "}" << std::endl;
                 }
                 m_SchemesFile << "##" << std::endl;
             }
@@ -1554,6 +1609,7 @@ int CNrgen::CreateCubitJournal()
                          << "#{else}" << std::endl;
             m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
             m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;
+            m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
             m_FileOutput << "#{endif}" << std::endl;
         }
         m_FileOutput << "#" << std::endl;
@@ -1576,6 +1632,7 @@ int CNrgen::CreateCubitJournal()
                              << "#{else}" << std::endl;
                 m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
                 m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;
+                m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
                 m_FileOutput << "#{endif}" << std::endl;
             }
             for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -1589,6 +1646,7 @@ int CNrgen::CreateCubitJournal()
                              << "#{else}" << std::endl;
                 m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
                 m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;
+                m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "_ss\"" << std::endl;
                 m_FileOutput << "#{endif}" << std::endl;
             }
             m_FileOutput << "#" << std::endl;
@@ -1596,8 +1654,9 @@ int CNrgen::CreateCubitJournal()
             m_FileOutput << "#Creating sideset for outer most side surfaces" << std::endl;
             ++nSideset;
 
-            m_FileOutput << "group 'tmpgrp' equals surf with name 'side_surface'" << std::endl;
-            m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+//            m_FileOutput << "group 'tmpgrp' equals surf with name 'side_surface'" << std::endl;
+//            m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+//            m_FileOutput << "sideset " << nSideset << " name \"" << "outer_side_ss\"" << std::endl;
         }
     }
     if(m_nHblock != -1){ // if more blocks are needed axially, create'em using hexes and the end
@@ -1640,23 +1699,25 @@ int CNrgen::CreateCubitJournal()
         }
     }
 
-    // now dump the commands for making hex layers as blocks and subtracting from original
-    double delta = (m_dZend - m_dZstart)/m_nHblock;
-    for(int i=0; i<m_szAssmMatAlias.GetSize(); i++){
-        m_FileOutput << "## BLOCK CREATION USING HEXES" << std::endl;
-        for(int j=0; j<m_nHblock; j++){
-            m_FileOutput << "group 'tmpgrp" << j+1 << "' equals hex in block " <<  m_nMaterialSetId + i
-                         << " with z_coord < " << m_dZstart + (j+1)*delta << " and z_coord > "
-                         << m_dZstart + j*delta << std::endl;
-        }
-        for(int j=0; j<m_nHblock; j++){
-            m_FileOutput << "block " <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << " remove" << std::endl;
-        }
-        for(int j=0; j<m_nHblock; j++){
-            if(m_szAssmMatAlias.GetSize() < 10)
-                m_FileOutput << "block " << j+1 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl;
-            else
-                m_FileOutput << "block " << (j+1)*10 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl;
+    if(m_nHblock > 0){
+        // now dump the commands for making hex layers as blocks and subtracting from original
+        double delta = (m_dZend - m_dZstart)/m_nHblock;
+        for(int i=0; i<m_szAssmMatAlias.GetSize(); i++){
+            m_FileOutput << "## BLOCK CREATION USING HEXES" << std::endl;
+            for(int j=0; j<m_nHblock; j++){
+                m_FileOutput << "group 'tmpgrp" << j+1 << "' equals hex in block " <<  m_nMaterialSetId + i
+                             << " with z_coord < " << m_dZstart + (j+1)*delta << " and z_coord > "
+                             << m_dZstart + j*delta << std::endl;
+            }
+            for(int j=0; j<m_nHblock; j++){
+                m_FileOutput << "block " <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << " remove" << std::endl;
+            }
+            for(int j=0; j<m_nHblock; j++){
+                if(m_szAssmMatAlias.GetSize() < 10)
+                    m_FileOutput << "block " << j+1 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl;
+                else
+                    m_FileOutput << "block " << (j+1)*10 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl;
+            }
         }
     }
     if(m_nMaterialSetId != 1)

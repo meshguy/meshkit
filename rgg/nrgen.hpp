@@ -67,7 +67,7 @@ private:
   
   // number of sides in the geometry
   int m_nSides;
-  
+  bool m_bCreateMatFiles;
   // file Input
   std::ifstream m_FileInput;  
     
@@ -90,6 +90,9 @@ private:
   
   // vector for material names
   CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
+  CVector<double> m_dAxialSize;
+  CVector<int> m_nListMatSet, m_nListNeuSet;
+
   CMatrix<std::string> m_szMMAlias;  
 
   // vector holding a pincell
@@ -107,7 +110,7 @@ private:
     m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag, m_nTotalPincells; 
   int m_edgeInterval, m_nStartpinid, m_nHblock;
   // doubles for pincell pitch, pi and mesh sizes resp.
-  double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;      
+  double m_dPitch, pi, m_dRadialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;
  
   // igeom related
   SimpleArray<iBase_EntityHandle> assms, in_pins;
