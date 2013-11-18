@@ -18,7 +18,9 @@ libSweep_la_SOURCES = Global.hpp \
         GreenCoordinates3D.cpp \
         GreenCoordinates3D.hpp \
 		IsoLaplace.cpp \
-		IsoLaplace.hpp
+		IsoLaplace.hpp \
+		Dijkstra.hpp \
+		Dijkstra.cpp
 #        HarmonicMap.cpp \
 #        HarmonicMap.hpp \
 #        MatrixOp.hpp \
@@ -33,7 +35,9 @@ libSweep_la_SOURCES += TriharmonicRBF.hpp \
 					   HarmonicMapper.hpp \
 					   HarmonicMapper.cpp \
 					   SurfProHarmonicMap.hpp \
-					   SurfProHarmonicMap.cpp
+					   SurfProHarmonicMap.cpp \
+					   Deform2D.hpp \
+					   Deform2D.cpp
 endif
 endif
 
