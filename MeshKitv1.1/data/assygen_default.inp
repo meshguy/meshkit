@@ -1,0 +1,38 @@
+! #############################################################################################################
+! Default input file used in make check for assygen program: Creats a geometry file and CUBIT meshing script
+! #############################################################################################################
+!
+MeshType Tet	
+GeomEngine ACIS
+GeometryType Rectangular 
+!
+Materials 3 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3 
+!
+Duct 3   0.0 0.0    0 40.0    18.0 18.0  20.0 20.0   23.5 23.5    G1 C1 G1
+Duct 3   0.0 0.0    40.0 80.0    18.0 18.0  20.0 20.0   23.5 23.5    G1 C1 G1
+!
+Pincells 2
+!                                                                                          
+! reflector
+PWR_RF_01 RF 3
+Pitch  4.0 4.0 40.0 
+Cylinder 1 0.0 0.0  0.0 40.0   1.6 M3  
+Cylinder 1 0.0 0.0  40.0 80.0   1.6 M3 
+PWR_CR_01 G 3
+Pitch  4.0 4.0 40.0
+Cylinder 1 2.0 -2.0  0.0 40.0   2.6 M3
+Cylinder 1 2.0 -2.0  40.0 80.0   2.6 M3
+!
+Assembly 4 4 
+RF RF RF RF
+RF G XX RF
+RF XX XX RF
+RF RF RF RF
+Center Z
+Center Y
+Center X
+TetMeshSize 1.0
+CreateSideset No
+MergeTolerance 1e-6
+END     ! This is a must  
+

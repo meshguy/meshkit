@@ -1,0 +1,374 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D2045513164DA8B200A6C803 /* IABendNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2045511164DA8B200A6C803 /* IABendNlp.cpp */; };
+		D2045517164DA8C200A6C803 /* IASolverBend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2045515164DA8C200A6C803 /* IASolverBend.cpp */; };
+		D204551A164DA8D100A6C803 /* IPBend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2045518164DA8D100A6C803 /* IPBend.cpp */; };
+		D2C19DE816407B9E00A76AC7 /* ia_main_stub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DE416407B9E00A76AC7 /* ia_main_stub.cpp */; };
+		D2C19DE916407B9E00A76AC7 /* IAInterfaceStub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DE616407B9E00A76AC7 /* IAInterfaceStub.cpp */; };
+		D2C19DF616407BEA00A76AC7 /* IANlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DF116407BEA00A76AC7 /* IANlp.cpp */; };
+		D2C19DFC16407C0B00A76AC7 /* IARoundingNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DFA16407C0B00A76AC7 /* IARoundingNlp.cpp */; };
+		D2C19E0016407C1D00A76AC7 /* IASolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19DFE16407C1D00A76AC7 /* IASolver.cpp */; };
+		D2C19E0316407C2B00A76AC7 /* IASolverInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E0116407C2B00A76AC7 /* IASolverInt.cpp */; };
+		D2C19E0616407C3400A76AC7 /* IASolverRelaxed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E0416407C3400A76AC7 /* IASolverRelaxed.cpp */; };
+		D2C19E0916407C4000A76AC7 /* IPData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E0716407C4000A76AC7 /* IPData.cpp */; };
+		D2C19E191642F45200A76AC7 /* IASolverTool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E181642F45200A76AC7 /* IASolverTool.cpp */; };
+		D2C19E1C1642FDF400A76AC7 /* IADataBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E1A1642FDF400A76AC7 /* IADataBuilder.cpp */; };
+		D2C19E1F1643064B00A76AC7 /* IASolverToolInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E1D1643064A00A76AC7 /* IASolverToolInt.cpp */; };
+		D2C19E221644534D00A76AC7 /* IAWeights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C19E201644534D00A76AC7 /* IAWeights.cpp */; };
+		D2ECD1C416487822007AC560 /* IAIntWaveNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */; };
+		D2ECD1C8164C280B007AC560 /* IAIntParabolaNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECD1C6164C280B007AC560 /* IAIntParabolaNlp.cpp */; };
+		D2ECD1CE164C33EE007AC560 /* IAIntCosNlp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECD1CC164C33EE007AC560 /* IAIntCosNlp.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D2C19DD616407B7800A76AC7 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D2045511164DA8B200A6C803 /* IABendNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IABendNlp.cpp; path = ../../IABendNlp.cpp; sourceTree = "<group>"; };
+		D2045512164DA8B200A6C803 /* IABendNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IABendNlp.hpp; path = ../../IABendNlp.hpp; sourceTree = "<group>"; };
+		D2045515164DA8C200A6C803 /* IASolverBend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IASolverBend.cpp; path = ../../IASolverBend.cpp; sourceTree = "<group>"; };
+		D2045516164DA8C200A6C803 /* IASolverBend.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolverBend.hpp; path = ../../IASolverBend.hpp; sourceTree = "<group>"; };
+		D2045518164DA8D100A6C803 /* IPBend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IPBend.cpp; path = ../../IPBend.cpp; sourceTree = "<group>"; };
+		D2045519164DA8D100A6C803 /* IPBend.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IPBend.hpp; path = ../../IPBend.hpp; sourceTree = "<group>"; };
+		D2C19DD816407B7800A76AC7 /* ia_main_stub */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ia_main_stub; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2C19DDE16407B7800A76AC7 /* ia_main_stub.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ia_main_stub.1; sourceTree = "<group>"; };
+		D2C19DE416407B9E00A76AC7 /* ia_main_stub.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ia_main_stub.cpp; path = ../../ia_main_stub.cpp; sourceTree = "<group>"; };
+		D2C19DE516407B9E00A76AC7 /* IAInterface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAInterface.hpp; path = ../IAInterface.hpp; sourceTree = "<group>"; };
+		D2C19DE616407B9E00A76AC7 /* IAInterfaceStub.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAInterfaceStub.cpp; path = ../IAInterfaceStub.cpp; sourceTree = "<group>"; };
+		D2C19DE716407B9E00A76AC7 /* IAVariable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAVariable.hpp; path = ../IAVariable.hpp; sourceTree = "<group>"; };
+		D2C19DEA16407BD300A76AC7 /* IAData.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAData.hpp; path = ../../IAData.hpp; sourceTree = "<group>"; };
+		D2C19DF116407BEA00A76AC7 /* IANlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IANlp.cpp; path = ../../IANlp.cpp; sourceTree = "<group>"; };
+		D2C19DF216407BEA00A76AC7 /* IANlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IANlp.hpp; path = ../../IANlp.hpp; sourceTree = "<group>"; };
+		D2C19DFA16407C0B00A76AC7 /* IARoundingNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IARoundingNlp.cpp; path = ../../IARoundingNlp.cpp; sourceTree = "<group>"; };
+		D2C19DFB16407C0B00A76AC7 /* IARoundingNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IARoundingNlp.hpp; path = ../../IARoundingNlp.hpp; sourceTree = "<group>"; };
+		D2C19DFD16407C1D00A76AC7 /* IASolution.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolution.hpp; path = ../../IASolution.hpp; sourceTree = "<group>"; };
+		D2C19DFE16407C1D00A76AC7 /* IASolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IASolver.cpp; path = ../../IASolver.cpp; sourceTree = "<group>"; };
+		D2C19DFF16407C1D00A76AC7 /* IASolver.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolver.hpp; path = ../../IASolver.hpp; sourceTree = "<group>"; };
+		D2C19E0116407C2B00A76AC7 /* IASolverInt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IASolverInt.cpp; path = ../../IASolverInt.cpp; sourceTree = "<group>"; };
+		D2C19E0216407C2B00A76AC7 /* IASolverInt.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolverInt.hpp; path = ../../IASolverInt.hpp; sourceTree = "<group>"; };
+		D2C19E0416407C3400A76AC7 /* IASolverRelaxed.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IASolverRelaxed.cpp; path = ../../IASolverRelaxed.cpp; sourceTree = "<group>"; };
+		D2C19E0516407C3400A76AC7 /* IASolverRelaxed.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolverRelaxed.hpp; path = ../../IASolverRelaxed.hpp; sourceTree = "<group>"; };
+		D2C19E0716407C4000A76AC7 /* IPData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IPData.cpp; path = ../../IPData.cpp; sourceTree = "<group>"; };
+		D2C19E0816407C4000A76AC7 /* IPData.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IPData.hpp; path = ../../IPData.hpp; sourceTree = "<group>"; };
+		D2C19E131640867000A76AC7 /* MKVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MKVersion.h; path = ../MKVersion.h; sourceTree = "<group>"; };
+		D2C19E171642F44200A76AC7 /* IASolverTool.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolverTool.hpp; path = ../../IASolverTool.hpp; sourceTree = "<group>"; };
+		D2C19E181642F45200A76AC7 /* IASolverTool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IASolverTool.cpp; path = ../../IASolverTool.cpp; sourceTree = "<group>"; };
+		D2C19E1A1642FDF400A76AC7 /* IADataBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IADataBuilder.cpp; path = ../../IADataBuilder.cpp; sourceTree = "<group>"; };
+		D2C19E1B1642FDF400A76AC7 /* IADataBuilder.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IADataBuilder.hpp; path = ../../IADataBuilder.hpp; sourceTree = "<group>"; };
+		D2C19E1D1643064A00A76AC7 /* IASolverToolInt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IASolverToolInt.cpp; path = ../../IASolverToolInt.cpp; sourceTree = "<group>"; };
+		D2C19E1E1643064B00A76AC7 /* IASolverToolInt.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IASolverToolInt.hpp; path = ../../IASolverToolInt.hpp; sourceTree = "<group>"; };
+		D2C19E201644534D00A76AC7 /* IAWeights.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAWeights.cpp; path = ../../IAWeights.cpp; sourceTree = "<group>"; };
+		D2C19E211644534D00A76AC7 /* IAWeights.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAWeights.hpp; path = ../../IAWeights.hpp; sourceTree = "<group>"; };
+		D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAIntWaveNlp.cpp; path = ../../IAIntWaveNlp.cpp; sourceTree = "<group>"; };
+		D2ECD1C316487822007AC560 /* IAIntWaveNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAIntWaveNlp.hpp; path = ../../IAIntWaveNlp.hpp; sourceTree = "<group>"; };
+		D2ECD1C6164C280B007AC560 /* IAIntParabolaNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAIntParabolaNlp.cpp; path = ../../IAIntParabolaNlp.cpp; sourceTree = "<group>"; };
+		D2ECD1C7164C280B007AC560 /* IAIntParabolaNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAIntParabolaNlp.hpp; path = ../../IAIntParabolaNlp.hpp; sourceTree = "<group>"; };
+		D2ECD1CC164C33EE007AC560 /* IAIntCosNlp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IAIntCosNlp.cpp; path = ../../IAIntCosNlp.cpp; sourceTree = "<group>"; };
+		D2ECD1CD164C33EE007AC560 /* IAIntCosNlp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IAIntCosNlp.hpp; path = ../../IAIntCosNlp.hpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D2C19DD516407B7800A76AC7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D2C19DCD16407B7800A76AC7 = {
+			isa = PBXGroup;
+			children = (
+				D2C19DEA16407BD300A76AC7 /* IAData.hpp */,
+				D2C19DFD16407C1D00A76AC7 /* IASolution.hpp */,
+				D2C19E0816407C4000A76AC7 /* IPData.hpp */,
+				D2C19E0716407C4000A76AC7 /* IPData.cpp */,
+				D2C19E1A1642FDF400A76AC7 /* IADataBuilder.cpp */,
+				D2C19E1B1642FDF400A76AC7 /* IADataBuilder.hpp */,
+				D2C19E211644534D00A76AC7 /* IAWeights.hpp */,
+				D2C19E201644534D00A76AC7 /* IAWeights.cpp */,
+				D2C19E171642F44200A76AC7 /* IASolverTool.hpp */,
+				D2C19E181642F45200A76AC7 /* IASolverTool.cpp */,
+				D2ECD1C216487822007AC560 /* IAIntWaveNlp.cpp */,
+				D2ECD1C316487822007AC560 /* IAIntWaveNlp.hpp */,
+				D2ECD1CC164C33EE007AC560 /* IAIntCosNlp.cpp */,
+				D2ECD1CD164C33EE007AC560 /* IAIntCosNlp.hpp */,
+				D2ECD1C6164C280B007AC560 /* IAIntParabolaNlp.cpp */,
+				D2ECD1C7164C280B007AC560 /* IAIntParabolaNlp.hpp */,
+				D2C19E1D1643064A00A76AC7 /* IASolverToolInt.cpp */,
+				D2C19E1E1643064B00A76AC7 /* IASolverToolInt.hpp */,
+				D2C19DF116407BEA00A76AC7 /* IANlp.cpp */,
+				D2C19DF216407BEA00A76AC7 /* IANlp.hpp */,
+				D2C19DFB16407C0B00A76AC7 /* IARoundingNlp.hpp */,
+				D2C19DFA16407C0B00A76AC7 /* IARoundingNlp.cpp */,
+				D2C19E0416407C3400A76AC7 /* IASolverRelaxed.cpp */,
+				D2C19E0516407C3400A76AC7 /* IASolverRelaxed.hpp */,
+				D2C19E0116407C2B00A76AC7 /* IASolverInt.cpp */,
+				D2C19E0216407C2B00A76AC7 /* IASolverInt.hpp */,
+				D2C19DFE16407C1D00A76AC7 /* IASolver.cpp */,
+				D2C19DFF16407C1D00A76AC7 /* IASolver.hpp */,
+				D2C19E131640867000A76AC7 /* MKVersion.h */,
+				D2C19DE516407B9E00A76AC7 /* IAInterface.hpp */,
+				D2C19DE616407B9E00A76AC7 /* IAInterfaceStub.cpp */,
+				D2C19DE716407B9E00A76AC7 /* IAVariable.hpp */,
+				D2045518164DA8D100A6C803 /* IPBend.cpp */,
+				D2045519164DA8D100A6C803 /* IPBend.hpp */,
+				D2045515164DA8C200A6C803 /* IASolverBend.cpp */,
+				D2045516164DA8C200A6C803 /* IASolverBend.hpp */,
+				D2045511164DA8B200A6C803 /* IABendNlp.cpp */,
+				D2045512164DA8B200A6C803 /* IABendNlp.hpp */,
+				D2C19DDB16407B7800A76AC7 /* ia_main_stub */,
+				D2C19DD916407B7800A76AC7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D2C19DD916407B7800A76AC7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2C19DD816407B7800A76AC7 /* ia_main_stub */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D2C19DDB16407B7800A76AC7 /* ia_main_stub */ = {
+			isa = PBXGroup;
+			children = (
+				D2C19DE416407B9E00A76AC7 /* ia_main_stub.cpp */,
+				D2C19DDE16407B7800A76AC7 /* ia_main_stub.1 */,
+			);
+			path = ia_main_stub;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D2C19DD716407B7800A76AC7 /* ia_main_stub */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2C19DE116407B7800A76AC7 /* Build configuration list for PBXNativeTarget "ia_main_stub" */;
+			buildPhases = (
+				D2C19DD416407B7800A76AC7 /* Sources */,
+				D2C19DD516407B7800A76AC7 /* Frameworks */,
+				D2C19DD616407B7800A76AC7 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ia_main_stub;
+			productName = ia_main_stub;
+			productReference = D2C19DD816407B7800A76AC7 /* ia_main_stub */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D2C19DCF16407B7800A76AC7 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = D2C19DD216407B7800A76AC7 /* Build configuration list for PBXProject "ia_main_stub" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D2C19DCD16407B7800A76AC7;
+			productRefGroup = D2C19DD916407B7800A76AC7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D2C19DD716407B7800A76AC7 /* ia_main_stub */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2C19DD416407B7800A76AC7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2C19DE816407B9E00A76AC7 /* ia_main_stub.cpp in Sources */,
+				D2C19DE916407B9E00A76AC7 /* IAInterfaceStub.cpp in Sources */,
+				D2C19DF616407BEA00A76AC7 /* IANlp.cpp in Sources */,
+				D2C19DFC16407C0B00A76AC7 /* IARoundingNlp.cpp in Sources */,
+				D2C19E0016407C1D00A76AC7 /* IASolver.cpp in Sources */,
+				D2C19E0316407C2B00A76AC7 /* IASolverInt.cpp in Sources */,
+				D2C19E0616407C3400A76AC7 /* IASolverRelaxed.cpp in Sources */,
+				D2C19E0916407C4000A76AC7 /* IPData.cpp in Sources */,
+				D2C19E191642F45200A76AC7 /* IASolverTool.cpp in Sources */,
+				D2C19E1C1642FDF400A76AC7 /* IADataBuilder.cpp in Sources */,
+				D2C19E1F1643064B00A76AC7 /* IASolverToolInt.cpp in Sources */,
+				D2C19E221644534D00A76AC7 /* IAWeights.cpp in Sources */,
+				D2ECD1C416487822007AC560 /* IAIntWaveNlp.cpp in Sources */,
+				D2ECD1C8164C280B007AC560 /* IAIntParabolaNlp.cpp in Sources */,
+				D2ECD1CE164C33EE007AC560 /* IAIntCosNlp.cpp in Sources */,
+				D2045513164DA8B200A6C803 /* IABendNlp.cpp in Sources */,
+				D2045517164DA8C200A6C803 /* IASolverBend.cpp in Sources */,
+				D204551A164DA8D100A6C803 /* IPBend.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D2C19DDF16407B7800A76AC7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D2C19DE016407B7800A76AC7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D2C19DE216407B7800A76AC7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_PEDANTIC = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SIGN_COMPARE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				HEADER_SEARCH_PATHS = (
+					"${IPOPTDIR}/Ipopt/src/**",
+					"${IPOPTDIR}/BuildTools/headers",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"${IPOPTDIR}/build/lib/coin/**",
+					"${IPOPTDIR}/build/lib/coin/ThirdParty/**",
+					/usr/lib,
+					/usr/local/lib,
+				);
+				New_Setting = "";
+				ONLY_ACTIVE_ARCH = YES;
+				"OTHER_LDFLAGS[arch=*]" = (
+					"-lipopt",
+					"-lcoinhsl",
+					"-lcoinmetis",
+					"-lblas",
+					"-lcblas",
+					"-lm",
+					"-lglpk",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = /usr/local/include;
+			};
+			name = Debug;
+		};
+		D2C19DE316407B7800A76AC7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_PEDANTIC = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SIGN_COMPARE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				HEADER_SEARCH_PATHS = (
+					"${IPOPTDIR}/Ipopt/src/**",
+					"${IPOPTDIR}/BuildTools/headers",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"${IPOPTDIR}/build/lib/coin/**",
+					"${IPOPTDIR}/build/lib/coin/ThirdParty/**",
+					/usr/lib,
+					/usr/local/lib,
+				);
+				New_Setting = "";
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lipopt",
+					"-lcoinhsl",
+					"-lcoinmetis",
+					"-lblas",
+					"-lcblas",
+					"-lm",
+					"-lglpk",
+				);
+				"OTHER_LDFLAGS[arch=*]" = (
+					"-lipopt",
+					"-lcoinhsl",
+					"-lcoinmetis",
+					"-lblas",
+					"-lcblas",
+					"-lm",
+					"-lglpk",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = /usr/local/include;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D2C19DD216407B7800A76AC7 /* Build configuration list for PBXProject "ia_main_stub" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2C19DDF16407B7800A76AC7 /* Debug */,
+				D2C19DE016407B7800A76AC7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D2C19DE116407B7800A76AC7 /* Build configuration list for PBXNativeTarget "ia_main_stub" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2C19DE216407B7800A76AC7 /* Debug */,
+				D2C19DE316407B7800A76AC7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D2C19DCF16407B7800A76AC7 /* Project object */;
+}

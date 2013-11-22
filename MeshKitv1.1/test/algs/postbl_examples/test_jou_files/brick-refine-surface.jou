@@ -1,0 +1,5 @@
+reset
+create brick x 10
+curve all interval 2
+mesh vol all
+refine mesh vol 1 feature surface 1 interval 1

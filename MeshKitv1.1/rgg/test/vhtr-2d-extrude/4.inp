@@ -1,0 +1,44 @@
+! #############################################################################################################
+! Full Hexagonal Control Block With Coolant On Bottom Center
+! #############################################################################################################
+!
+Geometry Surface
+GeometryType Hexagonal  
+!                                     
+Materials 5 Mat_C2Coolant C02 Mat_C1Coolant C01 Mat_OCoolant C1Out Mat_Block G1  Mat_Control R1      
+!
+Duct 2 0.0 0.0    0.0 793.0    36.0 37.3     G1 C1Out 
+!
+Pincells 1 1.87960 
+! 1
+Cell_Control CR 1                                         
+Cylinder  3  0.0 0.0 0.0 793.0 2.64 4.13 4.7625 C01 R1 C02
+Assembly 11                                                 
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  CR  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+ XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+RadialMeshSize 0.3
+AxialMeshSize 50
+Center
+MaterialSet_StartId 400
+NeumannSet_StartId 400
+CreateSideset No
+END ! This is a must

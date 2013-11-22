@@ -1,0 +1,47 @@
+! #############################################################################################################
+! Hexagonal Control block (Section X 0)
+! #############################################################################################################
+!
+Geometry Volume
+GeometryType Hexagonal  
+!                                     
+Materials 3 Mat_OCoolant C1Out Mat_Block G1  Mat_Control R1      
+!
+Duct 2 0.0 0.0    0.0 793.0    36.0 37.3     G1 C1Out 
+!
+Pincells 1 1.87960 
+! 1
+Cell_FHH     FH2 1
+Cylinder  1  0.0 0.0 0.0 793.0 2.0 R1  
+Assembly 11                                                 
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+ XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  FH2  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+RadialMeshSize 0.3
+AxialMeshSize 50
+EdgeInterval 72
+Center
+Rotate Z 30
+Section X 0
+Rotate Z -30
+MaterialSet_StartId 500
+CreateSideset No
+END ! This is a must

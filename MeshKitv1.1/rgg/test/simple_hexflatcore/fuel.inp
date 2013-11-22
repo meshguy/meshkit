@@ -1,0 +1,25 @@
+! #############################################################################################################
+! Example Assembly fuel.inp
+! #############################################################################################################
+GeometryType Hexagonal                              
+Materials 5 CR C  Fuel F  Dt1 D1  Dt2 D2  Mat M1
+Duct 2  0.0 0.0  0.0 100.0 9.0 10.0  D1 D2
+Pincells 3 1.87960 
+ControlRod CR 1                             
+Cylinder  1  0.0 0.0 0.0 100.0 1.0 C  
+FuelCell_1     F2  1
+Cylinder  1  0.0 0.0 0.0 100.0 0.5 F  
+FuelCell_2     F1  1
+Cylinder  2  0.0 0.0  0.0 100.0  0.4 0.6 F M1
+Assembly 3                 
+    F2  F2  F2          
+  F2  F1  F1  F2        
+F2  F1  CR  F1  F2      
+  F2  F1  F1  F2        
+    F2  F2  F2  
+RadialMeshSize 0.15
+AxialMeshSize 20.0
+Rotate Z -30
+Center
+END
+

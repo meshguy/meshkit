@@ -1,0 +1,11 @@
+MeshFile tbr.cub
+!NeumannSet 9
+Hybrid 1
+Surfaces 1
+Material 4
+Thickness 0.2
+Intervals 1
+Bias 1.0
+Debug 1
+Outfile o-tet-brick.h5m
+END

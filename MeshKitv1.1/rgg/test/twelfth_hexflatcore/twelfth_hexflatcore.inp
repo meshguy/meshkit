@@ -1,0 +1,20 @@
+! #############################################################################################################
+! 1/12 Core generation from example assemblies s1.inp to s2.inp 
+! #############################################################################################################
+!
+Geometry Volume        	 ! 'Geometry' card defines if the meshes are volume or surface
+!
+Symmetry 12			 ! 'Symmetry' card defines the desired symmetry in the model
+!
+GeometryType hexflat    	 ! 'GeometryType' card can take values Hexagonal Cartesian and Default
+!
+Assemblies 3 10.0	     	 ! 'Assemblies' card defines there is one assembly with pitch 15.685 (Note this should takecare of background mesh)
+a1.cub  A1      	         ! Meshfile name followed by alias 
+a2.cub  A2
+a3.cub  A3
+!
+Lattice 3           	         ! 'Lattice' card defines core had 2 rings next define these rings based on Aliases
+A1 &
+A2 & 	        	    
+A3 A2 
+END                              ! 'END' card is a MUST marks the end of file for the file reader

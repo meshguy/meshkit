@@ -1,0 +1,10 @@
+MeshFile cube.cub
+!NeumannSet 9
+Surfaces 1
+!Material 4
+Thickness 0.3
+Intervals 1
+Bias 0.8
+Outfile co.h5m	
+debug 0
+END
