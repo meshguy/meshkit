@@ -23,7 +23,7 @@ CNrgen::CNrgen ()
   geom = NULL;
   root_set= NULL;
   szComment = "!";
-  MAXCHARS = 1000;
+  MAXCHARS = 1500;
   MAXLINES = 10000;
   pi = M_PI;
   m_nTotalPincells = 0;

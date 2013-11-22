@@ -75,6 +75,8 @@ The ‘examples’ subdirectory in the MeshKit source installation contains an e
 makefile showing how these make variables can be used to compile and link MeshKit-based
 applications.
 
+**Note: Automatic CMake-based build that builds MeshKit, MOAB, CGM, Lasso, OCE, FTGL, HDF5 can be found in folder <MeshKit>/trunk/doc/SuperBuild
+
 3. Release MeshKit: Version 1.1
 =====================================
 This version has been tested on Ubuntu 10.04, 12.04 and Mac OS X 10.6.8 to 10.9.
