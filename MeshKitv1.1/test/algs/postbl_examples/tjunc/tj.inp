@@ -1,9 +1,0 @@
-MeshFile tj.exo
-NeumannSet 600
-Material 200	
-Thickness 0.4
-Intervals 3
-Bias 1.0
-Outfile tj_pbl.h5m
-debug 1
-END

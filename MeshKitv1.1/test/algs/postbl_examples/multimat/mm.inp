@@ -1,9 +1,0 @@
-MeshFile mm.cub
-NeumannSet 2
-!Material 4
-Thickness 0.25
-Intervals 2
-Bias 1.0
-Outfile o-mm.exo
-debug 1
-END
