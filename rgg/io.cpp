@@ -950,7 +950,7 @@ int CNrgen::ReadAndCreate()
             std::cout <<"--------------------------------------------------"<<std::endl;
 
         }
-       if ((szInputString.substr(0,23) == "list_neumannset_startid") ){
+        if ((szInputString.substr(0,23) == "list_neumannset_startid") ){
             std::istringstream szFormatString (szInputString);
             int num_nset_ids = 0;
             szFormatString >> card >> num_nset_ids;
@@ -959,18 +959,34 @@ int CNrgen::ReadAndCreate()
                 szFormatString >> m_nListNeuSet(p);
                 if(m_nListNeuSet(p) < 0 || szFormatString.fail())
                     IOErrorHandler(ENEGATIVE);
-                }
-       }
-       if ((szInputString.substr(0,24) == "list_materialset_startid") ){
-           std::istringstream szFormatString (szInputString);
-           int num_mset_ids = 0;
-           szFormatString >> card >> num_mset_ids;
-           m_nListMatSet.SetSize(num_mset_ids);
-           for (int p = 1; p <= num_mset_ids; p++){
-               szFormatString >> m_nListMatSet(p);
-               if(m_nListMatSet(p) < 0 || szFormatString.fail())
-                   IOErrorHandler(ENEGATIVE);
-           }
+            }
+        }
+        if ((szInputString.substr(0,14) == "numsuperblocks") ){
+            std::istringstream szFormatString (szInputString);
+            szFormatString >> card >> m_nSuperBlocks;
+            sb.SetSize(m_nSuperBlocks);
+        }
+        if ((szInputString.substr(0,10) == "superblock") ){
+            std::istringstream szFormatString (szInputString);
+            szFormatString >> card >> sb(tmpSB).m_nSuperBlockId  >> sb(tmpSB).m_szSuperBlockAlias >> sb(tmpSB).m_nNumSBContents;
+            sb(tmpSB).m_nSBContents.SetSize(sb(tmpSB).m_nNumSBContents);
+            for (int p = 1; p <= sb(tmpSB).m_nNumSBContents; p++){
+                szFormatString >> sb(tmpSB).m_nSBContents(p);
+                if(sb(tmpSB).m_nSBContents(p) < 0 || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+            }
+            ++tmpSB;
+        }
+        if ((szInputString.substr(0,24) == "list_materialset_startid") ){
+            std::istringstream szFormatString (szInputString);
+            int num_mset_ids = 0;
+            szFormatString >> card >> num_mset_ids;
+            m_nListMatSet.SetSize(num_mset_ids);
+            for (int p = 1; p <= num_mset_ids; p++){
+                szFormatString >> m_nListMatSet(p);
+                if(m_nListMatSet(p) < 0 || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+            }
         }
         if (szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
 
@@ -1654,9 +1670,9 @@ int CNrgen::CreateCubitJournal()
             m_FileOutput << "#Creating sideset for outer most side surfaces" << std::endl;
             ++nSideset;
 
-//            m_FileOutput << "group 'tmpgrp' equals surf with name 'side_surface'" << std::endl;
-//            m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
-//            m_FileOutput << "sideset " << nSideset << " name \"" << "outer_side_ss\"" << std::endl;
+            m_FileOutput << "group 'tmpgrp' equals surf with name 'side_surface'" << std::endl;
+            m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+            m_FileOutput << "sideset " << nSideset << " name \"" << "outer_side_ss\"" << std::endl;
         }
     }
     if(m_nHblock != -1){ // if more blocks are needed axially, create'em using hexes and the end
@@ -1699,6 +1715,24 @@ int CNrgen::CreateCubitJournal()
         }
     }
 
+    // create super blocks
+    if(m_nSuperBlocks > 0){
+        for(int o = 1; o <= m_nSuperBlocks; o++){
+            m_FileOutput << "block " << sb(o).m_nSuperBlockId << " vol in block ";
+            for (int p = 1; p <= sb(o).m_nNumSBContents; p++){
+                m_FileOutput << m_nMaterialSetId + sb(o).m_nSBContents(p) << " ";
+            }
+            m_FileOutput << "\n" << "block " << sb(o).m_nSuperBlockId << " name '" << sb(o).m_szSuperBlockAlias << "'" << std::endl;
+            m_FileOutput << "delete block " ;
+            for (int q = 1; q <= sb(o).m_nNumSBContents; q++){
+                m_FileOutput << m_nMaterialSetId + sb(o).m_nSBContents(q) << " ";
+            }
+            m_FileOutput << "\n" << std::endl;
+        }
+    }
+
+
+
     if(m_nHblock > 0){
         // now dump the commands for making hex layers as blocks and subtracting from original
         double delta = (m_dZend - m_dZstart)/m_nHblock;
@@ -1721,7 +1755,7 @@ int CNrgen::CreateCubitJournal()
         }
     }
     if(m_nMaterialSetId != 1)
-        m_FileOutput << "renumber hex all start_id " << MAXLINES*m_nMaterialSetId << std::endl;
+        m_FileOutput << "renumber hex all start_id " << MAXLINES*1000 << std::endl;
     // color now
     m_FileOutput << "#Set color for different parts" << std::endl;
     if(m_nPlanar == 0){ // volumes only

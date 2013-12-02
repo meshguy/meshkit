@@ -18,6 +18,7 @@ CNrgen::CNrgen ()
 // ---------------------------------------------------------------------------
 {
   err = 0;
+  tmpSB = 1;
   m_nPlanar = 0; //default is 3D
   m_nLineNumber = 0;
   geom = NULL;

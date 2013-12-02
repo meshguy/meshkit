@@ -98,6 +98,15 @@ private:
   // vector holding a pincell
   CVector<CPincell> m_Pincell; 
 
+  struct superblocks{
+      int m_nSuperBlockId;
+      std::string m_szSuperBlockAlias;
+      int m_nNumSBContents;
+      CVector<int> m_nSBContents;
+  };
+  int m_nSuperBlocks;
+  CVector<superblocks> sb;
+  int tmpSB;
   // string for geomtype, engine, meshtype
   std::string m_szEngine;
   std::string m_szGeomType;       
