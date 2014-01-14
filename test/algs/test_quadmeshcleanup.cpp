@@ -136,6 +136,7 @@ void run(){
     size_t nireg0   =  mesh->count_irregular_nodes(4);
 
     cout << "# of irregular nodes before cleanup : " << nireg0 << endl;
+    mesh->get_topological_statistics();
 
     if( ninvert > 0.5*numfaces )
         mesh->reverse();

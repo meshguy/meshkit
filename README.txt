@@ -30,6 +30,9 @@ MeshKit requires the following libraries to be installed before configuration:
    for details on obtaining and building CGM.
 • MOAB: a library for representing structured and unstructured mesh; see 
    https://trac.mcs.anl.gov/projects/ITAPS/wiki/BuildingMoab
+• Lasso: a library for recovering and querying relations between mesh and geometry; see
+   http://trac.mcs.anl.gov/projects/ITAPS/wiki/Lasso
+
    for details on obtaining and building MOAB.
 • Autotools: this is a set of Linux utilities for configuring software packages.
    Autotools can be found in most Linux package managers, and usually consists
