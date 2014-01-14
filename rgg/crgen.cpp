@@ -180,18 +180,17 @@ int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
 // -------------------------------------------------------------------------------------------
 {
     if (nrank == 0) {
-        std::cout << "Merging nodes in parallel. " << std::endl;
+        std::cout << "Merging nodes.. " << std::endl;
     }
 
-#ifdef USE_MPI
-    //Call the resolve parallel function
+//#ifdef USE_MPI
     moab::ParallelMergeMesh pm(pc, merge_tol);
     err = pm.merge();
     if (err != moab::MB_SUCCESS) {
         std::cerr << "Merge Failed" << std::endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-#endif
+//#endif
     return iBase_SUCCESS;
 }
 
@@ -858,6 +857,9 @@ int CCrgen::read_inputs_phase1() {
             } else if ((strcmp(nsLoc.c_str(), "bot") == 0)) {
                 nsb_flag = true;
                 nsb_Id = nsId;
+            } else if ((strcmp(nsLoc.c_str(), "sideall") == 0)) {
+                nssall_flag = true;
+                nssall_Id = nsId;
             } else if ((strcmp(nsLoc.c_str(), "side") == 0)) {
                 nss_Id.push_back(nsId);
 
@@ -1546,12 +1548,15 @@ int CCrgen::save_mesh() {
     // Output:   none
     // ---------------------------------------------------------------------------
     // export
+    int rval;
     std::cout << "Saving mesh file." << std::endl;
-    iMesh_save(impl, root_set, outfile.c_str(), NULL, &err, strlen(
-                   outfile.c_str()), 0);
-    ERRORR("Trouble writing output mesh.", err);
-    std::cout << "Saved mesh file: " << outfile.c_str() << std::endl;
-
+    //rval = mbImpl()->write_file(outfile.c_str(),0, "DEBUG_IO=1");
+    rval = mbImpl()->write_file(outfile.c_str(),0);
+    if(rval != moab::MB_SUCCESS) {
+        std::cerr<<"Writing output file failed Code:";
+        std::string foo = ""; mbImpl()->get_last_error(foo);
+        std::cerr<<"File Error: "<<foo<<std::endl;
+    }
     return iBase_SUCCESS;
 }
 
@@ -1814,7 +1819,7 @@ int CCrgen::create_neumannset() {
                 int flag = 0;
                 for (int p=1; p<num_vertex; p++) {
                     double z1 = coords[3*p+2];
-                    if( ztemp != z1) {
+                    if( fabs(ztemp-z1) >= merge_tol) {
                         flag = 1;
                         continue;
                     }
@@ -1824,7 +1829,7 @@ int CCrgen::create_neumannset() {
                         z_flag = 1;
                         z1 = ztemp;
                     }
-                    if( ztemp == z1) {
+                    if( fabs(ztemp-z1) <= merge_tol) {
                         iMesh_addEntToSet(impl, (iBase_EntityHandle)(*rit), set_z1, &err);
                         ERRORR("Trouble getting number of entities after merge.", err);
                     }
@@ -1849,8 +1854,12 @@ int CCrgen::create_neumannset() {
                             ERRORR("Trouble getting number of entities after merge.", err);
                             continue;
                         }
-
                     }
+                    if(num_nsside == 0){
+                        iMesh_addEntToSet(impl, (iBase_EntityHandle)(*rit), set, &err);
+                        ERRORR("Trouble getting number of entities after merge.", err);
+                    }
+
                 }
             }
             else if(set_DIM == 2) { // edges add all for sideset
@@ -1859,11 +1868,11 @@ int CCrgen::create_neumannset() {
             }
         }
 
-        iMesh_setEntSetIntData( impl, set, ntag1, 99999, &err);
-        ERRORR("Trouble getting handle.", err);
+        //        iMesh_setEntSetIntData( impl, set, ntag1, 99999, &err);
+        //        ERRORR("Trouble getting handle.", err);
 
-        iMesh_setEntSetIntData( impl, set, gtag1, 99999, &err);
-        ERRORR("Trouble getting handle.", err);
+        //        iMesh_setEntSetIntData( impl, set, gtag1, 99999, &err);
+        //        ERRORR("Trouble getting handle.", err);
 
         if (set_DIM == 3) {
             if (nst_flag == true || nsb_flag == true) {
@@ -1887,6 +1896,13 @@ int CCrgen::create_neumannset() {
                     iMesh_setEntSetIntData( impl, set_side[j], gtag1, nss_Id[j], &err);
                     ERRORR("Trouble getting handle.", err);
                 }
+            }
+            if (nssall_flag == true) {
+                iMesh_setEntSetIntData( impl, set, ntag1, nssall_Id, &err);
+                ERRORR("Trouble getting handle.", err);
+
+                iMesh_setEntSetIntData( impl, set, gtag1, nssall_Id, &err);
+                ERRORR("Trouble getting handle.", err);
             }
         }
 #endif

@@ -15,11 +15,11 @@ int main(int argc, char *argv[]) {
     int rank = 0, nprocs = 1;
 
     //Initialize MPI
-#ifdef USE_MPI
+//#ifdef USE_MPI
     MPI::Init(argc, argv);
     nprocs = MPI::COMM_WORLD.Get_size();
     rank = MPI::COMM_WORLD.Get_rank();
-#endif
+//#endif
 
     // start program timer and declare timing variables
     CClock Timer;
@@ -84,10 +84,11 @@ int main(int argc, char *argv[]) {
                     err = TheCore.distribute_mesh(rank, nprocs);
                     ERRORR("Failed to load meshes.", 1);
                 }
-                //Get a pcomm object
-                TheCore.pc = new moab::ParallelComm(TheCore.mbImpl(), MPI::COMM_WORLD, &err);
 #endif
             }
+
+            //Get a pcomm object
+            TheCore.pc = new moab::ParallelComm(TheCore.mbImpl(), MPI::COMM_WORLD, &err);
 
             TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem1);
             ld_tload = ld_time.DiffTime();
@@ -144,14 +145,9 @@ int main(int argc, char *argv[]) {
             // merge
             /*********************************************/
             CClock ld_mm;
-            if (nprocs == 1) {
-                std::cout << "Merging.." << std::endl;
-                err = TheCore.merge_nodes();
-                ERRORR("Failed to merge nodes.", 1);
-            } else {
-                err = TheCore.merge_nodes_parallel(rank, nprocs);
-                ERRORR("Failed to merge nodes in parallel.", 1);
-            }
+            // works for both serial and parallel
+            err = TheCore.merge_nodes_parallel(rank, nprocs);
+            ERRORR("Failed to merge nodes in parallel.", 1);
 
             TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem3);
             ld_tmerge = ld_mm.DiffTime();
@@ -226,7 +222,7 @@ int main(int argc, char *argv[]) {
             // create neumann sets on the core model
             /*********************************************/
             if((TheCore.nss_flag == true || TheCore.nsb_flag == true
-                || TheCore.nst_flag == true) && nprocs == 1){
+                || TheCore.nst_flag == true)){
                 CClock ld_ns;
                 err = TheCore.create_neumannset();
                 ERRORR("Failed to create neumann set.", 1);

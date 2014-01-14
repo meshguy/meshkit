@@ -1609,7 +1609,8 @@ int CNrgen::CreateCubitJournal()
     }
 
     // create and sidesets after meshing
-
+    m_FileOutput << "#" << std::endl;
+    //    }
     if(m_szSideset == "yes"){
         // top surface sidesets
         m_FileOutput << "#Creating top surface sidesets" << std::endl;
@@ -1617,19 +1618,13 @@ int CNrgen::CreateCubitJournal()
         for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
             ++nSideset;
             szSurfTop = m_szAssmMat(p)+"_top";
-            m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-            m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
-            m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
             // Avoid creation if empty sideset
-            m_FileOutput << "#{nsurf"<< nSideset << " = NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf"<< nSideset << ")}" << "\n"
-                         << "#{else}" << std::endl;
-            m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
-            m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;
+            m_FileOutput << "sideset " << nSideset << " surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
             m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
-            m_FileOutput << "#{endif}" << std::endl;
         }
         m_FileOutput << "#" << std::endl;
     }
+
 
     if(m_nPlanar ==0){
         if(m_szSideset == "yes"){
@@ -1639,32 +1634,46 @@ int CNrgen::CreateCubitJournal()
                 szSurfTop = m_szAssmMat(p)+"_bot";
                 m_FileOutput << "#" << std::endl;
                 ++nSideset;
-
-                m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-                m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
-                m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
-                // Avoid creation if empty sideset
-                m_FileOutput << "#{nsurf"<< nSideset << " = NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf"<< nSideset << ")}" << "\n"
-                             << "#{else}" << std::endl;
-                m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
-                m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;
+                m_FileOutput << "sideset " << nSideset << " surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
                 m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
-                m_FileOutput << "#{endif}" << std::endl;
             }
             for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
                 szSurfSide = m_szAssmMat(p)+"_side";
                 ++nSideset;
-                m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfSide  << "\"" << std::endl;
-                m_FileOutput << "group 'srepeated' intersect group surfall with group tmpgrp" << std::endl;
-                m_FileOutput << "group 'tsideset' subtract group srepeated from group tmpgrp" << std::endl;
-                // Avoid creation if empty sideset
-                m_FileOutput << "#{nsurf"<< nSideset << " = NumInGrp('tsideset')}" << "\n" << "#{Ifndef(nsurf"<< nSideset << ")}" << "\n"
-                             << "#{else}" << std::endl;
-                m_FileOutput << "group 'surfall' add surf in tsideset" << std::endl;
-                m_FileOutput << "sideset " << nSideset << " surface in tsideset" << std::endl;
-                m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "_ss\"" << std::endl;
-                m_FileOutput << "#{endif}" << std::endl;
+                if(m_szGeomType == "hexagonal"){
+                    for (int u=1; u<=6;u++){
+                        m_FileOutput << "group 'tmpgrp" << u <<"' equals surf with name '" << szSurfSide << u << "'" << std::endl;
+                    }
+                    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp1 tmpgrp2 tmpgrp3 tmpgrp4 tmpgrp5 tmpgrp6'" << std::endl;
+                    m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "1_ss\"" << std::endl;
+                    ++nSideset;
+                }
+                if(m_szGeomType == "hexagonal"){
+                    for (int u=7; u<=12;u++){
+                        m_FileOutput << "group 'tmpgrp" << u <<"' equals surf with name '" << szSurfSide << "_" << u << "'" << std::endl;
+                    }
+                    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp7 tmpgrp8 tmpgrp9 tmpgrp10 tmpgrp11 tmpgrp12'" << std::endl;
+                    m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "2_ss\"" << std::endl;
+                }
+                if(m_szGeomType == "rectangular"){
+                    for (int u=1; u<=4;u++){
+                        m_FileOutput << "group 'tmpgrp" << u <<"' equals surf with name '" << szSurfSide << u << "'" << std::endl;
+                    }
+                    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp1 tmpgrp2 tmpgrp3 tmpgrp4'" << std::endl;
+                    m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "2_ss\"" << std::endl;
+                    ++nSideset;
+                }
+
+                if(m_szGeomType == "rectangular"){
+                    for (int u=5; u<=8;u++){
+                        m_FileOutput << "group 'tmpgrp" << u <<"' equals surf with name '" << szSurfSide  << "_" << u << "'" << std::endl;
+                    }
+                    m_FileOutput << "sideset " << nSideset << " surface in tmpgrp5 tmpgrp6 tmpgrp7 tmpgrp8'" << std::endl;
+                    m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "2_ss\"" << std::endl;
+                }
             }
+
+
             m_FileOutput << "#" << std::endl;
 
             m_FileOutput << "#Creating sideset for outer most side surfaces" << std::endl;
@@ -2021,7 +2030,19 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
         if(side_surf !=0){
             ++nSide;
             sSideName = sMatName + "_side";
-            os << sSideName << nSide;
+            if(m_szGeomType == "hexagonal") {
+                if(nSide <= 6)
+                    os << sSideName << nSide;
+                else
+                    os << sSideName << "_" << nSide;
+            }
+
+            if(m_szGeomType == "rectangular"){
+                if(nSide <= 4)
+                    os << sSideName << nSide;
+                else
+                    os << sSideName << "_" << nSide;
+            }
             sSideName = os.str();
             iGeom_setData(geom, side_surf, this_tag,
                           sSideName.c_str(), sMatName1.size(), &err);

@@ -48,6 +48,7 @@ CNrgen::CNrgen ()
   m_nHblock = -1;
   m_nPincells = 0;
   m_bCreateMatFiles = false;
+  m_nSuperBlocks = 0;
 }
 
 CNrgen::~CNrgen ()

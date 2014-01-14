@@ -33,14 +33,14 @@ CCrgen class declaration
 #endif
 
 
-#ifdef USE_MPI
+//#ifdef USE_MPI
 #include "mpi.h"
 #include "iMeshP.h"
 #include "moab_mpi.h"
 #include "moab/ParallelMergeMesh.hpp"
 #include "moab/ParallelComm.hpp"
 #include "MBParallelConventions.h"
-#endif
+//#endif
 
 class CCrgen
 {
@@ -82,10 +82,10 @@ public:
   
 #ifdef HAVE_MOAB
   moab::Interface* mbImpl() {return reinterpret_cast<MBiMesh*> (impl)->mbImpl;};
-#ifdef USE_MPI
+//#ifdef USE_MPI
   moab::ParallelComm *pc;
 #endif
-#endif
+//#endif
 
   bool extrude_flag;
   bool mem_tflag;
@@ -97,7 +97,7 @@ public:
   std::vector<int> meshfile_proc;
   std::vector<double> x_coord;
   std::vector<double> y_coord;
-  bool nst_flag, nsb_flag, nss_flag;
+  bool nst_flag, nsb_flag, nss_flag, nssall_flag;
   std::vector<std::string> core_alias;
   std::vector<double> nsx, nsy, nsc;
   int num_nsside;
@@ -122,7 +122,7 @@ private:
   double PII;
   double z_height;    // z_height for extruding surfaces mesh
   int z_divisions; // z_divisions for extruding surface mesh
-  int nst_Id, nsb_Id;
+  int nst_Id, nsb_Id, nssall_Id;
   std::vector<int> nss_Id;
   
   // file related
