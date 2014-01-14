@@ -1,9 +1,9 @@
 #include "meshkit/QuadMesh.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "Mesh.hpp"
-#include "JaalMoabConverter.hpp"
-#include "Tri2Quad.hpp"
+#include "meshkit/Mesh.hpp"
+#include "meshkit/JaalMoabConverter.hpp"
+#include "meshkit/Tri2Quad.hpp"
 #include <vector>
 #include <math.h>
 

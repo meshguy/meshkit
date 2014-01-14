@@ -1062,7 +1062,7 @@ public:
      bool getAdjTable(int i, int j) const {
           return adjTable[i][j];
      }
-
+     Mesh * load(const string &fname, Mesh *m);
      Mesh *getPartMesh( int p);
      int  getNumPartitions(int e );
 

@@ -1,5 +1,5 @@
-#include "DijkstraShortestPath.hpp"
-#include "StopWatch.hpp"
+#include "meshkit/DijkstraShortestPath.hpp"
+#include "meshkit/StopWatch.hpp"
 #include <limits>
 ///////////////////////////////////////////////////////////////////////////////
 

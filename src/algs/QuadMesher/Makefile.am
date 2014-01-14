@@ -11,57 +11,57 @@ libJaalQuadMesher_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libJaalQuadMesher_la_SOURCES = \
-	basic_math.hpp \
 	BinaryTree.cpp \
-	BinaryTree.hpp \
-	cycle.hpp \
 	DijkstraShortestPath.cpp \
 	DijkstraShortestPath.hpp \
 	Doublet.cpp \
 	DualGraph.cpp \
-	DualGraph.hpp \
-	FastArea.hpp \
 	FaceClose.cpp \
 	JaalMoabConverter.cpp \
-	JaalMoabConverter.hpp \
 	laplace.cpp \
 	Mesh.cpp \
-	Mesh.h \
-	Mesh.hpp \
 	mesh_io.cpp \
 	MeshOpt.cpp \
 	off_io.cpp \
 	OneDefectRemeshing.cpp \
 	QuadCleanUp.cpp \
-	QuadCleanUp.hpp \
 	QuadPatches.cpp \
         QuadMesh.cpp \
 	Singlet.cpp \
-	SwapEdges.hpp \
 	SwapTriEdges.cpp \
 	SwapQuadEdges.cpp \
 	tfiblend.cpp \
-	tfiblend.hpp \
-	Tri2Quad.cpp \
-	Tri2Quad.hpp \
 	tri_io.cpp \
 	circumcenter.cpp \
-	circumcenter.hpp \
 	GeomPredicates.cpp \
-	GeomPredicates.hpp \
-	MeshRefine2D.hpp \
 	MeshRefine2D.cpp \
 	MeshQuality.cpp  \
-	StopWatch.hpp   \
 	vtk_io.cpp      \
 	xml_io.cpp     \
+        Tri2Quad.cpp \
         cubit_io.cpp 
  
   
 
 # The list of header files which are to be installed
-nobase_libJaalQuadMesher_la_include_HEADERS = \
-        meshkit/QuadMesh.hpp
+nobase_libJaalQcd ..uadMesher_la_include_HEADERS = \
+        meshkit/QuadMesh.hpp \
+        meshkit/StopWatch.hpp   \
+        meshkit/circumcenter.hpp \
+        meshkit/GeomPredicates.hpp \
+        meshkit/Tri2Quad.hpp \
+        meshkit/tfiblend.hpp \
+        meshkit/MeshRefine2D.hpp \
+        meshkit/SwapEdges.hpp \
+        meshkit/QuadCleanUp.hpp \
+        meshkit/Mesh.hpp \
+        meshkit/JaalMoabConverter.hpp \
+        meshkit/DualGraph.hpp \
+        meshkit/FastArea.hpp \
+        meshkit/BinaryTree.hpp \
+        meshkit/cycle.hpp \
+        meshkit/basic_math.hpp \
+        meshkit/iMeshRefine2D.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -74,3 +74,5 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
+
+AM_CPPFLAGS += -DHAVE_BOOST

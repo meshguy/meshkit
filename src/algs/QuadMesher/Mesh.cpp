@@ -1,7 +1,7 @@
 #include <iomanip>
 
-#include "Mesh.hpp"
-#include "basic_math.hpp"
+#include "meshkit/Mesh.hpp"
+#include "meshkit/basic_math.hpp"
 #include <limits>
 using namespace std;
 using namespace Jaal;

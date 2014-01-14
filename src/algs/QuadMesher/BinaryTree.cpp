@@ -1,4 +1,4 @@
-#include "BinaryTree.hpp"
+#include "meshkit/BinaryTree.hpp"
 
 using namespace Jaal;
 

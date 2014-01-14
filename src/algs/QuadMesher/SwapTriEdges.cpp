@@ -1,4 +1,4 @@
-#include "SwapEdges.hpp"
+#include "meshkit/SwapEdges.hpp"
 
 #include <iostream>
 #include <iomanip>

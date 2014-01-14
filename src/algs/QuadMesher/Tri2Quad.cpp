@@ -1,5 +1,5 @@
-#include "Tri2Quad.hpp"
-#include "StopWatch.hpp"
+#include "meshkit/Tri2Quad.hpp"
+#include "meshkit/StopWatch.hpp"
 
 using namespace Jaal;
 

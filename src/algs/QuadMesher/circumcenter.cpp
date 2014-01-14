@@ -1,5 +1,5 @@
 
-#include "circumcenter.hpp"
+#include "meshkit/circumcenter.hpp"
 
 #include <stdlib.h>
 #include <stdio.h>

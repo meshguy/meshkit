@@ -20,10 +20,12 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/PostBL \
                -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/algs/AssyGen \
+               -I$(top_srcdir)/src/algs/QuadMesher \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-BROKEN_TESTS = test_jaalquad test_assygen
+#BROKEN_TESTS = test_jaalquad test_assygen edmond_matching hamiltonian mreport qualestm SimpleTri2Quad test_quadmeshcleanup
+BROKEN_TESTS = test_jaalquad test_assygen test_quadmeshcleanup
 
 TESTS = test_edgemesher \
         test_tfimapping \
@@ -71,6 +73,11 @@ AM_CPPFLAGS += -DMOAB
 endif
 
 # Tests and such
+#edmond_matching_SOURCES = edmond_matching.cpp
+#hamiltonian_SOURCES = hamiltonian.cpp
+#qualestm_SOURCES = qualestm.cpp
+#SimpleTri2Quad_SOURCES = SimpleTri2Quad.cpp
+test_quadmeshcleanup_SOURCES = test_quadmeshcleanup.cpp
 
 test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesher_SOURCES = test_edgemesher.cpp

@@ -3,8 +3,8 @@
 #include <cassert>
 #include <cstring>
 
-#include "Mesh.h"
-#include "QuadCleanUp.h"
+#include "Mesh.hpp"
+#include "QuadCleanUp.hpp"
 
 using namespace Jaal;
 

@@ -1,5 +1,5 @@
-#include "SwapEdges.hpp"
-#include "QuadCleanUp.hpp"
+#include "meshkit/SwapEdges.hpp"
+#include "meshkit/QuadCleanUp.hpp"
 
 using namespace Jaal;
 ///////////////////////////////////////////////////////////////////////////////

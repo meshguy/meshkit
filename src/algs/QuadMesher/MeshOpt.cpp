@@ -1,5 +1,5 @@
-#include "Mesh.hpp"
-#include <ostream>
+#include "meshkit/Mesh.hpp"
+#include <iostream>
 
 #ifdef HAVE_MESQUITE
 #include "Mesquite_all_headers.hpp"

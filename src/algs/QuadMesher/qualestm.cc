@@ -3,8 +3,8 @@
 #include <cassert>
 #include <cstring>
 
-#include "QuadCleanUp.h"
-#include "circumcenter.h"
+#include "QuadCleanUp.hpp"
+#include "circumcenter.hpp"
 
 using namespace Jaal;
 
@@ -22,16 +22,16 @@ int main(int argc, char **argv)
 
   QuadCleanUp qClean(qm);
 
-  qClean.getVertexFaceDegrees();
+  //qClean.getVertexFaceDegrees();
 
   cout << " Input Mesh    : " << endl;
   cout << "      #Nodes   : " << qm->getSize(0) << endl;
   cout << "      #Quads   : " << qm->getSize(2) << endl;
-  qClean.getVertexFaceDegrees();
+ // qClean.getVertexFaceDegrees();
 
   qClean.search_boundary_singlets();
   qClean.search_interior_doublets();
-  qClean.search_bridges();
+  //qClean.search_bridges();
   qClean.search_diamonds();
 
 }
