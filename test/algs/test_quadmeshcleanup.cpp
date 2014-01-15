@@ -52,7 +52,7 @@ void usage()
 ////////////////////////////////////////////////////////////////////////////////
 string infilename, outfilename;
 
-int iopt, numiters = 100, topo_improve = 1;
+int iopt, numiters = 1000, topo_improve = 1;
 int cleanup_op = 0;
 Mesh *mesh = new Jaal::Mesh;
 MeshOptimization mopt;
@@ -129,7 +129,8 @@ int main(int argc, char **argv)
 
 void run(){
     mesh->readFromFile( infilename );
-
+    string orig_file = "orig.vtk";
+    mesh->saveAs(orig_file);
     size_t ninvert  =  mesh->count_inverted_faces();
     size_t numfaces =  mesh->getSize(2);
     size_t numBound =  mesh->getBoundarySize(0);

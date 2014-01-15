@@ -616,7 +616,7 @@ QuadCleanUp::isSinglet (const Vertex *v)
      assert( v );
      // Any boundary node having only one neigbour cell is a singlet node ...
      int numfaces = v->getNumRelations(2);
-     assert (numfaces > 0);
+     assert (numfaces >= 0);
      if (v->isBoundary () && (numfaces == 1)) return 1;
      return 0;
 }
