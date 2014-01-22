@@ -49,6 +49,7 @@ CNrgen::CNrgen ()
   m_nPincells = 0;
   m_bCreateMatFiles = false;
   m_nSuperBlocks = 0;
+  save_exodus =false;
 }
 
 CNrgen::~CNrgen ()

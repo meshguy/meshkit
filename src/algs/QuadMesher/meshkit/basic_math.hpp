@@ -11,26 +11,6 @@ using namespace std;
 #define ANGLE_IN_DEGREES  0
 #define ANGLE_IN_RADIANS  1
 
-#ifdef HAVE_BOOST
-#include <boost/utility.hpp>
-#include <boost/any.hpp>
-#include <boost/foreach.hpp>
-#include <boost/array.hpp>
-#endif
-/*
-typedef boost::array<double, 3> Point3D;
-typedef boost::array<double,2> Point2D;
-typedef boost::array<double,3> Point3D;
-typedef boost::array<double,4> Array4D;
-typedef boost::array<double,3> Vec3D;
-
-typedef boost::array<float,2> Point2F;
-typedef boost::array<float,3> Point3F;
-typedef boost::array<float,4> Array4F;
-typedef boost::array<float,3> Vec3F;
-*/
-
-
 template<class DataType, int n>
 class Array {
 public:
@@ -225,7 +205,6 @@ inline T min_value( const T &a, const T &b, const T &c)
      return min(a,min(b, c));
 }
 
-#ifndef HAVE_BOOST
 template <class T, size_t n>
 inline double getAngle(const Array<T, n> &VecA, const Array<T, n> &VecB,
                        int unit_measure)
@@ -263,8 +242,6 @@ inline T getAngle(const Array<T, n> &pa, const Array<T, n> &pb,
      Array<T, n> VecB = create_vector(pc, pa);
      return getAngle(VecA, VecB, unit_measure);
 }
-
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

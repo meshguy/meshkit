@@ -44,7 +44,7 @@ libJaalQuadMesher_la_SOURCES = \
   
 
 # The list of header files which are to be installed
-nobase_libJaalQcd ..uadMesher_la_include_HEADERS = \
+nobase_libJaalQuadMesher_la_include_HEADERS = \
         meshkit/QuadMesh.hpp \
         meshkit/StopWatch.hpp   \
         meshkit/circumcenter.hpp \
@@ -61,7 +61,8 @@ nobase_libJaalQcd ..uadMesher_la_include_HEADERS = \
         meshkit/BinaryTree.hpp \
         meshkit/cycle.hpp \
         meshkit/basic_math.hpp \
-        meshkit/iMeshRefine2D.hpp
+        meshkit/iMeshRefine2D.hpp \
+        meshkit/myany.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -74,5 +75,3 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
-
-AM_CPPFLAGS += -DHAVE_BOOST

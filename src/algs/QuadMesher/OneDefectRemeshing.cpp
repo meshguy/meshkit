@@ -1417,7 +1417,7 @@ void OneDefectPatch::post_remesh()
      inner_nodes.clear();
 
      nSize = newnodes.size();
-     assert( nSize );
+     //assert( nSize );
      for (size_t i = 0; i < nSize; i++)
           inner_nodes.push_back(newnodes[i]);
      newnodes.clear();

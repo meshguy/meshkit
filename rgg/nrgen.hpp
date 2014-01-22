@@ -67,7 +67,7 @@ private:
   
   // number of sides in the geometry
   int m_nSides;
-  bool m_bCreateMatFiles;
+  bool m_bCreateMatFiles, save_exodus;
   // file Input
   std::ifstream m_FileInput;  
     

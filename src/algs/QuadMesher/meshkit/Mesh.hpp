@@ -16,6 +16,8 @@
 #include <queue>
 #include <algorithm>
 
+#include <tr1/array>
+
 #ifdef HAVE_MESQUITE
 #include <Mesquite_all_headers.hpp>
 #endif
@@ -24,9 +26,7 @@
 #include <verdict.h>
 #endif
 
-#ifdef HAVE_BOOST
-#include <boost/any.hpp>
-#endif
+#include "myany.hpp"
 
 #define FOR_EACH(container, iter ) for(iter = container.begin(); iter != container.end(); ++iter)
 
@@ -125,23 +125,17 @@ int split_stl_vector(const std::deque<T> &a, size_t pos, std::deque<T> &b, std::
 ////////////////////////////////////////////////////////////////////////////////
 
 struct Attribute {
-public:
-     Attribute() {}
+    public:
+        Attribute() {}
+        Attribute(const std::string &s, const myany &p) {
+            name = s;
+            value = p;
+        }
 
-#ifdef HAVE_BOOST
-     Attribute(const std::string &s, const boost::any & p) {
-          name = s;
-          value = p;
-     }
+        template <typename T> Attribute(T n) { value = n; }
 
-     template <typename T>
-     Attribute(T n) {
-          value = n;
-     }
-     boost::any value;
-#endif
-
-     std::string name;
+        std::string name;
+        myany value;
 };
 
 template<class T>
@@ -149,12 +143,10 @@ struct VecAttribute {
      std::vector<T> values;
 };
 
-#ifdef HAVE_BOOST
 template<class T, int n>
-struct ArrayAttribute {
-     boost::array<T,n> values;
+struct ArrayAttribute {     
+      std::tr1::array <T,n> values;
 };
-#endif
 
 template<class T>
 struct ListAttribute {
@@ -232,7 +224,6 @@ struct AttribRep {
      }
      template<class T>
      int setAttribute(const string &s, const T &val) {
-#ifdef HAVE_BOOST
           int nAttribs = attributes.size();
           for( int i = 0; i < nAttribs; i++) {
                if( attributes[i]->name == s ) {
@@ -242,21 +233,18 @@ struct AttribRep {
           }
           Attribute *a = new Attribute(s,val);
           attributes.push_back( a );
-#endif
           return 0;
      }
 
      template<class T>
      int getAttribute(const string &s, T &val) const {
-#ifdef HAVE_BOOST
           int nAttribs = attributes.size();
           for( int i = 0; i < nAttribs; i++) {
                if( attributes[i]->name == s ) {
-                    val = boost::any_cast<T>(attributes[i]->value);
+                    val = any_cast <T>( attributes[i]->value);
                     return 0;
                }
           }
-#endif
           return 1;
      }
 

@@ -78,8 +78,8 @@ void QuadMesher::execute_this()
   MEntSelection::iterator i;
   for (i = me_selection().begin(); i != me_selection().end(); ++i) {
     ModelEnt* ent = i->first;
-    std::auto_ptr<Jaal::Mesh> trimesh(meshconverter.fromMOAB( imesh, m, (iBase_EntitySetHandle)ent->mesh_handle() ));
-    std::auto_ptr<Jaal::Mesh> quadmesh(t2quad.getQuadMesh( trimesh.get(), 1));
+    std::unique_ptr<Jaal::Mesh> trimesh(meshconverter.fromMOAB( imesh, m, (iBase_EntitySetHandle)ent->mesh_handle() ));
+    std::unique_ptr<Jaal::Mesh> quadmesh(t2quad.getQuadMesh( trimesh.get(), 1));
     meshconverter.toMOAB( quadmesh.get(), imesh, (iBase_EntitySetHandle)(ent->mesh_handle()) );
     ent->commit_mesh( i->second, COMPLETE_MESH );
   }

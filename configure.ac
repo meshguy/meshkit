@@ -16,6 +16,7 @@ dnl FATHOM_CHECK_COMPILERS([yes],[yes],[no])
 dnl However, there is a call to AC_FC_WRAPPERS below, so presumably
 dnl we should be checking for FC. - j.kraftcheck 2010-8-13
 EXTRA_GNU_FLAGS="-pipe -Wall"
+AM_CXXFLAGS=-std=c++0x
 FATHOM_CHECK_COMPILERS
 AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
 LIBS="-lm"

@@ -150,7 +150,7 @@ void run(){
     vector<QTrack>  qpath;
     vector<Vertex*> steiner;
     Mesh *q2t;
-    int  algo, numiter;
+  //  int  algo, numiter;
 
     StopWatch swatch;
     swatch.start();

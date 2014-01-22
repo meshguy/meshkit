@@ -890,6 +890,11 @@ int CNrgen::ReadAndCreate()
             szFormatString >> card >> m_nAssyGenInputFiles;
             std::cout <<"--------------------------------------------------"<<std::endl;
         }
+        // Create specified number of files with varying material ids
+        if (szInputString.substr(0,11) == "save_exodus"){
+            save_exodus = true;
+            std::cout <<"--------------------------------------------------"<<std::endl;
+        }
         // specify a merge tolerance value for cubit journal file
         if (szInputString.substr(0,14) == "mergetolerance"){
             std::istringstream szFormatString (szInputString);
@@ -1792,8 +1797,14 @@ int CNrgen::CreateCubitJournal()
     m_FileOutput << "delete group all" << std::endl;
     // save as .cub file dump
     m_FileOutput << "#\n#Save file" << std::endl;
-    std::string szSave = m_szFile + ".cub";
-    m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl;
+    if(save_exodus){
+        std::string szSave = m_szFile + ".exo";
+        m_FileOutput << "export mesh '"<< szSave <<"'" << " overwrite"<<std::endl;
+    }
+    else{
+        std::string szSave = m_szFile + ".cub";
+        m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl;
+    }
 
     std::cout << "Schemes file created: " << m_szSchFile << std::endl;
     std::cout << "Cubit journal file created: " << m_szJouFile << std::endl;
