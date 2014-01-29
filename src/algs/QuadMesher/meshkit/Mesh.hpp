@@ -16,7 +16,7 @@
 #include <queue>
 #include <algorithm>
 
-#include <tr1/array>
+#include <array>
 
 #ifdef HAVE_MESQUITE
 #include <Mesquite_all_headers.hpp>
@@ -145,7 +145,7 @@ struct VecAttribute {
 
 template<class T, int n>
 struct ArrayAttribute {     
-      std::tr1::array <T,n> values;
+      std::array <T,n> values;
 };
 
 template<class T>
