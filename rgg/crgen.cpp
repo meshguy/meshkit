@@ -183,14 +183,14 @@ int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
         std::cout << "Merging nodes.. " << std::endl;
     }
 
-//#ifdef USE_MPI
+#ifdef USE_MPI
     moab::ParallelMergeMesh pm(pc, merge_tol);
     err = pm.merge();
     if (err != moab::MB_SUCCESS) {
         std::cerr << "Merge Failed" << std::endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-//#endif
+#endif
     return iBase_SUCCESS;
 }
 

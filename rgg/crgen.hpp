@@ -33,14 +33,14 @@ CCrgen class declaration
 #endif
 
 
-//#ifdef USE_MPI
+#ifdef USE_MPI
 #include "mpi.h"
 #include "iMeshP.h"
 #include "moab_mpi.h"
 #include "moab/ParallelMergeMesh.hpp"
 #include "moab/ParallelComm.hpp"
 #include "MBParallelConventions.h"
-//#endif
+#endif
 
 class CCrgen
 {
@@ -82,10 +82,10 @@ public:
   
 #ifdef HAVE_MOAB
   moab::Interface* mbImpl() {return reinterpret_cast<MBiMesh*> (impl)->mbImpl;};
-//#ifdef USE_MPI
+#ifdef USE_MPI
   moab::ParallelComm *pc;
 #endif
-//#endif
+#endif
 
   bool extrude_flag;
   bool mem_tflag;
