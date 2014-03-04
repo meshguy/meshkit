@@ -86,10 +86,10 @@ int main(int argc, char *argv[]) {
                 }
 #endif
             }
-
+#ifdef USE_MPI
             //Get a pcomm object
             TheCore.pc = new moab::ParallelComm(TheCore.mbImpl(), MPI::COMM_WORLD, &err);
-
+#endif
             TheCore.mbImpl()->estimated_memory_use(0, 0, 0, &mem1);
             ld_tload = ld_time.DiffTime();
             tload = clock();
