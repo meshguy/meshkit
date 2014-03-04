@@ -15,11 +15,11 @@ int main(int argc, char *argv[]) {
     int rank = 0, nprocs = 1;
 
     //Initialize MPI
-//#ifdef USE_MPI
+#ifdef USE_MPI
     MPI::Init(argc, argv);
     nprocs = MPI::COMM_WORLD.Get_size();
     rank = MPI::COMM_WORLD.Get_rank();
-//#endif
+#endif
 
     // start program timer and declare timing variables
     CClock Timer;
