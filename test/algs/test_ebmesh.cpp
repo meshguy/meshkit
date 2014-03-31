@@ -21,7 +21,7 @@ using namespace MeshKit;
 #define DEFAULT_TEST_FILE "sphere.stp"
 #endif
 
-const bool debug_ebmesher = false;
+const bool debug_ebmesher = true;
 
 int load_and_mesh(const char *input_filename,
 		  const char *output_filename,
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 {
   // check command line arg
   std::string input_filename;
-  const char *output_filename = NULL;
+  const char *output_filename = "ebmesh_out.vtk";
   int whole_geom = 1;
   int n_interval[3] = {10, 10, 10};
   int mesh_based_geom = 0;

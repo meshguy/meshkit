@@ -109,8 +109,8 @@ void NGTetMesher::execute_this()
     ngp.fineness = 0.5;
     
     // Use variable name second_order if using newer version of NetGen
-    ngp.secondorder = 0; 
-    //    ngp.second_order = 0; 
+    //ngp.secondorder = 0;
+        ngp.second_order = 0;
     //    nglib.h Rev. 663 http://netgen-mesher.svn.sourceforge.net/viewvc/netgen-mesher/netgen/nglib/nglib.h?revision=663&view=markup
     //uses: second_order instead of secondorder(4.9.13) 
 

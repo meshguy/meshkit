@@ -6,7 +6,7 @@ MeshType Tet
 GeomEngine ACIS
 GeometryType Rectangular 
 !
-Materials 3 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3 
+Materials 4 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3  Material M4
 !
 Duct 3   0.0 0.0    0 4.0    18.0 18.0  20.0 20.0   23.5 23.5    G1 C1 G1
 Duct 3   0.0 0.0    4.0 8.0    18.0 18.0  20.0 20.0   23.5 23.5    G1 C1 G1
@@ -14,10 +14,13 @@ Duct 3   0.0 0.0    4.0 8.0    18.0 18.0  20.0 20.0   23.5 23.5    G1 C1 G1
 Pincells 1
 !                                                                                          
 ! reflector
-PWR_RF_01 RF 3
-Pitch  4.0 4.0 4.0 
-Cylinder 1 0.0 0.0  0.0 4.0   1.6 M3  
-Frustum 1 0.0 0.0  4.0 8.0   1.6 1.4 M3 
+PWR_RF_01 RF 4
+Pitch  4.0 3.0 4.0
+Cylinder 1 0.0 0.0  0.0 4.0   1.1 M3
+Cylinder 1 0.0 0.0  4.0 8.0   1.1 M3
+!Frustum 1 0.0 0.0  4.0 8.0   0.6 1.0 M3
+CellMaterial 0.0 4.0  M4 &
+             4.0 8.0  M4
 !
 Assembly 4 4 
 RF RF RF RF
