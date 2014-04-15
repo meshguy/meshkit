@@ -2628,7 +2628,6 @@ int CNrgen::Subtract_Pins()
               CHECK("Couldn't subtract pins from block.");
 
               tmp_vol = tmp_new1;
-
               unite = NULL;
               tmp_new1=NULL;
             }
@@ -2640,19 +2639,12 @@ int CNrgen::Subtract_Pins()
 #if HAVE_OCC
           // if there are more than one pins
           if( cp_inpins[k-1].size() > 1){
-
-              //                iGeom_uniteEnts(geom, &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
-              //                CHECK( "uniteEnts failed!" );
-                //  iGeom_copyEnt(igeomImpl, entities[i], &temp, &err);
-
-
+              std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
               for (int i=0; i< cp_inpins[k-1].size(); i++){
                  // iGeom_copyEnt(geom, cp_inpins[k-1][i], &unite, &err);
                   iGeom_subtractEnts(geom, tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
                   CHECK("Couldn't subtract pins from block.");
                   tmp_vol = tmp_new1;
-
-                  //unite = NULL;
                   tmp_new1=NULL;
                 }
 
