@@ -10,6 +10,11 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/ModelEnt.hpp"
 
+#ifdef HAVE_MOAB
+#include "moab/Interface.hpp"
+#include "moab/EntityHandle.hpp"
+#endif
+
 //#include "CGMApp.hpp"
 using namespace MeshKit;
 
@@ -97,6 +102,38 @@ int load_and_mesh(const char *input_filename,
   // get the volumes
   MEntVector vols;
   mk.get_entities_by_dimension(3, vols);
+  if (vols.empty())
+  {
+    // check the surfaces
+    MEntVector surfs;
+    mk.get_entities_by_dimension(2, surfs);
+    if (surfs.empty())
+    {
+      std::cout<<" no geometry, bail out \n";
+      return 1;
+    }
+#ifdef HAVE_MOAB
+    if (surfs.size()==1)
+    {
+      // create a new ModelEnt, volume, with one surface
+      // also create a volume ; add to it a surface entity
+      moab::EntityHandle surfSet = surfs[0]->mesh_handle();
+      moab::EntityHandle volSet;
+      moab::ErrorCode rval = mk.moab_instance()->create_meshset(moab::MESHSET_SET, volSet);
+      MBERRCHK(rval, mk.moab_instance());
+      rval = mk.moab_instance()->add_parent_child(volSet, surfSet);
+      MBERRCHK(rval, mk.moab_instance());
+      // also, set the geom dimension
+      int dimension = 3;
+      rval =mk.moab_instance()->tag_set_data(mk.moab_geom_dim_tag(), &volSet, 1, &dimension);
+      MBERRCHK(rval, mk.moab_instance());
+      ModelEnt * this_me = new ModelEnt(&mk, (iGeom::EntityHandle)NULL, 0, volSet, 0, 0);
+      //mk.modelEnts[3].push_back(this_me);
+      // get out if we created one model ent
+      vols.push_back(this_me);
+    }
+#endif
+  }
 
   // make EBMesher
   EBMesher *ebm = (EBMesher*) mk.construct_meshop("EBMesher", vols);
