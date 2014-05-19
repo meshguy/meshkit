@@ -4,6 +4,7 @@
 #include "meshkit/MergeMesh.hpp"
 #include "meshkit/EBMesher.hpp"
 #include "meshkit/EdgeMesher.hpp"
+#include "meshkit/CurveMesher.hpp"
 #include "meshkit/TFIMapping.hpp"
 #include "meshkit/ExtrudeMesh.hpp"
 #include "meshkit/OneToOneSwept.hpp"
@@ -90,5 +91,7 @@ REGISTER_MESH_OP(ParRecvSurfMesh);
 #ifdef HAVE_INTASSIGN
 REGISTER_MESH_OP(IAInterface);
 #endif    
+
+REGISTER_MESH_OP(CurveMesher);
 
 } // namespace MeshKit

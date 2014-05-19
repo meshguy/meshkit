@@ -15,20 +15,44 @@
 #include <iRel.h>
 #include <vector>
 #include "meshkit/MKCore.hpp"
+#include "meshkit/MeshScheme.hpp"
 
 namespace MeshKit
 {
  
-class CurveMesher
+using namespace std;
+
+class CurveMesher : public MeshScheme
 {
 public: 
-CurveMesher(MKCore *mk, const MEntVector &ments, double faceting_tolerance, double geom_resabs);
+CurveMesher(MKCore *mk, const MEntVector &ments);
 
-  ~CurveMesher();
+~CurveMesher();
 private:
   double facet_tol;
+  double geom_res;
+  MKCore *mk;
+  MEntVector model_ents;
 
+public:  
+  virtual void setup_this();
+  virtual void execute_this();
+
+  static bool can_mesh(iBase_EntityType dim)
+  { return iBase_EDGE == dim; }
+
+  static bool can_mesh(ModelEnt *me)
+  { return canmesh_edge(me); }
+ 
+  static const char* name()
+  {return "CurveMesher";}
+
+  static const moab::EntityType* output_types();
+
+  virtual const moab::EntityType* mesh_types_arr() const
+  { return output_types(); }
 
 };
-  
+
+
 }
