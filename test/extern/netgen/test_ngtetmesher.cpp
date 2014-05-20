@@ -64,7 +64,7 @@ void mesh_test(std::string filebase, double size)
   MEntVector dum, vols;
   mk->get_entities_by_dimension(3, dum);
   vols.push_back(*dum.rbegin());
-  NGTetMesher *tm = (NGTetMesher*) mk->construct_meshop("NGTetMesher", vols);
+  /*NGTetMesher *tm = (NGTetMesher*)*/ mk->construct_meshop("NGTetMesher", vols);
 
     // make a sizing function and set it on the surface
   SizingFunction esize(mk, -1, size);

@@ -124,6 +124,9 @@ int main( int argc, char *argv[] )
     options = "PARTITION=GEOM_DIMENSION;PARTITION_VAL=3;PARTITION_DISTRIBUTE;";
   }
 
+  if (force_intervals && mesh_interval==-1)
+    std::cout << "error in defining mesh count\n";
+
   if (load_and_mesh(geom_filename.c_str(), mesh_filename,
                     options.c_str(), mesh_size, mesh_interval, rank)) return 1;
 
@@ -149,7 +152,7 @@ int load_and_mesh(const char *geom_filename,
   // make a sizing function and set it on the surface
   SizingFunction esize(mk, n_interval, interval_size);
   unsigned int i_sf = esize.core_index();
-  for (int i = 0; i < vols.size(); i++) vols[i]->sizing_function_index(i_sf);
+  for (size_t i = 0; i < vols.size(); i++) vols[i]->sizing_function_index(i_sf);
   
   // do parallel mesh
   mk->construct_meshop("ParallelMesher", vols);

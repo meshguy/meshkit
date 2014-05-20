@@ -285,7 +285,8 @@ void run(){
     mesh->get_topological_statistics();
     plot_all_quad_quality_measures( mesh );
 
-    assert( numBound == mesh->getBoundarySize(0) );
+   if( numBound != mesh->getBoundarySize(0) )
+     cout<<" error in numBound\n";
 
    // if( lapweight ) delete lapweight;
 

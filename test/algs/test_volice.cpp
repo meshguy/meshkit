@@ -74,7 +74,7 @@ void test_ice()
 
 	MEntVector s1;
   s1.push_back(surfs[0]);
-  CAMALPaver * cmp = (CAMALPaver*)mk->construct_meshop("CAMALPaver", s1);
+  /*CAMALPaver * cmp = (CAMALPaver*)*/mk->construct_meshop("CAMALPaver", s1);
   //set up the size
   SizingFunction * pavSize = new SizingFunction(mk, -1, 600);
 

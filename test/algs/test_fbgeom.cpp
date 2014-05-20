@@ -345,7 +345,9 @@ void extrudeQuads()
   // get all hexas, and get the skin
   moab::Range hexas, iniQuads;
   moab::ErrorCode rval = mb->get_entities_by_type(0, moab::MBHEX, hexas);
+  MBERRCHK(rval, mb);
   rval = mb->get_entities_by_type(0, moab::MBQUAD, iniQuads);
+  MBERRCHK(rval, mb);
   moab::Skinner skinner(mb);
   moab::Range allQuads;
   rval = skinner.find_skin(0, hexas, 2, allQuads);
