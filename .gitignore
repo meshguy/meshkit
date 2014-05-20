@@ -44,6 +44,10 @@ cubit*
 *.h5m
 *.vtk
 *.eps
+*.exo
+*.inp
+*.stp
+*.csv
 *.makefile
 */**/Makefile
 */**/Makefile.in
@@ -128,6 +132,7 @@ testdir.h
 utils/MKUtils_test
 rgg/assygen
 rgg/coregen
+rgg/pin217
 test_fbgeom
 test_mbgeomop
 test_mbsplitop
