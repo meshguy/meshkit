@@ -197,7 +197,7 @@ int CCrgen::merge_nodes_parallel(const int nrank, const int numprocs)
       moab::Range ents;
       moab::MergeMesh merm(mbImpl());
       mbImpl()->get_entities_by_dimension(0, set_DIM, ents);
-      std::cout << ents.size() << "Serial Merging...." << set_DIM <<std::endl;
+      std::cout << "Serial Merging...." << std::endl;
 
       err = merm.merge_entities(ents, merge_tol);
     }
