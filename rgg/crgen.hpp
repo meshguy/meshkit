@@ -30,6 +30,7 @@ CCrgen class declaration
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
 #include "MBTagConventions.hpp"
+#include "moab/MergeMesh.hpp"
 #endif
 
 
@@ -62,7 +63,6 @@ public:
   int copymove(const int nrank, const int numprocs);
   int copymove_all(const int nrank, const int numprocs);
   int set_copymove_coords();
-  int merge_nodes();
   int merge_nodes_parallel(const int nrank, const int numprocs);
   int assign_gids();
   int assign_gids_parallel(const int nrank, const int numprocs);
@@ -104,7 +104,6 @@ public:
 private:
 
   CopyMesh **cm;
-  MergeMesh *mm;
   CopyGeom **cg;
   iBase_EntitySetHandle root_set;
   std::vector<iBase_EntitySetHandle> assys;
