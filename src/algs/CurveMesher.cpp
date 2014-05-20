@@ -6,6 +6,8 @@
 #include <iGeom.h>
 
 #include "MBTagConventions.hpp"
+#include "MBCore.hpp"
+#include "moab/GeomTopoTool.hpp"
 
 namespace MeshKit
 {
@@ -78,7 +80,13 @@ void CurveMesher::execute_this()
       //---------------------------------//
       //set the category tag
       mk_core()->imesh_instance()->setEntSetData(msh, category_tag, &category);
+    
+      //---------------------------------//
+      //            FACET                //
+      //---------------------------------//
+   
       facet(gh,msh);
+      //set_senses(me);
       me->set_meshed_state(COMPLETE_MESH);
 
     }
@@ -119,10 +127,43 @@ void CurveMesher::execute_this()
 	  edges.push_back(e);
 	}
 
-      //add verticess and edges to the entity set
+      //add vertices and edges to the entity set
       mk_core()->imesh_instance()->addEntArrToSet(&verts[0],verts.size(),sh);
       mk_core()->imesh_instance()->addEntArrToSet(&edges[0],edges.size(),sh);
 
+
+}
+
+  void CurveMesher::set_senses(ModelEnt *ent)
+{
+  
+  //get the geom_handle for this curve
+  iGeom::EntityHandle gh = ent->geom_handle();
+
+  //get all surfaces adjacent to this curve
+  MEntVector adj_surfs;
+  ent->get_adjacencies(2,adj_surfs);
+
+  MEntVector::iterator i; 
+
+  std::vector<int> senses;
+  std::vector<moab::EntityHandle> meshsets;
+  for(i = adj_surfs.begin(); i !=adj_surfs.end(); i++)
+    {
+      int sense;
+      ModelEnt *adj_ent = *i;
+      mk_core()->igeom_instance()->getEgFcSense(gh, adj_ent->geom_handle(),sense);
+      std::cout << "Sense: " << sense << std::endl;
+      senses.push_back(sense);
+
+      meshsets.push_back(adj_ent->mesh_handle());
+
+    }
+
+   
+  moab::GeomTopoTool gt(mk_core()->moab_instance());
+  moab::ErrorCode rval = gt.set_senses(ent->mesh_handle(),meshsets,senses);
+  if(rval != MB_SUCCESS) std::cout << "Error setting curve senses!" << std::endl;
 
 }
 
