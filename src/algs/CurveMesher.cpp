@@ -33,6 +33,10 @@ CurveMesher::~CurveMesher()
 void CurveMesher::setup_this()
 {
 
+  //create a vertex mesher
+  int meshop_dim = 0;
+  MeshOp *vm = (MeshOp*) mk_core()->construct_meshop(meshop_dim);
+
   MEntVector::iterator i;
   for ( i = model_ents.begin(); i != model_ents.end(); i++)
     { 
@@ -45,8 +49,22 @@ void CurveMesher::setup_this()
           continue;
         } 
 
+     
+      //make sure that its children (vertices) have been meshed
+      MEntVector children; 
+      me->get_adjacencies(0, children);
+
+      for( MEntVector::iterator j = children.begin(); j != children.end(); j++)
+	{
+          ModelEnt *child = *j;
+          if(child->is_meshops_list_empty()) vm->add_modelent(child);
+	}
+
     }
 
+  //make sure we're meshing the veritces first
+  mk_core()->insert_node(vm, this, mk_core()->root_node());
+  
   //set the faceting_tolerance
   facet_tol = 1e-3;
 
