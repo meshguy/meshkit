@@ -37,8 +37,9 @@ private:
 public:  
   virtual void setup_this();
   virtual void execute_this();
-  virtual void facet(iGeom::EntityHandle, iMesh::EntitySetHandle);
+  virtual void facet(ModelEnt *curve);
   virtual void set_senses( ModelEnt *ent);
+  virtual double length(  iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2);
 
   static bool can_mesh(iBase_EntityType dim)
   { return iBase_EDGE == dim; }

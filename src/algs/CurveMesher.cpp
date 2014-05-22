@@ -67,6 +67,9 @@ void CurveMesher::setup_this()
   
   //set the faceting_tolerance
   facet_tol = 1e-3;
+  
+  //set the geom_reabs value
+  geom_res = 1e-6;
 
 }
 
@@ -103,7 +106,7 @@ void CurveMesher::execute_this()
       //            FACET                //
       //---------------------------------//
    
-      facet(gh,msh);
+      facet(me);
       //set_senses(me);
       me->set_meshed_state(COMPLETE_MESH);
 
@@ -111,20 +114,24 @@ void CurveMesher::execute_this()
 
 }
 
- void CurveMesher::facet( iGeom::EntityHandle h, iMesh::EntitySetHandle sh)
+ void CurveMesher::facet(ModelEnt *curve)
 {
 
-      
+      iGeom::EntityHandle h = curve->geom_handle();
+      iMesh::EntitySetHandle sh = IBSH(curve->mesh_handle());
+
       //get the facets for this curve/ref_edge
       std::vector<double> pnts;
       std::vector<int> conn;
       mk_core()->igeom_instance()->getFacets(h,facet_tol,pnts,conn);
       std::cout << "Points returned from getFacets: " << pnts.size()/3 << std::endl;
       std::cout << "Facets returned from getFacets: " << conn.size() << std::endl;
-      
+
+
       //create vector for keeping track of the vertices
       std::vector<iBase_EntityHandle> verts;
- 
+          
+
       // loop over the facet points
       for(unsigned int j=0; j<pnts.size(); j+=3)
 	{
@@ -133,6 +140,8 @@ void CurveMesher::execute_this()
           mk_core()->imesh_instance()->createVtx(pnts[j],pnts[j+1],pnts[j+2],v);
           verts.push_back(v);
 	}
+      std::cout << "Number of verts created: " << verts.size() << std::endl;
+
 
       //vector to contain the edges
       std::vector<iBase_EntityHandle> edges;
@@ -184,5 +193,26 @@ void CurveMesher::execute_this()
   if(rval != MB_SUCCESS) std::cout << "Error setting curve senses!" << std::endl;
 
 }
+
+  // should I be using an iMesh entity to do this comparison??
+double CurveMesher::length( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
+{
+
+  double x1,y1,z1;
+  double x2,y2,z2;
+
+
+
+  mk_core()->igeom_instance()->getVtxCoord( vtx1, x1, y1, z1);
+  mk_core()->imesh_instance()->getVtxCoord( vtx2, x2, y2, z2);
+
+  double dist = pow((x1-x2),2) + pow((y1-y2),2) + pow((z1-z2),2);
+
+  return sqrt(dist);
+
+  
+}
+
+
 
 }
