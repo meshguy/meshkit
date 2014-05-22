@@ -65,11 +65,13 @@ void CurveMesher::setup_this()
   //make sure we're meshing the veritces first
   mk_core()->insert_node(vm, this, mk_core()->root_node());
   
+  //set faceting parameters to default values if the are not already set. 
+
   //set the faceting_tolerance
-  facet_tol = 1e-3;
-  
+  if(!facet_tol)  facet_tol = 1e-4;
+
   //set the geom_reabs value
-  geom_res = 1e-6;
+  if(!geom_res) geom_res = 1e-6;
 
 }
 
@@ -273,6 +275,12 @@ double CurveMesher::length( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
   
 }
 
+void CurveMesher::set_facet_params(double faceting_tolerance, double geom_resabs)
+{
+  //Assign the faceting values
+  if(faceting_tolerance) facet_tol = faceting_tolerance; 
+  if(geom_resabs) geom_res = geom_resabs; 
 
+}
 
 }
