@@ -141,6 +141,66 @@ void CurveMesher::execute_this()
           verts.push_back(v);
 	}
       std::cout << "Number of verts created: " << verts.size() << std::endl;
+      //--------------------------------------------------//
+      //check that the start and end vertices are within  //
+      //the geom resabs of the facet verts                //
+      //--------------------------------------------------//
+     
+      //get the curve vertices
+      MEntVector end_verts;
+      curve->get_adjacencies(0, end_verts);
+      std::cout << "Number of end_verts: " << end_verts.size() << std::endl;
+
+      //check for a closed curve
+      bool closed = (end_verts.size() == 1);
+
+      //Special case for a point curve
+      if (verts.size() < 2 && (!closed || curve->measure() > geom_res))
+        {
+          std::cerr << "Warning: No facetting for curve" << curve->id() << std::endl;
+          return;
+        }
+
+
+      if(closed)
+	{
+	  //check the proximity of the single vertex to both the start and end points
+	  iGeom::EntityHandle end_vert_hand = end_verts[0]->geom_handle(); 
+          if(length(end_vert_hand,verts.front()) > geom_res || length(end_vert_hand,verts.back()) > geom_res)
+	    std::cerr << "Warning: closed curve vertex not at the end of curve facets" << std::endl;
+          //insert the single vertex in at the beginning and the end of the curve
+	  std::vector<moab::EntityHandle> dum_handles;
+          end_verts[0]->get_mesh(0,dum_handles);
+          verts.front() = IBEH(dum_handles[0]);
+          verts.back() = IBEH(dum_handles[0]);
+	}
+      else
+	{
+	  //check the proximity of the front and end vertices to the start and end points, respectively
+          if(length(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
+             length(end_verts[1]->geom_handle(), verts.back()) > geom_res)
+	    {
+	      //try reversing the points
+	      std::reverse(verts.begin(), verts.end());
+	    }
+           //check again, if this time it fails, give a warning
+           if(length(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
+              length(end_verts[1]->geom_handle(), verts.back()) > geom_res)
+	     {
+	       std::cerr << "Warning: vertices not at the ends of the curve" << std::endl;
+	     }
+          //now replace start and end facet points with the child verts
+          //this is all necessary to keep withing imesh interface
+	  std::vector<moab::EntityHandle> dum_handles;
+          end_verts[0]->get_mesh(0,dum_handles);
+          verts.front() = IBEH(dum_handles[0]);
+          dum_handles.clear();
+          end_verts[1]->get_mesh(0,dum_handles);
+          verts.back() = IBEH(dum_handles[0]);
+
+	}
+    
+	  //now create the edges with the vertices we've chosen
 
 
       //vector to contain the edges
