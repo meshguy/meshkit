@@ -48,7 +48,7 @@ Assembly 11
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
 RadialMeshSize 0.3
-AxialMeshSize 50
+EdgeInterval 72
 Center
 MaterialSet_StartId 700
 NeumannSet_StartId 700

@@ -33,7 +33,7 @@ Assembly 11
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
 RadialMeshSize 0.3
-AxialMeshSize 50
+EdgeInterval 72
 Center
 MaterialSet_StartId 1
 NeumannSet_StartId 1
