@@ -214,15 +214,15 @@ void CurveMesher::execute_this()
   mk_core()->imesh_instance()->addEntArrToSet(&edges[0],edges.size(),sh);
 }
 
-  void CurveMesher::set_senses(ModelEnt *ent)
+  void CurveMesher::set_senses(ModelEnt *curve)
 {
  
   //get the geom_handle for this curve
-  iGeom::EntityHandle gh = ent->geom_handle();
+  iGeom::EntityHandle gh = curve->geom_handle();
 
   //get all surfaces adjacent to this curve
   MEntVector adj_surfs;
-  ent->get_adjacencies(2, adj_surfs);
+  curve->get_adjacencies(2, adj_surfs);
 
   MEntVector::iterator i; 
   std::vector<int> senses;
@@ -244,7 +244,7 @@ void CurveMesher::execute_this()
   // using moab to do this allows the use of variable length tags
   // which are not currently available in iGeom 
   moab::GeomTopoTool gt(mk_core()->moab_instance());
-  moab::ErrorCode rval = gt.set_senses(ent->mesh_handle(),meshsets,senses);
+  moab::ErrorCode rval = gt.set_senses(curve->mesh_handle(),meshsets,senses);
   if(rval != MB_SUCCESS) std::cout << "Error setting curve senses!" << std::endl;
 
 }

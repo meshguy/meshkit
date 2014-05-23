@@ -33,13 +33,29 @@ private:
   double geom_res;
   MKCore *mk;
   MEntVector model_ents;
+  /** \brief Returns the distance between an iGeom vertex and an iMesh vertex.
+   * \param vtx1 iGeom vertex handle
+   * \param vtx2 iMesh vertex handle
+   */
   virtual double length(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2);
+  /** \brief Uses iGeom's getFacets to assign a mesh to a ModelEnt.
+   *  \param curve Pointer to the ModelEnt to be meshed
+   */
   virtual void facet(ModelEnt *curve);
-  virtual void set_senses( ModelEnt *ent);
+  /** \brief Sets the senses wrt all surfaces adjacent to the curve
+   * \param curve Pointer to the ModelEnt to be meshed
+   */
+  virtual void set_senses( ModelEnt *curve);
 
 public:  
   virtual void setup_this();
   virtual void execute_this();
+  /** \brief Sets the faceting tolerance and geom_reabs values. If
+       this function is not run before mk->setup(). Default values
+       for these parameters will be used. 
+   * \param faceting_tolerance value to be set for the faceting tolerance
+   * \param geom_resabs value to be set for the geom_resabs (used for vertex proximity checks)
+   */
   void set_facet_params(double faceting_tolerance = 0, double geom_resabs = 0);
 
   static bool can_mesh(iBase_EntityType dim)
