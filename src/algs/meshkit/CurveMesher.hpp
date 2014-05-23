@@ -33,15 +33,20 @@ private:
   double geom_res;
   MKCore *mk;
   MEntVector model_ents;
+
   /** \brief Returns the distance between an iGeom vertex and an iMesh vertex.
    * \param vtx1 iGeom vertex handle
    * \param vtx2 iMesh vertex handle
    */
-  virtual double length(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2);
-  /** \brief Uses iGeom's getFacets to assign a mesh to a ModelEnt.
-   *  \param curve Pointer to the ModelEnt to be meshed
+  virtual double vtx2vtx_dist(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2);
+
+  /** \brief Returns the distance between an iGeom vertex and an iMesh vertex.
+   * \param vtx1 iMesh vertex handle
+   * \param vtx2 iMesh vertex handle
    */
+
   virtual void facet(ModelEnt *curve);
+
   /** \brief Sets the senses wrt all surfaces adjacent to the curve
    * \param curve Pointer to the ModelEnt to be meshed
    */
@@ -50,6 +55,7 @@ private:
 public:  
   virtual void setup_this();
   virtual void execute_this();
+
   /** \brief Sets the faceting tolerance and geom_reabs values. If
        this function is not run before mk->setup(). Default values
        for these parameters will be used. 

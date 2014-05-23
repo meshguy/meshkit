@@ -163,7 +163,7 @@ void CurveMesher::execute_this()
     {
       //check the proximity of the single vertex to both the start and end points
       iGeom::EntityHandle end_vert_hand = end_verts[0]->geom_handle(); 
-      if(length(end_vert_hand,verts.front()) > geom_res || length(end_vert_hand,verts.back()) > geom_res)
+      if(vtx2vtx_dist(end_vert_hand,verts.front()) > geom_res || vtx2vtx_dist(end_vert_hand,verts.back()) > geom_res)
         std::cerr << "Warning: closed curve vertex not at the end of curve facets" << std::endl;
       //insert the single vertex in at the beginning and the end of the curve
       std::vector<moab::EntityHandle> dum_handles;
@@ -174,15 +174,15 @@ void CurveMesher::execute_this()
   else
     {
       //check the proximity of the front and end vertices to the start and end points, respectively
-      if(length(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
-         length(end_verts[1]->geom_handle(), verts.back()) > geom_res)
+      if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
+         vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
         {
           //try reversing the points
           std::reverse(verts.begin(), verts.end());
         }
           //check again, if this time it fails, give a warning
-          if(length(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
-             length(end_verts[1]->geom_handle(), verts.back()) > geom_res)
+          if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
+             vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
             {
               std::cerr << "Warning: vertices not at the ends of the curve" << std::endl;
             }
@@ -250,7 +250,7 @@ void CurveMesher::execute_this()
 }
 
 // should I be using an iMesh entity to do this comparison??
-double CurveMesher::length( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
+double CurveMesher::vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
 {
 
   double x1,y1,z1;
