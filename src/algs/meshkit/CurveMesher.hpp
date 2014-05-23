@@ -33,13 +33,13 @@ private:
   double geom_res;
   MKCore *mk;
   MEntVector model_ents;
+  virtual double length(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2);
+  virtual void facet(ModelEnt *curve);
+  virtual void set_senses( ModelEnt *ent);
 
 public:  
   virtual void setup_this();
   virtual void execute_this();
-  virtual void facet(ModelEnt *curve);
-  virtual void set_senses( ModelEnt *ent);
-  virtual double length(  iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2);
   void set_facet_params(double faceting_tolerance = 0, double geom_resabs = 0);
 
   static bool can_mesh(iBase_EntityType dim)
