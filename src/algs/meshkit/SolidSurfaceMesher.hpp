@@ -55,6 +55,8 @@ namespace MeshKit
     virtual const moab::EntityType* mesh_types_arr() const
     { return output_types(); }
 
+    void set_mesh_params(double faceting_tolerance, double geom_resabs);
+
   private:
     double facet_tol; 
     double geom_res; 
@@ -65,6 +67,7 @@ namespace MeshKit
      * \param surf ModelEntity for the surface to be meshed.
      */
     void facet(ModelEnt *surf);
+
   };
 
 }

@@ -51,11 +51,14 @@ void SolidSurfaceMesher::setup_this()
       //make sure that the model entity's children have been meshed
       MEntVector children; 
       me->get_adjacencies(1, children); 
+      std::cout << "Number of children found: " << children.size() << std::endl;
  
       for(MEntVector::iterator j = children.begin(); j != children.end(); j++)
 	{
 	  ModelEnt *child = *j; 
+	  std::cout << "Meshops List status: " << child->is_meshops_list_empty() << std::endl;
           if(child->is_meshops_list_empty()) scm-> add_modelent(child); 
+          if(child->is_meshops_list_empty()) std::cout << "Added a meshop to a child ModelEntity" << std::endl;
 	}
 
     }
@@ -101,7 +104,7 @@ void SolidSurfaceMesher::execute_this()
       //            FACET                //
       //---------------------------------//
    
-      //facet(me);
+      facet(me);
 
       me->set_meshed_state(COMPLETE_MESH);
     }
@@ -157,5 +160,13 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
   mk->imesh_instance()->addEntArrToSet(&tris[0],tris.size(),sh);
 
 }
+
+void SolidSurfaceMesher::set_mesh_params(double faceting_tolerance, double geom_resabs)
+{
+  //Assign the faceting values if they are passed into the function
+  if(faceting_tolerance) facet_tol = faceting_tolerance; 
+  if(geom_resabs) geom_res = geom_resabs; 
+}
+
 
 }
