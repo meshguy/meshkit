@@ -55,6 +55,11 @@ namespace MeshKit
     virtual const moab::EntityType* mesh_types_arr() const
     { return output_types(); }
 
+  private:
+    double facet_tol; 
+    double geom_res; 
+    MKCore *mk; 
+    MEntVector model_ents; 
   };
 
 }
