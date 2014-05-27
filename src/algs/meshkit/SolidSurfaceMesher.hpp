@@ -55,7 +55,7 @@ namespace MeshKit
     virtual const moab::EntityType* mesh_types_arr() const
     { return output_types(); }
 
-    void set_mesh_params(double faceting_tolerance, double geom_resabs);
+    void set_mesh_params(double faceting_tolerance=0, double geom_resabs=0);
 
   private:
     double facet_tol; 
