@@ -14,9 +14,26 @@
 namespace MeshKit
 {
 
-  SolidSurfaceMesher::SolidSurfaceMesher(MKCore *mk_core, const MEntVector &ments)
-    : MeshScheme(mk_core, ments)
-  {
-  }
+// Output mesh types for this class
+moab::EntityType SolidSurfaceMesher_types[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBTRI, moab::MBMAXTYPE};
+const moab::EntityType* SolidSurfaceMesher::output_types()
+{ return SolidSurfaceMesher_types; }
+
+SolidSurfaceMesher::SolidSurfaceMesher(MKCore *mk_core, const MEntVector &ments)
+  : MeshScheme(mk_core, ments)
+{
+}
+
+SolidSurfaceMesher::~SolidSurfaceMesher()
+{
+}
+
+void SolidSurfaceMesher::setup_this()
+{
+}
+
+void SolidSurfaceMesher::execute_this()
+{
+}
 
 }

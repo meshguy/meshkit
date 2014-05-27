@@ -26,8 +26,35 @@ namespace MeshKit
   class SolidSurfaceMesher : public MeshScheme
   {
    public:
+    /** \brief Construction function for the Solid CAD Surface Mesher
+     */
      SolidSurfaceMesher(MKCore *mk, const MEntVector &ments);
-   
+
+    /** \brief Decstructor function for the Solid CAD Surface Mesher
+     */
+    ~SolidSurfaceMesher();
+
+    virtual void setup_this();
+  
+    virtual void execute_this(); 
+
+    //Functions needed to register the new meshing class in MK
+    static bool can_mesh(iBase_EntityType dim)
+    { return iBase_FACE == dim; }
+
+    static bool can_mesh(ModelEnt *me)
+    { return canmesh_face(me); }
+ 
+    static const char* name()
+    {return "SolidSurfaceMesher";}
+
+    /** \brief Function that names the output types of this meshing class
+     */
+    static const moab::EntityType* output_types();
+  
+    virtual const moab::EntityType* mesh_types_arr() const
+    { return output_types(); }
+
   };
 
 }
