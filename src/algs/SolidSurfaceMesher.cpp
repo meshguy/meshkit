@@ -1,7 +1,7 @@
 
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/CADSurfaceMesher.hpp"
+#include "meshkit/SolidSurfaceMesher.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
 #include <iGeom.h>
@@ -14,7 +14,7 @@
 namespace MeshKit
 {
 
-  CADSurfaceMesher::CADSurfaceMesher(MKCore *mk_core, const MEntVector &ments)
+  SolidSurfaceMesher::SolidSurfaceMesher(MKCore *mk_core, const MEntVector &ments)
     : MeshScheme(mk_core, ments)
   {
   }

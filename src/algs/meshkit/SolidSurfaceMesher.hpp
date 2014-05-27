@@ -23,10 +23,10 @@ namespace MeshKit
 
   using namespace std; 
 
-  class CADSurfaceMesher : public MeshScheme
+  class SolidSurfaceMesher : public MeshScheme
   {
    public:
-     CADSurfaceMesher(MKCore *mk, const MEntVector &ments);
+     SolidSurfaceMesher(MKCore *mk, const MEntVector &ments);
    
   };
 
