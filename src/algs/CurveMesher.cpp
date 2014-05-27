@@ -165,11 +165,21 @@ void CurveMesher::execute_this()
       iGeom::EntityHandle end_vert_hand = end_verts[0]->geom_handle(); 
       if(vtx2vtx_dist(end_vert_hand,verts.front()) > geom_res || vtx2vtx_dist(end_vert_hand,verts.back()) > geom_res)
         std::cerr << "Warning: closed curve vertex not at the end of curve facets" << std::endl;
+
+      //capture the beginning and end vertex handles for deletion 
+      iMesh::EntityHandle front_vert_to_del = verts.front();
+      iMesh::EntityHandle back_vert_to_del = verts.back();
+
       //insert the single vertex in at the beginning and the end of the curve
       std::vector<moab::EntityHandle> dum_handles;
       end_verts[0]->get_mesh(0,dum_handles);
       verts.front() = IBEH(dum_handles[0]);
       verts.back() = IBEH(dum_handles[0]);
+     
+      //delete the old vertices
+      mk_core()->imesh_instance()->deleteEnt(front_vert_to_del);
+      mk_core()->imesh_instance()->deleteEnt(back_vert_to_del);
+
     }
   else
     {
@@ -186,7 +196,13 @@ void CurveMesher::execute_this()
             {
               std::cerr << "Warning: vertices not at the ends of the curve" << std::endl;
             }
-      //now replace start and end facet points with the child verts
+      //now replace start and end facet points with the child vert
+
+      //capture the beginning and end vertex handles for deletion 
+      iMesh::EntityHandle front_vert_to_del = verts.front();
+      iMesh::EntityHandle back_vert_to_del = verts.back();
+
+
       //this is all necessary to keep withing imesh interface
       std::vector<moab::EntityHandle> dum_handles;
       end_verts[0]->get_mesh(0,dum_handles);
@@ -194,6 +210,11 @@ void CurveMesher::execute_this()
       dum_handles.clear();
       end_verts[1]->get_mesh(0,dum_handles);
       verts.back() = IBEH(dum_handles[0]);
+
+      //delete the old vertices
+      mk_core()->imesh_instance()->deleteEnt(front_vert_to_del);
+      mk_core()->imesh_instance()->deleteEnt(back_vert_to_del);
+
     }
     
   //now create the edges with the vertices we've chosen

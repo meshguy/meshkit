@@ -154,9 +154,18 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
           if(vtx2vtx_dist(geom_verts[k]->geom_handle(),verts[j]) < geom_res)
 	    {
               //replace the vertex with the geometric vertex
+
+	      //capture vert to remove from the list
+	      iMesh::EntityHandle vert_to_del = verts[j];
+                
+              //replace the vertex with the geom vertex in the vector
 	      std::vector<moab::EntityHandle> dum_handle;
 	      geom_verts[k]->get_mesh(0, dum_handle);
               verts[j] = IBEH(dum_handle[0]);
+
+              //delete the former vertex
+              mk_core()->imesh_instance()->deleteEnt(vert_to_del);
+
               matches++;
 	    }
 	}
