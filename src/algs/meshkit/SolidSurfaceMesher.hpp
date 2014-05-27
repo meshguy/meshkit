@@ -60,6 +60,11 @@ namespace MeshKit
     double geom_res; 
     MKCore *mk; 
     MEntVector model_ents; 
+    
+    /** \brief Function to for creating triangles and adding them to the ModelEntity's meshset
+     * \param surf ModelEntity for the surface to be meshed.
+     */
+    void facet(ModelEnt *surf);
   };
 
 }
