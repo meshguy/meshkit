@@ -62,7 +62,7 @@ public:
    * \param faceting_tolerance value to be set for the faceting tolerance
    * \param geom_resabs value to be set for the geom_resabs (used for vertex proximity checks)
    */
-  void set_facet_params(double faceting_tolerance = 0, double geom_resabs = 0);
+  void set_mesh_params(double faceting_tolerance = 0, double geom_resabs = 0);
 
   static bool can_mesh(iBase_EntityType dim)
   { return iBase_EDGE == dim; }

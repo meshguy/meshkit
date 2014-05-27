@@ -264,7 +264,7 @@ double CurveMesher::vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle 
   return sqrt(dist);
 }
 
-void CurveMesher::set_facet_params(double faceting_tolerance, double geom_resabs)
+void CurveMesher::set_mesh_params(double faceting_tolerance, double geom_resabs)
 {
   //Assign the faceting values if they are passed into the function
   if(faceting_tolerance) facet_tol = faceting_tolerance; 
