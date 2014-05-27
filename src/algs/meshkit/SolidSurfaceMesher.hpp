@@ -68,6 +68,8 @@ namespace MeshKit
      */
     void facet(ModelEnt *surf);
 
+    double vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2); 
+
   };
 
 }

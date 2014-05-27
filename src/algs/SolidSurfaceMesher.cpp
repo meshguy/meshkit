@@ -135,6 +135,40 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
       verts.push_back(v);
     }
       
+
+  // get the geometric vertices of the surface and merge them into the mesh by 
+  // a proximity check
+
+  //get the geometric vertices
+  MEntVector geom_verts;
+  surf->get_adjacencies(0,geom_verts);
+  unsigned int matches = 0;
+ 
+  //loop over all the vertices we've created
+  for(unsigned int j=0; j<verts.size() ; j++)
+    {
+      //loop over all geometric vertices adjacent to this surface
+      for(unsigned int k=0; k<geom_verts.size(); k++)
+	{
+          // if thhe current vert is within the geom_res proximity of a geometric vert
+          if(vtx2vtx_dist(geom_verts[k]->geom_handle(),verts[j]) < geom_res)
+	    {
+              //replace the vertex with the geometric vertex
+	      std::vector<moab::EntityHandle> dum_handle;
+	      geom_verts[k]->get_mesh(0, dum_handle);
+              verts[j] = IBEH(dum_handle[0]);
+              matches++;
+	    }
+	}
+    }
+
+  //now check that we have matched the correct number of vertices
+  if (matches != geom_verts.size())
+    {
+      if(matches > geom_verts.size()) std::cout << "Warning: coincident vertices in surface " << surf->id() << std::endl;
+      if(matches < geom_verts.size()) std::cout << "Warning: one or more geom vertices could not be matched in surface " << surf->id() << std::endl;
+    }
+
   //vector for keeping track of the triangles
   std::vector<iBase_EntityHandle> tris;
 
@@ -166,6 +200,20 @@ void SolidSurfaceMesher::set_mesh_params(double faceting_tolerance, double geom_
   //Assign the faceting values if they are passed into the function
   if(faceting_tolerance) facet_tol = faceting_tolerance; 
   if(geom_resabs) geom_res = geom_resabs; 
+}
+
+double SolidSurfaceMesher::vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
+{
+
+  double x1,y1,z1;
+  double x2,y2,z2;
+
+  mk_core()->igeom_instance()->getVtxCoord( vtx1, x1, y1, z1);
+  mk_core()->imesh_instance()->getVtxCoord( vtx2, x2, y2, z2);
+
+  double dist = pow((x1-x2),2) + pow((y1-y2),2) + pow((z1-z2),2);
+
+  return sqrt(dist);
 }
 
 
