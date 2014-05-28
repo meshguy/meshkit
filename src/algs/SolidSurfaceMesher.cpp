@@ -56,9 +56,7 @@ void SolidSurfaceMesher::setup_this()
       for(MEntVector::iterator j = children.begin(); j != children.end(); j++)
 	{
 	  ModelEnt *child = *j; 
-	  std::cout << "Meshops List status: " << child->is_meshops_list_empty() << std::endl;
           if(child->is_meshops_list_empty()) scm-> add_modelent(child); 
-          if(child->is_meshops_list_empty()) std::cout << "Added a meshop to a child ModelEntity" << std::endl;
 	}
 
     }
@@ -120,8 +118,6 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
   std::vector<double> pnts;
   std::vector<int> conn;
   mk->igeom_instance()->getFacets(h,facet_tol,pnts,conn);
-  std::cout << "Triangles returned from getFacets: " << pnts.size()/3 << std::endl;
-  std::cout << "Facets returned from getFacets: " << conn.size()/3 << std::endl;
   
   //create vector for keeping track of the vertices
   std::vector<iBase_EntityHandle> verts;
@@ -182,7 +178,7 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
   std::vector<iBase_EntityHandle> tris;
 
   //loop over the connectivity
-  for(unsigned int j=0; j<conn.size()-2; j+=3)
+  for(unsigned int j = 0; j < conn.size()-2; j+=3)
     {
       //get the appropriate points for a triangle and add them to a vector
       std::vector<iBase_EntityHandle> tri_verts; 
@@ -192,15 +188,15 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
 
       //create a new triangle handle
       iBase_EntityHandle t; 
-      mk->imesh_instance()->createEnt(iMesh_TRIANGLE, &tri_verts[0],3,t);
+      mk->imesh_instance()->createEnt(iMesh_TRIANGLE, &tri_verts[0], 3, t);
       tri_verts.clear();
       tris.push_back(t);
     }
   std::cout << "Created " << tris.size() << " triangles" << std::endl;
 
   //add verticess and edges to the entity set
-  mk->imesh_instance()->addEntArrToSet(&verts[0],verts.size(),sh);
-  mk->imesh_instance()->addEntArrToSet(&tris[0],tris.size(),sh);
+  mk->imesh_instance()->addEntArrToSet(&verts[0], verts.size(), sh);
+  mk->imesh_instance()->addEntArrToSet(&tris[0], tris.size(), sh);
 
 }
 
@@ -211,19 +207,18 @@ void SolidSurfaceMesher::set_mesh_params(double faceting_tolerance, double geom_
   if(geom_resabs) geom_res = geom_resabs; 
 }
 
-double SolidSurfaceMesher::vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
+double SolidSurfaceMesher::vtx2vtx_dist(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
 {
 
   double x1,y1,z1;
   double x2,y2,z2;
 
-  mk_core()->igeom_instance()->getVtxCoord( vtx1, x1, y1, z1);
-  mk_core()->imesh_instance()->getVtxCoord( vtx2, x2, y2, z2);
+  mk_core()->igeom_instance()->getVtxCoord(vtx1, x1, y1, z1);
+  mk_core()->imesh_instance()->getVtxCoord(vtx2, x2, y2, z2);
 
   double dist = pow((x1-x2),2) + pow((y1-y2),2) + pow((z1-z2),2);
 
   return sqrt(dist);
 }
-
 
 }

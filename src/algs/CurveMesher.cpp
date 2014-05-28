@@ -13,7 +13,7 @@ namespace MeshKit
 {
 // Construction Function for CurveMesher
 
-  moab::EntityType CurveMesher_types[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBMAXTYPE};
+moab::EntityType CurveMesher_types[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBMAXTYPE};
 const moab::EntityType* CurveMesher::output_types()
   { return CurveMesher_types; }
 
@@ -84,7 +84,7 @@ void CurveMesher::execute_this()
 
   //create iMesh tag for categories
   iBase_TagHandle category_tag;
-  mk_core()->imesh_instance()->createTag(CATEGORY_TAG_NAME,CATEGORY_TAG_SIZE,iBase_BYTES, category_tag);
+  mk_core()->imesh_instance()->createTag(CATEGORY_TAG_NAME, CATEGORY_TAG_SIZE, iBase_BYTES, category_tag);
 
   MEntVector::iterator i;
   for(i = model_ents.begin(); i != model_ents.end(); i++)
@@ -121,9 +121,6 @@ void CurveMesher::execute_this()
   std::vector<double> pnts;
   std::vector<int> conn;
   mk_core()->igeom_instance()->getFacets(h,facet_tol,pnts,conn);
-  std::cout << "Points returned from getFacets: " << pnts.size()/3 << std::endl;
-  std::cout << "Facets returned from getFacets: " << conn.size() << std::endl;
-
 
   //create vector for keeping track of the vertices
   std::vector<iBase_EntityHandle> verts;
@@ -137,7 +134,7 @@ void CurveMesher::execute_this()
       mk_core()->imesh_instance()->createVtx(pnts[j],pnts[j+1],pnts[j+2],v);
       verts.push_back(v);
     }
-  //std::cout << "Number of verts created: " << verts.size() << std::endl;
+
   //--------------------------------------------------//
   //check that the start and end vertices are within  //
   //the geom resabs of the facet verts                //
@@ -206,10 +203,10 @@ void CurveMesher::execute_this()
 
       //this is all necessary to keep withing imesh interface
       std::vector<moab::EntityHandle> dum_handles;
-      end_verts[0]->get_mesh(0,dum_handles);
+      end_verts[0]->get_mesh(0, dum_handles);
       verts.front() = IBEH(dum_handles[0]);
       dum_handles.clear();
-      end_verts[1]->get_mesh(0,dum_handles);
+      end_verts[1]->get_mesh(0, dum_handles);
       verts.back() = IBEH(dum_handles[0]);
 
       //delete the old vertices
@@ -227,13 +224,13 @@ void CurveMesher::execute_this()
     {
       //create edges
       iBase_EntityHandle e; 
-      mk_core()->imesh_instance()->createEnt(iMesh_LINE_SEGMENT, &verts[j],2,e);
+      mk_core()->imesh_instance()->createEnt(iMesh_LINE_SEGMENT, &verts[j], 2, e);
       edges.push_back(e);
     }
 
   //add vertices and edges to the entity set
-  mk_core()->imesh_instance()->addEntArrToSet(&verts[0],verts.size(),sh);
-  mk_core()->imesh_instance()->addEntArrToSet(&edges[0],edges.size(),sh);
+  mk_core()->imesh_instance()->addEntArrToSet(&verts[0], verts.size(), sh);
+  mk_core()->imesh_instance()->addEntArrToSet(&edges[0], edges.size(), sh);
 }
 
   void CurveMesher::set_senses(ModelEnt *curve)
@@ -278,8 +275,8 @@ double CurveMesher::vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle 
   double x1,y1,z1;
   double x2,y2,z2;
 
-  mk_core()->igeom_instance()->getVtxCoord( vtx1, x1, y1, z1);
-  mk_core()->imesh_instance()->getVtxCoord( vtx2, x2, y2, z2);
+  mk_core()->igeom_instance()->getVtxCoord(vtx1, x1, y1, z1);
+  mk_core()->imesh_instance()->getVtxCoord(vtx2, x2, y2, z2);
 
   double dist = pow((x1-x2),2) + pow((y1-y2),2) + pow((z1-z2),2);
 
