@@ -189,13 +189,14 @@ void CurveMesher::execute_this()
         {
           //try reversing the points
           std::reverse(verts.begin(), verts.end());
-        }
+
           //check again, if this time it fails, give a warning
           if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
              vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
             {
               std::cerr << "Warning: vertices not at the ends of the curve" << std::endl;
             }
+         }
       //now replace start and end facet points with the child vert
 
       //capture the beginning and end vertex handles for deletion 
