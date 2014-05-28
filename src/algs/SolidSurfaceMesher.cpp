@@ -2,6 +2,7 @@
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SolidSurfaceMesher.hpp"
+#include "meshkit/CurveMesher.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
 #include <iGeom.h>
@@ -32,10 +33,20 @@ SolidSurfaceMesher::~SolidSurfaceMesher()
 
 void SolidSurfaceMesher::setup_this()
 {
+  //set the faceting parameters to default values if they are not already set
+  
+  //set the faceting tolerance
+  if(!facet_tol) facet_tol = 1e-4; 
+  
+  //set the geom_resabs value
+  if(!geom_res) geom_res = 1e-6;
 
   //create a solid curve mesher 
-  MeshOp *scm = (MeshOp*) mk_core()->construct_meshop("CurveMesher");
- 
+  CurveMesher *scm = (CurveMesher*) mk_core()->construct_meshop("CurveMesher");
+
+  //set the parameters of the curvemesher to match those of the surface mesher
+  scm->set_mesh_params(facet_tol,geom_res);
+
   MEntVector::iterator i; 
   for(i = model_ents.begin(); i != model_ents.end(); i++)
     {
@@ -63,14 +74,6 @@ void SolidSurfaceMesher::setup_this()
 
   //have the children be meshed first
   mk_core()->insert_node(scm, this, mk_core()->root_node());
-
-  //set the faceting parameters to default values if they are not already set
-  
-  //set the faceting tolerance
-  if(!facet_tol) facet_tol = 1e-4; 
-  
-  //set the geom_resabs value
-  if(!geom_res) geom_res = 1e-6;
 
 }
 
