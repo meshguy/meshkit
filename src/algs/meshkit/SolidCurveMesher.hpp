@@ -32,7 +32,6 @@ private:
         double facet_tol;
         double geom_res;
         MKCore *mk;
-        MEntVector model_ents;
 
         /** \brief Returns the distance between an iGeom vertex and an iMesh vertex.
          * \param vtx1 iGeom vertex handle

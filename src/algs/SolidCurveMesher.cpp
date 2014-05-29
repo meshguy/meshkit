@@ -22,7 +22,6 @@ SolidCurveMesher::SolidCurveMesher(MKCore *mk_core, const MEntVector &ments)
   : MeshScheme(mk_core, ments)
 {
   mk = mk_core;
-  model_ents = ments;
 }
 
 // Destructor Function for SolidCurveMesher
