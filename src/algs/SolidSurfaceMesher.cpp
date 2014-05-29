@@ -2,7 +2,7 @@
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SolidSurfaceMesher.hpp"
-#include "meshkit/CurveMesher.hpp"
+#include "meshkit/SolidCurveMesher.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
 #include <iGeom.h>
@@ -42,7 +42,7 @@ void SolidSurfaceMesher::setup_this()
   if(!geom_res) geom_res = 1e-6;
 
   //create a solid curve mesher 
-  CurveMesher *scm = (CurveMesher*) mk_core()->construct_meshop("CurveMesher");
+  SolidCurveMesher *scm = (SolidCurveMesher*) mk_core()->construct_meshop("SolidCurveMesher");
 
   //set the parameters of the curvemesher to match those of the surface mesher
   scm->set_mesh_params(facet_tol,geom_res);

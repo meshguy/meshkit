@@ -22,12 +22,12 @@ namespace MeshKit
  
 using namespace std;
 
-class CurveMesher : public MeshScheme
+class SolidCurveMesher : public MeshScheme
 {
 public: 
-       CurveMesher(MKCore *mk, const MEntVector &ments);
+       SolidCurveMesher(MKCore *mk, const MEntVector &ments);
 
-       ~CurveMesher();
+       ~SolidCurveMesher();
 private:
         double facet_tol;
         double geom_res;
@@ -81,7 +81,7 @@ public:
 
       /** \brief Get the class name */
       static const char* name()
-      {return "CurveMesher";}
+      {return "SolidCurveMesher";}
 
       /** \brief Function that names the output types of this meshing class
        *  \return array terminated with \c moab::MBMAXTYPE

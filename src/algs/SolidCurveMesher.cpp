@@ -1,6 +1,6 @@
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/CurveMesher.hpp"
+#include "meshkit/SolidCurveMesher.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
 #include <iGeom.h>
@@ -11,26 +11,26 @@
 
 namespace MeshKit
 {
-// Construction Function for CurveMesher
+// Construction Function for SolidCurveMesher
 
-moab::EntityType CurveMesher_types[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBMAXTYPE};
-const moab::EntityType* CurveMesher::output_types()
-  { return CurveMesher_types; }
+moab::EntityType SolidCurveMesher_types[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBMAXTYPE};
+const moab::EntityType* SolidCurveMesher::output_types()
+  { return SolidCurveMesher_types; }
 
 
-CurveMesher::CurveMesher(MKCore *mk_core, const MEntVector &ments)
+SolidCurveMesher::SolidCurveMesher(MKCore *mk_core, const MEntVector &ments)
   : MeshScheme(mk_core, ments)
 {
   mk = mk_core;
   model_ents = ments;
 }
 
-// Destructor Function for Curvemesher
-CurveMesher::~CurveMesher()
+// Destructor Function for SolidCurveMesher
+SolidCurveMesher::~SolidCurveMesher()
 {
 }
 
-void CurveMesher::setup_this()
+void SolidCurveMesher::setup_this()
 {
 
   //create a vertex mesher
@@ -74,7 +74,7 @@ void CurveMesher::setup_this()
 
 }
 
-void CurveMesher::execute_this()
+void SolidCurveMesher::execute_this()
 {
  
   //setup the category tag value  
@@ -110,7 +110,7 @@ void CurveMesher::execute_this()
     }
 }
 
- void CurveMesher::facet(ModelEnt *curve)
+ void SolidCurveMesher::facet(ModelEnt *curve)
 {
   iGeom::EntityHandle h = curve->geom_handle();
   iMesh::EntitySetHandle sh = IBSH(curve->mesh_handle());
@@ -231,7 +231,7 @@ void CurveMesher::execute_this()
   mk_core()->imesh_instance()->addEntArrToSet(&edges[0], edges.size(), sh);
 }
 
-  void CurveMesher::set_senses(ModelEnt *curve)
+void SolidCurveMesher::set_senses(ModelEnt *curve)
 {
  
   //get the geom_handle for this curve
@@ -267,7 +267,7 @@ void CurveMesher::execute_this()
 }
 
 // should I be using an iMesh entity to do this comparison??
-double CurveMesher::vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
+double SolidCurveMesher::vtx2vtx_dist(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
 {
 
   double x1,y1,z1;
@@ -281,7 +281,7 @@ double CurveMesher::vtx2vtx_dist( iGeom::EntityHandle vtx1, iMesh::EntityHandle 
   return sqrt(dist);
 }
 
-void CurveMesher::set_mesh_params(double faceting_tolerance, double geom_resabs)
+void SolidCurveMesher::set_mesh_params(double faceting_tolerance, double geom_resabs)
 {
   //Assign the faceting values if they are passed into the function
   if(faceting_tolerance) facet_tol = faceting_tolerance; 
