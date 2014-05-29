@@ -47,15 +47,14 @@ void SolidSurfaceMesher::setup_this()
   //set the parameters of the curvemesher to match those of the surface mesher
   scm->set_mesh_params(facet_tol,geom_res);
 
-  MEntVector::iterator i; 
-  for(i = model_ents.begin(); i != model_ents.end(); i++)
+  for(MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
     {
-      ModelEnt *me = *i;
+      ModelEnt *me = mit->first;
       //do an initial check that the model entity is of the correct dimension
       if(me->dimension() != 2)
 	{
 	  std::cout << "Found a model entity with an incorrect dimension for this mesher" << std::endl;
-          model_ents.erase(i); 
+          mentSelection.erase(mit); 
           continue; 
 	}
 
@@ -87,10 +86,9 @@ void SolidSurfaceMesher::execute_this()
   iBase_TagHandle category_tag; 
   mk_core()->imesh_instance()->createTag(CATEGORY_TAG_NAME, CATEGORY_TAG_SIZE, iBase_BYTES, category_tag); 
 
-  MEntVector::iterator i; 
-  for(i = model_ents.begin(); i !=model_ents.end(); i++)
+  for(MEntSelection::iterator mit = mentSelection.begin(); mit !=mentSelection.end(); mit++)
     {
-      ModelEnt *me = *i; 
+      ModelEnt *me = mit->first; 
       
       //get the mesh set handle from the ModelEnt
       iMesh::EntitySetHandle msh = IBSH(me->mesh_handle());
