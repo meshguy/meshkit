@@ -49,7 +49,7 @@
  - meshfile \verbatim     <string>    input mesh file name support by moab reader. \endverbatim
  - surfaces  \verbatim    <integer>   id of the surface on which boundary layer needs to be created.  \endverbatim
  - neumannset  \verbatim  <integer>   id of the neumann set on which boundary layer needs to be created.  \endverbatim
- - material    \verbatim  <integer>   material id to which the newly created hexes will be assigned, default is 999. \endverbatim
+ - material    \verbatim  <integer>   material id to which the newly created hexes will be assigned, default is 999999. \endverbatim
  - thickness  \verbatim   <double>    boundary layer thickness. \endverbatim
  - debug     \verbatim    <1 or 0>    print all the debug o/p if set to 1. A .log file is always created.  \endverbatim
  - outfile   \verbatim    <string>    name of output mesh file, can be any format that is supported by moab.  \endverbatim

@@ -9,7 +9,6 @@ using namespace MeshKit;
 #include <string.h>
 
 void PostBL:: Algo2(){
-
     m_LogFile << "\nIn execute this : creating boundary layer elements.." <<  std::endl;
     // start the timer
     CClock Timer;
@@ -22,6 +21,22 @@ void PostBL:: Algo2(){
 
     // load specified mesh file
     IBERRCHK(imesh->load(0, m_MeshFile.c_str(),0), *imesh);
+
+
+    // if no NS specified, take all d-1 elements as BL input
+    if (m_NeumannSet == -1 && m_SurfId == -1) {
+        // create a neumann set with id 99999 in the model and set it for BL generation
+        moab::Range neuEnts;
+        moab::EntityHandle neuEntSet;
+        moab::Tag neuTag;
+        mb->create_meshset(moab::MESHSET_SET, neuEntSet);
+        mb->get_entities_by_dimension(mb->get_root_set(), 2, neuEnts, true);
+        mb->add_entities(neuEntSet, neuEnts);
+        mb->tag_get_handle("NEUMANN_SET", neuTag);
+        m_NeumannSet = 999999;
+        mb->tag_set_data(neuTag, &neuEntSet, 1, (void*) &m_NeumannSet);
+    }
+
     moab::Range all_elems, all_verts;
     MBERRCHK(mb->get_entities_by_dimension(0, 3, all_elems,true),mb);
     if (all_elems.size() == 0)
@@ -85,6 +100,7 @@ void PostBL:: Algo2(){
     moab::EntityHandle s1;
     moab::Range quads, nodes,edges, fixmat_ents;
     int dims; // variable to store global id of boundary layer specified in the input file
+
 
     // Method 1: INPUT by NeumannSet
     if(m_NeumannSet != -1 && this_set != 0){
@@ -152,11 +168,11 @@ void PostBL:: Algo2(){
     node_status.resize(nodes.size());
     moab::Range hexes, hex_edge, quad_verts;
     double coords_new_quad[3];
-    moab::EntityHandle hex, hex1;
+    moab::EntityHandle hex, hex1, hex2;
     int qcount = 0;
 
     //size of the following is based on element type
-    std::vector<moab::EntityHandle> conn, qconn, adj_qconn, tri_conn,
+    std::vector<moab::EntityHandle> conn, qconn, adj_qconn, tri_conn, tet_conn,
             new_vert(m_Intervals*nodes.size()), old_hex_conn, adj_hexes, adj_quads, adj_hex_nodes1;
     moab::CartVect surf_normal;
 
@@ -181,13 +197,16 @@ void PostBL:: Algo2(){
     }
     else if(mb->type_from_handle(old_hex[0]) == MBTET){
         m_Conn = 4;
-        m_HConn = 6;
         m_BElemNodes = 3;
         //allocating based on element type - thrice the number of elements
-        if(hybrid)
+        if(hybrid){
+            m_HConn = 6;
             conn.resize(m_Intervals*6);
-        else
-            conn.resize(2*m_Intervals*m_Conn);
+        }
+        else{
+            tet_conn.resize(3*m_Intervals*m_Conn);
+            conn.resize(3*m_Intervals*m_Conn);
+        }
         qconn.resize(m_BElemNodes), adj_qconn.resize(m_BElemNodes),
                 old_hex_conn.resize(m_Conn), adj_hex_nodes1.resize(m_Conn);
     }
@@ -313,18 +332,25 @@ void PostBL:: Algo2(){
     // get the normal to the plane of the 2D mesh
     if(m_GD==2)
         get_normal_quad (old_hex_conn, surf_normal);
-    if(found == 1 && m_Material !=999){
+    if(found == 1 && m_Material !=999999){
         m_LogFile << "Found material set with id " << m_Material << std::endl;
     }
-    else if (m_Material !=999 && found == 0){
+    else if (m_Material !=999999 && found == 0){
         // material set found, but non-existant. Now create this material set
         m_LogFile << "Creating material set with id " << m_Material << std::endl;
         MBERRCHK(mb->create_meshset(moab::MESHSET_SET, mthis_set, 1), mb);
         MBERRCHK(mb->tag_set_data(MTag, &mthis_set, 1, &m_Material), mb);
     }
-    else if (m_Material == 999 && found == 0){
+    else if (m_Material == 999999 && found == 0){
         //
         m_LogFile << "Use old materials for new boundary layer elements. No material specified." << std::endl;
+
+        // If no material tag exists in the model create one now
+        if((int)m_sets.size() == 0){
+            m_LogFile << "Creating material set with id " << m_Material << std::endl;
+            MBERRCHK(mb->create_meshset(moab::MESHSET_SET, mthis_set, 1), mb);
+            MBERRCHK(mb->tag_set_data(MTag, &mthis_set, 1, &m_Material), mb);
+        }
     }
     else{
         m_LogFile << "Unhandled case" << std::endl;
@@ -697,7 +723,7 @@ void PostBL:: Algo2(){
                         conn[m_Conn*j + m_BElemNodes + 1 -i] = new_vert[nid + m_Intervals - 2*j -1];
                     }
                 }
-                else if(m_Conn == 4 && m_BElemNodes == 3 && hybrid == true){ // make wedges aka prisms for tet mesh
+                else if(m_Conn == 4 && m_BElemNodes == 3){ // && hybrid == true make wedges aka prisms for tet mesh
                     int nid = node_tag_id*m_Intervals+j;
                     if(m_Intervals == 1){
                         conn[m_Conn*j +i] = qconn[i];
@@ -735,10 +761,37 @@ void PostBL:: Algo2(){
                         conn[m_HConn*j + m_BElemNodes + 1 - i] = new_vert[nid + m_Intervals - 2*j -1];
                     }
                 }
+                else {
+                    std::cout << "ERROR: cannot create BL elements: element type not supported." << std::endl;
+                    exit(0);
+                }
             }
         }
 
         //TODO: Set Connectivity of tet's, break prisms into 3 tets, Another loop is required.
+
+        if(m_Conn == 4 && m_BElemNodes == 3 && hybrid == false){
+            for(int c=0; c<m_Intervals; c++){
+                // first tet
+                tet_conn[m_Conn*c*2] =     conn[c*m_HConn + 0];
+                tet_conn[m_Conn*c*2 + 1] = conn[c*m_HConn + 4];
+                tet_conn[m_Conn*c*2 + 2] = conn[c*m_HConn + 5];
+                tet_conn[m_Conn*c*2 + 3] = conn[c*m_HConn + 3];
+                // middle tet
+                tet_conn[m_Conn*c*2 + 4] = conn[c*m_HConn + 0];
+                tet_conn[m_Conn*c*2 + 5] = conn[c*m_HConn + 1];
+                tet_conn[m_Conn*c*2 + 6] = conn[c*m_HConn + 2];
+                tet_conn[m_Conn*c*2 + 7] = conn[c*m_HConn + 5];
+                //last tet
+                tet_conn[m_Conn*c*2 + 8] = conn[c*m_HConn + 0];
+                tet_conn[m_Conn*c*2 + 9] = conn[c*m_HConn + 1];
+                tet_conn[m_Conn*c*2 + 10] = conn[c*m_HConn + 5];
+                tet_conn[m_Conn*c*2 + 11] = conn[c*m_HConn + 4];
+            }
+        }
+
+
+
         if(m_Conn == 3 && m_BElemNodes == 2 && hybrid == false){
             for(int c=0; c<m_Intervals; c++){
                 if(tri_sch == 1){
@@ -786,6 +839,13 @@ void PostBL:: Algo2(){
                 //       MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
                 //        MBERRCHK(mb->add_entities(smooth_set, &hex1, 1), mb);
             }
+            else if(m_Conn==4 && m_GD ==3 && hybrid == false){
+                MBERRCHK(mb->create_element(MBTET, &tet_conn[j*m_Conn*3], m_Conn, hex),mb);
+                MBERRCHK(mb->create_element(MBTET, &tet_conn[j*m_Conn*3+4], m_Conn, hex1),mb);
+                MBERRCHK(mb->create_element(MBTET, &tet_conn[j*m_Conn*3+8], m_Conn, hex2),mb);
+                //       MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
+                //        MBERRCHK(mb->add_entities(smooth_set, &hex1, 1), mb);
+            }
             // add this hex to a block
             moab::Range adj_hex_for_mat;
             // int hmat_id = 0;
@@ -815,6 +875,10 @@ void PostBL:: Algo2(){
                         MBERRCHK(mb->add_entities(mat_set, &hex, 1), mb);
                         if(m_Conn==3 && m_GD ==2 && hybrid == false)
                             MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
+                        if(m_Conn==4 && m_GD ==3 && hybrid == false){
+                            MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
+                            MBERRCHK(mb->add_entities(mthis_set, &hex2, 1), mb);
+                        }
                     }
                 }
 
@@ -828,6 +892,10 @@ void PostBL:: Algo2(){
                 MBERRCHK(mb->add_entities(mthis_set, &hex, 1), mb);
                 if(m_Conn==3 && m_GD ==2 && hybrid == false)
                     MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
+                if(m_Conn==4 && m_GD ==3 && hybrid == false){
+                    MBERRCHK(mb->add_entities(mthis_set, &hex1, 1), mb);
+                    MBERRCHK(mb->add_entities(mthis_set, &hex2, 1), mb);
+                }
 
             }
             // mark entities for smoothing

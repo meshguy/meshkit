@@ -27,7 +27,7 @@ PostBL::PostBL( MKCore *mk, const MEntVector &me_vec)
     debug = false;
     hybrid = false;
     m_NeumannSet = -1;
-    m_Material = 999;
+    m_Material = 999999;
     m_nLineNumber = 0;
     szComment = "!";
     MAXCHARS = 300;
@@ -261,11 +261,11 @@ void PostBL::execute_this()
         //        for(int i=0; i<nodes.size(); i++){
         //            std::cout << " Node " << i << " tag value " << all_bl[i] << std::endl;
         //          }
-        if(found == 1 && m_Material !=999){
+        if(found == 1 && m_Material !=999999){
             m_LogFile << "Found material set with id " << m_Material << std::endl;
         }
         else{
-            // No material set found, creating material set 999 for BL elements
+            // No material set found, creating material set 999999 for BL elements
             m_LogFile << "Creating material set with id " << m_Material << std::endl;
             MBERRCHK(mb->create_meshset(moab::MESHSET_SET, mthis_set, 1), mb);
             MBERRCHK(mb->tag_set_data(MTag, &mthis_set, 1, &m_Material), mb);
