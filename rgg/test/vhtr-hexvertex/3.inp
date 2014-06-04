@@ -2,8 +2,6 @@
 ! Full Hexagonal Control Block With Coolant On Bottom Left
 ! #############################################################################################################
 !
-Geometry Volume
-GeometryType Hexagonal  
 !                                     
 Materials 5 Mat_C2Coolant C02 Mat_C1Coolant C01 Mat_OCoolant C1Out Mat_Block G1  Mat_Control R1      
 !
@@ -35,12 +33,7 @@ Assembly 11
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
-RadialMeshSize 0.3
-AxialMeshSize 50
-EdgeInterval 72
-Center
 Rotate Z -60
-Center
 MaterialSet_StartId 300
-CreateSideset No
+Center
 END ! This is a must

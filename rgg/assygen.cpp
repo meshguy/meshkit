@@ -30,9 +30,20 @@ int main (int argc, char *argv[])
   err =  TheNR.PrepareIO (argc, argv);
   ERRORR("Error in function PrepareIO", err);
  
+  if (TheNR.have_common == true){
+      err = TheNR.ReadCommonInp();
+      ERRORR("Error reading common.inp file", err);
+    }
+
   //count pin cylinders and cell material, needed for setting array size before actual read
   err = TheNR.ReadInputPhase1 ();
   ERRORR("Error in function ReadInputPhase1", err);
+
+  // again read common.inp, this is needed since duct size is not populated and setting axial meshsize needs it
+  if (TheNR.have_common == true){
+      err = TheNR.ReadCommonInp();
+      ERRORR("Error reading common.inp file", err);
+    }
 
   // read the problem size and create pincell
   TheNR.ReadAndCreate ();

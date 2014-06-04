@@ -2,8 +2,6 @@
 ! First Corner 60 degree Hexagonal Block
 ! #############################################################################################################
 !
-Geometry Volume
-GeometryType Hexagonal  
 !                                     
 Materials 2 Mat_OCoolant C1Out Mat_Block G1       
 !
@@ -32,15 +30,11 @@ Assembly 11
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
-RadialMeshSize 0.3
-AxialMeshSize 50
-EdgeInterval 72
-Center
 Rotate Z 30
 Section X 0
 Rotate Z 210
 Section Y 0
 Rotate Z 240
 MaterialSet_StartId 1100
-CreateSideset No
+Center
 END ! This is a must

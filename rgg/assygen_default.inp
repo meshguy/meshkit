@@ -1,10 +1,7 @@
 ! #############################################################################################################
 ! Default input file used in make check for assygen program
+! Note: Some keywords are specified through common.inp file
 ! #############################################################################################################
-!
-MeshType Tet	
-GeomEngine ACIS
-GeometryType Rectangular 
 !
 Materials 4 Mat_Block G1 Mat_Coolant C1 PWR_RF_R_01 M3  Material M4
 !
@@ -27,16 +24,12 @@ RF RF RF RF
 XX XX XX XX
 XX XX XX XX
 RF RF RF RF
-TetMeshSize 2.0
-CreateSideset No
 list_materialset_startid 2 &
 1000 &
 5000
 list_neumannset_startid 2 &
 10 &
 50
-MergeTolerance 1e-6
 CreateMatFiles 2
-info on
 END     ! This is a must  
 

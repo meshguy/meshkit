@@ -1,9 +1,8 @@
 /*********************************************
-Feb,10
 Reactor Geometry Generator
 Argonne National Laboratory
 
-file with input o/p funtions
+AssyGen input o/p and functions
 *********************************************/
 #include <sstream>
 #include "nrgen.hpp"
@@ -55,6 +54,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
           m_szSchFile = m_szFile+".template.jou";
           m_szAssmInfo = m_szFile + "_info.csv";
           m_szLogFile = m_szFile + ".log";
+          m_szCommonFile = "common.inp";
         }
       else if (3 == argc) {
           int i=1;// will loop through arguments, and process them
@@ -107,6 +107,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
           m_szSchFile = m_szFile+".template.jou";
           m_szAssmInfo = m_szFile + "_info.csv";
           m_szLogFile = m_szFile + ".log";
+          m_szCommonFile = "common.inp";
 
           std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
                    << "  " << m_szJouFile << std::endl;
@@ -121,6 +122,18 @@ int CNrgen::PrepareIO (int argc, char *argv[])
         }
       else
         bDone = true; // file opened successfully
+
+      // open common.inp file, if not found do nothing.
+      m_FileCommon.open (m_szCommonFile.c_str(), std::ios::in);
+      if (!m_FileCommon){
+          have_common = false;
+          std::cout << "common.inp file not specified." << std::endl;
+          m_FileCommon.clear ();
+        }
+      else {     
+          have_common = true;
+        }
+
     } while (!bDone);
   std::cout << "\nEntered input file name: " <<  m_szInFile <<std::endl;
 
@@ -153,6 +166,169 @@ int CNrgen::PrepareIO (int argc, char *argv[])
   return 0;
 }
 
+
+int CNrgen::ReadCommonInp ()
+// -------------------------------------------------------------------------------------------
+// Function: reads the input file to count the no. of cyl in a pincell, before the actual read
+// Input:    none
+// Output:   none
+// -------------------------------------------------------------------------------------------
+{
+  ++com_run_count;
+  if(com_run_count > 1){
+      //Rewind the reader for common.inp file
+      m_FileCommon.clear (std::ios_base::goodbit);
+      m_FileCommon.seekg (0L, std::ios::beg);
+    }
+  CParser Parse1;
+  bool found = false;
+  std::string card;
+  std::cout << "Reading from common.inp file." << std::endl;
+  for(;;){
+      if (!Parse1.ReadNextLine (m_FileCommon, m_nLineNumber, szInputString,
+                               MAXCHARS, szComment))
+        IOErrorHandler (INVALIDINPUT);
+
+      if (szInputString.substr(0,10) == "geomengine"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_szEngine;
+          if( ((strcmp (m_szEngine.c_str(), "acis") != 0) &&
+               (strcmp (m_szEngine.c_str(), "occ") != 0)) || szFormatString.fail())
+            IOErrorHandler(EGEOMENGINE);
+        }
+      // start id for pin number
+      if (szInputString.substr(0, 10) == "startpinid") {
+          found = true;
+          std::istringstream szFormatString(szInputString);
+          szFormatString >> card >> m_nStartpinid;
+        }
+      if (szInputString.substr(0,8) == "meshtype"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_szMeshType;
+          if( ((strcmp (m_szMeshType.c_str(), "hex") != 0) &&
+               (strcmp (m_szMeshType.c_str(), "tet") != 0)) || szFormatString.fail())
+            IOErrorHandler(INVALIDINPUT);
+        }
+      // info flag
+      if (szInputString.substr(0,4) == "info"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_szInfo;
+          std::cout <<"--------------------------------------------------"<<std::endl;
+        }
+      // hex block along z
+      if (szInputString.substr(0,6) == "hblock"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_nHblock >> m_dZstart >> m_dZend;
+          std::cout <<"--------------------------------------------------"<<std::endl;
+        }
+      // Hex or Rect geometry type
+      if (szInputString.substr(0,12) == "geometrytype"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_szGeomType;
+          if( ((strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
+               (strcmp (m_szGeomType.c_str(), "rectangular") != 0)) || szFormatString.fail())
+            IOErrorHandler(EGEOMTYPE);
+
+          // set the number of sides in the geometry
+          if(m_szGeomType == "hexagonal")
+            m_nSides = 6;
+          else  if(m_szGeomType == "rectangular")
+            m_nSides = 4;
+        }
+      // Default if volume, set geometry type to surface for 2D assemblies
+      if (szInputString.substr(0,8) == "geometry"){
+          found = true;
+          std::string outfile;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> outfile;
+          if(strcmp (outfile.c_str(), "surface") == 0 || szFormatString.fail())
+            m_nPlanar=1;
+        }
+      // 'yes' or 'no' for creating sidesets
+      if (szInputString.substr(0,13) == "createsideset"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_szSideset;
+          std::cout <<"--------------------------------------------------"<<std::endl;
+        }
+      // Create specified number of files with varying material ids
+      if (szInputString.substr(0,11) == "createfiles"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_nAssyGenInputFiles;
+          std::cout <<"--------------------------------------------------"<<std::endl;
+        }
+      // Create specified number of files with varying material ids
+      if (szInputString.substr(0,11) == "save_exodus"){
+          found = true;
+          save_exodus = true;
+          std::cout <<"--------------------------------------------------"<<std::endl;
+        }
+      // specify a merge tolerance value for cubit journal file
+      if (szInputString.substr(0,14) == "mergetolerance"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_dMergeTol;
+          std::cout <<"--------------------------------------------------"<<std::endl;
+        }
+      // Handle mesh size inputs
+      if (szInputString.substr(0,14) == "radialmeshsize"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_dRadialSize;
+          if(m_dRadialSize < 0 || szFormatString.fail())
+            IOErrorHandler(ENEGATIVE);
+          std::cout <<"--------------------------------------------------"<<std::endl;
+
+        }
+      // Handle mesh size inputs
+      if (szInputString.substr(0,11) == "tetmeshsize"){
+          found = true;
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_dTetMeshSize;
+          if(m_dTetMeshSize < 0 || szFormatString.fail())
+            IOErrorHandler(ENEGATIVE);
+          std::cout <<"--------------------------------------------------"<<std::endl;
+
+        }
+      // Handle mesh size inputs
+      if (szInputString.substr(0,13) == "axialmeshsize"){
+          found = true;
+          if(com_run_count > 1){
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card;
+              m_dAxialSize.SetSize(m_nDuct);
+              for (int p = 1; p <= m_nDuct; p++){
+                  szFormatString >> m_dAxialSize(p);
+                  if(m_dAxialSize(p) < 0 || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+                }
+              std::cout <<"--------------------------------------------------"<<std::endl;
+            }
+        }
+      // edge interval
+      if (szInputString.substr(0, 12) == "edgeinterval") {
+          found = true;
+          std::istringstream szFormatString(szInputString);
+          szFormatString >> card >> m_edgeInterval;
+        }
+      // breaking condition
+      if(szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
+          found = true;
+          break;
+        }
+     if (found == false){
+         std::cout << "Cannot specify: " << szInputString << " in common.inp files" << std::endl;
+       }
+    }
+  return 0;
+}
+
 int CNrgen::ReadInputPhase1 ()
 // -------------------------------------------------------------------------------------------
 // Function: reads the input file to count the no. of cyl in a pincell, before the actual read
@@ -160,6 +336,7 @@ int CNrgen::ReadInputPhase1 ()
 // Output:   none
 // -------------------------------------------------------------------------------------------
 {
+  std::cout << "Reading from AssyGen input file." << std::endl;
   CParser Parse;  bool bDone = false;
   int nCyl =0, nCellMat=0, nInputLines=0;
   std::string card, szVolId, szVolAlias;
@@ -251,7 +428,6 @@ int CNrgen::ReadInputPhase1 ()
         }
       // breaking condition
       if(szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
-          std::istringstream szFormatString (szInputString);
           break;
         }
     }

@@ -2,8 +2,6 @@
 ! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins (No CR)
 ! ##############################################################################################################
 !
-Geometry Volume
-GeometryType Hexagonal  
 !                                     
 Materials 6 Mat_OCoolant C1Out Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_FHH H1       
 !
@@ -47,10 +45,6 @@ Assembly 11
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
-RadialMeshSize 0.3
-AxialMeshSize 50
-EdgeInterval 72
-Center
 MaterialSet_StartId 700
-CreateSideset No
+Center
 END ! This is a must

@@ -2,8 +2,6 @@
 ! Hexagonal Control block (Section X 0)
 ! #############################################################################################################
 !
-Geometry Volume
-GeometryType Hexagonal  
 !                                     
 Materials 3 Mat_OCoolant C1Out Mat_Block G1  Mat_Control R1      
 !
@@ -35,13 +33,9 @@ Assembly 11
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
-RadialMeshSize 0.3
-AxialMeshSize 50
-EdgeInterval 72
-Center
 Rotate Z 30
 Section X 0
 Rotate Z -30
 MaterialSet_StartId 500
-CreateSideset No
+Center
 END ! This is a must

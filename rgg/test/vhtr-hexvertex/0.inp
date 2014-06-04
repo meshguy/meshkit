@@ -2,8 +2,6 @@
 ! Hexagonal VHTR Block and Outer Coolant without Pins
 ! #############################################################################################################
 !
-Geometry Volume
-GeometryType Hexagonal  
 !                                     
 Materials 2 Mat_OCoolant C1Out  Mat_Block G1 
 !
@@ -32,12 +30,7 @@ Assembly 11
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
-RadialMeshSize 0.3
-AxialMeshSize 50
-EdgeInterval 72
-Center
 MaterialSet_StartId 1
-CreateSideSet No
-CreateSideset No
+Center
 END ! This is a must
 

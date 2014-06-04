@@ -34,6 +34,7 @@ public:
   void Banner (std::ostream& OF);
   int PrepareIO (int argc, char *argv[]);
   int ReadInputPhase1 ();
+  int ReadCommonInp ();
   int ReadAndCreate ();
   int Name_Faces(const std::string sMatName, const iBase_EntityHandle body, 
 		 iBase_TagHandle this_tag);
@@ -62,20 +63,22 @@ public:
 		   const char* file,
 		   int line );
   int TerminateProgram ();
+  bool have_common;
 
 private:
   
   // number of sides in the geometry
+  int com_run_count;
   int m_nSides;
   bool m_bCreateMatFiles, save_exodus;
   // file Input
-  std::ifstream m_FileInput;  
+  std::ifstream m_FileInput, m_FileCommon;
     
   // journal file Output
   std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
   // string for file names
-  std::string m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szLogFile;    
+  std::string m_szFile, m_szInFile, m_szCommonFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szLogFile;
 
    std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
 

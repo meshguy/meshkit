@@ -2,8 +2,6 @@
 ! Hexagonal Block (Section Y 0)
 ! #############################################################################################################
 !
-Geometry Volume
-GeometryType Hexagonal  
 !                                     
 Materials 2 Mat_OCoolant C1Out  Mat_Block G1 
 !
@@ -32,11 +30,7 @@ Assembly 11
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
-RadialMeshSize 0.3
-AxialMeshSize 50
-EdgeInterval 72
-Center
 Section Y 0
 MaterialSet_StartId 200
-CreateSideset No
+Center
 END ! This is a must

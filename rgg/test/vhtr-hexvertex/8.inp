@@ -2,8 +2,6 @@
 ! Hexagonal VHTR Control Fuel Block Assembly Definition without CellMaterials (Prism) around individual Pins (CR on Top Center)
 ! ##############################################################################################################################
 !
-Geometry Volume
-GeometryType Hexagonal  
 !                                     
 Materials 10 Mat_C2Coolant C02 Mat_C1Coolant C01 Mat_OCoolant C1Out Mat_Coolant C1 Mat_SCoolant SC1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_Control R1 Mat_FHH H1       
 !
@@ -50,11 +48,7 @@ Assembly 11
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
-RadialMeshSize 0.3
-AxialMeshSize 50
-EdgeInterval 72
-Center
 Rotate Z 180
 MaterialSet_StartId 800
-CreateSideset No
+Center
 END ! This is a must
