@@ -76,35 +76,20 @@ void SolidCurveMesher::setup_this()
 void SolidCurveMesher::execute_this()
 {
  
-  //setup the category tag value  
-  char category[CATEGORY_TAG_SIZE] = "Curve\0";
-
-
-  //create iMesh tag for categories
-  iBase_TagHandle category_tag;
-  mk_core()->imesh_instance()->createTag(CATEGORY_TAG_NAME, CATEGORY_TAG_SIZE, iBase_BYTES, category_tag);
-
   for(MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
     {
 
       ModelEnt *me = mit->first;
       
-      //get the mesh set handle from the ModelEnt
-      iMesh::EntitySetHandle msh = IBSH(me->mesh_handle());
-
-      //---------------------------------//
-      //           SET TAGS              //
-      //---------------------------------//
-      //set the category tag
-      mk_core()->imesh_instance()->setEntSetData(msh, category_tag, &category);
     
       //---------------------------------//
       //            FACET                //
       //---------------------------------//
-   
       facet(me);
+
       // Not sure if this needs to be done yet
       //set_senses(me);
+
       me->set_meshed_state(COMPLETE_MESH);
     }
 }
