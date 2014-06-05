@@ -21,7 +21,9 @@ int main(int argc, char **argv)
 {
     mk = new MKCore();
     int num_fail = 0; 
+    #ifdef HAVE_ACIS
     num_fail += RUN_TEST(test_load_groups);
+    #endif
     return num_fail;
 }
 
