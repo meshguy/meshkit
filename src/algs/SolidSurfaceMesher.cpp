@@ -58,7 +58,7 @@ void SolidSurfaceMesher::setup_this()
       //make sure that the model entity's children have been meshed
       MEntVector children; 
       me->get_adjacencies(1, children); 
-      std::cout << "Number of children found: " << children.size() << std::endl;
+      //std::cout << "Number of children found: " << children.size() << std::endl;
  
       for(MEntVector::iterator j = children.begin(); j != children.end(); j++)
 	{
@@ -173,7 +173,7 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
       tri_verts.clear();
       tris.push_back(t);
     }
-  std::cout << "Created " << tris.size() << " triangles" << std::endl;
+  //std::cout << "Created " << tris.size() << " triangles" << std::endl;
 
   //add verticess and edges to the entity set
   mk->imesh_instance()->addEntArrToSet(&verts[0], verts.size(), sh);

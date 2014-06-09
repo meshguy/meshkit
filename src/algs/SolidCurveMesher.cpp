@@ -125,7 +125,7 @@ void SolidCurveMesher::execute_this()
   //get the curve vertices
   MEntVector end_verts;
   curve->get_adjacencies(0, end_verts);
-  std::cout << "Number of end_verts: " << end_verts.size() << std::endl;
+  //std::cout << "Number of end_verts: " << end_verts.size() << std::endl;
 
   //check for a closed curve
   bool closed = (end_verts.size() == 1);
