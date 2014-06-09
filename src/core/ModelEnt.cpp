@@ -84,8 +84,9 @@ ModelEnt::ModelEnt(MKCore *mk,
       // get a corresponding mesh set handle, if any; create one if missing and have a meshIndex
     iBase_EntitySetHandle h;
     iRel::Error err = mkCore->group_set_pair(irelIndex)->getSetSetRelation(geom_ent, false, h);
-    IBERRCHK(err, "Failed to get mesh set handle for geometry entity set.");
-    moabEntSet = reinterpret_cast<moab::EntityHandle>(h);
+    //IBERRCHK(err, "Failed to get mesh set handle for geometry entity set.");
+    if(iBase_SUCCESS == err) moabEntSet = reinterpret_cast<moab::EntityHandle>(h);
+    else moabEntSet=0;
   }
 
     // if still no mesh entity and non-default mesh index, create one
@@ -99,7 +100,7 @@ ModelEnt::ModelEnt(MKCore *mk,
   if (moabEntSet && -1 != meshIndex) {
     ModelEnt *dum_this = this;
     moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_model_tag(meshIndex), 
-                                                                          &moabEntSet, 1, &dum_this);
+                                                                         &moabEntSet, 1, &dum_this);
     IBERRCHK(err, "Failed to set moab ModelEnt tag.");
   }
 }

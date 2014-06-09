@@ -2,14 +2,19 @@ SUBDIRS = .
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
-AM_CPPFLAGS += -I$(top_srcdir)/src \
+DATADIR = $(top_srcdir)/data
+
+AM_CPPFLAGS += -DDATADIR=$(DATADIR)
+
+AM_CPPFLAGS += -I$(top_srcdir)/test \
+               -I$(top_srcdir)/src \
                -I$(top_srcdir)/src/utils \
                -I$(top_srcdir)/src/core \
                -I$(top_srcdir)/src/algs \
                -I$(top_srcdir)/utils \
-               -I$(top_srcdir)/src/lemon -I$(top_srcdir)
+               -I$(top_srcdir)/src/lemon -I$(top_srcdir) 
 
-TESTS = test_graph list_meshops
+TESTS = test_graph list_meshops test_load_grps
 
 check_PROGRAMS = $(TESTS)
 
@@ -20,6 +25,8 @@ MOSTLYCLEANFILES = graph.eps
 test_graph_SOURCES = test_graph.cpp
 
 list_meshops_SOURCES = list_meshops.cpp
+
+test_load_grps_SOURCES = test_load_grps.cpp
 
 # Utility target: build but don't run tests
 build-check:
