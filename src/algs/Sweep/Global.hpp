@@ -27,7 +27,6 @@
 #define PI 3.1415926536
 
 
-
 using namespace std;
 typedef MeshKit::Vector<3> Vector3D;
 typedef MeshKit::Vector<2> Vector2D;
@@ -42,7 +41,8 @@ typedef MeshKit::Matrix<3, 3> Matrix3D;
 //===========================================================================//
 namespace MeshKit
 {
-
+static const double dist_tolerance = 1.0e-1;
+static const double eps = 1.0e-5;
 struct Vertex {
   Vertex()
   {
