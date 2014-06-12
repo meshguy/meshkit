@@ -69,6 +69,7 @@ private:
 	bool ComputeBarycentric(Vector2D a, Vector2D b, Vector2D c, Vector2D xy, Vector3D &uvw);
 	void computeNormalTri(Face &tri, Vector3D& nrml, Face surf);
 	void cleanup();
+	void adjustVtxEdges(Face &f);
 private:
 	//member variables
 	MKCore* mk_core;

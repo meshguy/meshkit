@@ -122,7 +122,7 @@ bool SurfProHarmonicMap::ComputeBarycentric(Vector3D a, Vector3D b, Vector3D c, 
 	uvw[0] = 1.0 - uvw[1] - uvw[2];
 
 	//check if the point is in the triangle
-	return (uvw[0]>=0)&&(uvw[1]>=0)&&(uvw[0]+uvw[1]<=1);
+	return (uvw[0]>=-eps)&&(uvw[1]>=-eps)&&(uvw[0]+uvw[1]<=1.0+eps);
 }
 
 void SurfProHarmonicMap::test()
@@ -214,7 +214,7 @@ bool SurfProHarmonicMap::ComputeBarycentric(Vector2D a, Vector2D b, Vector2D c, 
 	uvw[0] = 1.0 - uvw[1] - uvw[2];
 
 	//check if the point is in the triangle
-	return (uvw[0]>=0)&&(uvw[1]>=0)&&(uvw[0]+uvw[1]<=1);
+	return (uvw[0]>=-eps)&&(uvw[1]>=-eps)&&(uvw[0]+uvw[1]<=1+eps);
 }
 //compute the normal of a triangle
 void SurfProHarmonicMap::computeNormalTri(Face &tri, Vector3D& nrml, Face surf)
@@ -320,12 +320,19 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
 		set_vertices.insert(source.connect[i]->index);
 
     //match the vertices between the source and target surface.
-    std::map<int,int> tgt_src_v, tgt_src_e;
+    //std::map<int,int> tgt_src_v, tgt_src_e;
+	std::vector<int> tgt_src_v(vertices.size(), -1), tgt_src_e(edges.size(), -1);	
     int count = -1;
+	std::set<int> bak_edges;
+	bak_edges.insert(set_edges.begin(), set_edges.end());
     for (unsigned int mm = 0; mm < target.vertexloops.size(); mm++){
         for (unsigned int i = 0; i < target.vertexloops[mm].size(); i++){
 		    count++;
-            tgt_src_v[count] = -1;
+			if (target.vertexloops[mm].size()==1){
+				tgt_src_v[target.vertexloops[mm][0]] = source.vertexloops[mm][0];
+				continue;
+			}
+	
 		    bool is_found = false;
 		    int edge_index = -1;
 		    int pre_vertex = target.vertexloops[mm][i];
@@ -350,7 +357,8 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
 						    int intdata = -1;
 						    g_err = igeom_instance->getIntData(*it_e, harmonic_surf_pro, intdata);
 						    IBERRCHK(g_err, "Trouble get the int data for an edge");
-						    set_edges.insert(intdata);
+							if (set_edges.find(intdata)==set_edges.end())
+								set_edges.insert(intdata);
 					    }
 				    }
 			    }
@@ -359,25 +367,31 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
 			    for (vector<iBase_EntityHandle>::iterator it = adj.begin(); it != adj.end(); it++){
 				    g_err = igeom_instance->getIntData(*it, harmonic_surf_pro, edge_index);
 				    IBERRCHK(g_err, "Trouble get the adjacent edges of a vertex!");
-				    if (std::find(set_edges.begin(), set_edges.end(), edge_index)==set_edges.end()){//this is an edge on the linking surface.
+				    if (set_edges.find(edge_index)==set_edges.end()){//this is an edge on the linking surface.
 					    is_found = is_found && false;
 					    break;
 				    }
 				    else{
+						edge_index = -1;
 					    is_found = is_found && true;
 					    continue;
 				    }
-			    }
+			    } 
+				//check whether next vertex is on the source surface or not
+			    if (is_found){
+				   				 
+				   break;
+				}
 			    //find the next vertex connected by the linking edge
 			    if (edges[edge_index].connect[0]->index == pre_vertex)
 				    next_vertex = edges[edge_index].connect[1]->index;
 			    else
 				    next_vertex = edges[edge_index].connect[0]->index;
-			    //check whether next vertex is on the source surface or not
-			    if (is_found)
-				    break;
+			    pre_vertex = next_vertex;
 		    }
-		    tgt_src_v[target.vertexloops[mm][i]] = next_vertex;
+			tgt_src_v[target.vertexloops[mm][i]] = next_vertex;
+			set_edges.clear();
+			set_edges.insert(bak_edges.begin(), bak_edges.end());
         }
     }
 	//done with the mapping of vertices between the source and target surfaces;
@@ -386,6 +400,10 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
     for (unsigned int mm = 0; mm < target.vertexloops.size(); mm++){
         for (unsigned int i = 0; i < target.vertexloops[mm].size(); i++){
 			int tgt_edge_index = target.edgeloops[mm][i];
+			if (target.vertexloops[mm].size()==1){
+				tgt_src_e[tgt_edge_index] = source.edgeloops[mm][0];
+				continue;
+			}
 			int vtx_a = tgt_src_v[edges[tgt_edge_index].connect[0]->index], vtx_b = tgt_src_v[edges[tgt_edge_index].connect[1]->index];
 			for (unsigned int j = 0; j < source.connEdges.size(); j++){
 				int vtx_c = (source.connEdges[j]->connect[0])->index, vtx_d = (source.connEdges[j]->connect[1])->index;
@@ -431,8 +449,8 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
 		vector<iBase_EntityHandle> tmp_src, tmp_tgt;
 		vector<double> dist_source, dist_target;
 		for (unsigned int j = 0; j < target.edgeloops[i].size(); j++){
-			tmp_src.push_back(edges[target.edgeloops[i][j]].gEdgeHandle);
-			tmp_tgt.push_back(edges[tgt_src_e[target.edgeloops[i][j]]].gEdgeHandle);
+			tmp_tgt.push_back(edges[target.edgeloops[i][j]].gEdgeHandle);
+			tmp_src.push_back(edges[tgt_src_e[target.edgeloops[i][j]]].gEdgeHandle);
 		}
 		dist_source.resize(tmp_src.size());
 		g_err = igeom_instance->measure(&tmp_src[0], tmp_src.size(), &dist_source[0]);
@@ -447,6 +465,7 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
             int next_tgt_vtx = target.vertexloops[i][(j+1+target.vertexloops[i].size())%target.vertexloops[i].size()], next_src_vtx = tgt_src_v[next_tgt_vtx];
             int tgt_edge_index = target.edgeloops[i][j];
             int src_edge_index = tgt_src_e[tgt_edge_index];
+			std::cout << "current target vtx = " << current_tgt_vtx << "\tcurrent source vtx = " << current_src_vtx << "\tnext_tgt_vtx = " << next_tgt_vtx << "\tnext_src_vtx = " << next_src_vtx << "\ttarget edge index = " << tgt_edge_index << "\tsource edge index = " << std::endl;
             double u1, u2, u3, u4, u;
             g_err = igeom_instance->getEntXYZtoU(edges[tgt_edge_index].gEdgeHandle, vertices[current_tgt_vtx].xyz[0], vertices[current_tgt_vtx].xyz[1], vertices[current_tgt_vtx].xyz[2], u1);
             IBERRCHK(g_err, "Trouble get the parametric coordinate of a vertex on an edge!");
@@ -461,23 +480,38 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
 			tgt_facet_v[tgt_vtx_index].onBoundary = true;
 			tgt_facet_v[tgt_vtx_index].uv[0] = src_facet_v[src_vtx_facet[current_src_vtx]].uv[0];
 			tgt_facet_v[tgt_vtx_index].uv[1] = src_facet_v[src_vtx_facet[current_src_vtx]].uv[1];
+			std::cout << "src index = " << src_vtx_facet[current_src_vtx] << std::endl;
 
-			std::cout << "--------\nu = {" << u3 << " ";
-			for (int m = src_nodes_u[src_edge_index].size()-1; m >= 0; m--)
-				std::cout << "[" << m << "]" << src_nodes_u[src_edge_index][m] << " ";
-			std::cout << u4 << "}\n--------\n";
+			std::vector<double> lists_u;
+			std::vector<int> index_list;
+			int start_index = -1;
+			if (target.vertexloops[i].size() == 1){
+				//get the source vertex facet
+				std::vector<int> pointlist;
+				pointlist.push_back(*(src_geom_facet[count].begin()));
+				for (list<int>::iterator it = src_geom_facet[count+source.connect.size()].begin(); it != src_geom_facet[count+source.connect.size()].end(); it++)
+					pointlist.push_back(*it);
+				std::sort(pointlist.begin(), pointlist.end());
+				start_index = find(pointlist.begin(), pointlist.end(), *(src_geom_facet[count].begin()))-pointlist.begin();
+				for (std::vector<int>::iterator it = pointlist.begin(); it != pointlist.end(); it++){
+					index_list.push_back(*it);
+					g_err = igeom_instance->getEntXYZtoU(edges[src_edge_index].gEdgeHandle, src_facet_v[*it].xyz[0], src_facet_v[*it].xyz[1], src_facet_v[*it].xyz[2], u);
+		            IBERRCHK(g_err, "Trouble get the parametric coordinate of a vertex on an edge!");
+					lists_u.push_back(u);
+				}
+			}						
 			for (list<int>::iterator it = tgt_geom_facet[count+target.connect.size()].begin(); it != tgt_geom_facet[count+target.connect.size()].end(); it++){
 				count_pts++;
                 g_err = igeom_instance->getEntXYZtoU(edges[tgt_edge_index].gEdgeHandle, tgt_facet_v[*it].xyz[0], tgt_facet_v[*it].xyz[1], tgt_facet_v[*it].xyz[2], u);
                 IBERRCHK(g_err, "Trouble get the parametric coordinate of a vertex on an edge!");
-                double u_src = (u4 - u3)*(u - u1)/(u2 - u1) + u3;
+                
 	
                 tgt_facet_v[*it].onBoundary = true;
                 //how to compute the corresponding uv coordinates of each nodes on the source H_1
                 //loop over facet nodes
                 //cases to be discussed: (1) no facet nodes (2) last facet nodes (3) first facet nodes
 				int pre_facet_v = -1, next_facet_v = -1;
-				double pre_facet_u = 0.0, next_facet_u = 0.0;
+				double pre_facet_u = 0.0, next_facet_u = 0.0, u_src;
 				if (src_nodes_u[src_edge_index].size() == 0){//no facet nodes
 					//it will be a straight line between current_src_vtx and next_src_vtx
 					pre_facet_v = src_vtx_facet[current_src_vtx];
@@ -485,7 +519,88 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
 					pre_facet_u = u3;
 					next_facet_u = u4;
 				}
+				else if (target.vertexloops[i].size() == 1){//circle case
+					double tgt_min, tgt_max, src_min, src_max;
+					g_err = igeom_instance->getEntURange(edges[target.edgeloops[i][0]].gEdgeHandle, tgt_min, tgt_max);
+					IBERRCHK(g_err, "Trouble get the parametric range of U on an edge!");
+					g_err = igeom_instance->getEntURange(edges[source.edgeloops[i][0]].gEdgeHandle, src_min, src_max);
+					IBERRCHK(g_err, "Trouble get the parametric range of U on an edge!");
+					
+					//get edge sense w.r.t. face
+					int dotproduct = 0, sense_tgt, sense_src;
+					g_err = igeom_instance->getEgFcSense(edges[target.edgeloops[i][0]].gEdgeHandle, target.gFaceHandle, sense_tgt);
+					IBERRCHK(g_err, "Trouble get the edge sense w.r.t. the target surface!");
+					g_err = igeom_instance->getEgFcSense(edges[source.edgeloops[i][0]].gEdgeHandle, source.gFaceHandle, sense_src);
+					IBERRCHK(g_err, "Trouble get the edge sense w.r.t. the source surface!");
+					dotproduct = sense_tgt*sense_src;
+					if (dotproduct > 0)
+						u_src = (src_min - src_max)*(u - tgt_min)/(tgt_max - tgt_min) + src_max;
+					else
+						u_src = (src_max - src_min)*(u - tgt_min)/(tgt_max - tgt_min) + src_min;
+						
+					//note(very important):usually edge facets on the target surface are in the reverse order as those on the source surface. 
+					int index_count = 0;
+					//determine whether lists_u[start_index] has max or min value
+					bool is_max = (lists_u[start_index] >= lists_u[(start_index+1)%lists_u.size()])&&(lists_u[start_index] >= lists_u[(start_index-1)%lists_u.size()]);
+					if (lists_u[(start_index+1)%lists_u.size()] <= lists_u[(start_index+2)%lists_u.size()]){ 						
+						if ((!is_max)&&(u_src <= lists_u[start_index])){
+							pre_facet_u = src_min - src_max + lists_u[(start_index + lists_u.size()-1)%lists_u.size()];
+							next_facet_u = lists_u[start_index];
+							pre_facet_v = index_list[(start_index + lists_u.size()-1)%lists_u.size()];
+							next_facet_v = index_list[start_index];
+						}
+						else if ((!is_max)&&(u_src >= lists_u[(start_index + lists_u.size()-1)%lists_u.size()])){
+							pre_facet_u = lists_u[(start_index + lists_u.size()-1)%lists_u.size()];
+							next_facet_u = lists_u[start_index]-src_min+src_max;
+							pre_facet_v = index_list[(start_index + lists_u.size()-1)%lists_u.size()];
+							next_facet_v = index_list[start_index];
+						}
+						else{
+							int it_index = start_index;
+							if (is_max) it_index += 1;											
+							for (; index_count < lists_u.size(); it_index++, index_count++){
+								if (u_src <= lists_u[it_index%lists_u.size()]){
+									pre_facet_u = lists_u[(it_index-1+lists_u.size())%lists_u.size()];
+									next_facet_u = lists_u[it_index%lists_u.size()];
+									pre_facet_v = index_list[(it_index-1+lists_u.size())%lists_u.size()];
+									next_facet_v = index_list[it_index%lists_u.size()];
+									break;
+								}
+							}
+						}
+					}
+					else{//lists_u is decreasing
+						//determine if lists_u has max or min values
+						if ((!is_max)&&(u_src <= lists_u[start_index])){
+							pre_facet_u = src_min - src_max + lists_u[(start_index +1)%lists_u.size()];
+							next_facet_u = lists_u[start_index];
+							pre_facet_v = index_list[(start_index+1)%lists_u.size()];
+							next_facet_v = index_list[start_index];
+						}
+						else if ((!is_max)&&(u_src >= lists_u[(start_index +1)%lists_u.size()])){
+							pre_facet_u = lists_u[(start_index + 1)%lists_u.size()];
+							next_facet_u = lists_u[start_index]-src_min+src_max;
+							pre_facet_v = index_list[(start_index +1)%lists_u.size()];
+							next_facet_v = index_list[start_index];
+						}
+						else{
+							int it_index = start_index;
+							if (is_max) it_index -= 1;											
+							for (; index_count < lists_u.size(); it_index--, index_count++){
+								if (u_src <= lists_u[(it_index+lists_u.size())%lists_u.size()]){
+									pre_facet_u = lists_u[(it_index+1+lists_u.size())%lists_u.size()];
+									next_facet_u = lists_u[(it_index+lists_u.size())%lists_u.size()];
+									pre_facet_v = index_list[(it_index+1+lists_u.size())%lists_u.size()];
+									next_facet_v = index_list[(it_index+lists_u.size())%lists_u.size()];
+									break;
+								}
+							}
+						}
+
+					}					
+				}
 				else{
+					u_src = (u4 - u3)*(u - u1)/(u2 - u1) + u3;
 					for (int m = src_nodes_u[src_edge_index].size()-1; m >= 0; m--){
 						if (u4 > u3){
 							if (m == 0)//it is located before the first item
@@ -560,6 +675,7 @@ void SurfProHarmonicMap::LocateBoundaryNodesTarget()
 				double alpha = (u_src - pre_facet_u)/(next_facet_u - pre_facet_u);				
 				tgt_facet_v[*it].uv[0] = (1.0 - alpha)*src_facet_v[pre_facet_v].uv[0]+alpha*src_facet_v[next_facet_v].uv[0];
 				tgt_facet_v[*it].uv[1] = (1.0 - alpha)*src_facet_v[pre_facet_v].uv[1]+alpha*src_facet_v[next_facet_v].uv[1];
+				std::cout << std::endl;
 			}
         }
     }
@@ -697,6 +813,7 @@ void SurfProHarmonicMap::addExtra(Face f, vector<Vertex> &facet_v, vector<Edge> 
 				}
 			}
 			//done
+			std::sort(pointlist.begin(), pointlist.end());
 			//add extra vertex
 			for (int m = 0; m < 3; m++)
 				 facet_v[vtx_center].xyz[m] = xyz[m]/double(pointlist.size());
@@ -861,24 +978,23 @@ void SurfProHarmonicMap::boundaryUnitDisk(Face f, vector<double> dist, vector<Ve
 	int start_vertex = f.vertexloops[0][0];
 	for (std::vector<double>::iterator it = dist.begin(); it != dist.end(); it++)
 		dist_sum += *it;
+	vector<int> pointlist;
 	for (unsigned int i = 0; i < f.vertexloops[0].size(); i++){
+		pointlist.push_back(*(geom_facet[i].begin()));
+		for (std::list<int>::iterator it = geom_facet[i+f.connect.size()].begin(); it != geom_facet[i+f.connect.size()].end(); it++)
+			pointlist.push_back(*it);
+	}
+	std::sort(pointlist.begin(), pointlist.end());
+	for (unsigned int i = 0; i < pointlist.size(); i++){
+		int now = pointlist[i];
 		if (i > 0){
-			len_curve += dist[i-1];		
-			local_dist = len_curve;
+			double tmp_dist = sqrt(pow(facet_v[now].xyz[0]-facet_v[pointlist[i-1]].xyz[0],2)+pow(facet_v[now].xyz[1]-facet_v[pointlist[i-1]].xyz[1],2)+pow(facet_v[now].xyz[2]-facet_v[pointlist[i-1]].xyz[2],2));		
+			local_dist += tmp_dist;
 		}
 		//get the facet on a geometry vertex of a loop	
-		facet_v[*(geom_facet[i].begin())].uv[0] = 100.0*cos(2*PI*local_dist/dist_sum);
-		facet_v[*(geom_facet[i].begin())].uv[1] = 100.0*sin(2*PI*local_dist/dist_sum);
-		facet_v[*(geom_facet[i].begin())].onBoundary = true;
-		int pre_v = *(geom_facet[i].begin());
-		//get the facet on a geometry edge of a loop
-		for (std::list<int>::iterator it = geom_facet[i+f.connect.size()].begin(); it != geom_facet[i+f.connect.size()].end(); it++){
-			local_dist += sqrt(pow(facet_v[*it].xyz[0]-facet_v[pre_v].xyz[0],2)+pow(facet_v[*it].xyz[1]-facet_v[pre_v].xyz[1],2)+pow(facet_v[*it].xyz[2]-facet_v[pre_v].xyz[2],2));
-			pre_v = *it;
-			facet_v[*it].uv[0] = 100.0*cos(2*PI*local_dist/dist_sum);
-			facet_v[*it].uv[1] = 100.0*sin(2*PI*local_dist/dist_sum);
-			facet_v[*it].onBoundary = true;
-		}
+		facet_v[now].uv[0] = 100.0*cos(2*PI*local_dist/dist_sum);
+		facet_v[now].uv[1] = 100.0*sin(2*PI*local_dist/dist_sum);
+		facet_v[now].onBoundary = true;
 	}
 }
 
@@ -942,23 +1058,20 @@ void SurfProHarmonicMap::getFacets()
 void SurfProHarmonicMap::MapFacetGeom(Face f_surf, vector<Vertex> facet_node, std::map<int, int> &map_data, vector<list<int> > &geom_facet, int size_facet_v)
 {
 	geom_facet.resize(f_surf.connect.size()+f_surf.connEdges.size()+1);
-	//0===f_surf.connect.size()-1													store vertex info
-	//f_surf.connect.size()===f_surf.connect.size()+f_surf.connEdges.size()-1		store edge info
-	//f_surf.connect.size()+f_surf.connEdges.size()									store face info	
+	
 	for (unsigned int i = 0; i < size_facet_v; i++){
 		facet_node[i].index = i;
 		int is_on = false;
 
 		map_data[i] = -1;		
 
-		double proj_xyz[3];
-		g_err = igeom_instance->getEntClosestPtTrimmed(f_surf.gFaceHandle, facet_node[i].xyz[0], facet_node[i].xyz[1], facet_node[i].xyz[2], proj_xyz[0], proj_xyz[1], proj_xyz[2]);
-		IBERRCHK(g_err, "Trouble get the closest point on a geometry entity!");
-		facet_node[i].xyz[0] = proj_xyz[0];
-		facet_node[i].xyz[1] = proj_xyz[1];
-		facet_node[i].xyz[2] = proj_xyz[2];
-
-
+		iGeom_isPositionOn(igeom_instance->instance(), f_surf.gFaceHandle, facet_node[i].xyz[0], facet_node[i].xyz[1], facet_node[i].xyz[2], &is_on);
+		if (!is_on){		
+			double proj_xyz[3];
+			g_err = igeom_instance->getEntClosestPtTrimmed(f_surf.gFaceHandle, facet_node[i].xyz[0], facet_node[i].xyz[1], facet_node[i].xyz[2], proj_xyz[0], proj_xyz[1], proj_xyz[2]);
+			IBERRCHK(g_err, "Trouble get the closest point on a geometry entity!");
+		}
+		is_on = false;
 
 		//check whether the facet mesh is on vertices or not.
 		for (unsigned int j = 0; j < f_surf.connect.size(); j++){			
@@ -973,7 +1086,16 @@ void SurfProHarmonicMap::MapFacetGeom(Face f_surf, vector<Vertex> facet_node, st
 			continue;
 		//check whether the facet mesh is on edges or not
 		for (unsigned int j = 0; j < f_surf.connEdges.size(); j++){
-			iGeom_isPositionOn(igeom_instance->instance(), f_surf.connEdges[j]->gEdgeHandle, facet_node[i].xyz[0], facet_node[i].xyz[1], facet_node[i].xyz[2], &is_on);			
+			Vector3D xyz_f(0.0), xyz_e(0.0);
+			g_err = igeom_instance->getEntClosestPtTrimmed((f_surf.connEdges[j])->gEdgeHandle, facet_node[i].xyz[0], facet_node[i].xyz[1], facet_node[i].xyz[2], xyz_e[0], xyz_e[1], xyz_e[2]);
+			IBERRCHK(g_err, "Trouble get the trimmed closest point on an edge!");
+			g_err = igeom_instance->getEntClosestPtTrimmed(f_surf.gFaceHandle, facet_node[i].xyz[0], facet_node[i].xyz[1], facet_node[i].xyz[2], xyz_f[0], xyz_f[1], xyz_f[2]);
+			IBERRCHK(g_err, "Trouble get the trimmed closest point on a face!");
+			Vector3D diff = xyz_f - xyz_e;
+			double dist_tol = sqrt(diff[0]*diff[0]+diff[1]*diff[1]+diff[2]*diff[2]);
+			if ( dist_tol < dist_tolerance){
+				iGeom_isPositionOn(igeom_instance->instance(), f_surf.connEdges[j]->gEdgeHandle, xyz_e[0], xyz_e[1], xyz_e[2], &is_on);
+			}
 			if (is_on){
 				map_data[i] = f_surf.connect.size()+j;
 				geom_facet[f_surf.connect.size()+j].push_back(i);				
@@ -1041,6 +1163,7 @@ void SurfProHarmonicMap::preprocessing()
 			addFaceToList(f[i], source, i, false);
 			GetGeomLoops(source, source.vertexloops, source.edgeloops);
 			postProcessGeomLoops(source);
+			adjustVtxEdges(source);
 			source.src_tgt_link = 0;
 			link[i].index = -1;
 			continue;
@@ -1049,6 +1172,7 @@ void SurfProHarmonicMap::preprocessing()
 			addFaceToList(f[i], target, i, false);
 			GetGeomLoops(target, target.vertexloops, target.edgeloops);
 			postProcessGeomLoops(target);
+			adjustVtxEdges(target);
 			target.src_tgt_link = 1;
 			link[i].index = -2;
 			continue;
@@ -1059,6 +1183,24 @@ void SurfProHarmonicMap::preprocessing()
 	}
 	
 		
+}
+
+void SurfProHarmonicMap::adjustVtxEdges(Face &f)
+{
+	vector<int> tmp;
+	for (unsigned int mm = 0; mm < f.vertexloops.size(); mm++)
+		for (unsigned int nn = 0; nn < f.vertexloops[mm].size(); nn++)
+			tmp.push_back(f.vertexloops[mm][nn]);
+	f.connect.clear();
+	for (unsigned mm = 0; mm < tmp.size(); mm++)
+		f.connect.push_back(&vertices[tmp[mm]]);
+	tmp.clear();
+	for (unsigned int mm = 0; mm < f.edgeloops.size(); mm++)
+		for (unsigned int nn = 0; nn < f.edgeloops[mm].size(); nn++)
+			tmp.push_back(f.edgeloops[mm][nn]);
+	f.connEdges.clear();
+	for (unsigned mm = 0; mm < tmp.size(); mm++)
+		f.connEdges.push_back(&edges[tmp[mm]]);
 }
 
 void SurfProHarmonicMap::addFaceToList(iBase_EntityHandle entity, Face& f, int index, bool is_set_int)
@@ -1147,6 +1289,8 @@ void SurfProHarmonicMap::postProcessGeomLoops(Face& surf)
 			outmost_index = j;
 		}
 	}
+    if (outmost_index == 0)
+		return;
 	//exchange loop[0] and loop[outmost_index]
 	std::vector<int> tmp_loop1, tmp_loop2;
 	for (unsigned int j = 0; j < surf.vertexloops[0].size(); j++){
@@ -1161,24 +1305,9 @@ void SurfProHarmonicMap::postProcessGeomLoops(Face& surf)
 	}
 	surf.vertexloops[outmost_index].clear();
 	surf.edgeloops[outmost_index].clear();
-	for (unsigned int j = 0; j < tmp_loop1.size(); j++){
-		surf.vertexloops[outmost_index].push_back(tmp_loop1[j]);
-		surf.edgeloops[outmost_index].push_back(tmp_loop2[j]);
-	}
-	//adjust surf.connect and surf.connEdges based on the boundary loops
-	int count = 0;
-	std::vector<int> v, e;
-	for (unsigned int i = 0; i < surf.vertexloops.size(); i++)
-		for (unsigned int j = 0; j < surf.vertexloops[i].size(); j++)
-			v.push_back(surf.vertexloops[i][j]);
-	for (unsigned int i = 0; i < surf.edgeloops.size(); i++)
-		for (unsigned int j = 0; j < surf.edgeloops[i].size(); j++)
-			e.push_back(surf.edgeloops[i][j]);	
-	
-	for (unsigned int i = 0; i < v.size(); i++)
-		surf.connect[i] = &vertices[v[i]];
-	for (unsigned int i = 0; i < e.size(); i++)
-		surf.connEdges[i] = &edges[e[i]];
+
+	surf.vertexloops[outmost_index].insert(surf.vertexloops[outmost_index].begin(), tmp_loop1.begin(), tmp_loop1.end());
+	surf.edgeloops[outmost_index].insert(surf.edgeloops[outmost_index].begin(), tmp_loop2.begin(), tmp_loop2.end());
 	
 }
 
@@ -1203,16 +1332,18 @@ void SurfProHarmonicMap::GetGeomLoops(Face surf, vector<vector<int> > &loops_ver
 
 		//get the edge sense and make sure that the nodes are oriented correctly
 		int edge_sense = 0;
-		int first_vertex = start_vertex, second_vertex = edges[*(edge_index.begin())].connect[1]->index;
-		g_err = igeom_instance->getEgVtxSense(edges[start_edge].gEdgeHandle, vertices[first_vertex].gVertexHandle, vertices[second_vertex].gVertexHandle, edge_sense);
-		IBERRCHK(g_err, "Trouble get the edge sense.");
-		int face_sense = 0;
-		g_err = igeom_instance->getEgFcSense(edges[start_edge].gEdgeHandle,  surf.gFaceHandle, face_sense);
-		IBERRCHK(g_err, "Trouble get the face sense.");
-		if (face_sense*edge_sense < 0){
-			start_vertex = edges[*(edge_index.begin())].connect[1]->index;
+		int first_vertex = start_vertex, second_vertex;
+		if (edges[*(edge_index.begin())].connect.size()==2){
+			second_vertex = edges[*(edge_index.begin())].connect[1]->index;
+			g_err = igeom_instance->getEgVtxSense(edges[start_edge].gEdgeHandle, vertices[first_vertex].gVertexHandle, vertices[second_vertex].gVertexHandle, edge_sense);
+			IBERRCHK(g_err, "Trouble get the edge sense.");
+			int face_sense = 0;
+			g_err = igeom_instance->getEgFcSense(edges[start_edge].gEdgeHandle,  surf.gFaceHandle, face_sense);
+			IBERRCHK(g_err, "Trouble get the face sense.");
+			if (face_sense*edge_sense < 0){
+				start_vertex = edges[*(edge_index.begin())].connect[1]->index;
+			}
 		}
-
 		//initialization
 		loops_vertex.resize(loops_vertex.size()+1);
 		loops_edge.resize(loops_edge.size()+1);
@@ -1222,6 +1353,8 @@ void SurfProHarmonicMap::GetGeomLoops(Face surf, vector<vector<int> > &loops_ver
 			loops_vertex[loops_vertex.size()-1].push_back(start_vertex);
 			loops_edge[loops_edge.size()-1].push_back(start_edge);
 			edge_index.erase(start_edge);
+			if (edges[start_edge].connect.size()==1)//circle case
+				break;
 			if (start_vertex == edges[start_edge].connect[0]->index)
 				next_vertex = edges[start_edge].connect[1]->index;
 			else
