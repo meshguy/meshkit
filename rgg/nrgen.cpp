@@ -44,6 +44,7 @@ CNrgen::CNrgen ()
   m_edgeInterval = 99;
   m_nStartpinid = 1;
   m_szInfo = "off";
+  m_szMeshScheme = "pave";
   pin_name = "";
   m_nHblock = -1;
   m_nPincells = 0;
