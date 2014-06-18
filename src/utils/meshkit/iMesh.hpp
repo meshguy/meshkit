@@ -61,7 +61,7 @@ class iMesh : public iMeshBase {
     inline StorageOrder getDfltStorage() const;
     
     typedef AdjacencyCost (*AdjTableType)[4];
-    inline const AdjTableType getAdjTable();
+    inline AdjTableType getAdjTable();
     
     inline Error getNumOfType( EntitySetHandle set, EntityType type, int& count_out  ) const;
     
@@ -313,8 +313,7 @@ iMesh::getDfltStorage() const
   return (iBase_SUCCESS == err) ? (StorageOrder)order : iBase_BLOCKED;
 }
 
-inline const iMesh::AdjTableType
-iMesh::getAdjTable() 
+inline iMesh::AdjTableType iMesh::getAdjTable()
 {
   return (iBase_SUCCESS == adjTableErr) ? adjTable : 0;
 }
