@@ -27,7 +27,6 @@ MKCore *mk = NULL;
 
 void test_brick();
 
-
 int main(int argc, char **argv) 
 {
   if (argc==1)
@@ -37,9 +36,10 @@ int main(int argc, char **argv)
     mfile_name = TestDir + "/sf.h5m";
     index_source = 0; index_target = 1; mesh_intervals = 6;
 #else
-    gfile_name = TestDir + "/BrickWithSrcMeshed.cub";
+    gfile_name = TestDir + "/multiconnected.cub";
     mfile_name = gfile_name;
-    index_source = 1; index_target = 0; mesh_intervals = 6;
+    index_source = 2; index_target = 3; mesh_intervals = 10;
+	
 #endif
     std::cout<<"using default arguments: ";
   }
@@ -66,7 +66,6 @@ int main(int argc, char **argv)
   int num_fail = 0;
   
   num_fail += RUN_TEST(test_brick);
-
   return num_fail;
   
 }
@@ -103,6 +102,7 @@ void test_brick()
   std::cout << " generated " << hex.size() << " hexahedrons\n";
 
 	mk->save_mesh("OneToOneSwept.h5m");
+	mk->save_mesh("OneToOneSwept.vtk");
 
 	delete sw;
 	delete mk->vertex_mesher();
