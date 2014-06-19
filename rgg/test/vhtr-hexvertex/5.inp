@@ -33,9 +33,9 @@ Assembly 11
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+Center
 Rotate Z 30
 Section X 0
 Rotate Z -30
 MaterialSet_StartId 500
-Center
 END ! This is a must

@@ -7,12 +7,11 @@ ProblemType Mesh
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
 GeomEngine OCC
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
-Assemblies 2 23.5 23.5			! 'Assemblies' card defines the number of assembly mesh files and pitch
-assygen_default1.cub S1                  !  Meshfile name followed by alias 
-assygen_default2.cub S2
+Assemblies 1 23.5 23.5			! 'Assemblies' card defines the number of assembly mesh files and pitch
+assygen_default.cub S1                  !  Meshfile name followed by alias
 Lattice 2 2 
-S1 S2 &
-S2 S1 
+S1 S1 &
+S1 S1
 NeumannSet Top  100                     ! 'NeumannSet' card followed by 'location of NeumannSet'  'Id of NeumannSet'
 NeumannSet Bot  101                     !  Values 'top', 'bot' and 'side' are acceptable for second parameter. 
 NeumannSet Side 102 x 0 y 1 c 35.25

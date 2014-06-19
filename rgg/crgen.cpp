@@ -36,10 +36,10 @@ int CCrgen::assign_gids_parallel(const int nrank, const int numprocs) {
 #ifdef USE_MPI   
   // assign new global ids
   if (global_ids == true) {
- //     if(nrank==0)
-//        std::cout << "Assigning global ids in parallel" << std::endl;
-//      err = pc->assign_global_ids(0, 3, 1, false, true, false);
-//      ERRORR("Error assigning global ids.", err);
+      //     if(nrank==0)
+      //        std::cout << "Assigning global ids in parallel" << std::endl;
+      //      err = pc->assign_global_ids(0, 3, 1, false, true, false);
+      //      ERRORR("Error assigning global ids.", err);
     }
   // // assign global ids for all entity sets
   // SimpleArray<iBase_EntitySetHandle> sets;
@@ -371,6 +371,14 @@ int CCrgen::load_meshes_parallel(const int nrank, int numprocs)
                   iMesh_load(impl, orig_set, files[rank_load[temp_index]].c_str(), NULL, &err, strlen(files[rank_load[temp_index]].c_str()), 0);
                   ERRORR("Couldn't read mesh file.", err);
                   std::cout << "Loaded mesh file " << rank_load[temp_index] << " in processor: " << nrank << std::endl;
+
+                  if(bsameas[rank_load[temp_index]] == 0 && rank_load[temp_index] < nassys){
+                      if(all_ms_starts[rank_load[temp_index]] != -1 && all_ns_starts[rank_load[temp_index]] !=-1){
+                          if(!shift_mn_ids(orig_set, temp_index))
+                            ERRORR("Couldn't shift material and neumann set id's.", 1);
+                        }
+                    }
+
                   assys.push_back(orig_set);
                   assys_index.push_back(rank_load[temp_index]);
                   break;
@@ -384,6 +392,14 @@ int CCrgen::load_meshes_parallel(const int nrank, int numprocs)
               iMesh_load(impl, orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
               ERRORR("Couldn't read mesh file.", err);
               std::cout << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
+
+              if(bsameas[temp_index] == 0 && temp_index < nassys){
+                  if(all_ms_starts[temp_index] != -1 && all_ns_starts[temp_index] !=-1){
+                      if(!shift_mn_ids(orig_set, temp_index))
+                        ERRORR("Couldn't shift material and neumann set id's.", 1);
+                    }
+                }
+
               assys.push_back(orig_set);
               assys_index.push_back(temp_index);
             }
@@ -438,6 +454,7 @@ CCrgen::CCrgen()
   linenumber = 0;
   info = "off";
   minfo = "off";
+  same_as = "";
 }
 
 CCrgen::~CCrgen()
@@ -698,13 +715,94 @@ int CCrgen::load_meshes()
       iMesh_load(impl, orig_set, files[i].c_str(), NULL, &err, strlen(
                    files[i].c_str()), 0);
       ERRORR("Couldn't read mesh file.", err);
-
+      //resize this else code will break
+      //check if we've loaded the same mesh file and need to shift the Material and Neumann set start id's
+      if(bsameas[i] == 0 && (int) i < nassys){
+          if(all_ms_starts[i] != -1 && all_ns_starts[i] !=-1){
+              if(!shift_mn_ids(orig_set, i))
+                ERRORR("Couldn't shift material and neumann set id's.", 1);
+            }
+        }
       assys.push_back(orig_set);
       assys_index.push_back(i);
     }
   std::cout << "Loaded mesh files." << std::endl;
 
   return iBase_SUCCESS;
+}
+
+int CCrgen::shift_mn_ids(iBase_EntitySetHandle orig_set, int number)
+// ---------------------------------------------------------------------------
+// Function: loads all the meshes and initializes copymesh and merge mesh objects
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  std::cout << "Swapping MS and NS ids for " << number << std::endl;
+  // get all the material sets in this assembly
+  moab::Tag mattag, neutag;
+  mbImpl()->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+  mbImpl()->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, neutag );
+
+  int rval = 0;
+  moab::Range matsets, neusets;
+
+  mbImpl()->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &mattag, 0, 1, matsets );
+  mbImpl()->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &neutag, 0, 1, neusets );
+
+  int i = 0;
+  moab::Range::iterator set_it;
+  for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+      moab::EntityHandle this_set = *set_it;
+
+      // get the id for this set
+      int set_id;
+      rval = mbImpl()->tag_get_data(mattag, &this_set, 1, &set_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mbImpl()->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+
+      // set the new id for this set
+      int new_id = all_ms_starts[number] + i;
+      rval = mbImpl()->tag_set_data(mattag, &this_set, 1, &new_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mbImpl()->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+      ++i;
+    }
+
+  int j = 0;
+  for (set_it = neusets.begin(); set_it != neusets.end(); set_it++)  {
+      moab::EntityHandle this_set = *set_it;
+
+      // get the id for this set
+      int set_id;
+      rval = mbImpl()->tag_get_data(neutag, &this_set, 1, &set_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mbImpl()->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+
+      // set the new id for this set
+      int new_id = all_ns_starts[number] + j;
+      rval = mbImpl()->tag_set_data(neutag, &this_set, 1, &new_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mbImpl()->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+      ++j;
+    }
+  return 0;
 }
 
 int CCrgen::load_geometries()
@@ -934,22 +1032,9 @@ int CCrgen::read_inputs_phase2()
                 }
 
               // reading file and alias names
-              for (int i = 1; i <= nassys; i++) {
-                  if (!parse.ReadNextLine(file_input, linenumber,
-                                          input_string, MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                  std::istringstream formatString(input_string);
-                  formatString >> meshfile >> mf_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
+              if(!parse_assembly_names(parse))
+                ERRORR("error parsing names of assemblies",1);
 
-                  all_meshfiles.push_back(meshfile);
-                  if (iname == DEFAULT_TEST_FILE){
-                      meshfile = DIR + meshfile;
-                    }
-                  files.push_back(meshfile);
-                  assm_alias.push_back(mf_alias);
-                }
               // reading lattice
               if (!parse.ReadNextLine(file_input, linenumber, input_string,
                                       MAXCHARS, comment))
@@ -993,23 +1078,8 @@ int CCrgen::read_inputs_phase2()
                 }
 
               // reading file and alias names
-              for (int i = 1; i <= nassys; i++) {
-                  if (!parse.ReadNextLine(file_input, linenumber,
-                                          input_string, MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                  std::istringstream formatString(input_string);
-                  formatString >> meshfile >> mf_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-
-                  all_meshfiles.push_back(meshfile);
-
-                  if (iname == DEFAULT_TEST_FILE){
-                      meshfile = DIR + meshfile;
-                    }
-                  files.push_back(meshfile);
-                  assm_alias.push_back(mf_alias);
-                }
+              if(!parse_assembly_names(parse))
+                ERRORR("error parsing names of assemblies",1);
 
               // reading lattice
               if (!parse.ReadNextLine(file_input, linenumber, input_string,
@@ -1049,23 +1119,8 @@ int CCrgen::read_inputs_phase2()
                 }
 
               // reading file and alias names
-              for (int i = 1; i <= nassys; i++) {
-                  if (!parse.ReadNextLine(file_input, linenumber,
-                                          input_string, MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                  std::istringstream formatString(input_string);
-                  formatString >> meshfile >> mf_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-
-                  all_meshfiles.push_back(meshfile);
-
-                  if (iname == DEFAULT_TEST_FILE){
-                      meshfile = DIR + meshfile;
-                    }
-                  files.push_back(meshfile);
-                  assm_alias.push_back(mf_alias);
-                }
+              if(!parse_assembly_names(parse))
+                ERRORR("error parsing names of assemblies",1);
 
               // reading lattice
               if (!parse.ReadNextLine(file_input, linenumber, input_string,
@@ -1102,24 +1157,8 @@ int CCrgen::read_inputs_phase2()
                     IOErrorHandler (INVALIDINPUT);
                 }
 
-              // reading file and alias names
-              for (int i = 1; i <= nassys; i++) {
-                  if (!parse.ReadNextLine(file_input, linenumber,
-                                          input_string, MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                  std::istringstream formatString(input_string);
-                  formatString >> meshfile >> mf_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-
-                  all_meshfiles.push_back(meshfile);
-
-                  if (iname == DEFAULT_TEST_FILE){
-                      meshfile = DIR + meshfile;
-                    }
-                  files.push_back(meshfile);
-                  assm_alias.push_back(mf_alias);
-                }
+              if(!parse_assembly_names(parse))
+                ERRORR("error parsing names of assemblies",1);
 
               // reading lattice
               if (!parse.ReadNextLine(file_input, linenumber, input_string,
@@ -1157,24 +1196,8 @@ int CCrgen::read_inputs_phase2()
                     IOErrorHandler (INVALIDINPUT);
                 }
 
-              // reading file and alias names
-              for (int i = 1; i <= nassys; i++) {
-                  if (!parse.ReadNextLine(file_input, linenumber,
-                                          input_string, MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                  std::istringstream formatString(input_string);
-                  formatString >> meshfile >> mf_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-
-                  all_meshfiles.push_back(meshfile);
-
-                  if (iname == DEFAULT_TEST_FILE){
-                      meshfile = DIR + meshfile;
-                    }
-                  files.push_back(meshfile);
-                  assm_alias.push_back(mf_alias);
-                }
+              if(!parse_assembly_names(parse))
+                ERRORR("error parsing names of assemblies",1);
 
               // reading lattice
               if (!parse.ReadNextLine(file_input, linenumber, input_string,
@@ -1260,6 +1283,7 @@ int CCrgen::read_inputs_phase2()
   // set some variables
   assm_meshfiles.resize(nassys);
   assm_location.resize(nassys);
+  bsameas.resize(nassys);
 
   for(int i = 0; i < tot_assys; i++){
       for (int j = 0; j < nassys; j++){
@@ -1271,6 +1295,53 @@ int CCrgen::read_inputs_phase2()
         }
     }
   return iBase_SUCCESS;
+}
+
+
+int CCrgen::parse_assembly_names(CParser parse)
+// ---------------------------------------------------------------------------
+// Function: Reads all the assemblies from CoreGen input file
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+
+  // reading file and alias names
+  for (int i = 1; i <= nassys; i++) {
+      if (!parse.ReadNextLine(file_input, linenumber,
+                              input_string, MAXCHARS, comment))
+        ERRORR("Reading input file failed",1);
+      std::istringstream formatString(input_string);
+      formatString >> meshfile >> mf_alias >> same_as >> reloading_mf >> ms_startid >> ns_startid;
+      // we don't check for formatting since same_as and parameters after it may not be present.
+      // variable gets populated correctly in the file
+      if (same_as == "same_as")
+        bsameas.push_back(0);
+      else
+        bsameas.push_back(1);
+      if(bsameas[i-1] == 1){
+          all_meshfiles.push_back(meshfile);
+          if (iname == DEFAULT_TEST_FILE){
+              meshfile = DIR + meshfile;
+            }
+          files.push_back(meshfile);
+          assm_alias.push_back(mf_alias);
+          all_ms_starts.push_back(-1);
+          all_ns_starts.push_back(-1);
+        }
+      else{
+          all_meshfiles.push_back(reloading_mf);
+          if (iname == DEFAULT_TEST_FILE){
+              meshfile = DIR + reloading_mf;
+            }
+          files.push_back(reloading_mf);
+          assm_alias.push_back(mf_alias);
+          all_ms_starts.push_back(ms_startid);
+          all_ns_starts.push_back(ns_startid);
+        }
+      //  bsameas = false;
+    }
+  return 0;
 }
 
 int CCrgen::find_assm(const int i, int &assm_index)

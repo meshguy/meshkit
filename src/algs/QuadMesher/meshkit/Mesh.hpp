@@ -294,7 +294,7 @@ public:
           return statusMark;
      }
 
-     const bool isRemoved() const {
+     bool isRemoved() const {
           if (statusMark == REMOVE) return 1;
           return 0;
      }
@@ -304,7 +304,7 @@ public:
           return 0;
      }
 
-     const bool isBoundary() const {
+     bool isBoundary() const {
           return boundarymark;
      }
 

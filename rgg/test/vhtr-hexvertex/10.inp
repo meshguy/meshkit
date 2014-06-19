@@ -45,8 +45,9 @@ Assembly 11
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+Center
 Rotate Z -120
+Center
 Section Y 0
 MaterialSet_StartId 1000
-Center
 END ! This is a must
