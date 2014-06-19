@@ -31,8 +31,7 @@ const moab::EntityType* TFIMapping::output_types()
 TFIMapping::TFIMapping(MKCore *mk_core, const MEntVector &me_vec) :
   MeshScheme(mk_core, me_vec)
 {
-  _shapeImprove=true;
-  //buildAssociation();
+  _shapeImprove=false;
 }
 
 //---------------------------------------------------------------------------//
@@ -48,7 +47,7 @@ void TFIMapping::setup_this()
 {
 
   /* the only things we need to make sure :
-   1) there are 4 edges, exactly
+   1) there are 4 edges, exactly: this is removed
    2) the opposite edges have the same meshcount
    - if some of the edges are meshed, we need to mesh the opposite edge with
    correct meshcount
@@ -77,69 +76,117 @@ void TFIMapping::setup_this()
     MEntVector boundEdges;
     std::vector<int> senses, group_sizes;
     me->ModelEnt::boundary(1, boundEdges, &senses, &group_sizes);
-    if (boundEdges.size() != 4)
-      ECERRCHK(MK_FAILURE, "bad input for TFI Mapping, we can only mesh surfaces with 4 edges");
+    //remove this constraint in case of the side-cylinder surface
+    //if (boundEdges.size() != 4)
+    //  ECERRCHK(MK_FAILURE, "bad input for TFI Mapping, we can only mesh surfaces with 4 edges");
 
-    // mesh edge 0 and 2 together, and 1 and 3 together (same mesh count)
-    // look at all settings, to decide proper mesh count
-    for (int k = 0; k <= 1; k++)
-    {
-      // treat first edges 0 and 2, then 1 and 3
-      ModelEnt * oppEdges[2] = { boundEdges[k], boundEdges[k + 2] };
-      MEntVector edgesToMesh;// edges that are not meshed yet
-      //if one of them is meshed and the other not, use the same mesh count
+    if (boundEdges.size()<4){
+        ModelEnt *oppEdges[2] = {boundEdges[0], boundEdges[1]};
+        MEntVector edgesToMesh;
 
-      // take the maximum of the proposed mesh counts, either from sizing function, or mesh intervals
-      int mesh_count = mesh_count_surface; // could be -1, still
-      bool force = false;
-      for (int j = 0; j < 2; j++)
-      {
-        if (oppEdges[j]->get_meshed_state() >= COMPLETE_MESH)
-        {
-          // in this case, force the other edge to have the same mesh count, do not take it from surface
-          std::vector<moab::EntityHandle> medges;
-          oppEdges[j]->get_mesh(1, medges, true);
-          mesh_count = (int) medges.size();
-          force = true;
+        int mesh_count = mesh_count_surface;
+        bool force = false;
+        for (int j = 0; j < 2; j++){
+            if (oppEdges[j]->get_meshed_state() >= COMPLETE_MESH){
+                std::vector<moab::EntityHandle> medges;
+                oppEdges[j]->get_mesh(1, medges, true);
+                mesh_count = (int) medges.size();
+                force = true;
+            }
+            else
+            {
+                int indexS = oppEdges[j]->sizing_function_index();
+                if (indexS >= 0){
+                    SizingFunction * sfe = mk_core()->sizing_function(indexS);
+                    if (sfe->intervals()>0 && !force)
+                        mesh_count = sfe->intervals();
+                }
+                edgesToMesh.push_back(oppEdges[j]);
+            }
         }
-        else
-        {
-          int indexS = oppEdges[j]->sizing_function_index();
-          if (indexS >= 0)
-          {
-            SizingFunction * sfe = mk_core()->sizing_function(indexS);
-            if (sfe->intervals() > 0 && !force)// if a sizing function was set on an edge, use it, do not
-              // use the mesh count from surface
-              // still, a mesh count from opposing edge is very powerful
-              mesh_count = sfe->intervals();
-          }
-          // push it to the list if it is not setup to another mesh op (edge mesher) already
-          //if (oppEdges[j]->is_meshops_list_empty())// it will create an EdgeMesher later
-          edgesToMesh.push_back(oppEdges[j]);
-        }
-      }
-      // decide on a mesh count now, if edgesToMesh.size()>0
-      if (edgesToMesh.size() > 0)
-      {
+		if (edgesToMesh.size() > 0)
+      	{
+		    EdgeMesher * em = (EdgeMesher*) me->mk_core()->construct_meshop("EdgeMesher", edgesToMesh);
+		    if (mesh_count < 0)
+		    {
+		      std::cout << "mesh count not set properly on opposite edges, set it to 10\n";
+		      mesh_count = 10; // 4 is a nice number, used in the default edge mesher;
+		      // but I like 10 more
+		    }
 
-        EdgeMesher * em = (EdgeMesher*) me->mk_core()->construct_meshop("EdgeMesher", edgesToMesh);
-        if (mesh_count < 0)
-        {
-          std::cout << "mesh count not set properly on opposite edges, set it to 10\n";
-          mesh_count = 10; // 4 is a nice number, used in the default edge mesher;
-          // but I like 10 more
-        }
+		    for (unsigned int j = 0; j < edgesToMesh.size(); j++)
+		    {
+		      edgesToMesh[j]->mesh_intervals(mesh_count);
+		      edgesToMesh[j]->interval_firmness(HARD);
+		      edgesToMesh[j]->add_meshop(em);
+		    }
+		    mk_core()->insert_node(em, (MeshOp*) this);
 
-        for (unsigned int j = 0; j < edgesToMesh.size(); j++)
-        {
-          edgesToMesh[j]->mesh_intervals(mesh_count);
-          edgesToMesh[j]->interval_firmness(HARD);
-          edgesToMesh[j]->add_meshop(em);
-        }
-        mk_core()->insert_node(em, (MeshOp*) this);
+      	}
+    }
+	else{
 
-      }
-    } // end loop over pair of opposite edges
+		// mesh edge 0 and 2 together, and 1 and 3 together (same mesh count)
+		// look at all settings, to decide proper mesh count
+		for (int k = 0; k <= 1; k++)
+		{
+		  // treat first edges 0 and 2, then 1 and 3
+		  ModelEnt * oppEdges[2] = { boundEdges[k], boundEdges[k + 2] };
+		  MEntVector edgesToMesh;// edges that are not meshed yet
+		  //if one of them is meshed and the other not, use the same mesh count
+
+		  // take the maximum of the proposed mesh counts, either from sizing function, or mesh intervals
+		  int mesh_count = mesh_count_surface; // could be -1, still
+		  bool force = false;
+		  for (int j = 0; j < 2; j++)
+		  {
+		    if (oppEdges[j]->get_meshed_state() >= COMPLETE_MESH)
+		    {
+		      // in this case, force the other edge to have the same mesh count, do not take it from surface
+		      std::vector<moab::EntityHandle> medges;
+		      oppEdges[j]->get_mesh(1, medges, true);
+		      mesh_count = (int) medges.size();
+		      force = true;
+		    }
+		    else
+		    {
+		      int indexS = oppEdges[j]->sizing_function_index();
+		      if (indexS >= 0)
+		      {
+		        SizingFunction * sfe = mk_core()->sizing_function(indexS);
+		        if (sfe->intervals() > 0 && !force)// if a sizing function was set on an edge, use it, do not
+		          // use the mesh count from surface
+		          // still, a mesh count from opposing edge is very powerful
+		          mesh_count = sfe->intervals();
+		      }
+		      // push it to the list if it is not setup to another mesh op (edge mesher) already
+		      //if (oppEdges[j]->is_meshops_list_empty())// it will create an EdgeMesher later
+		      edgesToMesh.push_back(oppEdges[j]);
+		    }
+		  }
+		  // decide on a mesh count now, if edgesToMesh.size()>0
+		  if (edgesToMesh.size() > 0)
+		  {
+
+		    EdgeMesher * em = (EdgeMesher*) me->mk_core()->construct_meshop("EdgeMesher", edgesToMesh);
+		    if (mesh_count < 0)
+		    {
+		      std::cout << "mesh count not set properly on opposite edges, set it to 10\n";
+		      mesh_count = 10; // 4 is a nice number, used in the default edge mesher;
+		      // but I like 10 more
+		    }
+
+		    for (unsigned int j = 0; j < edgesToMesh.size(); j++)
+		    {
+		      edgesToMesh[j]->mesh_intervals(mesh_count);
+		      edgesToMesh[j]->interval_firmness(HARD);
+		      edgesToMesh[j]->add_meshop(em);
+		    }
+		    mk_core()->insert_node(em, (MeshOp*) this);
+
+		  }
+		} // end loop over pair of opposite edges
+	}
   }// end loop over surfaces
   mk_core()->print_graph("AfterTFISetup.eps");
 }
@@ -154,15 +201,235 @@ void TFIMapping::execute_this()
   {
     ModelEnt *me = mit -> first;
     //first check whether the surface is meshed or not
-    if (me->get_meshed_state() >= COMPLETE_MESH)
-      continue;
-
-    SurfMapping(me);
+    if (me->get_meshed_state() >= COMPLETE_MESH){
+		
+#ifdef HAVE_MESQUITE
+	iBase_EntitySetHandle entityset;
+    iRel::Error r_err = mk_core()->irel_pair(me->iRelPairIndex())->getEntSetRelation(me->geom_handle(), 0, entityset);
+	IBERRCHK(r_err, "Trouble get the entityset w.r.t a surface!");
+    MeshImprove shapesmooth(mk_core(), false, false, true, false, mk_core()->igeom_instance(me->iGeomIndex()));
+    shapesmooth.SurfMeshImprove(me->geom_handle(), entityset, iBase_FACE);
+#endif     
+	
+	 continue;
+	}
+	
+	MEntVector boundEdges;
+    std::vector<int> senses, group_sizes;
+    me->ModelEnt::boundary(1, boundEdges, &senses, &group_sizes);
+    if (boundEdges.size() == 4)
+    	SurfMapping(me);
+    else
+		cylinderSurfMapping(me);
 
     //ok, we are done, commit to ME
     me->commit_mesh(mit->second, COMPLETE_MESH);
   }
 
+}
+
+//generate the structured mesh on the cylinder-like linking surfaces.
+int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
+{
+	int irelPairIndex = ent->iRelPairIndex();
+    MEntVector boundEdges;
+    std::vector<int> senses, group_sizes;
+    ent->ModelEnt::boundary(1, boundEdges, &senses, &group_sizes);
+	//in this case, we only have boundEdges[0] and boundEdges[1]
+	std::vector<moab::EntityHandle> nList;
+	std::vector<iBase_EntityHandle> List_i, List_ii;
+	boundEdges[0]->get_mesh(0, nList, true);//include start and end corner
+	std::cout << "cylinder mapping\n";
+    unsigned int ix = 0;
+	int size_i = (int)nList.size()-1;
+	for (ix = 0; ix < nList.size(); ix++)
+		List_i.push_back((iBase_EntityHandle) nList[ix]);
+    //if sense is reverse for edge 0, reverse list
+	if (senses[0] == -1)
+		std::reverse(List_i.begin(), List_i.end());
+	nList.clear();
+	boundEdges[1]->get_mesh(0, nList, true);
+	int size_ii = nList.size() - 1;
+	for (ix = 0; ix < nList.size(); ix++)
+		List_ii.push_back((iBase_EntityHandle) nList[ix]);
+	if (senses[1] == 1)//we reverse it if this edge is "positive" in the loop
+		std::reverse(List_ii.begin(), List_ii.end());
+
+	if (size_i != size_ii)
+    	ECERRCHK(MK_FAILURE, "opposite edges have different mesh count, abort");
+	//ok, done with all the initalizations
+	
+	//get all the position vectors in 3D
+	std::vector<Vector3D> pos_i(size_i), pos_ii(size_ii);
+	iGeom::Error g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_i[0]), size_i, iBase_INTERLEAVED, &(pos_i[0][0]));
+	IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i");
+	g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_ii[0]), size_ii, iBase_INTERLEAVED, &(pos_ii[0][0]));
+	IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i");
+	
+	//compute the interior nodes based on transforming the top and bottom edges in position
+	int mesh_count = ent->mk_core()->sizing_function(ent->sizing_function_index())->intervals();
+	std::vector<iBase_EntityHandle> InteriorNodes(size_i * (mesh_count-1));
+
+	Vector3D c0, c1;
+	for (int k = 1; k < mesh_count; k++)//compute layer by layer
+	{
+		double interpolationFactor = 1.0-double(k)/double(mesh_count);
+		for (int i = 0; i < size_i; i++){
+			c0 = pos_i[i];
+			c1 = pos_ii[i];
+			Vector3D pts = c0*interpolationFactor + c1*(1.0-interpolationFactor);
+			Vector3D coords; 
+			g_err = ent->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
+			if (g_err){
+				g_err = ent->igeom_instance()->getEntClosestPt(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
+			}
+			IBERRCHK(g_err, "Trouble get the closest xyz coordinates on the linking surface.");
+			iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(coords[0], coords[1], coords[2], InteriorNodes[(k-1)*size_i+i]);
+			IBERRCHK(m_err, "Trouble create the interior node.");			
+		}
+	}
+
+	//finish creating the interior nodes
+	iBase_EntitySetHandle entityset;
+	iRel::Error r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(ent->geom_handle(), 0, entityset);
+	if (r_err){
+		//create the entityset
+		iMesh::Error m_err = mk_core()->imesh_instance()->createEntSet(true, entityset);
+		IBERRCHK(m_err, "Trouble create the entity set.");
+
+		r_err = mk_core()->irel_pair(irelPairIndex)->setEntSetRelation(ent->geom_handle(), entityset);
+		IBERRCHK(r_err, "Trouble create the association between the geometry and mesh entity set.");
+	}
+
+	iMesh::Error m_err = mk_core()->imesh_instance()->addEntArrToSet(&InteriorNodes[0], InteriorNodes.size(), entityset);
+	IBERRCHK(m_err, "Trouble add an array of entities to the mesh entity set.");
+
+	//copy nodes in a vector to create quads easier
+	std::vector<iBase_EntityHandle> Nodes((mesh_count+1)*size_i);
+	//create the int data for mesh nodes on the linking surface
+	iBase_TagHandle mesh_tag;
+	m_err = mk_core()->imesh_instance()->getTagHandle("MeshTFIMapping", mesh_tag);
+	if (m_err)
+	{
+		m_err = mk_core()->imesh_instance()->createTag("MeshTFIMapping", 1, iBase_INTEGER, mesh_tag);
+		IBERRCHK(m_err, "Trouble create the mesh_tag for the surface.");
+	}
+	int intdata = -1;
+	for (int i = 0; i < size_i; i++){
+		intdata++;
+		m_err = mk_core()->imesh_instance()->setIntData(List_i[i], mesh_tag, intdata);
+		IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+
+		Nodes[i] = List_i[i];
+
+		m_err = mk_core()->imesh_instance()->setIntData(List_ii[i], mesh_tag, (intdata + mesh_count*size_i));
+		IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+		Nodes[size_i*mesh_count+i] = List_ii[i];
+	}
+	for (int ii = 0; ii < int(InteriorNodes.size()); ii++){
+		intdata++;
+		m_err = mk_core()->imesh_instance()->setIntData(InteriorNodes[ii], mesh_tag, intdata);
+		IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+		
+		Nodes[intdata] = InteriorNodes[ii];
+	}
+
+	//we will always create them in the positive orientation, because we already reversed the Lists with nodes
+	std::vector<iBase_EntityHandle> qNodes(4);//a generic quad
+	std::vector<iBase_EntityHandle> Quads(size_i*mesh_count);
+	for (int k = 0; k < mesh_count; k++){		
+		for (int i = 0; i < size_i; i++){
+			qNodes[0] = Nodes[ k*size_i + i ];
+			qNodes[1] = Nodes[ k*size_i + (i + 1)%size_i ];
+			qNodes[2] = Nodes[ (k+1)*size_i + (i + 1)%size_i ];
+			qNodes[3] = Nodes[ (k+1)*size_i + i ];
+			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[k*size_i+i]);
+			IBERRCHK(m_err, "Trouble create the quadrilateral element.");
+		}
+	}
+	
+	//finish creating the quads
+	m_err = mk_core()->imesh_instance()->addEntArrToSet(&Quads[0], Quads.size(), entityset);
+	IBERRCHK(m_err, "Trouble add an array of quads to the mesh entity set.");
+	//set int data for quads
+	for (unsigned int i = 0; i < Quads.size(); i++)                               
+    {                                                                             
+       m_err = mk_core()->imesh_instance()->setIntData(Quads[i], mesh_tag, i);     
+       IBERRCHK(m_err, "Trouble set the int data for quadrilateral elements.");    
+    }
+
+  //Get the global id tag
+  const char *tag = "GLOBAL_ID";
+  iBase_TagHandle mesh_id_tag;
+  m_err = mk_core()->imesh_instance()->getTagHandle(tag, mesh_id_tag);
+  IBERRCHK(m_err, "Trouble get the mesh_id_tag for 'GLOBAL_ID'.");
+	
+  std::vector<iBase_EntityHandle> m_Nodes, m_Edges, m_Quads;
+
+  //set the int data for Global ID tag
+  iBase_EntitySetHandle root_set;
+  int err;
+  iMesh_getRootSet(mk_core()->imesh_instance()->instance(), &root_set, &err);
+  assert(!err);
+  m_err = mk_core()->imesh_instance()->getEntities(root_set, iBase_VERTEX, iMesh_POINT, m_Nodes);
+  IBERRCHK(m_err, "Trouble get the node list from the mesh entity set.");
+  m_err = mk_core()->imesh_instance()->getEntities(root_set, iBase_EDGE, iMesh_LINE_SEGMENT, m_Edges);
+  IBERRCHK(m_err, "Trouble get the edges from the mesh entity set.");
+  m_err = mk_core()->imesh_instance()->getEntities(root_set, iBase_FACE, iMesh_QUADRILATERAL, m_Quads);
+  IBERRCHK(m_err, "Trouble get the faces from the mesh entity set.");
+
+  for (unsigned int i = 0; i < m_Nodes.size(); i++)
+  {
+    m_err = mk_core()->imesh_instance()->setIntData(m_Nodes[i], mesh_id_tag, i);
+    IBERRCHK(m_err, "Trouble set the int data for 'GLOBAL_ID'.");
+  }
+  for (unsigned int i = 0; i < m_Edges.size(); i++)
+  {
+    m_err = mk_core()->imesh_instance()->setIntData(m_Edges[i], mesh_id_tag, i);
+    IBERRCHK(m_err, "Trouble set the int data for 'GLOBAL_ID'.");
+  }
+  for (unsigned int i = 0; i < m_Quads.size(); i++)
+  {
+    m_err = mk_core()->imesh_instance()->setIntData(m_Quads[i], mesh_id_tag, i);
+    IBERRCHK(m_err, "Trouble set the int data for 'GLOBAL_ID'.");
+  }
+
+  //SurfImprove(ent->geom_handle(), entityset, iBase_FACE);
+  mk_core()->save_mesh("InitialMapping.vtk");
+
+  if (_shapeImprove)
+  {
+#ifdef HAVE_MESQUITE
+
+    iGeom * ig_inst = mk_core()->igeom_instance(ent->iGeomIndex());
+
+    MeshImprove meshopt(mk_core(), true, false, false, false, ig_inst);
+    meshopt.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
+
+#endif
+
+    mk_core()->save_mesh("AfterWinslow.vtk");
+#ifdef HAVE_MESQUITE
+    MeshImprove shapesmooth(mk_core(), false, false, true, false, ig_inst);
+    shapesmooth.SurfMeshImprove(ent->geom_handle(), entityset, iBase_FACE);
+#endif
+  }
+
+  //remove the mesh tag
+  m_err = mk_core()->imesh_instance()->rmvArrTag(&Quads[0], Quads.size(), mesh_tag);
+  IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
+  m_err = mk_core()->imesh_instance()->rmvArrTag(&List_i[0], List_i.size(), mesh_tag);
+  IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
+  m_err = mk_core()->imesh_instance()->rmvArrTag(&List_ii[0], List_ii.size(), mesh_tag);
+  IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
+
+  if (InteriorNodes.size() > 0)
+  {
+    m_err = mk_core()->imesh_instance()->rmvArrTag(&InteriorNodes[0], InteriorNodes.size(), mesh_tag);
+    IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
+  }
+
+  return 1; 
 }
 
 /***********************************************************************************/
@@ -182,8 +449,10 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   MEntVector boundEdges;
   std::vector<int> senses, group_sizes;
   ent->ModelEnt::boundary(1, boundEdges, &senses, &group_sizes);
-  if (boundEdges.size() != 4)
-    ECERRCHK(MK_FAILURE, "bad input for TFI Mapping, we can only mesh surfaces with 4 edges");
+  //remove this constraint in case of the side-cylinder case
+  //if (boundEdges.size() != 4)
+  //  ECERRCHK(MK_FAILURE, "bad input for TFI Mapping, we can only mesh surfaces with 4 edges");
+  std::cout << "Surf mapping\n";
 
   std::vector<iBase_EntityHandle> List_i, List_j, List_ii, List_jj;
 
