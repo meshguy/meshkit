@@ -2,7 +2,7 @@
 ! Hexagonal VHTR Control Rod Assembly Definition without CellMaterials (Prism) around individual Pins (No CR; Section X 0)
 ! ########################################################################################################################
 !
-!                                     
+!           
 Materials 6 Mat_OCoolant C1Out Mat_Coolant C1 Mat_Fuel  F1 Mat_Block G1 Mat_Poison P1 Mat_FHH H1       
 !
 Duct 2 0.0 0.0    0.0 793.0    36.0 37.3     G1 C1Out 
@@ -45,9 +45,9 @@ Assembly 11
                  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC
                    FC  CC  FC  FC  CC  FC  FC  CC  FC  FC  CC  FC
                      BP  FC  CC  FC  FC  CC  FC  FC  CC  FC  BP
+Center
 Rotate Z 30
 Section X 0
 Rotate Z -30
 MaterialSet_StartId 900
-Center
 END ! This is a must

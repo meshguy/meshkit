@@ -163,6 +163,41 @@ int CNrgen::PrepareIO (int argc, char *argv[])
 
   std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
           << std::endl;
+
+
+  //ACIS ENGINE
+#ifdef HAVE_ACIS
+  //  if(m_szEngine == "acis"){
+  m_szGeomFile = m_szFile+".sat";
+  //  }
+#elif defined(HAVE_OCC)
+  //  OCC ENGINE
+  //  if (m_szEngine == "occ"){
+  m_szGeomFile = m_szFile+".stp";
+  //  }o
+#endif
+  std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
+
+  // writing schemes .jou file ends, now write the main journal file.
+  // stuff common to both surface and volume
+  m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
+  m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
+  m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
+  m_FileOutput << "#" << std::endl;
+  m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
+  m_FileOutput << "Timer Start" << std::endl;
+  // import the geometry file
+  m_FileOutput << "# Import geometry file " << std::endl;
+  //ACIS ENGINE
+#ifdef HAVE_ACIS
+  m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
+
+#elif defined(HAVE_OCC)
+  //  OCC ENGINE
+  m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
+#endif
+
+  m_FileOutput << "#" << std::endl;
   return 0;
 }
 
@@ -317,6 +352,11 @@ int CNrgen::ReadCommonInp ()
           std::istringstream szFormatString(szInputString);
           szFormatString >> card >> m_edgeInterval;
         }
+      // mesh scheme - hole or pave
+      if (szInputString.substr(0, 10) == "meshscheme") {
+          std::istringstream szFormatString(szInputString);
+          szFormatString >> card >> m_szMeshScheme;
+        }
       // breaking condition
       if(szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
           found = true;
@@ -352,6 +392,29 @@ int CNrgen::ReadInputPhase1 ()
           if( ((strcmp (m_szEngine.c_str(), "acis") != 0) &&
                (strcmp (m_szEngine.c_str(), "occ") != 0)) || szFormatString.fail())
             IOErrorHandler(EGEOMENGINE);
+        }
+      // Read material data
+      if ((szInputString.substr(0,9) == "materials") && (szInputString.substr(0,19) != "materialset_startid")){
+
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_nAssemblyMat;
+          if(szFormatString.fail())
+            IOErrorHandler(INVALIDINPUT);
+          m_szAssmMat.SetSize(m_nAssemblyMat); m_szAssmMatAlias.SetSize(m_nAssemblyMat);
+          for (int j=1; j<=m_nAssemblyMat; j++){
+              szFormatString >> m_szAssmMat(j) >> m_szAssmMatAlias(j);
+              if( (strcmp (m_szAssmMat(j).c_str(), "") == 0) ||
+                  (strcmp (m_szAssmMatAlias(j).c_str(), "") == 0)){
+                  IOErrorHandler(EMAT);
+                }
+              // checking if & inserted at the end of the material by mistake
+              if (j == m_nAssemblyMat){
+                  std::string dummy = "";
+                  szFormatString >> dummy;
+                  if (strcmp (dummy.c_str(), "") != 0)
+                    IOErrorHandler(EMAT);
+                }
+            }
         }
       // start id for pin number
       if (szInputString.substr(0, 10) == "startpinid") {
@@ -420,6 +483,11 @@ int CNrgen::ReadInputPhase1 ()
           szFormatString >> card >> m_szInfo;
           std::cout <<"--------------------------------------------------"<<std::endl;
         }
+      // mesh scheme - hole or pave
+      if (szInputString.substr(0, 10) == "meshscheme") {
+          std::istringstream szFormatString(szInputString);
+          szFormatString >> card >> m_szMeshScheme;
+        }
       // hex block along z
       if (szInputString.substr(0,6) == "hblock"){
           std::istringstream szFormatString (szInputString);
@@ -434,19 +502,6 @@ int CNrgen::ReadInputPhase1 ()
 
   iGeom_newGeom( 0, &geom, &err, 0 ); // this is default way of specifying engine used in configure line
   CHECK("Failed to set geometry engine.");
-
-  //ACIS ENGINE
-#ifdef HAVE_ACIS
-  //  if(m_szEngine == "acis"){
-  m_szGeomFile = m_szFile+".sat";
-  //  }
-#elif defined(HAVE_OCC)
-  //  OCC ENGINE
-  //  if (m_szEngine == "occ"){
-  m_szGeomFile = m_szFile+".stp";
-  //  }o
-#endif
-  std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
   if(strcmp(m_szInfo.c_str(),"on") == 0){
       std::cout  << m_szAssmInfo <<std::endl;
@@ -585,6 +640,14 @@ int CNrgen::ReadPinCellData (int i)
                   szFormatString >> szVCylMat(m);
                   if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (m > 1 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                 }
               m_Pincell(i).SetCylMat(nCyl, szVCylMat);
             }
@@ -627,6 +690,14 @@ int CNrgen::ReadPinCellData (int i)
                   szFormatString >> szVCylMat(m);
                   if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (m > 2 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                 }
               m_Pincell(i).SetCylMat(nCyl, szVCylMat);
             }
@@ -745,6 +816,15 @@ int CNrgen::ReadPinCellData (int i)
                   szFormatString >> szVCylMat(m);
                   if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (m > 1 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                       //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                         if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                 }
 
               m_Pincell(i).SetCylMat(nCyl, szVCylMat);
@@ -788,6 +868,14 @@ int CNrgen::ReadPinCellData (int i)
                   szFormatString >> szVCylMat(m);
                   if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (m > 2 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                 }
               m_Pincell(i).SetCylMat(nCyl, szVCylMat);
             }
@@ -856,28 +944,6 @@ int CNrgen::ReadAndCreate()
           if(strcmp (outfile.c_str(), "surface") == 0 || szFormatString.fail())
             m_nPlanar=1;
         }
-      if ((szInputString.substr(0,9) == "materials") && (szInputString.substr(0,19) != "materialset_startid")){
-
-          std::istringstream szFormatString (szInputString);
-          szFormatString >> card >> m_nAssemblyMat;
-          if(szFormatString.fail())
-            IOErrorHandler(INVALIDINPUT);
-          m_szAssmMat.SetSize(m_nAssemblyMat); m_szAssmMatAlias.SetSize(m_nAssemblyMat);
-          for (int j=1; j<=m_nAssemblyMat; j++){
-              szFormatString >> m_szAssmMat(j) >> m_szAssmMatAlias(j);
-              if( (strcmp (m_szAssmMat(j).c_str(), "") == 0) ||
-                  (strcmp (m_szAssmMatAlias(j).c_str(), "") == 0)){
-                  IOErrorHandler(EMAT);
-                }
-              // checking if & inserted at the end of the material by mistake
-              if (j == m_nAssemblyMat){
-                  std::string dummy = "";
-                  szFormatString >> dummy;
-                  if (strcmp (dummy.c_str(), "") != 0)
-                    IOErrorHandler(EMAT);
-                }
-            }
-        }
       if( (szInputString.substr(0,10) == "dimensions") ||
           (szInputString.substr(0,4) == "duct") ){
 
@@ -909,6 +975,15 @@ int CNrgen::ReadAndCreate()
                   szFormatString >> m_szMMAlias(m_nDuctNum, i);
                   if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0)
                     IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (i > 1 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                       //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                         if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                 }
             }
           if(m_szGeomType =="rectangular"){
@@ -938,6 +1013,15 @@ int CNrgen::ReadAndCreate()
                   szFormatString >> m_szMMAlias(m_nDuctNum, i);
                   if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (i > 1 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                       //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                         if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                 }
             }
         }
@@ -1310,6 +1394,8 @@ int CNrgen::CreateCubitJournal()
 //Output:   none
 //---------------------------------------------------------------------------
 {
+  if(m_szMeshScheme == "hole")
+    m_FileOutput << "surf in group hole_surfaces scheme hole" << std::endl;
   // variables
   int nColor;
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
@@ -1380,7 +1466,10 @@ int CNrgen::CreateCubitJournal()
               m_SchemesFile << "## Set interval along Z direction ## " << std::endl;
 
               for( int p=1; p<= m_nDuct; p++){
-                  m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "=" << m_dAxialSize(p) << "}" << std::endl;
+                  if (m_dAxialSize.GetSize() != 0)
+                      m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "=" << m_dAxialSize(p) << "}" << std::endl;
+                  else
+                    m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "= 0.1*Z_HEIGHT}" << std::endl;
                   m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE" << p << "}" << std::endl;
                 }
               m_SchemesFile << "##" << std::endl;
@@ -1406,26 +1495,6 @@ int CNrgen::CreateCubitJournal()
           m_SchemesFile << "#{TET_MESH_SIZE = " << m_dTetMeshSize  << "}" << std::endl;
         }
     }
-  // writing schemes .jou file ends, now write the main journal file.
-  // stuff common to both surface and volume
-  m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
-  m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
-  m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
-  m_FileOutput << "#" << std::endl;
-  m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
-  m_FileOutput << "Timer Start" << std::endl;
-  // import the geometry file
-  m_FileOutput << "# Import geometry file " << std::endl;
-  //ACIS ENGINE
-#ifdef HAVE_ACIS
-  m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
-
-#elif defined(HAVE_OCC)
-  //  OCC ENGINE
-  m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
-#endif
-
-  m_FileOutput << "#" << std::endl;
 
   if(m_nHblock == -1){ // if more blocks are needed axially, create'em using hexes and the end
       // block creation dumps
@@ -1583,9 +1652,20 @@ int CNrgen::CreateCubitJournal()
           szSurfTop = m_szAssmMat(p) + "_top";
           szGrp = "g_"+ m_szAssmMat(p);
           szSize =  m_szAssmMat(p) + "_surf_size";
-          m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
-          m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
-          m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
+          if(m_szMeshScheme == "hole"){
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+              m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
+              m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
+              m_FileOutput << "#{If(nIntersect==0)}" << std::endl;
+              m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
+              m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
+              m_FileOutput << "#{endif}"  << std::endl;
+            }
+          else{
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+              m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
+              m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
+            }
 
           if (p==1 && m_edgeInterval != 99){
               m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge'"<< std::endl;
@@ -1606,7 +1686,23 @@ int CNrgen::CreateCubitJournal()
         }
       else {
           m_FileOutput << "#Meshing top surface" << std::endl;
-          m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+          //m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+          if(m_szMeshScheme == "hole"){
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+              m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
+              m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
+              m_FileOutput << "#{If(nIntersect==0)}" << std::endl;
+              m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
+              m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
+              m_FileOutput << "#{endif}"  << std::endl;
+              m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+            }
+          else{
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+              m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
+              m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
+              m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+            }
         }
 
       if(m_nPlanar == 0){ // volumes only

@@ -50,6 +50,8 @@ public:
   ~CCrgen ();   // dtor
   enum ErrorStates {INVALIDINPUT, ENEGATIVE};
   int prepareIO (int argc, char *argv[], int nrank, int numprocs);
+  int parse_assembly_names(CParser parse);
+  int shift_mn_ids(iBase_EntitySetHandle, int);
   int load_meshes();
   int load_meshes_parallel(const int, int);
   int distribute_mesh(const int,  int);
@@ -87,9 +89,9 @@ public:
 #endif
 #endif
 
-  bool extrude_flag;
-  bool mem_tflag;
-  std::string prob_type, savefiles, info, minfo;
+  bool extrude_flag, mem_tflag;
+  std::vector <int> bsameas;
+  std::string prob_type, savefiles, info, minfo, same_as, reloading_mf;
   std::vector<std::string> files, all_meshfiles, mk_files;
   std::vector<int> assm_meshfiles;
   std::vector< std::vector<int> > assm_location;
@@ -100,7 +102,7 @@ public:
   bool nst_flag, nsb_flag, nss_flag, nssall_flag;
   std::vector<std::string> core_alias;
   std::vector<double> nsx, nsy, nsc;
-  int num_nsside;
+  int num_nsside, ms_startid, ns_startid;
 private:
 
   CopyMesh **cm;
@@ -131,6 +133,7 @@ private:
   int linenumber;
   std::string card,geom_type, meshfile, mf_alias, temp_alias;
   std::vector<std::string> assm_alias;
+  std::vector<int> all_ms_starts, all_ns_starts;
   
   // parsing related
   std::string input_string;

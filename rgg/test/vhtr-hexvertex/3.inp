@@ -33,7 +33,8 @@ Assembly 11
                  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                    XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
                      XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
-Rotate Z -60
-MaterialSet_StartId 300
 Center
+Rotate Z -60
+Center
+MaterialSet_StartId 300
 END ! This is a must
