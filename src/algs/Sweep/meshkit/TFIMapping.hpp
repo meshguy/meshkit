@@ -104,6 +104,9 @@ private:
   //generate the mesh on the linking surface
   int SurfMapping(ModelEnt *ent);
 
+ //generate the mesh on the cylinder-like linking surface
+  int cylinderSurfMapping(ModelEnt *ent);
+
   // transform from source line to target line, such that
   // target= A * ( source - 2*sc + tc) + sc
   void computeTransformation(Vector3D & A, Vector3D & B, Vector3D & C, Vector3D & D,

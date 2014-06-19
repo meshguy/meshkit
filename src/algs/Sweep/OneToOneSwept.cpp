@@ -157,7 +157,7 @@ void OneToOneSwept::setup_this()
         MEntVector edges;
         surfs[i]->get_adjacencies(1, edges);// all surfaces adjacent to the volume
         std::cout << " linking surface with global ID: " << index_id_link << " has " << edges.size() << " edges\n";
-        assert((int)edges.size()==4);
+        //assert((int)edges.size()==4);
 
         linkingSurfaces.push_back(surfs[i]);
       }
@@ -210,8 +210,8 @@ void OneToOneSwept::execute_this()
 
     mk_core()->save_mesh("BeforeVolumeImprove.h5m");
 #if HAVE_MESQUITE
-    MeshImprove meshImpr(mk_core());
-    meshImpr.VolumeMeshImprove(volumeSet, iBase_REGION);
+    //MeshImprove meshImpr(mk_core());
+    //meshImpr.VolumeMeshImprove(volumeSet, iBase_REGION);
 #endif
     me->commit_mesh(mit->second, COMPLETE_MESH);
   }
