@@ -11,6 +11,7 @@ AssyGen input o/p and functions
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <iterator>     // std::istream_iterator
 
 #define STRINGIFY_(X) #X
 #define STRINGIFY(X) STRINGIFY_(X)
@@ -72,6 +73,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
                         m_szSchFile = m_szFile+".template.jou";
                         m_szAssmInfo = m_szFile + "_info.csv";
                         m_szLogFile = m_szFile + ".log";
+                        m_szCommonFile = "common.inp";
                         break;
                       }
                     case 'h':
@@ -130,7 +132,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
           std::cout << "common.inp file not specified." << std::endl;
           m_FileCommon.clear ();
         }
-      else {     
+      else {
           have_common = true;
         }
 
@@ -221,7 +223,7 @@ int CNrgen::ReadCommonInp ()
   std::cout << "Reading from common.inp file." << std::endl;
   for(;;){
       if (!Parse1.ReadNextLine (m_FileCommon, m_nLineNumber, szInputString,
-                               MAXCHARS, szComment))
+                                MAXCHARS, szComment))
         IOErrorHandler (INVALIDINPUT);
 
       if (szInputString.substr(0,10) == "geomengine"){
@@ -338,9 +340,16 @@ int CNrgen::ReadCommonInp ()
               std::istringstream szFormatString (szInputString);
               szFormatString >> card;
               m_dAxialSize.SetSize(m_nDuct);
+              int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
+                                                    std::istream_iterator<std::string>());
+              std::istringstream szFormatStringAgain (szInputString);
+              szFormatStringAgain >> card;
               for (int p = 1; p <= m_nDuct; p++){
-                  szFormatString >> m_dAxialSize(p);
-                  if(m_dAxialSize(p) < 0 || szFormatString.fail())
+                  if(p <= num_ams_specified)
+                    szFormatStringAgain >> m_dAxialSize(p);
+                  else
+                    m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
+                  if(m_dAxialSize(p) < 0)
                     IOErrorHandler(ENEGATIVE);
                 }
               std::cout <<"--------------------------------------------------"<<std::endl;
@@ -362,9 +371,9 @@ int CNrgen::ReadCommonInp ()
           found = true;
           break;
         }
-     if (found == false){
-         std::cout << "Cannot specify: " << szInputString << " in common.inp files" << std::endl;
-       }
+      if (found == false){
+          std::cout << "Cannot specify: " << szInputString << " in common.inp files" << std::endl;
+        }
     }
   return 0;
 }
@@ -820,8 +829,8 @@ int CNrgen::ReadPinCellData (int i)
                   if (m > 1 && m_szMeshScheme == "hole"){
                       // find material name for this alias
                       for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                       //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                         if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
+                          //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                          if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
                             m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
                         }
                     }
@@ -957,8 +966,8 @@ int CNrgen::ReadAndCreate()
                   m_dMXYAssm.SetSize(m_nDuct, 2); m_dMZAssm.SetSize(m_nDuct, 2);
                 }
               szFormatString >> card >> m_nDimensions
-                             >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
-                             >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
+                  >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
+                                               >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
               if(m_nDuctNum == 1){
                   m_dMAssmPitch.SetSize(m_nDuct, m_nDimensions); m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
 
@@ -979,8 +988,8 @@ int CNrgen::ReadAndCreate()
                   if (i > 1 && m_szMeshScheme == "hole"){
                       // find material name for this alias
                       for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                       //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                         if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
+                          //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                          if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
                             m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
                         }
                     }
@@ -993,8 +1002,8 @@ int CNrgen::ReadAndCreate()
                   m_dMZAssm.SetSize(m_nDuct, 2);
                 }
               szFormatString >> card >> m_nDimensions
-                             >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
-                             >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
+                  >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
+                                               >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
               if (szFormatString.fail())
                 IOErrorHandler(INVALIDINPUT);
               if(m_nDuctNum == 1){
@@ -1017,8 +1026,8 @@ int CNrgen::ReadAndCreate()
                   if (i > 1 && m_szMeshScheme == "hole"){
                       // find material name for this alias
                       for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                       //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                         if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
+                          //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                          if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
                             m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
                         }
                     }
@@ -1184,9 +1193,16 @@ int CNrgen::ReadAndCreate()
           std::istringstream szFormatString (szInputString);
           szFormatString >> card;
           m_dAxialSize.SetSize(m_nDuct);
+          int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
+                                                std::istream_iterator<std::string>());
+          std::istringstream szFormatStringAgain (szInputString);
+          szFormatStringAgain >> card;
           for (int p = 1; p <= m_nDuct; p++){
-              szFormatString >> m_dAxialSize(p);
-              if(m_dAxialSize(p) < 0 || szFormatString.fail())
+              if(p <= num_ams_specified)
+                szFormatStringAgain >> m_dAxialSize(p);
+              else
+                m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
+              if(m_dAxialSize(p) < 0)
                 IOErrorHandler(ENEGATIVE);
             }
           std::cout <<"--------------------------------------------------"<<std::endl;
@@ -1467,7 +1483,7 @@ int CNrgen::CreateCubitJournal()
 
               for( int p=1; p<= m_nDuct; p++){
                   if (m_dAxialSize.GetSize() != 0)
-                      m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "=" << m_dAxialSize(p) << "}" << std::endl;
+                    m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "=" << m_dAxialSize(p) << "}" << std::endl;
                   else
                     m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "= 0.1*Z_HEIGHT}" << std::endl;
                   m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE" << p << "}" << std::endl;
@@ -2913,7 +2929,7 @@ int CNrgen::Subtract_Pins()
           if( cp_inpins[k-1].size() > 1){
               std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
               for (int i=0; i< cp_inpins[k-1].size(); i++){
-                 // iGeom_copyEnt(geom, cp_inpins[k-1][i], &unite, &err);
+                  // iGeom_copyEnt(geom, cp_inpins[k-1][i], &unite, &err);
                   iGeom_subtractEnts(geom, tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
                   CHECK("Couldn't subtract pins from block.");
                   tmp_vol = tmp_new1;
