@@ -220,6 +220,7 @@ int CNrgen::ReadCommonInp ()
   CParser Parse1;
   bool found = false;
   std::string card;
+  m_nLineNumber = 0;
   std::cout << "Reading from common.inp file." << std::endl;
   for(;;){
       if (!Parse1.ReadNextLine (m_FileCommon, m_nLineNumber, szInputString,
@@ -389,6 +390,7 @@ int CNrgen::ReadInputPhase1 ()
   CParser Parse;  bool bDone = false;
   int nCyl =0, nCellMat=0, nInputLines=0;
   std::string card, szVolId, szVolAlias;
+  m_nLineNumber = 0;
   // count the total number of cylinder commands in each pincell
   for(;;){
       if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
