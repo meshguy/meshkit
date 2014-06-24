@@ -14,7 +14,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) 
 
-TESTS = test_graph list_meshops test_load_grps
+TESTS = test_graph list_meshops test_load_grps test_get_entities_by_dim
 
 check_PROGRAMS = $(TESTS)
 
@@ -27,6 +27,8 @@ test_graph_SOURCES = test_graph.cpp
 list_meshops_SOURCES = list_meshops.cpp
 
 test_load_grps_SOURCES = test_load_grps.cpp
+
+test_get_entities_by_dim_SOURCES = test_get_entities_by_dim.cpp
 
 # Utility target: build but don't run tests
 build-check:
