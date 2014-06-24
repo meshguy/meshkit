@@ -443,16 +443,19 @@ void MKCore::save_mesh_from_model_ents(const char *filename,
 void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents,
     int igindx)
 {
+  // make sure the dimension is valid
+  if (dim < -1 || dim > 4)
+    throw Error(MK_BAD_INPUT, "Invalid dimension requested");
+
   int start = dim, end = dim;
-  if (iBase_ALL_TYPES == dim) {
+  if (-1  == dim) {
     start = 0;
-    end = iBase_REGION;
+    end = 4;
   }
   for (dim = start; dim <= end; dim++)
   {
     if (igindx < 0)
     {
-
         std::copy(modelEnts[dim].begin(), modelEnts[dim].end(), std::back_inserter(model_ents));
     }
     else
