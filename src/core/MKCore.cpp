@@ -475,7 +475,7 @@ void MKCore::get_entities_by_dimension(int dim, MEntVector &model_ents,
 
 void MKCore::get_entities_by_handle(MEntVector &model_ents) 
 {
-  get_entities_by_dimension(iBase_ALL_TYPES, model_ents);
+  get_entities_by_dimension( -1, model_ents);
 }
 
 int MKCore::add_sizing_function(SizingFunction *sf) 
