@@ -62,4 +62,12 @@ void test_get_entities_by_dim()
   int num_of_verts = verts.size();
   CHECK_EQUAL(2, num_of_verts);
 
+  MEntVector dum;
+  bool found_error = false;
+  try {mk->get_entities_by_dimension(6, dum);
+  }
+  catch(Error) {
+    found_error = true;
+  }
+  CHECK(found_error);
 }
