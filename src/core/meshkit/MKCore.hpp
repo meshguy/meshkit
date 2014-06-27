@@ -292,7 +292,7 @@ public:
     /**@{*/
 
     /** \brief Get model entities of a given dimension
-     * \param dim Dimension of entities to get
+     * \param dim Dimension of entities to get (-1 to get all model entities)
      * \param model_ents The list these entities get appended to
      * \param igindx the geometry instance index of the retrieved model ents
      *   (default -1 means no check on igeom instance index)
