@@ -11,9 +11,9 @@
 #ifndef BTREE_H
 #define BTREE_H
 
-#include "Mesh.hpp"
-#include "DualGraph.hpp"
-#include "ObjectPool.hpp"
+#include "meshkit/Mesh.hpp"
+#include "meshkit/DualGraph.hpp"
+#include "meshkit/ObjectPool.hpp"
 
 #ifdef USE_HASHMAP
 #include <tr1/unordered_map>

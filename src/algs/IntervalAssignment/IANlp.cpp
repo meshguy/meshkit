@@ -10,9 +10,9 @@
 //
 // Authors:  Carl Laird, Andreas Waechter     IBM    2005-08-16
 
-#include "IANlp.hpp"
-#include "IAData.hpp"
-#include "IASolution.hpp"
+#include "meshkit/IANlp.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IASolution.hpp"
 
 #include <math.h>
 

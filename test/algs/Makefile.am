@@ -1,5 +1,7 @@
 SUBDIRS = . 
 
+MOSTLYCLEANFILES = test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk OneToOneSwept.vtk
+
 LDADD = $(top_builddir)/src/libMeshKit.la
 
 DATADIR = $(top_srcdir)/data
@@ -21,6 +23,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/algs/AssyGen \
                -I$(top_srcdir)/src/algs/QuadMesher \
+               -I$(top_srcdir)/src/algs/IntervalAssignment \
+               -I$(top_srcdir)/src/extern/triangle \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 

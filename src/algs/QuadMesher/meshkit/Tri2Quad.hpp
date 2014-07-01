@@ -29,10 +29,10 @@
 #ifndef Tri2Quad_H
 #define Tri2Quad_H
 
-#include "Mesh.hpp"
-#include "DualGraph.hpp"
-#include "BinaryTree.hpp"
-#include "cycle.hpp"         // performance counter. 
+#include "meshkit/Mesh.hpp"
+#include "meshkit/DualGraph.hpp"
+#include "meshkit/BinaryTree.hpp"
+#include "meshkit/cycle.hpp"         // performance counter.
 
 namespace Jaal {
 

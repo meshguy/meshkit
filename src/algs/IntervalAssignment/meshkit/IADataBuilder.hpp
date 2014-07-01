@@ -9,7 +9,7 @@
 #define MESHKIT_IA_IADATABUILDER_HP
 
 class IAData;
-#include "IAData.hpp"
+#include "meshkit/IAData.hpp"
 
 namespace MeshKit 
 {

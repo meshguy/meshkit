@@ -10,12 +10,12 @@
 //
 // Authors:  Carl Laird, Andreas Waechter     IBM    2005-08-16
 
-#include "IARoundingFarNlp.hpp"
-#include "IARoundingNlp.hpp"
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IASolution.hpp"
-#include "IANlp.hpp"
+#include "meshkit/IARoundingFarNlp.hpp"
+#include "meshkit/IARoundingNlp.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IPData.hpp"
+#include "meshkit/IASolution.hpp"
+#include "meshkit/IANlp.hpp"
 
 #include <math.h>
 #include <algorithm>

@@ -18,7 +18,7 @@
 #ifndef DUALGRAPH_H
 #define DUALGRAPH_H
 
-#include "Mesh.hpp"
+#include "meshkit/Mesh.hpp"
 
 namespace Jaal {
 

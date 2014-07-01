@@ -8,9 +8,9 @@
 
 #include <map>
 
-#include "IASolverToolInt.hpp"
-#include "IPBend.hpp"
-#include "IAWeights.hpp"
+#include "meshkit/IASolverToolInt.hpp"
+#include "meshkit/IPBend.hpp"
+#include "meshkit/IAWeights.hpp"
 // #include "IPData.hpp"
 // #include "IABendNlp.hpp"
 

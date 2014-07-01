@@ -1,4 +1,4 @@
-// IARoundingFarNnl.hpp
+// IARoundingNnl.hpp
 // Interval Assignment for Meshkit
 //
 // ipopt mixed-integer solution
@@ -6,29 +6,33 @@
 // Define some region around the relaxed solution and search for an integer solution
 //
 
-#ifndef MESHKIT_IA_IAROUNDINGFARNLP_HP
-#define MESHKIT_IA_IAROUNDINGFARNLP_HP
+#ifndef MESHKIT_IA_IAROUNDINGNLP_HP
+#define MESHKIT_IA_IAROUNDINGNLP_HP
+
+#include "meshkit/IANlp.hpp"
+#include "meshkit/IAWeights.hpp"
+
+// from Ipopot
+#include "IpTNLP.hpp"
+
+namespace MeshKit {
 
 class IAData;
 class IPData;
 class IASolution;
-#include "IAWeights.hpp"
-#include "IANlp.hpp"
 
-#include "IpTNLP.hpp"
-
-class IARoundingFarNlp : public TNLP
+class IARoundingNlp : public TNLP
 {
+  // first set of functions required by TNLP
 public:
   /** default constructor */
-  IARoundingFarNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr); 
+  IARoundingNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr,
+    const bool set_silent = true); 
 
   /** default destructor */
-  virtual ~IARoundingFarNlp();
-
-  // extra for IA, not for TNLP
-  // nada
+  virtual ~IARoundingNlp();
   
+
   /**@name Overloaded from TNLP */
   //@{
   /** Method to return some info about the nlp */
@@ -84,23 +88,21 @@ public:
                                  IpoptCalculatedQuantities* ip_cq);
   //@}
 
+// extra stuff not required by TNLP
+  bool randomize_weights_of_non_int();
 
 private:  
   // hide untrusted default methods
   //@{
   //  IA_NLP();
-  IARoundingFarNlp();
-  IARoundingFarNlp(const IARoundingFarNlp&);
-  IARoundingFarNlp& operator=(const IARoundingFarNlp&);
+  IARoundingNlp();
+  IARoundingNlp(const IARoundingNlp&);
+  IARoundingNlp& operator=(const IARoundingNlp&);
   //@}
   
   // input data
   const IAData *data;
   const IPData *ipData;
-  // model
-  IAWeights h0; // h0, as weights in IARoundingNLP
-  IAWeights hp; // h+
-  IAWeights hm; // h-
   
   // solution data
   IASolution *solution;
@@ -108,16 +110,19 @@ private:
   
   // implemented using an overlay over an IANlp
   IANlp baseNlp;  
-  
+
+  // defining / weighting objective function
+  IAWeights weights;
+
+  double f_x_value( double I_i, double x_i );
+
+  // debug
+  const bool silent;
   const bool debugging;
   const bool verbose; // verbose debugging
   
-  
-  // utility
-  double f_x_value( double I_i, double x_i ) const;
-  double get_f_xl(int i) const; // obj function value at xl
-  double get_f_xh(int i) const; // obj function value at xh
-
 };
+
+} // namespace MeshKit 
 
 #endif

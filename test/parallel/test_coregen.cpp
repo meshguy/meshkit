@@ -21,7 +21,9 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/CoreGen.hpp"
 #include "TestUtil.hpp"
+#ifdef USE_MPI
 #include "mpi.h"
+#endif
 using namespace MeshKit;
 
 

@@ -1308,6 +1308,19 @@ AC_SUBST([AM_CPPFLAGS])
 AC_SUBST([AM_LDFLAGS])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([AM_CFLAGS])
+# make distcheck will use this DISTCHECK_CONFIGURE_FLAGS
+# variable to be passed to configure line
+# some people include a lot of env vars here
+# I think we need only those; only distcheck is affected by this
+## original is commented out below; we use only a few
+## for var in CC CFLAGS CPPFLAGS CXX CXXCPP LDFLAGS LIBS F90 FC F77; do
+for var in CC CXX F90 FC F77 LDFLAGS LIBS; do
+  eval isset=\${$var+set}
+  if test "$isset" = 'set' ; then
+    eval val=$`echo $var`
+    DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS  $var=\"$val\""
+  fi
+done
 AC_SUBST([DISTCHECK_CONFIGURE_FLAGS])
 
 AC_ARG_VAR([FC], [FORTRAN compiler command])

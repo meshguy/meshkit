@@ -1,11 +1,11 @@
 // IASolver.cpp
 // Interval Assignment for Meshkit
 //
-#include "IASolver.hpp"
-#include "IPData.hpp"
-// #include "IAMilp.hpp"
-#include "IASolverRelaxed.hpp"
-#include "IASolverInt.hpp"
+#include "meshkit/IASolver.hpp"
+#include "meshkit/IPData.hpp"
+// #include "meshkit/IAMilp.hpp"
+#include "meshkit/IASolverRelaxed.hpp"
+#include "meshkit/IASolverInt.hpp"
 
 #include <cstdlib>
 #include <stdio.h>

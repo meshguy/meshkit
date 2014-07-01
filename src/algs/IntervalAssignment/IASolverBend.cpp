@@ -1,12 +1,12 @@
 // IASolverBend.cpp
 // Interval Assignment for Meshkit
 //
-#include "IASolverBend.hpp"
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IPBend.hpp"
-#include "IASolution.hpp"
-#include "IABendNlp.hpp"
+#include "meshkit/IASolverBend.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IPData.hpp"
+#include "meshkit/IPBend.hpp"
+#include "meshkit/IASolution.hpp"
+#include "meshkit/IABendNlp.hpp"
 
 #include <stdio.h>
 #include <math.h>

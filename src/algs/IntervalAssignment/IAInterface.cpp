@@ -3,9 +3,9 @@
 // Interface to the rest of Meshkit
 
 #include "meshkit/IAInterface.hpp"
-#include "IASolver.hpp"
-#include "IADataBuilder.hpp"
-#include "IASolution.hpp"
+#include "meshkit/IASolver.hpp"
+#include "meshkit/IADataBuilder.hpp"
+#include "meshkit/IASolution.hpp"
 
 #include "meshkit/ModelEnt.hpp" // from MeshKit
 

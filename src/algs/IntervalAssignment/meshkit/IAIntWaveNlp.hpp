@@ -10,7 +10,7 @@
 #ifndef MESHKIT_IA_IAINTHESSNLP_HP
 #define MESHKIT_IA_IAINTHESSNLP_HP
 
-#include "IANlp.hpp"
+#include "meshkit/IANlp.hpp"
 
 // from Ipopt
 #include "IpTNLP.hpp"

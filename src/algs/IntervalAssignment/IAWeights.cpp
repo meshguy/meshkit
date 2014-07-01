@@ -3,7 +3,7 @@
 //
 // Weights
 
-#include "IAWeights.hpp"
+#include "meshkit/IAWeights.hpp"
 
 #include <math.h>
 #include <limits>

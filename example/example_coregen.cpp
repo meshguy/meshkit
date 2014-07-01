@@ -12,9 +12,12 @@
 #include "meshkit/MeshOp.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/CoreGen.hpp"
-#include "mpi.h"
-using namespace MeshKit;
 
+#ifdef USE_MPI
+#include "mpi.h"
+#endif
+
+using namespace MeshKit;
 
 void test_coregen_default(int argc, char **argv);
 

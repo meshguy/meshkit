@@ -10,13 +10,13 @@
 //
 // Authors:  Carl Laird, Andreas Waechter     IBM    2005-08-16
 
-#include "IABendNlp.hpp"
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IPBend.hpp"
-#include "IASolution.hpp"
-#include "IANlp.hpp"
-#include "IASolverToolInt.hpp"
+#include "meshkit/IABendNlp.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IPData.hpp"
+#include "meshkit/IPBend.hpp"
+#include "meshkit/IASolution.hpp"
+#include "meshkit/IANlp.hpp"
+#include "meshkit/IASolverToolInt.hpp"
 
 #include <math.h>
 #include <limits>

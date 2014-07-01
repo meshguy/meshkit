@@ -1,16 +1,18 @@
-// IARoundingNnl.hpp
+// IABendNlp.hpp
 // Interval Assignment for Meshkit
 //
 // ipopt mixed-integer solution
 // The idea is the optimal solution will be an integer one, if one exists
-// Define some region around the relaxed solution and search for an integer solution
 //
 
-#ifndef MESHKIT_IA_IAROUNDINGNLP_HP
-#define MESHKIT_IA_IAROUNDINGNLP_HP
+#ifndef MESHKIT_IA_IABENDNLP_HP
+#define MESHKIT_IA_IABENDNLP_HP
 
-#include "IANlp.hpp"
-#include "IAWeights.hpp"
+#include "meshkit/IANlp.hpp"
+#include "meshkit/IAWeights.hpp"
+#include "meshkit/IPBend.hpp"
+
+#include <math.h>
 
 // from Ipopot
 #include "IpTNLP.hpp"
@@ -21,16 +23,16 @@ class IAData;
 class IPData;
 class IASolution;
 
-class IARoundingNlp : public TNLP
+class IABendNlp : public TNLP
 {
   // first set of functions required by TNLP
 public:
   /** default constructor */
-  IARoundingNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr,
-    const bool set_silent = true); 
+  IABendNlp(const IAData *data_ptr, const IPData *ip_data_ptr, const IPBendData* ip_bend_ptr, 
+            IASolution *solution_ptr, IAWeights *weight_ptr, const bool set_silent = true); 
 
   /** default destructor */
-  virtual ~IARoundingNlp();
+  virtual ~IABendNlp();
   
 
   /**@name Overloaded from TNLP */
@@ -89,20 +91,27 @@ public:
   //@}
 
 // extra stuff not required by TNLP
-  bool randomize_weights_of_non_int();
+  
+  // if true, then enforce that the sum-even values are a whole integer multiplied by two
+  void even_constraints_active( bool set_active )
+  { evenConstraintsActive = set_active; }
+
+  // raw value, relative change to I, usually taken to some power
+  double f_x_value( double I_i, double x_i );
 
 private:  
   // hide untrusted default methods
   //@{
   //  IA_NLP();
-  IARoundingNlp();
-  IARoundingNlp(const IARoundingNlp&);
-  IARoundingNlp& operator=(const IARoundingNlp&);
+  IABendNlp();
+  IABendNlp(const IABendNlp&);
+  IABendNlp& operator=(const IABendNlp&);
   //@}
   
   // input data
   const IAData *data;
   const IPData *ipData;
+  const IPBendData *ipBendData;
   
   // solution data
   IASolution *solution;
@@ -111,15 +120,97 @@ private:
   // implemented using an overlay over an IANlp
   IANlp baseNlp;  
 
-  // defining / weighting objective function
-  IAWeights weights;
+  const int base_n, base_m;
+  const int problem_n;
+  int problem_m;
+  int wave_even_constraint_start;
 
-  double f_x_value( double I_i, double x_i );
+  // defining / weighting objective function
+  IAWeights *weights;
 
   // debug
   const bool silent;
   const bool debugging;
   const bool verbose; // verbose debugging
+  
+  bool evenConstraintsActive;
+  
+  // for non-linear even constraints
+  struct SparseMatrixEntry
+	{
+	  // position in matrix
+	  // column must be less than row, j <= i
+	  int i; // row
+	  int j; // col
+	  
+	  // order in sequence for hessian values array, etc.
+	  int k;
+    
+	  static int n; // matrix is n x n
+	  int key() const { return i * n + j; }
+	  
+	  SparseMatrixEntry(const int iset, const int jset, const int kset);
+	  SparseMatrixEntry() : i(-1), j(-1), k(-1) {} // bad values if unspecified
+	};
+	
+	typedef std::map<int, SparseMatrixEntry> SparseMatrixMap; 
+	
+	SparseMatrixMap hessian_map;  // sorted by key
+	std::vector< SparseMatrixEntry > hessian_vector; // from 0..k
+  
+	void add_hessian_entry( int i, int j, int &k );
+	void build_hessian();
+	int get_hessian_k( int i, int j );
+  void print_hessian(); // debug
+  
+  // nearest integer
+  const double nearest_int( const double x )
+  {
+    const double xm = floor(x);
+    const double xp = ceil(x);
+    return (fabs(xm - x) < fabs(xp - x)) ? xm : xp;
+  }
+  const double nearest_even( const double s )
+  {
+    return 2. * nearest_int( s / 2. );
+  }
+  const double delta_x( const double x )
+  {
+    return x - nearest_int(x);
+  }
+  const double delta_s( const double s )
+  {
+    return s - nearest_even(s);
+  }
+  
+  double eval_g_int_x( const double x )
+  {
+    const double d = delta_x(x);
+    return 1. - d * d;
+  }
+  double eval_g_int_s( const double s )
+  {
+    const double d = delta_s(s);
+    return 1. - d * d;
+  }
+  double eval_jac_int_x( const double x )
+  {
+    const double d = delta_x( x );
+    return -2. * d; // d' is 1
+  }
+  double eval_jac_int_s( const double s )
+  {
+    double d = delta_s(s);
+    return -2. * d; // d' is 1
+  }
+  double eval_hess_int_x( const double x )
+  {
+    return -2.; 
+  }
+  virtual double eval_hess_int_s( const double s )
+  {
+    return -2.;
+  }
   
 };
 

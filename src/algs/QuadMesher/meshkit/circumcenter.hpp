@@ -1,7 +1,7 @@
 #ifndef CCENTER_H
 #define CCENTER_H
-#include "GeomPredicates.hpp"
-#include "basic_math.hpp"
+#include "meshkit/GeomPredicates.hpp"
+#include "meshkit/basic_math.hpp"
 using namespace QM;
 void TetCircumCenter( double *a, double *b, double *c, double *d, double *r, double *p);
 void TriCircumCenter2D( double *a, double *b, double *c, double *r, double *p);

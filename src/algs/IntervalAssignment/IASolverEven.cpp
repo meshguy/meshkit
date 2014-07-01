@@ -1,9 +1,9 @@
 // IASolverEven.cpp
 // Interval Assignment for Meshkit
 //
-#include "IASolverEven.hpp"
-#include "IAMINlp.hpp"
-#include "IPData.hpp"
+#include "meshkit/IASolverEven.hpp"
+#include "meshkit/IAMINlp.hpp"
+#include "meshkit/IPData.hpp"
 // #include "IAMilp.hpp"
 
 #include <stdio.h>

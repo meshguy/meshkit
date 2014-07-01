@@ -1,14 +1,14 @@
 // IAIntWaveNlp.cpp
 // Interval Assignment for Meshkit
 //
-#include "IAIntWaveNlp.hpp"
+#include "meshkit/IAIntWaveNlp.hpp"
 
 #include <math.h>
 #include <limits>
 
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IASolution.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IPData.hpp"
+#include "meshkit/IASolution.hpp"
 
 /* structure
  

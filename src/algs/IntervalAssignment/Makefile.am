@@ -18,46 +18,53 @@ libIntervalAssignment_la_LIBADD = $(IPOPT_LIBS)
 
 # The list of source files, and any header files that do not need to be installed
 libIntervalAssignment_la_SOURCES = \
-IAData.hpp \
 IADataBuilder.cpp \
-IADataBuilder.hpp \
 IAInterface.cpp \
 IAIntWaveNlp.cpp \
-IAIntWaveNlp.hpp \
 IAIntParabolaNlp.cpp \
-IAIntParabolaNlp.hpp \
 IANlp.cpp \
-IANlp.hpp \
 IARoundingNlp.cpp \
-IARoundingNlp.hpp \
-IASolution.hpp \
 IASolver.cpp \
-IASolver.hpp \
 IASolverTool.cpp \
-IASolverTool.hpp \
 IASolverToolInt.cpp \
-IASolverToolInt.hpp \
 IASolverInt.cpp \
-IASolverInt.hpp \
 IASolverRelaxed.cpp \
-IASolverRelaxed.hpp \
 IAWeights.cpp \
-IAWeights.hpp \
 IAWeights.cpp \
 IPData.cpp \
-IPData.hpp \
 IPBend.cpp \
-IPBend.hpp \
 IASolverBend.cpp \
-IASolverBend.hpp \
-IABendNlp.cpp \
-IABendNlp.hpp
-
+IABendNlp.cpp
 
 # The list of header files which are to be installed
 nobase_libIntervalAssignment_la_include_HEADERS = \
-        meshkit/IAInterface.hpp \
-		meshkit/IAVariable.hpp
+meshkit/IABendNlp.hpp \
+meshkit/IADataBuilder.hpp \
+meshkit/IAData.hpp \
+meshkit/IAIntCosNlp.hpp \
+meshkit/IAInterface.hpp \
+meshkit/IAIntParabolaNlp.hpp \
+meshkit/IAIntWaveNlp.hpp \
+meshkit/IAMilp.hpp \
+meshkit/IAMINlp.hpp \
+meshkit/IANlp.hpp \
+meshkit/IARoundingFar3StepNlp.hpp \
+meshkit/IARoundingFarNlp.hpp \
+meshkit/IARoundingHeuristicMINLP.hpp \
+meshkit/IARoundingNlp.hpp \
+meshkit/IASolution.hpp \
+meshkit/IASolverBend.hpp \
+meshkit/IASolverEven.hpp \
+meshkit/IASolver.hpp \
+meshkit/IASolverInt.hpp \
+meshkit/IASolverRelaxed.hpp \
+meshkit/IASolverTool.hpp \
+meshkit/IASolverToolInt.hpp \
+meshkit/IAVariable.hpp \
+meshkit/IAWeights.hpp \
+meshkit/IPBend.hpp \
+meshkit/IPData.hpp
+
 
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir)/src/core \

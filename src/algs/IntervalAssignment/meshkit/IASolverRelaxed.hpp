@@ -6,7 +6,7 @@
 #ifndef MESHKIT_IA_IASOLVER_RELAXED_HP
 #define MESHKIT_IA_IASOLVER_RELAXED_HP
 
-#include "IASolverTool.hpp"
+#include "meshkit/IASolverTool.hpp"
 
 namespace MeshKit {
 

@@ -1,8 +1,8 @@
 // IADataBulder.cpp
 // Interval Assignment for Meshkit
 
-#include "IAData.hpp"
-#include "IADataBuilder.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IADataBuilder.hpp"
 
 namespace MeshKit 
 {

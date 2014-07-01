@@ -1,7 +1,7 @@
 #ifndef QPATCHREMESH_H
 #define QPATCHREMESH_H
 
-#include "Mesh.hpp"
+#include "meshkit/Mesh.hpp"
 
 namespace Jaal {
 struct RemeshTemplate {

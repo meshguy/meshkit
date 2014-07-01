@@ -3,7 +3,7 @@
 // Integer Program - making intervals into integer values 
 //
 
-#include "IPData.hpp"
+#include "meshkit/IPData.hpp"
 
 namespace MeshKit {
 

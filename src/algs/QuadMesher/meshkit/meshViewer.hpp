@@ -2,8 +2,8 @@
 #define JAAL_MESH
 
 
-#include <qglviewer.h>
-#include <qapplication.h>
+#include <meshkit/qglviewer.h>
+#include <meshkit/qapplication.h>
 
 #ifdef CSV
 #include <string>

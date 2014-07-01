@@ -1,9 +1,9 @@
 // IAMilp.cpp
 // Interval Assignment for Meshkit
 //
-#include "IAMilp.hpp"
-#include "IAData.hpp"
-#include "IASolution.hpp"
+#include "meshkit/IAMilp.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IASolution.hpp"
 #include <assert.h>
 
 #include <iostream>
@@ -11,7 +11,7 @@
 #include <string>
 
 //usr/local/include/glpk.h
-#include "glpk.h" 
+#include "meshkit/glpk.h"
 #include <stdio.h>
 #include <math.h>
 

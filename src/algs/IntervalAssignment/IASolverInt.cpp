@@ -2,18 +2,18 @@
 // IASolverInt.cpp
 // Interval Assignment for Meshkit
 //
-#include "IASolverInt.hpp"
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IASolution.hpp"
-#include "IARoundingNlp.hpp"
-#include "IASolverRelaxed.hpp"
-#include "IASolverBend.hpp"
-// #include "IAMINlp.hpp"
-#include "IAIntCosNlp.hpp"
-#include "IAIntParabolaNlp.hpp"
+#include "meshkit/IASolverInt.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IPData.hpp"
+#include "meshkit/IASolution.hpp"
+#include "meshkit/IARoundingNlp.hpp"
+#include "meshkit/IASolverRelaxed.hpp"
+#include "meshkit/IASolverBend.hpp"
+// #include "meshkit/IAMINlp.hpp"
+#include "meshkit/IAIntCosNlp.hpp"
+#include "meshkit/IAIntParabolaNlp.hpp"
 
-// #include "IAMilp.hpp" // glpk based solution too slow
+// #include "meshkit/IAMilp.hpp" // glpk based solution too slow
 
 #include <stdio.h>
 #include <math.h>

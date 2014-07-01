@@ -2,10 +2,10 @@
 #define REFINE_H
 
 #include <bitset>
-#include "Mesh.hpp"
-#include "SwapEdges.hpp"
+#include "meshkit/Mesh.hpp"
+#include "meshkit/SwapEdges.hpp"
 
-#include "basic_math.hpp"
+#include "meshkit/basic_math.hpp"
 
 using namespace std;
 

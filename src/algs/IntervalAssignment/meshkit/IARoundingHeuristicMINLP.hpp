@@ -47,7 +47,7 @@ class IPData;
 class IASolution;
 
 #include "IpTNLP.hpp"
-#include "IANlp.hpp"
+#include "meshkit/IANlp.hpp"
 
 class IARoundingHeuristicMINLP : public TNLP
 {

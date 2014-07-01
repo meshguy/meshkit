@@ -7,7 +7,7 @@
 #ifndef MESHKIT_IA_IAINTCOSNLP_HP
 #define MESHKIT_IA_IAINTCOSNLP_HP
 
-#include "IAIntWaveNlp.hpp"
+#include "meshkit/IAIntWaveNlp.hpp"
 
 #include <math.h>
 #include <limits.h>

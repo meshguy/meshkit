@@ -12,8 +12,8 @@
 class IAData;
 class IPData;
 class IASolution;
-#include "IANlp.hpp"
-#include "IAWeights.hpp"
+#include "meshkit/IANlp.hpp"
+#include "meshkit/IAWeights.hpp"
 
 #include "IpTNLP.hpp"
 

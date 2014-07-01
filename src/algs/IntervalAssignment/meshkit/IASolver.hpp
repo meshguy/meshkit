@@ -6,7 +6,7 @@
 #ifndef MESHKIT_IA_IASOLVER_HP
 #define MESHKIT_IA_IASOLVER_HP
 
-#include "IASolverToolInt.hpp"
+#include "meshkit/IASolverToolInt.hpp"
 
 namespace MeshKit {
 

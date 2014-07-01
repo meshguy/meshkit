@@ -1,8 +1,8 @@
 // IASolverRelaxed.cpp
 // Interval Assignment for Meshkit
 //
-#include "IASolverRelaxed.hpp"
-#include "IANlp.hpp"
+#include "meshkit/IASolverRelaxed.hpp"
+#include "meshkit/IANlp.hpp"
 
 #include <stdio.h>
 #include <math.h>

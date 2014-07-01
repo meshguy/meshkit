@@ -2,12 +2,12 @@
 // Interval Assignment Data for Meshkit
 // Interface to the rest of Meshkit
 
-#include "IAInterface.hpp" // the one in stubs = this dir
-#include "IASolver.hpp"
-#include "IADataBuilder.hpp"
-#include "IASolution.hpp"
+#include "meshkit/IAInterface.hpp" // the one in stubs = this dir
+#include "meshkit/IASolver.hpp"
+#include "meshkit/IADataBuilder.hpp"
+#include "meshkit/IASolution.hpp"
 
-// stubbed #include "meshkit/ModelEnt.hpp" // from MeshKit
+// stubbed #include "meshkit/meshkit/ModelEnt.hpp" // from MeshKit
 
 #include <vector>
 #include <iterator>

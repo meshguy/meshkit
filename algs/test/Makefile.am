@@ -6,6 +6,7 @@ EXTRA_DIST = \
 	assygen_default.cub \
 	m1.vtk \
 	m2.vtk \
+        gridData.txt \
 	sphere.stp 
 
 MOSTLYCLEANFILES = \
@@ -15,7 +16,8 @@ MOSTLYCLEANFILES = \
 	t3.h5m \
 	t4.h5m \
 	t5.h5m \
-	intx.vtk
+        intx.vtk \
+        output.smf
 
 # Tests and such
 check_PROGRAMS = \

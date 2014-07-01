@@ -1,7 +1,7 @@
 // IAIntCosNlp.cpp
 // Interval Assignment for Meshkit
 //
-#include "IAIntCosNlp.hpp"
+#include "meshkit/IAIntCosNlp.hpp"
 
 namespace MeshKit {
 

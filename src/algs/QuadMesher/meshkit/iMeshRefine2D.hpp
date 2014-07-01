@@ -15,7 +15,7 @@
 
 using namespace std;
 
-#include "SimpleArray.h"
+#include "meshkit/SimpleArray.h"
 #include "meshkit/basic_math.hpp"
 
 /////////////////////////////////////////////////////////////////////////////////

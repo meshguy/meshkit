@@ -40,14 +40,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "Mesh.hpp"
-#include "Tri2Quad.hpp"
-#include "basic_math.hpp"
-#include "StopWatch.hpp"
-#include "tfiblend.hpp"
+#include "meshkit/Mesh.hpp"
+#include "meshkit/Tri2Quad.hpp"
+#include "meshkit/basic_math.hpp"
+#include "meshkit/StopWatch.hpp"
+#include "meshkit/tfiblend.hpp"
 
-#include "DijkstraShortestPath.hpp"
-#include "QuadPatchRemesh.hpp"
+#include "meshkit/DijkstraShortestPath.hpp"
+#include "meshkit/QuadPatchRemesh.hpp"
 
 extern double area_of_poly3d(int n, double *x, double *y, double *z);
 

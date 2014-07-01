@@ -59,6 +59,8 @@ nobase_libJaalQuadMesher_la_include_HEADERS = \
         meshkit/DualGraph.hpp \
         meshkit/FastArea.hpp \
         meshkit/BinaryTree.hpp \
+        meshkit/ObjectPool.hpp \
+        meshkit/QuadPatchRemesh.hpp \
         meshkit/cycle.hpp \
         meshkit/basic_math.hpp \
         meshkit/iMeshRefine2D.hpp \

@@ -8,8 +8,8 @@
 
 #include <map>
 
-#include "IASolverToolInt.hpp"
-#include "IPData.hpp"
+#include "meshkit/IASolverToolInt.hpp"
+#include "meshkit/IPData.hpp"
 
 namespace MeshKit {
   

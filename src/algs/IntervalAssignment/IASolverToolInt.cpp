@@ -1,10 +1,10 @@
 // IASolverToolInt.cpp
 
-#include "IASolverToolInt.hpp"
-#include "IAData.hpp"
-#include "IASolution.hpp"
-#include "IPData.hpp"
-#include "IAWeights.hpp"
+#include "meshkit/IASolverToolInt.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IASolution.hpp"
+#include "meshkit/IPData.hpp"
+#include "meshkit/IAWeights.hpp"
 
 #include <vector>
 #include <math.h>

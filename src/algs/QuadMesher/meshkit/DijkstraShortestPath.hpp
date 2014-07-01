@@ -1,8 +1,8 @@
 #ifndef DIJKSHORT_H
 #define DIJKSHORT_H
 
-#include "Mesh.hpp"
-#include "basic_math.hpp"
+#include "meshkit/Mesh.hpp"
+#include "meshkit/basic_math.hpp"
 
 #ifdef USE_HASHMAP
 #include <tr1/unordered_map>

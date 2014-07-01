@@ -751,7 +751,7 @@ void PostBL::PrepareIO (int argc, char *argv[], std::string  TestDir)
             m_LogFile << "\nRunning default case:\n" << std::endl;
 
             m_InputFile = TestDir + "/" + (char *)DEFAULT_TEST_POSTBL;
-            m_LogName = m_InputFile + ".log";
+            m_LogName = (std::string)DEFAULT_TEST_POSTBL + ".log";
         }
 
         // open input file for reading

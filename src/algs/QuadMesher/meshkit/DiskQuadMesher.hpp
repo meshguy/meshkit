@@ -9,7 +9,7 @@
 #include <map>
 #include <algorithm>
 
-#include "tfiblend.hpp"
+#include "meshkit/tfiblend.hpp"
 
 using namespace std;
 

@@ -6,9 +6,9 @@
 #ifndef MESHKIT_IA_IASOLVEREVEN_HP
 #define MESHKIT_IA_IASOLVEREVEN_HP
 
-#include "IAData.hpp"
-#include "IPData.hpp"
-#include "IASolution.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IPData.hpp"
+#include "meshkit/IASolution.hpp"
 
 #include <map> //todo move this data to an auxillary class
 

@@ -1,7 +1,7 @@
 // IAIntParabolaNlp.cpp
 // Interval Assignment for Meshkit
 //
-#include "IAIntParabolaNlp.hpp"
+#include "meshkit/IAIntParabolaNlp.hpp"
 
 namespace MeshKit {
 

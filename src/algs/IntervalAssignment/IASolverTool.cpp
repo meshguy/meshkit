@@ -2,10 +2,10 @@
 // Interval Assignment for Meshkit
 //
 
-#include "IASolverTool.hpp"
-#include "IAData.hpp"
-#include "IASolution.hpp"
-#include "IPData.hpp" 
+#include "meshkit/IASolverTool.hpp"
+#include "meshkit/IAData.hpp"
+#include "meshkit/IASolution.hpp"
+#include "meshkit/IPData.hpp"
 
 #include <cstdlib>
 #include <stdio.h>
