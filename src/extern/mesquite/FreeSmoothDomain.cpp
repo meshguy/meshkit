@@ -1,7 +1,7 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/MKCore.hpp"
 #include "moab/Interface.hpp"
-#include "FreeSmoothDomain.hpp"
+#include "meshkit/FreeSmoothDomain.hpp"
 #include "MsqError.hpp"
 
 namespace MeshKit {

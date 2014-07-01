@@ -8,7 +8,7 @@
 #ifdef MSQIGEOM
 # include "MsqIGeom.hpp"
 #endif
-#include "FreeSmoothDomain.hpp"
+#include "meshkit/FreeSmoothDomain.hpp"
 
 #include "mesquite_version.h"
 #if MSQ_VERSION_MAJOR > 2 || (MSQ_VERSION_MAJOR == 2 && MSQ_VERSION_MINOR > 1)

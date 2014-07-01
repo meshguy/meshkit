@@ -13,18 +13,22 @@ libMeshKitmesquite_la_includedir = $(includedir)
 
 libMeshKitmesquite_la_SOURCES = \
 	MesquiteOpt.cpp \
-	FreeSmoothDomain.cpp \
-	FreeSmoothDomain.hpp 
+        FreeSmoothDomain.cpp
 
 if HAVE_FBIGEOM 
 libMeshKitmesquite_la_SOURCES+=	\
-		MsqFBiGeom.cpp \
-		MsqFBiGeom.hpp
+                MsqFBiGeom.cpp
 endif
 
 # The list of header files which are to be installed
 nobase_libMeshKitmesquite_la_include_HEADERS = \
-	meshkit/MesquiteOpt.hpp
+        meshkit/MesquiteOpt.hpp \
+        meshkit/FreeSmoothDomain.hpp
+
+if HAVE_FBIGEOM
+nobase_libMeshKitmesquite_la_include_HEADERS+=	\
+                meshkit/MsqFBiGeom.hpp
+endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

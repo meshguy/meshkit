@@ -13,7 +13,6 @@ libJaalQuadMesher_la_includedir = $(includedir)
 libJaalQuadMesher_la_SOURCES = \
 	BinaryTree.cpp \
 	DijkstraShortestPath.cpp \
-	DijkstraShortestPath.hpp \
 	Doublet.cpp \
 	DualGraph.cpp \
 	FaceClose.cpp \
@@ -46,6 +45,7 @@ libJaalQuadMesher_la_SOURCES = \
 # The list of header files which are to be installed
 nobase_libJaalQuadMesher_la_include_HEADERS = \
         meshkit/QuadMesh.hpp \
+        meshkit/DijkstraShortestPath.hpp \
         meshkit/StopWatch.hpp   \
         meshkit/circumcenter.hpp \
         meshkit/GeomPredicates.hpp \
