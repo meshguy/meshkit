@@ -1,6 +1,8 @@
 SUBDIRS = . 
-
-MOSTLYCLEANFILES = test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk OneToOneSwept.vtk
+MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk \
+BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk \
+SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.sat assygen_default.template.jou graph.eps \
+intassign.exo mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
@@ -69,8 +71,6 @@ endif
 
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
-
-MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.sat assygen_default.template.jou graph.eps intassign.exo mesquite.gpt test.h5m volumesIce.h5m
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
