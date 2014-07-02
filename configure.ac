@@ -1,7 +1,7 @@
 ################################################################################
 #                           Standard Stuff
 ################################################################################
-AC_INIT(MESHKIT, 1.1.5)
+AC_INIT(MESHKIT, 1.2pre)
 AC_CANONICAL_SYSTEM
 AC_CONFIG_MACRO_DIR([m4])
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it 
