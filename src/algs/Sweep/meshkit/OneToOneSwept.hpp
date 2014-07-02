@@ -17,6 +17,7 @@
 #include <fstream>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
 
 #include "Global.hpp"
 #include "meshkit/MKCore.hpp"

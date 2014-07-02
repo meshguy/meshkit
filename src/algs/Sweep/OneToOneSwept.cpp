@@ -598,7 +598,7 @@ bool OneToOneSwept::isConcave()
 			double dotproduct = v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
 			angle += acos(dotproduct/sqrt((v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2])*(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2])));
 		}
-		if (angle > PI){
+		if (angle > M_PI){
 			return true;	
 		}
 	}
@@ -683,7 +683,7 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
     IBERRCHK(m_err, "Trouble create the entity set");
   }
 
-  bool condition_harmonic = isConcave();
+ // bool condition_harmonic = isConcave();
   bool is_exe_harmonic = false;
 #ifdef HAVE_ARMADILLO
   //target surface mesh projection based on harmonic mapping

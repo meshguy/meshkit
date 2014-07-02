@@ -38,8 +38,8 @@ SUBDIRS += test doc
 # Some variables
 AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
 
-check_PROGRAMS =  
-TESTS = $(check_PROGRAMS)
+# check_PROGRAMS =
+# TESTS = $(check_PROGRAMS)
 
 EXTRA_DIST = MKDefines.h data
 

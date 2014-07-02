@@ -24,7 +24,6 @@
 #include <vector>
 #include <set>
 #include <list>
-#define PI 3.1415926536
 
 
 using namespace std;

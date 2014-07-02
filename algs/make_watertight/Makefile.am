@@ -25,7 +25,7 @@ libMakeWatertight_la_include_HEADERS =
 # Tests and such
 check_PROGRAMS = 
 
-TESTS = $(check_PROGRAMS)
+# TESTS = $(check_PROGRAMS)
 
 bin_PROGRAMS = make_watertight
 make_watertight_SOURCES = make_watertight.cpp 
