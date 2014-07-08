@@ -4,8 +4,6 @@
 AC_INIT(MESHKIT, 1.2pre)
 AC_CANONICAL_SYSTEM
 AC_CONFIG_MACRO_DIR([m4])
-# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it 
-m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 m4_ifdef([AM_SILENT_RULES],
  [AM_INIT_AUTOMAKE([-Wall color-tests parallel-tests])],
  [AM_INIT_AUTOMAKE([-Wall])])
