@@ -2089,10 +2089,12 @@ int CNrgen::CreateCubitJournal()
   m_FileOutput << "#\n#Save file" << std::endl;
   if(save_exodus){
       std::string szSave = m_szFile + ".exo";
+      std::transform(szSave.begin(), szSave.end(), szSave.begin(), ::tolower);
       m_FileOutput << "export mesh '"<< szSave <<"'" << " overwrite"<<std::endl;
     }
   else{
       std::string szSave = m_szFile + ".cub";
+      std::transform(szSave.begin(), szSave.end(), szSave.begin(), ::tolower);
       m_FileOutput << "save as '"<< szSave <<"'" << " overwrite"<<std::endl;
     }
 

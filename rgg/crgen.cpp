@@ -1315,6 +1315,7 @@ int CCrgen::parse_assembly_names(CParser parse)
       formatString >> meshfile >> mf_alias >> same_as >> reloading_mf >> ms_startid >> ns_startid;
       // we don't check for formatting since same_as and parameters after it may not be present.
       // variable gets populated correctly in the file
+      std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
       if (same_as == "same_as")
         bsameas.push_back(0);
       else
