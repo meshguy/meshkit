@@ -26,6 +26,8 @@
 #include "arc.hpp"
 #include "zip.hpp"
 
+#include "TestUtil.hpp"
+
 MBErrorCode move_vert( MBEntityHandle vertex, double dx, double dy, double dz, bool verbose = false );
 MBErrorCode rand_vert_move( MBEntityHandle vertex, double tol, bool verbose = false);
 MBErrorCode move_vert_theta( MBEntityHandle vertex, double tolerance, bool verbose = false);
@@ -717,13 +719,13 @@ bool verbose=false;
   start_time = clock();
   //save the mesh to a new filename
   std::string input_name="cyl.h5m";
-  std::string root_name="cyl.h5m";
+  std::string root_name=input_name;
   int len = root_name.length();
   root_name.erase(len-4);
 
   // load file and get tolerance from input argument
   MBErrorCode result;
-  std::string filename = "cyl.h5m"; //set filename
+  std::string filename = TestDir + "/" + input_name; //set filename
   MBEntityHandle input_set;
   result = MBI()->create_meshset( MESHSET_SET, input_set ); //create handle to meshset
   if(MB_SUCCESS != result) 

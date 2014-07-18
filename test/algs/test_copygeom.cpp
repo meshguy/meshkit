@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 void test_load_and_copymove()
 {
   std::string filename = TestDir + "/" + DEFAULT_TEST_FILE;
+  std::cout << "Filename value: " << filename << std::endl;
   mk->load_geometry(filename.c_str());
 
   MEntVector vols;

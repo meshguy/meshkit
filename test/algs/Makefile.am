@@ -27,6 +27,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/QuadMesher \
                -I$(top_srcdir)/src/algs/IntervalAssignment \
                -I$(top_srcdir)/src/extern/triangle \
+	       -I$(top_srcdir)/src/algs/make_watertight \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
@@ -44,7 +45,9 @@ TESTS = test_edgemesher \
         test_qslimmesher \
         test_ebmesh \
         test_assygen \
-        test_postbl
+        test_postbl \
+	test_make_watertight
+
 if HAVE_LPSOLVER
 TESTS += test_submapping
 endif
@@ -72,6 +75,8 @@ endif
 
 check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
+MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.sat assygen_default.template.jou graph.eps intassign.exo mesquite.gpt test.h5m volumesIce.h5m cyl.h5m
+
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
@@ -85,6 +90,8 @@ test_quadmeshcleanup_SOURCES = test_quadmeshcleanup.cpp
 
 test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesher_SOURCES = test_edgemesher.cpp
+test_make_watertight_SOURCES = test_make_watertight.cpp
+test_make_watertight_LDADD = $(top_builddir)/src/algs/make_watertight/libMakeWatertight.la
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
 if HAVE_LPSOLVER
