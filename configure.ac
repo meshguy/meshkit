@@ -1341,6 +1341,7 @@ AC_CONFIG_FILES([Makefile
 		 src/algs/CoreGen/Makefile
                  src/algs/PostBL/Makefile
                  src/algs/Qslim/Makefile
+		 src/algs/make_watertight/Makefile
                  src/utils/Makefile
                  src/lemon/Makefile
                  src/extern/Makefile

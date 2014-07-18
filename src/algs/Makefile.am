@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL
+SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL make_watertight
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
