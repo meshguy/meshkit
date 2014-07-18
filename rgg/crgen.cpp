@@ -1309,13 +1309,27 @@ int CCrgen::parse_assembly_names(CParser parse)
   // reading file and alias names
   for (int i = 1; i <= nassys; i++) {
       if (!parse.ReadNextLine(file_input, linenumber,
-                              input_string, MAXCHARS, comment))
+                              input_string, MAXCHARS, comment, false))
         ERRORR("Reading input file failed",1);
       std::istringstream formatString(input_string);
       formatString >> meshfile >> mf_alias >> same_as >> reloading_mf >> ms_startid >> ns_startid;
       // we don't check for formatting since same_as and parameters after it may not be present.
       // variable gets populated correctly in the file
-      std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
+
+      // if meshfile variable is a path then only convert the filename to lower case
+      unsigned pos = 0;
+      pos = meshfile.find_last_of("/\\");
+      if (pos > 0 && pos < meshfile.length()){
+        std::string filename = "", path="";
+        path = meshfile.substr(0,pos);
+        filename = meshfile.substr(pos+1);
+        std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+        meshfile = path+"/"+ filename;
+      }
+      else{
+          std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
+        }
+
       if (same_as == "same_as")
         bsameas.push_back(0);
       else
