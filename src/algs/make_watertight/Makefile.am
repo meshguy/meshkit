@@ -27,20 +27,13 @@ libMakeWatertight_la_SOURCES = \
 libMakeWatertight_la_include_HEADERS = 
 
 # Tests and such
-#check_PROGRAMS = mw_test
-
-TESTS = $(check_PROGRAMS)
-
-#mw_test_SOURCES = test/test_cyl.cpp test/test_cyl.hpp
-#mw_test_DEPENDENCIES = ../make_watertight/libMakeWatertight.la 
-#mw_test_CXXFLAGS = -DTEST $(CXXFLAGS)
-#mw_test_LDADD = ../make_watertight/libMakeWatertight.la $(IGEOM_LIBS)  $(IMESH_LIBS)  $(IREL_LIBS)
-#mw_test_FILES = cyl.h5m 
+TESTS = 
 
 bin_PROGRAMS = make_watertight
 make_watertight_SOURCES = make_watertight.cpp 
 make_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
 make_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
+
 
 libMakeWatertight_la_LIBADD = -ldagmc
 libMakeWatertight_la_DEPENDENCIES = 
