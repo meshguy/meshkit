@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL
+SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL make_watertight
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
@@ -12,6 +12,7 @@ libMeshKitalgs_la_LIBADD = Qslim/libQslim.la \
                            AssyGen/libAssyGen.la \
 			   CoreGen/libCoreGen.la \
                            PostBL/libPostBL.la                        
+			   make_watertight/libMakeWatertight.la
 
 if ENABLE_intassign
   SUBDIRS += IntervalAssignment
