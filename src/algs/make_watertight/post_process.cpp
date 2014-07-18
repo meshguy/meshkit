@@ -31,10 +31,10 @@
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
 
-#include "gen.hpp"
-#include "arc.hpp"
-#include "zip.hpp"
-#include "cleanup.hpp"
+#include "meshkit/gen.hpp"
+#include "meshkit/arc.hpp"
+#include "meshkit/zip.hpp"
+#include "meshkit/cleanup.hpp"
 
 
 

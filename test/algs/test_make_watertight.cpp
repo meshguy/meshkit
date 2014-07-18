@@ -20,11 +20,11 @@
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
 
-#include "mw_func.hpp"
-#include "cw_func.hpp"
-#include "gen.hpp"
-#include "arc.hpp"
-#include "zip.hpp"
+#include "meshkit/mw_func.hpp"
+#include "meshkit/cw_func.hpp"
+#include "meshkit/gen.hpp"
+#include "meshkit/arc.hpp"
+#include "meshkit/zip.hpp"
 
 #include "TestUtil.hpp"
 
@@ -715,8 +715,8 @@ bool verbose=false;
   // Load the h5m file and create tags.
   // ******************************************************************
 
-  clock_t start_time;
-  start_time = clock();
+  //clock_t start_time;
+  //start_time = clock();
   //save the mesh to a new filename
   std::string input_name="cyl.h5m";
   std::string root_name=input_name;
@@ -807,8 +807,9 @@ if(verbose)
 
 //initialize booleans to pass to make_mesh_watertight
 
-  bool check_topology, test, sealed;
-       check_topology=false;
+  //bool check_topology;
+  bool test, sealed;
+       //check_topology=false;
        test=true;
   
 // initialize boolean for each set of tests

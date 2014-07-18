@@ -5,9 +5,9 @@
 #include <vector>
 #include "MBRange.hpp"
 #include "MBAdaptiveKDTree.hpp"
-#include "arc.hpp"
-#include "zip.hpp"
-#include "gen.hpp"
+#include "meshkit/arc.hpp"
+#include "meshkit/zip.hpp"
+#include "meshkit/gen.hpp"
 
 #include "moab/GeomTopoTool.hpp"
 #include "moab/FileOptions.hpp"
@@ -588,9 +588,9 @@ namespace arc {
       if(candidate_curves.empty()) continue;
 
       // subtract the current curve
-      int n_before = candidate_curves.size();
+      //int n_before = candidate_curves.size();
       candidate_curves.erase( *i );
-      int n_after = candidate_curves.size();
+      //int n_after = candidate_curves.size();
       
 
       // now find curves who's interior vertices are also coincident and merge them

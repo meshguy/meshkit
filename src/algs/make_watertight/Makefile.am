@@ -11,30 +11,28 @@ libMakeWatertight_la_includedir = $(includedir)
 # The list of source files, and any header files that do not need to be installed
 libMakeWatertight_la_SOURCES = \
 	arc.cpp \
-	arc.hpp \
 	cleanup.cpp \
-	cleanup.hpp \
-	gen.cpp \
-	gen.hpp \
-	zip.cpp \
-	zip.hpp \
+	gen.cpp \	
+        zip.cpp \
 	cw_func.cpp \
-	cw_func.hpp \
-	mw_func.cpp \
-	mw_func.hpp
-
+        mw_func.cpp
 # The list of header files which are to be installed
-libMakeWatertight_la_include_HEADERS = 
+libMakeWatertight_la_include_HEADERS = \
+        meshkit/arc.hpp \
+        meshkit/cleanup.hpp \
+        meshkit/gen.hpp \
+        meshkit/zip.hpp \
+        meshkit/cw_func.hpp \
+        meshkit/mw_func.hpp
 
 # Tests and such
 TESTS = 
 
-bin_PROGRAMS = make_watertight
+bin_PROGRAMS = make_watertight check_watertight
 make_watertight_SOURCES = make_watertight.cpp 
 make_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
 make_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
 
-bin_PROGRAMS = check_watertight
 check_watertight_SOURCES = check_watertight.cpp
 check_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
 check_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)

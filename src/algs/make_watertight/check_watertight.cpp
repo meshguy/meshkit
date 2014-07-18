@@ -39,10 +39,10 @@
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
 
-#include "cw_func.hpp"
-#include "gen.hpp"
-#include "arc.hpp"
-#include "zip.hpp"
+#include "meshkit/cw_func.hpp"
+#include "meshkit/gen.hpp"
+#include "meshkit/arc.hpp"
+#include "meshkit/zip.hpp"
 
 MBInterface *MBI();
 

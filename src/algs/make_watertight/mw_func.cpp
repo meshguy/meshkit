@@ -26,11 +26,11 @@
 #include "moab/Skinner.hpp"
 #include "moab/GeomTopoTool.hpp"
 
-#include "mw_func.hpp"
-#include "gen.hpp"
-#include "arc.hpp"
-#include "zip.hpp"
-#include "cleanup.hpp"
+#include "meshkit/mw_func.hpp"
+#include "meshkit/gen.hpp"
+#include "meshkit/arc.hpp"
+#include "meshkit/zip.hpp"
+#include "meshkit/cleanup.hpp"
 
 
 
@@ -1725,7 +1725,7 @@ MBErrorCode make_mesh_watertight(MBEntityHandle input_set, double &facet_tol, bo
     const bool debug = false;
     const bool check_geom_size = true;
     // duplicated here from make_watertight, seemed to always be set to false
-    bool is_acis=false;
+    //bool is_acis=false;
 
    // initialize mesh tags
     MBTag geom_tag, id_tag, normal_tag, merge_tag, faceting_tol_tag, 

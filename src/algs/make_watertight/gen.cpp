@@ -9,8 +9,8 @@
 #include "moab/GeomTopoTool.hpp"
 #include "moab/FileOptions.hpp"
 
-#include "gen.hpp"
-#include "zip.hpp"
+#include "meshkit/gen.hpp"
+#include "meshkit/zip.hpp"
 #include "MBSkinner.hpp"
 
 

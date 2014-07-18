@@ -23,9 +23,9 @@
 #include "MBSkinner.hpp"
 
 #include "moab/GeomTopoTool.hpp"
-#include "cw_func.hpp"
-#include "gen.hpp"
-#include "zip.hpp"
+#include "meshkit/cw_func.hpp"
+#include "meshkit/gen.hpp"
+#include "meshkit/zip.hpp"
 #include "MBSkinner.hpp"
 
 namespace cw_func {
@@ -213,10 +213,10 @@ namespace cw_func {
 	  result = MBI()->get_coords( &(verts.back()), 1, coords1 );
           if(MB_SUCCESS != result) return result;
           // orient the edge by endpoint coords
-          if(!check_topology && 
-             coords1[0]< coords0[0] ||
+          if((!check_topology) &&
+            (coords1[0]< coords0[0] ||
             (coords1[0]==coords0[0] && coords1[1]< coords0[1]) ||
-            (coords1[0]==coords0[0] && coords1[1]==coords0[1] && coords1[2]< coords0[2])) {
+            (coords1[0]==coords0[0] && coords1[1]==coords0[1] && coords1[2]< coords0[2]))) {
             temp.x1 = coords1[0];
             temp.y1 = coords1[1];
             temp.z1 = coords1[2];

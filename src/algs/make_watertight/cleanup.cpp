@@ -1,5 +1,5 @@
 #include <iostream>
-#include "cleanup.hpp"
+#include "meshkit/cleanup.hpp"
 //#include "MBAdaptiveKDTree.hpp"
 #include "MBOrientedBoxTreeTool.hpp"
 
@@ -50,7 +50,7 @@ namespace cleanup {
 
 
     result = MBI()->tag_get_handle ( "OBB", sizeof(double), 
-     				  MB_TYPE_DOUBLE, rootTag, MB_TAG_SPARSE, 0, false);
+                                  MB_TYPE_DOUBLE, rootTag, MB_TAG_SPARSE, 0, 0);
     assert(MB_SUCCESS==result || MB_ALREADY_ALLOCATED==result);
     /*    result = MBI()->get_entities_by_type_and_tag( 0, MBENTITYSET, &rootTag, 
                                                    NULL, 1, trees );
@@ -194,9 +194,9 @@ namespace cleanup {
 	  }
 	  assert(3 <= adj_edges0.size());
 	  MBRange adj_skin_edges0 = intersect( adj_edges0, skin_edges );
-	  bool endpt0_is_skin;
-	  if(adj_skin_edges0.empty()) endpt0_is_skin = false;
-	  else endpt0_is_skin = true;
+//	  bool endpt0_is_skin;
+//	  if(adj_skin_edges0.empty()) endpt0_is_skin = false;
+//	  else endpt0_is_skin = true;
 
 	  MBRange adj_edges1;
 	  result = MBI()->get_adjacencies( &epts[1], 1, 1, true, adj_edges1 );
