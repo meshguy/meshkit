@@ -4,12 +4,11 @@ This is MeshKit, an open-source library for mesh generation functionality.
 MeshKit is distributed under the terms of the GNU LGPL. See the LICENSE.txt
 
 The example/ directory contains the examples from the described in
-the doxygen page (http://www.mcs.anl.gov/~fathom/meshkit-docs/html/examples.html).
+the doxygen page (http://ftp.mcs.anl.gov/pub/fathom/meshkit-docs/examples.html).
 The test/ directory contains tests for individual algorithms and tools.
 
 MeshKit user and developer guide are available online:
-http://www.mcs.anl.gov/~fathom/meshkit-docs/html/userguide.html
-http://www.mcs.anl.gov/~fathom/meshkit-docs/html/devguide.html
+http://www.sigma.mcs.anl.gov?page_id=777
 
 =====================================
 Installation Instructions:
@@ -26,12 +25,12 @@ MeshKit is currently supported on Linux and Linux-like operating systems (includ
 MeshKit requires the following libraries to be installed before configuration:
 
 • CGM: a library for representation, query and modification of geometric
-   models; see https://trac.mcs.anl.gov/projects/ITAPS/wiki/CgmFromScratch
+   models; see http://www.sigma.mcs.anl.gov
    for details on obtaining and building CGM.
 • MOAB: a library for representing structured and unstructured mesh; see 
-   https://trac.mcs.anl.gov/projects/ITAPS/wiki/BuildingMoab
+   http://www.sigma.mcs.anl.gov
 • Lasso: a library for recovering and querying relations between mesh and geometry; see
-   http://trac.mcs.anl.gov/projects/ITAPS/wiki/Lasso
+   http://www.sigma.mcs.anl.gov
 
    for details on obtaining and building MOAB.
 • Autotools: this is a set of Linux utilities for configuring software packages.
@@ -44,8 +43,8 @@ most Linux package managers.
 
 2.2 Download, Configure, Build, Install
 =====================================
-MeshKit source code is maintained in a world-readable svn repository, located at
-https://svn.mcs.anl.gov/repos/fathom/MeshKit/trunk/. By default, MeshKit uses a GNU
+MeshKit source code is maintained in a world-readable git repository, located at
+https://guest@bitbucket.org/fathomteam/meshkit.git. By default, MeshKit uses a GNU
 Autotools-based configuration process. The following steps should be used to configure,
 build, and install MeshKit:
 
@@ -80,28 +79,6 @@ applications.
 
 **Note: Automatic CMake-based build that builds MeshKit, MOAB, CGM, Lasso, OCE, FTGL, HDF5 can be found in folder <MeshKit>/trunk/doc/SuperBuild
 
-3. Release MeshKit: Version 1.1
-=====================================
-This version has been tested on Ubuntu 10.04, 12.04 and Mac OS X 10.6.8 to 10.9.
-Some dependencies may have restrictive license. 
 
-3.1 Components
-=====================================
-The following version of dependencies are found to be compatible with MeshKit v 1.1
-MPICH2 1.4.1p1, 1.5, open-mpi 1.6.4
-MOAB Git SHAR1: bd52ba12517416f4b6d2162696a41583b73d52ed
-CGM  https://svn.mcs.anl.gov/repos/ITAPS/cgm/tags/13.1.1
-LASSO https://svn.mcs.anl.gov/repos/ITAPS/Lasso/trunk Rev: 6103
-
-TRIANGLE: Triangle provides a 2D triangle mesh generation algorithm.
-
-CAMAL/CUBIT 5.1.0: Sandia National Lab’s proprietary CAMAL library provides access to tetrahedral, tri-advance and paving algorithms.
-
-NetGen 4.9.13: An open source automatic tetrahedral mesh generation library.
-
-Mesquite: Open source mesh optimization package MESQUITE 
-
-IPOPT: 3.10.0 (Coin), MA27 solver http://www.hsl.rl.ac.uk/download/coinhsl-archive/2011.10.03/  
-Ipopt an optimization library used by interval assignment algorithm developed in MeshKit.
 
 

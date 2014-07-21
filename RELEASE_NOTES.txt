@@ -1,0 +1,42 @@
+21st July 2014 - Version 1.5
+=================================
+See details on compatibility with dependent libraries in NEWS section of https://www.sigma.mcs.anl.gov
+A. BUG FIXES
+1. Various RGG (AssyGen/CoreGen) bugfixes and enhancements: common keywords inputs, superblocks, automated multiple file creation, automatic mesh size specification, scheme spefication for hole surfaces etc.
+2. Fixes to OneToOneSweep: new test case added
+3. Fixes to PostBL along with addition of methods to create mixed element meshes.
+4. Fixes to quadmesher and dependency on BOOST.
+
+
+B. NEW FEATURES
+1. make_watertight for sealing faceted CAD Geometry, see page: http://sigma.mcs.anl.gov/?p=901
+2. RGG AssyGen feature to "CreateFiles" and "CreateMatFiles". CoreGen feature "same_as" to shift material/boundaries while loading the same mesh file.
+3. Load file with geometry group sets (see: test/core/test_load_grps.cpp)
+4. Routines with 21 options for quad mesh cleanup (test/algs/test_quadmeshcleanup)
+
+C. API CHANGES
+1. Fixes to get_entities_by_dimension and get_entities_by_handle.
+2. Correction to the ModelEnt constructor for iGeom EntSets.
+
+
+Version 1.1
+=====================================
+This version has been tested on Ubuntu 10.04, 12.04 and Mac OS X 10.6.8 to 10.9.
+Some dependencies may have restrictive license.
+
+The following version of dependencies are found to be compatible with MeshKit v 1.1
+MPICH2 1.4.1p1, 1.5, open-mpi 1.6.4
+MOAB Git SHAR1: bd52ba12517416f4b6d2162696a41583b73d52ed
+CGM  https://git.mcs.anl.gov/repos/ITAPS/cgm/tags/13.1.1
+LASSO https://git.mcs.anl.gov/repos/ITAPS/Lasso/trunk Rev: 6103
+
+TRIANGLE: Triangle provides a 2D triangle mesh generation algorithm.
+
+CAMAL/CUBIT 5.1.0: Sandia National Lab’s proprietary CAMAL library provides access to tetrahedral, tri-advance and paving algorithms.
+
+NetGen 4.9.13: An open source automatic tetrahedral mesh generation library.
+
+Mesquite: Open source mesh optimization package MESQUITE
+
+IPOPT: 3.10.0 (Coin), MA27 solver http://www.hsl.rl.ac.uk/download/coinhsl-archive/2011.10.03/
+Ipopt an optimization library used by interval assignment algorithm developed in MeshKit.

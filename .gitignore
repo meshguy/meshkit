@@ -62,6 +62,8 @@ Makefile.in
 Makefile
 MKVersion.h
 MKVersion.h.in
+src/algs/make_watertight/make_watertight
+src/algs/make_watertight/check_watertight
 algs/make_watertight/make_watertight
 algs/test/BedJako
 algs/test/CopyGeom_test
@@ -127,6 +129,8 @@ test/algs/test_qslimmesher
 test/algs/test_quadmeshcleanup
 test/algs/test_scdmesh
 test/algs/test_tfimapping
+test/algs/alllocal.off
+test/algs/test_make_watertight
 test/core/graph.eps
 test/core/list_meshops
 test/core/test_graph
