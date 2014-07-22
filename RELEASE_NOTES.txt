@@ -2,22 +2,36 @@
 =================================
 See details on compatibility with dependent libraries in NEWS section of https://www.sigma.mcs.anl.gov
 A. BUG FIXES
-1. Various RGG (AssyGen/CoreGen) bugfixes and enhancements: common keywords inputs, superblocks, automated multiple file creation, automatic mesh size specification, scheme spefication for hole surfaces etc.
+1. Various RGG (AssyGen/CoreGen) bugfixes and enhancements: common keywords inputs, superblocks,
+    automated multiple file creation, automatic mesh size specification, scheme spefication for hole surfaces etc.
 2. Fixes to OneToOneSweep: new test case added
 3. Fixes to PostBL along with addition of methods to create mixed element meshes.
 4. Fixes to quadmesher and dependency on BOOST.
 
 
 B. NEW FEATURES
-1. make_watertight for sealing faceted CAD Geometry, see page: http://sigma.mcs.anl.gov/?p=901
+1. A new version of make_watertight for sealing faceted CAD Geometry, see page: http://sigma.mcs.anl.gov/?p=901
+    Note: Use with MOAB 4.7.0 or higher.
+    A program called check_watertight for evaluating model integrity for use with ray-firing has been included as well.
 2. RGG AssyGen feature to "CreateFiles" and "CreateMatFiles". CoreGen feature "same_as" to shift material/boundaries while loading the same mesh file.
 3. Load file with geometry group sets (see: test/core/test_load_grps.cpp)
 4. Routines with 21 options for quad mesh cleanup (test/algs/test_quadmeshcleanup)
+5. RGG GUI has been developed by Kitware and is available for download from: http://cmb.kitware.com/CMB/resources/software.html
+    CMB website: http://cmb.kitware.com/CMB/project/cmbnuclear.html
 
 C. API CHANGES
 1. Fixes to get_entities_by_dimension and get_entities_by_handle.
+    These functions will now return ModelEnts of dimension 4 if requested.
+    If the dimension passed in is -1, the function will return all ModelEnts in the MK instance.
 2. Correction to the ModelEnt constructor for iGeom EntSets.
 
+D. FUTURE WORK:
+1. B-Rep(OCC)-based mesh generation, Solid Geometry Mesher-based on CGM, this will add the capability of meshing and manipulating solid geometry models based on OpenCascade and CUBIT.
+2. Open source tri-mesher
+3. Integration of verdict-mesh quality evalulation library
+4. Interval assignment integration with existing algorithms
+5. New parallel schemes and optimization of RGG tools: AssyGen and CoreGen.
+6. Parallel mesh generation
 
 Version 1.1
 =====================================
