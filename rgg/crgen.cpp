@@ -1329,6 +1329,9 @@ int CCrgen::parse_assembly_names(CParser parse)
       else{
           std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
         }
+      // also convert the alias and reloading_mf name to lower case, since we've changed the actual reading.
+      std::transform(mf_alias.begin(), mf_alias.end(), mf_alias.begin(), ::tolower);
+      std::transform(reloading_mf.begin(), reloading_mf.end(), reloading_mf.begin(), ::tolower);
 
       if (same_as == "same_as")
         bsameas.push_back(0);
