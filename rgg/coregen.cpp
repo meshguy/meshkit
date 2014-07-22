@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   // more memory/time related variables
   int ld_t = 0, ld_tload = 0, ld_tcopymove = 0, ld_tsave = 0, ld_tgid = 0, ld_tmerge = 0, ld_tns = 0;
-  unsigned long mem1 = 0, mem2 = 0, mem3 = 0, mem4 = 0, mem5 = 0, mem6 = 0, mem7 = 0;
+  unsigned long long mem1 = 0, mem2 = 0, mem3 = 0, mem4 = 0, mem5 = 0, mem6 = 0, mem7 = 0;
 
   /*********************************************/
   // Print banner on standard output

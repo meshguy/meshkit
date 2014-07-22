@@ -196,7 +196,7 @@ void EBMesher::execute_this()
   double intersection_time = .0;
   double set_info_time = .0;
   time_t time1, time2, time3, time4;
-  unsigned long mem1, mem2, mem3, mem4;
+  unsigned long long mem1, mem2, mem3, mem4;
   moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
   moab::ErrorCode rval;
 

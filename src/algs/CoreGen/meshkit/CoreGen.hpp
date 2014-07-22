@@ -239,7 +239,7 @@ namespace MeshKit {
 
     // more memory/time related variables
     int ld_t, ld_tload, ld_tcopymove, ld_tsave, ld_tgid, ld_tmerge, ld_tns;
-    unsigned long mem1, mem2, mem3, mem4, mem5, mem6, mem7;
+    unsigned long long mem1, mem2, mem3, mem4, mem5, mem6, mem7;
   };
 
   inline const char* CoreGen::name()

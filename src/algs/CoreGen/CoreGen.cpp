@@ -73,7 +73,7 @@ void CoreGen::setup_this()
         clock_t tload = 0;
         CClock ld_time;
         int ld_t = 0, ld_tload = 0;
-        unsigned long mem1 = 0;
+        unsigned long long mem1 = 0;
         if (prob_type == "mesh") {
             if (procs == 1) {
                 err = load_meshes();
