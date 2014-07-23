@@ -74,15 +74,15 @@ namespace cleanup {
 						    NULL, 1, trees );
     assert(MB_SUCCESS == result);
     std::cout << "  " << trees.size() << " OBB tree(s) contained in file" << std::endl;
-    return result;  
+    return MB_SUCCESS;  
   }
 
   MBErrorCode delete_small_edge_and_tris( const MBEntityHandle vert0, 
                                           MBEntityHandle &vert1,
                                           const double tol ) {
     // If the verts are the same, this is not meaningful.
-    MBErrorCode result = MB_SUCCESS;
-    if(vert0 == vert1) return result;
+    if(vert0 == vert1) return MB_SUCCESS;
+    MBErrorCode result;
 
     // If the edge is small, delete it and the adjacent tris.
     if(tol > gen::dist_between_verts(vert0, vert1)) {
@@ -101,7 +101,7 @@ namespace cleanup {
       assert(MB_SUCCESS == result);
       vert1 = vert0;
     }
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode delete_small_edges(const MBRange &surfaces, const double FACET_TOL) {
@@ -413,7 +413,7 @@ namespace cleanup {
       assert(MB_SUCCESS == result); 
    
     }
-    return result;
+    return MB_SUCCESS;
   } 
   
   // Lots of edges have been created but are no longer needed.
@@ -438,7 +438,7 @@ namespace cleanup {
     std::cout << "deleting " << edges_to_delete.size() << " unused edges" << std::endl;
     result = MBI()->delete_entities( edges_to_delete );
     assert(MB_SUCCESS == result);
-    return result;
+    return MB_SUCCESS;
   }
  
   

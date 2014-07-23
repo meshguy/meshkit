@@ -84,7 +84,7 @@ MBErrorCode move_vert( MBEntityHandle vertex, double dx, double dy, double dz, b
   result=MBI()-> set_coords( &vertex, 1, coords);
   if (gen::error(MB_SUCCESS!=result, "could not set the vertex coordinates")) return result;
 
-return result;
+return MB_SUCCESS;
 }
 
 /// takes an entity handle vertex, gets the original coordinates, changes and resets the vertex coordinates in the mesh
@@ -136,7 +136,7 @@ MBErrorCode rand_vert_move( MBEntityHandle vertex, double tol, bool verbose) {
   result=MBI()-> set_coords( &vertex, 1, coords);
   if (gen::error(MB_SUCCESS!=result, "could not set the vertex coordinates")) return result;
 
-return result;
+return MB_SUCCESS;
 }
 
 /// moves a vertex along the rim of the cylinder in the theta direction a distance equal to the faceting_tolerance
@@ -186,7 +186,7 @@ MBErrorCode move_vert_theta( MBEntityHandle vertex, double tolerance, bool verbo
   result=MBI()-> set_coords( &vertex, 1, coords);
   if (gen::error(MB_SUCCESS!=result, "could not set the vertex coordinates")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// moves the vertex in R some distance less than tol
@@ -228,7 +228,7 @@ MBErrorCode move_vert_R( MBEntityHandle vertex, double tol, bool verbose ) {
   result=MBI()-> set_coords( &vertex, 1, coords);
   if (gen::error(MB_SUCCESS!=result, "could not set the vertex coordinates")) return result;
 
-return result;
+return MB_SUCCESS;
 }
 
 
@@ -241,7 +241,7 @@ MBErrorCode write_mod_file( std::string filename ) {
  result=MBI()->write_mesh(output_filename.c_str());
  if(gen::error(MB_SUCCESS!=result,"could not write the mesh to output_filename")) return result; 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 
@@ -287,7 +287,7 @@ MBErrorCode single_vert_bump( MBRange verts, double bump_dist_x, double bump_dis
   result = move_vert( vertex, bump_dist_x, bump_dist_y, bump_dist_z );
   if(gen::error(MB_SUCCESS!=result, "could not move single vert")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// bumps the last vertex in the cylinder model in the R direction
@@ -299,7 +299,7 @@ MBErrorCode single_vert_bump_R( MBRange verts, double facet_tol, bool verbose = 
   result = move_vert_R( vertex, facet_tol, verbose );
   if(gen::error(MB_SUCCESS!=result, "could not move single vert")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// moves the last two verticies in the model the same distance in x, y, and z 
@@ -317,7 +317,7 @@ MBErrorCode locked_pair_bump( MBRange verts, double bump_dist_x, double bump_dis
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
 
-  return result;
+  return MB_SUCCESS;
 }
 /// selects a random pair of verticies from verts and moves them in random directions some distance less than the faceting tolerance
 MBErrorCode rand_locked_pair_bump_rand( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
@@ -340,7 +340,7 @@ MBErrorCode rand_locked_pair_bump_rand( MBRange verts, double facet_tol , std::s
   result = rand_vert_move( vertex2, facet_tol, verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// selects a random pair of verticies and moves them along theta a distance less than the faceting tolerance
@@ -364,7 +364,7 @@ MBErrorCode rand_locked_pair_bump_theta( MBRange verts, double facet_tol , std::
   result = move_vert_theta( vertex2, facet_tol, verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 /// selects a random pair of adjacent verticies and bumps them in x, y, and z 
 MBErrorCode rand_locked_pair_bump( MBRange verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
@@ -387,7 +387,7 @@ MBErrorCode rand_locked_pair_bump( MBRange verts, double bump_dist_x, double bum
   result = move_vert( vertex2, bump_dist_x, bump_dist_y, bump_dist_z, verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 /// moves the last two verticies in the model in the same direction some distance less than the faceting tolerance
 MBErrorCode locked_pair_bump_rand( MBRange verts, double facet_tol,  std::string root_name, bool verbose = false ) {
@@ -403,7 +403,7 @@ MBErrorCode locked_pair_bump_rand( MBRange verts, double facet_tol,  std::string
   result = rand_vert_move( vertex2, facet_tol, verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 
@@ -417,7 +417,7 @@ MBErrorCode rand_vert_bump( MBRange verts, double facet_tol, std::string root_na
   if(gen::error(MB_SUCCESS!=result, "could not move single vert")) return result;
 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 // FOR CYLINDER TESTING ONLY 
@@ -471,7 +471,7 @@ MBErrorCode theta_vert_bump( MBRange verts, double bump_dist_theta, double toler
   if (gen::error(MB_SUCCESS!=result, "could not set the vertex coordinates")) return result;
   // alter output filename
  
-  return result;
+  return MB_SUCCESS;
 }
 
 /// moves two adjacent vertices along theta a distance equal to the faceting tolerance
@@ -488,7 +488,7 @@ MBErrorCode locked_pair_move_theta( MBRange verts, double tolerance, std::string
   result= move_vert_theta( vertex2, tolerance, verbose);
   if(gen::error(MB_SUCCESS!=result,"could not move vertex1 along theta")) return result; 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// moves the third to last and the last vertices in the model the same distance in x, y, and z
@@ -506,7 +506,7 @@ MBErrorCode adjplone_locked_pair_bump( MBRange verts, double bump_dist_x, double
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// moves the third to last and the last verticies in the model in theta the same distance along theta equal to the faceting tolerance
@@ -524,7 +524,7 @@ MBErrorCode adjplone_locked_pair_bump_theta( MBRange verts, double facet_tol , s
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// moves the third to last and the last verticies in the model in rand directions some distance less than the facet_tolerance
@@ -542,7 +542,7 @@ MBErrorCode adjplone_locked_pair_bump_rand( MBRange verts, double facet_tol , st
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 
@@ -567,7 +567,7 @@ MBErrorCode nonadj_locked_pair_bump( MBRange verts, double bump_dist_x, double b
   result = move_vert( vertex2, bump_dist_x, bump_dist_y, bump_dist_z, verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// selects a random pair of adjacent verticies and bumps them along the theta direction a distance equal to the faceting tolerance
@@ -591,7 +591,7 @@ MBErrorCode nonadj_locked_pair_bump_theta( MBRange verts, double facet_tol , std
   result = move_vert_theta( vertex2, facet_tol , verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// selects a random pair of adjacent verticies and bumps them along the theta direction a distance equal to the faceting tolerance
@@ -615,7 +615,7 @@ MBErrorCode nonadj_locked_pair_bump_rand( MBRange verts, double facet_tol , std:
   result = rand_vert_move( vertex2, facet_tol , verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 MBErrorCode locked_pair_bump_R( MBRange verts, double facet_tol,  std::string root_name, bool verbose = false ) {
@@ -632,7 +632,7 @@ MBErrorCode locked_pair_bump_R( MBRange verts, double facet_tol,  std::string ro
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// selects random verticies from verts and moves them in R a distance equal to the faceting tolerance
@@ -656,7 +656,7 @@ MBErrorCode rand_locked_pair_bump_R( MBRange verts, double facet_tol , std::stri
   result = move_vert_R( vertex2, facet_tol, verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// selects a the last vertex and third to last vertex in the model and moves them in R a distance equal to the faceting tolerance
@@ -674,7 +674,7 @@ MBErrorCode adjplone_locked_pair_bump_R( MBRange verts, double facet_tol , std::
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /// moves the last vertex in the model and a randomly selected, non-adjacent vertex and moves them both in R a distance equal to the faceting tolerance
@@ -698,7 +698,7 @@ MBErrorCode nonadj_locked_pair_bump_R( MBRange verts, double facet_tol , std::st
   result = move_vert_R( vertex2, facet_tol , verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move vertex2")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
  
 

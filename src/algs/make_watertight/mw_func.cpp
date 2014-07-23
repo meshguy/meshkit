@@ -53,7 +53,7 @@ MBErrorCode delete_all_edges() {
   result = MBI()->delete_entities( edges );
   if(gen::error(MB_SUCCESS!=result,"could not delete edges")) return result;
   assert(MB_SUCCESS == result);
-  return result;
+  return MB_SUCCESS;
 }
 
 MBErrorCode find_degenerate_tris() {
@@ -75,7 +75,7 @@ MBErrorCode find_degenerate_tris() {
   {
   std::cout << "Found " << counter << " degenerate triangles. " << std::endl;
   }
-  return result;
+  return MB_SUCCESS;
 }
 
 // Input: Possibly unordered sets of curves that do track ownership. Curves contain
@@ -196,7 +196,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
   result = arc::merge_curves(curve_sets, FACET_TOL, id_tag, merge_tag, debug );
   if(gen::error(MB_SUCCESS!=result,"could not merge_curves")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /* The chosen curve may need to be reversed to be in the same direction as the skin.
@@ -391,7 +391,7 @@ MBErrorCode create_arc_pair(  const double FACET_TOL,
 
   if(debug) std::cout << "  curve " << gen::geom_id_by_handle(curve_set) 
                       << " paired with skin, min_dist =" << min_dist << std::endl;
-  return rval;
+  return MB_SUCCESS;
 }
 
 
@@ -719,7 +719,7 @@ MBErrorCode seal_arc_pair( const bool debug,
     if(gen::error(MB_SUCCESS!=rval,"sealing test failed")) return rval;
   }
 
-  return rval;
+  return MB_SUCCESS;
 
 }
 
@@ -966,7 +966,7 @@ MBErrorCode seal_loop( bool debug,
     rval = MBI()->delete_entities( &skin_loop_set, 1 );
     if(gen::error(MB_SUCCESS!=rval,"deleting skin_loop_set failed")) return rval;      
 
-    return rval;
+    return MB_SUCCESS;
   }
 
   // input: surface sets, ordered curve sets,
@@ -1098,7 +1098,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
         return result;
 
       } // loop over each surface
-      return result;
+      return MB_SUCCESS;
     }
 
 
@@ -1163,7 +1163,7 @@ MBErrorCode fix_normals(MBRange surface_sets, MBTag id_tag, MBTag normal_tag, co
     std::cout << "  Before fixing, " << inverted_tri_counter 
               << " inverted triangles were found." << std::endl;
     }
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode restore_moab_curve_representation( const MBRange curve_sets ) {
@@ -1263,7 +1263,7 @@ MBErrorCode fix_normals(MBRange surface_sets, MBTag id_tag, MBTag normal_tag, co
       assert(MB_SUCCESS==result);
       if(MB_SUCCESS != result) return result;
     }
-    return result;
+    return MB_SUCCESS;
   }
 
 MBErrorCode get_geom_size_before_sealing( const MBRange geom_sets[], 
@@ -1299,7 +1299,7 @@ MBErrorCode get_geom_size_before_sealing( const MBRange geom_sets[],
   { 
   std::cout << "finished in get_geom_size_before_sealing" << std::endl;
   }
-  return rval;
+  return MB_SUCCESS;
 }
 
 MBErrorCode get_geom_size_after_sealing( const MBRange geom_sets[], 
@@ -1433,7 +1433,7 @@ MBErrorCode get_geom_size_after_sealing( const MBRange geom_sets[],
   	          << ", percent_change=" << smallest_size[dim-1].percent << std::endl;
       }
       std::cout.unsetf(std::ios::scientific|std::ios::showpos);
-      return rval;
+      return MB_SUCCESS;
 }
 
 MBErrorCode delete_merged_curves( MBRange &existing_curve_sets, MBTag merge_tag, bool debug){
@@ -1542,7 +1542,7 @@ MBErrorCode get_unmerged_curves( MBEntityHandle surface, std::vector<MBEntityHan
       }
 
 
-  return result; 
+  return MB_SUCCESS; 
 
 }
 
@@ -1630,7 +1630,7 @@ MBErrorCode create_skin_vert_loops( MBRange &skin_edges, MBRange tris, std::vect
 
       
 
- return result; 
+ return MB_SUCCESS; 
 
 }
 
@@ -1666,7 +1666,7 @@ MBErrorCode merge_skin_verts ( MBRange &skin_verts, MBRange &skin_edges, double 
         }  
 
 
-   return result;
+   return MB_SUCCESS;
 }
 
 
@@ -1708,12 +1708,17 @@ MBErrorCode seal_surface_loops ( MBEntityHandle surf, MBEntityHandle skin_loops[
         }
       }
  
-  return rval;
+  return MB_SUCCESS;
 
 }
 
+
+
 MBErrorCode make_mesh_watertight(MBEntityHandle input_set, double &facet_tol, bool verbose) 
   {
+
+
+
     MBErrorCode result;
 
     //added to this function because they are called in make_watertight but aren't used until here
@@ -1883,7 +1888,7 @@ MBErrorCode make_mesh_watertight(MBEntityHandle input_set, double &facet_tol, bo
     std::cout << "  triangle count changed " << (double)sealed_n_tris/orig_n_tris
               << "x (sealed/unsealed)" << std::endl;
     }
-    return result;  
+    return MB_SUCCESS;  
   }
 
 }

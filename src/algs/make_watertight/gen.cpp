@@ -269,7 +269,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       length += temp.length();
       if(length>dist_limit && debug) 
         std::cout << "length=" << length << " dist_limit=" << dist_limit << std::endl;
-      if(length > dist_limit) return rval;
+      if(length > dist_limit) return MB_SUCCESS;
     }
     prev_coords = coords;
 
@@ -283,7 +283,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     }
   }
  
-  return rval;
+  return MB_SUCCESS;
 }
 
 
@@ -325,7 +325,8 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       positions.push_back( min_pos );
     }
 
-   return rval;
+            
+   return MB_SUCCESS;
   }
 
   MBErrorCode merge_vertices( MBRange verts /* in */, const double tol /* in */ ) {
@@ -401,7 +402,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 	}
       }
     }   
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode squared_dist_between_verts( const MBEntityHandle v0, 
@@ -423,7 +424,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     }
     const MBCartVect diff = coords0 - coords1;
     d = diff.length_squared();
-    return result;
+    return MB_SUCCESS;
   }
 
   double dist_between_verts( const MBCartVect v0, const MBCartVect v1 ) {
@@ -446,7 +447,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       return result;
     }
     d = dist_between_verts( coords0, coords1 );
-    return result;
+    return MB_SUCCESS;
   }
 
   double dist_between_verts( double coords0[], double coords1[] ) {
@@ -560,10 +561,10 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       MBCartVect zero_vector( 0.0 );
       dir = zero_vector;
       std::cout << "direction vector has 0 magnitude" << std::endl;
-      return result;  
+      return MB_SUCCESS;  
     }
     dir.normalize();
-    return result;
+    return MB_SUCCESS;
   }    
  
   // from http://www.topcoder.com/tc?module=Static&d1=tutorials&d2=geometry1
@@ -646,7 +647,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 	  //print_vertex_coords( *i );
 	}
         // check one edge past the point after max_dist_along_curve
-        if(last_edge) return result;
+        if(last_edge) return MB_SUCCESS;
         if(max_dist_along_curve<cumulative_dist) last_edge = true;
       
 	front_vert = *i;
@@ -659,7 +660,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
      // } 
        else return MB_FAILURE;
     //std::cout << "point_curve_min_dist=" << min_dist << " curve.size()=" << curve.size() << std::endl;    
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode  point_curve_min_dist( const std::vector<MBEntityHandle> curve, // of verts 
@@ -681,7 +682,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBErrorCode result = MBI()->get_coords( conn, 3, coords[0].array() );
     assert(MB_SUCCESS == result);
     area = triangle_area( coords[0], coords[1], coords[2] );
-    return result;
+    return MB_SUCCESS;
   }
   MBErrorCode triangle_area( const MBEntityHandle tri, double &area ) {
     MBErrorCode result;
@@ -693,7 +694,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     
     result = triangle_area( conn, area );
     assert(MB_SUCCESS == result);
-    return result;
+    return MB_SUCCESS;
   }
   double triangle_area( const MBRange tris ) {
     double a, area = 0;
@@ -731,7 +732,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       assert(MB_SUCCESS==result || MB_ENTITY_NOT_FOUND==result);
       normals.push_back( normal );
     }
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode triangle_normal( const MBEntityHandle tri, MBCartVect &normal) {
@@ -754,19 +755,20 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 
   MBErrorCode triangle_normal( const MBEntityHandle v0, const MBEntityHandle v1,
 			       const MBEntityHandle v2, MBCartVect &normal ) {
-    MBErrorCode result = MB_SUCCESS;
+
     // if tri is degenerate return 0,0,0
     if( triangle_degenerate(v0, v1, v2) ) {
       MBCartVect zero_vector( 0.0 );
       normal = zero_vector;
       std::cout << "  normal=" << normal << std::endl;
-      return result;
+      return MB_SUCCESS;
     }
 
     MBEntityHandle conn[3];
     conn[0] = v0;
     conn[1] = v1;
     conn[2] = v2;
+    MBErrorCode result;
     MBCartVect coords[3];
     result = MBI()->get_coords( conn, 3, coords[0].array() );
     assert(MB_SUCCESS == result); 
@@ -775,18 +777,17 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 
   MBErrorCode triangle_normal( const MBCartVect coords0, const MBCartVect coords1,
 			       const MBCartVect coords2, MBCartVect &normal ) {
-    MBErrorCode result = MB_SUCCESS;
     MBCartVect edge0, edge1;
     edge0 = coords1-coords0;
     edge1 = coords2-coords0;
     normal = edge0*edge1;
 
     // do not normalize if magnitude is zero (avoid nans)
-    if(0 == normal.length()) return result;
+    if(0 == normal.length()) return MB_SUCCESS;
 
     normal.normalize();
     //if(debug) std::cout << "  normal=" << normal << std::endl;
-    return result;
+    return MB_SUCCESS;
   }
     
 
@@ -806,7 +807,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     assert(MB_SUCCESS == result); 
 
     dist = ( ((x0-x1)*(x0-x2)).length() ) / ( (x2-x1).length() );
-    return result;
+    return MB_SUCCESS;
   }
 
   // Project the point onto the line. Not the line segment!
@@ -821,7 +822,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     assert(MB_SUCCESS == result);
     result = MBI()->set_coords( &pt0, 1, projected_coords.array() );   
     assert(MB_SUCCESS == result);
-    return result;
+    return MB_SUCCESS;
   }    
   MBErrorCode point_line_projection( const MBEntityHandle line_pt1,
 				     const MBEntityHandle line_pt2,
@@ -845,7 +846,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     parameter    = (a%b)/(b%b);
     MBCartVect c = parameter*b;                    
     projected_coords = c     + coords[1];      
-    return result;
+    return MB_SUCCESS;
   }
   MBErrorCode point_line_projection( const MBEntityHandle line_pt1,
 				     const MBEntityHandle line_pt2,
@@ -866,7 +867,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBCartVect a = coords[0] - coords[1];                 
     MBCartVect b = coords[2] - coords[1]; 
     dist_along_edge = a%b / b.length();      
-    return result;
+    return MB_SUCCESS;
   }
   
 
@@ -1130,7 +1131,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     assert(MB_SUCCESS == result);
     new_tris.insert( new_tri );
     
-    return result; 
+    return MB_SUCCESS; 
   }
 
   int geom_id_by_handle( const MBEntityHandle set ) {
@@ -1154,7 +1155,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 
     result = MBI()->tag_set_data(normal_tag, tris, &normals[0]);
     assert(MB_SUCCESS == result);
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode flip(const MBEntityHandle tri, const MBEntityHandle vert0, 
@@ -1236,7 +1237,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       ordered_verts.push_back(conn[1]);
       previous_back_vert = conn[1];
     }
-    return result;
+    return MB_SUCCESS;
   }
 
   /* Find the distance between two arcs. Assume that their endpoints are somewhat
@@ -1302,7 +1303,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       // Both are point arcs
       if(1==arcs[other_arc_index].size()) {
         dist = dist_between_verts( arcs[point_arc_index].front(), arcs[other_arc_index].front());
-        return result;
+        return MB_SUCCESS;
 	// The other arc has more than one point
       } else {
         double area = 0.0;
@@ -1312,7 +1313,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
                                       coords[point_arc_index].front() ));
         }
         dist = area / gen::length(arcs[other_arc_index]);
-        return result;
+        return MB_SUCCESS;
       }
     }
 
@@ -1394,7 +1395,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     // Divide the area by the average length to get the average distance between arcs.
     dist = fabs(2*area / (arc_len[0] + arc_len[1] ));
     //std::cout << "dist_between_arcs=" << dist << std::endl;
-    return result;
+    return MB_SUCCESS;
   }
 
 
@@ -1519,7 +1520,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       } 
     }
     delete[] edges;
-    return result;
+    return MB_SUCCESS;
   }
   /*  MBErrorCode find_skin( MBRange tris, const int dim, MBRange &skin_edges, const bool temp ) {
     std::vector<std::vector<MBEntityHandle> > skin_edges_vctr;
@@ -1533,7 +1534,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       assert(MB_SUCCESS == result);
       skin_edges.insert( edge );
     }
-    return result;
+    return MB_SUCCESS;
     }*/
 
 // calculate volume of polyhedron
@@ -1629,7 +1630,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
   
   result /= 6.0;
   if(debug)  std::cout << result << std::endl;
-  return rval;
+  return MB_SUCCESS;
 }
 
   /// Calculate the signed volumes beneath the surface (x 6.0). Use the triangle's
@@ -1655,7 +1656,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       coords[2] -= coords[0];                     
       signed_volume += (coords[0] % (coords[1] * coords[2]));       
     }                                     
-    return rval;
+    return MB_SUCCESS;                              
   }                 
 
 MBErrorCode measure( const MBEntityHandle set, const MBTag geom_tag, double &size, bool debug,  bool verbose ) {
@@ -1691,7 +1692,7 @@ MBErrorCode measure( const MBEntityHandle set, const MBTag geom_tag, double &siz
       std::cout << "measure: incorrect dimension" << std::endl;
       return MB_FAILURE;
     }
-    return result;
+    return MB_SUCCESS;
   }
 
   // From CGMA/builds/dbg/include/CubitDefines
@@ -1737,7 +1738,7 @@ MBErrorCode measure( const MBEntityHandle set, const MBTag geom_tag, double &siz
 
      // special case: ambiguous
     if(1<counter) sense = SENSE_UNKNOWN;
-    return rval;
+    return MB_SUCCESS;
   }
 
   MBErrorCode surface_sense( MBEntityHandle volume, 
@@ -1776,7 +1777,7 @@ MBErrorCode measure( const MBEntityHandle set, const MBTag geom_tag, double &siz
 	++senses_out;
       }
   
-    return rval;
+    return MB_SUCCESS;
   }
 
   /// get sense of surface(s) wrt volume
@@ -1806,7 +1807,7 @@ MBErrorCode measure( const MBEntityHandle set, const MBTag geom_tag, double &siz
 	return MB_ENTITY_NOT_FOUND;
       }
   
-  return rval;
+  return MB_SUCCESS;
  }
 
  MBTag get_tag( const char* name, int size, MBTagType store,
@@ -1863,7 +1864,7 @@ MBErrorCode delete_surface( MBEntityHandle surf, MBTag geom_tag, MBRange tris, i
         assert(MB_SUCCESS == result);
 
 
-  return result;
+  return MB_SUCCESS;
  }
 
  /// removes sense data from all curves associated with the surface given to the function
@@ -1938,7 +1939,7 @@ MBErrorCode remove_surf_sense_data(MBEntityHandle del_surf, bool debug) {
 
         }
 
- return result;
+ return MB_SUCCESS;
  } 
 
 /// combines the senses of any curves tagged as merged in the vector curves
@@ -2023,7 +2024,7 @@ MBErrorCode remove_surf_sense_data(MBEntityHandle del_surf, bool debug) {
 
 
 
-  return result;
+  return MB_SUCCESS;
   }
 
 MBErrorCode get_sealing_mesh_tags( double &facet_tol,
@@ -2126,7 +2127,7 @@ MBErrorCode get_sealing_mesh_tags( double &facet_tol,
 
 
 
-  return result;
+  return MB_SUCCESS;
 
   }
 
@@ -2171,7 +2172,7 @@ MBErrorCode get_sealing_mesh_tags( double &facet_tol,
 	  }
       }
  
-    return result;
+    return MB_SUCCESS;
 
     }
 
@@ -2190,7 +2191,7 @@ MBErrorCode get_sealing_mesh_tags( double &facet_tol,
 
         }
  
-    return result;
+    return MB_SUCCESS;
   }
 
 

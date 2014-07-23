@@ -401,7 +401,7 @@ namespace cw_func {
  {
   sealed=false;
  }
- return result;
+ return MB_SUCCESS;
  }
 
 /* qsort struct comparision function */

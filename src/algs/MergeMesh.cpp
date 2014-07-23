@@ -163,7 +163,7 @@ namespace MeshKit
       if (MB_SUCCESS != result) return result;
     }
   
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode MergeMesh::perform_merge(MBTag merge_tag) 
@@ -285,7 +285,7 @@ namespace MeshKit
 
       }
     }
-    return result;
+    return MB_SUCCESS;
   }
 
 #endif // ifdef MOAB

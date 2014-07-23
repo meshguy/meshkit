@@ -53,7 +53,7 @@ MBErrorCode delete_all_edges() {
   result = MBI()->delete_entities( edges );
   if(gen::error(MB_SUCCESS!=result,"could not delete edges")) return result;
   assert(MB_SUCCESS == result);
-  return result;
+  return MB_SUCCESS;
 }
 
 MBErrorCode find_degenerate_tris() {
@@ -72,7 +72,7 @@ MBErrorCode find_degenerate_tris() {
     }
   }
   std::cout << "find_degenerate_tris: " << counter << " tris found." << std::endl;
-  return result;
+  return MB_SUCCESS;
 }
 
 // Input: Possibly unordered sets of curves that do track ownership. Curves contain
@@ -191,7 +191,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
   result = arc::merge_curves(curve_sets, FACET_TOL, id_tag, merge_tag, debug );
   if(gen::error(MB_SUCCESS!=result,"could not merge_curves")) return result;
 
-  return result;
+  return MB_SUCCESS;
 }
 
 /* The chosen curve may need to be reversed to be in the same direction as the skin.
@@ -382,7 +382,7 @@ MBErrorCode create_arc_pair(  const double FACET_TOL,
 
   if(debug) std::cout << "  curve " << gen::geom_id_by_handle(curve_set) 
                       << " paired with skin, min_dist =" << min_dist << std::endl;
-  return rval;
+  return MB_SUCCESS;
 }
 
 //  -Instead of altering the skin and curve vectors, make them const. Put the
@@ -711,7 +711,7 @@ MBErrorCode seal_arc_pair( const bool debug,
     if(gen::error(MB_SUCCESS!=rval,"sealing test failed")) return rval;
   }
 
-  return rval;
+  return MB_SUCCESS;
 
 }
 
@@ -956,7 +956,7 @@ MBErrorCode seal_loop( bool debug,
     rval = MBI()->delete_entities( &skin_loop_set, 1 );
     if(gen::error(MB_SUCCESS!=rval,"deleting skin_loop_set failed")) return rval;      
 
-    return rval;
+    return MB_SUCCESS;
   }
 
   // input: surface sets, ordered curve sets,
@@ -1291,7 +1291,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       // mod13surf2996, 3028 and 2997 are adjacent to the same bad geometry (figure 8 loop)
       //assert(MB_SUCCESS==result || 2996==surf_id || 2997==surf_id || 3028==surf_id);
     } // loop over each surface
-    return result;
+    return MB_SUCCESS;
   }
 
 MBErrorCode fix_normals(MBRange surface_sets, MBTag id_tag, MBTag normal_tag, const bool debug) {
@@ -1352,7 +1352,7 @@ MBErrorCode fix_normals(MBRange surface_sets, MBTag id_tag, MBTag normal_tag, co
     }
     std::cout << "  Before fixing, " << inverted_tri_counter 
               << " inverted triangles were found." << std::endl;
-    return result;
+    return MB_SUCCESS;
   }
 
   MBErrorCode restore_moab_curve_representation( const MBRange curve_sets ) {
@@ -1452,7 +1452,7 @@ MBErrorCode fix_normals(MBRange surface_sets, MBTag id_tag, MBTag normal_tag, co
       assert(MB_SUCCESS==result);
       if(MB_SUCCESS != result) return result;
     }
-    return result;
+    return MB_SUCCESS;
   }
 
 MBErrorCode get_geom_size_before_sealing( const MBRange geom_sets[], 
@@ -1468,7 +1468,7 @@ MBErrorCode get_geom_size_before_sealing( const MBRange geom_sets[],
       if(gen::error(MB_SUCCESS!=rval,"could not set size tag")) return rval;
     }
   }
-  return rval;
+  return MB_SUCCESS;
 }
 
 MBErrorCode get_geom_size_after_sealing( const MBRange geom_sets[], 
@@ -1600,7 +1600,7 @@ MBErrorCode get_geom_size_after_sealing( const MBRange geom_sets[],
   	          << ", percent_change=" << smallest_size[dim-1].percent << std::endl;
       }
       std::cout.unsetf(std::ios::scientific|std::ios::showpos);
-      return rval;
+      return MB_SUCCESS;
 }
 
   int main(int argc, char **argv) {
