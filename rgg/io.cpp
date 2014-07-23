@@ -2930,7 +2930,7 @@ int CNrgen::Subtract_Pins()
             }
 #endif
 #if HAVE_OCC
-          iBase_EntityHandle tmp_new1=NULL;
+          iBase_EntityHandle tmp_new1=NULL
           // if there are more than one pins
           if( cp_inpins[k-1].size() > 1){
               std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
