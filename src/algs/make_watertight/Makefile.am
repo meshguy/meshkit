@@ -16,6 +16,7 @@ libMakeWatertight_la_SOURCES = \
         zip.cpp \
 	cw_func.cpp \
         mw_func.cpp
+
 # The list of header files which are to be installed
 libMakeWatertight_la_include_HEADERS = \
         meshkit/arc.hpp \
