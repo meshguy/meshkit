@@ -70,7 +70,7 @@ namespace MeshKit
     std::cout << "IN EXTHIS MERGEMESH " << std::endl;
 
     std::vector<iBase_EntityHandle> ents(mentSelection.size());
-    int dim;
+    int dim = 3;
     for (MEntSelection::iterator mit = mentSelection.begin();
          mit != mentSelection.end(); mit++) {
       ModelEnt *me = mit->first;

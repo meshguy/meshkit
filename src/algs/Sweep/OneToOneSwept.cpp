@@ -584,7 +584,7 @@ bool OneToOneSwept::isConcave()
 			int face_index = -1;
 			m_err = mk_core()->imesh_instance()->getIntData(adj_quads[i], taghandle, face_index);
 			if (m_err) continue;//this is a quad entity from the linking surface
-			int node_index, pre_index, next_index;
+			int node_index = 0, pre_index, next_index;
 			for (int j = 0; j < 4; j++)
 				if (FaceList[face_index].connect[j]->index == it->index){
 					node_index = j;
@@ -840,6 +840,7 @@ void OneToOneSwept::computeTransformationFromSourceToTarget(std::vector<Vector3D
 
   //first determine the affine mapping matrix is singular or not
   double detValue = det(tmpMatrix);
+  (void) detValue;
   assert(pow(detValue, 2)>1.0e-20);
 
   //solve the affine mapping matrix, make use of inverse matrix to get affine mapping matrix

@@ -790,6 +790,7 @@ void TFIMapping::computeTransformation(Vector3D & A, Vector3D & B, Vector3D & C,
   bMatrix.set_column(2, normal);
 
   double detValue = det(tmpMatrix);
+  (void) detValue;
   assert(detValue*detValue>1.e-20);
 
   //solve the affine mapping matrix, make use of inverse matrix to get affine mapping matrix

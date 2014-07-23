@@ -170,7 +170,7 @@ int Dijkstra::minDistance(vector<double> d, vector<bool> sptSet)
 {
 	//Initialize min value
 	double minvalue = 1.0e10;
-	int min_index;
+	int min_index = 0;
 	for (int v = 0; v < (int) dist.size(); v++){
 		if (sptSet[v] == false && d[v] <= minvalue){
 			minvalue = d[v];
