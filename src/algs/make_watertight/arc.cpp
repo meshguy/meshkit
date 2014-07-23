@@ -42,16 +42,16 @@ namespace arc {
       result = MBI()->set_connectivity( edge, new_conn, 2 );
       assert(MB_SUCCESS == result);
     }
-    return MB_SUCCESS;
+    return result;
   } 
 
   // Degenerate edges (same topological endpts) are caused by a prior step in which
   // coincident verts are merged.
   MBErrorCode remove_degenerate_edges( MBRange &edges, const bool debug ) {
     MBRange::iterator i = edges.begin();
+    MBErrorCode rval;
     while (i!=edges.end()) {
       // get the endpoints of the edge
-      MBErrorCode rval;
       const MBEntityHandle *endpts;
       int n_verts;
       rval = MBI()->get_connectivity( *i, endpts, n_verts );
@@ -78,7 +78,7 @@ namespace arc {
       }
     
     }
-    return MB_SUCCESS;
+    return rval;
   }
 
 
@@ -124,7 +124,7 @@ namespace arc {
         i--;
       }
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode remove_opposite_pairs_of_edges_fast( MBRange &edges, const bool debug) {
@@ -195,7 +195,7 @@ namespace arc {
     }
     
     delete[] my_edges;
-    return MB_SUCCESS;
+    return rval;
   }
 
   MBErrorCode get_next_oriented_edge( const MBRange edges, const MBEntityHandle edge,
@@ -259,7 +259,7 @@ namespace arc {
       //return MB_MULTIPLE_ENTITIES_FOUND;
       next_edge = adj_edges.front();
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode create_loops_from_oriented_edges_fast( MBRange edges,
@@ -286,7 +286,7 @@ namespace arc {
     std::cout << "error: function not complete" << std::endl;
     return MB_FAILURE;
 
-    return MB_SUCCESS;
+    return rval;
   }
 
   // This function should be rewritten using multimaps or something to avoid
@@ -395,18 +395,18 @@ namespace arc {
     if(gen::error(n_edges_in!=n_edges_out,"edges not conserved")) return MB_FAILURE;
     assert( n_edges_in == n_edges_out );
 
-    return MB_SUCCESS;
+    return result;
   }
 
   // return a set of ordered_verts and remaining unordered_edges
   MBErrorCode order_verts_by_edge( MBRange unordered_edges, 
                                    std::vector<MBEntityHandle> &ordered_verts ) {
-    if(unordered_edges.empty()) return MB_SUCCESS;
+    MBErrorCode result = MB_SUCCESS;
+    if(unordered_edges.empty()) return result;
  
     // get the endpoints of the curve. It should have 2 endpoints, unless is it a circle.
     MBRange end_verts;
-    MBSkinner tool(MBI());
-    MBErrorCode result;
+    MBSkinner tool(MBI());    
     result = tool.find_skin( 0 , unordered_edges, 0, end_verts, false );
     if(MB_SUCCESS != result) gen::print_range_of_edges( unordered_edges );
     assert(MB_SUCCESS == result);
@@ -454,7 +454,7 @@ namespace arc {
       vert = end_verts.front()==vert ? end_verts.back() : end_verts.front();
       ordered_verts.push_back( vert );
     }
-    return MB_SUCCESS;
+    return result;
   }
      
   MBErrorCode get_meshset( const MBEntityHandle set, std::vector<MBEntityHandle> &vec) {
@@ -462,7 +462,7 @@ namespace arc {
     vec.clear();
     result = MBI()->get_entities_by_handle( set, vec );
     assert(MB_SUCCESS == result);  
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode set_meshset( const MBEntityHandle set, const std::vector<MBEntityHandle> vec) {
@@ -471,7 +471,7 @@ namespace arc {
     assert(MB_SUCCESS == result);  
     result = MBI()->add_entities( set, &vec[0], vec.size() );       
     assert(MB_SUCCESS == result);  
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode merge_curves( MBRange curve_sets, const double facet_tol, 
@@ -693,7 +693,7 @@ namespace arc {
 
       }
     }
-    return MB_SUCCESS;
+    return result;
   }
 
 

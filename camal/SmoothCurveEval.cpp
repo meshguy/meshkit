@@ -415,7 +415,7 @@ MBErrorCode SmoothCurveEval::evaluate_smooth_edge(MBEntityHandle eh, double &tt,
 			* one_minus_t2 * t2 * controlPoints[1] + 4. * one_minus_t * t3
 			* controlPoints[2] + t4 * P[1];
 
-	return MB_SUCCESS;
+	return rval;
 }
 
 void SmoothCurveEval::create_mesh_edges(std::map<MBEntityHandle, SmoothVertex*>  & mapVertices)

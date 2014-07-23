@@ -136,7 +136,7 @@ MBErrorCode get_geom_size_before_sealing( const MBRange geom_sets[],
 
     }
   }
-  return MB_SUCCESS;
+  return result;
 }
 
 MBErrorCode get_senses(MBEntityHandle entity,
@@ -227,7 +227,7 @@ MBErrorCode get_senses(MBEntityHandle entity,
   senses.resize(currentSize);
   //
   */
-  return MB_SUCCESS;
+  return result;
 }
   int main(int argc, char **argv) {
 

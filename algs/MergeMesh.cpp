@@ -89,20 +89,21 @@ MBErrorCode MergeMesh::merge_entities(MBRange &elems,
     if (MB_SUCCESS != result) return result;
   }
   
-  return MB_SUCCESS;
+  return result;
 }
 
 MBErrorCode MergeMesh::perform_merge(MBTag merge_tag) 
 {
+  MBErrorCode result = MB_SUCCESS;
   if (deadEnts.size()==0){
     std::cout << "\nWarning: Geometries don't have a common face; Nothing to merge" << std::endl;
-    return MB_SUCCESS; //nothing to merge carry on with the program
+    return result; //nothing to merge carry on with the program
   }
   if (mbImpl->type_from_handle(*deadEnts.rbegin()) != MBVERTEX) 
     return MB_FAILURE;
   
   std::vector<MBEntityHandle> merge_tag_val(deadEnts.size());
-  MBErrorCode result = mbImpl->tag_get_data(merge_tag, deadEnts, &merge_tag_val[0]);
+  result = mbImpl->tag_get_data(merge_tag, deadEnts, &merge_tag_val[0]);
   if (MB_SUCCESS != result) return result;
   
   MBRange::iterator rit;
@@ -210,7 +211,7 @@ MBErrorCode MergeMesh::find_merged_to(MBAdaptiveKDTree & tree, MBEntityHandle &t
 
     }
   }
-  return MB_SUCCESS;
+  return result;
 }
 
 #endif // ifdef MOAB

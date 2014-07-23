@@ -35,7 +35,7 @@ MBErrorCode SmoothVertex::create_mesh_vertex()
 	rval = _mbOut -> create_vertex(coords, newNode );
 	_mbOut->add_entities(_oSet, &newNode, 1);
 
-	return MB_SUCCESS;
+	return rval;
 }
 // this will be used to generate new mesh edges on the geo edges
 // this belongs to _mbOut instance

@@ -124,7 +124,7 @@ namespace zip {
       //gen::print_triangle( tri, false );
       //gen::print_triangle( new_tri, false );
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   // Delete degenerate triangles in the range.
@@ -140,7 +140,7 @@ namespace zip {
       result = MBI()->delete_entities( &tri, 1 );
       assert(MB_SUCCESS == result);
     }
-    return MB_SUCCESS;
+    return result;
   }
   MBErrorCode delete_degenerate_tris( MBRange tris ) {
     MBErrorCode result;
@@ -148,7 +148,7 @@ namespace zip {
       result = delete_degenerate_tris( *i );
       assert(MB_SUCCESS == result);
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode delete_adj_degenerate_tris( const MBEntityHandle adj_vert ) {
@@ -159,7 +159,7 @@ namespace zip {
     assert(MB_SUCCESS == result);
     result = delete_degenerate_tris( tris );
     assert(MB_SUCCESS == result);
-    return MB_SUCCESS;
+    return result;
   }
 
   // Problem: MOAB can check for degenerate tris and delete them.
@@ -225,7 +225,7 @@ namespace zip {
     if(gen::error(MB_SUCCESS!=rval,"deleting arc1_set failed")) return rval;
     */
 
-    return MB_SUCCESS;
+    return rval;
   }                           
 
   // Test to make sure the triangle normal vectors have not been inverted.
@@ -233,14 +233,15 @@ namespace zip {
                             const std::vector<MBCartVect> norms1,
                             std::vector<int> &inverted_tri_indices ) {
     assert(norms0.size() == norms1.size());
+    MBErrorCode result = MB_SUCCESS;
     for(unsigned int i=0; i<norms0.size(); i++) {
-      MBErrorCode result = test_normals( norms0[i], norms1[i]);
+      result = test_normals( norms0[i], norms1[i]);
       if(MB_SUCCESS != result) {
         //std::cout << "test_normals: failed on i=" << i << std::endl;
         inverted_tri_indices.push_back(i);
       }
     }
-    return MB_SUCCESS;
+    return result;
   }
   MBErrorCode test_normals( const MBCartVect norm0, const MBCartVect norm1 ) {
     if(0 > norm0 % norm1) {
@@ -503,7 +504,7 @@ namespace zip {
       if(debug) std::cout << "remove_inverted_facets: at least one failure occured" << std::endl;
       return MB_FAILURE;
     } else {
-      return MB_SUCCESS;
+      return result;
     }
   }
 
@@ -584,7 +585,7 @@ namespace zip {
 	  } 
 	}
       }
-      return MB_SUCCESS;
+      return result;
     }          
   
   

@@ -51,7 +51,7 @@ MBErrorCode getFaceSenseFromList(MBEntityHandle face, std::vector<
 	for (int i = 0; i < faces.size(); i++) {
 		if (face == faces[i]) {
 			sense = senses[i];
-			return MB_SUCCESS;
+			return rval
 		}
 	}
 	return MB_FAILURE;// face not found in list
@@ -256,7 +256,7 @@ MBErrorCode SmoothFaceEval::initialize_geom_topo_tool() {
 
 	assert(rval == MB_SUCCESS);
 
-	return MB_SUCCESS;
+	return rval
 }
 
 MBErrorCode SmoothFaceEval::compute_control_points_on_edges(double min_dot,
@@ -284,7 +284,7 @@ MBErrorCode SmoothFaceEval::compute_control_points_on_edges(double min_dot,
 		tagVal = 1;
 		_mb->tag_set_data(_markTag, &edg, 1, &tagVal);
 	}
-	return MB_SUCCESS;
+	return rval
 }
 
 int SmoothFaceEval::init_gradient() {
@@ -471,7 +471,7 @@ MBErrorCode SmoothFaceEval::init_bezier_edge(MBEntityHandle edge,
 				<< " " << ctrl_pts[2] << std::endl;
 	}
 
-	return MB_SUCCESS;
+	return rval
 }
 
 MBErrorCode SmoothFaceEval::compute_tangents_for_each_edge()
@@ -500,7 +500,7 @@ MBErrorCode SmoothFaceEval::compute_tangents_for_each_edge()
 		T[1] = T[0]; //
 		_mb->tag_set_data(_tangentsTag, &edg, 1, (double*) &T[0]);// set the tangents computed at every edge
 	}
-	return MB_SUCCESS;
+	return rval
 }
 // start copy
 //===========================================================================
@@ -539,7 +539,7 @@ MBErrorCode SmoothFaceEval::init_edge_control_points(MBCartVect &P0,
 	Pi[1] = 0.50 * Vi[1] + 0.50 * Vi[2];
 	Pi[2] = 0.75 * Vi[2] + 0.25 * Vi[3];
 
-	return MB_SUCCESS;
+	return rval
 }
 
 MBErrorCode SmoothFaceEval::find_edges_orientations(MBEntityHandle edges[3],
@@ -571,7 +571,7 @@ MBErrorCode SmoothFaceEval::find_edges_orientations(MBEntityHandle edges[3],
 		else
 			return MB_FAILURE;
 	}
-	return MB_SUCCESS;
+	return rval
 }
 MBErrorCode SmoothFaceEval::compute_internal_control_points_on_facets(
 		double min_dot, MBTag facetCtrlTag, MBTag facetEdgeCtrlTag) {
@@ -658,7 +658,7 @@ MBErrorCode SmoothFaceEval::compute_internal_control_points_on_facets(
 			adjust_bounding_box(G[j]);
 
 	}
-	return MB_SUCCESS;
+	return rval
 }
 void SmoothFaceEval::adjust_bounding_box(MBCartVect & vect) {
 	// _minim, _maxim
@@ -838,7 +838,7 @@ MBErrorCode SmoothFaceEval::evaluate_smooth_edge(MBEntityHandle eh, double &tt,
 			* one_minus_t2 * t2 * controlPoints[1] + 4. * one_minus_t * t3
 			* controlPoints[2] + t4 * P[1];
 
-	return MB_SUCCESS;
+	return rval
 }
 
 //this is the
@@ -876,7 +876,7 @@ MBErrorCode SmoothFaceEval::evaluate_loop_at_u(int loopIndex, double u,
 	MBErrorCode rval = evaluate_smooth_edge(edge, t, position);
 	assert(MB_SUCCESS == rval);
 
-	return MB_SUCCESS;
+	return rval
 
 }
 
@@ -901,15 +901,15 @@ MBErrorCode SmoothFaceEval::eval_bezier_patch(MBEntityHandle tri,
 
 	if (fabs(areacoord[1] + areacoord[2]) < 1.0e-6) {
 		pt = vN[0];
-		return MB_SUCCESS;
+		return rval
 	}
 	if (fabs(areacoord[0] + areacoord[2]) < 1.0e-6) {
 		pt = vN[0];
-		return MB_SUCCESS;
+		return rval
 	}
 	if (fabs(areacoord[0] + areacoord[1]) < 1.0e-6) {
 		pt = vN[0];
-		return MB_SUCCESS;
+		return rval
 	}
 
 	MBCartVect P_facet[3];
@@ -1021,7 +1021,7 @@ MBErrorCode SmoothFaceEval::eval_bezier_patch(MBEntityHandle tri,
 	B = 12.0 * areacoord[0] * areacoord[1] * sqr(areacoord[2]);
 	pt += B * P_facet[2];
 
-	return MB_SUCCESS;
+	return rval
 
 }
 
@@ -1323,7 +1323,7 @@ MBErrorCode SmoothFaceEval::project_to_facets(
 	outside = best_outside_facet;
 	lastFacet = best_facet;
 
-	return MB_SUCCESS;
+	return rval
 	//end copy
 }
 
@@ -1355,7 +1355,7 @@ MBErrorCode SmoothFaceEval::project_to_patch(MBEntityHandle facet, // (IN) the f
 
 	if (is_at_vertex(facet, pt, ac, compare_tol, eval_pt, eval_norm)) {
 		outside = false;
-		return MB_SUCCESS;
+		return rval
 	}
 
 	// check if the start ac is inside the patch -if not, then move it there
@@ -1821,15 +1821,15 @@ MBErrorCode SmoothFaceEval::eval_bezier_patch_normal(MBEntityHandle facet,
 
 	if (fabs(areacoord[1] + areacoord[2]) < 1.0e-6) {
 		normal = NN[0];
-		return MB_SUCCESS;
+		return rval
 	}
 	if (fabs(areacoord[0] + areacoord[2]) < 1.0e-6) {
 		normal = NN[1];//facet->point(1)->normal(facet);
-		return MB_SUCCESS;
+		return rval
 	}
 	if (fabs(areacoord[0] + areacoord[1]) < 1.0e-6) {
 		normal = NN[2]; //facet->point(2)->normal(facet);
-		return MB_SUCCESS;
+		return rval
 	}
 
 	// compute the hodograph of the quartic Gregory patch
@@ -1981,7 +1981,7 @@ MBErrorCode SmoothFaceEval::eval_bezier_patch_normal(MBEntityHandle facet,
 
 	normal.normalize();
 
-	return MB_SUCCESS;
+	return rval
 }
 
 MBErrorCode SmoothFaceEval::get_normals_for_vertices(
@@ -2157,7 +2157,7 @@ MBErrorCode SmoothFaceEval::find_loops() {
 
 		}
 	}
-	return MB_SUCCESS;
+	return rval
 }
 
 MBErrorCode SmoothFaceEval::mesh_count_total(std::map<MBEntityHandle,
@@ -2171,7 +2171,7 @@ MBErrorCode SmoothFaceEval::mesh_count_total(std::map<MBEntityHandle,
 		mesh_count += cEval->get_mesh_count();
 
 	}
-	return MB_SUCCESS;
+	return rval
 }
 void SmoothFaceEval::evenify(
 		std::map<MBEntityHandle, SmoothCurveEval*> & mapCurves) {

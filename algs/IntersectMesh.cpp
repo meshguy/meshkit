@@ -443,7 +443,7 @@ MBErrorCode GetOrderedNeighbors(MBInterface * MB, MBEntityHandle set,
       }
 
    }
-   return MB_SUCCESS;
+   return rval;
 }
 
 void CreateANewNode(double * coord, MBEntityHandle & outNode) {

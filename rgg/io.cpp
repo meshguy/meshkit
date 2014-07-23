@@ -2903,13 +2903,14 @@ int CNrgen::Subtract_Pins()
               CHECK("Couldn't copy inner duct wall prism.");
             }
 
-          iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
+          iBase_EntityHandle tmp_vol = NULL;
           tmp_vol = assms[(k-1)*m_nDimensions];
 
           // subtract the innermost hex from the pins
           std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
 #if HAVE_ACIS
+          iBase_EntityHandle unite= NULL, tmp_new1=NULL;
           // if there are more than one pins
           if( cp_inpins[k-1].size() > 1){
 
@@ -2932,7 +2933,7 @@ int CNrgen::Subtract_Pins()
           // if there are more than one pins
           if( cp_inpins[k-1].size() > 1){
               std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
-              for (int i=0; i< cp_inpins[k-1].size(); i++){
+              for (int i=0; i < (int)cp_inpins[k-1].size(); i++){
                   // iGeom_copyEnt(geom, cp_inpins[k-1][i], &unite, &err);
                   iGeom_subtractEnts(geom, tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
                   CHECK("Couldn't subtract pins from block.");

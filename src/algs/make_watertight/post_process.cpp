@@ -50,7 +50,7 @@ MBErrorCode delete_all_edges() {
   assert(MB_SUCCESS == result);
   result = MBI()->delete_entities( edges );
   assert(MB_SUCCESS == result);
-  return MB_SUCCESS;
+  return result;
 }
 
 // Input: unordered sets of curves that do not track ownership
@@ -145,7 +145,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
     assert(MB_SUCCESS == result);      
   }
 
-  return MB_SUCCESS;
+  return result;
 }
 
 /* Isolate the failure by removing the curve and loop that failed. The zip_loop
@@ -162,7 +162,7 @@ MBErrorCode remove_failed_loop_and_curve( std::vector<std::vector<MBEntityHandle
   curve_ids.erase( curve_ids.begin()+curve ); 
   curve_sets.erase( curve_sets.begin()+curve );
   std::cout << "remove_failed_loop: removed loop " << loop << std::endl;
-  return MB_SUCCESS;
+  return result;
 }
 
   // input: surface sets, ordered curve sets,
@@ -338,7 +338,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       // mod13surf2996, 3028 and 2997 are adjacent to the same bad geometry (figure 8 loop)
       //assert(MB_SUCCESS==result || 2996==surf_id || 2997==surf_id || 3028==surf_id);
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode test_edges() {
@@ -347,7 +347,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
     result = MBI()->get_entities_by_dimension( 0, 1, edges );
     assert(MB_SUCCESS == result);
     MBI()->list_entities( edges );
-    return MB_SUCCESS;
+    return result;
   }
 
 

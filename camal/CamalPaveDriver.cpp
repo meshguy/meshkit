@@ -574,5 +574,5 @@ MBErrorCode CamalPaveDriver::find_face_loops()
 		if (MB_SUCCESS!=rval)
 			return rval;
 	}
-	return MB_SUCCESS;
+	return rval;
 }
