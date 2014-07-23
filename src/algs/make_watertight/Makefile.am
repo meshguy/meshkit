@@ -25,9 +25,6 @@ libMakeWatertight_la_include_HEADERS = \
         meshkit/cw_func.hpp \
         meshkit/mw_func.hpp
 
-# Tests and such
-TESTS = 
-
 bin_PROGRAMS = make_watertight check_watertight
 make_watertight_SOURCES = make_watertight.cpp 
 make_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)

@@ -1174,7 +1174,7 @@ void OneToOneSwept::SurfaceSpecifying()
 	//create the corner relationship between source surface and target surface
 	for (unsigned int i=0; i < gVertexList.size(); i=i+2)
 	{
-		int index_a;
+		int index_a = 0;
 		for (unsigned int j=0; j < gLinkSides.size(); j++)
 		{
 			if (gVertexList[i].id == gLinkSides[j].connect[0]->id)
@@ -2054,7 +2054,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	assert(!err);
 	for (unsigned int i=0; i < gLinkSides.size(); i++)
 	{
-		int sIndex, stIndex;
+		int sIndex = 0, stIndex = 0;
 		double u0, u1;
 		vector<iBase_EntityHandle> mNodeHandle(numLayers-1);
 		//find the node
@@ -2432,7 +2432,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 			//suLeft------parametrical coordinatiMesh_addEntArrToSet(mesh, &mNodeHandle[0], numLayers-1, entityset, &err);es on the source boundary edge
 			Point2D pt00, pt01, pt10, pt11;  //parametric coordinates for four corners on the linking surface
 			SimpleArray<iBase_EntityHandle> gEdges, mNodes;
-			int sEdgeIndex, gLeftIndex, gRightIndex;
+			int sEdgeIndex = 0, gLeftIndex = 0, gRightIndex = 0;
 			iBase_EntitySetHandle edgeNodeSet;
 			vector<iBase_EntityHandle>  nodeHandle(0);
 		

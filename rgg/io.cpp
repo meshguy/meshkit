@@ -2935,7 +2935,7 @@ int CNrgen::Subtract_Pins()
           // if there are more than one pins
           if( cp_inpins[k-1].size() > 1){
               std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
-              for (int i=0; i< cp_inpins[k-1].size(); i++){
+              for (int i=0; i< (int)cp_inpins[k-1].size(); i++){
                   // iGeom_copyEnt(geom, cp_inpins[k-1][i], &unite, &err);
                   iGeom_subtractEnts(geom, tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
                   CHECK("Couldn't subtract pins from block.");
