@@ -101,7 +101,7 @@ namespace cleanup {
       assert(MB_SUCCESS == result);
       vert1 = vert0;
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode delete_small_edges(const MBRange &surfaces, const double FACET_TOL) {
@@ -403,7 +403,8 @@ namespace cleanup {
           }
           assert(skin_edges[k] == new_skin_edges[k]);
         }
-        assert(n_internal_edges = internal_edges.size()+3);
+	if (n_internal_edges != internal_edges.size()+3)
+        assert(n_internal_edges == internal_edges.size()+3);
       }
   
       // cleanup edges
@@ -438,7 +439,7 @@ namespace cleanup {
     std::cout << "deleting " << edges_to_delete.size() << " unused edges" << std::endl;
     result = MBI()->delete_entities( edges_to_delete );
     assert(MB_SUCCESS == result);
-    return MB_SUCCESS;
+    return result;
   }
  
   
