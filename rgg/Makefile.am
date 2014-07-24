@@ -47,12 +47,22 @@ EXTRA_DIST = assygen_default.inp \
              test_geom.inp \
 	     test_sodium_all.cub \
 	     test_sodium_all.sat \
-	     twoassm.inp
+             twoassm.inp \
+             common.inp
 
 MOSTLYCLEANFILES = \
 	     twoassm.h5m \
 	     twoassm.makefile \
-	     pin217-out.h5m
+             pin217-out.h5m \
+             1000.inp \
+             5000.inp \
+             assygen_default.stp \
+             assygen_default.sat \
+             assygen_default.template.jou \
+             assygen_default_info.csv \
+             twoassm_info.csv \
+             twoassm_out.h5m \
+             assygen_default.jou
 
 
 # Tests and such
@@ -76,10 +86,10 @@ pin217_LDADD = ../algs/libMKalgs.la ../utils/libMKutils.la  $(IGEOM_LIBS)  $(IME
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
-               -I$(top_srcdir) \
-               -I$(top_builddir) \
-               -I$(top_srcdir)/algs \
-               -I$(top_srcdir)/utils
+  I$(top_srcdir) \
+  I$(top_builddir) \
+  I$(top_srcdir)/algs \
+  I$(top_srcdir)/utils
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB

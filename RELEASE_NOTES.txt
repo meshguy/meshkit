@@ -1,4 +1,4 @@
-21st July 2014 - Version 1.5
+21st July 2014 - Version 1.2
 =================================
 See details on compatibility with dependent libraries in NEWS section of https://www.sigma.mcs.anl.gov
 A. BUG FIXES

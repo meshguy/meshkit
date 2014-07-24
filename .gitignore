@@ -12,6 +12,7 @@ bin/*
 .deps/*
 .libs/*
 *.ccm
+*.tar.gz
 config/config.guess
 config/config.sub
 config/depcomp
@@ -94,6 +95,8 @@ missing
 python/setup.py
 stamp-h1
 test-driver
+test/core/test_get_entities_by_dim
+test/core/test_load_grps
 test/algs/5bout.exo
 test/algs/AfterOneSetup.eps
 test/algs/AfterTFISetup.eps

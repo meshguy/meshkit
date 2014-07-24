@@ -18,6 +18,7 @@ AssyGen input o/p and functions
 
 #define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/assygen_default"
 #define TEST_FILE_NAME "assygen_default"
+#define SRC_DIR STRINGIFY(SRCDIR) "/"
 
 // NRGEN CLASS FUNCIONS:
 
@@ -109,7 +110,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
           m_szSchFile = m_szFile+".template.jou";
           m_szAssmInfo = m_szFile + "_info.csv";
           m_szLogFile = m_szFile + ".log";
-          m_szCommonFile = "common.inp";
+          m_szCommonFile = (std::string) SRC_DIR + "common.inp";
 
           std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
                    << "  " << m_szJouFile << std::endl;
