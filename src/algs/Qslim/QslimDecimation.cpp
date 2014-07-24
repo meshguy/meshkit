@@ -42,6 +42,7 @@ moab::EntityHandle iniSet;
 int uniqID(moab::EntityHandle v) {
   int val;
   moab::ErrorCode rval = mb->tag_get_data(uniqIDtag, &v, 1, &val);
+  (void) rval;
   assert(rval==moab::MB_SUCCESS);
   return val;
 }
@@ -50,6 +51,7 @@ int uniqID(moab::EntityHandle v) {
 int ehIsValid(moab::EntityHandle v) {
   unsigned char val;
   moab::ErrorCode rval = mb->tag_get_data(validTag, &v, 1, &val);
+  (void) rval;
   assert(rval==moab::MB_SUCCESS);
   return (int) val;
 }
@@ -184,6 +186,7 @@ int predict_face(moab::EntityHandle tria, moab::EntityHandle v1,
   const moab::EntityHandle * conn;
   int num_nodes;
   moab::ErrorCode rval = mb->get_connectivity(tria, conn, num_nodes);
+  (void) rval;
   assert(3==num_nodes && rval == moab::MB_SUCCESS);
   if (conn[0] == v1 || conn[0] == v2) {
     f1 = vnew;
@@ -494,6 +497,7 @@ void do_contract(pair_info *pair) {
   // Perform the actual contraction
   std::vector<moab::EntityHandle> changed;
   moab::ErrorCode rval1 = contract(mb, v0, v1, vnew, changed);
+  (void) rval1;
   // this is a list of triangles still connected to v0 (are they valid? probably)
   if (opts.will_preserve_mesh_quality) {
     // recompute normals only in this case, because they are not needed otherwise
@@ -557,6 +561,7 @@ void do_contract(pair_info *pair) {
   // maybe we will delete at the end all that are invalid ??
   int invalid = 0;
   moab::ErrorCode rval = mb->tag_set_data(validTag, &v1, 1, &invalid);
+  (void) rval;
   assert (moab::MB_SUCCESS == rval);
 
   if (opts.plotCost) {
@@ -744,6 +749,7 @@ int QslimDecimation::decimate(QslimOptions & iOpts, moab::Range & oRange) {
 
     moab::ErrorCode rval = mb->get_coords(&(validVerts[0]), numNodes,
         &(coords[0]));
+    (void) rval;
     assert(moab::MB_SUCCESS==rval);
 
     // create the new vertices, at the same  coordinates

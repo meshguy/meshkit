@@ -152,7 +152,9 @@ int main(int argc, char **argv)
       return result;
     }
 
-  double tol; // tolerance for two verts to be considered the same
+  double tol = 1e-04; // tolerance for two verts to be considered the same
+                      // used in geometry checking a model
+                      // set to this default value, unless user specifies otherwize, see below
   bool check_topology, verbose;
 
   if(2 == argc) // set topological check
@@ -172,10 +174,14 @@ int main(int argc, char **argv)
     {
       std::cout << "geometry check";
       check_topology = false;
-      tol = atof( argv[3] );
+      if(!argv[3]){
+	std::cout << "No tolerance specified for geometric check. Using default of " << tol << std::endl;
+      }
+      else tol = atof( argv[3] );
       std::cout<< " tolerance=" << tol << std::endl;
       const std::string verbose_string = argv[2];
       verbose = ( 0==verbose_string.compare("true") );
+
     }
 
   // replaced much of this code with a more modular version in check_watertight_func for testing purposes 

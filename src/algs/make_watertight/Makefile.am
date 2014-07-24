@@ -16,6 +16,7 @@ libMakeWatertight_la_SOURCES = \
         zip.cpp \
 	cw_func.cpp \
         mw_func.cpp
+
 # The list of header files which are to be installed
 libMakeWatertight_la_include_HEADERS = \
         meshkit/arc.hpp \
@@ -24,9 +25,6 @@ libMakeWatertight_la_include_HEADERS = \
         meshkit/zip.hpp \
         meshkit/cw_func.hpp \
         meshkit/mw_func.hpp
-
-# Tests and such
-TESTS = 
 
 bin_PROGRAMS = make_watertight check_watertight
 make_watertight_SOURCES = make_watertight.cpp 

@@ -1767,7 +1767,7 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
   double tolerance = 1e-12, dDistance, elem_origin[3],
     elem_interval_size[3], startPnt[3], endPnt[3], rayMaxEnd[3];
   moab::ErrorCode rval;
-  bool bOverlapSecond, bClosed;
+  bool bOverlapSecond, bClosed = true;
   std::vector<iBase_EntityHandle> edge_handles;
 
   double dTotEdgeElem = 0.;
@@ -2101,6 +2101,7 @@ bool EBMesher::is_same_direct_to_ray(int i, int dir)
   assert(MB_SUCCESS == rval && 3 == len);
   
   rval = moab_instance()->get_coords(conn, 3, coords[0].array());
+  (void) rval;
   assert(MB_SUCCESS == rval);
 
   coords[1] -= coords[0];

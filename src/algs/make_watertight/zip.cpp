@@ -140,15 +140,15 @@ namespace zip {
       result = MBI()->delete_entities( &tri, 1 );
       assert(MB_SUCCESS == result);
     }
-    return MB_SUCCESS;
+    return result;
   }
   MBErrorCode delete_degenerate_tris( MBRange tris ) {
-    MBErrorCode result;
+    MBErrorCode result = MB_SUCCESS;
     for(MBRange::iterator i=tris.begin(); i!=tris.end(); i++) {
       result = delete_degenerate_tris( *i );
       assert(MB_SUCCESS == result);
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode delete_adj_degenerate_tris( const MBEntityHandle adj_vert ) {
@@ -159,7 +159,7 @@ namespace zip {
     assert(MB_SUCCESS == result);
     result = delete_degenerate_tris( tris );
     assert(MB_SUCCESS == result);
-    return MB_SUCCESS;
+    return result;
   }
 
   // Problem: MOAB can check for degenerate tris and delete them.
@@ -511,7 +511,7 @@ namespace zip {
     // we do not merge edges, just vert. check the verts
   MBErrorCode test_zipping(const double FACET_TOL,
                            const std::vector< std::vector<MBEntityHandle> > arcs ) {
-      MBErrorCode result;
+      MBErrorCode result = MB_SUCCESS;
 
       // make sure each arc has the same number of edges
       for(unsigned int i=1; i<arcs.size(); i++) {
@@ -584,7 +584,7 @@ namespace zip {
 	  } 
 	}
       }
-      return MB_SUCCESS;
+      return result;
     }          
   
   

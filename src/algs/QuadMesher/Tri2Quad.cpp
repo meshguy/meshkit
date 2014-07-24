@@ -42,6 +42,7 @@ int Tri2Quads::verify(Mesh *mesh, const vector<FacePair> &matching)
 
      for (size_t i = 0; i < numfaces; i++) {
           Face * f = mesh->getFaceAt(i);
+          (void)f;
           assert(f->isVisited());
      }
 

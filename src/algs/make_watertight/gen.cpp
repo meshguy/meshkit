@@ -101,6 +101,7 @@ void moab_printer(MBErrorCode error_code)
     double coords[3];
     int n_precision = 20;
     result = MBI()->get_coords( &vertex, 1, coords );
+    if(gen::error(MB_SUCCESS!=result, "failed to get vertex coords"));
     assert(MB_SUCCESS == result);
     std::cout << "  create vertex " 
 	      << std::setprecision(n_precision)
@@ -158,6 +159,7 @@ void moab_printer(MBErrorCode error_code)
     int n_verts;
     std::cout << "    edge " << edge << std::endl;
     MBErrorCode result = MBI()->get_connectivity( edge, conn, n_verts );
+    if(gen::error(MB_SUCCESS!=result, "failed to get edge connectivity"));
     assert(MB_SUCCESS == result);
     assert(2 == n_verts);
     print_vertex_coords( conn[0] );   
@@ -196,6 +198,7 @@ void moab_printer(MBErrorCode error_code)
     MBErrorCode result;
     MBRange vertices;
     result = MBI()->get_entities_by_type(0, MBVERTEX, vertices);
+    if(gen::error(MB_SUCCESS!=result, "failed to get vertex entities from the mesh"));
     assert( MB_SUCCESS == result );
   
     std::cout<< "    " << vertices.size() << " vertices found." << std::endl;
@@ -217,6 +220,7 @@ void moab_printer(MBErrorCode error_code)
       int n_verts;
       const MBEntityHandle *conn;
       result = MBI()->get_connectivity( *i, conn, n_verts ); 
+      if(gen::error(MB_SUCCESS!=result, "failed to get edge connectivity"));
       assert(MB_SUCCESS == result);
       assert( 2 == n_verts );
       dist += dist_between_verts( conn[0], conn[1] );
@@ -402,7 +406,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 	}
       }
     }   
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode squared_dist_between_verts( const MBEntityHandle v0, 
@@ -521,6 +525,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBErrorCode result;
     MBRange adj_edges;
     result = MBI()->get_adjacencies( &vert, 1, 1, false, adj_edges );
+    gen::error(MB_SUCCESS!=result, "could not get edges adjacent to the vertex");
     assert(MB_SUCCESS == result);
     //adj_edges = adj_edges.intersect(edges);
     adj_edges = intersect( adj_edges, edges );
@@ -534,9 +539,11 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBErrorCode result;
     MBRange verts0, verts1;
     result = MBI()->get_adjacencies( &edge0, 1, 0, false, verts0 );
+    gen::error(MB_SUCCESS!=result, "could not get edge0 adjacencies");
     assert( MB_SUCCESS == result );
     assert( 2 == verts0.size() );
     result = MBI()->get_adjacencies( &edge1, 1, 0, false, verts1 );
+    gen::error(MB_SUCCESS!=result, "could not get edge1 adjacencies");
     assert( MB_SUCCESS == result );
     assert( 2 == verts1.size() );
     if      ( verts0.front() == verts1.front() ) return true;
@@ -564,7 +571,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       return MB_SUCCESS;  
     }
     dir.normalize();
-    return MB_SUCCESS;
+    return result;
   }    
  
   // from http://www.topcoder.com/tc?module=Static&d1=tutorials&d2=geometry1
@@ -601,11 +608,14 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 			  const MBEntityHandle pt ) {
     MBErrorCode result;
     MBCartVect a, b, c;
-   result = MBI()->get_coords( &endpt0, 1, a.array() );
+    result = MBI()->get_coords( &endpt0, 1, a.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS==result);
     result = MBI()->get_coords( &endpt1, 1, b.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS==result);
     result = MBI()->get_coords( &pt,     1, c.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS==result);
     return edge_point_dist( a, b, c);
   }
@@ -614,6 +624,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     const MBEntityHandle *conn;
     int n_verts;     
     result = MBI()->get_connectivity( edge, conn, n_verts );
+    gen::error(MB_SUCCESS!=result, "could not get edge connectivity");
     assert(MB_SUCCESS==result);
     assert( 2 == n_verts );
     return edge_point_dist( conn[0], conn[1], pt );
@@ -680,27 +691,31 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
   MBErrorCode triangle_area( const MBEntityHandle conn[], double &area ) {
     MBCartVect coords[3];
     MBErrorCode result = MBI()->get_coords( conn, 3, coords[0].array() );
+    gen::error(MB_SUCCESS!=result, "could not get triangle vertex coordinates");
     assert(MB_SUCCESS == result);
     area = triangle_area( coords[0], coords[1], coords[2] );
-    return MB_SUCCESS;
+    return result;
   }
   MBErrorCode triangle_area( const MBEntityHandle tri, double &area ) {
     MBErrorCode result;
     const MBEntityHandle *conn;
     int n_verts;
     result = MBI()->get_connectivity( tri, conn, n_verts );
+    gen::error(MB_SUCCESS!=result, "could not get trangle vertices");
     assert(MB_SUCCESS == result);
     assert(3 == n_verts);
     
     result = triangle_area( conn, area );
+    gen::error(MB_SUCCESS!=result, "could not get triangle area");
     assert(MB_SUCCESS == result);
-    return MB_SUCCESS;
+    return result;
   }
   double triangle_area( const MBRange tris ) {
     double a, area = 0;
     MBErrorCode result;
     for(MBRange::iterator i=tris.begin(); i!=tris.end(); i++) {
       result = triangle_area( *i, a);
+      gen::error(MB_SUCCESS!=result, "could not get triangle area");
       assert(MB_SUCCESS == result);
       area += a;
     }
@@ -712,6 +727,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     const MBEntityHandle *conn;
     int n_verts;
     result = MBI()->get_connectivity( tri, conn, n_verts );
+    gen::error(MB_SUCCESS!=result, "could not get triangle vertices");
     assert(MB_SUCCESS == result);
     assert(3 == n_verts);
     return triangle_degenerate( conn[0], conn[1], conn[2] );
@@ -729,10 +745,13 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     for(MBRange::const_iterator i=tris.begin(); i!=tris.end(); i++) {
       MBCartVect normal;
       result = triangle_normal( *i, normal );
+      gen::error(MB_SUCCESS!=result, "could not get triangle normal vector");
       assert(MB_SUCCESS==result || MB_ENTITY_NOT_FOUND==result);
       normals.push_back( normal );
     }
-    return MB_SUCCESS;
+    // if we've gotten here, then we have succeeded
+    result = MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode triangle_normal( const MBEntityHandle tri, MBCartVect &normal) {
@@ -771,6 +790,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBErrorCode result;
     MBCartVect coords[3];
     result = MBI()->get_coords( conn, 3, coords[0].array() );
+    gen::error(MB_SUCCESS!=result, "could not get coordinates of the triangle vertices");
     assert(MB_SUCCESS == result); 
     return triangle_normal( coords[0], coords[1], coords[2], normal );
   }
@@ -807,7 +827,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     assert(MB_SUCCESS == result); 
 
     dist = ( ((x0-x1)*(x0-x2)).length() ) / ( (x2-x1).length() );
-    return MB_SUCCESS;
+    return result;
   }
 
   // Project the point onto the line. Not the line segment!
@@ -822,7 +842,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     assert(MB_SUCCESS == result);
     result = MBI()->set_coords( &pt0, 1, projected_coords.array() );   
     assert(MB_SUCCESS == result);
-    return MB_SUCCESS;
+    return result;
   }    
   MBErrorCode point_line_projection( const MBEntityHandle line_pt1,
 				     const MBEntityHandle line_pt2,
@@ -846,7 +866,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     parameter    = (a%b)/(b%b);
     MBCartVect c = parameter*b;                    
     projected_coords = c     + coords[1];      
-    return MB_SUCCESS;
+    return result;
   }
   MBErrorCode point_line_projection( const MBEntityHandle line_pt1,
 				     const MBEntityHandle line_pt2,
@@ -867,7 +887,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBCartVect a = coords[0] - coords[1];                 
     MBCartVect b = coords[2] - coords[1]; 
     dist_along_edge = a%b / b.length();      
-    return MB_SUCCESS;
+    return result;
   }
   
 
@@ -877,14 +897,18 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBErrorCode result;
     MBCartVect a, b, c;
     result = MBI()->get_coords( &pt_a, 1, a.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS == result);
     result = MBI()->get_coords( &pt_b, 1, b.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS == result);
     result = MBI()->get_coords( &pt_c, 1, c.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS == result);
     MBCartVect d = b - a;
     MBCartVect e = c - a;
     // project onto a plane defined by the plane's normal vector
+
     return (d*e)%plane_normal;
   }
 
@@ -944,10 +968,13 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     MBErrorCode result;
     MBCartVect a, b, c;
     result = MBI()->get_coords( &pt_a, 1, a.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS == result);
     result = MBI()->get_coords( &pt_b, 1, b.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS == result);
     result = MBI()->get_coords( &pt_c, 1, c.array() );
+    gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
     assert(MB_SUCCESS == result);
 
     // if ab not vertical, check betweenness on x; else on y.
@@ -1131,7 +1158,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     assert(MB_SUCCESS == result);
     new_tris.insert( new_tri );
     
-    return MB_SUCCESS; 
+    return result; 
   }
 
   int geom_id_by_handle( const MBEntityHandle set ) {
@@ -1140,6 +1167,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     //result = MBI()->tag_create( GLOBAL_ID_TAG_NAME, sizeof(int), MB_TAG_DENSE,
     //                                MB_TYPE_INTEGER, id_tag, 0, true );           
     result = MBI()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1, MB_TYPE_INTEGER,id_tag,moab::MB_TAG_DENSE);
+    gen::error(MB_SUCCESS!=result && MB_ALREADY_ALLOCATED != result, "could not get the tag handle");
     assert(MB_SUCCESS==result || MB_ALREADY_ALLOCATED==result);                       
     int id;
     result = MBI()->tag_get_data( id_tag, &set, 1, &id );                  
@@ -1151,11 +1179,13 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     std::vector<MBCartVect> normals(tris.size());
     MBErrorCode result;
     result = triangle_normals( tris, normals );
+    gen::error(MB_SUCCESS!=result, "could not get triangle normals");
     assert(MB_SUCCESS == result);
 
     result = MBI()->tag_set_data(normal_tag, tris, &normals[0]);
+    gen::error(MB_SUCCESS!=result, "could not get the tag set data");
     assert(MB_SUCCESS == result);
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode flip(const MBEntityHandle tri, const MBEntityHandle vert0, 
@@ -1163,7 +1193,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
 
     // get the triangles in the surface. The tri and adj_tri must be in the surface.
     MBRange surf_tris;
-    MBEntityHandle result = MBI()->get_entities_by_type( surf_set, MBTRI, surf_tris);
+    MBErrorCode result = MBI()->get_entities_by_type( surf_set, MBTRI, surf_tris);
     assert(MB_SUCCESS == result);
 
     // get the triangle across the edge that will be flipped
@@ -1210,12 +1240,12 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     assert(MB_SUCCESS == result);
     print_triangle( tri, false );
     print_triangle( adj_tri.front(), false );
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode ordered_verts_from_ordered_edges( const std::vector<MBEntityHandle> ordered_edges,
                                                 std::vector<MBEntityHandle> &ordered_verts ) {
-    MBErrorCode result;
+    MBErrorCode result = MB_SUCCESS;
     ordered_verts.clear();
     ordered_verts.reserve(ordered_edges.size()+1);
 
@@ -1227,17 +1257,19 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
       const MBEntityHandle *conn;
       int n_verts;
       result = MBI()->get_connectivity( *i, conn, n_verts);
+      gen::error(MB_SUCCESS!=result, "could not get edge connectivity");
       assert(MB_SUCCESS == result);
       assert(2 == n_verts);
       if(ordered_edges.begin() == i) {
         ordered_verts.push_back(conn[0]);
       } else {
+	gen::error(previous_back_vert!=conn[0], "edges are not adjacent");
         assert(previous_back_vert == conn[0]);
       }
       ordered_verts.push_back(conn[1]);
       previous_back_vert = conn[1];
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   /* Find the distance between two arcs. Assume that their endpoints are somewhat
@@ -1280,6 +1312,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     for(unsigned int i=0; i<2; i++) {
       coords[i].resize( arcs[i].size() );
       result = MBI()->get_coords( &arcs[i][0], arcs[i].size(), coords[i][0].array());
+      gen::error(MB_SUCCESS!=result, "could not get vertex coordinates");
       assert(MB_SUCCESS == result);
     }
 
@@ -2172,7 +2205,7 @@ MBErrorCode get_sealing_mesh_tags( double &facet_tol,
 	  }
       }
  
-    return MB_SUCCESS;
+    return result;
 
     }
 
