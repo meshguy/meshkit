@@ -82,7 +82,7 @@ namespace cleanup {
                                           const double tol ) {
     // If the verts are the same, this is not meaningful.
     if(vert0 == vert1) return MB_SUCCESS;
-    MBErrorCode result;
+    MBErrorCode result = MB_SUCCESS;
 
     // If the edge is small, delete it and the adjacent tris.
     if(tol > gen::dist_between_verts(vert0, vert1)) {

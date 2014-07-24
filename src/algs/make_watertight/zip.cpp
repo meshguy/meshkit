@@ -143,7 +143,7 @@ namespace zip {
     return result;
   }
   MBErrorCode delete_degenerate_tris( MBRange tris ) {
-    MBErrorCode result;
+    MBErrorCode result = MB_SUCCESS;
     for(MBRange::iterator i=tris.begin(); i!=tris.end(); i++) {
       result = delete_degenerate_tris( *i );
       assert(MB_SUCCESS == result);
