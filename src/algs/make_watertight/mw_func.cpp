@@ -232,7 +232,7 @@ MBErrorCode create_arc_pair(  const double FACET_TOL,
   // initialize stuff
   double min_dist = std::numeric_limits<double>::max();
   curve_set = 0;
-  double curve_set_idx, skin_pos;;
+  double curve_set_idx, skin_pos;
   curve.clear();
   skin_arc.clear();
   skin_arc.reserve( skin_loop.size() );
