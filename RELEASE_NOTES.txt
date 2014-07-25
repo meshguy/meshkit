@@ -1,6 +1,6 @@
-21st July 2014 - Version 1.2
-=================================
-See details on compatibility with dependent libraries in NEWS section of https://www.sigma.mcs.anl.gov
+Version 1.2  (SIGMA v1.0)
+=========================
+See details on compatibility with dependent libraries in NEWS section of http://sigma.mcs.anl.gov
 
 A. BUG FIXES
 ------------
@@ -36,8 +36,7 @@ D. FUTURE WORK
   3) Integration of verdict-mesh quality evalulation library
   4) Interval assignment integration with existing algorithms
   5) New parallel schemes and optimization of RGG tools: AssyGen and CoreGen.
-  6) Parallel mesh generationtimization of RGG tools: AssyGen and CoreGen.
-6. Parallel mesh generation
+  6) Parallel mesh generation
 
 Version 1.1
 =====================================
