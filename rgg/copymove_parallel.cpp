@@ -52,11 +52,12 @@ int CCrgen::set_copymove_coords()
   }
   if (!strcmp(geom_type.c_str(), "rectangular") && symm == 1) {
     for (int n1 = 0; n1 < nringsx; n1++) {
+        i=n1;
       for (int n2 = 0; n2 < nringsy; n2++) {
-	err = find_assm(i, assm_index);
-	y_coord[i] = -n1 * pitchy;
-	x_coord[i] = n2 * pitchx;
-	i++;
+        err = find_assm(i, assm_index);
+        y_coord[i] = n2 * pitchy;
+        x_coord[i] = n1 * pitchx;
+        i+=nringsx;
       }
     }
   }
