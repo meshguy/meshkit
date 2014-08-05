@@ -2200,7 +2200,7 @@ int OneToOneSwept::LinkSurfMeshing(vector<vector <Vertex> > &linkVertexList)
 	for (unsigned int i=0; i < gLinkFaceList.size(); i++)
 	{
 		int t1=1, t2=1, t3=1;
-		int sEdgeIndex, gLeftIndex, gRightIndex;
+		int sEdgeIndex=0, gLeftIndex=0, gRightIndex=0;
 		iBase_EntitySetHandle tmpSet;
 		SimpleArray<iBase_EntityHandle> aEdges, aNodes, aFaces, gEdges;
 		SimpleArray<iBase_EntityHandle> bNodes1, bNodes2, bNodes3;

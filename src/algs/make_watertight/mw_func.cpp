@@ -232,7 +232,7 @@ MBErrorCode create_arc_pair(  const double FACET_TOL,
   // initialize stuff
   double min_dist = std::numeric_limits<double>::max();
   curve_set = 0;
-  double curve_set_idx, skin_pos;
+  double curve_set_idx = 0, skin_pos = 0;
   curve.clear();
   skin_arc.clear();
   skin_arc.reserve( skin_loop.size() );
@@ -764,8 +764,8 @@ MBErrorCode seal_loop( bool debug,
      set of things to be zipped. It is likely that curves of the failed zip
      still exist even though their corresponding loop has been removed. Not all
      curves in this list will ever be zipped. Select a curve that can be zipped. */
-    unsigned pos, curve_idx;
-    MBEntityHandle closest_skin_pt, closest_front_curve_endpt;
+    unsigned pos = 0, curve_idx = 0;
+    MBEntityHandle closest_skin_pt = 0, closest_front_curve_endpt = 0;
     double min_dist = std::numeric_limits<double>::max();
     for(unsigned i=0; i<curve_sets.size(); ++i) {
       // get geometric vertices

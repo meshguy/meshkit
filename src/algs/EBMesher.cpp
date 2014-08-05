@@ -196,7 +196,7 @@ void EBMesher::execute_this()
   double intersection_time = .0;
   double set_info_time = .0;
   time_t time1, time2, time3, time4;
-  unsigned long long mem1, mem2, mem3, mem4;
+  unsigned long long mem1, mem3, mem4;
   moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
   moab::ErrorCode rval;
 
@@ -247,13 +247,13 @@ void EBMesher::execute_this()
     if (m_bUseWholeGeom) break;
   }
 #endif
-  
+
   if (debug_ebmesh) {
     std::cout << "OBB_tree_construct_time: " << obb_time
               << ", intersection_time: " << intersection_time
               << ", set_info_time: " << set_info_time << std::endl;
     std::cout << "start_memory: " << mem1
-              << ", OBB_tree_construct_moemory: " << mem2
+              //<< ", OBB_tree_construct_moemory: " << mem2
               << ", intersection_memory: " << mem3
               << ", set_info_memory: " << mem4
               << std::endl;

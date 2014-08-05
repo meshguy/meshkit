@@ -1250,7 +1250,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     ordered_verts.reserve(ordered_edges.size()+1);
 
     // Save the back of the previous edge to check for continuity.
-    MBEntityHandle previous_back_vert;
+    MBEntityHandle previous_back_vert = 0;
     
     for(std::vector<MBEntityHandle>::const_iterator i=ordered_edges.begin(); 
         i!=ordered_edges.end(); i++) {

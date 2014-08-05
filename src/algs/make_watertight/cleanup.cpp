@@ -403,7 +403,7 @@ namespace cleanup {
           }
           assert(skin_edges[k] == new_skin_edges[k]);
         }
-	if (n_internal_edges != internal_edges.size()+3)
+        if (n_internal_edges != (int) internal_edges.size()+3)
         assert(n_internal_edges == internal_edges.size()+3);
       }
   
