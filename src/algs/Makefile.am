@@ -11,7 +11,7 @@ libMeshKitalgs_la_LIBADD = Qslim/libQslim.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
 			   CoreGen/libCoreGen.la \
-                           PostBL/libPostBL.la \                        
+                           PostBL/libPostBL.la \
 			   make_watertight/libMakeWatertight.la
 
 if ENABLE_intassign
