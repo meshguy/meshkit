@@ -198,8 +198,3 @@ int main(int argc, char **argv)
  
 }
 
-
-MBInterface* MBI() {
-  static MBCore instance;
-  return &instance;
-}

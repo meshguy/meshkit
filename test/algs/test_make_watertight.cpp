@@ -1947,8 +1947,4 @@ std::cout << "NON-ADJACENT LOCKED PAIR TESTS" << std::endl;
 
 }
 
-MBInterface* MBI() {
- static MBCore instance;
- return &instance;
-}
 

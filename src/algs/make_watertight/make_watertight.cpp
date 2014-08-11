@@ -45,6 +45,7 @@
 
 
 MBInterface *MOAB();
+
 MBErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis);
 
 
@@ -130,11 +131,6 @@ int main(int argc, char **argv)
   return 0;  
   }
 
-MBInterface *MBI() 
-{
-    static MBCore instance;
-    return &instance;
-}
 
 MBErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis){
 

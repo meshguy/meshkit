@@ -20,7 +20,9 @@
 #define SENSE_UNKNOWN 0
 
 
+// returns a moab interface
 MBInterface *MBI(); 
+
 namespace gen {
   bool error( const bool error_has_occured, const std::string message="" );
   
