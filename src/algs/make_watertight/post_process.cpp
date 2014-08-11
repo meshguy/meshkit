@@ -448,9 +448,3 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
   
     return 0;  
   }
-
-  MBInterface *MBI() {
-    static MBCore instance;
-    return &instance;
-  }
-
