@@ -13,8 +13,6 @@
 #include "moab/FileOptions.hpp"
 
 
-
-
 namespace arc {
 
   MBErrorCode orient_edge_with_tri( const MBEntityHandle edge, const MBEntityHandle tri ) {

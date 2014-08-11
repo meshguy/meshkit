@@ -44,7 +44,6 @@
 #include "meshkit/arc.hpp"
 #include "meshkit/zip.hpp"
 
-MBInterface *MBI();
 
 // struct to hold coordinates of skin edge, it's surface id, and a matched flag
 struct coords_and_id {

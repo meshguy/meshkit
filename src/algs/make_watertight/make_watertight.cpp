@@ -44,7 +44,6 @@
 
 
 
-MBInterface *MOAB();
 
 MBErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis);
 

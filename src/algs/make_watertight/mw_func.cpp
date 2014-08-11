@@ -34,10 +34,6 @@
 
 
 
-
-
-MBInterface *MOAB();
-
 namespace mw_func {
 
 

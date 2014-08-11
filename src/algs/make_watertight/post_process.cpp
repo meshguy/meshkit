@@ -38,9 +38,6 @@
 
 
 
-
-MBInterface *MBI();
-
 MBErrorCode delete_all_edges() {
   // delete all of the edges. Never keep edges. They are too hard to track and use
   // due to orientation and multiple entities errors when merging.
