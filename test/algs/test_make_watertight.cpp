@@ -32,8 +32,8 @@ MBErrorCode move_vert( MBEntityHandle vertex, double dx, double dy, double dz, b
 MBErrorCode rand_vert_move( MBEntityHandle vertex, double tol, bool verbose = false);
 MBErrorCode move_vert_theta( MBEntityHandle vertex, double tolerance, bool verbose = false);
 MBErrorCode move_vert_R ( MBEntityHandle vertex, double tol, bool verbose = false ) ;
+MBErrorCode rand_adj_pair( MBRange verts, MBEntityHandle &vert1, MBEntityHandle &vert2);
 
-MBInterface *MBI();
 
 /// struct to hold coordinates of skin edge, it's surface id, and a matched flag
 struct coords_and_id {
@@ -197,7 +197,8 @@ MBErrorCode move_vert_R( MBEntityHandle vertex, double tol, bool verbose ) {
   //get vertex coordinates
   double coords[3];
   result= MBI()-> get_coords( &vertex , 1 , coords );
- 
+  if(gen::error(MB_SUCCESS!=result, "could not get the vertex coordinates"));
+
   if(verbose){
   //original coordinates
   std::cout << "Vertex ID: " << gen::geom_id_by_handle(vertex) << std::endl;
@@ -325,14 +326,10 @@ MBErrorCode rand_locked_pair_bump_rand( MBRange verts, double facet_tol , std::s
   MBErrorCode result; 
 
   //select random verticies from verts
-  int number_of_verts = verts.size();
-  double num = rand()/static_cast<double>(RAND_MAX);
- 
-  int index = 1+static_cast<int>(num*(number_of_verts-1));
-  //std::cout << "index = " << index << std::endl;
+  MBEntityHandle vertex1;
+  MBEntityHandle vertex2;
 
-  MBEntityHandle vertex1=(verts.back()-index);
-  MBEntityHandle vertex2=(verts.back()-index-1);
+  result = rand_adj_pair( verts, vertex1, vertex2);
   
   //move the desired verticies by the allotted distance(s)
   result = rand_vert_move( vertex1, facet_tol , verbose);
@@ -349,14 +346,10 @@ MBErrorCode rand_locked_pair_bump_theta( MBRange verts, double facet_tol , std::
   MBErrorCode result; 
 
   //select random verticies from verts
-  int number_of_verts = verts.size();
-  double num = rand()/static_cast<double>(RAND_MAX);
- 
-  int index = 1+static_cast<int>(num*(number_of_verts-1));
-  //std::cout << "index = " << index << std::endl;
+  MBEntityHandle vertex1;
+  MBEntityHandle vertex2;
 
-  MBEntityHandle vertex1=(verts.back()-index);
-  MBEntityHandle vertex2=(verts.back()-index-1);
+  result = rand_adj_pair(verts, vertex1, vertex2);
   
   //move the desired verticies by the allotted distance(s)
   result = move_vert_theta( vertex1, facet_tol , verbose);
@@ -372,14 +365,10 @@ MBErrorCode rand_locked_pair_bump( MBRange verts, double bump_dist_x, double bum
   MBErrorCode result; 
 
   //select random verticies from verts
-  int number_of_verts = verts.size();
-  double num = rand()/static_cast<double>(RAND_MAX);
- 
-  int index = 1+static_cast<int>(num*(number_of_verts-1));
-  //std::cout << "index = " << index << std::endl;
+  MBEntityHandle vertex1;
+  MBEntityHandle vertex2;
 
-  MBEntityHandle vertex1=(verts.back()-index);
-  MBEntityHandle vertex2=(verts.back()-index-1);
+  result = rand_adj_pair( verts, vertex1, vertex2);
   
   //move the desired verticies by the allotted distance(s)
   result = move_vert( vertex1, bump_dist_x, bump_dist_y, bump_dist_z, verbose);
@@ -641,14 +630,10 @@ MBErrorCode rand_locked_pair_bump_R( MBRange verts, double facet_tol , std::stri
   MBErrorCode result; 
 
   //select random verticies from verts
-  int number_of_verts = verts.size();
-  double num = rand()/static_cast<double>(RAND_MAX);
- 
-  int index = 1+static_cast<int>(num*(number_of_verts-1));
-  //std::cout << "index = " << index << std::endl;
+  MBEntityHandle vertex1;
+  MBEntityHandle vertex2;
 
-  MBEntityHandle vertex1=(verts.back()-index);
-  MBEntityHandle vertex2=(verts.back()-index-1);
+  result = rand_adj_pair( verts, vertex1, vertex2);
   
   //move the desired verticies by the allotted distance(s)
   result = move_vert_R( vertex1, facet_tol , verbose);
@@ -701,6 +686,24 @@ MBErrorCode nonadj_locked_pair_bump_R( MBRange verts, double facet_tol , std::st
   return MB_SUCCESS;
 }
  
+MBErrorCode rand_adj_pair( MBRange verts, MBEntityHandle &vert1, MBEntityHandle &vert2)
+{
+
+  MBErrorCode result; 
+
+  //select random verticies from verts
+  int number_of_verts = verts.size();
+  double num = rand()/static_cast<double>(RAND_MAX);
+ 
+  int index = static_cast<int>(num*(number_of_verts-2));
+
+
+  vert1=(verts.front()+index);
+  vert2=(verts.front()+(index+1));
+
+
+  return MB_SUCCESS;
+}
 
 int main(int argc, char **argv)
 {
