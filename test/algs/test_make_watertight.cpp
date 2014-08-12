@@ -689,7 +689,6 @@ MBErrorCode nonadj_locked_pair_bump_R( MBRange verts, double facet_tol , std::st
 MBErrorCode rand_adj_pair( MBRange verts, MBEntityHandle &vert1, MBEntityHandle &vert2)
 {
 
-  MBErrorCode result; 
 
   //select random verticies from verts
   int number_of_verts = verts.size();
