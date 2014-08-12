@@ -6,7 +6,6 @@
 #include "arc.hpp"
 #include "zip.hpp"
 
-MBInterface *MBI();
 namespace cleanup {
 
   /// The obbtrees are no longer valid because the triangles have been altered.

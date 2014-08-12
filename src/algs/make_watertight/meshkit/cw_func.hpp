@@ -14,8 +14,6 @@
 #include "MBAdaptiveKDTree.hpp" // for merging verts
 #include "MBCartVect.hpp"
 
-
-MBInterface *MBI();
 namespace cw_func {
 /// checks the input mesh for watertightness. If check_topology=true, then the mesh will be checked topologically only, no tolerances allowed.
 /// If check_topology = false, then the model will be checked for watertightness by proximity.

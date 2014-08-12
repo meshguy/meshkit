@@ -5,7 +5,6 @@
 #include "gen.hpp"
 #include "arc.hpp"
 
-MBInterface *MBI();
 namespace zip {
   MBErrorCode t_joint( MBTag normal_tag, 
                        const MBEntityHandle vert0,              

@@ -19,10 +19,6 @@
 #include "cleanup.hpp"
 
 
-
-
-MBInterface *MOAB();
-
 namespace mw_func {
 
 void moab_printer(MBErrorCode error_code);
@@ -139,8 +135,6 @@ MBErrorCode seal_surface_loops ( MBEntityHandle surf,
 
 /// takes the mesh in input_set and makes it watertight
 MBErrorCode make_mesh_watertight(MBEntityHandle input_set, double &facet_tol, bool verbose = true);
-
-
 
 
 }

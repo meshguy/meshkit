@@ -8,6 +8,7 @@
 
 #include "moab/GeomTopoTool.hpp"
 #include "moab/FileOptions.hpp"
+#include "moab/Core.hpp"
 
 #include "meshkit/gen.hpp"
 #include "meshkit/zip.hpp"
@@ -2229,3 +2230,9 @@ MBErrorCode get_sealing_mesh_tags( double &facet_tol,
 
 
 } //EOL
+
+MBInterface *MBI() 
+{
+    static MBCore instance;
+    return &instance;
+}
