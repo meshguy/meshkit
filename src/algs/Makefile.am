@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL make_watertight
+SUBDIRS =  QuadMesher Qslim AssyGen CoreGen Sweep PostBL
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
@@ -11,8 +11,8 @@ libMeshKitalgs_la_LIBADD = Qslim/libQslim.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
 			   CoreGen/libCoreGen.la \
-                           PostBL/libPostBL.la \
-			   make_watertight/libMakeWatertight.la
+                           PostBL/libPostBL.la
+
 
 if ENABLE_intassign
   SUBDIRS += IntervalAssignment
@@ -20,6 +20,12 @@ if ENABLE_intassign
   libMeshKitalgs_la_LIBADD += IntervalAssignment/libIntervalAssignment.la
   AM_LDFLAGS += $(IPOPT_LDFLAGS)
   LIBS += $(IPOPT_LIBS)
+endif
+
+if HAVE_DAGMC_MOAB
+  SUBDIRS += make_watertight
+  libMeshKitalgs_la_LIBADD += make_watertight/libMakeWatertight.la
+  AM_CPPFLAGS += -I$(top_srcdir)/src/algs/make_watertight
 endif
 
 # The directory in which to install headers
