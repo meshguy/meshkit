@@ -39,10 +39,13 @@ private:
          */
         virtual double vtx2vtx_dist(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2);
 
-        /** \brief Returns the distance between an iGeom vertex and an iMesh vertex.
+        /** \brief Returns the distance between an iMesh vertex and an iMesh vertex.
          * \param vtx1 iMesh vertex handle
          * \param vtx2 iMesh vertex handle
          */
+        virtual double mvtx2mvtx_dist(iMesh::EntityHandle vtx1, iMesh::EntityHandle vtx2);
+
+
         virtual void facet(ModelEnt *curve);
 
         /** \brief Sets the senses wrt all surfaces adjacent to the curve

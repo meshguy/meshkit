@@ -94,7 +94,7 @@ void SolidCurveMesher::execute_this()
     }
 }
 
- void SolidCurveMesher::facet(ModelEnt *curve)
+void SolidCurveMesher::facet(ModelEnt *curve)
 {
   iGeom::EntityHandle h = curve->geom_handle();
   iMesh::EntitySetHandle sh = IBSH(curve->mesh_handle());
@@ -125,77 +125,62 @@ void SolidCurveMesher::execute_this()
   //get the curve vertices
   MEntVector end_verts;
   curve->get_adjacencies(0, end_verts);
+  iMesh::EntityHandle start_vtx = IBEH(end_verts.front()->mesh_handle());
+  iMesh::EntityHandle end_vtx = IBEH(end_verts.back()->mesh_handle());
+
   //std::cout << "Number of end_verts: " << end_verts.size() << std::endl;
 
+  //special case for a point curve
+  if(verts.size() < 2)
+    {
+      if( start_vtx != end_vtx || curve->measure() > geom_res)
+	{
+	  std::cout << "Warning: no facetting for curve " << curve->id() << std::endl;
+	  return;
+	}
+      else
+	{
+	  mk_core()->imesh_instance()->addEntToSet(start_vtx, sh);
+	  return;
+	}
+    }
+
   //check for a closed curve
-  bool closed = (end_verts.size() == 1);
+  bool closed = (mvtx2mvtx_dist(verts.front(),verts.back()) < geom_res);
 
-  //Special case for a point curve
-  if (verts.size() < 2 && (!closed || curve->measure() > geom_res))
+  // check that geometry and facetting agree that the curve is closed
+  if ( closed != (start_vtx == end_vtx))
+    std::cout << "Warning: topology and geometry inconsistent for possibly closed curve "
+	      << curve->id() << std::endl;
+
+  //check the proximity of the front and end vertices to the start and end points, respectively
+  if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
+     vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
     {
-      std::cerr << "Warning: No facetting for curve" << curve->id() << std::endl;
-      return;
-    }
-
-
-  if(closed)
-    {
-      //check the proximity of the single vertex to both the start and end points
-      iGeom::EntityHandle end_vert_hand = end_verts[0]->geom_handle(); 
-      if(vtx2vtx_dist(end_vert_hand,verts.front()) > geom_res || vtx2vtx_dist(end_vert_hand,verts.back()) > geom_res)
-        std::cerr << "Warning: closed curve vertex not at the end of curve facets" << std::endl;
-
-      //capture the beginning and end vertex handles for deletion 
-      iMesh::EntityHandle front_vert_to_del = verts.front();
-      iMesh::EntityHandle back_vert_to_del = verts.back();
-
-      //insert the single vertex in at the beginning and the end of the curve
-      std::vector<moab::EntityHandle> dum_handles;
-      end_verts[0]->get_mesh(0,dum_handles);
-      verts.front() = IBEH(dum_handles[0]);
-      verts.back() = IBEH(dum_handles[0]);
-     
-      //delete the old vertices
-      mk_core()->imesh_instance()->deleteEnt(front_vert_to_del);
-      mk_core()->imesh_instance()->deleteEnt(back_vert_to_del);
-
-    }
-  else
-    {
-      //check the proximity of the front and end vertices to the start and end points, respectively
+      //try reversing the points
+      std::reverse(verts.begin(), verts.end());
+      
+      //check again, if this time it fails, give a warning
       if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
-         vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
-        {
-          //try reversing the points
-          std::reverse(verts.begin(), verts.end());
-
-          //check again, if this time it fails, give a warning
-          if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
-             vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
-            {
-              std::cerr << "Warning: vertices not at the ends of the curve" << std::endl;
-            }
-         }
-      //now replace start and end facet points with the child vert
-
-      //capture the beginning and end vertex handles for deletion 
-      iMesh::EntityHandle front_vert_to_del = verts.front();
-      iMesh::EntityHandle back_vert_to_del = verts.back();
-
-
-      //this is all necessary to keep withing imesh interface
-      std::vector<moab::EntityHandle> dum_handles;
-      end_verts[0]->get_mesh(0, dum_handles);
-      verts.front() = IBEH(dum_handles[0]);
-      dum_handles.clear();
-      end_verts[1]->get_mesh(0, dum_handles);
-      verts.back() = IBEH(dum_handles[0]);
-
-      //delete the old vertices
-      mk_core()->imesh_instance()->deleteEnt(front_vert_to_del);
-      mk_core()->imesh_instance()->deleteEnt(back_vert_to_del);
-
+	 vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
+	{
+	  std::cerr << "Warning: vertices not at the ends of the curve " << curve->id() << std::endl;
+	}
     }
+
+
+  //now replace start and end facet points with the curve's child vert(s)
+  
+  //capture the beginning and end vertex handles for deletion 
+  iMesh::EntityHandle front_vert_to_del = verts.front();
+  iMesh::EntityHandle back_vert_to_del = verts.back();
+  
+  verts.front() = start_vtx;
+  verts.back() = end_vtx;
+  
+  //delete the old vertices
+  mk_core()->imesh_instance()->deleteEnt(front_vert_to_del);
+  mk_core()->imesh_instance()->deleteEnt(back_vert_to_del);
     
   //now create the edges with the vertices we've chosen
 
@@ -209,6 +194,9 @@ void SolidCurveMesher::execute_this()
       mk_core()->imesh_instance()->createEnt(iMesh_LINE_SEGMENT, &verts[j], 2, e);
       edges.push_back(e);
     }
+
+  //remove duplicate vertex if the curve is closed
+  if(closed && start_vtx == end_vtx) verts.pop_back(); 
 
   //add vertices and edges to the entity set
   mk_core()->imesh_instance()->addEntArrToSet(&verts[0], verts.size(), sh);
@@ -258,6 +246,20 @@ double SolidCurveMesher::vtx2vtx_dist(iGeom::EntityHandle vtx1, iMesh::EntityHan
   double x2,y2,z2;
 
   mk_core()->igeom_instance()->getVtxCoord(vtx1, x1, y1, z1);
+  mk_core()->imesh_instance()->getVtxCoord(vtx2, x2, y2, z2);
+
+  double dist = pow((x1-x2),2) + pow((y1-y2),2) + pow((z1-z2),2);
+
+  return sqrt(dist);
+}
+
+double SolidCurveMesher::mvtx2mvtx_dist(iMesh::EntityHandle vtx1, iMesh::EntityHandle vtx2)
+{
+
+  double x1,y1,z1;
+  double x2,y2,z2;
+
+  mk_core()->imesh_instance()->getVtxCoord(vtx1, x1, y1, z1);
   mk_core()->imesh_instance()->getVtxCoord(vtx2, x2, y2, z2);
 
   double dist = pow((x1-x2),2) + pow((y1-y2),2) + pow((z1-z2),2);
