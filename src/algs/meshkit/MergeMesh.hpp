@@ -15,12 +15,10 @@
 
 #include "iMesh.h"
 
-#ifdef HAVE_MOAB
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #include "MBAdaptiveKDTree.hpp"
-#endif
 
 namespace MeshKit {
 
@@ -127,7 +125,6 @@ private:
   int updateSets;
   int doMerge;
 
-#ifdef HAVE_MOAB
 
     //- given a kdtree, set tag on vertices in leaf nodes with vertices
     //- to which they should be merged
@@ -149,7 +146,6 @@ private:
 
     //- entities which will go away after the merge
   MBRange deadEnts;
-#endif
 };
 
   inline const char* MergeMesh::name()

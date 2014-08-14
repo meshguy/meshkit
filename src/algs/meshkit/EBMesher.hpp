@@ -11,11 +11,9 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/iMesh.hpp"
 
-#ifdef HAVE_MOAB
 #include "moab/Interface.hpp"
 #include "moab/GeomTopoTool.hpp"
 #include "MBOrientedBoxTreeTool.hpp"
-#endif
 
 //! edge status
 enum EdgeStatus {
@@ -372,7 +370,6 @@ private:
     //! Static variable, used in registration
   static int init;
 
-#ifdef HAVE_MOAB
   /** \brief get MOAB instance
    * \return MOAB instance
    */
@@ -488,7 +485,6 @@ private:
   std::map<MBEntityHandle, MBEntityHandle>  m_mRootSets;
 
   double m_minCoord[3], m_maxCoord[3];
-#endif
 };
 
 inline void EBMesher::increase_box(double box_increase)

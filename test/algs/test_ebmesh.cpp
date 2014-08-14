@@ -10,10 +10,8 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/ModelEnt.hpp"
 
-#ifdef HAVE_MOAB
 #include "moab/Interface.hpp"
 #include "moab/EntityHandle.hpp"
-#endif
 
 //#include "CGMApp.hpp"
 using namespace MeshKit;
@@ -112,7 +110,6 @@ int load_and_mesh(const char *input_filename,
       std::cout<<" no geometry, bail out \n";
       return 1;
     }
-#ifdef HAVE_MOAB
     if (surfs.size()==1)
     {
       // create a new ModelEnt, volume, with one surface
@@ -132,7 +129,6 @@ int load_and_mesh(const char *input_filename,
       // get out if we created one model ent
       vols.push_back(this_me);
     }
-#endif
   }
 
   // make EBMesher
