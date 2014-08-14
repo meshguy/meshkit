@@ -24,15 +24,12 @@ CCrgen class declaration
 #include "matrixtemplate.hpp"
 #include "utils.hpp"
 
-#ifdef HAVE_MOAB
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
 #include "MBRange.hpp"
 #include "MBSkinner.hpp"
 #include "MBTagConventions.hpp"
 #include "moab/MergeMesh.hpp"
-#endif
-
 
 #ifdef USE_MPI
 #include "mpi.h"
@@ -82,11 +79,9 @@ public:
   iMesh_Instance impl;
   iGeom_Instance geom;
   
-#ifdef HAVE_MOAB
   moab::Interface* mbImpl() {return reinterpret_cast<MBiMesh*> (impl)->mbImpl;};
 #ifdef USE_MPI
   moab::ParallelComm *pc;
-#endif
 #endif
 
   bool extrude_flag, mem_tflag;
