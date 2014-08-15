@@ -171,7 +171,7 @@ void SolidCurveMesher::facet(ModelEnt *curve)
      vtx2vtx_dist(end_verts.back()->geom_handle(), verts.back()) > geom_res)
     {
       //try reversing the points
-      std::reverse(verts.begin(), verts.end());
+      //std::reverse(verts.begin(), verts.end());
       
       //check again, if this time it fails, give a warning
       if(vtx2vtx_dist(end_verts.front()->geom_handle(), verts.front()) > geom_res ||
