@@ -125,8 +125,21 @@ void SolidCurveMesher::facet(ModelEnt *curve)
   //get the curve vertices
   MEntVector end_verts;
   curve->get_adjacencies(0, end_verts);
-  iMesh::EntityHandle start_vtx = IBEH(end_verts.front()->mesh_handle());
-  iMesh::EntityHandle end_vtx = IBEH(end_verts.back()->mesh_handle());
+  
+  //get the entity handle of the start vertex
+  std::vector<moab::EntityHandle> dum_handles;
+  end_verts.front()->get_mesh(0,dum_handles);
+  assert( 1 == dum_handles.size() );   // should only be one vertex in a vertex entity set
+  iMesh::EntityHandle start_vtx = IBEH(dum_handles.front());
+
+  dum_handles.clear();
+
+  // do the same for the end vertex
+  end_verts.back()->get_mesh(0, dum_handles);
+  assert( 1 == dum_handles.size() );   // should only be one vertex in a vertex entity set
+  iMesh::EntityHandle end_vtx = IBEH(dum_handles.front());
+
+  dum_handles.clear();
 
   //std::cout << "Number of end_verts: " << end_verts.size() << std::endl;
 
@@ -154,15 +167,15 @@ void SolidCurveMesher::facet(ModelEnt *curve)
 	      << curve->id() << std::endl;
 
   //check the proximity of the front and end vertices to the start and end points, respectively
-  if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
-     vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
+  if(vtx2vtx_dist(end_verts.front()->geom_handle(), verts.front()) > geom_res ||
+     vtx2vtx_dist(end_verts.back()->geom_handle(), verts.back()) > geom_res)
     {
       //try reversing the points
       std::reverse(verts.begin(), verts.end());
       
       //check again, if this time it fails, give a warning
-      if(vtx2vtx_dist(end_verts[0]->geom_handle(), verts.front()) > geom_res ||
-	 vtx2vtx_dist(end_verts[1]->geom_handle(), verts.back()) > geom_res)
+      if(vtx2vtx_dist(end_verts.front()->geom_handle(), verts.front()) > geom_res ||
+	 vtx2vtx_dist(end_verts.back()->geom_handle(), verts.back()) > geom_res)
 	{
 	  std::cerr << "Warning: vertices not at the ends of the curve " << curve->id() << std::endl;
 	}
