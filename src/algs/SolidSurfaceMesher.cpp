@@ -159,7 +159,7 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
   std::vector<iBase_EntityHandle> tris;
 
   //loop over the connectivity
-  for(unsigned int j = 0; j < conn.size()-2; j+=3)
+  for(int j = 0; j < (int)conn.size()-2; j+=3)
     {
       //get the appropriate points for a triangle and add them to a vector
       std::vector<iBase_EntityHandle> tri_verts; 
