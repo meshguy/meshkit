@@ -21,6 +21,9 @@ std::string extension = ".sat";
 std::string extension = ".stp";
 #endif
 
+
+void read_cube_tris_test();
+
 int main(int argc, char **argv) 
 {
   
@@ -48,7 +51,7 @@ int main(int argc, char **argv)
 
 
   int num_fail = 0;
-  //num_fail += RUN_TEST(edgemesh_hole);
+  num_fail += RUN_TEST(read_cube_tris_test);
 
 #if HAVE_OCC
   return 0;
@@ -59,4 +62,19 @@ int main(int argc, char **argv)
 
 
 //Tests
+// NOTE: all tests should be performed using the iMesh interface as that is where our faceted
+//       information lives. It can, however, be compared to the iGeom information if desired.
+
+
+void read_cube_tris_test()
+{
+
+  std::vector<iMesh::EntityHandle> tris;
+  mk->imesh_instance()->getEntities(0, iBase_ALL_TYPES, iMesh_TRIANGLE, tris);
+
+  //For a cube, there should be exactly 2 triangles per face
+  int num_of_tris = tris.size();
+  CHECK_EQUAL(12, num_of_tris);
+
+}
 
