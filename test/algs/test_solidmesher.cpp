@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
   filename = TestDir + "/" + filename + extension;
 
-  mk->load_geometry(&filename[0], NULL, 0, 0, 0, false, false);
+  mk->load_geometry(&filename[0]);
 
   MEntVector surfs;
   mk->get_entities_by_dimension(2,surfs);
@@ -69,11 +69,20 @@ int main(int argc, char **argv)
 void read_cube_tris_test()
 {
 
-  std::vector<iMesh::EntityHandle> tris;
-  mk->imesh_instance()->getEntities(0, iBase_ALL_TYPES, iMesh_TRIANGLE, tris);
+  MEntVector ents;
+  mk->get_entities_by_dimension(-1,ents);
 
-  //For a cube, there should be exactly 2 triangles per face
-  int num_of_tris = tris.size();
+  int num_of_tris = 0;
+  for(unsigned int i=0; i < ents.size(); i++)
+    {
+      int temp;
+      iMesh::EntitySetHandle ent_handle = IBSH(ents[i]->mesh_handle());
+      mk->imesh_instance()->getNumOfTopo(ent_handle, iMesh_TRIANGLE, temp);
+      num_of_tris+=temp;
+      temp = 0;
+    }
+
+  //For a cube, there should be exactly 2 triangles per face, totaling 12 for the cube.
   CHECK_EQUAL(12, num_of_tris);
 
 }
