@@ -44,7 +44,9 @@ TESTS = test_edgemesher \
         test_qslimmesher \
         test_ebmesh \
         test_assygen \
-        test_postbl
+        test_postbl \
+	test_solidmesher
+
 
 if HAVE_QUADMESHER
 AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
@@ -99,7 +101,9 @@ test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesher_SOURCES = test_edgemesher.cpp
 if HAVE_DAGMC_MOAB
 test_make_watertight_SOURCES = test_make_watertight.cpp
+test_make_watertight_LDADD = $(top_builddir)/src/algs/make_watertight/libMakeWatertight.la
 endif
+test_solidmesher_SOURCES = test_solidmesher.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
 if HAVE_LPSOLVER
