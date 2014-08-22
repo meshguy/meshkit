@@ -25,6 +25,7 @@ std::string extension = ".stp";
 
 void read_cube_tris_test();
 void read_cube_curves_test();
+void read_cube_surfs_test();
 
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo);
 
@@ -57,6 +58,7 @@ int main(int argc, char **argv)
   int num_fail = 0;
   num_fail += RUN_TEST(read_cube_tris_test);
   num_fail += RUN_TEST(read_cube_curves_test);
+  num_fail += RUN_TEST(read_cube_surfs_test);
 
 #if HAVE_OCC
   return 0;
@@ -93,6 +95,19 @@ void read_cube_curves_test()
   int num_of_curves = ents.size();
 
   CHECK_EQUAL(12, num_of_curves);
+}
+
+void read_cube_surfs_test()
+{
+  
+  MEntVector ents;
+  
+  // there should be 6 surf (dim==1) ModelEnts for a cube
+  mk->get_entities_by_dimension(2,ents);
+
+  int num_of_surfs = ents.size();
+
+  CHECK_EQUAL(6, num_of_surfs);
 }
 
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
