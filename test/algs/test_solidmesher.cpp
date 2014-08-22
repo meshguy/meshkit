@@ -24,6 +24,9 @@ std::string extension = ".stp";
 
 
 void read_cube_tris_test();
+void read_cube_curves_test();
+
+int count_topo_for_dim( int dim, iMesh::EntityTopology topo);
 
 int main(int argc, char **argv) 
 {
@@ -50,9 +53,10 @@ int main(int argc, char **argv)
   mk->execute();
 
 
-
+  //RUN TESTS
   int num_fail = 0;
   num_fail += RUN_TEST(read_cube_tris_test);
+  num_fail += RUN_TEST(read_cube_curves_test);
 
 #if HAVE_OCC
   return 0;
@@ -69,23 +73,26 @@ int main(int argc, char **argv)
 
 void read_cube_tris_test()
 {
-
-  MEntVector ents;
-  mk->get_entities_by_dimension(-1,ents);
-
-  int num_of_tris = 0;
-  for(unsigned int i=0; i < ents.size(); i++)
-    {
-      int temp;
-      iMesh::EntitySetHandle ent_handle = IBSH(ents[i]->mesh_handle());
-      mk->imesh_instance()->getNumOfTopo(ent_handle, iMesh_TRIANGLE, temp);
-      num_of_tris+=temp;
-      temp = 0;
-    }
+  
+  // get the number of tris in the surface model ents
+  int num_of_tris = count_topo_for_dim( 2, iMesh_TRIANGLE);
 
   //For a cube, there should be exactly 2 triangles per face, totaling 12 for the cube.
   CHECK_EQUAL(12, num_of_tris);
 
+}
+
+void read_cube_curves_test()
+{
+  
+  MEntVector ents;
+  
+  // there should be 12 curve (dim==1) ModelEnts for a cube
+  mk->get_entities_by_dimension(1,ents);
+
+  int num_of_curves = ents.size();
+
+  CHECK_EQUAL(12, num_of_curves);
 }
 
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
@@ -94,11 +101,11 @@ int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
   MEntVector ents;
   mk->get_entities_by_dimension(dim, ents);
 
-  int counter;
+  int counter = 0;
 
   for(unsigned int i = 0; i < ents.size(); i++)
     {
-      int temp;
+      int temp = 0;
       iMesh::EntitySetHandle set_handle = IBSH(ents[i]->mesh_handle());
       mk->imesh_instance()->getNumOfTopo(set_handle, topo, temp);
 
