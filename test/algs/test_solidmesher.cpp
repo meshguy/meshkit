@@ -9,6 +9,7 @@
 #include "meshkit/SolidCurveMesher.hpp"
 #include "meshkit/ModelEnt.hpp"
 
+
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
@@ -87,3 +88,23 @@ void read_cube_tris_test()
 
 }
 
+int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
+{
+
+  MEntVector ents;
+  mk->get_entities_by_dimension(dim, ents);
+
+  int counter;
+
+  for(unsigned int i = 0; i < ents.size(); i++)
+    {
+      int temp;
+      iMesh::EntitySetHandle set_handle = IBSH(ents[i]->mesh_handle());
+      mk->imesh_instance()->getNumOfTopo(set_handle, topo, temp);
+
+      counter += temp;
+      temp = 0;
+    }
+
+  return counter;
+}
