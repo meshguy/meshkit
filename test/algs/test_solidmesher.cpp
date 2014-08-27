@@ -22,12 +22,16 @@ std::string extension = ".sat";
 std::string extension = ".stp";
 #endif
 
-
+// Basic Tests
 void read_cube_tris_test();
 void read_cube_curves_test();
 void read_cube_surfs_test();
 void read_cube_vols_test();
 void read_cube_vertex_pos_test();
+
+//Connectivity Tests
+void cube_verts_connectivity_test();
+
 
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo);
 
@@ -63,6 +67,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(read_cube_surfs_test);
   num_fail += RUN_TEST(read_cube_vols_test);
   num_fail += RUN_TEST(read_cube_vertex_pos_test);
+  num_fail += RUN_TEST(cube_verts_connectivity_test);
 
 #if HAVE_OCC
   return 0;
@@ -228,6 +233,28 @@ void read_cube_vertex_pos_test()
 
 }
 
+void cube_verts_connectivity_test()
+{
+
+  MEntVector verts;
+  mk->get_entities_by_dimension(0, verts);
+
+  MEntVector::iterator i;
+  for( i = verts.begin(); i != verts.end(); i++)
+    {
+      std::vector<iMesh::EntityHandle> adj_tris;
+      std::vector<int> dum;
+      iMesh::EntitySetHandle sh = IBSH((*i)->mesh_handle());
+      mk->imesh_instance()->getAdjEntities(sh, iBase_ALL_TYPES, iMesh_POINT, iBase_FACE, adj_tris, dum);
+
+      int num_adj_tris = adj_tris.size();
+      CHECK( num_adj_tris >=4 && num_adj_tris <=6);
+
+    }
+
+
+}
+
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
 {
 
@@ -248,3 +275,4 @@ int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
 
   return counter;
 }
+
