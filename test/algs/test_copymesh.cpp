@@ -13,8 +13,8 @@
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
-#define DEFAULT_TEST_FILE1 "c.exo"
-#define DEFAULT_TEST_FILE2 "d.exo"
+#define DEFAULT_TEST_FILE1 "c.h5m"
+#define DEFAULT_TEST_FILE2 "d.h5m"
 
 MKCore *mk;
 

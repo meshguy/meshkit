@@ -316,7 +316,7 @@ void mapping_test()
   //now, do the TFIMapping
   (MeshKit::TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
   mk->setup_and_execute();
-  mk->save_mesh("intassign.exo");
+  mk->save_mesh("intassign.h5m");
   //
   delete_ia_interface( ia_interface );
 }

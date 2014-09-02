@@ -79,6 +79,6 @@ int main(int argv, char* argc[])
   //now, do the TFIMapping
   (MeshKit::TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
   mk->setup_and_execute();
-  mk->save_mesh("intassign.exo");
+  mk->save_mesh("intassign.h5m");
   return 0;
 }

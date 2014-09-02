@@ -443,6 +443,7 @@ CCrgen::CCrgen()
   nst_flag = false;
   nsb_flag = false;
   nss_flag = false;
+  nssall_flag = false;
   nst_Id = 9997;
   nsb_Id = 9998;
   //  nss_Id = 9999;
@@ -1795,7 +1796,7 @@ int CCrgen::create_neumannset() {
   // Input:    none
   // Output:   none
   // ---------------------------------------------------------------------------
-  if (nss_flag == true || nsb_flag == true || nst_flag == true) {
+  if (nss_flag == true || nsb_flag == true || nst_flag == true || nssall_flag == true) {
       std::cout << "Creating NeumannSet." << std::endl;
 
       if (extrude_flag == true)
@@ -1926,12 +1927,6 @@ int CCrgen::create_neumannset() {
             }
         }
 
-      //        iMesh_setEntSetIntData( impl, set, ntag1, 99999, &err);
-      //        ERRORR("Trouble getting handle.", err);
-
-      //        iMesh_setEntSetIntData( impl, set, gtag1, 99999, &err);
-      //        ERRORR("Trouble getting handle.", err);
-
       if (set_DIM == 3) {
           if (nst_flag == true || nsb_flag == true) {
 
@@ -1955,13 +1950,14 @@ int CCrgen::create_neumannset() {
                   ERRORR("Trouble getting handle.", err);
                 }
             }
-          if (nssall_flag == true) {
-              iMesh_setEntSetIntData( impl, set, ntag1, nssall_Id, &err);
-              ERRORR("Trouble getting handle.", err);
+        }
+      // same for both 2D and 3D models
+      if (nssall_flag == true) {
+          iMesh_setEntSetIntData( impl, set, ntag1, nssall_Id, &err);
+          ERRORR("Trouble getting handle.", err);
 
-              iMesh_setEntSetIntData( impl, set, gtag1, nssall_Id, &err);
-              ERRORR("Trouble getting handle.", err);
-            }
+          iMesh_setEntSetIntData( impl, set, gtag1, nssall_Id, &err);
+          ERRORR("Trouble getting handle.", err);
         }
     }
   return iBase_SUCCESS;

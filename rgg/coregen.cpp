@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
           // create neumann sets on the core model
           /*********************************************/
           if((TheCore.nss_flag == true || TheCore.nsb_flag == true
-              || TheCore.nst_flag == true)){
+              || TheCore.nst_flag == true) || TheCore.nssall_flag == true){
               CClock ld_ns;
               err = TheCore.create_neumannset();
               ERRORR("Failed to create neumann set.", 1);
