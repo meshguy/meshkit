@@ -176,7 +176,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
 #elif defined(HAVE_OCC)
   //  OCC ENGINE
   //  if (m_szEngine == "occ"){
-  m_szGeomFile = m_szFile+".stp";
+  m_szGeomFile = m_szFile+".brep";
   //  }o
 #endif
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;

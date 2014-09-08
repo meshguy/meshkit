@@ -51,6 +51,7 @@ public:
   int shift_mn_ids(iBase_EntitySetHandle, int);
   int load_meshes();
   int load_meshes_parallel(const int, int);
+  int load_meshes_more_procs(const int, int);
   int distribute_mesh(const int,  int);
   int load_geometries();
   int read_inputs_phase1 ();
@@ -88,7 +89,9 @@ public:
   std::vector <int> bsameas;
   std::string prob_type, savefiles, info, minfo, same_as, reloading_mf;
   std::vector<std::string> files, all_meshfiles, mk_files;
-  std::vector<int> assm_meshfiles;
+  std::vector<int> assm_meshfiles,  size_mf, times_loaded;
+  std::vector<double> load_per_assm;
+  std::vector<int> rank_load;
   std::vector< std::vector<int> > assm_location;
   std::vector<std::vector<int> > position_core;
   std::vector<int> meshfile_proc;
@@ -98,6 +101,8 @@ public:
   std::vector<std::string> core_alias;
   std::vector<double> nsx, nsy, nsc;
   int num_nsside, ms_startid, ns_startid;
+  int nassys; // the number of mesh files
+
 private:
 
   CopyMesh **cm;
@@ -112,7 +117,6 @@ private:
   double pitch, pitchx, pitchy;
   bool global_ids, back_mesh;
   std::string outfile, mesh_info;
-  int nassys; // the number of mesh files
   int tot_assys; // total no. of assms forming core
   int set_DIM; // default is 3D
   double PII;
