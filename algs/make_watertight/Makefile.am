@@ -30,9 +30,9 @@ check_PROGRAMS =
 bin_PROGRAMS = make_watertight
 make_watertight_SOURCES = make_watertight.cpp 
 make_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
-make_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
+make_watertight_LDADD = libMakeWatertight.la -lmoab $(IMESH_LIBS) $(IGEOM_LIBS)
 
-libMakeWatertight_la_LIBADD = -ldagmc
+libMakeWatertight_la_LIBADD = -ldagmc -lmoab
 libMakeWatertight_la_DEPENDENCIES = 
 
 dumtest:

@@ -29,14 +29,14 @@ libMakeWatertight_la_include_HEADERS = \
 bin_PROGRAMS = make_watertight check_watertight
 make_watertight_SOURCES = make_watertight.cpp 
 make_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
-make_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
+make_watertight_LDADD = libMakeWatertight.la -lmoab $(IMESH_LIBS) $(IGEOM_LIBS)
 
 check_watertight_SOURCES = check_watertight.cpp
 check_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
-check_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
+check_watertight_LDADD = libMakeWatertight.la -lmoab $(IMESH_LIBS) $(IGEOM_LIBS)
 
 
-libMakeWatertight_la_LIBADD = -ldagmc
+libMakeWatertight_la_LIBADD = -ldagmc -lmoab
 libMakeWatertight_la_DEPENDENCIES = 
 
 dumtest:
