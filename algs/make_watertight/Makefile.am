@@ -8,6 +8,8 @@ noinst_LTLIBRARIES = libMakeWatertight.la
 # The directory in which to install headers
 libMakeWatertight_la_includedir = $(includedir)
 
+if HAVE_MOAB
+
 # The list of source files, and any header files that do not need to be installed
 libMakeWatertight_la_SOURCES = \
 	arc.cpp \
@@ -32,12 +34,10 @@ make_watertight_SOURCES = make_watertight.cpp
 make_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
 make_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
 
-libMakeWatertight_la_LIBADD = -ldagmc
+if HAVE_DAGMC_MOAB
+libMakeWatertight_la_LIBADD = $(MOAB_DAGMC_LIBS) $(MOAB_LIBS)
 libMakeWatertight_la_DEPENDENCIES = 
-
-dumtest:
-	cat $(IMESH_LIBDIR)/libdagmc.la
-	echo $(IMESH_INCLUDES)
+endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -46,7 +46,7 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
                -I$(top_srcdir)/algs \
                -I$(top_srcdir)/utils
 
-if HAVE_MOAB
+# include the define for MOAB
 AM_CPPFLAGS += -DMOAB
-endif
 
+endif

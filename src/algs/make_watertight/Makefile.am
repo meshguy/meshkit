@@ -2,6 +2,8 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 
+if HAVE_MOAB
+
 # Things to build
 noinst_LTLIBRARIES = libMakeWatertight.la 
 
@@ -35,13 +37,10 @@ check_watertight_SOURCES = check_watertight.cpp
 check_watertight_CXXFLAGS = -DTEST $(CXXFLAGS)
 check_watertight_LDADD = libMakeWatertight.la $(IMESH_LIBS) $(IGEOM_LIBS)
 
-
-libMakeWatertight_la_LIBADD = -ldagmc
+if HAVE_DAGMC_MOAB
+libMakeWatertight_la_LIBADD = $(MOAB_DAGMC_LIBS) $(MOAB_LIBS)
 libMakeWatertight_la_DEPENDENCIES = 
-
-dumtest:
-	cat $(IMESH_LIBDIR)/libdagmc.la
-	echo $(IMESH_INCLUDES)
+endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -50,8 +49,9 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
                -I$(top_srcdir)/algs \
                -I$(top_srcdir)/utils
 
-if HAVE_MOAB
+# include the define for MOAB
 AM_CPPFLAGS += -DMOAB
-endif
 
 LDADD = $(top_builddir)/src/libMeshKit.la
+
+endif

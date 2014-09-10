@@ -241,6 +241,9 @@ if test "xyes" = "x$HAVE_$2"; then
                       [$2_DEFINES=])
   $2_DIR=$itaps_dir 
   AC_SUBST($2_DIR)
+  AC_SUBST($2_LIBS)
+  AC_SUBST($2_INCLUDES)
+  AC_SUBST($2_LDFLAGS)
 fi
 
 if test "xyes" = "x$HAVE_$2"; then 
@@ -269,25 +272,31 @@ old_LDFLAGS="$LDFLAGS"
 old_CPPFLAGS="$CPPFLAGS"
 LDFLAGS="$LDFLAGS $IMESH_LDFLAGS"
 AC_LANG_PUSH([C++])
-AC_CHECK_LIB( [MOAB], [main], [HAVE_MOAB=yes],[HAVE_MOAB=no] )
-AM_CONDITIONAL( HAVE_MOAB, [test "xyes" == "x$HAVE_$2"] )
-AC_SUBST([HAVE_MOAB])
-if test "xyes" = "x$HAVE_MOAB"; then 
+AC_CHECK_LIB( [MOAB], [main], [enablemoab=yes; MOAB_LIBS="-L$IMESH_DIR/lib -lMOAB"],[enablemoab=no; MOAB_LIBS=""] )
+AM_CONDITIONAL( HAVE_MOAB, [test "xyes" == "x$enablemoab"] )
+AC_SUBST([enablemoab])
+if (test "$enablemoab" != "no"); then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_MOAB"
+  AC_SUBST([MOAB_LIBS])
 fi
 
 CPPFLAGS="$CPPFLAGS -I$IMESH_DIR/include"
-AC_CHECK_HEADER([moab/ParallelComm.hpp], [HAVE_PARALLEL_MOAB=yes], [HAVE_PARALLEL_MOAB=no])
-AM_CONDITIONAL(HAVE_PARALLEL_MOAB, [test "x$HAVE_PARALLEL_MOAB" = "xyes"])
-AC_SUBST([HAVE_PARALLEL_MOAB])
-if test "xyes" = "x$HAVE_PARALLEL_MOAB"; then 
+AC_CHECK_HEADER([moab/ParallelComm.hpp], [enablemoabparallel=yes], [enablemoabparallel=no])
+AM_CONDITIONAL(HAVE_PARALLEL_MOAB, [test "x$enablemoabparallel" == "xyes"])
+AC_SUBST([enablemoabparallel])
+if (test "$enablemoabparallel" != "no"); then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_PARALLEL_MOAB"
-  DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH test/parallel       "
+  DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH test/parallel"
 fi
 
-AC_CHECK_HEADER([DagMC.hpp], [HAVE_DAGMC_MOAB=yes], [HAVE_DAGMC_MOAB=no])
-AM_CONDITIONAL(HAVE_DAGMC_MOAB, [test "x$HAVE_DAGMC_MOAB" = "xyes"])
-AC_SUBST([HAVE_DAGMC_MOAB])
+AC_CHECK_HEADER([DagMC.hpp], [enablemoabdagmc=yes], [enablemoabdagmc=no])
+if (test "$enablemoabdagmc" != "no"); then
+  AC_CHECK_LIB([dagmc], [main], [MOAB_DAGMC_LIBS="-L$IMESH_DIR/lib -ldagmc"], [enablemoabdagmc=no; MOAB_DAGMC_LIBS=""])
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_DAGMC_MOAB"
+  AC_SUBST([MOAB_DAGMC_LIBS])
+fi
+AM_CONDITIONAL(HAVE_DAGMC_MOAB, [test "x$enablemoabdagmc" = "xyes"])
+AC_SUBST([enablemoabdagmc])
 
 LIBS="$old_LIBS"
 LDFLAGS="$old_LDFLAGS"
