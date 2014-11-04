@@ -186,7 +186,7 @@ class iMesh : public iMeshBase {
    inline Error getEnt2ndAdj( EntityHandle handle, 
                               EntityType bridge_entity_type,
                               EntityType type_requested,
-                              std::vector<EntityHandle> adj_entities_out ) const;                   
+                              std::vector<EntityHandle>& adj_entities_out ) const;                   
    inline Error getEntArr2ndAdj( const EntityHandle* entity_handles,
                                   int entity_handles_size,
                                   EntityType order_key,
@@ -757,7 +757,7 @@ inline iMesh::Error
 iMesh::getEnt2ndAdj( EntityHandle handle, 
                      EntityType bridge_entity_type,
                      EntityType type_requested,
-                     std::vector<EntityHandle> adj_entities_out ) const
+                     std::vector<EntityHandle>& adj_entities_out ) const
 {
   if (adj_entities_out.capacity() == 0) 
     adj_entities_out.resize(12);
