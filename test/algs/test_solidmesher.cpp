@@ -31,6 +31,7 @@ void read_cube_vertex_pos_test();
 
 //Connectivity Tests
 void cube_verts_connectivity_test();
+void cube_tris_connectivity_test();
 
 
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo);
@@ -68,6 +69,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(read_cube_vols_test);
   num_fail += RUN_TEST(read_cube_vertex_pos_test);
   num_fail += RUN_TEST(cube_verts_connectivity_test);
+  num_fail += RUN_TEST(cube_tris_connectivity_test);
 
 #if HAVE_OCC
   return 0;
@@ -252,6 +254,48 @@ void cube_verts_connectivity_test()
 
     }
 
+}
+
+
+void cube_tris_connectivity_test()
+{
+  
+  //get all triangles from the model ents
+  MEntVector surfs; 
+  mk->get_entities_by_dimension(2, surfs);
+  
+  int expected_num_of_adj_tris = 3;
+  
+  MEntVector::iterator i; 
+  
+  for( i = surfs.begin(); i != surfs.end(); i++) 
+    {
+      //get the triangles for each surface
+      std::vector<int> dum;
+      iMesh::EntitySetHandle sh = IBSH((*i)->mesh_handle()); 
+      std::vector<iMesh::EntityHandle> surf_tris;
+      mk->imesh_instance()->getEntities( sh, iBase_FACE, iMesh_TRIANGLE, surf_tris); 
+      
+      //each triangle should be adjacent to exactly 3 other triangles 
+      for( std::vector<iMesh::EntityHandle>::iterator j = surf_tris.begin();
+	   j != surf_tris.end(); j++)
+	{
+	  std::vector<iMesh::EntityHandle> adjacent_tris; 
+	  mk->imesh_instance()->getEnt2ndAdj( *j, iBase_EDGE, iBase_FACE, adjacent_tris); 
+	  
+
+	  for(unsigned int k = 0; k < adjacent_tris.size(); k++) 
+	    {
+
+	      iMesh::EntityTopology topo; 
+	      mk->imesh_instance()->getEntTopo(adjacent_tris[k], topo); 
+	      std::cout << topo <<std::endl; 
+
+	    }
+
+	  CHECK(expected_num_of_adj_tris == int(adjacent_tris.size())); 
+	}
+    }
 
 }
 
