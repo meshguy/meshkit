@@ -35,7 +35,7 @@ void CNrgen::Banner (std::ostream& OF)
   std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
   std::cout << "\t\t\t\t        2009-2010         " << '\n';
   std::cout << "\t\t---------------------------------------------------------" << '\n';
-  std::cout << "\nsee README file for using the program and details on various cards.\n"<< std::endl;
+  std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
 }
 
 
@@ -80,7 +80,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
                     case 'h':
                       {
                         std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-                        std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl;
+                        std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
                         std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;
                         std::cout << "        -j create journal file only" << std::endl;
                         std::cout << "        -h print help" << std::endl;
@@ -94,7 +94,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
         }
       else if (1 == argc){
           std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-          std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl;
+          std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
           std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;
           std::cout << "        -t print timing and memory usage info in each step" << std::endl;
           std::cout << "        -j create journal file only" << std::endl;

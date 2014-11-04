@@ -598,7 +598,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
                       << "\nInstruction on writing coregen input file can be found at: "
                       << std::endl;
                   std::cout
-                      << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                      << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                       << std::endl;
                   exit(0);
                 }
@@ -653,7 +653,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
                                 << "\nInstruction on writing coregen input file can also be found at: "
                                 << std::endl;
                             std::cout
-                                << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                                << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                                 << std::endl;
                             exit(0);
                             break;
@@ -694,7 +694,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
                   << "\nInstruction on writing coregen input file can be found at: "
                   << std::endl;
               std::cout
-                  << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                  << "         http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                   << std::endl;
             }
           file_input.clear();
@@ -1484,6 +1484,8 @@ int CCrgen::banner()
   std::cout
       << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
       << '\n';
+  std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
+
   return iBase_SUCCESS;
 }
 
