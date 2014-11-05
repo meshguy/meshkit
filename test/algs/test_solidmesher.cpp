@@ -32,9 +32,12 @@ void read_cube_vertex_pos_test();
 //Connectivity Tests
 void cube_verts_connectivity_test();
 void cube_tris_connectivity_test();
+void cube_tri_curve_coincidence_test();
 
 
+//Other functions
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo);
+void match_tri_edges_w_curves( std::vector<iMesh::EntityHandle> edges, MEntVector curves);
 
 int main(int argc, char **argv) 
 {
@@ -297,6 +300,65 @@ void cube_tris_connectivity_test()
 	}
     }
 
+}
+
+void cube_tri_curve_coincidence_test()
+{
+  //get all curves from the mesh 
+  MEntVector curves; 
+  mk->get_entities_by_dimension(1, curves); 
+  
+  //get all triangles from the mesh
+  std::vector<iMesh::EntityHandle> tris; 
+  mk->imesh_instance()->getEntities(0, iBase_FACE, iMesh_TRIANGLE, tris); 
+
+  std::vector<iMesh::EntityHandle>::iterator i; 
+  for( i = tris.begin(); i != tris.end(); i++)
+    {
+
+      //get the edges for this triangle 
+      std::vector<iMesh::EntityHandle> tri_edges;
+      mk->imesh_instance()->getEntAdj( *i, iBase_EDGE, tri_edges); 
+      //make sure we've retrieved two edges for this triangle 
+      CHECK( 2 == int(tri_edges.size()) ); 
+      match_tri_edges_w_curves( tri_edges, curves ); 
+      
+    }
+  
+
+
+}
+
+void match_tri_edges_w_curves( std::vector<iMesh::EntityHandle> edges, MEntVector curves)
+{
+
+  int match_counter = 0; 
+  int num_of_tri_edges = edges.size(); 
+  CHECK(num_of_tri_edges);
+
+  for(std::vector<iMesh::EntityHandle>::iterator i = edges.begin(); 
+      i != edges.end(); i++)
+    {
+      for(MEntVector::iterator j = curves.begin(); j != curves.end(); 
+	  j++)
+	{
+	  //get the curve edges (there should be only one per curve for a cube)
+	  iMesh::EntitySetHandle sh = IBSH((*j)->mesh_handle());
+	  std::vector<iMesh::EntityHandle> cedges;
+	  mk->imesh_instance()->getEntities( sh, iBase_EDGE, iMesh_LINE_SEGMENT, cedges); 
+
+	  CHECK( 1 == int(cedges.size()) );
+
+	  iMesh::EntityHandle curve_edge_handle = cedges[0];
+	  iMesh::EntityHandle tri_edge_handle = *i;
+	  if( tri_edge_handle == curve_edge_handle ) match_counter++;
+	}
+
+      
+    }
+
+  //make sure we found a match for each triangle edge to a curve edge
+  CHECK( num_of_tri_edges == match_counter ); 
 }
 
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
