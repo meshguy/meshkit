@@ -62,7 +62,9 @@ class iMesh : public iMeshBase {
     
     typedef AdjacencyCost (*AdjTableType)[4];
     inline AdjTableType getAdjTable();
-    
+  
+    inline Error setAdjTable( int* adj_table, int table_size);
+
     inline Error getNumOfType( EntitySetHandle set, EntityType type, int& count_out  ) const;
     
     inline Error getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out ) const;
@@ -315,9 +317,22 @@ iMesh::getDfltStorage() const
 
 inline iMesh::AdjTableType iMesh::getAdjTable()
 {
+  cacheAdjTable(); //retrieve the most up-to-date table
   return (iBase_SUCCESS == adjTableErr) ? adjTable : 0;
 }
   
+
+inline iMesh::Error 
+iMesh::setAdjTable( int adj_table[], int table_size)
+{
+
+  int err; 
+  iMesh_setAdjTable( mInstance, adj_table, table_size, &err);
+  
+  return (Error)err;
+
+}
+
 inline iMesh::Error
 iMesh::getNumOfType( EntitySetHandle set, EntityType type, int& count_out  ) const
 {
