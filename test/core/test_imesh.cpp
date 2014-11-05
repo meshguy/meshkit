@@ -69,7 +69,7 @@ void test_Adj()
   //now start checking the adjacencies
   int expected_num_of_adj = 3; 
 
-  
+  //check first adj
   std::vector<iMesh::EntityHandle>::iterator i; 
   for( i = tris.begin(); i != tris.end(); i++)
     {
@@ -83,9 +83,28 @@ void test_Adj()
       mk->imesh_instance()->getEntAdj( *i, iBase_EDGE, adj); 
       CHECK( expected_num_of_adj == int(adj.size()) ); 
       
-      
-  
-}
+    }
+
+  //check 2nd adj
+  for( i = tris.begin(); i != tris.end(); i++)
+    {
+      std::vector<iMesh::EntityHandle> adj; 
+      //each triangle should be adjacent to three other triangles via the edges 
+      adj.clear(); 
+      mk->imesh_instance()->getEnt2ndAdj( *i, iBase_EDGE, iBase_FACE, adj);
+
+      //make sure these are all triangles
+      std::vector<iMesh::EntityHandle>::iterator j; 
+      for( j = adj.begin(); j != adj.end(); j++) 
+	{
+	  iMesh::EntityTopology topo; 
+	  mk->imesh_instance()->getEntTopo( *j, topo); 
+	  CHECK( iMesh_TRIANGLE == topo ); 
+	}
+
+      CHECK( expected_num_of_adj == int(adj.size()) );
+
+    }
 
 }
 
