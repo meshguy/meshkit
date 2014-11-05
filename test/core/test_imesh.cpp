@@ -10,6 +10,8 @@ using namespace MeshKit;
 MKCore *mk; 
 
 void test_Adj(); 
+void test_setAdjTable();
+
 
 int main(int argc, char **argv) 
 {
@@ -19,6 +21,7 @@ int main(int argc, char **argv)
   int num_fail = 0; 
   #ifdef HAVE_MOAB 
   num_fail+= RUN_TEST(test_Adj); 
+  num_fail+= RUN_TEST(test_setAdjTable);
   #endif
   return num_fail; 
 }
@@ -91,10 +94,10 @@ void test_setAdjTable()
 
 
   //setup the test adjacency table
-  int table_vals[16] = { 1, 0, 0, 0, 
-                         0, 1, 0, 0,
-                         0, 0, 1, 0,
-                         0, 0, 0, 0};
+  int table_vals[16] = { 1, 1, 1, 1, 
+                         1, 1, 1, 1,
+                         1, 1, 1, 1,
+                         1, 1, 1, 1};
   int table_size = 16;     
 
   //set the adjacency table for the iMesh instance
