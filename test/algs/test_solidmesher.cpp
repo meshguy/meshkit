@@ -33,7 +33,7 @@ void read_cube_vertex_pos_test();
 void cube_verts_connectivity_test();
 void cube_tris_connectivity_test();
 void cube_tri_curve_coincidence_test();
-
+void cube_edge_adjacencies_test(); 
 
 //Other functions
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo);
@@ -360,6 +360,51 @@ void match_tri_edges_w_curves( std::vector<iMesh::EntityHandle> edges, MEntVecto
   //make sure we found a match for each triangle edge to a curve edge
   CHECK( num_of_tri_edges == match_counter ); 
 }
+
+void cube_edge_adjacencies_test()
+{
+
+  //get all the curves of the cube
+  MEntVector curves;
+  mk->get_entities_by_dimension( 1, curves); 
+  
+  for(MEntVector::iterator i = curves.begin(); i != curves.end(); i++)
+    {
+
+      //get the iMesh set handle for the curve
+      iMesh::EntitySetHandle sh = IBSH( (*i)->mesh_handle() ); 
+
+      //get the curve edges
+      std::vector<iMesh::EntityHandle> curve_edges; 
+      mk->imesh_instance()->getEntities( sh, iBase_EDGE, iMesh_LINE_SEGMENT, curve_edges); 
+      
+      //for a cube there should only be one edge per curve
+      CHECK( 1 == int(curve_edges.size()) );
+
+      //check that each edge is adjacent to no more than 2 triangles 
+      for(unsigned int i = 0; i < curve_edges.size(); i++) 
+	{
+	  
+	  //get the adjacent triangles to the curve edge 
+	  std::vector<iMesh::EntityHandle> adj_tris; 
+	  mk->imesh_instance()->getEntAdj( curve_edges[i], iBase_FACE, adj_tris ); 
+	  
+	  //check that the entities returned are triangles 
+	  for( unsigned int j = 0; j < adj_tris.size(); j++)
+	    {
+	      iMesh::EntityTopology topo; 
+	      mk->imesh_instance()->getEntTopo( adj_tris[j], topo); 
+	      CHECK( iMesh_TRIANGLE == topo ); 
+	    }
+
+	  //check that there are no more than two triangles adjacent to this edge
+	  CHECK( 2 <= int(adj_tris.size()) ); 
+
+	} //end curve edges loop
+    } // end curves loop
+
+}
+
 
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo)
 {
