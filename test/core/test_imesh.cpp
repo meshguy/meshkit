@@ -32,8 +32,6 @@ void test_Adj()
   //create a new tet in the mesh
   iMesh::EntityHandle v1, v2, v3, v4; 
 
-  iMesh::AdjTableType adjTable =  mk->imesh_instance()->getAdjTable();
-
   //setup the adjacency table values such that intermediate dimension entities are created
   int table_vals[16] = { 1, 0, 0, 0, 
                          0, 1, 0, 0,
@@ -122,7 +120,7 @@ void test_setAdjTable()
   //set the adjacency table for the iMesh instance
   mk->imesh_instance()->setAdjTable( table_vals, table_size ); 
   
-  //get the adjacancy table back and make sure there aren't any zero-values
+  //get the adjacancy table back and make sure all the values are non-zero
   iMesh::AdjTableType adjTable = mk->imesh_instance()->getAdjTable();
 
   for( unsigned int i = 0; i < 4; i++)
