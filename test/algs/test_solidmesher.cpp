@@ -34,6 +34,7 @@ void cube_verts_connectivity_test();
 void cube_tris_connectivity_test();
 void cube_tri_curve_coincidence_test();
 void cube_edge_adjacencies_test(); 
+void cube_tri_verts_test(); 
 
 //Other functions
 int count_topo_for_dim( int dim, iMesh::EntityTopology topo);
@@ -73,6 +74,8 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(read_cube_vertex_pos_test);
   num_fail += RUN_TEST(cube_verts_connectivity_test);
   num_fail += RUN_TEST(cube_tris_connectivity_test);
+  num_fail += RUN_TEST(cube_edge_adjacencies_test); 
+  num_fail += RUN_TEST(cube_tri_verts_test); 
 
 #if HAVE_OCC
   return 0;
@@ -402,6 +405,30 @@ void cube_edge_adjacencies_test()
 
 	} //end curve edges loop
     } // end curves loop
+
+}
+
+void cube_tri_verts_test()
+{
+
+  //get all of the triangles in the instance 
+  std::vector<iMesh::EntityHandle> tris; 
+  mk->imesh_instance()->getEntities( 0, iBase_FACE, iMesh_TRIANGLE, tris); 
+
+  std::vector<iMesh::EntityHandle>::iterator i; 
+  for( i = tris.begin(); i != tris.end(); i++)
+    { 
+      //get the triangle vertices
+      std::vector<iMesh::EntityHandle> tri_verts;
+      mk->imesh_instance()->getEntAdj( *i, iBase_VERTEX, tri_verts); 
+
+      //check that there are three of them 
+      CHECK( 3 == int(tri_verts.size()) ); 
+      //check that none of the vertices are the same
+      CHECK( tri_verts[0] != tri_verts[1] ); 
+      CHECK( tri_verts[1] != tri_verts[2] ); 
+      CHECK( tri_verts[2] != tri_verts[0] ); 
+    }
 
 }
 
