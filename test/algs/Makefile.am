@@ -45,7 +45,8 @@ TESTS = test_edgemesher \
         test_ebmesh \
         test_assygen \
         test_postbl \
-	test_solidmesher
+	test_solidmesher \
+	test_solidmesher_senses
 
 
 if HAVE_QUADMESHER
@@ -104,6 +105,7 @@ test_make_watertight_SOURCES = test_make_watertight.cpp
 test_make_watertight_LDADD = $(top_builddir)/src/algs/make_watertight/libMakeWatertight.la
 endif
 test_solidmesher_SOURCES = test_solidmesher.cpp
+test_solidmesher_senses_SOURCES = test_solidmesher_senses.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
 if HAVE_LPSOLVER
