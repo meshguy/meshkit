@@ -127,79 +127,79 @@ void cylcube_curve_senses_test()
 }
 
 //Loads two vectors with reference curve and curve_sense data
-void load_sat_curve_sense_data( ModelEnt* curve, std::vector<int>& curve_ids_out, std::vector<int>& senses_out )
+void load_sat_curve_sense_data( ModelEnt* curve, std::vector<int>& surf_ids_out, std::vector<int>& senses_out )
 {
 
   int curve_id = geom_id_by_handle( curve->mesh_handle() );
   switch(curve_id)
   {
     case 1:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 2:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(5);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(5);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 3:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(4);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(4);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 4:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(3);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(3);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 5:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 6:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(3);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(3);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 7:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(4);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(4);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 8:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(5);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(5);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 9:
-          curve_ids_out.push_back(3); curve_ids_out.push_back(4);
+          surf_ids_out.push_back(3); surf_ids_out.push_back(4);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 10:
-          curve_ids_out.push_back(3); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(3); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
           break;
 
     case 11:
-          curve_ids_out.push_back(4); curve_ids_out.push_back(5);
+          surf_ids_out.push_back(4); surf_ids_out.push_back(5);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 12:
-          curve_ids_out.push_back(5); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(5); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 13:
-      curve_ids_out.push_back(7); curve_ids_out.push_back(8);
+      surf_ids_out.push_back(7); surf_ids_out.push_back(8);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
 
     case 14:
-      curve_ids_out.push_back(7); curve_ids_out.push_back(9);
+      surf_ids_out.push_back(7); surf_ids_out.push_back(9);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
     default:
@@ -212,95 +212,95 @@ void load_sat_curve_sense_data( ModelEnt* curve, std::vector<int>& curve_ids_out
 
 
 //Loads two vectors with reference curve and curve_sense data
-void load_stp_curve_sense_data( ModelEnt* curve, std::vector<int>& curve_ids_out, std::vector<int>& senses_out )
+void load_stp_curve_sense_data( ModelEnt* curve, std::vector<int>& surf_ids_out, std::vector<int>& senses_out )
 {
 
   int curve_id = geom_id_by_handle( curve->mesh_handle() );
   switch(curve_id)
   {
     case 1:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 2:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(5);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(5);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 3:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(4);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(4);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 4:
-          curve_ids_out.push_back(1); curve_ids_out.push_back(3);
+          surf_ids_out.push_back(1); surf_ids_out.push_back(3);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 5:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 6:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(3);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(3);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 7:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(4);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(4);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 8:
-          curve_ids_out.push_back(2); curve_ids_out.push_back(5);
+          surf_ids_out.push_back(2); surf_ids_out.push_back(5);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 9:
-          curve_ids_out.push_back(3); curve_ids_out.push_back(4);
+          surf_ids_out.push_back(3); surf_ids_out.push_back(4);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 10:
-          curve_ids_out.push_back(3); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(3); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
           break;
 
     case 11:
-          curve_ids_out.push_back(4); curve_ids_out.push_back(5);
+          surf_ids_out.push_back(4); surf_ids_out.push_back(5);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 12:
-          curve_ids_out.push_back(5); curve_ids_out.push_back(6);
+          surf_ids_out.push_back(5); surf_ids_out.push_back(6);
           senses_out.push_back(SENSE_FORWARD); senses_out.push_back(SENSE_REVERSE);
           break;
 
     case 13:
-      curve_ids_out.push_back(7); curve_ids_out.push_back(8);
+      surf_ids_out.push_back(7); surf_ids_out.push_back(8);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
 
     case 14:
-      curve_ids_out.push_back(7); curve_ids_out.push_back(9);
+      surf_ids_out.push_back(7); surf_ids_out.push_back(9);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
     case 15:
-      curve_ids_out.push_back(7); curve_ids_out.push_back(8);
+      surf_ids_out.push_back(7); surf_ids_out.push_back(8);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
     case 16:
-      curve_ids_out.push_back(7); curve_ids_out.push_back(10);
+      surf_ids_out.push_back(7); surf_ids_out.push_back(10);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
     case 17:
-      curve_ids_out.push_back(8); curve_ids_out.push_back(10);
+      surf_ids_out.push_back(8); surf_ids_out.push_back(10);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
     case 18:
-      curve_ids_out.push_back(8); curve_ids_out.push_back(9);
+      surf_ids_out.push_back(8); surf_ids_out.push_back(9);
       senses_out.push_back(SENSE_REVERSE); senses_out.push_back(SENSE_FORWARD);
       break;
     default:
