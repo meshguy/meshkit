@@ -1891,7 +1891,7 @@ int CCrgen::create_neumannset() {
 
       int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
       double z1 = 0.0;
-      iBase_TagHandle ntag1, gtag1;
+      iBase_TagHandle ntag1, gtag1, nametag1;
       iBase_EntityHandle *ents = NULL;
       iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
       std::vector<iBase_EntitySetHandle> set_side;
@@ -1909,6 +1909,8 @@ int CCrgen::create_neumannset() {
         }
       ERRORR("Trouble getting entities for specifying neumannsets via skinner.", err);
 
+      // assign a name to the tag
+      const char *ch_name1 = "NAME";
       // get tag handle
       const char *tag_neumann1 = "NEUMANN_SET";
       const char *global_id1 = "GLOBAL_ID";
@@ -1917,6 +1919,9 @@ int CCrgen::create_neumannset() {
       ERRORR("Trouble getting handle.", err);
 
       iMesh_getTagHandle(impl, global_id1, &gtag1, &err, 9);
+      ERRORR("Trouble getting handle.", err);
+
+      iMesh_getTagHandle(impl, ch_name1, &nametag1, &err, 4);
       ERRORR("Trouble getting handle.", err);
 
       iMesh_createEntSet(impl,0, &set, &err); // for all other sides
@@ -2023,10 +2028,18 @@ int CCrgen::create_neumannset() {
               iMesh_setEntSetIntData( impl, set_z1, gtag1, nst_Id, &err);
               ERRORR("Trouble getting handle.", err);
 
+              std::string name1 = "core_top_ss";
+              iMesh_setEntSetData( impl, set_z1, nametag1, name1.c_str(), 11, &err);
+              ERRORR("Trouble getting handle.", err);
+
               iMesh_setEntSetIntData( impl, set_z2, ntag1, nsb_Id, &err);
               ERRORR("Trouble getting handle.", err);
 
               iMesh_setEntSetIntData( impl, set_z2, gtag1, nsb_Id, &err);
+              ERRORR("Trouble getting handle.", err);
+
+              std::string name2 = "core_bottom_ss";
+              iMesh_setEntSetData( impl, set_z2, nametag1, name2.c_str(), 14, &err);
               ERRORR("Trouble getting handle.", err);
 
               for(int j=0; j<num_nsside; j++){
@@ -2034,6 +2047,10 @@ int CCrgen::create_neumannset() {
                   ERRORR("Trouble getting handle.", err);
 
                   iMesh_setEntSetIntData( impl, set_side[j], gtag1, nss_Id[j], &err);
+                  ERRORR("Trouble getting handle.", err);
+
+                  std::string name3 = "side" +j;
+                  iMesh_setEntSetData( impl, set_side[j], nametag1, name3.c_str(), 8, &err);
                   ERRORR("Trouble getting handle.", err);
                 }
             }
@@ -2044,6 +2061,10 @@ int CCrgen::create_neumannset() {
           ERRORR("Trouble getting handle.", err);
 
           iMesh_setEntSetIntData( impl, set, gtag1, nssall_Id, &err);
+          ERRORR("Trouble getting handle.", err);
+
+          std::string name = "all_sides";
+          iMesh_setEntSetData( impl, set, nametag1, name.c_str(), 9, &err);
           ERRORR("Trouble getting handle.", err);
         }
     }
