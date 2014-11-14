@@ -127,8 +127,12 @@ void test_setAdjTable()
 
   for( unsigned int i = 0; i < 4; i++)
     for(unsigned int j = 0; j < 4; j++)
-      CHECK( 0 != adjTable[i][j] ); 
-
+      {
+	{
+	  if( i == j ) CHECK( iBase_AVAILABLE == adjTable[i][j] );
+	  else CHECK( iBase_ALL_ORDER_1 == adjTable[i][j] );
+	}
+      }
 
 
 }
