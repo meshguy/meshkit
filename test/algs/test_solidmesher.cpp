@@ -77,11 +77,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(cube_edge_adjacencies_test); 
   num_fail += RUN_TEST(cube_tri_verts_test); 
 
-#if HAVE_OCC
-  return 0;
-#else
   return num_fail;
-#endif
 }
 
 

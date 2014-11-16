@@ -69,13 +69,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(cylcube_curve_senses_test);
 
 
-
-
-#if HAVE_OCC
-  return 0;
-#else
   return num_fail;
-#endif
 }
 
 void cylcube_curve_senses_test()
