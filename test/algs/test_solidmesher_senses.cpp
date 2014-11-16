@@ -27,11 +27,15 @@ std::string extension = ".stp";
 
 //test functions 
 void cylcube_curve_senses_test();
+void cylcube_surf_senses_test();
+
 
 //support functions 
 int geom_id_by_handle( moab::EntityHandle ent );
 void load_sat_curve_sense_data( ModelEnt* curve, std::vector<int>& curve_ids_out, std::vector<int>& senses_out );
 void load_stp_curve_sense_data( ModelEnt* curve, std::vector<int>& curve_ids_out, std::vector<int>& senses_out );
+void load_sat_surf_sense_data( ModelEnt *surf, std::vector<int>& vol_ids_out, std::vector<int>& senses_out );
+void load_stp_surf_sense_data( ModelEnt *surf, std::vector<int>& vol_ids_out, std::vector<int>& senses_out );
 void check_sense_data( std::vector<moab::EntityHandle> wrt_ents, std::vector<int> senses, 
 		       std::vector<int> known_wrt_ids, std::vector<int> known_senses );
 
@@ -124,6 +128,173 @@ void cylcube_curve_senses_test()
       //check that each surf and sense has a match in our reference data
 
     } 
+}
+
+void cylcube_surf_senses_test()
+{
+
+  MEntVector surfs;
+  
+  mk->get_entities_by_dimension( 2, surfs ); 
+
+  //make sure we've retrieved the right number of surfaces for the model
+#ifdef HAVE_OCC
+  CHECK_EQUAL( 10, int(surfs.size()) ); 
+#else
+  CHECK_EQUAL( 9, int(surfs.size()) ); 
+#endif
+
+  //Create a Geomtopotool and declare containers for sense data
+  moab::GeomTopoTool gt( mk->moab_instance() );
+  moab::ErrorCode rval;
+  std::vector<moab::EntityHandle> vols; 
+  std::vector<int> senses;
+  std::vector<int> known_volume_ids; 
+  std::vector<int> known_senses; 
+
+  for( unsigned int i = 0; i < surfs.size(); i++)
+    {
+      //clear out the old containers from the previous surface
+      vols.clear();
+      senses.clear();
+
+      moab::EntityHandle sh = surfs[i]->mesh_handle(); 
+
+      rval = gt.get_senses( sh, vols, senses);
+      CHECK_ERR(rval);
+      
+      //clear previous reference data
+      known_volume_ids.clear();
+      known_senses.clear(); 
+      //Load the known surface to volume sense data
+#ifdef HAVE_OCC
+      load_stp_surf_sense_data( surfs[i], known_volume_ids, known_senses);
+#else
+      load_sat_surf_sense_data( surfs[i], known_volume_ids, known_senses);
+#endif
+
+      check_sense_data( vols, senses, known_volume_ids, known_senses);
+    }
+}
+
+
+//Loads reference surface to volume sense data into the reference vectors
+void load_sat_surf_sense_data( ModelEnt *surf, std::vector<int>& vol_ids_out, std::vector<int>& senses_out ){
+
+  int surf_id = geom_id_by_handle( surf->mesh_handle() );
+  switch(surf_id)
+  {
+    case 1:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 2:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 3:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 4:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 5:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 6:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 7:
+          vol_ids_out.push_back(2);
+          senses_out.push_back(SENSE_FORWARD);
+          break;
+  
+    case 8:
+          vol_ids_out.push_back(2);
+          senses_out.push_back(SENSE_FORWARD);
+          break;
+
+    case 9:
+          vol_ids_out.push_back(2);
+          senses_out.push_back(SENSE_FORWARD);
+          break;
+    default:
+      std::cout << "Could not match the surface id to sense data." << std::endl;
+      CHECK(false);
+
+   }
+
+}
+
+//Loads reference surface to volume sense data into the reference vectors
+void load_stp_surf_sense_data( ModelEnt *surf, std::vector<int>& vol_ids_out, std::vector<int>& senses_out ){
+
+  int surf_id = geom_id_by_handle( surf->mesh_handle() );
+  switch(surf_id)
+  {
+    case 1:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 2:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 3:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 4:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 5:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 6:
+          vol_ids_out.push_back(1);
+          senses_out.push_back(SENSE_FORWARD); 
+          break;
+
+    case 7:
+          vol_ids_out.push_back(2);
+          senses_out.push_back(SENSE_FORWARD);
+          break;
+  
+    case 8:
+          vol_ids_out.push_back(2);
+          senses_out.push_back(SENSE_FORWARD);
+          break;
+
+    case 9:
+          vol_ids_out.push_back(2);
+          senses_out.push_back(SENSE_FORWARD);
+          break;
+
+    case 10:
+          vol_ids_out.push_back(2);
+          senses_out.push_back(SENSE_FORWARD);
+          break;
+    default:
+      std::cout << "Could not match surface id to sense data." << std::endl;
+      CHECK(false);
+   }
 }
 
 //Loads two vectors with reference curve and curve_sense data
