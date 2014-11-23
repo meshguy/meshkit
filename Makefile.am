@@ -18,6 +18,9 @@ if ENABLE_rgg
   SUBDIRS += rgg
   AM_CPPFLAGS += -I$(top_srcdir)/rgg
 endif
+if ENABLE_quadmesher
+  AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
+endif
 if ENABLE_src
   SUBDIRS += src
   AM_CPPFLAGS += -I$(top_srcdir)/src 

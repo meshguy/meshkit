@@ -361,13 +361,21 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
                          [ENABLE_TOOLS=$enableval],[ENABLE_TOOLS=] )
   # Individual tools
 MK_OPTIONAL_TOOL([algs],   [yes])
+MK_OPTIONAL_TOOL([quadmesher],   [no])
 MK_OPTIONAL_TOOL([rgg],    [yes])
 MK_OPTIONAL_TOOL([utils],  [yes])
 MK_OPTIONAL_TOOL([src],    [yes])
 MK_OPTIONAL_TOOL([python], [no])
 MK_OPTIONAL_TOOL([intassign], [no])
 
-
+################################################################################
+#                           QuadMesher
+################################################################################
+if test "x${ENABLE_quadmesher}" != "xno"; then
+  AC_MSG_CHECKING([if quadmesher support is enabled])
+fi
+# make the conditional quadmesher
+AM_CONDITIONAL(HAVE_QUADMESHER, [test "x$HAVE_QUADMESHER" = "xyes"])
 ################################################################################
 #                           CAMAL
 ################################################################################
@@ -916,7 +924,6 @@ AM_CONDITIONAL(HAVE_INTASSIGN, [test "x$HAVE_IPOPT" = "xyes"])
 if test "xyes" = "x$HAVE_IPOPT"; then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_INTASSIGN"
 fi
-
 ################################################################################
 #                           Mesquite
 ################################################################################

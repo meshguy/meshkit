@@ -24,7 +24,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/PostBL \
                -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/algs/AssyGen \
-               -I$(top_srcdir)/src/algs/QuadMesher \
                -I$(top_srcdir)/src/algs/IntervalAssignment \
                -I$(top_srcdir)/src/extern/triangle \
 	       -I$(top_srcdir)/src/algs/make_watertight \
@@ -47,6 +46,10 @@ TESTS = test_edgemesher \
         test_assygen \
         test_postbl
 
+if HAVE_QUADMESHER
+TESTS += test_jaalquad
+TESTS += test_quadmeshcleanup
+endif
 if HAVE_LPSOLVER
 TESTS += test_submapping
 endif
@@ -87,8 +90,10 @@ endif
 #hamiltonian_SOURCES = hamiltonian.cpp
 #qualestm_SOURCES = qualestm.cpp
 #SimpleTri2Quad_SOURCES = SimpleTri2Quad.cpp
+if HAVE_QUADMESHER
 test_quadmeshcleanup_SOURCES = test_quadmeshcleanup.cpp
-
+test_jaalquad_SOURCES = test_jaalquad.cpp
+endif
 test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesher_SOURCES = test_edgemesher.cpp
 if HAVE_DAGMC_MOAB
@@ -106,7 +111,6 @@ test_copygeom_SOURCES = test_copygeom.cpp
 test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslimmesher_SOURCES = test_qslimmesher.cpp
-test_jaalquad_SOURCES = test_jaalquad.cpp
 test_assygen_SOURCES = test_assygen.cpp
 test_postbl_SOURCES = test_postbl.cpp
 if HAVE_FBIGEOM
