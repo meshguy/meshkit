@@ -2049,7 +2049,9 @@ int CCrgen::create_neumannset() {
                   iMesh_setEntSetIntData( impl, set_side[j], gtag1, nss_Id[j], &err);
                   ERRORR("Trouble getting handle.", err);
 
-                  std::string name3 = "side" +j;
+                  std::stringstream ss;
+                  ss << j;
+                  std::string name3 = "side" + ss.str();
                   iMesh_setEntSetData( impl, set_side[j], nametag1, name3.c_str(), 8, &err);
                   ERRORR("Trouble getting handle.", err);
                 }
