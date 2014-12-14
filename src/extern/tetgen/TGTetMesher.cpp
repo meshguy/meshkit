@@ -128,6 +128,7 @@ void TGTetMesher::execute_this()
     tetgen::tetrahedralize(tet_switch, &in, &out);
 
    // TODO: Bring back mesh to MeshKit database
+    }
 }
 
 } // namespace MeshKit
