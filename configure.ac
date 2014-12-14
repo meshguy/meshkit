@@ -658,6 +658,7 @@ else
   old_CPPFLAGS="$CPPFLAGS"
   LDFLAGS="$LDFLAGS $TETGEN_LDFLAGS -ltet"
   CPPFLAGS="$CPPFLAGS $TETGEN_CPPFLAGS"
+  AM_CPPFLAGS="$AM_CPPFLAGS -DTETLIBRARY"
   AC_LANG_PUSH([C++])
 
   AC_LINK_IFELSE(
@@ -762,7 +763,6 @@ AC_SUBST([NETGEN_LIBS])
 AC_SUBST([HAVE_NETGEN])
 
 AM_CONDITIONAL(HAVE_NETGEN, [test "x$HAVE_NETGEN" = "xyes"])
-
 
 ################################################################################
 #                           Triangle
@@ -1355,6 +1355,7 @@ AC_CONFIG_FILES([Makefile
                  src/extern/Makefile
                  src/extern/CAMAL/Makefile
                  src/extern/netgen/Makefile
+                 src/extern/tetgen/Makefile
                  src/extern/mesquite/Makefile
                  src/extern/triangle/Makefile
                  test/Makefile
@@ -1364,6 +1365,7 @@ AC_CONFIG_FILES([Makefile
                  test/extern/CAMAL/Makefile
                  test/extern/mesquite/Makefile
                  test/extern/netgen/Makefile
+                 test/extern/tetgen/Makefile
                  test/extern/triangle/Makefile
                  test/parallel/Makefile
                  doc/Makefile
