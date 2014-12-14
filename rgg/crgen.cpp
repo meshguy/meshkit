@@ -1050,8 +1050,8 @@ int CCrgen::read_inputs_phase1() {
               nssall_flag = true;
               nssall_Id = nsId;
             } else if ((strcmp(nsLoc.c_str(), "side") == 0)) {
-              nss_Id.push_back(nsId);
-
+              nss_Id.push_back(nsId);              
+              // we are reading the equation of a straight line ax + by + c = 0
               formatString >> temp1 >> x >> temp2 >> y >> temp3 >> c;
               if(formatString.fail())
                 IOErrorHandler (INVALIDINPUT);
