@@ -608,21 +608,6 @@ TETGEN_CPPFLAGS=
 TETGEN_LDFLAGS=
 TETGEN_LIBS=
 
-# check if iRel is enable
-if test "xyes" != "x$HAVE_IREL"; then
-  case "x$TETGEN_VAL" in
-    xno)
-      ;;
-    x|xyes)
-      AC_MSG_WARN([TetGen support disabled because iRel not found])
-      TETGEN_VAL=no
-      ;;
-    *)
-      AC_MSG_ERROR([TetGen cannot be enabled w/out iRel])
-      ;;
-  esac
-fi
-
 # Check for TETGEN headers and libraries
 if test "xno" = "x$TETGEN_VAL"; then
   HAVE_TETGEN=no
@@ -639,7 +624,7 @@ else
     fi
     
     if test -d "$TETGEN_DIR/include"; then
-      TETGEN_CPPFLAGS="-I$TETGEN_DIR/include"
+      TETGEN_CPPFLAGS="-I$TETGEN_DIR/include -DTETLIBRARY"
     else
       AC_MSG_WARN([$TETGEN_DIR/include: no such directory])
       TETGEN_CPPFLAGS="-I$TETGEN_DIR"
@@ -658,7 +643,6 @@ else
   old_CPPFLAGS="$CPPFLAGS"
   LDFLAGS="$LDFLAGS $TETGEN_LDFLAGS -ltet"
   CPPFLAGS="$CPPFLAGS $TETGEN_CPPFLAGS"
-  AM_CPPFLAGS="$AM_CPPFLAGS -DTETLIBRARY"
   AC_LANG_PUSH([C++])
 
   AC_LINK_IFELSE(
@@ -675,6 +659,7 @@ fi
 
 if test "x$HAVE_TETGEN" = "xyes"; then
   AC_MSG_RESULT([TetGen is found.])
+  DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/tetgen test/extern/tetgen"
 elif test "x$TETGEN_VAL" != "xno"; then
   AC_MSG_ERROR([TetGen not found or not usable.])
 fi
