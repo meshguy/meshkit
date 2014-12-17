@@ -1915,7 +1915,8 @@ int CNrgen::CreateCubitJournal()
           ++nSideset;
           szSurfTop = m_szAssmMat(p)+"_top";
           // Avoid creation if empty sideset
-          m_FileOutput << "sideset " << nSideset << " surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+          m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+          m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
           m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
         }
       m_FileOutput << "#" << std::endl;
@@ -1930,7 +1931,8 @@ int CNrgen::CreateCubitJournal()
               szSurfTop = m_szAssmMat(p)+"_bot";
               m_FileOutput << "#" << std::endl;
               ++nSideset;
-              m_FileOutput << "sideset " << nSideset << " surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+              m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+              m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
               m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
             }
           for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){

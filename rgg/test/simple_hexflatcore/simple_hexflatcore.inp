@@ -22,4 +22,4 @@ NeumannSet Bot  98                       !  Values 'top', 'bot' and 'side' are a
 NeumannSet SideAll 99
 OutputFileName shfc.h5m
 END		 			 ! 'END' card is a MUST marks the end of file for the file reader
-cu
+
