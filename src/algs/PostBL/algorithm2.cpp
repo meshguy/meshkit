@@ -324,7 +324,7 @@ void PostBL:: Algo2(){
     }
     else if(fixmat ==-1 && (int) old_hex.size()>1){
         m_LogFile << "FIXMAT not defined, elements found on either side of specified BL surface, aborting...";
-        m_LogFile << "\n\n Define FIXMAT keyword with material id that remains fixed." << std::endl;mbsinit()
+        m_LogFile << "\n\n Define FIXMAT keyword with material id that remains fixed." << std::endl;
         exit(0);
     }
 
