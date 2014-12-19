@@ -311,7 +311,7 @@ void PostBL:: Algo2(){
     } // end handling material set
 
     // if fixmat specified, filter old hex, we don't have to correct both sides of the boundary
-    if (fixmat !=0 && (int) old_hex.size() > 1){
+    if (fixmat !=-1 && (int) old_hex.size() > 1){
         moab::EntityHandle old_hex_set;
         MBERRCHK(mb->create_meshset(moab::MESHSET_SET, old_hex_set, 1), mb);
         MBERRCHK(mb->add_entities(old_hex_set,&old_hex[0], (int) old_hex.size()), mb);
@@ -322,8 +322,9 @@ void PostBL:: Algo2(){
         // the the old hex to be modified
         MBERRCHK(mb->get_entities_by_dimension(old_hex_set, m_GD, old_hex), mb);
     }
-    else if(fixmat ==0 && old_hex.size()>1){
+    else if(fixmat ==-1 && (int) old_hex.size()>1){
         m_LogFile << "FIXMAT not defined, elements found on either side of specified BL surface, aborting...";
+        m_LogFile << "\n\n Define FIXMAT keyword with material id that remains fixed." << std::endl;mbsinit()
         exit(0);
     }
 
