@@ -5,7 +5,7 @@ AC_INIT(MESHKIT, 1.2.1pre)
 AC_CANONICAL_SYSTEM
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([AM_SILENT_RULES],
- [AM_INIT_AUTOMAKE([-Wall color-tests parallel-tests])],
+ [AM_INIT_AUTOMAKE([-Wall color-tests parallel-tests subdir-objects])],
  [AM_INIT_AUTOMAKE([-Wall])])
 
 dnl Original MK_CHECK_COMPILERS did not look for Fortran.  We
@@ -19,6 +19,7 @@ FATHOM_CHECK_COMPILERS
 AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
 LIBS="-lm"
 
+AM_PROG_AR
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_DISABLE_SHARED
@@ -91,10 +92,14 @@ AC_CHECK_HEADER([ieeefp.h],[DEFINES="$DEFINES -DHAVE_IEEEFP_H"] )
 if test "xyes" = "x$enable_debug"; then
   AC_CHECK_HEADER( [valgrind/memcheck.h], [CPPFLAGS="$CPPFLAGS -DVALGRIND"] )
 fi
-AC_CHECK_HEADER([cstddef],   [AC_DEFINE(HAVE_CSTDDEF,    [], [HAVE_CSTDDEF])   ])
+AC_LANG_PUSH([C])
 AC_CHECK_HEADER([stddef.h],   [AC_DEFINE(HAVE_STDDEF_H,    [], [HAVE_STDDEF_H])   ])
 AC_CHECK_HEADER([stdio.h],   [AC_DEFINE(HAVE_STDIO_H,    [], [HAVE_STDIO_H])   ])
+AC_LANG_POP([C])
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER([cstddef],   [AC_DEFINE(HAVE_CSTDDEF,    [], [HAVE_CSTDDEF])   ])
 AC_CHECK_HEADER([cstdio],   [AC_DEFINE(HAVE_CSTDIO,    [], [HAVE_CSTDIO])   ])
+AC_LANG_POP([C++])
 
 # Need this here, 'cuz MKVersion.h is needed for a later check
 AC_CONFIG_HEADERS([MKVersion.h])
