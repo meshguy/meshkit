@@ -15,6 +15,7 @@ void PostBL:: Algo2(){
     clock_t sTime = clock();
     std::string szDateTime;
     Timer.GetDateTime (szDateTime);
+    VerdictWrapper vw(mb);
 
     m_LogFile <<  "\nStarting out at : " << szDateTime << std::endl;
     m_LogFile <<  "\n Loading meshfile: " << m_MeshFile << ".." << std::endl;
@@ -613,6 +614,13 @@ void PostBL:: Algo2(){
                     }
                 }
                 MBERRCHK(mb->set_connectivity(*fmter, &fmconn[0], fmconn.size()), mb);
+                double jac = 0;
+                vw.quality_measure(*fmter, MB_JACOBIAN, jac);
+                ++m_JacCalls;
+                if (jac < 0){
+                    m_LogFile << "Negative Jacobian, check BL thickness/intervals. Stopping." << std::endl;
+                    exit(0);
+                  }
                 //                MBERRCHK(mb->add_adjacencies((*fmter), hexes, true), mb);
                 //                MBERRCHK(mb->add_adjacencies((*fmter), fixmat_ents, true), mb);
 
@@ -626,6 +634,7 @@ void PostBL:: Algo2(){
             // check to see if this is a fixmat case
         }
         else if(all_bl[count] > 0 && fixmat == -1){ // node belongs to more than one material and fixmat not specified
+            m_LogFile << " I'm here" << std::endl;
             // NODE ON BOUNDARY
             double coords_new_quad[3];
             double coords_old_quad[3];
@@ -671,8 +680,28 @@ void PostBL:: Algo2(){
 
     // Now start creating New elements
     for (Range::iterator kter = quads.begin(); kter != quads.end(); ++kter){
+
         qcount++;
-        //        if(flag[qcount] != 1){
+
+        std::vector<moab::EntityHandle> old_hex;
+        MBERRCHK(mb->get_adjacencies(&(*kter), 1, m_GD, false, old_hex),mb);
+        double jac = 0;
+        vw.quality_measure(old_hex[0], MB_JACOBIAN, jac);
+        if (qcount == 1){
+            m_JLo = jac;
+          }
+        ++m_JacCalls;
+
+        if(m_JHi < jac)
+          m_JHi = jac;
+
+        if(m_JLo > jac)
+          m_JLo = jac;
+
+        if (jac < 0){
+            m_LogFile << "Negative Jacobian, check BL thickness/intervals. Stopping." << std::endl;
+            exit(0);
+          }
 
         MBERRCHK(mb->get_connectivity(&(*kter), 1, qconn),mb);
         double one_node_in_quad[3];
@@ -820,8 +849,6 @@ void PostBL:: Algo2(){
 
         // create boundary layer hexes
         for(int j=0; j< m_Intervals; j++){
-            //double j_hex = 0.0;
-            //  get_det_jacobian(conn, j*m_Conn, j_hex);
             if(m_Conn == 8){
                 MBERRCHK(mb->create_element(MBHEX, &conn[j*m_Conn], m_Conn, hex),mb);
             }
@@ -903,6 +930,7 @@ void PostBL:: Algo2(){
             //                MBERRCHK(mb->add_entities(smooth_set, &hex, 1), mb);
             // add geom dim tag
             MBERRCHK(mb->add_entities(geom_set, &hex, 1), mb);
+
             //              // TODO: Add Local Smooting
         }
 
@@ -921,7 +949,7 @@ void PostBL:: Algo2(){
     //    std::vector<int> all_skin_data(skin_verts.size(), 1);
     //    MBERRCHK(mb->tag_set_data(FTag, skin_verts, &all_skin_data[0]), mb);
 
-    m_LogFile << "\nTotal Jacobian calls/Min/Max: " << m_JacCalls << ", " << m_JLo << ", " << m_JHi << std::endl;
+    m_LogFile << "\nTotal Jacobian calls/Min/Max of penultimate hex elements:" << m_JacCalls << ", " << m_JLo << ", " << m_JHi << std::endl;
 
     // save the final boundary layer mesh
     MBERRCHK(mb->write_mesh(m_OutFile.c_str()),mb);
