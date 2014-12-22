@@ -946,7 +946,7 @@ AC_HELP_STRING([--without-mesquite], [Configure w/out support for Mesquite libra
 # 3) actions if success and 4) actions if not found.
 AC_DEFUN([MESQUITE_LINK_DESTRUCTOR],[
     msq_link_dest_old_LIBS="$LIBS"
-    LIBS="-l$2 $LIBS"
+    LIBS="-l$2 $LIBS -ldl"
     AC_MSG_CHECKING([for $1 in -l$2])
     AC_LINK_IFELSE( [AC_LANG_PROGRAM(
                       [#include "Mesquite.hpp"
