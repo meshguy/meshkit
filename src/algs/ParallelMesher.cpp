@@ -8,7 +8,6 @@
 #include "moab/Range.hpp"
 #include "moab/Types.hpp"
 
-#include "CGMParallelComm.hpp"
 #include "RefEntity.hpp"
 #include "RefVolume.hpp"
 #include "RefFace.hpp"
