@@ -311,16 +311,12 @@ AM_CONDITIONAL( HAVE_CGM, [test "xyes" == "x$HAVE_$2"] )
 AC_SUBST([HAVE_CGM])
 if test "xyes" = "x$HAVE_CGM"; then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CGM"
+  CPPFLAGS="$CPPFLAGS -I$IGEOM_DIR/include"
 fi
 
 # Check for parallel support
-AC_MSG_CHECKING([For CGMParallelComm in libcgm])
-AC_LINK_IFELSE([
-   AC_LANG_PROGRAM(
-[class CGMParallelComm{ public: static CGMParallelComm* get_pcomm(const 
-int); };],
-[CGMParallelComm::get_pcomm(0);])],
-[HAVE_PARALLEL_CGM=yes],[HAVE_PARALLEL_CGM=no])
+AC_MSG_CHECKING([For TDParallel in cgm])
+AC_CHECK_HEADER([TDParallel.hpp], [HAVE_PARALLEL_CGM=yes], [HAVE_PARALLEL_CGM=no])
 AC_MSG_RESULT([$HAVE_PARALLEL_CGM])
 AM_CONDITIONAL(HAVE_PARALLEL_CGM, [test "x$HAVE_PARALLEL_CGM" = "xyes"])
 AC_SUBST([HAVE_PARALLEL_CGM])
