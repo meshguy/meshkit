@@ -1,132 +1,111 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+# A from-scratch CMake build of lemon for meshkit. Lemon is a stand-alone
+# project and does lots of things not necessary inside of meshkit.
 
-SET(PROJECT_NAME "LEMON")
-PROJECT(${PROJECT_NAME})
+set(lemon_srcs
+  arg_parser.cc
+  base.cc
+  color.cc
+  lp_base.cc
+  lp_skeleton.cc
+  random.cc
+  lemon/bits/windows.cc)
 
-IF(EXISTS ${PROJECT_SOURCE_DIR}/cmake/version.cmake)
-  INCLUDE(${PROJECT_SOURCE_DIR}/cmake/version.cmake)
-ELSEIF(DEFINED ENV{LEMON_VERSION})
-  SET(LEMON_VERSION $ENV{LEMON_VERSION} CACHE STRING "LEMON version string.")
-ELSE()
-  EXECUTE_PROCESS(
-    COMMAND hg id -i
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE HG_REVISION
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  IF(HG_REVISION STREQUAL "")
-    SET(HG_REVISION "hg-tip")
-  ENDIF()
-  SET(LEMON_VERSION ${HG_REVISION} CACHE STRING "LEMON version string.")
-ENDIF()
+set(lemon_headers
+  lemon/adaptors.h
+  lemon/arg_parser.h
+  lemon/assert.h
+  lemon/bellman_ford.h
+  lemon/bfs.h
+  lemon/bin_heap.h
+  lemon/binomial_heap.h
+  lemon/bucket_heap.h
+  lemon/capacity_scaling.h
+  lemon/cbc.h
+  lemon/circulation.h
+  lemon/clp.h
+  lemon/color.h
+  lemon/concept_check.h
+  lemon/connectivity.h
+  lemon/config.h
+  lemon/core.h
+  lemon/cost_scaling.h
+  lemon/counter.h
+  lemon/cplex.h
+  lemon/cycle_canceling.h
+  lemon/dfs.h
+  lemon/dheap.h
+  lemon/dijkstra.h
+  lemon/dim2.h
+  lemon/dimacs.h
+  lemon/edge_set.h
+  lemon/elevator.h
+  lemon/error.h
+  lemon/euler.h
+  lemon/fib_heap.h
+  lemon/fractional_matching.h
+  lemon/full_graph.h
+  lemon/glpk.h
+  lemon/gomory_hu.h
+  lemon/graph_to_eps.h
+  lemon/grid_graph.h
+  lemon/hartmann_orlin_mmc.h
+  lemon/howard_mmc.h
+  lemon/hypercube_graph.h
+  lemon/karp_mmc.h
+  lemon/kruskal.h
+  lemon/hao_orlin.h
+  lemon/lgf_reader.h
+  lemon/lgf_writer.h
+  lemon/list_graph.h
+  lemon/lp.h
+  lemon/lp_base.h
+  lemon/lp_skeleton.h
+  lemon/maps.h
+  lemon/matching.h
+  lemon/math.h
+  lemon/min_cost_arborescence.h
+  lemon/nauty_reader.h
+  lemon/network_simplex.h
+  lemon/pairing_heap.h
+  lemon/path.h
+  lemon/planarity.h
+  lemon/preflow.h
+  lemon/quad_heap.h
+  lemon/radix_heap.h
+  lemon/radix_sort.h
+  lemon/random.h
+  lemon/smart_graph.h
+  lemon/soplex.h
+  lemon/static_graph.h
+  lemon/suurballe.h
+  lemon/time_measure.h
+  lemon/tolerance.h
+  lemon/unionfind.h
+  lemon/bits/windows.h
+  lemon/bits/alteration_notifier.h
+  lemon/bits/array_map.h
+  lemon/bits/bezier.h
+  lemon/bits/default_map.h
+  lemon/bits/edge_set_extender.h
+  lemon/bits/enable_if.h
+  lemon/bits/graph_adaptor_extender.h
+  lemon/bits/graph_extender.h
+  lemon/bits/map_extender.h
+  lemon/bits/path_dump.h
+  lemon/bits/solver_bits.h
+  lemon/bits/traits.h
+  lemon/bits/variant.h
+  lemon/bits/vector_map.h
+  lemon/concepts/digraph.h
+  lemon/concepts/graph.h
+  lemon/concepts/graph_components.h
+  lemon/concepts/heap.h
+  lemon/concepts/maps.h
+  lemon/concepts/path.h)
 
-SET(PROJECT_VERSION ${LEMON_VERSION})
-
-SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-FIND_PACKAGE(Doxygen)
-FIND_PACKAGE(Ghostscript)
-FIND_PACKAGE(GLPK 4.33)
-FIND_PACKAGE(CPLEX)
-FIND_PACKAGE(COIN)
-
-INCLUDE(CheckTypeSize)
-CHECK_TYPE_SIZE("long long" LONG_LONG)
-SET(LEMON_HAVE_LONG_LONG ${HAVE_LONG_LONG})
-
-INCLUDE(FindPythonInterp)
-
-ENABLE_TESTING()
-
-ADD_SUBDIRECTORY(lemon)
-IF(${CMAKE_SOURCE_DIR} STREQUAL ${PROJECT_SOURCE_DIR})
-  ADD_SUBDIRECTORY(demo)
-  ADD_SUBDIRECTORY(tools)
-  ADD_SUBDIRECTORY(doc)
-  ADD_SUBDIRECTORY(test)
-ENDIF()
-
-CONFIGURE_FILE(
-  ${PROJECT_SOURCE_DIR}/cmake/LEMONConfig.cmake.in
-  ${PROJECT_BINARY_DIR}/cmake/LEMONConfig.cmake
-  @ONLY
-)
-IF(UNIX)
-  INSTALL(
-    FILES ${PROJECT_BINARY_DIR}/cmake/LEMONConfig.cmake
-    DESTINATION share/lemon/cmake
-  )
-ELSEIF(WIN32)
-  INSTALL(
-    FILES ${PROJECT_BINARY_DIR}/cmake/LEMONConfig.cmake
-    DESTINATION cmake
-  )
-ENDIF()
-
-IF(${CMAKE_SOURCE_DIR} STREQUAL ${PROJECT_SOURCE_DIR} AND WIN32)
-  SET(CPACK_PACKAGE_NAME ${PROJECT_NAME})
-  SET(CPACK_PACKAGE_VENDOR "EGRES")
-  SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-    "LEMON - Library for Efficient Modeling and Optimization in Networks")
-  SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
-
-  SET(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-
-  SET(CPACK_PACKAGE_INSTALL_DIRECTORY
-    "${PROJECT_NAME} ${PROJECT_VERSION}")
-  SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY
-    "${PROJECT_NAME} ${PROJECT_VERSION}")
-
-  SET(CPACK_COMPONENTS_ALL headers library html_documentation bin)
-
-  SET(CPACK_COMPONENT_HEADERS_DISPLAY_NAME "C++ headers")
-  SET(CPACK_COMPONENT_LIBRARY_DISPLAY_NAME "Dynamic-link library")
-  SET(CPACK_COMPONENT_BIN_DISPLAY_NAME "Command line utilities")
-  SET(CPACK_COMPONENT_HTML_DOCUMENTATION_DISPLAY_NAME "HTML documentation")
-
-  SET(CPACK_COMPONENT_HEADERS_DESCRIPTION
-    "C++ header files")
-  SET(CPACK_COMPONENT_LIBRARY_DESCRIPTION
-    "DLL and import library")
-  SET(CPACK_COMPONENT_BIN_DESCRIPTION
-    "Command line utilities")
-  SET(CPACK_COMPONENT_HTML_DOCUMENTATION_DESCRIPTION
-    "Doxygen generated documentation")
-
-  SET(CPACK_COMPONENT_HEADERS_DEPENDS library)
-
-  SET(CPACK_COMPONENT_HEADERS_GROUP "Development")
-  SET(CPACK_COMPONENT_LIBRARY_GROUP "Development")
-  SET(CPACK_COMPONENT_HTML_DOCUMENTATION_GROUP "Documentation")
-
-  SET(CPACK_COMPONENT_GROUP_DEVELOPMENT_DESCRIPTION
-    "Components needed to develop software using LEMON")
-  SET(CPACK_COMPONENT_GROUP_DOCUMENTATION_DESCRIPTION
-    "Documentation of LEMON")
-
-  SET(CPACK_ALL_INSTALL_TYPES Full Developer)
-
-  SET(CPACK_COMPONENT_HEADERS_INSTALL_TYPES Developer Full)
-  SET(CPACK_COMPONENT_LIBRARY_INSTALL_TYPES Developer Full)
-  SET(CPACK_COMPONENT_HTML_DOCUMENTATION_INSTALL_TYPES Full)
-
-  SET(CPACK_GENERATOR "NSIS")
-  SET(CPACK_NSIS_MUI_ICON "${PROJECT_SOURCE_DIR}/cmake/nsis/lemon.ico")
-  SET(CPACK_NSIS_MUI_UNIICON "${PROJECT_SOURCE_DIR}/cmake/nsis/uninstall.ico")
-  #SET(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/cmake/nsis\\\\installer.bmp")
-  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\lemon.ico")
-  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} ${PROJECT_NAME}")
-  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\lemon.cs.elte.hu")
-  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\lemon.cs.elte.hu")
-  SET(CPACK_NSIS_CONTACT "lemon-user@lemon.cs.elte.hu")
-  SET(CPACK_NSIS_CREATE_ICONS_EXTRA "
-    CreateShortCut \\\"$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Documentation.lnk\\\" \\\"$INSTDIR\\\\share\\\\doc\\\\index.html\\\"
-    ")
-  SET(CPACK_NSIS_DELETE_ICONS_EXTRA "
-    !insertmacro MUI_STARTMENU_GETFOLDER Application $MUI_TEMP
-    Delete \\\"$SMPROGRAMS\\\\$MUI_TEMP\\\\Documentation.lnk\\\"
-    ")
-
-  INCLUDE(CPack)
-ENDIF()
+add_library(emon STATIC
+  ${lemon_srcs}
+  ${lemon_headers})
+target_include_directories(emon
+  PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}")
