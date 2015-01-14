@@ -1,0 +1,5 @@
+set(MeshKit_FOUND TRUE)
+
+set(MeshKit_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
+
+include("${CMAKE_CURRENT_LIST_DIR}/MeshKitTargets.cmake")

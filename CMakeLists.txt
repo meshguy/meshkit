@@ -154,3 +154,31 @@ include_directories(
 
 #add_subdirectory(test)
 #add_subdirectory(doc)
+
+get_property(meshkit_targets GLOBAL
+  PROPERTY meshkit_export_targets)
+
+export(
+  TARGETS ${meshkit_targets}
+  FILE    "${CMAKE_CURRENT_BINARY_DIR}/MeshKitTargets.cmake")
+
+if (WIN32)
+  set(cmakedir cmake)
+else ()
+  set(cmakedir lib/cmake/MeshKit)
+endif ()
+
+install(
+  EXPORT      meshkit
+  DESTINATION "${cmakedir}"
+  FILE        MeshKitTargets.cmake
+  COMPONENT   development)
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/MeshKitConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/MeshKitConfig.cmake"
+  @ONLY)
+install(
+  FILES       "${CMAKE_CURRENT_BINARY_DIR}/MeshKitConfig.cmake"
+  DESTINATION "${cmakedir}"
+  COMPONENT   development)

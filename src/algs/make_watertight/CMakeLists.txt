@@ -38,3 +38,9 @@ add_executable(check_watertight
   check_watertight.cpp)
 target_link_libraries(check_watertight
   MakeWatertight)
+
+install(
+  TARGETS     make_watertight
+              check_watertight
+  DESTINATION bin
+  COMPONENT   runtime)

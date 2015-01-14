@@ -13,8 +13,20 @@ configure_file(
 add_library(MeshKit
   "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp") # Force C++ language.
 target_link_libraries(MeshKit
-  MeshKitcore
-  MeshKitalgs
-  emon
-  MeshKitutils
-  MeshKitextern)
+  PRIVATE
+    MeshKitcore
+    MeshKitalgs
+    emon
+    MeshKitutils
+    MeshKitextern)
+
+install(
+  TARGETS  MeshKit
+  EXPORT   meshkit
+  RUNTIME  DESTINATION bin
+  LIBRARY  DESTINATION lib
+  ARCHIVE  DESTINATION lib
+  COMPONENT runtime)
+set_property(GLOBAL APPEND
+  PROPERTY meshkit_export_targets
+  MeshKit)
