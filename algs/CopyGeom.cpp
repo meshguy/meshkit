@@ -1,11 +1,12 @@
 #include "CopyGeom.hpp"
+#include "iGeom.h"
 #include <iostream>
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <functional>
 
-CopyGeom::CopyGeom(iGeom_Instance impl)
+CopyGeom::CopyGeom(iGeom_Instance impl) : igeomImpl(impl)
 {}
 
 CopyGeom::~CopyGeom()
