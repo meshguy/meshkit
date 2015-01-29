@@ -1,3 +1,22 @@
+Version 1.3  (SIGMA v1.1)
+=========================
+
+Fixes:
+------
+
+  1) Fixes and new enhancements to PostBL, using new mesh quality support from MOAB.
+  2) Name all Neumann sets created by CoreGen (RGG).
+  3) Fixes to building make_watertight on OSX.
+  4) Fixed several warnings.
+  5) Fixes to shared builds and make distcheck.
+  6) Bug fixes for rectangular assembly arrangement in CoreGen.
+
+Enhancements:
+-------------
+
+  1) Improvements to configure script for Mesquite, TetGen etc.
+  2) New RGG example with shifting material and Neumann sets for creating new assemblies.
+
 Version 1.2  (SIGMA v1.0)
 =========================
 See details on compatibility with dependent libraries in NEWS section of http://sigma.mcs.anl.gov
