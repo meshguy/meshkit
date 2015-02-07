@@ -15,7 +15,9 @@ libMeshKitutils_la_SOURCES = \
         iMesh.cpp \
         clock.cpp \
         mstream.cpp \
-        parser.cpp
+        parser.cpp \
+        pincell.cpp \
+        cylinder.cpp
 
 
 # The list of header files which are to be installed
@@ -33,7 +35,10 @@ nobase_libMeshKitutils_la_include_HEADERS = \
         meshkit/vectortemplate.hpp \
         meshkit/matrixtemplate.hpp \
         meshkit/mstream.hpp \
-        meshkit/ReadPolyLine.hpp
+        meshkit/ReadPolyLine.hpp \
+        meshkit/pincell.hpp \
+        meshkit/cylinder.hpp
+
 if HAVE_FBIGEOM
 nobase_libMeshKitutils_la_include_HEADERS += \
         meshkit/FBiGeom.hpp

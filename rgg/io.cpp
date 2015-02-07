@@ -368,6 +368,24 @@ int CNrgen::ReadCommonInp ()
           std::istringstream szFormatString(szInputString);
           szFormatString >> card >> m_szMeshScheme;
         }
+      // Handle mesh size inputs
+      if (szInputString.substr(0,18) == "neumannset_startid"){
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> card >> m_nNeumannSetId;
+        if(m_nNeumannSetId < 0 || szFormatString.fail())
+          IOErrorHandler(ENEGATIVE);
+        std::cout <<"--------------------------------------------------"<<std::endl;
+
+      }
+      // Handle mesh size inputs
+      if (szInputString.substr(0,19) == "materialset_startid"){
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> card >> m_nMaterialSetId;
+        if(m_nMaterialSetId < 0 || szFormatString.fail())
+          IOErrorHandler(ENEGATIVE);
+        std::cout <<"--------------------------------------------------"<<std::endl;
+
+      }
       // breaking condition
       if(szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
           found = true;

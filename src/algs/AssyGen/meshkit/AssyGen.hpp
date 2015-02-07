@@ -34,15 +34,19 @@
 
 #include "meshkit/vectortemplate.hpp"
 #include "meshkit/matrixtemplate.hpp"
-#include "pincell.hpp"
+#include "meshkit/pincell.hpp"
 #include "meshkit/parser.hpp"
 #include "meshkit/clock.hpp"
 
 
 namespace MeshKit {
 
-#define DEFAULT_TEST_FILE  "assygen_default"
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/assygen_default"
 #define TEST_FILE_NAME "assygen_default"
+#define SRC_DIR STRINGIFY(SRCDIR) "/"
 
   enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE, EGEOMENGINE, ENEGATIVE, EALIAS, EPIN};
 
@@ -201,57 +205,72 @@ namespace MeshKit {
     void ComputePinCentroid( int, CMatrix<std::string>, int, int,
 			     double&, double&, double&);
 
+    /** \brief Read common input file
+     * as a part of original .inp file, file with name common.inp
+     */
+    void ReadCommonInp ();
+
+
+    bool have_common;
+
   private:
     // iGeom Impl for calling geometry creation/manipulation operations
     iGeom *igeomImpl;
 
     // number of sides in the geometry
+    int com_run_count;
     int m_nSides;
-  
+    bool m_bCreateMatFiles, save_exodus;
     // file Input
-    std::ifstream m_FileInput;  
-    
+    std::ifstream m_FileInput, m_FileCommon;
+
     // journal file Output
-    std::ofstream m_FileOutput, m_SchemesFile;
+    std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
     // string for file names
-    std::string m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;    
+    std::string m_szFile, m_szInFile, m_szCommonFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szLogFile, m_szMeshScheme;
+    int m_nAssyGenInputFiles;
+     std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
 
     // matrix for holding pincell arrangement
-    CMatrix<std::string> m_Assembly; 
+    CMatrix<std::string> m_Assembly;
 
     // matrix for holding verts coordinates used in tet-meshing
-    CMatrix<double> m_dMTopSurfCoords; 
+    CMatrix<double> m_dMTopSurfCoords;
 
-    // vector for duct specification 
+    // vector for duct specification
     CMatrix<double> m_dMAssmPitch, m_dMAssmPitchX, m_dMAssmPitchY, m_dMXYAssm, m_dMZAssm;
-  
+
     // vector for material names
     CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
-    CMatrix<std::string> m_szMMAlias;  
+    CVector<double> m_dAxialSize;
+    CVector<int> m_nListMatSet, m_nListNeuSet;
+
+    CMatrix<std::string> m_szMMAlias;
 
     // vector holding a pincell
-    CVector<CPincell> m_Pincell; 
+    CVector<CPincell> m_Pincell;
 
     // string for geomtype, engine, meshtype
     std::string m_szEngine;
-    std::string m_szGeomType;       
+    std::string m_szGeomType;
     std::string m_szMeshType;
-    std::string m_szSideset; 
+    std::string m_szSideset;
 
     // integers for vectors sizes, err etc
-    int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
-      m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag; 
+    int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar,
+      m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag;
 
     // doubles for pincell pitch, pi and mesh sizes resp.
-    double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize, m_dMergeTol;      
- 
+    double m_dPitch, pi, m_dRadialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;
+    int m_edgeInterval, m_nStartpinid, m_nHblock;
+
     // igeom related
     std::vector<iBase_EntityHandle> assms, in_pins;
     //iGeom_Instance geom;
     iBase_EntitySetHandle root_set;
 
- 
+
     // error handlers
     void IOErrorHandler (ErrorStates) const;
     friend class CPincell;
@@ -259,7 +278,7 @@ namespace MeshKit {
     // parsing related
     std::string szInputString;
     std::string szComment;
-    int MAXCHARS;
+    int MAXCHARS, MAXLINES;
 
   };
 

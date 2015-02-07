@@ -2,13 +2,14 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Subdirectories to build
-SUBDIRS = Qslim AssyGen CoreGen Sweep PostBL
+SUBDIRS = Qslim AssyGen CoreGen Sweep PostBL AssyMesher
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitalgs.la
 libMeshKitalgs_la_LIBADD = Qslim/libQslim.la \
                            Sweep/libSweep.la \
                            AssyGen/libAssyGen.la \
+                           AssyMesher/libAssyMesher.la \
 			   CoreGen/libCoreGen.la \
                            PostBL/libPostBL.la
 
@@ -90,6 +91,7 @@ AM_CPPFLAGS += $(DEFINES) \
               -I$(srcdir)/../lemon \
               -I$(srcdir)/Sweep \
               -I$(srcdir)/AssyGen \
+              -I$(srcdir)/AssyMesher \
 	      -I$(srcdir)/CoreGen \
 	      -I$(srcdir)/PostBL \
 	      -I$(srcdir)/Qslim

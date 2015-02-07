@@ -1346,6 +1346,7 @@ AC_CONFIG_FILES([Makefile
                  src/algs/QuadMesher/Makefile
                  src/algs/Sweep/Makefile
                  src/algs/AssyGen/Makefile
+                 src/algs/AssyMesher/Makefile
 		 src/algs/CoreGen/Makefile
                  src/algs/PostBL/Makefile
                  src/algs/Qslim/Makefile
