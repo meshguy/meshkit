@@ -84,6 +84,8 @@ endif ()
 add_library(MeshKitalgs STATIC
   ${MeshKitalgs_srcs}
   ${MeshKitalgs_headers})
+include(GenerateExportHeader)
+generate_export_header(MeshKitalgs)
 target_link_libraries(MeshKitalgs
   MeshKitcore
   Qslim
