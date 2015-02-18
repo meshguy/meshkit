@@ -12,6 +12,7 @@
 #include "moab/Core.hpp"
 #include "moab/Range.hpp"
 #include "moab/AdaptiveKDTree.hpp" // for merging verts
+#include "moab/EntityHandle.h"
 #include "moab/CartVect.hpp"
 
 // SENSE CONVENTIONS

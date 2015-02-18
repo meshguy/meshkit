@@ -14,6 +14,8 @@
 #include "moab/HomXform.hpp"
 #include "moab/GeomTopoTool.hpp"
 
+#include <time.h>
+
 #ifdef HAVE_CGM
 #include "CubitDefines.h"
 #include "GeometryQueryTool.hpp"
