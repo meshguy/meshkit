@@ -21,7 +21,7 @@
 
 #include<lemon/bits/windows.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -53,7 +53,7 @@ namespace lemon {
                          double &utime, double &stime,
                          double &cutime, double &cstime)
     {
-#ifdef WIN32
+#ifdef _WIN32
       static const double ch = 4294967296.0e-7;
       static const double cl = 1.0e-7;
 
@@ -92,7 +92,7 @@ namespace lemon {
     std::string getWinFormattedDate()
     {
       std::ostringstream os;
-#ifdef WIN32
+#ifdef _WIN32
       SYSTEMTIME time;
       GetSystemTime(&time);
       char buf1[11], buf2[9], buf3[5];
@@ -118,7 +118,7 @@ namespace lemon {
 
     int getWinRndSeed()
     {
-#ifdef WIN32
+#ifdef _WIN32
       FILETIME time;
       GetSystemTimeAsFileTime(&time);
       return GetCurrentProcessId() + time.dwHighDateTime + time.dwLowDateTime;
