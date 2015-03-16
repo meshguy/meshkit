@@ -9,6 +9,8 @@
 #include "iMesh_extensions.h"
 #include "MBCN.h"
 
+#include <set>
+
 
 namespace MeshKit
 {
@@ -57,7 +59,102 @@ bool AssyMesher::add_modelent(ModelEnt *model_ent)
 
 void AssyMesher::setup_this()
 {
-   std::cout << "Nothing to setup." << std::endl;
+  // populate the model entities based on the geometry
+  mk_core()->populate_model_ents();
+
+  // create a set that will hold names of pin materials
+  std::set<std::string> pinMtrlsSet;
+
+  // collect names of pin materials based on input file
+  for (int pci = 1; pci <= m_nPincells; ++pci)
+  {
+    int numCyl = 0;
+    m_Pincell(pci).GetNumCyl(numCyl);
+    for (int cyli = 1; cyli <= numCyl; ++cyli)
+    {
+      int cylSizes = 0;
+       m_Pincell(pci).GetCylSizes(cyli, cylSizes);
+      if (cylSizes > 0)
+      {
+        CVector<std::string> cylMat(cylSizes);
+        m_Pincell(pci).GetCylMat(cyli, cylMat);
+        for (int cmai = 1; cmai <= cylMat.GetSize(); ++cmai)
+        {
+          for (int mtrlIndx = 1; mtrlIndx <= m_nAssemblyMat; ++mtrlIndx)
+          {
+            if (m_szAssmMatAlias(mtrlIndx) == cylMat(cmai))
+            {
+              pinMtrlsSet.insert(m_szAssmMat(mtrlIndx));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // get a vector of all surfaces
+  std::vector<iGeom::EntityHandle> allSurfs;
+  iGeom::EntitySetHandle rootSetHandle = igeom->getRootSet();
+  igeom->getEntities(rootSetHandle, iBase_FACE, allSurfs);
+
+  // get the name tag
+  iGeom::TagHandle nameTag;
+  int tagSize;
+  igeom->getTagHandle("NAME", nameTag);
+  igeom->getTagSizeBytes(nameTag, tagSize);
+
+  // collect surfaces that have names identifying them as the tops of pins
+  std::vector<iGeom::EntityHandle> pinTopSurfs;
+  for (unsigned int ei = 0; ei < allSurfs.size(); ++ei)
+  {
+    char* entName = new char[tagSize];
+    entName[0] = 0;
+    igeom->getData(allSurfs[ei], nameTag, entName);
+    // TODO: error check for result == iBase_SUCCESS
+    // it should always be true for current code of CGM
+    // Other calls to igeom should do that too.  iGeom::Error result = ...
+    size_t enLen = strlen(entName);
+    char* endMatchChar = strchr(entName, '@');
+    if (endMatchChar == NULL)
+    {
+      endMatchChar = &entName[enLen];
+    }
+    if ((endMatchChar - entName) > 4 &&
+        strncmp(endMatchChar - 4, "_top", 4) == 0)
+    {
+      std::string matNameStr(entName, endMatchChar - 4);
+      if (pinMtrlsSet.find(matNameStr) != pinMtrlsSet.end())
+      {
+        pinTopSurfs.push_back(allSurfs[ei]);
+      }
+    }
+
+    delete[] entName;
+  }
+
+  // get the tag on the geometry that identifies the associated model entity
+  iGeom::TagHandle meTag = mk_core()->igeom_model_tag();
+
+  // sizing function for radial mesh size
+  SizingFunction radialMeshSize(mk_core(), -1, m_dRadialSize);
+  int radialSizeIndex = radialMeshSize.core_index();
+
+  // gather pointers to model entities for pin top surfaces and
+  // set the mesh size on the pin top surfaces
+  MEntVector pinTopSurfMes;
+  for (unsigned int ptsi = 0; ptsi < pinTopSurfs.size(); ++ptsi)
+  {
+    // Remark: iterator pattern may perform better that indexed loop here
+    iGeom::EntityHandle geoPinTopHandle = pinTopSurfs[ptsi];
+    ModelEnt* mePinTop;
+    igeom->getData(geoPinTopHandle, meTag, &mePinTop);
+    // TODO: check success
+    pinTopSurfMes.push_back(mePinTop);
+    mePinTop->sizing_function_index(radialSizeIndex);
+  }
+
+  mk_core()->insert_node(mk_core()->construct_meshop("CAMALPaver",
+      pinTopSurfMes), (MeshOp*) this);
 }
 
 void AssyMesher::execute_this()
@@ -193,14 +290,16 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
         }
 
 	// set the sizes
-	if(nCyl>0){
-	  if  (nCellMat!=0){
-	    m_Pincell(i).SetCellMatSize(nCyl);
+	if (nCyl>0) {
+	  if (nCellMat > 0) {
+	    m_Pincell(i).SetCellMatSize(nCellMat);
 	  }
 	  m_Pincell(i).SetNumCyl(nCyl);
 	}
-	else if(nCyl ==0){
-	  if(nInputLines >0)
+	else if (nCyl ==0) {
+          // used to be nInputLines > 0 . . . is it an error if
+          // neither a cylinder nor a material line in the pin cell input?
+	  if (nCellMat > 0)
 	    m_Pincell(i).SetCellMatSize(nCellMat);
 	}
 	nCyl = 0;
@@ -251,9 +350,8 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
         m_nSides = 6;
       else  if(m_szGeomType == "rectangular")
         m_nSides = 4;
-    }
-
-    if (szInputString.substr(0,8) == "geometry"){
+    } 
+    else if (szInputString.substr(0,8) == "geometry"){
       std::string outfile;
       std::istringstream szFormatString (szInputString);
       szFormatString >> card >> outfile;
