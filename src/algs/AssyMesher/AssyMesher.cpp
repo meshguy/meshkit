@@ -72,6 +72,10 @@ void AssyMesher::execute_this()
 //  5. Now mesh the top cutout portion using  CAMALTriMesher or GRUMMP trimesher (Report if this fails, if this fails change in radial mesh size and edge interval might be needed)
 //  6. Now sweep and name blocks.
 //  7. Create Neumann Sets
+
+  // step 1
+
+
 }
 
 void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)

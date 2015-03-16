@@ -22,7 +22,6 @@ namespace MeshKit
     MAXCHARS = 300;
     pi = M_PI;
     m_dRadialSize = -1.0;
-    m_dAxialSize = -1.0;
     m_dTetMeshSize = -1.0;
     m_nDimensions = 0;
     m_nMaterialSetId = 1;
@@ -55,6 +54,10 @@ namespace MeshKit
     Timer.GetDateTime (szDateTime);
     std::cout << "\nStarting out at : " << szDateTime << "\n";
   
+    if (have_common == true){
+       ReadCommonInp();
+      }
+
     //count pin cylinders and cell material, needed for setting array size before actual read
     ReadInputPhase1 ();
 
@@ -142,16 +145,14 @@ namespace MeshKit
             std::cout << "        -h print help" << std::endl;
             std::cout << "\nRunning default case:\n" << std::endl;
 
-            m_szInFile = (char *)DEFAULT_TEST_FILE;
-            m_szGeomFile = (char *)TEST_FILE_NAME;
-            m_szJouFile = (char *)TEST_FILE_NAME;
-            m_szFile =  (char *)TEST_FILE_NAME;
-            m_szInFile+=".inp";
+            m_szFile = (char *)DEFAULT_TEST_FILE;
+            m_szJouFile = (char *)DEFAULT_TEST_FILE;
             m_szJouFile+=".jou";
+            m_szInFile= TestDir + "/" + m_szFile + ".inp";
             m_szSchFile = m_szFile+".template.jou";
             m_szAssmInfo = m_szFile + "_info.csv";
             m_szLogFile = m_szFile + ".log";
-            m_szCommonFile = (std::string) SRC_DIR + "common.inp";
+            m_szCommonFile = "common.inp";
 
             std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
                      << "  " << m_szJouFile << std::endl;
@@ -338,7 +339,7 @@ namespace MeshKit
 #elif defined(HAVE_OCC)
     //  OCC ENGINE
     //  if (m_szEngine == "occ"){
-    m_szGeomFile = m_szFile+".stp";
+    m_szGeomFile = m_szFile+".brep";
     //  }
 #endif
     std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
@@ -1781,7 +1782,7 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   {
     // get the surface with max z
-    double dTol=1.0e-6, dZTemp = 0.0;
+    double dTol=1.0e-4, dZTemp = 0.0;
     int flag = 0, locTemp = 0;
     iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
     //SimpleArray<iBase_EntityHandle> surfs;
