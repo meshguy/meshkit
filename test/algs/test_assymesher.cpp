@@ -35,8 +35,7 @@ void test_assymesher_default(int argc, char **argv)
 
   // setup input/output assygen files for creating the 'Reactor Assembly' geometry
   am->PrepareIO(argc, argv, TestDir);
-  am->setup_this();
-  am->execute_this();
+  mk->setup_and_execute();
 
   //  mk->save_geometry("t.sat");
   // TODO: mesh using camal and parallel mesher
