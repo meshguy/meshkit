@@ -135,9 +135,18 @@ void AssyMesher::setup_this()
   // get the tag on the geometry that identifies the associated model entity
   iGeom::TagHandle meTag = mk_core()->igeom_model_tag();
 
-  // sizing function for radial mesh size
-  SizingFunction radialMeshSize(mk_core(), -1, m_dRadialSize);
-  int radialSizeIndex = radialMeshSize.core_index();
+  // sizing function for radial mesh size . . . MeshKit core will delete it
+  SizingFunction* radialMeshSizePtr;
+  if (m_dRadialSize <= 0)
+  {
+    radialMeshSizePtr = new SizingFunction(mk_core(), -1, 1);
+  }
+  else
+  {
+    radialMeshSizePtr = new SizingFunction(mk_core(), -1, m_dRadialSize);
+  }
+  int radialSizeIndex = radialMeshSizePtr->core_index();
+  std::cout << "Radial mesh size: " << m_dRadialSize << std::endl;
 
   // gather pointers to model entities for pin top surfaces and
   // set the mesh size on the pin top surfaces
