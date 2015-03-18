@@ -33,6 +33,8 @@ Center Y
 Center X
 TetMeshSize 1.0
 CreateSideset No
+RadialMeshSize 0.3
+AxialMeshSize 1 1
 MergeTolerance 1e-6
 END     ! This is a must  
 
