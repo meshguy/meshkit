@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include "meshkit/AssyMesher.hpp"
-#include "meshkit/MKCore.hpp"
-#include "meshkit/SizingFunction.hpp"
-#include "meshkit/RegisterMeshOp.hpp"
 #include "meshkit/LocalSet.hpp"
+#include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
+#include "meshkit/OneToOneSwept.hpp"
+#include "meshkit/RegisterMeshOp.hpp"
+#include "meshkit/SizingFunction.hpp"
 
 #include "iMesh_extensions.h"
 #include "MBCN.h"
-
-#include <set>
 
 
 namespace MeshKit
@@ -62,34 +61,11 @@ void AssyMesher::setup_this()
   // populate the model entities based on the geometry
   mk_core()->populate_model_ents();
 
-  // create a set that will hold names of pin materials
-  std::set<std::string> pinMtrlsSet;
-
-  // collect names of pin materials based on input file
-  for (int pci = 1; pci <= m_nPincells; ++pci)
+  // create a set with the names of materials as std::string
+  std::set<std::string> allMtrlsSet;
+  for (int mtrlIndx = 1; mtrlIndx <= m_nAssemblyMat; ++mtrlIndx)
   {
-    int numCyl = 0;
-    m_Pincell(pci).GetNumCyl(numCyl);
-    for (int cyli = 1; cyli <= numCyl; ++cyli)
-    {
-      int cylSizes = 0;
-       m_Pincell(pci).GetCylSizes(cyli, cylSizes);
-      if (cylSizes > 0)
-      {
-        CVector<std::string> cylMat(cylSizes);
-        m_Pincell(pci).GetCylMat(cyli, cylMat);
-        for (int cmai = 1; cmai <= cylMat.GetSize(); ++cmai)
-        {
-          for (int mtrlIndx = 1; mtrlIndx <= m_nAssemblyMat; ++mtrlIndx)
-          {
-            if (m_szAssmMatAlias(mtrlIndx) == cylMat(cmai))
-            {
-              pinMtrlsSet.insert(m_szAssmMat(mtrlIndx));
-            }
-          }
-        }
-      }
-    }
+    allMtrlsSet.insert(m_szAssmMat(mtrlIndx));
   }
 
   // get a vector of all surfaces
@@ -97,73 +73,159 @@ void AssyMesher::setup_this()
   iGeom::EntitySetHandle rootSetHandle = igeom->getRootSet();
   igeom->getEntities(rootSetHandle, iBase_FACE, allSurfs);
 
-  // get the name tag
-  iGeom::TagHandle nameTag;
-  int tagSize;
-  igeom->getTagHandle("NAME", nameTag);
-  igeom->getTagSizeBytes(nameTag, tagSize);
-
-  // collect surfaces that have names identifying them as the tops of pins
-  std::vector<iGeom::EntityHandle> pinTopSurfs;
-  for (unsigned int ei = 0; ei < allSurfs.size(); ++ei)
-  {
-    char* entName = new char[tagSize];
-    entName[0] = 0;
-    igeom->getData(allSurfs[ei], nameTag, entName);
-    // TODO: error check for result == iBase_SUCCESS
-    // it should always be true for current code of CGM
-    // Other calls to igeom should do that too.  iGeom::Error result = ...
-    size_t enLen = strlen(entName);
-    char* endMatchChar = strchr(entName, '@');
-    if (endMatchChar == NULL)
-    {
-      endMatchChar = &entName[enLen];
-    }
-    if ((endMatchChar - entName) > 4 &&
-        strncmp(endMatchChar - 4, "_top", 4) == 0)
-    {
-      std::string matNameStr(entName, endMatchChar - 4);
-      if (pinMtrlsSet.find(matNameStr) != pinMtrlsSet.end())
-      {
-        pinTopSurfs.push_back(allSurfs[ei]);
-      }
-    }
-
-    delete[] entName;
-  }
+  // get a vector of all surfaces that have are identified
+  // as top surfaces for some material
+  std::vector<iGeom::EntityHandle> *allTopSurfs =
+      selectByMaterialsAndNameSuffix(allSurfs, allMtrlsSet, "_top");
 
   // get the tag on the geometry that identifies the associated model entity
   iGeom::TagHandle meTag = mk_core()->igeom_model_tag();
 
   // sizing function for radial mesh size . . . MeshKit core will delete it
   SizingFunction* radialMeshSizePtr;
-  if (m_dRadialSize <= 0)
+  if (m_dRadialSize <= 0) // the radial size was not specified in the input
   {
-    radialMeshSizePtr = new SizingFunction(mk_core(), -1, 1);
+    if (m_szGeomType == "hexagonal")
+    {
+      double pitch = m_dMAssmPitch(1, m_nDimensions);
+      radialMeshSizePtr = new SizingFunction(mk_core(), -1, 0.1*pitch);
+    }
+    else
+    {
+      double pitchX = m_dMAssmPitchX(1, m_nDimensions);
+      double pitchY = m_dMAssmPitchY(1, m_nDimensions);
+      radialMeshSizePtr = new SizingFunction(mk_core(), -1,
+          0.02*0.5*(pitchX + pitchY));
+    }
   }
   else
   {
     radialMeshSizePtr = new SizingFunction(mk_core(), -1, m_dRadialSize);
   }
   int radialSizeIndex = radialMeshSizePtr->core_index();
-  std::cout << "Radial mesh size: " << m_dRadialSize << std::endl;
 
-  // gather pointers to model entities for pin top surfaces and
-  // set the mesh size on the pin top surfaces
-  MEntVector pinTopSurfMes;
-  for (unsigned int ptsi = 0; ptsi < pinTopSurfs.size(); ++ptsi)
+  // sizing function for axial mesh size . . . MeshKit core will delete it
+  // it looks like axial mesh size can be more complicated depending
+  // on number of ducts but for the moment assume it is uniform
+  SizingFunction* axialMeshSizePtr;
+  if (m_dAxialSize <= 0) // the axial size was not specified in the input
+  {
+    // in uniform size case, default is 10 intervals, i.e. 10% of height
+    axialMeshSizePtr = new SizingFunction(mk_core(), 10, -1);
+  }
+  else
+  {
+    axialMeshSizePtr = new SizingFunction(mk_core(), -1, m_dAxialSize);
+  }
+  int axialSizeIndex = axialMeshSizePtr->core_index();
+
+  // set the mesh sizes and operations starting from top surfaces
+  for (unsigned int tsi = 0; tsi < allTopSurfs->size(); ++tsi)
   {
     // Remark: iterator pattern may perform better that indexed loop here
-    iGeom::EntityHandle geoPinTopHandle = pinTopSurfs[ptsi];
-    ModelEnt* mePinTop;
-    igeom->getData(geoPinTopHandle, meTag, &mePinTop);
+    iGeom::EntityHandle topGeoHandle = (*allTopSurfs)[tsi];
+    ModelEnt* meTopSurf;
+    igeom->getData(topGeoHandle, meTag, &meTopSurf);
     // TODO: check success
-    pinTopSurfMes.push_back(mePinTop);
-    mePinTop->sizing_function_index(radialSizeIndex);
+    meTopSurf->sizing_function_index(radialSizeIndex);
+
+    MEntVector topSurfVec;
+    topSurfVec.push_back(meTopSurf);
+    MeshOp* paveOp = mk_core()->construct_meshop("CAMALPaver", topSurfVec);
+    mk_core()->insert_node(paveOp, (MeshOp*) this, mk_core()->root_node());
+
+    double topBBMinX, topBBMinY, topBBMinZ, topBBMaxX, topBBMaxY, topBBMaxZ;
+    igeom->getEntBoundBox(topGeoHandle,
+        topBBMinX, topBBMinY, topBBMinZ, topBBMaxX, topBBMaxY, topBBMaxZ);
+
+    std::vector<iGeom::EntityHandle> adjRegions;
+    igeom->getEntAdj(topGeoHandle, iBase_REGION, adjRegions);
+    for (size_t ari = 0; ari < adjRegions.size(); ++ari)
+    {
+      iGeom::EntityHandle adjRegionHandle = adjRegions[ari];
+
+      // confirm that the adjacent region is really below the top surface
+      double arBBMinX, arBBMinY, arBBMinZ, arBBMaxX, arBBMaxY, arBBMaxZ;
+      igeom->getEntBoundBox(adjRegionHandle,
+          arBBMinX, arBBMinY, arBBMinZ, arBBMaxX, arBBMaxY, arBBMaxZ);
+      if (arBBMinZ >= topBBMinZ)
+      {
+        // this is not the correct region since it is not below the top surface
+        continue;
+      }
+
+      ModelEnt* regionME;
+      igeom->getData(adjRegionHandle, meTag, &regionME);
+      // TODO: check success
+
+
+      // examine the faces of the region in order to
+      // (1) identify indices of the top and bottom face
+      // (2) set sizes on vertical faces and bottom face as needed
+      std::vector<iGeom::EntityHandle> regionSurfs;
+      igeom->getEntAdj(adjRegionHandle, iBase_FACE, regionSurfs);
+      size_t topFaceIndex, bottomFaceIndex;
+      for (size_t rfi = 0; rfi < regionSurfs.size(); ++rfi)
+      {
+        iGeom::EntityHandle regionFaceHandle = regionSurfs[rfi];
+        if (regionFaceHandle == topGeoHandle)
+        {
+          topFaceIndex = rfi;
+          continue;
+        }
+
+        // check whether this face shares an edge with the top face
+        bool commonEdge = false;
+        std::vector<iGeom::EntityHandle> edgesOfFace;
+        igeom->getEntAdj(regionFaceHandle, iBase_EDGE, edgesOfFace);
+        for (size_t eofci = 0; eofci < edgesOfFace.size(); ++eofci)
+        {
+          igeom->isEntAdj(topGeoHandle, edgesOfFace[eofci], commonEdge);
+          if (commonEdge) break;
+        }
+
+        if (commonEdge)
+        {
+          // this is a vertical face
+          ModelEnt* meVertSurf;
+          igeom->getData(regionFaceHandle, meTag, &meVertSurf);
+          // TODO: check success
+          if (meVertSurf->sizing_function_index() == -1)
+          {
+            // the vertical surface has not yet been processed, since no
+            // sizing function index is set on it
+            meVertSurf->sizing_function_index(axialSizeIndex);
+          }
+        }
+        else
+        {
+          // this is the bottom face
+          bottomFaceIndex = rfi;
+          ModelEnt* meBottomSurf;
+          igeom->getData(regionFaceHandle, meTag, &meBottomSurf);
+          // TODO: check success
+          if (meBottomSurf->sizing_function_index() == -1)
+          {
+            // the bottom surface does not yet have a
+            // sizing function set on it
+            meBottomSurf->sizing_function_index(radialSizeIndex);
+          }
+        }
+      }
+
+      MEntVector regionVec;
+      regionVec.push_back(regionME);
+      OneToOneSwept *sweepOp = (OneToOneSwept*)
+          mk_core()->construct_meshop("OneToOneSwept", regionVec);
+      sweepOp->SetSourceSurface(topFaceIndex);
+      sweepOp->SetTargetSurface(bottomFaceIndex);
+      mk_core()->insert_node(sweepOp, (MeshOp*)this, paveOp);
+    }
   }
 
-  mk_core()->insert_node(mk_core()->construct_meshop("CAMALPaver",
-      pinTopSurfMes), (MeshOp*) this);
+  delete allTopSurfs;
+
+  mk_core()->print_graph();
 }
 
 void AssyMesher::execute_this()
@@ -850,6 +912,63 @@ void AssyMesher::IOErrorHandler (ErrorStates ECode) const
   std::cerr << '\n' << "Error in input file line : " << m_nLineNumber;
   std::cerr << std::endl;
   exit (1);
+}
+
+std::vector<iGeom::EntityHandle>* AssyMesher::selectByMaterialsAndNameSuffix(
+    std::vector<iGeom::EntityHandle> const &geoEntVec,
+    std::set<std::string> const &matFilter, const char* suffix) const
+{
+  // get the name tag
+  iGeom::TagHandle nameTag;
+  int tagSize;
+  igeom->getTagHandle("NAME", nameTag);
+  igeom->getTagSizeBytes(nameTag, tagSize);
+
+  // get the length of the suffix
+  int suffixLen = strlen(suffix);
+
+  // allocate space to store the entity name retrieved from geometric entity
+  char* entName = new char[tagSize];
+
+  // allocate the vector that will be recturned
+  std::vector<iGeom::EntityHandle> *selectedEnts =
+    new std::vector<iGeom::EntityHandle>;
+
+  for (unsigned int ei = 0; ei < geoEntVec.size(); ++ei)
+  {
+    entName[0] = 0;
+    igeom->getData(geoEntVec[ei], nameTag, entName);
+    // TODO: error check for result == iBase_SUCCESS
+    // it should always be true for current code of CGM
+
+    // the suffix, if present, should end at the first @ character in the
+    // name or at the end of the name if there are no @ characters
+    size_t enLen = strlen(entName);
+    char* endMatchChar = strchr(entName, '@');
+    if (endMatchChar == NULL)
+    {
+      endMatchChar = &entName[enLen];
+    }
+
+    // if the suffix is present
+    if ((endMatchChar - entName) > suffixLen &&
+        strncmp(endMatchChar - suffixLen, suffix, suffixLen) == 0)
+    {
+      // if the part of the name before the suffix is in the
+      // set of acceptable materials
+      std::string matNameStr(entName, endMatchChar - suffixLen);
+      if (matFilter.find(matNameStr) != matFilter.end())
+      {
+        // add it to the vector
+        selectedEnts->push_back(geoEntVec[ei]);
+      }
+    }
+  }
+
+  // release the memory allocated for the entity name
+  delete[] entName;
+
+  return selectedEnts;
 }
 
 } // namespace MeshKit

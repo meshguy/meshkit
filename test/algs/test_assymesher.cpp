@@ -1,6 +1,6 @@
-/** \file test_assygen.cpp \test
+/** \file test_assymesher.cpp \test
  *
- * Test AssyGen
+ * Test AssyMesher
  *
  */
 
@@ -26,14 +26,17 @@ int main(int argc, char *argv[])
 
 void test_assymesher_default(int argc, char **argv)
 {
-  // create a model entity vector for construting assygen meshop, note that NO model entities are required for assygen meshop.
+  // Create a model entity vector for construting assymesher meshop.
+  // No model entities are required for assymesher meshop, so the vector
+  // remains empty.
   MEntVector volso;
 
   // construct the meshop and set name
   AssyMesher *am = (AssyMesher*) mk->construct_meshop("AssyMesher", volso);
-  am->set_name("assygen");
+  am->set_name("assymesher");
 
-  // setup input/output assygen files for creating the 'Reactor Assembly' geometry
+  // setup input/output assymesher files for meshing the
+  // 'Reactor Assembly' geometry
   am->PrepareIO(argc, argv, TestDir);
   mk->setup_and_execute();
 

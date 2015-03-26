@@ -158,7 +158,9 @@ private:
   // doubles for pincell pitch, pi and mesh sizes resp.
   double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize, m_dMergeTol;
 
-
+  std::vector<iGeom::EntityHandle>* selectByMaterialsAndNameSuffix(
+      std::vector<iGeom::EntityHandle> const &geoEntVec,
+      std::set<std::string> const &matFilter, const char* suffix) const;
 
 };
 
