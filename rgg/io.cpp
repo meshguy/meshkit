@@ -2669,7 +2669,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
   szFormatString >> card >> m_nPinX >> m_nPinY;
   if(m_nPinX <=0 || m_nPinY <=0)
     IOErrorHandler (INVALIDINPUT);
-  m_Assembly.SetSize(m_nPinX,m_nPinY);
+  m_Assembly.SetSize(m_nPinY,m_nPinX);
 
   if (m_nJouFlag == 1)
     return 0;
