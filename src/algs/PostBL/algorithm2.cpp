@@ -205,8 +205,9 @@ void PostBL:: Algo2(){
             conn.resize(m_Intervals*6);
         }
         else{
+            m_HConn = 6; // we use the prism for making tets
             tet_conn.resize(3*m_Intervals*m_Conn);
-            conn.resize(3*m_Intervals*m_Conn);
+            conn.resize(m_Intervals*6);
         }
         qconn.resize(m_BElemNodes), adj_qconn.resize(m_BElemNodes),
                 old_hex_conn.resize(m_Conn), adj_hex_nodes1.resize(m_Conn);
@@ -802,21 +803,21 @@ void PostBL:: Algo2(){
 
         if(m_Conn == 4 && m_BElemNodes == 3 && hybrid == false){
             for(int c=0; c<m_Intervals; c++){
-                // first tet
-                tet_conn[m_Conn*c*2] =     conn[c*m_HConn + 0];
-                tet_conn[m_Conn*c*2 + 1] = conn[c*m_HConn + 4];
-                tet_conn[m_Conn*c*2 + 2] = conn[c*m_HConn + 5];
-                tet_conn[m_Conn*c*2 + 3] = conn[c*m_HConn + 3];
-                // middle tet
-                tet_conn[m_Conn*c*2 + 4] = conn[c*m_HConn + 0];
-                tet_conn[m_Conn*c*2 + 5] = conn[c*m_HConn + 1];
-                tet_conn[m_Conn*c*2 + 6] = conn[c*m_HConn + 2];
-                tet_conn[m_Conn*c*2 + 7] = conn[c*m_HConn + 5];
-                //last tet
-                tet_conn[m_Conn*c*2 + 8] = conn[c*m_HConn + 0];
-                tet_conn[m_Conn*c*2 + 9] = conn[c*m_HConn + 1];
-                tet_conn[m_Conn*c*2 + 10] = conn[c*m_HConn + 5];
-                tet_conn[m_Conn*c*2 + 11] = conn[c*m_HConn + 4];
+                    // first tet
+                  tet_conn[m_Conn*c*3] =     conn[c*m_HConn + 0];
+                  tet_conn[m_Conn*c*3 + 1] = conn[c*m_HConn + 4];
+                  tet_conn[m_Conn*c*3 + 2] = conn[c*m_HConn + 5];
+                  tet_conn[m_Conn*c*3 + 3] = conn[c*m_HConn + 3];
+                  // middle tet
+                  tet_conn[m_Conn*c*3 + 4] = conn[c*m_HConn + 0];
+                  tet_conn[m_Conn*c*3 + 5] = conn[c*m_HConn + 1];
+                  tet_conn[m_Conn*c*3 + 6] = conn[c*m_HConn + 2];
+                  tet_conn[m_Conn*c*3 + 7] = conn[c*m_HConn + 5];
+                  //last tet
+                  tet_conn[m_Conn*c*3 + 8] = conn[c*m_HConn + 0];
+                  tet_conn[m_Conn*c*3 + 9] = conn[c*m_HConn + 1];
+                  tet_conn[m_Conn*c*3 + 10] = conn[c*m_HConn + 5];
+                  tet_conn[m_Conn*c*3 + 11] = conn[c*m_HConn + 4];
             }
         }
 
