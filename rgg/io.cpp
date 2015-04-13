@@ -1277,7 +1277,7 @@ int CNrgen::ReadAndCreate()
 
           if ( m_nJouFlag == 0){
               // impring merge before saving
-              //	Imprint_Merge();
+              Imprint_Merge();
 
               // save .sat file
               iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
@@ -2268,8 +2268,16 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  // get the surface with max z
-  double dTol=1.0e-6, dZTemp = 0.0;
+  double dTol = 1e-4, ttol = 0.0;
+  if(m_szGeomType == "hexagonal")
+    ttol = m_dMAssmPitch(1, 1);
+  else if (m_szGeomType == "rectangular")
+    ttol = m_dMAssmPitchX(1,1);
+  // set tolerance for surface identification
+  if (ttol != 0){
+      dTol=ttol*1.0e-4;
+    }
+ double dZTemp = 0.0;
   int flag = 0, locTemp = 0;
   iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
   SimpleArray<iBase_EntityHandle> surfs;
@@ -2366,7 +2374,7 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
     }
   std::cout <<"\n";
   return 0;
-} 
+}
 
 
 int CNrgen::Center_Assm (char &rDir)
@@ -2971,25 +2979,25 @@ int CNrgen::Imprint_Merge()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  // // getting all entities for merge and imprint
-  // SimpleArray<iBase_EntityHandle> entities;
-  // iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
-  // CHECK( "ERROR : getRootSet failed!" );
+   // getting all entities for merge and imprint
+   SimpleArray<iBase_EntityHandle> entities;
+   iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
+   CHECK( "ERROR : getRootSet failed!" );
 
-  //  //  now imprint
-  //  std::cout << "\n\nImprinting...." << std::endl;
-  //  iGeom_imprintEnts(geom, ARRAY_IN(entities),&err);
-  //  CHECK("Imprint failed.");
-  //  std::cout << "\n--------------------------------------------------"<<std::endl;
+    //  now imprint
+    std::cout << "\n\nImprinting...." << std::endl;
+    iGeom_imprintEnts(geom, ARRAY_IN(entities),&err);
+    CHECK("Imprint failed.");
+    std::cout << "\n--------------------------------------------------"<<std::endl;
 
-  //   // merge tolerance
-  //   double dTol = 1e-4;
-  //   // now  merge
-  //   std::cout << "\n\nMerging...." << std::endl;
-  //   iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
-  //   CHECK("Merge failed.");
-  //   std::cout <<"merging finished."<< std::endl;
-  //   std::cout << "\n--------------------------------------------------"<<std::endl;
+     // merge tolerance
+     double dTol = 1e-4;
+     // now  merge
+     std::cout << "\n\nMerging...." << std::endl;
+     iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
+     CHECK("Merge failed.");
+     std::cout <<"merging finished."<< std::endl;
+     std::cout << "\n--------------------------------------------------"<<std::endl;
   return 0;
 }
 
