@@ -83,8 +83,10 @@ void AssyMesher::setup_this()
 
   // sizing function for radial mesh size . . . MeshKit core will delete it
   SizingFunction* radialMeshSizePtr;
-  if (m_dRadialSize <= 0) // the radial size was not specified in the input
+  if (m_dRadialSize <= 0 && m_nDimensions > 0)
   {
+    // the radial size was not specified in the input
+    // but there are pins
     if (m_szGeomType == "hexagonal")
     {
       double pitch = m_dMAssmPitch(1, m_nDimensions);
@@ -97,6 +99,11 @@ void AssyMesher::setup_this()
       radialMeshSizePtr = new SizingFunction(mk_core(), -1,
           0.02*0.5*(pitchX + pitchY));
     }
+  }
+  else if (m_dRadialSize <= 0)
+  {
+    // there are no pins and no radial mesh size
+    radialMeshSizePtr = new SizingFunction(mk_core(), -1, 1.0);
   }
   else
   {
@@ -158,6 +165,7 @@ void AssyMesher::setup_this()
       igeom->getData(adjRegionHandle, meTag, &regionME);
       // TODO: check success
 
+      regionME->sizing_function_index(axialSizeIndex, false);
 
       // examine the faces of the region in order to
       // (1) identify indices of the top and bottom face
@@ -194,7 +202,19 @@ void AssyMesher::setup_this()
           {
             // the vertical surface has not yet been processed, since no
             // sizing function index is set on it
-            meVertSurf->sizing_function_index(axialSizeIndex);
+            meVertSurf->sizing_function_index(axialSizeIndex, false);
+            // sizing function needs to be set on the vertical edges . . .
+            // it should be okay to set it on all boundary edges not yet set
+            MEntVector edgeMEsVec;
+            std::vector<int> senses;
+            meVertSurf->boundary(1, edgeMEsVec, &senses);
+            for (size_t emei = 0; emei < edgeMEsVec.size(); ++emei)
+            {
+              if (edgeMEsVec[emei]->sizing_function_index() == -1)
+              {
+                edgeMEsVec[emei]->sizing_function_index(axialSizeIndex, false);
+              }
+            }
           }
         }
         else
