@@ -4,7 +4,9 @@
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 
-//#include "meshkit/FBiGeom.hpp"
+#include "lemon/adaptors.h"
+
+#include <set>
 
 namespace MeshKit 
 {
@@ -62,6 +64,83 @@ void MeshOp::setup_boundary()
     if (this_op[dim])
       mk_core()->insert_node(this_op[dim], this);
   }
+}
+
+// TODO: Split this into separate functions, one for ensuring dependence
+// on a list of meshops, and the other for doing it with boundary
+void MeshOp::ensure_facet_dependencies(bool recurse_to_facets)
+{
+  std::set<MeshOp*> allFacetMOps;
+
+  for (MEntSelection::iterator mit = mentSelection.begin();
+      mit != mentSelection.end(); ++mit)
+  {
+    ModelEnt *aSelEnt = (*mit).first;
+    int dim = aSelEnt->dimension();
+    if (dim == 0 || aSelEnt->get_meshed_state() >= COMPLETE_MESH)
+    {
+      continue;
+    }
+
+    MEntVector facets;
+    aSelEnt->get_adjacencies(dim - 1, facets);
+    for (MEntVector::iterator facetItr = facets.begin();
+        facetItr != facets.end(); ++facetItr)
+    {
+      std::vector<MeshOp*> facetMOps;
+      (*facetItr)->get_meshops(facetMOps);
+      allFacetMOps.insert(facetMOps.begin(), facetMOps.end());
+    }
+  }
+
+
+  // if recursing, keep track of mops found so we can recurse on them
+  std::vector<MeshOp*> mopsFound;
+
+  lemon::ReverseDigraph<lemon::ListDigraph>
+      revGraph(this->get_graph()->get_graph());
+  lemon::Bfs<lemon::ReverseDigraph<lemon::ListDigraph> > rbfs(revGraph);
+  rbfs.init();
+  rbfs.addSource(this->get_node());
+  while (!rbfs.emptyQueue() && !allFacetMOps.empty())
+  {
+    lemon::ListDigraph::Node lemNode = rbfs.processNextNode();
+    MeshOp* mkMOp = this->get_graph()->get_meshop(lemNode);
+    std::set<MeshOp*>::iterator opFoundItr = allFacetMOps.find(mkMOp);
+    if (opFoundItr != allFacetMOps.end())
+    {
+      if (recurse_to_facets)
+      {
+        mopsFound.push_back(mkMOp);
+      }
+      allFacetMOps.erase(opFoundItr);
+    }
+  }
+
+  // insert direct dependencies on MeshOps not found in the graph
+  for (std::set<MeshOp*>::iterator mOpItr = allFacetMOps.begin();
+      mOpItr != allFacetMOps.end(); ++mOpItr)
+  {
+    this->get_graph()->add_arc(*mOpItr, this);
+  }
+
+  if (recurse_to_facets)
+  {
+    // recurse to facets that this did not previously depend on
+    for (std::set<MeshOp*>::iterator mOpItr = allFacetMOps.begin();
+        mOpItr != allFacetMOps.end(); ++mOpItr)
+    {
+      (*mOpItr)->ensure_facet_dependencies(true);
+    }
+    // recurse to facets that this already depended on
+    for (std::vector<MeshOp*>::iterator mOpItr = mopsFound.begin();
+        mOpItr != mopsFound.end(); ++mOpItr)
+    {
+      (*mOpItr)->ensure_facet_dependencies(true);
+    }
+  }
+
+  return;
 }
 
 bool MeshOp::canmesh_vertex(ModelEnt *model_ent) 

@@ -70,6 +70,17 @@ public:
      */
   void setup_boundary();
 
+    /** \brief Ensure that this MeshOp depends on any MeshOp assigned to a face of this MeshOp's selected entities
+     *
+     * For each entity selected for this MeshOp, checks that this MeshOp
+     * has a dependence on any MeshOp assigned to a face of the entity.
+     * If no such dependence can be found inserts a direct dependency arc
+     * from this MeshOpt to the MeshOp on the face.
+     *
+     * \param recurse_to_faces if true (default value), this method is called on each MeshOp that is assigned to one or more faces of entities that this MeshOp is assigned to
+     */
+  void ensure_facet_dependencies(bool recurse_to_facets = true);
+
     /** \brief Helper function for meshop registration, returns true if specified ModelEnt is a vertex
      * \param model_ent Model entity being evaluated
      * \return True if model_ent has dimension() == 0
