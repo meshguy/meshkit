@@ -2,7 +2,8 @@ SUBDIRS = .
 MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk \
 BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk \
 SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default.sat assygen_default.template.jou graph.eps \
-intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m
+intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk \
+assygen_default.stp cyl_mod.h5m cgd.h5m coregen_d.h5m CoreGen_default.log CoreGen_default.makefile
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
@@ -31,7 +32,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils
 
 
-TESTS = postbl
+TESTS = postbl coregen assygen
 
 
 
@@ -44,6 +45,10 @@ endif
 
 
 postbl_SOURCES = postbl.cpp
+
+coregen_SOURCES = coregen.cpp
+
+assygen_SOURCES = assygen.cpp
 
 # Utility target: build but don't run tests
 build-check:
