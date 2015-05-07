@@ -278,8 +278,8 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
 
   // determine whether there is an edge along the linking surface
   MEntVector allBoundEdges;
-  std::vector<int> senses, group_sizes;
-  ent->ModelEnt::boundary(1, allBoundEdges, &senses, &group_sizes);
+  std::vector<int> allSenses, group_sizes;
+  ent->ModelEnt::boundary(1, allBoundEdges, &allSenses, &group_sizes);
   map<ModelEnt*, int> boundEdgeCount;
   for (unsigned int i = 0; i < allBoundEdges.size(); ++i)
   {
@@ -290,12 +290,14 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
     ++boundEdgeCount[allBoundEdges[i]];
   }
   MEntVector boundEdges;
+  std::vector<int> boundEdgeSenses;
   ModelEnt* linkSurfEdge = NULL;
   for (unsigned int i = 0; i < allBoundEdges.size(); ++i)
   {
     if (boundEdgeCount[allBoundEdges[i]] == 1)
     {
       boundEdges.push_back(allBoundEdges[i]);
+      boundEdgeSenses.push_back(allSenses[i]);
     }
     else
     {
@@ -321,8 +323,8 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
   {
     List_i.push_back((iBase_EntityHandle) nList[ix]);
   }
-  // if sense is reverse for edge 0, reverse list
-  if (senses[0] == -1)
+  // we reverse the first boundary edge if it is "negative" in the loop
+  if (boundEdgeSenses[0] == -1)
   {
     std::reverse(List_i.begin(), List_i.end());
   }
@@ -335,7 +337,8 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
   {
     List_ii.push_back((iBase_EntityHandle) nList[ix]);
   }
-  if (senses[1] == 1)//we reverse it if this edge is "positive" in the loop
+  // we reverse the second boundary edge if it is "positive" in the loop
+  if (boundEdgeSenses[1] == 1)
   {
     std::reverse(List_ii.begin(), List_ii.end());
   }
