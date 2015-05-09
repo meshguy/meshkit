@@ -53,6 +53,7 @@ CNrgen::CNrgen ()
   save_exodus = false;
   have_common = true;
   com_run_count = 0;
+  m_nBLAssemblyMat = 0;
 }
 
 CNrgen::~CNrgen ()
