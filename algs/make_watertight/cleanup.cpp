@@ -68,7 +68,7 @@ namespace cleanup {
 						    NULL, 1, trees );
     assert(MB_SUCCESS == result);
     std::cout << "  " << trees.size() << " OBB tree(s) contained in file" << std::endl;
-    return MB_SUCCESS;  
+    return result;
   }
 
   MBErrorCode delete_small_edge_and_tris( const MBEntityHandle vert0, 
@@ -76,7 +76,7 @@ namespace cleanup {
                                           const double tol ) {
     // If the verts are the same, this is not meaningful.
     if(vert0 == vert1) return MB_SUCCESS;
-    MBErrorCode result;
+    MBErrorCode result = MB_SUCCESS;
 
     // If the edge is small, delete it and the adjacent tris.
     if(tol > gen::dist_between_verts(vert0, vert1)) {
@@ -95,7 +95,7 @@ namespace cleanup {
       assert(MB_SUCCESS == result);
       vert1 = vert0;
     }
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode delete_small_edges(const MBRange &surfaces, const double FACET_TOL) {
@@ -105,7 +105,7 @@ namespace cleanup {
     /* Remove small triangles by removing edges that are too small. 
     Remove small edges by merging their endpoints together, creating
     degenerate triangles. Delete the degenerate triangles. */
-    MBErrorCode result;
+    MBErrorCode result = MB_SUCCESS;
     for(MBRange::const_iterator i=surfaces.begin(); i!=surfaces.end(); i++) {
       std::cout << "surf_id=" << gen::geom_id_by_handle(*i) << std::endl;
 
@@ -146,6 +146,7 @@ namespace cleanup {
 
       for(MBRange::iterator j=internal_edges.begin(); j!=internal_edges.end(); j++) {
         int n_internal_edges = internal_edges.size();
+        (void) n_internal_edges;
 	std::cout << "edge=" << *j << std::endl;
         MBI()->list_entity( *j );
         assert(MB_SUCCESS == result);
@@ -408,7 +409,7 @@ namespace cleanup {
       assert(MB_SUCCESS == result); 
    
     }
-    return MB_SUCCESS;
+    return result;
   } 
   
   // Lots of edges have been created but are no longer needed.
@@ -433,7 +434,7 @@ namespace cleanup {
     std::cout << "deleting " << edges_to_delete.size() << " unused edges" << std::endl;
     result = MBI()->delete_entities( edges_to_delete );
     assert(MB_SUCCESS == result);
-    return MB_SUCCESS;
+    return result;
   }
  
   

@@ -62,7 +62,8 @@ MOSTLYCLEANFILES = \
              assygen_default_info.csv \
              twoassm_info.csv \
              twoassm_out.h5m \
-             assygen_default.jou
+             assygen_default.jou \
+             assygen_default.brep
 
 
 # Tests and such

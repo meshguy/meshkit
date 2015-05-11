@@ -7,7 +7,7 @@
 #include "MBSkinner.hpp"
 #include "MBTagConventions.hpp"
 
-MBInterface *MBI(); 
+
 namespace arc {
 
 /// check that edge is going in the same direction as one of the edges on tri.

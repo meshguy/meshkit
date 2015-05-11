@@ -35,7 +35,7 @@ void CNrgen::Banner (std::ostream& OF)
   std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
   std::cout << "\t\t\t\t        2009-2010         " << '\n';
   std::cout << "\t\t---------------------------------------------------------" << '\n';
-  std::cout << "\nsee README file for using the program and details on various cards.\n"<< std::endl;
+  std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
 }
 
 
@@ -80,7 +80,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
                     case 'h':
                       {
                         std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-                        std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl;
+                        std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
                         std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;
                         std::cout << "        -j create journal file only" << std::endl;
                         std::cout << "        -h print help" << std::endl;
@@ -94,7 +94,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
         }
       else if (1 == argc){
           std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-          std::cout << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README" << std::endl;
+          std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
           std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;
           std::cout << "        -t print timing and memory usage info in each step" << std::endl;
           std::cout << "        -j create journal file only" << std::endl;
@@ -176,7 +176,7 @@ int CNrgen::PrepareIO (int argc, char *argv[])
 #elif defined(HAVE_OCC)
   //  OCC ENGINE
   //  if (m_szEngine == "occ"){
-  m_szGeomFile = m_szFile+".stp";
+  m_szGeomFile = m_szFile+".brep";
   //  }o
 #endif
   std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
@@ -428,6 +428,32 @@ int CNrgen::ReadInputPhase1 ()
                 }
             }
         }
+      // Read material data
+      if (szInputString.substr(0,11) == "blmaterials"){
+
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_nBLAssemblyMat;
+          if(szFormatString.fail())
+            IOErrorHandler(INVALIDINPUT);
+          m_szBLAssmMat.SetSize(m_nBLAssemblyMat); m_dBLMatBias.SetSize(m_nBLAssemblyMat);
+          m_nBLMatIntervals.SetSize(m_nBLAssemblyMat);
+          for (int j=1; j<=m_nBLAssemblyMat; j++){
+              szFormatString >> m_szBLAssmMat(j) >> m_dBLMatBias(j) >> m_nBLMatIntervals(j);
+              if( (strcmp (m_szBLAssmMat(j).c_str(), "") == 0) ||
+                  (m_nBLMatIntervals(j) < 0) ||
+                  (m_dBLMatBias(j) < 0.0)){
+                  IOErrorHandler(EMAT);
+                }
+              // checking if & inserted at the end of the material by mistake
+              if (j == m_nBLAssemblyMat){
+                  std::string dummy = "";
+                  szFormatString >> dummy;
+                  if (strcmp (dummy.c_str(), "") != 0)
+                    IOErrorHandler(EMAT);
+                }
+            }
+        }
+
       // start id for pin number
       if (szInputString.substr(0, 10) == "startpinid") {
           std::istringstream szFormatString(szInputString);
@@ -652,16 +678,16 @@ int CNrgen::ReadPinCellData (int i)
                   szFormatString >> szVCylMat(m);
                   if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
-                  // setting stuff for hole scheme determination for meshing
-                  if (m > 1 && m_szMeshScheme == "hole"){
-                      // find material name for this alias
-                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                        }
-                    }
-                }
+//                  // setting stuff for hole scheme determination for meshing
+//                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
+//                      // find material name for this alias
+//                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+//                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+//                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+//                        }
+//                    }
               m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+            }
             }
           if (szInputString.substr(0,7) == "frustum"){
 
@@ -829,7 +855,7 @@ int CNrgen::ReadPinCellData (int i)
                   if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
                   // setting stuff for hole scheme determination for meshing
-                  if (m > 1 && m_szMeshScheme == "hole"){
+                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
                       // find material name for this alias
                       for (int ll=1; ll<= m_nAssemblyMat; ll++){
                           //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
@@ -1277,7 +1303,7 @@ int CNrgen::ReadAndCreate()
 
           if ( m_nJouFlag == 0){
               // impring merge before saving
-              //	Imprint_Merge();
+              Imprint_Merge();
 
               // save .sat file
               iGeom_save(geom, m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
@@ -1415,6 +1441,19 @@ int CNrgen::CreateCubitJournal()
 {
   if(m_szMeshScheme == "hole")
     m_FileOutput << "surf in group hole_surfaces scheme hole" << std::endl;
+
+ if (m_nBLAssemblyMat !=0){
+      // Also look for material name in BL material list
+      for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
+          //if(szVCylMat(m) == m_szBLAssmMat(ll)) {
+              m_FileOutput << "group 'tmpgrp' equals surf with name '" <<  m_szBLAssmMat(ll)  << "_top'" << std::endl;
+              m_FileOutput << "group '" << m_szBLAssmMat(ll) << "_hole_surfaces' equals surf in tmpgrp"<< std::endl;
+              m_FileOutput << "surface in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_interval " << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
+              m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
+           // }
+        }
+    }
+
   // variables
   int nColor;
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
@@ -1490,6 +1529,8 @@ int CNrgen::CreateCubitJournal()
                   else
                     m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "= 0.1*Z_HEIGHT}" << std::endl;
                   m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE" << p << "}" << std::endl;
+                  m_SchemesFile << "#{BLOCK" << p << "_ZBOT = " << m_dMZAssm(p, 1) << "}" << std::endl;
+                  m_SchemesFile << "#{BLOCK" << p << "_ZTOP = " << m_dMZAssm(p, 2) << "}" << std::endl;
                 }
               m_SchemesFile << "##" << std::endl;
             }
@@ -1520,7 +1561,7 @@ int CNrgen::CreateCubitJournal()
       m_FileOutput << "#Creating blocks, Note: you might need to combine some blocks" << std::endl;
       // group creation dumps. each material has a group
       m_FileOutput << "#Creating groups" << std::endl;
-      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
           szGrp = "g_"+ m_szAssmMat(p);
           m_szAssmMat(p);
           if(m_nPlanar ==1){
@@ -1530,7 +1571,7 @@ int CNrgen::CreateCubitJournal()
               m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
             }
         }
-      for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
+      for(int p = 1; p <=  (m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
           szBlock = "b_"+ m_szAssmMat(p);
           szGrp = "g_"+ m_szAssmMat(p);
           m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
@@ -1652,7 +1693,7 @@ int CNrgen::CreateCubitJournal()
           //now set the sizes
           m_FileOutput << "#Set Meshing Scheme and Sizes, use template.jou to specify sizes" << std::endl;
 
-          for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+          for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
               szGrp = "g_"+ m_szAssmMat(p);
               szSize =  m_szAssmMat(p) + "_size";
               szSurfBot = m_szAssmMat(p) + "_bot";
@@ -1667,7 +1708,7 @@ int CNrgen::CreateCubitJournal()
   if(m_szMeshType == "hex"){
       // some more common stuff meshing top surfaces set the sizes and mesh
       m_FileOutput << "#Surfaces mesh, use template.jou to specify sizes" << std::endl;
-      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
           szSurfTop = m_szAssmMat(p) + "_top";
           szGrp = "g_"+ m_szAssmMat(p);
           szSize =  m_szAssmMat(p) + "_surf_size";
@@ -1911,11 +1952,21 @@ int CNrgen::CreateCubitJournal()
       // top surface sidesets
       m_FileOutput << "#Creating top surface sidesets" << std::endl;
       m_FileOutput << "create group 'surfall'" << std::endl;
-      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
           ++nSideset;
           szSurfTop = m_szAssmMat(p)+"_top";
           // Avoid creation if empty sideset
-          m_FileOutput << "sideset " << nSideset << " surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+          m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+          m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+          m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
+        }
+      m_FileOutput << "#" << std::endl;
+      for(int p=1;p<=m_nBLAssemblyMat;p++){
+          ++nSideset;
+          szSurfTop = m_szBLAssmMat(p)+"_top";
+          // Avoid creation if empty sideset
+          m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << std::endl;
+          m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
           m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
         }
       m_FileOutput << "#" << std::endl;
@@ -1926,14 +1977,25 @@ int CNrgen::CreateCubitJournal()
       if(m_szSideset == "yes"){
           // now create bot and side sideset
           m_FileOutput << "#Creating bot/side surface sidesets" << std::endl;
-          for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+          for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
               szSurfTop = m_szAssmMat(p)+"_bot";
               m_FileOutput << "#" << std::endl;
               ++nSideset;
-              m_FileOutput << "sideset " << nSideset << " surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+              m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+              m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
               m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
             }
-          for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+          for(int p=1;p<=m_nBLAssemblyMat;p++){
+              ++nSideset;
+              szSurfTop = m_szBLAssmMat(p)+"_bot";
+              // Avoid creation if empty sideset
+              m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << std::endl;
+              m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
+              m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
+            }
+          m_FileOutput << "#" << std::endl;
+
+          for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
               szSurfSide = m_szAssmMat(p)+"_side";
               ++nSideset;
               if(m_szGeomType == "hexagonal"){
@@ -1986,7 +2048,7 @@ int CNrgen::CreateCubitJournal()
       // group creation dumps. each material has a group
       m_FileOutput << "#Creating groups" << std::endl;
       if(m_szMeshType == "hex"){
-          for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+          for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
               szGrp = "g_"+ m_szAssmMat(p);
               m_szAssmMat(p);
               if(m_nPlanar ==1){
@@ -1997,7 +2059,7 @@ int CNrgen::CreateCubitJournal()
                   m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
                 }
             }
-          for(int p = 1; p <=  m_szAssmMatAlias.GetSize();p++){
+          for(int p = 1; p <=  (m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
               szBlock = "b_"+ m_szAssmMat(p);
               szGrp = "g_"+ m_szAssmMat(p);
               m_FileOutput << "#{nb" << p << " =NumInGrp('" << szGrp << "')}" << std::endl;
@@ -2041,7 +2103,7 @@ int CNrgen::CreateCubitJournal()
   if(m_nHblock > 0){
       // now dump the commands for making hex layers as blocks and subtracting from original
       double delta = (m_dZend - m_dZstart)/m_nHblock;
-      for(int i=0; i<m_szAssmMatAlias.GetSize(); i++){
+      for(int i=0; i<(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat); i++){
           m_FileOutput << "## BLOCK CREATION USING HEXES" << std::endl;
           for(int j=0; j<m_nHblock; j++){
               m_FileOutput << "group 'tmpgrp" << j+1 << "' equals hex in block " <<  m_nMaterialSetId + i
@@ -2052,7 +2114,7 @@ int CNrgen::CreateCubitJournal()
               m_FileOutput << "block " <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << " remove" << std::endl;
             }
           for(int j=0; j<m_nHblock; j++){
-              if(m_szAssmMatAlias.GetSize() < 10)
+              if((m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat) < 10)
                 m_FileOutput << "block " << j+1 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl;
               else
                 m_FileOutput << "block " << (j+1)*10 <<  m_nMaterialSetId+i << " group tmpgrp" << j+1 << std::endl;
@@ -2064,7 +2126,7 @@ int CNrgen::CreateCubitJournal()
   // color now
   m_FileOutput << "#Set color for different parts" << std::endl;
   if(m_nPlanar == 0){ // volumes only
-      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
           szGrp = "g_"+ m_szAssmMat(p);
           if(p>20)
             nColor = 1;
@@ -2075,7 +2137,7 @@ int CNrgen::CreateCubitJournal()
     }
   else{ //surfaces
       // color now
-      for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+      for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
           szGrp = "g_"+ m_szAssmMat(p);
           if(p>20)
             nColor = 1;
@@ -2264,8 +2326,16 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  // get the surface with max z
-  double dTol=1.0e-6, dZTemp = 0.0;
+  double dTol = 1e-4, ttol = 0.0;
+  if(m_szGeomType == "hexagonal")
+    ttol = m_dMAssmPitch(1, 1);
+  else if (m_szGeomType == "rectangular")
+    ttol = m_dMAssmPitchX(1,1);
+  // set tolerance for surface identification
+  if (ttol != 0){
+      dTol=ttol*1.0e-4;
+    }
+ double dZTemp = 0.0;
   int flag = 0, locTemp = 0;
   iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
   SimpleArray<iBase_EntityHandle> surfs;
@@ -2362,7 +2432,7 @@ int CNrgen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle bod
     }
   std::cout <<"\n";
   return 0;
-} 
+}
 
 
 int CNrgen::Center_Assm (char &rDir)
@@ -2665,7 +2735,7 @@ int CNrgen::Create_CartAssm(std::string &szInputString)
   szFormatString >> card >> m_nPinX >> m_nPinY;
   if(m_nPinX <=0 || m_nPinY <=0)
     IOErrorHandler (INVALIDINPUT);
-  m_Assembly.SetSize(m_nPinX,m_nPinY);
+  m_Assembly.SetSize(m_nPinY,m_nPinX);
 
   if (m_nJouFlag == 1)
     return 0;
@@ -2967,25 +3037,25 @@ int CNrgen::Imprint_Merge()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  // // getting all entities for merge and imprint
-  // SimpleArray<iBase_EntityHandle> entities;
-  // iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
-  // CHECK( "ERROR : getRootSet failed!" );
+   // getting all entities for merge and imprint
+   SimpleArray<iBase_EntityHandle> entities;
+   iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
+   CHECK( "ERROR : getRootSet failed!" );
 
-  //  //  now imprint
-  //  std::cout << "\n\nImprinting...." << std::endl;
-  //  iGeom_imprintEnts(geom, ARRAY_IN(entities),&err);
-  //  CHECK("Imprint failed.");
-  //  std::cout << "\n--------------------------------------------------"<<std::endl;
+    //  now imprint
+    std::cout << "\n\nImprinting...." << std::endl;
+    iGeom_imprintEnts(geom, ARRAY_IN(entities),&err);
+    CHECK("Imprint failed.");
+    std::cout << "\n--------------------------------------------------"<<std::endl;
 
-  //   // merge tolerance
-  //   double dTol = 1e-4;
-  //   // now  merge
-  //   std::cout << "\n\nMerging...." << std::endl;
-  //   iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
-  //   CHECK("Merge failed.");
-  //   std::cout <<"merging finished."<< std::endl;
-  //   std::cout << "\n--------------------------------------------------"<<std::endl;
+     // merge tolerance
+     double dTol = 1e-4;
+     // now  merge
+     std::cout << "\n\nMerging...." << std::endl;
+     iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
+     CHECK("Merge failed.");
+     std::cout <<"merging finished."<< std::endl;
+     std::cout << "\n--------------------------------------------------"<<std::endl;
   return 0;
 }
 

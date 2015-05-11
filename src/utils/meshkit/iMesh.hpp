@@ -62,7 +62,9 @@ class iMesh : public iMeshBase {
     
     typedef AdjacencyCost (*AdjTableType)[4];
     inline AdjTableType getAdjTable();
-    
+  
+    inline Error setAdjTable( int* adj_table, int table_size);
+
     inline Error getNumOfType( EntitySetHandle set, EntityType type, int& count_out  ) const;
     
     inline Error getNumOfTopo( EntitySetHandle set, EntityTopology topo, int& count_out ) const;
@@ -184,7 +186,7 @@ class iMesh : public iMeshBase {
    inline Error getEnt2ndAdj( EntityHandle handle, 
                               EntityType bridge_entity_type,
                               EntityType type_requested,
-                              std::vector<EntityHandle> adj_entities_out ) const;                   
+                              std::vector<EntityHandle>& adj_entities_out ) const;                   
    inline Error getEntArr2ndAdj( const EntityHandle* entity_handles,
                                   int entity_handles_size,
                                   EntityType order_key,
@@ -315,9 +317,22 @@ iMesh::getDfltStorage() const
 
 inline iMesh::AdjTableType iMesh::getAdjTable()
 {
+  cacheAdjTable(); //retrieve the most up-to-date table
   return (iBase_SUCCESS == adjTableErr) ? adjTable : 0;
 }
   
+
+inline iMesh::Error 
+iMesh::setAdjTable( int adj_table[], int table_size)
+{
+
+  int err; 
+  iMesh_setAdjTable( mInstance, adj_table, table_size, &err);
+  
+  return (Error)err;
+
+}
+
 inline iMesh::Error
 iMesh::getNumOfType( EntitySetHandle set, EntityType type, int& count_out  ) const
 {
@@ -742,7 +757,7 @@ inline iMesh::Error
 iMesh::getEnt2ndAdj( EntityHandle handle, 
                      EntityType bridge_entity_type,
                      EntityType type_requested,
-                     std::vector<EntityHandle> adj_entities_out ) const
+                     std::vector<EntityHandle>& adj_entities_out ) const
 {
   if (adj_entities_out.capacity() == 0) 
     adj_entities_out.resize(12);

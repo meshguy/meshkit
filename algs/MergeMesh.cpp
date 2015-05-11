@@ -1,12 +1,10 @@
 #include "MergeMesh.hpp"
 #include "MKException.hpp"
 
-#ifdef HAVE_MOAB
 #include "MBSkinner.hpp"
 //#include "MBAdaptiveKDTree.hpp"
 #include "MBRange.hpp"
 #include "MBCartVect.hpp"
-#endif
 
 #include <algorithm>
 #include <string>
@@ -24,32 +22,22 @@ void MergeMesh::merge_entities(iBase_EntityHandle *elems,
   mergeTol = merge_tol;
   mergeTolSq = merge_tol*merge_tol;
   
-#ifdef HAVE_MOAB  
   MBRange tmp_elems;
   tmp_elems.insert((MBEntityHandle*)elems, (MBEntityHandle*)elems + elems_size);
   MBErrorCode result = merge_entities(tmp_elems, do_merge, update_sets,
                                       (MBTag)merge_tag);
-  if (result != MB_SUCCESS)
-    throw MKException(iBase_FAILURE, "");
-#else
-  throw MKException(iBase_NOT_SUPPORTED, "");
-#endif
-
+  if (MB_SUCCESS != result)
+    exit(0);
 }
 
 void MergeMesh::perform_merge(iBase_TagHandle merge_tag) 
 {
-#ifdef HAVE_MOAB
   // put into a range
   MBErrorCode result = perform_merge((MBTag) merge_tag);
-  if (result != MB_SUCCESS)
-    throw MKException(iBase_FAILURE, "");
-#else
-  throw MKException(iBase_NOT_SUPPORTED, "");
-#endif
+  if (MB_SUCCESS != result)
+    exit(0);
 }
 
-#ifdef HAVE_MOAB
 MBErrorCode MergeMesh::merge_entities(MBRange &elems,
                                       const int do_merge,
                                       const int update_sets,
@@ -213,4 +201,3 @@ MBErrorCode MergeMesh::find_merged_to(MBAdaptiveKDTree & tree, MBEntityHandle &t
   return MB_SUCCESS;
 }
 
-#endif // ifdef MOAB

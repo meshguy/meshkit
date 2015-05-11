@@ -134,7 +134,9 @@ bool IASolverInt::solve_wave_workhorse(IAIntWaveNlp *mynlp)
     bool solved_partial = false;
     bool solver_failed = false;
     bool bad_problem = false;
-
+    // setting void just to avoid compiler warning: variable 'solver_failed' set but not used [-Wunused-but-set-variable]
+    (void) solver_failed;
+    (void) bad_problem;
     switch (status) {
       case Ipopt::Solve_Succeeded:
       case Ipopt::Solved_To_Acceptable_Level:
@@ -434,6 +436,7 @@ bool IASolverInt::solve()
   // unfortunately, it appears to find local minima that are far from optimal, even when starting in a well
   
   bool solved = false;
+  (void) solved;
   switch (solver_type) {
     case COS:
     case PARABOLA:

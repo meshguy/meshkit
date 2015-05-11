@@ -154,7 +154,6 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
 
   // pc->set_debug_verbosity(5);
 
-#ifdef HAVE_MOAB
   //   rval = mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
   mbImpl()->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
   if(rval != moab::MB_SUCCESS) {
@@ -166,7 +165,6 @@ int CCrgen::save_mesh_parallel(const int nrank, const int numprocs)
   if (nrank == 0) {
       std::cout << "Done saving mesh file: " << outfile << std::endl;
     }
-#endif
 #endif
   return iBase_SUCCESS;
 
@@ -217,34 +215,49 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
       if(numprocs > (int) core_alias.size()){
           numprocs =  core_alias.size() + nback;
         }
-#ifdef USE_MPI
-      std::vector<int> rank_load;
+
       rank_load.resize(numprocs);
       int extra_procs = numprocs - files.size();
       if(numprocs >= (int) files.size() && numprocs <= (tot_assys + nback)){
           // again fill assm_meshfiles
-          for(int p=0; p<nassys; p++)
-            assm_meshfiles[p]=0;
+          for(int p=0; p<nassys; p++){
+              assm_meshfiles[p]=0;
+              load_per_assm[p]=0;
+            }
           for(int p=0; p<tot_assys; p++){
               for(int q=0; q<nassys; q++){
                   if(strcmp(core_alias[p].c_str(), assm_alias[q].c_str()) ==0) {
                       assm_meshfiles[q]+=1;
+                      load_per_assm[q]+=1;
                     }
+                }
+            }
+          if(nrank == 0){
+              std::cout << " assm_meshfiles" << std::endl;
+              for(int p=0; p<nassys; p++){
+                  std::cout << assm_meshfiles[p] << " : " << p << std::endl;
+                }
+              std::cout << " load per assm" << std::endl;
+              for(int p=0; p<nassys; p++){
+                  std::cout << load_per_assm[p] << " : " << p << std::endl;
                 }
             }
           //distribute
           for(int i=0; i<  (int)files.size(); i++){
               rank_load[i] = i;
+              if(i< nassys)
+                times_loaded[i]+=1;
             }
 
-          int temp = 0;
+          double temp = 0;
           int assm_load = - 1;
           int e= 0;
           // compute the rank, mf vector for extra procs
           while(e < extra_procs){
               for(int i = 0; i < nassys; i++){
-                  if (assm_meshfiles[i] > temp){
-                      temp = assm_meshfiles[i];
+                  if (load_per_assm[i] > temp ){
+                  //if (load_per_assm[i] > temp){
+                      temp = load_per_assm[i];
                       assm_load = i;
                     }
                   else if (assm_load == -1){
@@ -252,7 +265,12 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
                       exit(0);
                     }
                 }
-              assm_meshfiles[assm_load]-=1;
+              //assm_meshfiles[assm_load]-=1;
+              times_loaded[assm_load]+=1;
+               load_per_assm[assm_load] = (double)assm_meshfiles[assm_load]/(double)times_loaded[assm_load];
+
+               if(nrank == 0)
+                std::cout << assm_load <<": - assembly has a Current Load: " << load_per_assm[assm_load] << std::endl;
               int temp_rank = files.size()+ e;
               rank_load[temp_rank] = assm_load;
               e++;
@@ -262,14 +280,20 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
       else{
           std::cout << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
         }
+      if(nrank == 0){
+          std::cout << "Times loaded 1 " << std::endl;
+          for(int p=0; p<nassys; p++){
+              std::cout << times_loaded[p] << " : " << p << std::endl;
+            }
 
-      std::vector<int> times_loaded(nassys);
+        }
+     // times_loaded.resize(nassys);
       std::vector<std::vector<int> > meshfiles_rank (files.size());
       for(int i=0; i < (int) files.size(); i++){
           for(int j=0; j < (int) rank_load.size(); j++){
               if(rank_load[j]==i){
                   meshfiles_rank[i].push_back(j);
-                  times_loaded[i]+=1;
+                  // already done above times_loaded[i]+=1;
                 }
             }
         }
@@ -295,7 +319,23 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
               position_core[i].push_back(-2);
             }
         }
+      if(nrank == 0){
+          std::cout << "Times loaded 1 After" << std::endl;
+          for(int p=0; p<nassys; p++){
+              std::cout << times_loaded[p] << " : " << p << std::endl;
+            }
 
+        }
+      if(nrank == 0){
+          std::cout << "FINAL scheme 1 assm_meshfiles" << std::endl;
+          for(int p=0; p<nassys; p++){
+              std::cout << assm_meshfiles[p] << " : " << p << std::endl;
+            }
+          std::cout << "FINAL scheme 1 load per assm" << std::endl;
+          for(int p=0; p<nassys; p++){
+              std::cout << load_per_assm[p] << " : " << p << std::endl;
+            }
+        }
       if(nrank == 0){
           std::cout << " copy/move task distribution " << std::endl;
           for(int i =0; i< numprocs; i++){
@@ -306,9 +346,49 @@ int CCrgen::distribute_mesh(const int nrank, int numprocs)
               std::cout << "\n" << std::endl;
             }
         }
-#endif
     }
   return 0;
+}
+int CCrgen::load_meshes_more_procs(const int nrank, int numprocs)
+// ---------------------------------------------------------------------------
+// Function: loads all the meshes and initializes copymesh object
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  iMesh_newMesh("MOAB", &impl, &err, 4);
+  ERRORR("Failed to create instance.", 1);
+
+  iMesh_getRootSet(impl, &root_set, &err);
+  ERRORR("Couldn't get the root set", err);
+
+  int temp_index = rank_load[nrank];
+
+  iBase_EntitySetHandle orig_set;
+  iMesh_createEntSet(impl, 0, &orig_set, &err);
+  ERRORR("Couldn't create file set.", err);
+
+  // load this file
+  iMesh_load(impl, orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
+  ERRORR("Couldn't read mesh file.", err);
+  std::cout << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
+
+  if(bsameas[temp_index] == 0 && temp_index < nassys){
+      if(all_ms_starts[temp_index] != -1 && all_ns_starts[temp_index] !=-1){
+          if(!shift_mn_ids(orig_set, temp_index))
+            ERRORR("Couldn't shift material and neumann set id's.", 1);
+        }
+    }
+
+  assys.push_back(orig_set);
+  assys_index.push_back(temp_index);
+
+  // create cm instances for each mesh file
+  cm = new CopyMesh*[assys.size()];
+  for (unsigned int i = 0; i < assys.size(); i++) {
+      cm[i] = new CopyMesh(impl);
+    }
+  return iBase_SUCCESS;
 }
 
 int CCrgen::load_meshes_parallel(const int nrank, int numprocs)
@@ -445,6 +525,7 @@ CCrgen::CCrgen()
   nst_flag = false;
   nsb_flag = false;
   nss_flag = false;
+  nssall_flag = false;
   nst_Id = 9997;
   nsb_Id = 9998;
   //  nss_Id = 9999;
@@ -517,7 +598,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
                       << "\nInstruction on writing coregen input file can be found at: "
                       << std::endl;
                   std::cout
-                      << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                      << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                       << std::endl;
                   exit(0);
                 }
@@ -572,7 +653,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
                                 << "\nInstruction on writing coregen input file can also be found at: "
                                 << std::endl;
                             std::cout
-                                << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                                << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                                 << std::endl;
                             exit(0);
                             break;
@@ -613,7 +694,7 @@ int CCrgen::prepareIO(int argc, char *argv[], int nrank, int nprocs)
                   << "\nInstruction on writing coregen input file can be found at: "
                   << std::endl;
               std::cout
-                  << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                  << "         http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                   << std::endl;
             }
           file_input.clear();
@@ -969,8 +1050,8 @@ int CCrgen::read_inputs_phase1() {
               nssall_flag = true;
               nssall_Id = nsId;
             } else if ((strcmp(nsLoc.c_str(), "side") == 0)) {
-              nss_Id.push_back(nsId);
-
+              nss_Id.push_back(nsId);              
+              // we are reading the equation of a straight line ax + by + c = 0
               formatString >> temp1 >> x >> temp2 >> y >> temp3 >> c;
               if(formatString.fail())
                 IOErrorHandler (INVALIDINPUT);
@@ -1282,6 +1363,9 @@ int CCrgen::read_inputs_phase2()
     }
   // set some variables
   assm_meshfiles.resize(nassys);
+  load_per_assm.resize(nassys);
+  size_mf.resize(nassys);
+  times_loaded.resize(nassys);
   assm_location.resize(nassys);
   bsameas.resize(nassys);
 
@@ -1320,12 +1404,12 @@ int CCrgen::parse_assembly_names(CParser parse)
       unsigned pos = 0;
       pos = meshfile.find_last_of("/\\");
       if (pos > 0 && pos < meshfile.length()){
-        std::string filename = "", path="";
-        path = meshfile.substr(0,pos);
-        filename = meshfile.substr(pos+1);
-        std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
-        meshfile = path+"/"+ filename;
-      }
+          std::string filename = "", path="";
+          path = meshfile.substr(0,pos);
+          filename = meshfile.substr(pos+1);
+          std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+          meshfile = path+"/"+ filename;
+        }
       else{
           std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
         }
@@ -1400,6 +1484,8 @@ int CCrgen::banner()
   std::cout
       << "\t\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
       << '\n';
+  std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
+
   return iBase_SUCCESS;
 }
 
@@ -1797,16 +1883,15 @@ int CCrgen::create_neumannset() {
   // Input:    none
   // Output:   none
   // ---------------------------------------------------------------------------
-  if (nss_flag == true || nsb_flag == true || nst_flag == true) {
+  if (nss_flag == true || nsb_flag == true || nst_flag == true || nssall_flag == true) {
       std::cout << "Creating NeumannSet." << std::endl;
 
       if (extrude_flag == true)
         set_DIM = 3;
 
-#ifdef HAVE_MOAB  
       int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
       double z1 = 0.0;
-      iBase_TagHandle ntag1, gtag1;
+      iBase_TagHandle ntag1, gtag1, nametag1;
       iBase_EntityHandle *ents = NULL;
       iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
       std::vector<iBase_EntitySetHandle> set_side;
@@ -1824,6 +1909,8 @@ int CCrgen::create_neumannset() {
         }
       ERRORR("Trouble getting entities for specifying neumannsets via skinner.", err);
 
+      // assign a name to the tag
+      const char *ch_name1 = "NAME";
       // get tag handle
       const char *tag_neumann1 = "NEUMANN_SET";
       const char *global_id1 = "GLOBAL_ID";
@@ -1832,6 +1919,9 @@ int CCrgen::create_neumannset() {
       ERRORR("Trouble getting handle.", err);
 
       iMesh_getTagHandle(impl, global_id1, &gtag1, &err, 9);
+      ERRORR("Trouble getting handle.", err);
+
+      iMesh_getTagHandle(impl, ch_name1, &nametag1, &err, 4);
       ERRORR("Trouble getting handle.", err);
 
       iMesh_createEntSet(impl,0, &set, &err); // for all other sides
@@ -1929,12 +2019,6 @@ int CCrgen::create_neumannset() {
             }
         }
 
-      //        iMesh_setEntSetIntData( impl, set, ntag1, 99999, &err);
-      //        ERRORR("Trouble getting handle.", err);
-
-      //        iMesh_setEntSetIntData( impl, set, gtag1, 99999, &err);
-      //        ERRORR("Trouble getting handle.", err);
-
       if (set_DIM == 3) {
           if (nst_flag == true || nsb_flag == true) {
 
@@ -1944,10 +2028,18 @@ int CCrgen::create_neumannset() {
               iMesh_setEntSetIntData( impl, set_z1, gtag1, nst_Id, &err);
               ERRORR("Trouble getting handle.", err);
 
+              std::string name1 = "core_top_ss";
+              iMesh_setEntSetData( impl, set_z1, nametag1, name1.c_str(), 11, &err);
+              ERRORR("Trouble getting handle.", err);
+
               iMesh_setEntSetIntData( impl, set_z2, ntag1, nsb_Id, &err);
               ERRORR("Trouble getting handle.", err);
 
               iMesh_setEntSetIntData( impl, set_z2, gtag1, nsb_Id, &err);
+              ERRORR("Trouble getting handle.", err);
+
+              std::string name2 = "core_bottom_ss";
+              iMesh_setEntSetData( impl, set_z2, nametag1, name2.c_str(), 14, &err);
               ERRORR("Trouble getting handle.", err);
 
               for(int j=0; j<num_nsside; j++){
@@ -1956,17 +2048,27 @@ int CCrgen::create_neumannset() {
 
                   iMesh_setEntSetIntData( impl, set_side[j], gtag1, nss_Id[j], &err);
                   ERRORR("Trouble getting handle.", err);
+
+                  std::stringstream ss;
+                  ss << j;
+                  std::string name3 = "side" + ss.str();
+                  iMesh_setEntSetData( impl, set_side[j], nametag1, name3.c_str(), 8, &err);
+                  ERRORR("Trouble getting handle.", err);
                 }
             }
-          if (nssall_flag == true) {
-              iMesh_setEntSetIntData( impl, set, ntag1, nssall_Id, &err);
-              ERRORR("Trouble getting handle.", err);
-
-              iMesh_setEntSetIntData( impl, set, gtag1, nssall_Id, &err);
-              ERRORR("Trouble getting handle.", err);
-            }
         }
-#endif
+      // same for both 2D and 3D models
+      if (nssall_flag == true) {
+          iMesh_setEntSetIntData( impl, set, ntag1, nssall_Id, &err);
+          ERRORR("Trouble getting handle.", err);
+
+          iMesh_setEntSetIntData( impl, set, gtag1, nssall_Id, &err);
+          ERRORR("Trouble getting handle.", err);
+
+          std::string name = "all_sides";
+          iMesh_setEntSetData( impl, set, nametag1, name.c_str(), 9, &err);
+          ERRORR("Trouble getting handle.", err);
+        }
     }
   return iBase_SUCCESS;
 }

@@ -1,9 +1,9 @@
-MeshFile plate.exo
+MeshFile cb.cub
 NeumannSet 5
 !Surfaces 1
 Material 6
 FIXMAT 1
-Thickness 0.3
+Thickness 0.4
 Intervals 5
 Bias 1.0
 Outfile outmid.exo

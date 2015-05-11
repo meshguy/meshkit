@@ -40,7 +40,7 @@ namespace arc {
       result = MBI()->set_connectivity( edge, new_conn, 2 );
       assert(MB_SUCCESS == result);
     }
-    return MB_SUCCESS;
+    return result;
   } 
 
   // Degenerate edges (same topological endpts) are caused by a prior step in which
@@ -460,7 +460,7 @@ namespace arc {
     vec.clear();
     result = MBI()->get_entities_by_handle( set, vec );
     assert(MB_SUCCESS == result);  
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode set_meshset( const MBEntityHandle set, const std::vector<MBEntityHandle> vec) {
@@ -469,7 +469,7 @@ namespace arc {
     assert(MB_SUCCESS == result);  
     result = MBI()->add_entities( set, &vec[0], vec.size() );       
     assert(MB_SUCCESS == result);  
-    return MB_SUCCESS;
+    return result;
   }
 
   MBErrorCode merge_curves( MBRange curve_sets, const double facet_tol, 

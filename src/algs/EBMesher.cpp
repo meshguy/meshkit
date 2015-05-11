@@ -7,14 +7,12 @@
 #include "meshkit/iGeom.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 
-#ifdef HAVE_MOAB
 #include "moab/Core.hpp"
 #include "MBRange.hpp"
 #include "MBCartVect.hpp"
 #include "moab/EntityType.hpp"
 #include "moab/HomXform.hpp"
 #include "moab/GeomTopoTool.hpp"
-#endif
 
 #ifdef HAVE_CGM
 #include "CubitDefines.h"
@@ -54,7 +52,6 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   m_hObbTree = NULL;
   m_hTreeRoot = 0;
 
-#ifdef HAVE_MOAB
   // create tags with MOAB for dense tags
   int outside = 1;
   const void *out = &outside;
@@ -91,7 +88,6 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
                     MB_TAG_SPARSE, MB_TYPE_DOUBLE, bb_default);
   
   m_GeomTopoTool = new moab::GeomTopoTool( moab_instance() );
-#endif
 }
 
 EBMesher::~EBMesher()
@@ -191,12 +187,11 @@ void EBMesher::execute_this()
   iBase_ErrorType  err;
   GraphNode *scd_node = other_node(in_arcs());
 
-#ifdef HAVE_MOAB
   double obb_time = .0;
   double intersection_time = .0;
   double set_info_time = .0;
   time_t time1, time2, time3, time4;
-  unsigned long long mem1, mem2, mem3, mem4;
+  unsigned long long mem1, mem3, mem4;
   moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
   moab::ErrorCode rval;
 
@@ -246,14 +241,12 @@ void EBMesher::execute_this()
 
     if (m_bUseWholeGeom) break;
   }
-#endif
-  
   if (debug_ebmesh) {
     std::cout << "OBB_tree_construct_time: " << obb_time
               << ", intersection_time: " << intersection_time
               << ", set_info_time: " << set_info_time << std::endl;
     std::cout << "start_memory: " << mem1
-              << ", OBB_tree_construct_moemory: " << mem2
+              //<< ", OBB_tree_construct_moemory: " << mem2
               << ", intersection_memory: " << mem3
               << ", set_info_memory: " << mem4
               << std::endl;
@@ -267,7 +260,6 @@ void EBMesher::set_num_interval(int* n_interval)
   }
 }
 
-#ifdef HAVE_MOAB
 void EBMesher::set_tree_root(ModelEnt* me)
 {
   moab::ErrorCode rval;
@@ -459,7 +451,6 @@ void EBMesher::write_mesh(const char* file_name, int type,
               << std::endl;
   }
 }
-#endif
 
 EdgeStatus EBMesher::get_edge_status(const double dP, int& iSkip)
 {
@@ -620,7 +611,6 @@ bool EBMesher::set_edge_status(int dir)
   return true;
 }
 
-#ifdef HAVE_MOAB
 void EBMesher::set_division()
 {
   int i, j;
@@ -1580,7 +1570,6 @@ double EBMesher::get_edge_fraction(int idHex, int dir)
   }
   else return -1.;
 }
-#endif
 
 double EBMesher::get_uncut_edge_fraction(int i, int j, int k, int dir)
 {
@@ -1606,7 +1595,6 @@ double EBMesher::get_uncut_edge_fraction(int i, int j, int k, int dir)
   else return -1.;
 }
 
-#ifdef HAVE_MOAB
 bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
                       double tol, int dir, bool bSpecialCase)
 {
@@ -1678,7 +1666,6 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
 
   return true;
 }
-#endif
 
 bool EBMesher::is_ray_move_and_set_overlap_surf(bool& bSpecialCase)
 {
@@ -2088,7 +2075,6 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
   return true;
 }
 
-#ifdef HAVE_MOAB
 bool EBMesher::is_same_direct_to_ray(int i, int dir)
 {
   MBCartVect coords[3], normal(0.0), ray_dir(rayDir[dir]);
@@ -2150,5 +2136,4 @@ void EBMesher::set_obb_tree_box_dimension()
   }
   std::cout << "finished to construct obb tree." << std::endl;
 }
-#endif
 } // namespace MeshKit

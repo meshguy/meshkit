@@ -1,11 +1,11 @@
 ################################################################################
 #                           Standard Stuff
 ################################################################################
-AC_INIT(MESHKIT, 1.2.1pre)
+AC_INIT(MESHKIT, 1.3.1pre)
 AC_CANONICAL_SYSTEM
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([AM_SILENT_RULES],
- [AM_INIT_AUTOMAKE([-Wall color-tests parallel-tests])],
+ [AM_INIT_AUTOMAKE([-Wall color-tests parallel-tests subdir-objects])],
  [AM_INIT_AUTOMAKE([-Wall])])
 
 dnl Original MK_CHECK_COMPILERS did not look for Fortran.  We
@@ -19,6 +19,7 @@ FATHOM_CHECK_COMPILERS
 AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
 LIBS="-lm"
 
+AM_PROG_AR
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_DISABLE_SHARED
@@ -91,10 +92,14 @@ AC_CHECK_HEADER([ieeefp.h],[DEFINES="$DEFINES -DHAVE_IEEEFP_H"] )
 if test "xyes" = "x$enable_debug"; then
   AC_CHECK_HEADER( [valgrind/memcheck.h], [CPPFLAGS="$CPPFLAGS -DVALGRIND"] )
 fi
-AC_CHECK_HEADER([cstddef],   [AC_DEFINE(HAVE_CSTDDEF,    [], [HAVE_CSTDDEF])   ])
+AC_LANG_PUSH([C])
 AC_CHECK_HEADER([stddef.h],   [AC_DEFINE(HAVE_STDDEF_H,    [], [HAVE_STDDEF_H])   ])
 AC_CHECK_HEADER([stdio.h],   [AC_DEFINE(HAVE_STDIO_H,    [], [HAVE_STDIO_H])   ])
+AC_LANG_POP([C])
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER([cstddef],   [AC_DEFINE(HAVE_CSTDDEF,    [], [HAVE_CSTDDEF])   ])
 AC_CHECK_HEADER([cstdio],   [AC_DEFINE(HAVE_CSTDIO,    [], [HAVE_CSTDIO])   ])
+AC_LANG_POP([C++])
 
 # Need this here, 'cuz MKVersion.h is needed for a later check
 AC_CONFIG_HEADERS([MKVersion.h])
@@ -306,16 +311,12 @@ AM_CONDITIONAL( HAVE_CGM, [test "xyes" == "x$HAVE_$2"] )
 AC_SUBST([HAVE_CGM])
 if test "xyes" = "x$HAVE_CGM"; then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_CGM"
+  CPPFLAGS="$CPPFLAGS -I$IGEOM_DIR/include"
 fi
 
 # Check for parallel support
-AC_MSG_CHECKING([For CGMParallelComm in libcgm])
-AC_LINK_IFELSE([
-   AC_LANG_PROGRAM(
-[class CGMParallelComm{ public: static CGMParallelComm* get_pcomm(const 
-int); };],
-[CGMParallelComm::get_pcomm(0);])],
-[HAVE_PARALLEL_CGM=yes],[HAVE_PARALLEL_CGM=no])
+AC_MSG_CHECKING([For TDParallel in cgm])
+AC_CHECK_HEADER([TDParallel.hpp], [HAVE_PARALLEL_CGM=yes], [HAVE_PARALLEL_CGM=no])
 AC_MSG_RESULT([$HAVE_PARALLEL_CGM])
 AM_CONDITIONAL(HAVE_PARALLEL_CGM, [test "x$HAVE_PARALLEL_CGM" = "xyes"])
 AC_SUBST([HAVE_PARALLEL_CGM])
@@ -361,13 +362,21 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
                          [ENABLE_TOOLS=$enableval],[ENABLE_TOOLS=] )
   # Individual tools
 MK_OPTIONAL_TOOL([algs],   [yes])
+MK_OPTIONAL_TOOL([quadmesher],   [no])
 MK_OPTIONAL_TOOL([rgg],    [yes])
 MK_OPTIONAL_TOOL([utils],  [yes])
 MK_OPTIONAL_TOOL([src],    [yes])
 MK_OPTIONAL_TOOL([python], [no])
 MK_OPTIONAL_TOOL([intassign], [no])
 
-
+################################################################################
+#                           QuadMesher
+################################################################################
+if test "x${ENABLE_quadmesher}" != "xno"; then
+  AC_MSG_CHECKING([if quadmesher support is enabled])
+fi
+# make the conditional quadmesher
+AM_CONDITIONAL(HAVE_QUADMESHER, [test "x$HAVE_QUADMESHER" = "xyes"])
 ################################################################################
 #                           CAMAL
 ################################################################################
@@ -916,7 +925,6 @@ AM_CONDITIONAL(HAVE_INTASSIGN, [test "x$HAVE_IPOPT" = "xyes"])
 if test "xyes" = "x$HAVE_IPOPT"; then 
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_INTASSIGN"
 fi
-
 ################################################################################
 #                           Mesquite
 ################################################################################
@@ -934,7 +942,7 @@ AC_HELP_STRING([--without-mesquite], [Configure w/out support for Mesquite libra
 # 3) actions if success and 4) actions if not found.
 AC_DEFUN([MESQUITE_LINK_DESTRUCTOR],[
     msq_link_dest_old_LIBS="$LIBS"
-    LIBS="-l$2 $LIBS"
+    LIBS="-l$2 $LIBS -ldl"
     AC_MSG_CHECKING([for $1 in -l$2])
     AC_LINK_IFELSE( [AC_LANG_PROGRAM(
                       [#include "Mesquite.hpp"
@@ -1361,6 +1369,7 @@ AC_CONFIG_FILES([Makefile
                  utils/Makefile
                  doc/Makefile
                  doc/meshkit.dox
+                 tools/Makefile
                  ])
 
 AC_OUTPUT

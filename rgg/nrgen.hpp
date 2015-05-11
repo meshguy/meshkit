@@ -93,8 +93,10 @@ private:
   
   // vector for material names
   CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
-  CVector<double> m_dAxialSize;
-  CVector<int> m_nListMatSet, m_nListNeuSet;
+  CVector<std::string> m_szBLAssmMat;
+
+  CVector<double> m_dAxialSize, m_dBLMatBias;
+  CVector<int> m_nListMatSet, m_nListNeuSet, m_nBLMatIntervals;
 
   CMatrix<std::string> m_szMMAlias;  
 
@@ -118,7 +120,7 @@ private:
   int m_nAssyGenInputFiles;
   std::string pin_name;
   // integers for vectors sizes, err etc
-  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
+  int m_nBLAssemblyMat, m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar,
     m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag, m_nTotalPincells; 
   int m_edgeInterval, m_nStartpinid, m_nHblock;
   // doubles for pincell pitch, pi and mesh sizes resp.

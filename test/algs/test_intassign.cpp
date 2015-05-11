@@ -291,15 +291,22 @@ void mapping_test()
   MeshKit::ModelEnt *this_surf = (*surfs.rbegin());
 
   // request a specific size
-  //mk->sizing_function(0.1, true);
   MeshKit::MEntVector curves;
   std::vector<int> senses, loop_sizes;
   this_surf->boundary(1, curves, &senses, &loop_sizes);
   CHECK_EQUAL(4, (int)curves.size());
 
-//  MeshKit::SizingFunction esize(mk, 3, 0.01);
-  MeshKit::SizingFunction esize(mk, -1, -1);
+  MeshKit::SizingFunction esize(mk, 5, 0.2);
   surfs[0]->sizing_function_index(esize.core_index());
+  curves[0]->interval_firmness(MeshKit::SOFT);
+  curves[1]->interval_firmness(MeshKit::SOFT);
+  MeshKit::SizingFunction esizeTwo(mk, 8, 0.125);
+  curves[2]->sizing_function_index(esizeTwo.core_index());
+  curves[2]->interval_firmness(MeshKit::SOFT);
+  MeshKit::SizingFunction esizeThree(mk, 4, 0.25);
+  curves[3]->sizing_function_index(esizeThree.core_index());
+  curves[3]->interval_firmness(MeshKit::SOFT);
+
 
   MeshKit::MEntVector side1, side2;
   side1.push_back(curves[0]); side2.push_back(curves[2]);
@@ -316,12 +323,12 @@ void mapping_test()
   //now, do the TFIMapping
   (MeshKit::TFIMapping*) mk->construct_meshop("TFIMapping", surfs);
   mk->setup_and_execute();
-  mk->save_mesh("intassign.exo");
+  mk->save_mesh("intassign.h5m");
   //
   delete_ia_interface( ia_interface );
 }
 
-int main(int argv, char* argc[])
+int main(int argv, char *argc[])
 {
   // currently unable to create more than one mk called IntervalAssignment
   mk = new MeshKit::MKCore();

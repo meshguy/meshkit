@@ -146,6 +146,9 @@ bool IASolverBend::solve_nlp() // IABendNlp *mynlp
     bool solved_failure = false;
     bool problem_bad = false;
     bool problem_unbounded = false;
+    (void) solved_failure;
+    (void) problem_bad;
+    (void) problem_unbounded;
 
     switch (status) {
       case Ipopt::Solve_Succeeded:
@@ -731,6 +734,7 @@ bool IASolverBend::update_ip_bends()
       IPBend &bend = bendData.bendVec[i]; // shorthand
       
       bool plus_deltas = false;
+      (void) plus_deltas;
       double xprior = 1.;
       for (int j = 0; j < bend.numDeltaPlus-1; ++j)
       {
@@ -750,6 +754,7 @@ bool IASolverBend::update_ip_bends()
         plus_deltas = true;
       
       bool minus_deltas = false;
+      (void) minus_deltas;
       xprior = 1.;
       for (int j = 0; j < bend.numDeltaMinus-1; ++j)
       {
@@ -866,7 +871,7 @@ bool IASolverBend::update_ip_bends()
   if (!new_bend)
   {
     // the weight indices being current relies on there being no new bends added in the prior loop
-    IAWeights::iterator wi = weights.begin();
+    //IAWeights::iterator wi = weights.begin();
 
     int num_new_tilts = 0;
     for (int i = 0; i < iaData->num_variables(); ++i)

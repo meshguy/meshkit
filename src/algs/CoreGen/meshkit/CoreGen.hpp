@@ -43,7 +43,6 @@
 #include "meshkit/clock.hpp"
 #include "meshkit/mstream.hpp"
 
-#ifdef HAVE_MOAB
 #include "iMesh_extensions.h"
 #include "MBiMesh.hpp"
 #include "MBInterface.hpp"
@@ -51,7 +50,6 @@
 #include "MBSkinner.hpp"
 #include "MBTagConventions.hpp"
 #include "moab/MergeMesh.hpp"
-#endif
 
 
 #ifdef USE_MPI

@@ -1,8 +1,8 @@
 SUBDIRS = . 
 MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk \
 BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk \
-SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.sat assygen_default.template.jou graph.eps \
-intassign.exo mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m
+SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default.sat assygen_default.template.jou graph.eps \
+intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
@@ -24,7 +24,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/PostBL \
                -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/algs/AssyGen \
-               -I$(top_srcdir)/src/algs/QuadMesher \
                -I$(top_srcdir)/src/algs/IntervalAssignment \
                -I$(top_srcdir)/src/extern/triangle \
 	       -I$(top_srcdir)/src/algs/make_watertight \
@@ -32,7 +31,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils
 
 #BROKEN_TESTS = test_jaalquad test_assygen edmond_matching hamiltonian mreport qualestm SimpleTri2Quad test_quadmeshcleanup
-BROKEN_TESTS = test_jaalquad test_assygen test_quadmeshcleanup
+BROKEN_TESTS = test_assygen
 
 TESTS = test_edgemesher \
         test_tfimapping \
@@ -45,13 +44,19 @@ TESTS = test_edgemesher \
         test_qslimmesher \
         test_ebmesh \
         test_assygen \
-        test_postbl \
-	test_make_watertight
+        test_postbl
 
+if HAVE_QUADMESHER
+TESTS += test_jaalquad test_quadmeshcleanup
+BROKEN_TESTS += test_jaalquad test_quadmeshcleanup
+endif
 if HAVE_LPSOLVER
 TESTS += test_submapping
 endif
 
+if HAVE_DAGMC_MOAB
+TESTS += test_make_watertight
+endif
 
 if HAVE_FBIGEOM
 TESTS += \
@@ -85,12 +90,15 @@ endif
 #hamiltonian_SOURCES = hamiltonian.cpp
 #qualestm_SOURCES = qualestm.cpp
 #SimpleTri2Quad_SOURCES = SimpleTri2Quad.cpp
+if HAVE_QUADMESHER
 test_quadmeshcleanup_SOURCES = test_quadmeshcleanup.cpp
-
+test_jaalquad_SOURCES = test_jaalquad.cpp
+endif
 test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesher_SOURCES = test_edgemesher.cpp
+if HAVE_DAGMC_MOAB
 test_make_watertight_SOURCES = test_make_watertight.cpp
-test_make_watertight_LDADD = $(top_builddir)/src/algs/make_watertight/libMakeWatertight.la
+endif
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
 if HAVE_LPSOLVER
@@ -103,7 +111,6 @@ test_copygeom_SOURCES = test_copygeom.cpp
 test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslimmesher_SOURCES = test_qslimmesher.cpp
-test_jaalquad_SOURCES = test_jaalquad.cpp
 test_assygen_SOURCES = test_assygen.cpp
 test_postbl_SOURCES = test_postbl.cpp
 if HAVE_FBIGEOM

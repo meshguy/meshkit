@@ -12,7 +12,7 @@ libMakeWatertight_la_includedir = $(includedir)
 libMakeWatertight_la_SOURCES = \
 	arc.cpp \
 	cleanup.cpp \
-	gen.cpp \	
+	gen.cpp \
         zip.cpp \
 	cw_func.cpp \
         mw_func.cpp

@@ -22,12 +22,12 @@ namespace MeshKit {
 // constructor
 IAIntWaveNlp::IAIntWaveNlp(const IAData *data_ptr, const IPData *ip_data_ptr, IASolution *solution_ptr, bool set_silent): 
   data(data_ptr), ipData(ip_data_ptr), solution(solution_ptr), baseNlp(data_ptr, solution_ptr),
-  problem_n((int)data_ptr->I.size()), 
+  base_n((int)data_ptr->num_variables()),
+  base_m((int)(data_ptr->constraints.size() + data_ptr->sumEvenConstraints.size())),
+  problem_n((int)data_ptr->I.size()),
   problem_m((int)(data_ptr->constraints.size() + 2*data_ptr->sumEvenConstraints.size() + data_ptr->num_variables())),
   wave_even_constraint_start((int)(data_ptr->constraints.size() + data_ptr->sumEvenConstraints.size())),
   wave_int_constraint_start((int)(data_ptr->constraints.size() + 2*data_ptr->sumEvenConstraints.size())),
-  base_n((int)data_ptr->num_variables()),
-  base_m((int)(data_ptr->constraints.size() + data_ptr->sumEvenConstraints.size())),
   silent(set_silent), debugging(true), verbose(true) // true
 {
   printf("\nIAIntWaveNLP Problem size:\n");

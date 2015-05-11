@@ -72,16 +72,20 @@ int main(int argc, char *argv[]) {
               ERRORR("Failed to load meshes.", 1);
             }
           else {
-#ifdef USE_MPI	
-              err = TheCore.load_meshes_parallel(rank, nprocs);
-              ERRORR("Failed to load meshes.", 1);
+#ifdef USE_MPI
+              if(nprocs < (int) TheCore.files.size()){
+                  err = TheCore.load_meshes_parallel(rank, nprocs);
+                  ERRORR("Failed to load meshes.", 1);
+                }
+              else {
+                  // first distribute the mesh and then load
+                  err = TheCore.distribute_mesh(rank, nprocs);
+                  ERRORR("Failed to load meshes.", 1);
 
 #ifdef USE_MPI
               MPI::COMM_WORLD.Barrier();
 #endif
-              if(nprocs > (int) TheCore.files.size()){
-                  // if there are more procs than files distribute the copy/move work on each proc
-                  err = TheCore.distribute_mesh(rank, nprocs);
+                  err = TheCore.load_meshes_more_procs(rank, nprocs);
                   ERRORR("Failed to load meshes.", 1);
                 }
 #endif
@@ -221,7 +225,7 @@ int main(int argc, char *argv[]) {
           // create neumann sets on the core model
           /*********************************************/
           if((TheCore.nss_flag == true || TheCore.nsb_flag == true
-              || TheCore.nst_flag == true)){
+              || TheCore.nst_flag == true) || TheCore.nssall_flag == true){
               CClock ld_ns;
               err = TheCore.create_neumannset();
               ERRORR("Failed to create neumann set.", 1);

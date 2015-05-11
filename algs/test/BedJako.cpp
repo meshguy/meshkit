@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
    const char *filename_data = 0;
 
    char * output_bed_file = NULL;
-   char * output_top_file = NULL;
+   //char * output_top_file = NULL;
 
    double fretting = 0;
    if (argc == 4) {
@@ -51,13 +51,13 @@ int main(int argc, char* argv[]) {
       //      filename_data = DEFAULT_TEST_FILE;
       filename_data = STRINGIFY(SRCDIR) "/gridData.txt";
       std::cout << "No file specified.  Defaulting to: %s %s 2.\n" << filename_data << std::endl;
-      output_bed_file = DEFAULT_BED_FILE;
+      output_bed_file = (char*) DEFAULT_BED_FILE;
       fretting = 2.; //
    }
 
    // read vertices
 
-   clock_t start_time = clock();
+   //clock_t start_time = clock();
 
    // read the file with the vertex data
    std::ifstream datafile(filename_data, std::ifstream::in);
@@ -73,8 +73,8 @@ int main(int argc, char* argv[]) {
    std::vector<double> lats, longits, beds;
    while (!datafile.eof()) {
       datafile.getline(temp, 100);
-      int id = 0;
-      double latit, longit, bed, thickness, surfdata;
+      //int id = 0;
+      double latit, longit, bed;//, thickness, surfdata;
       int nr = sscanf(temp, "%lf %lf %lf", &latit, &longit, &bed);
 
       if (3==nr){
@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
 
    //std::string opts("pc");
    //triangulate(opts.c_str(), &in, &out, (struct triangulateio *) NULL);// no voronoi
-   char * opts="pc";
+   char * opts= (char *) "pc";
    triangulate(opts, &in, &out, (struct triangulateio *) NULL);// no voronoi
 
    // run triangle
