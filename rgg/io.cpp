@@ -1447,6 +1447,7 @@ int CNrgen::CreateCubitJournal()
       for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
           //if(szVCylMat(m) == m_szBLAssmMat(ll)) {
               m_FileOutput << "group 'tmpgrp' equals surf with name '" <<  m_szBLAssmMat(ll)  << "_top'" << std::endl;
+              m_FileOutput << "surf in tmpgrp size {RADIAL_MESH_SIZE}" << std::endl;
               m_FileOutput << "group '" << m_szBLAssmMat(ll) << "_hole_surfaces' equals surf in tmpgrp"<< std::endl;
               m_FileOutput << "surface in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_interval " << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
               m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
