@@ -54,6 +54,7 @@ CNrgen::CNrgen ()
   have_common = true;
   com_run_count = 0;
   m_nBLAssemblyMat = 0;
+  m_szInnerDuct = "";
 }
 
 CNrgen::~CNrgen ()

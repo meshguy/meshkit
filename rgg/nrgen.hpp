@@ -113,7 +113,7 @@ private:
   CVector<superblocks> sb;
   int tmpSB;
   // string for geomtype, engine, meshtype
-  std::string m_szEngine;
+  std::string m_szEngine, m_szInnerDuct;
   std::string m_szGeomType;       
   std::string m_szMeshType;
   std::string m_szSideset; 
