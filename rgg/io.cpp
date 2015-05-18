@@ -1013,6 +1013,15 @@ int CNrgen::ReadAndCreate()
                   szFormatString >> m_szMMAlias(m_nDuctNum, i);
                   if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0)
                     IOErrorHandler(EALIAS);
+                  // this is the innermost duct
+                  if (i==1){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                          if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
+                            m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                   // setting stuff for hole scheme determination for meshing
                   if (i > 1 && m_szMeshScheme == "hole"){
                       // find material name for this alias
@@ -1051,6 +1060,15 @@ int CNrgen::ReadAndCreate()
                   szFormatString >> m_szMMAlias(m_nDuctNum, i);
                   if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
+                  // this is the innermost duct
+                  if (i==1){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                          if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
+                            m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
                   // setting stuff for hole scheme determination for meshing
                   if (i > 1 && m_szMeshScheme == "hole"){
                       // find material name for this alias
@@ -1450,11 +1468,11 @@ int CNrgen::CreateCubitJournal()
               m_FileOutput << "surf in tmpgrp size {RADIAL_MESH_SIZE}" << std::endl;
               m_FileOutput << "group '" << m_szBLAssmMat(ll) << "_hole_surfaces' equals surf in tmpgrp"<< std::endl;
               m_FileOutput << "surface in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_interval " << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
-              m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
+     //         m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
            // }
+              m_FileOutput << "group 'bl_surfaces' add surf in tmpgrp" << std::endl; 
         }
     }
-
   // variables
   int nColor;
   std::string color[21] = {" ", "thistle", "grey", "deepskyblue", "red", "purple",  "green",
@@ -1743,7 +1761,9 @@ int CNrgen::CreateCubitJournal()
       // mesh all command after meshing surface
       if (m_nDuct <= 1 ){
           m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
-          m_FileOutput << "mesh tmpgrp" << std::endl;
+          m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
+          m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
+          m_FileOutput << "mesh tmpgrp2" << std::endl;
         }
       else {
           m_FileOutput << "#Meshing top surface" << std::endl;
@@ -1765,6 +1785,13 @@ int CNrgen::CreateCubitJournal()
               m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
             }
         }
+ if (m_nBLAssemblyMat !=0){
+      // Also look for material name in BL material list
+      for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
+              m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
+        }
+      m_FileOutput << "mesh surf in innerduct" << std::endl;
+    }
 
       if(m_nPlanar == 0){ // volumes only
           if (m_nDuct == 1){
