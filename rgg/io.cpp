@@ -1761,9 +1761,15 @@ int CNrgen::CreateCubitJournal()
       // mesh all command after meshing surface
       if (m_nDuct <= 1 ){
           m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
-          m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
-          m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
-          m_FileOutput << "mesh tmpgrp2" << std::endl;
+          if (m_nBLAssemblyMat !=0){
+            m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
+            m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
+            m_FileOutput << "mesh tmpgrp2" << std::endl;
+          }
+          else
+          {
+            m_FileOutput << "mesh tmpgrp" << std::endl;
+          }
         }
       else {
           m_FileOutput << "#Meshing top surface" << std::endl;
@@ -1790,7 +1796,7 @@ int CNrgen::CreateCubitJournal()
       for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
               m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
         }
-      m_FileOutput << "mesh surf in innerduct" << std::endl;
+   m_FileOutput << "mesh surf in innerduct" << std::endl;
     }
 
       if(m_nPlanar == 0){ // volumes only
