@@ -47,6 +47,7 @@ TESTS = test_edgemesher \
         test_postbl
 
 if HAVE_QUADMESHER
+AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
 TESTS += test_jaalquad test_quadmeshcleanup
 BROKEN_TESTS += test_jaalquad test_quadmeshcleanup
 endif

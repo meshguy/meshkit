@@ -14,7 +14,6 @@ struct myany
     template <typename T> myany(T const& v) : _storage(new storage<T>(v)) { }
     myany(myany const& other) : _storage()
     {
-        if (other._storage)
           #ifdef __APPLE__
                   if (other._storage.get())
                       _storage = other._storage->clone();
