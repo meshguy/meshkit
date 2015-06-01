@@ -440,8 +440,7 @@ int CNrgen::ReadInputPhase1 ()
           for (int j=1; j<=m_nBLAssemblyMat; j++){
               szFormatString >> m_szBLAssmMat(j) >> m_dBLMatBias(j) >> m_nBLMatIntervals(j);
               if( (strcmp (m_szBLAssmMat(j).c_str(), "") == 0) ||
-                  (m_nBLMatIntervals(j) < 0) ||
-                  (m_dBLMatBias(j) < 0.0)){
+                  (m_nBLMatIntervals(j) < 0) ){
                   IOErrorHandler(EMAT);
                 }
               // checking if & inserted at the end of the material by mistake
