@@ -38,6 +38,26 @@ CCylinder::~CCylinder ()
 {
 }
 
+void CCylinder::SetType(int nType)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+	m_nType = nType;
+}
+
+void CCylinder::GetType(int &nType)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+	nType = m_nType;
+}
+
 void CCylinder::SetSizes(int nRadii)
 // ---------------------------------------------------------------------------
 // Function: sets the first line of pin input

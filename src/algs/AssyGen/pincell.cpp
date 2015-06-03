@@ -159,6 +159,15 @@ void CPincell::SetCylRadii(int nCyl, CVector<double> dVRadii)
   m_VCyl(nCyl).SetRadii(dVRadii);
 }
 
+void CPincell::SetCellType(int nCyl, int nType)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  m_VCyl(nCyl).SetType(nType);
+}
 
 
 void CPincell::SetCylZPos(int nCyl, CVector<double> dVZCoor)

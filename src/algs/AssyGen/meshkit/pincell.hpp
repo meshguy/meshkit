@@ -54,7 +54,7 @@ public:
   //cell
   void SetCellMatSize(int nSize);
   void SetCellMat(CVector<double> dZStart, CVector<double> dZEnd, CVector<std::string> szVCellMat);
-
+  void SetCellType(int nCyl, int nType);
 
 private:
 

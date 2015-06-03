@@ -24,6 +24,7 @@ public:
   void GetRadii(CVector<double>&);
   void GetMat(CVector<std::string>&);
   void GetZPos(CVector<double>&);
+  void GetType(int&);
 
   // modifier functions
   void SetSizes(int nRadii);
@@ -31,12 +32,14 @@ public:
   void SetRadii(CVector<double>);
   void SetMat(CVector<std::string>);
   void SetZPos(CVector<double>);
+  void SetType(int nType);
 
 private:
 
   // pin related input
   //line one
   int m_nRadii;
+  int m_nType;
   CVector<double> m_dVXYPos;
   CVector<double> m_dVZPos;
   CVector<std::string> m_szVMat;
