@@ -16,7 +16,7 @@
 #include <queue>
 #include <algorithm>
 
-#include <array>
+#include <meshkit/array_qm.hpp>
 
 #ifdef HAVE_MESQUITE
 #include <Mesquite_all_headers.hpp>
@@ -145,7 +145,7 @@ struct VecAttribute {
 
 template<class T, int n>
 struct ArrayAttribute {     
-      std::array <T,n> values;
+      meshkit::array <T,n> values;
 };
 
 template<class T>

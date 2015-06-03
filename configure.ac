@@ -373,10 +373,15 @@ MK_OPTIONAL_TOOL([intassign], [no])
 #                           QuadMesher
 ################################################################################
 if test "x${ENABLE_quadmesher}" != "xno"; then
-  AC_MSG_CHECKING([if quadmesher support is enabled])
+  AC_MSG_CHECKING([quadmesher is enabled])
 fi
 # make the conditional quadmesher
-AM_CONDITIONAL(HAVE_QUADMESHER, [test "x$HAVE_QUADMESHER" = "xyes"])
+AM_CONDITIONAL(HAVE_QUADMESHER, [test "x$ENABLE_quadmesher" = "xyes"])
+
+if test "xyes" = "x$ENABLE_quadmesher"; then
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_QUADMESHER"
+fi
+
 ################################################################################
 #                           CAMAL
 ################################################################################
