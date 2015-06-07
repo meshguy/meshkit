@@ -138,6 +138,7 @@ test/core/graph.eps
 test/core/list_meshops
 test/core/test_graph
 test/extern/netgen/test_ngtetmesher
+test/extern/netgen/test_ngtrimesher
 testdir.h
 utils/MKUtils_test
 rgg/assygen
@@ -161,5 +162,3 @@ test/extern/triangle/test_trianglemesher
 test/parallel/test_coregen
 test/parallel/test_parallelmesher
 test/test_testutil
-
-

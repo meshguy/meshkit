@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = foreign
 
 # Things to build
 noinst_LTLIBRARIES = libMeshKitnetgen.la
-SUBDIRS = 
+SUBDIRS =
 
 # The directory in which to install headers
 libMeshKitnetgen_la_includedir = $(includedir)
@@ -13,6 +13,11 @@ libMeshKitnetgen_la_SOURCES = NGTetMesher.cpp
 
 # The list of header files which are to be installed
 nobase_libMeshKitnetgen_la_include_HEADERS = meshkit/NGTetMesher.hpp
+
+if HAVE_OCC_NETGEN
+libMeshKitnetgen_la_SOURCES += NGTriMesher.cpp
+nobase_libMeshKitnetgen_la_include_HEADERS += meshkit/NGTriMesher.hpp
+endif
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -24,4 +29,3 @@ if HAVE_NETGEN
 AM_CPPFLAGS += $(NETGEN_CPPFLAGS)
 LDFLAGS += $(NETGEN_LDFLAGS)
 endif
-

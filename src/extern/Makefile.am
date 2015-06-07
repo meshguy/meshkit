@@ -1,8 +1,8 @@
 # Things to build
-noinst_LTLIBRARIES = libMeshKitextern.la 
+noinst_LTLIBRARIES = libMeshKitextern.la
 
 # Subdirectories to build
-SUBDIRS = 
+SUBDIRS =
 
 AM_CPPFLAGS += -I$(srcdir)/../core \
                -I$(srcdir)/../utils \
@@ -21,6 +21,9 @@ if HAVE_NETGEN
 SUBDIRS += netgen
 LIBADD += netgen/libMeshKitnetgen.la
 AM_CPPFLAGS += -I$(srcdir)/netgen $(NETGEN_CPPFLAGS) -DHAVE_NETGEN
+if HAVE_OCC_NETGEN
+AM_CPPFLAGS += -DHAVE_OCC_NETGEN
+endif
 LIBS += $(NETGEN_LIBS)
 endif
 
@@ -46,7 +49,6 @@ libMeshKitextern_la_includedir = $(includedir)
 libMeshKitextern_la_SOURCES = register_extern.cpp
 
 # The list of header files which are to be installed
-nobase_libMeshKitextern_la_include_HEADERS = 
+nobase_libMeshKitextern_la_include_HEADERS =
 
 libMeshKitextern_la_LIBADD = $(LIBADD)
-

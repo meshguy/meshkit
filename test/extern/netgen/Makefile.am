@@ -1,4 +1,4 @@
-SUBDIRS = . 
+SUBDIRS = .
 
 LDADD = $(top_builddir)/src/libMeshKit.la $(top_builddir)/src/extern/libMeshKitextern.la
 
@@ -15,7 +15,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-TESTS = 
+TESTS =
 
 check_PROGRAMS = $(TESTS)
 
@@ -24,15 +24,23 @@ MOSTLYCLEANFILES = test.out
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
+if HAVE_OCC_NETGEN
+AM_CPPFLAGS += $(NETGEN_CPPFLAGS)
+endif
 
 # Tests and such
 test_ngtetmesher_SOURCES = test_ngtetmesher.cpp
 test_ngtetmesher_DEPENDENCIES = \
-	$(LDADD)
+        $(LDADD)
 TESTS += test_ngtetmesher
+
+if HAVE_OCC_NETGEN
+test_ngtrimesher_SOURCES = test_ngtrimesher.cpp
+test_ngtrimesher_DEPENDENCIES = \
+        $(LDADD)
+TESTS += test_ngtrimesher
+endif
 
 # Utility target: build but don't run tests
 build-check:
-	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
-
-
+        $(MAKE) 'TESTS_ENVIRONMENT=: ' check

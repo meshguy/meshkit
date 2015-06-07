@@ -11,6 +11,9 @@
 #ifdef HAVE_NETGEN
 #  include "meshkit/NGTetMesher.hpp"
 #endif
+#ifdef HAVE_OCC_NETGEN
+#  include "meshkit/NGTriMesher.hpp"
+#endif
 #ifdef HAVE_MESQUITE
 #  include "meshkit/MesquiteOpt.hpp"
 #endif
@@ -51,11 +54,13 @@ extern int register_extern_mesh_ops() { return 1; }
 
 #ifdef HAVE_NETGEN
   REGISTER_MESH_OP(NGTetMesher);
-#endif    
+#endif
+#ifdef HAVE_OCC_NETGEN
+  REGISTER_MESH_OP(NGTriMesher);
+#endif
 
 #ifdef HAVE_MESQUITE
   REGISTER_MESH_OP(MesquiteOpt);
-#endif 
+#endif
 
 } // namespace MeshKit
-

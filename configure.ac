@@ -734,7 +734,7 @@ else
   old_LIBS="$LIBS"
   old_LDFLAGS="$LDFLAGS"
   old_CPPFLAGS="$CPPFLAGS"
-  LDFLAGS="$LDFLAGS $NETGEN_LDFLAGS -lnglib"
+  LDFLAGS="$LDFLAGS $NETGEN_LDFLAGS"
   CPPFLAGS="$CPPFLAGS $NETGEN_CPPFLAGS"
   AC_LANG_PUSH([C++])
 
@@ -742,8 +742,19 @@ else
     [AC_LANG_PROGRAM([#include <cstddef>
                       #include "nglib.h"],
         [Ng_Mesh mesh])],
-    [NETGEN_LIBS="$NETGEN_LDFLAGS -lnglib"] [HAVE_NETGEN=yes],
+    [NETGEN_LIBS="-lnglib"] [HAVE_NETGEN=yes],
     [AC_MSG_WARN([libnglib is not installed.])])
+      CPPFLAGS="$old_CPPFLAGS $NETGEN_CPPFLAGS -DOCCGEOMETRY"
+      LIBS="$old_LIBS -lnglib -locc"
+      AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([#include <cstddef>
+                          namespace nglib {
+                          #include "nglib.h"
+                          }],
+            [nglib::Ng_OCC_Geometry* occGeom = nglib::Ng_OCC_Load_STEP("file.stp")])],
+        [NETGEN_CPPFLAGS="$NETGEN_CPPFLAGS -DOCCGEOMETRY"
+         NETGEN_LIBS="-lnglib -locc"] [HAVE_OCC_NETGEN=yes],
+        [HAVE_OCC_NETGEN=no])
 
   AC_LANG_POP([C++])
   LIBS="$old_LIBS"
@@ -754,6 +765,11 @@ fi
 if test "x$HAVE_NETGEN" = "xyes"; then
   AC_MSG_RESULT([Netgen is found.])
   DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/netgen test/extern/netgen"
+    if test "x$HAVE_OCC_NETGEN" = "xyes"; then
+      AC_MSG_RESULT([Netgen is built with support for OCC.])
+    elif test "x$HAVE_OCC_NETGEN" = "xno"; then
+      AC_MSG_RESULT([Netgen is built without support for OCC.])
+    fi
 elif test "x$NETGEN_VAL" != "xno"; then
   AC_MSG_ERROR([Netgen not found or not usable.])
 fi
@@ -762,9 +778,10 @@ AC_SUBST([NETGEN_CPPFLAGS])
 AC_SUBST([NETGEN_LDFLAGS])
 AC_SUBST([NETGEN_LIBS])
 AC_SUBST([HAVE_NETGEN])
+AC_SUBST([HAVE_OCC_NETGEN])
 
 AM_CONDITIONAL(HAVE_NETGEN, [test "x$HAVE_NETGEN" = "xyes"])
-
+AM_CONDITIONAL(HAVE_OCC_NETGEN, [test "x$HAVE_OCC_NETGEN" = "xyes"])
 
 ################################################################################
 #                           Triangle
