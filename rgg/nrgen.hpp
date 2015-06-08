@@ -78,7 +78,7 @@ private:
   std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
   // string for file names
-  std::string m_szFile, m_szInFile, m_szCommonFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szLogFile, m_szMeshScheme;
+  std::string m_szFile, m_szInFile, m_szCommonFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szSmooth, m_szLogFile, m_szMeshScheme;
 
    std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
 

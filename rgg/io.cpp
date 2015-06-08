@@ -520,6 +520,12 @@ int CNrgen::ReadInputPhase1 ()
           szFormatString >> card >> m_szInfo;
           std::cout <<"--------------------------------------------------"<<std::endl;
         }
+      // info flag
+      if (szInputString.substr(0,6) == "smooth"){
+          std::istringstream szFormatString (szInputString);
+          szFormatString >> card >> m_szSmooth;
+          std::cout <<"--------------------------------------------------"<<std::endl;
+        }
       // mesh scheme - hole or pave
       if (szInputString.substr(0, 10) == "meshscheme") {
           std::istringstream szFormatString(szInputString);
@@ -1467,7 +1473,8 @@ int CNrgen::CreateCubitJournal()
               m_FileOutput << "surf in tmpgrp size {RADIAL_MESH_SIZE}" << std::endl;
               m_FileOutput << "group '" << m_szBLAssmMat(ll) << "_hole_surfaces' equals surf in tmpgrp"<< std::endl;
               m_FileOutput << "surface in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_interval " << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
-              m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << " smooth scheme condition number beta 2.0 cpu 10" << std::endl;
+              if(strcmp(m_szSmooth.c_str(),"on") == 0)
+                m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << " smooth scheme condition number beta 2.0 cpu 10" << std::endl;
      //         m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
            // }
               m_FileOutput << "group 'bl_surfaces' add surf in tmpgrp" << std::endl; 
@@ -1795,7 +1802,8 @@ int CNrgen::CreateCubitJournal()
       // Also look for material name in BL material list
       for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
               m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
-              m_FileOutput << "smooth surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
+              if(strcmp(m_szSmooth.c_str(),"on") == 0)
+                m_FileOutput << "smooth surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
         }
    m_FileOutput << "mesh surf in innerduct" << std::endl;
     }

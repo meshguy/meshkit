@@ -55,6 +55,7 @@ CNrgen::CNrgen ()
   com_run_count = 0;
   m_nBLAssemblyMat = 0;
   m_szInnerDuct = "";
+  m_szSmooth  = "off";
 }
 
 CNrgen::~CNrgen ()
