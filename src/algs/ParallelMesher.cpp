@@ -2,7 +2,6 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/ParExchangeMesh.hpp"
 
-#include "MKDefines.h"
 #include "MBTagConventions.hpp"
 #include "MBEntityType.h"
 #include "moab/Range.hpp"

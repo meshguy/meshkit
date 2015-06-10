@@ -182,7 +182,7 @@ void MKCore::init(bool construct_missing_ifaces)
     //                                    moab::MB_TYPE_OPAQUE, moabModelTags[0], &null_me);
     rval = moabInstances[0]->tag_get_handle("__MKModelEntity", sizeof(MeshKit::ModelEnt*), moab::MB_TYPE_OPAQUE, 
                                             moabModelTags[0], moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT, &null_me);
-    if (moab::MB_SUCCESS != rval) 
+    if (moab::MB_SUCCESS != rval)
       MBERRCHK(rval, moab_instance());
   }
 
@@ -193,7 +193,7 @@ void MKCore::init(bool construct_missing_ifaces)
     //                                    moab::MB_TYPE_INTEGER, moabGeomDimTags[0], 0, true);
     rval = moabInstances[0]->tag_get_handle(GEOM_DIMENSION_TAG_NAME, 1, moab::MB_TYPE_INTEGER, moabGeomDimTags[0], 
                                             moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT);
-    if (moab::MB_SUCCESS != rval) 
+    if (moab::MB_SUCCESS != rval)
       MBERRCHK(rval, moab_instance());
   }
   
@@ -202,7 +202,7 @@ void MKCore::init(bool construct_missing_ifaces)
     moabIDTags.resize(1);
     rval = moabInstances[0]->tag_get_handle(GLOBAL_ID_TAG_NAME, 1, moab::MB_TYPE_INTEGER, moabIDTags[0], 
                                             moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
-    if (moab::MB_SUCCESS != rval) 
+    if (moab::MB_SUCCESS != rval)
       MBERRCHK(rval, moab_instance());
   }
 }

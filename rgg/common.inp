@@ -1,8 +1,0 @@
-MeshType Tet
-GeomEngine ACIS
-GeometryType Rectangular
-TetMeshSize 2.0
-CreateSideset No
-MergeTolerance 1e-6
-info on
-END     ! This is a must

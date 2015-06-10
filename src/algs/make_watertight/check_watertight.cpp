@@ -35,9 +35,9 @@
 #include <set>
 #include <algorithm>
 #include "MBCore.hpp"
-#include "MBTagConventions.hpp"
-#include "MBRange.hpp"
-#include "MBSkinner.hpp"
+#include "moab::TagConventions.hpp"
+#include "moab/Range.hpp"
+#include "moab/Skinner.hpp"
 
 #include "meshkit/cw_func.hpp"
 #include "meshkit/gen.hpp"
@@ -55,8 +55,8 @@ struct coords_and_id {
   double z2;
   int  surf_id;
   bool matched;
-  MBEntityHandle vert1;
-  MBEntityHandle vert2;
+  moab::EntityHandle vert1;
+  moab::EntityHandle vert2;
 };
 
 /* qsort struct comparision function */
@@ -134,17 +134,17 @@ int main(int argc, char **argv)
     }
 
   // load file and get tolerance from input argument
-  MBErrorCode result;
+  moab::ErrorCode result;
   std::string filename = argv[1]; //set filename
-  MBEntityHandle input_set;
+  moab::EntityHandle input_set;
   result = MBI()->create_meshset( MESHSET_SET, input_set ); //create handle to meshset
-  if(MB_SUCCESS != result) 
+  if(moab::MB_SUCCESS != result) 
     {
       return result;
     }
 
   result = MBI()->load_file( filename.c_str(), &input_set ); //load the file into the meshset
-  if(MB_SUCCESS != result) 
+  if(moab::MB_SUCCESS != result) 
     {
       // failed to load the file
       std::cout << "could not load file" << std::endl;
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
   // is the order of the optional variables going to be a problem?
   // (i.e. we 'skipped' the variable test)
   result=cw_func::check_mesh_for_watertightness( input_set, tol, sealed, test, verbose, check_topology);
-  if(gen::error(MB_SUCCESS!=result, "could not check model for watertightness")) return result;
+  if(gen::error(moab::MB_SUCCESS!=result, "could not check model for watertightness")) return result;
 
   clock_t end_time = clock();
   std::cout << (double) (end_time-start_time)/CLOCKS_PER_SEC << " seconds" << std::endl;

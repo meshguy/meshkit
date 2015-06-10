@@ -45,9 +45,9 @@
 
 #include "iMesh_extensions.h"
 #include "MBiMesh.hpp"
-#include "MBInterface.hpp"
-#include "MBRange.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Interface.hpp"
+#include "moab/Range.hpp"
+#include "moab/Skinner.hpp"
 #include "MBTagConventions.hpp"
 #include "moab/MergeMesh.hpp"
 
@@ -173,7 +173,7 @@ namespace MeshKit {
     iMesh *imesh;
 
     //! MOAB Impl for calling mesh creation/manipulation operations
-    MBInterface *mb;
+    moab::Interface *mb;
 
     std::vector <CopyMesh*> cm;
     std::vector <CopyGeom*> cg;

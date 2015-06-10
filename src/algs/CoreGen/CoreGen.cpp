@@ -169,7 +169,7 @@ void CoreGen::setup_this()
 
                 moab::MergeMesh mm(mb);
                 moab::ErrorCode err = mm.merge_entities(ents, merge_tol, true);
-                if (MB_SUCCESS != err) {
+                if (moab::MB_SUCCESS != err) {
                     std::cerr << "Error in MergeMesh during merging entities" << std::endl;
                     exit(2);
                 }
@@ -1196,17 +1196,17 @@ int CoreGen::create_neumannset() {
             }
         }
 
-        MBRange tmp_elems;
-        tmp_elems.insert((MBEntityHandle*)ents, (MBEntityHandle*)ents + ents_size);
+        moab::Range tmp_elems;
+        tmp_elems.insert((moab::EntityHandle*)ents, (moab::EntityHandle*)ents + ents_size);
 
         // get the skin of the entities
-        MBSkinner skinner(mb);
-        MBRange skin_range;
-        MBErrorCode result;
-        MBRange::iterator rit;
+        moab::Skinner skinner(mb);
+        moab::Range skin_range;
+        moab::ErrorCode result;
+        moab::Range::iterator rit;
 
         result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
-        if (MB_SUCCESS != result) return result;
+        if (moab::MB_SUCCESS != result) return result;
 
         for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {
             if(set_DIM == 3) { // filter top and bottom

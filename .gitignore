@@ -161,5 +161,8 @@ test/extern/triangle/test_trianglemesher
 test/parallel/test_coregen
 test/parallel/test_parallelmesher
 test/test_testutil
-
+tools/coregen
+tools/assygen
+tools/postbl
+test/core/test_imesh
 

@@ -255,7 +255,7 @@ void PostBL::execute_this()
   }
 
   // allocate space for connectivity/adjacency during the first pass of this loop
-  if(mb->type_from_handle(old_hex[0]) == MBHEX){
+  if(mb->type_from_handle(old_hex[0]) == moab::MBHEX){
       m_Conn = 8;
       m_BElemNodes = 4;
       m_HConn = 8;
@@ -918,7 +918,7 @@ void PostBL::execute_this()
       // create boundary layer hexes
       for(int j=0; j< m_Intervals; j++){
           if(m_Conn == 8){
-              MBERRCHK(mb->create_element(MBHEX, &conn[j*m_Conn], m_Conn, hex),mb);
+              MBERRCHK(mb->create_element(moab::MBHEX, &conn[j*m_Conn], m_Conn, hex),mb);
           }
           else if(m_Conn==4 && m_GD ==3 && hybrid == true){
               MBERRCHK(mb->create_element(MBPRISM, &conn[j*6], 6, hex),mb);

@@ -2365,7 +2365,7 @@ namespace MeshKit
    double dZTemp = 0.0;
     int flag = 0, locTemp = 0;
     iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
-    SimpleArray<iBase_EntityHandle> surfs;
+    std::vector<iBase_EntityHandle> surfs;
     int nSide = 0;
     std::ostringstream os;
     std::string sMatName0=sMatName+"_top";
@@ -2377,7 +2377,7 @@ namespace MeshKit
     double *min_corn = new double [3*surfs.size()];
     IBERRCHK(igeomImpl->getArrBoundBox(&surfs[0], (int) surfs.size(),iBase_INTERLEAVED, &min_corn[0], &max_corn[0]), *igeomImpl);
 
-    for (int i = 0; i < surfs.size(); ++i){
+    for (int i = 0; i < (int)surfs.size(); ++i){
         // first find the max z-coordinate
         if( (fabs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
             if(flag == 0){

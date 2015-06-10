@@ -4,7 +4,7 @@
 #include "Buffer.h"
 #include "Vec3.h"
 #include "3D.h"
-#include "MBInterface.hpp"
+#include "moab/Interface.hpp"
 
 #define EDGE_BOGUS 0
 #define EDGE_BORDER 1
