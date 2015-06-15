@@ -5,7 +5,7 @@
 #include "MBCore.hpp"
 #include "gen.hpp"
 #include "moab/Skinner.hpp"
-#include "moab::TagConventions.hpp"
+#include "MBTagConventions.hpp"
 
 
 namespace arc {
