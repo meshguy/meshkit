@@ -33,7 +33,7 @@ void CNrgen::Banner (std::ostream& OF)
   std::cout << "\t\t---------------------------------------------------------" << '\n';
   std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
   std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
-  std::cout << "\t\t\t\t        2009-2010         " << '\n';
+  std::cout << "\t\t\t\t        2015-2016         " << '\n';
   std::cout << "\t\t---------------------------------------------------------" << '\n';
   std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
 }
@@ -1838,7 +1838,7 @@ int CNrgen::CreateCubitJournal()
                         "#{yc1 = Ny(corner1)} " << "\n" <<
                         "#{_num_nodes = NumInGrp('v_node')} " << "\n" <<
                         "#{_min_dis = 1.e10} " << "\n" <<
-                        "#{Loop(10)} " << "\n" <<
+                        "#{Loop(24)} " << "\n" <<
                         "#{_node_id = GroupMemberId('v_node', 'node', _cntr)} " << "\n" <<
                         "#{_xni = Nx(_node_id)} " << "\n" <<
                         "#{_yni = Ny(_node_id)} " << "\n" <<
