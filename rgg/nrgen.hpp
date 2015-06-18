@@ -82,7 +82,9 @@ private:
 
    std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
 
-  // matrix for holding pincell arrangement
+   std::vector<std::string> m_szDuctMats;
+
+// matrix for holding pincell arrangement
   CMatrix<std::string> m_Assembly; 
 
   // matrix for holding verts coordinates used in tet-meshing

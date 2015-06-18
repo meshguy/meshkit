@@ -1018,7 +1018,8 @@ int CNrgen::ReadAndCreate()
                   szFormatString >> m_szMMAlias(m_nDuctNum, i);
                   if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0)
                     IOErrorHandler(EALIAS);
-                  // this is the innermost duct
+                  m_szDuctMats.push_back(m_szMMAlias(m_nDuctNum, i));
+                  // this is the innermost duct add to group for journaling later
                   if (i==1){
                       // find material name for this alias
                       for (int ll=1; ll<= m_nAssemblyMat; ll++){
@@ -1065,6 +1066,7 @@ int CNrgen::ReadAndCreate()
                   szFormatString >> m_szMMAlias(m_nDuctNum, i);
                   if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0 || szFormatString.fail())
                     IOErrorHandler(EALIAS);
+                  m_szDuctMats.push_back(m_szMMAlias(m_nDuctNum, i));
                   // this is the innermost duct
                   if (i==1){
                       // find material name for this alias
@@ -1730,7 +1732,6 @@ int CNrgen::CreateCubitJournal()
           m_FileOutput << "#" << std::endl;
         }
     }
-
   if(m_szMeshType == "hex"){
       // some more common stuff meshing top surfaces set the sizes and mesh
       m_FileOutput << "#Surfaces mesh, use template.jou to specify sizes" << std::endl;
@@ -1738,7 +1739,7 @@ int CNrgen::CreateCubitJournal()
           szSurfTop = m_szAssmMat(p) + "_top";
           szGrp = "g_"+ m_szAssmMat(p);
           szSize =  m_szAssmMat(p) + "_surf_size";
-          if(m_szMeshScheme == "hole"){
+          if(m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
               m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
               m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
               m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
@@ -1768,7 +1769,7 @@ int CNrgen::CreateCubitJournal()
       // mesh all command after meshing surface
       if (m_nDuct <= 1 ){
           m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
-          if (m_nBLAssemblyMat !=0){
+          if (m_nBLAssemblyMat !=0){ // only if boundary layers are specified
             m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
             m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
             m_FileOutput << "mesh tmpgrp2" << std::endl;
@@ -1781,7 +1782,7 @@ int CNrgen::CreateCubitJournal()
       else {
           m_FileOutput << "#Meshing top surface" << std::endl;
           //m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
-          if(m_szMeshScheme == "hole"){
+          if(m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
               m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
               m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
               m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
@@ -1791,22 +1792,83 @@ int CNrgen::CreateCubitJournal()
               m_FileOutput << "#{endif}"  << std::endl;
               m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
             }
-          else{
+          else if (m_nBLAssemblyMat != 0){ // mesh by spefifying boundary layers or mesh partially
+              m_FileOutput << "group 'tmpgrp' equals surface name '_top'" << std::endl;
+              m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
+              m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
+              m_FileOutput << "group 'tmpgrp3' equals surface in tmpgrp2 with z_coord = " << z2 << std::endl;
+
+              m_FileOutput << "surface in tmpgrp3  size {"  << szSize <<"}" << std::endl;
+              m_FileOutput << "surface in tmpgrp3 scheme {" << "PAVE" << "}"  << std::endl;
+              m_FileOutput << "mesh tmpgrp3" << std::endl;
+
+            }
+            else {
               m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
               m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
               m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
               m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
             }
         }
- if (m_nBLAssemblyMat !=0){
-      // Also look for material name in BL material list
-      for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
-              m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
-              if(strcmp(m_szSmooth.c_str(),"on") == 0)
-                m_FileOutput << "smooth surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
-        }
-   m_FileOutput << "mesh surf in innerduct" << std::endl;
-    }
+        // This part is for mesh top surfaces only when boundary layer surfaces are specified
+       if (m_nBLAssemblyMat !=0){
+            // Also look for material name in BL material list
+            for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
+              bool duct = false;
+              for (int n = 0; n < (int) m_szDuctMats.size(); n++){
+                if (strcmp(m_szDuctMats[n].c_str(), m_szBLAssmMat(ll).c_str()) == 0)
+                  duct = true;
+                else
+                  duct = false;
+              }
+              if (duct){                 //We want to use this part with pair node only for ducts and not cylinderical pins so check if this material is duct or not
+                  if (m_edgeInterval != 99)
+                    m_FileOutput << "curve in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces interval {TOP_EDGE_INTERVAL}"<< std::endl;
+                  m_FileOutput << "mesh vertex in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+                  m_FileOutput << "#{corner1 = Id('node')} " << std::endl;
+                  m_FileOutput << "group 'gcurves' equals curve in surface in " << m_szBLAssmMat(ll) << "_hole_surfaces'" << std::endl;
+                  m_FileOutput << "#{_cntr=0} " << "\n" <<
+                        "#{_tmp_dis=0} " << "\n" <<
+                        "#{_min_dis=0}  " << "\n" <<
+                        "#{_closest_node=11} " << "\n" <<
+
+                        "group 'v_node' equals node in volume in surface in " <<  m_szBLAssmMat(ll) << "_hole_surfaces" << "\n" <<
+                        "group v_node remove node {corner1} " << "\n" <<
+                        "#{xc1 = Nx(corner1)} " << "\n" <<
+                        "#{yc1 = Ny(corner1)} " << "\n" <<
+                        "#{_num_nodes = NumInGrp('v_node')} " << "\n" <<
+                        "#{_min_dis = 1.e10} " << "\n" <<
+                        "#{Loop(10)} " << "\n" <<
+                        "#{_node_id = GroupMemberId('v_node', 'node', _cntr)} " << "\n" <<
+                        "#{_xni = Nx(_node_id)} " << "\n" <<
+                        "#{_yni = Ny(_node_id)} " << "\n" <<
+                        "#{_tmp_dis = (xc1 - _xni)*(xc1 -_xni) + (yc1 -_yni)*(yc1 - _yni)} " << "\n" <<
+                        "#{if(_tmp_dis < _min_dis)} " << "\n" <<
+                        "#{ _closest_node = _node_id} " << "\n" <<
+                        "# {_min_dis=_tmp_dis} " << "\n" <<
+                        "#{endif} " << "\n" <<
+                        "#{_cntr++} " << "\n" <<
+                        "#{if (_cntr >_num_nodes)} " << "\n" <<
+                        "#{break} " << "\n" <<
+                        "#{endif} " << "\n" <<
+                        "#{EndLoop} " << "\n" << std::endl;
+
+                  // This must be used only for ducts
+                   //   if (m_szBLAssmMat(ll) == duct material or it's not pin material')
+                      m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
+                                   << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << " pair node {corner1} with node {_closest_node}" << std::endl;
+                   }
+                   else { // this is regular cylinder
+                      m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
+                                   << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
+                   }
+
+                    m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+                    if(strcmp(m_szSmooth.c_str(),"on") == 0)
+                      m_FileOutput << "smooth surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
+              }
+              m_FileOutput << "mesh surf in innerduct with z_coord = " << z2 << std::endl;
+          }
 
       if(m_nPlanar == 0){ // volumes only
           if (m_nDuct == 1){
@@ -1835,6 +1897,7 @@ int CNrgen::CreateCubitJournal()
             }
         }
     }
+
   else if(m_szMeshType == "tet"){
       m_FileOutput << "##"<< std::endl;
       m_FileOutput << "# groupings for creating vertex groups"<< std::endl;
