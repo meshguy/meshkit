@@ -71,15 +71,23 @@ namespace MeshKit
     std::string szDateTime;
     Timer.GetDateTime (szDateTime);
     std::cout << "\nStarting out at : " << szDateTime << "\n";
-  
+
+    if (have_common == true)
+        ReadCommonInp();
+
     //count pin cylinders and cell material, needed for setting array size before actual read
     ReadInputPhase1 ();
+
+    if (have_common == true)
+        ReadCommonInp();
 
     // read the problem size and create pincell
     ReadAndCreate ();
 
     // create the .jou file
     CreateCubitJournal();
+
+    CreateAssyGenInputFiles();
 
     // get the current date and time
     Timer.GetDateTime (szDateTime);
@@ -165,7 +173,7 @@ namespace MeshKit
             std::cout << "        -h print help" << std::endl;
             std::cout << "\nRunning default case:\n" << std::endl;
 
-            m_szInFile = (char *)DEFAULT_TEST_FILE;
+            m_szInFile = TestDir + "/" + (char *)DEFAULT_TEST_FILE;
             m_szGeomFile = (char *)TEST_FILE_NAME;
             m_szJouFile = (char *)TEST_FILE_NAME;
             m_szFile =  (char *)TEST_FILE_NAME;
@@ -174,7 +182,7 @@ namespace MeshKit
             m_szSchFile = m_szFile+".template.jou";
             m_szAssmInfo = m_szFile + "_info.csv";
             m_szLogFile = m_szFile + ".log";
-            m_szCommonFile = "common.inp";
+            m_szCommonFile = TestDir + "/" + "common.inp";
 
             std::cout <<"  No file specified.  Defaulting to: " << m_szInFile<< "  " << m_szJouFile << std::endl;
           }
@@ -630,373 +638,372 @@ namespace MeshKit
   //Output:   none
   //---------------------------------------------------------------------------
   {
-    CParser Parse;
-    std::string card, szVolId, szVolAlias, szIFlag;
-    int nInputLines, nMaterials, nCyl = 0, nRadii=0, nCellMat=0;
-    double dLZ=0.0, dFlatF=0.0, dPX=0.0, dPY=0.0, dPZ=0.0;
-    CVector <std::string> szVMatName, szVMatAlias, szVCylMat, szVCellMat;
-    CVector<double> dVCoor(2), dVCylRadii, dVCylZPos, dZVStart, dZVEnd;
+  CParser Parse;
+  std::string card, szVolId, szVolAlias, szIFlag;
+  int nInputLines, nMaterials, nCyl = 0, nRadii=0, nCellMat=0;
+  double dLZ=0.0, dFlatF=0.0, dPX=0.0, dPY=0.0, dPZ=0.0;
+  CVector <std::string> szVMatName, szVMatAlias, szVCylMat, szVCellMat;
+  CVector<double> dVCoor(2), dVCylRadii, dVCylZPos, dZVStart, dZVEnd;
 
-    //loop over input lines
-    if (m_szGeomType == "rectangular"){
+  //loop over input lines
+  if (m_szGeomType == "rectangular"){
 
-        std::cout << "\ngetting volume id";
-        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                 MAXCHARS, szComment))
-          IOErrorHandler (INVALIDINPUT);
-        std::istringstream szFormatString (szInputString);
-        szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
+      std::cout << "\ngetting volume id";
+      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                               MAXCHARS, szComment))
+        IOErrorHandler (INVALIDINPUT);
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
 
-        // error checking
-        if( (strcmp (szVolAlias.c_str(), "") == 0) ||
-            (strcmp (szVolId.c_str(), "") == 0))
-          IOErrorHandler(EPIN);
-        if( nInputLines < 0 )
-          IOErrorHandler(ENEGATIVE);
+      // error checking
+      if( (strcmp (szVolAlias.c_str(), "") == 0) ||
+          (strcmp (szVolId.c_str(), "") == 0))
+        IOErrorHandler(EPIN);
+      if( nInputLines < 0 )
+        IOErrorHandler(ENEGATIVE);
 
-        m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
-        if(szIFlag == "intersect"){
-            m_Pincell(i).SetIntersectFlag(1);
-          }
-        else{
-            m_Pincell(i).SetIntersectFlag(0);
-          }
-        for(int l=1; l<=nInputLines; l++){
-            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                     MAXCHARS, szComment))
-              IOErrorHandler (INVALIDINPUT);
-            if (szInputString.substr(0,5) == "pitch"){
+      m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
+      if(szIFlag == "intersect"){
+          m_Pincell(i).SetIntersectFlag(1);
+        }
+      else{
+          m_Pincell(i).SetIntersectFlag(0);
+        }
+      for(int l=1; l<=nInputLines; l++){
+          if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                   MAXCHARS, szComment))
+            IOErrorHandler (INVALIDINPUT);
+          if (szInputString.substr(0,5) == "pitch"){
 
-                std::istringstream szFormatString (szInputString);
-                std::cout << "\ngetting pitch data";
-                szFormatString >> card >> dPX >> dPY >> dPZ;
+              std::istringstream szFormatString (szInputString);
+              std::cout << "\ngetting pitch data";
+              szFormatString >> card >> dPX >> dPY >> dPZ;
 
-                if( dPX < 0 || dPY < 0 || dPZ < 0 || szFormatString.fail())
-                  IOErrorHandler(ENEGATIVE);
-                m_Pincell(i).SetPitch (dPX, dPY, dPZ);
-              }
-            if (szInputString.substr(0,9) == "materials"){
+              if( dPX < 0 || dPY < 0 || dPZ < 0 || szFormatString.fail())
+                IOErrorHandler(ENEGATIVE);
+              m_Pincell(i).SetPitch (dPX, dPY, dPZ);
+            }
+          if (szInputString.substr(0,9) == "materials"){
 
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card >> nMaterials;
-                if(szFormatString.fail())
-                  IOErrorHandler(INVALIDINPUT);
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card >> nMaterials;
+              if(szFormatString.fail())
+                IOErrorHandler(INVALIDINPUT);
 
-                //setting local arrays
-                szVMatName.SetSize(nMaterials);
-                szVMatAlias.SetSize(nMaterials);
+              //setting local arrays
+              szVMatName.SetSize(nMaterials);
+              szVMatAlias.SetSize(nMaterials);
 
-                //set class variable sizes
-                m_Pincell(i).SetMatArray(nMaterials);
-                std::cout << "\ngetting material data";
-                for(int j=1; j<= nMaterials; j++){
-                    szFormatString >> szVMatName(j) >> szVMatAlias(j);
-                    if(szFormatString.fail())
-                      IOErrorHandler(INVALIDINPUT);
-                  }
-                m_Pincell(i).SetMat(szVMatName, szVMatAlias);
-              }
-            if (szInputString.substr(0,8) == "cylinder"){
+              //set class variable sizes
+              m_Pincell(i).SetMatArray(nMaterials);
+              std::cout << "\ngetting material data";
+              for(int j=1; j<= nMaterials; j++){
+                  szFormatString >> szVMatName(j) >> szVMatAlias(j);
+                  if(szFormatString.fail())
+                    IOErrorHandler(INVALIDINPUT);
+                }
+              m_Pincell(i).SetMat(szVMatName, szVMatAlias);
+            }
+          if (szInputString.substr(0,8) == "cylinder"){
 
-                ++nCyl;
-                std::cout << "\ngetting cylinder data";
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-                if(szFormatString.fail())
-                  IOErrorHandler(INVALIDINPUT);
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
-                m_Pincell(i).SetCylPos(nCyl, dVCoor);
-                m_Pincell(i).SetCellType(nCyl, 0);
+              ++nCyl;
+              std::cout << "\ngetting cylinder data";
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+              if(szFormatString.fail())
+                IOErrorHandler(INVALIDINPUT);
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+              m_Pincell(i).SetCylPos(nCyl, dVCoor);
+              m_Pincell(i).SetCellType(nCyl, 0);
 
-                //set local array
-                dVCylRadii.SetSize(2*nRadii);
-                szVCylMat.SetSize(nRadii);
-                dVCylZPos.SetSize(2);
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+              //set local array
+              dVCylRadii.SetSize(2*nRadii);
+              szVCylMat.SetSize(nRadii);
+              dVCylZPos.SetSize(2);
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
 
-                // reading ZCoords
-                for(int k=1; k<=2; k++){
-                    szFormatString >> dVCylZPos(k);
-                    if(szFormatString.fail())
-                      IOErrorHandler(INVALIDINPUT);
-                  }
-                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
-
-                // reading Radii
-                for(int l=1; l<= nRadii; l++){
-                    szFormatString >> dVCylRadii(l);
-                    if( dVCylRadii(l) < 0  || szFormatString.fail())
-                      IOErrorHandler(ENEGATIVE);
-                  }
-                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
-
-                // reading Material alias
-                for(int m=1; m<= nRadii; m++){
-                    szFormatString >> szVCylMat(m);
-                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                      IOErrorHandler(EALIAS);
-  //                  // setting stuff for hole scheme determination for meshing
-  //                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
-  //                      // find material name for this alias
-  //                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
-  //                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
-  //                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-  //                        }
-  //                    }
-                m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-              }
-              }
-            if (szInputString.substr(0,7) == "frustum"){
-
-                ++nCyl;
-                std::cout << "\ngetting frustum data";
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-                if(szFormatString.fail())
-                  IOErrorHandler(INVALIDINPUT);
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
-                m_Pincell(i).SetCylPos(nCyl, dVCoor);
-                m_Pincell(i).SetCellType(nCyl, 1);
-
-                //set local array
-                dVCylRadii.SetSize(2*nRadii);
-                szVCylMat.SetSize(nRadii);
-                dVCylZPos.SetSize(2);
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
-
-                // reading ZCoords
-                for(int k=1; k<=2; k++){
-                    szFormatString >> dVCylZPos(k);
-                    if(szFormatString.fail())
-                      IOErrorHandler(INVALIDINPUT);
-                  }
-                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
-
-                // reading Radii
-                for(int l=1; l<= 2*nRadii; l++){
-                    szFormatString >> dVCylRadii(l);
-                    if( dVCylRadii(l) < 0  || szFormatString.fail())
-                      IOErrorHandler(ENEGATIVE);
-                  }
-                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
-
-                // reading Material alias
-                for(int m=1; m<= nRadii; m++){
-                    szFormatString >> szVCylMat(m);
-                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                      IOErrorHandler(EALIAS);
-                    // setting stuff for hole scheme determination for meshing
-                    if (m > 2 && m_szMeshScheme == "hole"){
-                        // find material name for this alias
-                        for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                            if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                          }
-                      }
-                  }
-                m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-              }
-            if (szInputString.substr(0,12) == "cellmaterial"){
-
-                std::cout << "\ngetting cell material data\n";
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card;
-
-                //set local arrays
-                m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
-                dZVStart.SetSize(nCellMat);
-                dZVEnd.SetSize(nCellMat);
-                szVCellMat.SetSize(nCellMat);
-
-                for(int k=1; k<=nCellMat; k++){
-                    szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
-                    if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
-                      IOErrorHandler(EALIAS);
-                  }
-                m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
-              }
-          }
-      }//if rectangular ends
-
-    if (m_szGeomType == "hexagonal"){
-
-        std::cout << "\ngetting volume id";
-        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                 MAXCHARS, szComment))
-          IOErrorHandler (INVALIDINPUT);
-        std::istringstream szFormatString (szInputString);
-        szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
-
-        // error checking
-        if( (strcmp (szVolAlias.c_str(), "") == 0) ||
-            (strcmp (szVolId.c_str(), "") == 0))
-          IOErrorHandler(EPIN);
-        if( nInputLines < 0 )
-          IOErrorHandler(ENEGATIVE);
-
-        m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
-        if(szIFlag == "intersect"){
-            m_Pincell(i).SetIntersectFlag(1);
-          }
-        else{
-            m_Pincell(i).SetIntersectFlag(0);
-          }
-        for(int l=1; l<=nInputLines; l++){
-            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                     MAXCHARS, szComment))
-              IOErrorHandler (INVALIDINPUT);
-            if (szInputString.substr(0,5) == "pitch"){
-
-                std::istringstream szFormatString (szInputString);
-                std::cout << "\ngetting pitch data";
-                szFormatString >> card >> dFlatF >> dLZ;
-                if( dFlatF < 0 || dLZ < 0  || szFormatString.fail())
-                  IOErrorHandler(ENEGATIVE);
-                m_Pincell(i).SetPitch (dFlatF, dLZ);
-              }
-            if (szInputString.substr(0,9) == "materials"){
-
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card >> nMaterials;
-                if(szFormatString.fail())
-                  IOErrorHandler(INVALIDINPUT);
-                //setting local arrays
-                szVMatName.SetSize(nMaterials);
-                szVMatAlias.SetSize(nMaterials);
-
-                //set class variable sizes
-                m_Pincell(i).SetMatArray(nMaterials);
-                std::cout << "\ngetting material data";
-                for(int j=1; j<= nMaterials; j++){
-                    szFormatString >> szVMatName(j) >> szVMatAlias(j);
-                    if(szFormatString.fail())
-                      IOErrorHandler(INVALIDINPUT);
-                  }
-                m_Pincell(i).SetMat(szVMatName, szVMatAlias);
-              }
-            if (szInputString.substr(0,8) == "cylinder"){
-
-                ++nCyl;
-                std::cout << "\ngetting cylinder data";
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-                if(szFormatString.fail())
-                  IOErrorHandler(INVALIDINPUT);
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
-                m_Pincell(i).SetCylPos(nCyl, dVCoor);
-                m_Pincell(i).SetCellType(nCyl, 0);
-
-                //set local array
-                dVCylRadii.SetSize(2*nRadii);
-                szVCylMat.SetSize(nRadii);
-                dVCylZPos.SetSize(2);
-                //
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
-
-                // reading ZCoords - max and min 2 always
-                for(int k=1; k<=2; k++)
+              // reading ZCoords
+              for(int k=1; k<=2; k++){
                   szFormatString >> dVCylZPos(k);
-                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+                  if(szFormatString.fail())
+                    IOErrorHandler(INVALIDINPUT);
+                }
+              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
 
-                // reading Radii
-                for(int l=1; l<= nRadii; l++){
-                    szFormatString >> dVCylRadii(l);
-                    if( dVCylRadii(l) < 0 || szFormatString.fail())
-                      IOErrorHandler(ENEGATIVE);
-                  }
-                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+              // reading Radii
+              for(int l=1; l<= nRadii; l++){
+                  szFormatString >> dVCylRadii(l);
+                  if( dVCylRadii(l) < 0  || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+                }
+              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
 
-                // reading Material alias
-                for(int m=1; m<= nRadii; m++){
-                    szFormatString >> szVCylMat(m);
-                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                      IOErrorHandler(EALIAS);
-                    // setting stuff for hole scheme determination for meshing
-                    if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
-                        // find material name for this alias
-                        for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                            //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
-                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                          }
-                      }
-                  }
+              // reading Material alias
+              for(int m=1; m<= nRadii; m++){
+                  szFormatString >> szVCylMat(m);
+                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                    IOErrorHandler(EALIAS);
+//                  // setting stuff for hole scheme determination for meshing
+//                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
+//                      // find material name for this alias
+//                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+//                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+//                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+//                        }
+//                    }
+              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+            }
+            }
+          if (szInputString.substr(0,7) == "frustum"){
 
-                m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-              }
-            if (szInputString.substr(0,7) == "frustum"){
+              ++nCyl;
+              std::cout << "\ngetting frustum data";
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+              if(szFormatString.fail())
+                IOErrorHandler(INVALIDINPUT);
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+              m_Pincell(i).SetCylPos(nCyl, dVCoor);
+              m_Pincell(i).SetCellType(nCyl, 1);
 
-                ++nCyl;
-                std::cout << "\ngetting frustum data";
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-                if(szFormatString.fail())
-                  IOErrorHandler(INVALIDINPUT);
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
-                m_Pincell(i).SetCylPos(nCyl, dVCoor);
-                m_Pincell(i).SetCellType(nCyl, 1);
+              //set local array
+              dVCylRadii.SetSize(2*nRadii);
+              szVCylMat.SetSize(nRadii);
+              dVCylZPos.SetSize(2);
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
 
-                //set local array
-                dVCylRadii.SetSize(2*nRadii);
-                szVCylMat.SetSize(nRadii);
-                dVCylZPos.SetSize(2);
-                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+              // reading ZCoords
+              for(int k=1; k<=2; k++){
+                  szFormatString >> dVCylZPos(k);
+                  if(szFormatString.fail())
+                    IOErrorHandler(INVALIDINPUT);
+                }
+              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
 
-                // reading ZCoords
-                for(int k=1; k<=2; k++){
-                    szFormatString >> dVCylZPos(k);
-                    if(szFormatString.fail())
-                      IOErrorHandler(INVALIDINPUT);
-                  }
-                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+              // reading Radii
+              for(int l=1; l<= 2*nRadii; l++){
+                  szFormatString >> dVCylRadii(l);
+                  if( dVCylRadii(l) < 0  || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+                }
+              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
 
-                // reading Radii
-                for(int l=1; l<= 2*nRadii; l++){
-                    szFormatString >> dVCylRadii(l);
-                    if( dVCylRadii(l) < 0  || szFormatString.fail())
-                      IOErrorHandler(ENEGATIVE);
-                  }
-                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+              // reading Material alias
+              for(int m=1; m<= nRadii; m++){
+                  szFormatString >> szVCylMat(m);
+                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                    IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (m > 2 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
+                }
+              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+            }
+          if (szInputString.substr(0,12) == "cellmaterial"){
 
-                // reading Material alias
-                for(int m=1; m<= nRadii; m++){
-                    szFormatString >> szVCylMat(m);
-                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                      IOErrorHandler(EALIAS);
-                    // setting stuff for hole scheme determination for meshing
-                    if (m > 2 && m_szMeshScheme == "hole"){
-                        // find material name for this alias
-                        for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                            if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                          }
-                      }
-                  }
-                m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-              }
-            if (szInputString.substr(0,12) == "cellmaterial"){
+              std::cout << "\ngetting cell material data\n";
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card;
 
-                std::cout << "\ngetting cell material data";
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card;
+              //set local arrays
+              m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
+              dZVStart.SetSize(nCellMat);
+              dZVEnd.SetSize(nCellMat);
+              szVCellMat.SetSize(nCellMat);
 
-                //set local arrays
-                m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
-                dZVStart.SetSize(nCellMat);
-                dZVEnd.SetSize(nCellMat);
-                szVCellMat.SetSize(nCellMat);
+              for(int k=1; k<=nCellMat; k++){
+                  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
+                  if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
+                    IOErrorHandler(EALIAS);
+                }
+              m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
+            }
+        }
+    }//if rectangular ends
 
-                for(int k=1; k<=nCellMat; k++){
-                    szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
-                    if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
-                      IOErrorHandler(EALIAS);
-                  }
-                m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
-              }
-          }
-      }// if hexagonal end
-  }
+  if (m_szGeomType == "hexagonal"){
 
+      std::cout << "\ngetting volume id";
+      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                               MAXCHARS, szComment))
+        IOErrorHandler (INVALIDINPUT);
+      std::istringstream szFormatString (szInputString);
+      szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
+
+      // error checking
+      if( (strcmp (szVolAlias.c_str(), "") == 0) ||
+          (strcmp (szVolId.c_str(), "") == 0))
+        IOErrorHandler(EPIN);
+      if( nInputLines < 0 )
+        IOErrorHandler(ENEGATIVE);
+
+      m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
+      if(szIFlag == "intersect"){
+          m_Pincell(i).SetIntersectFlag(1);
+        }
+      else{
+          m_Pincell(i).SetIntersectFlag(0);
+        }
+      for(int l=1; l<=nInputLines; l++){
+          if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                   MAXCHARS, szComment))
+            IOErrorHandler (INVALIDINPUT);
+          if (szInputString.substr(0,5) == "pitch"){
+
+              std::istringstream szFormatString (szInputString);
+              std::cout << "\ngetting pitch data";
+              szFormatString >> card >> dFlatF >> dLZ;
+              if( dFlatF < 0 || dLZ < 0  || szFormatString.fail())
+                IOErrorHandler(ENEGATIVE);
+              m_Pincell(i).SetPitch (dFlatF, dLZ);
+            }
+          if (szInputString.substr(0,9) == "materials"){
+
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card >> nMaterials;
+              if(szFormatString.fail())
+                IOErrorHandler(INVALIDINPUT);
+              //setting local arrays
+              szVMatName.SetSize(nMaterials);
+              szVMatAlias.SetSize(nMaterials);
+
+              //set class variable sizes
+              m_Pincell(i).SetMatArray(nMaterials);
+              std::cout << "\ngetting material data";
+              for(int j=1; j<= nMaterials; j++){
+                  szFormatString >> szVMatName(j) >> szVMatAlias(j);
+                  if(szFormatString.fail())
+                    IOErrorHandler(INVALIDINPUT);
+                }
+              m_Pincell(i).SetMat(szVMatName, szVMatAlias);
+            }
+          if (szInputString.substr(0,8) == "cylinder"){
+
+              ++nCyl;
+              std::cout << "\ngetting cylinder data";
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+              if(szFormatString.fail())
+                IOErrorHandler(INVALIDINPUT);
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+              m_Pincell(i).SetCylPos(nCyl, dVCoor);
+              m_Pincell(i).SetCellType(nCyl, 0);
+
+              //set local array
+              dVCylRadii.SetSize(2*nRadii);
+              szVCylMat.SetSize(nRadii);
+              dVCylZPos.SetSize(2);
+              //
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+
+              // reading ZCoords - max and min 2 always
+              for(int k=1; k<=2; k++)
+                szFormatString >> dVCylZPos(k);
+              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+
+              // reading Radii
+              for(int l=1; l<= nRadii; l++){
+                  szFormatString >> dVCylRadii(l);
+                  if( dVCylRadii(l) < 0 || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+                }
+              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+
+              // reading Material alias
+              for(int m=1; m<= nRadii; m++){
+                  szFormatString >> szVCylMat(m);
+                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                    IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                          if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
+                }
+
+              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+            }
+          if (szInputString.substr(0,7) == "frustum"){
+
+              ++nCyl;
+              std::cout << "\ngetting frustum data";
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+              if(szFormatString.fail())
+                IOErrorHandler(INVALIDINPUT);
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+              m_Pincell(i).SetCylPos(nCyl, dVCoor);
+              m_Pincell(i).SetCellType(nCyl, 1);
+
+              //set local array
+              dVCylRadii.SetSize(2*nRadii);
+              szVCylMat.SetSize(nRadii);
+              dVCylZPos.SetSize(2);
+              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+
+              // reading ZCoords
+              for(int k=1; k<=2; k++){
+                  szFormatString >> dVCylZPos(k);
+                  if(szFormatString.fail())
+                    IOErrorHandler(INVALIDINPUT);
+                }
+              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+
+              // reading Radii
+              for(int l=1; l<= 2*nRadii; l++){
+                  szFormatString >> dVCylRadii(l);
+                  if( dVCylRadii(l) < 0  || szFormatString.fail())
+                    IOErrorHandler(ENEGATIVE);
+                }
+              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+
+              // reading Material alias
+              for(int m=1; m<= nRadii; m++){
+                  szFormatString >> szVCylMat(m);
+                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                    IOErrorHandler(EALIAS);
+                  // setting stuff for hole scheme determination for meshing
+                  if (m > 2 && m_szMeshScheme == "hole"){
+                      // find material name for this alias
+                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                        }
+                    }
+                }
+              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+            }
+          if (szInputString.substr(0,12) == "cellmaterial"){
+
+              std::cout << "\ngetting cell material data";
+              std::istringstream szFormatString (szInputString);
+              szFormatString >> card;
+
+              //set local arrays
+              m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
+              dZVStart.SetSize(nCellMat);
+              dZVEnd.SetSize(nCellMat);
+              szVCellMat.SetSize(nCellMat);
+
+              for(int k=1; k<=nCellMat; k++){
+                  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
+                  if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
+                    IOErrorHandler(EALIAS);
+                }
+              m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
+            }
+        }
+    }// if hexagonal end
+}
 
   void AssyGen::ReadAndCreate()
   //---------------------------------------------------------------------------
@@ -1069,7 +1076,8 @@ namespace MeshKit
                     szFormatString >> m_szMMAlias(m_nDuctNum, i);
                     if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0)
                       IOErrorHandler(EALIAS);
-                    // this is the innermost duct
+                    m_szDuctMats.push_back(m_szMMAlias(m_nDuctNum, i));
+                    // this is the innermost duct add to group for journaling later
                     if (i==1){
                         // find material name for this alias
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
@@ -1116,6 +1124,7 @@ namespace MeshKit
                     szFormatString >> m_szMMAlias(m_nDuctNum, i);
                     if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0 || szFormatString.fail())
                       IOErrorHandler(EALIAS);
+                    m_szDuctMats.push_back(m_szMMAlias(m_nDuctNum, i));
                     // this is the innermost duct
                     if (i==1){
                         // find material name for this alias
@@ -1371,6 +1380,7 @@ namespace MeshKit
                 Imprint_Merge();
 
                 // save .sat file
+                // save .sat file
                 IBERRCHK(igeomImpl->save(m_szGeomFile.c_str()), *igeomImpl);
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
               }
@@ -1378,7 +1388,6 @@ namespace MeshKit
           }
       }
   }
-
 
   void AssyGen::CreateAssyGenInputFiles()
   //---------------------------------------------------------------------------
@@ -1511,8 +1520,6 @@ namespace MeshKit
                 m_FileOutput << "surf in tmpgrp size {RADIAL_MESH_SIZE}" << std::endl;
                 m_FileOutput << "group '" << m_szBLAssmMat(ll) << "_hole_surfaces' equals surf in tmpgrp"<< std::endl;
                 m_FileOutput << "surface in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_interval " << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
-       //         m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
-             // }
                 m_FileOutput << "group 'bl_surfaces' add surf in tmpgrp" << std::endl;
           }
       }
@@ -1524,12 +1531,13 @@ namespace MeshKit
 
     // if creating only journal file load the geometry file to compute bounding box for automatic size specification
     if(m_nJouFlag == 1){
-        IBERRCHK(igeomImpl->load(m_szGeomFile.c_str()), *igeomImpl);
+          IBERRCHK(igeomImpl->load(m_szGeomFile.c_str()), *igeomImpl);
       }
 
     // get the max and min coordinates of the geometry
     double x1, y1, z1, x2, y2, z2;
     IBERRCHK(igeomImpl->getBoundBox(x1, y1, z1, x2, y2, z2), *igeomImpl);
+
     int nSideset=m_nNeumannSetId;
     std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
     double dHeight = 0.0, dMid = 0.0;
@@ -1763,7 +1771,6 @@ namespace MeshKit
             m_FileOutput << "#" << std::endl;
           }
       }
-
     if(m_szMeshType == "hex"){
         // some more common stuff meshing top surfaces set the sizes and mesh
         m_FileOutput << "#Surfaces mesh, use template.jou to specify sizes" << std::endl;
@@ -1771,7 +1778,7 @@ namespace MeshKit
             szSurfTop = m_szAssmMat(p) + "_top";
             szGrp = "g_"+ m_szAssmMat(p);
             szSize =  m_szAssmMat(p) + "_surf_size";
-            if(m_szMeshScheme == "hole"){
+            if(m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
                 m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
                 m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
                 m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
@@ -1801,14 +1808,20 @@ namespace MeshKit
         // mesh all command after meshing surface
         if (m_nDuct <= 1 ){
             m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
-            m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
-            m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
-            m_FileOutput << "mesh tmpgrp2" << std::endl;
+            if (m_nBLAssemblyMat !=0){ // only if boundary layers are specified
+              m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
+              m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
+              m_FileOutput << "mesh tmpgrp2" << std::endl;
+            }
+            else
+            {
+              m_FileOutput << "mesh tmpgrp" << std::endl;
+            }
           }
         else {
             m_FileOutput << "#Meshing top surface" << std::endl;
             //m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
-            if(m_szMeshScheme == "hole"){
+            if(m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
                 m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
                 m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
                 m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
@@ -1818,20 +1831,81 @@ namespace MeshKit
                 m_FileOutput << "#{endif}"  << std::endl;
                 m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
               }
-            else{
+            else if (m_nBLAssemblyMat != 0){ // mesh by spefifying boundary layers or mesh partially
+                m_FileOutput << "group 'tmpgrp' equals surface name '_top'" << std::endl;
+                m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
+                m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
+                m_FileOutput << "group 'tmpgrp3' equals surface in tmpgrp2 with z_coord = " << z2 << std::endl;
+
+                m_FileOutput << "surface in tmpgrp3  size {"  << szSize <<"}" << std::endl;
+                m_FileOutput << "surface in tmpgrp3 scheme {" << "PAVE" << "}"  << std::endl;
+                m_FileOutput << "mesh tmpgrp3" << std::endl;
+
+              }
+              else {
                 m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
                 m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
                 m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
                 m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
               }
           }
-   if (m_nBLAssemblyMat !=0){
-        // Also look for material name in BL material list
-        for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
-                m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
-          }
-        m_FileOutput << "mesh surf in innerduct" << std::endl;
-      }
+          // This part is for mesh top surfaces only when boundary layer surfaces are specified
+         if (m_nBLAssemblyMat !=0){
+              // Also look for material name in BL material list
+              for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
+                bool duct = false;
+                for (int n = 0; n < (int) m_szDuctMats.size(); n++){
+                  if (strcmp(m_szDuctMats[n].c_str(), m_szBLAssmMat(ll).c_str()) == 0)
+                    duct = true;
+                  else
+                    duct = false;
+                }
+                if (duct){                 //We want to use this part with pair node only for ducts and not cylinderical pins so check if this material is duct or not
+                    if (m_edgeInterval != 99)
+                      m_FileOutput << "curve in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces interval {TOP_EDGE_INTERVAL}"<< std::endl;
+                    m_FileOutput << "mesh vertex in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+                    m_FileOutput << "#{corner1 = Id('node')} " << std::endl;
+                    m_FileOutput << "group 'gcurves' equals curve in surface in " << m_szBLAssmMat(ll) << "_hole_surfaces'" << std::endl;
+                    m_FileOutput << "#{_cntr=0} " << "\n" <<
+                          "#{_tmp_dis=0} " << "\n" <<
+                          "#{_min_dis=0}  " << "\n" <<
+                          "#{_closest_node=11} " << "\n" <<
+
+                          "group 'v_node' equals node in volume in surface in " <<  m_szBLAssmMat(ll) << "_hole_surfaces" << "\n" <<
+                          "group v_node remove node {corner1} " << "\n" <<
+                          "#{xc1 = Nx(corner1)} " << "\n" <<
+                          "#{yc1 = Ny(corner1)} " << "\n" <<
+                          "#{_num_nodes = NumInGrp('v_node')} " << "\n" <<
+                          "#{_min_dis = 1.e10} " << "\n" <<
+                          "#{Loop(24)} " << "\n" <<
+                          "#{_node_id = GroupMemberId('v_node', 'node', _cntr)} " << "\n" <<
+                          "#{_xni = Nx(_node_id)} " << "\n" <<
+                          "#{_yni = Ny(_node_id)} " << "\n" <<
+                          "#{_tmp_dis = (xc1 - _xni)*(xc1 -_xni) + (yc1 -_yni)*(yc1 - _yni)} " << "\n" <<
+                          "#{if(_tmp_dis < _min_dis)} " << "\n" <<
+                          "#{ _closest_node = _node_id} " << "\n" <<
+                          "# {_min_dis=_tmp_dis} " << "\n" <<
+                          "#{endif} " << "\n" <<
+                          "#{_cntr++} " << "\n" <<
+                          "#{if (_cntr >_num_nodes)} " << "\n" <<
+                          "#{break} " << "\n" <<
+                          "#{endif} " << "\n" <<
+                          "#{EndLoop} " << "\n" << std::endl;
+
+                    // This must be used only for ducts
+                     //   if (m_szBLAssmMat(ll) == duct material or it's not pin material')
+                        m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
+                                     << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << " pair node {corner1} with node {_closest_node}" << std::endl;
+                     }
+                     else { // this is regular cylinder
+                        m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
+                                     << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
+                     }
+
+                      m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+                  }
+                m_FileOutput << "mesh surf in innerduct with z_coord = " << z2 << std::endl;
+            }
 
         if(m_nPlanar == 0){ // volumes only
             if (m_nDuct == 1){
@@ -1860,6 +1934,7 @@ namespace MeshKit
               }
           }
       }
+
     else if(m_szMeshType == "tet"){
         m_FileOutput << "##"<< std::endl;
         m_FileOutput << "# groupings for creating vertex groups"<< std::endl;
@@ -3189,7 +3264,7 @@ namespace MeshKit
 	  SimpleArray<iBase_EntityHandle> cyls(nRadii);
 
 	  //declare variables
-	  CVector<double> dVCylRadii(nRadii);
+	  CVector<double> dVCylRadii(2*nRadii);
 	  CVector<std::string> szVMat(nRadii);
 	  CVector<std::string> szVCylMat(nRadii);
 
@@ -3293,7 +3368,7 @@ namespace MeshKit
 	  SimpleArray<iBase_EntityHandle> cyls(nRadii);
 
 	  //declare variables
-	  CVector<double> dVCylRadii(nRadii);
+	  CVector<double> dVCylRadii(2*nRadii);
 	  CVector<std::string> szVMat(nRadii);
 	  CVector<std::string> szVCylMat(nRadii);
 
