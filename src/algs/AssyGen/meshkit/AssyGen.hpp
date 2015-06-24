@@ -38,13 +38,14 @@
 #include "meshkit/parser.hpp"
 #include "meshkit/clock.hpp"
 
-
 namespace MeshKit {
 
 #define DEFAULT_TEST_FILE  "assygen_default"
 #define TEST_FILE_NAME "assygen_default"
 
-  enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE, EGEOMENGINE, ENEGATIVE, EALIAS, EPIN};
+//#define CHECK( STR ) if (err != iBase_SUCCESS) return Print_Error( STR, err, geom, __FILE__, __LINE__ )
+
+  enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE, EGEOMENGINE, ENEGATIVE, EALIAS, EPIN, EUNEQUAL};
 
   class MKCore;
 
@@ -62,7 +63,7 @@ namespace MeshKit {
      */
     virtual ~AssyGen();
 
-    enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE, EGEOMENGINE, ENEGATIVE, EALIAS, EPIN};
+    enum ErrorStates {PINCELLS, INVALIDINPUT, EMAT, EGEOMTYPE, EGEOMENGINE, ENEGATIVE, EALIAS, EPIN, EUNEQUAL};
 
     /**\brief Get class name */
     static const char* name();
@@ -107,6 +108,11 @@ namespace MeshKit {
      */
     void PrepareIO (int argc, char *argv[], std::string TestDir);
 
+    /** \brief Read the common.inp file
+     *  common.inp is hardcoded name
+     */
+    void ReadCommonInp ();
+
     /** \brief Read the command based text input file
      *  input file
      */
@@ -116,6 +122,11 @@ namespace MeshKit {
      *  input file
      */
     void ReadAndCreate ();
+
+    /** \brief Create assygen input files
+     *  based on material sets specified in master assygen input file
+     */
+    void CreateAssyGenInputFiles();
 
     /** \brief Name the surface created
      *  material name from input file, surface entity, name tag
@@ -199,7 +210,7 @@ namespace MeshKit {
      *  pin-number and location of the pincell
      */
     void ComputePinCentroid( int, CMatrix<std::string>, int, int,
-			     double&, double&, double&);
+                             double&, double&, double&);
 
   private:
     // iGeom Impl for calling geometry creation/manipulation operations
@@ -209,13 +220,13 @@ namespace MeshKit {
     int m_nSides;
   
     // file Input
-    std::ifstream m_FileInput;  
+    std::ifstream m_FileInput, m_FileCommon;
     
     // journal file Output
-    std::ofstream m_FileOutput, m_SchemesFile;
+    std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
     // string for file names
-    std::string m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;    
+    std::string m_szAssmInfo, m_szLogFile, m_szCommonFile, m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;
 
     // matrix for holding pincell arrangement
     CMatrix<std::string> m_Assembly; 
@@ -233,18 +244,20 @@ namespace MeshKit {
     // vector holding a pincell
     CVector<CPincell> m_Pincell; 
 
+    CVector<double> m_dAxialSize, m_dBLMatBias;
+
     // string for geomtype, engine, meshtype
     std::string m_szEngine;
     std::string m_szGeomType;       
     std::string m_szMeshType;
     std::string m_szSideset; 
-
+    std::vector<std::string> m_szDuctMats;
     // integers for vectors sizes, err etc
-    int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
-      m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag; 
+    int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar,
+      m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag, m_nAssyGenInputFiles,  m_nTotalPincells;
 
     // doubles for pincell pitch, pi and mesh sizes resp.
-    double m_dPitch, pi, m_dRadialSize, m_dAxialSize, m_dTetMeshSize, m_dMergeTol;      
+    double m_dPitch, pi, m_dRadialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;
  
     // igeom related
     std::vector<iBase_EntityHandle> assms, in_pins;
@@ -256,11 +269,39 @@ namespace MeshKit {
     void IOErrorHandler (ErrorStates) const;
     friend class CPincell;
 
+    struct superblocks{
+        int m_nSuperBlockId;
+        std::string m_szSuperBlockAlias;
+        int m_nNumSBContents;
+        CVector<int> m_nSBContents;
+    };
+
+    int m_nSuperBlocks;
+    CVector<superblocks> sb;
+    int tmpSB;
+
     // parsing related
     std::string szInputString;
     std::string szComment;
-    int MAXCHARS;
+    int MAXCHARS, MAXLINES;
 
+    std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
+
+    CVector<std::string> m_szBLAssmMat;
+    CVector<int> m_nListMatSet, m_nListNeuSet, m_nBLMatIntervals;
+
+    int m_edgeInterval;
+    int m_nStartpinid;
+    std::string m_szInfo;
+    std::string m_szMeshScheme;
+    std::string pin_name;
+    int m_nHblock;
+    bool m_bCreateMatFiles;
+    bool save_exodus;
+    bool have_common;
+    int com_run_count;
+    int m_nBLAssemblyMat;
+    std::string m_szInnerDuct;
   };
 
   inline const char* AssyGen::name()

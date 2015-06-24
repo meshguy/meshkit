@@ -1,7 +1,0 @@
-Geometry Volume
-GeometryType Hexagonal
-RadialMeshSize 0.3
-AxialMeshSize 350
-EdgeInterval 72
-CreateSideset No
-End

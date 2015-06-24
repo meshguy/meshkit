@@ -12,8 +12,8 @@
 
 #define STRINGIFY_(X) #X
 #define STRINGIFY(X) STRINGIFY_(X)
-#define COREGEN_DEFAULT_TEST_FILE  "CoreGen_default"
-#define CTEST_FILE_NAME "CoreGen_default"
+#define COREGEN_DEFAULT_TEST_FILE  "coregen_default"
+#define CTEST_FILE_NAME "coregen_default"
 
 #include <cassert>
 #include <string>
@@ -45,9 +45,9 @@
 
 #include "iMesh_extensions.h"
 #include "MBiMesh.hpp"
-#include "MBInterface.hpp"
-#include "MBRange.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Interface.hpp"
+#include "moab/Range.hpp"
+#include "moab/Skinner.hpp"
 #include "MBTagConventions.hpp"
 #include "moab/MergeMesh.hpp"
 
@@ -124,12 +124,13 @@ namespace MeshKit {
 
     enum ErrorStates {INVALIDINPUT, ENEGATIVE};
     int prepareIO (int argc, char *argv[], int nrank, int numprocs, std::string  TestDir);
+    int parse_assembly_names(CParser parse, int argc, char *argv[]);
     int load_meshes();
     int load_meshes_parallel(const int, int);
     int distribute_mesh(const int,  int);
     int load_geometries();
-    int read_inputs_phase1 ();
-    int read_inputs_phase2 ();
+    int read_inputs_phase1 (int argc, char *argv[]);
+    int read_inputs_phase2 (int argc, char *argv[]);
     int write_makefile ();
     int write_minfofile ();
     int find_assm(const int i, int &assm_index);
@@ -143,6 +144,7 @@ namespace MeshKit {
     int save_mesh(int rank);
     int save_mesh_parallel(const int nrank, const int numprocs);
     int save_geometry();
+    int shift_mn_ids(iBase_EntitySetHandle orig_set, int index);
     int close();
     int close_parallel(const int nrank, const int numprocs);
     int extrude();
@@ -151,10 +153,13 @@ namespace MeshKit {
     int create_neumannset();
 
     bool extrude_flag;
+    std::vector <int> bsameas;
     bool mem_tflag;
-    std::string prob_type, savefiles, info, minfo;
+    std::string prob_type, savefiles, info, minfo, same_as, reloading_mf;
     std::vector<std::string> files, all_meshfiles, mk_files;
-    std::vector<int> assm_meshfiles;
+    std::vector<int> assm_meshfiles,  size_mf, times_loaded;
+    std::vector<int> rank_load;
+    std::vector<double> load_per_assm;
     std::vector< std::vector<int> > assm_location;
     std::vector<std::vector<int> > position_core;
     std::vector<int> meshfile_proc;
@@ -163,7 +168,7 @@ namespace MeshKit {
     bool nst_flag, nsb_flag, nss_flag;
     std::vector<std::string> core_alias;
     std::vector<double> nsx, nsy, nsc;
-    int num_nsside;
+    int num_nsside, ms_startid, ns_startid;
 
   private:
     //! iGeom Impl for calling geometry creation/manipulation operations
@@ -173,7 +178,7 @@ namespace MeshKit {
     iMesh *imesh;
 
     //! MOAB Impl for calling mesh creation/manipulation operations
-    MBInterface *mb;
+    moab::Interface *mb;
 
     std::vector <CopyMesh*> cm;
     std::vector <CopyGeom*> cg;
@@ -206,6 +211,8 @@ namespace MeshKit {
     int linenumber;
     std::string card,geom_type, meshfile, mf_alias, temp_alias;
     std::vector<std::string> assm_alias;
+    std::vector<int> all_ms_starts, all_ns_starts;
+
     mstream logfile;
 
     // parsing related

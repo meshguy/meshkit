@@ -8,8 +8,8 @@
 #include "meshkit/RegisterMeshOp.hpp"
 
 #include "moab/Core.hpp"
-#include "MBRange.hpp"
-#include "MBCartVect.hpp"
+#include "moab/Range.hpp"
+#include "moab/CartVect.hpp"
 #include "moab/EntityType.hpp"
 #include "moab/HomXform.hpp"
 #include "moab/GeomTopoTool.hpp"
@@ -56,36 +56,36 @@ EBMesher::EBMesher(MKCore *mkcore, const MEntVector &me_vec,
   int outside = 1;
   const void *out = &outside;
   m_elemStatusTag = get_tag("ELEM_STATUS_TAG", 1,
-                            MB_TAG_DENSE, MB_TYPE_INTEGER, out);
+                            moab::MB_TAG_DENSE, moab::MB_TYPE_INTEGER, out);
   
   int length = 1;
   const void *leng = &length;
   m_edgeCutFracLengthTag = get_tag("EDGE_CUT_FRAC_LENGTH_TAG", // # of fractions
                                    3,
-                                   //MB_TAG_SPARSE, // using dense for hdf5 exporting performance
-                                   MB_TAG_DENSE,
-                                   MB_TYPE_INTEGER, leng);
+                                   //moab::MB_TAG_SPARSE, // using dense for hdf5 exporting performance
+                                   moab::MB_TAG_DENSE,
+                                   moab::MB_TYPE_INTEGER, leng);
 
   m_edgeCutFracTag = get_various_length_tag("EDGE_CUT_FRAC_TAG",
-                                            //MB_TAG_SPARSE,
-                                            MB_TAG_DENSE,
-                                            MB_TYPE_DOUBLE);
+                                            //moab::MB_TAG_SPARSE,
+                                            moab::MB_TAG_DENSE,
+                                            moab::MB_TYPE_DOUBLE);
 
   int m_id = 1;
   const void *id = &m_id;
   m_volFracLengthTag = get_tag("VOL_FRAC_LENGTH_TAG", 1,
-                               MB_TAG_SPARSE, MB_TYPE_INTEGER, id);
+                               moab::MB_TAG_SPARSE, moab::MB_TYPE_INTEGER, id);
   
   m_volFracHandleTag = get_various_length_tag("VOL_FRAC_HANDLE_TAG",
-                                          MB_TAG_SPARSE, MB_TYPE_INTEGER);
+                                          moab::MB_TAG_SPARSE, moab::MB_TYPE_INTEGER);
 
   m_volFracTag = get_various_length_tag("VOL_FRAC_TAG",
-                                        MB_TAG_SPARSE, MB_TYPE_DOUBLE);
+                                        moab::MB_TAG_SPARSE, moab::MB_TYPE_DOUBLE);
   
   // set bounding box size tag
   double bb_default[6] = { 0., 0., 0., 0., 0., 0. };
   m_bbTag = get_tag("BOUNDING_BOX_SIZE", 6,
-                    MB_TAG_SPARSE, MB_TYPE_DOUBLE, bb_default);
+                    moab::MB_TAG_SPARSE, moab::MB_TYPE_DOUBLE, bb_default);
   
   m_GeomTopoTool = new moab::GeomTopoTool( moab_instance() );
 }
@@ -276,18 +276,18 @@ void EBMesher::set_tree_root(ModelEnt* me)
     }
   }
   else { // facet data input case
-    MBEntityHandle meshset;
+    moab::EntityHandle meshset;
     if (m_bUseWholeGeom) meshset = 0;
     else meshset = me->mesh_handle();
 
     // get triangles
-    MBRange tris;
+    moab::Range tris;
     rval = moab_instance()->get_entities_by_dimension(meshset, 2, tris);
     MBERRCHK(rval, mk_core()->moab_instance());
     
     // make tree
     if (m_hObbTree == NULL) {
-      m_hObbTree = new MBOrientedBoxTreeTool( moab_instance() );
+      m_hObbTree = new moab::OrientedBoxTreeTool( moab_instance() );
     }
     rval = m_hObbTree->build(tris, m_hTreeRoot);
     MBERRCHK(rval, mk_core()->moab_instance());
@@ -647,7 +647,7 @@ void EBMesher::set_division()
   if (m_dInputSize < 0.) {
     int n_tri;
     rval = moab_instance()->
-      get_number_entities_by_dimension(reinterpret_cast<MBEntityHandle>(m_hRootSet),
+      get_number_entities_by_dimension(reinterpret_cast<moab::EntityHandle>(m_hRootSet),
                                        2, n_tri);
     MBERRCHK(rval, mk_core()->moab_instance());
     
@@ -712,10 +712,10 @@ int EBMesher::make_scd_hexes()
   moab::EntityHandle vs, cs;
   moab::Core *mbcore = dynamic_cast<moab::Core*>(moab_instance());
 
-  moab::ErrorCode rval = mbcore->create_scd_sequence(coord_min, coord_max, MBVERTEX, 1, vs, vertex_seq);
+  moab::ErrorCode rval = mbcore->create_scd_sequence(coord_min, coord_max, moab::MBVERTEX, 1, vs, vertex_seq);
   MBERRCHK(rval, mk_core()->moab_instance());
   
-  mbcore->create_scd_sequence(coord_min, coord_max, MBHEX, 1, cs, cell_seq);
+  mbcore->create_scd_sequence(coord_min, coord_max, moab::MBHEX, 1, cs, cell_seq);
   MBERRCHK(rval, mk_core()->moab_instance());
 
   moab::HomCoord p2(coord_max.i(), coord_min.j(), coord_min.k());
@@ -727,7 +727,7 @@ int EBMesher::make_scd_hexes()
 
   int nTotNode = m_nNode[0]*m_nNode[1]*m_nNode[2];
   int ii, jj, kk;
-  MBEntityHandle handle;
+  moab::EntityHandle handle;
   double dumv[3];
   for (i = 0, handle = vs; i < nTotNode; i++, handle++) {
     ii = (i%(m_nNode[0]*m_nNode[1]))%m_nNode[0];
@@ -746,11 +746,11 @@ int EBMesher::make_scd_hexes()
 }
 
 iBase_TagHandle EBMesher::get_tag(const char* name, int size,
-                                     unsigned store, MBDataType type,
+                                     unsigned store, moab::DataType type,
                                      const void* def_value,
                                      bool create_if_missing) 
 {
-  MBTag retval = 0;
+  moab::Tag retval = 0;
   /*moab::ErrorCode result = moab_instance()->tag_create(name, size, store, type,
                                                    retval, def_value,
                                                    create_if_missing);*/
@@ -759,7 +759,7 @@ iBase_TagHandle EBMesher::get_tag(const char* name, int size,
     store = store | moab::MB_TAG_EXCL;
   moab::ErrorCode result = moab_instance()->tag_get_handle(name, size, type, retval, store,
                                                       def_value);
-  if (create_if_missing && MB_SUCCESS != result) {
+  if (create_if_missing && moab::MB_SUCCESS != result) {
     std::cerr << "Couldn't find nor create tag named " << name << std::endl;
   }
   
@@ -767,13 +767,13 @@ iBase_TagHandle EBMesher::get_tag(const char* name, int size,
 }
 
 iBase_TagHandle EBMesher::get_various_length_tag(const char* name,
-                                                    unsigned store, MBDataType type)
+                                                    unsigned store, moab::DataType type)
 {
-  MBTag retval = 0;
+  moab::Tag retval = 0;
   store = store | moab::MB_TAG_VARLEN | moab::MB_TAG_CREAT;
   moab::ErrorCode result = moab_instance()->
     tag_get_handle( name, 1, type, retval, store);
-  if (MB_SUCCESS != result) {
+  if (moab::MB_SUCCESS != result) {
     std::cerr << "Couldn't find nor create tag named " << name << std::endl;
   }
   
@@ -837,7 +837,7 @@ void EBMesher::set_tag_info()
                                                    frac_leng);
   IBERRCHK(err, "Failed to set cut fraction sizes to hex.");
 
-  moab::ErrorCode rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<MBTag> (m_edgeCutFracTag),
+  moab::ErrorCode rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<moab::Tag> (m_edgeCutFracTag),
                                                    reinterpret_cast<moab::EntityHandle*> (&hvBndrHex[0]),
                                                    nBndrHex, &frac_data_pointer[0], frac_size);
   MBERRCHK(rval, mk_core()->moab_instance());
@@ -1009,7 +1009,7 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
   }
   
   nIntersect = temp_intersects.size();
-  if (MB_SUCCESS != rVal) {
+  if (moab::MB_SUCCESS != rVal) {
     std::cerr << "Failed : ray-triangle intersection." << std::endl;
     return false;
   }
@@ -1532,7 +1532,7 @@ bool EBMesher::export_fraction_points(std::map< CutCellSurfEdgeKey, std::vector<
   
   result = moab_instance()->write_mesh("frac_vertices.vtk",
                                        (const moab::EntityHandle*) &set, 1);
-  if (MB_SUCCESS != result) {
+  if (moab::MB_SUCCESS != result) {
     std::cerr << "Failed to write fraction vertices." << std::endl;
     return false;
   }
@@ -1624,7 +1624,7 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
       }
     }
 
-    MBCartVect ray(endPnt[0] - startPnt[0], endPnt[1] - startPnt[1], endPnt[2] - startPnt[2]);
+    moab::CartVect ray(endPnt[0] - startPnt[0], endPnt[1] - startPnt[1], endPnt[2] - startPnt[2]);
     double rayLength = ray.length();
     moab::ErrorCode rVal;
     ray.normalize();
@@ -1646,7 +1646,7 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
       m_vhInterSurf.resize(temp_intersects.size());
     }
 
-    if (MB_SUCCESS != rVal) {
+    if (moab::MB_SUCCESS != rVal) {
       std::cerr << "Failed : ray-triangle intersection." << std::endl;
       return false;
     }
@@ -1847,10 +1847,10 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
               bClosed = true;
               for (k = 0; k < nIntersect; k++) {
                 std::vector<moab::EntityHandle> parents;
-                //MBRange parents;
+                //moab::Range parents;
                 rval = moab_instance()->get_parent_meshsets(m_vhInterSurf[m_vIntersection[k].index],
                                                             parents);
-                if (rval != MB_SUCCESS) {
+                if (rval != moab::MB_SUCCESS) {
                   std::cerr << "Couldn't get parents." << std::endl;
                   return false;
                 }
@@ -1989,10 +1989,10 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
               if (nIntersect > 0) { // fully inside
                 if (is_shared_overlapped_surf(0) || // shared or overlapped
                     is_same_direct_to_ray(0, dir)) { // other inside case
-                  MBRange parents;
+                  moab::Range parents;
                   rval = moab_instance()->get_parent_meshsets(m_vhInterSurf[m_vIntersection[0].index],
                                                               parents);
-                  if (rval != MB_SUCCESS) {
+                  if (rval != moab::MB_SUCCESS) {
                     std::cerr << "Couldn't get parents." << std::endl;
                     return false;
                   }
@@ -2043,17 +2043,17 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
       const void* vol_fracs = &vol_frac[0];
 
       // set volume fraction information as tag
-      rval = moab_instance()->tag_set_data(reinterpret_cast<MBTag> (m_volFracLengthTag),
+      rval = moab_instance()->tag_set_data(reinterpret_cast<moab::Tag> (m_volFracLengthTag),
                                            reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
                                            1, &vol_frac_length);
       MBERRCHK(rval, mk_core()->moab_instance());
 
-      rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<MBTag> (m_volFracHandleTag),
+      rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<moab::Tag> (m_volFracHandleTag),
                                            reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
                                            1, &vol_frac_ids, &vol_frac_id_size);
       MBERRCHK(rval, mk_core()->moab_instance());
 
-      rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<MBTag> (m_volFracTag),
+      rval = moab_instance()->tag_set_by_ptr(reinterpret_cast<moab::Tag> (m_volFracTag),
                                            reinterpret_cast<moab::EntityHandle*> (&hex_handles[n]),
                                            1, &vol_fracs, &vol_frac_size);
       MBERRCHK(rval, mk_core()->moab_instance());
@@ -2077,18 +2077,18 @@ bool EBMesher::get_volume_fraction(int vol_frac_div)
 
 bool EBMesher::is_same_direct_to_ray(int i, int dir)
 {
-  MBCartVect coords[3], normal(0.0), ray_dir(rayDir[dir]);
+  moab::CartVect coords[3], normal(0.0), ray_dir(rayDir[dir]);
   const moab::EntityHandle *conn;
   int len;
 
   // get triangle normal vector
   moab::ErrorCode rval = moab_instance()->get_connectivity(m_vhInterFacet[m_vIntersection[i].index],
                                                            conn, len);
-  assert(MB_SUCCESS == rval && 3 == len);
+  assert(moab::MB_SUCCESS == rval && 3 == len);
   
   rval = moab_instance()->get_coords(conn, 3, coords[0].array());
   (void) rval;
-  assert(MB_SUCCESS == rval);
+  assert(moab::MB_SUCCESS == rval);
 
   coords[1] -= coords[0];
   coords[2] -= coords[0];

@@ -19,41 +19,41 @@
 #include <algorithm>
 #include "MBCore.hpp"
 #include "MBTagConventions.hpp"
-#include "MBRange.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Range.hpp"
+#include "moab/Skinner.hpp"
 
 #include "moab/GeomTopoTool.hpp"
 #include "meshkit/cw_func.hpp"
 #include "meshkit/gen.hpp"
 #include "meshkit/zip.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Skinner.hpp"
 
 namespace cw_func {
 
- MBErrorCode check_mesh_for_watertightness( MBEntityHandle input_set, double tol, bool &sealed, bool test, bool verbose, bool check_topology )
+ moab::ErrorCode check_mesh_for_watertightness( moab::EntityHandle input_set, double tol, bool &sealed, bool test, bool verbose, bool check_topology )
  {
 
-  MBErrorCode result; 
+  moab::ErrorCode result; 
 
  // create tags on geometry
-  MBTag geom_tag, id_tag;
+  moab::Tag geom_tag, id_tag;
   result = MBI()->tag_get_handle( GEOM_DIMENSION_TAG_NAME, 1, 
                             MB_TYPE_INTEGER, geom_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
-  if(gen::error(MB_SUCCESS != result, "could not get GEOM_DIMENSION_TAG_NAME handle")) return result; 
+  if(gen::error(moab::MB_SUCCESS != result, "could not get GEOM_DIMENSION_TAG_NAME handle")) return result; 
 
   result = MBI()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1, 
                             MB_TYPE_INTEGER, id_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
-  if(gen::error(MB_SUCCESS != result, "could not get GLOBAL_ID_TAG_NAME handle")) return result;
+  if(gen::error(moab::MB_SUCCESS != result, "could not get GLOBAL_ID_TAG_NAME handle")) return result;
 
   
   // get surface and volume sets
-  MBRange surf_sets, vol_sets; // MBRange of set of surfaces and volumes
+  moab::Range surf_sets, vol_sets; // moab::Range of set of surfaces and volumes
   // surface sets
   int dim = 2;
   void* input_dim[] = {&dim};
   result = MBI()->get_entities_by_type_and_tag( input_set, MBENTITYSET, &geom_tag, 
                                                 input_dim, 1, surf_sets);
-  if(MB_SUCCESS != result) 
+  if(moab::MB_SUCCESS != result) 
     {
       return result;
     }
@@ -62,7 +62,7 @@ namespace cw_func {
   dim = 3;
   result = MBI()->get_entities_by_type_and_tag( input_set, MBENTITYSET, &geom_tag, 
                                                 input_dim, 1, vol_sets);
-  if(MB_SUCCESS != result)
+  if(moab::MB_SUCCESS != result)
     {
       return result;
     }
@@ -78,13 +78,13 @@ namespace cw_func {
   // counted leaky surfaces
   int total_counter = 0, unmatched_counter=0;
   std::set<int> leaky_surfs, leaky_vols;
-  MBSkinner tool(MBI());
+  moab::Skinner tool(MBI());
 
   // remove all edges for fast skinning
-  MBRange edges;
+  moab::Range edges;
 
   result = MBI()->get_entities_by_type( 0, MBEDGE, edges ); // get all edges
-  if(MB_SUCCESS != result) // failed to get edge data
+  if(moab::MB_SUCCESS != result) // failed to get edge data
     {
       return result; // failed
     }
@@ -93,7 +93,7 @@ namespace cw_func {
 /*
   result = MBI()->delete_entities( edges ); //otherwise delete all edge
   
-  if(MB_SUCCESS != result) // failed to delete edge data
+  if(moab::MB_SUCCESS != result) // failed to delete edge data
     {
       return result; // failed
     }
@@ -104,10 +104,10 @@ namespace cw_func {
     {
       ++vol_counter;
       int surf_counter=0;
-      MBRange child_sets;
+      moab::Range child_sets;
 
       result = MBI()->get_child_meshsets( *i, child_sets ); // get child set
-      if(MB_SUCCESS != result)  
+      if(moab::MB_SUCCESS != result)  
 	{
 	  return result; // failed
 	}
@@ -117,7 +117,7 @@ namespace cw_func {
       // i is the iterator, so &(*i) is a pointer to the first element of MBRange
       result = MBI()->tag_get_data( id_tag, &(*i), 1, &vol_id );
 
-      if(MB_SUCCESS != result)
+      if(moab::MB_SUCCESS != result)
 	{
 	  return result;
 	}
@@ -134,7 +134,7 @@ namespace cw_func {
       for(MBRange::iterator j=child_sets.begin(); j!=child_sets.end(); ++j) 
 	{
 	  result = MBI()->get_number_entities_by_type( *j, MBTRI, n_tris ); // for each child set get number of triangles
-	  if(MB_SUCCESS != result) 
+	  if(moab::MB_SUCCESS != result) 
 	    {
 	      return result;
 	    }
@@ -153,15 +153,15 @@ namespace cw_func {
 	  surf_counter++;
 	  int surf_id=0;
 	  result = MBI()->tag_get_data( id_tag, &(*j), 1, &surf_id );
-	  if(MB_SUCCESS != result) 
+	  if(moab::MB_SUCCESS != result) 
 	    {
 	      return result;
 	    }
 
 	  // get the range of facets of the surface meshset
-	  MBRange facets;
+	  moab::Range facets;
 	  result = MBI()->get_entities_by_type( *j, MBTRI, facets );
-	  if(MB_SUCCESS != result) 
+	  if(moab::MB_SUCCESS != result) 
 	    {
 	      return result;
 	    }
@@ -171,12 +171,12 @@ namespace cw_func {
 	  // almost as well as my specialized version (gen::find_skin). When he made then
 	  // generalized find_skin_vertices for MOAB it killed performance. As it stands,
 	  // gen::find_skin is ~7x faster (January 29, 2010).
-	  MBRange skin_edges;
+	  moab::Range skin_edges;
           moab::Skinner sk(MBI());
 	  if(!facets.empty()) 
 	    {
 	      result = sk.find_skin( 0 , facets, 1, skin_edges, false );
-	      if(MB_SUCCESS != result) 
+	      if(moab::MB_SUCCESS != result) 
 		{
 		  return result;
 		}
@@ -192,9 +192,9 @@ namespace cw_func {
      
       for(MBRange::const_iterator k=skin_edges.begin(); k!=skin_edges.end(); ++k) {
 	// get the endpoint vertices of the facet edge
-	MBRange verts;
+	moab::Range verts;
 	result = MBI()->get_adjacencies( &(*k), 1, 0, false, verts );
-        if(MB_SUCCESS != result) return result;
+        if(moab::MB_SUCCESS != result) return result;
         if(2 != verts.size()) {
           std::cout << "  WARNING: verts.size()=" << verts.size() << std::endl;
 	  continue;
@@ -209,9 +209,9 @@ namespace cw_func {
           // get the coordinates of endpoint vertices
           double coords0[3], coords1[3];
 	  result = MBI()->get_coords( &(verts.front()), 1, coords0 );
-          if(MB_SUCCESS != result) return result;
+          if(moab::MB_SUCCESS != result) return result;
 	  result = MBI()->get_coords( &(verts.back()), 1, coords1 );
-          if(MB_SUCCESS != result) return result;
+          if(moab::MB_SUCCESS != result) return result;
           // orient the edge by endpoint coords
           if((!check_topology) &&
             (coords1[0]< coords0[0] ||
@@ -243,16 +243,16 @@ namespace cw_func {
       //10/10/13
       // Removed the following to avoid altering the data set at all
       // -No need to delete skin_edges with the moab:Skinner find_skin function
-      // -skin_edges size will be reset to zero upon new MBRange skin_edges; call
+      // -skin_edges size will be reset to zero upon new moab::Range skin_edges; call
       // clean up the edges for the next find_skin call
       //result = MBI()->delete_entities( skin_edges );
-      //if(MB_SUCCESS != result) return result;
+      //if(moab::MB_SUCCESS != result) return result;
 
       //10/10/13
       // - No ned to ensure edges aren't in the meshset with moab::Skinner find_skin function
       //int n_edges;
       //result = MBI()->get_number_entities_by_type(0, MBEDGE, n_edges );
-      //if(MB_SUCCESS != result) return result;
+      //if(moab::MB_SUCCESS != result) return result;
       //if(gen::error(0 != n_edges, "n_edges not equal to zero")) return MB_MULTIPLE_ENTITIES_FOUND;
     }
 
@@ -331,12 +331,12 @@ namespace cw_func {
           if(check_topology) {
   	    double endpt_coords[3];
 	    result = MBI()->get_coords( &the_coords_and_id[j].vert1, 1, endpt_coords );
-            if(MB_SUCCESS != result) return result;
+            if(moab::MB_SUCCESS != result) return result;
 	    the_coords_and_id[j].x1 = endpt_coords[0]; 
 	    the_coords_and_id[j].y1 = endpt_coords[1];
 	    the_coords_and_id[j].z1 = endpt_coords[2];
             result = MBI()->get_coords( &the_coords_and_id[j].vert2, 1, endpt_coords );
-            if(MB_SUCCESS != result) return result;
+            if(moab::MB_SUCCESS != result) return result;
 	    the_coords_and_id[j].x2 = endpt_coords[0]; 
 	    the_coords_and_id[j].y2 = endpt_coords[1];
 	    the_coords_and_id[j].z2 = endpt_coords[2];
@@ -401,7 +401,7 @@ namespace cw_func {
  {
   sealed=false;
  }
- return MB_SUCCESS;
+ return moab::MB_SUCCESS;
  }
 
 /* qsort struct comparision function */

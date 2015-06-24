@@ -14,8 +14,8 @@ CCylinder::CCylinder ()
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  m_dVXYPos.SetSize(2);
-  m_dVZPos.SetSize(2);
+	m_dVXYPos.SetSize(2);
+	m_dVZPos.SetSize(2);
 
 }
 
@@ -45,9 +45,9 @@ void CCylinder::SetSizes(int nRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  m_nRadii = nRadii;
-  m_szVMat.SetSize(nRadii);
-  m_dVRadii.SetSize(nRadii);
+	m_nRadii = nRadii;
+	m_szVMat.SetSize(nRadii);
+	m_dVRadii.SetSize(2*nRadii);
 }
 
 void CCylinder::SetRadii(CVector<double> dVRadii)
@@ -57,8 +57,19 @@ void CCylinder::SetRadii(CVector<double> dVRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  m_dVRadii = dVRadii;
+	m_dVRadii = dVRadii;
 }
+
+void CCylinder::SetType(int nType)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+	m_nType = nType;
+}
+
 
 void CCylinder::SetPos(CVector<double> dVXYPos)
 // ---------------------------------------------------------------------------
@@ -67,7 +78,7 @@ void CCylinder::SetPos(CVector<double> dVXYPos)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  m_dVXYPos = dVXYPos;
+	m_dVXYPos = dVXYPos;
 }
 
 
@@ -78,7 +89,7 @@ void CCylinder::SetZPos(CVector<double> dVZPos)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  m_dVZPos = dVZPos;
+	m_dVZPos = dVZPos;
 }
 
 void CCylinder::SetMat(CVector<std::string> szVMat)
@@ -88,7 +99,7 @@ void CCylinder::SetMat(CVector<std::string> szVMat)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  m_szVMat = szVMat;
+	m_szVMat = szVMat;
 }
 
 void CCylinder::GetSizes(int &nRadii)
@@ -98,7 +109,7 @@ void CCylinder::GetSizes(int &nRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  nRadii = m_nRadii;
+	nRadii = m_nRadii;
 }
 
 void CCylinder::GetRadii(CVector<double> &dVRadii)
@@ -108,8 +119,19 @@ void CCylinder::GetRadii(CVector<double> &dVRadii)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  dVRadii = m_dVRadii;
+	dVRadii = m_dVRadii;
 }
+
+void CCylinder::GetType(int &nType)
+// ---------------------------------------------------------------------------
+// Function: sets the first line of pin input
+// Input:    volume id of the pin, alias and total no. of lines in the pin input
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+	nType = m_nType;
+}
+
 
 void CCylinder::GetMat(CVector<std::string> &szVMat)
 // ---------------------------------------------------------------------------
@@ -118,7 +140,7 @@ void CCylinder::GetMat(CVector<std::string> &szVMat)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  szVMat = m_szVMat;
+	szVMat = m_szVMat;
 }
 
 void CCylinder::GetPos(CVector<double> &dVCoor)
@@ -128,7 +150,7 @@ void CCylinder::GetPos(CVector<double> &dVCoor)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  dVCoor = m_dVXYPos;
+	dVCoor = m_dVXYPos;
 }
 
 void CCylinder::GetZPos(CVector<double> &dVZPos)
@@ -138,5 +160,5 @@ void CCylinder::GetZPos(CVector<double> &dVZPos)
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-  dVZPos = m_dVZPos;
+	dVZPos = m_dVZPos;
 }

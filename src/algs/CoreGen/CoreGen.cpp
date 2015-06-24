@@ -164,12 +164,12 @@ void CoreGen::setup_this()
                 // merge mesh now
                 //std::vector<iBase_EntityHandle> ents;
                 moab::Range ents;
-                int dim = imesh->getGeometricDimension();
-                mb->get_entities_by_dimension(0, dim, ents);
-
+                //int dim = imesh->getGeometricDimension();
+                mb->get_entities_by_dimension(0, set_DIM, ents);
+                logfile << " Merging nodes.."<< std::endl;
                 moab::MergeMesh mm(mb);
                 moab::ErrorCode err = mm.merge_entities(ents, merge_tol, true);
-                if (MB_SUCCESS != err) {
+                if (moab::MB_SUCCESS != err) {
                     std::cerr << "Error in MergeMesh during merging entities" << std::endl;
                     exit(2);
                 }
@@ -249,6 +249,8 @@ void CoreGen::execute_this()
         for (unsigned int i = 0; i < assys.size(); i++) {
             cm[i]->execute_called(true);
         }
+    if(extrude_flag == true)
+      em->execute_called(true);
         /*********************************************/
         // assign gids
         /*********************************************/
@@ -929,6 +931,16 @@ int CoreGen::load_meshes()
         cm[i] = (CopyMesh*) mk_core()->construct_meshop("CopyMesh", assm_set);
         cm[i]->set_name("copy_move_mesh");
         // cm[i]->copy_sets().add_set(orig_set);
+
+        //resize this else code will break
+        //check if we've loaded the same mesh file and need to shift the Material and Neumann set start id's
+        if(bsameas[i] == 0 && (int) i < nassys){
+            if(all_ms_starts[i] != -1 && all_ns_starts[i] !=-1){
+                if(!shift_mn_ids(orig_set, i))
+                  ERRORR("Couldn't shift material and neumann set id's.", 1);
+              }
+          }
+
         assys.push_back(orig_set);
         assys_index.push_back(i);
     }
@@ -1003,6 +1015,82 @@ int CoreGen::load_geometries()
 
     return iBase_SUCCESS;
 }
+
+int CoreGen::shift_mn_ids(iBase_EntitySetHandle orig_set, int number)
+// ---------------------------------------------------------------------------
+// Function: loads all the meshes and initializes copymesh and merge mesh objects
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  std::cout << "Swapping MS and NS ids for " << number << std::endl;
+  // get all the material sets in this assembly
+  moab::Tag mattag, neutag;
+  mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+  mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, neutag );
+
+  int rval = 0;
+  moab::Range matsets, neusets;
+
+  mb->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &mattag, 0, 1, matsets );
+  mb->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &neutag, 0, 1, neusets );
+
+  int i = 0;
+  moab::Range::iterator set_it;
+  for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+      moab::EntityHandle this_set = *set_it;
+
+      // get the id for this set
+      int set_id;
+      rval = mb->tag_get_data(mattag, &this_set, 1, &set_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mb->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+
+      // set the new id for this set
+      int new_id = all_ms_starts[number] + i;
+      rval = mb->tag_set_data(mattag, &this_set, 1, &new_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mb->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+      ++i;
+    }
+
+  int j = 0;
+  for (set_it = neusets.begin(); set_it != neusets.end(); set_it++)  {
+      moab::EntityHandle this_set = *set_it;
+
+      // get the id for this set
+      int set_id;
+      rval = mb->tag_get_data(neutag, &this_set, 1, &set_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mb->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+
+      // set the new id for this set
+      int new_id = all_ns_starts[number] + j;
+      rval = mb->tag_set_data(neutag, &this_set, 1, &new_id);
+      if(rval != moab::MB_SUCCESS) {
+          std::cerr<<"getting tag data failed Code:";
+          std::string foo = ""; mb->get_last_error(foo);
+          std::cerr<<"File Error: "<<foo<<std::endl;
+          return 1;
+        }
+      ++j;
+    }
+}
+
+
+
 
 int CoreGen::move_verts(iBase_EntitySetHandle set, const double *dx)
 // ---------------------------------------------------------------------------
@@ -1119,19 +1207,14 @@ int CoreGen::extrude() {
         double v[] = { 0, 0, z_height };
         int steps = z_divisions;
 
-        ModelEnt me(mk_core(), iBase_EntitySetHandle(0), /*igeom instance*/0,
-                    0);
-        MEntVector selection;
-        selection.push_back(&me);
-
-        em = (ExtrudeMesh*) mk_core()->construct_meshop("ExtrudeMesh",
-                                                        selection);
-
+      // get the hexes
+        MEntVector vols;
+        mk_core()->get_entities_by_dimension(2, vols);
+        em = (ExtrudeMesh*) mk_core()->construct_meshop("ExtrudeMesh", vols);
         em->set_transform(Extrude::Translate(v, steps));
         em->copy_faces(true);
-
+        em->setup_this();
         em->execute_this();
-
     }
 
     return iBase_SUCCESS;
@@ -1196,17 +1279,17 @@ int CoreGen::create_neumannset() {
             }
         }
 
-        MBRange tmp_elems;
-        tmp_elems.insert((MBEntityHandle*)ents, (MBEntityHandle*)ents + ents_size);
+        moab::Range tmp_elems;
+        tmp_elems.insert((moab::EntityHandle*)ents, (moab::EntityHandle*)ents + ents_size);
 
         // get the skin of the entities
-        MBSkinner skinner(mb);
-        MBRange skin_range;
-        MBErrorCode result;
-        MBRange::iterator rit;
+        moab::Skinner skinner(mb);
+        moab::Range skin_range;
+        moab::ErrorCode result;
+        moab::Range::iterator rit;
 
         result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
-        if (MB_SUCCESS != result) return result;
+        if (moab::MB_SUCCESS != result) return result;
 
         for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {
             if(set_DIM == 3) { // filter top and bottom
@@ -1570,10 +1653,10 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
     }
 
     // now call the functions to read and write
-    err = read_inputs_phase1();
+    err = read_inputs_phase1(argc, argv);
     ERRORR("Failed to read inputs in phase1.", 1);
 
-    err = read_inputs_phase2();
+    err = read_inputs_phase2(argc, argv);
     ERRORR("Failed to read inputs in phase2.", 1);
 
     // open info file
@@ -1616,7 +1699,7 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
 }
 
 
-int CoreGen::read_inputs_phase1() {
+int CoreGen::read_inputs_phase1(int argc, char *argv[]) {
     // ---------------------------------------------------------------------------
     // Function: Reads the dimension and symmetry of the problem
     // Input:    none
@@ -1736,381 +1819,374 @@ int CoreGen::read_inputs_phase1() {
     return iBase_SUCCESS;
 }
 
-int CoreGen::read_inputs_phase2()
+int CoreGen::read_inputs_phase2(int argc, char *argv[])
 // ---------------------------------------------------------------------------
 // Function: read all the inputs
 // Input:    command line arguments
 // Output:   none
 // ---------------------------------------------------------------------------
 {
-    //Rewind the input file
-    file_input.clear(std::ios_base::goodbit);
-    file_input.seekg(0L, std::ios::beg);
-    linenumber = 0;
+  //Rewind the input file
+  file_input.clear(std::ios_base::goodbit);
+  file_input.seekg(0L, std::ios::beg);
+  linenumber = 0;
 
-    CParser parse;
-    for (;;) {
-        if (!parse.ReadNextLine(file_input, linenumber, input_string, MAXCHARS,
-                                comment))
-            ERRORR("Reading input file failed",1);
+  CParser parse;
+  for (;;) {
+      if (!parse.ReadNextLine(file_input, linenumber, input_string, MAXCHARS,
+                              comment))
+        ERRORR("Reading input file failed",1);
 
-        if (input_string.substr(0, 12) == "geometrytype" ) {
-            std::istringstream formatString(input_string);
-            formatString >> card >> geom_type;
-            if(formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
+      if (input_string.substr(0, 12) == "geometrytype" ) {
+          std::istringstream formatString(input_string);
+          formatString >> card >> geom_type;
+          if(formatString.fail())
+            IOErrorHandler (INVALIDINPUT);
 
-            if (geom_type == "hexvertex" && symm == 6) {
+          if (geom_type == "hexvertex" && symm == 6) {
 
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(nassys < 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              // reading pitch info
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 10) == "assemblies") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nassys >> pitch;
+                  if(nassys < 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
                 }
 
-                // reading file and alias names
-                for (int i = 1; i <= nassys; i++) {
-                    if (!parse.ReadNextLine(file_input, linenumber,
-                                            input_string, MAXCHARS, comment))
-                        ERRORR("Reading input file failed",1);
-                    std::istringstream formatString(input_string);
-                    formatString >> meshfile >> mf_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              // reading file and alias names
+              if(!parse_assembly_names(parse, argc, argv))
+                ERRORR("error parsing names of assemblies",1);
 
-                    all_meshfiles.push_back(meshfile);
-                    if (iname == COREGEN_DEFAULT_TEST_FILE){
-                        meshfile = testdir + meshfile;
-                    }
-                    files.push_back(meshfile);
-                    assm_alias.push_back(mf_alias);
-                }
-                // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    if (nrings % 2 == 0)
-                        tot_assys = (nrings * (nrings)) / 2;
-                    else
-                        tot_assys = ((nrings * (nrings - 1)) / 2)
-                                + (nrings + 1) / 2;
+              // reading lattice
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 7) == "lattice") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nrings;
+                  if(nrings < 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  if (nrings % 2 == 0)
+                    tot_assys = (nrings * (nrings)) / 2;
+                  else
+                    tot_assys = ((nrings * (nrings - 1)) / 2)
+                        + (nrings + 1) / 2;
                 }
 
-                // now reading the arrangement
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
-                for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    core_alias.push_back(temp_alias);
+              // now reading the arrangement
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              std::istringstream formatString(input_string);
+              for (int i = 1; i <= tot_assys; i++) {
+                  formatString >> temp_alias;
+                  if(formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  core_alias.push_back(temp_alias);
                 }
             }
 
-            else if (geom_type == "rectangular" && symm == 1) {
+          else if (geom_type == "rectangular" && symm == 1) {
 
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitchx >> pitchy;
-                    if(nassys < 0 || pitchx < 0 || pitchy< 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              // reading pitch info
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 10) == "assemblies") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nassys >> pitchx >> pitchy;
+                  if(nassys < 0 || pitchx < 0 || pitchy< 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
                 }
 
-                // reading file and alias names
-                for (int i = 1; i <= nassys; i++) {
-                    if (!parse.ReadNextLine(file_input, linenumber,
-                                            input_string, MAXCHARS, comment))
-                        ERRORR("Reading input file failed",1);
-                    std::istringstream formatString(input_string);
-                    formatString >> meshfile >> mf_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              // reading file and alias names
+              if(!parse_assembly_names(parse, argc, argv))
+                ERRORR("error parsing names of assemblies",1);
 
-                    all_meshfiles.push_back(meshfile);
-
-                    if (iname.find(COREGEN_DEFAULT_TEST_FILE) != std::string::npos){
-                        meshfile = testdir + "/" + meshfile;
-                    }
-                    files.push_back(meshfile);
-                    assm_alias.push_back(mf_alias);
+              // reading lattice
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 7) == "lattice") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nringsx >> nringsy;
+                  if(formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  tot_assys = nringsx * nringsy;
                 }
 
-                // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nringsx >> nringsy;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    tot_assys = nringsx * nringsy;
-                }
-
-                // now reading the arrangement
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
-                for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    core_alias.push_back(temp_alias);
+              // now reading the arrangement
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              std::istringstream formatString(input_string);
+              for (int i = 1; i <= tot_assys; i++) {
+                  formatString >> temp_alias;
+                  if(formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  core_alias.push_back(temp_alias);
                 }
             }
 
-            else if (geom_type == "hexflat" && symm == 6) {
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+          else if (geom_type == "hexflat" && symm == 6) {
+              // reading pitch info
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 10) == "assemblies") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nassys >> pitch;
+                  if(formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
                 }
 
-                // reading file and alias names
-                for (int i = 1; i <= nassys; i++) {
-                    if (!parse.ReadNextLine(file_input, linenumber,
-                                            input_string, MAXCHARS, comment))
-                        ERRORR("Reading input file failed",1);
-                    std::istringstream formatString(input_string);
-                    formatString >> meshfile >> mf_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              // reading file and alias names
+              if(!parse_assembly_names(parse, argc, argv))
+                ERRORR("error parsing names of assemblies",1);
 
-                    all_meshfiles.push_back(meshfile);
-
-                    if (iname == COREGEN_DEFAULT_TEST_FILE){
-                        meshfile = testdir + meshfile;
-                    }
-                    files.push_back(meshfile);
-                    assm_alias.push_back(mf_alias);
+              // reading lattice
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 7) == "lattice") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nrings;
+                  if(nrings < 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  tot_assys = (nrings * (nrings + 1)) / 2;
                 }
 
-                // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    tot_assys = (nrings * (nrings + 1)) / 2;
-                }
-
-                // now reading the arrangement
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
-                for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    core_alias.push_back(temp_alias);
+              // now reading the arrangement
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              std::istringstream formatString(input_string);
+              for (int i = 1; i <= tot_assys; i++) {
+                  formatString >> temp_alias;
+                  if(formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  core_alias.push_back(temp_alias);
                 }
             } else if (geom_type == "hexflat" && symm == 1) {
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(nassys < 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              // reading pitch info
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 10) == "assemblies") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nassys >> pitch;
+                  if(nassys < 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
                 }
 
-                // reading file and alias names
-                for (int i = 1; i <= nassys; i++) {
-                    if (!parse.ReadNextLine(file_input, linenumber,
-                                            input_string, MAXCHARS, comment))
-                        ERRORR("Reading input file failed",1);
-                    std::istringstream formatString(input_string);
-                    formatString >> meshfile >> mf_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              if(!parse_assembly_names(parse, argc, argv))
+                ERRORR("error parsing names of assemblies",1);
 
-                    all_meshfiles.push_back(meshfile);
-
-                    if (iname == COREGEN_DEFAULT_TEST_FILE){
-                        meshfile = testdir + meshfile;
-                    }
-                    files.push_back(meshfile);
-                    assm_alias.push_back(mf_alias);
+              // reading lattice
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 7) == "lattice") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nrings;
+                  if(nrings < 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  tot_assys = 3 * (nrings * (nrings - 1)) + 1;
                 }
 
-                // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    tot_assys = 3 * (nrings * (nrings - 1)) + 1;
-                }
-
-                // now reading the arrangement
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
-                for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    core_alias.push_back(temp_alias);
+              // now reading the arrangement
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              std::istringstream formatString(input_string);
+              for (int i = 1; i <= tot_assys; i++) {
+                  formatString >> temp_alias;
+                  if(formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  core_alias.push_back(temp_alias);
                 }
             } else if (geom_type == "hexflat" && symm == 12) {
 
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(nassys < 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              // reading pitch info
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 10) == "assemblies") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nassys >> pitch;
+                  if(nassys < 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
                 }
 
-                // reading file and alias names
-                for (int i = 1; i <= nassys; i++) {
-                    if (!parse.ReadNextLine(file_input, linenumber,
-                                            input_string, MAXCHARS, comment))
-                        ERRORR("Reading input file failed",1);
-                    std::istringstream formatString(input_string);
-                    formatString >> meshfile >> mf_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
+              if(!parse_assembly_names(parse, argc, argv))
+                ERRORR("error parsing names of assemblies",1);
 
-                    all_meshfiles.push_back(meshfile);
-
-                    if (iname == COREGEN_DEFAULT_TEST_FILE){
-                        meshfile = testdir + meshfile;
-                    }
-                    files.push_back(meshfile);
-                    assm_alias.push_back(mf_alias);
+              // reading lattice
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              if (input_string.substr(0, 7) == "lattice") {
+                  std::istringstream formatString(input_string);
+                  formatString >> card >> nrings;
+                  if(nrings < 0 || formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  if (nrings % 2 == 0)
+                    tot_assys = (nrings * (nrings + 2)) / 4;
+                  else
+                    tot_assys = ((nrings + 1) * (nrings + 1)) / 4;
                 }
 
-                // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    if (nrings % 2 == 0)
-                        tot_assys = (nrings * (nrings + 2)) / 4;
-                    else
-                        tot_assys = ((nrings + 1) * (nrings + 1)) / 4;
-                }
-
-                // now reading the arrangement
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                    ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
-                for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
-                        IOErrorHandler (INVALIDINPUT);
-                    core_alias.push_back(temp_alias);
+              // now reading the arrangement
+              if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                      MAXCHARS, comment))
+                ERRORR("Reading input file failed",1);
+              std::istringstream formatString(input_string);
+              for (int i = 1; i <= tot_assys; i++) {
+                  formatString >> temp_alias;
+                  if(formatString.fail())
+                    IOErrorHandler (INVALIDINPUT);
+                  core_alias.push_back(temp_alias);
                 }
             }
 
-            else {
-                ERRORR("Invalid geometry type",1);
+          else {
+              ERRORR("Invalid geometry type",1);
             }
         }
-        // background mesh
-        if (input_string.substr(0, 10) == "background") {
-            std::istringstream formatString(input_string);
-            formatString >> card >> back_meshfile;
-            if(formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
+      // background mesh
+      if (input_string.substr(0, 10) == "background") {
+          std::istringstream formatString(input_string);
+          formatString >> card >> back_meshfile;
+          if(formatString.fail())
+              IOErrorHandler (INVALIDINPUT);
 
-            all_meshfiles.push_back(back_meshfile);
+          all_meshfiles.push_back(back_meshfile);
 
-            if (iname == COREGEN_DEFAULT_TEST_FILE){
-                back_meshfile = testdir + back_meshfile;
-            }
-            files.push_back(back_meshfile);
-            back_mesh = true;
+          if (iname == COREGEN_DEFAULT_TEST_FILE){
+              back_meshfile = testdir + back_meshfile;
+          }
+          files.push_back(back_meshfile);
+          back_mesh = true;
         }
-        // z-height and z-divisions
-        if (input_string.substr(0, 7) == "extrude") {
-            extrude_flag = true;
-            std::istringstream formatString(input_string);
-            formatString >> card >> z_height >> z_divisions;
-            if(z_divisions < 0 || formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
-        }
-
-        // // neumannset card
-        // if (input_string.substr(0, 10) == "neumannset") {
-        //   std::istringstream formatString(input_string);
-        //   std::string nsLoc = "", temp;
-        //   int nsId = 0;
-        //   formatString >> card >> nsLoc >> nsId;
-        //   if ((strcmp(nsLoc.c_str(), "side") == 0)) {
-        // 	formatString >> temp >> nsx[ns] >> temp >> nsy[ns] >> temp >> nsc[ns];
-        // 	++ns
-        //   }
-        // }
-        // OutputFileName
-        if (input_string.substr(0, 14) == "outputfilename") {
-            std::istringstream formatString(input_string);
-            formatString >> card >> outfile;
-            if(formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
+      // z-height and z-divisions
+      if (input_string.substr(0, 7) == "extrude") {
+          extrude_flag = true;
+          std::istringstream formatString(input_string);
+          formatString >> card >> z_height >> z_divisions;
+          if(z_divisions < 0 || formatString.fail())
+            IOErrorHandler (INVALIDINPUT);
         }
 
-        // breaking condition
-        if (input_string.substr(0, 3) == "end") {
-            std::istringstream formatstring(input_string);
-            break;
+      // // neumannset card
+      // if (input_string.substr(0, 10) == "neumannset") {
+      //   std::istringstream formatString(input_string);
+      //   std::string nsLoc = "", temp;
+      //   int nsId = 0;
+      //   formatString >> card >> nsLoc >> nsId;
+      //   if ((strcmp(nsLoc.c_str(), "side") == 0)) {
+      // 	formatString >> temp >> nsx[ns] >> temp >> nsy[ns] >> temp >> nsc[ns];
+      // 	++ns
+      //   }
+      // }
+      // OutputFileName
+      if (input_string.substr(0, 14) == "outputfilename") {
+          std::istringstream formatString(input_string);
+          formatString >> card >> outfile;
+          if(formatString.fail())
+            IOErrorHandler (INVALIDINPUT);
+        }
+
+      // breaking condition
+      if (input_string.substr(0, 3) == "end") {
+          std::istringstream formatstring(input_string);
+          break;
         }
     }
-    // set some variables
-    assm_meshfiles.resize(nassys);
-    assm_location.resize(nassys);
+  // set some variables
+  assm_meshfiles.resize(nassys);
+  load_per_assm.resize(nassys);
+  size_mf.resize(nassys);
+  times_loaded.resize(nassys);
+  assm_location.resize(nassys);
+  bsameas.resize(nassys);
 
-    for(int i = 0; i < tot_assys; i++){
-        for (int j = 0; j < nassys; j++){
-            if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
-                assm_meshfiles[j]+=1;
-                assm_location[j].push_back(i);
-                break;
+  for(int i = 0; i < tot_assys; i++){
+      for (int j = 0; j < nassys; j++){
+          if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
+              assm_meshfiles[j]+=1;
+              assm_location[j].push_back(i);
+              break;
             }
         }
     }
-    return iBase_SUCCESS;
+  return iBase_SUCCESS;
+}
+
+int CoreGen::parse_assembly_names(CParser parse, int argc, char *argv[] )
+// ---------------------------------------------------------------------------
+// Function: Reads all the assemblies from CoreGen input file
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+
+  // reading file and alias names
+  for (int i = 1; i <= nassys; i++) {
+      if (!parse.ReadNextLine(file_input, linenumber,
+                              input_string, MAXCHARS, comment, false))
+        ERRORR("Reading input file failed",1);
+      std::istringstream formatString(input_string);
+      formatString >> meshfile >> mf_alias >> same_as >> reloading_mf >> ms_startid >> ns_startid;
+      // we don't check for formatting since same_as and parameters after it may not be present.
+      // variable gets populated correctly in the file
+
+      // if meshfile variable is a path then only convert the filename to lower case
+      unsigned pos = 0;
+      pos = meshfile.find_last_of("/\\");
+      if (pos > 0 && pos < meshfile.length()){
+          std::string filename = "", path="";
+          path = meshfile.substr(0,pos);
+          filename = meshfile.substr(pos+1);
+          std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+          meshfile = path+"/"+ filename;
+        }
+      else{
+          std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
+        }
+      // also convert the alias and reloading_mf name to lower case, since we've changed the actual reading.
+      std::transform(mf_alias.begin(), mf_alias.end(), mf_alias.begin(), ::tolower);
+      std::transform(reloading_mf.begin(), reloading_mf.end(), reloading_mf.begin(), ::tolower);
+
+      if (same_as == "same_as")
+        bsameas.push_back(0);
+      else
+        bsameas.push_back(1);
+      if(bsameas[i-1] == 1){
+          all_meshfiles.push_back(meshfile);
+          if (argc == 1){
+              meshfile = testdir + "/" + meshfile;
+            }
+          files.push_back(meshfile);
+          assm_alias.push_back(mf_alias);
+          all_ms_starts.push_back(-1);
+          all_ns_starts.push_back(-1);
+        }
+      else{
+          all_meshfiles.push_back(reloading_mf);
+          if (iname == COREGEN_DEFAULT_TEST_FILE){
+              meshfile = testdir + reloading_mf;
+            }
+          files.push_back(reloading_mf);
+          assm_alias.push_back(mf_alias);
+          all_ms_starts.push_back(ms_startid);
+          all_ns_starts.push_back(ns_startid);
+        }
+      //  bsameas = false;
+    }
+  return 0;
 }
 
 int CoreGen::find_assm(const int i, int &assm_index)

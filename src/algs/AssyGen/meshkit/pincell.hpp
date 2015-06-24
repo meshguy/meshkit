@@ -9,7 +9,7 @@ CPincell class definition.
 #define __RGG_PINCELL_H__
 #include <iostream>
 #include "meshkit/vectortemplate.hpp"
-#include "cylinder.hpp"
+#include "meshkit/cylinder.hpp"
 
 class CPincell
 {
@@ -27,11 +27,12 @@ public:
   void GetMatArray(int &nMaterials);
   void GetMat(CVector<std::string> &szVMatName, CVector<std::string> &szVMatAlias);
   void GetNumCyl(const int &nCyl);
-  void GetCylSizes(int &nCyl,int &nRadii);
-  void GetCylRadii(int &nCyl, CVector<double>&);
-  void GetCylZPos(int &nCyl, CVector<double>&);
-  void GetCylPos(int &nCyl, CVector<double>&);
-  void GetCylMat(int &nCyl, CVector<std::string>&);
+  void GetCylSizes(int nCyl,int &nRadii);
+  void GetCylRadii(int nCyl, CVector<double>&);
+  void GetCellType(int nCyl, int &nType);
+  void GetCylZPos(int nCyl, CVector<double>&);
+  void GetCylPos(int nCyl, CVector<double>&);
+  void GetCylMat(int nCyl, CVector<std::string>&);
   void GetCellMatSize(int &nSize);
   void GetCellMat(CVector<double> &dZStart, CVector<double> &dZEnd, CVector<std::string> &szVCellMat);
 
@@ -49,6 +50,7 @@ public:
   void SetCylSizes(int nCyl,int nRadii);
   void SetCylZPos(int nCyl, CVector<double>);
   void SetCylRadii(int nCyl, CVector<double>);
+  void SetCellType(int nCyl, int nType);
   void SetCylPos(int nCyl, CVector<double>);
   void SetCylMat(int nCyl, CVector<std::string>);
   //cell
@@ -77,4 +79,4 @@ private:
   CVector<std::string> m_szVCellMat;
 };
 
-#endif	
+#endif

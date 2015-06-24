@@ -363,8 +363,6 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
   # Individual tools
 MK_OPTIONAL_TOOL([algs],   [yes])
 MK_OPTIONAL_TOOL([quadmesher],   [no])
-MK_OPTIONAL_TOOL([rgg],    [yes])
-MK_OPTIONAL_TOOL([utils],  [yes])
 MK_OPTIONAL_TOOL([src],    [yes])
 MK_OPTIONAL_TOOL([python], [no])
 MK_OPTIONAL_TOOL([intassign], [no])
@@ -1338,12 +1336,8 @@ AC_ARG_VAR([FC], [FORTRAN compiler command])
 AC_CONFIG_FILES([Makefile 
                  meshkit.make 
                  testdir.h
-                 algs/Makefile
-                 algs/test/Makefile
-                 algs/make_watertight/Makefile
                  python/setup.py
                  python/Makefile
-                 rgg/Makefile
                  src/Makefile
                  src/core/Makefile
                  src/algs/Makefile
@@ -1371,7 +1365,6 @@ AC_CONFIG_FILES([Makefile
                  test/extern/netgen/Makefile
                  test/extern/triangle/Makefile
                  test/parallel/Makefile
-                 utils/Makefile
                  doc/Makefile
                  doc/meshkit.dox
                  tools/Makefile
