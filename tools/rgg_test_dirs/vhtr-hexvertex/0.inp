@@ -1,0 +1,36 @@
+! #############################################################################################################
+! Hexagonal VHTR Block and Outer Coolant without Pins
+! #############################################################################################################
+!
+!                                     
+Materials 2 Mat_OCoolant C1Out  Mat_Block G1 
+!
+Duct 2 0.0 0.0    0.0 793.0    36.0 37.3     G1 C1Out 
+!
+Pincells 0 1.87960 
+Assembly 11                                                 
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+ XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+       XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+         XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+           XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+             XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+               XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                 XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+                     XX  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+Center
+MaterialSet_StartId 1
+END ! This is a must
+

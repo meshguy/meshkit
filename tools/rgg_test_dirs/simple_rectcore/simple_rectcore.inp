@@ -1,0 +1,15 @@
+! #############################################################################################################
+! Core generation from example assemblies s1.inp to s2.inp
+! #############################################################################################################
+!
+Geometry Volume  			! 'Geometry' card defines if the meshes are volume or surface
+Symmetry 1			        ! 'Symmetry' card defines the desired symmetry in the model
+GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Rectangular and Default
+Assemblies 2 5.0 5.0			! 'Assemblies' card defines there is one assembly with pitch  (Note this should takecare of background mesh)
+s2.cub S2                   	  	! Meshfile name followed by alias 
+s1.cub S1
+Lattice 1 2 
+S1 S2  
+MergeTolerance 1e-3
+end					! 'END' card is a MUST; Marks the end of file for the file reader
+

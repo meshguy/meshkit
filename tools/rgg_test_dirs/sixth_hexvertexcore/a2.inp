@@ -1,0 +1,23 @@
+! #############################################################################################################
+! Example Assembly 2
+! #############################################################################################################
+!
+Geometry Volume
+GeometryType Hexagonal  
+!                                     
+Materials 2 Mat_Control G1 Mat_Coolant C1
+!
+Dimensions 1  0.0 0.0  0 10.0 10 C1 
+!
+Pincells 1 10.0 
+! 1
+Pin1 P1 1
+Cylinder  1  0.0 0.0   0.0 10.0   2.0  G1        
+Assembly 1
+P1
+RadialMeshSize 0.5
+MaterialSet_StartId 200
+NeumannSet_StartId 200
+EdgeInterval 13
+Center
+END ! This is a must
