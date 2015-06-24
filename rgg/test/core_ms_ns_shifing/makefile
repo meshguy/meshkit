@@ -10,7 +10,7 @@ COREGEN = ../../coregen
 
 ASSYGEN = ../../assygen
 
-MESH_FILES = assm_mesh.exo  assm_mesh22.exo   
+MESH_FILES = assm_mesh.cub  assm_mesh22.cub   
 
 GEOM_FILES = assm_mesh.sat  assm_mesh22.sat 
 
@@ -22,13 +22,13 @@ ASSYGEN_FILES = assm_mesh.inp  assm_mesh22.inp
 
 sc.h5m : ${MESH_FILES} shifting_core.inp
 	${COREGEN} shifting_core
-assm_mesh.exo : assm_mesh.sat  assm_mesh.jou  assm_mesh.template.jou
+assm_mesh.cub : assm_mesh.sat  assm_mesh.jou  assm_mesh.template.jou
 	${CUBIT} -batch assm_mesh.jou
 
 assm_mesh.sat assm_mesh.jou assm_mesh.template.jou : assm_mesh.inp
 	${ASSYGEN} assm_mesh
 
-assm_mesh22.exo : assm_mesh22.sat  assm_mesh22.jou  assm_mesh22.template.jou
+assm_mesh22.cub : assm_mesh22.sat  assm_mesh22.jou  assm_mesh22.template.jou
 	${CUBIT} -batch assm_mesh22.jou
 
 assm_mesh22.sat assm_mesh22.jou assm_mesh22.template.jou : assm_mesh22.inp

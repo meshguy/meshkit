@@ -188,6 +188,15 @@ AC_ARG_ENABLE( optimize, AC_HELP_STRING([--enable-optimize],[Compile optimized (
 DEBUG=no
 if test "x$enable_debug" = "x"; then
   if test "x$enable_cxx_optimize" = "x"; then
+    enable_cxx_optimize=yes
+    enable_cc_optimize=yes
+    enable_fc_optimize=yes
+    enable_f77_optimize=yes
+  fi
+fi
+
+if test "x$enable_debug" = "x"; then
+  if test "x$enable_cxx_optimize" = "x"; then
     if test "x$USER_CXXFLAGS" = "x"; then
       enable_cxx_optimize=yes
     fi
@@ -310,6 +319,7 @@ if test x$GXX = xyes; then
   cxx_compiler=GNU
   # Intel claims to be GCC, check for it here
   FATHOM_TRY_COMPILER_DEFINE([__INTEL_COMPILER],[cxx_compiler=Intel])
+  FATHOM_TRY_COMPILER_DEFINE([__clang__],[cxx_compiler=Clang])
 # Search for other compiler types
 # For efficiency, limit checks to relevant OSs
 else
@@ -323,6 +333,9 @@ else
       ;;
     irix*)
       FATHOM_TRY_COMPILER_DEFINE([__sgi],[cxx_compiler=MIPSpro])
+      ;;
+    darwin*)
+      FATHOM_TRY_COMPILER_DEFINE([__clang__],[cxx_compiler=Clang])
       ;;
     linux*)
       FATHOM_TRY_COMPILER_DEFINE([__INTEL_COMPILER],[cxx_compiler=Intel])
@@ -413,6 +426,11 @@ case "$cxx_compiler:$host_cpu" in
   SunWorkshop:sparc*)
     FATHOM_CXX_32BIT=-xarch=generic
     FATHOM_CXX_64BIT=-xarch=generic64
+    ;;
+  Clang:*)
+    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS -stdlib=libstdc++"
+    FATHOM_CXX_32BIT=-m32
+    FATHOM_CXX_64BIT=-m64
     ;;
   SunWorkshop:i?86|SunWorkshop:x86_64)
     FATHOM_CXX_32BIT=-m32

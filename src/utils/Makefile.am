@@ -33,7 +33,9 @@ nobase_libMeshKitutils_la_include_HEADERS = \
         meshkit/vectortemplate.hpp \
         meshkit/matrixtemplate.hpp \
         meshkit/mstream.hpp \
-        meshkit/ReadPolyLine.hpp
+        meshkit/ReadPolyLine.hpp \
+        meshkit/array_qm.hpp
+
 if HAVE_FBIGEOM
 nobase_libMeshKitutils_la_include_HEADERS += \
         meshkit/FBiGeom.hpp

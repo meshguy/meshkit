@@ -50,7 +50,7 @@ void VertexMesher::execute_this()
   for (sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
     if  ((*sit).first->get_meshed_state() >= COMPLETE_MESH)
 	continue;
-    double pos[3];
+    double pos[3] = {0, 0, 0};
       // get the position
     (*sit).first->evaluate(pos[0], pos[0], pos[0], pos);
     moab::EntityHandle new_vert;

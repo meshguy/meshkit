@@ -35,7 +35,6 @@ rotate z 30
 radialmeshsize 0.1
 axialmeshsize 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
 edgeinterval 4
-save_exodus
 MaterialSet_StartId 1122000
 CreateSideset No
 end

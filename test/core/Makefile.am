@@ -14,13 +14,15 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) 
 
-TESTS = test_graph list_meshops test_load_grps test_get_entities_by_dim
+TESTS = test_graph list_meshops test_load_grps test_get_entities_by_dim test_imesh
 
 check_PROGRAMS = $(TESTS)
 
 MOSTLYCLEANFILES = graph.eps
 
 # Tests and such
+
+test_imesh_SOURCES = test_imesh.cpp
 
 test_graph_SOURCES = test_graph.cpp
 

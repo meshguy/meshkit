@@ -506,7 +506,6 @@ int CoreGen::save_mesh_parallel(const int nrank, const int numprocs)
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
     pc->resolve_shared_sets( nssets, nstag );
 
-#ifdef HAVE_MOAB
     //  int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
     int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
     if(rval != moab::MB_SUCCESS) {
@@ -518,7 +517,6 @@ int CoreGen::save_mesh_parallel(const int nrank, const int numprocs)
     if (nrank == 0) {
         logfile << "Done saving mesh file: " << outfile << std::endl;
     }
-#endif
 #endif
     return iBase_SUCCESS;
 
@@ -1151,7 +1149,6 @@ int CoreGen::create_neumannset() {
         if (extrude_flag == true)
             set_DIM = 3;
 
-#ifdef HAVE_MOAB
         int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
         double z1 = 0.0;
         iBase_TagHandle ntag1, gtag1;
@@ -1303,7 +1300,6 @@ int CoreGen::create_neumannset() {
                 }
             }
         }
-#endif
     }
     return iBase_SUCCESS;
 }

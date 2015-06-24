@@ -8,6 +8,7 @@
 
 #include "moab/GeomTopoTool.hpp"
 #include "moab/FileOptions.hpp"
+#include "moab/Core.hpp"
 
 #include "meshkit/gen.hpp"
 #include "meshkit/zip.hpp"
@@ -1250,7 +1251,7 @@ MBErrorCode find_closest_vert( const MBEntityHandle reference_vert,
     ordered_verts.reserve(ordered_edges.size()+1);
 
     // Save the back of the previous edge to check for continuity.
-    MBEntityHandle previous_back_vert;
+    MBEntityHandle previous_back_vert = 0;
     
     for(std::vector<MBEntityHandle>::const_iterator i=ordered_edges.begin(); 
         i!=ordered_edges.end(); i++) {
@@ -2229,3 +2230,9 @@ MBErrorCode get_sealing_mesh_tags( double &facet_tol,
 
 
 } //EOL
+
+MBInterface *MBI() 
+{
+    static MBCore instance;
+    return &instance;
+}

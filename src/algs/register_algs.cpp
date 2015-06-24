@@ -10,7 +10,9 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/QslimMesher.hpp"
+#ifdef HAVE_QUADMESHER
 #include "meshkit/QuadMesh.hpp"
+#endif
 #include "meshkit/AssyGen.hpp"
 #include "meshkit/CoreGen.hpp"
 #include "meshkit/PostBL.hpp"
@@ -61,7 +63,9 @@ REGISTER_MESH_OP(CopyGeom);
 REGISTER_MESH_OP(ExtrudeMesh);
 REGISTER_MESH_OP(EBMesher);
 REGISTER_MESH_OP(QslimMesher);
+#ifdef HAVE_QUADMESHER
 REGISTER_MESH_OP(QuadMesher);
+#endif
 REGISTER_MESH_OP(AssyGen);
 REGISTER_MESH_OP(CoreGen);
 REGISTER_MESH_OP(PostBL);

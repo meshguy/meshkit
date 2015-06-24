@@ -78,11 +78,13 @@ private:
   std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
   // string for file names
-  std::string m_szFile, m_szInFile, m_szCommonFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szLogFile, m_szMeshScheme;
+  std::string m_szFile, m_szInFile, m_szCommonFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szSmooth, m_szLogFile, m_szMeshScheme;
 
    std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
 
-  // matrix for holding pincell arrangement
+   std::vector<std::string> m_szDuctMats;
+
+// matrix for holding pincell arrangement
   CMatrix<std::string> m_Assembly; 
 
   // matrix for holding verts coordinates used in tet-meshing
@@ -93,8 +95,10 @@ private:
   
   // vector for material names
   CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
-  CVector<double> m_dAxialSize;
-  CVector<int> m_nListMatSet, m_nListNeuSet;
+  CVector<std::string> m_szBLAssmMat;
+
+  CVector<double> m_dAxialSize, m_dBLMatBias;
+  CVector<int> m_nListMatSet, m_nListNeuSet, m_nBLMatIntervals;
 
   CMatrix<std::string> m_szMMAlias;  
 
@@ -111,14 +115,14 @@ private:
   CVector<superblocks> sb;
   int tmpSB;
   // string for geomtype, engine, meshtype
-  std::string m_szEngine;
+  std::string m_szEngine, m_szInnerDuct;
   std::string m_szGeomType;       
   std::string m_szMeshType;
   std::string m_szSideset; 
   int m_nAssyGenInputFiles;
   std::string pin_name;
   // integers for vectors sizes, err etc
-  int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar, 
+  int m_nBLAssemblyMat, m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar,
     m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag, m_nTotalPincells; 
   int m_edgeInterval, m_nStartpinid, m_nHblock;
   // doubles for pincell pitch, pi and mesh sizes resp.

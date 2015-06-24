@@ -3,7 +3,7 @@ ProblemType Mesh
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
 Assemblies 1 10 10			! 'Assemblies' card defines the number of assembly mesh files and pitch
-c.exo c
+c.h5m c
 Lattice 2 2 
 C C &
 C C 
