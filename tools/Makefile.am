@@ -31,14 +31,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
-
-TESTS = postbl coregen assygen
-
-
-
-check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
-
-
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB
 endif
@@ -53,5 +45,11 @@ assygen_SOURCES = assygen.cpp
 # Utility target: build but don't run tests
 build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
+
+bin_PROGRAMS =
+dist_man1_MANS =
+
+bin_PROGRAMS += assygen coregen postbl
+dist_man1_MANS += assygen.man coregen.man
 
 
