@@ -16,7 +16,7 @@ libMeshKitalgs_la_LIBADD = Qslim/libQslim.la \
 if ENABLE_quadmesher
   SUBDIRS += QuadMesher
   AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
-  libMeshKitalgs_la_LIBADD += QuadMesher/libQuadMesher.la
+  libMeshKitalgs_la_LIBADD += QuadMesher/libJaalQuadMesher.la
 endif
 if ENABLE_intassign
   SUBDIRS += IntervalAssignment
