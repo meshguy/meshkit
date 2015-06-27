@@ -47,9 +47,8 @@ build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
 
 bin_PROGRAMS =
-dist_man1_MANS =
+
 
 bin_PROGRAMS += assygen coregen postbl
-dist_man1_MANS += assygen.man coregen.man
 
 
