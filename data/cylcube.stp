@@ -1,202 +1,290 @@
-1900 0 2 0           
-10 Cubit 12.2 17 ACIS 19.0.2 Linux 24 Thu Feb  6 08:36:54 2014 
-1 9.9999999999999995e-07 1e-10 
-body $2 -1 -1 $-1 $3 $-1 $4 T 25 -5 -5 35 5 5 #
-body $5 -1 -1 $-1 $6 $-1 $-1 T -5 -5 -5 5 5 5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $7 $-1 $0 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 1 #
-lump $8 -1 -1 $-1 $-1 $9 $0 T 25 -5 -5 35 5 5 #
-transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $10 $-1 $1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
-lump $11 -1 -1 $-1 $-1 $12 $1 T -5 -5 -5 5 5 5 #
-simple-snl-attrib $-1 -1 $-1 $2 $0 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 1 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $13 $-1 $3 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 1 #
-shell $-1 -1 -1 $-1 $-1 $-1 $14 $-1 $3 T 25 -5 -5 35 5 5 #
-simple-snl-attrib $-1 -1 $-1 $5 $1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 2 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $15 $-1 $6 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
-shell $-1 -1 -1 $-1 $-1 $-1 $16 $-1 $6 T -5 -5 -5 5 5 5 #
-simple-snl-attrib $-1 -1 $17 $8 $3 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 1 -2147483648 -1 #
-face $18 -1 -1 $-1 $19 $20 $9 $-1 $21 forward single T 25 -5 5 35 5 5 F #
-simple-snl-attrib $-1 -1 $22 $11 $6 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 2 -2147483648 -1 #
-face $23 -1 -1 $-1 $24 $25 $12 $-1 $26 forward single T -5 -5 -5 5 5 5 F #
-simple-snl-attrib $-1 -1 $27 $13 $3 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @5 GROUP @7 Group 2 0 7 1 2 618932362 0 0 0 0 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $28 $-1 $14 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 1 #
-face $29 -1 -1 $-1 $30 $31 $9 $-1 $32 reversed single T 25 -5 -5 35 5 -5 F #
-loop $-1 -1 -1 $-1 $-1 $33 $14 T 25 -5 5 35 5 5 unknown #
-plane-surface $-1 -1 -1 $-1 30 0 5 0 0 1 1 0 0 forward_v I I I I #
-simple-snl-attrib $-1 -1 $34 $15 $6 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @5 GROUP @7 Group 3 0 7 1 3 885205176 0 0 0 0 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $35 $-1 $16 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 7 #
-face $36 -1 -1 $-1 $37 $38 $12 $-1 $39 forward single T -5 -5 -5 5 5 -5 F #
-loop $-1 -1 -1 $-1 $40 $41 $16 T -5 -5 -5 5 5 -5 unknown #
-cone-surface $-1 -1 -1 $-1 0 0 0 0 0 1 5 0 0 1 I I 0 1 5 forward I I I I #
-simple-snl-attrib $-1 -1 $-1 $17 $3 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 7 @16 GRAPHICS_OPTIONS @14 geometry color @10 mesh color @19 geometry visibility @15 mesh visibility @11 render mode @11 transparent 0 6 4 4 1 1 0 0 #
-simple-snl-attrib $-1 -1 $42 $18 $14 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 1 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $43 $-1 $19 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
-face $44 -1 -1 $-1 $45 $46 $9 $-1 $47 reversed single T 25 -5 -5 35 -5 5 F #
-loop $-1 -1 -1 $-1 $-1 $48 $19 T 25 -5 -5 35 5 -5 unknown #
-plane-surface $-1 -1 -1 $-1 30 0 -5 0 0 1 1 0 0 forward_v I I I I #
-coedge $-1 -1 -1 $-1 $49 $50 $51 $52 forward $20 $-1 #
-simple-snl-attrib $-1 -1 $-1 $22 $6 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 7 @16 GRAPHICS_OPTIONS @14 geometry color @10 mesh color @19 geometry visibility @15 mesh visibility @11 render mode @11 transparent 0 6 5 5 1 1 0 0 #
-simple-snl-attrib $-1 -1 $53 $23 $16 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 7 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $54 $-1 $24 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 8 #
-face $55 -1 -1 $-1 $-1 $56 $12 $-1 $57 forward single T -5 -5 5 5 5 5 F #
-loop $-1 -1 -1 $-1 $-1 $58 $24 T -5 -5 -5 5 5 -5 unknown #
-plane-surface $-1 -1 -1 $-1 0 0 -5 0 0 -1 -1 0 0 forward_v I I I I #
-loop $-1 -1 -1 $-1 $-1 $59 $16 T -5 -5 5 5 5 5 unknown #
-coedge $-1 -1 -1 $-1 $41 $41 $58 $60 reversed $25 $-1 #
-simple-snl-attrib $-1 -1 $-1 $28 $14 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $61 $29 $19 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 2 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $62 $-1 $30 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 3 #
-face $63 -1 -1 $-1 $64 $65 $9 $-1 $66 reversed single T 25 -5 -5 25 5 5 F #
-loop $-1 -1 -1 $-1 $-1 $67 $30 T 25 -5 -5 35 -5 5 unknown #
-plane-surface $-1 -1 -1 $-1 30 -5 0 0 1 0 0 0 1 forward_v I I I I #
-coedge $-1 -1 -1 $-1 $68 $69 $70 $71 forward $31 $-1 #
-coedge $-1 -1 -1 $-1 $72 $33 $73 $74 forward $20 $-1 #
-coedge $-1 -1 -1 $-1 $33 $72 $75 $76 forward $20 $-1 #
-coedge $-1 -1 -1 $-1 $77 $78 $33 $52 reversed $79 $-1 #
-edge $80 -1 -1 $-1 $81 -5 $82 5 $51 $83 forward @7 unknown T 35 -5 5 35 5 5 #
-simple-snl-attrib $-1 -1 $-1 $35 $16 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $84 $36 $24 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 8 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $85 $-1 $37 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 9 #
-loop $-1 -1 -1 $-1 $-1 $86 $37 T -5 -5 5 5 5 5 unknown #
-plane-surface $-1 -1 -1 $-1 0 0 5 0 0 1 1 0 0 forward_v I I I I #
-coedge $-1 -1 -1 $-1 $58 $58 $41 $60 forward $38 $-1 #
-coedge $-1 -1 -1 $-1 $59 $59 $86 $87 reversed $40 $-1 #
-edge $88 -1 -1 $-1 $89 0 $89 6.2831853071795862 $58 $90 forward @7 unknown T -5 -5 -5 5 5 -5 #
-simple-snl-attrib $-1 -1 $-1 $43 $19 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $91 $44 $30 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 3 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $92 $-1 $45 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 4 #
-face $93 -1 -1 $-1 $94 $95 $9 $-1 $96 reversed single T 25 5 -5 35 5 5 F #
-loop $-1 -1 -1 $-1 $-1 $97 $45 T 25 -5 -5 25 5 5 unknown #
-plane-surface $-1 -1 -1 $-1 25 0 0 1 0 0 0 0 -1 forward_v I I I I #
-coedge $-1 -1 -1 $-1 $98 $75 $99 $100 forward $46 $-1 #
-coedge $-1 -1 -1 $-1 $101 $48 $98 $102 forward $31 $-1 #
-coedge $-1 -1 -1 $-1 $48 $101 $103 $104 forward $31 $-1 #
-coedge $-1 -1 -1 $-1 $78 $77 $48 $71 reversed $79 $-1 #
-edge $105 -1 -1 $-1 $106 -5 $107 5 $70 $108 forward @7 unknown T 35 -5 -5 35 5 -5 #
-coedge $-1 -1 -1 $-1 $50 $49 $109 $110 forward $20 $-1 #
-coedge $-1 -1 -1 $-1 $111 $112 $49 $74 reversed $95 $-1 #
-edge $113 -1 -1 $-1 $82 -5 $114 5 $73 $115 forward @7 unknown T 25 5 5 35 5 5 #
-coedge $-1 -1 -1 $-1 $67 $116 $50 $76 reversed $46 $-1 #
-edge $117 -1 -1 $-1 $118 -5 $81 5 $75 $119 forward @7 unknown T 25 -5 5 35 -5 5 #
-coedge $-1 -1 -1 $-1 $70 $51 $116 $120 forward $79 $-1 #
-coedge $-1 -1 -1 $-1 $51 $70 $111 $121 reversed $79 $-1 #
-loop $-1 -1 -1 $-1 $-1 $77 $94 T 35 -5 -5 35 5 5 unknown #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $122 $-1 $52 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 1 #
-vertex $123 -1 -1 $-1 $52 $124 #
-vertex $125 -1 -1 $-1 $52 $126 #
-straight-curve $-1 -1 -1 $-1 35 0 5 0 1 0 I I #
-simple-snl-attrib $-1 -1 $-1 $54 $24 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $127 $55 $37 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 9 -2147483648 -1 #
-coedge $-1 -1 -1 $-1 $86 $86 $59 $87 forward $56 $-1 #
-edge $128 -1 -1 $-1 $129 0 $129 6.2831853071795862 $86 $130 forward @7 unknown T -5 -5 5 5 5 5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $131 $-1 $60 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 13 #
-vertex $132 -1 -1 $-1 $60 $133 #
-ellipse-curve $-1 -1 -1 $-1 0 0 -5 0 0 -1 5 0 0 1 I I #
-simple-snl-attrib $-1 -1 $-1 $62 $30 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $134 $63 $45 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 4 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $135 $-1 $64 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 5 #
-face $136 -1 -1 $-1 $-1 $79 $9 $-1 $137 reversed single T 35 -5 -5 35 5 5 F #
-loop $-1 -1 -1 $-1 $-1 $111 $64 T 25 5 -5 35 5 5 unknown #
-plane-surface $-1 -1 -1 $-1 30 5 0 0 -1 0 0 0 -1 forward_v I I I I #
-coedge $-1 -1 -1 $-1 $138 $109 $112 $139 forward $65 $-1 #
-coedge $-1 -1 -1 $-1 $116 $67 $68 $102 reversed $46 $-1 #
-coedge $-1 -1 -1 $-1 $109 $138 $67 $100 reversed $65 $-1 #
-edge $140 -1 -1 $-1 $118 -5 $141 5 $99 $142 forward @7 unknown T 25 -5 -5 25 -5 5 #
-coedge $-1 -1 -1 $-1 $69 $68 $138 $143 forward $31 $-1 #
-edge $144 -1 -1 $-1 $107 -5 $141 5 $98 $145 forward @7 unknown T 25 -5 -5 35 -5 -5 #
-coedge $-1 -1 -1 $-1 $112 $111 $69 $104 reversed $95 $-1 #
-edge $146 -1 -1 $-1 $147 -5 $106 5 $103 $148 forward @7 unknown T 25 5 -5 35 5 -5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $149 $-1 $71 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 5 #
-vertex $150 -1 -1 $-1 $71 $151 #
-vertex $152 -1 -1 $-1 $120 $153 #
-straight-curve $-1 -1 -1 $-1 35 0 -5 0 -1 0 I I #
-coedge $-1 -1 -1 $-1 $97 $99 $72 $110 reversed $65 $-1 #
-edge $154 -1 -1 $-1 $114 -5 $118 5 $109 $155 forward @7 unknown T 25 -5 5 25 5 5 #
-coedge $-1 -1 -1 $-1 $103 $73 $78 $121 forward $95 $-1 #
-coedge $-1 -1 -1 $-1 $73 $103 $97 $139 reversed $95 $-1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $156 $-1 $74 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
-vertex $157 -1 -1 $-1 $74 $158 #
-straight-curve $-1 -1 -1 $-1 30 5 5 -1 0 0 I I #
-coedge $-1 -1 -1 $-1 $75 $98 $77 $120 reversed $46 $-1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $159 $-1 $76 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 4 #
-vertex $160 -1 -1 $-1 $110 $161 #
-straight-curve $-1 -1 -1 $-1 30 -5 5 1 0 0 I I #
-edge $162 -1 -1 $-1 $81 -5 $107 5 $77 $163 forward @7 unknown T 35 -5 -5 35 -5 5 #
-edge $164 -1 -1 $-1 $82 -5 $106 5 $78 $165 forward @7 unknown T 35 5 -5 35 5 5 #
-simple-snl-attrib $-1 -1 $-1 $80 $52 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 1 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $166 $-1 $81 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 1 #
-point $-1 -1 -1 $-1 35 -5 5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $167 $-1 $82 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 2 #
-point $-1 -1 -1 $-1 35 5 5 #
-simple-snl-attrib $-1 -1 $-1 $85 $37 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $168 $-1 $87 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 14 #
-vertex $169 -1 -1 $-1 $87 $170 #
-ellipse-curve $-1 -1 -1 $-1 0 0 5 0 0 1 5 0 0 1 I I #
-simple-snl-attrib $-1 -1 $-1 $88 $60 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 13 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $171 $-1 $89 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 9 #
-point $-1 -1 -1 $-1 5 0 -5 #
-simple-snl-attrib $-1 -1 $-1 $92 $45 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $172 $93 $64 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 5 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $173 $-1 $94 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 6 #
-plane-surface $-1 -1 -1 $-1 35 0 0 -1 0 0 0 0 1 forward_v I I I I #
-coedge $-1 -1 -1 $-1 $99 $97 $101 $143 reversed $65 $-1 #
-edge $174 -1 -1 $-1 $114 -5 $147 5 $112 $175 forward @7 unknown T 25 5 -5 25 5 5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $176 $-1 $100 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 9 #
-vertex $177 -1 -1 $-1 $143 $178 #
-straight-curve $-1 -1 -1 $-1 25 -5 0 0 0 -1 I I #
-edge $179 -1 -1 $-1 $141 -5 $147 5 $138 $180 forward @7 unknown T 25 -5 -5 25 5 -5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $181 $-1 $102 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 6 #
-straight-curve $-1 -1 -1 $-1 30 -5 -5 -1 0 0 I I #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $182 $-1 $104 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 8 #
-vertex $183 -1 -1 $-1 $104 $184 #
-straight-curve $-1 -1 -1 $-1 30 5 -5 1 0 0 I I #
-simple-snl-attrib $-1 -1 $-1 $105 $71 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 5 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $185 $-1 $106 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 5 #
-point $-1 -1 -1 $-1 35 5 -5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $186 $-1 $107 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 6 #
-point $-1 -1 -1 $-1 35 -5 -5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $187 $-1 $110 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 3 #
-straight-curve $-1 -1 -1 $-1 25 0 5 0 -1 0 I I #
-simple-snl-attrib $-1 -1 $-1 $113 $74 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 2 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $188 $-1 $114 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 3 #
-point $-1 -1 -1 $-1 25 5 5 #
-simple-snl-attrib $-1 -1 $-1 $117 $76 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 4 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $189 $-1 $118 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 4 #
-point $-1 -1 -1 $-1 25 -5 5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $190 $-1 $120 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 10 #
-straight-curve $-1 -1 -1 $-1 35 -5 0 0 0 -1 I I #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $191 $-1 $121 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 12 #
-straight-curve $-1 -1 -1 $-1 35 5 0 0 0 -1 I I #
-simple-snl-attrib $-1 -1 $-1 $123 $81 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 1 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $125 $82 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 2 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $128 $87 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 14 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $192 $-1 $129 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 10 #
-point $-1 -1 -1 $-1 5 0 5 #
-simple-snl-attrib $-1 -1 $-1 $132 $89 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 9 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $135 $64 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $193 $136 $94 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 6 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $194 $-1 $139 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 11 #
-straight-curve $-1 -1 -1 $-1 25 5 0 0 0 -1 I I #
-simple-snl-attrib $-1 -1 $-1 $140 $100 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 9 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $195 $-1 $141 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 7 #
-point $-1 -1 -1 $-1 25 -5 -5 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $196 $-1 $143 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 7 #
-straight-curve $-1 -1 -1 $-1 25 0 -5 0 1 0 I I #
-simple-snl-attrib $-1 -1 $-1 $144 $102 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 6 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $146 $104 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 8 -2147483648 -1 #
-integer_attrib-name_attrib-gen-attrib $-1 -1 $197 $-1 $147 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 8 #
-point $-1 -1 -1 $-1 25 5 -5 #
-simple-snl-attrib $-1 -1 $-1 $150 $106 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 5 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $152 $107 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 6 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $154 $110 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 3 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $157 $114 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 3 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $160 $118 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 4 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $162 $120 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 10 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $164 $121 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 12 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $169 $129 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 10 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $173 $94 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @13 MESH_INTERVAL @4 LIMP @4 LIMP 2 1 0 5 1 0 0 1 1 #
-simple-snl-attrib $-1 -1 $-1 $174 $139 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 11 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $177 $141 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 7 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $179 $143 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 7 -2147483648 -1 #
-simple-snl-attrib $-1 -1 $-1 $183 $147 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 8 -2147483648 -1 #
-End-of-ACIS-data 
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('STEP AP214'),'1');
+FILE_NAME('/home/shriwise/occ_blds/meshkit/src/data/cylcube.stp','2015-06-30T18:22:53',(' '),(' '),'Spatial InterOp 3D',' ',' ');
+FILE_SCHEMA(('automotive_design'));
+ENDSEC;
+DATA;
+#1=PRODUCT_DEFINITION_CONTEXT('',#13,'design');
+#2=APPLICATION_PROTOCOL_DEFINITION('INTERNATIONAL STANDARD','automotive_design',1994,#13);
+#3=PRODUCT_CATEGORY_RELATIONSHIP('NONE','NONE',#14,#15);
+#4=SHAPE_DEFINITION_REPRESENTATION(#16,#17);
+#5=PRODUCT_DEFINITION_CONTEXT('',#18,'design');
+#6=APPLICATION_PROTOCOL_DEFINITION('INTERNATIONAL STANDARD','automotive_design',1994,#18);
+#7=PRODUCT_CATEGORY_RELATIONSHIP('NONE','NONE',#19,#20);
+#8=SHAPE_DEFINITION_REPRESENTATION(#21,#22);
+#9= (GEOMETRIC_REPRESENTATION_CONTEXT(3)GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#25))GLOBAL_UNIT_ASSIGNED_CONTEXT((#27,#28,#29))REPRESENTATION_CONTEXT('NONE','WORKSPACE'));
+#13=APPLICATION_CONTEXT(' ');
+#14=PRODUCT_CATEGORY('part','NONE');
+#15=PRODUCT_RELATED_PRODUCT_CATEGORY('detail',' ',(#31));
+#16=PRODUCT_DEFINITION_SHAPE('NONE','NONE',#32);
+#17=ADVANCED_BREP_SHAPE_REPRESENTATION('1',(#33,#34),#9);
+#18=APPLICATION_CONTEXT(' ');
+#19=PRODUCT_CATEGORY('part','NONE');
+#20=PRODUCT_RELATED_PRODUCT_CATEGORY('detail',' ',(#35));
+#21=PRODUCT_DEFINITION_SHAPE('NONE','NONE',#36);
+#22=ADVANCED_BREP_SHAPE_REPRESENTATION('2',(#37,#38),#9);
+#25=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.0E-06),#27,'','');
+#27= (CONVERSION_BASED_UNIT('MILLIMETRE',#41)LENGTH_UNIT()NAMED_UNIT(#44));
+#28= (NAMED_UNIT(#46)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.));
+#29= (NAMED_UNIT(#46)SOLID_ANGLE_UNIT()SI_UNIT($,.STERADIAN.));
+#31=PRODUCT('1','1','PART-1-DESC',(#52));
+#32=PRODUCT_DEFINITION('NONE','NONE',#53,#1);
+#33=MANIFOLD_SOLID_BREP('1',#54);
+#34=AXIS2_PLACEMENT_3D('',#55,#56,#57);
+#35=PRODUCT('2','2','PART-2-DESC',(#58));
+#36=PRODUCT_DEFINITION('NONE','NONE',#59,#5);
+#37=MANIFOLD_SOLID_BREP('2',#60);
+#38=AXIS2_PLACEMENT_3D('',#61,#62,#63);
+#41=LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.0),#64);
+#44=DIMENSIONAL_EXPONENTS(1.0,0.0,0.0,0.0,0.0,0.0,0.0);
+#46=DIMENSIONAL_EXPONENTS(0.0,0.0,0.0,0.0,0.0,0.0,0.0);
+#52=PRODUCT_CONTEXT('',#13,'mechanical');
+#53=PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE(' ','NONE',#31,.NOT_KNOWN.);
+#54=CLOSED_SHELL('',(#65,#66,#67,#68,#69,#70));
+#55=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#56=DIRECTION('',(0.0,0.0,1.0));
+#57=DIRECTION('',(1.0,0.0,0.0));
+#58=PRODUCT_CONTEXT('',#18,'mechanical');
+#59=PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE(' ','NONE',#35,.NOT_KNOWN.);
+#60=CLOSED_SHELL('',(#71,#72,#73,#74));
+#61=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#62=DIRECTION('',(0.0,0.0,1.0));
+#63=DIRECTION('',(1.0,0.0,0.0));
+#64= (NAMED_UNIT(#44)LENGTH_UNIT()SI_UNIT(.MILLI.,.METRE.));
+#65=ADVANCED_FACE('',(#76),#77,.T.);
+#66=ADVANCED_FACE('',(#78),#79,.F.);
+#67=ADVANCED_FACE('',(#80),#81,.F.);
+#68=ADVANCED_FACE('',(#82),#83,.F.);
+#69=ADVANCED_FACE('',(#84),#85,.F.);
+#70=ADVANCED_FACE('',(#86),#87,.F.);
+#71=ADVANCED_FACE('',(#88),#89,.T.);
+#72=ADVANCED_FACE('',(#90),#91,.T.);
+#73=ADVANCED_FACE('',(#92),#93,.T.);
+#74=ADVANCED_FACE('',(#94),#95,.T.);
+#76=FACE_OUTER_BOUND('',#96,.T.);
+#77=PLANE('',#97);
+#78=FACE_OUTER_BOUND('',#98,.T.);
+#79=PLANE('',#99);
+#80=FACE_OUTER_BOUND('',#100,.T.);
+#81=PLANE('',#101);
+#82=FACE_OUTER_BOUND('',#102,.T.);
+#83=PLANE('',#103);
+#84=FACE_OUTER_BOUND('',#104,.T.);
+#85=PLANE('',#105);
+#86=FACE_OUTER_BOUND('',#106,.T.);
+#87=PLANE('',#107);
+#88=FACE_OUTER_BOUND('',#108,.T.);
+#89=CYLINDRICAL_SURFACE('',#109,5.0);
+#90=FACE_OUTER_BOUND('',#110,.T.);
+#91=CYLINDRICAL_SURFACE('',#111,5.0);
+#92=FACE_OUTER_BOUND('',#112,.T.);
+#93=PLANE('',#113);
+#94=FACE_OUTER_BOUND('',#114,.T.);
+#95=PLANE('',#115);
+#96=EDGE_LOOP('',(#116,#117,#118,#119));
+#97=AXIS2_PLACEMENT_3D('',#120,#121,#122);
+#98=EDGE_LOOP('',(#123,#124,#125,#126));
+#99=AXIS2_PLACEMENT_3D('',#127,#128,#129);
+#100=EDGE_LOOP('',(#130,#131,#132,#133));
+#101=AXIS2_PLACEMENT_3D('',#134,#135,#136);
+#102=EDGE_LOOP('',(#137,#138,#139,#140));
+#103=AXIS2_PLACEMENT_3D('',#141,#142,#143);
+#104=EDGE_LOOP('',(#144,#145,#146,#147));
+#105=AXIS2_PLACEMENT_3D('',#148,#149,#150);
+#106=EDGE_LOOP('',(#151,#152,#153,#154));
+#107=AXIS2_PLACEMENT_3D('',#155,#156,#157);
+#108=EDGE_LOOP('',(#158,#159,#160,#161));
+#109=AXIS2_PLACEMENT_3D('',#162,#163,#164);
+#110=EDGE_LOOP('',(#165,#166,#167,#168));
+#111=AXIS2_PLACEMENT_3D('',#169,#170,#171);
+#112=EDGE_LOOP('',(#172,#173));
+#113=AXIS2_PLACEMENT_3D('',#174,#175,#176);
+#114=EDGE_LOOP('',(#177,#178));
+#115=AXIS2_PLACEMENT_3D('',#179,#180,#181);
+#116=ORIENTED_EDGE('',*,*,#182,.T.);
+#117=ORIENTED_EDGE('',*,*,#183,.T.);
+#118=ORIENTED_EDGE('',*,*,#184,.T.);
+#119=ORIENTED_EDGE('',*,*,#185,.T.);
+#120=CARTESIAN_POINT('',(30.0,0.0,5.0));
+#121=DIRECTION('',(0.0,0.0,1.0));
+#122=DIRECTION('',(1.0,0.0,0.0));
+#123=ORIENTED_EDGE('',*,*,#186,.T.);
+#124=ORIENTED_EDGE('',*,*,#187,.T.);
+#125=ORIENTED_EDGE('',*,*,#188,.T.);
+#126=ORIENTED_EDGE('',*,*,#189,.T.);
+#127=CARTESIAN_POINT('',(30.0,0.0,-5.0));
+#128=DIRECTION('',(0.0,0.0,1.0));
+#129=DIRECTION('',(1.0,0.0,0.0));
+#130=ORIENTED_EDGE('',*,*,#190,.T.);
+#131=ORIENTED_EDGE('',*,*,#187,.F.);
+#132=ORIENTED_EDGE('',*,*,#191,.F.);
+#133=ORIENTED_EDGE('',*,*,#185,.F.);
+#134=CARTESIAN_POINT('',(30.0,-5.0,0.0));
+#135=DIRECTION('',(0.0,1.0,0.0));
+#136=DIRECTION('',(0.0,0.0,1.0));
+#137=ORIENTED_EDGE('',*,*,#192,.T.);
+#138=ORIENTED_EDGE('',*,*,#188,.F.);
+#139=ORIENTED_EDGE('',*,*,#190,.F.);
+#140=ORIENTED_EDGE('',*,*,#184,.F.);
+#141=CARTESIAN_POINT('',(25.0,0.0,0.0));
+#142=DIRECTION('',(1.0,0.0,0.0));
+#143=DIRECTION('',(0.0,0.0,-1.0));
+#144=ORIENTED_EDGE('',*,*,#193,.T.);
+#145=ORIENTED_EDGE('',*,*,#189,.F.);
+#146=ORIENTED_EDGE('',*,*,#192,.F.);
+#147=ORIENTED_EDGE('',*,*,#183,.F.);
+#148=CARTESIAN_POINT('',(30.0,5.0,0.0));
+#149=DIRECTION('',(0.0,-1.0,0.0));
+#150=DIRECTION('',(0.0,0.0,-1.0));
+#151=ORIENTED_EDGE('',*,*,#191,.T.);
+#152=ORIENTED_EDGE('',*,*,#186,.F.);
+#153=ORIENTED_EDGE('',*,*,#193,.F.);
+#154=ORIENTED_EDGE('',*,*,#182,.F.);
+#155=CARTESIAN_POINT('',(35.0,0.0,0.0));
+#156=DIRECTION('',(-1.0,0.0,0.0));
+#157=DIRECTION('',(0.0,0.0,1.0));
+#158=ORIENTED_EDGE('',*,*,#194,.F.);
+#159=ORIENTED_EDGE('',*,*,#195,.F.);
+#160=ORIENTED_EDGE('',*,*,#196,.F.);
+#161=ORIENTED_EDGE('',*,*,#197,.F.);
+#162=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#163=DIRECTION('',(-0.0,-0.0,-1.0));
+#164=DIRECTION('',(1.0,0.0,0.0));
+#165=ORIENTED_EDGE('',*,*,#194,.T.);
+#166=ORIENTED_EDGE('',*,*,#198,.F.);
+#167=ORIENTED_EDGE('',*,*,#196,.T.);
+#168=ORIENTED_EDGE('',*,*,#199,.F.);
+#169=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#170=DIRECTION('',(-0.0,-0.0,-1.0));
+#171=DIRECTION('',(1.0,0.0,0.0));
+#172=ORIENTED_EDGE('',*,*,#199,.T.);
+#173=ORIENTED_EDGE('',*,*,#195,.T.);
+#174=CARTESIAN_POINT('',(0.0,0.0,-5.0));
+#175=DIRECTION('',(0.0,0.0,-1.0));
+#176=DIRECTION('',(-1.0,0.0,0.0));
+#177=ORIENTED_EDGE('',*,*,#197,.T.);
+#178=ORIENTED_EDGE('',*,*,#198,.T.);
+#179=CARTESIAN_POINT('',(0.0,0.0,5.0));
+#180=DIRECTION('',(0.0,0.0,1.0));
+#181=DIRECTION('',(1.0,0.0,0.0));
+#182=EDGE_CURVE('',#200,#201,#202,.T.);
+#183=EDGE_CURVE('',#201,#203,#204,.T.);
+#184=EDGE_CURVE('',#203,#205,#206,.T.);
+#185=EDGE_CURVE('',#205,#200,#207,.T.);
+#186=EDGE_CURVE('',#208,#209,#210,.T.);
+#187=EDGE_CURVE('',#209,#211,#212,.T.);
+#188=EDGE_CURVE('',#211,#213,#214,.T.);
+#189=EDGE_CURVE('',#213,#208,#215,.T.);
+#190=EDGE_CURVE('',#205,#211,#216,.T.);
+#191=EDGE_CURVE('',#200,#209,#217,.T.);
+#192=EDGE_CURVE('',#203,#213,#218,.T.);
+#193=EDGE_CURVE('',#201,#208,#219,.T.);
+#194=EDGE_CURVE('',#220,#221,#222,.T.);
+#195=EDGE_CURVE('',#223,#220,#224,.T.);
+#196=EDGE_CURVE('',#225,#223,#226,.T.);
+#197=EDGE_CURVE('',#221,#225,#227,.T.);
+#198=EDGE_CURVE('',#225,#221,#228,.T.);
+#199=EDGE_CURVE('',#220,#223,#229,.T.);
+#200=VERTEX_POINT('',#230);
+#201=VERTEX_POINT('',#231);
+#202=LINE('',#232,#233);
+#203=VERTEX_POINT('',#234);
+#204=LINE('',#235,#236);
+#205=VERTEX_POINT('',#237);
+#206=LINE('',#238,#239);
+#207=LINE('',#240,#241);
+#208=VERTEX_POINT('',#242);
+#209=VERTEX_POINT('',#243);
+#210=LINE('',#244,#245);
+#211=VERTEX_POINT('',#246);
+#212=LINE('',#247,#248);
+#213=VERTEX_POINT('',#249);
+#214=LINE('',#250,#251);
+#215=LINE('',#252,#253);
+#216=LINE('',#254,#255);
+#217=LINE('',#256,#257);
+#218=LINE('',#258,#259);
+#219=LINE('',#260,#261);
+#220=VERTEX_POINT('',#262);
+#221=VERTEX_POINT('',#263);
+#222=LINE('',#264,#265);
+#223=VERTEX_POINT('',#266);
+#224=CIRCLE('',#267,5.0);
+#225=VERTEX_POINT('',#268);
+#226=LINE('',#269,#270);
+#227=CIRCLE('',#271,5.0);
+#228=CIRCLE('',#272,5.0);
+#229=CIRCLE('',#273,5.0);
+#230=CARTESIAN_POINT('',(35.0,-5.0,5.0));
+#231=CARTESIAN_POINT('',(35.0,5.0,5.0));
+#232=CARTESIAN_POINT('',(35.0,0.0,5.0));
+#233=VECTOR('',#274,1.0);
+#234=CARTESIAN_POINT('',(25.0,5.0,5.0));
+#235=CARTESIAN_POINT('',(30.0,5.0,5.0));
+#236=VECTOR('',#275,1.0);
+#237=CARTESIAN_POINT('',(25.0,-5.0,5.0));
+#238=CARTESIAN_POINT('',(25.0,0.0,5.0));
+#239=VECTOR('',#276,1.0);
+#240=CARTESIAN_POINT('',(30.0,-5.0,5.0));
+#241=VECTOR('',#277,1.0);
+#242=CARTESIAN_POINT('',(35.0,5.0,-5.0));
+#243=CARTESIAN_POINT('',(35.0,-5.0,-5.0));
+#244=CARTESIAN_POINT('',(35.0,0.0,-5.0));
+#245=VECTOR('',#278,1.0);
+#246=CARTESIAN_POINT('',(25.0,-5.0,-5.0));
+#247=CARTESIAN_POINT('',(30.0,-5.0,-5.0));
+#248=VECTOR('',#279,1.0);
+#249=CARTESIAN_POINT('',(25.0,5.0,-5.0));
+#250=CARTESIAN_POINT('',(25.0,0.0,-5.0));
+#251=VECTOR('',#280,1.0);
+#252=CARTESIAN_POINT('',(30.0,5.0,-5.0));
+#253=VECTOR('',#281,1.0);
+#254=CARTESIAN_POINT('',(25.0,-5.0,0.0));
+#255=VECTOR('',#282,1.0);
+#256=CARTESIAN_POINT('',(35.0,-5.0,0.0));
+#257=VECTOR('',#283,1.0);
+#258=CARTESIAN_POINT('',(25.0,5.0,0.0));
+#259=VECTOR('',#284,1.0);
+#260=CARTESIAN_POINT('',(35.0,5.0,0.0));
+#261=VECTOR('',#285,1.0);
+#262=CARTESIAN_POINT('',(5.0,0.0,-5.0));
+#263=CARTESIAN_POINT('',(5.0,0.0,5.0));
+#264=CARTESIAN_POINT('',(5.0,-6.12323399573677E-16,0.0));
+#265=VECTOR('',#286,1.0);
+#266=CARTESIAN_POINT('',(-5.0,6.12323399573677E-16,-5.0));
+#267=AXIS2_PLACEMENT_3D('',#287,#288,#289);
+#268=CARTESIAN_POINT('',(-5.0,6.12323399573677E-16,5.0));
+#269=CARTESIAN_POINT('',(-5.0,6.12323399573677E-16,0.0));
+#270=VECTOR('',#290,1.0);
+#271=AXIS2_PLACEMENT_3D('',#291,#292,#293);
+#272=AXIS2_PLACEMENT_3D('',#294,#295,#296);
+#273=AXIS2_PLACEMENT_3D('',#297,#298,#299);
+#274=DIRECTION('',(0.0,1.0,0.0));
+#275=DIRECTION('',(-1.0,0.0,0.0));
+#276=DIRECTION('',(0.0,-1.0,0.0));
+#277=DIRECTION('',(1.0,0.0,0.0));
+#278=DIRECTION('',(0.0,-1.0,0.0));
+#279=DIRECTION('',(-1.0,0.0,0.0));
+#280=DIRECTION('',(0.0,1.0,0.0));
+#281=DIRECTION('',(1.0,0.0,0.0));
+#282=DIRECTION('',(0.0,0.0,-1.0));
+#283=DIRECTION('',(0.0,0.0,-1.0));
+#284=DIRECTION('',(0.0,0.0,-1.0));
+#285=DIRECTION('',(0.0,0.0,-1.0));
+#286=DIRECTION('',(0.0,0.0,1.0));
+#287=CARTESIAN_POINT('',(0.0,0.0,-5.0));
+#288=DIRECTION('',(0.0,0.0,-1.0));
+#289=DIRECTION('',(1.0,0.0,0.0));
+#290=DIRECTION('',(-0.0,-0.0,-1.0));
+#291=CARTESIAN_POINT('',(0.0,0.0,5.0));
+#292=DIRECTION('',(0.0,0.0,1.0));
+#293=DIRECTION('',(1.0,0.0,0.0));
+#294=CARTESIAN_POINT('',(0.0,0.0,5.0));
+#295=DIRECTION('',(0.0,0.0,1.0));
+#296=DIRECTION('',(1.0,0.0,0.0));
+#297=CARTESIAN_POINT('',(0.0,0.0,-5.0));
+#298=DIRECTION('',(0.0,0.0,-1.0));
+#299=DIRECTION('',(1.0,0.0,0.0));
+ENDSEC;
+END-ISO-10303-21;
