@@ -102,8 +102,8 @@ void SolidCurveMesher::facet(ModelEnt *curve)
   //get the facets for this curve/ref_edge
   std::vector<double> pnts;
   std::vector<int> conn;
-  mk_core()->igeom_instance()->getFacets(h,facet_tol,pnts,conn);
-
+  iGeom::Error errval = mk_core()->igeom_instance()->getFacets(h,facet_tol,pnts,conn);
+  if (errval != iBase_SUCCESS) throw Error(MK_FAILURE, "Unable get the facets of the curve.");
   //create vector for keeping track of the vertices
   std::vector<iBase_EntityHandle> verts;
           

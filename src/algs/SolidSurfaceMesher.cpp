@@ -98,7 +98,8 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
   //get the facets for this surface/ ref_face
   std::vector<double> pnts;
   std::vector<int> conn;
-  mk->igeom_instance()->getFacets(h,facet_tol,pnts,conn);
+  iGeom::Error errval = mk->igeom_instance()->getFacets(h,facet_tol,pnts,conn);
+  if (errval != iBase_SUCCESS) throw Error(MK_FAILURE, "Unable get the facets of the surface.");
   
   //create vector for keeping track of the vertices
   std::vector<iBase_EntityHandle> verts;
