@@ -22,6 +22,17 @@ namespace MeshKit
  
 using namespace std;
 
+  /** \class SolidCurveMesher SolidCurveMesher.hpp "meshkit/SolidCurveMesher.hpp"
+   * \brief A class for generating facet-based mesh of geometric curves.
+   * INPUT: one or more ModelEnts representing geometric curves
+   * MESH TYPE(S): MBEDGE, MBVERTEX
+   * OUTPUT: a set of edges and vertices for each ModelEnt
+   * DEPENDENCIES: meshkit build with iGeom interface
+   * 
+   * This class uses the facets generated for the visualization of solid models in typical CAD 
+   * software to represent a geometric curve as mesh. Upon execution, this class will call for
+   * the facet data and store it as part of the ModelEnt's mesh.
+   */
 class SolidCurveMesher : public MeshScheme
 {
 public: 

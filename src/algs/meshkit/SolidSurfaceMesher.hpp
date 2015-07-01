@@ -23,6 +23,17 @@ namespace MeshKit
 
 using namespace std; 
 
+  /** \class SolidSurfaceMesher SolidSurfaceMesher.hpp "meshkit/SolidSurfaceMesher.hpp"
+   * \brief A class for generating facet-based mesh of geometric surfaces
+   * INPUT: one or more ModelEnts representing geometric surfaces
+   * MESH TYPE(S): MBEDGE, MBVERTEX, MBTRI
+   * OUTPUT: a set of triangles, edges  and verticesfor each ModelEnt
+   * DEPENDENCIES: meshkit build with iGeom interface
+   * 
+   * This class uses the facets generated for the visualization of solid models in typical CAD 
+   * software to represent a geometric surface as mesh. Upon execution, this class will call for
+   * the facet data and store it as part of the ModelEnt's mesh.
+   */
 class SolidSurfaceMesher : public MeshScheme
 {
 public:
