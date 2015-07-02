@@ -165,7 +165,7 @@ namespace MeshKit {
     std::vector<int> meshfile_proc;
     std::vector<double> x_coord;
     std::vector<double> y_coord;
-    bool nst_flag, nsb_flag, nss_flag;
+    bool nst_flag, nsb_flag, nss_flag, nssall_flag;
     std::vector<std::string> core_alias;
     std::vector<double> nsx, nsy, nsc;
     int num_nsside, ms_startid, ns_startid;
@@ -200,7 +200,7 @@ namespace MeshKit {
     double PII;
     double z_height;    // z_height for extruding surfaces mesh
     int z_divisions; // z_divisions for extruding surface mesh
-    int nst_Id, nsb_Id;
+    int nst_Id, nsb_Id, nssall_Id;
     std::vector<int> nss_Id;
     std::string testdir;
 

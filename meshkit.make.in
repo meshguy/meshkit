@@ -3,11 +3,14 @@
 # for installed copies of MESHKIT.
 MESHKIT_LIBS = -L@abs_builddir@/src/.libs
 MESHKIT_INCLUDES = -I@abs_srcdir@/src/core \
-                -I@abs_builddir@/src/algs \
-                -I@abs_builddir@/src/algs/Sweep \
-                -I@abs_builddir@/src/utils \
                 -I@abs_srcdir@/src/lemon \
                 -I@abs_srcdir@/src/extern \
+                -I@abs_srcdir@/src/algs \
+                -I@abs_builddir@/src/core \
+                -I@abs_builddir@/src/lemon \
+                -I@abs_builddir@/src/extern \
+                -I@abs_builddir@/src/algs
+
 
 MESHKIT_CXXFLAGS = @CXXFLAGS@ @AM_CXXFLAGS@
 MESHKIT_CPPFLAGS = @CPPFLAGS@ @AM_CPPFLAGS@
@@ -17,7 +20,7 @@ MESHKIT_FCFLAGS = @FCFLAGS@
 MESHKIT_LDFLAGS = @LDFLAGS@ \
 @CAMAL_LDFLAGS@ @TETGEN_LDFLAGS@ @NETGEN_LDFLAGS@ @NETGEN_LDFLAGS@ @IPOPT_LDFLAGS@ @MESQUITE_LDFLAGS@
 
-MESHKIT_LIBS_LINK = ${MESHKIT_LDFLAGS} ${MESHKIT_LIBS} -lMeshKit -lemon -lMKalgs -lMKutils @LIBS@ \
+MESHKIT_LIBS_LINK = ${MESHKIT_LDFLAGS} ${MESHKIT_LIBS} -lMeshKit -lemon @LIBS@ \
 @CAMAL_LIBS@ @TETGEN_LIBS@ @NETGEN_LIBS@ @NETGEN_LIBS@ @IPOPT_LIBS@ @MESQUITE_LIBS@ @TRIANGLE_LIBS@
 
 MESHKIT_CXX = @CXX@

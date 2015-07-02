@@ -39,6 +39,7 @@ CoreGen::CoreGen( MKCore *mk, const MEntVector &me_vec)
     nst_flag = false;
     nsb_flag = false;
     nss_flag = false;
+    nssall_flag = false;
     nst_Id = 9997;
     nsb_Id = 9998;
     prob_type = "mesh";
@@ -1087,6 +1088,7 @@ int CoreGen::shift_mn_ids(iBase_EntitySetHandle orig_set, int number)
         }
       ++j;
     }
+  return 0;
 }
 
 
@@ -1226,165 +1228,194 @@ int CoreGen::create_neumannset() {
     // Input:    none
     // Output:   none
     // ---------------------------------------------------------------------------
-    if (nss_flag == true || nsb_flag == true || nst_flag == true) {
-        logfile << "Creating NeumannSet." << std::endl;
+  if (nss_flag == true || nsb_flag == true || nst_flag == true || nssall_flag == true) {
+      std::cout << "Creating NeumannSet." << std::endl;
 
-        if (extrude_flag == true)
-            set_DIM = 3;
+      if (extrude_flag == true)
+        set_DIM = 3;
 
-        int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
-        double z1 = 0.0;
-        iBase_TagHandle ntag1, gtag1;
-        iBase_EntityHandle *ents = NULL;
-        iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
-        std::vector<iBase_EntitySetHandle> set_side;
+      int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
+      double z1 = 0.0;
+      iBase_TagHandle ntag1, gtag1, nametag1;
+      iBase_EntityHandle *ents = NULL;
+      iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
+      std::vector<iBase_EntitySetHandle> set_side;
 
-        //get entities for skinner
-        if(set_DIM ==2) { // if surface geometry specified
-            iMesh_getEntities(imesh->instance(), root_set,
-                              iBase_FACE, iMesh_ALL_TOPOLOGIES,
-                              &ents, &ents_alloc, &ents_size, &err);
+      //get entities for skinner
+      if(set_DIM ==2) { // if surface geometry specified
+          iMesh_getEntities(imesh->instance(), root_set,
+                            iBase_FACE, iMesh_ALL_TOPOLOGIES,
+                            &ents, &ents_alloc, &ents_size, &err);
         }
-        else {
-            iMesh_getEntities(imesh->instance(), root_set,
-                              iBase_REGION, iMesh_ALL_TOPOLOGIES,
-                              &ents, &ents_alloc, &ents_size, &err);
+      else {
+          iMesh_getEntities(imesh->instance(), root_set,
+                            iBase_REGION, iMesh_ALL_TOPOLOGIES,
+                            &ents, &ents_alloc, &ents_size, &err);
         }
-        ERRORR("Trouble getting entities for specifying neumannsets via skinner.", err);
+      ERRORR("Trouble getting entities for specifying neumannsets via skinner.", err);
 
-        // get tag handle
-        const char *tag_neumann1 = "NEUMANN_SET";
-        const char *global_id1 = "GLOBAL_ID";
+      // assign a name to the tag
+      const char *ch_name1 = "NAME";
+      // get tag handle
+      const char *tag_neumann1 = "NEUMANN_SET";
+      const char *global_id1 = "GLOBAL_ID";
 
-        iMesh_getTagHandle(imesh->instance(), tag_neumann1, &ntag1, &err, 12);
-        ERRORR("Trouble getting handle.", err);
+      iMesh_getTagHandle(imesh->instance(), tag_neumann1, &ntag1, &err, 12);
+      ERRORR("Trouble getting handle.", err);
 
-        iMesh_getTagHandle(imesh->instance(), global_id1, &gtag1, &err, 9);
-        ERRORR("Trouble getting handle.", err);
+      iMesh_getTagHandle(imesh->instance(), global_id1, &gtag1, &err, 9);
+      ERRORR("Trouble getting handle.", err);
 
-        iMesh_createEntSet(imesh->instance(),0, &set, &err); // for all other sides
-        ERRORR("Trouble creating set handle.", err);
+      iMesh_getTagHandle(imesh->instance(), ch_name1, &nametag1, &err, 4);
+      ERRORR("Trouble getting handle.", err);
 
-        if (set_DIM == 3) { // sets for collecting top and bottom surface
-            iMesh_createEntSet(imesh->instance(),0, &set_z1, &err);
-            ERRORR("Trouble creating set handle.", err);
+      iMesh_createEntSet(imesh->instance(),0, &set, &err); // for all other sides
+      ERRORR("Trouble creating set handle.", err);
 
-            iMesh_createEntSet(imesh->instance(),0, &set_z2, &err);
-            ERRORR("Trouble creating set handle.", err);
+      if (set_DIM == 3) { // sets for collecting top and bottom surface
+          iMesh_createEntSet(imesh->instance(),0, &set_z1, &err);
+          ERRORR("Trouble creating set handle.", err);
 
-            set_side.resize(num_nsside);
-            for(int i=0; i<num_nsside; i++){
-                iMesh_createEntSet(imesh->instance(),0, &set_side[i], &err);
-                ERRORR("Trouble creating set handle.", err);
+          iMesh_createEntSet(imesh->instance(),0, &set_z2, &err);
+          ERRORR("Trouble creating set handle.", err);
+
+          set_side.resize(num_nsside);
+          for(int i=0; i<num_nsside; i++){
+              iMesh_createEntSet(imesh->instance(),0, &set_side[i], &err);
+              ERRORR("Trouble creating set handle.", err);
             }
         }
 
-        moab::Range tmp_elems;
-        tmp_elems.insert((moab::EntityHandle*)ents, (moab::EntityHandle*)ents + ents_size);
+      moab::Range tmp_elems;
+      tmp_elems.insert((EntityHandle*)ents, (moab::EntityHandle*)ents + ents_size);
 
-        // get the skin of the entities
-        moab::Skinner skinner(mb);
-        moab::Range skin_range;
-        moab::ErrorCode result;
-        moab::Range::iterator rit;
+      // get the skin of the entities
+      moab::Skinner skinner(mb);
+      moab::Range skin_range;
+      moab::ErrorCode result;
+      moab::Range::iterator rit;
 
-        result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
-        if (moab::MB_SUCCESS != result) return result;
+      result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
+      if (MB_SUCCESS != result) return result;
 
-        for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {
-            if(set_DIM == 3) { // filter top and bottom
-                int num_vertex=0, size_vertex =0;
-                iBase_EntityHandle *vertex = NULL;
-                iMesh_getEntAdj(imesh->instance(), (iBase_EntityHandle)(*rit), iBase_VERTEX, &vertex,
-                                &num_vertex, &size_vertex, &err);
-                ERRORR("Trouble getting number of entities after merge.", err);
+      for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {
+          if(set_DIM == 3) { // filter top and bottom
+              int num_vertex=0, size_vertex =0;
+              iBase_EntityHandle *vertex = NULL;
+              iMesh_getEntAdj(imesh->instance(), (iBase_EntityHandle)(*rit), iBase_VERTEX, &vertex,
+                              &num_vertex, &size_vertex, &err);
+              ERRORR("Trouble getting number of entities after merge.", err);
 
-                double *coords = NULL;
-                int coords_alloc = 0, coords_size=0;
-                iMesh_getVtxArrCoords(imesh->instance(), vertex, size_vertex, iBase_INTERLEAVED,
-                                      &coords, &coords_alloc, &coords_size, &err);
-                ERRORR("Trouble getting number of entities after merge.", err);
-                double ztemp = coords[2];
-                int flag = 0;
-                for (int p=1; p<num_vertex; p++) {
-                    double z1 = coords[3*p+2];
-                    if( ztemp != z1) {
-                        flag = 1;
-                        continue;
+              double *coords = NULL;
+              int coords_alloc = 0, coords_size=0;
+              iMesh_getVtxArrCoords(imesh->instance(), vertex, size_vertex, iBase_INTERLEAVED,
+                                    &coords, &coords_alloc, &coords_size, &err);
+              ERRORR("Trouble getting number of entities after merge.", err);
+              double ztemp = coords[2];
+              int flag = 0;
+              for (int p=1; p<num_vertex; p++) {
+                  double z1 = coords[3*p+2];
+                  if( fabs(ztemp-z1) >= merge_tol) {
+                      flag = 1;
+                      continue;
                     }
                 }
-                if(flag == 0) { // this is top or bottom surface
-                    if (z_flag == 0) { // store z-coord this is the first call
-                        z_flag = 1;
-                        z1 = ztemp;
+              if(flag == 0) { // this is top or bottom surface
+                  if (z_flag == 0) { // store z-coord this is the first call
+                      z_flag = 1;
+                      z1 = ztemp;
                     }
-                    if( ztemp == z1) {
-                        iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z1, &err);
-                        ERRORR("Trouble getting number of entities after merge.", err);
+                  if( fabs(ztemp-z1) <= merge_tol) {
+                      iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z1, &err);
+                      ERRORR("Trouble getting number of entities after merge.", err);
                     }
-                    else {
-                        iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z2, &err);
-                        ERRORR("Trouble getting number of entities after merge.", err);
+                  else {
+                      iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z2, &err);
+                      ERRORR("Trouble getting number of entities after merge.", err);
                     }
                 }
-                else if (flag == 1) { // add the faces that are not top or bottom surface
-                    // filter the sidesets based on their x and y coords
+              else if (flag == 1) { // add the faces that are not top or bottom surface
+                  // filter the sidesets based on their x and y coords
 
-                    for(int k=0; k<num_nsside; k++){
-                        if ( fabs((coords[0])*nsx[k] + (coords[1])*nsy[k] + nsc[k]) <= merge_tol
-                             && fabs((coords[3])*nsx[k] + (coords[4])*nsy[k] + nsc[k]) <= merge_tol
-                             && fabs((coords[6])*nsx[k] + (coords[7])*nsy[k] + nsc[k]) <= merge_tol) {
-                            iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), (iBase_EntitySetHandle) set_side[k], &err);
-                            ERRORR("Trouble getting number of entities after merge.", err);
-                            continue;
+                  for(int k=0; k<num_nsside; k++){
+                      if ( fabs((coords[0])*nsx[k] + (coords[1])*nsy[k] + nsc[k]) <= merge_tol
+                           && fabs((coords[3])*nsx[k] + (coords[4])*nsy[k] + nsc[k]) <= merge_tol
+                           && fabs((coords[6])*nsx[k] + (coords[7])*nsy[k] + nsc[k]) <= merge_tol) {
+                          iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), (iBase_EntitySetHandle) set_side[k], &err);
+                          ERRORR("Trouble getting number of entities after merge.", err);
+                          continue;
                         }
-                        else{ // outside the specified
-                            iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
-                            ERRORR("Trouble getting number of entities after merge.", err);
-                            continue;
+                      else{ // outside the specified
+                          iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
+                          ERRORR("Trouble getting number of entities after merge.", err);
+                          continue;
                         }
-
                     }
+                  if(num_nsside == 0){
+                      iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
+                      ERRORR("Trouble getting number of entities after merge.", err);
+                    }
+
                 }
             }
-            else if(set_DIM == 2) { // edges add all for sideset
-                iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
-                ERRORR("Trouble getting number of entities after merge.", err);
+          else if(set_DIM == 2) { // edges add all for sideset
+              iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
+              ERRORR("Trouble getting number of entities after merge.", err);
             }
         }
 
-        iMesh_setEntSetIntData( imesh->instance(), set, ntag1, 99999, &err);
-        ERRORR("Trouble getting handle.", err);
+      if (set_DIM == 3) {
+          if (nst_flag == true || nsb_flag == true) {
 
-        iMesh_setEntSetIntData( imesh->instance(), set, gtag1, 99999, &err);
-        ERRORR("Trouble getting handle.", err);
+              iMesh_setEntSetIntData( imesh->instance(), set_z1, ntag1, nst_Id, &err);
+              ERRORR("Trouble getting handle.", err);
 
-        if (set_DIM == 3) {
-            if (nst_flag == true || nsb_flag == true) {
+              iMesh_setEntSetIntData( imesh->instance(), set_z1, gtag1, nst_Id, &err);
+              ERRORR("Trouble getting handle.", err);
 
-                iMesh_setEntSetIntData( imesh->instance(), set_z1, ntag1, nst_Id, &err);
-                ERRORR("Trouble getting handle.", err);
+              std::string name1 = "core_top_ss";
+              iMesh_setEntSetData( imesh->instance(), set_z1, nametag1, name1.c_str(), 11, &err);
+              ERRORR("Trouble getting handle.", err);
 
-                iMesh_setEntSetIntData( imesh->instance(), set_z1, gtag1, nst_Id, &err);
-                ERRORR("Trouble getting handle.", err);
+              iMesh_setEntSetIntData( imesh->instance(), set_z2, ntag1, nsb_Id, &err);
+              ERRORR("Trouble getting handle.", err);
 
-                iMesh_setEntSetIntData( imesh->instance(), set_z2, ntag1, nsb_Id, &err);
-                ERRORR("Trouble getting handle.", err);
+              iMesh_setEntSetIntData( imesh->instance(), set_z2, gtag1, nsb_Id, &err);
+              ERRORR("Trouble getting handle.", err);
 
-                iMesh_setEntSetIntData( imesh->instance(), set_z2, gtag1, nsb_Id, &err);
-                ERRORR("Trouble getting handle.", err);
+              std::string name2 = "core_bottom_ss";
+              iMesh_setEntSetData( imesh->instance(), set_z2, nametag1, name2.c_str(), 14, &err);
+              ERRORR("Trouble getting handle.", err);
 
-                for(int j=0; j<num_nsside; j++){
-                    iMesh_setEntSetIntData( imesh->instance(), set_side[j], ntag1, nss_Id[j], &err);
-                    ERRORR("Trouble getting handle.", err);
+              for(int j=0; j<num_nsside; j++){
+                  iMesh_setEntSetIntData( imesh->instance(), set_side[j], ntag1, nss_Id[j], &err);
+                  ERRORR("Trouble getting handle.", err);
 
-                    iMesh_setEntSetIntData( imesh->instance(), set_side[j], gtag1, nss_Id[j], &err);
-                    ERRORR("Trouble getting handle.", err);
+                  iMesh_setEntSetIntData( imesh->instance(), set_side[j], gtag1, nss_Id[j], &err);
+                  ERRORR("Trouble getting handle.", err);
+
+                  std::stringstream ss;
+                  ss << j;
+                  std::string name3 = "side" + ss.str();
+                  iMesh_setEntSetData( imesh->instance(), set_side[j], nametag1, name3.c_str(), 8, &err);
+                  ERRORR("Trouble getting handle.", err);
                 }
             }
+        }
+      // same for both 2D and 3D models
+      if (nssall_flag == true) {
+          iMesh_setEntSetIntData( imesh->instance(), set, ntag1, nssall_Id, &err);
+          ERRORR("Trouble getting handle.", err);
+
+          iMesh_setEntSetIntData( imesh->instance(), set, gtag1, nssall_Id, &err);
+          ERRORR("Trouble getting handle.", err);
+
+          std::string name = "all_sides";
+          iMesh_setEntSetData( imesh->instance(), set, nametag1, name.c_str(), 9, &err);
+          ERRORR("Trouble getting handle.", err);
         }
     }
-    return iBase_SUCCESS;
+  return iBase_SUCCESS;
 }
 
 void CoreGen::IOErrorHandler (ErrorStates ECode) const
@@ -1786,29 +1817,32 @@ int CoreGen::read_inputs_phase1(int argc, char *argv[]) {
             int nsId = 0;
             formatString >> card >> nsLoc >> nsId;
             if(nsId < 0 || formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
+              IOErrorHandler (INVALIDINPUT);
             if ((strcmp(nsLoc.c_str(), "top") == 0)) {
                 nst_flag = true;
                 nst_Id = nsId;
-            } else if ((strcmp(nsLoc.c_str(), "bot") == 0)) {
+              } else if ((strcmp(nsLoc.c_str(), "bot") == 0)) {
                 nsb_flag = true;
                 nsb_Id = nsId;
-            } else if ((strcmp(nsLoc.c_str(), "side") == 0)) {
+              } else if ((strcmp(nsLoc.c_str(), "sideall") == 0)) {
+                nssall_flag = true;
+                nssall_Id = nsId;
+              } else if ((strcmp(nsLoc.c_str(), "side") == 0)) {
                 nss_Id.push_back(nsId);
-
+                // we are reading the equation of a straight line ax + by + c = 0
                 formatString >> temp1 >> x >> temp2 >> y >> temp3 >> c;
                 if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
+                  IOErrorHandler (INVALIDINPUT);
                 nsx.push_back(x);
                 nsy.push_back(y);
                 nsc.push_back(c);
 
                 ++num_nsside;
                 nss_flag = true;
-            } else {
-                logfile << "Invalid Neumann set specification" << std::endl;
-            }
-        }
+              } else {
+                std::cout << "Invalid Neumann set specification" << std::endl;
+              }
+          }
 
         // breaking condition
         if (input_string.substr(0, 3) == "end") {

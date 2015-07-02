@@ -2687,12 +2687,11 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   // Function: read and create the assembly for hexagonal lattice
   // Input:    error code
-  // Output:   none
   // ---------------------------------------------------------------------------
   {
     CParser Parse;
     std::string card, szVolId, szVolAlias;
-    int nInputLines, nTempPin = 1, t, nIFlag = 0;
+    int nInputLines, nTempPin = 1, t, nIFlag = 0, total_pincells = 0;
     double dX = 0.0, dY =0.0, dZ=0.0;
     double  dP, dH, dSide, dHeight;
     iBase_EntityHandle assm = NULL;
@@ -2700,6 +2699,8 @@ namespace MeshKit
     std::istringstream szFormatString (szInputString);
 
     szFormatString >> card >> m_nPin;
+    if(m_nPin <=0 )
+      IOErrorHandler (INVALIDINPUT);
 
     // width of the hexagon is n*n+1/2
     int nWidth =2*m_nPin -1;
@@ -2710,85 +2711,90 @@ namespace MeshKit
       return;
 
     for(int m=1; m<=nWidth; m++){
-      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-			       MAXCHARS, szComment))
-	IOErrorHandler (INVALIDINPUT);
-      if(m>m_nPin)
-	t = 2*m_nPin - m;
-      else
-	t = m;
-      std::istringstream szFormatString1 (szInputString);
+        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                 MAXCHARS, szComment))
+          IOErrorHandler (INVALIDINPUT);
+        if(m>m_nPin)
+          t = 2*m_nPin - m;
+        else
+          t = m;
+        std::istringstream szFormatString1 (szInputString);
 
-      for(int n=1; n<=(m_nPin + t - 1); n++){
-	szFormatString1 >> m_Assembly(m,n);
-	if(szFormatString1.fail())
-	  IOErrorHandler (INVALIDINPUT);
-	// if dummy pincell skip and continue
-	if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-	  continue;
-	}
-	// find that pincell
-	for(int b=1; b<=m_nPincells; b++){
-	  m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-	  if(m_Assembly(m,n) == szVolAlias)
-	    nTempPin = b;
-	}
+        for(int n=1; n<=(m_nPin + t - 1); n++){
+            ++total_pincells;
+            szFormatString1 >> m_Assembly(m,n);
+            if(szFormatString1.fail())
+              IOErrorHandler (INVALIDINPUT);
+            // if dummy pincell skip and continue
+            if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+                continue;
+              }
+            // find that pincell
+            ++m_nTotalPincells;
+            for(int b=1; b<=m_nPincells; b++){
+                m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+                if(m_Assembly(m,n) == szVolAlias)
+                  nTempPin = b;
+              }
 
-	// now compute the location and create it
-	ComputePinCentroid( nTempPin, m_Assembly, m, n, dX, dY, dZ);
+            // now compute the location and create it
+            ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
 
-	// now create the pincell in the location found
-	std::cout << "\n--------------------------------------------------"<<std::endl;
-	std::cout << " m = " << m <<" n = " << n << std::endl;
-	std::cout << "creating pin: " << nTempPin;
-	std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
+            // now create the pincell in the location found
+            std::cout << "\n--------------------------------------------------"<<std::endl;
+            std::cout << " m = " << m <<" n = " << n << std::endl;
+            std::cout << "creating pin: " << nTempPin;
+            std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
 
-	m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
-	if(nIFlag){
-	  CreatePinCell_Intersect( nTempPin, dX, -dY, dZ);
-	}
-	else{
-	  CreatePinCell( nTempPin, dX, -dY, dZ);
-	}
+            if(strcmp(m_szInfo.c_str(),"on") == 0)
+              m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+
+            m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
+            if(nIFlag){
+                CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
+              }
+            else{
+                CreatePinCell(nTempPin, dX, -dY, dZ);
+              }
+          }
       }
-    }
 
     // get all the entities (in pins)defined so far, in an entity set - for subtraction later
     IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, in_pins), *igeomImpl);
-
-    std::cout << "\n\nCreating surrounding outer hexes .." << std::endl;
+    std::cout << "Expected pin definitions: " << total_pincells << "\n\nCreating surrounding outer hexes .." << std::endl;
 
     for (int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
-      if(m_nDimensions >0){
+        if(m_nDimensions >0){
 
-	// create outermost hexes
-	for(int n=1;n<=m_nDimensions; n++){
-	  dSide = m_dMAssmPitch(nTemp, n)/(sqrt(3));
-	  dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
+            // create outermost hexes
+            for(int n=1;n<=m_nDimensions; n++){
+                dSide = m_dMAssmPitch(nTemp, n)/(sqrt(3));
+                dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
 
-	  // creating coverings
-	  IBERRCHK(igeomImpl->createPrism(dHeight, 6, dSide, dSide, assm), *igeomImpl);
+                // creating coverings
+                IBERRCHK(igeomImpl->createPrism(dHeight, 6, dSide, dSide, assm), *igeomImpl);
 
+                // rotate the prism to match the pins
+                 IBERRCHK(igeomImpl->rotateEnt(assm, 30, 0, 0, 1), *igeomImpl);
+                if(0 != m_Pincell.GetSize()){
+                    m_Pincell(1).GetPitch(dP, dH);
+                    dX = m_nPin*dP;
+                    dY = -(m_nPin-1)*dP*sqrt(3.0)/2.0;
+                  }
+                else{
+                    dX = 0.0;
+                    dY = 0.0;
+                  }
+                dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
 
-	  // rotate the prism to match the pins
-	  IBERRCHK(igeomImpl->rotateEnt(assm, 30, 0, 0, 1), *igeomImpl);
+                // position the prism
+                 IBERRCHK(igeomImpl->moveEnt(assm, dX, dY, dZ), *igeomImpl);
 
-
-	  m_Pincell(1).GetPitch(dP, dH);
-	  dX = m_nPin*dP;
-	  dY = -(m_nPin-1)*dP*sqrt(3.0)/2.0;
-	  dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
-
-	  // position the prism
-	  IBERRCHK(igeomImpl->moveEnt(assm, dX, dY, dZ), *igeomImpl);
-
-
-	  // populate the coverings array
-	  assms[(nTemp-1)*m_nDimensions + n -1]=assm;
-	}
+                // populate the coverings array
+                assms[(nTemp-1)*m_nDimensions + n -1]=assm;
+              }
+          }
       }
-    }
-
   }
 
   void AssyGen::Create_CartAssm( std::string &szInputString)
@@ -2806,96 +2812,103 @@ namespace MeshKit
 
     std::istringstream szFormatString (szInputString);
     szFormatString >> card >> m_nPinX >> m_nPinY;
-    m_Assembly.SetSize(m_nPinX,m_nPinY);
+    if(m_nPinX <=0 || m_nPinY <=0)
+      IOErrorHandler (INVALIDINPUT);
+    m_Assembly.SetSize(m_nPinY,m_nPinX);
 
     if (m_nJouFlag == 1)
       return;
 
-
     //read the next line to get assembly info &store assembly info
-    for(int m=1; m<=m_nPinY; m++){
-      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-			       MAXCHARS, szComment))
-	IOErrorHandler (INVALIDINPUT);
-      std::istringstream szFormatString1 (szInputString);
+    if(0 != m_Pincell.GetSize()){
+        for(int m=1; m<=m_nPinY; m++){
+            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                     MAXCHARS, szComment))
+              IOErrorHandler (INVALIDINPUT);
+            std::istringstream szFormatString1 (szInputString);
 
-      //store the line read in Assembly array and create / position the pin in the core
-      for(int n=1; n<=m_nPinX; n++){
-	szFormatString1 >> m_Assembly(m,n);
-	if(szFormatString1.fail())
-	  IOErrorHandler (INVALIDINPUT);
+            //store the line read in Assembly array and create / position the pin in the core
+            for(int n=1; n<=m_nPinX; n++){
+                szFormatString1 >> m_Assembly(m,n);
+                if(szFormatString1.fail())
+                  IOErrorHandler (INVALIDINPUT);
 
 
-	// loop thro' all pins to get the type of pin
-	for(int b=1; b<=m_nPincells; b++){
-	  m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-	  if(m_Assembly(m,n) == szVolAlias)
-	    nTempPin = b;
-	}
+                // loop thro' all pins to get the type of pin
+                for(int b=1; b<=m_nPincells; b++){
+                    m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+                    if(m_Assembly(m,n) == szVolAlias)
+                      nTempPin = b;
+                  }
 
-	//now compute the location where the pin needs to be placed
-	ComputePinCentroid( nTempPin, m_Assembly, m, n, dX, dY, dZ);
+                //now compute the location where the pin needs to be placed
+                ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
 
-	// if dummy pincell skip and continue
-	if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-	  m_Pincell(1).GetPitch(dPX, dPY, dPZ);
-	  continue;
-	}
+                // if dummy pincell skip and continue
+                if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+                    m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+                    // dMoveX and dMoveY are stored for positioning the outer squares later
+                    if(m == m_nPinY && n ==m_nPinX){
+                        dMoveX = dX/2.0;
+                        dMoveY = -dY/2.0;
+                      }
+                    continue;
+                  }
+                ++m_nTotalPincells;
+                // now create the pincell in the location found
+                std::cout << "\n--------------------------------------------------"<<std::endl;
+                std::cout << " m = " << m <<" n = " << n << std::endl;
+                std::cout << "creating pin: " << nTempPin;
+                std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
 
-	// now create the pincell in the location found
-	std::cout << "\n--------------------------------------------------"<<std::endl;
-	std::cout << " m = " << m <<" n = " << n << std::endl;
-	std::cout << "creating pin: " << nTempPin;
-	std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
+                if(strcmp(m_szInfo.c_str(),"on") == 0)
+                  m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
 
-	m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
-	if(nIFlag){
-	  CreatePinCell_Intersect( nTempPin, dX, -dY, dZ);
-	}
-	else{
-	  CreatePinCell( nTempPin, dX, -dY, dZ);
-	}
-	// dMoveX and dMoveY are stored for positioning the outer squares later
-	if(m == m_nPinY && n ==m_nPinX){
-	  dMoveX = dX/2.0;
-	  dMoveY = -dY/2.0;
-	}
+                m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
+                if(nIFlag){
+                    CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
+                  }
+                else{
+                    CreatePinCell(nTempPin, dX, -dY, dZ);
+                  }
+                // dMoveX and dMoveY are stored for positioning the outer squares later
+                if(m == m_nPinY && n ==m_nPinX){
+                    dMoveX = dX/2.0;
+                    dMoveY = -dY/2.0;
+                  }
+              }
+          }
       }
-    }
     std::cout << "\n--------------------------------------------------"<<std::endl;
 
     // get all the entities (in pins)defined so far, in an entity set - for subtraction later
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, in_pins), *igeomImpl);
-
+    //  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
+    //  CHECK( "ERROR : getRootSet failed!" );
 
 
     if(m_nDimensions > 0){
 
-      // create outermost rectangular blocks
-      std::cout << "\nCreating surrounding outer blocks .." << std::endl;
-      int nCount = -1;
-      for(int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
-	for(int n=1;n<=m_nDimensions; n++){
-	  ++nCount;
-	  dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
-	  IBERRCHK(igeomImpl->createBrick(m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight, assm), *igeomImpl);
+        // create outermost rectangular blocks
+        std::cout << "\nCreating surrounding outer blocks .." << std::endl;
+        int nCount = -1;
+        for(int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
+            for(int n=1;n<=m_nDimensions; n++){
+                ++nCount;
+                dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
+                IBERRCHK(igeomImpl->createBrick(m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight, assm), *igeomImpl);
 
+                // position the outer block to match the pins
+                dX = m_dMAssmPitchX(nTemp, n)/4.0;
+                dY =  m_dMAssmPitchY(nTemp, n)/4.0;
+                dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
+                std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
+                IBERRCHK(igeomImpl->moveEnt(assm, dMoveX,dMoveY,dZ), *igeomImpl);
 
-	  // position the outer block to match the pins
-	  dX = m_dMAssmPitchX(nTemp, n)/4.0;
-	  dY =  m_dMAssmPitchY(nTemp, n)/4.0;
-	  dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
-	  //	std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
-	  IBERRCHK(igeomImpl->moveEnt(assm, dMoveX,dMoveY,dZ), *igeomImpl);
-
-
-
-	  // populate the outer covering array squares
-	  assms[nCount]=assm;
-	}
+                // populate the outer covering array squares
+                assms[nCount]=assm;
+              }
+          }
       }
-    }
-
   }
 
   void AssyGen::CreateOuterCovering ()
