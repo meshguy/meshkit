@@ -23,7 +23,7 @@ namespace MeshKit
 
 using namespace std; 
 
-  /** \class SolidSurfaceMesher SolidSurfaceMesher.hpp "meshkit/SolidSurfaceMesher.hpp"
+  /** \class SurfaceFacetMeshReader SurfaceFacetMeshReader.hpp "meshkit/SurfaceFacetMeshReader.hpp"
    * \brief A class for generating facet-based mesh of geometric surfaces
    * INPUT: one or more ModelEnts representing geometric surfaces
    * MESH TYPE(S): MBEDGE, MBVERTEX, MBTRI
@@ -34,16 +34,16 @@ using namespace std;
    * software to represent a geometric surface as mesh. Upon execution, this class will call for
    * the facet data and store it as part of the ModelEnt's mesh.
    */
-class SolidSurfaceMesher : public MeshScheme
+class SurfaceFacetMeshReader : public MeshScheme
 {
 public:
        /** \brief Construction function for the Solid CAD Surface Mesher
         */
-       SolidSurfaceMesher(MKCore *mk, const MEntVector &ments);
+       SurfaceFacetMeshReader(MKCore *mk, const MEntVector &ments);
 
       /** \brief Decstructor function for the Solid CAD Surface Mesher
        */
-       ~SolidSurfaceMesher();
+       ~SurfaceFacetMeshReader();
 
        virtual void setup_this();
   
@@ -69,7 +69,7 @@ public:
  
        /** \brief Get the class name */
        static const char* name()
-       {return "SolidSurfaceMesher";}
+       {return "SurfaceFacetMeshReader";}
 
        /** \brief Function that names the output types of this meshing class
         *  \return array terminated with \c moab::MBMAXTYPE

@@ -39,7 +39,7 @@ libMeshKitalgs_la_SOURCES = \
 	register_algs.cpp \
 	EdgeMesher.cpp \
 	CurveFacetMeshReader.cpp \
-	SolidSurfaceMesher.cpp \
+	SurfaceFacetMeshReader.cpp \
 	VertexMesher.cpp \
 	SCDMesh.cpp \
 	EBMesher.cpp \
@@ -64,7 +64,7 @@ endif
 nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EdgeMesher.hpp \
 	meshkit/CurveFacetMeshReader.hpp \
-	meshkit/SolidSurfaceMesher.hpp \
+	meshkit/SurfaceFacetMeshReader.hpp \
 	meshkit/VertexMesher.hpp \
 	meshkit/SCDMesh.hpp \
 	meshkit/EBMesher.hpp \

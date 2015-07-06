@@ -1,7 +1,7 @@
 
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/SolidSurfaceMesher.hpp"
+#include "meshkit/SurfaceFacetMeshReader.hpp"
 #include "meshkit/CurveFacetMeshReader.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
@@ -14,21 +14,21 @@ namespace MeshKit
 {
 
 // Output mesh types for this class
-moab::EntityType SolidSurfaceMesher_types[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBTRI, moab::MBMAXTYPE};
-const moab::EntityType* SolidSurfaceMesher::output_types()
-{ return SolidSurfaceMesher_types; }
+moab::EntityType SurfaceFacetMeshReader_types[] = {moab::MBVERTEX, moab::MBEDGE, moab::MBTRI, moab::MBMAXTYPE};
+const moab::EntityType* SurfaceFacetMeshReader::output_types()
+{ return SurfaceFacetMeshReader_types; }
 
-SolidSurfaceMesher::SolidSurfaceMesher(MKCore *mk_core, const MEntVector &ments)
+SurfaceFacetMeshReader::SurfaceFacetMeshReader(MKCore *mk_core, const MEntVector &ments)
   : MeshScheme(mk_core, ments)
 {
   mk = mk_core; 
 }
 
-SolidSurfaceMesher::~SolidSurfaceMesher()
+SurfaceFacetMeshReader::~SurfaceFacetMeshReader()
 {
 }
 
-void SolidSurfaceMesher::setup_this()
+void SurfaceFacetMeshReader::setup_this()
 {
   //set the faceting parameters to default values if they are not already set
   
@@ -73,7 +73,7 @@ void SolidSurfaceMesher::setup_this()
 
 }
 
-void SolidSurfaceMesher::execute_this()
+void SurfaceFacetMeshReader::execute_this()
 {
 
   for(MEntSelection::iterator mit = mentSelection.begin(); mit !=mentSelection.end(); mit++)
@@ -89,7 +89,7 @@ void SolidSurfaceMesher::execute_this()
     }
 }
 
-void SolidSurfaceMesher::facet(ModelEnt *surf)
+void SurfaceFacetMeshReader::facet(ModelEnt *surf)
 {
 
   iGeom::EntityHandle h = surf->geom_handle(); 
@@ -182,14 +182,14 @@ void SolidSurfaceMesher::facet(ModelEnt *surf)
 
 }
 
-void SolidSurfaceMesher::set_mesh_params(double faceting_tolerance, double geom_resabs)
+void SurfaceFacetMeshReader::set_mesh_params(double faceting_tolerance, double geom_resabs)
 {
   //Assign the faceting values if they are passed into the function
   if(faceting_tolerance) facet_tol = faceting_tolerance; 
   if(geom_resabs) geom_res = geom_resabs; 
 }
 
-double SolidSurfaceMesher::vtx2vtx_dist(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
+double SurfaceFacetMeshReader::vtx2vtx_dist(iGeom::EntityHandle vtx1, iMesh::EntityHandle vtx2)
 {
 
   double x1,y1,z1;

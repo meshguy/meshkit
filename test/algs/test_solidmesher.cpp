@@ -5,7 +5,7 @@
  */
 
 #include "meshkit/MKCore.hpp"
-#include "meshkit/SolidSurfaceMesher.hpp"
+#include "meshkit/SurfaceFacetMeshReader.hpp"
 #include "meshkit/CurveFacetMeshReader.hpp"
 #include "meshkit/ModelEnt.hpp"
 
@@ -54,12 +54,12 @@ int main(int argc, char **argv)
 
   MEntVector surfs;
   mk->get_entities_by_dimension(2,surfs);
-  SolidSurfaceMesher *ssm;
+  SurfaceFacetMeshReader *sfmr;
 
-  ssm = (SolidSurfaceMesher*) mk->construct_meshop("SolidSurfaceMesher", surfs);
+  sfmr = (SurfaceFacetMeshReader*) mk->construct_meshop("SurfaceFacetMeshReader", surfs);
 
   double facet_tol = 1e-04, geom_resabs = 1e-06;
-  ssm->set_mesh_params(facet_tol, geom_resabs);
+  sfmr->set_mesh_params(facet_tol, geom_resabs);
 
   mk->setup();
   mk->execute();
