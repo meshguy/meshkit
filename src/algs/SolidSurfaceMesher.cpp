@@ -2,7 +2,7 @@
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SolidSurfaceMesher.hpp"
-#include "meshkit/SolidCurveMesher.hpp"
+#include "meshkit/CurveFacetMeshReader.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
 #include <iGeom.h>
@@ -39,10 +39,10 @@ void SolidSurfaceMesher::setup_this()
   if(!geom_res) geom_res = 1e-6;
 
   //create a solid curve mesher 
-  SolidCurveMesher *scm = (SolidCurveMesher*) mk_core()->construct_meshop("SolidCurveMesher");
+  CurveFacetMeshReader *cfmr = (CurveFacetMeshReader*) mk_core()->construct_meshop("CurveFacetMeshReader");
 
   //set the parameters of the curvemesher to match those of the surface mesher
-  scm->set_mesh_params(facet_tol,geom_res);
+  cfmr->set_mesh_params(facet_tol,geom_res);
 
   for(MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
     {
@@ -63,13 +63,13 @@ void SolidSurfaceMesher::setup_this()
       for(MEntVector::iterator j = children.begin(); j != children.end(); j++)
 	{
 	  ModelEnt *child = *j; 
-          if(child->is_meshops_list_empty()) scm-> add_modelent(child); 
+          if(child->is_meshops_list_empty()) cfmr-> add_modelent(child); 
 	}
 
     }
 
   //have the children be meshed first
-  mk_core()->insert_node(scm, this, mk_core()->root_node());
+  mk_core()->insert_node(cfmr, this, mk_core()->root_node());
 
 }
 

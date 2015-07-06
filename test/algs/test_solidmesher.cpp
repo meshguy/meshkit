@@ -6,7 +6,7 @@
 
 #include "meshkit/MKCore.hpp"
 #include "meshkit/SolidSurfaceMesher.hpp"
-#include "meshkit/SolidCurveMesher.hpp"
+#include "meshkit/CurveFacetMeshReader.hpp"
 #include "meshkit/ModelEnt.hpp"
 
 

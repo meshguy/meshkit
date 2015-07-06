@@ -33,12 +33,13 @@ using namespace std;
    * software to represent a geometric curve as mesh. Upon execution, this class will call for
    * the facet data and store it as part of the ModelEnt's mesh.
    */
-class SolidCurveMesher : public MeshScheme
+
+class CurveFacetMeshReader : public MeshScheme
 {
 public: 
-       SolidCurveMesher(MKCore *mk, const MEntVector &ments);
+       CurveFacetMeshReader(MKCore *mk, const MEntVector &ments);
 
-       ~SolidCurveMesher();
+       ~CurveFacetMeshReader();
 private:
         double facet_tol;
         double geom_res;
@@ -94,7 +95,7 @@ public:
 
       /** \brief Get the class name */
       static const char* name()
-      {return "SolidCurveMesher";}
+      {return "CurveFacetMeshReader";}
 
       /** \brief Function that names the output types of this meshing class
        *  \return array terminated with \c moab::MBMAXTYPE

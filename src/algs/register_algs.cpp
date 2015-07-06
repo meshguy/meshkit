@@ -4,7 +4,7 @@
 #include "meshkit/MergeMesh.hpp"
 #include "meshkit/EBMesher.hpp"
 #include "meshkit/EdgeMesher.hpp"
-#include "meshkit/SolidCurveMesher.hpp"
+#include "meshkit/CurveFacetMeshReader.hpp"
 #include "meshkit/SolidSurfaceMesher.hpp"
 #include "meshkit/TFIMapping.hpp"
 #include "meshkit/ExtrudeMesh.hpp"
@@ -93,7 +93,7 @@ REGISTER_MESH_OP(ParRecvSurfMesh);
 REGISTER_MESH_OP(IAInterface);
 #endif    
 
-REGISTER_MESH_OP(SolidCurveMesher);
+REGISTER_MESH_OP(CurveFacetMeshReader);
 REGISTER_MESH_OP(SolidSurfaceMesher);
 
 } // namespace MeshKit
