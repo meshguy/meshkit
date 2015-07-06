@@ -4,7 +4,7 @@
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
 #include <iGeom.h>
-
+#include <cmath>
 #include "MBTagConventions.hpp"
 #include "MBCore.hpp"
 #include "moab/GeomTopoTool.hpp"

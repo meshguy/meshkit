@@ -6,6 +6,7 @@
 #include "meshkit/ModelEnt.hpp"
 #include <iostream>
 #include <iGeom.h>
+#include <cmath> 
 
 #include "MBCore.hpp"
 
