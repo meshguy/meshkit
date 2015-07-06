@@ -1046,9 +1046,7 @@ void PostBL::PrepareIO (int argc, char *argv[], std::string  TestDir)
             m_InputFile = argv[1];
             m_LogName = m_InputFile + ".log";
         }
-        else if (1 == argc){
-            m_LogFile << "\nRunning default case:\n" << std::endl;
-
+        else if (1 == argc){            
             m_InputFile = TestDir + "/" + (char *)DEFAULT_TEST_POSTBL;
             m_LogName = (std::string)DEFAULT_TEST_POSTBL + ".log";
         }
@@ -1056,7 +1054,9 @@ void PostBL::PrepareIO (int argc, char *argv[], std::string  TestDir)
         // open input file for reading
         m_FileInput.open (m_InputFile.c_str(), std::ios::in);
         if (!m_FileInput){
-            m_LogFile << "Unable to open file: " << m_InputFile << std::endl;
+            m_LogFile << "Usage: postbl <filename.inp> " << std::endl;
+            m_LogFile << "Default test file can be found here <Meshkit/data>" << std::endl;
+            m_LogFile << " Examples input and mesh files are located here <MeshKit/test/algs/postbl_examples>" << std::endl;
             m_FileInput.clear ();
             exit(1);
         }

@@ -171,7 +171,6 @@ namespace MeshKit
             std::cout << "        -t print timing and memory usage info in each step" << std::endl;
             std::cout << "        -j create journal file only" << std::endl;
             std::cout << "        -h print help" << std::endl;
-            std::cout << "\nRunning default case:\n" << std::endl;
 
             m_szInFile = TestDir + "/" + (char *)DEFAULT_TEST_FILE;
             m_szGeomFile = (char *)TEST_FILE_NAME;
@@ -184,12 +183,11 @@ namespace MeshKit
             m_szLogFile = m_szFile + ".log";
             m_szCommonFile = TestDir + "/" + "common.inp";
 
-            std::cout <<"  No file specified.  Defaulting to: " << m_szInFile<< "  " << m_szJouFile << std::endl;
+            std::cout <<"Default case input file is located here <MeshKit/data> "<< std::endl;
           }
         // open the file
         m_FileInput.open (m_szInFile.c_str(), std::ios::in);
-        if (!m_FileInput){
-            std::cout << "Unable to open file: " << m_szInFile << std::endl;
+        if (!m_FileInput){            
             std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
             m_FileInput.clear ();
             exit(1);

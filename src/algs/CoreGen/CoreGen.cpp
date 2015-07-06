@@ -1533,7 +1533,6 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
     procs = nprocs;
     sTime = clock();
     testdir = TestDir;
-    std::cout << testdir << std::endl;
     if (argc > 1) {
         if (argv[1][0] == '-' && argv[1][1] == 'm') {
             // set to zero, when run_flag = 1, program runs and does copy, move, merge, extrude, assign gids, save and close
@@ -1554,7 +1553,7 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
                     logfile << "        -h print help" << std::endl;
                     logfile << "\nInstruction on writing coregen input file can be found at: "
                             << std::endl;
-                    logfile << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                    logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                             << std::endl;
                     exit(0);
                 }
@@ -1608,7 +1607,7 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
                             logfile << "        -h print help" << std::endl;
                             logfile << "\nInstruction on writing coregen input file can also be found at: "
                                     << std::endl;
-                            logfile << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                            logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                                     << std::endl;
                             exit(0);
                             break;
@@ -1619,10 +1618,8 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
             }
         } else { //default case
             if (nrank == 0) {
-                std::cerr << "Usage: " << argv[0]
+                logfile << "Usage: " << argv[0]
                           << " <input file> WITHOUT EXTENSION" << std::endl;
-                logfile << "  No file specified.  Defaulting to: "
-                        << COREGEN_DEFAULT_TEST_FILE << std::endl;
             }
             iname = TestDir + "/" + COREGEN_DEFAULT_TEST_FILE;
             ifile = iname + ".inp";
@@ -1649,7 +1646,7 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
 
         if (!file_input) {
             if (nrank == 0) {
-                logfile << "Unable to open file" << std::endl;
+                logfile << "Default case input file located here: <MeshKit/data>" << std::endl;
                 logfile << "Usage: coregen [-t -m -h] <coregen input file>"
                         << std::endl;
                 logfile << "        -t print timing and memory usage info in each step"
@@ -1658,7 +1655,7 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
                 logfile << "        -h print help" << std::endl;
                 logfile << "\nInstruction on writing coregen input file can be found at: "
                         << std::endl;
-                logfile << "        https://trac.mcs.anl.gov/projects/fathom/browser/MeshKit/trunk/rgg/README"
+                logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                         << std::endl;
             }
             file_input.clear();
