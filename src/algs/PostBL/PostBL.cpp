@@ -255,7 +255,7 @@ void PostBL::execute_this()
   }
 
   // allocate space for connectivity/adjacency during the first pass of this loop
-  if(mb->type_from_handle(old_hex[0]) == MBHEX){
+  if(mb->type_from_handle(old_hex[0]) == moab::MBHEX){
       m_Conn = 8;
       m_BElemNodes = 4;
       m_HConn = 8;
@@ -918,7 +918,7 @@ void PostBL::execute_this()
       // create boundary layer hexes
       for(int j=0; j< m_Intervals; j++){
           if(m_Conn == 8){
-              MBERRCHK(mb->create_element(MBHEX, &conn[j*m_Conn], m_Conn, hex),mb);
+              MBERRCHK(mb->create_element(moab::MBHEX, &conn[j*m_Conn], m_Conn, hex),mb);
           }
           else if(m_Conn==4 && m_GD ==3 && hybrid == true){
               MBERRCHK(mb->create_element(MBPRISM, &conn[j*6], 6, hex),mb);
@@ -1046,9 +1046,7 @@ void PostBL::PrepareIO (int argc, char *argv[], std::string  TestDir)
             m_InputFile = argv[1];
             m_LogName = m_InputFile + ".log";
         }
-        else if (1 == argc){
-            m_LogFile << "\nRunning default case:\n" << std::endl;
-
+        else if (1 == argc){            
             m_InputFile = TestDir + "/" + (char *)DEFAULT_TEST_POSTBL;
             m_LogName = (std::string)DEFAULT_TEST_POSTBL + ".log";
         }
@@ -1056,7 +1054,9 @@ void PostBL::PrepareIO (int argc, char *argv[], std::string  TestDir)
         // open input file for reading
         m_FileInput.open (m_InputFile.c_str(), std::ios::in);
         if (!m_FileInput){
-            m_LogFile << "Unable to open file: " << m_InputFile << std::endl;
+            m_LogFile << "Usage: postbl <filename.inp> " << std::endl;
+            m_LogFile << "Default test file can be found here <Meshkit/data>" << std::endl;
+            m_LogFile << " Examples input and mesh files are located here <MeshKit/test/algs/postbl_examples>" << std::endl;
             m_FileInput.clear ();
             exit(1);
         }

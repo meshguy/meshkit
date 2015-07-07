@@ -1,7 +1,7 @@
 SUBDIRS = . 
 MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk \
 BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk \
-SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default.sat assygen_default.template.jou graph.eps \
+SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default_info.csv assygen_default.sat assygen_default.template.jou graph.eps \
 intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m
 
 LDADD = $(top_builddir)/src/libMeshKit.la
@@ -31,7 +31,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils
 
 #BROKEN_TESTS = test_jaalquad test_assygen edmond_matching hamiltonian mreport qualestm SimpleTri2Quad test_quadmeshcleanup
-BROKEN_TESTS = test_assygen
+BROKEN_TESTS = test_ebmesh
 
 TESTS = test_edgemesher \
         test_tfimapping \
@@ -42,7 +42,6 @@ TESTS = test_edgemesher \
         test_meshoptemplate \
         test_extrudemesh \
         test_qslimmesher \
-        test_ebmesh \
         test_assygen \
         test_postbl
 

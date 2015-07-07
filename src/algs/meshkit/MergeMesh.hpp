@@ -1,8 +1,6 @@
 #ifndef MESHKIT_MERGE_MESH_HPP
 #define MESHKIT_MERGE_MESH_HPP
 
-#include "MKException.hpp"
-
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"
 #include "meshkit/MeshScheme.hpp"
@@ -15,10 +13,10 @@
 
 #include "iMesh.h"
 
-#include "MBiMesh.hpp"
-#include "MBInterface.hpp"
-#include "MBRange.hpp"
-#include "MBAdaptiveKDTree.hpp"
+#include "meshkit/iMesh.hpp"
+#include "moab/Interface.hpp"
+#include "moab/Range.hpp"
+#include "moab/AdaptiveKDTree.hpp"
 
 namespace MeshKit {
 
@@ -128,24 +126,24 @@ private:
 
     //- given a kdtree, set tag on vertices in leaf nodes with vertices
     //- to which they should be merged
-  MBErrorCode find_merged_to(MBAdaptiveKDTree & tree, MBEntityHandle &tree_root, MBTag merged_to);
+  moab::ErrorCode find_merged_to(moab::AdaptiveKDTree & tree, moab::EntityHandle &tree_root, moab::Tag merged_to);
 
   
-  MBErrorCode merge_entities(MBRange &elems,
+  moab::ErrorCode merge_entities(moab::Range &elems,
                              const int do_merge,
                              const int update_sets,
-                             MBTag merge_tag);
+                             moab::Tag merge_tag);
   
     //- perform the actual merge
-  MBErrorCode perform_merge(MBTag merged_to);
+  moab::ErrorCode perform_merge(moab::Tag merged_to);
 
-  MBInterface *mbImpl;
+  moab::Interface *mbImpl;
 
     //- the tag pointing to the entity to which an entity will be merged
-  MBTag mbMergeTag;
+  moab::Tag mbMergeTag;
 
     //- entities which will go away after the merge
-  MBRange deadEnts;
+  moab::Range deadEnts;
 };
 
   inline const char* MergeMesh::name()

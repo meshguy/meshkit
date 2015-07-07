@@ -13,7 +13,7 @@
 
 #include "moab/Interface.hpp"
 #include "moab/GeomTopoTool.hpp"
-#include "MBOrientedBoxTreeTool.hpp"
+#include "moab/OrientedBoxTreeTool.hpp"
 
 //! edge status
 enum EdgeStatus {
@@ -373,7 +373,7 @@ private:
   /** \brief get MOAB instance
    * \return MOAB instance
    */
-  MBInterface* moab_instance() {return mk_core()->moab_instance();}
+  moab::Interface* moab_instance() {return mk_core()->moab_instance();}
 
   /** \brief get MOAB's Tag
    * \param name Tag name
@@ -384,7 +384,7 @@ private:
    * \param create_if_missing create Tag if it is missed (flag)
    * \return Tag handle
    */
-  iBase_TagHandle get_tag(const char* name, int size, unsigned flags, MBDataType type,
+  iBase_TagHandle get_tag(const char* name, int size, unsigned flags, moab::DataType type,
                           const void* def_value = NULL, bool create_if_missing = true);
   
   /** \brief get MOAB's various length Tag
@@ -394,7 +394,7 @@ private:
    * \return Tag handle
    */
   iBase_TagHandle get_various_length_tag(const char* name,
-                                         unsigned store, MBDataType type);
+                                         unsigned store, moab::DataType type);
 
   /** \brief construct hexes in MOAB structured mesh format
    * \return int if is working correctly
@@ -468,21 +468,21 @@ private:
   moab::GeomTopoTool* m_GeomTopoTool;
 
   // ! Tree root
-  MBEntityHandle m_hTreeRoot;
+  moab::EntityHandle m_hTreeRoot;
 
   // ! OBB tree tool instance
-  MBOrientedBoxTreeTool* m_hObbTree;
+  moab::OrientedBoxTreeTool* m_hObbTree;
 
   // ! intersected surface geometry list
-  std::vector<MBEntityHandle> m_vhInterSurf;
+  std::vector<moab::EntityHandle> m_vhInterSurf;
 
   // ! intersected facet list
-  std::vector<MBEntityHandle> m_vhInterFacet;
+  std::vector<moab::EntityHandle> m_vhInterFacet;
 
   // ! overlapped surface list
-  std::map<MBEntityHandle, int> m_mhOverlappedSurf;
+  std::map<moab::EntityHandle, int> m_mhOverlappedSurf;
 
-  std::map<MBEntityHandle, MBEntityHandle>  m_mRootSets;
+  std::map<moab::EntityHandle, moab::EntityHandle>  m_mRootSets;
 
   double m_minCoord[3], m_maxCoord[3];
 };
