@@ -1,5 +1,6 @@
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/MKCore.hpp"
+#include "MBTagConventions.hpp"
 #include "moab/EntityType.hpp"
 #include "meshkit/iGeom.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
@@ -57,6 +58,12 @@ void VertexMesher::execute_this()
       // create the vertex
     moab::ErrorCode rval = mk_core()->moab_instance()->create_vertex(pos, new_vert);
     MBERRCHK(rval, mk_core()->moab_instance());
+      // category tagging
+    iMesh::EntitySetHandle msh = IBSH((*sit).first->mesh_handle());
+    char category_val[CATEGORY_TAG_SIZE] = "Vertex\0";
+    iBase_TagHandle category_tag;
+    mk_core()->imesh_instance()->createTag(CATEGORY_TAG_NAME,CATEGORY_TAG_SIZE,iBase_BYTES, category_tag);    
+    mk_core()->imesh_instance()->setEntSetData(msh, category_tag, &category_val);
       // add to meselection
     (*sit).second.insert(new_vert);
       // commit to ModelEnt
