@@ -6,7 +6,7 @@
 #include <iGeom.h>
 #include <cmath>
 #include "MBTagConventions.hpp"
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "moab/GeomTopoTool.hpp"
 
 namespace MeshKit
@@ -247,7 +247,7 @@ void CurveFacetMeshReader::set_senses(ModelEnt *curve)
   // which are not currently available in iGeom 
   moab::GeomTopoTool gt(mk_core()->moab_instance());
   moab::ErrorCode rval = gt.set_senses(curve->mesh_handle(),meshsets,senses);
-  if(rval != MB_SUCCESS) std::cout << "Error setting curve senses!" << std::endl;
+  if(rval != moab::MB_SUCCESS) std::cout << "Error setting curve senses!" << std::endl;
 
 }
 

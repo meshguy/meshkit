@@ -10,7 +10,7 @@
 #include "meshkit/ModelEnt.hpp"
 #include "MBTagConventions.hpp"
 #include "moab/GeomTopoTool.hpp"
-#include "MBTypes.h"
+#include "moab/Types.hpp"
 
 using namespace MeshKit;
 
@@ -519,7 +519,7 @@ int geom_id_by_handle( moab::EntityHandle ent )
   moab::ErrorCode rval;
   //Get the id_tag handle
   moab::Tag id_tag;
-  rval = mk->moab_instance()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1, MB_TYPE_INTEGER, id_tag, moab::MB_TAG_DENSE );
+  rval = mk->moab_instance()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1, moab::MB_TYPE_INTEGER, id_tag, moab::MB_TAG_DENSE );
   CHECK_ERR(rval);
 
   //Load the ID for the EntHandle given to the function                  
