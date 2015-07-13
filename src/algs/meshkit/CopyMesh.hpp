@@ -144,7 +144,6 @@ namespace MeshKit {
 
     CESets copySets;
     CESets expandSets;
-    bool process_copy_sets;
   };
 
   /**\brief Create higher-dimension entities on a set of vertices

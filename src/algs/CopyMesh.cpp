@@ -33,9 +33,7 @@ CopyMesh::CopyMesh(MKCore *mkcore, const MEntVector &me_vec)
       transform(new Copy::Identity()),
       copySets(mkcore),
       expandSets(mkcore)
-{
-  process_copy_sets = false;
-}
+{}
 
 CopyMesh::~CopyMesh()
 {
@@ -189,9 +187,8 @@ void CopyMesh::do_copy(iMesh::EntitySetHandle set_handle)
     update_sets();
 
     link_expand_sets(expandSets, local_tag);
-    bool process_copy_sets = false;
-    if(process_copy_sets == true)
-      process_ce_sets(mesh, copySets.sets(), local_tag);
+
+    process_ce_sets(mesh, copySets.sets(), local_tag);
     process_ce_sets(mesh, expandSets.sets(), local_tag);
 
     tag_copy_sets(copySets, local_tag, copyTag);
