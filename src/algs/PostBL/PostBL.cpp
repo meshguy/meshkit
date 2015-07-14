@@ -449,7 +449,7 @@ void PostBL::execute_this()
               MBERRCHK(mb->get_connectivity(&(*qter), 1, adj_qconn),mb);
 
               int side_number = 0, sense = 1, offset = 0;
-              MBERRCHK(mb->side_number(old_hex[0], (*qter), side_number, sense, offset), mb);
+              mb->side_number(old_hex[0], (*qter), side_number, sense, offset), mb;
 
               if(m_GD==3){
                   get_normal_quad (adj_qconn, v);
@@ -499,7 +499,7 @@ void PostBL::execute_this()
 
               int side_number = 0, sense = 1, offset = 0;
               Range::iterator hexter = quad_hex.begin();
-              MBERRCHK(mb->side_number(*hexter, (*qter), side_number, sense, offset), mb);
+              mb->side_number(*hexter, (*qter), side_number, sense, offset), mb;
 
               if(m_GD==3){
                   get_normal_quad (adj_qconn, v);

@@ -8,7 +8,7 @@
 #include <iGeom.h>
 #include <cmath> 
 
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 
 
 namespace MeshKit
