@@ -154,6 +154,7 @@ include_directories(
 
 #add_subdirectory(test)
 #add_subdirectory(doc)
+add_subdirectory(tools)
 
 get_property(meshkit_targets GLOBAL
   PROPERTY meshkit_export_targets)
