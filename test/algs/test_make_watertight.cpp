@@ -16,7 +16,7 @@
 #include <set>
 #include <algorithm>
 #include "moab/Core.hpp"
-#include "MBTagConventions.hpp"
+#include "moab/TagConventions.hpp"
 #include "moab/Range.hpp"
 #include "moab/Skinner.hpp"
 
