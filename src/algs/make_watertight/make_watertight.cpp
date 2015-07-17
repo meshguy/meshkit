@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "moab/Core.hpp"
-#include "MBTagConventions.hpp"
+#include "moab/TagConventions.hpp"
 #include "moab/Range.hpp"
 #include "moab/Skinner.hpp"
 #include "moab/GeomTopoTool.hpp"
