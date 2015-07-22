@@ -113,6 +113,9 @@ namespace MeshKit {
      */
     void tag_copied_sets(iMesh::TagHandle *tags, const char **tag_vals,
                          const int num_tags);
+
+    bool flag_process_ce_set;
+
   private:
     void do_copy(iMesh::EntitySetHandle set_handle);
 

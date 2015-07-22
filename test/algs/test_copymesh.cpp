@@ -157,7 +157,7 @@ void test_copy_quad()
     mk->get_graph().addArc(cm->get_node(), mk->leaf_node()->get_node());
 
     cm->copy_sets().add_set(set);
-
+    cm->flag_process_ce_set = true;
     // mesh embedded boundary mesh, by calling execute
     mk->setup_and_execute();
 
