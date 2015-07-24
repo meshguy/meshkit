@@ -3023,51 +3023,78 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    if (m_nDimensions >0 && in_pins.size()>0){
-      std::vector<iBase_EntityHandle> copy_inpins(in_pins.size());
-      std::cout <<"Total number of pins in the model = " <<  in_pins.size()/m_nDuct << std::endl;
+    if (m_nDimensions >0){
+        std::cout <<"Total number of pins in the model = " << m_nTotalPincells << std::endl;
 
-      int num_inpins = in_pins.size()/m_nDuct;
-      CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, num_inpins);
+        for (int k=1; k<=m_nDuct; k++){
+            if(cp_inpins[k-1].size() ==0)
+              continue;
+            // put all the in pins in a matrix of size duct for subtraction with ducts
+            std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
+            for (int i=0; i< (int) cp_inpins[k-1].size();i++){
+                 IBERRCHK(igeomImpl->copyEnt(cp_inpins[k-1][i], pin_copy[i]), *igeomImpl);
+              }
 
-      for (int k=1; k<=m_nDuct; k++){
+            iBase_EntityHandle tmp_vol = NULL;
+            tmp_vol = assms[(k-1)*m_nDimensions];
 
-	// put all the in pins in a matrix of size duct for subtraction with ducts
-	for (int i=0; i<num_inpins; i++){
-	  IBERRCHK(igeomImpl->copyEnt(in_pins[ k - 1 + m_nDuct*i], cp_inpins(k,i+1)), *igeomImpl);
+            // subtract the innermost hex from the pins
+            std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
-	}
+  #if HAVE_ACIS
+            iBase_EntityHandle unite= NULL, tmp_new1;
 
-	iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
-	tmp_vol = assms[(k-1)*m_nDimensions];
+            // if there are more than one pins
+            if( cp_inpins[k-1].size() > 1){
 
-	// subtract the innermost hex from the pins
-	std::cout << "Duct no.: " << k << " subtracting " << num_inpins << " pins from the duct .. " << std::endl;
+                IBERRCHK(igeomImpl->uniteEnts(&cp_inpins[k-1][0], cp_inpins[k-1].size(), unite), *igeomImpl);
+//                iGeom_uniteEnts(geom, &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
+//                CHECK( "uniteEnts failed!" );
+                IBERRCHK(igeomImpl->subtractEnts(tmp_vol,unite, tmp_new1), *igeomImpl);
+//                iGeom_subtractEnts(geom, tmp_vol,unite, &tmp_new1, &err);
+//                CHECK("Couldn't subtract pins from block.");
 
-	// if there are more than one pins
-	if(in_pins.size() > 1){
-	  IBERRCHK(igeomImpl->uniteEnts(&cp_inpins(k,1), num_inpins, unite), *igeomImpl);
+                tmp_vol = tmp_new1;
+                unite = NULL;
+                tmp_new1=NULL;
+              }
+            else{ // only one pin in in_pins
+                IBERRCHK(igeomImpl->subtractEnts(tmp_vol, cp_inpins[k-1][0], tmp_new1), *igeomImpl);
+//                iGeom_subtractEnts(geom, tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
+//                CHECK("Couldn't subtract pins from block.");
+              }
+  #endif
+  #if HAVE_OCC
+            iBase_EntityHandle tmp_new1 = NULL;
+            // if there are more than one pins
+            if( cp_inpins[k-1].size() > 1){
+                std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
+                for (int i=0; i< (int)cp_inpins[k-1].size(); i++){
+                    // iGeom_copyEnt(geom, cp_inpins[k-1][i], &unite, &err);
+                    IBERRCHK(igeomImpl->subtractEnts(tmp_vol, cp_inpins[k-1][0], tmp_new1), *igeomImpl);
 
+//                    iGeom_subtractEnts(geom, tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
+//                    CHECK("Couldn't subtract pins from block.");
+                    tmp_vol = tmp_new1;
+                    tmp_new1=NULL;
+                  }
 
-	  IBERRCHK(igeomImpl->subtractEnts(tmp_vol,unite, tmp_new1), *igeomImpl);
+              }
+            else{ // only one pin in in_pins
+                IBERRCHK(igeomImpl->subtractEnts(tmp_vol, cp_inpins[k-1][0], tmp_new1), *igeomImpl);
 
+//                iGeom_subtractEnts(geom, tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
+//                CHECK("Couldn't subtract pins from block.");
+              }
+  #endif
 
-	  tmp_vol = tmp_new1;
-	  unite = NULL;
-	  tmp_new1=NULL;
-	}
-	else{ // only one pin in in_pins
-	  IBERRCHK(igeomImpl->subtractEnts(tmp_vol, in_pins[0], tmp_new1), *igeomImpl);
-
-	}
+          }
+        std::cout << "\n--------------------------------------------------"<<std::endl;
       }
-      std::cout << "\n--------------------------------------------------"<<std::endl;
-    }
     else{
-      std::cout <<"Nothing to subtract" << std::endl;
-    }
-
-  }
+        std::cout <<"Nothing to subtract" << std::endl;
+      }
+}
 
   void AssyGen::Imprint_Merge()
   // ---------------------------------------------------------------------------
@@ -3194,6 +3221,7 @@ namespace MeshKit
     CVector<double> dVCylZPos(2), dVCylXYPos(2), dVStartZ, dVEndZ;;
     CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
     iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
+    std::vector<iBase_EntityHandle> cp_in;
 
     // name tag handle
     iBase_TagHandle this_tag= NULL;
@@ -3201,11 +3229,19 @@ namespace MeshKit
 
     std::string sMatName = "";
     std::string sMatName1 = "";
+    int nDuctIndex = -1;
+
+    if(strcmp(m_szInfo.c_str(),"on") == 0){
+        std::ostringstream os;
+        pin_name = "_xp";
+        os << (m_nTotalPincells + m_nStartpinid - 1);
+        os << "_";
+        std::string pid = os.str(); //retrieve as a string
+        pin_name+=pid;
+      }
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
     IBERRCHK(igeomImpl->getTagHandle(tag_name, this_tag), *igeomImpl);
-
-
 
     // get cell material
     m_Pincell(i).GetCellMatSize(nCells);
@@ -3213,24 +3249,32 @@ namespace MeshKit
 
     // branch when cells are present
     if(nCells > 0){
-      dVStartZ.SetSize(nCells);
-      dVEndZ.SetSize(nCells);
-      szVCellMat.SetSize(nCells);
-      m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
+        dVStartZ.SetSize(nCells);
+        dVEndZ.SetSize(nCells);
+        szVCellMat.SetSize(nCells);
+        m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
 
-      // get cylinder data
-      m_Pincell(i).GetNumCyl(nCyl);
+        // get cylinder data
+        m_Pincell(i).GetNumCyl(nCyl);
 
-      for(int n=1;n<=nCells; n++){
+        for(int n=1;n<=nCells; n++){
+            // get cylinder locations
+            m_Pincell(i).GetCylZPos(n, dVCylZPos);
+            nDuctIndex = -1;
+            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
+            // get the index for cp_inpins based on Z-heights
+            for (int dd = 1; dd <= m_nDuct; dd++){
+                if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                  nDuctIndex = dd;
+                if (nDuctIndex != -1)
+                  break;
+              }
+            if(m_szGeomType =="hexagonal"){
 
-	dHeight = fabs(dVEndZ(n) - dVStartZ(n));
+                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
+                double dSide = dP/(sqrt(3));
 
-	if(m_szGeomType =="hexagonal"){
-
-	  m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-	  double dSide = dP/(sqrt(3));
-
-	  if(nCells >0){
+		if(nCells >0){
 	    // create prism
 	    IBERRCHK(igeomImpl->createPrism( dHeight, 6, dSide, dSide, cell), *igeomImpl);
 
@@ -3278,17 +3322,25 @@ namespace MeshKit
 	  CVector<double> dVCylRadii(2*nRadii);
 	  CVector<std::string> szVMat(nRadii);
 	  CVector<std::string> szVCylMat(nRadii);
-
+	  int nType = 0;
 	  //get values
 	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	  m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	  m_Pincell(i).GetCylMat(n, szVCylMat);
 	  m_Pincell(i).GetCylZPos(n, dVCylZPos);
+	  m_Pincell(i).GetCellType(n, nType);
+
 	  dHeight = dVCylZPos(2)-dVCylZPos(1);
 
 	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
-
+	      if (nType == 0){
+		    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+		    std::cout << m << ": Creating cylinder with radii " << dVCylRadii(m) << std::endl;
+		}
+	      else {
+		IBERRCHK(igeomImpl->createCone(dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m), cyl), *igeomImpl);
+	      std::cout << m << ": Creating cylinder with radii " << dVCylRadii(m) << std::endl;
+	  }
 
 	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
 	    dCylMoveX = dVCylXYPos(1)+dX;
@@ -3296,7 +3348,6 @@ namespace MeshKit
 	    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 	    IBERRCHK(igeomImpl->moveEnt(cyl, dCylMoveX,dCylMoveY,dZMove), *igeomImpl);
 
-	    ;
 	    cyls[m-1] = cyl;
 	  }
 
@@ -3311,9 +3362,9 @@ namespace MeshKit
 
 	    // copy the new into the cyl array
 	    cells[n-1] = tmp_new; cell = tmp_new;
-	    cyls[nRadii-1]=tmp_vol;
-
 	  }
+	  cp_in.push_back(tmp_new);
+
 	  //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
 	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
@@ -3321,7 +3372,13 @@ namespace MeshKit
 	    }
 	  }
 	  tmp_vol1=cyls[0]; //inner most cyl
+	  cp_in.push_back(tmp_vol1);
 	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
+
+          if(strcmp(m_szInfo.c_str(),"on") == 0){
+              IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag,  pin_name.c_str()), *igeomImpl);
+              std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+            }
 
 	  Name_Faces( sMatName, tmp_vol1, this_tag);
 
@@ -3342,14 +3399,26 @@ namespace MeshKit
 	      }
 	    }
 	    std::cout << "created: " << sMatName << std::endl;
+	    cp_in.push_back(tmp_new);
+
 	    // set the name of the annulus
 	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
+	    if(strcmp(m_szInfo.c_str(),"on") == 0){
+		IBERRCHK(igeomImpl->setData(tmp_new, this_tag, pin_name.c_str()), *igeomImpl);
+		std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	      }
 
 	    Name_Faces( sMatName, tmp_new, this_tag);
 	    // copy the new into the cyl array
 	    cyls[b-1] = tmp_new;
+	    tmp_vol=NULL;
 	  }
 	}
+	if(nDuctIndex > 0){
+	    for (int count = 0; count < (int) cp_in.size(); count++)
+	      cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+	  }
+	cp_in.clear();
       }
     }
     // this branch of the routine is responsible for creating cylinders with '0' cells
@@ -3361,10 +3430,9 @@ namespace MeshKit
 
 
       for(int n=1;n<=nCells; n++){
-
+          nDuctIndex = -1;
 
 	if(m_szGeomType =="hexagonal"){
-
 	  m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
 	}
 	// if rectangular geometry
@@ -3382,18 +3450,32 @@ namespace MeshKit
 	  CVector<double> dVCylRadii(2*nRadii);
 	  CVector<std::string> szVMat(nRadii);
 	  CVector<std::string> szVCylMat(nRadii);
-
+	  int nType = 0;
 	  //get values
 	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	  m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	  m_Pincell(i).GetCylMat(n, szVCylMat);
 	  m_Pincell(i).GetCylZPos(n, dVCylZPos);
+	  m_Pincell(i).GetCellType(n, nType);
 
 	  dHeight = dVCylZPos(2)-dVCylZPos(1);
 
-	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+	  // get the index for cp_inpins based on Z-heights
+	  for (int dd = 1; dd <= m_nDuct; dd++){
+	      if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+		nDuctIndex = dd;
+	      if (nDuctIndex != -1)
+		break;
+	    }
 
+	  for (int m=1; m<=nRadii; m++){
+
+	      if (nType == 0){
+		  IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+		}
+	      else{
+		  IBERRCHK(igeomImpl->createCone(dHeight, dVCylRadii(2*m - 1), dVCylRadii(2*m - 1), dVCylRadii(2*m), cyl), *igeomImpl);
+		}
 
 	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
 	    dCylMoveX = dVCylXYPos(1)+dX;
@@ -3413,10 +3495,14 @@ namespace MeshKit
 	  }
 	  std::cout << "created: " << sMatName << std::endl;
 	  tmp_vol1=cyls[0]; //inner most cyl
+	  cp_in.push_back(tmp_vol1);
 
 	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
 
-
+          if(strcmp(m_szInfo.c_str(),"on") == 0){
+              IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, pin_name.c_str()), *igeomImpl);
+              std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+            }
 	  Name_Faces( sMatName, tmp_vol1, this_tag);
 
 	  // other cyl annulus after substraction
@@ -3436,15 +3522,25 @@ namespace MeshKit
 	      }
 	    }
 	    std::cout << "created: " << sMatName << std::endl;
+	    cp_in.push_back(tmp_new);
+
 	    // set the name of the annulus
 	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
-
+	    if(strcmp(m_szInfo.c_str(),"on") == 0){
+		IBERRCHK(igeomImpl->setData(tmp_new, this_tag, pin_name.c_str()), *igeomImpl);
+		std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	      }
 	    Name_Faces( sMatName, tmp_new, this_tag);
 
 	    // copy the new into the cyl array
 	    cyls[b-1] = tmp_new;
 	  }
 	}
+	if(nDuctIndex > 0){
+	    for (int count = 0; count < (int) cp_in.size(); count++)
+	      cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+	  }
+	cp_in.clear();
       }
     }
 
@@ -3464,6 +3560,7 @@ namespace MeshKit
     CVector<double> dVCylZPos(2), dVCylXYPos(2), dVEndZ, dVStartZ;
     CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
     iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol1= NULL, tmp_new= NULL, cell_copy = NULL, intersec = NULL;
+    std::vector<iBase_EntityHandle> cp_in;
 
     // name tag handle
     iBase_TagHandle this_tag= NULL;
@@ -3472,6 +3569,16 @@ namespace MeshKit
     std::string sMatName = "";
     std::string sMatName0 = "";
     std::string sMatName1 = "";
+    int nDuctIndex = -1;
+
+    if(strcmp(m_szInfo.c_str(),"on") == 0){
+        std::ostringstream os;
+        pin_name = "_xp";
+        os << (m_nTotalPincells + m_nStartpinid - 1);
+        os << "_";
+        std::string pid = os.str(); //retrieve as a string
+        pin_name+=pid;
+      }
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
     IBERRCHK(igeomImpl->getTagHandle(tag_name, this_tag), *igeomImpl);
@@ -3495,7 +3602,13 @@ namespace MeshKit
       for(int n=1;n<=nCells; n++){
 
 	dHeight = dVEndZ(n) - dVStartZ(n);
-
+	// get the index for cp_inpins based on Z-heights
+	for (int dd = 1; dd <= m_nDuct; dd++){
+	    if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+	      nDuctIndex = dd;
+	    if (nDuctIndex != -1)
+	      break;
+	  }
 	if(m_szGeomType =="hexagonal"){
 
 	  m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
@@ -3540,6 +3653,7 @@ namespace MeshKit
 	  CVector<double> dVCylRadii(nRadii);
 	  CVector<std::string> szVMat(nRadii);
 	  CVector<std::string> szVCylMat(nRadii);
+	  int nType = 0;
 
 	  //get values
 	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
@@ -3547,20 +3661,23 @@ namespace MeshKit
 	  m_Pincell(i).GetCylMat(n, szVCylMat);
 	  m_Pincell(i).GetCylZPos(n, dVCylZPos);
 	  dHeight = dVCylZPos(2)-dVCylZPos(1);
+	  m_Pincell(i).GetCellType(n, nType);
 
 	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+	      if (nType == 0){
+		  IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+		}
+	      else{
+		  IBERRCHK(igeomImpl->createCone(dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m), cyl), *igeomImpl);
 
+		}
 
 	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
 	    dCylMoveX = dVCylXYPos(1)+dX;
 	    dCylMoveY = dVCylXYPos(2)+dY;
 	    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 	    IBERRCHK(igeomImpl->moveEnt( cyl, dCylMoveX,dCylMoveY,dZMove), *igeomImpl);
-
-
 	    cyls[m-1] = cyl;
-
 
 	    //copy cell nRadii  times for intersection with cylinders
 	    IBERRCHK(igeomImpl->copyEnt(cells[n-1], cell_copy), *igeomImpl);
@@ -3581,8 +3698,14 @@ namespace MeshKit
 	      sMatName = m_szAssmMat(p);
 	    }
 	  }
+
+	  cp_in.push_back(tmp_vol1);
+
 	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
 
+          if(strcmp(m_szInfo.c_str(),"on") == 0){
+              IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, pin_name.c_str()), *igeomImpl);
+            }
 
 	  Name_Faces( sMatName, tmp_vol1, this_tag);
 
@@ -3601,6 +3724,9 @@ namespace MeshKit
 	    }
 	  }
 	  std::cout << "created: " << sMatName << std::endl;
+
+	  cp_in.push_back(tmp_new);
+
 	  // set the name of the annulus
 	  IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
 
@@ -3622,8 +3748,16 @@ namespace MeshKit
 	      }
 	    }
 	    std::cout << "created: " << sMatName << std::endl;
+
+	    cp_in.push_back(tmp_new);
+
 	    // set the name of the annulus
 	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
+
+
+	    if(strcmp(m_szInfo.c_str(),"on") == 0){
+		IBERRCHK(igeomImpl->setData(tmp_new, this_tag, pin_name.c_str()), *igeomImpl);
+	      }
 
 	    Name_Faces( sMatName, tmp_new, this_tag);
 
@@ -3632,6 +3766,11 @@ namespace MeshKit
 
 	  }
 	}
+	if(nDuctIndex > 0){
+	    for (int count = 0; count < (int) cp_in.size(); count++)
+	      cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+	  }
+	cp_in.clear();
       }
     }
     // this branch of the routine is responsible for creating cylinders with '0' cells
@@ -3680,14 +3819,28 @@ namespace MeshKit
 	  iBase_EntityHandle  tmp_intersec;
 	  CVector<double> dVCylRadii(nRadii);
 	  CVector<std::string> szVMat(nRadii), szVCylMat(nRadii);
-
+	  int nType = 0;
 	  //get values
 	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
 	  m_Pincell(i).GetCylPos(n, dVCylXYPos);
 	  m_Pincell(i).GetCylMat(n, szVCylMat);
+	  m_Pincell(i).GetCellType(n, nType);
+
+          // get the index for cp_inpins based on Z-heights
+          for (int dd = 1; dd <= m_nDuct; dd++){
+              if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                nDuctIndex = dd;
+              if (nDuctIndex != -1)
+                break;
+            }
 
 	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+	      if (nType == 0){
+		  IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+		}
+	      else{
+		  IBERRCHK(igeomImpl->createCone( dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m), cyl), *igeomImpl);
+		}
 
 
 	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
@@ -3716,8 +3869,13 @@ namespace MeshKit
 	      sMatName = m_szAssmMat(p);
 	    }
 	  }
-	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
 
+	  cp_in.push_back(tmp_vol1);
+
+	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
+	  if(strcmp(m_szInfo.c_str(),"on") == 0){
+	      IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, pin_name.c_str()), *igeomImpl);
+	    }
 
 	  Name_Faces( sMatName, tmp_vol1, this_tag);
 
@@ -3733,8 +3891,6 @@ namespace MeshKit
 	    //subtract tmp vol from the outer most
 	    IBERRCHK(igeomImpl->subtractEnts( intersec_main[b-1], tmp_intersec, tmp_new), *igeomImpl);
 
-
-
 	    // now search for the full name of the abbreviated Cell Mat
 	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
 	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
@@ -3742,9 +3898,14 @@ namespace MeshKit
 	      }
 	    }
 	    std::cout << "created: " << sMatName << std::endl;
+	    cp_in.push_back(tmp_new);
+
 	    // set the name of the annulus
 	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
-
+	    if(strcmp(m_szInfo.c_str(),"on") == 0){
+		IBERRCHK(igeomImpl->setData(tmp_new, this_tag, pin_name.c_str()), *igeomImpl);
+		std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+	      }
 	    Name_Faces( sMatName, tmp_new, this_tag);
 
 	    // copy the new into the cyl array
@@ -3752,7 +3913,11 @@ namespace MeshKit
 
 	  }
 	}
-
+	if(nDuctIndex > 0){
+	    for (int count = 0; count < (int) cp_in.size(); count++)
+	      cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+	  }
+	cp_in.clear();
       }
     }
 
