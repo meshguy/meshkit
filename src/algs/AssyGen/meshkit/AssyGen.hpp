@@ -27,7 +27,8 @@
 #include "meshkit/Matrix.hpp"
 
 #include "meshkit/iMesh.hpp"
-#include "meshkit/iGeom.hpp"
+//#include "meshkit/iGeom.hpp"
+#include "iGeom.h"
 #include "MBCN.h"
 
 #include "meshkit/SimpleArray.hpp"
@@ -226,7 +227,7 @@ namespace MeshKit {
     std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
     // string for file names
-    std::string m_szAssmInfo, m_szLogFile, m_szCommonFile, m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;
+    std::string m_szSmooth, m_szAssmInfo, m_szLogFile, m_szCommonFile, m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;
 
     // matrix for holding pincell arrangement
     CMatrix<std::string> m_Assembly; 
@@ -260,7 +261,7 @@ namespace MeshKit {
     double m_dPitch, pi, m_dRadialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;
  
     // igeom related
-    std::vector<iBase_EntityHandle> assms, in_pins;
+    SimpleArray<iBase_EntityHandle> assms, in_pins;
     //iGeom_Instance geom;
     iBase_EntitySetHandle root_set;
 

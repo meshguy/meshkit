@@ -66,8 +66,6 @@ void test_coregen_default(int argc, char **argv)
     MPI::Finalize();
 #endif
 #endif
-
-    delete mk;
 }
 
 
