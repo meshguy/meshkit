@@ -35,7 +35,7 @@
 
 #include "meshkit/vectortemplate.hpp"
 #include "meshkit/matrixtemplate.hpp"
-#include "pincell.hpp"
+#include "meshkit/pincell.hpp"
 #include "meshkit/parser.hpp"
 #include "meshkit/clock.hpp"
 
