@@ -39,6 +39,8 @@ libMeshKitalgs_la_includedir = $(includedir)
 libMeshKitalgs_la_SOURCES = \
 	register_algs.cpp \
 	EdgeMesher.cpp \
+	CurveFacetMeshReader.cpp \
+	SurfaceFacetMeshReader.cpp \
 	VertexMesher.cpp \
 	SCDMesh.cpp \
 	EBMesher.cpp \
@@ -62,6 +64,8 @@ endif
 # The list of header files which are to be installed
 nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/EdgeMesher.hpp \
+	meshkit/CurveFacetMeshReader.hpp \
+	meshkit/SurfaceFacetMeshReader.hpp \
 	meshkit/VertexMesher.hpp \
 	meshkit/SCDMesh.hpp \
 	meshkit/EBMesher.hpp \

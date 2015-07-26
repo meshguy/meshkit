@@ -1,0 +1,21 @@
+! #############################################################################################################
+! Homogenized 7-assembly ABTR Core Model, Demo of same_as keyword for shifting material and neumann set id's
+! #############################################################################################################
+!
+Geometry Volume				 ! 'Geometry' card defines if the meshes are volume or surface
+Symmetry 1 				 ! 'Symmetry' card defines the desired symmetry in the model
+GeometryType HexFlat			 ! 'GeometryType' card can take values Hexagonal Rectangular
+Assemblies 4 14.598			 ! 'Assemblies' card defines the number of assembly mesh files and their pitch
+assm_mesh.cub	1121
+assm_mesh22.cub	1122	
+1123000.cub	1123	same_as	   assm_mesh.cub	1123000	  1123000
+1124000.cub	1124	same_as	   assm_mesh22.cub	1124000	   1124000
+Lattice 2                     
+        1121 1124 &
+      1122 1123 1121 &
+         1122 1124
+NeumannSet Top  1                       ! 'NeumannSet' card followed by 'location of NeumannSet'  'Id of NeumannSet'
+NeumannSet Bot  2                       !  Values 'top', 'bot' and 'side' are acceptable for second parameter.
+OutputFileName sc.h5m
+END		 			 ! 'END' card is a MUST marks the end of file for the file reader	
+    

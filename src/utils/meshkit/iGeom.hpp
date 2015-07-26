@@ -335,6 +335,8 @@ class iGeom {
 				EntityHandle& brick);
 		virtual inline Error createCylinder(double height, double maj_rad,
 				double min_rad, EntityHandle& cylinder);
+		virtual inline Error createCone(double height, double maj_rad,
+				double min_rad, double top_rad, EntityHandle& cone);
 		virtual inline Error createTorus(double maj_rad, double min_rad,
 				EntityHandle& torus);
 
@@ -1751,6 +1753,15 @@ inline iGeom::Error iGeom::createCylinder(double height, double maj_rad,
      iGeom_createCylinder(mInstance, height, maj_rad, min_rad, &cylinder, &err);
      return (Error) err;
 }
+
+inline iGeom::Error iGeom::createCone(double height, double maj_rad,
+          double min_rad, double rad_top, EntityHandle& cone)
+{
+     int err;
+     iGeom_createCone(mInstance, height, maj_rad, min_rad, rad_top, &cone, &err);
+     return (Error) err;
+}
+
 
 inline iGeom::Error iGeom::createTorus(double maj_rad, double min_rad,
                                        EntityHandle& torus)

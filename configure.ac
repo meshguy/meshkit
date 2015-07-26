@@ -363,8 +363,6 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
   # Individual tools
 MK_OPTIONAL_TOOL([algs],   [yes])
 MK_OPTIONAL_TOOL([quadmesher],   [no])
-MK_OPTIONAL_TOOL([rgg],    [yes])
-MK_OPTIONAL_TOOL([utils],  [yes])
 MK_OPTIONAL_TOOL([src],    [yes])
 MK_OPTIONAL_TOOL([python], [no])
 MK_OPTIONAL_TOOL([intassign], [no])
@@ -373,10 +371,15 @@ MK_OPTIONAL_TOOL([intassign], [no])
 #                           QuadMesher
 ################################################################################
 if test "x${ENABLE_quadmesher}" != "xno"; then
-  AC_MSG_CHECKING([if quadmesher support is enabled])
+  AC_MSG_CHECKING([quadmesher is enabled])
 fi
 # make the conditional quadmesher
-AM_CONDITIONAL(HAVE_QUADMESHER, [test "x$HAVE_QUADMESHER" = "xyes"])
+AM_CONDITIONAL(HAVE_QUADMESHER, [test "x$ENABLE_quadmesher" = "xyes"])
+
+if test "xyes" = "x$ENABLE_quadmesher"; then
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_QUADMESHER"
+fi
+
 ################################################################################
 #                           CAMAL
 ################################################################################
@@ -1333,12 +1336,8 @@ AC_ARG_VAR([FC], [FORTRAN compiler command])
 AC_CONFIG_FILES([Makefile 
                  meshkit.make 
                  testdir.h
-                 algs/Makefile
-                 algs/test/Makefile
-                 algs/make_watertight/Makefile
                  python/setup.py
                  python/Makefile
-                 rgg/Makefile
                  src/Makefile
                  src/core/Makefile
                  src/algs/Makefile
@@ -1367,9 +1366,9 @@ AC_CONFIG_FILES([Makefile
                  test/extern/netgen/Makefile
                  test/extern/triangle/Makefile
                  test/parallel/Makefile
-                 utils/Makefile
                  doc/Makefile
                  doc/meshkit.dox
+                 tools/Makefile
                  ])
 
 AC_OUTPUT

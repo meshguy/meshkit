@@ -100,7 +100,7 @@ void FreeSmoothDomain::get_geometry( const Mesh::EntityHandle* mesh_ents,
 {
   const moab::EntityHandle* ents = (const moab::EntityHandle*)mesh_ents;
   moab::ErrorCode rval = moabIface->tag_get_data( entGeomRel, ents, num_handles, geom_ents );
-  if (MB_SUCCESS != rval) {
+  if (moab::MB_SUCCESS != rval) {
     MSQ_SETERR(err)(MsqError::INTERNAL_ERROR,
                     "Error querying MOAB for geom");
   }                    

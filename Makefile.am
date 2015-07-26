@@ -6,18 +6,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 # Subdirectories to build
 SUBDIRS = . python
-if ENABLE_utils
-  SUBDIRS += utils
-  AM_CPPFLAGS += -I$(top_srcdir)/utils
-endif
-if ENABLE_algs
-  SUBDIRS += algs
-  AM_CPPFLAGS += -I$(top_srcdir)/algs
-endif
-if ENABLE_rgg
-  SUBDIRS += rgg
-  AM_CPPFLAGS += -I$(top_srcdir)/rgg
-endif
 if ENABLE_quadmesher
   AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
 endif
@@ -31,12 +19,7 @@ if ENABLE_intassign
   LIBS += $(IPOPT_LIBS)
 endif
 
-#if HAVE_CAMAL
-#  SUBDIRS += camal
-#  AM_CPPFLAGS += -I$(top_srcdir)/camal
-#endif
-
-SUBDIRS += test doc
+SUBDIRS += test doc tools
 
 # Some variables
 AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
