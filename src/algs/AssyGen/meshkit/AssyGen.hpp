@@ -41,12 +41,8 @@
 
 namespace MeshKit {
 
-#define STRINGIFY_(X) #X
-#define STRINGIFY(X) STRINGIFY_(X)
-
-#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/assygen_default"
+#define DEFAULT_TEST_FILE  "assygen_default"
 #define TEST_FILE_NAME "assygen_default"
-#define SRC_DIR STRINGIFY(SRCDIR) "/"
 
 //#define CHECK( STR ) if (err != iBase_SUCCESS) return Print_Error( STR, err, geom, __FILE__, __LINE__ )
 
@@ -217,78 +213,44 @@ namespace MeshKit {
     void ComputePinCentroid( int, CMatrix<std::string>, int, int,
                              double&, double&, double&);
 
-    /** \brief Read common input file
-     * as a part of original .inp file, file with name common.inp
-     */
-    void ReadCommonInp ();
-
-
-    bool have_common;
-
   private:
     // iGeom Impl for calling geometry creation/manipulation operations
     iGeom *igeomImpl;
 
     // number of sides in the geometry
-    int com_run_count;
     int m_nSides;
-    bool m_bCreateMatFiles, save_exodus;
+  
     // file Input
     std::ifstream m_FileInput, m_FileCommon;
-<<<<<<< HEAD
-
-=======
     
->>>>>>> develop
     // journal file Output
     std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
     // string for file names
-<<<<<<< HEAD
-    std::string m_szFile, m_szInFile, m_szCommonFile, m_szGeomFile,m_szJouFile, m_szSchFile, m_szAssmInfo, m_szInfo, m_szLogFile, m_szMeshScheme;
-    int m_nAssyGenInputFiles;
-     std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
-=======
     std::string m_szSmooth, m_szAssmInfo, m_szLogFile, m_szCommonFile, m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;
->>>>>>> develop
 
     // matrix for holding pincell arrangement
-    CMatrix<std::string> m_Assembly;
+    CMatrix<std::string> m_Assembly; 
 
     // matrix for holding verts coordinates used in tet-meshing
-    CMatrix<double> m_dMTopSurfCoords;
+    CMatrix<double> m_dMTopSurfCoords; 
 
-    // vector for duct specification
+    // vector for duct specification 
     CMatrix<double> m_dMAssmPitch, m_dMAssmPitchX, m_dMAssmPitchY, m_dMXYAssm, m_dMZAssm;
-
+  
     // vector for material names
     CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
-    CVector<double> m_dAxialSize;
-    CVector<int> m_nListMatSet, m_nListNeuSet;
-
-    CMatrix<std::string> m_szMMAlias;
+    CMatrix<std::string> m_szMMAlias;  
 
     // vector holding a pincell
-    CVector<CPincell> m_Pincell;
+    CVector<CPincell> m_Pincell; 
 
     CVector<double> m_dAxialSize, m_dBLMatBias;
 
     // string for geomtype, engine, meshtype
     std::string m_szEngine;
-    std::string m_szGeomType;
+    std::string m_szGeomType;       
     std::string m_szMeshType;
-<<<<<<< HEAD
-    std::string m_szSideset;
-
-    // integers for vectors sizes, err etc
-    int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar,
-      m_nNeumannSetId, m_nMaterialSetId, m_nDuct, m_nDuctNum, m_nJouFlag;
-
-    // doubles for pincell pitch, pi and mesh sizes resp.
-    double m_dPitch, pi, m_dRadialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;
-    int m_edgeInterval, m_nStartpinid, m_nHblock;
-
-=======
     std::string m_szSideset; 
     std::vector<std::string> m_szDuctMats;
     // integers for vectors sizes, err etc
@@ -298,13 +260,12 @@ namespace MeshKit {
     // doubles for pincell pitch, pi and mesh sizes resp.
     double m_dPitch, pi, m_dRadialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;
  
->>>>>>> develop
     // igeom related
     SimpleArray<iBase_EntityHandle> assms, in_pins;
     //iGeom_Instance geom;
     iBase_EntitySetHandle root_set;
 
-
+ 
     // error handlers
     void IOErrorHandler (ErrorStates) const;
     friend class CPincell;
@@ -325,8 +286,6 @@ namespace MeshKit {
     std::string szComment;
     int MAXCHARS, MAXLINES;
 
-<<<<<<< HEAD
-=======
     std::vector< std::vector<iBase_EntityHandle> > cp_inpins;
 
     CVector<std::string> m_szBLAssmMat;
@@ -344,7 +303,6 @@ namespace MeshKit {
     int com_run_count;
     int m_nBLAssemblyMat;
     std::string m_szInnerDuct;
->>>>>>> develop
   };
 
   inline const char* AssyGen::name()

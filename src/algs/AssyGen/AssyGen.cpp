@@ -83,8 +83,6 @@ namespace MeshKit
     m_nAssyGenInputFiles = 0;
     m_dMergeTol = 1e-4;
     m_edgeInterval = 99;
-<<<<<<< HEAD
-=======
     m_nStartpinid = 1;
     m_szInfo = "off";
     m_szMeshScheme = "pave";
@@ -99,7 +97,6 @@ namespace MeshKit
     m_nBLAssemblyMat = 0;
     m_szInnerDuct = "";
     m_szSmooth  = "off";
->>>>>>> develop
   }
 
   AssyGen::~AssyGen()
@@ -129,16 +126,9 @@ namespace MeshKit
     std::string szDateTime;
     Timer.GetDateTime (szDateTime);
     std::cout << "\nStarting out at : " << szDateTime << "\n";
-<<<<<<< HEAD
-  
-    if (have_common == true){
-       ReadCommonInp();
-      }
-=======
 
     if (have_common == true)
       ReadCommonInp();
->>>>>>> develop
 
     //count pin cylinders and cell material, needed for setting array size before actual read
     ReadInputPhase1 ();
@@ -178,159 +168,6 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-<<<<<<< HEAD
-    // set and open input output files
-    bool bDone = false;
-    do{
-        if (2 == argc) {
-            m_szFile = argv[1];
-            m_szInFile=m_szFile+".inp";
-            m_szJouFile = m_szFile+".jou";
-            m_szSchFile = m_szFile+".template.jou";
-            m_szAssmInfo = m_szFile + "_info.csv";
-            m_szLogFile = m_szFile + ".log";
-            m_szCommonFile = "common.inp";
-          }
-        else if (3 == argc) {
-            int i=1;// will loop through arguments, and process them
-            for (i=1; i<argc-1 ; i++) {
-                if (argv[i][0]=='-') {
-                    switch (argv[i][1])
-                      {
-                      case 'j':
-                        {
-                          m_nJouFlag = 1;
-                          std::cout << "Creating journal file only.\n Geometry file must exist in the same directory." << std::endl;
-                          m_szFile = argv[2];
-                          m_szInFile=m_szFile+".inp";
-                          m_szJouFile = m_szFile+".jou";
-                          m_szSchFile = m_szFile+".template.jou";
-                          m_szAssmInfo = m_szFile + "_info.csv";
-                          m_szLogFile = m_szFile + ".log";
-                          m_szCommonFile = "common.inp";
-                          break;
-                        }
-                      case 'h':
-                        {
-                          std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-                          std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
-                          std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;
-                          std::cout << "        -j create journal file only" << std::endl;
-                          std::cout << "        -h print help" << std::endl;
-
-                          exit(0);
-                          break;
-                        }
-                      }
-                  }
-              }
-          }
-        else if (1 == argc){
-            std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-            std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
-            std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;
-            std::cout << "        -t print timing and memory usage info in each step" << std::endl;
-            std::cout << "        -j create journal file only" << std::endl;
-            std::cout << "        -h print help" << std::endl;
-            std::cout << "\nRunning default case:\n" << std::endl;
-
-            m_szFile = (char *)DEFAULT_TEST_FILE;
-            m_szJouFile = (char *)DEFAULT_TEST_FILE;
-            m_szJouFile+=".jou";
-            m_szInFile= TestDir + "/" + m_szFile + ".inp";
-            m_szSchFile = m_szFile+".template.jou";
-            m_szAssmInfo = m_szFile + "_info.csv";
-            m_szLogFile = m_szFile + ".log";
-            m_szCommonFile = "common.inp";
-
-            std::cout <<"  No file specified.  Defaulting to: " << m_szInFile
-                     << "  " << m_szJouFile << std::endl;
-          }
-        // open the file
-        m_FileInput.open (m_szInFile.c_str(), std::ios::in);
-        if (!m_FileInput){
-            std::cout << "Unable to open file: " << m_szInFile << std::endl;
-            std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
-            m_FileInput.clear ();
-            exit(1);
-          }
-        else
-          bDone = true; // file opened successfully
-
-        // open common.inp file, if not found do nothing.
-        m_FileCommon.open (m_szCommonFile.c_str(), std::ios::in);
-        if (!m_FileCommon){
-            have_common = false;
-            std::cout << "common.inp file not specified." << std::endl;
-            m_FileCommon.clear ();
-          }
-        else {
-            have_common = true;
-          }
-
-      } while (!bDone);
-    std::cout << "\nEntered input file name: " <<  m_szInFile <<std::endl;
-
-    // open the file
-    do{
-        m_FileOutput.open (m_szJouFile.c_str(), std::ios::out);
-        if (!m_FileOutput){
-            std::cout << "Unable to open o/p file: " << m_szJouFile << std::endl;
-            m_FileOutput.clear ();
-            exit(1);
-          }
-        else
-          bDone = true; // file opened successfully
-      } while (!bDone);
-
-    // open the template journal file for writing
-    do{
-        m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out);
-        if (!m_SchemesFile){
-            std::cout << "Unable to open o/p file: " << m_szSchFile << std::endl;
-            m_SchemesFile.clear ();
-            exit(1);
-          }
-        else
-          bDone = true; // file opened successfully
-      } while (!bDone);
-
-    std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
-            << std::endl;
-
-
-    //ACIS ENGINE
-  #ifdef HAVE_ACIS
-    //  if(m_szEngine == "acis"){
-    m_szGeomFile = m_szFile+".sat";
-    //  }
-  #elif defined(HAVE_OCC)
-    //  OCC ENGINE
-    //  if (m_szEngine == "occ"){
-    m_szGeomFile = m_szFile+".brep";
-    //  }o
-  #endif
-    std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
-
-    // writing schemes .jou file ends, now write the main journal file.
-    // stuff common to both surface and volume
-    m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
-    m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
-    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
-    m_FileOutput << "#" << std::endl;
-    m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
-    m_FileOutput << "Timer Start" << std::endl;
-    // import the geometry file
-    m_FileOutput << "# Import geometry file " << std::endl;
-    //ACIS ENGINE
-  #ifdef HAVE_ACIS
-    m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
-
-  #elif defined(HAVE_OCC)
-    //  OCC ENGINE
-    m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
-  #endif
-=======
     std::cout << '\n';
      std::cout << "\t\t---------------------------------------------------------" << '\n';
      std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
@@ -666,9 +503,7 @@ namespace MeshKit
             std::cout << "Cannot specify: " << szInputString << " in common.inp files" << std::endl;
           }
       }
->>>>>>> develop
 
-    m_FileOutput << "#" << std::endl;
   }
 
   void AssyGen::ReadInputPhase1 ()
@@ -685,94 +520,6 @@ namespace MeshKit
     m_nLineNumber = 0;
     // count the total number of cylinder commands in each pincell
     for(;;){
-<<<<<<< HEAD
-      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-			       MAXCHARS, szComment))
-	IOErrorHandler (INVALIDINPUT);
-
-      if (szInputString.substr(0,10) == "geomengine"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_szEngine;
-	if( ((strcmp (m_szEngine.c_str(), "acis") != 0) &&
-	     (strcmp (m_szEngine.c_str(), "occ") != 0)) || szFormatString.fail())
-	  IOErrorHandler(EGEOMENGINE);
-      }
-      if (szInputString.substr(0,8) == "meshtype"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_szMeshType;
-	if( ((strcmp (m_szMeshType.c_str(), "hex") != 0) &&
-	     (strcmp (m_szMeshType.c_str(), "tet") != 0)) || szFormatString.fail())
-	  IOErrorHandler(INVALIDINPUT);
-      }
-      if (szInputString.substr(0,4) == "duct" || szInputString.substr(0,10) == "dimensions"){
-	++m_nDuct;
-      }
-      if (szInputString.substr(0,8) == "pincells"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_nPincells;
-	if(m_nPincells>0)
-	  m_Pincell.SetSize(m_nPincells);
-	else if(m_nPincells ==0)
-	  m_Pincell.SetSize(1); // assume for using dummy pincell
-
-	// count the number of cylinder lines for each pincell
-	for (int i=1; i<=m_nPincells; i++){
-	  // read the no. of input lines first pincell
-	  if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-				   MAXCHARS, szComment))
-	    IOErrorHandler (INVALIDINPUT);
-	  std::istringstream szFormatString1 (szInputString);
-	  szFormatString1 >> szVolId >> szVolAlias >> nInputLines;
-	  if(szFormatString1.fail())
-	    IOErrorHandler(INVALIDINPUT);
-	  // loop thru the input lines of each pincell
-	  for(int l=1; l<=nInputLines; l++){
-	    if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-				     MAXCHARS, szComment))
-	      IOErrorHandler (INVALIDINPUT);
-	    if (szInputString.substr(0,8) == "cylinder"){
-	      ++nCyl;
-	    }
-	    if (szInputString.substr(0,12) == "cellmaterial"){
-	      ++nCellMat;
-	    }
-	  }
-
-	  // set the sizes
-	  if(nCyl>0){
-	    if  (nCellMat!=0){
-	      m_Pincell(i).SetCellMatSize(nCyl);
-	    }
-	    m_Pincell(i).SetNumCyl(nCyl);
-	  }
-	  else if(nCyl ==0){
-	    if(nInputLines >0)
-	      m_Pincell(i).SetCellMatSize(nCellMat);
-	  }
-	  nCyl = 0;
-	  nCellMat = 0;
-	}
-      }
-      // breaking condition
-      if(szInputString.substr(0,3) == "end"){
-	std::istringstream szFormatString (szInputString);
-	break;
-      }
-    }
-
-    //ACIS ENGINE
-#ifdef HAVE_ACIS
-    //  if(m_szEngine == "acis"){
-    m_szGeomFile = m_szFile+".sat";
-    //  }
-#elif defined(HAVE_OCC)
-    //  OCC ENGINE
-    //  if (m_szEngine == "occ"){
-    m_szGeomFile = m_szFile+".brep";
-    //  }
-#endif
-    std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
-=======
         if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
                                  MAXCHARS, szComment))
           IOErrorHandler (INVALIDINPUT);
@@ -921,7 +668,6 @@ namespace MeshKit
             break;
           }
       }
->>>>>>> develop
 
 //    iGeom_newGeom( 0, &igeomImpl->instance(), &err, 0 ); // this is default way of specifying engine used in configure line
 //    ////CHECK("Failed to set geometry engine.");
@@ -1326,197 +1072,6 @@ namespace MeshKit
 
   }
 
-  void AssyGen::ReadCommonInp ()
-  // -------------------------------------------------------------------------------------------
-  // Function: reads the input file to count the no. of cyl in a pincell, before the actual read
-  // Input:    none
-  // Output:   none
-  // -------------------------------------------------------------------------------------------
-  {
-    ++com_run_count;
-    if(com_run_count > 1){
-        //Rewind the reader for common.inp file
-        m_FileCommon.clear (std::ios_base::goodbit);
-        m_FileCommon.seekg (0L, std::ios::beg);
-      }
-    CParser Parse1;
-    bool found = false;
-    std::string card;
-    m_nLineNumber = 0;
-    std::cout << "Reading from common.inp file." << std::endl;
-    for(;;){
-        if (!Parse1.ReadNextLine (m_FileCommon, m_nLineNumber, szInputString,
-                                  MAXCHARS, szComment))
-          IOErrorHandler (INVALIDINPUT);
-
-        if (szInputString.substr(0,10) == "geomengine"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_szEngine;
-            if( ((strcmp (m_szEngine.c_str(), "acis") != 0) &&
-                 (strcmp (m_szEngine.c_str(), "occ") != 0)) || szFormatString.fail())
-              IOErrorHandler(EGEOMENGINE);
-          }
-        // start id for pin number
-        if (szInputString.substr(0, 10) == "startpinid") {
-            found = true;
-            std::istringstream szFormatString(szInputString);
-            szFormatString >> card >> m_nStartpinid;
-          }
-        if (szInputString.substr(0,8) == "meshtype"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_szMeshType;
-            if( ((strcmp (m_szMeshType.c_str(), "hex") != 0) &&
-                 (strcmp (m_szMeshType.c_str(), "tet") != 0)) || szFormatString.fail())
-              IOErrorHandler(INVALIDINPUT);
-          }
-        // info flag
-        if (szInputString.substr(0,4) == "info"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_szInfo;
-            std::cout <<"--------------------------------------------------"<<std::endl;
-          }
-        // hex block along z
-        if (szInputString.substr(0,6) == "hblock"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_nHblock >> m_dZstart >> m_dZend;
-            std::cout <<"--------------------------------------------------"<<std::endl;
-          }
-        // Hex or Rect geometry type
-        if (szInputString.substr(0,12) == "geometrytype"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_szGeomType;
-            if( ((strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
-                 (strcmp (m_szGeomType.c_str(), "rectangular") != 0)) || szFormatString.fail())
-              IOErrorHandler(EGEOMTYPE);
-
-            // set the number of sides in the geometry
-            if(m_szGeomType == "hexagonal")
-              m_nSides = 6;
-            else  if(m_szGeomType == "rectangular")
-              m_nSides = 4;
-          }
-        // Default if volume, set geometry type to surface for 2D assemblies
-        if (szInputString.substr(0,8) == "geometry"){
-            found = true;
-            std::string outfile;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> outfile;
-            if(strcmp (outfile.c_str(), "surface") == 0 || szFormatString.fail())
-              m_nPlanar=1;
-          }
-        // 'yes' or 'no' for creating sidesets
-        if (szInputString.substr(0,13) == "createsideset"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_szSideset;
-            std::cout <<"--------------------------------------------------"<<std::endl;
-          }
-        // Create specified number of files with varying material ids
-        if (szInputString.substr(0,11) == "createfiles"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_nAssyGenInputFiles;
-            std::cout <<"--------------------------------------------------"<<std::endl;
-          }
-        // Create specified number of files with varying material ids
-        if (szInputString.substr(0,11) == "save_exodus"){
-            found = true;
-            save_exodus = true;
-            std::cout <<"--------------------------------------------------"<<std::endl;
-          }
-        // specify a merge tolerance value for cubit journal file
-        if (szInputString.substr(0,14) == "mergetolerance"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_dMergeTol;
-            std::cout <<"--------------------------------------------------"<<std::endl;
-          }
-        // Handle mesh size inputs
-        if (szInputString.substr(0,14) == "radialmeshsize"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_dRadialSize;
-            if(m_dRadialSize < 0 || szFormatString.fail())
-              IOErrorHandler(ENEGATIVE);
-            std::cout <<"--------------------------------------------------"<<std::endl;
-
-          }
-        // Handle mesh size inputs
-        if (szInputString.substr(0,11) == "tetmeshsize"){
-            found = true;
-            std::istringstream szFormatString (szInputString);
-            szFormatString >> card >> m_dTetMeshSize;
-            if(m_dTetMeshSize < 0 || szFormatString.fail())
-              IOErrorHandler(ENEGATIVE);
-            std::cout <<"--------------------------------------------------"<<std::endl;
-
-          }
-        // Handle mesh size inputs
-        if (szInputString.substr(0,13) == "axialmeshsize"){
-            found = true;
-            if(com_run_count > 1){
-                std::istringstream szFormatString (szInputString);
-                szFormatString >> card;
-                m_dAxialSize.SetSize(m_nDuct);
-                int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
-                                                      std::istream_iterator<std::string>());
-                std::istringstream szFormatStringAgain (szInputString);
-                szFormatStringAgain >> card;
-                for (int p = 1; p <= m_nDuct; p++){
-                    if(p <= num_ams_specified)
-                      szFormatStringAgain >> m_dAxialSize(p);
-                    else
-                      m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
-                    if(m_dAxialSize(p) < 0)
-                      IOErrorHandler(ENEGATIVE);
-                  }
-                std::cout <<"--------------------------------------------------"<<std::endl;
-              }
-          }
-        // edge interval
-        if (szInputString.substr(0, 12) == "edgeinterval") {
-            found = true;
-            std::istringstream szFormatString(szInputString);
-            szFormatString >> card >> m_edgeInterval;
-          }
-        // mesh scheme - hole or pave
-        if (szInputString.substr(0, 10) == "meshscheme") {
-            std::istringstream szFormatString(szInputString);
-            szFormatString >> card >> m_szMeshScheme;
-          }
-        // Handle mesh size inputs
-        if (szInputString.substr(0,18) == "neumannset_startid"){
-          std::istringstream szFormatString (szInputString);
-          szFormatString >> card >> m_nNeumannSetId;
-          if(m_nNeumannSetId < 0 || szFormatString.fail())
-            IOErrorHandler(ENEGATIVE);
-          std::cout <<"--------------------------------------------------"<<std::endl;
-
-        }
-        // Handle mesh size inputs
-        if (szInputString.substr(0,19) == "materialset_startid"){
-          std::istringstream szFormatString (szInputString);
-          szFormatString >> card >> m_nMaterialSetId;
-          if(m_nMaterialSetId < 0 || szFormatString.fail())
-            IOErrorHandler(ENEGATIVE);
-          std::cout <<"--------------------------------------------------"<<std::endl;
-
-        }
-        // breaking condition
-        if(szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
-            found = true;
-            break;
-          }
-        if (found == false){
-            std::cout << "Cannot specify: " << szInputString << " in common.inp files" << std::endl;
-          }
-      }
-  }
 
   void AssyGen::ReadAndCreate()
   //---------------------------------------------------------------------------
@@ -1534,323 +1089,6 @@ namespace MeshKit
 
     // start reading the input file break when encounter end
     for(;;){
-<<<<<<< HEAD
-      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-			       MAXCHARS, szComment))
-	IOErrorHandler (INVALIDINPUT);
-      if (szInputString.substr(0,12) == "geometrytype"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_szGeomType;
-	if( ((strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
-	     (strcmp (m_szGeomType.c_str(), "rectangular") != 0)) || szFormatString.fail())
-	  IOErrorHandler(EGEOMTYPE);
-
-	// set the number of sides in the geometry
-	if(m_szGeomType == "hexagonal")
-	  m_nSides = 6;
-	else  if(m_szGeomType == "rectangular")
-	  m_nSides = 4;
-      }
-
-
-      if (szInputString.substr(0,8) == "geometry"){
-	std::string outfile;
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> outfile;
-	if(strcmp (outfile.c_str(), "surface") == 0 || szFormatString.fail())
-	  m_nPlanar=1;
-      }
-      if ((szInputString.substr(0,9) == "materials") && (szInputString.substr(0,19) != "materialset_startid")){
-
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_nAssemblyMat;
-	if(szFormatString.fail())
-	  IOErrorHandler(INVALIDINPUT);
-	m_szAssmMat.SetSize(m_nAssemblyMat); m_szAssmMatAlias.SetSize(m_nAssemblyMat);
-	for (int j=1; j<=m_nAssemblyMat; j++){
-	  szFormatString >> m_szAssmMat(j) >> m_szAssmMatAlias(j);
-	  if( (strcmp (m_szAssmMat(j).c_str(), "") == 0) ||
-	      (strcmp (m_szAssmMatAlias(j).c_str(), "") == 0)){
-	    IOErrorHandler(EMAT);
-	  }
-	  // checking if & inserted at the end of the material by mistake
-	  if (j == m_nAssemblyMat){
-	    std::string dummy = "";
-	    szFormatString >> dummy;
-	    if (strcmp (dummy.c_str(), "") != 0)
-	      IOErrorHandler(EMAT);
-	  }
-	}
-      }
-      if( (szInputString.substr(0,10) == "dimensions") ||
-	  (szInputString.substr(0,4) == "duct") ){
-
-	++m_nDuctNum;
-	std::cout << "getting assembly dimensions " << m_nDuctNum << std::endl;
-
-	if(m_szGeomType =="hexagonal"){
-	  std::istringstream szFormatString (szInputString);
-
-	  if(m_nDuctNum == 1){
-	    m_dMXYAssm.SetSize(m_nDuct, 2); m_dMZAssm.SetSize(m_nDuct, 2);
-	  }
-	  szFormatString >> card >> m_nDimensions
-			 >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
-			 >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
-	  if(m_nDuctNum == 1){
-	    m_dMAssmPitch.SetSize(m_nDuct, m_nDimensions); m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
-
-	    assms.resize(m_nDimensions*m_nDuct); // setup while reading the problem size
-	  }
-
-	  for (int i=1; i<=m_nDimensions; i++){
-	    szFormatString >> m_dMAssmPitch(m_nDuctNum, i);
-	    if( m_dMAssmPitch(m_nDuctNum, i) < 0 )
-	      IOErrorHandler(ENEGATIVE);
-	  }
-
-	  for (int i=1; i<=m_nDimensions; i++){
-	    szFormatString >> m_szMMAlias(m_nDuctNum, i);
-	    if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0)
-	      IOErrorHandler(EALIAS);
-	  }
-	}
-	if(m_szGeomType =="rectangular"){
-	  std::istringstream szFormatString (szInputString);
-	  if(m_nDuctNum == 1){
-	    m_dMXYAssm.SetSize(m_nDuct, 2);
-	    m_dMZAssm.SetSize(m_nDuct, 2);
-	  }
-	  szFormatString >> card >> m_nDimensions
-			 >> m_dMXYAssm(m_nDuctNum, 1) >> m_dMXYAssm(m_nDuctNum, 2)
-			 >> m_dMZAssm(m_nDuctNum, 1) >> m_dMZAssm(m_nDuctNum, 2);
-	  if (szFormatString.fail())
-	    IOErrorHandler(INVALIDINPUT);
-	  if(m_nDuctNum == 1){
-	    m_dMAssmPitchX.SetSize(m_nDuct, m_nDimensions);
-	    m_dMAssmPitchY.SetSize(m_nDuct, m_nDimensions);
-	    m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
-	    assms.resize(m_nDimensions*m_nDuct);
-	  }
-	  for (int i=1; i<=m_nDimensions; i++){
-	    szFormatString >> m_dMAssmPitchX(m_nDuctNum, i) >> m_dMAssmPitchY(m_nDuctNum, i);
-	    if( m_dMAssmPitchX(m_nDuctNum, i) < 0 || m_dMAssmPitchY(m_nDuctNum, i) < 0 || szFormatString.fail())
-	      IOErrorHandler(ENEGATIVE);
-	  }
-
-	  for (int i=1; i<=m_nDimensions; i++){
-	    szFormatString >> m_szMMAlias(m_nDuctNum, i);
-	    if(strcmp (m_szMMAlias(m_nDuctNum, i).c_str(), "") == 0 || szFormatString.fail())
-	      IOErrorHandler(EALIAS);
-	  }
-	}
-      }
-      if (szInputString.substr(0,8) == "pincells"){
-	std::istringstream szFormatString (szInputString);
-
-	szFormatString >> card >> m_nPincells >> m_dPitch;
-	if(m_nPincells < 0)
-	  IOErrorHandler(ENEGATIVE);
-
-	// this is an option if a user wants to specify pitch here
-	double dTotalHeight = 0.0;
-
-	//get the number of cylinder in each pincell
-	int nTemp = 1;
-	if(m_nDimensions > 0){
-	  dTotalHeight = m_dMZAssm(nTemp, 2)-m_dMZAssm(nTemp, 1);
-	}
-	else{
-	  dTotalHeight = 0; // nothing specified only pincells in the model
-	}
-
-	// loop thro' the pincells and read/store pincell data
-	for (int i=1; i<=m_nPincells; i++){
-
-	  // set pitch if specified in pincell card
-	  if(m_dPitch > 0.0)
-	    m_Pincell(i).SetPitch(m_dPitch, dTotalHeight);
-
-	  ReadPinCellData( i);
-	  std::cout << "\nread pincell " << i << std::endl;
-	}
-      }
-      if (szInputString.substr(0,8) == "assembly"){
-	if(m_szGeomType =="hexagonal"){
-	  Create_HexAssm( szInputString);
-	}
-	if(m_szGeomType =="rectangular"){
-	  Create_CartAssm(szInputString);
-	}
-	if (m_nJouFlag == 0){
-	  CreateOuterCovering();
-
-	  // subtract pins before save
-	  Subtract_Pins();
-	  if(m_nPlanar ==1){
-	    Create2DSurf();
-	  }
-	}
-      }
-
-      // section the assembly as described in section card
-      if (szInputString.substr(0,7) == "section" && m_nJouFlag == 0){
-	std::cout << "Sectioning geometry .." << std::endl;
-	char cDir;
-	double dOffset;
-	std::string szReverse = "";
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> cDir >> dOffset >> szReverse;
-	Section_Assm( cDir, dOffset, szReverse);
-	std::cout <<"--------------------------------------------------"<<std::endl;
-
-      }
-      if (szInputString.substr(0,4) == "move" && m_nJouFlag == 0){
-	std::cout << "Moving geometry .." << std::endl;
-	double dX, dY, dZ;
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> dX >> dY >> dZ;
-	if(szFormatString.fail())
-	  IOErrorHandler(INVALIDINPUT);
-	Move_Assm( dX, dY, dZ);
-	std::cout <<"--------------------------------------------------"<<std::endl;
-
-      }
-      // ceter the assembly
-      if (szInputString.substr(0,6) == "center" && m_nJouFlag == 0){
-
-	char rDir = 'q';
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> rDir;
-	if (rDir != 'q')
-	  std::cout << "Positioning assembly to "<< rDir << " center" << std::endl;
-	else
-	  std::cout << "Positioning assembly to xy center" << std::endl;
-	Center_Assm( rDir);
-	std::cout <<"--------------------------------------------------"<<std::endl;
-      }
-      // rotate the assembly if rotate card is specified
-      if (szInputString.substr(0,6) == "rotate" && m_nJouFlag == 0){
-	char cDir;
-	double dAngle;
-	std::cout << "Rotating geometry .." << std::endl;
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> cDir >> dAngle;
-	if(szFormatString.fail())
-	  IOErrorHandler(INVALIDINPUT);
-	Rotate_Assm( cDir, dAngle);
-	std::cout <<"--------------------------------------------------"<<std::endl;
-
-      }
-      // 'yes' or 'no' for creating sidesets
-      if (szInputString.substr(0,13) == "createsideset"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_szSideset;
-	std::cout <<"--------------------------------------------------"<<std::endl;
-      }
-      // specify a merge tolerance value for cubit journal file
-      if (szInputString.substr(0,14) == "mergetolerance"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_dMergeTol;
-	std::cout <<"--------------------------------------------------"<<std::endl;
-      }  // Handle mesh size inputs
-      if (szInputString.substr(0,14) == "radialmeshsize"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_dRadialSize;
-	if(m_dRadialSize < 0 || szFormatString.fail())
-	  IOErrorHandler(ENEGATIVE);
-	std::cout <<"--------------------------------------------------"<<std::endl;
-
-      }
-      // Handle mesh size inputs
-      if (szInputString.substr(0,11) == "tetmeshsize"){
-	std::istringstream szFormatString (szInputString);
-	szFormatString >> card >> m_dTetMeshSize;
-	if(m_dTetMeshSize < 0 || szFormatString.fail())
-	  IOErrorHandler(ENEGATIVE);
-	std::cout <<"--------------------------------------------------"<<std::endl;
-
-      }
-      // Handle mesh size inputs
-      if (szInputString.substr(0,13) == "axialmeshsize"){
-          std::istringstream szFormatString (szInputString);
-          szFormatString >> card;
-          m_dAxialSize.SetSize(m_nDuct);
-          int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
-                                                std::istream_iterator<std::string>());
-          std::istringstream szFormatStringAgain (szInputString);
-          szFormatStringAgain >> card;
-          for (int p = 1; p <= m_nDuct; p++){
-              if(p <= num_ams_specified)
-                szFormatStringAgain >> m_dAxialSize(p);
-              else
-                m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
-              if(m_dAxialSize(p) < 0)
-                IOErrorHandler(ENEGATIVE);
-            }
-          std::cout <<"--------------------------------------------------"<<std::endl;
-
-        }
-      // edge interval
-      if (szInputString.substr(0, 12) == "edgeinterval") {
-          std::istringstream szFormatString(szInputString);
-          szFormatString >> card >> m_edgeInterval;
-        }
-      // Handle mesh size inputs
-      if (szInputString.substr(0,18) == "neumannset_startid"){
-          std::istringstream szFormatString (szInputString);
-          szFormatString >> card >> m_nNeumannSetId;
-          if(m_nNeumannSetId < 0 || szFormatString.fail())
-            IOErrorHandler(ENEGATIVE);
-          std::cout <<"--------------------------------------------------"<<std::endl;
-
-        }
-      // Handle mesh size inputs
-      if (szInputString.substr(0,19) == "materialset_startid"){
-          std::istringstream szFormatString (szInputString);
-          szFormatString >> card >> m_nMaterialSetId;
-          if(m_nMaterialSetId < 0 || szFormatString.fail())
-            IOErrorHandler(ENEGATIVE);
-          std::cout <<"--------------------------------------------------"<<std::endl;
-
-        }
-      if ((szInputString.substr(0,23) == "list_neumannset_startid") ){
-          std::istringstream szFormatString (szInputString);
-          int num_nset_ids = 0;
-          szFormatString >> card >> num_nset_ids;
-          m_nListNeuSet.SetSize(num_nset_ids);
-          for (int p = 1; p <= num_nset_ids; p++){
-              szFormatString >> m_nListNeuSet(p);
-              if(m_nListNeuSet(p) < 0 || szFormatString.fail())
-                IOErrorHandler(ENEGATIVE);
-            }
-        }
-      if ((szInputString.substr(0,24) == "list_materialset_startid") ){
-          std::istringstream szFormatString (szInputString);
-          int num_mset_ids = 0;
-          szFormatString >> card >> num_mset_ids;
-          m_nListMatSet.SetSize(num_mset_ids);
-          for (int p = 1; p <= num_mset_ids; p++){
-              szFormatString >> m_nListMatSet(p);
-              if(m_nListMatSet(p) < 0 || szFormatString.fail())
-                IOErrorHandler(ENEGATIVE);
-            }
-        }
-      if (szInputString.substr(0,3) == "end"){
-
-
-	if ( m_nJouFlag == 0){
-	  // impring merge before saving
-	  // Imprint_Merge();
-
-	  // save .sat file
-	  IBERRCHK(igeomImpl->save(m_szGeomFile.c_str()), *igeomImpl);
-	  std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
-	}
-	break;
-      }
-    }
-=======
         if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
                                  MAXCHARS, szComment))
           IOErrorHandler (INVALIDINPUT);
@@ -2342,7 +1580,6 @@ namespace MeshKit
       }
 
 
->>>>>>> develop
 
   }
 
@@ -2446,32 +1683,12 @@ namespace MeshKit
                     else
                       m_SchemesFile << "#{AXIAL_MESH_SIZE" << p << "= 0.1*Z_HEIGHT}" << std::endl;
                     m_SchemesFile << "#{BLOCK" << p << "_Z_INTERVAL = AXIAL_MESH_SIZE" << p << "}" << std::endl;
-<<<<<<< HEAD
-=======
                     m_SchemesFile << "#{BLOCK" << p << "_ZBOT = " << m_dMZAssm(p, 1) << "}" << std::endl;
                     m_SchemesFile << "#{BLOCK" << p << "_ZTOP = " << m_dMZAssm(p, 2) << "}" << std::endl;
->>>>>>> develop
                   }
                 m_SchemesFile << "##" << std::endl;
               }
           }
-<<<<<<< HEAD
-      if (-1.0 == m_dRadialSize) {
-	if (m_szGeomType == "hexagonal")
-	  m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
-	else
-	  m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.02*0.5*(PITCHX+PITCHY)}" << std::endl;
-      }
-      else
-	m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_dRadialSize << "}" << std::endl;
-    }
-    else if (m_szMeshType == "tet"){
-      if (-1.0 == m_dTetMeshSize) {
-	if (m_szGeomType == "hexagonal")
-	  m_SchemesFile << "#{TET_MESH_SIZE = 0.1*PITCH}" << std::endl;
-	else
-	  m_SchemesFile << "#{TET_MESH_SIZE = 0.02*0.5*(PITCHX+PITCHY)}" << std::endl;
-=======
         if (-1.0 == m_dRadialSize) {
             if (m_szGeomType == "hexagonal")
               m_SchemesFile << "#{RADIAL_MESH_SIZE = 0.1*PITCH}" << std::endl;
@@ -2480,7 +1697,6 @@ namespace MeshKit
           }
         else
           m_SchemesFile << "#{RADIAL_MESH_SIZE = " << m_dRadialSize << "}" << std::endl;
->>>>>>> develop
       }
     else if (m_szMeshType == "tet"){
         if (-1.0 == m_dTetMeshSize) {
@@ -3342,10 +2558,6 @@ void AssyGen::TerminateProgram ()
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-<<<<<<< HEAD
-    // get the surface with max z
-    double dTol=1.0e-4, dZTemp = 0.0;
-=======
     double dTol = 1e-4, ttol = 0.0;
     if(m_szGeomType == "hexagonal")
       ttol = m_dMAssmPitch(1, 1);
@@ -3356,7 +2568,6 @@ void AssyGen::TerminateProgram ()
         dTol=ttol*1.0e-4;
       }
     double dZTemp = 0.0;
->>>>>>> develop
     int flag = 0, locTemp = 0;
     iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
     SimpleArray<iBase_EntityHandle> surfs;
