@@ -1,13 +1,57 @@
+
+/*********************************************
+Reactor Geometry Generator
+Argonne National Laboratory
+
+AssyGen input o/p and functions
+*********************************************/
+/*
+#include <sstream>
+#include "nrgen.hpp"
+#include "parser.hpp"
+#include <fstream>
+#include <math.h>
+#include <string.h>
+#include <stdlib.h>
+#include <iterator>     // std::istream_iterator
+
+#define STRINGIFY_(X) #X
+#define STRINGIFY(X) STRINGIFY_(X)
+
+#define DEFAULT_TEST_FILE STRINGIFY(SRCDIR) "/assygen_default"
+#define TEST_FILE_NAME "assygen_default"
+#define SRC_DIR STRINGIFY(SRCDIR) "/"
+
+// NRGEN CLASS FUNCIONS:
+
+void CNrgen::Banner (std::ostream& OF)
+// ---------------------------------------------------------------------------
+// Function: Prints program banner
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  std::cout << '\n';
+  std::cout << "\t\t---------------------------------------------------------" << '\n';
+  std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
+  std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
+  std::cout << "\t\t\t\t        2009-2010         " << '\n';
+  std::cout << "\t\t---------------------------------------------------------" << '\n';
+  std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
+}
+
+*/
+
 #include "meshkit/AssyGen.hpp"
 
 namespace MeshKit
 {
   // static registration of this  mesh scheme
   moab::EntityType AssyGen_tps[] = { moab::MBVERTEX,
-				     moab::MBEDGE,
-				     moab::MBTRI,
-				     moab::MBHEX,
-				     moab::MBMAXTYPE};
+                                     moab::MBEDGE,
+                                     moab::MBTRI,
+                                     moab::MBHEX,
+                                     moab::MBMAXTYPE};
   const moab::EntityType* AssyGen::output_types()
   { return AssyGen_tps; }
 
@@ -15,12 +59,16 @@ namespace MeshKit
     : MeshScheme( mk, me_vec),
       igeomImpl(mk->igeom_instance())
   {
+    err = 0;
+    tmpSB = 1;
     m_nPlanar = 0; //default is 3D
     m_nLineNumber = 0;
     root_set= NULL;
     szComment = "!";
-    MAXCHARS = 300;
+    MAXCHARS = 1500;
+    MAXLINES = 1000;
     pi = M_PI;
+    m_nTotalPincells = 0;
     m_dRadialSize = -1.0;
     m_dTetMeshSize = -1.0;
     m_nDimensions = 0;
@@ -32,6 +80,7 @@ namespace MeshKit
     m_nDuctNum = 0;
     m_nJouFlag = 0;
     m_szSideset = "yes";
+    m_nAssyGenInputFiles = 0;
     m_dMergeTol = 1e-4;
     m_edgeInterval = 99;
     m_nStartpinid = 1;
@@ -39,6 +88,7 @@ namespace MeshKit
     m_szMeshScheme = "pave";
     pin_name = "";
     m_nHblock = -1;
+    m_nPincells = 0;
     m_bCreateMatFiles = false;
     m_nSuperBlocks = 0;
     save_exodus = false;
@@ -46,16 +96,21 @@ namespace MeshKit
     com_run_count = 0;
     m_nBLAssemblyMat = 0;
     m_szInnerDuct = "";
+    m_szSmooth  = "off";
   }
 
   AssyGen::~AssyGen()
   {
+    iGeom_dtor(igeomImpl->instance(), &err);
+    //CHECK( "Interface destruction didn't work properly." );
+    // close the input and output files
     m_FileInput.close ();
     m_FileOutput.close ();
     m_SchemesFile.close ();
     if(strcmp(m_szInfo.c_str(),"on") == 0)
       m_AssmInfo.close ();
   }
+
 
   bool AssyGen::add_modelent(ModelEnt *model_ent)
   {
@@ -65,7 +120,7 @@ namespace MeshKit
   void AssyGen::setup_this()
   {
 
-    // start the timer 
+    // start the timer
     CClock Timer;
     clock_t sTime = clock();
     std::string szDateTime;
@@ -73,13 +128,13 @@ namespace MeshKit
     std::cout << "\nStarting out at : " << szDateTime << "\n";
 
     if (have_common == true)
-        ReadCommonInp();
+      ReadCommonInp();
 
     //count pin cylinders and cell material, needed for setting array size before actual read
     ReadInputPhase1 ();
 
     if (have_common == true)
-        ReadCommonInp();
+      ReadCommonInp();
 
     // read the problem size and create pincell
     ReadAndCreate ();
@@ -92,20 +147,21 @@ namespace MeshKit
     // get the current date and time
     Timer.GetDateTime (szDateTime);
     std::cout << "Ending at : " << szDateTime;
- 
+
     // compute the elapsed time
     std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
-	      << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
+              << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
 
     std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
-	      << " seconds" << std::endl; 
+              << " seconds" << std::endl;
   }
 
   void AssyGen::execute_this()
   {
   }
 
-  void AssyGen::PrepareIO (int argc, char *argv[], std::string  TestDir)
+
+  void AssyGen::PrepareIO (int argc, char *argv[],  std::string TestDir)
   // ---------------------------------------------------------------------------
   // Function: Obtains file names and opens input/output files
   // Input:    command line arguments
@@ -113,163 +169,165 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   {
     std::cout << '\n';
-    std::cout << "\t\t---------------------------------------------------------" << '\n';
-    std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
-    std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
-    std::cout << "\t\t---------------------------------------------------------" << '\n';
-    std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
-    // set and open input output files
-    bool bDone = false;
-    do{
-        if (2 == argc) {
-            m_szFile = argv[1];
-            m_szInFile=m_szFile+".inp";
-            m_szJouFile = m_szFile+".jou";
-            m_szSchFile = m_szFile+".template.jou";
-            m_szAssmInfo = m_szFile + "_info.csv";
-            m_szLogFile = m_szFile + ".log";
-            m_szCommonFile = "common.inp";
-          }
-        else if (3 == argc) {
-            int i=1;// will loop through arguments, and process them
-            for (i=1; i<argc-1 ; i++) {
-                if (argv[i][0]=='-') {
-                    switch (argv[i][1])
-                      {
-                      case 'j':
-                        {
-                          m_nJouFlag = 1;
-                          std::cout << "Creating journal file only.\n Geometry file must exist in the same directory." << std::endl;
-                          m_szFile = argv[2];
-                          m_szInFile=m_szFile+".inp";
-                          m_szJouFile = m_szFile+".jou";
-                          m_szSchFile = m_szFile+".template.jou";
-                          m_szAssmInfo = m_szFile + "_info.csv";
-                          m_szLogFile = m_szFile + ".log";
-                          m_szCommonFile = "common.inp";
-                          break;
-                        }
-                      case 'h':
-                        {
-                          std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-                          std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
-                          std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;
-                          std::cout << "        -j create journal file only" << std::endl;
-                          std::cout << "        -h print help" << std::endl;
+     std::cout << "\t\t---------------------------------------------------------" << '\n';
+     std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
+     std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
+     std::cout << "\t\t---------------------------------------------------------" << '\n';
+     std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
+     // set and open input output files
+     bool bDone = false;
+     do{
+         if (2 == argc) {
+             m_szFile = argv[1];
+             m_szInFile=m_szFile+".inp";
+             m_szJouFile = m_szFile+".jou";
+             m_szSchFile = m_szFile+".template.jou";
+             m_szAssmInfo = m_szFile + "_info.csv";
+             m_szLogFile = m_szFile + ".log";
+             m_szCommonFile = "common.inp";
+           }
+         else if (3 == argc) {
+             int i=1;// will loop through arguments, and process them
+             for (i=1; i<argc-1 ; i++) {
+                 if (argv[i][0]=='-') {
+                     switch (argv[i][1])
+                       {
+                       case 'j':
+                         {
+                           m_nJouFlag = 1;
+                           std::cout << "Creating journal file only.\n Geometry file must exist in the same directory." << std::endl;
+                           m_szFile = argv[2];
+                           m_szInFile=m_szFile+".inp";
+                           m_szJouFile = m_szFile+".jou";
+                           m_szSchFile = m_szFile+".template.jou";
+                           m_szAssmInfo = m_szFile + "_info.csv";
+                           m_szLogFile = m_szFile + ".log";
+                           m_szCommonFile = "common.inp";
+                           break;
+                         }
+                       case 'h':
+                         {
+                           std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
+                           std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
+                           std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;
+                           std::cout << "        -j create journal file only" << std::endl;
+                           std::cout << "        -h print help" << std::endl;
 
-                          exit(0);
-                          break;
-                        }
-                      }
-                  }
-              }
-          }
-        else if (1 == argc){
-            std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-            std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
-            std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;
-            std::cout << "        -t print timing and memory usage info in each step" << std::endl;
-            std::cout << "        -j create journal file only" << std::endl;
-            std::cout << "        -h print help" << std::endl;
+                           exit(0);
+                           break;
+                         }
+                       }
+                   }
+               }
+           }
+         else if (1 == argc){
+             std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
+             std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
+             std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;
+             std::cout << "        -t print timing and memory usage info in each step" << std::endl;
+             std::cout << "        -j create journal file only" << std::endl;
+             std::cout << "        -h print help" << std::endl;
 
-            m_szInFile = TestDir + "/" + (char *)DEFAULT_TEST_FILE;
-            m_szGeomFile = (char *)TEST_FILE_NAME;
-            m_szJouFile = (char *)TEST_FILE_NAME;
-            m_szFile =  (char *)TEST_FILE_NAME;
-            m_szInFile+=".inp";
-            m_szJouFile+=".jou";
-            m_szSchFile = m_szFile+".template.jou";
-            m_szAssmInfo = m_szFile + "_info.csv";
-            m_szLogFile = m_szFile + ".log";
-            m_szCommonFile = TestDir + "/" + "common.inp";
+             m_szInFile = TestDir + "/" + (char *)DEFAULT_TEST_FILE;
+             m_szGeomFile = (char *)TEST_FILE_NAME;
+             m_szJouFile = (char *)TEST_FILE_NAME;
+             m_szFile =  (char *)TEST_FILE_NAME;
+             m_szInFile+=".inp";
+             m_szJouFile+=".jou";
+             m_szSchFile = m_szFile+".template.jou";
+             m_szAssmInfo = m_szFile + "_info.csv";
+             m_szLogFile = m_szFile + ".log";
+             m_szCommonFile = TestDir + "/" + "common.inp";
 
-            std::cout <<"Default case input file is located here <MeshKit/data> "<< std::endl;
-          }
-        // open the file
-        m_FileInput.open (m_szInFile.c_str(), std::ios::in);
-        if (!m_FileInput){            
-            std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
-            m_FileInput.clear ();
-            exit(1);
-          }
-        else
-          bDone = true; // file opened successfully
+             std::cout <<"Default case input file is located here <MeshKit/data> "<< std::endl;
+           }
+         // open the file
+         m_FileInput.open (m_szInFile.c_str(), std::ios::in);
+         if (!m_FileInput){
+             std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
+             m_FileInput.clear ();
+             exit(1);
+           }
+         else
+           bDone = true; // file opened successfully
 
-        // open common.inp file, if not found do nothing.
-        m_FileCommon.open (m_szCommonFile.c_str(), std::ios::in);
-        if (!m_FileCommon){
-            have_common = false;
-            std::cout << "common.inp file not specified." << std::endl;
-            m_FileCommon.clear ();
-          }
-        else {
-            have_common = true;
-          }
+         // open common.inp file, if not found do nothing.
+         m_FileCommon.open (m_szCommonFile.c_str(), std::ios::in);
+         if (!m_FileCommon){
+             have_common = false;
+             std::cout << "common.inp file not specified." << std::endl;
+             m_FileCommon.clear ();
+           }
+         else {
+             have_common = true;
+           }
+         std::cout << " opened file " << m_szCommonFile << " have common is "
+ << have_common << std::endl;
+       } while (!bDone);
+     std::cout << "\nEntered input file name: " <<  m_szInFile <<std::endl;
 
-      } while (!bDone);
-    std::cout << "\nEntered input file name: " <<  m_szInFile <<std::endl;
+     // open the file
+     do{
+         m_FileOutput.open (m_szJouFile.c_str(), std::ios::out);
+         if (!m_FileOutput){
+             std::cout << "Unable to open o/p file: " << m_szJouFile << std::endl;
+             m_FileOutput.clear ();
+             exit(1);
+           }
+         else
+           bDone = true; // file opened successfully
+       } while (!bDone);
 
-    // open the file
-    do{
-        m_FileOutput.open (m_szJouFile.c_str(), std::ios::out);
-        if (!m_FileOutput){
-            std::cout << "Unable to open o/p file: " << m_szJouFile << std::endl;
-            m_FileOutput.clear ();
-            exit(1);
-          }
-        else
-          bDone = true; // file opened successfully
-      } while (!bDone);
+     // open the template journal file for writing
+     do{
+         m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out);
+         if (!m_SchemesFile){
+             std::cout << "Unable to open o/p file: " << m_szSchFile << std::endl;
+             m_SchemesFile.clear ();
+             exit(1);
+           }
+         else
+           bDone = true; // file opened successfully
+       } while (!bDone);
 
-    // open the template journal file for writing
-    do{
-        m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out);
-        if (!m_SchemesFile){
-            std::cout << "Unable to open o/p file: " << m_szSchFile << std::endl;
-            m_SchemesFile.clear ();
-            exit(1);
-          }
-        else
-          bDone = true; // file opened successfully
-      } while (!bDone);
-
-    std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
-            << std::endl;
+     std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
+             << std::endl;
 
 
-    //ACIS ENGINE
-  #ifdef HAVE_ACIS
-    //  if(m_szEngine == "acis"){
-    m_szGeomFile = m_szFile+".sat";
-    //  }
-  #elif defined(HAVE_OCC)
-    //  OCC ENGINE
-    //  if (m_szEngine == "occ"){
-    m_szGeomFile = m_szFile+".brep";
-    //  }o
-  #endif
-    std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
+     //ACIS ENGINE
+   #ifdef HAVE_ACIS
+     //  if(m_szEngine == "acis"){
+     m_szGeomFile = m_szFile+".sat";
+     //  }
+   #elif defined(HAVE_OCC)
+     //  OCC ENGINE
+     //  if (m_szEngine == "occ"){
+     m_szGeomFile = m_szFile+".brep";
+     //  }o
+   #endif
+     std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
-    // writing schemes .jou file ends, now write the main journal file.
-    // stuff common to both surface and volume
-    m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
-    m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
-    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
-    m_FileOutput << "#" << std::endl;
-    m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
-    m_FileOutput << "Timer Start" << std::endl;
-    // import the geometry file
-    m_FileOutput << "# Import geometry file " << std::endl;
-    //ACIS ENGINE
-  #ifdef HAVE_ACIS
-    m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
+     // writing schemes .jou file ends, now write the main journal file.
+     // stuff common to both surface and volume
+     m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
+     m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
+     m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
+     m_FileOutput << "#" << std::endl;
+     m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
+     m_FileOutput << "Timer Start" << std::endl;
+     // import the geometry file
+     m_FileOutput << "# Import geometry file " << std::endl;
+     //ACIS ENGINE
+   #ifdef HAVE_ACIS
+     m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
 
-  #elif defined(HAVE_OCC)
-    //  OCC ENGINE
-    m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
-  #endif
+   #elif defined(HAVE_OCC)
+     //  OCC ENGINE
+     m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
+   #endif
 
-    m_FileOutput << "#" << std::endl;
+     m_FileOutput << "#" << std::endl;
+
   }
 
 
@@ -445,8 +503,8 @@ namespace MeshKit
             std::cout << "Cannot specify: " << szInputString << " in common.inp files" << std::endl;
           }
       }
-  }
 
+  }
 
   void AssyGen::ReadInputPhase1 ()
   // -------------------------------------------------------------------------------------------
@@ -588,6 +646,12 @@ namespace MeshKit
             szFormatString >> card >> m_szInfo;
             std::cout <<"--------------------------------------------------"<<std::endl;
           }
+        // info flag
+        if (szInputString.substr(0,6) == "smooth"){
+            std::istringstream szFormatString (szInputString);
+            szFormatString >> card >> m_szSmooth;
+            std::cout <<"--------------------------------------------------"<<std::endl;
+          }
         // mesh scheme - hole or pave
         if (szInputString.substr(0, 10) == "meshscheme") {
             std::istringstream szFormatString(szInputString);
@@ -604,6 +668,9 @@ namespace MeshKit
             break;
           }
       }
+
+//    iGeom_newGeom( 0, &igeomImpl->instance(), &err, 0 ); // this is default way of specifying engine used in configure line
+//    ////CHECK("Failed to set geometry engine.");
 
     if(strcmp(m_szInfo.c_str(),"on") == 0){
         std::cout  << m_szAssmInfo <<std::endl;
@@ -624,384 +691,387 @@ namespace MeshKit
                      "dY" << " \t" << "dZ"  << std::endl;
       }
     // set the size of cp_inpins matrix
-    //	cp_inpins.resize(m_nDuct);
+    //  cp_inpins.resize(m_nDuct);
     for (int j=0; j<m_nDuct ; j++)
       cp_inpins.push_back(std::vector<iBase_EntityHandle>());
+
   }
 
-  void AssyGen::ReadPinCellData ( int i)
+  void AssyGen::ReadPinCellData (int i)
   //---------------------------------------------------------------------------
   //Function: reading pincell i from file and storing the data
   //Input:    none
   //Output:   none
   //---------------------------------------------------------------------------
   {
-  CParser Parse;
-  std::string card, szVolId, szVolAlias, szIFlag;
-  int nInputLines, nMaterials, nCyl = 0, nRadii=0, nCellMat=0;
-  double dLZ=0.0, dFlatF=0.0, dPX=0.0, dPY=0.0, dPZ=0.0;
-  CVector <std::string> szVMatName, szVMatAlias, szVCylMat, szVCellMat;
-  CVector<double> dVCoor(2), dVCylRadii, dVCylZPos, dZVStart, dZVEnd;
+    CParser Parse;
+    std::string card, szVolId, szVolAlias, szIFlag;
+    int nInputLines, nMaterials, nCyl = 0, nRadii=0, nCellMat=0;
+    double dLZ=0.0, dFlatF=0.0, dPX=0.0, dPY=0.0, dPZ=0.0;
+    CVector <std::string> szVMatName, szVMatAlias, szVCylMat, szVCellMat;
+    CVector<double> dVCoor(2), dVCylRadii, dVCylZPos, dZVStart, dZVEnd;
 
-  //loop over input lines
-  if (m_szGeomType == "rectangular"){
+    //loop over input lines
+    if (m_szGeomType == "rectangular"){
 
-      std::cout << "\ngetting volume id";
-      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                               MAXCHARS, szComment))
-        IOErrorHandler (INVALIDINPUT);
-      std::istringstream szFormatString (szInputString);
-      szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
+        std::cout << "\ngetting volume id";
+        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                 MAXCHARS, szComment))
+          IOErrorHandler (INVALIDINPUT);
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
 
-      // error checking
-      if( (strcmp (szVolAlias.c_str(), "") == 0) ||
-          (strcmp (szVolId.c_str(), "") == 0))
-        IOErrorHandler(EPIN);
-      if( nInputLines < 0 )
-        IOErrorHandler(ENEGATIVE);
+        // error checking
+        if( (strcmp (szVolAlias.c_str(), "") == 0) ||
+            (strcmp (szVolId.c_str(), "") == 0))
+          IOErrorHandler(EPIN);
+        if( nInputLines < 0 )
+          IOErrorHandler(ENEGATIVE);
 
-      m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
-      if(szIFlag == "intersect"){
-          m_Pincell(i).SetIntersectFlag(1);
-        }
-      else{
-          m_Pincell(i).SetIntersectFlag(0);
-        }
-      for(int l=1; l<=nInputLines; l++){
-          if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                   MAXCHARS, szComment))
-            IOErrorHandler (INVALIDINPUT);
-          if (szInputString.substr(0,5) == "pitch"){
+        m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
+        if(szIFlag == "intersect"){
+            m_Pincell(i).SetIntersectFlag(1);
+          }
+        else{
+            m_Pincell(i).SetIntersectFlag(0);
+          }
+        for(int l=1; l<=nInputLines; l++){
+            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                     MAXCHARS, szComment))
+              IOErrorHandler (INVALIDINPUT);
+            if (szInputString.substr(0,5) == "pitch"){
 
-              std::istringstream szFormatString (szInputString);
-              std::cout << "\ngetting pitch data";
-              szFormatString >> card >> dPX >> dPY >> dPZ;
+                std::istringstream szFormatString (szInputString);
+                std::cout << "\ngetting pitch data";
+                szFormatString >> card >> dPX >> dPY >> dPZ;
 
-              if( dPX < 0 || dPY < 0 || dPZ < 0 || szFormatString.fail())
-                IOErrorHandler(ENEGATIVE);
-              m_Pincell(i).SetPitch (dPX, dPY, dPZ);
-            }
-          if (szInputString.substr(0,9) == "materials"){
+                if( dPX < 0 || dPY < 0 || dPZ < 0 || szFormatString.fail())
+                  IOErrorHandler(ENEGATIVE);
+                m_Pincell(i).SetPitch (dPX, dPY, dPZ);
+              }
+            if (szInputString.substr(0,9) == "materials"){
 
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card >> nMaterials;
-              if(szFormatString.fail())
-                IOErrorHandler(INVALIDINPUT);
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card >> nMaterials;
+                if(szFormatString.fail())
+                  IOErrorHandler(INVALIDINPUT);
 
-              //setting local arrays
-              szVMatName.SetSize(nMaterials);
-              szVMatAlias.SetSize(nMaterials);
+                //setting local arrays
+                szVMatName.SetSize(nMaterials);
+                szVMatAlias.SetSize(nMaterials);
 
-              //set class variable sizes
-              m_Pincell(i).SetMatArray(nMaterials);
-              std::cout << "\ngetting material data";
-              for(int j=1; j<= nMaterials; j++){
-                  szFormatString >> szVMatName(j) >> szVMatAlias(j);
-                  if(szFormatString.fail())
-                    IOErrorHandler(INVALIDINPUT);
-                }
-              m_Pincell(i).SetMat(szVMatName, szVMatAlias);
-            }
-          if (szInputString.substr(0,8) == "cylinder"){
+                //set class variable sizes
+                m_Pincell(i).SetMatArray(nMaterials);
+                std::cout << "\ngetting material data";
+                for(int j=1; j<= nMaterials; j++){
+                    szFormatString >> szVMatName(j) >> szVMatAlias(j);
+                    if(szFormatString.fail())
+                      IOErrorHandler(INVALIDINPUT);
+                  }
+                m_Pincell(i).SetMat(szVMatName, szVMatAlias);
+              }
+            if (szInputString.substr(0,8) == "cylinder"){
 
-              ++nCyl;
-              std::cout << "\ngetting cylinder data";
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-              if(szFormatString.fail())
-                IOErrorHandler(INVALIDINPUT);
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
-              m_Pincell(i).SetCylPos(nCyl, dVCoor);
-              m_Pincell(i).SetCellType(nCyl, 0);
+                ++nCyl;
+                std::cout << "\ngetting cylinder data";
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+                if(szFormatString.fail())
+                  IOErrorHandler(INVALIDINPUT);
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+                m_Pincell(i).SetCylPos(nCyl, dVCoor);
+                m_Pincell(i).SetCellType(nCyl, 0);
 
-              //set local array
-              dVCylRadii.SetSize(2*nRadii);
-              szVCylMat.SetSize(nRadii);
-              dVCylZPos.SetSize(2);
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+                //set local array
+                dVCylRadii.SetSize(2*nRadii);
+                szVCylMat.SetSize(nRadii);
+                dVCylZPos.SetSize(2);
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
 
-              // reading ZCoords
-              for(int k=1; k<=2; k++){
+                // reading ZCoords
+                for(int k=1; k<=2; k++){
+                    szFormatString >> dVCylZPos(k);
+                    if(szFormatString.fail())
+                      IOErrorHandler(INVALIDINPUT);
+                  }
+                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+
+                // reading Radii
+                for(int l=1; l<= nRadii; l++){
+                    szFormatString >> dVCylRadii(l);
+                    if( dVCylRadii(l) < 0  || szFormatString.fail())
+                      IOErrorHandler(ENEGATIVE);
+                  }
+                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+
+                // reading Material alias
+                for(int m=1; m<= nRadii; m++){
+                    szFormatString >> szVCylMat(m);
+                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                      IOErrorHandler(EALIAS);
+                    //                  // setting stuff for hole scheme determination for meshing
+                    //                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
+                    //                      // find material name for this alias
+                    //                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                    //                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                    //                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                    //                        }
+                    //                    }
+                    m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+                  }
+              }
+            if (szInputString.substr(0,7) == "frustum"){
+
+                ++nCyl;
+                std::cout << "\ngetting frustum data";
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+                if(szFormatString.fail())
+                  IOErrorHandler(INVALIDINPUT);
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+                m_Pincell(i).SetCylPos(nCyl, dVCoor);
+                m_Pincell(i).SetCellType(nCyl, 1);
+
+                //set local array
+                dVCylRadii.SetSize(2*nRadii);
+                szVCylMat.SetSize(nRadii);
+                dVCylZPos.SetSize(2);
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+
+                // reading ZCoords
+                for(int k=1; k<=2; k++){
+                    szFormatString >> dVCylZPos(k);
+                    if(szFormatString.fail())
+                      IOErrorHandler(INVALIDINPUT);
+                  }
+                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+
+                // reading Radii
+                for(int l=1; l<= 2*nRadii; l++){
+                    szFormatString >> dVCylRadii(l);
+                    if( dVCylRadii(l) < 0  || szFormatString.fail())
+                      IOErrorHandler(ENEGATIVE);
+                  }
+                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+
+                // reading Material alias
+                for(int m=1; m<= nRadii; m++){
+                    szFormatString >> szVCylMat(m);
+                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                      IOErrorHandler(EALIAS);
+                    // setting stuff for hole scheme determination for meshing
+                    if (m > 2 && m_szMeshScheme == "hole"){
+                        // find material name for this alias
+                        for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                            if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                          }
+                      }
+                  }
+                m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+              }
+            if (szInputString.substr(0,12) == "cellmaterial"){
+
+                std::cout << "\ngetting cell material data\n";
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card;
+
+                //set local arrays
+                m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
+                dZVStart.SetSize(nCellMat);
+                dZVEnd.SetSize(nCellMat);
+                szVCellMat.SetSize(nCellMat);
+
+                for(int k=1; k<=nCellMat; k++){
+                    szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
+                    if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
+                      IOErrorHandler(EALIAS);
+                  }
+                m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
+              }
+          }
+      }//if rectangular ends
+
+    if (m_szGeomType == "hexagonal"){
+
+        std::cout << "\ngetting volume id";
+        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                 MAXCHARS, szComment))
+          IOErrorHandler (INVALIDINPUT);
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
+
+        // error checking
+        if( (strcmp (szVolAlias.c_str(), "") == 0) ||
+            (strcmp (szVolId.c_str(), "") == 0))
+          IOErrorHandler(EPIN);
+        if( nInputLines < 0 )
+          IOErrorHandler(ENEGATIVE);
+
+        m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
+        if(szIFlag == "intersect"){
+            m_Pincell(i).SetIntersectFlag(1);
+          }
+        else{
+            m_Pincell(i).SetIntersectFlag(0);
+          }
+        for(int l=1; l<=nInputLines; l++){
+            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                     MAXCHARS, szComment))
+              IOErrorHandler (INVALIDINPUT);
+            if (szInputString.substr(0,5) == "pitch"){
+
+                std::istringstream szFormatString (szInputString);
+                std::cout << "\ngetting pitch data";
+                szFormatString >> card >> dFlatF >> dLZ;
+                if( dFlatF < 0 || dLZ < 0  || szFormatString.fail())
+                  IOErrorHandler(ENEGATIVE);
+                m_Pincell(i).SetPitch (dFlatF, dLZ);
+              }
+            if (szInputString.substr(0,9) == "materials"){
+
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card >> nMaterials;
+                if(szFormatString.fail())
+                  IOErrorHandler(INVALIDINPUT);
+                //setting local arrays
+                szVMatName.SetSize(nMaterials);
+                szVMatAlias.SetSize(nMaterials);
+
+                //set class variable sizes
+                m_Pincell(i).SetMatArray(nMaterials);
+                std::cout << "\ngetting material data";
+                for(int j=1; j<= nMaterials; j++){
+                    szFormatString >> szVMatName(j) >> szVMatAlias(j);
+                    if(szFormatString.fail())
+                      IOErrorHandler(INVALIDINPUT);
+                  }
+                m_Pincell(i).SetMat(szVMatName, szVMatAlias);
+              }
+            if (szInputString.substr(0,8) == "cylinder"){
+
+                ++nCyl;
+                std::cout << "\ngetting cylinder data";
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+                if(szFormatString.fail())
+                  IOErrorHandler(INVALIDINPUT);
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+                m_Pincell(i).SetCylPos(nCyl, dVCoor);
+                m_Pincell(i).SetCellType(nCyl, 0);
+
+                //set local array
+                dVCylRadii.SetSize(2*nRadii);
+                szVCylMat.SetSize(nRadii);
+                dVCylZPos.SetSize(2);
+                //
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+
+                // reading ZCoords - max and min 2 always
+                for(int k=1; k<=2; k++)
                   szFormatString >> dVCylZPos(k);
-                  if(szFormatString.fail())
-                    IOErrorHandler(INVALIDINPUT);
-                }
-              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
 
-              // reading Radii
-              for(int l=1; l<= nRadii; l++){
-                  szFormatString >> dVCylRadii(l);
-                  if( dVCylRadii(l) < 0  || szFormatString.fail())
-                    IOErrorHandler(ENEGATIVE);
-                }
-              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+                // reading Radii
+                for(int l=1; l<= nRadii; l++){
+                    szFormatString >> dVCylRadii(l);
+                    if( dVCylRadii(l) < 0 || szFormatString.fail())
+                      IOErrorHandler(ENEGATIVE);
+                  }
+                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
 
-              // reading Material alias
-              for(int m=1; m<= nRadii; m++){
-                  szFormatString >> szVCylMat(m);
-                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                    IOErrorHandler(EALIAS);
-//                  // setting stuff for hole scheme determination for meshing
-//                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
-//                      // find material name for this alias
-//                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
-//                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
-//                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-//                        }
-//                    }
-              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-            }
-            }
-          if (szInputString.substr(0,7) == "frustum"){
+                // reading Material alias
+                for(int m=1; m<= nRadii; m++){
+                    szFormatString >> szVCylMat(m);
+                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                      IOErrorHandler(EALIAS);
+                    // setting stuff for hole scheme determination for meshing
+                    if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
+                        // find material name for this alias
+                        for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                            //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                            if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                          }
+                      }
+                  }
 
-              ++nCyl;
-              std::cout << "\ngetting frustum data";
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-              if(szFormatString.fail())
-                IOErrorHandler(INVALIDINPUT);
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
-              m_Pincell(i).SetCylPos(nCyl, dVCoor);
-              m_Pincell(i).SetCellType(nCyl, 1);
+                m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+              }
+            if (szInputString.substr(0,7) == "frustum"){
 
-              //set local array
-              dVCylRadii.SetSize(2*nRadii);
-              szVCylMat.SetSize(nRadii);
-              dVCylZPos.SetSize(2);
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
+                ++nCyl;
+                std::cout << "\ngetting frustum data";
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
+                if(szFormatString.fail())
+                  IOErrorHandler(INVALIDINPUT);
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
+                m_Pincell(i).SetCylPos(nCyl, dVCoor);
+                m_Pincell(i).SetCellType(nCyl, 1);
 
-              // reading ZCoords
-              for(int k=1; k<=2; k++){
-                  szFormatString >> dVCylZPos(k);
-                  if(szFormatString.fail())
-                    IOErrorHandler(INVALIDINPUT);
-                }
-              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
+                //set local array
+                dVCylRadii.SetSize(2*nRadii);
+                szVCylMat.SetSize(nRadii);
+                dVCylZPos.SetSize(2);
+                m_Pincell(i).SetCylSizes(nCyl, nRadii);
 
-              // reading Radii
-              for(int l=1; l<= 2*nRadii; l++){
-                  szFormatString >> dVCylRadii(l);
-                  if( dVCylRadii(l) < 0  || szFormatString.fail())
-                    IOErrorHandler(ENEGATIVE);
-                }
-              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
+                // reading ZCoords
+                for(int k=1; k<=2; k++){
+                    szFormatString >> dVCylZPos(k);
+                    if(szFormatString.fail())
+                      IOErrorHandler(INVALIDINPUT);
+                  }
+                m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
 
-              // reading Material alias
-              for(int m=1; m<= nRadii; m++){
-                  szFormatString >> szVCylMat(m);
-                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                    IOErrorHandler(EALIAS);
-                  // setting stuff for hole scheme determination for meshing
-                  if (m > 2 && m_szMeshScheme == "hole"){
-                      // find material name for this alias
-                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                        }
-                    }
-                }
-              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-            }
-          if (szInputString.substr(0,12) == "cellmaterial"){
+                // reading Radii
+                for(int l=1; l<= 2*nRadii; l++){
+                    szFormatString >> dVCylRadii(l);
+                    if( dVCylRadii(l) < 0  || szFormatString.fail())
+                      IOErrorHandler(ENEGATIVE);
+                  }
+                m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
 
-              std::cout << "\ngetting cell material data\n";
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card;
+                // reading Material alias
+                for(int m=1; m<= nRadii; m++){
+                    szFormatString >> szVCylMat(m);
+                    if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
+                      IOErrorHandler(EALIAS);
+                    // setting stuff for hole scheme determination for meshing
+                    if (m > 2 && m_szMeshScheme == "hole"){
+                        // find material name for this alias
+                        for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                            if(szVCylMat(m) == m_szAssmMatAlias(ll))
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                          }
+                      }
+                  }
+                m_Pincell(i).SetCylMat(nCyl, szVCylMat);
+              }
+            if (szInputString.substr(0,12) == "cellmaterial"){
 
-              //set local arrays
-              m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
-              dZVStart.SetSize(nCellMat);
-              dZVEnd.SetSize(nCellMat);
-              szVCellMat.SetSize(nCellMat);
+                std::cout << "\ngetting cell material data";
+                std::istringstream szFormatString (szInputString);
+                szFormatString >> card;
 
-              for(int k=1; k<=nCellMat; k++){
-                  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
-                  if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
-                    IOErrorHandler(EALIAS);
-                }
-              m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
-            }
-        }
-    }//if rectangular ends
+                //set local arrays
+                m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
+                dZVStart.SetSize(nCellMat);
+                dZVEnd.SetSize(nCellMat);
+                szVCellMat.SetSize(nCellMat);
 
-  if (m_szGeomType == "hexagonal"){
+                for(int k=1; k<=nCellMat; k++){
+                    szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
+                    if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
+                      IOErrorHandler(EALIAS);
+                  }
+                m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
+              }
+          }
+      }// if hexagonal end
 
-      std::cout << "\ngetting volume id";
-      if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                               MAXCHARS, szComment))
-        IOErrorHandler (INVALIDINPUT);
-      std::istringstream szFormatString (szInputString);
-      szFormatString >> szVolId >> szVolAlias >> nInputLines >> szIFlag;
+  }
 
-      // error checking
-      if( (strcmp (szVolAlias.c_str(), "") == 0) ||
-          (strcmp (szVolId.c_str(), "") == 0))
-        IOErrorHandler(EPIN);
-      if( nInputLines < 0 )
-        IOErrorHandler(ENEGATIVE);
-
-      m_Pincell(i).SetLineOne (szVolId, szVolAlias, nInputLines);
-      if(szIFlag == "intersect"){
-          m_Pincell(i).SetIntersectFlag(1);
-        }
-      else{
-          m_Pincell(i).SetIntersectFlag(0);
-        }
-      for(int l=1; l<=nInputLines; l++){
-          if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                   MAXCHARS, szComment))
-            IOErrorHandler (INVALIDINPUT);
-          if (szInputString.substr(0,5) == "pitch"){
-
-              std::istringstream szFormatString (szInputString);
-              std::cout << "\ngetting pitch data";
-              szFormatString >> card >> dFlatF >> dLZ;
-              if( dFlatF < 0 || dLZ < 0  || szFormatString.fail())
-                IOErrorHandler(ENEGATIVE);
-              m_Pincell(i).SetPitch (dFlatF, dLZ);
-            }
-          if (szInputString.substr(0,9) == "materials"){
-
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card >> nMaterials;
-              if(szFormatString.fail())
-                IOErrorHandler(INVALIDINPUT);
-              //setting local arrays
-              szVMatName.SetSize(nMaterials);
-              szVMatAlias.SetSize(nMaterials);
-
-              //set class variable sizes
-              m_Pincell(i).SetMatArray(nMaterials);
-              std::cout << "\ngetting material data";
-              for(int j=1; j<= nMaterials; j++){
-                  szFormatString >> szVMatName(j) >> szVMatAlias(j);
-                  if(szFormatString.fail())
-                    IOErrorHandler(INVALIDINPUT);
-                }
-              m_Pincell(i).SetMat(szVMatName, szVMatAlias);
-            }
-          if (szInputString.substr(0,8) == "cylinder"){
-
-              ++nCyl;
-              std::cout << "\ngetting cylinder data";
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-              if(szFormatString.fail())
-                IOErrorHandler(INVALIDINPUT);
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
-              m_Pincell(i).SetCylPos(nCyl, dVCoor);
-              m_Pincell(i).SetCellType(nCyl, 0);
-
-              //set local array
-              dVCylRadii.SetSize(2*nRadii);
-              szVCylMat.SetSize(nRadii);
-              dVCylZPos.SetSize(2);
-              //
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
-
-              // reading ZCoords - max and min 2 always
-              for(int k=1; k<=2; k++)
-                szFormatString >> dVCylZPos(k);
-              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
-
-              // reading Radii
-              for(int l=1; l<= nRadii; l++){
-                  szFormatString >> dVCylRadii(l);
-                  if( dVCylRadii(l) < 0 || szFormatString.fail())
-                    IOErrorHandler(ENEGATIVE);
-                }
-              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
-
-              // reading Material alias
-              for(int m=1; m<= nRadii; m++){
-                  szFormatString >> szVCylMat(m);
-                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                    IOErrorHandler(EALIAS);
-                  // setting stuff for hole scheme determination for meshing
-                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
-                      // find material name for this alias
-                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                          //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                          if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
-                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                        }
-                    }
-                }
-
-              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-            }
-          if (szInputString.substr(0,7) == "frustum"){
-
-              ++nCyl;
-              std::cout << "\ngetting frustum data";
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card >> nRadii >> dVCoor(1) >> dVCoor(2);
-              if(szFormatString.fail())
-                IOErrorHandler(INVALIDINPUT);
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
-              m_Pincell(i).SetCylPos(nCyl, dVCoor);
-              m_Pincell(i).SetCellType(nCyl, 1);
-
-              //set local array
-              dVCylRadii.SetSize(2*nRadii);
-              szVCylMat.SetSize(nRadii);
-              dVCylZPos.SetSize(2);
-              m_Pincell(i).SetCylSizes(nCyl, nRadii);
-
-              // reading ZCoords
-              for(int k=1; k<=2; k++){
-                  szFormatString >> dVCylZPos(k);
-                  if(szFormatString.fail())
-                    IOErrorHandler(INVALIDINPUT);
-                }
-              m_Pincell(i).SetCylZPos(nCyl, dVCylZPos);
-
-              // reading Radii
-              for(int l=1; l<= 2*nRadii; l++){
-                  szFormatString >> dVCylRadii(l);
-                  if( dVCylRadii(l) < 0  || szFormatString.fail())
-                    IOErrorHandler(ENEGATIVE);
-                }
-              m_Pincell(i).SetCylRadii(nCyl, dVCylRadii);
-
-              // reading Material alias
-              for(int m=1; m<= nRadii; m++){
-                  szFormatString >> szVCylMat(m);
-                  if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
-                    IOErrorHandler(EALIAS);
-                  // setting stuff for hole scheme determination for meshing
-                  if (m > 2 && m_szMeshScheme == "hole"){
-                      // find material name for this alias
-                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                        }
-                    }
-                }
-              m_Pincell(i).SetCylMat(nCyl, szVCylMat);
-            }
-          if (szInputString.substr(0,12) == "cellmaterial"){
-
-              std::cout << "\ngetting cell material data";
-              std::istringstream szFormatString (szInputString);
-              szFormatString >> card;
-
-              //set local arrays
-              m_Pincell(i).GetCellMatSize(nCellMat); // since size of cell material already set equal to number of cylinders
-              dZVStart.SetSize(nCellMat);
-              dZVEnd.SetSize(nCellMat);
-              szVCellMat.SetSize(nCellMat);
-
-              for(int k=1; k<=nCellMat; k++){
-                  szFormatString >> dZVStart(k)>> dZVEnd(k) >> szVCellMat(k);
-                  if(strcmp (szVCellMat(k).c_str(), "") == 0 || szFormatString.fail())
-                    IOErrorHandler(EALIAS);
-                }
-              m_Pincell(i).SetCellMat(dZVStart, dZVEnd, szVCellMat);
-            }
-        }
-    }// if hexagonal end
-}
 
   void AssyGen::ReadAndCreate()
   //---------------------------------------------------------------------------
@@ -1171,23 +1241,28 @@ namespace MeshKit
                   m_Pincell(i).SetPitch(m_dPitch, dTotalHeight);
 
                 ReadPinCellData(i);
+                //ERRORR("Error in ReadPinCellData", err);
                 std::cout << "\nread pincell " << i << std::endl;
               }
           }
         if (szInputString.substr(0,8) == "assembly"){
             if(m_szGeomType =="hexagonal"){
                 Create_HexAssm(szInputString);
+                //ERRORR("Error in Create_HexAssm", err);
               }
             if(m_szGeomType =="rectangular"){
                 Create_CartAssm(szInputString);
+                //ERRORR("Error in Create_CartAssm", err);
               }
             if (m_nJouFlag == 0){
                 CreateOuterCovering();
+                //ERRORR("Error in CreateOuterCovering", err);
 
                 // subtract pins before save
                 Subtract_Pins();
                 if(m_nPlanar ==1){
                     Create2DSurf();
+                    //ERRORR("Error in Create2DSurf", err);
                   }
               }
           }
@@ -1201,6 +1276,7 @@ namespace MeshKit
             std::istringstream szFormatString (szInputString);
             szFormatString >> card >> cDir >> dOffset >> szReverse;
             Section_Assm(cDir, dOffset, szReverse);
+            //ERRORR("Error in Section_Assm", err);
             std::cout <<"--------------------------------------------------"<<std::endl;
 
           }
@@ -1212,6 +1288,7 @@ namespace MeshKit
             if(szFormatString.fail())
               IOErrorHandler(INVALIDINPUT);
             Move_Assm(dX, dY, dZ);
+            //ERRORR("Error in Move_Assm", err);
             std::cout <<"--------------------------------------------------"<<std::endl;
 
           }
@@ -1226,6 +1303,7 @@ namespace MeshKit
             else
               std::cout << "Positioning assembly to xy center" << std::endl;
             Center_Assm(rDir);
+            //ERRORR("Error in Center_Assm", err);
             std::cout <<"--------------------------------------------------"<<std::endl;
           }
         // rotate the assembly if rotate card is specified
@@ -1238,6 +1316,7 @@ namespace MeshKit
             if(szFormatString.fail())
               IOErrorHandler(INVALIDINPUT);
             Rotate_Assm(cDir, dAngle);
+            //ERRORR("Error in Rotate_Assm", err);
             std::cout <<"--------------------------------------------------"<<std::endl;
 
           }
@@ -1375,16 +1454,17 @@ namespace MeshKit
 
             if ( m_nJouFlag == 0){
                 // impring merge before saving
-                Imprint_Merge();
+            //    Imprint_Merge();
 
                 // save .sat file
-                // save .sat file
-                IBERRCHK(igeomImpl->save(m_szGeomFile.c_str()), *igeomImpl);
+                iGeom_save(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
+                ////CHECK("Save to file failed.");
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
               }
             break;
           }
       }
+
   }
 
   void AssyGen::CreateAssyGenInputFiles()
@@ -1498,6 +1578,9 @@ namespace MeshKit
             ofs.close();
           } while(!bDone);
       }
+
+
+
   }
 
   void AssyGen::CreateCubitJournal()
@@ -1510,15 +1593,19 @@ namespace MeshKit
     if(m_szMeshScheme == "hole")
       m_FileOutput << "surf in group hole_surfaces scheme hole" << std::endl;
 
-   if (m_nBLAssemblyMat !=0){
+    if (m_nBLAssemblyMat !=0){
         // Also look for material name in BL material list
         for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
             //if(szVCylMat(m) == m_szBLAssmMat(ll)) {
-                m_FileOutput << "group 'tmpgrp' equals surf with name '" <<  m_szBLAssmMat(ll)  << "_top'" << std::endl;
-                m_FileOutput << "surf in tmpgrp size {RADIAL_MESH_SIZE}" << std::endl;
-                m_FileOutput << "group '" << m_szBLAssmMat(ll) << "_hole_surfaces' equals surf in tmpgrp"<< std::endl;
-                m_FileOutput << "surface in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_interval " << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
-                m_FileOutput << "group 'bl_surfaces' add surf in tmpgrp" << std::endl;
+            m_FileOutput << "group 'tmpgrp' equals surf with name '" <<  m_szBLAssmMat(ll)  << "_top'" << std::endl;
+            m_FileOutput << "surf in tmpgrp size {RADIAL_MESH_SIZE}" << std::endl;
+            m_FileOutput << "group '" << m_szBLAssmMat(ll) << "_hole_surfaces' equals surf in tmpgrp"<< std::endl;
+            m_FileOutput << "surface in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_interval " << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
+            if(strcmp(m_szSmooth.c_str(),"on") == 0)
+              m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << " smooth scheme condition number beta 2.0 cpu 10" << std::endl;
+            //         m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
+            // }
+            m_FileOutput << "group 'bl_surfaces' add surf in tmpgrp" << std::endl;
           }
       }
     // variables
@@ -1529,12 +1616,14 @@ namespace MeshKit
 
     // if creating only journal file load the geometry file to compute bounding box for automatic size specification
     if(m_nJouFlag == 1){
-          IBERRCHK(igeomImpl->load(m_szGeomFile.c_str()), *igeomImpl);
+        iGeom_load(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
+        ////CHECK("Failed to load geometry.");
       }
 
     // get the max and min coordinates of the geometry
     double x1, y1, z1, x2, y2, z2;
-    IBERRCHK(igeomImpl->getBoundBox(x1, y1, z1, x2, y2, z2), *igeomImpl);
+    iGeom_getBoundBox( igeomImpl->instance(), &x1, &y1, &z1, &x2, &y2, &z2, &err );
+    //CHECK( "Problems getting bouding box." );
 
     int nSideset=m_nNeumannSetId;
     std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
@@ -1807,14 +1896,14 @@ namespace MeshKit
         if (m_nDuct <= 1 ){
             m_FileOutput << "group 'tmpgrp' add surface name '_top'" << std::endl;
             if (m_nBLAssemblyMat !=0){ // only if boundary layers are specified
-              m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
-              m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
-              m_FileOutput << "mesh tmpgrp2" << std::endl;
-            }
+                m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
+                m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
+                m_FileOutput << "mesh tmpgrp2" << std::endl;
+              }
             else
-            {
-              m_FileOutput << "mesh tmpgrp" << std::endl;
-            }
+              {
+                m_FileOutput << "mesh tmpgrp" << std::endl;
+              }
           }
         else {
             m_FileOutput << "#Meshing top surface" << std::endl;
@@ -1840,24 +1929,24 @@ namespace MeshKit
                 m_FileOutput << "mesh tmpgrp3" << std::endl;
 
               }
-              else {
+            else {
                 m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
                 m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
                 m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
                 m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
               }
           }
-          // This part is for mesh top surfaces only when boundary layer surfaces are specified
-         if (m_nBLAssemblyMat !=0){
-              // Also look for material name in BL material list
-              for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
+        // This part is for mesh top surfaces only when boundary layer surfaces are specified
+        if (m_nBLAssemblyMat !=0){
+            // Also look for material name in BL material list
+            for (int ll=1; ll<= m_nBLAssemblyMat; ll++){
                 bool duct = false;
                 for (int n = 0; n < (int) m_szDuctMats.size(); n++){
-                  if (strcmp(m_szDuctMats[n].c_str(), m_szBLAssmMat(ll).c_str()) == 0)
-                    duct = true;
-                  else
-                    duct = false;
-                }
+                    if (strcmp(m_szDuctMats[n].c_str(), m_szBLAssmMat(ll).c_str()) == 0)
+                      duct = true;
+                    else
+                      duct = false;
+                  }
                 if (duct){                 //We want to use this part with pair node only for ducts and not cylinderical pins so check if this material is duct or not
                     if (m_edgeInterval != 99)
                       m_FileOutput << "curve in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces interval {TOP_EDGE_INTERVAL}"<< std::endl;
@@ -1865,45 +1954,47 @@ namespace MeshKit
                     m_FileOutput << "#{corner1 = Id('node')} " << std::endl;
                     m_FileOutput << "group 'gcurves' equals curve in surface in " << m_szBLAssmMat(ll) << "_hole_surfaces'" << std::endl;
                     m_FileOutput << "#{_cntr=0} " << "\n" <<
-                          "#{_tmp_dis=0} " << "\n" <<
-                          "#{_min_dis=0}  " << "\n" <<
-                          "#{_closest_node=11} " << "\n" <<
+                                    "#{_tmp_dis=0} " << "\n" <<
+                                    "#{_min_dis=0}  " << "\n" <<
+                                    "#{_closest_node=11} " << "\n" <<
 
-                          "group 'v_node' equals node in volume in surface in " <<  m_szBLAssmMat(ll) << "_hole_surfaces" << "\n" <<
-                          "group v_node remove node {corner1} " << "\n" <<
-                          "#{xc1 = Nx(corner1)} " << "\n" <<
-                          "#{yc1 = Ny(corner1)} " << "\n" <<
-                          "#{_num_nodes = NumInGrp('v_node')} " << "\n" <<
-                          "#{_min_dis = 1.e10} " << "\n" <<
-                          "#{Loop(24)} " << "\n" <<
-                          "#{_node_id = GroupMemberId('v_node', 'node', _cntr)} " << "\n" <<
-                          "#{_xni = Nx(_node_id)} " << "\n" <<
-                          "#{_yni = Ny(_node_id)} " << "\n" <<
-                          "#{_tmp_dis = (xc1 - _xni)*(xc1 -_xni) + (yc1 -_yni)*(yc1 - _yni)} " << "\n" <<
-                          "#{if(_tmp_dis < _min_dis)} " << "\n" <<
-                          "#{ _closest_node = _node_id} " << "\n" <<
-                          "# {_min_dis=_tmp_dis} " << "\n" <<
-                          "#{endif} " << "\n" <<
-                          "#{_cntr++} " << "\n" <<
-                          "#{if (_cntr >_num_nodes)} " << "\n" <<
-                          "#{break} " << "\n" <<
-                          "#{endif} " << "\n" <<
-                          "#{EndLoop} " << "\n" << std::endl;
+                                    "group 'v_node' equals node in volume in surface in " <<  m_szBLAssmMat(ll) << "_hole_surfaces" << "\n" <<
+                                    "group v_node remove node {corner1} " << "\n" <<
+                                    "#{xc1 = Nx(corner1)} " << "\n" <<
+                                    "#{yc1 = Ny(corner1)} " << "\n" <<
+                                    "#{_num_nodes = NumInGrp('v_node')} " << "\n" <<
+                                    "#{_min_dis = 1.e10} " << "\n" <<
+                                    "#{Loop(20)} " << "\n" <<
+                                    "#{_node_id = GroupMemberId('v_node', 'node', _cntr)} " << "\n" <<
+                                    "#{_xni = Nx(_node_id)} " << "\n" <<
+                                    "#{_yni = Ny(_node_id)} " << "\n" <<
+                                    "#{_tmp_dis = (xc1 - _xni)*(xc1 -_xni) + (yc1 -_yni)*(yc1 - _yni)} " << "\n" <<
+                                    "#{if(_tmp_dis < _min_dis)} " << "\n" <<
+                                    "#{ _closest_node = _node_id} " << "\n" <<
+                                    "# {_min_dis=_tmp_dis} " << "\n" <<
+                                    "#{endif} " << "\n" <<
+                                    "#{_cntr++} " << "\n" <<
+                                    "#{if (_cntr >_num_nodes)} " << "\n" <<
+                                    "#{break} " << "\n" <<
+                                    "#{endif} " << "\n" <<
+                                    "#{EndLoop} " << "\n" << std::endl;
 
                     // This must be used only for ducts
-                     //   if (m_szBLAssmMat(ll) == duct material or it's not pin material')
-                        m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
-                                     << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << " pair node {corner1} with node {_closest_node}" << std::endl;
-                     }
-                     else { // this is regular cylinder
-                        m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
-                                     << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
-                     }
-
-                      m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+                    //   if (m_szBLAssmMat(ll) == duct material or it's not pin material')
+                    m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
+                                 << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << " pair node {corner1} with node {_closest_node}" << std::endl;
                   }
-                m_FileOutput << "mesh surf in innerduct with z_coord = " << z2 << std::endl;
-            }
+                else { // this is regular cylinder
+                    m_FileOutput << "surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces scheme hole rad_intervals "
+                                 << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
+                  }
+
+                m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+                if(strcmp(m_szSmooth.c_str(),"on") == 0)
+                  m_FileOutput << "smooth surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
+              }
+            m_FileOutput << "mesh surf in innerduct with z_coord = " << z2 << std::endl;
+          }
 
         if(m_nPlanar == 0){ // volumes only
             if (m_nDuct == 1){
@@ -2308,10 +2399,11 @@ namespace MeshKit
       std::cout << "Assembly info file created: " << m_szAssmInfo << std::endl;
 
     m_FileOutput << "Timer Stop" << std::endl;
+
   }
 
-  void AssyGen:: ComputePinCentroid( int nTempPin, CMatrix<std::string> MAssembly,
-				     int m, int n, double &dX, double &dY, double &dZ)
+  void AssyGen:: ComputePinCentroid(int nTempPin, CMatrix<std::string> MAssembly,
+                                    int m, int n, double &dX, double &dY, double &dZ)
   // ---------------------------------------------------------------------------
   // Function: computes the centroid in the whole assembly of rectangular or hexagonal pincell
   // Input:    number and location of the pincell
@@ -2381,6 +2473,7 @@ namespace MeshKit
           }
         dZ = 0.0; // moving in XY plane only
       }//if rectangular ends
+
   }
 
   void AssyGen::IOErrorHandler (ErrorStates ECode) const
@@ -2417,8 +2510,48 @@ namespace MeshKit
     std::cerr << std::endl;
     exit (1);
   }
+  /*
+void AssyGen::TerminateProgram ()
+// ---------------------------------------------------------------------------
+// Function: terminates the program steps by closing the input/output files
+// Input:    none
+// Output:   none
+// ---------------------------------------------------------------------------
+{
+  iGeom_dtor(igeomImpl->instance(), &err);
+  //CHECK( "Interface destruction didn't work properly." );
+  // close the input and output files
+  m_FileInput.close ();
+  m_FileOutput.close ();
+  m_SchemesFile.close ();
+  if(strcmp(m_szInfo.c_str(),"on") == 0)
+    m_AssmInfo.close ();
 
-  void AssyGen:: Name_Faces( const std::string sMatName, const iBase_EntityHandle body,  iBase_TagHandle this_tag )
+
+}
+*/
+
+//  // print error function definition (iGeom)
+//  bool C::Print_Error( const char* desc,
+//                            int err,
+//                            iGeom_Instance igeomImpl->instance(),
+//                            const char* file,
+//                            int line )
+//  {
+//    char buffer[1024];
+//    iGeom_getDescription( igeomImpl->instance(), buffer, sizeof(buffer) );
+//    buffer[sizeof(buffer)-1] = '\0';
+
+//    std::cerr << "ERROR: " << desc << std::endl
+//              << "  Error code: " << err << std::endl
+//              << "  Error desc: " << buffer << std::endl
+//              << "  At        : " << file << ':' << line << std::endl
+//                 ;
+
+//    return false; // must always return false or CHECK macro will break
+//  }
+
+  void AssyGen:: Name_Faces(const std::string sMatName, const iBase_EntityHandle body,  iBase_TagHandle this_tag )
   // ---------------------------------------------------------------------------
   // Function: names all the faces in the body
   // Input:    none
@@ -2434,22 +2567,25 @@ namespace MeshKit
     if (ttol != 0){
         dTol=ttol*1.0e-4;
       }
-   double dZTemp = 0.0;
+    double dZTemp = 0.0;
     int flag = 0, locTemp = 0;
     iBase_EntityHandle max_surf = NULL, min_surf = NULL, side_surf =NULL;
-    std::vector<iBase_EntityHandle> surfs;
+    SimpleArray<iBase_EntityHandle> surfs;
     int nSide = 0;
     std::ostringstream os;
     std::string sMatName0=sMatName+"_top";
     std::string sMatName1=sMatName+"_bot";
     std::string sSideName;
-    IBERRCHK(igeomImpl->getEntAdj(body, iBase_FACE, surfs), *igeomImpl);
+    iGeom_getEntAdj( igeomImpl->instance(), body, iBase_FACE, ARRAY_INOUT(surfs), &err );
+    //CHECK( "Problems getting max surf for rotation." );
 
-    double *max_corn = new double [3*surfs.size()];
-    double *min_corn = new double [3*surfs.size()];
-    IBERRCHK(igeomImpl->getArrBoundBox(&surfs[0], (int) surfs.size(),iBase_INTERLEAVED, &min_corn[0], &max_corn[0]), *igeomImpl);
-
-    for (int i = 0; i < (int)surfs.size(); ++i){
+    SimpleArray<double> max_corn, min_corn;
+    iGeom_getArrBoundBox( igeomImpl->instance(), ARRAY_IN(surfs), iBase_INTERLEAVED,
+                          ARRAY_INOUT( min_corn ),
+                          ARRAY_INOUT( max_corn ),
+                          &err );
+    //CHECK( "Problems getting max surf for rotation." );
+    for (int i = 0; i < surfs.size(); ++i){
         // first find the max z-coordinate
         if( (fabs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
             if(flag == 0){
@@ -2470,61 +2606,68 @@ namespace MeshKit
                 max_surf = surfs[i];
               }
           }
-       // see if max or min set name
-      if(max_surf !=0){
-	IBERRCHK(igeomImpl->setData(max_surf, this_tag, sMatName0.c_str()), *igeomImpl);
+        // see if max or min set name
+        if(max_surf !=0){
+            iGeom_setData(igeomImpl->instance(), max_surf, this_tag,
+                          sMatName0.c_str(), sMatName0.size(), &err);
+            ////CHECK("setData failed");
 
-	std::cout << sMatName0 << ",  ";
-	max_surf = NULL;
+            std::cout << sMatName0 << ",  ";
+            max_surf = NULL;
 
-      }
-      if(min_surf !=0){
-	IBERRCHK(igeomImpl->setData(min_surf, this_tag, sMatName1.c_str()), *igeomImpl);
-	std::cout << sMatName1 << ",  ";
-	min_surf = NULL;
+          }
+        if(min_surf !=0){
+            iGeom_setData(igeomImpl->instance(), min_surf, this_tag,
+                          sMatName1.c_str(), sMatName1.size(), &err);
+            ////CHECK("setData failed");
+            std::cout << sMatName1 << ",  ";
+            min_surf = NULL;
 
+          }
       }
-    }
-    for (int i = 0; i < (int) surfs.size(); ++i){
-      if( (fabs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
-	continue; // its a max of min surface
-      }
-      else{ // its a side surface
-	side_surf = surfs[i];
-      }
-      //set name for the sidesurf now
-      if(side_surf !=0){
-          ++nSide;
-          sSideName = sMatName + "_side";
-          if(m_szGeomType == "hexagonal") {
-              if(nSide <= 6)
-                os << sSideName << nSide;
-              else
-                os << sSideName << "_" << nSide;
-            }
+    for (int i = 0; i < surfs.size(); ++i){
+        if( (fabs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
+            continue; // its a max of min surface
+          }
+        else{ // its a side surface
+            side_surf = surfs[i];
+          }
+        //set name for the sidesurf now
+        if(side_surf !=0){
+            ++nSide;
+            sSideName = sMatName + "_side";
+            if(m_szGeomType == "hexagonal") {
+                if(nSide <= 6)
+                  os << sSideName << nSide;
+                else
+                  os << sSideName << "_" << nSide;
+              }
 
-          if(m_szGeomType == "rectangular"){
-              if(nSide <= 4)
-                os << sSideName << nSide;
-              else
-                os << sSideName << "_" << nSide;
-            }
-          sSideName = os.str();
-	IBERRCHK(igeomImpl->setData(side_surf, this_tag, sMatName1.c_str()), *igeomImpl);
-	std::cout << sSideName << ",  " ;
-	sSideName = "";
-	os.str("");
-	side_surf = NULL;
+            if(m_szGeomType == "rectangular"){
+                if(nSide <= 4)
+                  os << sSideName << nSide;
+                else
+                  os << sSideName << "_" << nSide;
+              }
+            sSideName = os.str();
+            iGeom_setData(igeomImpl->instance(), side_surf, this_tag,
+                          sSideName.c_str(), sMatName1.size(), &err);
+            ////CHECK("setData failed");
+            std::cout << sSideName << ",  " ;
+            sSideName = "";
+            os.str("");
+            side_surf = NULL;
+          }
+        else {
+            std::cerr << "Couldn't find surface for naming" << std::endl;
+          }
       }
-      else {
-	std::cerr << "Couldn't find surface for naming" << std::endl;
-      }
-    }
     std::cout <<"\n";
 
   }
 
-  void AssyGen::Center_Assm ( char &rDir)
+
+  void AssyGen::Center_Assm (char &rDir)
   // ---------------------------------------------------------------------------
   // Function: centers all the entities along x and y axis
   // Input:    none
@@ -2533,40 +2676,40 @@ namespace MeshKit
   {
     double xmin, xmax, ymin, ymax, zmin, zmax, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;
     // position the assembly such that origin is at the center before sa
-    IBERRCHK(igeomImpl->getBoundBox(xmin, ymin,zmin, xmax, ymax, zmax), *igeomImpl);
-
+    iGeom_getBoundBox(igeomImpl->instance(),&xmin,&ymin,&zmin,
+                      &xmax,&ymax,&zmax, &err);
+    ////CHECK("Failed getting bounding box");
 
     // moving all geom entities to center
 
 
     if( rDir =='x'){
-      xcenter = (xmin+xmax)/2.0;
-    }
+        xcenter = (xmin+xmax)/2.0;
+      }
     else if( rDir =='y'){
-      ycenter = (ymin+ymax)/2.0;
-    }
+        ycenter = (ymin+ymax)/2.0;
+      }
     else if ( rDir =='z'){
-      zcenter = (zmin+zmax)/2.0;
-    }
+        zcenter = (zmin+zmax)/2.0;
+      }
     else{
-      // assume that it is centered along x and y and not z direction
-      xcenter = (xmin+xmax)/2.0;
-      ycenter = (ymin+ymax)/2.0;
-    }
+        // assume that it is centered along x and y and not z direction
+        xcenter = (xmin+xmax)/2.0;
+        ycenter = (ymin+ymax)/2.0;
+      }
 
-    //SimpleArray<iBase_EntityHandle> all;
-    std::vector<iBase_EntityHandle> all;
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, all), *igeomImpl);
+    SimpleArray<iBase_EntityHandle> all;
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+    ////CHECK("Failed to get all entities");
 
-
-    for(int i=0; i< (int) all.size(); i++){
-      IBERRCHK(igeomImpl->moveEnt(all[i], -xcenter, -ycenter, -zcenter), *igeomImpl);
-
-    }
+    for(int i=0; i<all.size(); i++){
+        iGeom_moveEnt(igeomImpl->instance(),all[i],-xcenter,-ycenter,-zcenter,&err);
+        ////CHECK("Failed to move entities");
+      }
 
   }
 
-  void AssyGen::Section_Assm ( char &cDir, double &dOffset, const std::string szReverse)
+  void AssyGen::Section_Assm (char &cDir, double &dOffset, const std::string szReverse)
   // ---------------------------------------------------------------------------
   // Function: sections the assembly about the cutting plane
   // Input:    none
@@ -2578,60 +2721,60 @@ namespace MeshKit
     int nReverse = 0;
     // check if reverse side is needed
     if(szReverse == "reverse"){
-      nReverse = 1;
-    }
+        nReverse = 1;
+      }
     if( cDir =='x'){
-      yzplane = 1.0;
-      xzplane = 0.0;
-    }
+        yzplane = 1.0;
+        xzplane = 0.0;
+      }
     if( cDir =='y'){
-      yzplane = 0.0;
-      xzplane = 1.0;
-    }
-    //SimpleArray<iBase_EntityHandle> all;
-    std::vector<iBase_EntityHandle> all;
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, all), *igeomImpl);
-
+        yzplane = 0.0;
+        xzplane = 1.0;
+      }
+    SimpleArray<iBase_EntityHandle> all;
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+    ////CHECK("Failed to get all entities");
     // loop and section/delete entities
-    for(int i=0; i < (int) all.size(); i++){
-      //get the bounding box to decide
-      IBERRCHK(igeomImpl->getEntBoundBox(all[i], xmin, ymin, zmin, xmax, ymax, zmax), *igeomImpl);
-
-      if(xmin > dOffset && yzplane ==1 && nReverse ==1){
-	IBERRCHK(igeomImpl->deleteEnt(all[i]), *igeomImpl);
-
-	continue;
+    for(int i=0; i < all.size(); i++){
+        //get the bounding box to decide
+        iGeom_getEntBoundBox(igeomImpl->instance(),all[i],&xmin,&ymin,&zmin,
+                             &xmax,&ymax,&zmax, &err);
+        ////CHECK("Failed get bound box");
+        if(xmin > dOffset && yzplane ==1 && nReverse ==1){
+            iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
+            ////CHECK("Failed delete entities");
+            continue;
+          }
+        if(ymin > dOffset && xzplane == 1 && nReverse ==1){
+            iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
+            ////CHECK("Failed delete entities");
+            continue;
+          }
+        if(xmax < dOffset && yzplane ==1 && nReverse ==0){
+            iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
+            ////CHECK("Failed delete entities");
+            continue;
+          }
+        if(ymax < dOffset && xzplane == 1 && nReverse ==0){
+            iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
+            ////CHECK("Failed delete entities");
+            continue;
+          }
+        else{
+            if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
+                iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset, nReverse,&sec,&err);
+                ////CHECK("Failed to section ent");
+              }
+            if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
+                iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset,nReverse,&sec,&err);
+                ////CHECK("Failed to section ent");
+              }
+          }
       }
-      if(ymin > dOffset && xzplane == 1 && nReverse ==1){
-	IBERRCHK(igeomImpl->deleteEnt(all[i]), *igeomImpl);
-
-	continue;
-      }
-      if(xmax < dOffset && yzplane ==1 && nReverse ==0){
-	IBERRCHK(igeomImpl->deleteEnt(all[i]), *igeomImpl);
-
-	continue;
-      }
-      if(ymax < dOffset && xzplane == 1 && nReverse ==0){
-	IBERRCHK(igeomImpl->deleteEnt(all[i]), *igeomImpl);
-
-	continue;
-      }
-      else{
-	if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
-	  IBERRCHK(igeomImpl->sectionEnt(all[i],yzplane,xzplane,0, dOffset, nReverse, sec), *igeomImpl);
-
-	}
-	if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
-	  IBERRCHK(igeomImpl->sectionEnt(all[i],yzplane,xzplane,0, dOffset, nReverse, sec), *igeomImpl);
-
-	}
-      }
-    }
 
   }
 
-  void AssyGen::Rotate_Assm ( char &cDir, double &dAngle)
+  void AssyGen::Rotate_Assm (char &cDir, double &dAngle)
   // ---------------------------------------------------------------------------
   // Function: rotates the whole assembly
   // Input:    none
@@ -2640,51 +2783,52 @@ namespace MeshKit
   {
     double dX = 0.0, dY=0.0, dZ=0.0;
     if( cDir =='x'){
-      dX = 1.0;
-    }
+        dX = 1.0;
+      }
     if( cDir =='y'){
-      dY = 1.0;
-    }
+        dY = 1.0;
+      }
     if( cDir =='z'){
-      dZ = 1.0;
-    }
-    std::vector<iBase_EntityHandle> all;
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, all), *igeomImpl);
-
-
+        dZ = 1.0;
+      }
+    SimpleArray<iBase_EntityHandle> all;
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+    ////CHECK("Failed to get all entities");
     // loop and rotate all entities
-    for(int i=0; i< (int) all.size(); i++){
-      //get the bounding box to decide
-      IBERRCHK(igeomImpl->rotateEnt(all[i], dAngle, dX, dY, dZ), *igeomImpl);
-
-    }
+    for(int i=0; i<all.size(); i++){
+        //get the bounding box to decide
+        iGeom_rotateEnt(igeomImpl->instance(),all[i],dAngle,
+                        dX, dY, dZ, &err);
+        ////CHECK("Failed rotate entities");
+      }
 
   }
 
-  void AssyGen::Move_Assm ( double &dX,double &dY, double &dZ)
+  void AssyGen::Move_Assm (double &dX,double &dY, double &dZ)
   // ---------------------------------------------------------------------------
   // Function: move's the model by dX, dY and dZ
   // Input:    none
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    std::vector<iBase_EntityHandle> all;
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, all), *igeomImpl);
-
-
+    SimpleArray<iBase_EntityHandle> all;
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+    ////CHECK("Failed to get all entities");
     // loop and rotate all entities
-    for(int i=0; i< (int) all.size(); i++){
-      //get the bounding box to decide
-      IBERRCHK(igeomImpl->moveEnt(all[i], dX, dY, dZ), *igeomImpl);
-
-    }
+    for(int i=0; i<all.size(); i++){
+        //get the bounding box to decide
+        iGeom_moveEnt(igeomImpl->instance(),all[i],
+                      dX, dY, dZ, &err);
+        ////CHECK("Failed move entities");
+      }
 
   }
 
-  void AssyGen::Create_HexAssm( std::string &szInputString)
+  void AssyGen::Create_HexAssm(std::string &szInputString)
   // ---------------------------------------------------------------------------
   // Function: read and create the assembly for hexagonal lattice
   // Input:    error code
+  // Output:   none
   // ---------------------------------------------------------------------------
   {
     CParser Parse;
@@ -2706,59 +2850,63 @@ namespace MeshKit
     // creating a square array of size width
     m_Assembly.SetSize(nWidth, nWidth);
     if (m_nJouFlag == 1)
-      return;
 
-    for(int m=1; m<=nWidth; m++){
-        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                 MAXCHARS, szComment))
-          IOErrorHandler (INVALIDINPUT);
-        if(m>m_nPin)
-          t = 2*m_nPin - m;
-        else
-          t = m;
-        std::istringstream szFormatString1 (szInputString);
 
-        for(int n=1; n<=(m_nPin + t - 1); n++){
-            ++total_pincells;
-            szFormatString1 >> m_Assembly(m,n);
-            if(szFormatString1.fail())
-              IOErrorHandler (INVALIDINPUT);
-            // if dummy pincell skip and continue
-            if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-                continue;
-              }
-            // find that pincell
-            ++m_nTotalPincells;
-            for(int b=1; b<=m_nPincells; b++){
-                m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-                if(m_Assembly(m,n) == szVolAlias)
-                  nTempPin = b;
-              }
+      for(int m=1; m<=nWidth; m++){
+          if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                   MAXCHARS, szComment))
+            IOErrorHandler (INVALIDINPUT);
+          if(m>m_nPin)
+            t = 2*m_nPin - m;
+          else
+            t = m;
+          std::istringstream szFormatString1 (szInputString);
 
-            // now compute the location and create it
-            ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+          for(int n=1; n<=(m_nPin + t - 1); n++){
+              ++total_pincells;
+              szFormatString1 >> m_Assembly(m,n);
+              if(szFormatString1.fail())
+                IOErrorHandler (INVALIDINPUT);
+              // if dummy pincell skip and continue
+              if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+                  continue;
+                }
+              // find that pincell
+              ++m_nTotalPincells;
+              for(int b=1; b<=m_nPincells; b++){
+                  m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+                  if(m_Assembly(m,n) == szVolAlias)
+                    nTempPin = b;
+                }
 
-            // now create the pincell in the location found
-            std::cout << "\n--------------------------------------------------"<<std::endl;
-            std::cout << " m = " << m <<" n = " << n << std::endl;
-            std::cout << "creating pin: " << nTempPin;
-            std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
+              // now compute the location and create it
+              ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+              //ERRORR("Error in function ComputePinCentroid", err);
 
-            if(strcmp(m_szInfo.c_str(),"on") == 0)
-              m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+              // now create the pincell in the location found
+              std::cout << "\n--------------------------------------------------"<<std::endl;
+              std::cout << " m = " << m <<" n = " << n << std::endl;
+              std::cout << "creating pin: " << nTempPin;
+              std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
 
-            m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
-            if(nIFlag){
-                CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
-              }
-            else{
-                CreatePinCell(nTempPin, dX, -dY, dZ);
-              }
-          }
-      }
+              if(strcmp(m_szInfo.c_str(),"on") == 0)
+                m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+
+              m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
+              if(nIFlag){
+                  CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
+                  //ERRORR("Error in function CreatePinCell_Intersect", err);
+                }
+              else{
+                  CreatePinCell(nTempPin, dX, -dY, dZ);
+                  //ERRORR("Error in function CreatePinCell", err);
+                }
+            }
+        }
 
     // get all the entities (in pins)defined so far, in an entity set - for subtraction later
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, in_pins), *igeomImpl);
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
+    //CHECK( "ERROR : getRootSet failed!" );
     std::cout << "Expected pin definitions: " << total_pincells << "\n\nCreating surrounding outer hexes .." << std::endl;
 
     for (int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
@@ -2770,10 +2918,15 @@ namespace MeshKit
                 dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
 
                 // creating coverings
-                IBERRCHK(igeomImpl->createPrism(dHeight, 6, dSide, dSide, assm), *igeomImpl);
+                iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
+                                  dSide, dSide,
+                                  &assm, &err);
+                ////CHECK("Prism creation failed.");
 
                 // rotate the prism to match the pins
-                 IBERRCHK(igeomImpl->rotateEnt(assm, 30, 0, 0, 1), *igeomImpl);
+                iGeom_rotateEnt (igeomImpl->instance(), assm, 30, 0, 0, 1, &err);
+                ////CHECK("Rotation failed failed.");
+
                 if(0 != m_Pincell.GetSize()){
                     m_Pincell(1).GetPitch(dP, dH);
                     dX = m_nPin*dP;
@@ -2786,16 +2939,18 @@ namespace MeshKit
                 dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
 
                 // position the prism
-                 IBERRCHK(igeomImpl->moveEnt(assm, dX, dY, dZ), *igeomImpl);
+                iGeom_moveEnt(igeomImpl->instance(), assm, dX,dY,dZ, &err);
+                ////CHECK("Move failed failed.");
 
                 // populate the coverings array
                 assms[(nTemp-1)*m_nDimensions + n -1]=assm;
               }
           }
       }
+
   }
 
-  void AssyGen::Create_CartAssm( std::string &szInputString)
+  void AssyGen::Create_CartAssm(std::string &szInputString)
   // ---------------------------------------------------------------------------
   // Function: read and create the assembly for rectangular lattice
   // Input:    error code
@@ -2815,73 +2970,76 @@ namespace MeshKit
     m_Assembly.SetSize(m_nPinY,m_nPinX);
 
     if (m_nJouFlag == 1)
-      return;
-
-    //read the next line to get assembly info &store assembly info
-    if(0 != m_Pincell.GetSize()){
-        for(int m=1; m<=m_nPinY; m++){
-            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                     MAXCHARS, szComment))
-              IOErrorHandler (INVALIDINPUT);
-            std::istringstream szFormatString1 (szInputString);
-
-            //store the line read in Assembly array and create / position the pin in the core
-            for(int n=1; n<=m_nPinX; n++){
-                szFormatString1 >> m_Assembly(m,n);
-                if(szFormatString1.fail())
-                  IOErrorHandler (INVALIDINPUT);
 
 
-                // loop thro' all pins to get the type of pin
-                for(int b=1; b<=m_nPincells; b++){
-                    m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-                    if(m_Assembly(m,n) == szVolAlias)
-                      nTempPin = b;
-                  }
+      //read the next line to get assembly info &store assembly info
+      if(0 != m_Pincell.GetSize()){
+          for(int m=1; m<=m_nPinY; m++){
+              if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                       MAXCHARS, szComment))
+                IOErrorHandler (INVALIDINPUT);
+              std::istringstream szFormatString1 (szInputString);
 
-                //now compute the location where the pin needs to be placed
-                ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+              //store the line read in Assembly array and create / position the pin in the core
+              for(int n=1; n<=m_nPinX; n++){
+                  szFormatString1 >> m_Assembly(m,n);
+                  if(szFormatString1.fail())
+                    IOErrorHandler (INVALIDINPUT);
 
-                // if dummy pincell skip and continue
-                if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-                    m_Pincell(1).GetPitch(dPX, dPY, dPZ);
-                    // dMoveX and dMoveY are stored for positioning the outer squares later
-                    if(m == m_nPinY && n ==m_nPinX){
-                        dMoveX = dX/2.0;
-                        dMoveY = -dY/2.0;
-                      }
-                    continue;
-                  }
-                ++m_nTotalPincells;
-                // now create the pincell in the location found
-                std::cout << "\n--------------------------------------------------"<<std::endl;
-                std::cout << " m = " << m <<" n = " << n << std::endl;
-                std::cout << "creating pin: " << nTempPin;
-                std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
 
-                if(strcmp(m_szInfo.c_str(),"on") == 0)
-                  m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+                  // loop thro' all pins to get the type of pin
+                  for(int b=1; b<=m_nPincells; b++){
+                      m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+                      if(m_Assembly(m,n) == szVolAlias)
+                        nTempPin = b;
+                    }
 
-                m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
-                if(nIFlag){
-                    CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
-                  }
-                else{
-                    CreatePinCell(nTempPin, dX, -dY, dZ);
-                  }
-                // dMoveX and dMoveY are stored for positioning the outer squares later
-                if(m == m_nPinY && n ==m_nPinX){
-                    dMoveX = dX/2.0;
-                    dMoveY = -dY/2.0;
-                  }
-              }
-          }
-      }
+                  //now compute the location where the pin needs to be placed
+                  ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+                  //ERRORR("Error in function ComputePinCentroid", err);
+
+                  // if dummy pincell skip and continue
+                  if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+                      m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+                      // dMoveX and dMoveY are stored for positioning the outer squares later
+                      if(m == m_nPinY && n ==m_nPinX){
+                          dMoveX = dX/2.0;
+                          dMoveY = -dY/2.0;
+                        }
+                      continue;
+                    }
+                  ++m_nTotalPincells;
+                  // now create the pincell in the location found
+                  std::cout << "\n--------------------------------------------------"<<std::endl;
+                  std::cout << " m = " << m <<" n = " << n << std::endl;
+                  std::cout << "creating pin: " << nTempPin;
+                  std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
+
+                  if(strcmp(m_szInfo.c_str(),"on") == 0)
+                    m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+
+                  m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
+                  if(nIFlag){
+                      CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
+                      //ERRORR("Error in function CreatePinCell_Intersect", err);
+                    }
+                  else{
+                      CreatePinCell(nTempPin, dX, -dY, dZ);
+                      //ERRORR("Error in function CreatePinCell", err);
+                    }
+                  // dMoveX and dMoveY are stored for positioning the outer squares later
+                  if(m == m_nPinY && n ==m_nPinX){
+                      dMoveX = dX/2.0;
+                      dMoveY = -dY/2.0;
+                    }
+                }
+            }
+        }
     std::cout << "\n--------------------------------------------------"<<std::endl;
 
     // get all the entities (in pins)defined so far, in an entity set - for subtraction later
-    //  iGeom_getEntities( geom, root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
-    //  CHECK( "ERROR : getRootSet failed!" );
+    //  iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
+    //  //CHECK( "ERROR : getRootSet failed!" );
 
 
     if(m_nDimensions > 0){
@@ -2893,20 +3051,24 @@ namespace MeshKit
             for(int n=1;n<=m_nDimensions; n++){
                 ++nCount;
                 dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
-                IBERRCHK(igeomImpl->createBrick(m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight, assm), *igeomImpl);
+                iGeom_createBrick(igeomImpl->instance(), m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight,
+                                  &assm, &err);
+                ////CHECK("Prism creation failed.");
 
                 // position the outer block to match the pins
                 dX = m_dMAssmPitchX(nTemp, n)/4.0;
                 dY =  m_dMAssmPitchY(nTemp, n)/4.0;
                 dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
                 std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
-                IBERRCHK(igeomImpl->moveEnt(assm, dMoveX,dMoveY,dZ), *igeomImpl);
+                iGeom_moveEnt(igeomImpl->instance(), assm, dMoveX,dMoveY,dZ, &err);
+                ////CHECK("Move failed failed.");
 
                 // populate the outer covering array squares
                 assms[nCount]=assm;
               }
           }
       }
+
   }
 
   void AssyGen::CreateOuterCovering ()
@@ -2924,95 +3086,103 @@ namespace MeshKit
     std::string sMatName1 = "";
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
-    IBERRCHK(igeomImpl->getTagHandle(tag_name, this_tag), *igeomImpl);
-
+    iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
+    ////CHECK("getTagHandle failed");
     iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
 
     // name the innermost outer covering common for both rectangular and hexagonal assembliees
     if(m_nDimensions >0){
-      for (int nTemp1 = 1; nTemp1 <=m_nDuct; nTemp1++){
-	for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	  if(strcmp ( m_szMMAlias(nTemp1, 1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	    sMatName =  m_szAssmMat(p);
-	  }
-	}
+        //    int tag_no = 0;
+        for (int nTemp1 = 1; nTemp1 <=m_nDuct; nTemp1++){
+            for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                if(strcmp ( m_szMMAlias(nTemp1, 1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                    sMatName =  m_szAssmMat(p);
+                    //    tag_no=p;
+                  }
+              }
 
-	std::cout << "\ncreated innermost block: " << sMatName << std::endl;
+            std::cout << "\ncreated innermost block: " << sMatName << std::endl;
 
-	tmp_vol = assms[(nTemp1 - 1)*m_nDimensions];
-	IBERRCHK(igeomImpl->setData(tmp_vol, this_tag, sMatName.c_str()), *igeomImpl);
+            tmp_vol = assms[(nTemp1 - 1)*m_nDimensions];
+            iGeom_setData(igeomImpl->instance(), tmp_vol, this_tag,
+                          sMatName.c_str(), sMatName.size(), &err);
+            ////CHECK("setData failed");
 
+            Name_Faces(sMatName, tmp_vol, this_tag);
+            //ERRORR("Error in function Name_Faces", err);
+          }
 
-	Name_Faces( sMatName, tmp_vol, this_tag);
+        int count =0;//index for edge names
+        for (int nTemp = 1; nTemp <= m_nDuct; nTemp++){
+            //  Naming outermost block edges - sidesets in cubit journal file
+            std::cout << "Naming outermost block edges" << std::endl;
+            SimpleArray<iBase_EntityHandle> edges;
+
+            iGeom_getEntAdj( igeomImpl->instance(), assms[nTemp*m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
+                &err );
+            //CHECK( "ERROR : getEntAdj failed!" );
+
+            // get the top corner edges of the outer most covering
+            std::ostringstream os;
+            for (int i = 0; i < edges.size(); ++i){
+                iGeom_getEntBoundBox(igeomImpl->instance(), edges[i],&xmin,&ymin,&zmin,
+                                     &xmax,&ymax,&zmax, &err);
+                ////CHECK("getEntBoundBox failed.");
+                double dTol = 1e-5; // tolerance for comparing coordinates
+
+                if(fabs(zmax - m_dMZAssm(nTemp, 2)) <  dTol){
+                    if(fabs(zmax-zmin) < dTol){
+
+                        //we have a corner edge - name it
+                        sMatName="side_edge";
+                        ++count;
+                        os << sMatName << count;
+                        sMatName=os.str();
+                        tmp_vol=edges[i];
+                        iGeom_setData(igeomImpl->instance(), tmp_vol, this_tag,
+                                      sMatName.c_str(), sMatName.size(), &err);
+                        ////CHECK("setData failed");
+                        std::cout << "created: " << sMatName << std::endl;
+                        os.str("");
+                        sMatName="";
+                      }
+                  }
+              }
+          }
+        // now subtract the outermost hexes and name them
+        std::cout << "Subtract outermost hexes and naming them" << std::endl;
+        int nCount = 0;
+        for(int nTemp=1; nTemp<=m_nDuct; nTemp++){
+            for(int n=m_nDimensions; n>1 ; n--){
+                if(n>1){
+                    ++nCount;
+                    // copy cyl before subtract
+                    iGeom_copyEnt(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-2], &tmp_vol, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
+
+                    // subtract outer most cyl from brick
+                    iGeom_subtractEnts(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-1], tmp_vol, &tmp_new, &err);
+                    ////CHECK("Subtract of inner from outer failed.");
+
+                    assms[(nTemp-1)*m_nDimensions + n-1]=tmp_new;
+
+                    // name the vols by searching for the full name of the abbreviated Cell Mat
+                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                        if(strcmp ( m_szMMAlias(nTemp, n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                            sMatName =  m_szAssmMat(p);
+                          }
+                      }
+                    std::cout << "created: " << sMatName << std::endl;
+
+                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                  sMatName.c_str(), sMatName.size(), &err);
+                    ////CHECK("setData failed");
+                    Name_Faces(sMatName, tmp_new, this_tag);
+                  }
+              }
+          }
+        std::cout << "\n--------------------------------------------------"<<std::endl;
       }
-
-      int count =0;//index for edge names
-      for (int nTemp = 1; nTemp <= m_nDuct; nTemp++){
-	//  Naming outermost block edges - sidesets in cubit journal file
-	std::cout << "Naming outermost block edges" << std::endl;
-	//SimpleArray
-	std::vector<iBase_EntityHandle> edges;
-	IBERRCHK(igeomImpl->getEntAdj(assms[nTemp*m_nDimensions -1], iBase_EDGE, edges), *igeomImpl);
-
-
-	// get the top corner edges of the outer most covering
-	std::ostringstream os;
-	for (int i = 0; i < (int) edges.size(); ++i){
-	  IBERRCHK(igeomImpl->getEntBoundBox(edges[i], xmin, ymin,zmin, xmax, ymax, zmax), *igeomImpl);
-
-
-	  double dTol = 1e-2; // tolerance for comparing coordinates
-
-	  if(fabs(zmax - m_dMZAssm(nTemp, 2)) <  dTol){
-	    if(fabs(zmax-zmin) < dTol){
-
-	      //we have a corner edge - name it
-	      sMatName="side_edge";
-	      ++count;
-	      os << sMatName << count;
-	      sMatName=os.str();
-	      tmp_vol=edges[i];
-	      IBERRCHK(igeomImpl->setData(tmp_vol, this_tag, sMatName.c_str()), *igeomImpl);
-
-	      std::cout << "created: " << sMatName << std::endl;
-	      os.str("");
-	      sMatName="";
-	    }
-	  }
-	}
-      }
-      // now subtract the outermost hexes and name them
-      std::cout << "Subtract outermost hexes and naming them" << std::endl;
-      int nCount = 0;
-      for(int nTemp=1; nTemp<=m_nDuct; nTemp++){
-	for(int n=m_nDimensions; n>1 ; n--){
-	  if(n>1){
-	    ++nCount;
-	    // copy cyl before subtract
-	    IBERRCHK(igeomImpl->copyEnt(assms[(nTemp-1)*m_nDimensions + n-2], tmp_vol), *igeomImpl);
-
-
-	    // subtract outer most cyl from brick
-	    IBERRCHK(igeomImpl->subtractEnts(assms[(nTemp-1)*m_nDimensions + n-1], tmp_vol, tmp_new), *igeomImpl);
-
-
-	    assms[(nTemp-1)*m_nDimensions + n-1]=tmp_new;
-
-	    // name the vols by searching for the full name of the abbreviated Cell Mat
-	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	      if(strcmp ( m_szMMAlias(nTemp, n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		sMatName =  m_szAssmMat(p);
-	      }
-	    }
-	    std::cout << "created: " << sMatName << std::endl;
-	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
-
-	    Name_Faces( sMatName, tmp_new, this_tag);
-	  }
-	}
-      }
-      std::cout << "\n--------------------------------------------------"<<std::endl;
-    }
 
   }
 
@@ -3023,49 +3193,72 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    if (m_nDimensions >0 && in_pins.size()>0){
-      std::vector<iBase_EntityHandle> copy_inpins(in_pins.size());
-      std::cout <<"Total number of pins in the model = " <<  in_pins.size()/m_nDuct << std::endl;
+    if (m_nDimensions >0){
+        std::cout <<"Total number of pins in the model = " << m_nTotalPincells << std::endl;
 
-      int num_inpins = in_pins.size()/m_nDuct;
-      CMatrix<iBase_EntityHandle> cp_inpins(m_nDuct, num_inpins);
+        for (int k=1; k<=m_nDuct; k++){
+            if(cp_inpins[k-1].size() ==0)
+              continue;
+            // put all the in pins in a matrix of size duct for subtraction with ducts
+            std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
+            for (int i=0; i< (int) cp_inpins[k-1].size();i++){
+                iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &pin_copy[i], &err);
+                ////CHECK("Couldn't copy inner duct wall prism.");
+              }
 
-      for (int k=1; k<=m_nDuct; k++){
+            iBase_EntityHandle tmp_vol = NULL;
+            tmp_vol = assms[(k-1)*m_nDimensions];
 
-	// put all the in pins in a matrix of size duct for subtraction with ducts
-	for (int i=0; i<num_inpins; i++){
-	  IBERRCHK(igeomImpl->copyEnt(in_pins[ k - 1 + m_nDuct*i], cp_inpins(k,i+1)), *igeomImpl);
+            // subtract the innermost hex from the pins
+            std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
-	}
+#if HAVE_ACIS
+            iBase_EntityHandle unite= NULL, tmp_new1;
 
-	iBase_EntityHandle unite= NULL, tmp_vol = NULL, tmp_new1 = NULL;
-	tmp_vol = assms[(k-1)*m_nDimensions];
+            // if there are more than one pins
+            if( cp_inpins[k-1].size() > 1){
 
-	// subtract the innermost hex from the pins
-	std::cout << "Duct no.: " << k << " subtracting " << num_inpins << " pins from the duct .. " << std::endl;
+                iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
+                //CHECK( "uniteEnts failed!" );
 
-	// if there are more than one pins
-	if(in_pins.size() > 1){
-	  IBERRCHK(igeomImpl->uniteEnts(&cp_inpins(k,1), num_inpins, unite), *igeomImpl);
+                iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,unite, &tmp_new1, &err);
+                ////CHECK("Couldn't subtract pins from block.");
 
+                tmp_vol = tmp_new1;
+                unite = NULL;
+                tmp_new1=NULL;
+              }
+            else{ // only one pin in in_pins
+                iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
+                ////CHECK("Couldn't subtract pins from block.");
+              }
+#endif
+#if HAVE_OCC
+            iBase_EntityHandle tmp_new1 = NULL;
+            // if there are more than one pins
+            if( cp_inpins[k-1].size() > 1){
+                std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
+                for (int i=0; i< (int)cp_inpins[k-1].size(); i++){
+                    // iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &unite, &err);
+                    iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
+                    ////CHECK("Couldn't subtract pins from block.");
+                    tmp_vol = tmp_new1;
+                    tmp_new1=NULL;
+                  }
 
-	  IBERRCHK(igeomImpl->subtractEnts(tmp_vol,unite, tmp_new1), *igeomImpl);
+              }
+            else{ // only one pin in in_pins
+                iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
+                ////CHECK("Couldn't subtract pins from block.");
+              }
+#endif
 
-
-	  tmp_vol = tmp_new1;
-	  unite = NULL;
-	  tmp_new1=NULL;
-	}
-	else{ // only one pin in in_pins
-	  IBERRCHK(igeomImpl->subtractEnts(tmp_vol, in_pins[0], tmp_new1), *igeomImpl);
-
-	}
+          }
+        std::cout << "\n--------------------------------------------------"<<std::endl;
       }
-      std::cout << "\n--------------------------------------------------"<<std::endl;
-    }
     else{
-      std::cout <<"Nothing to subtract" << std::endl;
-    }
+        std::cout <<"Nothing to subtract" << std::endl;
+      }
 
   }
 
@@ -3077,25 +3270,24 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   {
     // getting all entities for merge and imprint
-    //SimpleArray
-    std::vector<iBase_EntityHandle> entities;
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, entities), *igeomImpl);
-
+    SimpleArray<iBase_EntityHandle> entities;
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
+    //CHECK( "ERROR : getRootSet failed!" );
 
     //  now imprint
     std::cout << "\n\nImprinting...." << std::endl;
-    IBERRCHK(igeomImpl->imprintEnts(&entities[0], (int) entities.size()), *igeomImpl);
-
+    iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
+    ////CHECK("Imprint failed.");
     std::cout << "\n--------------------------------------------------"<<std::endl;
 
-    //   // merge tolerance
-    //   double dTol = 1e-4;
-    //   // now  merge
-    //   std::cout << "\n\nMerging...." << std::endl;
-    //   iGeom_mergeEnts(geom, ARRAY_IN(entities), dTol, &err);
-    //   CHECK("Merge failed.");
-    //   std::cout <<"merging finished."<< std::endl;
-    //   std::cout << "\n--------------------------------------------------"<<std::endl;
+    // merge tolerance
+    double dTol = 1e-4;
+    // now  merge
+    std::cout << "\n\nMerging...." << std::endl;
+    iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
+    ////CHECK("Merge failed.");
+    std::cout <<"merging finished."<< std::endl;
+    std::cout << "\n--------------------------------------------------"<<std::endl;
 
   }
 
@@ -3106,35 +3298,36 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    //SimpleArray<iBase_EntityHandle>  all_geom;
-    //SimpleArray<iBase_EntityHandle> surfs;
-    int *offset = NULL;
+    SimpleArray<iBase_EntityHandle>  all_geom;
+    SimpleArray<iBase_EntityHandle> surfs;
+    int *offset = NULL, offset_alloc = 0, offset_size;
     int t=0;
     std::cout << "Creating surface; 2D assembly specified..." << std::endl;
 
     // get all the entities in the model (delete after making a copy of top surface)
-    std::vector<iBase_EntityHandle> all_geom, surfs;
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, all_geom), *igeomImpl);
-
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
+    //CHECK( "ERROR : Failed to get all geom" );
 
     // get all the surfaces in the model
-    IBERRCHK(igeomImpl->getArrAdj(&all_geom[0], (int) all_geom.size(), iBase_FACE, surfs, offset), *igeomImpl);
+    iGeom_getArrAdj( igeomImpl->instance(), ARRAY_IN(all_geom) , iBase_FACE, ARRAY_INOUT(surfs),
+                     &offset, &offset_alloc, &offset_size, &err );
+    //CHECK( "ERROR : getArrAdj failed!" );
 
-
-    double *max_corn = new double [3*surfs.size()];
-    double *min_corn = new double [3*surfs.size()];
-    //, min_corn[surfs.size()];
-    IBERRCHK(igeomImpl->getArrBoundBox(&surfs[0], (int) surfs.size(),iBase_INTERLEAVED, &min_corn[0], &max_corn[0]), *igeomImpl);
-
+    SimpleArray<double> max_corn, min_corn;
+    iGeom_getArrBoundBox( igeomImpl->instance(), ARRAY_IN(surfs), iBase_INTERLEAVED,
+                          ARRAY_INOUT( min_corn ),
+                          ARRAY_INOUT( max_corn ),
+                          &err );
+    //CHECK( "Problems getting max surf for rotation." );
 
     // find the number of surfaces 't' for array allocation
     int nTemp = 1;
-    double dTol = 1e-3;
+    double dTol = 1e-5;
     double dtop = m_dMZAssm(nTemp, 2);
-    for (int i = 0; i < (int) surfs.size(); ++i){
-      if((fabs(max_corn[3*i+2] -  dtop) < dTol) && (fabs(min_corn[3*i+2] - dtop)<dTol))
-	t++;
-    }
+    for (int i = 0; i < surfs.size(); ++i){
+        if((fabs(max_corn[3*i+2] -  dtop) < dTol) && (fabs(min_corn[3*i+2] - dtop)<dTol))
+          t++;
+      }
 
     // allocate arrays
     SimpleArray<iBase_EntityHandle> max_surfs(t);
@@ -3142,38 +3335,37 @@ namespace MeshKit
     t=0;
 
     // store the max surfaces in max_surfs
-    for (int i = 0; i < (int) surfs.size(); ++i){
+    for (int i = 0; i < surfs.size(); ++i){
 
-      // locate surfaces for which max and min zcoord is same as maxz coord
-      if((fabs(max_corn[3*i+2] -  dtop) < dTol) && (fabs(min_corn[3*i+2] - dtop) < dTol)){
-	max_surfs[t] = surfs[i];
-	t++;
+        // locate surfaces for which max and min zcoord is same as maxz coord
+        if((fabs(max_corn[3*i+2] -  dtop) < dTol) && (fabs(min_corn[3*i+2] - dtop) < dTol)){
+            max_surfs[t] = surfs[i];
+            t++;
+          }
       }
-    }
 
     // make a copy of max_surfs
     for(int i = 0; i < max_surfs.size(); ++i){
-      IBERRCHK(igeomImpl->copyEnt(max_surfs[i], new_surfs[i]), *igeomImpl);
-
-    }
+        iGeom_copyEnt(igeomImpl->instance(), max_surfs[i], &new_surfs[i], &err);
+        //CHECK( "Problems creating surface." );
+      }
 
     // delete all the old ents
-    for(int i=0; i< (int) all_geom.size(); i++){
-      IBERRCHK(igeomImpl->deleteEnt(all_geom[i]), *igeomImpl);
-    }
+    for(int i=0; i<all_geom.size(); i++){
+        iGeom_deleteEnt(igeomImpl->instance(), all_geom[i], &err);
+        //CHECK( "Problems deleting cyls." );
+      }
     // position the final assembly at the center
     // get the assembly on z=0 plane
     double zcenter = m_dMZAssm(nTemp, 2)/2.0;//move up
-    //SimpleArray
-    std::vector<iBase_EntityHandle> all;
+    SimpleArray<iBase_EntityHandle> all;
+    iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
+    ////CHECK("Failed to get all entities");
 
-    IBERRCHK(igeomImpl->getEntities(root_set, iBase_REGION, all_geom), *igeomImpl);
-
-
-    for(int i=0; i< (int) all.size(); i++){
-      IBERRCHK(igeomImpl->moveEnt(all[i],0,0,-zcenter), *igeomImpl);
-
-    }
+    for(int i=0; i<all.size(); i++){
+        iGeom_moveEnt(igeomImpl->instance(),all[i],0,0,-zcenter,&err);
+        ////CHECK("Failed to move entities");
+      }
     std::cout << "--------------------------------------------------"<<std::endl;
 
     free(offset);
@@ -3181,7 +3373,7 @@ namespace MeshKit
   }
 
 
-  void AssyGen::CreatePinCell( int i, double dX, double dY, double dZ)
+  void AssyGen::CreatePinCell(int i, double dX, double dY, double dZ)
   //---------------------------------------------------------------------------
   //Function: Create pincell i in location dX dY and dZ
   //Input:    none
@@ -3194,18 +3386,27 @@ namespace MeshKit
     CVector<double> dVCylZPos(2), dVCylXYPos(2), dVStartZ, dVEndZ;;
     CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
     iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
-
+    std::vector<iBase_EntityHandle> cp_in;
     // name tag handle
     iBase_TagHandle this_tag= NULL;
     char* tag_name = (char*)"NAME";
 
     std::string sMatName = "";
     std::string sMatName1 = "";
+    int nDuctIndex = -1;
+
+    if(strcmp(m_szInfo.c_str(),"on") == 0){
+        std::ostringstream os;
+        pin_name = "_xp";
+        os << (m_nTotalPincells + m_nStartpinid - 1);
+        os << "_";
+        std::string pid = os.str(); //retrieve as a string
+        pin_name+=pid;
+      }
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
-    IBERRCHK(igeomImpl->getTagHandle(tag_name, this_tag), *igeomImpl);
-
-
+    iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
+    ////CHECK("getTagHandle failed");
 
     // get cell material
     m_Pincell(i).GetCellMatSize(nCells);
@@ -3213,245 +3414,344 @@ namespace MeshKit
 
     // branch when cells are present
     if(nCells > 0){
-      dVStartZ.SetSize(nCells);
-      dVEndZ.SetSize(nCells);
-      szVCellMat.SetSize(nCells);
-      m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
+        dVStartZ.SetSize(nCells);
+        dVEndZ.SetSize(nCells);
+        szVCellMat.SetSize(nCells);
+        m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
 
-      // get cylinder data
-      m_Pincell(i).GetNumCyl(nCyl);
+        // get cylinder data
+        m_Pincell(i).GetNumCyl(nCyl);
 
-      for(int n=1;n<=nCells; n++){
+        for(int n=1;n<=nCells; n++){
+            // get cylinder locations
+            m_Pincell(i).GetCylZPos(n, dVCylZPos);
+            nDuctIndex = -1;
+            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
+            // get the index for cp_inpins based on Z-heights
+            for (int dd = 1; dd <= m_nDuct; dd++){
+                if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                  nDuctIndex = dd;
+                if (nDuctIndex != -1)
+                  break;
+              }
+            if(m_szGeomType =="hexagonal"){
 
-	dHeight = fabs(dVEndZ(n) - dVStartZ(n));
+                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
+                double dSide = dP/(sqrt(3));
 
-	if(m_szGeomType =="hexagonal"){
+                if(nCells >0){
+                    // create prism
+                    iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
+                                      dSide, dSide,
+                                      &cell, &err);
+                    ////CHECK("Prism creation failed.");
+                  }
+              }
+            // if rectangular geometry
+            if(m_szGeomType =="rectangular"){
 
-	  m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-	  double dSide = dP/(sqrt(3));
+                m_Pincell(i).GetPitch(PX, PY, PZ);
 
-	  if(nCells >0){
-	    // create prism
-	    IBERRCHK(igeomImpl->createPrism( dHeight, 6, dSide, dSide, cell), *igeomImpl);
+                if(nCells >0){
+                    // create brick
+                    iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
+                    ////CHECK("Couldn't create pincell.");
+                  }
+              }
 
-	  }
-	}
-	// if rectangular geometry
-	if(m_szGeomType =="rectangular"){
+            dZMove = (dVStartZ(n)+dVEndZ(n))/2.0;
+            if(nCells > 0){
+                // position the brick in assembly
+                iGeom_moveEnt(igeomImpl->instance(), cell, dX, dY, dZMove, &err);
+                ////CHECK("Couldn't move cell.");
+                cells[n-1]=cell;
 
-	  m_Pincell(i).GetPitch(PX, PY, PZ);
+                //search for the full name of the abbreviated Cell Mat and set name
+                for(int p=1;p<= m_szAssmMatAlias.GetSize();p++){
+                    if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                        sMatName = m_szAssmMat(p);
+                      }
+                  }
+                std::cout << "created: " << sMatName << std::endl;
+                iGeom_setData(igeomImpl->instance(), cell, this_tag,
+                              sMatName.c_str(), sMatName.size(), &err);
+                ////CHECK("setData failed");
 
-	  if(nCells >0){
-	    // create brick
-	    IBERRCHK(igeomImpl->createBrick(PX,PY,dHeight,cell), *igeomImpl);
-
-	  }
-	}
-
-	dZMove = (dVEndZ(n)+dVEndZ(n-1))/2.0;
-
-	if(nCells > 0){
-	  // position the brick in assembly
-	  IBERRCHK(igeomImpl->moveEnt( cell, dX, dY, dZMove), *igeomImpl);
-
-	  cells[n-1]=cell;
-
-	  //search for the full name of the abbreviated Cell Mat and set name
-	  for(int p=1;p<= m_szAssmMatAlias.GetSize();p++){
-	    if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      sMatName = m_szAssmMat(p);
-	    }
-	  }
-
-	  std::cout << "created: " << sMatName << std::endl;
-	  IBERRCHK(igeomImpl->setData(cell, this_tag, sMatName.c_str()), *igeomImpl);
-
-
-	  Name_Faces( sMatName, cell, this_tag);
-	}
-	// loop and create cylinders
-	if(nCyl > 0){
-	  m_Pincell(i).GetCylSizes(n, nRadii);
-	  SimpleArray<iBase_EntityHandle> cyls(nRadii);
-
-	  //declare variables
-	  CVector<double> dVCylRadii(2*nRadii);
-	  CVector<std::string> szVMat(nRadii);
-	  CVector<std::string> szVCylMat(nRadii);
-
-	  //get values
-	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
-	  m_Pincell(i).GetCylPos(n, dVCylXYPos);
-	  m_Pincell(i).GetCylMat(n, szVCylMat);
-	  m_Pincell(i).GetCylZPos(n, dVCylZPos);
-	  dHeight = dVCylZPos(2)-dVCylZPos(1);
-
-	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+                if(strcmp(m_szInfo.c_str(),"on") == 0){
+                    iGeom_setData(igeomImpl->instance(), cell, this_tag,
+                                  pin_name.c_str(), pin_name.size(), &err);
+                    std::cout << "Naming pin body :" <<  pin_name << std::endl;
+                  }
 
 
-	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-	    dCylMoveX = dVCylXYPos(1)+dX;
-	    dCylMoveY = dVCylXYPos(2)+dY;
-	    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
-	    IBERRCHK(igeomImpl->moveEnt(cyl, dCylMoveX,dCylMoveY,dZMove), *igeomImpl);
+                Name_Faces(sMatName, cell, this_tag);
+                ////CHECK("Name_Faces failed");
+              }
+            // loop and create cylinders
+            if(nCyl > 0){
+                m_Pincell(i).GetCylSizes(n, nRadii);
+                SimpleArray<iBase_EntityHandle> cyls(nRadii);
 
-	    ;
-	    cyls[m-1] = cyl;
-	  }
+                //declare variables
+                CVector<double> dVCylRadii(2*nRadii);
+                CVector<std::string> szVMat(nRadii);
+                CVector<std::string> szVCylMat(nRadii);
+                int nType = 0;
+                //get values
+                m_Pincell(i).GetCylRadii(n, dVCylRadii);
+                m_Pincell(i).GetCylPos(n, dVCylXYPos);
+                m_Pincell(i).GetCylMat(n, szVCylMat);
+                m_Pincell(i).GetCylZPos(n, dVCylZPos);
+                m_Pincell(i).GetCellType(n, nType);
 
-	  if(nCells > 0){
-	    // copy cyl before subtract
-	    IBERRCHK(igeomImpl->copyEnt(cyls[nRadii-1], tmp_vol), *igeomImpl);
+                dHeight = dVCylZPos(2)-dVCylZPos(1);
 
+                for (int m=1; m<=nRadii; m++){
 
-	    // subtract outer most cyl from brick
-	    IBERRCHK(igeomImpl->subtractEnts( cells[n-1], cyls[nRadii-1], tmp_new), *igeomImpl);
+                    if (nType == 0){
+                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
+                                             &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                        std::cout << m << ": Creating cylinder with radii " << dVCylRadii(m) << std::endl;
+                      }
+                    else{
+                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
+                                         &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                      }
+                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
+                    dCylMoveX = dVCylXYPos(1)+dX;
+                    dCylMoveY = dVCylXYPos(2)+dY;
+                    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 
+                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
+                    ////CHECK("Couldn't move cyl.");
+                    cyls[m-1] = cyl;
+                  }
 
-	    // copy the new into the cyl array
-	    cells[n-1] = tmp_new; cell = tmp_new;
-	    cyls[nRadii-1]=tmp_vol;
+                if(nCells > 0){
+                    // copy cyl before subtract
+                    iGeom_copyEnt(igeomImpl->instance(), cyls[nRadii-1], &tmp_vol, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
 
-	  }
-	  //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      sMatName = m_szAssmMat(p);
-	    }
-	  }
-	  tmp_vol1=cyls[0]; //inner most cyl
-	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
+                    // subtract outer most cyl from brick
+                    iGeom_subtractEnts(igeomImpl->instance(), cells[n-1], tmp_vol, &tmp_new, &err);
+                    ////CHECK("Subtract of inner from outer failed.");
 
-	  Name_Faces( sMatName, tmp_vol1, this_tag);
+                    // copy the new into the cyl array
+                    cells[n-1] = tmp_new; cell = tmp_new;
 
-	  // other cyl annulus after substraction
-	  for (int b=nRadii; b>1; b--){
-	    IBERRCHK(igeomImpl->copyEnt(cyls[b-2], tmp_vol), *igeomImpl);
+                  }
+                cp_in.push_back(tmp_new);
 
+                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
+                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                        sMatName = m_szAssmMat(p);
+                      }
+                  }
+                tmp_vol1=cyls[0]; //inner most cyl
 
-	    //subtract tmp vol from the outer most
-	    IBERRCHK(igeomImpl->subtractEnts( cyls[b-1], tmp_vol, tmp_new), *igeomImpl);
+                cp_in.push_back(tmp_vol1);
+                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                              sMatName.c_str(), 10, &err);
+                ////CHECK("setData failed");
+                if(strcmp(m_szInfo.c_str(),"on") == 0){
+                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                                  pin_name.c_str(), pin_name.size(), &err);
+                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                  }
 
+                Name_Faces(sMatName, tmp_vol1, this_tag);
+                //ERRORR("Error in function Name_Faces", err);
 
+                // other cyl annulus after substraction
+                for (int b=nRadii; b>1; b--){
 
-	    // now search for the full name of the abbreviated Cell Mat
-	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		sMatName =  m_szAssmMat(p);
-	      }
-	    }
-	    std::cout << "created: " << sMatName << std::endl;
-	    // set the name of the annulus
-	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
+                    iGeom_copyEnt(igeomImpl->instance(), cyls[b-2], &tmp_vol, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
 
-	    Name_Faces( sMatName, tmp_new, this_tag);
-	    // copy the new into the cyl array
-	    cyls[b-1] = tmp_new;
-	  }
-	}
+                    //subtract tmp vol from the outer most
+                    iGeom_subtractEnts(igeomImpl->instance(), cyls[b-1], tmp_vol, &tmp_new, &err);
+                    ////CHECK("Subtract of inner from outer failed.");
+
+                    // now search for the full name of the abbreviated Cell Mat
+                    //    int tag_no;
+                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                            //        tag_no = p;
+                            sMatName =  m_szAssmMat(p);
+                          }
+                      }
+                    std::cout << "created: " << sMatName << std::endl;
+                    cp_in.push_back(tmp_new);
+                    // set the name of the annulus
+                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                  sMatName.c_str(),sMatName.size(), &err);
+                    ////CHECK("setData failed");
+
+                    if(strcmp(m_szInfo.c_str(),"on") == 0){
+                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                      pin_name.c_str(), pin_name.size(), &err);
+                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                      }
+                    Name_Faces(sMatName, tmp_new, this_tag);
+                    //ERRORR("Error in function Name_Faces", err);
+
+                    // copy the new into the cyl array
+                    cyls[b-1] = tmp_new;
+                    tmp_vol=NULL;
+                  }
+              }
+            if(nDuctIndex > 0){
+                for (int count = 0; count < (int) cp_in.size(); count++)
+                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+              }
+            cp_in.clear();
+          }
       }
-    }
     // this branch of the routine is responsible for creating cylinders with '0' cells
     if(nCells == 0){
 
-      // get cylinder data
-      m_Pincell(i).GetNumCyl(nCyl);
-      nCells = nCyl;
+        // get cylinder data
+        m_Pincell(i).GetNumCyl(nCyl);
+        nCells = nCyl;
 
+        for(int n=1;n<=nCells; n++){
+            nDuctIndex = -1;
+            if(m_szGeomType =="hexagonal"){
 
-      for(int n=1;n<=nCells; n++){
+                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
+              }
+            // if rectangular geometry
+            if(m_szGeomType =="rectangular"){
 
+                m_Pincell(i).GetPitch(PX, PY, PZ);
+              }
 
-	if(m_szGeomType =="hexagonal"){
+            // loop and create cylinders
+            if(nCyl > 0){
+                m_Pincell(i).GetCylSizes(n, nRadii);
+                SimpleArray<iBase_EntityHandle> cyls(nRadii);
 
-	  m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-	}
-	// if rectangular geometry
-	if(m_szGeomType =="rectangular"){
+                //declare variables
+                CVector<double> dVCylRadii(2*nRadii);
+                CVector<std::string> szVMat(nRadii);
+                CVector<std::string> szVCylMat(nRadii);
+                int nType = 0;
+                //get values
+                m_Pincell(i).GetCylRadii(n, dVCylRadii);
+                m_Pincell(i).GetCylPos(n, dVCylXYPos);
+                m_Pincell(i).GetCylMat(n, szVCylMat);
+                m_Pincell(i).GetCylZPos(n, dVCylZPos);
+                m_Pincell(i).GetCellType(n, nType);
 
-	  m_Pincell(i).GetPitch(PX, PY, PZ);
-	}
+                dHeight = dVCylZPos(2)-dVCylZPos(1);
 
-	// loop and create cylinders
-	if(nCyl > 0){
-	  m_Pincell(i).GetCylSizes(n, nRadii);
-	  SimpleArray<iBase_EntityHandle> cyls(nRadii);
+                // get the index for cp_inpins based on Z-heights
+                for (int dd = 1; dd <= m_nDuct; dd++){
+                    if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                      nDuctIndex = dd;
+                    if (nDuctIndex != -1)
+                      break;
+                  }
 
-	  //declare variables
-	  CVector<double> dVCylRadii(2*nRadii);
-	  CVector<std::string> szVMat(nRadii);
-	  CVector<std::string> szVCylMat(nRadii);
+                for (int m=1; m<=nRadii; m++){
+                    if (nType == 0){
+                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
+                                             &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                      }
+                    else{
+                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m - 1), dVCylRadii(2*m - 1), dVCylRadii(2*m),
+                                         &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                      }
 
-	  //get values
-	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
-	  m_Pincell(i).GetCylPos(n, dVCylXYPos);
-	  m_Pincell(i).GetCylMat(n, szVCylMat);
-	  m_Pincell(i).GetCylZPos(n, dVCylZPos);
+                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
+                    dCylMoveX = dVCylXYPos(1)+dX;
+                    dCylMoveY = dVCylXYPos(2)+dY;
+                    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 
-	  dHeight = dVCylZPos(2)-dVCylZPos(1);
+                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
+                    ////CHECK("Couldn't move cyl.");
+                    cyls[m-1] = cyl;
+                  }
 
-	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
+                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
+                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                        sMatName = m_szAssmMat(p);
+                      }
+                  }
+                std::cout << "created: " << sMatName << std::endl;
+                tmp_vol1=cyls[0]; //inner most cyl
 
+                cp_in.push_back(tmp_vol1);
 
-	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-	    dCylMoveX = dVCylXYPos(1)+dX;
-	    dCylMoveY = dVCylXYPos(2)+dY;
-	    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
-	    IBERRCHK(igeomImpl->moveEnt( cyl, dCylMoveX,dCylMoveY,dZMove), *igeomImpl);
+                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                              sMatName.c_str(), 10, &err);
+                ////CHECK("setData failed");
 
+                if(strcmp(m_szInfo.c_str(),"on") == 0){
+                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                                  pin_name.c_str(), pin_name.size(), &err);
+                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                  }
 
-	    cyls[m-1] = cyl;
-	  }
+                Name_Faces(sMatName, tmp_vol1, this_tag);
+                //ERRORR("Error in function Name_Faces", err);
 
-	  //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      sMatName = m_szAssmMat(p);
-	    }
-	  }
-	  std::cout << "created: " << sMatName << std::endl;
-	  tmp_vol1=cyls[0]; //inner most cyl
+                // other cyl annulus after substraction
+                for (int b=nRadii; b>1; b--){
 
-	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
+                    iGeom_copyEnt(igeomImpl->instance(), cyls[b-2], &tmp_vol, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
 
+                    //subtract tmp vol from the outer most
+                    iGeom_subtractEnts(igeomImpl->instance(), cyls[b-1], tmp_vol, &tmp_new, &err);
+                    ////CHECK("Subtract of inner from outer failed.");
 
-	  Name_Faces( sMatName, tmp_vol1, this_tag);
+                    // now search for the full name of the abbreviated Cell Mat
+                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                            sMatName =  m_szAssmMat(p);
+                          }
+                      }
+                    std::cout <<"created: " << sMatName << std::endl;
 
-	  // other cyl annulus after substraction
-	  for (int b=nRadii; b>1; b--){
-	    IBERRCHK(igeomImpl->copyEnt(cyls[b-2], tmp_vol), *igeomImpl);
+                    cp_in.push_back(tmp_new);
 
+                    // set the name of the annulus
+                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                  sMatName.c_str(),sMatName.size(), &err);
+                    ////CHECK("setData failed");
 
-	    //subtract tmp vol from the outer most
-	    IBERRCHK(igeomImpl->subtractEnts( cyls[b-1], tmp_vol, tmp_new), *igeomImpl);
+                    if(strcmp(m_szInfo.c_str(),"on") == 0){
+                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                      pin_name.c_str(), pin_name.size(), &err);
+                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                      }
 
+                    Name_Faces(sMatName, tmp_new, this_tag);
+                    //ERRORR("Error in function Name_Faces", err);
 
-
-	    // now search for the full name of the abbreviated Cell Mat
-	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		sMatName =  m_szAssmMat(p);
-	      }
-	    }
-	    std::cout << "created: " << sMatName << std::endl;
-	    // set the name of the annulus
-	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
-
-	    Name_Faces( sMatName, tmp_new, this_tag);
-
-	    // copy the new into the cyl array
-	    cyls[b-1] = tmp_new;
-	  }
-	}
+                    // copy the new into the cyl array
+                    cyls[b-1] = tmp_new;
+                  }
+              }
+            if(nDuctIndex > 0){
+                for (int count = 0; count < (int) cp_in.size(); count++)
+                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+              }
+            cp_in.clear();
+          }
       }
-    }
 
   }
 
 
-  void AssyGen::CreatePinCell_Intersect( int i, double dX, double dY, double dZ)
+  void AssyGen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
   //---------------------------------------------------------------------------
   //Function: Create pincell i in location dX dY and dZ
   //Input:    none
@@ -3464,6 +3764,7 @@ namespace MeshKit
     CVector<double> dVCylZPos(2), dVCylXYPos(2), dVEndZ, dVStartZ;
     CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
     iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol1= NULL, tmp_new= NULL, cell_copy = NULL, intersec = NULL;
+    std::vector<iBase_EntityHandle> cp_in;
 
     // name tag handle
     iBase_TagHandle this_tag= NULL;
@@ -3472,10 +3773,20 @@ namespace MeshKit
     std::string sMatName = "";
     std::string sMatName0 = "";
     std::string sMatName1 = "";
+    int nDuctIndex = -1;
+
+    if(strcmp(m_szInfo.c_str(),"on") == 0){
+        std::ostringstream os;
+        pin_name = "_xp";
+        os << (m_nTotalPincells + m_nStartpinid - 1);
+        os << "_";
+        std::string pid = os.str(); //retrieve as a string
+        pin_name+=pid;
+      }
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
-    IBERRCHK(igeomImpl->getTagHandle(tag_name, this_tag), *igeomImpl);
-
+    iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
+    ////CHECK("getTagHandle failed");
 
     // get cell material
     m_Pincell(i).GetCellMatSize(nCells);
@@ -3484,278 +3795,379 @@ namespace MeshKit
 
     // branch when cells are present
     if(nCells > 0){
-      dVStartZ.SetSize(nCells);
-      dVEndZ.SetSize(nCells);
-      szVCellMat.SetSize(nCells);
-      m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
+        dVStartZ.SetSize(nCells);
+        dVEndZ.SetSize(nCells);
+        szVCellMat.SetSize(nCells);
+        m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
 
-      // get cylinder data
-      m_Pincell(i).GetNumCyl(nCyl);
+        // get cylinder data
+        m_Pincell(i).GetNumCyl(nCyl);
 
-      for(int n=1;n<=nCells; n++){
+        for(int n=1;n<=nCells; n++){
 
-	dHeight = dVEndZ(n) - dVStartZ(n);
+            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
+            // get the index for cp_inpins based on Z-heights
+            for (int dd = 1; dd <= m_nDuct; dd++){
+                if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                  nDuctIndex = dd;
+                if (nDuctIndex != -1)
+                  break;
+              }
+            if(m_szGeomType =="hexagonal"){
 
-	if(m_szGeomType =="hexagonal"){
+                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
 
-	  m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
+                double dSide = dP/(sqrt(3));
 
-	  double dSide = dP/(sqrt(3));
+                if(nCells >0){
+                    // create prism
+                    iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
+                                      dSide, dSide,
+                                      &cell, &err);
+                    ////CHECK("Prism creation failed.");
+                  }
+              }
+            // if rectangular geometry
+            if(m_szGeomType =="rectangular"){
 
-	  if(nCells >0){
-	    // create prism
-	    IBERRCHK(igeomImpl->createPrism( dHeight, 6, dSide, dSide, cell), *igeomImpl);
+                m_Pincell(i).GetPitch(PX, PY, PZ);
 
-	  }
-	}
-	// if rectangular geometry
-	if(m_szGeomType =="rectangular"){
+                if(nCells >0){
+                    // create brick
+                    iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
+                    ////CHECK("Couldn't create pincell.");
+                  }
+              }
 
-	  m_Pincell(i).GetPitch(PX, PY, PZ);
+            dZMove = (dVStartZ(n)+dVEndZ(n))/2.0;
 
-	  if(nCells >0){
-	    // create brick
-	    IBERRCHK(igeomImpl->createBrick(PX,PY,dHeight, cell), *igeomImpl);
+            if(nCells > 0){
+                // position the brick in assembly
+                iGeom_moveEnt(igeomImpl->instance(), cell, dX, dY, dZMove, &err);
+                ////CHECK("Couldn't move cell.");
+                cells[n-1]=cell;
+              }
+            // loop and create cylinders
+            if(nCyl > 0){
+                m_Pincell(i).GetCylSizes(n, nRadii);
+                SimpleArray<iBase_EntityHandle> cyls(nRadii);
+                SimpleArray<iBase_EntityHandle> cell_copys(nRadii);
+                SimpleArray<iBase_EntityHandle> intersec_main(nRadii);
+                iBase_EntityHandle  tmp_intersec;
+                //declare variables
+                CVector<double> dVCylRadii(2*nRadii);
+                CVector<std::string> szVMat(nRadii);
+                CVector<std::string> szVCylMat(nRadii);
+                int nType = 0;
+                //get values
+                m_Pincell(i).GetCylRadii(n, dVCylRadii);
+                m_Pincell(i).GetCylPos(n, dVCylXYPos);
+                m_Pincell(i).GetCylMat(n, szVCylMat);
+                m_Pincell(i).GetCylZPos(n, dVCylZPos);
+                m_Pincell(i).GetCellType(n, nType);
 
-	  }
-	}
+                dHeight = dVCylZPos(2)-dVCylZPos(1);
 
-	dZMove = (dVEndZ(n)+dVEndZ(n-1))/2.0;
+                for (int m=1; m<=nRadii; m++){
+                    if (nType == 0){
+                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
+                                             &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                      }
+                    else{
+                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
+                                         &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                      }
 
-	if(nCells > 0){
-	  // position the brick in assembly
-	  IBERRCHK(igeomImpl->moveEnt(  cell, dX, dY, dZMove), *igeomImpl);
+                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
+                    dCylMoveX = dVCylXYPos(1)+dX;
+                    dCylMoveY = dVCylXYPos(2)+dY;
+                    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 
-
-	  cells[n-1]=cell;
-	}
-	// loop and create cylinders
-	if(nCyl > 0){
-	  m_Pincell(i).GetCylSizes(n, nRadii);
-	  SimpleArray<iBase_EntityHandle> cyls(nRadii);
-	  SimpleArray<iBase_EntityHandle> cell_copys(nRadii);
-	  SimpleArray<iBase_EntityHandle> intersec_main(nRadii);
-	  iBase_EntityHandle  tmp_intersec;
-	  //declare variables
-	  CVector<double> dVCylRadii(nRadii);
-	  CVector<std::string> szVMat(nRadii);
-	  CVector<std::string> szVCylMat(nRadii);
-
-	  //get values
-	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
-	  m_Pincell(i).GetCylPos(n, dVCylXYPos);
-	  m_Pincell(i).GetCylMat(n, szVCylMat);
-	  m_Pincell(i).GetCylZPos(n, dVCylZPos);
-	  dHeight = dVCylZPos(2)-dVCylZPos(1);
-
-	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
-
-
-	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-	    dCylMoveX = dVCylXYPos(1)+dX;
-	    dCylMoveY = dVCylXYPos(2)+dY;
-	    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
-	    IBERRCHK(igeomImpl->moveEnt( cyl, dCylMoveX,dCylMoveY,dZMove), *igeomImpl);
-
-
-	    cyls[m-1] = cyl;
-
-
-	    //copy cell nRadii  times for intersection with cylinders
-	    IBERRCHK(igeomImpl->copyEnt(cells[n-1], cell_copy), *igeomImpl);
-
-
-	    cell_copys[m-1] = cell_copy;
-	    IBERRCHK(igeomImpl->intersectEnts(cell_copys[m-1], cyls[m-1], intersec), *igeomImpl);
-
-
-	    intersec_main[m-1] = intersec;
-	    intersec = NULL;
-	  }
-
-	  //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-	  tmp_vol1=intersec_main[0];
-	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      sMatName = m_szAssmMat(p);
-	    }
-	  }
-	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
+                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
+                    ////CHECK("Couldn't move cyl.");
+                    cyls[m-1] = cyl;
 
 
-	  Name_Faces( sMatName, tmp_vol1, this_tag);
+                    //copy cell nRadii  times for intersection with cylinders
+                    iGeom_copyEnt(igeomImpl->instance(), cells[n-1], &cell_copy, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
+                    cell_copys[m-1] = cell_copy;
 
-	  // copy the outermost cyl
-	  IBERRCHK(igeomImpl->copyEnt(intersec_main[nRadii-1], tmp_intersec), *igeomImpl);
+                    iGeom_intersectEnts(igeomImpl->instance(), cell_copys[m-1], cyls[m-1],&intersec,&err);
+                    ////CHECK("intersection failed");
+                    intersec_main[m-1] = intersec;
+                    intersec = NULL;
+                  }
 
+                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
+                tmp_vol1=intersec_main[0];
+                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                        sMatName = m_szAssmMat(p);
+                      }
+                  }
 
-	  // subtract the outermost cyl from the cell
-	  IBERRCHK(igeomImpl->subtractEnts( cells[n-1], tmp_intersec, tmp_new), *igeomImpl);
+                cp_in.push_back(tmp_vol1);
 
+                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                              sMatName.c_str(), 10, &err);
+                ////CHECK("setData failed");
 
-	  // now search for the full name of the abbreviated Cell Mat
-	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	    if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      sMatName =  m_szAssmMat(p);
-	    }
-	  }
-	  std::cout << "created: " << sMatName << std::endl;
-	  // set the name of the annulus
-	  IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
+                if(strcmp(m_szInfo.c_str(),"on") == 0){
+                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                                  pin_name.c_str(), pin_name.size(), &err);
+                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                  }
+                Name_Faces(sMatName, tmp_vol1, this_tag);
+                //ERRORR("Error in function Name_Faces", err);
 
-	  Name_Faces( sMatName, tmp_new, this_tag);
+                // copy the outermost cyl
+                iGeom_copyEnt(igeomImpl->instance(), intersec_main[nRadii-1], &tmp_intersec, &err);
+                ////CHECK("Couldn't copy inner duct wall prism.");
 
-	  for (int b=nRadii; b>1; b--){
-	    IBERRCHK(igeomImpl->copyEnt(intersec_main[b-2], tmp_intersec), *igeomImpl);
+                // subtract the outermost cyl from the cell
+                iGeom_subtractEnts(igeomImpl->instance(), cells[n-1], tmp_intersec, &tmp_new, &err);
+                ////CHECK("Subtract of inner from outer failed.");
+                // now search for the full name of the abbreviated Cell Mat
+                //  int tag_no;
+                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                    if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                        //      tag_no = p;
+                        sMatName =  m_szAssmMat(p);
+                      }
+                  }
+                std::cout << "created: " << sMatName << std::endl;
 
+                cp_in.push_back(tmp_new);
 
-	    //subtract tmp vol from the outer most
-	    IBERRCHK(igeomImpl->subtractEnts( intersec_main[b-1], tmp_intersec, tmp_new), *igeomImpl);
+                // set the name of the annulus
+                iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                              sMatName.c_str(),sMatName.size(), &err);
+                ////CHECK("setData failed");
 
+                iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                              pin_name.c_str(), pin_name.size(), &err);
+                std::cout << "Naming pin body :" <<  pin_name<< std::endl;
 
+                Name_Faces(sMatName, tmp_new, this_tag);
+                //ERRORR("Error in function Name_Faces", err);
 
-	    // now search for the full name of the abbreviated Cell Mat
-	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		sMatName =  m_szAssmMat(p);
-	      }
-	    }
-	    std::cout << "created: " << sMatName << std::endl;
-	    // set the name of the annulus
-	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
+                for (int b=nRadii; b>1; b--){
 
-	    Name_Faces( sMatName, tmp_new, this_tag);
+                    iGeom_copyEnt(igeomImpl->instance(), intersec_main[b-2], &tmp_intersec, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
+                    //subtract tmp vol from the outer most
+                    iGeom_subtractEnts(igeomImpl->instance(), intersec_main[b-1], tmp_intersec, &tmp_new, &err);
+                    ////CHECK("Subtract of inner from outer failed.");
 
-	    // copy the new into the cyl array
-	    cyls[b-1] = tmp_new;
+                    // now search for the full name of the abbreviated Cell Mat
+                    //    int tag_no;
+                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                            //        tag_no = p;
+                            sMatName =  m_szAssmMat(p);
+                          }
+                      }
+                    std::cout << "created: " << sMatName << std::endl;
 
-	  }
-	}
+                    cp_in.push_back(tmp_new);
+
+                    // set the name of the annulus
+                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                  sMatName.c_str(),sMatName.size(), &err);
+                    ////CHECK("setData failed");
+
+                    if(strcmp(m_szInfo.c_str(),"on") == 0){
+                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                      pin_name.c_str(), pin_name.size(), &err);
+                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                      }
+                    Name_Faces(sMatName, tmp_new, this_tag);
+                    //ERRORR("Error in function Name_Faces", err);
+
+                    // copy the new into the cyl array
+                    cyls[b-1] = tmp_new;
+
+                  }
+              }
+            if(nDuctIndex > 0){
+                for (int count = 0; count < (int) cp_in.size(); count++)
+                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+              }
+            cp_in.clear();
+          }
       }
-    }
     // this branch of the routine is responsible for creating cylinders with '0' cells
     if(nCells == 0){
 
-      // get cylinder data
-      m_Pincell(i).GetNumCyl(nCyl);
-      nCells = nCyl;
-      cells.resize(nCells);
+        // get cylinder data
+        m_Pincell(i).GetNumCyl(nCyl);
+        nCells = nCyl;
+        cells.resize(nCells);
 
-      for(int n=1;n<=nCells; n++){
+        for(int n=1;n<=nCells; n++){
 
-	// get some cylinder parameters to create the cell material for intersection
-	m_Pincell(i).GetCylZPos(n, dVCylZPos);
-	dHeight = dVCylZPos(2)-dVCylZPos(1);
-	dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
+            // get some cylinder parameters to create the cell material for intersection
+            m_Pincell(i).GetCylZPos(n, dVCylZPos);
+            dHeight = dVCylZPos(2)-dVCylZPos(1);
+            dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 
-	if(m_szGeomType =="hexagonal"){
+            if(m_szGeomType =="hexagonal"){
 
-	  m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-	  double dSide = dP/(sqrt(3));
-	  IBERRCHK(igeomImpl->createPrism(dHeight, 6, dSide, dSide, cell), *igeomImpl);
+                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
+                double dSide = dP/(sqrt(3));
 
+                iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
+                                  dSide, dSide,
+                                  &cell, &err);
+                ////CHECK("Prism creation failed.");
 
-	}
-	// if rectangular geometry
-	if(m_szGeomType =="rectangular"){
+              }
+            // if rectangular geometry
+            if(m_szGeomType =="rectangular"){
 
-	  m_Pincell(i).GetPitch(PX, PY, PZ);
-	  // create brick
-	  IBERRCHK(igeomImpl->createBrick(PX,PY,dHeight,cell), *igeomImpl);
+                m_Pincell(i).GetPitch(PX, PY, PZ);
+                // create brick
+                iGeom_createBrick( igeomImpl->instance(),PX,PY,PZ, &cell,&err );
+                ////CHECK("Couldn't create pincell.");
+              }
 
+            iGeom_moveEnt(igeomImpl->instance(), cell, dX, dY, dZMove, &err);
+            ////CHECK("Couldn't move cell.");
 
-	}
-	IBERRCHK(igeomImpl->moveEnt( cell, dX, dY, dZMove), *igeomImpl);
+            cells[n-1]=cell;
+            // loop and create cylinders
+            if(nCyl > 0){
+                m_Pincell(i).GetCylSizes(n, nRadii);
 
-
-
-	cells[n-1]=cell;
-	// loop and create cylinders
-	if(nCyl > 0){
-	  m_Pincell(i).GetCylSizes(n, nRadii);
-
-	  //declare variables
-	  SimpleArray<iBase_EntityHandle> cyls(nRadii), cell_copys(nRadii), intersec_main(nRadii), intersec_copy(nRadii);
-	  iBase_EntityHandle  tmp_intersec;
-	  CVector<double> dVCylRadii(nRadii);
-	  CVector<std::string> szVMat(nRadii), szVCylMat(nRadii);
-
-	  //get values
-	  m_Pincell(i).GetCylRadii(n, dVCylRadii);
-	  m_Pincell(i).GetCylPos(n, dVCylXYPos);
-	  m_Pincell(i).GetCylMat(n, szVCylMat);
-
-	  for (int m=1; m<=nRadii; m++){
-	    IBERRCHK(igeomImpl->createCylinder(dHeight, dVCylRadii(m), dVCylRadii(m), cyl), *igeomImpl);
-
-
-	    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-	    dCylMoveX = dVCylXYPos(1)+dX;
-	    dCylMoveY = dVCylXYPos(2)+dY;
-
-	    IBERRCHK(igeomImpl->moveEnt( cyl, dCylMoveX,dCylMoveY,dZMove), *igeomImpl);
+                //declare variables
+                SimpleArray<iBase_EntityHandle> cyls(nRadii), cell_copys(nRadii), intersec_main(nRadii), intersec_copy(nRadii);
+                iBase_EntityHandle  tmp_intersec;
+                CVector<double> dVCylRadii(2*nRadii);
+                CVector<std::string> szVMat(nRadii), szVCylMat(nRadii);
+                int nType = 0;
+                //get values
+                m_Pincell(i).GetCylRadii(n, dVCylRadii);
+                m_Pincell(i).GetCylPos(n, dVCylXYPos);
+                m_Pincell(i).GetCylMat(n, szVCylMat);
+                m_Pincell(i).GetCellType(n, nType);
 
 
-	    cyls[m-1] = cyl;
+                // get the index for cp_inpins based on Z-heights
+                for (int dd = 1; dd <= m_nDuct; dd++){
+                    if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                      nDuctIndex = dd;
+                    if (nDuctIndex != -1)
+                      break;
+                  }
 
-	    //copy cell nRadii  times for intersection with cylinders
-	    IBERRCHK(igeomImpl->copyEnt(cells[n-1], cell_copy), *igeomImpl);
+                for (int m=1; m<=nRadii; m++){
+                    if (nType == 0){
+                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
+                                             &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                      }
+                    else{
+                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
+                                         &cyl, &err);
+                        ////CHECK("Couldn't create fuel rod.");
+                      }
 
-	    //	  cell_copys[m-1] = cell_copy;
-	    IBERRCHK(igeomImpl->intersectEnts(cell_copy, cyls[m-1], intersec), *igeomImpl);
+                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
+                    dCylMoveX = dVCylXYPos(1)+dX;
+                    dCylMoveY = dVCylXYPos(2)+dY;
 
-	    intersec_main[m-1] = intersec;
-	    intersec = NULL;
-	  }
+                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
+                    ////CHECK("Couldn't move cyl.");
+                    cyls[m-1] = cyl;
 
-	  //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-	  tmp_vol1=intersec_main[0];
-	  for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-	      sMatName = m_szAssmMat(p);
-	    }
-	  }
-	  IBERRCHK(igeomImpl->setData(tmp_vol1, this_tag, sMatName.c_str()), *igeomImpl);
+                    //copy cell nRadii  times for intersection with cylinders
+                    iGeom_copyEnt(igeomImpl->instance(), cells[n-1], &cell_copy, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
+                    //    cell_copys[m-1] = cell_copy;
+
+                    iGeom_intersectEnts(igeomImpl->instance(), cell_copy, cyls[m-1],&intersec,&err);
+                    ////CHECK("intersection failed");
+                    intersec_main[m-1] = intersec;
+                    intersec = NULL;
+                  }
+
+                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
+                tmp_vol1=intersec_main[0];
+                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                        sMatName = m_szAssmMat(p);
+                      }
+                  }
+
+                cp_in.push_back(tmp_vol1);
+
+                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                              sMatName.c_str(), 10, &err);
+                ////CHECK("setData failed");
+
+                if(strcmp(m_szInfo.c_str(),"on") == 0){
+                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
+                                  pin_name.c_str(), pin_name.size(), &err);
+                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                  }
+
+                Name_Faces(sMatName, tmp_vol1, this_tag);
+                //ERRORR("Error in function Name_Faces", err);
+
+                // delete the cell as this is the case when no. cell material is specified
+                iGeom_deleteEnt(igeomImpl->instance(), cells[n-1], &err);
+                ////CHECK("Entity deletion failed");
 
 
-	  Name_Faces( sMatName, tmp_vol1, this_tag);
+                // other cyl annulus after substraction
+                for (int b=nRadii; b>1; b--){
 
-	  // delete the cell as this is the case when no. cell material is specified
-	  IBERRCHK(igeomImpl->deleteEnt(cells[n-1]), *igeomImpl);
+                    iGeom_copyEnt(igeomImpl->instance(), intersec_main[b-2], &tmp_intersec, &err);
+                    ////CHECK("Couldn't copy inner duct wall prism.");
+                    //subtract tmp vol from the outer most
+                    iGeom_subtractEnts(igeomImpl->instance(), intersec_main[b-1], tmp_intersec, &tmp_new, &err);
+                    ////CHECK("Subtract of inner from outer failed.");
 
+                    // now search for the full name of the abbreviated Cell Mat
+                    //    int tag_no;
+                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
+                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
+                            //        tag_no = p;
+                            sMatName =  m_szAssmMat(p);
+                          }
+                      }
+                    std::cout << "created: " << sMatName << std::endl;
 
+                    cp_in.push_back(tmp_new);
 
-	  // other cyl annulus after substraction
-	  for (int b=nRadii; b>1; b--){
-	    IBERRCHK(igeomImpl->copyEnt(intersec_main[b-2], tmp_intersec), *igeomImpl);
+                    // set the name of the annulus
+                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                  sMatName.c_str(),sMatName.size(), &err);
+                    ////CHECK("setData failed");
+                    if(strcmp(m_szInfo.c_str(),"on") == 0){
+                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
+                                      pin_name.c_str(), pin_name.size(), &err);
+                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                      }
 
-	    //subtract tmp vol from the outer most
-	    IBERRCHK(igeomImpl->subtractEnts( intersec_main[b-1], tmp_intersec, tmp_new), *igeomImpl);
+                    Name_Faces(sMatName, tmp_new, this_tag);
+                    //ERRORR("Error in function Name_Faces", err);
 
+                    // copy the new into the cyl array
+                    cyls[b-1] = tmp_new;
 
-
-	    // now search for the full name of the abbreviated Cell Mat
-	    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-	      if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-		sMatName =  m_szAssmMat(p);
-	      }
-	    }
-	    std::cout << "created: " << sMatName << std::endl;
-	    // set the name of the annulus
-	    IBERRCHK(igeomImpl->setData(tmp_new, this_tag, sMatName.c_str()), *igeomImpl);
-
-	    Name_Faces( sMatName, tmp_new, this_tag);
-
-	    // copy the new into the cyl array
-	    cyls[b-1] = tmp_new;
-
-	  }
-	}
-
+                  }
+              }
+            if(nDuctIndex > 0){
+                for (int count = 0; count < (int) cp_in.size(); count++)
+                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
+              }
+            cp_in.clear();
+          }
       }
-    }
 
   }
-
-} // namespace MeshKit
+}

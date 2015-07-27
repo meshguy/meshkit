@@ -46,7 +46,7 @@ bool CParser::ReadNextLine (std::ifstream& FileInput, int& nLineNum,
   int flag1 =0;
   bool bWhSpc = false;
   int tokenfound = 1;
-  const int MAXCH = 1000;
+  const int MAXCH = 2000;
   char szInp[MAXCH];
   char szTemp [MAXCH];
   std::vector<std::string> tokens;
