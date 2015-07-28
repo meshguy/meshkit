@@ -1,7 +1,7 @@
 #ifndef ZIP_HPP
 #define ZIP_HPP
 
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "gen.hpp"
 #include "arc.hpp"
 
@@ -30,11 +30,11 @@ namespace zip {
                            std::vector<moab::EntityHandle> &arc1 );
 
 /// test two normal vectors to see if they point in the same direction
-  moab::ErrorCode test_normals( const std::vector<MBCartVect> norms0, 
-                            const std::vector<MBCartVect> norms1,
+  moab::ErrorCode test_normals( const std::vector<moab::CartVect> norms0,
+                            const std::vector<moab::CartVect> norms1,
                             std::vector<int> &inverted_tri_indices );
-  moab::ErrorCode test_normals( const             MBCartVect  norms0, 
-                            const             MBCartVect  norms1 );
+  moab::ErrorCode test_normals( const             moab::CartVect  norms0,
+                            const             moab::CartVect  norms1 );
 
   moab::ErrorCode remove_inverted_tris(moab::Tag normal_tag, moab::Range tris, const bool debug );
 

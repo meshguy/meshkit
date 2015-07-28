@@ -34,7 +34,7 @@
 #include <vector>
 #include <set>
 #include <algorithm>
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "MBTagConventions.hpp"
 #include "moab/Range.hpp"
 #include "moab/Skinner.hpp"
@@ -43,7 +43,7 @@
 #include "meshkit/gen.hpp"
 #include "meshkit/arc.hpp"
 #include "meshkit/zip.hpp"
-
+using namespace moab;
 
 // struct to hold coordinates of skin edge, it's surface id, and a matched flag
 struct coords_and_id {
@@ -55,8 +55,8 @@ struct coords_and_id {
   double z2;
   int  surf_id;
   bool matched;
-  moab::EntityHandle vert1;
-  moab::EntityHandle vert2;
+  EntityHandle vert1;
+  EntityHandle vert2;
 };
 
 /* qsort struct comparision function */
@@ -134,17 +134,17 @@ int main(int argc, char **argv)
     }
 
   // load file and get tolerance from input argument
-  moab::ErrorCode result;
+  ErrorCode result;
   std::string filename = argv[1]; //set filename
-  moab::EntityHandle input_set;
+  EntityHandle input_set;
   result = MBI()->create_meshset( MESHSET_SET, input_set ); //create handle to meshset
-  if(moab::MB_SUCCESS != result) 
+  if(MB_SUCCESS != result)
     {
       return result;
     }
 
   result = MBI()->load_file( filename.c_str(), &input_set ); //load the file into the meshset
-  if(moab::MB_SUCCESS != result) 
+  if(MB_SUCCESS != result)
     {
       // failed to load the file
       std::cout << "could not load file" << std::endl;
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
   // is the order of the optional variables going to be a problem?
   // (i.e. we 'skipped' the variable test)
   result=cw_func::check_mesh_for_watertightness( input_set, tol, sealed, test, verbose, check_topology);
-  if(gen::error(moab::MB_SUCCESS!=result, "could not check model for watertightness")) return result;
+  if(gen::error(MB_SUCCESS!=result, "could not check model for watertightness")) return result;
 
   clock_t end_time = clock();
   std::cout << (double) (end_time-start_time)/CLOCKS_PER_SEC << " seconds" << std::endl;

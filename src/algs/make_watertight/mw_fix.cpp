@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "moab/Core.hpp"
-#include "moab::TagConventions.hpp"
+#include "TagConventions.hpp"
 #include "moab/Range.hpp"
 #include "moab/Skinner.hpp"
 #include "moab/GeomTopoTool.hpp"
@@ -43,8 +43,9 @@ const char GEOM_SENSE_2_TAG_NAME[] = "GEOM_SENSE_2";
 const char GEOM_SENSE_N_ENTS_TAG_NAME[] = "GEOM_SENSE_N_ENTS";
 const char GEOM_SENSE_N_SENSES_TAG_NAME[] = "GEOM_SENSE_N_SENSES"; 
 
-MBInterface *MBI();
 
+using namespace moab;
+Interface *MBI();
 
 char* sense_printer( int sense){
 
@@ -53,7 +54,7 @@ char* sense_printer( int sense){
   if ( sense == 0 ) return "UNKNOWN (0)";
 }
 
-void moab_printer(moab::ErrorCode error_code)
+void moab_printer(ErrorCode error_code)
 {
   if ( error_code == MB_INDEX_OUT_OF_RANGE )
     {
@@ -111,14 +112,14 @@ void moab_printer(moab::ErrorCode error_code)
 }
 
 
-moab::ErrorCode get_geom_size_before_sealing( const moab::Range geom_sets[], 
-                                          const moab::Tag geom_tag,
-                                          const moab::Tag size_tag,
+ErrorCode get_geom_size_before_sealing( const Range geom_sets[],
+                                          const Tag geom_tag,
+                                          const Tag size_tag,
                                           bool verbose ) {
-  moab::ErrorCode rval;
+  ErrorCode rval;
   for(int dim=1; dim <= 3 ; dim++) {
     std::cout << "dim = " << dim << std::endl;
-    for(MBRange::iterator i=geom_sets[dim].begin(); i!=geom_sets[dim].end(); i++) {
+    for(Range::iterator i=geom_sets[dim].begin(); i!=geom_sets[dim].end(); i++) {
       double size = 0;
 	//std::cout << "*i =" << *i << std::endl;
 	//std::cout << "geom_tag =" << geom_tag << std::endl;
@@ -126,9 +127,9 @@ moab::ErrorCode get_geom_size_before_sealing( const moab::Range geom_sets[],
 
 
       rval = gen::measure( *i, geom_tag, size, false, verbose );
-      if(gen::error(moab::MB_SUCCESS!=rval,"could not measure")) return rval;
+      if(gen::error(MB_SUCCESS!=rval,"could not measure")) return rval;
       rval = MBI()->tag_set_data( size_tag, &(*i), 1, &size );
-      if(gen::error(moab::MB_SUCCESS!=rval,"could not set size tag")) return rval;
+      if(gen::error(MB_SUCCESS!=rval,"could not set size tag")) return rval;
 
 	//std::cout << "*i =" << *i << std::endl;
 	//std::cout << "geom_tag =" << geom_tag << std::endl;
@@ -136,11 +137,11 @@ moab::ErrorCode get_geom_size_before_sealing( const moab::Range geom_sets[],
 
     }
   }
-  return moab::MB_SUCCESS;
+  return MB_SUCCESS;
 }
 
-moab::ErrorCode get_senses(moab::EntityHandle entity,
-    std::vector<moab::EntityHandle> &wrt_entities, std::vector<int> &senses)
+ErrorCode get_senses(EntityHandle entity,
+    std::vector<EntityHandle> &wrt_entities, std::vector<int> &senses)
 {
   //
   // the question here is: the wrt_entities is supplied or not?
@@ -150,7 +151,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
   if (-1 == edim)
     return MB_FAILURE;// not geometry entity
 
-  moab::ErrorCode rval;
+  ErrorCode rval;
   wrt_entities.clear();
   senses.clear();
 
@@ -159,22 +160,22 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
     
     const void *dum_ptr;
     int num_ents;
-    unsigned flags = moab::MB_TAG_SPARSE;
+    unsigned flags = MB_TAG_SPARSE;
   
-    moab::Tag senseNEntsTag;
+    Tag senseNEntsTag;
     rval = MBI() -> tag_get_handle(GEOM_SENSE_N_ENTS_TAG_NAME, 0 , MB_TYPE_HANDLE, senseNEntsTag, flags);
-    if (gen::error(moab::MB_SUCCESS!=rval, "could not get ent sense handles")) return rval;
+    if (gen::error(MB_SUCCESS!=rval, "could not get ent sense handles")) return rval;
     rval = MBI()->tag_get_by_ptr(senseNEntsTag, &entity, 1, &dum_ptr, &num_ents);
-    if (gen::error(moab::MB_SUCCESS!=rval, "could not get ent sense data")) return rval;
-    const moab::EntityHandle *ents_data = static_cast<const moab::EntityHandle*> (dum_ptr);
+    if (gen::error(MB_SUCCESS!=rval, "could not get ent sense data")) return rval;
+    const EntityHandle *ents_data = static_cast<const EntityHandle*> (dum_ptr);
     std::copy(ents_data, ents_data + num_ents, std::back_inserter(wrt_entities));
 
-    moab::Tag senseNSensesTag;
+    Tag senseNSensesTag;
     rval = MBI()->tag_get_handle(GEOM_SENSE_N_SENSES_TAG_NAME, 0 , MB_TYPE_INTEGER, senseNSensesTag, flags);
-    if (gen::error(moab::MB_SUCCESS!=rval, "could not get senses handle")) return rval;
+    if (gen::error(MB_SUCCESS!=rval, "could not get senses handle")) return rval;
     rval = MBI()->tag_get_by_ptr(senseNSensesTag, &entity, 1, &dum_ptr,
         &num_ents);
-    if (gen::error(moab::MB_SUCCESS!=rval, "could not get senses data")) return rval;
+    if (gen::error(MB_SUCCESS!=rval, "could not get senses data")) return rval;
 
     const int *senses_data = static_cast<const int*> (dum_ptr);
     std::copy(senses_data, senses_data + num_ents, std::back_inserter(senses));
@@ -182,9 +183,9 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
   }/* else // face in volume, edim == 2
   {
     
-    moab::EntityHandle sense_data[2] = { 0, 0 };
+    EntityHandle sense_data[2] = { 0, 0 };
     rval = MBI()->tag_get_data(GEOM_SENSE_2_TAG_NAME, &entity, 1, sense_data);
-    if (moab::MB_SUCCESS != rval)
+    if (MB_SUCCESS != rval)
       return rval;
     if (sense_data[0] != 0 && sense_data[1] == sense_data[0]) {
       wrt_entities.push_back(sense_data[0]);
@@ -212,7 +213,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 
   for (unsigned int index=0; index<wrt_entities.size(); index++)
   {
-    moab::EntityHandle wrt_ent=wrt_entities[index];
+    EntityHandle wrt_ent=wrt_entities[index];
     if (wrt_ent )
     {
       if (MBI()->contains_entities(modelSet, &wrt_ent, 1))
@@ -227,7 +228,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
   senses.resize(currentSize);
   //
   */
-  return moab::MB_SUCCESS;
+  return MB_SUCCESS;
 }
   int main(int argc, char **argv) {
 
@@ -260,12 +261,12 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
     bool is_acis;
 
     // load the input file
-    moab::ErrorCode result, rval;
-    moab::EntityHandle input_set;
+    ErrorCode result, rval;
+    EntityHandle input_set;
 
     rval = MBI()->create_meshset( MESHSET_SET, input_set );
 
-    if(gen::error(moab::MB_SUCCESS!=rval,"failed to create_meshset"))
+    if(gen::error(MB_SUCCESS!=rval,"failed to create_meshset"))
       {
 	return rval;
       }
@@ -279,7 +280,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
     if(std::string::npos!=input_name.find("h5m") && (2==argc)) 
       {
 	rval = MBI()->load_file( input_name.c_str(), &input_set );
-	if(gen::error(moab::MB_SUCCESS!=rval,"failed to load_file 0")) 
+	if(gen::error(MB_SUCCESS!=rval,"failed to load_file 0"))
 	  {
 	    return rval;      
 	  }
@@ -313,12 +314,12 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 	options += facet_tol_ss.str();
 	if(debug) std::cout << "  options=" << options << std::endl;
 	rval = MBI()->load_file( input_name.c_str(), &input_set, options.c_str() );
-	if(gen::error(moab::MB_SUCCESS!=rval,"failed to load_file 1")) return rval;      
+	if(gen::error(MB_SUCCESS!=rval,"failed to load_file 1")) return rval;
 
       // write an HDF5 file of facets with known tolerance   
 	std::string facet_tol_filename = root_name + "_" + facet_tol_ss.str() + ".h5m";
 	rval = MBI()->write_mesh( facet_tol_filename.c_str() );
-	if(gen::error(moab::MB_SUCCESS!=rval,"failed to write_mesh 0")) return rval;      
+	if(gen::error(MB_SUCCESS!=rval,"failed to write_mesh 0")) return rval;
 	is_acis = true;
       } 
     else 
@@ -331,73 +332,73 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 
     // create tags
     clock_t load_time = clock();    
-    moab::Tag geom_tag, id_tag, normal_tag, merge_tag, faceting_tol_tag, 
+    Tag geom_tag, id_tag, normal_tag, merge_tag, faceting_tol_tag,
       geometry_resabs_tag, size_tag, orig_curve_tag;
   
     result = MBI()->tag_get_handle( GEOM_DIMENSION_TAG_NAME, 1,
-				MB_TYPE_INTEGER, geom_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
-    assert( moab::MB_SUCCESS == result );
-    if ( result != moab::MB_SUCCESS )
+				MB_TYPE_INTEGER, geom_tag, MB_TAG_DENSE|MB_TAG_CREAT );
+    assert( MB_SUCCESS == result );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       }
     result = MBI()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1,
-				MB_TYPE_INTEGER, id_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
-    assert( moab::MB_SUCCESS == result );
-    if ( result != moab::MB_SUCCESS )
+				MB_TYPE_INTEGER, id_tag, MB_TAG_DENSE|MB_TAG_CREAT);
+    assert( MB_SUCCESS == result );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       }
     result = MBI()->tag_get_handle( "NORMAL", sizeof(MBCartVect), MB_TYPE_OPAQUE,
-        normal_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
-    assert( moab::MB_SUCCESS == result );
-    if ( result != moab::MB_SUCCESS )
+        normal_tag, MB_TAG_DENSE|MB_TAG_CREAT);
+    assert( MB_SUCCESS == result );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       }
     result = MBI()->tag_get_handle( "MERGE", 1, MB_TYPE_HANDLE,
-        merge_tag, moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT );
-    assert( moab::MB_SUCCESS == result ); 
-    if ( result != moab::MB_SUCCESS )
+        merge_tag, MB_TAG_SPARSE|MB_TAG_CREAT );
+    assert( MB_SUCCESS == result );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       } 
     result = MBI()->tag_get_handle( "FACETING_TOL", 1, MB_TYPE_DOUBLE,
-        faceting_tol_tag , moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT );
-    assert( moab::MB_SUCCESS == result );  
-    if ( result != moab::MB_SUCCESS )
+        faceting_tol_tag , MB_TAG_SPARSE|MB_TAG_CREAT );
+    assert( MB_SUCCESS == result );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       }
     result = MBI()->tag_get_handle( "GEOMETRY_RESABS", 1,     MB_TYPE_DOUBLE,
-                             geometry_resabs_tag, moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT  );
-    assert( moab::MB_SUCCESS == result );  
-    if ( result != moab::MB_SUCCESS )
+                             geometry_resabs_tag, MB_TAG_SPARSE|MB_TAG_CREAT  );
+    assert( MB_SUCCESS == result );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       }
     result = MBI()->tag_get_handle( "GEOM_SIZE", 1, MB_TYPE_DOUBLE,
-				    size_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT  );
-    assert( (moab::MB_SUCCESS == result) );
-    if ( result != moab::MB_SUCCESS )
+				    size_tag, MB_TAG_DENSE|MB_TAG_CREAT  );
+    assert( (MB_SUCCESS == result) );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       }
     int true_int = 1;    
     result = MBI()->tag_get_handle( "ORIG_CURVE", 1,
-				MB_TYPE_INTEGER, orig_curve_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT, &true_int );
-    assert( moab::MB_SUCCESS == result );
-    if ( result != moab::MB_SUCCESS )
+				MB_TYPE_INTEGER, orig_curve_tag, MB_TAG_DENSE|MB_TAG_CREAT, &true_int );
+    assert( MB_SUCCESS == result );
+    if ( result != MB_SUCCESS )
       {
 	moab_printer(result);
       }
     // PROBLEM: MOAB is not consistent with file_set behavior. The tag may not be
     // on the file_set.
-    moab::Range file_set;
+    Range file_set;
     result = MBI()->get_entities_by_type_and_tag( 0, MBENTITYSET, &faceting_tol_tag,
                                                   NULL, 1, file_set );
 
-    if(gen::error(moab::MB_SUCCESS!=result,"could not get faceting_tol_tag")) 
+    if(gen::error(MB_SUCCESS!=result,"could not get faceting_tol_tag"))
       {
 	return result;
       }
@@ -412,10 +413,10 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
     double facet_tol, sme_resabs_tol=1e-6;
     result = MBI()->tag_get_data( faceting_tol_tag, &file_set.front(), 1,  
                                   &facet_tol );
-    assert(moab::MB_SUCCESS == result);
+    assert(MB_SUCCESS == result);
     result = MBI()->tag_get_data( geometry_resabs_tag, &file_set.front(), 1,  
                                   &sme_resabs_tol );
-    if(moab::MB_SUCCESS != result) 
+    if(MB_SUCCESS != result)
       {
 	std::cout <<  "absolute tolerance could not be read from file" << std::endl;
       }
@@ -433,7 +434,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
  
     
     // get all geometry sets
-    moab::Range geom_sets[4];
+    Range geom_sets[4];
     for(unsigned dim=0; dim<4; dim++) 
       {
 	void *val[] = {&dim};
@@ -441,15 +442,15 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 	  					    val, 1, geom_sets[dim] );
 	std::cout << "Get entities by type and tag" << std::endl;
 
-	assert(moab::MB_SUCCESS == result);
+	assert(MB_SUCCESS == result);
 
 	// make sure that sets TRACK membership and curves are ordered
 	// MESHSET_TRACK_OWNER=0x1, MESHSET_SET=0x2, MESHSET_ORDERED=0x4
-	for(MBRange::iterator i=geom_sets[dim].begin(); i!=geom_sets[dim].end(); i++) 
+	for(Range::iterator i=geom_sets[dim].begin(); i!=geom_sets[dim].end(); i++)
 	  {
 	    unsigned int options;
 	    result = MBI()->get_meshset_options(*i, options );
-	    assert(moab::MB_SUCCESS == result);
+	    assert(MB_SUCCESS == result);
     
 	    // if options are wrong change them
 	    if(dim==1) 
@@ -457,7 +458,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 		if( !(MESHSET_TRACK_OWNER&options) || !(MESHSET_ORDERED&options) ) 
 		  {
 		    result = MBI()->set_meshset_options(*i, MESHSET_TRACK_OWNER|MESHSET_ORDERED);
-		    assert(moab::MB_SUCCESS == result);
+		    assert(MB_SUCCESS == result);
 		  }
 	      } 
 	    else 
@@ -465,7 +466,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 		if( !(MESHSET_TRACK_OWNER&options) ) 
 		  {        
 		    result = MBI()->set_meshset_options(*i, MESHSET_TRACK_OWNER);
-		    assert(moab::MB_SUCCESS == result);
+		    assert(MB_SUCCESS == result);
 		  }
 	      }
 	  }
@@ -480,7 +481,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
       {
 	std::cout << "I am checking the geometry size" << std::endl;
 	result = get_geom_size_before_sealing( geom_sets, geom_tag, size_tag, verbose );
-	if(gen::error(moab::MB_SUCCESS!=result,"measuring geom size failed"))
+	if(gen::error(MB_SUCCESS!=result,"measuring geom size failed"))
 	  {
 	    return result;
 	  }
@@ -494,7 +495,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
     result = MBI()->get_number_entities_by_type( 0, MBTRI, orig_n_tris );
     std::cout << result << std::endl;
 
-    assert(moab::MB_SUCCESS == result);
+    assert(MB_SUCCESS == result);
 
     std::cout << "==================================" << std::endl;
     std::cout << "  Input faceted geometry contains: " << std::endl;
@@ -538,15 +539,15 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
     std::cout << " CURVE SENSES " << std::endl;
     std::cout << "=====================================" << std::endl;
 
-    moab::GeomTopoTool gt(MBI(), false);
+    GeomTopoTool gt(MBI(), false);
     
     for( unsigned int i=0; i<geom_sets[1].size(); i++)
     {
-    moab::EntityHandle curve = geom_sets[1][i];
-    std::vector<moab::EntityHandle> surfs;
+    EntityHandle curve = geom_sets[1][i];
+    std::vector<EntityHandle> surfs;
     std::vector<int> senses;
     rval = gt.get_senses( curve, surfs, senses);
-    if(gen::error(moab::MB_SUCCESS!=result,"could not get curve senses")) return result;
+    if(gen::error(MB_SUCCESS!=result,"could not get curve senses")) return result;
     std::cout << "Number of senses for curve " << gen::geom_id_by_handle(curve) << " = " << senses.size() << std::endl;
     for (unsigned int index=0; index<senses.size() ; index++)
     { 
@@ -567,11 +568,11 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 
     for( unsigned int i=0; i<geom_sets[2].size(); i++)
     {
-    moab::EntityHandle surf = geom_sets[2][i];
-    std::vector<moab::EntityHandle> vols;
+    EntityHandle surf = geom_sets[2][i];
+    std::vector<EntityHandle> vols;
     std::vector<int> surf_senses;
     rval = gt.get_senses( surf, vols, surf_senses);
-    if(gen::error(moab::MB_SUCCESS!=result,"could not get surface senses")) return result;
+    if(gen::error(MB_SUCCESS!=result,"could not get surface senses")) return result;
     std::cout << "Number of senses for surface " << gen::geom_id_by_handle(surf) << " = " << surf_senses.size() << std::endl;
     for (unsigned int index=0; index<surf_senses.size() ; index++)
     { 
@@ -587,20 +588,20 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
     std::cout << " Vertex Coordinates " << std::endl;
     std::cout << "=====================================" << std::endl;
 
-    moab::Range verts;
+    Range verts;
     rval = MBI()->get_entities_by_type(0, MBVERTEX, verts);
-    if(gen::error(moab::MB_SUCCESS!=result,"could not get vertex handles")) return result;
+    if(gen::error(MB_SUCCESS!=result,"could not get vertex handles")) return result;
     double x[geom_sets[0].size()];
     double y[geom_sets[0].size()];
     double z[geom_sets[0].size()];
 
 
     rval = MBI()-> get_coords( verts, &x[0], &y[0], &z[0]);
-    if(gen::error(moab::MB_SUCCESS!=result,"could not get coordinates of the vertices")) return result;
+    if(gen::error(MB_SUCCESS!=result,"could not get coordinates of the vertices")) return result;
 
 
     int j=0;
-    for (MBRange::const_iterator i = verts.begin(); i!=verts.end(); i++)
+    for (Range::const_iterator i = verts.begin(); i!=verts.end(); i++)
     {
         
      std::cout << "Vertex ID = " << *i << std::endl;
@@ -614,7 +615,7 @@ moab::ErrorCode get_senses(moab::EntityHandle entity,
 }
 //==========EOL=============//
 
-MBInterface *MBI() {
-    static MBCore instance;
+Interface *MBI() {
+    static Core instance;
     return &instance;
   }
