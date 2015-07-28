@@ -43,9 +43,9 @@
 #include "meshkit/cleanup.hpp"
 
 
+using namespace moab;
 
-
-moab::ErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis);
+ErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis);
 
 
 
@@ -79,12 +79,12 @@ int main(int argc, char **argv)
     bool is_acis;
 
     // load the input file
-    moab::ErrorCode result, rval;
-    moab::EntityHandle input_set;
+    ErrorCode result, rval;
+    EntityHandle input_set;
 
     rval = MBI()->create_meshset( MESHSET_SET, input_set );
 
-    if(gen::error(moab::MB_SUCCESS!=rval,"failed to create_meshset"))
+    if(gen::error(MB_SUCCESS!=rval,"failed to create_meshset"))
       {
 	return rval;
       }
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     if(std::string::npos!=input_name.find("h5m") && (2==argc)) 
       {
 	rval = MBI()->load_file( input_name.c_str(), &input_set );
-	if(gen::error(moab::MB_SUCCESS!=rval,"failed to load_file 0")) 
+	if(gen::error(MB_SUCCESS!=rval,"failed to load_file 0"))
 	  {
 	    return rval;      
 	  }
@@ -111,14 +111,14 @@ int main(int argc, char **argv)
     //seal the input mesh set
     double facet_tol;
     result= mw_func::make_mesh_watertight(input_set, facet_tol);
-    if(gen::error(moab::MB_SUCCESS!=result, "could not make model watertight")) return result;
+    if(gen::error(MB_SUCCESS!=result, "could not make model watertight")) return result;
 
   
     //write file
     clock_t zip_time = clock();  
     std::cout << "Writing zipped file..." << std::endl;
     write_sealed_file( root_name, facet_tol, is_acis);
-    if(gen::error(moab::MB_SUCCESS!=result, "could not write the sealed mesh to a new file"))
+    if(gen::error(MB_SUCCESS!=result, "could not write the sealed mesh to a new file"))
     return result; 
 
     clock_t write_time = clock();
@@ -131,9 +131,9 @@ int main(int argc, char **argv)
   }
 
 
-moab::ErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis){
+ErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis){
 
-    moab::ErrorCode result;
+    ErrorCode result;
     std::string output_filename;
     if(is_acis) {  
       std::stringstream facet_tol_ss;
@@ -146,8 +146,8 @@ moab::ErrorCode write_sealed_file( std::string root_filename, double facet_tol, 
     // This happens only if I delete vertices when merging.
     // result = MBI()->write_mesh( filename_new.c_str(), &input_meshset, 1);
     result = MBI()->write_mesh( output_filename.c_str() );
-    if (moab::MB_SUCCESS != result) std::cout << "result= " << result << std::endl;
-    assert(moab::MB_SUCCESS == result);  
+    if (MB_SUCCESS != result) std::cout << "result= " << result << std::endl;
+    assert(MB_SUCCESS == result);
 
   return result; 
 }
