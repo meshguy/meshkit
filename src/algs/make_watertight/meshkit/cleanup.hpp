@@ -1,7 +1,7 @@
 #ifndef CLEANUP_HPP
 #define CLEANUP_HPP
 
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "gen.hpp"
 #include "arc.hpp"
 #include "zip.hpp"

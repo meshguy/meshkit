@@ -9,10 +9,10 @@
 #include <time.h>
 #include <vector>
 #include <algorithm>
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "moab/Range.hpp"
 #include "moab/AdaptiveKDTree.hpp" // for merging verts
-#include "MBCartVect.hpp"
+#include "moab/CartVect.hpp"
 
 namespace cw_func {
 /// checks the input mesh for watertightness. If check_topology=true, then the mesh will be checked topologically only, no tolerances allowed.
