@@ -2,7 +2,7 @@
 #define ARC_HPP
 
 #include <vector>
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "gen.hpp"
 #include "moab/Skinner.hpp"
 #include "MBTagConventions.hpp"

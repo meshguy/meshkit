@@ -9,10 +9,10 @@
 #include <time.h>
 #include <vector>
 #include <algorithm>
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "moab/Range.hpp"
 #include "moab/AdaptiveKDTree.hpp" // for merging verts
-#include "MBCartVect.hpp"
+#include "moab/CartVect.hpp"
 
 // SENSE CONVENTIONS
 #define SENSE_FORWARD 1
@@ -21,7 +21,7 @@
 
 
 // returns a moab interface
-MBInterface *MBI(); 
+moab::Interface *MBI(); 
 
 namespace gen {
   bool error( const bool error_has_occured, const std::string message="" );
@@ -81,7 +81,7 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
                                           double &d);
 /// returns the distance between v0 and v1
 
-  double dist_between_verts( const MBCartVect v0, const MBCartVect v1 );
+  double dist_between_verts( const moab::CartVect v0, const moab::CartVect v1 );
   moab::ErrorCode dist_between_verts( const moab::EntityHandle v0, const moab::EntityHandle v1,
                                   double &d );
   double dist_between_verts( double coords0[], double coords1[] );
@@ -99,10 +99,10 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
 // get the direction unit vector from one vertex to another vertex
   //moab::ErrorCode get_direction( moab::EntityHandle from_vert, moab::EntityHandle to_vert, double dir[] );
   moab::ErrorCode get_direction( const moab::EntityHandle from_vert, const moab::EntityHandle to_vert,
-                           MBCartVect &dir ); 
+                           moab::CartVect &dir ); 
 
 // from http://www.topcoder.com/tc?module=Static&d1=tutorials&d2=geometry1
-  double edge_point_dist( const MBCartVect a, const MBCartVect b, const MBCartVect c );
+  double edge_point_dist( const moab::CartVect a, const moab::CartVect b, const moab::CartVect c );
   double edge_point_dist( const moab::EntityHandle endpt0, const moab::EntityHandle endpt1, 
                           const moab::EntityHandle pt );
   double edge_point_dist( const moab::EntityHandle edge, const moab::EntityHandle pt );
@@ -113,7 +113,7 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
   moab::ErrorCode point_curve_min_dist( const std::vector<moab::EntityHandle> curve, 
                                     const moab::EntityHandle pt, double &min_dist );
 
-  double triangle_area( const MBCartVect a, const MBCartVect b, const MBCartVect c);
+  double triangle_area( const moab::CartVect a, const moab::CartVect b, const moab::CartVect c);
   moab::ErrorCode triangle_area( const moab::EntityHandle conn[], double &area );
   moab::ErrorCode triangle_area( const moab::EntityHandle triangle, double &area );
   double triangle_area( moab::Range triangles );
@@ -122,12 +122,12 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
   bool triangle_degenerate( const moab::EntityHandle v0, const moab::EntityHandle v1, const moab::EntityHandle v2);
 
 /// gets the normal vectors of all triangles in moab::Range triangles and returns them as MBCartVect's in normals
-  moab::ErrorCode triangle_normals( const moab::Range triangles, std::vector<MBCartVect> &normals );
-  moab::ErrorCode triangle_normal( const moab::EntityHandle triangle, MBCartVect &normal );
+  moab::ErrorCode triangle_normals( const moab::Range triangles, std::vector<moab::CartVect> &normals );
+  moab::ErrorCode triangle_normal( const moab::EntityHandle triangle, moab::CartVect &normal );
   moab::ErrorCode triangle_normal( const moab::EntityHandle v0, const moab::EntityHandle v1,
-                               const moab::EntityHandle v2, MBCartVect &normal );
-  moab::ErrorCode triangle_normal( const MBCartVect v0, const MBCartVect v1, 
-                               const MBCartVect v2, MBCartVect &normal ); 
+                               const moab::EntityHandle v2, moab::CartVect &normal );
+  moab::ErrorCode triangle_normal( const moab::CartVect v0, const moab::CartVect v1, 
+                               const moab::CartVect v2, moab::CartVect &normal ); 
 
   // Distance between a point and line. The line is defined by two verts.
   // We are using a line and not a line segment!
@@ -145,7 +145,7 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
   moab::ErrorCode point_line_projection( const moab::EntityHandle line_pt1,     
                                      const moab::EntityHandle line_pt2,             
                                      const moab::EntityHandle pt0,              
-                                     MBCartVect &projected_coords,
+                                     moab::CartVect &projected_coords,
                                      double &parameter );  
   // Get the distance of pt0 from line_pt1 if pt0 is projected. No coords are
   // changed in MOAB.
@@ -155,7 +155,7 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
 				     double &dist_along_edge  );
   
   moab::ErrorCode ear_clip_polygon( std::vector<moab::EntityHandle> polygon_of_verts,
-                                    const MBCartVect plane_normal_vector, moab::Range &new_tris );
+                                    const moab::CartVect plane_normal_vector, moab::Range &new_tris );
 
   int geom_id_by_handle( const moab::EntityHandle set);
 
@@ -197,7 +197,7 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
   moab::ErrorCode surface_sense( moab::EntityHandle volume, int num_surfaces,const moab::EntityHandle* surfaces,int* senses_out );
   moab::ErrorCode surface_sense( moab::EntityHandle volume, moab::EntityHandle surface, int& sense_out );
 
-  moab::Tag get_tag( const char* name, int size, moab::TagType store,MBDataType type, const void* def_value, bool create_if_missing);
+  moab::Tag get_tag( const char* name, int size, moab::TagType store,moab::DataType type, const void* def_value, bool create_if_missing);
 
   moab::ErrorCode delete_surface( moab::EntityHandle surf, moab::Tag geom_tag, moab::Range tris, int id, bool debug, bool verbose);
 
