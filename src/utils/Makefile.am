@@ -36,12 +36,8 @@ nobase_libMeshKitutils_la_include_HEADERS = \
         meshkit/matrixtemplate.hpp \
         meshkit/mstream.hpp \
         meshkit/ReadPolyLine.hpp \
-<<<<<<< HEAD
         meshkit/pincell.hpp \
         meshkit/cylinder.hpp
-=======
-        meshkit/array_qm.hpp
->>>>>>> develop
 
 if HAVE_FBIGEOM
 nobase_libMeshKitutils_la_include_HEADERS += \
