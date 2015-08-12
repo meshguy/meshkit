@@ -12,7 +12,7 @@
 using namespace MeshKit;
 
 #include "TestUtil.hpp"
-#define DEFAULT_TEST_FILE "cube.cub"
+#define DEFAULT_TEST_FILE "rect_quads.cub"
 
 MKCore *mk;
 
@@ -51,7 +51,7 @@ void test_load_and_extrude()
   std::string filename = TestDir + "/" + DEFAULT_TEST_FILE;
   mk->load_mesh(filename.c_str());
 
-    // populate mesh with no attached geometry or relations
+  // populate mesh with no attached geometry or relations
   mk->populate_model_ents(-1, 0, -1);
 
   // get the hexes
@@ -64,18 +64,46 @@ void test_load_and_extrude()
   // some entity tag types are always copy or expand
   em->expand_sets().add_tag("MATERIAL_SET");
   em->expand_sets().add_tag("DIRICHLET_SET");
-  em->expand_sets().add_tag("NEUMANN_SET");
+  em->copy_sets().add_tag("NEUMANN_SET");
+  em->copy_faces(true);
 
-  Vector<3> dx; dx[0] = 10; dx[1] = 0; dx[2] = 0;
-  em->set_transform(Extrude::Translate(dx, 5));
+  Vector<3> dx; dx[0] = 0; dx[1] = 0; dx[2] = 3;
+  em->set_transform(Extrude::Translate(dx, 1));
 
   // put them in the graph
   mk->get_graph().addArc(mk->root_node()->get_node(), em->get_node());
   mk->get_graph().addArc(em->get_node(), mk->leaf_node()->get_node());
 
+  moab::Tag mattag;
+  mk->moab_instance()->tag_get_handle( "MATERIAL_SET", 1, moab::MB_TYPE_INTEGER, mattag );
+  moab::Range matsets;
+  std::vector <moab::EntityHandle> set_ents;
+  mk->moab_instance()->get_entities_by_type_and_tag( 0, moab::MBENTITYSET, &mattag, 0, 1, matsets );
+
+  moab::Range::iterator set_it;
+  for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+      moab::EntityHandle this_set = *set_it;
+      em->extrude_sets().add_set((iMesh::EntitySetHandle)this_set);
+    }
+
+  // some entity tag types are always copy or expand
+  em->extrude_sets().add_tag("MATERIAL_SET");
+
   // mesh embedded boundary mesh, by calling execute
   mk->setup_and_execute();
 
+  // now delete all the 2D material sets:
+  matsets.clear();
+  // doing this again, to get new material sets created by extrude
+  mk->moab_instance()->get_entities_by_type_and_tag( 0, moab::MBENTITYSET, &mattag, 0, 1, matsets );
+  for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+      moab::EntityHandle this_set = *set_it;
+      // get material sets with two dimension and delete
+      std::vector <moab::EntityHandle> set_ents;
+      mk->moab_instance()->get_entities_by_dimension(this_set, 2, set_ents, true);
+      if(set_ents.size() > 0)
+        mk->moab_instance()->delete_entities(&this_set, 1);
+    }
   delete em;
 }
 
@@ -133,13 +161,13 @@ void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
   CHECK_EQUAL(new_verts.size(), nverts);
 
   mesh->getVtxArrCoords(&new_verts[0], new_verts.size(), iBase_INTERLEAVED,
-                        &new_coords[0]);
+      &new_coords[0]);
 
   for(size_t i=0; i<nverts; i++) {
-    CHECK_REAL_EQUAL(coords[i*3+0],    new_coords[i*3+0], 0.00001);
-    CHECK_REAL_EQUAL(coords[i*3+1],    new_coords[i*3+1], 0.00001);
-    CHECK_REAL_EQUAL(coords[i*3+2]+10, new_coords[i*3+2], 0.00001);
-  }
+      CHECK_REAL_EQUAL(coords[i*3+0],    new_coords[i*3+0], 0.00001);
+      CHECK_REAL_EQUAL(coords[i*3+1],    new_coords[i*3+1], 0.00001);
+      CHECK_REAL_EQUAL(coords[i*3+2]+10, new_coords[i*3+2], 0.00001);
+    }
 
   iMesh::EntitySetHandle extrude_set;
   int n;
@@ -147,7 +175,6 @@ void help_test_extrude_face(iMesh_EntityTopology topo, double *coords,
                         (iMesh::EntityHandle&)extrude_set);
   mesh->getNumOfType(extrude_set, iBase_ALL_TYPES, n);
   CHECK_EQUAL(n, 10);
-
 
   delete em;
 }
