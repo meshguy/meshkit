@@ -2311,6 +2311,7 @@ namespace MeshKit
             // subtract the innermost hex from the pins
             std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
+//#if HAVE_ACIS
             iBase_EntityHandle unite= NULL, tmp_new1;
 
             // if there are more than one pins
@@ -2330,7 +2331,9 @@ namespace MeshKit
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
                 ////CHECK("Couldn't subtract pins from block.");
               }
-//#if HAVE_ACIS
+//#endif
+            // This block was needed for OCE below 0.13 or OCC 6.6
+//#if HAVE_OCC
 //            iBase_EntityHandle tmp_new1 = NULL;
 //            // if there are more than one pins
 //            if( cp_inpins[k-1].size() > 1){
