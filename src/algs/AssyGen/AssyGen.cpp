@@ -2311,7 +2311,6 @@ namespace MeshKit
             // subtract the innermost hex from the pins
             std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
-#if HAVE_ACIS
             iBase_EntityHandle unite= NULL, tmp_new1;
 
             // if there are more than one pins
@@ -2331,26 +2330,25 @@ namespace MeshKit
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
                 ////CHECK("Couldn't subtract pins from block.");
               }
-#endif
-#if HAVE_OCC
-            iBase_EntityHandle tmp_new1 = NULL;
-            // if there are more than one pins
-            if( cp_inpins[k-1].size() > 1){
-                std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
-                for (int i=0; i< (int)cp_inpins[k-1].size(); i++){
-                    // iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &unite, &err);
-                    iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
-                    ////CHECK("Couldn't subtract pins from block.");
-                    tmp_vol = tmp_new1;
-                    tmp_new1=NULL;
-                  }
+//#if HAVE_ACIS
+//            iBase_EntityHandle tmp_new1 = NULL;
+//            // if there are more than one pins
+//            if( cp_inpins[k-1].size() > 1){
+//                std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
+//                for (int i=0; i< (int)cp_inpins[k-1].size(); i++){
+//                    // iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &unite, &err);
+//                    iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
+//                    ////CHECK("Couldn't subtract pins from block.");
+//                    tmp_vol = tmp_new1;
+//                    tmp_new1=NULL;
+//                  }
 
-              }
-            else{ // only one pin in in_pins
-                iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
-                ////CHECK("Couldn't subtract pins from block.");
-              }
-#endif
+//              }
+//            else{ // only one pin in in_pins
+//                iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
+//                ////CHECK("Couldn't subtract pins from block.");
+//              }
+//#endif
 
           }
         std::cout << "\n--------------------------------------------------"<<std::endl;
