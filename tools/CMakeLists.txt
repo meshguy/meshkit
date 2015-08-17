@@ -34,3 +34,8 @@ target_link_libraries(coregen
   iMesh
   MOAB
   iRel)
+
+install(TARGETS coregen assygen
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
