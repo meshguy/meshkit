@@ -59,7 +59,6 @@ void test_coregen_default(int argc, char **argv)
     // setup input/output files for creating the 'Reactor Core' model
     cg->prepareIO(argc, argv, nrank, nprocs, TestDir);
     mk->setup_and_execute();
-    mk->save_mesh("cgd.h5m");
 #ifdef USE_MPI
 #ifdef HAVE_PARALLEL_MOAB
     MPI::COMM_WORLD.Barrier();
