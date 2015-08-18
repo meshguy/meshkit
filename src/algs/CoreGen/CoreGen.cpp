@@ -931,7 +931,7 @@ namespace MeshKit
         assm_set.push_back(me);
         cm[i] = (CopyMesh*) mk_core()->construct_meshop("CopyMesh", assm_set);
         cm[i]->set_name("copy_move_mesh");
-        // cm[i]->copy_sets().add_set(orig_set);
+        cm[i]->copy_sets().add_set(orig_set);
 
         //resize this else code will break
         //check if we've loaded the same mesh file and need to shift the Material and Neumann set start id's
