@@ -28,7 +28,7 @@ namespace MeshKit
     set_DIM = 3; // default is 3D
     PII = acos(-1.0);
     comment = "!";
-    MAXCHARS = 300;
+    MAXCHARS = 2000;
     extrude_flag = false;
     mem_tflag = false;
     global_ids = true;
@@ -1182,7 +1182,7 @@ namespace MeshKit
     // iMesh_getTagHandle(imesh->instance(), tag_name, &gid_tag, &err, 9);
     // if (iBase_TAG_NOT_FOUND == err) {
     //   iMesh_createTag(imesh->instance(), tag_name, 1, iBase_INTEGER,
-    //                   &gid_tag, &err, strlen(tag_name));
+    //                   &gid_tag, &ermax, strlen(tag_name));
     //   ERRORR("Couldn't create global id tag", err);
     // }
 
