@@ -1549,7 +1549,7 @@ namespace MeshKit
   // Output:   coordinates of pin in assembly
   // ---------------------------------------------------------------------------
   {
-    int nTempPin1 = 0, nTempPin2 = 0, nInputLines;
+    int nTempPin1 = -1, nTempPin2 = 0, nInputLines;
     std::string szVolId, szVolAlias;
     if(m_szGeomType == "hexagonal"){
         double dP, dZ;
@@ -1588,6 +1588,10 @@ namespace MeshKit
                     m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
                     if(m_Assembly(m,n-1) == szVolAlias)
                       nTempPin1 = b;
+                  }
+                if(nTempPin1 == -1){
+                    std::cout << "Unknown pincell, pincell " << m_Assembly(m,n-1) << " not declared" << std::endl;
+                    exit(1);
                   }
                 m_Pincell(nTempPin1).GetPitch(dPX1, dPY1, dPZ1);
                 // now add half of X pitch to the previous cells pitch
@@ -1963,6 +1967,7 @@ namespace MeshKit
 
           for(int n=1; n<=(m_nPin + t - 1); n++){
               ++total_pincells;
+              nTempPin = -1;
               szFormatString1 >> m_Assembly(m,n);
               if(szFormatString1.fail())
                 IOErrorHandler (INVALIDINPUT);
@@ -1977,6 +1982,10 @@ namespace MeshKit
                   if(m_Assembly(m,n) == szVolAlias)
                     nTempPin = b;
                 }
+               if(nTempPin == -1){
+                   std::cout << "Unknown pincell, pincell " << m_Assembly(m,n) << " not declared" << std::endl;
+                   exit(1);
+                 }
 
               // now compute the location and create it
               ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
