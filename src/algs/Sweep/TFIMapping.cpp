@@ -99,8 +99,15 @@ void TFIMapping::setup_this()
                 int indexS = oppEdges[j]->sizing_function_index();
                 if (indexS >= 0){
                     SizingFunction * sfe = mk_core()->sizing_function(indexS);
-                    if (sfe->intervals()>0 && !force)
-                        mesh_count = sfe->intervals();
+                    if (!force)
+                    {
+                        if (sfe->intervals() > 0)
+                            mesh_count = sfe->intervals();
+                        else if (sfe->size() > 0)
+                            mesh_count = oppEdges[j]->measure() / sfe->size();
+                        if (mesh_count % 2 && oppEdges[j]->constrain_even())
+                            ++mesh_count;
+                    }
                 }
                 edgesToMesh.push_back(oppEdges[j]);
             }
@@ -172,10 +179,17 @@ void TFIMapping::setup_this()
 		      if (indexS >= 0)
 		      {
 		        SizingFunction * sfe = mk_core()->sizing_function(indexS);
-		        if (sfe->intervals() > 0 && !force)// if a sizing function was set on an edge, use it, do not
-		          // use the mesh count from surface
-		          // still, a mesh count from opposing edge is very powerful
-		          mesh_count = sfe->intervals();
+                        if (!force)
+                        {
+                          // if a sizing function was set on an edge, use
+                          // that rather than a mesh count from the surface
+                          if (sfe->intervals() > 0)
+                            mesh_count = sfe->intervals();
+                          else if (sfe->size() > 0)
+                            mesh_count = oppEdges[j]->measure() /  sfe->size();
+                          if (mesh_count % 2 && oppEdges[j]->constrain_even())
+                            ++mesh_count;
+                        }
 		      }
 		      // push it to the list if it is not setup to another mesh op (edge mesher) already
 		      //if (oppEdges[j]->is_meshops_list_empty())// it will create an EdgeMesher later
