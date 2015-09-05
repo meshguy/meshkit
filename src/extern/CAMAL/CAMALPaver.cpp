@@ -31,6 +31,10 @@ void CAMALPaver::setup_this()
   
     // then call setup_boundary, to set up edge meshers
   setup_boundary();
+
+  // then ensure that this depends on all bounding edges being meshed,
+  //   even if the edge meshers were already set up before setup_boundary
+  ensure_facet_dependencies(false);
 }
 
 void CAMALPaver::execute_this()

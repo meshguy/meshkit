@@ -26,7 +26,6 @@
 
 #include <iMesh.h>
 #include <iGeom.h>
-#include <set>
 #include <iRel.h>
 #include <vector>
 #include <set>
@@ -142,7 +141,6 @@ private:
   iBase_EntityHandle sourceSurface;
   iBase_EntityHandle targetSurface;
   iBase_EntityHandle volume;
-  moab::Tag markTag;
   moab::Interface *mb;
   int numLayers;
   int numLoops;
@@ -157,6 +155,7 @@ private:
   std::vector<Face> FaceList;
   iBase_EntitySetHandle volumeSet;
 
+  std::set<moab::EntityHandle> markedMoabEnts;
 };
 
 }

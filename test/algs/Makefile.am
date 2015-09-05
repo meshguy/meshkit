@@ -25,6 +25,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/PostBL \
                -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/algs/AssyGen \
+               -I$(top_srcdir)/src/algs/AssyMesher \
                -I$(top_srcdir)/src/algs/IntervalAssignment \
                -I$(top_srcdir)/src/extern/triangle \
 	       -I$(top_srcdir)/src/algs/make_watertight \
@@ -32,7 +33,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils
 
 #BROKEN_TESTS = test_jaalquad test_assygen edmond_matching hamiltonian mreport qualestm SimpleTri2Quad test_quadmeshcleanup
-BROKEN_TESTS = test_ebmesh
+BROKEN_TESTS = test_ebmesh test_assymesher
 
 TESTS = test_edgemesher \
         test_tfimapping \
@@ -70,7 +71,7 @@ TESTS += \
         test_mbvolop
 # some of these tests require CAMAL and FBiGeom, too
 if HAVE_CAMAL_PAVER
-TESTS += test_volice
+TESTS += test_volice test_assymesher
 if HAVE_TRIANGLE
 TESTS += test_setpnt2quad
 endif
@@ -119,6 +120,7 @@ test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslimmesher_SOURCES = test_qslimmesher.cpp
 test_assygen_SOURCES = test_assygen.cpp
+test_assymesher_SOURCES = test_assymesher.cpp
 test_postbl_SOURCES = test_postbl.cpp
 if HAVE_FBIGEOM
 test_fbgeom_SOURCES = test_fbgeom.cpp
