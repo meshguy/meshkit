@@ -19,7 +19,7 @@ FATHOM_CHECK_COMPILERS
 AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
 LIBS="-lm"
 
-AM_PROG_AR
+#AM_PROG_AR
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_DISABLE_SHARED
@@ -1345,6 +1345,7 @@ AC_CONFIG_FILES([Makefile
                  src/algs/QuadMesher/Makefile
                  src/algs/Sweep/Makefile
                  src/algs/AssyGen/Makefile
+                 src/algs/AssyMesher/Makefile
 		 src/algs/CoreGen/Makefile
                  src/algs/PostBL/Makefile
                  src/algs/Qslim/Makefile

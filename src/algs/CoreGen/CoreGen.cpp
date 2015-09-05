@@ -3,20 +3,20 @@
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 namespace MeshKit
 {
-// static registration of this  mesh scheme
-moab::EntityType CoreGen_tps[] = { moab::MBVERTEX,
-                                   moab::MBEDGE,
-                                   moab::MBTRI,
-                                   moab::MBHEX,
-                                   moab::MBMAXTYPE};
-const moab::EntityType* CoreGen::output_types()
-{ return CoreGen_tps; }
+  // static registration of this  mesh scheme
+  moab::EntityType CoreGen_tps[] = { moab::MBVERTEX,
+                                     moab::MBEDGE,
+                                     moab::MBTRI,
+                                     moab::MBHEX,
+                                     moab::MBMAXTYPE};
+  const moab::EntityType* CoreGen::output_types()
+  { return CoreGen_tps; }
 
-CoreGen::CoreGen( MKCore *mk, const MEntVector &me_vec)
+  CoreGen::CoreGen( MKCore *mk, const MEntVector &me_vec)
     : MeshScheme( mk, me_vec),
       igeom(mk->igeom_instance()), imesh(mk->imesh_instance()),
       mb (mk->moab_instance())
-{
+  {
     err = 0;
     run_flag = 1;
     UNITCELL_DUCT = 0;
@@ -28,7 +28,7 @@ CoreGen::CoreGen( MKCore *mk, const MEntVector &me_vec)
     set_DIM = 3; // default is 3D
     PII = acos(-1.0);
     comment = "!";
-    MAXCHARS = 300;
+    MAXCHARS = 2000;
     extrude_flag = false;
     mem_tflag = false;
     global_ids = true;
@@ -56,18 +56,18 @@ CoreGen::CoreGen( MKCore *mk, const MEntVector &me_vec)
     mem1 = 0, mem2 = 0, mem3 = 0, mem4 = 0, mem5 = 0, mem6 = 0, mem7 = 0;
 
 
-}
+  }
 
-CoreGen::~CoreGen()
-{}
+  CoreGen::~CoreGen()
+  {}
 
-bool CoreGen::add_modelent(ModelEnt *model_ent)
-{
+  bool CoreGen::add_modelent(ModelEnt *model_ent)
+  {
     return MeshOp::add_modelent(model_ent);
-}
+  }
 
-void CoreGen::setup_this()
-{
+  void CoreGen::setup_this()
+  {
     logfile << "Setting-up in CoreGen meshop.." << std::endl;
     if(run_flag != 0){
         double ctload = 0;
@@ -79,7 +79,7 @@ void CoreGen::setup_this()
             if (procs == 1) {
                 err = load_meshes();
                 //ERRORR("Failed to load meshes.", 1);
-            }
+              }
             else {
 #ifdef USE_MPI
                 err = load_meshes_parallel(rank, procs);
@@ -92,11 +92,11 @@ void CoreGen::setup_this()
                     // if there are more procs than files distribute the copy/move work on each proc
                     err = distribute_mesh(rank, procs);
                     // ERRORR("Failed to load meshes.", 1);
-                }
+                  }
                 //Get a pcomm object
                 pc = new moab::ParallelComm(mk_core()->moab_instance(), MPI::COMM_WORLD, &err);
 #endif
-            }
+              }
 
             mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
             ld_tload = ld_time.DiffTime();
@@ -108,8 +108,8 @@ void CoreGen::setup_this()
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctload << " mins" << std::endl;
                 logfile << " Memory used: " << mem1/1e6 << " Mb\n" << std::endl;
-            }
-        }
+              }
+          }
 
         /*********************************************/
         // load geometry files
@@ -117,11 +117,11 @@ void CoreGen::setup_this()
         else if (prob_type == "geometry" && procs == 1) {
             err = load_geometries();
             //   ERRORR("Failed to load geometries", 1);
-        }
+          }
         else if(prob_type == "geometry" && procs > 1){
             logfile << " Parallel mode not supported for problem-type: Geometry " << std::endl;
             exit(1);
-        }
+          }
 
 
 
@@ -144,17 +144,17 @@ void CoreGen::setup_this()
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctcopymove << " mins" << std::endl;
                 logfile << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
-            }
-        }
+              }
+          }
 #ifdef USE_MPI
         MPI::COMM_WORLD.Barrier();
 #endif
         for (unsigned int i = 0; i < assys.size(); i++) {
             if(prob_type =="mesh")
-                cm[i]->setup_called(true);
+              cm[i]->setup_called(true);
             if(prob_type =="geometry")
-                cg[i]->setup_called(true);
-        }
+              cg[i]->setup_called(true);
+          }
 
         if (prob_type == "mesh") {
             /*********************************************/
@@ -173,12 +173,12 @@ void CoreGen::setup_this()
                 if (moab::MB_SUCCESS != err) {
                     std::cerr << "Error in MergeMesh during merging entities" << std::endl;
                     exit(2);
-                }
-            }
+                  }
+              }
             else if(procs > 1){
                 if (rank == 0) {
                     logfile << "Merging nodes in parallel. " << std::endl;
-                }
+                  }
 
 #ifdef USE_MPI
                 //Call the resolve parallel function
@@ -187,9 +187,9 @@ void CoreGen::setup_this()
                 if (err != moab::MB_SUCCESS) {
                     std::cerr << "Merge Failed" << std::endl;
                     //MPI_Abort(MPI_COMM_WORLD, 1);
-                }
+                  }
 #endif
-            }
+              }
             mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem3);
             ld_tmerge = ld_mm.DiffTime();
             tmerge = clock();
@@ -200,7 +200,7 @@ void CoreGen::setup_this()
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctmerge << " mins" << std::endl;
                 logfile << " Memory used: " << mem3/1e6 << " Mb\n" << std::endl;
-            }
+              }
 #ifdef USE_MPI
             MPI::COMM_WORLD.Barrier();
 #endif
@@ -212,7 +212,7 @@ void CoreGen::setup_this()
 
                     // assign global ids after copy/move step
                     if (rank == 0)
-                        err = assign_gids();
+                      err = assign_gids();
 
                     CClock ld_em;
                     err = extrude();
@@ -229,29 +229,29 @@ void CoreGen::setup_this()
                         logfile << " CPU time = " << ctextrude << " mins" << std::endl;
                         logfile << " Memory used: " << mem4/1e6 << " Mb\n"
                                 << std::endl;
-                    }
-                }
-            }
+                      }
+                  }
+              }
             if(extrude_flag == true)
-                em->setup_called(true);
+              em->setup_called(true);
 #ifdef USE_MPI
             MPI::COMM_WORLD.Barrier();
 #endif
-        }
-    }
-}
+          }
+      }
+  }
 
 
-void CoreGen::execute_this()
-{
+  void CoreGen::execute_this()
+  {
     logfile << "Executing in CoreGen meshop.." << std::endl;
 
     if(run_flag != 0){
         for (unsigned int i = 0; i < assys.size(); i++) {
             cm[i]->execute_called(true);
-        }
-    if(extrude_flag == true)
-      em->execute_called(true);
+          }
+        if(extrude_flag == true)
+          em->execute_called(true);
         /*********************************************/
         // assign gids
         /*********************************************/
@@ -259,7 +259,7 @@ void CoreGen::execute_this()
         if (procs == 1) {
             err = assign_gids();
             //      ERRORR("Failed to assign global ids.", 1);
-        }
+          }
         //        else{
         //          // err = assign_gids_parallel(rank, procs);
         //          // ERRORR("Failed to assign global ids.", 1);
@@ -275,7 +275,7 @@ void CoreGen::execute_this()
                     << " seconds" << std::endl;
             logfile << " CPU time = " << ctgid << " mins" << std::endl;
             logfile << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
-        }
+          }
         /*********************************************/
         // create neumann sets on the core model
         /*********************************************/
@@ -294,13 +294,13 @@ void CoreGen::execute_this()
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctns << " mins" << std::endl;
                 logfile << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
-            }
-        }
+              }
+          }
 #ifdef USE_MPI
         MPI::COMM_WORLD.Barrier();
 #endif
 
-    }
+      }
     if (prob_type == "mesh") {
 
 
@@ -311,11 +311,11 @@ void CoreGen::execute_this()
         if (procs == 1) {
             err = save_mesh();
             //  ERRORR("Failed to save o/p file.", 1);
-        } else {
+          } else {
             if(savefiles != "one" && (savefiles == "multiple" || savefiles == "both")){
                 err = save_mesh(rank); // uncomment to save the meshes with each proc
                 //ERRORR("Failed to save o/p file.", 1);
-            }
+              }
             if(savefiles != "multiple"){
 #ifdef USE_MPI
                 double write_time = MPI_Wtime();
@@ -323,10 +323,10 @@ void CoreGen::execute_this()
                 //ERRORR("Failed to save o/p file.", 1);
                 write_time = MPI_Wtime() - write_time;
                 if (rank == 0)
-                    logfile << "Parallel write time = " << write_time/60.0 << " mins" << std::endl;
+                  logfile << "Parallel write time = " << write_time/60.0 << " mins" << std::endl;
 #endif
-            }
-        }
+              }
+          }
 
         mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem7);
         ld_tsave = ld_sv.DiffTime();
@@ -338,15 +338,15 @@ void CoreGen::execute_this()
                     << std::endl;
             logfile << " CPU time = " << ctsave << " mins" << std::endl;
             logfile << " Memory used: " << mem7/1e6 << " Mb\n" << std::endl;
-        }
-    }
+          }
+      }
     /*********************************************/
     // geometry operations
     /*********************************************/
     else if (prob_type == "geometry") {
         err = save_geometry();
         //ERRORR("Failed to save o/p file.", 1);
-    }
+      }
 
 
 
@@ -430,8 +430,8 @@ void CoreGen::execute_this()
 
             logfile  << " r = " << rank << " Time taken to save mesh = " << ctsave
                      << " mins" << std::endl;
-        }
-    }
+          }
+      }
 #endif
 
     if (rank == 0) {
@@ -448,35 +448,35 @@ void CoreGen::execute_this()
         logfile << "Maximum memory used by a processor: " << max_mem7 <<  " Mb" << std::endl;
 #endif
         if(procs == 1)
-            logfile << "Maximum memory used: " << mem7 <<  " Mb" << std::endl;
+          logfile << "Maximum memory used: " << mem7 <<  " Mb" << std::endl;
         logfile << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"  << std::endl;
 
-    }
+      }
     /*********************************************/
     // close
     /*********************************************/
     if (run_flag == 1 && procs == 1) {
         //err = close();
         //ERRORR("Failed to dellocate.", 1);
-    } else {
+      } else {
         //err = close_parallel(rank, procs);
         //ERRORR("Failed to dellocate.", 1);
-    }
-}
+      }
+  }
 
-int CoreGen::save_mesh_parallel(const int nrank, const int numprocs)
-// -------------------------------------------------------------------------------------------
-// Function: save mesh file in parallel (hdf5 only)
-// Input:    none
-// Output:   none
-// -------------------------------------------------------------------------------------------
-{
+  int CoreGen::save_mesh_parallel(const int nrank, const int numprocs)
+  // -------------------------------------------------------------------------------------------
+  // Function: save mesh file in parallel (hdf5 only)
+  // Input:    none
+  // Output:   none
+  // -------------------------------------------------------------------------------------------
+  {
 
 #ifdef USE_MPI
     // write file
     if (nrank == 0) {
         logfile << "Saving mesh file in parallel. " << std::endl;
-    }
+      }
 
     //  All explicit sharing data must be updated in ParallelComm instance before save
     // moab::Range entities, sets, faces, edges;
@@ -516,16 +516,16 @@ int CoreGen::save_mesh_parallel(const int nrank, const int numprocs)
         std::string foo = ""; mb->get_last_error(foo);
         std::cerr<<"File Error: "<<foo<<std::endl;
         return 1;
-    }
+      }
     if (nrank == 0) {
         logfile << "Done saving mesh file: " << outfile << std::endl;
-    }
+      }
 #endif
     return iBase_SUCCESS;
 
-}
+  }
 
-int CoreGen::save_mesh(int nrank) {
+  int CoreGen::save_mesh(int nrank) {
     // export proc- nrank mesh
     std::ostringstream os;
     std::string fname;
@@ -537,9 +537,9 @@ int CoreGen::save_mesh(int nrank) {
     logfile << "Saved mesh file: " << fname.c_str() << std::endl;
 
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::save_mesh() {
+  int CoreGen::save_mesh() {
     // ---------------------------------------------------------------------------
     // Function: save mesh serially
     // Input:    none
@@ -548,15 +548,15 @@ int CoreGen::save_mesh() {
     // export
     logfile << "Saving mesh file." << std::endl;
     iMesh_save(imesh->instance(), root_set, outfile.c_str(), NULL, &err, strlen(
-                   outfile.c_str()), 0);
+                 outfile.c_str()), 0);
     ERRORR("Trouble writing output mesh.", err);
     logfile << "Saved mesh file: " << outfile.c_str() << std::endl;
 
     return iBase_SUCCESS;
-}
+  }
 
 
-int CoreGen::save_geometry() {
+  int CoreGen::save_geometry() {
     // ---------------------------------------------------------------------------
     // Function: save geometry serially
     // Input:    none
@@ -590,17 +590,17 @@ int CoreGen::save_geometry() {
     logfile << "Saved geometry file: "<< outfile.c_str() <<std::endl;
 
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::assign_gids_parallel(const int nrank, const int numprocs) {
+  int CoreGen::assign_gids_parallel(const int nrank, const int numprocs) {
 #ifdef USE_MPI
     // assign new global ids
     if (global_ids == true) {
         if(nrank==0)
-            logfile << "Assigning global ids in parallel" << std::endl;
+          logfile << "Assigning global ids in parallel" << std::endl;
         err = pc->assign_global_ids(0, 3, 1, false, true, false);
         ERRORR("Error assigning global ids.", err);
-    }
+      }
     // // assign global ids for all entity sets
     // SimpleArray<iBase_EntitySetHandle> sets;
     // iBase_TagHandle gid_tag;
@@ -623,15 +623,15 @@ int CoreGen::assign_gids_parallel(const int nrank, const int numprocs) {
     // }
 #endif
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::close_parallel(const int nrank, const int numprocs)
-// ---------------------------------------------------------------------------
-// Function: dellocating
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::close_parallel(const int nrank, const int numprocs)
+  // ---------------------------------------------------------------------------
+  // Function: dellocating
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
 #ifdef USE_MPI
     // deallocate ... deallocate ... deallocate
     if (prob_type == "mesh") {
@@ -642,7 +642,7 @@ int CoreGen::close_parallel(const int nrank, const int numprocs)
         iMesh_dtor(imesh->instance(), &err);
         ERRORR("Failed in call iMesh_dtor", err);
 
-    }
+      }
 
     if (prob_type == "geometry") {
         //        for (unsigned int i = 0; i < 1; i++) {
@@ -650,23 +650,23 @@ int CoreGen::close_parallel(const int nrank, const int numprocs)
         //          }
         iGeom_dtor(igeom->instance(), &err);
         ERRORR("Failed in call iGeom_dtor", err);
-    }
+      }
 #endif
     return 0;
-}
+  }
 
-int CoreGen::distribute_mesh(const int nrank, int numprocs)
-// -------------------------------------------------------------------------------------------
-// Function: merge the nodes within a set tolerance in the model
-// Input:    none
-// Output:   none
-// -------------------------------------------------------------------------------------------
-{
+  int CoreGen::distribute_mesh(const int nrank, int numprocs)
+  // -------------------------------------------------------------------------------------------
+  // Function: merge the nodes within a set tolerance in the model
+  // Input:    none
+  // Output:   none
+  // -------------------------------------------------------------------------------------------
+  {
     int nback = files.size() - nassys;
     if(nrank < ((int) core_alias.size() + nback)){
         if(numprocs > (int) core_alias.size()){
             numprocs =  core_alias.size() + nback;
-        }
+          }
 #ifdef USE_MPI
         std::vector<int> rank_load;
         rank_load.resize(numprocs);
@@ -674,18 +674,18 @@ int CoreGen::distribute_mesh(const int nrank, int numprocs)
         if(numprocs >= (int) files.size() && numprocs <= (tot_assys + nback)){
             // again fill assm_meshfiles
             for(int p=0; p<nassys; p++)
-                assm_meshfiles[p]=0;
+              assm_meshfiles[p]=0;
             for(int p=0; p<tot_assys; p++){
                 for(int q=0; q<nassys; q++){
                     if(strcmp(core_alias[p].c_str(), assm_alias[q].c_str()) ==0) {
                         assm_meshfiles[q]+=1;
-                    }
-                }
-            }
+                      }
+                  }
+              }
             //distribute
             for(int i=0; i<  (int)files.size(); i++){
                 rank_load[i] = i;
-            }
+              }
 
             int temp = 0;
             int assm_load = - 1;
@@ -696,22 +696,22 @@ int CoreGen::distribute_mesh(const int nrank, int numprocs)
                     if (assm_meshfiles[i] > temp){
                         temp = assm_meshfiles[i];
                         assm_load = i;
-                    }
+                      }
                     else if (assm_load == -1){
                         logfile << "No assemblies mesh files used in core" << std::endl;
                         exit(0);
-                    }
-                }
+                      }
+                  }
                 assm_meshfiles[assm_load]-=1;
                 int temp_rank = files.size()+ e;
                 rank_load[temp_rank] = assm_load;
                 e++;
                 temp = 0;
-            }
-        }
+              }
+          }
         else{
             logfile << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
-        }
+          }
 
         std::vector<int> times_loaded(nassys);
         std::vector<std::vector<int> > meshfiles_rank (files.size());
@@ -720,9 +720,9 @@ int CoreGen::distribute_mesh(const int nrank, int numprocs)
                 if(rank_load[j]==i){
                     meshfiles_rank[i].push_back(j);
                     times_loaded[i]+=1;
-                }
-            }
-        }
+                  }
+              }
+          }
 
         position_core.resize(numprocs);
 
@@ -732,19 +732,19 @@ int CoreGen::distribute_mesh(const int nrank, int numprocs)
                 for(int j=0; j < (int) assm_location[i].size(); j++){
                     if (k >= (int) meshfiles_rank[i].size()){
                         k = 0;
-                    }
+                      }
                     int p = meshfiles_rank[i][k];
                     int q = assm_location[i][j];
                     position_core[p].push_back(q);
 
                     ++k;
-                }
-            }
+                  }
+              }
             else{
                 // this is background mesh set it -2, no meshfile to copy/move
                 position_core[i].push_back(-2);
-            }
-        }
+              }
+          }
 
         if(nrank == 0){
             logfile << " copy/move task distribution " << std::endl;
@@ -752,22 +752,22 @@ int CoreGen::distribute_mesh(const int nrank, int numprocs)
                 logfile << "rank: " << i <<  " positions : ";
                 for(int j=0; j< (int) position_core[i].size(); j++){
                     logfile << (int) position_core[i][j] << " ";
-                }
+                  }
                 logfile << "\n" << std::endl;
-            }
-        }
+              }
+          }
 #endif
-    }
+      }
     return 0;
-}
+  }
 
-int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
-// ---------------------------------------------------------------------------
-// Function: loads all the meshes and initializes copymesh object
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
+  // ---------------------------------------------------------------------------
+  // Function: loads all the meshes and initializes copymesh object
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     int nback = files.size() - nassys;
     cm.resize(files.size());
 
@@ -776,12 +776,12 @@ int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
     if(nrank < ((int) core_alias.size() + nback)){
         if(numprocs > (int) core_alias.size()){
             numprocs =  core_alias.size() + nback;
-        }
+          }
 
 #ifdef USE_MPI
         if(numprocs > ((int) core_alias.size() + nback)){
             logfile << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
-        }
+          }
 
         iBase_EntitySetHandle orig_set;
         int temp_index;
@@ -800,17 +800,17 @@ int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
                             if ((int) assm_meshfiles[i] > temp){
                                 temp = assm_meshfiles[i];
                                 assm_load = i;
-                            }
-                        }
+                              }
+                          }
                         if (assm_load == -1){
                             continue;
                             logfile << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
-                        }
+                          }
                         assm_meshfiles[assm_load]-=1;
                         rank_load.push_back(assm_load);
                         --p;
                         temp = 1;
-                    }
+                      }
 
                     temp_index = nrank - files.size();
                     iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
@@ -832,8 +832,8 @@ int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
                     assys.push_back(orig_set);
                     assys_index.push_back(rank_load[temp_index]);
                     break;
-                }
-            }
+                  }
+              }
             else{
                 iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
                 ERRORR("Couldn't create file set.", err);
@@ -853,8 +853,8 @@ int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
 
                 assys.push_back(orig_set);
                 assys_index.push_back(temp_index);
-            }
-        }
+              }
+          }
 
         // create cm instances for each mesh file
         //cm = new CopyMesh*[assys.size()];
@@ -862,17 +862,17 @@ int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
         //            cm[i] = new CopyMesh(impl);
         //          }
 #endif
-    }
+      }
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::close()
-// ---------------------------------------------------------------------------
-// Function: dellocating
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::close()
+  // ---------------------------------------------------------------------------
+  // Function: dellocating
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     // deallocate ... deallocate ... deallocate
     if (prob_type == "mesh") {
         //        for (unsigned int i = 0; i < files.size(); i++) {
@@ -882,24 +882,24 @@ int CoreGen::close()
         iMesh_dtor(imesh->instance(), &err);
         ERRORR("Failed in call iMesh_dtor", err);
 
-    }
+      }
     if (prob_type == "geometry") {
         //        for (unsigned int i = 0; i < files.size(); i++) {
         //            delete cg[i];
         //          }
         iGeom_dtor(igeom->instance(), &err);
         ERRORR("Failed in call iGeom_dtor", err);
-    }
+      }
     return 0;
-}
+  }
 
-int CoreGen::load_meshes()
-// ---------------------------------------------------------------------------
-// Function: loads all the meshes and initializes copymesh and merge mesh objects
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::load_meshes()
+  // ---------------------------------------------------------------------------
+  // Function: loads all the meshes and initializes copymesh and merge mesh objects
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     // make a mesh instance
     // iMesh_newMesh("MOAB", imesh->instance(), &err, 4);
     // ERRORR("Failed to create instance.", 1);
@@ -931,7 +931,7 @@ int CoreGen::load_meshes()
         assm_set.push_back(me);
         cm[i] = (CopyMesh*) mk_core()->construct_meshop("CopyMesh", assm_set);
         cm[i]->set_name("copy_move_mesh");
-        // cm[i]->copy_sets().add_set(orig_set);
+        cm[i]->copy_sets().add_set(orig_set);
 
         //resize this else code will break
         //check if we've loaded the same mesh file and need to shift the Material and Neumann set start id's
@@ -944,19 +944,19 @@ int CoreGen::load_meshes()
 
         assys.push_back(orig_set);
         assys_index.push_back(i);
-    }
+      }
     logfile << "Loaded mesh files." << std::endl;
 
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::load_geometries()
-// ---------------------------------------------------------------------------
-// Function: loads all the meshes and initializes copymesh and merge mesh objects
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::load_geometries()
+  // ---------------------------------------------------------------------------
+  // Function: loads all the meshes and initializes copymesh and merge mesh objects
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     logfile << "\n--Loading geometry files." << std::endl;
     // make a mesh instance
     //    iGeom_newGeom("GEOM", igeom->instance(), &err, 4);
@@ -996,7 +996,7 @@ int CoreGen::load_geometries()
         for (int j = 0; j < entities_ehsize; j++) {
             iGeom_addEntToSet(igeom->instance(), entities[j], temp_set, &err);
             ERRORR( "Problem adding to set.", err );
-        }
+          }
 
         iGeom_subtract(igeom->instance(), temp_set, temp_set1, &orig_set, &err);
         ERRORR( "Unable to subtract entity sets.", err );
@@ -1011,96 +1011,96 @@ int CoreGen::load_geometries()
 
         // store this set for subtraction with next entity set
         temp_set1 = temp_set;
-    }
+      }
     logfile << "\n--Loaded geometry files.\n" << std::endl;
 
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::shift_mn_ids(iBase_EntitySetHandle orig_set, int number)
-// ---------------------------------------------------------------------------
-// Function: loads all the meshes and initializes copymesh and merge mesh objects
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
-  std::cout << "Swapping MS and NS ids for " << number << std::endl;
-  // get all the material sets in this assembly
-  moab::Tag mattag, neutag;
-  mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
-  mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, neutag );
+  int CoreGen::shift_mn_ids(iBase_EntitySetHandle orig_set, int number)
+  // ---------------------------------------------------------------------------
+  // Function: loads all the meshes and initializes copymesh and merge mesh objects
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
+    std::cout << "Swapping MS and NS ids for " << number << std::endl;
+    // get all the material sets in this assembly
+    moab::Tag mattag, neutag;
+    mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+    mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, neutag );
 
-  int rval = 0;
-  moab::Range matsets, neusets;
+    int rval = 0;
+    moab::Range matsets, neusets;
 
-  mb->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &mattag, 0, 1, matsets );
-  mb->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &neutag, 0, 1, neusets );
+    mb->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &mattag, 0, 1, matsets );
+    mb->get_entities_by_type_and_tag( (moab::EntityHandle)orig_set, MBENTITYSET, &neutag, 0, 1, neusets );
 
-  int i = 0;
-  moab::Range::iterator set_it;
-  for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
-      moab::EntityHandle this_set = *set_it;
+    int i = 0;
+    moab::Range::iterator set_it;
+    for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+        moab::EntityHandle this_set = *set_it;
 
-      // get the id for this set
-      int set_id;
-      rval = mb->tag_get_data(mattag, &this_set, 1, &set_id);
-      if(rval != moab::MB_SUCCESS) {
-          std::cerr<<"getting tag data failed Code:";
-          std::string foo = ""; mb->get_last_error(foo);
-          std::cerr<<"File Error: "<<foo<<std::endl;
-          return 1;
-        }
+        // get the id for this set
+        int set_id;
+        rval = mb->tag_get_data(mattag, &this_set, 1, &set_id);
+        if(rval != moab::MB_SUCCESS) {
+            std::cerr<<"getting tag data failed Code:";
+            std::string foo = ""; mb->get_last_error(foo);
+            std::cerr<<"File Error: "<<foo<<std::endl;
+            return 1;
+          }
 
-      // set the new id for this set
-      int new_id = all_ms_starts[number] + i;
-      rval = mb->tag_set_data(mattag, &this_set, 1, &new_id);
-      if(rval != moab::MB_SUCCESS) {
-          std::cerr<<"getting tag data failed Code:";
-          std::string foo = ""; mb->get_last_error(foo);
-          std::cerr<<"File Error: "<<foo<<std::endl;
-          return 1;
-        }
-      ++i;
-    }
+        // set the new id for this set
+        int new_id = all_ms_starts[number] + i;
+        rval = mb->tag_set_data(mattag, &this_set, 1, &new_id);
+        if(rval != moab::MB_SUCCESS) {
+            std::cerr<<"getting tag data failed Code:";
+            std::string foo = ""; mb->get_last_error(foo);
+            std::cerr<<"File Error: "<<foo<<std::endl;
+            return 1;
+          }
+        ++i;
+      }
 
-  int j = 0;
-  for (set_it = neusets.begin(); set_it != neusets.end(); set_it++)  {
-      moab::EntityHandle this_set = *set_it;
+    int j = 0;
+    for (set_it = neusets.begin(); set_it != neusets.end(); set_it++)  {
+        moab::EntityHandle this_set = *set_it;
 
-      // get the id for this set
-      int set_id;
-      rval = mb->tag_get_data(neutag, &this_set, 1, &set_id);
-      if(rval != moab::MB_SUCCESS) {
-          std::cerr<<"getting tag data failed Code:";
-          std::string foo = ""; mb->get_last_error(foo);
-          std::cerr<<"File Error: "<<foo<<std::endl;
-          return 1;
-        }
+        // get the id for this set
+        int set_id;
+        rval = mb->tag_get_data(neutag, &this_set, 1, &set_id);
+        if(rval != moab::MB_SUCCESS) {
+            std::cerr<<"getting tag data failed Code:";
+            std::string foo = ""; mb->get_last_error(foo);
+            std::cerr<<"File Error: "<<foo<<std::endl;
+            return 1;
+          }
 
-      // set the new id for this set
-      int new_id = all_ns_starts[number] + j;
-      rval = mb->tag_set_data(neutag, &this_set, 1, &new_id);
-      if(rval != moab::MB_SUCCESS) {
-          std::cerr<<"getting tag data failed Code:";
-          std::string foo = ""; mb->get_last_error(foo);
-          std::cerr<<"File Error: "<<foo<<std::endl;
-          return 1;
-        }
-      ++j;
-    }
-  return 0;
-}
-
-
+        // set the new id for this set
+        int new_id = all_ns_starts[number] + j;
+        rval = mb->tag_set_data(neutag, &this_set, 1, &new_id);
+        if(rval != moab::MB_SUCCESS) {
+            std::cerr<<"getting tag data failed Code:";
+            std::string foo = ""; mb->get_last_error(foo);
+            std::cerr<<"File Error: "<<foo<<std::endl;
+            return 1;
+          }
+        ++j;
+      }
+    return 0;
+  }
 
 
-int CoreGen::move_verts(iBase_EntitySetHandle set, const double *dx)
-// ---------------------------------------------------------------------------
-// Function: Change the coordinates for moving the assembly to its first loc.
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+
+
+  int CoreGen::move_verts(iBase_EntitySetHandle set, const double *dx)
+  // ---------------------------------------------------------------------------
+  // Function: Change the coordinates for moving the assembly to its first loc.
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
 
     int verts_ents_alloc = 0, verts_ents_size = 0;
     iBase_EntityHandle *verts_ents = NULL;
@@ -1120,22 +1120,22 @@ int CoreGen::move_verts(iBase_EntitySetHandle set, const double *dx)
         coords[3 * i] += dx[0];
         coords[3 * i + 1] += dx[1];
         coords[3 * i + 2] += dx[2];
-    }
+      }
 
     iMesh_setVtxArrCoords(imesh->instance(), verts_ents, verts_ents_size, iBase_INTERLEAVED,
                           coords, coords_size, &err);
     ERRORR("Failed to set vtx coords.", iBase_FAILURE);
 
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::move_geoms(iBase_EntitySetHandle set, const double *dx)
-// ---------------------------------------------------------------------------
-// Function: Change the coordinates for moving the assembly to its first loc.
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::move_geoms(iBase_EntitySetHandle set, const double *dx)
+  // ---------------------------------------------------------------------------
+  // Function: Change the coordinates for moving the assembly to its first loc.
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     int entities_ehsize = 0, entities_ehallocated = 0;
     iBase_EntityHandle *entities = NULL;
 
@@ -1146,11 +1146,11 @@ int CoreGen::move_geoms(iBase_EntitySetHandle set, const double *dx)
     for (int i = 0; i < entities_ehsize; i++) {
         iGeom_moveEnt(igeom->instance(), entities[i], dx[0], dx[1], dx[2], &err);
         ERRORR("Failed to move geometries.", iBase_FAILURE);
-    }
+      }
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::assign_gids() {
+  int CoreGen::assign_gids() {
     // ---------------------------------------------------------------------------
     // Function: assign global ids
     // Input:    none
@@ -1182,7 +1182,7 @@ int CoreGen::assign_gids() {
     // iMesh_getTagHandle(imesh->instance(), tag_name, &gid_tag, &err, 9);
     // if (iBase_TAG_NOT_FOUND == err) {
     //   iMesh_createTag(imesh->instance(), tag_name, 1, iBase_INTEGER,
-    //                   &gid_tag, &err, strlen(tag_name));
+    //                   &gid_tag, &ermax, strlen(tag_name));
     //   ERRORR("Couldn't create global id tag", err);
     // }
 
@@ -1194,9 +1194,9 @@ int CoreGen::assign_gids() {
     //   ERRORR("Failed to set tags on sets.", err);
     // }
     // return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::extrude() {
+  int CoreGen::extrude() {
     // ---------------------------------------------------------------------------
     // Function: extrude 2D surface core
     // Input:    none
@@ -1209,242 +1209,272 @@ int CoreGen::extrude() {
         double v[] = { 0, 0, z_height };
         int steps = z_divisions;
 
-      // get the hexes
+        // get the hexes
         MEntVector vols;
         mk_core()->get_entities_by_dimension(2, vols);
         em = (ExtrudeMesh*) mk_core()->construct_meshop("ExtrudeMesh", vols);
         em->set_transform(Extrude::Translate(v, steps));
         em->copy_faces(true);
+
+        //set the material sets as extrude sets to get new material sets with hexes
+
+        moab::Tag mattag;
+        mk_core()->moab_instance()->tag_get_handle( "MATERIAL_SET", 1, moab::MB_TYPE_INTEGER, mattag );
+        moab::Range matsets;
+        mk_core()->moab_instance()->get_entities_by_type_and_tag( 0, moab::MBENTITYSET, &mattag, 0, 1, matsets );
+
+        moab::Range::iterator set_it;
+        for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+            moab::EntityHandle this_set = *set_it;
+            em->extrude_sets().add_set((iMesh::EntitySetHandle)this_set);
+          }
+
+        // some entity tag types are always copy or expand
+        em->extrude_sets().add_tag("MATERIAL_SET");
+
+        // run
         em->setup_this();
         em->execute_this();
-    }
 
+        // now delete all the 2D material sets:
+        matsets.clear();
+        // doing this again, to get new material sets created by extrude
+        mk_core()->moab_instance()->get_entities_by_type_and_tag( 0, moab::MBENTITYSET, &mattag, 0, 1, matsets );
+        for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+            moab::EntityHandle this_set = *set_it;
+            // get material sets with two dimension and delete
+            std::vector <moab::EntityHandle> set_ents;
+            mk_core()->moab_instance()->get_entities_by_dimension(this_set, 3, set_ents, true);
+            if(set_ents.size() == 0)
+              mk_core()->moab_instance()->delete_entities(&this_set, 1);
+          }
+      }
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::create_neumannset() {
+  int CoreGen::create_neumannset() {
     // ---------------------------------------------------------------------------
     // Function: create Neumann set on the whole core
     // Input:    none
     // Output:   none
     // ---------------------------------------------------------------------------
-  if (nss_flag == true || nsb_flag == true || nst_flag == true || nssall_flag == true) {
-      std::cout << "Creating NeumannSet." << std::endl;
+    if (nss_flag == true || nsb_flag == true || nst_flag == true || nssall_flag == true) {
+        std::cout << "Creating NeumannSet." << std::endl;
 
-      if (extrude_flag == true)
-        set_DIM = 3;
+        if (extrude_flag == true)
+          set_DIM = 3;
 
-      int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
-      double z1 = 0.0;
-      iBase_TagHandle ntag1, gtag1, nametag1;
-      iBase_EntityHandle *ents = NULL;
-      iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
-      std::vector<iBase_EntitySetHandle> set_side;
+        int err = 0, z_flag = 0, i, ents_alloc = 0, ents_size;
+        double z1 = 0.0;
+        iBase_TagHandle ntag1, gtag1, nametag1;
+        iBase_EntityHandle *ents = NULL;
+        iBase_EntitySetHandle set = NULL, set_z1 = NULL, set_z2 = NULL;
+        std::vector<iBase_EntitySetHandle> set_side;
 
-      //get entities for skinner
-      if(set_DIM ==2) { // if surface geometry specified
-          iMesh_getEntities(imesh->instance(), root_set,
-                            iBase_FACE, iMesh_ALL_TOPOLOGIES,
-                            &ents, &ents_alloc, &ents_size, &err);
-        }
-      else {
-          iMesh_getEntities(imesh->instance(), root_set,
-                            iBase_REGION, iMesh_ALL_TOPOLOGIES,
-                            &ents, &ents_alloc, &ents_size, &err);
-        }
-      ERRORR("Trouble getting entities for specifying neumannsets via skinner.", err);
+        //get entities for skinner
+        if(set_DIM ==2) { // if surface geometry specified
+            iMesh_getEntities(imesh->instance(), root_set,
+                              iBase_FACE, iMesh_ALL_TOPOLOGIES,
+                              &ents, &ents_alloc, &ents_size, &err);
+          }
+        else {
+            iMesh_getEntities(imesh->instance(), root_set,
+                              iBase_REGION, iMesh_ALL_TOPOLOGIES,
+                              &ents, &ents_alloc, &ents_size, &err);
+          }
+        ERRORR("Trouble getting entities for specifying neumannsets via skinner.", err);
 
-      // assign a name to the tag
-      const char *ch_name1 = "NAME";
-      // get tag handle
-      const char *tag_neumann1 = "NEUMANN_SET";
-      const char *global_id1 = "GLOBAL_ID";
+        // assign a name to the tag
+        const char *ch_name1 = "NAME";
+        // get tag handle
+        const char *tag_neumann1 = "NEUMANN_SET";
+        const char *global_id1 = "GLOBAL_ID";
 
-      iMesh_getTagHandle(imesh->instance(), tag_neumann1, &ntag1, &err, 12);
-      ERRORR("Trouble getting handle.", err);
+        iMesh_getTagHandle(imesh->instance(), tag_neumann1, &ntag1, &err, 12);
+        ERRORR("Trouble getting handle.", err);
 
-      iMesh_getTagHandle(imesh->instance(), global_id1, &gtag1, &err, 9);
-      ERRORR("Trouble getting handle.", err);
+        iMesh_getTagHandle(imesh->instance(), global_id1, &gtag1, &err, 9);
+        ERRORR("Trouble getting handle.", err);
 
-      iMesh_getTagHandle(imesh->instance(), ch_name1, &nametag1, &err, 4);
-      ERRORR("Trouble getting handle.", err);
+        iMesh_getTagHandle(imesh->instance(), ch_name1, &nametag1, &err, 4);
+        ERRORR("Trouble getting handle.", err);
 
-      iMesh_createEntSet(imesh->instance(),0, &set, &err); // for all other sides
-      ERRORR("Trouble creating set handle.", err);
+        iMesh_createEntSet(imesh->instance(),0, &set, &err); // for all other sides
+        ERRORR("Trouble creating set handle.", err);
 
-      if (set_DIM == 3) { // sets for collecting top and bottom surface
-          iMesh_createEntSet(imesh->instance(),0, &set_z1, &err);
-          ERRORR("Trouble creating set handle.", err);
+        if (set_DIM == 3) { // sets for collecting top and bottom surface
+            iMesh_createEntSet(imesh->instance(),0, &set_z1, &err);
+            ERRORR("Trouble creating set handle.", err);
 
-          iMesh_createEntSet(imesh->instance(),0, &set_z2, &err);
-          ERRORR("Trouble creating set handle.", err);
+            iMesh_createEntSet(imesh->instance(),0, &set_z2, &err);
+            ERRORR("Trouble creating set handle.", err);
 
-          set_side.resize(num_nsside);
-          for(int i=0; i<num_nsside; i++){
-              iMesh_createEntSet(imesh->instance(),0, &set_side[i], &err);
-              ERRORR("Trouble creating set handle.", err);
-            }
-        }
+            set_side.resize(num_nsside);
+            for(int i=0; i<num_nsside; i++){
+                iMesh_createEntSet(imesh->instance(),0, &set_side[i], &err);
+                ERRORR("Trouble creating set handle.", err);
+              }
+          }
 
-      moab::Range tmp_elems;
-      tmp_elems.insert((EntityHandle*)ents, (moab::EntityHandle*)ents + ents_size);
+        moab::Range tmp_elems;
+        tmp_elems.insert((EntityHandle*)ents, (moab::EntityHandle*)ents + ents_size);
 
-      // get the skin of the entities
-      moab::Skinner skinner(mb);
-      moab::Range skin_range;
-      moab::ErrorCode result;
-      moab::Range::iterator rit;
+        // get the skin of the entities
+        moab::Skinner skinner(mb);
+        moab::Range skin_range;
+        moab::ErrorCode result;
+        moab::Range::iterator rit;
 
-      result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
-      if (MB_SUCCESS != result) return result;
+        result = skinner.find_skin(0, tmp_elems, set_DIM-1, skin_range);
+        if (MB_SUCCESS != result) return result;
 
-      for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {
-          if(set_DIM == 3) { // filter top and bottom
-              int num_vertex=0, size_vertex =0;
-              iBase_EntityHandle *vertex = NULL;
-              iMesh_getEntAdj(imesh->instance(), (iBase_EntityHandle)(*rit), iBase_VERTEX, &vertex,
-                              &num_vertex, &size_vertex, &err);
-              ERRORR("Trouble getting number of entities after merge.", err);
+        for (rit = skin_range.begin(), i = 0; rit != skin_range.end(); rit++, i++) {
+            if(set_DIM == 3) { // filter top and bottom
+                int num_vertex=0, size_vertex =0;
+                iBase_EntityHandle *vertex = NULL;
+                iMesh_getEntAdj(imesh->instance(), (iBase_EntityHandle)(*rit), iBase_VERTEX, &vertex,
+                                &num_vertex, &size_vertex, &err);
+                ERRORR("Trouble getting number of entities after merge.", err);
 
-              double *coords = NULL;
-              int coords_alloc = 0, coords_size=0;
-              iMesh_getVtxArrCoords(imesh->instance(), vertex, size_vertex, iBase_INTERLEAVED,
-                                    &coords, &coords_alloc, &coords_size, &err);
-              ERRORR("Trouble getting number of entities after merge.", err);
-              double ztemp = coords[2];
-              int flag = 0;
-              for (int p=1; p<num_vertex; p++) {
-                  double z1 = coords[3*p+2];
-                  if( fabs(ztemp-z1) >= merge_tol) {
-                      flag = 1;
-                      continue;
-                    }
-                }
-              if(flag == 0) { // this is top or bottom surface
-                  if (z_flag == 0) { // store z-coord this is the first call
-                      z_flag = 1;
-                      z1 = ztemp;
-                    }
-                  if( fabs(ztemp-z1) <= merge_tol) {
-                      iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z1, &err);
-                      ERRORR("Trouble getting number of entities after merge.", err);
-                    }
-                  else {
-                      iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z2, &err);
-                      ERRORR("Trouble getting number of entities after merge.", err);
-                    }
-                }
-              else if (flag == 1) { // add the faces that are not top or bottom surface
-                  // filter the sidesets based on their x and y coords
+                double *coords = NULL;
+                int coords_alloc = 0, coords_size=0;
+                iMesh_getVtxArrCoords(imesh->instance(), vertex, size_vertex, iBase_INTERLEAVED,
+                                      &coords, &coords_alloc, &coords_size, &err);
+                ERRORR("Trouble getting number of entities after merge.", err);
+                double ztemp = coords[2];
+                int flag = 0;
+                for (int p=1; p<num_vertex; p++) {
+                    double z1 = coords[3*p+2];
+                    if( fabs(ztemp-z1) >= merge_tol) {
+                        flag = 1;
+                        continue;
+                      }
+                  }
+                if(flag == 0) { // this is top or bottom surface
+                    if (z_flag == 0) { // store z-coord this is the first call
+                        z_flag = 1;
+                        z1 = ztemp;
+                      }
+                    if( fabs(ztemp-z1) <= merge_tol) {
+                        iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z1, &err);
+                        ERRORR("Trouble getting number of entities after merge.", err);
+                      }
+                    else {
+                        iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set_z2, &err);
+                        ERRORR("Trouble getting number of entities after merge.", err);
+                      }
+                  }
+                else if (flag == 1) { // add the faces that are not top or bottom surface
+                    // filter the sidesets based on their x and y coords
 
-                  for(int k=0; k<num_nsside; k++){
-                      if ( fabs((coords[0])*nsx[k] + (coords[1])*nsy[k] + nsc[k]) <= merge_tol
-                           && fabs((coords[3])*nsx[k] + (coords[4])*nsy[k] + nsc[k]) <= merge_tol
-                           && fabs((coords[6])*nsx[k] + (coords[7])*nsy[k] + nsc[k]) <= merge_tol) {
-                          iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), (iBase_EntitySetHandle) set_side[k], &err);
-                          ERRORR("Trouble getting number of entities after merge.", err);
-                          continue;
-                        }
-                      else{ // outside the specified
-                          iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
-                          ERRORR("Trouble getting number of entities after merge.", err);
-                          continue;
-                        }
-                    }
-                  if(num_nsside == 0){
-                      iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
-                      ERRORR("Trouble getting number of entities after merge.", err);
-                    }
+                    for(int k=0; k<num_nsside; k++){
+                        if ( fabs((coords[0])*nsx[k] + (coords[1])*nsy[k] + nsc[k]) <= merge_tol
+                             && fabs((coords[3])*nsx[k] + (coords[4])*nsy[k] + nsc[k]) <= merge_tol
+                             && fabs((coords[6])*nsx[k] + (coords[7])*nsy[k] + nsc[k]) <= merge_tol) {
+                            iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), (iBase_EntitySetHandle) set_side[k], &err);
+                            ERRORR("Trouble getting number of entities after merge.", err);
+                            continue;
+                          }
+                        else{ // outside the specified
+                            iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
+                            ERRORR("Trouble getting number of entities after merge.", err);
+                            continue;
+                          }
+                      }
+                    if(num_nsside == 0){
+                        iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
+                        ERRORR("Trouble getting number of entities after merge.", err);
+                      }
 
-                }
-            }
-          else if(set_DIM == 2) { // edges add all for sideset
-              iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
-              ERRORR("Trouble getting number of entities after merge.", err);
-            }
-        }
+                  }
+              }
+            else if(set_DIM == 2) { // edges add all for sideset
+                iMesh_addEntToSet(imesh->instance(), (iBase_EntityHandle)(*rit), set, &err);
+                ERRORR("Trouble getting number of entities after merge.", err);
+              }
+          }
 
-      if (set_DIM == 3) {
-          if (nst_flag == true || nsb_flag == true) {
+        if (set_DIM == 3) {
+            if (nst_flag == true || nsb_flag == true) {
 
-              iMesh_setEntSetIntData( imesh->instance(), set_z1, ntag1, nst_Id, &err);
-              ERRORR("Trouble getting handle.", err);
+                iMesh_setEntSetIntData( imesh->instance(), set_z1, ntag1, nst_Id, &err);
+                ERRORR("Trouble getting handle.", err);
 
-              iMesh_setEntSetIntData( imesh->instance(), set_z1, gtag1, nst_Id, &err);
-              ERRORR("Trouble getting handle.", err);
+                iMesh_setEntSetIntData( imesh->instance(), set_z1, gtag1, nst_Id, &err);
+                ERRORR("Trouble getting handle.", err);
 
-              std::string name1 = "core_top_ss";
-              iMesh_setEntSetData( imesh->instance(), set_z1, nametag1, name1.c_str(), 11, &err);
-              ERRORR("Trouble getting handle.", err);
+                std::string name1 = "core_top_ss";
+                iMesh_setEntSetData( imesh->instance(), set_z1, nametag1, name1.c_str(), 11, &err);
+                ERRORR("Trouble getting handle.", err);
 
-              iMesh_setEntSetIntData( imesh->instance(), set_z2, ntag1, nsb_Id, &err);
-              ERRORR("Trouble getting handle.", err);
+                iMesh_setEntSetIntData( imesh->instance(), set_z2, ntag1, nsb_Id, &err);
+                ERRORR("Trouble getting handle.", err);
 
-              iMesh_setEntSetIntData( imesh->instance(), set_z2, gtag1, nsb_Id, &err);
-              ERRORR("Trouble getting handle.", err);
+                iMesh_setEntSetIntData( imesh->instance(), set_z2, gtag1, nsb_Id, &err);
+                ERRORR("Trouble getting handle.", err);
 
-              std::string name2 = "core_bottom_ss";
-              iMesh_setEntSetData( imesh->instance(), set_z2, nametag1, name2.c_str(), 14, &err);
-              ERRORR("Trouble getting handle.", err);
+                std::string name2 = "core_bottom_ss";
+                iMesh_setEntSetData( imesh->instance(), set_z2, nametag1, name2.c_str(), 14, &err);
+                ERRORR("Trouble getting handle.", err);
 
-              for(int j=0; j<num_nsside; j++){
-                  iMesh_setEntSetIntData( imesh->instance(), set_side[j], ntag1, nss_Id[j], &err);
-                  ERRORR("Trouble getting handle.", err);
+                for(int j=0; j<num_nsside; j++){
+                    iMesh_setEntSetIntData( imesh->instance(), set_side[j], ntag1, nss_Id[j], &err);
+                    ERRORR("Trouble getting handle.", err);
 
-                  iMesh_setEntSetIntData( imesh->instance(), set_side[j], gtag1, nss_Id[j], &err);
-                  ERRORR("Trouble getting handle.", err);
+                    iMesh_setEntSetIntData( imesh->instance(), set_side[j], gtag1, nss_Id[j], &err);
+                    ERRORR("Trouble getting handle.", err);
 
-                  std::stringstream ss;
-                  ss << j;
-                  std::string name3 = "side" + ss.str();
-                  iMesh_setEntSetData( imesh->instance(), set_side[j], nametag1, name3.c_str(), 8, &err);
-                  ERRORR("Trouble getting handle.", err);
-                }
-            }
-        }
-      // same for both 2D and 3D models
-      if (nssall_flag == true) {
-          iMesh_setEntSetIntData( imesh->instance(), set, ntag1, nssall_Id, &err);
-          ERRORR("Trouble getting handle.", err);
+                    std::stringstream ss;
+                    ss << j;
+                    std::string name3 = "side" + ss.str();
+                    iMesh_setEntSetData( imesh->instance(), set_side[j], nametag1, name3.c_str(), 8, &err);
+                    ERRORR("Trouble getting handle.", err);
+                  }
+              }
+          }
+        // same for both 2D and 3D models
+        if (nssall_flag == true) {
+            iMesh_setEntSetIntData( imesh->instance(), set, ntag1, nssall_Id, &err);
+            ERRORR("Trouble getting handle.", err);
 
-          iMesh_setEntSetIntData( imesh->instance(), set, gtag1, nssall_Id, &err);
-          ERRORR("Trouble getting handle.", err);
+            iMesh_setEntSetIntData( imesh->instance(), set, gtag1, nssall_Id, &err);
+            ERRORR("Trouble getting handle.", err);
 
-          std::string name = "all_sides";
-          iMesh_setEntSetData( imesh->instance(), set, nametag1, name.c_str(), 9, &err);
-          ERRORR("Trouble getting handle.", err);
-        }
-    }
-  return iBase_SUCCESS;
-}
+            std::string name = "all_sides";
+            iMesh_setEntSetData( imesh->instance(), set, nametag1, name.c_str(), 9, &err);
+            ERRORR("Trouble getting handle.", err);
+          }
+      }
+    return iBase_SUCCESS;
+  }
 
-void CoreGen::IOErrorHandler (ErrorStates ECode) const
-// ---------------------------------------------------------------------------
-// Function: displays error messages related to input file parsing data
-// Input:    error code
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  void CoreGen::IOErrorHandler (ErrorStates ECode) const
+  // ---------------------------------------------------------------------------
+  // Function: displays error messages related to input file parsing data
+  // Input:    error code
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     std::cerr << '\n';
     if (ECode == INVALIDINPUT) // invalid input
-        std::cerr << "Invalid input.";
+      std::cerr << "Invalid input.";
     else if (ECode == ENEGATIVE) // invalid input
-        std::cerr << "Unexpected negative value.";
+      std::cerr << "Unexpected negative value.";
     else
-        std::cerr << "Unknown error ...?";
+      std::cerr << "Unknown error ...?";
 
     std::cerr << '\n' << "Error reading input file, line : " << linenumber;
     std::cerr << std::endl;
     exit (1);
-}
+  }
 
-int CoreGen::write_minfofile()
-// ---------------------------------------------------------------------------
-// Function: write the spreadsheet mesh info file based on inputs read from mesh & input file
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::write_minfofile()
+  // ---------------------------------------------------------------------------
+  // Function: write the spreadsheet mesh info file based on inputs read from mesh & input file
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     logfile << "Writing mesh info file indicating elements and pin number" << std::endl;
 
     moab::Tag ntag;
@@ -1469,7 +1499,7 @@ int CoreGen::write_minfofile()
             std::string foo = ""; mb->get_last_error(foo);
             std::cerr<<"File Error: "<<foo<<std::endl;
             return 1;
-        }
+          }
         char name[NAME_TAG_SIZE];
         rval = mb->tag_get_data(ntag, &this_set, 1, &name);
         if(rval != moab::MB_SUCCESS) {
@@ -1477,7 +1507,7 @@ int CoreGen::write_minfofile()
             std::string foo = ""; mb->get_last_error(foo);
             std::cerr<<"File Error: "<<foo<<std::endl;
             return 1;
-        }
+          }
         // check for the special block _xp created in AssyGen stage
         // now print out elements for each pin on the mesh info file
         if(name[0]=='_' && name[1]=='x' && name[2] == 'p'){
@@ -1503,31 +1533,31 @@ int CoreGen::write_minfofile()
                     x_sum+=coords[0];
                     y_sum+=coords[1];
                     z_sum+=coords[2];
-                }
+                  }
                 int p = 3;
                 while(name[p]!='\0'){
                     minfo_file << name[p];
                     ++p;
-                }
+                  }
                 minfo_file << " \t" << x_sum/conn.size() << " \t" << y_sum/conn.size() << " \t" <<  z_sum/conn.size() <<  std::endl;
-            }
+              }
             logfile << ". Deleting block " << set_id << std::endl;
             mb->delete_entities(&this_set, 1);
             set_ents.clear();
-        }
+          }
 
-    }
+      }
     return 0;
-}
+  }
 
 
-int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::string  TestDir)
-// -----------------------------------------------------------------------------------
-// Function: Obtains file names and opens input/output files and then read/write them
-// Input:    command line arguments
-// Output:   none
-// -----------------------------------------------------------------------------------
-{
+  int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::string  TestDir)
+  // -----------------------------------------------------------------------------------
+  // Function: Obtains file names and opens input/output files and then read/write them
+  // Input:    command line arguments
+  // Output:   none
+  // -----------------------------------------------------------------------------------
+  {
     // set rank and total number of processors
     rank = nrank;
     procs = nprocs;
@@ -1537,8 +1567,8 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
         if (argv[1][0] == '-' && argv[1][1] == 'm') {
             // set to zero, when run_flag = 1, program runs and does copy, move, merge, extrude, assign gids, save and close
             run_flag = 0;
-        }
-    }
+          }
+      }
 
     bool bDone = false;
     do {
@@ -1556,8 +1586,8 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
                     logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                             << std::endl;
                     exit(0);
-                }
-            }
+                  }
+              }
 
             iname = argv[1];
             ifile = iname + ".inp";
@@ -1566,61 +1596,61 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
             infofile = iname + "_info.csv";
             minfofile = iname + "_mesh_info.csv";
             logfilename = iname + ".log";
-        } else if (3 == argc) {
+          } else if (3 == argc) {
             int i = 1;// will loop through arguments, and process them
             for (i = 1; i < argc - 1; i++) {
                 if (argv[i][0] == '-') {
                     switch (argv[i][1]) {
-                    case 'm': {
-                        if (nrank == 0) {
-                            logfile << "Creating Make/Info file Only" << std::endl;
+                      case 'm': {
+                          if (nrank == 0) {
+                              logfile << "Creating Make/Info file Only" << std::endl;
+                            }
+                          // only makefile creation specified
+                          iname = argv[2];
+                          ifile = iname + ".inp";
+                          outfile = iname + ".h5m";
+                          mfile = iname + ".makefile";
+                          infofile = iname + "_info.csv";
+                          minfofile = iname + "_mesh_info.csv";
+                          logfilename = iname + ".log";
+                          break;
                         }
-                        // only makefile creation specified
-                        iname = argv[2];
-                        ifile = iname + ".inp";
-                        outfile = iname + ".h5m";
-                        mfile = iname + ".makefile";
-                        infofile = iname + "_info.csv";
-                        minfofile = iname + "_mesh_info.csv";
-                        logfilename = iname + ".log";
-                        break;
-                    }
-                    case 't': {
-                        mem_tflag = true;
-                        iname = argv[2];
-                        ifile = iname + ".inp";
-                        outfile = iname + ".h5m";
-                        mfile = iname + ".makefile";
-                        infofile = iname + "_info.csv";
-                        minfofile = iname + "_mesh_info.csv";
-                        logfilename = iname + ".log";
-                        break;
-                    }
-                    case 'h': {
-                        if (nrank == 0) {
-                            logfile << "Usage: coregen [-t -m -h] <coregen input file>"
-                                    << std::endl;
-                            logfile << "        -t print timing and memory usage info in each step"
-                                    << std::endl;
-                            logfile << "        -m create makefile only"
-                                    << std::endl;
-                            logfile << "        -h print help" << std::endl;
-                            logfile << "\nInstruction on writing coregen input file can also be found at: "
-                                    << std::endl;
-                            logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
-                                    << std::endl;
-                            exit(0);
-                            break;
+                      case 't': {
+                          mem_tflag = true;
+                          iname = argv[2];
+                          ifile = iname + ".inp";
+                          outfile = iname + ".h5m";
+                          mfile = iname + ".makefile";
+                          infofile = iname + "_info.csv";
+                          minfofile = iname + "_mesh_info.csv";
+                          logfilename = iname + ".log";
+                          break;
                         }
-                    }
-                    }
-                }
-            }
-        } else { //default case
+                      case 'h': {
+                          if (nrank == 0) {
+                              logfile << "Usage: coregen [-t -m -h] <coregen input file>"
+                                      << std::endl;
+                              logfile << "        -t print timing and memory usage info in each step"
+                                      << std::endl;
+                              logfile << "        -m create makefile only"
+                                      << std::endl;
+                              logfile << "        -h print help" << std::endl;
+                              logfile << "\nInstruction on writing coregen input file can also be found at: "
+                                      << std::endl;
+                              logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
+                                      << std::endl;
+                              exit(0);
+                              break;
+                            }
+                        }
+                      }
+                  }
+              }
+          } else { //default case
             if (nrank == 0) {
                 logfile << "Usage: " << argv[0]
-                          << " <input file> WITHOUT EXTENSION" << std::endl;
-            }
+                        << " <input file> WITHOUT EXTENSION" << std::endl;
+              }
             iname = TestDir + "/" + COREGEN_DEFAULT_TEST_FILE;
             ifile = iname + ".inp";
             std::string temp = CTEST_FILE_NAME;
@@ -1629,7 +1659,7 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
             infofile = temp + "_info.csv";
             minfofile = temp + "_mesh_info.csv";
             logfilename = temp + ".log";
-        }
+          }
 
         // open the file
         file_input.open(ifile.c_str(), std::ios::in);
@@ -1642,7 +1672,7 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
             banner();
             Timer.GetDateTime(szDateTime);
             logfile << "\nStarting out at : " << szDateTime << "\n";
-        }
+          }
 
         if (!file_input) {
             if (nrank == 0) {
@@ -1657,12 +1687,12 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
                         << std::endl;
                 logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                         << std::endl;
-            }
+              }
             file_input.clear();
             exit(1);
-        } else
-            bDone = true; // file opened successfully
-    } while (!bDone);
+          } else
+          bDone = true; // file opened successfully
+      } while (!bDone);
 
     // open Makefile-rgg
     do {
@@ -1670,15 +1700,15 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
         if (!make_file) {
             if (nrank == 0) {
                 logfile << "Unable to open makefile for writing" << std::endl;
-            }
+              }
             make_file.clear();
-        } else
-            bDone = true; // file opened successfully
-    } while (!bDone);
+          } else
+          bDone = true; // file opened successfully
+      } while (!bDone);
 
     if (nrank == 0) {
         logfile << "\nEntered input file name: " << ifile << std::endl;
-    }
+      }
 
     // now call the functions to read and write
     err = read_inputs_phase1(argc, argv);
@@ -1694,15 +1724,15 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
             if (!info_file) {
                 if (nrank == 0) {
                     logfile << "Unable to open makefile for writing" << std::endl;
-                }
+                  }
                 info_file.clear();
-            } else
-                bDone = true; // file opened successfully
+              } else
+              bDone = true; // file opened successfully
             logfile << "Created core info file: " << infofile << std::endl;
-        } while (!bDone);
+          } while (!bDone);
 
         info_file << "assm index"  << " \t" << "assm number" << " \t" << "dX" << " \t" << "dY" << " \t" << "dZ"  << " \t" << "rank" << std::endl;
-    }
+      }
 
     // open mesh info file
     if(strcmp(minfo.c_str(),"on") == 0 && nrank == 0){
@@ -1711,23 +1741,23 @@ int CoreGen::prepareIO(int argc, char *argv[], int nrank, int nprocs, std::strin
             if (!info_file) {
                 if (nrank == 0) {
                     logfile << "Unable to open minfofile for writing" << std::endl;
-                }
+                  }
                 minfo_file.clear();
-            } else
-                bDone = true; // file opened successfully
+              } else
+              bDone = true; // file opened successfully
             logfile << "Created mesh details info file: " << minfofile << std::endl;
-        } while (!bDone);
+          } while (!bDone);
         minfo_file << "pin_number"  << " \t" << "x_centroid" << " \t" << "y_centroid" << " \t" << "z_centroid" << std::endl;
-    }
+      }
     if (nrank == 0) {
         err = write_makefile();
         ERRORR("Failed to write a makefile.", 1);
-    }
+      }
     return 0;
-}
+  }
 
 
-int CoreGen::read_inputs_phase1(int argc, char *argv[]) {
+  int CoreGen::read_inputs_phase1(int argc, char *argv[]) {
     // ---------------------------------------------------------------------------
     // Function: Reads the dimension and symmetry of the problem
     // Input:    none
@@ -1737,28 +1767,28 @@ int CoreGen::read_inputs_phase1(int argc, char *argv[]) {
     for (;;) {
         if (!parse.ReadNextLine(file_input, linenumber, input_string, MAXCHARS,
                                 comment))
-            ERRORR("Reading input file failed",1);
+          ERRORR("Reading input file failed",1);
         //    logfile << input_string << std::endl;
         if (input_string.substr(0, 11) == "problemtype") {
             std::istringstream formatString(input_string);
             formatString >> card >> prob_type;
             if(((strcmp (prob_type.c_str(), "geometry") != 0)
                 && (strcmp (prob_type.c_str(), "mesh") != 0)) || formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
+              IOErrorHandler (INVALIDINPUT);
             if ((strcmp(prob_type.c_str(), "geometry") == 0)) {
                 prob_type = "geometry";
-            }
-        }
+              }
+          }
         if (input_string.substr(0, 8) == "geometry" && input_string.substr(0, 12) != "geometrytype") {
             std::istringstream formatString(input_string);
             formatString >> card >> geometry;
             if(((strcmp (geometry.c_str(), "volume") != 0)
                 && (strcmp (geometry.c_str(), "surface") != 0)) || formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
+              IOErrorHandler (INVALIDINPUT);
             if ((strcmp(geometry.c_str(), "surface") == 0)) {
                 set_DIM = 2;
-            }
-        }
+              }
+          }
 
         // igeom->instance() engine
         if (input_string.substr(0, 10) == "geomengine") {
@@ -1766,46 +1796,46 @@ int CoreGen::read_inputs_phase1(int argc, char *argv[]) {
             formatString >> card >> geom_engine;
             if(((strcmp (geom_engine.c_str(), "acis") != 0)
                 && (strcmp (geom_engine.c_str(), "occ") != 0)) || formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
-        }
+              IOErrorHandler (INVALIDINPUT);
+          }
 
         // symmetry
         if (input_string.substr(0, 8) == "symmetry") {
             std::istringstream formatString(input_string);
             formatString >> card >> symm;
             if((symm !=1 && symm !=6 && symm !=12) || formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
-        }
+              IOErrorHandler (INVALIDINPUT);
+          }
 
         // merge tolerance
         if (input_string.substr(0, 14) == "mergetolerance") {
             std::istringstream formatString(input_string);
             formatString >> card >> merge_tol;
             if(merge_tol < 0 || formatString.fail())
-                IOErrorHandler (ENEGATIVE);
-        }
+              IOErrorHandler (ENEGATIVE);
+          }
 
         // save onefile for each proc (multiple) flag
         if (input_string.substr(0, 12) == "saveparallel") {
             std::istringstream formatString(input_string);
             formatString >> card >> savefiles;
             if(formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
-        }
+              IOErrorHandler (INVALIDINPUT);
+          }
         // info flag
         if (input_string.substr(0, 4) == "info") {
             std::istringstream formatString(input_string);
             formatString >> card >> info;
             if(formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
-        }
+              IOErrorHandler (INVALIDINPUT);
+          }
         // info flag
         if (input_string.substr(0, 8) == "meshinfo") {
             std::istringstream formatString(input_string);
             formatString >> card >> minfo;
             if(formatString.fail())
-                IOErrorHandler (INVALIDINPUT);
-        }
+              IOErrorHandler (INVALIDINPUT);
+          }
         // neumannset card
         if (input_string.substr(0, 10) == "neumannset") {
             std::istringstream formatString(input_string);
@@ -1845,413 +1875,413 @@ int CoreGen::read_inputs_phase1(int argc, char *argv[]) {
         if (input_string.substr(0, 3) == "end") {
             std::istringstream formatstring(input_string);
             break;
-        }
-    }
+          }
+      }
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::read_inputs_phase2(int argc, char *argv[])
-// ---------------------------------------------------------------------------
-// Function: read all the inputs
-// Input:    command line arguments
-// Output:   none
-// ---------------------------------------------------------------------------
-{
-  //Rewind the input file
-  file_input.clear(std::ios_base::goodbit);
-  file_input.seekg(0L, std::ios::beg);
-  linenumber = 0;
+  int CoreGen::read_inputs_phase2(int argc, char *argv[])
+  // ---------------------------------------------------------------------------
+  // Function: read all the inputs
+  // Input:    command line arguments
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
+    //Rewind the input file
+    file_input.clear(std::ios_base::goodbit);
+    file_input.seekg(0L, std::ios::beg);
+    linenumber = 0;
 
-  CParser parse;
-  for (;;) {
-      if (!parse.ReadNextLine(file_input, linenumber, input_string, MAXCHARS,
-                              comment))
-        ERRORR("Reading input file failed",1);
+    CParser parse;
+    for (;;) {
+        if (!parse.ReadNextLine(file_input, linenumber, input_string, MAXCHARS,
+                                comment))
+          ERRORR("Reading input file failed",1);
 
-      if (input_string.substr(0, 12) == "geometrytype" ) {
-          std::istringstream formatString(input_string);
-          formatString >> card >> geom_type;
-          if(formatString.fail())
-            IOErrorHandler (INVALIDINPUT);
-
-          if (geom_type == "hexvertex" && symm == 6) {
-
-              // reading pitch info
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 10) == "assemblies") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nassys >> pitch;
-                  if(nassys < 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                }
-
-              // reading file and alias names
-              if(!parse_assembly_names(parse, argc, argv))
-                ERRORR("error parsing names of assemblies",1);
-
-              // reading lattice
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 7) == "lattice") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nrings;
-                  if(nrings < 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  if (nrings % 2 == 0)
-                    tot_assys = (nrings * (nrings)) / 2;
-                  else
-                    tot_assys = ((nrings * (nrings - 1)) / 2)
-                        + (nrings + 1) / 2;
-                }
-
-              // now reading the arrangement
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              std::istringstream formatString(input_string);
-              for (int i = 1; i <= tot_assys; i++) {
-                  formatString >> temp_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  core_alias.push_back(temp_alias);
-                }
-            }
-
-          else if (geom_type == "rectangular" && symm == 1) {
-
-              // reading pitch info
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 10) == "assemblies") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nassys >> pitchx >> pitchy;
-                  if(nassys < 0 || pitchx < 0 || pitchy< 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                }
-
-              // reading file and alias names
-              if(!parse_assembly_names(parse, argc, argv))
-                ERRORR("error parsing names of assemblies",1);
-
-              // reading lattice
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 7) == "lattice") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nringsx >> nringsy;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  tot_assys = nringsx * nringsy;
-                }
-
-              // now reading the arrangement
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              std::istringstream formatString(input_string);
-              for (int i = 1; i <= tot_assys; i++) {
-                  formatString >> temp_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  core_alias.push_back(temp_alias);
-                }
-            }
-
-          else if (geom_type == "hexflat" && symm == 6) {
-              // reading pitch info
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 10) == "assemblies") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nassys >> pitch;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                }
-
-              // reading file and alias names
-              if(!parse_assembly_names(parse, argc, argv))
-                ERRORR("error parsing names of assemblies",1);
-
-              // reading lattice
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 7) == "lattice") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nrings;
-                  if(nrings < 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  tot_assys = (nrings * (nrings + 1)) / 2;
-                }
-
-              // now reading the arrangement
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              std::istringstream formatString(input_string);
-              for (int i = 1; i <= tot_assys; i++) {
-                  formatString >> temp_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  core_alias.push_back(temp_alias);
-                }
-            } else if (geom_type == "hexflat" && symm == 1) {
-              // reading pitch info
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 10) == "assemblies") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nassys >> pitch;
-                  if(nassys < 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                }
-
-              if(!parse_assembly_names(parse, argc, argv))
-                ERRORR("error parsing names of assemblies",1);
-
-              // reading lattice
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 7) == "lattice") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nrings;
-                  if(nrings < 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  tot_assys = 3 * (nrings * (nrings - 1)) + 1;
-                }
-
-              // now reading the arrangement
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              std::istringstream formatString(input_string);
-              for (int i = 1; i <= tot_assys; i++) {
-                  formatString >> temp_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  core_alias.push_back(temp_alias);
-                }
-            } else if (geom_type == "hexflat" && symm == 12) {
-
-              // reading pitch info
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 10) == "assemblies") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nassys >> pitch;
-                  if(nassys < 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                }
-
-              if(!parse_assembly_names(parse, argc, argv))
-                ERRORR("error parsing names of assemblies",1);
-
-              // reading lattice
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              if (input_string.substr(0, 7) == "lattice") {
-                  std::istringstream formatString(input_string);
-                  formatString >> card >> nrings;
-                  if(nrings < 0 || formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  if (nrings % 2 == 0)
-                    tot_assys = (nrings * (nrings + 2)) / 4;
-                  else
-                    tot_assys = ((nrings + 1) * (nrings + 1)) / 4;
-                }
-
-              // now reading the arrangement
-              if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                      MAXCHARS, comment))
-                ERRORR("Reading input file failed",1);
-              std::istringstream formatString(input_string);
-              for (int i = 1; i <= tot_assys; i++) {
-                  formatString >> temp_alias;
-                  if(formatString.fail())
-                    IOErrorHandler (INVALIDINPUT);
-                  core_alias.push_back(temp_alias);
-                }
-            }
-
-          else {
-              ERRORR("Invalid geometry type",1);
-            }
-        }
-      // background mesh
-      if (input_string.substr(0, 10) == "background") {
-          std::istringstream formatString(input_string);
-          formatString >> card >> back_meshfile;
-          if(formatString.fail())
+        if (input_string.substr(0, 12) == "geometrytype" ) {
+            std::istringstream formatString(input_string);
+            formatString >> card >> geom_type;
+            if(formatString.fail())
               IOErrorHandler (INVALIDINPUT);
 
-          all_meshfiles.push_back(back_meshfile);
+            if (geom_type == "hexvertex" && symm == 6) {
 
-          if (iname == COREGEN_DEFAULT_TEST_FILE){
-              back_meshfile = testdir + back_meshfile;
+                // reading pitch info
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 10) == "assemblies") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nassys >> pitch;
+                    if(nassys < 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                  }
+
+                // reading file and alias names
+                if(!parse_assembly_names(parse, argc, argv))
+                  ERRORR("error parsing names of assemblies",1);
+
+                // reading lattice
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 7) == "lattice") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nrings;
+                    if(nrings < 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    if (nrings % 2 == 0)
+                      tot_assys = (nrings * (nrings)) / 2;
+                    else
+                      tot_assys = ((nrings * (nrings - 1)) / 2)
+                          + (nrings + 1) / 2;
+                  }
+
+                // now reading the arrangement
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                std::istringstream formatString(input_string);
+                for (int i = 1; i <= tot_assys; i++) {
+                    formatString >> temp_alias;
+                    if(formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    core_alias.push_back(temp_alias);
+                  }
+              }
+
+            else if (geom_type == "rectangular" && symm == 1) {
+
+                // reading pitch info
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 10) == "assemblies") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nassys >> pitchx >> pitchy;
+                    if(nassys < 0 || pitchx < 0 || pitchy< 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                  }
+
+                // reading file and alias names
+                if(!parse_assembly_names(parse, argc, argv))
+                  ERRORR("error parsing names of assemblies",1);
+
+                // reading lattice
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 7) == "lattice") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nringsx >> nringsy;
+                    if(formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    tot_assys = nringsx * nringsy;
+                  }
+
+                // now reading the arrangement
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                std::istringstream formatString(input_string);
+                for (int i = 1; i <= tot_assys; i++) {
+                    formatString >> temp_alias;
+                    if(formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    core_alias.push_back(temp_alias);
+                  }
+              }
+
+            else if (geom_type == "hexflat" && symm == 6) {
+                // reading pitch info
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 10) == "assemblies") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nassys >> pitch;
+                    if(formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                  }
+
+                // reading file and alias names
+                if(!parse_assembly_names(parse, argc, argv))
+                  ERRORR("error parsing names of assemblies",1);
+
+                // reading lattice
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 7) == "lattice") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nrings;
+                    if(nrings < 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    tot_assys = (nrings * (nrings + 1)) / 2;
+                  }
+
+                // now reading the arrangement
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                std::istringstream formatString(input_string);
+                for (int i = 1; i <= tot_assys; i++) {
+                    formatString >> temp_alias;
+                    if(formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    core_alias.push_back(temp_alias);
+                  }
+              } else if (geom_type == "hexflat" && symm == 1) {
+                // reading pitch info
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 10) == "assemblies") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nassys >> pitch;
+                    if(nassys < 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                  }
+
+                if(!parse_assembly_names(parse, argc, argv))
+                  ERRORR("error parsing names of assemblies",1);
+
+                // reading lattice
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 7) == "lattice") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nrings;
+                    if(nrings < 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    tot_assys = 3 * (nrings * (nrings - 1)) + 1;
+                  }
+
+                // now reading the arrangement
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                std::istringstream formatString(input_string);
+                for (int i = 1; i <= tot_assys; i++) {
+                    formatString >> temp_alias;
+                    if(formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    core_alias.push_back(temp_alias);
+                  }
+              } else if (geom_type == "hexflat" && symm == 12) {
+
+                // reading pitch info
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 10) == "assemblies") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nassys >> pitch;
+                    if(nassys < 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                  }
+
+                if(!parse_assembly_names(parse, argc, argv))
+                  ERRORR("error parsing names of assemblies",1);
+
+                // reading lattice
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                if (input_string.substr(0, 7) == "lattice") {
+                    std::istringstream formatString(input_string);
+                    formatString >> card >> nrings;
+                    if(nrings < 0 || formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    if (nrings % 2 == 0)
+                      tot_assys = (nrings * (nrings + 2)) / 4;
+                    else
+                      tot_assys = ((nrings + 1) * (nrings + 1)) / 4;
+                  }
+
+                // now reading the arrangement
+                if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                        MAXCHARS, comment))
+                  ERRORR("Reading input file failed",1);
+                std::istringstream formatString(input_string);
+                for (int i = 1; i <= tot_assys; i++) {
+                    formatString >> temp_alias;
+                    if(formatString.fail())
+                      IOErrorHandler (INVALIDINPUT);
+                    core_alias.push_back(temp_alias);
+                  }
+              }
+
+            else {
+                ERRORR("Invalid geometry type",1);
+              }
           }
-          files.push_back(back_meshfile);
-          back_mesh = true;
-        }
-      // z-height and z-divisions
-      if (input_string.substr(0, 7) == "extrude") {
-          extrude_flag = true;
-          std::istringstream formatString(input_string);
-          formatString >> card >> z_height >> z_divisions;
-          if(z_divisions < 0 || formatString.fail())
-            IOErrorHandler (INVALIDINPUT);
-        }
+        // background mesh
+        if (input_string.substr(0, 10) == "background") {
+            std::istringstream formatString(input_string);
+            formatString >> card >> back_meshfile;
+            if(formatString.fail())
+              IOErrorHandler (INVALIDINPUT);
 
-      // // neumannset card
-      // if (input_string.substr(0, 10) == "neumannset") {
-      //   std::istringstream formatString(input_string);
-      //   std::string nsLoc = "", temp;
-      //   int nsId = 0;
-      //   formatString >> card >> nsLoc >> nsId;
-      //   if ((strcmp(nsLoc.c_str(), "side") == 0)) {
-      // 	formatString >> temp >> nsx[ns] >> temp >> nsy[ns] >> temp >> nsc[ns];
-      // 	++ns
-      //   }
-      // }
-      // OutputFileName
-      if (input_string.substr(0, 14) == "outputfilename") {
-          std::istringstream formatString(input_string);
-          formatString >> card >> outfile;
-          if(formatString.fail())
-            IOErrorHandler (INVALIDINPUT);
-        }
+            all_meshfiles.push_back(back_meshfile);
 
-      // breaking condition
-      if (input_string.substr(0, 3) == "end") {
-          std::istringstream formatstring(input_string);
-          break;
-        }
-    }
-  // set some variables
-  assm_meshfiles.resize(nassys);
-  load_per_assm.resize(nassys);
-  size_mf.resize(nassys);
-  times_loaded.resize(nassys);
-  assm_location.resize(nassys);
-  bsameas.resize(nassys);
+            if (iname == COREGEN_DEFAULT_TEST_FILE){
+                back_meshfile = testdir + back_meshfile;
+              }
+            files.push_back(back_meshfile);
+            back_mesh = true;
+          }
+        // z-height and z-divisions
+        if (input_string.substr(0, 7) == "extrude") {
+            extrude_flag = true;
+            std::istringstream formatString(input_string);
+            formatString >> card >> z_height >> z_divisions;
+            if(z_divisions < 0 || formatString.fail())
+              IOErrorHandler (INVALIDINPUT);
+          }
 
-  for(int i = 0; i < tot_assys; i++){
-      for (int j = 0; j < nassys; j++){
-          if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
-              assm_meshfiles[j]+=1;
-              assm_location[j].push_back(i);
-              break;
-            }
-        }
-    }
-  return iBase_SUCCESS;
-}
+        // // neumannset card
+        // if (input_string.substr(0, 10) == "neumannset") {
+        //   std::istringstream formatString(input_string);
+        //   std::string nsLoc = "", temp;
+        //   int nsId = 0;
+        //   formatString >> card >> nsLoc >> nsId;
+        //   if ((strcmp(nsLoc.c_str(), "side") == 0)) {
+        // 	formatString >> temp >> nsx[ns] >> temp >> nsy[ns] >> temp >> nsc[ns];
+        // 	++ns
+        //   }
+        // }
+        // OutputFileName
+        if (input_string.substr(0, 14) == "outputfilename") {
+            std::istringstream formatString(input_string);
+            formatString >> card >> outfile;
+            if(formatString.fail())
+              IOErrorHandler (INVALIDINPUT);
+          }
 
-int CoreGen::parse_assembly_names(CParser parse, int argc, char *argv[] )
-// ---------------------------------------------------------------------------
-// Function: Reads all the assemblies from CoreGen input file
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+        // breaking condition
+        if (input_string.substr(0, 3) == "end") {
+            std::istringstream formatstring(input_string);
+            break;
+          }
+      }
+    // set some variables
+    assm_meshfiles.resize(nassys);
+    load_per_assm.resize(nassys);
+    size_mf.resize(nassys);
+    times_loaded.resize(nassys);
+    assm_location.resize(nassys);
+    bsameas.resize(nassys);
 
-  // reading file and alias names
-  for (int i = 1; i <= nassys; i++) {
-      if (!parse.ReadNextLine(file_input, linenumber,
-                              input_string, MAXCHARS, comment, false))
-        ERRORR("Reading input file failed",1);
-      std::istringstream formatString(input_string);
-      formatString >> meshfile >> mf_alias >> same_as >> reloading_mf >> ms_startid >> ns_startid;
-      // we don't check for formatting since same_as and parameters after it may not be present.
-      // variable gets populated correctly in the file
+    for(int i = 0; i < tot_assys; i++){
+        for (int j = 0; j < nassys; j++){
+            if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
+                assm_meshfiles[j]+=1;
+                assm_location[j].push_back(i);
+                break;
+              }
+          }
+      }
+    return iBase_SUCCESS;
+  }
 
-      // if meshfile variable is a path then only convert the filename to lower case
-      unsigned pos = 0;
-      pos = meshfile.find_last_of("/\\");
-      if (pos > 0 && pos < meshfile.length()){
-          std::string filename = "", path="";
-          path = meshfile.substr(0,pos);
-          filename = meshfile.substr(pos+1);
-          std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
-          meshfile = path+"/"+ filename;
-        }
-      else{
-          std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
-        }
-      // also convert the alias and reloading_mf name to lower case, since we've changed the actual reading.
-      std::transform(mf_alias.begin(), mf_alias.end(), mf_alias.begin(), ::tolower);
-      std::transform(reloading_mf.begin(), reloading_mf.end(), reloading_mf.begin(), ::tolower);
+  int CoreGen::parse_assembly_names(CParser parse, int argc, char *argv[] )
+  // ---------------------------------------------------------------------------
+  // Function: Reads all the assemblies from CoreGen input file
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
 
-      if (same_as == "same_as")
-        bsameas.push_back(0);
-      else
-        bsameas.push_back(1);
-      if(bsameas[i-1] == 1){
-          all_meshfiles.push_back(meshfile);
-          if (argc == 1){
-              meshfile = testdir + "/" + meshfile;
-            }
-          files.push_back(meshfile);
-          assm_alias.push_back(mf_alias);
-          all_ms_starts.push_back(-1);
-          all_ns_starts.push_back(-1);
-        }
-      else{
-          all_meshfiles.push_back(reloading_mf);
-          if (iname == COREGEN_DEFAULT_TEST_FILE){
-              meshfile = testdir + reloading_mf;
-            }
-          files.push_back(reloading_mf);
-          assm_alias.push_back(mf_alias);
-          all_ms_starts.push_back(ms_startid);
-          all_ns_starts.push_back(ns_startid);
-        }
-      //  bsameas = false;
-    }
-  return 0;
-}
+    // reading file and alias names
+    for (int i = 1; i <= nassys; i++) {
+        if (!parse.ReadNextLine(file_input, linenumber,
+                                input_string, MAXCHARS, comment, false))
+          ERRORR("Reading input file failed",1);
+        std::istringstream formatString(input_string);
+        formatString >> meshfile >> mf_alias >> same_as >> reloading_mf >> ms_startid >> ns_startid;
+        // we don't check for formatting since same_as and parameters after it may not be present.
+        // variable gets populated correctly in the file
 
-int CoreGen::find_assm(const int i, int &assm_index)
-// ---------------------------------------------------------------------------
-// Function: find the assembly index (0 to n) for n assemblies for core alias i
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+        // if meshfile variable is a path then only convert the filename to lower case
+        unsigned pos = 0;
+        pos = meshfile.find_last_of("/\\");
+        if (pos > 0 && pos < meshfile.length()){
+            std::string filename = "", path="";
+            path = meshfile.substr(0,pos);
+            filename = meshfile.substr(pos+1);
+            std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+            meshfile = path+"/"+ filename;
+          }
+        else{
+            std::transform(meshfile.begin(), meshfile.end(), meshfile.begin(), ::tolower);
+          }
+        // also convert the alias and reloading_mf name to lower case, since we've changed the actual reading.
+        std::transform(mf_alias.begin(), mf_alias.end(), mf_alias.begin(), ::tolower);
+        std::transform(reloading_mf.begin(), reloading_mf.end(), reloading_mf.begin(), ::tolower);
+
+        if (same_as == "same_as")
+          bsameas.push_back(0);
+        else
+          bsameas.push_back(1);
+        if(bsameas[i-1] == 1){
+            all_meshfiles.push_back(meshfile);
+            if (argc == 1){
+                meshfile = testdir + "/" + meshfile;
+              }
+            files.push_back(meshfile);
+            assm_alias.push_back(mf_alias);
+            all_ms_starts.push_back(-1);
+            all_ns_starts.push_back(-1);
+          }
+        else{
+            all_meshfiles.push_back(reloading_mf);
+            if (iname == COREGEN_DEFAULT_TEST_FILE){
+                meshfile = testdir + reloading_mf;
+              }
+            files.push_back(reloading_mf);
+            assm_alias.push_back(mf_alias);
+            all_ms_starts.push_back(ms_startid);
+            all_ns_starts.push_back(ns_startid);
+          }
+        //  bsameas = false;
+      }
+    return 0;
+  }
+
+  int CoreGen::find_assm(const int i, int &assm_index)
+  // ---------------------------------------------------------------------------
+  // Function: find the assembly index (0 to n) for n assemblies for core alias i
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     int flag = 0;
     for (int j = 0; j < nassys; j++)
-        if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
-            assm_index = j;
-            flag = 1;
-            break;
+      if (strcmp(core_alias[i].c_str(), assm_alias[j].c_str()) == 0) {
+          assm_index = j;
+          flag = 1;
+          break;
         }
     if (flag == 0)//nothing found return -1 or no assembly
-        assm_index = -1;
+      assm_index = -1;
     return iBase_SUCCESS;
-}
+  }
 
-int CoreGen::write_makefile()
-// ---------------------------------------------------------------------------
-// Function: write the makefile based on inputs read from input file
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  int CoreGen::write_makefile()
+  // ---------------------------------------------------------------------------
+  // Function: write the makefile based on inputs read from input file
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     std::string name;
     std::vector<std::string> f_no_ext, f_sat, f_inp, f_jou, f_injou;
     make_file << "##" << std::endl;
     make_file
-            << "## This makefile is automatically generated by coregen program"
-            << std::endl;
+        << "## This makefile is automatically generated by coregen program"
+        << std::endl;
     make_file << "##" << std::endl;
     make_file << "## Check your coregen, assygen and cubit location"
               << std::endl;
@@ -2266,33 +2296,33 @@ int CoreGen::write_makefile()
     for (unsigned int i = 0; i < files.size(); i++) {
         if (files[i][0] == '.' && files[i][1] == '/') {
             filename = files[i].substr(2, files[i].length());
-        } else if (files[i][0] != '.' || files[i][1] != '/') {
+          } else if (files[i][0] != '.' || files[i][1] != '/') {
             int loc1 = files[i].find_last_of(".");
             int loc2 = files[i].find_last_of("/");
             filename = files[i].substr(loc2 + 1, loc1);
-        } else {
+          } else {
             filename = files[i];
-        }
+          }
         mk_files.push_back(filename);
         make_file << all_meshfiles[i] << "  ";
-    }
+      }
 
     // get file names without extension
     for (unsigned int i = 0; i < mk_files.size(); i++) {
         int loc = mk_files[i].find_first_of(".");
         f_no_ext.push_back(mk_files[i].substr(0, loc));
-    }
+      }
 
     make_file << "\n\nGEOM_FILES = ";
     for (unsigned int i = 0; i < mk_files.size(); i++) {
         if (geom_engine == "occ")
-            name = f_no_ext[i] + ".stp";
+          name = f_no_ext[i] + ".stp";
         else
-            name = f_no_ext[i] + ".sat";
+          name = f_no_ext[i] + ".sat";
         f_sat.push_back(name);
         make_file << name << "  ";
         name = "";
-    }
+      }
 
     make_file << "\n\nJOU_FILES = ";
     for (unsigned int i = 0; i < mk_files.size(); i++) {
@@ -2300,7 +2330,7 @@ int CoreGen::write_makefile()
         f_jou.push_back(name);
         make_file << name << "  ";
         name = "";
-    }
+      }
 
     make_file << "\n\nINJOU_FILES = ";
     for (unsigned int i = 0; i < mk_files.size(); i++) {
@@ -2308,7 +2338,7 @@ int CoreGen::write_makefile()
         f_injou.push_back(name);
         make_file << name << "  ";
         name = "";
-    }
+      }
 
     make_file << "\n\nASSYGEN_FILES = ";
     for (unsigned int i = 0; i < mk_files.size(); i++) {
@@ -2316,7 +2346,7 @@ int CoreGen::write_makefile()
         f_inp.push_back(name);
         make_file << name << "  ";
         name = "";
-    }
+      }
 
     make_file << "\n\n" << outfile << " : ${MESH_FILES} " << ifile << std::endl;
     make_file << "\t" << "${COREGEN} " << iname << std::endl;
@@ -2329,33 +2359,33 @@ int CoreGen::write_makefile()
         make_file << f_sat[i] << " " << f_jou[i] << " " << f_injou[i] << " : "
                   << f_inp[i] << std::endl;
         make_file << "\t" << "${ASSYGEN} " << f_no_ext[i] << "\n" << std::endl;
-    }
+      }
 
     make_file.close();
     logfile << "Created makefile: " << mfile << std::endl;
     return 0;
-}
+  }
 
-void CoreGen::banner()
-// ---------------------------------------------------------------------------
-// Function: display the program banner
-// Input:    none
-// Output:   none
-// ---------------------------------------------------------------------------
-{
+  void CoreGen::banner()
+  // ---------------------------------------------------------------------------
+  // Function: display the program banner
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
     logfile << '\n';
     logfile
-            << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            << '\n';
+        << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        << '\n';
     logfile
-            << "Program to Assemble Nuclear Reactor Assembly Meshes and Form a Core     "
-            << '\n';
+        << "Program to Assemble Nuclear Reactor Assembly Meshes and Form a Core     "
+        << '\n';
     logfile << "\t\t\tArgonne National Laboratory" << '\n';
     logfile << "\t\t\t        2011-2014         " << '\n';
     logfile
-            << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            << '\n';
-}
+        << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        << '\n';
+  }
 
 
 } // namespace MeshKit
