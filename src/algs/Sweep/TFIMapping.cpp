@@ -467,11 +467,13 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
       iMesh::Error m_err =
           mk_core()->imesh_instance()->createVtx(coords[0], coords[1],
           coords[2], interiorNodes[(k-1)*size_i+i]);
+#ifdef HAVE_OCC
       if (i != linkingEdgeNodeI)
       {
         createdNodes[(k - 1)*(size_i - 1) + i + pastLinkEdgeOffset] =
             interiorNodes[(k - 1)*size_i + i];
       }
+#endif
       IBERRCHK(m_err, "Trouble create the interior node.");			
     }
   }
