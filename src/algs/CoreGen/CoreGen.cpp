@@ -68,7 +68,8 @@ namespace MeshKit
 
   void CoreGen::setup_this()
   {
-    logfile << "Setting-up in CoreGen meshop.." << std::endl;
+    if(rank == 0)
+      logfile << "Setting-up in CoreGen meshop.." << std::endl;
     if(run_flag != 0){
         double ctload = 0;
         clock_t tload = 0;
@@ -78,20 +79,17 @@ namespace MeshKit
         if (prob_type == "mesh") {
             if (procs == 1) {
                 err = load_meshes();
-                //ERRORR("Failed to load meshes.", 1);
+                if(err !=0) {std::cout << "load meshes failed!" << std::endl; exit(1);}
               }
             else {
 #ifdef USE_MPI
                 err = load_meshes_parallel(rank, procs);
-                //ERRORR("Failed to load meshes.", 1);
+                if(err !=0) {std::cout << "failed to load meshes in parallel!" << std::endl; exit(1);}
 
-#ifdef USE_MPI
-                MPI::COMM_WORLD.Barrier();
-#endif
                 if(procs > (int) files.size()){
                     // if there are more procs than files distribute the copy/move work on each proc
                     err = distribute_mesh(rank, procs);
-                    // ERRORR("Failed to load meshes.", 1);
+                    if(err !=0) {std::cout << "distribute meshes failed!" << std::endl; exit(1);}
                   }
                 //Get a pcomm object
                 pc = new moab::ParallelComm(mk_core()->moab_instance(), MPI::COMM_WORLD, &err);
@@ -116,18 +114,13 @@ namespace MeshKit
         /*********************************************/
         else if (prob_type == "geometry" && procs == 1) {
             err = load_geometries();
-            //   ERRORR("Failed to load geometries", 1);
+            if(err !=0) {std::cout << "load geometry failed!" << std::endl; exit(1);}
           }
         else if(prob_type == "geometry" && procs > 1){
             logfile << " Parallel mode not supported for problem-type: Geometry " << std::endl;
             exit(1);
           }
 
-
-
-#ifdef USE_MPI
-        MPI::COMM_WORLD.Barrier();
-#endif
         /*********************************************/
         // copy move
         /*********************************************/
@@ -146,9 +139,7 @@ namespace MeshKit
                 logfile << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
               }
           }
-#ifdef USE_MPI
-        MPI::COMM_WORLD.Barrier();
-#endif
+
         for (unsigned int i = 0; i < assys.size(); i++) {
             if(prob_type =="mesh")
               cm[i]->setup_called(true);
@@ -209,14 +200,9 @@ namespace MeshKit
             /*********************************************/
             if(procs == 1){
                 if (extrude_flag == true) {
-
-                    // assign global ids after copy/move step
-                    if (rank == 0)
-                      err = assign_gids();
-
                     CClock ld_em;
                     err = extrude();
-                    //     ERRORR("Failed to extrude.", 1);
+                    if(err !=0) {std::cout << "extrusion failed!" << std::endl; exit(1);}
 
                     mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
                     ld_t = ld_em.DiffTime();
@@ -244,7 +230,8 @@ namespace MeshKit
 
   void CoreGen::execute_this()
   {
-    logfile << "Executing in CoreGen meshop.." << std::endl;
+    if(rank == 0)
+      logfile << "Executing in CoreGen meshop.." << std::endl;
 
     if(run_flag != 0){
         for (unsigned int i = 0; i < assys.size(); i++) {
@@ -256,15 +243,6 @@ namespace MeshKit
         // assign gids
         /*********************************************/
         CClock ld_gid;
-        if (procs == 1) {
-            err = assign_gids();
-            //      ERRORR("Failed to assign global ids.", 1);
-          }
-        //        else{
-        //          // err = assign_gids_parallel(rank, procs);
-        //          // ERRORR("Failed to assign global ids.", 1);
-        //        }
-
         mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem5);
         ld_tgid = ld_gid.DiffTime();
         tgid = clock();
@@ -283,7 +261,7 @@ namespace MeshKit
             || nst_flag == true) && procs == 1){
             CClock ld_ns;
             err = create_neumannset();
-            //    ERRORR("Failed to create neumann set.", 1);
+            if(err !=0) {std::cout << "create NeumannSet failed!" << std::endl; exit(1);}
 
             mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem6);
             ld_tns = ld_ns.DiffTime();
@@ -296,31 +274,25 @@ namespace MeshKit
                 logfile << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
               }
           }
-#ifdef USE_MPI
-        MPI::COMM_WORLD.Barrier();
-#endif
-
       }
     if (prob_type == "mesh") {
-
-
         /*********************************************/
         // save
         /*********************************************/
         CClock ld_sv;
         if (procs == 1) {
             err = save_mesh();
-            //  ERRORR("Failed to save o/p file.", 1);
+            if(err !=0) {std::cout << "save mesh failed!" << std::endl; exit(1);}
           } else {
             if(savefiles != "one" && (savefiles == "multiple" || savefiles == "both")){
                 err = save_mesh(rank); // uncomment to save the meshes with each proc
-                //ERRORR("Failed to save o/p file.", 1);
+                if(err !=0) {std::cout << "save mesh failed!" << std::endl; exit(1);}
               }
             if(savefiles != "multiple"){
 #ifdef USE_MPI
                 double write_time = MPI_Wtime();
                 err = save_mesh_parallel(rank, procs);
-                //ERRORR("Failed to save o/p file.", 1);
+                if(err !=0) {std::cout << "save parallel mesh failed!" << std::endl; exit(1);}
                 write_time = MPI_Wtime() - write_time;
                 if (rank == 0)
                   logfile << "Parallel write time = " << write_time/60.0 << " mins" << std::endl;
@@ -345,11 +317,8 @@ namespace MeshKit
     /*********************************************/
     else if (prob_type == "geometry") {
         err = save_geometry();
-        //ERRORR("Failed to save o/p file.", 1);
+        if(err !=0) {std::cout << "save geometry failed!" << std::endl; exit(1);}
       }
-
-
-
 
     /*********************************************/
     // print memory and timing if using mpi
@@ -452,21 +421,11 @@ namespace MeshKit
         logfile << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"  << std::endl;
 
       }
-    /*********************************************/
-    // close
-    /*********************************************/
-    if (run_flag == 1 && procs == 1) {
-        //err = close();
-        //ERRORR("Failed to dellocate.", 1);
-      } else {
-        //err = close_parallel(rank, procs);
-        //ERRORR("Failed to dellocate.", 1);
-      }
   }
 
   int CoreGen::save_mesh_parallel(const int nrank, const int numprocs)
   // -------------------------------------------------------------------------------------------
-  // Function: save mesh file in parallel (hdf5 only)
+  // Function: resolve shared entitie and save mesh file in parallel (hdf5 only)
   // Input:    none
   // Output:   none
   // -------------------------------------------------------------------------------------------
@@ -477,25 +436,6 @@ namespace MeshKit
     if (nrank == 0) {
         logfile << "Saving mesh file in parallel. " << std::endl;
       }
-
-    //  All explicit sharing data must be updated in ParallelComm instance before save
-    // moab::Range entities, sets, faces, edges;
-    // moab::Tag gid_tag;
-    // mb->tag_get_handle( "GLOBAL_ID",0, MB_TYPE_INTEGER, gid_tag);
-    // mb->get_entities_by_type( 0, MBQUAD, faces );
-    // mb->get_entities_by_type( 0, MBEDGE, edges );
-
-    // err = pc->resolve_shared_ents( 0, edges, 0, -1, &gid_tag );
-    // if (err != moab::MB_SUCCESS) {
-    //   std::cerr << "failed to resolve shared ents" << std::endl;
-    //   MPI_Abort(MPI_COMM_WORLD, 1);
-    // }
-
-    // err = pc->resolve_shared_ents( 0, faces, 0, -1, &gid_tag );
-    // if (err != moab::MB_SUCCESS) {
-    //   std::cerr << "failed to resolve shared ents" << std::endl;
-    //   MPI_Abort(MPI_COMM_WORLD, 1);
-    // }
 
     moab::Tag mattag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
@@ -590,69 +530,6 @@ namespace MeshKit
     logfile << "Saved geometry file: "<< outfile.c_str() <<std::endl;
 
     return iBase_SUCCESS;
-  }
-
-  int CoreGen::assign_gids_parallel(const int nrank, const int numprocs) {
-#ifdef USE_MPI
-    // assign new global ids
-    if (global_ids == true) {
-        if(nrank==0)
-          logfile << "Assigning global ids in parallel" << std::endl;
-        err = pc->assign_global_ids(0, 3, 1, false, true, false);
-        ERRORR("Error assigning global ids.", err);
-      }
-    // // assign global ids for all entity sets
-    // SimpleArray<iBase_EntitySetHandle> sets;
-    // iBase_TagHandle gid_tag;
-    // const char *tag_name = "GLOBAL_ID";
-    // iMesh_getTagHandle(imesh->instance(), tag_name, &gid_tag, &err, 9);
-    // if (iBase_TAG_NOT_FOUND == err) {
-    //   iMesh_createTag(imesh->instance(), tag_name, 1, iBase_INTEGER,
-    //                   &gid_tag, &err, strlen(tag_name));
-    //   ERRORR("Couldn't create global id tag", err);
-    // }
-
-
-
-    // iMesh_getEntSets(imesh->instance(),root_set, 1, ARRAY_INOUT(sets), &err);
-    // ERRORR("Failed to get contained sets.", err);
-
-    // for(int id = 1; id <= sets.size(); id++){
-    //   iMesh_setEntSetIntData(imesh->instance(), sets[id-1], gid_tag, id, &err);
-    //   ERRORR("Failed to set tags on sets.", err);
-    // }
-#endif
-    return iBase_SUCCESS;
-  }
-
-  int CoreGen::close_parallel(const int nrank, const int numprocs)
-  // ---------------------------------------------------------------------------
-  // Function: dellocating
-  // Input:    none
-  // Output:   none
-  // ---------------------------------------------------------------------------
-  {
-#ifdef USE_MPI
-    // deallocate ... deallocate ... deallocate
-    if (prob_type == "mesh") {
-        //        for (unsigned int i = 0; i < assys.size(); i++) {
-        //            delete cm[i];
-        //          }
-
-        iMesh_dtor(imesh->instance(), &err);
-        ERRORR("Failed in call iMesh_dtor", err);
-
-      }
-
-    if (prob_type == "geometry") {
-        //        for (unsigned int i = 0; i < 1; i++) {
-        //            delete cg[i];
-        //          }
-        iGeom_dtor(igeom->instance(), &err);
-        ERRORR("Failed in call iGeom_dtor", err);
-      }
-#endif
-    return 0;
   }
 
   int CoreGen::distribute_mesh(const int nrank, int numprocs)
@@ -855,42 +732,9 @@ namespace MeshKit
                 assys_index.push_back(temp_index);
               }
           }
-
-        // create cm instances for each mesh file
-        //cm = new CopyMesh*[assys.size()];
-        //        for (unsigned int i = 0; i < assys.size(); i++) {
-        //            cm[i] = new CopyMesh(impl);
-        //          }
 #endif
       }
     return iBase_SUCCESS;
-  }
-
-  int CoreGen::close()
-  // ---------------------------------------------------------------------------
-  // Function: dellocating
-  // Input:    none
-  // Output:   none
-  // ---------------------------------------------------------------------------
-  {
-    // deallocate ... deallocate ... deallocate
-    if (prob_type == "mesh") {
-        //        for (unsigned int i = 0; i < files.size(); i++) {
-        //            delete cm[i];
-        //          }
-
-        iMesh_dtor(imesh->instance(), &err);
-        ERRORR("Failed in call iMesh_dtor", err);
-
-      }
-    if (prob_type == "geometry") {
-        //        for (unsigned int i = 0; i < files.size(); i++) {
-        //            delete cg[i];
-        //          }
-        iGeom_dtor(igeom->instance(), &err);
-        ERRORR("Failed in call iGeom_dtor", err);
-      }
-    return 0;
   }
 
   int CoreGen::load_meshes()
@@ -900,19 +744,8 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    // make a mesh instance
-    // iMesh_newMesh("MOAB", imesh->instance(), &err, 4);
-    // ERRORR("Failed to create instance.", 1);
-
-    //    iMesh_getRootSet(imesh->instance(), &root_set, &err);
-    //    ERRORR("Couldn't get the root set", err);
-
     // create cm instances for each mesh file
     cm.resize(files.size());
-    //    for (unsigned int i = 0; i < files.size(); i++) {
-    //        cm[i] = new CopyMesh(impl);
-    //      }
-
     iBase_EntitySetHandle orig_set;
 
     // loop reading all mesh files
@@ -958,9 +791,6 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   {
     logfile << "\n--Loading geometry files." << std::endl;
-    // make a mesh instance
-    //    iGeom_newGeom("GEOM", igeom->instance(), &err, 4);
-    //    ERRORR("Failed to create instance.", 1);
 
     iGeom_getRootSet(igeom->instance(), &root_set, &err);
     ERRORR("Couldn't get the root set", err);
@@ -1091,9 +921,6 @@ namespace MeshKit
     return 0;
   }
 
-
-
-
   int CoreGen::move_verts(iBase_EntitySetHandle set, const double *dx)
   // ---------------------------------------------------------------------------
   // Function: Change the coordinates for moving the assembly to its first loc.
@@ -1148,52 +975,6 @@ namespace MeshKit
         ERRORR("Failed to move geometries.", iBase_FAILURE);
       }
     return iBase_SUCCESS;
-  }
-
-  int CoreGen::assign_gids() {
-    // ---------------------------------------------------------------------------
-    // Function: assign global ids
-    // Input:    none
-    // Output:   none
-    // ---------------------------------------------------------------------------
-    // assign new global ids
-    //    if (global_ids == true){
-    //        logfile << "Assigning global ids." << std::endl;
-    //        mu = new MKUtils(impl);
-    //        err = mu->assign_global_ids(root_set, 3, 1, true, false,
-    //                                    "GLOBAL_ID");
-    //        ERRORR("Error assigning global ids.", err);
-    //      }
-    //    delete mu;
-    return iBase_SUCCESS;
-
-
-    // // assign new global ids
-    // if (global_ids == true) {
-    //   logfile << "Assigning global ids." << std::endl;
-    //   err = pc->assign_global_ids(0, 3, 1, false, false, false);
-    //   ERRORR("Error assigning global ids.", err);
-    // }
-
-    // // assign global ids for all entity sets
-    // SimpleArray<iBase_EntitySetHandle> sets;
-    // iBase_TagHandle gid_tag;
-    // const char *tag_name = "GLOBAL_ID";
-    // iMesh_getTagHandle(imesh->instance(), tag_name, &gid_tag, &err, 9);
-    // if (iBase_TAG_NOT_FOUND == err) {
-    //   iMesh_createTag(imesh->instance(), tag_name, 1, iBase_INTEGER,
-    //                   &gid_tag, &ermax, strlen(tag_name));
-    //   ERRORR("Couldn't create global id tag", err);
-    // }
-
-    // iMesh_getEntSets(imesh->instance(),root_set, 1, ARRAY_INOUT(sets), &err);
-    // ERRORR("Failed to get contained sets.", err);
-
-    // for(int id = 1; id <= sets.size(); id++){
-    //   iMesh_setEntSetIntData(imesh->instance(), sets[id-1], gid_tag, id, &err);
-    //   ERRORR("Failed to set tags on sets.", err);
-    // }
-    // return iBase_SUCCESS;
   }
 
   int CoreGen::extrude() {
@@ -2141,17 +1922,6 @@ namespace MeshKit
               IOErrorHandler (INVALIDINPUT);
           }
 
-        // // neumannset card
-        // if (input_string.substr(0, 10) == "neumannset") {
-        //   std::istringstream formatString(input_string);
-        //   std::string nsLoc = "", temp;
-        //   int nsId = 0;
-        //   formatString >> card >> nsLoc >> nsId;
-        //   if ((strcmp(nsLoc.c_str(), "side") == 0)) {
-        // 	formatString >> temp >> nsx[ns] >> temp >> nsy[ns] >> temp >> nsc[ns];
-        // 	++ns
-        //   }
-        // }
         // OutputFileName
         if (input_string.substr(0, 14) == "outputfilename") {
             std::istringstream formatString(input_string);
@@ -2373,19 +2143,20 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    logfile << '\n';
-    logfile
-        << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        << '\n';
-    logfile
-        << "Program to Assemble Nuclear Reactor Assembly Meshes and Form a Core     "
-        << '\n';
-    logfile << "\t\t\tArgonne National Laboratory" << '\n';
-    logfile << "\t\t\t        2011-2014         " << '\n';
-    logfile
-        << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        << '\n';
+    if(rank == 0 ){
+        logfile << '\n';
+        logfile
+            << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            << '\n';
+        logfile
+            << "Program to Assemble Nuclear Reactor Assembly Meshes and Form a Core     "
+            << '\n';
+        logfile << "\t\t\tArgonne National Laboratory" << '\n';
+        logfile << "\t\t\t        2015         " << '\n';
+        logfile
+            << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            << '\n';
+      }
   }
-
 
 } // namespace MeshKit

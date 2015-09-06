@@ -138,15 +138,11 @@ namespace MeshKit {
     int copymove(const int nrank, const int numprocs);
     int copymove_all(const int nrank, const int numprocs);
     int set_copymove_coords();
-    int assign_gids();
-    int assign_gids_parallel(const int nrank, const int numprocs);
     int save_mesh();
     int save_mesh(int rank);
     int save_mesh_parallel(const int nrank, const int numprocs);
     int save_geometry();
     int shift_mn_ids(iBase_EntitySetHandle orig_set, int index);
-    int close();
-    int close_parallel(const int nrank, const int numprocs);
     int extrude();
     int move_verts(iBase_EntitySetHandle set, const double *dx);
     int move_geoms(iBase_EntitySetHandle set, const double *dx);

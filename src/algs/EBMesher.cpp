@@ -31,7 +31,7 @@ inline bool less_intersect(const IntersectDist d1, const IntersectDist d2) {
 }
 
 inline bool equal_intersect(const IntersectDist d1, const IntersectDist d2) {
-  return abs(d1.distance - d2.distance) < 10e-7;
+  return std::abs(d1.distance - d2.distance) < 10e-7;
 }
 
 namespace MeshKit 
