@@ -43,9 +43,9 @@
 #include "meshkit/cleanup.hpp"
 
 
+using namespace moab;
 
-
-MBErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis);
+ErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis);
 
 
 
@@ -79,8 +79,8 @@ int main(int argc, char **argv)
     bool is_acis;
 
     // load the input file
-    MBErrorCode result, rval;
-    MBEntityHandle input_set;
+    ErrorCode result, rval;
+    EntityHandle input_set;
 
     rval = MBI()->create_meshset( MESHSET_SET, input_set );
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     if(std::string::npos!=input_name.find("h5m") && (2==argc)) 
       {
 	rval = MBI()->load_file( input_name.c_str(), &input_set );
-	if(gen::error(MB_SUCCESS!=rval,"failed to load_file 0")) 
+	if(gen::error(MB_SUCCESS!=rval,"failed to load_file 0"))
 	  {
 	    return rval;      
 	  }
@@ -131,9 +131,9 @@ int main(int argc, char **argv)
   }
 
 
-MBErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis){
+ErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool is_acis){
 
-    MBErrorCode result;
+    ErrorCode result;
     std::string output_filename;
     if(is_acis) {  
       std::stringstream facet_tol_ss;
@@ -147,7 +147,7 @@ MBErrorCode write_sealed_file( std::string root_filename, double facet_tol, bool
     // result = MBI()->write_mesh( filename_new.c_str(), &input_meshset, 1);
     result = MBI()->write_mesh( output_filename.c_str() );
     if (MB_SUCCESS != result) std::cout << "result= " << result << std::endl;
-    assert(MB_SUCCESS == result);  
+    assert(MB_SUCCESS == result);
 
   return result; 
 }

@@ -26,23 +26,23 @@
 #include <cmath>
 #include <ctime>
 #include <vector>
-#include "MBCore.hpp"
-#include "MBTagConventions.hpp"
-#include "MBRange.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Core.hpp"
+#include "TagConventions.hpp"
+#include "moab/Range.hpp"
+#include "moab/Skinner.hpp"
 
 #include "meshkit/gen.hpp"
 #include "meshkit/arc.hpp"
 #include "meshkit/zip.hpp"
 #include "meshkit/cleanup.hpp"
 
+using namespace moab;
 
-
-MBErrorCode delete_all_edges() {
+ErrorCode delete_all_edges() {
   // delete all of the edges. Never keep edges. They are too hard to track and use
   // due to orientation and multiple entities errors when merging.
-  MBErrorCode result;
-  MBRange edges;
+  ErrorCode result;
+  Range edges;
   result = MBI()->get_entities_by_type( 0, MBEDGE, edges );
   assert(MB_SUCCESS == result);
   result = MBI()->delete_entities( edges );
@@ -52,10 +52,10 @@ MBErrorCode delete_all_edges() {
 
 // Input: unordered sets of curves that do not track ownership
 // Output: ordered sets of verts that do track ownership. All edges are deleted.
-MBErrorCode prepare_curves(MBRange &curve_sets, 
-                           MBTag geom_tag, MBTag id_tag, MBTag merge_tag,
+ErrorCode prepare_curves(Range &curve_sets,
+                           Tag geom_tag, Tag id_tag, Tag merge_tag,
                            double const MERGE_TOL, double const FACET_TOL) {
-  MBErrorCode result;
+  ErrorCode result;
 
   // process each curve
   for(MBRange::iterator i=curve_sets.begin(); i!=curve_sets.end(); i++ ) {
@@ -66,7 +66,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
     std::cout << "curve " << id << std::endl;
 
     // get the range of edges of the curve meshset
-    std::vector<MBEntityHandle> curve_edges;
+    std::vector<EntityHandle> curve_edges;
     result = MBI()->get_entities_by_type( *i, MBEDGE, curve_edges );
     assert( MB_SUCCESS == result );
 
@@ -79,7 +79,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
                 << " n_verts=" << curve_edges.size()+1 << std::endl;
 
       // get the endpoints of the curve
-      MBRange endpt_sets;
+      Range endpt_sets;
       result = MBI()->get_child_meshsets( *i, endpt_sets );
       assert(MB_SUCCESS==result);
       std::cout << "  endpt_sets.size()=" << endpt_sets.size() << std::endl;
@@ -88,7 +88,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
       } else if(1 == endpt_sets.size()) {
         // nothing
       } else if(2 == endpt_sets.size()) {
-        MBRange front_endpt, back_endpt;
+        Range front_endpt, back_endpt;
         result = MBI()->get_entities_by_type( endpt_sets.front(), MBVERTEX, front_endpt);
         assert(MB_SUCCESS == result);
         assert(1 == front_endpt.size());
@@ -100,12 +100,12 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
           result = MBI()->merge_entities( front_endpt[0], back_endpt[0], false, true);
           assert(MB_SUCCESS == result);
           // check for and remove degenerate edges caused by the merge
-          MBRange edges;
-          MBEntityHandle temp = front_endpt[0];
+          Range edges;
+          EntityHandle temp = front_endpt[0];
           result = MBI()->get_adjacencies( &temp, 1, 1, false, edges);
           assert(MB_SUCCESS == result);
           for(MBRange::iterator j=edges.begin(); j!=edges.end(); j++) {
-            const MBEntityHandle *conn;
+            const EntityHandle *conn;
             int n_verts;
             result = MBI()->get_connectivity( *j, conn, n_verts); 
             assert(MB_SUCCESS == result);
@@ -129,7 +129,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
     }
 
     // convert the curve of edges into a curve of verts 
-    std::vector<MBEntityHandle> ordered_verts;
+    std::vector<EntityHandle> ordered_verts;
     result = gen::ordered_verts_from_ordered_edges( curve_edges, ordered_verts);
     assert(MB_SUCCESS == result);
 
@@ -139,7 +139,7 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
 
     // replace the unordered edges with the ordered verts
     result = arc::set_meshset( *i, ordered_verts );
-    assert(MB_SUCCESS == result);      
+    assert(MB_SUCCESS == result);
   }
 
   return MB_SUCCESS;
@@ -147,11 +147,11 @@ MBErrorCode prepare_curves(MBRange &curve_sets,
 
 /* Isolate the failure by removing the curve and loop that failed. The zip_loop
    function will be called again on the remaining loops and curves. */
-MBErrorCode remove_failed_loop_and_curve( std::vector<std::vector<MBEntityHandle> > &skin,
-                                          std::vector<std::vector<MBEntityHandle> > &curves,
+ErrorCode remove_failed_loop_and_curve( std::vector<std::vector<EntityHandle> > &skin,
+                                          std::vector<std::vector<EntityHandle> > &curves,
                                           std::vector<int> &curve_ids,
-                                          std::vector<MBEntityHandle> &curve_sets,
-                                          //MBRange &curve_sets,
+                                          std::vector<EntityHandle> &curve_sets,
+                                          //Range &curve_sets,
 					  const unsigned int loop,
                                           const unsigned int curve ) {
   skin.erase( skin.begin()+loop );
@@ -164,12 +164,12 @@ MBErrorCode remove_failed_loop_and_curve( std::vector<std::vector<MBEntityHandle
 
   // input: surface sets, ordered curve sets,
   // output: skin arcs corresponding to curves are added to parent surface sets
-MBErrorCode prepare_surfaces(MBRange &surface_sets,
-                             MBTag geom_tag, MBTag id_tag, MBTag normal_tag, MBTag merge_tag,
+ErrorCode prepare_surfaces(Range &surface_sets,
+                             Tag geom_tag, Tag id_tag, Tag normal_tag, Tag merge_tag,
                              const double SME_RESABS_TOL, const double FACET_TOL, 
                                const double MERGE_TOL) {
     
-    MBErrorCode result;
+    ErrorCode result;
 
     // loop over each surface meshset
     for(MBRange::iterator i=surface_sets.begin(); i!=surface_sets.end(); i++ ) {
@@ -181,23 +181,23 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       std::cout << "  surf id=" << surf_id << std::endl;
 
       // get facets of the surface meshset
-      MBRange tris;
+      Range tris;
       result = MBI()->get_entities_by_type( *i, MBTRI, tris );
       assert(MB_SUCCESS == result);
 
       // Get the curves sets
-      std::vector<MBEntityHandle> curve_sets, unmerged_curve_sets;
+      std::vector<EntityHandle> curve_sets, unmerged_curve_sets;
       result = MBI()->get_child_meshsets( *i, curve_sets );
       assert(MB_SUCCESS==result);
 
       // Update the curve_sets with that contain entity_to_delete curves with their
       // entity_to_keep curves. Unmerged_curve_sets will end up holding the curves
       // of this surface that are not merged with another curve in this surface.
-      for(std::vector<MBEntityHandle>::iterator j=curve_sets.begin();
+      for(std::vector<EntityHandle>::iterator j=curve_sets.begin();
 	  j!=curve_sets.end(); j++) {
-        MBEntityHandle merged_curve, curve;
+        EntityHandle merged_curve, curve;
         result = MBI()->tag_get_data( merge_tag, &(*j), 1, &merged_curve );
-        assert(MB_TAG_NOT_FOUND==result || MB_SUCCESS==result);     
+        assert(MB_TAG_NOT_FOUND==result || MB_SUCCESS==result);
         if(MB_TAG_NOT_FOUND==result) {
           curve = *j;
         } else if(MB_SUCCESS == result) {
@@ -211,7 +211,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
         }
       
         // If the curve is in unmerged_curve_sets, then remove it. Otherwise add it.
-	std::vector<MBEntityHandle>::iterator k=find(unmerged_curve_sets.begin(), 
+	std::vector<EntityHandle>::iterator k=find(unmerged_curve_sets.begin(),
 	  unmerged_curve_sets.end(), curve);
         if(unmerged_curve_sets.end() == k) {
   	  //std::cout << "  curve " << gen::geom_id_by_handle(*k) 
@@ -225,7 +225,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       // If all of the curves are merged, remove the surfaces facets.
       if(unmerged_curve_sets.empty()) {
         result = MBI()->remove_entities( *i, tris);                                           
-	assert(MB_SUCCESS == result);                                                         
+	assert(MB_SUCCESS == result);
 	std::cout << "  removed " << tris.size() << " facets and deleted surface" << std::endl;
 	result = MBI()->delete_entities( tris );                                              
 	assert(MB_SUCCESS == result);
@@ -245,19 +245,19 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       assert(MB_SUCCESS == result);
   
       // get the range of skin edges from the range of facets
-      MBSkinner tool(MBI());
-      MBRange skin_edges;
+      Skinner tool(MBI());
+      Range skin_edges;
 
       // merge the vertices of the skin
       // BRANDON: For some reason cgm2moab does not do this? This was the 
       // problem with mod13 surf 881. Two skin verts were coincident. A tol=1e-10
       // found the verts, but tol=0 did not.
-      MBRange skin_verts;
+      Range skin_verts;
       result = MBI()->get_adjacencies( skin_edges, 0, false, skin_verts, 
                                        MBInterface::UNION );
       assert(MB_SUCCESS == result);
       result = gen::merge_vertices( skin_verts, SME_RESABS_TOL );         
-      if (MB_SUCCESS != result) {                                             
+      if (MB_SUCCESS != result) {
 	std::cout << "result= " << result << std::endl;                  
 	std::cout << "SURFACE_ZIPPING_FAILURE: could not merge vertices, surf_id="   
 		  << surf_id << std::endl;  
@@ -265,7 +265,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       }  
 						      
       // Create loops with the skin edges.  
-      std::vector< std::vector<MBEntityHandle> > skin_loops_of_edges;
+      std::vector< std::vector<EntityHandle> > skin_loops_of_edges;
       if(MB_SUCCESS != result) {
 	std::cout << "SURFACE_ZIPPING_FAILURE: could not create loops for surf_id=" 
 		  << surf_id << std::endl;
@@ -275,7 +275,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
                 << " skin loop(s)." << std::endl;
     
       // Convert the loops of skin edges to loops of skin verts.
-      std::vector< std::vector<MBEntityHandle> > skin(skin_loops_of_edges.size());
+      std::vector< std::vector<EntityHandle> > skin(skin_loops_of_edges.size());
       for(unsigned int j=0; j<skin_loops_of_edges.size(); j++) {
         result = gen::ordered_verts_from_ordered_edges( skin_loops_of_edges[j], skin[j] );
         assert(MB_SUCCESS == result);
@@ -295,17 +295,17 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       //assert(MB_SUCCESS==result);
       std::vector<int> curve_ids;
       int curve_id;
-      std::vector<std::vector<MBEntityHandle> > curves;
+      std::vector<std::vector<EntityHandle> > curves;
       //for(MBRange::iterator j=curve_sets.begin(); j!=curve_sets.end(); j++) {
       //for(unsigned int j=0; j<curve_sets.size(); j++) {
-      for(std::vector<MBEntityHandle>::iterator j=curve_sets.begin(); 
+      for(std::vector<EntityHandle>::iterator j=curve_sets.begin();
         j!=curve_sets.end(); j++) {
 
         // If a delete_curve, replace it with the keep_curve. This approach allows
         // for duplicates because we are using vectors instead of ranges. Note that
         // parent-child links also cannot store duplicate handles.
-        MBEntityHandle merged_curve;
-	//MBEntityHandle temp = curve_sets[j];
+        EntityHandle merged_curve;
+	//EntityHandle temp = curve_sets[j];
         result = MBI()->tag_get_data( merge_tag, &(*j), 1, &merged_curve );     
         assert(MB_TAG_NOT_FOUND==result || MB_SUCCESS==result);
         if(MB_SUCCESS == result) *j = merged_curve;
@@ -316,7 +316,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
 	assert(MB_SUCCESS == result);
 	std::cout << "  curve_id=" << curve_id << " handle=" << *j << std::endl;
 	curve_ids.push_back(curve_id);
-	std::vector<MBEntityHandle> curve;
+	std::vector<EntityHandle> curve;
 	result = arc::get_meshset( *j, curve );
 	assert(MB_SUCCESS == result);
 	curves.push_back( curve );
@@ -338,9 +338,9 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
     return MB_SUCCESS;
   }
 
-  MBErrorCode test_edges() {
-    MBErrorCode result;
-    MBRange edges;
+  ErrorCode test_edges() {
+    ErrorCode result;
+    Range edges;
     result = MBI()->get_entities_by_dimension( 0, 1, edges );
     assert(MB_SUCCESS == result);
     MBI()->list_entities( edges );
@@ -360,7 +360,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
       std::cout << "./post_process <input_file>" << std::endl;
       return 1;
     }
-    MBErrorCode result;
+    ErrorCode result;
     std::string input_name = argv[1];
 
     // The root name does not have an extension
@@ -370,7 +370,7 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
     const double MERGE_TOL = 1e-3; // should this depend on FACET_TOL? 
 
     // load the input file
-    MBEntityHandle input_meshset;
+    EntityHandle input_meshset;
     result = MBI()->create_meshset( MESHSET_SET, input_meshset );
     assert(MB_SUCCESS == result);
     if(std::string::npos != input_name.find("h5m")) {
@@ -382,25 +382,25 @@ MBErrorCode prepare_surfaces(MBRange &surface_sets,
     }
 
     // create tags
-    MBTag geom_tag, id_tag, sense_tag, normal_tag, merge_tag;
+    Tag geom_tag, id_tag, sense_tag, normal_tag, merge_tag;
     result = MBI()->tag_get_handle( GEOM_DIMENSION_TAG_NAME, sizeof(int), 
 				MB_TYPE_INTEGER, geom_tag, MB_TAG_DENSE, 0, 0 );
     assert( MB_SUCCESS == result );
     result = MBI()->tag_get_handle( GLOBAL_ID_TAG_NAME, sizeof(int), 
 				MB_TYPE_INTEGER, id_tag,MB_TAG_DENSE, 0, 0 );
     assert( MB_SUCCESS == result );
-    result = MBI()->tag_get_handle( "GEOM_SENSE_2", 2*sizeof(MBEntityHandle), 
+    result = MBI()->tag_get_handle( "GEOM_SENSE_2", 2*sizeof(EntityHandle),
                                 MB_TYPE_HANDLE, sense_tag, MB_TAG_DENSE, 0, 0 );
     assert( MB_SUCCESS == result );
     result = MBI()->tag_get_handle( "NORMAL", sizeof(MBCartVect), 
                                 MB_TYPE_OPAQUE, normal_tag, MB_TAG_DENSE, 0, 0 );
     assert( MB_SUCCESS == result );
-    result = MBI()->tag_get_handle( "MERGE", sizeof(MBEntityHandle), 
+    result = MBI()->tag_get_handle( "MERGE", sizeof(EntityHandle),
                                 MB_TYPE_HANDLE, merge_tag, MB_TAG_SPARSE, 0, 0 );
-    assert( MB_SUCCESS == result );  
+    assert( MB_SUCCESS == result );
 
     // get all geometry sets
-    MBRange geom_sets[4];
+    Range geom_sets[4];
     for(unsigned dim=0; dim<4; dim++) {
       void *val[] = {&dim};
       result = MBI()->get_entities_by_type_and_tag( 0, MBENTITYSET, &geom_tag,

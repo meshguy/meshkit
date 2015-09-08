@@ -3,8 +3,8 @@
 #include <limits>  // for double min/max
 #include <assert.h>
 #include <vector>
-#include "MBRange.hpp"
-#include "MBAdaptiveKDTree.hpp"
+#include "moab/Range.hpp"
+#include "moab/AdaptiveKDTree.hpp"
 #include "meshkit/arc.hpp"
 #include "meshkit/zip.hpp"
 #include "meshkit/gen.hpp"
@@ -12,20 +12,20 @@
 #include "moab/GeomTopoTool.hpp"
 #include "moab/FileOptions.hpp"
 
-
+using namespace moab;
 namespace arc {
 
-  MBErrorCode orient_edge_with_tri( const MBEntityHandle edge, const MBEntityHandle tri ) {
-    MBErrorCode result;
+  ErrorCode orient_edge_with_tri( const EntityHandle edge, const EntityHandle tri ) {
+    ErrorCode result;
     // get the connected vertices, properly ordered
-    const MBEntityHandle *tri_conn;
+    const EntityHandle *tri_conn;
     int n_verts;
     result = MBI()->get_connectivity( tri, tri_conn, n_verts );
     assert(MB_SUCCESS == result);
     assert( 3 == n_verts );
 
     // get the endpoints of the edge
-    const MBEntityHandle *edge_conn;
+    const EntityHandle *edge_conn;
     result = MBI()->get_connectivity( edge, edge_conn, n_verts );
     assert(MB_SUCCESS == result);
     assert( 2 == n_verts );
@@ -34,7 +34,7 @@ namespace arc {
     if (( edge_conn[0]==tri_conn[0] && edge_conn[1]==tri_conn[2] ) ||
 	( edge_conn[0]==tri_conn[1] && edge_conn[1]==tri_conn[0] ) ||
 	( edge_conn[0]==tri_conn[2] && edge_conn[1]==tri_conn[1] ) ) {
-      MBEntityHandle new_conn[2];
+      EntityHandle new_conn[2];
       new_conn[0] = edge_conn[1];
       new_conn[1] = edge_conn[0];
       result = MBI()->set_connectivity( edge, new_conn, 2 );
@@ -45,15 +45,15 @@ namespace arc {
 
   // Degenerate edges (same topological endpts) are caused by a prior step in which
   // coincident verts are merged.
-  MBErrorCode remove_degenerate_edges( MBRange &edges, const bool debug ) {
-    MBRange::iterator i = edges.begin();
+  ErrorCode remove_degenerate_edges( Range &edges, const bool debug ) {
+    Range::iterator i = edges.begin();
     while (i!=edges.end()) {
       // get the endpoints of the edge
-      MBErrorCode rval;
-      const MBEntityHandle *endpts;
+      ErrorCode rval;
+      const EntityHandle *endpts;
       int n_verts;
       rval = MBI()->get_connectivity( *i, endpts, n_verts );
-      if(gen::error(MB_SUCCESS!=rval,"could not get connectivity")) 
+      if(gen::error(MB_SUCCESS!=rval,"could not get connectivity"))
         return rval;
 
       // remove the edge if degenerate
@@ -81,16 +81,16 @@ namespace arc {
 
 
   // Given a range of edges, remove pairs that have vertices (a,b) (b,a)
-  MBErrorCode remove_opposite_pairs_of_edges( MBRange &edges, const bool debug ) {
+  ErrorCode remove_opposite_pairs_of_edges( Range &edges, const bool debug ) {
 
     // do this in O(n) by using adjacencies instead of O(n^2)
-    MBErrorCode result;
-    //for(MBRange::iterator i=edges.begin(); i!=edges.end(); i++ ) {
+    ErrorCode result;
+    //for(Range::iterator i=edges.begin(); i!=edges.end(); i++ ) {
     for(unsigned int i=0; i<edges.size(); i++) {
-      MBEntityHandle the_edge = edges[i];
+      EntityHandle the_edge = edges[i];
 
       // get endpoint verts
-      MBRange two_verts;
+      Range two_verts;
       result = MBI()->get_adjacencies( &the_edge, 1, 0, false, two_verts);
       if(MB_SUCCESS != result) {
         std::cout << "result=" << result << " could not get adjacencies of edge" << std::endl;
@@ -98,8 +98,8 @@ namespace arc {
       }
 
       // get adjacent edges, but only keep the edges adjacent to both verts
-      MBRange adj_edges;
-      result = MBI()->get_adjacencies( two_verts, 1, false, adj_edges, MBInterface::INTERSECT);
+      Range adj_edges;
+      result = MBI()->get_adjacencies( two_verts, 1, false, adj_edges, Interface::INTERSECT);
       assert(MB_SUCCESS == result);
       // remove the original edge
       //adj_edges.erase( *i );
@@ -125,9 +125,9 @@ namespace arc {
     return MB_SUCCESS;
   }
 
-  MBErrorCode remove_opposite_pairs_of_edges_fast( MBRange &edges, const bool debug) {
+  ErrorCode remove_opposite_pairs_of_edges_fast( Range &edges, const bool debug) {
     // special case
-    MBErrorCode rval;
+    ErrorCode rval;
     if(1==edges.size()) {
       std::cout << "cannot remove pairs: only one input edge" << std::endl;
       return MB_FAILURE;
@@ -137,12 +137,12 @@ namespace arc {
     unsigned n_orig_edges = edges.size();
     gen::edge *my_edges = new gen::edge[n_orig_edges];
     unsigned j = 0;
-    for(MBRange::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
+    for(Range::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
       // get the endpoints of the edge
-      const MBEntityHandle *endpts;
+      const EntityHandle *endpts;
       int n_verts;
       rval = MBI()->get_connectivity( *i, endpts, n_verts );
-      if(gen::error(MB_SUCCESS!=rval || 2!=n_verts,"could not get connectivity")) 
+      if(gen::error(MB_SUCCESS!=rval || 2!=n_verts,"could not get connectivity"))
         return rval;
     
       // store the edges
@@ -152,7 +152,7 @@ namespace arc {
 
       // sort edge by handle
       if(my_edges[j].v1 < my_edges[j].v0) {
-        MBEntityHandle temp = my_edges[j].v0;
+        EntityHandle temp = my_edges[j].v0;
         my_edges[j].v0 = my_edges[j].v1;
         my_edges[j].v1 = temp;
       }
@@ -164,7 +164,7 @@ namespace arc {
 
     // find duplicate edges
     j=0;
-    MBRange duplicate_edges;
+    Range duplicate_edges;
     for(unsigned i=1; i<n_orig_edges; ++i) {
       // delete edge if a match exists
       if(my_edges[j].v0==my_edges[i].v0 && my_edges[j].v1==my_edges[i].v1) {
@@ -196,19 +196,19 @@ namespace arc {
     return MB_SUCCESS;
   }
 
-  MBErrorCode get_next_oriented_edge( const MBRange edges, const MBEntityHandle edge,
-				      MBEntityHandle &next_edge ) {
+  ErrorCode get_next_oriented_edge( const Range edges, const EntityHandle edge,
+				      EntityHandle &next_edge ) {
 
     // get the back vertex
-    MBErrorCode result;
-    const MBEntityHandle *end_verts;
+    ErrorCode result;
+    const EntityHandle *end_verts;
     int n_verts;
     result = MBI()->get_connectivity( edge, end_verts, n_verts );
     assert(MB_SUCCESS==result);
     assert( 2 == n_verts );
 
     // get the edges adjacent to the back vertex
-    MBRange adj_edges;
+    Range adj_edges;
     result = MBI()->get_adjacencies( &(end_verts[1]), 1, 1, false, adj_edges );
     assert(MB_SUCCESS==result);
 
@@ -218,8 +218,8 @@ namespace arc {
     adj_edges.erase( edge );
 
     // make sure the edge is oriented correctly
-    for(MBRange::iterator i=adj_edges.begin(); i!=adj_edges.end(); i++) {
-      const MBEntityHandle *adj_end_verts;
+    for(Range::iterator i=adj_edges.begin(); i!=adj_edges.end(); i++) {
+      const EntityHandle *adj_end_verts;
       result = MBI()->get_connectivity( *i, adj_end_verts, n_verts );
       if(MB_SUCCESS != result) {
         MBI()->list_entity(*i);
@@ -260,18 +260,18 @@ namespace arc {
     return MB_SUCCESS;
   }
 
-  MBErrorCode create_loops_from_oriented_edges_fast( MBRange edges,
-						     std::vector< std::vector<MBEntityHandle> > &loops_of_edges,
+  ErrorCode create_loops_from_oriented_edges_fast( Range edges,
+						     std::vector< std::vector<EntityHandle> > &loops_of_edges,
                                                      const bool debug ) {
     // place all edges in map
-    std::multimap<MBEntityHandle,gen::edge> my_edges;
-    MBErrorCode rval;
-    for(MBRange::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
+    std::multimap<EntityHandle,gen::edge> my_edges;
+    ErrorCode rval;
+    for(Range::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
       // get the endpoints of the edge
-      const MBEntityHandle *endpts;
+      const EntityHandle *endpts;
       int n_verts;
       rval = MBI()->get_connectivity( *i, endpts, n_verts );
-      if(gen::error(MB_SUCCESS!=rval || 2!=n_verts,"could not get connectivity")) 
+      if(gen::error(MB_SUCCESS!=rval || 2!=n_verts,"could not get connectivity"))
         return rval;
     
       // store the edges
@@ -279,7 +279,7 @@ namespace arc {
       temp.edge = *i;
       temp.v0   = endpts[0];
       temp.v1   = endpts[1];
-      my_edges.insert( std::pair<MBEntityHandle,gen::edge>(temp.v0,temp) );  
+      my_edges.insert( std::pair<EntityHandle,gen::edge>(temp.v0,temp) );
     }
     std::cout << "error: function not complete" << std::endl;
     return MB_FAILURE;
@@ -289,20 +289,20 @@ namespace arc {
 
   // This function should be rewritten using multimaps or something to avoid
   // upward adjacency searching. Vertices are searched for their adjacent edges.
-  MBErrorCode create_loops_from_oriented_edges( MBRange edges,
-						std::vector< std::vector<MBEntityHandle> > &loops_of_edges,
+  ErrorCode create_loops_from_oriented_edges( Range edges,
+						std::vector< std::vector<EntityHandle> > &loops_of_edges,
                                                 const bool debug ) {
 
     // conserve edges
-    MBErrorCode result;
+    ErrorCode result;
     unsigned int n_edges_in  = edges.size();
     unsigned int n_edges_out = 0;
     //gen::print_range_of_edges( edges );
     // there could be several arcs for each surface
     while ( 0!= edges.size() ) {
-      std::vector<MBEntityHandle> loop_of_edges;
+      std::vector<EntityHandle> loop_of_edges;
       // pick initial edge and point
-      MBEntityHandle edge = edges.front();
+      EntityHandle edge = edges.front();
 
       // 20091201 Update: Pinch points may not be important. If not, there is no
       // purpose detecting them. Instead assume that pinch points coincide with 
@@ -313,13 +313,13 @@ namespace arc {
       // Check to make sure the beginning endpt of the first edge is not a pinch 
       // point. If it is a pinch point the loop is ambiguous. Maybe--see watertightness notes for 20091201
       {
-        const MBEntityHandle *end_verts;
+        const EntityHandle *end_verts;
         int n_verts;
         result = MBI()->get_connectivity( edge, end_verts, n_verts );
         assert(MB_SUCCESS==result);
         assert( 2 == n_verts );
         // get the edges adjacent to the back vertex
-        MBRange adj_edges;
+        Range adj_edges;
         result = MBI()->get_adjacencies( &(end_verts[0]), 1, 1, false, adj_edges );
         assert(MB_SUCCESS==result);
         // keep the edges that are part of the input range
@@ -340,7 +340,7 @@ namespace arc {
       edges.erase( edge );
 
       // find connected edges and add to the loop
-      MBEntityHandle next_edge = 0;
+      EntityHandle next_edge = 0;
       while (true) {
 
 	// get the next vertex and next edge
@@ -375,7 +375,7 @@ namespace arc {
       }
 
       // check to ensure the arc is closed
-      MBRange first_edge;
+      Range first_edge;
       first_edge.insert( loop_of_edges.front() );
       result = get_next_oriented_edge( first_edge, loop_of_edges.back(), next_edge );
       assert(MB_SUCCESS == result);
@@ -397,20 +397,20 @@ namespace arc {
   }
 
   // return a set of ordered_verts and remaining unordered_edges
-  MBErrorCode order_verts_by_edge( MBRange unordered_edges, 
-                                   std::vector<MBEntityHandle> &ordered_verts ) {
+  ErrorCode order_verts_by_edge( Range unordered_edges,
+                                   std::vector<EntityHandle> &ordered_verts ) {
     if(unordered_edges.empty()) return MB_SUCCESS;
  
     // get the endpoints of the curve. It should have 2 endpoints, unless is it a circle.
-    MBRange end_verts;
-    MBSkinner tool(MBI());
-    MBErrorCode result;
+    Range end_verts;
+    Skinner tool(MBI());
+    ErrorCode result;
     result = tool.find_skin( 0 , unordered_edges, 0, end_verts, false );
     if(MB_SUCCESS != result) gen::print_range_of_edges( unordered_edges );
     assert(MB_SUCCESS == result);
 
     // start with one endpoint
-    MBEntityHandle vert, edge;
+    EntityHandle vert, edge;
     if(2 == end_verts.size()) {
       vert = end_verts.front();
     } else if (0 == end_verts.size()) {
@@ -428,7 +428,7 @@ namespace arc {
     // this cannot be used if multiple loops exist
     while(!unordered_edges.empty()) {
       // get an edge of the vert
-      MBRange adj_edges;
+      Range adj_edges;
       result = MBI()->get_adjacencies( &vert, 1, 1, false, adj_edges );
       assert(MB_SUCCESS == result);
       adj_edges = intersect( adj_edges, unordered_edges );
@@ -455,37 +455,37 @@ namespace arc {
     return MB_SUCCESS;
   }
      
-  MBErrorCode get_meshset( const MBEntityHandle set, std::vector<MBEntityHandle> &vec) {
-    MBErrorCode result;
+  ErrorCode get_meshset( const EntityHandle set, std::vector<EntityHandle> &vec) {
+    ErrorCode result;
     vec.clear();
     result = MBI()->get_entities_by_handle( set, vec );
-    assert(MB_SUCCESS == result);  
+    assert(MB_SUCCESS == result);
     return result;
   }
 
-  MBErrorCode set_meshset( const MBEntityHandle set, const std::vector<MBEntityHandle> vec) {
-    MBErrorCode result;
+  ErrorCode set_meshset( const EntityHandle set, const std::vector<EntityHandle> vec) {
+    ErrorCode result;
     result = MBI()->clear_meshset( &set, 1 );
-    assert(MB_SUCCESS == result);  
+    assert(MB_SUCCESS == result);
     result = MBI()->add_entities( set, &vec[0], vec.size() );       
-    assert(MB_SUCCESS == result);  
+    assert(MB_SUCCESS == result);
     return result;
   }
 
-  MBErrorCode merge_curves( MBRange curve_sets, const double facet_tol, 
-                            MBTag id_tag, MBTag merge_tag, const bool debug ) {
+  ErrorCode merge_curves( Range curve_sets, const double facet_tol,
+                            Tag id_tag, Tag merge_tag, const bool debug ) {
     // find curve endpoints to add to kd tree
-    MBErrorCode result;
+    ErrorCode result;
     const double SQR_TOL = facet_tol*facet_tol;
-    MBRange endpoints;
-    for(MBRange::iterator i=curve_sets.begin(); i!=curve_sets.end(); i++) {
-      std::vector<MBEntityHandle> curve;
+    Range endpoints;
+    for(Range::iterator i=curve_sets.begin(); i!=curve_sets.end(); i++) {
+      std::vector<EntityHandle> curve;
       result = get_meshset( *i, curve );
       assert(MB_SUCCESS == result);
       //if(2 > curve.size()) continue;
       assert(1 < curve.size());
-      MBEntityHandle front_endpt = curve[0];
-      MBEntityHandle back_endpt  = curve[curve.size()-1];
+      EntityHandle front_endpt = curve[0];
+      EntityHandle back_endpt  = curve[curve.size()-1];
       // ADD CODE TO HANDLE SPECIAL CASES!!
       if(front_endpt == back_endpt) { // special case
         if(0 == gen::length(curve)) { // point curve
@@ -500,22 +500,22 @@ namespace arc {
     // add endpoints to kd-tree. Tree must track ownership to know when verts are
     // merged away (deleted).  
 
-    MBAdaptiveKDTree kdtree(MBI()); //, 0, MESHSET_TRACK_OWNER);                           
-    MBEntityHandle root;         
+    AdaptiveKDTree kdtree(MBI()); //, 0, MESHSET_TRACK_OWNER);
+    EntityHandle root;
 
     //set tree options
     const char settings[]="MAX_PER_LEAF=1;SPLITS_PER_DIR=1;PLANE_SET=0;MESHSET_FLAGS=0x1;TAG_NAME=0";
-    moab::FileOptions fileopts(settings);
+    FileOptions fileopts(settings);
 
     /* Old settings for the KD Tree                                            
     // initialize settings of the KD Tree
-    MBAdaptiveKDTree::Settings settings;
+    AdaptiveKDTree::Settings settings;
     // sets the tree to split any leaves with more than 1 entity                
     settings.maxEntPerLeaf = 1;                                 
     // tells the tree how many candidate planes to consider for each dim of the tree                    
     settings.candidateSplitsPerDir = 1;                           
     // planes are set to be at evenly spaced intervals
-    settings.candidatePlaneSet = MBAdaptiveKDTree::SUBDIVISION; 
+    settings.candidatePlaneSet = AdaptiveKDTree::SUBDIVISION;
     */
     
 
@@ -523,41 +523,41 @@ namespace arc {
 
     // initialize the tree and pass the root entity handle back into root
     result = kdtree.build_tree( endpoints, &root, &fileopts);            
-    assert(MB_SUCCESS == result);      
+    assert(MB_SUCCESS == result);
     // create tree iterator                                         
-    MBAdaptiveKDTreeIter tree_iter;                                     
+    AdaptiveKDTreeIter tree_iter;
     kdtree.get_tree_iterator( root, tree_iter );     
 
     // search for other endpoints that match each curve's endpoints
-    for(MBRange::iterator i=curve_sets.begin(); i!=curve_sets.end(); i++) {
-      std::vector<MBEntityHandle> curve_i_verts;
+    for(Range::iterator i=curve_sets.begin(); i!=curve_sets.end(); i++) {
+      std::vector<EntityHandle> curve_i_verts;
       result = get_meshset( *i, curve_i_verts );
       assert(MB_SUCCESS == result);
       double curve_length = gen::length( curve_i_verts );
       //if(2 > curve.size()) continue; // HANDLE SPECIAL CASES (add logic)     
       if(curve_i_verts.empty()) continue;
-      MBEntityHandle endpts[2] = { curve_i_verts.front(), curve_i_verts.back() };
-      MBCartVect endpt_coords;
+      EntityHandle endpts[2] = { curve_i_verts.front(), curve_i_verts.back() };
+      CartVect endpt_coords;
       //if( endpts[0] == endpts[1]) continue; // special case of point curve or circle
-      std::vector<MBEntityHandle> leaves;
+      std::vector<EntityHandle> leaves;
 
       // initialize an array which will contain matched of front points in [0] and 
       // matches for back points in [1]
-      MBRange adj_curves[2];
+      Range adj_curves[2];
       // match the front then back endpts                        
       for(unsigned int j=0; j<2; j++) {                                  
         result = MBI()->get_coords( &endpts[j], 1, endpt_coords.array());
-        assert(MB_SUCCESS == result);           
+        assert(MB_SUCCESS == result);
         // takes all leaves of the tree within a distance (facet_tol) of the coordinates
         // passed in by endpt_coords.array() and returns them in leaves
         result = kdtree.distance_search( endpt_coords.array(), 
                                                 facet_tol, leaves, root );
-        assert(MB_SUCCESS == result);                                
+        assert(MB_SUCCESS == result);
         for(unsigned int k=0; k<leaves.size(); k++) {           
           // retrieve all information about vertices in leaves
-	  std::vector<MBEntityHandle> leaf_verts;               
-          result = MBI()->get_entities_by_type( leaves[k], MBVERTEX, leaf_verts);    
-          assert(MB_SUCCESS == result);             
+	  std::vector<EntityHandle> leaf_verts;
+          result = MBI()->get_entities_by_type( leaves[k], MBVERTEX, leaf_verts);
+          assert(MB_SUCCESS == result);
           for(unsigned int l=0; l<leaf_verts.size(); l++) {               
             double sqr_dist;                                             
             result = gen::squared_dist_between_verts( endpts[j], leaf_verts[l], sqr_dist);        
@@ -565,7 +565,7 @@ namespace arc {
             /* Find parent curves. There will be no parent curves if the curve has
 	       already been merged and no longer exists. */     
             if(SQR_TOL >= sqr_dist) {
-              MBRange temp_curves;
+              Range temp_curves;
               // get the curves for all vertices that are within the squared distance of each other
               result = MBI()->get_adjacencies( &leaf_verts[l], 1, 4, false, temp_curves);
 	      assert(MB_SUCCESS == result);
@@ -579,7 +579,7 @@ namespace arc {
       }
 
       // now find the curves that have matching endpts
-      MBRange candidate_curves;
+      Range candidate_curves;
       // select curves that do not have coincident front AND back points
       // place them into candidate curves
       candidate_curves =intersect( adj_curves[0], adj_curves[1] );
@@ -592,17 +592,17 @@ namespace arc {
       
 
       // now find curves who's interior vertices are also coincident and merge them
-      for(MBRange::iterator j=candidate_curves.begin(); j!=candidate_curves.end(); j++) {
-	std::vector<MBEntityHandle> curve_j_verts;
+      for(Range::iterator j=candidate_curves.begin(); j!=candidate_curves.end(); j++) {
+	std::vector<EntityHandle> curve_j_verts;
         result = get_meshset( *j, curve_j_verts );
         assert(MB_SUCCESS == result);
         double j_curve_length = gen::length( curve_j_verts );
 
         int i_id, j_id;
         result = MBI()->tag_get_data( id_tag, &(*i), 1, &i_id );                         
-        assert(MB_SUCCESS == result);   
+        assert(MB_SUCCESS == result);
         result = MBI()->tag_get_data( id_tag, &(*j), 1, &j_id );                         
-        assert(MB_SUCCESS == result);   
+        assert(MB_SUCCESS == result);
 	if(debug) {
           std::cout << "curve i_id=" << i_id << " j_id=" << j_id 
                     << " leng0=" << curve_length << " leng1=" << j_curve_length << std::endl;
@@ -667,9 +667,9 @@ namespace arc {
         // reverse the curve-surf senses if the merged curve was found to be opposite the 
         // curve we keep
         if(reversed) {
-  	  std::vector<MBEntityHandle> surfs;
+  	  std::vector<EntityHandle> surfs;
           std::vector<int> senses;
-          moab::GeomTopoTool gt(MBI(), false);
+          GeomTopoTool gt(MBI(), false);
           result = gt.get_senses( *j, surfs, senses );
           if(gen::error(MB_SUCCESS!=result,"failed to get senses")) return result;
           for(unsigned k=0; k<surfs.size(); ++k) {

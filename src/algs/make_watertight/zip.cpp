@@ -1,23 +1,23 @@
 #include <iostream>
 #include <vector>
 #include "meshkit/zip.hpp"
-#include "MBOrientedBoxTreeTool.hpp"
-
+#include "moab/OrientedBoxTreeTool.hpp"
+using namespace moab;
 namespace zip {
-  MBErrorCode t_joint( MBTag normal_tag,
-                       const MBEntityHandle vert0,
-                       const MBEntityHandle vert1,
-                       const MBEntityHandle vert2,
+  ErrorCode t_joint( Tag normal_tag,
+                       const EntityHandle vert0,
+                       const EntityHandle vert1,
+                       const EntityHandle vert2,
                        bool debug ) {
     struct triangles {
-      MBEntityHandle before_tri;
-      const MBEntityHandle *before;
-      MBCartVect     before_norm;
-      MBEntityHandle after0[3];
-      MBEntityHandle after1[3];
-      MBCartVect     after0_norm;
-      MBCartVect     after1_norm;
-      MBEntityHandle surf_set;
+      EntityHandle before_tri;
+      const EntityHandle *before;
+      CartVect     before_norm;
+      EntityHandle after0[3];
+      EntityHandle after1[3];
+      CartVect     after0_norm;
+      CartVect     after1_norm;
+      EntityHandle surf_set;
     };   
 
     // Get all of the old information before changing anything. 
@@ -26,9 +26,9 @@ namespace zip {
     // get the edge
 
     // get endpoints of the edge
-    MBErrorCode result;
-    MBEntityHandle endpts[2] = { vert0, vert2 }; 
-    MBRange tris;
+    ErrorCode result;
+    EntityHandle endpts[2] = { vert0, vert2 };
+    Range tris;
     result = MBI()->get_adjacencies( endpts, 2, 2, true, tris );
     assert(MB_SUCCESS == result);
     //std::cout << "t_joint: tris.size()=" << tris.size() << std::endl;
@@ -39,7 +39,7 @@ namespace zip {
       joints[i].before_tri = tris[i];
 
       // Find the surface set that the tri is in.
-      MBRange surf_sets;
+      Range surf_sets;
       result = MBI()->get_adjacencies( &joints[i].before_tri, 1, 4, false, surf_sets);
       assert(MB_SUCCESS == result);
       //std::cout << "t_joint: " << surf_sets.size() << " surface sets found for triangle" 
@@ -101,12 +101,12 @@ namespace zip {
       result = MBI()->set_connectivity( joints[i].before_tri, joints[i].after0, 3 );
       assert(MB_SUCCESS == result);
       // set the new connectivity on the new triangle
-      MBEntityHandle new_tri;
+      EntityHandle new_tri;
       result = MBI()->create_element( MBTRI, joints[i].after1, 3, new_tri );
       assert(MB_SUCCESS == result);
 
       // copy the original normal to the new triangle
-      MBCartVect normal;
+      CartVect normal;
       result = MBI()->tag_get_data( normal_tag, &joints[i].before_tri, 1, &normal);
       assert(MB_SUCCESS == result);
       result = MBI()->tag_set_data( normal_tag, &new_tri, 1, &normal);
@@ -129,9 +129,9 @@ namespace zip {
   }
 
   // Delete degenerate triangles in the range.
-  MBErrorCode delete_degenerate_tris( MBEntityHandle tri ) {
-    MBErrorCode result;
-    const MBEntityHandle *con;
+  ErrorCode delete_degenerate_tris( EntityHandle tri ) {
+    ErrorCode result;
+    const EntityHandle *con;
     int n_verts;
     result = MBI()->get_connectivity( tri, con, n_verts);
     assert(MB_SUCCESS == result);
@@ -143,19 +143,19 @@ namespace zip {
     }
     return result;
   }
-  MBErrorCode delete_degenerate_tris( MBRange tris ) {
-    MBErrorCode result = MB_SUCCESS;
-    for(MBRange::iterator i=tris.begin(); i!=tris.end(); i++) {
+  ErrorCode delete_degenerate_tris( Range tris ) {
+    ErrorCode result = MB_SUCCESS;
+    for(Range::iterator i=tris.begin(); i!=tris.end(); i++) {
       result = delete_degenerate_tris( *i );
       assert(MB_SUCCESS == result);
     }
     return result;
   }
 
-  MBErrorCode delete_adj_degenerate_tris( const MBEntityHandle adj_vert ) {
+  ErrorCode delete_adj_degenerate_tris( const EntityHandle adj_vert ) {
     // get the adjacent triangles
-    MBErrorCode result;
-    MBRange tris;
+    ErrorCode result;
+    Range tris;
     result = MBI()->get_adjacencies( &adj_vert, 1, 2, false, tris );
     assert(MB_SUCCESS == result);
     result = delete_degenerate_tris( tris );
@@ -167,38 +167,38 @@ namespace zip {
   // MOAB check the curves and arcs passed in to update the merged vertex, but
   // still ends up with degenerate edges. The curves that are in MOAB as sets
   // are updated but also contain degenerate edges due to merging.
-  MBErrorCode merge_verts( const MBEntityHandle keep_vert, 
-                           const MBEntityHandle delete_vert,
-                           std::vector<MBEntityHandle> &arc0,
-                           std::vector<MBEntityHandle> &arc1 ) {
+  ErrorCode merge_verts( const EntityHandle keep_vert,
+                           const EntityHandle delete_vert,
+                           std::vector<EntityHandle> &arc0,
+                           std::vector<EntityHandle> &arc1 ) {
 
-    MBErrorCode rval;
+    ErrorCode rval;
     // first update the arcs with the keep_vert
-    for(std::vector<MBEntityHandle>::iterator i=arc0.begin(); i!=arc0.end(); ++i) {
+    for(std::vector<EntityHandle>::iterator i=arc0.begin(); i!=arc0.end(); ++i) {
       if(delete_vert == *i) *i = keep_vert;
     }
-    for(std::vector<MBEntityHandle>::iterator i=arc1.begin(); i!=arc1.end(); ++i) {
+    for(std::vector<EntityHandle>::iterator i=arc1.begin(); i!=arc1.end(); ++i) {
       if(delete_vert == *i) *i = keep_vert;
     }
 
     // UPDATE: This is slower than using the O(n) linear search above.
     // Let moab update adjacencies. Unless moab stores data is must be 
     // merge-updated manually to prevent stale handles.
-    /*    MBEntityHandle arc0_set, arc1_set;
+    /*    EntityHandle arc0_set, arc1_set;
     rval = MBI()->create_meshset( MESHSET_TRACK_OWNER|MESHSET_ORDERED, arc0_set );
     if(gen::error(MB_SUCCESS!=rval,"creating arc0_set failed")) return rval;
     rval = MBI()->create_meshset( MESHSET_TRACK_OWNER|MESHSET_ORDERED, arc1_set );
     if(gen::error(MB_SUCCESS!=rval,"creating arc1_set failed")) return rval;
     rval = arc::set_meshset( arc0_set, arc0 );                                          
-    if(gen::error(MB_SUCCESS!=rval,"setting arc0_set failed")) return rval; 
+    if(gen::error(MB_SUCCESS!=rval,"setting arc0_set failed")) return rval;
     rval = arc::set_meshset( arc1_set, arc1 );                                          
-    if(gen::error(MB_SUCCESS!=rval,"setting arc1_set failed")) return rval; 
+    if(gen::error(MB_SUCCESS!=rval,"setting arc1_set failed")) return rval;
     */
 
     // get adjacent tris
-    MBRange tris;
-    MBEntityHandle verts[2]={keep_vert, delete_vert};
-    rval = MBI()->get_adjacencies( verts, 2, 2, false, tris, MBInterface::UNION );
+    Range tris;
+    EntityHandle verts[2]={keep_vert, delete_vert};
+    rval = MBI()->get_adjacencies( verts, 2, 2, false, tris, Interface::UNION );
     if(gen::error(MB_SUCCESS!=rval,"getting adjacent tris failed")) return rval;
     //if(0 == tris.size()) {
     //  std::cout << "merge_verts: cannot find any triangles adjacent to vertices" << std::endl;
@@ -230,12 +230,12 @@ namespace zip {
   }                           
 
   // Test to make sure the triangle normal vectors have not been inverted.
-  MBErrorCode test_normals( const std::vector<MBCartVect> norms0,
-                            const std::vector<MBCartVect> norms1,
+  ErrorCode test_normals( const std::vector<CartVect> norms0,
+                            const std::vector<CartVect> norms1,
                             std::vector<int> &inverted_tri_indices ) {
     assert(norms0.size() == norms1.size());
     for(unsigned int i=0; i<norms0.size(); i++) {
-      MBErrorCode result = test_normals( norms0[i], norms1[i]);
+      ErrorCode result = test_normals( norms0[i], norms1[i]);
       if(MB_SUCCESS != result) {
         //std::cout << "test_normals: failed on i=" << i << std::endl;
         inverted_tri_indices.push_back(i);
@@ -243,7 +243,7 @@ namespace zip {
     }
     return MB_SUCCESS;
   }
-  MBErrorCode test_normals( const MBCartVect norm0, const MBCartVect norm1 ) {
+  ErrorCode test_normals( const CartVect norm0, const CartVect norm1 ) {
     if(0 > norm0 % norm1) {
       //std::cout << "test_normals: tri is inverted, dot product=" 
       //          << norm0 % norm1 << std::endl;
@@ -255,17 +255,17 @@ namespace zip {
 
   /* Accepts a range of inverted tris. Refacets affected surface so that no tris
      are inverted. */
-  MBErrorCode remove_inverted_tris(MBTag normal_tag, MBRange tris, const bool debug ) {
+  ErrorCode remove_inverted_tris(Tag normal_tag, Range tris, const bool debug ) {
       
-    MBErrorCode result;
+    ErrorCode result;
     bool failures_occur = false;
     while(!tris.empty()) {
 
       /* Get a group of triangles to re-facet. They must be adjacent to each other
 	 and in the same surface. */
-      MBRange tris_to_refacet;
+      Range tris_to_refacet;
       tris_to_refacet.insert( tris.front() );
-      MBRange surf_set;
+      Range surf_set;
       result = MBI()->get_adjacencies( tris_to_refacet, 4, false, surf_set );
       assert(MB_SUCCESS == result);
       if(1 != surf_set.size()) {
@@ -275,9 +275,9 @@ namespace zip {
       }
 
       // get all tris in the surface
-      MBRange surf_tris;
+      Range surf_tris;
       result = MBI()->get_entities_by_type( surf_set.front(), MBTRI, surf_tris );
-      assert(MB_SUCCESS == result); 
+      assert(MB_SUCCESS == result);
 
       /* Find all of the adjacent inverted triangles of the same surface. Keep
 	 searching until a search returns no new triangles. */
@@ -287,17 +287,17 @@ namespace zip {
         // Here edges are being created. Remember to delete them. Outside of this
         // function. Skinning gets bogged down if unused MBEdges (from other 
         // surfaces) accumulate.
-        MBRange tri_edges;
+        Range tri_edges;
         result = MBI()->get_adjacencies( tris_to_refacet, 1, true, tri_edges,
-                                         MBInterface::UNION );
+                                         Interface::UNION );
         assert(MB_SUCCESS == result);
-        MBRange connected_tris;
+        Range connected_tris;
         result = MBI()->get_adjacencies( tri_edges, 2, false, connected_tris, 
-                                         MBInterface::UNION );
+                                         Interface::UNION );
         assert(MB_SUCCESS == result);
         result = MBI()->delete_entities( tri_edges );
         assert(MB_SUCCESS == result);
-        MBRange tris_to_refacet2 = intersect( tris_to_refacet, connected_tris );
+        Range tris_to_refacet2 = intersect( tris_to_refacet, connected_tris );
         tris_to_refacet2 = intersect( tris_to_refacet, surf_tris );
 
         if(tris_to_refacet.size() == tris_to_refacet2.size()) search_again = false;
@@ -308,7 +308,7 @@ namespace zip {
       tris = subtract( tris, tris_to_refacet );
 
         // do edges already exist?
-	MBRange temp;
+	Range temp;
           result = MBI()->get_entities_by_type(0, MBEDGE, temp );
           assert(MB_SUCCESS == result);
           if(!temp.empty()) MBI()->list_entities( temp );
@@ -337,15 +337,15 @@ namespace zip {
         // THIS PROVIDES A BAD EXIT. MUST FIX
 
         // get the edges of the patch of inverted tris
-	MBRange tri_edges;
+	Range tri_edges;
 	result = MBI()->get_adjacencies( tris_to_refacet, 1, true, tri_edges,
-                                         MBInterface::UNION );
+                                         Interface::UNION );
 	assert(MB_SUCCESS == result);
 
 	// get all adjacent tris to the patch of inverted tris in the surface
-	MBRange adj_tris;
+	Range adj_tris;
 	result = MBI()->get_adjacencies( tri_edges, 2, false, adj_tris, 
-                                         MBInterface::UNION );
+                                         Interface::UNION );
 	assert(MB_SUCCESS == result);
         result = MBI()->delete_entities( tri_edges );
         assert(MB_SUCCESS == result);
@@ -354,10 +354,10 @@ namespace zip {
 	//gen::print_triangles( tris_to_refacet );    
 	
 	// get an area-weighted normal of the adj_tris
-	MBCartVect plane_normal(0,0,0);
+	CartVect plane_normal(0,0,0);
 	//for(unsigned int i=0; i<tris_to_refacet.size(); i++) {
-	for(MBRange::iterator i=tris_to_refacet.begin(); i!=tris_to_refacet.end(); i++) {
-	  MBCartVect norm;
+	for(Range::iterator i=tris_to_refacet.begin(); i!=tris_to_refacet.end(); i++) {
+	  CartVect norm;
 	  result = MBI()->tag_get_data( normal_tag, &(*i), 1, &norm);
 	  assert(MB_SUCCESS == result);
 	  double area;
@@ -377,14 +377,14 @@ namespace zip {
 	  assert(temp.empty());
  
 	// skin the tris
-	MBRange unordered_edges;
-	//MBSkinner tool(MBI());
+	Range unordered_edges;
+	//Skinner tool(MBI());
 	//result = tool.find_skin( tris_to_refacet, 1, unordered_edges, false );
 	result = gen::find_skin( tris_to_refacet, 1, unordered_edges, false );
 	assert(MB_SUCCESS == result);
         if(unordered_edges.empty()) {
         // do edges already exist?
-          MBRange temp;
+          Range temp;
           result = MBI()->get_entities_by_type(0, MBEDGE, temp );
           assert(MB_SUCCESS == result);
           if(!temp.empty()) MBI()->list_entities( temp );
@@ -398,7 +398,7 @@ namespace zip {
 	//assert(MB_SUCCESS == result);
 
 	// assemble into a polygon
-	std::vector<MBEntityHandle> polygon_of_verts;
+	std::vector<EntityHandle> polygon_of_verts;
 	result = arc::order_verts_by_edge( unordered_edges, polygon_of_verts );
 	if(debug) gen::print_loop( polygon_of_verts ); 
 	//assert(MB_SUCCESS == result);
@@ -422,13 +422,13 @@ namespace zip {
 
 	// orient the polygon with the triangles (could be backwards)
 	// get the first adjacent tri
-	MBEntityHandle edge[2] = { polygon_of_verts[0], polygon_of_verts[1] };
-	MBRange one_tri;
+	EntityHandle edge[2] = { polygon_of_verts[0], polygon_of_verts[1] };
+	Range one_tri;
 	result = MBI()->get_adjacencies( edge, 2, 2, false, one_tri );
 	assert(MB_SUCCESS == result);
 	one_tri = intersect( tris_to_refacet, one_tri );
 	assert(1 == one_tri.size());
-	const MBEntityHandle *conn;
+	const EntityHandle *conn;
 	int n_conn;
 	result = MBI()->get_connectivity( one_tri.front(), conn, n_conn );
 	assert(MB_SUCCESS == result);
@@ -441,13 +441,13 @@ namespace zip {
 	}
 
 	/* facet the polygon. Returns MB_FAILURE if it fails to facet the polygon. */
-	MBRange new_tris;
+	Range new_tris;
 	result = gen::ear_clip_polygon( polygon_of_verts, plane_normal, new_tris );
 
         // break if the refaceting is successful
 	if(MB_SUCCESS == result) {
           // summarize tri area
-          for(MBRange::iterator i=new_tris.begin(); i!=new_tris.end(); i++) {
+          for(Range::iterator i=new_tris.begin(); i!=new_tris.end(); i++) {
             double area;
             result = gen::triangle_area( *i, area );
             assert(MB_SUCCESS == result);
@@ -455,13 +455,13 @@ namespace zip {
           }
 
   	  // check the new normals
-	  std::vector<MBCartVect> new_normals;
+	  std::vector<CartVect> new_normals;
 	  result = gen::triangle_normals( new_tris, new_normals );
 	  if(MB_SUCCESS != result) return result;
 
 	  // test the new triangles
 	  std::vector<int> inverted_tri_indices;
-	  std::vector<MBCartVect> normals ( new_normals.size(), plane_normal );
+	  std::vector<CartVect> normals ( new_normals.size(), plane_normal );
 	  result = zip::test_normals( normals, new_normals, inverted_tri_indices );
 	  assert(MB_SUCCESS == result);
 	  if(inverted_tri_indices.empty()) {
@@ -510,9 +510,9 @@ namespace zip {
 
 
     // we do not merge edges, just vert. check the verts
-  MBErrorCode test_zipping(const double FACET_TOL,
-                           const std::vector< std::vector<MBEntityHandle> > arcs ) {
-      MBErrorCode result = MB_SUCCESS;
+  ErrorCode test_zipping(const double FACET_TOL,
+                           const std::vector< std::vector<EntityHandle> > arcs ) {
+      ErrorCode result = MB_SUCCESS;
 
       // make sure each arc has the same number of edges
       for(unsigned int i=1; i<arcs.size(); i++) {
@@ -552,10 +552,10 @@ namespace zip {
 	}  	
         
 	// make sure triangles have area
-	MBRange tris;
+	Range tris;
 	result = MBI()->get_adjacencies( &(arcs[0][i]), 2, 2, false, tris );
 	assert(MB_SUCCESS == result);
-	for(MBRange::iterator k=tris.begin(); k!=tris.end(); k++) {
+	for(Range::iterator k=tris.begin(); k!=tris.end(); k++) {
 	  // We know that there are not degenerate edges along the curve.
 	  // Sometimes degenerate tris are created due to merging curve endpts.
 	  // here we do not remove tri from the surf meshset, but we should

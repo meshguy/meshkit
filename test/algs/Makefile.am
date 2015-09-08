@@ -1,8 +1,9 @@
 SUBDIRS = . 
 MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk \
 BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk \
-SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default.sat assygen_default.template.jou graph.eps \
-intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m
+SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default_info.csv assygen_default.sat assygen_default.template.jou graph.eps \
+intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m \
+btree.dot out_quadcleanup.vtk alllocal.off orig.vtk
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
@@ -32,7 +33,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils
 
 #BROKEN_TESTS = test_jaalquad test_assygen edmond_matching hamiltonian mreport qualestm SimpleTri2Quad test_quadmeshcleanup
-BROKEN_TESTS = test_assygen
+BROKEN_TESTS = test_ebmesh
 
 TESTS = test_edgemesher \
         test_assymesher \
@@ -44,11 +45,14 @@ TESTS = test_edgemesher \
         test_meshoptemplate \
         test_extrudemesh \
         test_qslimmesher \
-        test_ebmesh \
         test_assygen \
-        test_postbl
+        test_postbl \
+	test_solidmesher \
+	test_solidmesher_senses
+
 
 if HAVE_QUADMESHER
+AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
 TESTS += test_jaalquad test_quadmeshcleanup
 BROKEN_TESTS += test_jaalquad test_quadmeshcleanup
 endif
@@ -100,7 +104,10 @@ test_meshoptemplate_SOURCES = test_meshoptemplate.cpp
 test_edgemesher_SOURCES = test_edgemesher.cpp
 if HAVE_DAGMC_MOAB
 test_make_watertight_SOURCES = test_make_watertight.cpp
+test_make_watertight_LDADD = $(top_builddir)/src/algs/make_watertight/libMakeWatertight.la
 endif
+test_solidmesher_SOURCES = test_solidmesher.cpp
+test_solidmesher_senses_SOURCES = test_solidmesher_senses.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
 if HAVE_LPSOLVER

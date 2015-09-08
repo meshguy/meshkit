@@ -17,43 +17,44 @@
 #include <ctime>
 #include <set>
 #include <algorithm>
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "MBTagConventions.hpp"
-#include "MBRange.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Range.hpp"
+#include "moab/Skinner.hpp"
 
 #include "moab/GeomTopoTool.hpp"
 #include "meshkit/cw_func.hpp"
 #include "meshkit/gen.hpp"
 #include "meshkit/zip.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Skinner.hpp"
 
+using namespace moab;
 namespace cw_func {
 
- MBErrorCode check_mesh_for_watertightness( MBEntityHandle input_set, double tol, bool &sealed, bool test, bool verbose, bool check_topology )
+ ErrorCode check_mesh_for_watertightness( EntityHandle input_set, double tol, bool &sealed, bool test, bool verbose, bool check_topology )
  {
 
-  MBErrorCode result; 
+  ErrorCode result;
 
  // create tags on geometry
-  MBTag geom_tag, id_tag;
+  Tag geom_tag, id_tag;
   result = MBI()->tag_get_handle( GEOM_DIMENSION_TAG_NAME, 1, 
-                            MB_TYPE_INTEGER, geom_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
-  if(gen::error(MB_SUCCESS != result, "could not get GEOM_DIMENSION_TAG_NAME handle")) return result; 
+                            MB_TYPE_INTEGER, geom_tag, MB_TAG_DENSE|MB_TAG_CREAT );
+  if(gen::error(MB_SUCCESS != result, "could not get GEOM_DIMENSION_TAG_NAME handle")) return result;
 
   result = MBI()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1, 
-                            MB_TYPE_INTEGER, id_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
+                            MB_TYPE_INTEGER, id_tag, MB_TAG_DENSE|MB_TAG_CREAT );
   if(gen::error(MB_SUCCESS != result, "could not get GLOBAL_ID_TAG_NAME handle")) return result;
 
   
   // get surface and volume sets
-  MBRange surf_sets, vol_sets; // MBRange of set of surfaces and volumes
+  Range surf_sets, vol_sets; // Range of set of surfaces and volumes
   // surface sets
   int dim = 2;
   void* input_dim[] = {&dim};
   result = MBI()->get_entities_by_type_and_tag( input_set, MBENTITYSET, &geom_tag, 
                                                 input_dim, 1, surf_sets);
-  if(MB_SUCCESS != result) 
+  if(MB_SUCCESS != result)
     {
       return result;
     }
@@ -78,10 +79,10 @@ namespace cw_func {
   // counted leaky surfaces
   int total_counter = 0, unmatched_counter=0;
   std::set<int> leaky_surfs, leaky_vols;
-  MBSkinner tool(MBI());
+  Skinner tool(MBI());
 
   // remove all edges for fast skinning
-  MBRange edges;
+  Range edges;
 
   result = MBI()->get_entities_by_type( 0, MBEDGE, edges ); // get all edges
   if(MB_SUCCESS != result) // failed to get edge data
@@ -89,7 +90,7 @@ namespace cw_func {
       return result; // failed
     }
 //10/11/13
-//removed as a result of the change from the gen::find_skin function to the moab::Skinner:find_skin function 
+//removed as a result of the change from the gen::find_skin function to the Skinner:find_skin function
 /*
   result = MBI()->delete_entities( edges ); //otherwise delete all edge
   
@@ -100,21 +101,21 @@ namespace cw_func {
 */  
   // loop over each volume meshset
   int vol_counter = 0;
-  for(MBRange::iterator i=vol_sets.begin(); i!=vol_sets.end(); ++i) 
+  for(Range::iterator i=vol_sets.begin(); i!=vol_sets.end(); ++i)
     {
       ++vol_counter;
       int surf_counter=0;
-      MBRange child_sets;
+      Range child_sets;
 
       result = MBI()->get_child_meshsets( *i, child_sets ); // get child set
-      if(MB_SUCCESS != result)  
+      if(MB_SUCCESS != result)
 	{
 	  return result; // failed
 	}
 
       // get the volume id of the volume meshset to print a status message
       int vol_id=0;
-      // i is the iterator, so &(*i) is a pointer to the first element of MBRange
+      // i is the iterator, so &(*i) is a pointer to the first element of Range
       result = MBI()->tag_get_data( id_tag, &(*i), 1, &vol_id );
 
       if(MB_SUCCESS != result)
@@ -131,10 +132,10 @@ namespace cw_func {
       // determine how many skin edges are in each volume
       int n_tris = 0;
 
-      for(MBRange::iterator j=child_sets.begin(); j!=child_sets.end(); ++j) 
+      for(Range::iterator j=child_sets.begin(); j!=child_sets.end(); ++j)
 	{
 	  result = MBI()->get_number_entities_by_type( *j, MBTRI, n_tris ); // for each child set get number of triangles
-	  if(MB_SUCCESS != result) 
+	  if(MB_SUCCESS != result)
 	    {
 	      return result;
 	    }
@@ -146,22 +147,22 @@ namespace cw_func {
       the_coords_and_id.reserve(n_tris);
 
       // loop over the surface meshsets of each volume meshset
-      for(MBRange::iterator j=child_sets.begin(); j!=child_sets.end(); ++j) 
+      for(Range::iterator j=child_sets.begin(); j!=child_sets.end(); ++j)
 	{
 
 	  // get the surface id of the surface meshset
 	  surf_counter++;
 	  int surf_id=0;
 	  result = MBI()->tag_get_data( id_tag, &(*j), 1, &surf_id );
-	  if(MB_SUCCESS != result) 
+	  if(MB_SUCCESS != result)
 	    {
 	      return result;
 	    }
 
 	  // get the range of facets of the surface meshset
-	  MBRange facets;
+	  Range facets;
 	  result = MBI()->get_entities_by_type( *j, MBTRI, facets );
-	  if(MB_SUCCESS != result) 
+	  if(MB_SUCCESS != result)
 	    {
 	      return result;
 	    }
@@ -171,12 +172,12 @@ namespace cw_func {
 	  // almost as well as my specialized version (gen::find_skin). When he made then
 	  // generalized find_skin_vertices for MOAB it killed performance. As it stands,
 	  // gen::find_skin is ~7x faster (January 29, 2010).
-	  MBRange skin_edges;
-          moab::Skinner sk(MBI());
+	  Range skin_edges;
+          Skinner sk(MBI());
 	  if(!facets.empty()) 
 	    {
 	      result = sk.find_skin( 0 , facets, 1, skin_edges, false );
-	      if(MB_SUCCESS != result) 
+	      if(MB_SUCCESS != result)
 		{
 		  return result;
 		}
@@ -190,9 +191,9 @@ namespace cw_func {
 		    << " facets and " << skin_edges.size() << " skin edges" << std::endl;
 	}
      
-      for(MBRange::const_iterator k=skin_edges.begin(); k!=skin_edges.end(); ++k) {
+      for(Range::const_iterator k=skin_edges.begin(); k!=skin_edges.end(); ++k) {
 	// get the endpoint vertices of the facet edge
-	MBRange verts;
+	Range verts;
 	result = MBI()->get_adjacencies( &(*k), 1, 0, false, verts );
         if(MB_SUCCESS != result) return result;
         if(2 != verts.size()) {
@@ -243,13 +244,13 @@ namespace cw_func {
       //10/10/13
       // Removed the following to avoid altering the data set at all
       // -No need to delete skin_edges with the moab:Skinner find_skin function
-      // -skin_edges size will be reset to zero upon new MBRange skin_edges; call
+      // -skin_edges size will be reset to zero upon new Range skin_edges; call
       // clean up the edges for the next find_skin call
       //result = MBI()->delete_entities( skin_edges );
       //if(MB_SUCCESS != result) return result;
 
       //10/10/13
-      // - No ned to ensure edges aren't in the meshset with moab::Skinner find_skin function
+      // - No ned to ensure edges aren't in the meshset with Skinner find_skin function
       //int n_edges;
       //result = MBI()->get_number_entities_by_type(0, MBEDGE, n_edges );
       //if(MB_SUCCESS != result) return result;
@@ -295,10 +296,10 @@ namespace cw_func {
 	  if (the_coords_and_id[k].matched) continue;
 
           // see if the edge matches
-          MBCartVect diff0(the_coords_and_id[j].x1-the_coords_and_id[k].x1,
+          CartVect diff0(the_coords_and_id[j].x1-the_coords_and_id[k].x1,
                            the_coords_and_id[j].y1-the_coords_and_id[k].y1,
                            the_coords_and_id[j].z1-the_coords_and_id[k].z1);
-          MBCartVect diff1(the_coords_and_id[j].x2-the_coords_and_id[k].x2,
+          CartVect diff1(the_coords_and_id[j].x2-the_coords_and_id[k].x2,
 			   the_coords_and_id[j].y2-the_coords_and_id[k].y2,
 			   the_coords_and_id[j].z2-the_coords_and_id[k].z2);
           double d0 = diff0.length_squared();

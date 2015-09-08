@@ -377,7 +377,7 @@ void check_equal( double A, double B, float eps, const char* sA, const char* sB,
 
 #ifdef MESHKIT_ERROR_HPP
 
-// Special case for MBErrorCode, use mb_error_str() to print the 
+// Special case for moab::ErrorCode, use mb_error_str() to print the 
 // string name of the error code.
 void check_equal( MeshKit::ErrorCode A, MeshKit::ErrorCode B, const char* sA, const char* sB, int line, const char* file )
 {

@@ -113,14 +113,15 @@ private:
   int m_nSides;
 
   // !! file Input
-  std::ifstream m_FileInput;
+  std::ifstream m_FileInput, m_FileCommon;
   mstream m_LogFile;
   std::string szInputString;
   std::string szComment;
   int MAXCHARS;
+  bool have_common;
 
   // ! variables to parse
-  std::string m_InputFile, m_GeomFile, m_MeshFile, m_OutFile, m_LogName, m_MeshType;
+  std::string m_InputFile, m_szCommonFile, m_GeomFile, m_MeshFile, m_OutFile, m_LogName, m_MeshType;
   std::string m_Card;
 
   // ! error handlers

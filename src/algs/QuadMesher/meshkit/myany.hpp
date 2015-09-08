@@ -2,6 +2,11 @@
 // myany.hpp
 #include <memory>
 #include <stdexcept>
+#include <utility>
+
+#ifdef __APPLE__
+#  define unique_ptr auto_ptr
+#endif
 
 struct myany
 {
@@ -9,11 +14,26 @@ struct myany
     template <typename T> myany(T const& v) : _storage(new storage<T>(v)) { }
     myany(myany const& other) : _storage()
     {
-        if (other._storage)
-            _storage = std::move(other._storage->clone());
+          #ifdef __APPLE__
+                  if (other._storage.get())
+                      _storage = other._storage->clone();
+          #else // __APPLE__
+                  if (other._storage.get())
+                      _storage = std::move(other._storage->clone());
+          #endif // __APPLE__
     }
 
-    void swap(myany& other)               { _storage.swap(other._storage); }
+    //void swap(myany& other)               { _storage.swap(other._storage); }
+        void swap(myany& other)
+          {
+    #ifdef __APPLE__
+          std::unique_ptr<storage_base> tmp = _storage;
+          _storage = other._storage;
+          other._storage = tmp;
+    #else // __APPLE__
+          _storage.swap(other._storage);
+    #endif // __APPLE__
+          }
     friend void swap(myany& a, myany& b) { a.swap(b); }
     myany& operator=(myany other)        { swap(other); return *this; }
 

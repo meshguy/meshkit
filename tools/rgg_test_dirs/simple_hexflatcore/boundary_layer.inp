@@ -1,0 +1,10 @@
+MeshFile ss.exo
+NeumannSet 599
+Materials 100
+FIXMAT 101
+Thickness 0.1
+Intervals 3
+Bias 1.0
+Outfile core_with_postbl.exo
+debug 1
+END

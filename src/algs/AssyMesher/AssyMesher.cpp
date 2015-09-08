@@ -230,6 +230,13 @@ void AssyMesher::setup_this()
             // sizing function set on it
             meBottomSurf->sizing_function_index(radialSizeIndex);
           }
+          MEntVector edgeMEsVec;
+          std::vector<int> senses;
+          meBottomSurf->boundary(1, edgeMEsVec, &senses);
+          for (size_t emei = 0; emei < edgeMEsVec.size(); ++emei)
+          {
+            edgeMEsVec[emei]->constrain_even(true);
+          }
         }
       }
 
@@ -286,12 +293,15 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
           m_InputFile = (std::string)argv[1] + ".inp";
           m_LogName = m_InputFile + ".log";
           m_GeomFile = (std::string)argv[1] + EXTENSION;
+          m_szCommonFile = "common.inp";
       }
       else if (1 == argc){
           m_LogFile << "\nRunning default case:\n" << std::endl;
           m_GeomFile = TestDir + "/" + (char *)DEFAULT_TEST_AM+ EXTENSION;
           m_InputFile = TestDir + "/" + (char *)DEFAULT_TEST_AM + ".inp";
           m_LogName = (std::string)DEFAULT_TEST_AM + ".log";
+          m_szCommonFile = TestDir + "/" + "common.inp";
+
       }
       // open input file for reading
       m_FileInput.open (m_InputFile.c_str(), std::ios::in);
@@ -302,6 +312,21 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
       }
       else
           bDone = true; // file opened successfully
+
+      // open common.inp file, if not found do nothing.
+      m_FileCommon.open (m_szCommonFile.c_str(), std::ios::in);
+      if (!m_FileCommon){
+          have_common = false;
+          std::cout << "common.inp file not specified." << std::endl;
+          m_FileCommon.clear ();
+        }
+      else {
+          have_common = true;
+        }
+      std::cout << " opened file " << m_szCommonFile << " have common is "
+<< have_common << std::endl;
+//    } while (!bDone);
+
 
       // open the log file for dumping debug/output statements
       m_LogFile.coss.open (m_LogName.c_str(), std::ios::out);
@@ -322,10 +347,79 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
 
   }while (!bDone);
 
+/////////////////////////
+/////////////////////////
+CParser Parse1;
+bool found = false;
+std::string card;
+m_nLineNumber = 0;
+std::cout << "Reading from common.inp file." << std::endl;
+for(;;){
+    if (!Parse1.ReadNextLine (m_FileCommon, m_nLineNumber, szInputString,
+                              MAXCHARS, szComment))
+      IOErrorHandler (INVALIDINPUT);
+
+    if (szInputString.substr(0,10) == "geomengine"){
+        found = true;
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> card >> m_szEngine;
+        if( ((strcmp (m_szEngine.c_str(), "acis") != 0) &&
+             (strcmp (m_szEngine.c_str(), "occ") != 0)) || szFormatString.fail())
+          IOErrorHandler(EGEOMENGINE);
+      }
+    if (szInputString.substr(0,8) == "meshtype"){
+        found = true;
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> card >> m_szMeshType;
+        if( ((strcmp (m_szMeshType.c_str(), "hex") != 0) &&
+             (strcmp (m_szMeshType.c_str(), "tet") != 0)) || szFormatString.fail())
+          IOErrorHandler(INVALIDINPUT);
+      }
+
+    // Hex or Rect geometry type
+    if (szInputString.substr(0,12) == "geometrytype"){
+        found = true;
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> card >> m_szGeomType;
+        if( ((strcmp (m_szGeomType.c_str(), "hexagonal") != 0) &&
+             (strcmp (m_szGeomType.c_str(), "rectangular") != 0)) || szFormatString.fail())
+          IOErrorHandler(EGEOMTYPE);
+
+        // set the number of sides in the geometry
+        if(m_szGeomType == "hexagonal")
+          m_nSides = 6;
+        else  if(m_szGeomType == "rectangular")
+          m_nSides = 4;
+      }
+    // Default if volume, set geometry type to surface for 2D assemblies
+    if (szInputString.substr(0,8) == "geometry"){
+        found = true;
+        std::string outfile;
+        std::istringstream szFormatString (szInputString);
+        szFormatString >> card >> outfile;
+        if(strcmp (outfile.c_str(), "surface") == 0 || szFormatString.fail())
+          m_nPlanar=1;
+      }
+
+    // breaking condition
+    if(szInputString.substr(0,3) == "end" || m_nLineNumber == 500){
+        found = true;
+        break;
+      }
+    if (found == false){
+        std::cout << "Cannot specify: " << szInputString << " in common.inp files" << std::endl;
+      }
+  }
+
+/////////////////////////////////////
+/////////////////////////////////////
+///
+///
+
 // Read AssyGen input file
   CParser Parse;
   int nCyl =0, nCellMat=0, nInputLines=0;
-  std::string card, szVolId, szVolAlias;
+  std::string szVolId, szVolAlias;
   // count the total number of cylinder commands in each pincell
   for(;;){
     if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
@@ -729,7 +823,7 @@ void AssyMesher::ReadPinCellData ( int i)
 	m_Pincell(i).SetCylPos(nCyl, dVCoor);
 
 	//set local array
-	dVCylRadii.SetSize(nRadii);
+	dVCylRadii.SetSize(2*nRadii);
 	szVCylMat.SetSize(nRadii);
 	dVCylZPos.SetSize(2);
 	m_Pincell(i).SetCylSizes(nCyl, nRadii);

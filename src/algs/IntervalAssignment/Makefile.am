@@ -30,7 +30,6 @@ IASolverToolInt.cpp \
 IASolverInt.cpp \
 IASolverRelaxed.cpp \
 IAWeights.cpp \
-IAWeights.cpp \
 IPData.cpp \
 IPBend.cpp \
 IASolverBend.cpp \

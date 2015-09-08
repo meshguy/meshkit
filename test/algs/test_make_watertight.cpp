@@ -15,10 +15,10 @@
 #include <vector>
 #include <set>
 #include <algorithm>
-#include "MBCore.hpp"
+#include "moab/Core.hpp"
 #include "MBTagConventions.hpp"
-#include "MBRange.hpp"
-#include "MBSkinner.hpp"
+#include "moab/Range.hpp"
+#include "moab/Skinner.hpp"
 
 #include "meshkit/mw_func.hpp"
 #include "meshkit/cw_func.hpp"
@@ -27,12 +27,12 @@
 #include "meshkit/zip.hpp"
 
 #include "TestUtil.hpp"
-
-MBErrorCode move_vert( MBEntityHandle vertex, double dx, double dy, double dz, bool verbose = false );
-MBErrorCode rand_vert_move( MBEntityHandle vertex, double tol, bool verbose = false);
-MBErrorCode move_vert_theta( MBEntityHandle vertex, double tolerance, bool verbose = false);
-MBErrorCode move_vert_R ( MBEntityHandle vertex, double tol, bool verbose = false ) ;
-MBErrorCode rand_adj_pair( MBRange verts, MBEntityHandle &vert1, MBEntityHandle &vert2);
+using namespace moab;
+ErrorCode move_vert( EntityHandle vertex, double dx, double dy, double dz, bool verbose = false );
+ErrorCode rand_vert_move( EntityHandle vertex, double tol, bool verbose = false);
+ErrorCode move_vert_theta( EntityHandle vertex, double tolerance, bool verbose = false);
+ErrorCode move_vert_R ( EntityHandle vertex, double tol, bool verbose = false ) ;
+ErrorCode rand_adj_pair( Range verts, EntityHandle &vert1, EntityHandle &vert2);
 
 
 /// struct to hold coordinates of skin edge, it's surface id, and a matched flag
@@ -45,19 +45,19 @@ struct coords_and_id {
   double z2;
   int  surf_id;
   bool matched;
-  MBEntityHandle vert1;
-  MBEntityHandle vert2;
+  EntityHandle vert1;
+  EntityHandle vert2;
 };
 
 /// takes an entity handle vertex, gets the original coordinates, changes and resets the vertex coordinates in the mesh
-MBErrorCode move_vert( MBEntityHandle vertex, double dx, double dy, double dz, bool verbose) {
+ErrorCode move_vert( EntityHandle vertex, double dx, double dy, double dz, bool verbose) {
 
- MBErrorCode result;
+ ErrorCode result;
  
  //get coordinates from the mesh
  double coords[3];
  result= MBI()-> get_coords( &vertex , 1 , coords );
- if(gen::error(MB_SUCCESS!=result, "could not get the vertex coordinates")) return result; 
+ if(gen::error(MB_SUCCESS!=result, "could not get the vertex coordinates")) return result;
 
  if(verbose)
  {
@@ -89,14 +89,14 @@ return MB_SUCCESS;
 
 /// takes an entity handle vertex, gets the original coordinates, changes and resets the vertex coordinates in the mesh
 /// setup to move the vert no further than the faceting tolerance
-MBErrorCode rand_vert_move( MBEntityHandle vertex, double tol, bool verbose) {
+ErrorCode rand_vert_move( EntityHandle vertex, double tol, bool verbose) {
 
- MBErrorCode result;
+ ErrorCode result;
  
  //get coordinates from the mesh
  double coords[3];
  result= MBI()-> get_coords( &vertex , 1 , coords );
- if(gen::error(MB_SUCCESS!=result, "could not get the vertex coordinates")) return result; 
+ if(gen::error(MB_SUCCESS!=result, "could not get the vertex coordinates")) return result;
 
  // get random values for the changes in x,y,z
  double dx,dy,dz;
@@ -140,9 +140,9 @@ return MB_SUCCESS;
 }
 
 /// moves a vertex along the rim of the cylinder in the theta direction a distance equal to the faceting_tolerance
-MBErrorCode move_vert_theta( MBEntityHandle vertex, double tolerance, bool verbose) {
+ErrorCode move_vert_theta( EntityHandle vertex, double tolerance, bool verbose) {
 
- MBErrorCode result; 
+ ErrorCode result;
   
   //get vertex coordinates
   double coords[3];
@@ -190,9 +190,9 @@ MBErrorCode move_vert_theta( MBEntityHandle vertex, double tolerance, bool verbo
 }
 
 /// moves the vertex in R some distance less than tol
-MBErrorCode move_vert_R( MBEntityHandle vertex, double tol, bool verbose ) {
+ErrorCode move_vert_R( EntityHandle vertex, double tol, bool verbose ) {
 
-  MBErrorCode result; 
+  ErrorCode result;
   
   //get vertex coordinates
   double coords[3];
@@ -234,22 +234,22 @@ return MB_SUCCESS;
 
 
 /// appends "_mod" to the original file name and writes to a new .h5m 
-MBErrorCode write_mod_file( std::string filename ) {
+ErrorCode write_mod_file( std::string filename ) {
 
- MBErrorCode result;
+ ErrorCode result;
  std::string output_filename = filename + "_mod.h5m";
  //write file
  result=MBI()->write_mesh(output_filename.c_str());
- if(gen::error(MB_SUCCESS!=result,"could not write the mesh to output_filename")) return result; 
+ if(gen::error(MB_SUCCESS!=result,"could not write the mesh to output_filename")) return result;
 
   return MB_SUCCESS;
 }
 
 
 // used to clear all mesh data and reload the file as original
-MBErrorCode reload_mesh(const char* filename,  MBEntityHandle &meshset, bool debug = false) {
+ErrorCode reload_mesh(const char* filename,  EntityHandle &meshset, bool debug = false) {
 
-  MBErrorCode result;
+  ErrorCode result;
 
   // delete meshset
   result= MBI() -> delete_mesh();
@@ -259,17 +259,17 @@ MBErrorCode reload_mesh(const char* filename,  MBEntityHandle &meshset, bool deb
 
   // re-initialize meshset
   result= MBI() -> create_meshset(MESHSET_SET, meshset);
-  if(gen::error(MB_SUCCESS!=result, "could not create the new meshset")) return result; 
+  if(gen::error(MB_SUCCESS!=result, "could not create the new meshset")) return result;
  
   //reload the file
   result = MBI() -> load_file(filename, &meshset);
-  if(gen::error(MB_SUCCESS!=result, "could not re-load the file into the mesh set")) return result; 
+  if(gen::error(MB_SUCCESS!=result, "could not re-load the file into the mesh set")) return result;
 
   //check that something was loaded into the meshset
   int num_meshsets;   
 
   result= MBI() -> num_contained_meshsets ( meshset, &num_meshsets);
-  if(gen::error(MB_SUCCESS!=result, "could not get the number of meshsets")) return result; 
+  if(gen::error(MB_SUCCESS!=result, "could not get the number of meshsets")) return result;
   
   if(debug) std::cout << "number of mesh sets after reload = " << num_meshsets << std::endl;
 
@@ -280,10 +280,10 @@ MBErrorCode reload_mesh(const char* filename,  MBEntityHandle &meshset, bool deb
 
 
 /// bumps the last vertex in the model by the x,y,z values given to the problem 
-MBErrorCode single_vert_bump( MBRange verts, double bump_dist_x, double bump_dist_y, double bump_dist_z, bool verbose = false ) {
+ErrorCode single_vert_bump( Range verts, double bump_dist_x, double bump_dist_y, double bump_dist_z, bool verbose = false ) {
  
-  MBErrorCode result; 
-  MBEntityHandle vertex=verts.back();
+  ErrorCode result;
+  EntityHandle vertex=verts.back();
   //move the desired vertex by the allotted distance
   result = move_vert( vertex, bump_dist_x, bump_dist_y, bump_dist_z );
   if(gen::error(MB_SUCCESS!=result, "could not move single vert")) return result;
@@ -292,10 +292,10 @@ MBErrorCode single_vert_bump( MBRange verts, double bump_dist_x, double bump_dis
 }
 
 /// bumps the last vertex in the cylinder model in the R direction
-MBErrorCode single_vert_bump_R( MBRange verts, double facet_tol, bool verbose = false ) {
+ErrorCode single_vert_bump_R( Range verts, double facet_tol, bool verbose = false ) {
  
-  MBErrorCode result; 
-  MBEntityHandle vertex=verts.back();
+  ErrorCode result;
+  EntityHandle vertex=verts.back();
   //move the desired vertex by the allotted distance
   result = move_vert_R( vertex, facet_tol, verbose );
   if(gen::error(MB_SUCCESS!=result, "could not move single vert")) return result;
@@ -304,12 +304,12 @@ MBErrorCode single_vert_bump_R( MBRange verts, double facet_tol, bool verbose = 
 }
 
 /// moves the last two verticies in the model the same distance in x, y, and z 
-MBErrorCode locked_pair_bump( MBRange verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
+ErrorCode locked_pair_bump( Range verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-1);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-1);
  
   //move the desired verticies by the allotted distance(s)
   result = move_vert( vertex1, bump_dist_x, bump_dist_y, bump_dist_z, verbose);
@@ -321,13 +321,13 @@ MBErrorCode locked_pair_bump( MBRange verts, double bump_dist_x, double bump_dis
   return MB_SUCCESS;
 }
 /// selects a random pair of verticies from verts and moves them in random directions some distance less than the faceting tolerance
-MBErrorCode rand_locked_pair_bump_rand( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode rand_locked_pair_bump_rand( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
-  MBEntityHandle vertex1;
-  MBEntityHandle vertex2;
+  EntityHandle vertex1;
+  EntityHandle vertex2;
 
   result = rand_adj_pair( verts, vertex1, vertex2);
   
@@ -341,13 +341,13 @@ MBErrorCode rand_locked_pair_bump_rand( MBRange verts, double facet_tol , std::s
 }
 
 /// selects a random pair of verticies and moves them along theta a distance less than the faceting tolerance
-MBErrorCode rand_locked_pair_bump_theta( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode rand_locked_pair_bump_theta( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
-  MBEntityHandle vertex1;
-  MBEntityHandle vertex2;
+  EntityHandle vertex1;
+  EntityHandle vertex2;
 
   result = rand_adj_pair(verts, vertex1, vertex2);
   
@@ -360,13 +360,13 @@ MBErrorCode rand_locked_pair_bump_theta( MBRange verts, double facet_tol , std::
   return MB_SUCCESS;
 }
 /// selects a random pair of adjacent verticies and bumps them in x, y, and z 
-MBErrorCode rand_locked_pair_bump( MBRange verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
+ErrorCode rand_locked_pair_bump( Range verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
-  MBEntityHandle vertex1;
-  MBEntityHandle vertex2;
+  EntityHandle vertex1;
+  EntityHandle vertex2;
 
   result = rand_adj_pair( verts, vertex1, vertex2);
   
@@ -379,12 +379,12 @@ MBErrorCode rand_locked_pair_bump( MBRange verts, double bump_dist_x, double bum
   return MB_SUCCESS;
 }
 /// moves the last two verticies in the model in the same direction some distance less than the faceting tolerance
-MBErrorCode locked_pair_bump_rand( MBRange verts, double facet_tol,  std::string root_name, bool verbose = false ) {
+ErrorCode locked_pair_bump_rand( Range verts, double facet_tol,  std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-1);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-1);
   
   //move the desired verticies by the allotted distance(s)
   result = rand_vert_move( vertex1, facet_tol, verbose);
@@ -397,10 +397,10 @@ MBErrorCode locked_pair_bump_rand( MBRange verts, double facet_tol,  std::string
 
 
 /// moves the last vertex in the model in a random direction by a distance less than the faceting tolerance
-MBErrorCode rand_vert_bump( MBRange verts, double facet_tol, std::string root_name, bool verbose = false ) {
+ErrorCode rand_vert_bump( Range verts, double facet_tol, std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
-  MBEntityHandle vertex = verts.back();
+  ErrorCode result;
+  EntityHandle vertex = verts.back();
   //move the desired vertex by the allotted distance
   result = rand_vert_move( vertex, facet_tol, verbose);
   if(gen::error(MB_SUCCESS!=result, "could not move single vert")) return result;
@@ -411,13 +411,13 @@ MBErrorCode rand_vert_bump( MBRange verts, double facet_tol, std::string root_na
 
 // FOR CYLINDER TESTING ONLY 
 /// moves the last vertex in the model along the curve of the cylinder some distance bump distance theta
-MBErrorCode theta_vert_bump( MBRange verts, double bump_dist_theta, double tolerance, std::string root_name, bool verbose = false ) {
+ErrorCode theta_vert_bump( Range verts, double bump_dist_theta, double tolerance, std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
   
   //get vertex coordinates
   double coords[3];
-  MBEntityHandle vertex=verts.back();
+  EntityHandle vertex=verts.back();
   result= MBI()-> get_coords( &vertex , 1 , coords );
  
   // determine radius
@@ -464,29 +464,29 @@ MBErrorCode theta_vert_bump( MBRange verts, double bump_dist_theta, double toler
 }
 
 /// moves two adjacent vertices along theta a distance equal to the faceting tolerance
-MBErrorCode locked_pair_move_theta( MBRange verts, double tolerance, std::string root_name,  bool verbose = false) {
+ErrorCode locked_pair_move_theta( Range verts, double tolerance, std::string root_name,  bool verbose = false) {
 
-  MBErrorCode result;
+  ErrorCode result;
 
   //get vertex coordinates
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=verts.back()-1;
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=verts.back()-1;
   
   result= move_vert_theta( vertex1, tolerance, verbose);
-  if(gen::error(MB_SUCCESS!=result,"could not move vertex1 along theta")) return result; 
+  if(gen::error(MB_SUCCESS!=result,"could not move vertex1 along theta")) return result;
   result= move_vert_theta( vertex2, tolerance, verbose);
-  if(gen::error(MB_SUCCESS!=result,"could not move vertex1 along theta")) return result; 
+  if(gen::error(MB_SUCCESS!=result,"could not move vertex1 along theta")) return result;
 
   return MB_SUCCESS;
 }
 
 /// moves the third to last and the last vertices in the model the same distance in x, y, and z
-MBErrorCode adjplone_locked_pair_bump( MBRange verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
+ErrorCode adjplone_locked_pair_bump( Range verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-2);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-2);
  
   //move the desired verticies by the allotted distance(s)
   result = move_vert( vertex1, bump_dist_x, bump_dist_y, bump_dist_z, verbose);
@@ -499,12 +499,12 @@ MBErrorCode adjplone_locked_pair_bump( MBRange verts, double bump_dist_x, double
 }
 
 /// moves the third to last and the last verticies in the model in theta the same distance along theta equal to the faceting tolerance
-MBErrorCode adjplone_locked_pair_bump_theta( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode adjplone_locked_pair_bump_theta( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-2);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-2);
  
   //move the desired verticies by the allotted distance(s)
   result = move_vert_theta( vertex1, facet_tol, verbose);
@@ -517,12 +517,12 @@ MBErrorCode adjplone_locked_pair_bump_theta( MBRange verts, double facet_tol , s
 }
 
 /// moves the third to last and the last verticies in the model in rand directions some distance less than the facet_tolerance
-MBErrorCode adjplone_locked_pair_bump_rand( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode adjplone_locked_pair_bump_rand( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-2);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-2);
  
   //move the desired verticies by the allotted distance(s)
   result = rand_vert_move( vertex1, facet_tol, verbose);
@@ -536,9 +536,9 @@ MBErrorCode adjplone_locked_pair_bump_rand( MBRange verts, double facet_tol , st
 
 
 /// selects a random pair of adjacent verticies and bumps them the same distance in x, y, and z
-MBErrorCode nonadj_locked_pair_bump( MBRange verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
+ErrorCode nonadj_locked_pair_bump( Range verts, double bump_dist_x, double bump_dist_y, double bump_dist_z,  std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
   int number_of_verts = verts.size();
@@ -547,8 +547,8 @@ MBErrorCode nonadj_locked_pair_bump( MBRange verts, double bump_dist_x, double b
   int index = static_cast<int>(num*((number_of_verts-2)));
   //std::cout << "index = " << index << std::endl;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-index);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-index);
   
   //move the desired verticies by the allotted distance(s)
   result = move_vert( vertex1, bump_dist_x, bump_dist_y, bump_dist_z, verbose);
@@ -560,9 +560,9 @@ MBErrorCode nonadj_locked_pair_bump( MBRange verts, double bump_dist_x, double b
 }
 
 /// selects a random pair of adjacent verticies and bumps them along the theta direction a distance equal to the faceting tolerance
-MBErrorCode nonadj_locked_pair_bump_theta( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode nonadj_locked_pair_bump_theta( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
   int number_of_verts = verts.size();
@@ -571,8 +571,8 @@ MBErrorCode nonadj_locked_pair_bump_theta( MBRange verts, double facet_tol , std
   int index = static_cast<int>(num*((number_of_verts-2)));
   //std::cout << "index = " << index << std::endl;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-index);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-index);
   
   //move the desired verticies by the allotted distance(s)
   result = move_vert_theta( vertex1, facet_tol, verbose);
@@ -584,9 +584,9 @@ MBErrorCode nonadj_locked_pair_bump_theta( MBRange verts, double facet_tol , std
 }
 
 /// selects a random pair of adjacent verticies and bumps them along the theta direction a distance equal to the faceting tolerance
-MBErrorCode nonadj_locked_pair_bump_rand( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode nonadj_locked_pair_bump_rand( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
   int number_of_verts = verts.size();
@@ -595,8 +595,8 @@ MBErrorCode nonadj_locked_pair_bump_rand( MBRange verts, double facet_tol , std:
   int index = static_cast<int>(num*((number_of_verts-2)));
   //std::cout << "index = " << index << std::endl;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-index);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-index);
   
   //move the desired verticies by the allotted distance(s)
   result = rand_vert_move( vertex1, facet_tol, verbose);
@@ -607,12 +607,12 @@ MBErrorCode nonadj_locked_pair_bump_rand( MBRange verts, double facet_tol , std:
   return MB_SUCCESS;
 }
 
-MBErrorCode locked_pair_bump_R( MBRange verts, double facet_tol,  std::string root_name, bool verbose = false ) {
+ErrorCode locked_pair_bump_R( Range verts, double facet_tol,  std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-1);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-1);
  
   //move the desired verticies by the allotted distance(s)
   result = move_vert_R( vertex1, facet_tol, verbose);
@@ -625,13 +625,13 @@ MBErrorCode locked_pair_bump_R( MBRange verts, double facet_tol,  std::string ro
 }
 
 /// selects random verticies from verts and moves them in R a distance equal to the faceting tolerance
-MBErrorCode rand_locked_pair_bump_R( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode rand_locked_pair_bump_R( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
-  MBEntityHandle vertex1;
-  MBEntityHandle vertex2;
+  EntityHandle vertex1;
+  EntityHandle vertex2;
 
   result = rand_adj_pair( verts, vertex1, vertex2);
   
@@ -645,12 +645,12 @@ MBErrorCode rand_locked_pair_bump_R( MBRange verts, double facet_tol , std::stri
 }
 
 /// selects a the last vertex and third to last vertex in the model and moves them in R a distance equal to the faceting tolerance
-MBErrorCode adjplone_locked_pair_bump_R( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode adjplone_locked_pair_bump_R( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-2);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-2);
  
   //move the desired verticies by the allotted distance(s)
   result = move_vert_R( vertex1, facet_tol, verbose);
@@ -663,9 +663,9 @@ MBErrorCode adjplone_locked_pair_bump_R( MBRange verts, double facet_tol , std::
 }
 
 /// moves the last vertex in the model and a randomly selected, non-adjacent vertex and moves them both in R a distance equal to the faceting tolerance
-MBErrorCode nonadj_locked_pair_bump_R( MBRange verts, double facet_tol , std::string root_name, bool verbose = false ) {
+ErrorCode nonadj_locked_pair_bump_R( Range verts, double facet_tol , std::string root_name, bool verbose = false ) {
  
-  MBErrorCode result; 
+  ErrorCode result;
 
   //select random verticies from verts
   int number_of_verts = verts.size();
@@ -674,8 +674,8 @@ MBErrorCode nonadj_locked_pair_bump_R( MBRange verts, double facet_tol , std::st
   int index = static_cast<int>(num*((number_of_verts-2)));
   //std::cout << "index = " << index << std::endl;
 
-  MBEntityHandle vertex1=verts.back();
-  MBEntityHandle vertex2=(verts.back()-index);
+  EntityHandle vertex1=verts.back();
+  EntityHandle vertex2=(verts.back()-index);
   
   //move the desired verticies by the allotted distance(s)
   result = move_vert_R( vertex1, facet_tol, verbose);
@@ -686,7 +686,7 @@ MBErrorCode nonadj_locked_pair_bump_R( MBRange verts, double facet_tol , std::st
   return MB_SUCCESS;
 }
  
-MBErrorCode rand_adj_pair( MBRange verts, MBEntityHandle &vert1, MBEntityHandle &vert2)
+ErrorCode rand_adj_pair( Range verts, EntityHandle &vert1, EntityHandle &vert2)
 {
 
 
@@ -708,7 +708,7 @@ int main(int argc, char **argv)
 {
 
 //open moab instance
-MBInterface *MBI();
+Interface *MBI();
 
 //for unit testing purposes, we don't care about the output. Just PASS or FAIL. 
 bool verbose=false;
@@ -726,17 +726,17 @@ bool verbose=false;
   root_name.erase(len-4);
 
   // load file and get tolerance from input argument
-  MBErrorCode result;
+  ErrorCode result;
   std::string filename = TestDir + "/" + input_name; //set filename
-  MBEntityHandle input_set;
+  EntityHandle input_set;
   result = MBI()->create_meshset( MESHSET_SET, input_set ); //create handle to meshset
-  if(MB_SUCCESS != result) 
+  if(MB_SUCCESS != result)
     {
       return result;
     }
 
 result = MBI()->load_file( filename.c_str(), &input_set ); //load the file into the meshset
-  if(MB_SUCCESS != result) 
+  if(MB_SUCCESS != result)
     {
       // failed to load the file
       std::cout << "could not load file" << std::endl;
@@ -746,39 +746,39 @@ result = MBI()->load_file( filename.c_str(), &input_set ); //load the file into 
   //// get faceting tolerance ////
   double facet_tolerance;
 
-  MBTag faceting_tol_tag;
+  Tag faceting_tol_tag;
   //get faceting tolerance handle from file
   result = MBI()->tag_get_handle( "FACETING_TOL", 1, MB_TYPE_DOUBLE,
-        faceting_tol_tag , moab::MB_TAG_SPARSE|moab::MB_TAG_CREAT );
+        faceting_tol_tag , MB_TAG_SPARSE|MB_TAG_CREAT );
   if(gen::error(MB_SUCCESS!=result, "could not get the faceting tag handle")) return result;
   
   //get the faceting tolerance of any entity
-  MBRange file_set;
+  Range file_set;
   result = MBI()->get_entities_by_type_and_tag( 0, MBENTITYSET, 
                         &faceting_tol_tag, NULL, 1, file_set );
 
   //get facetint tolerance value
   result = MBI()->tag_get_data( faceting_tol_tag, &file_set.front(), 1, &facet_tolerance );
-  if(gen::error(MB_SUCCESS!=result, "could not get the faceting tolerance")) return result; 
+  if(gen::error(MB_SUCCESS!=result, "could not get the faceting tolerance")) return result;
 
   // create tags on geometry
-  MBTag geom_tag, id_tag;
+  Tag geom_tag, id_tag;
   result = MBI()->tag_get_handle( GEOM_DIMENSION_TAG_NAME, 1, 
-                            MB_TYPE_INTEGER, geom_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
-  if(gen::error(MB_SUCCESS != result, "could not get GEOM_DIMENSION_TAG_NAME handle")) return result; 
+                            MB_TYPE_INTEGER, geom_tag, MB_TAG_DENSE|MB_TAG_CREAT );
+  if(gen::error(MB_SUCCESS != result, "could not get GEOM_DIMENSION_TAG_NAME handle")) return result;
 
   result = MBI()->tag_get_handle( GLOBAL_ID_TAG_NAME, 1, 
-                            MB_TYPE_INTEGER, id_tag, moab::MB_TAG_DENSE|moab::MB_TAG_CREAT );
+                            MB_TYPE_INTEGER, id_tag, MB_TAG_DENSE|MB_TAG_CREAT );
   if(gen::error(MB_SUCCESS != result, "could not get GLOBAL_ID_TAG_NAME handle")) return result;
   
   // get surface and volume sets
-  MBRange surf_sets, vol_sets; // MBRange of set of surfaces and volumes
+  Range surf_sets, vol_sets; // Range of set of surfaces and volumes
   // surface sets
   int dim = 2;
   void* input_dim[] = {&dim};
   result = MBI()->get_entities_by_type_and_tag( input_set, MBENTITYSET, &geom_tag, 
                                                 input_dim, 1, surf_sets);
-  if(MB_SUCCESS != result) 
+  if(MB_SUCCESS != result)
     {
       return result;
     }
@@ -794,11 +794,11 @@ result = MBI()->load_file( filename.c_str(), &input_set ); //load the file into 
     
   //vertex sets
   dim= 0;
-  MBRange verts;
+  Range verts;
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
   if(gen::error(MB_SUCCESS!=result, " could not get vertices from the mesh")) return result;
   
-  if(gen::error(MB_SUCCESS!=result, "could not get vertex coordinates")) return result; 
+  if(gen::error(MB_SUCCESS!=result, "could not get vertex coordinates")) return result;
   
 if(verbose)
 {
@@ -852,7 +852,7 @@ if(verbose)
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -888,7 +888,7 @@ if(verbose)
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -924,7 +924,7 @@ if(verbose)
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -959,7 +959,7 @@ if(verbose)
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -995,7 +995,7 @@ if(verbose)
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1047,7 +1047,7 @@ std::cout << "LOCKED VERTEX PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1083,7 +1083,7 @@ std::cout << "LOCKED VERTEX PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1120,7 +1120,7 @@ std::cout << "LOCKED VERTEX PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1156,7 +1156,7 @@ std::cout << "LOCKED VERTEX PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1192,7 +1192,7 @@ std::cout << "LOCKED VERTEX PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1228,7 +1228,7 @@ std::cout << "LOCKED VERTEX PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1285,7 +1285,7 @@ std::cout << "RAND PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1319,7 +1319,7 @@ std::cout << "RAND PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1354,7 +1354,7 @@ std::cout << "RAND PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1388,7 +1388,7 @@ std::cout << "RAND PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1422,7 +1422,7 @@ std::cout << "RAND PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1456,7 +1456,7 @@ std::cout << "RAND PAIR MOVEMENT TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1508,7 +1508,7 @@ std::cout << "ADJACENT PLUS ONE TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1542,7 +1542,7 @@ std::cout << "ADJACENT PLUS ONE TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1576,7 +1576,7 @@ std::cout << "ADJACENT PLUS ONE TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1610,7 +1610,7 @@ std::cout << "ADJACENT PLUS ONE TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1643,7 +1643,7 @@ std::cout << "ADJACENT PLUS ONE TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1677,7 +1677,7 @@ std::cout << "ADJACENT PLUS ONE TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1729,7 +1729,7 @@ std::cout << "NON-ADJACENT LOCKED PAIR TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1763,7 +1763,7 @@ std::cout << "NON-ADJACENT LOCKED PAIR TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1798,7 +1798,7 @@ std::cout << "NON-ADJACENT LOCKED PAIR TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1832,7 +1832,7 @@ std::cout << "NON-ADJACENT LOCKED PAIR TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1870,7 +1870,7 @@ std::cout << "NON-ADJACENT LOCKED PAIR TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);
@@ -1905,7 +1905,7 @@ std::cout << "NON-ADJACENT LOCKED PAIR TESTS" << std::endl;
 
   // Clear the mesh and reload original geometry for the next test
   result=reload_mesh( filename.c_str(), input_set);
-  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result; 
+  if (gen::error(MB_SUCCESS!=result, "could not reload the mesh" )) return result;
 
   // retrieve the verticies again so the model can be broken
   result = MBI()->get_entities_by_dimension(input_set, dim, verts, false);

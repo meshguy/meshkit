@@ -1,8 +1,9 @@
 #include <iostream>
 #include "meshkit/cleanup.hpp"
-//#include "MBAdaptiveKDTree.hpp"
-#include "MBOrientedBoxTreeTool.hpp"
+//#include "moab/AdaptiveKDTree.hpp"
+#include "moab/OrientedBoxTreeTool.hpp"
 
+using namespace moab;
 namespace cleanup {
   // The obbtrees are no longer valid because the triangles have been altered.
   //  -Surface and volume sets are tagged with tags holding the obb tree
@@ -10,11 +11,11 @@ namespace cleanup {
   //  -Surface/volume set handles are added to the root meshset.
   // Somehow, delete the old tree without deleting the
   // surface and volume sets, then build a new tree.
-  MBErrorCode remove_obb_tree(bool verbose) {
-    MBErrorCode result;
-    MBRange obb_entities;
-    MBTag obbTag;
-    result = MBI()->tag_get_handle( "OBB_TREE", sizeof(MBEntityHandle),
+  ErrorCode remove_obb_tree(bool verbose) {
+    ErrorCode result;
+    Range obb_entities;
+    Tag obbTag;
+    result = MBI()->tag_get_handle( "OBB_TREE", sizeof(EntityHandle),
 	       		  MB_TYPE_HANDLE, obbTag, MB_TAG_DENSE, NULL, 0 );
     if(verbose)
     {
@@ -35,11 +36,11 @@ namespace cleanup {
     //result = MBI()->delete_entities( obb_entities );
  
     // find tree roots
-    MBRange trees;
-    MBOrientedBoxTreeTool tool( MBI() );
-    MBTag rootTag;
-    for(MBRange::iterator i=obb_entities.begin(); i!=obb_entities.end(); i++) {
-      MBEntityHandle root;
+    Range trees;
+    OrientedBoxTreeTool tool( MBI() );
+    Tag rootTag;
+    for(Range::iterator i=obb_entities.begin(); i!=obb_entities.end(); i++) {
+      EntityHandle root;
       result = MBI()->tag_get_data( obbTag, &(*i), 1, &root );
       if(gen::error(MB_SUCCESS!=result, "coule not get OBB tree data")) return result;
       //assert(MB_SUCCESS == result);
@@ -61,7 +62,7 @@ namespace cleanup {
     //gen::print_range( trees );
   
     // delete the trees
-    for (MBRange::iterator i = trees.begin(); i != trees.end(); ++i) {
+    for (Range::iterator i = trees.begin(); i != trees.end(); ++i) {
       result = tool.delete_tree( *i );
       //if(MB_SUCCESS != result) std::cout << "result=" << result << std::endl;
       //assert(MB_SUCCESS == result);
@@ -74,21 +75,21 @@ namespace cleanup {
 						    NULL, 1, trees );
     assert(MB_SUCCESS == result);
     std::cout << "  " << trees.size() << " OBB tree(s) contained in file" << std::endl;
-    return MB_SUCCESS;  
+    return MB_SUCCESS;
   }
 
-  MBErrorCode delete_small_edge_and_tris( const MBEntityHandle vert0, 
-                                          MBEntityHandle &vert1,
+  ErrorCode delete_small_edge_and_tris( const EntityHandle vert0,
+                                          EntityHandle &vert1,
                                           const double tol ) {
     // If the verts are the same, this is not meaningful.
     if(vert0 == vert1) return MB_SUCCESS;
-    MBErrorCode result = MB_SUCCESS;
+    ErrorCode result = MB_SUCCESS;
 
     // If the edge is small, delete it and the adjacent tris.
     if(tol > gen::dist_between_verts(vert0, vert1)) {
       // get tris to delete
-      MBRange tris;              
-      MBEntityHandle verts[2] = {vert0, vert1};                      
+      Range tris;
+      EntityHandle verts[2] = {vert0, vert1};
       result = MBI()->get_adjacencies( verts, 2, 2, false, tris );                   
       assert(MB_SUCCESS == result);
       result = MBI()->delete_entities( tris );
@@ -104,26 +105,26 @@ namespace cleanup {
     return result;
   }
 
-  MBErrorCode delete_small_edges(const MBRange &surfaces, const double FACET_TOL) {
+  ErrorCode delete_small_edges(const Range &surfaces, const double FACET_TOL) {
     // PROBLEM: THIS IS INVALID BECAUSE TRIS CAN HAVE LONG EDGES BUT
     // SMALL AREA. All three pts are in a line. This is the nature of
     // faceting vs. meshing.
     /* Remove small triangles by removing edges that are too small. 
     Remove small edges by merging their endpoints together, creating
     degenerate triangles. Delete the degenerate triangles. */
-    MBErrorCode result;
-    for(MBRange::const_iterator i=surfaces.begin(); i!=surfaces.end(); i++) {
+    ErrorCode result;
+    for(Range::const_iterator i=surfaces.begin(); i!=surfaces.end(); i++) {
       std::cout << "surf_id=" << gen::geom_id_by_handle(*i) << std::endl;
 
       // get all tris
-      MBRange tris;
+      Range tris;
       result = MBI()->get_entities_by_type( *i, MBTRI, tris );
       assert(MB_SUCCESS == result);
 
       // Check to ensure there area no degenerate tris
-      for(MBRange::iterator j=tris.begin(); j!=tris.end(); j++) {
+      for(Range::iterator j=tris.begin(); j!=tris.end(); j++) {
         // get endpts
-        const MBEntityHandle *endpts;                                
+        const EntityHandle *endpts;
         int n_verts;                                      
         result = MBI()->get_connectivity( *j, endpts, n_verts);
         assert(MB_SUCCESS == result);
@@ -133,38 +134,38 @@ namespace cleanup {
 
 
       // get the skin first, because my find_skin does not check before creating edges.
-      MBRange skin_edges;
+      Range skin_edges;
       //result = gen::find_skin( tris, 1, skin_edges, false );
-      MBSkinner tool(MBI());
+      Skinner tool(MBI());
       result = tool.find_skin( 0 , tris, 1, skin_edges, false );
       assert(MB_SUCCESS == result);
 
       // create the edges
-      MBRange edges;
-      result = MBI()->get_adjacencies( tris, 1, true, edges, MBInterface::UNION );
+      Range edges;
+      result = MBI()->get_adjacencies( tris, 1, true, edges, Interface::UNION );
       if(MB_SUCCESS != result) {
 	std::cout << "result=" << result << std::endl;
       }
       assert(MB_SUCCESS == result);
 
       // get the internal edges
-      MBRange internal_edges = subtract(edges, skin_edges);
+      Range internal_edges = subtract(edges, skin_edges);
 
-      for(MBRange::iterator j=internal_edges.begin(); j!=internal_edges.end(); j++) {
+      for(Range::iterator j=internal_edges.begin(); j!=internal_edges.end(); j++) {
         int n_internal_edges = internal_edges.size();
 	std::cout << "edge=" << *j << std::endl;
         MBI()->list_entity( *j );
         assert(MB_SUCCESS == result);
 
         // get endpts
-        const MBEntityHandle *endpts;                                
+        const EntityHandle *endpts;
         int n_verts;                                      
         result = MBI()->get_connectivity( *j, endpts, n_verts);
         assert(MB_SUCCESS == result);
         assert(2 == n_verts);
 
         // does another edge exist w the same endpts? Why would it?
-        MBRange duplicate_edges;
+        Range duplicate_edges;
         result = MBI()->get_adjacencies( endpts, 2, 1, true, duplicate_edges );
         assert(MB_SUCCESS == result);
         if(1 < duplicate_edges.size()) MBI()->list_entities( duplicate_edges );
@@ -174,15 +175,15 @@ namespace cleanup {
         if(FACET_TOL < gen::dist_between_verts( endpts[0], endpts[1] )) continue; 
  
         // quick check
-        for(MBRange::iterator k=internal_edges.begin(); k!=internal_edges.end(); k++) {
-          const MBEntityHandle *epts;                                
+        for(Range::iterator k=internal_edges.begin(); k!=internal_edges.end(); k++) {
+          const EntityHandle *epts;
           int n_vts;                                      
           result = MBI()->get_connectivity( *k, epts, n_vts);
           assert(MB_SUCCESS == result);
           assert(2 == n_vts);
 	  // The skin edges/verts cannot be moved, therefore both endpoints cannot 
 	  // be on the skin. If they are, continue.
-	  MBRange adj_edges0;
+	  Range adj_edges0;
 	  result = MBI()->get_adjacencies( &epts[0], 1, 1, true, adj_edges0 );
 	  assert(MB_SUCCESS == result);
 	  if(3 > adj_edges0.size()) {
@@ -193,12 +194,12 @@ namespace cleanup {
 	    assert(MB_SUCCESS == result);
 	  }
 	  assert(3 <= adj_edges0.size());
-	  MBRange adj_skin_edges0 = intersect( adj_edges0, skin_edges );
+	  Range adj_skin_edges0 = intersect( adj_edges0, skin_edges );
 //	  bool endpt0_is_skin;
 //	  if(adj_skin_edges0.empty()) endpt0_is_skin = false;
 //	  else endpt0_is_skin = true;
 
-	  MBRange adj_edges1;
+	  Range adj_edges1;
 	  result = MBI()->get_adjacencies( &epts[1], 1, 1, true, adj_edges1 );
 	  assert(MB_SUCCESS == result);
 	  if(3 > adj_edges1.size()) {
@@ -214,7 +215,7 @@ namespace cleanup {
 
         // The skin edges/verts cannot be moved, therefore both endpoints cannot 
         // be on the skin. If they are, continue.
-        MBRange adj_edges0;
+        Range adj_edges0;
         result = MBI()->get_adjacencies( &endpts[0], 1, 1, true, adj_edges0 );
         assert(MB_SUCCESS == result);
         if(3 > adj_edges0.size()) {
@@ -225,12 +226,12 @@ namespace cleanup {
           assert(MB_SUCCESS == result);
         }
         assert(3 <= adj_edges0.size());
-        MBRange adj_skin_edges0 = intersect( adj_edges0, skin_edges );
+        Range adj_skin_edges0 = intersect( adj_edges0, skin_edges );
         bool endpt0_is_skin;
         if(adj_skin_edges0.empty()) endpt0_is_skin = false;
         else endpt0_is_skin = true;
 
-        MBRange adj_edges1;
+        Range adj_edges1;
         result = MBI()->get_adjacencies( &endpts[1], 1, 1, true, adj_edges1 );
         assert(MB_SUCCESS == result);
         if(3 > adj_edges1.size()) {
@@ -241,14 +242,14 @@ namespace cleanup {
           assert(MB_SUCCESS == result);
         }
         assert(3 <= adj_edges1.size());
-        MBRange adj_skin_edges1 = intersect( adj_edges1, skin_edges );
+        Range adj_skin_edges1 = intersect( adj_edges1, skin_edges );
         bool endpt1_is_skin;
         if(adj_skin_edges1.empty()) endpt1_is_skin = false;
         else endpt1_is_skin = true;
         if(endpt0_is_skin && endpt1_is_skin) continue;
         
         // Keep the skin endpt, and delete the other endpt
-        MBEntityHandle keep_endpt, delete_endpt;
+        EntityHandle keep_endpt, delete_endpt;
         if(endpt0_is_skin) {
           keep_endpt   = endpts[0];
           delete_endpt = endpts[1];
@@ -258,7 +259,7 @@ namespace cleanup {
         }
 
         // get the adjacent tris
-	std::vector<MBEntityHandle> adj_tris;
+	std::vector<EntityHandle> adj_tris;
         result = MBI()->get_adjacencies( &(*j), 1, 2, false, adj_tris );
         assert(MB_SUCCESS == result);
 	        if(2 != adj_tris.size()) {
@@ -269,22 +270,22 @@ namespace cleanup {
  
         // When merging away an edge, a tri and 2 edges will be deleted.
         // Get each triangle's edge other edge the will be deleted.
-        MBRange tri0_delete_edge_verts;
+        Range tri0_delete_edge_verts;
         result = MBI()->get_adjacencies( &adj_tris[0], 1, 0, true, tri0_delete_edge_verts );
         assert(MB_SUCCESS == result);
         assert(3 == tri0_delete_edge_verts.size());
         tri0_delete_edge_verts.erase( keep_endpt );
-        MBRange tri0_delete_edge;
+        Range tri0_delete_edge;
         result = MBI()->get_adjacencies( tri0_delete_edge_verts, 1, true, tri0_delete_edge );
         assert(MB_SUCCESS == result);
         assert(1 == tri0_delete_edge.size());      
  
-        MBRange tri1_delete_edge_verts;
+        Range tri1_delete_edge_verts;
         result = MBI()->get_adjacencies( &adj_tris[1], 1, 0, true, tri1_delete_edge_verts );
         assert(MB_SUCCESS == result);
         assert(3 == tri1_delete_edge_verts.size());
         tri1_delete_edge_verts.erase( keep_endpt );
-        MBRange tri1_delete_edge;
+        Range tri1_delete_edge;
         result = MBI()->get_adjacencies( tri1_delete_edge_verts, 1, true, tri1_delete_edge );
         assert(MB_SUCCESS == result);
         assert(1 == tri1_delete_edge.size());      
@@ -292,11 +293,11 @@ namespace cleanup {
         // When an edge is merged, it will be deleted and its to adjacent tris
         // will be deleted because they are degenerate. We cannot alter the skin.
         // How many skin edges does tri0 have?
-	/*        MBRange tri_edges;
+	/*        Range tri_edges;
         result = MBI()->get_adjacencies( &adj_tris[0], 1, 1, false, tri_edges );
         assert(MB_SUCCESS == result);
         assert(3 == tri_edges.size());
-        MBRange tri0_internal_edges = intersect(tri_edges, internal_edges);
+        Range tri0_internal_edges = intersect(tri_edges, internal_edges);
 
         // Cannot merge the edge away if the tri has more than one skin edge.
         // Otherwise we would delete a skin edge. We already know the edges in 
@@ -308,11 +309,11 @@ namespace cleanup {
         result = MBI()->get_adjacencies( &adj_tris[1], 1, 1, false, tri_edges );
         assert(MB_SUCCESS == result);
         assert(3 == tri_edges.size());
-        MBRange tri1_internal_edges = intersect(tri_edges, internal_edges);
+        Range tri1_internal_edges = intersect(tri_edges, internal_edges);
         if(2 > tri1_internal_edges.size()) continue;
 
         // Check to make sure that the internal edges are not on the skin
-        MBRange temp;
+        Range temp;
         temp = intersect( tri0_internal_edges, skin_edges );
         assert(temp.empty());
         temp = intersect( tri1_internal_edges, skin_edges );
@@ -321,7 +322,7 @@ namespace cleanup {
         // We know that the edge will be merged away. Find the keep_vert and
         // delete_vert. The delete_vert should never be a skin vertex because the
         // skin must not move.
-        MBRange delete_vert;
+        Range delete_vert;
         result = MBI()->get_adjacencies( tri0_internal_edges, 0, false, delete_vert);
         assert(MB_SUCCESS == result);
         assert(1 == delete_vert.size());        
@@ -332,17 +333,17 @@ namespace cleanup {
         // cases to avoid all result in inverted tris.
         // *********************************************************************
         // get all the tris adjacent to the point the will be moved.
-        MBRange altered_tris;
+        Range altered_tris;
         result = MBI()->get_adjacencies( &delete_endpt, 1, 2, false, altered_tris );
         assert(MB_SUCCESS == result);
         bool inverted_tri = false;
-        for(MBRange::const_iterator k=altered_tris.begin(); k!=altered_tris.end(); ++k) {
-          const MBEntityHandle *conn;
+        for(Range::const_iterator k=altered_tris.begin(); k!=altered_tris.end(); ++k) {
+          const EntityHandle *conn;
           int n_verts;
           result = MBI()->get_connectivity( *k, conn, n_verts );
           assert(MB_SUCCESS == result);
           assert(3 == tris.size());
-          MBEntityHandle new_conn[3];
+          EntityHandle new_conn[3];
           for(unsigned int i=0; i<3; ++i) {
             new_conn[i] = (conn[i]==delete_endpt) ? keep_endpt : conn[i];
           }
@@ -374,7 +375,7 @@ namespace cleanup {
         result = MBI()->delete_entities( tri0_delete_edge );
         assert(MB_SUCCESS == result);
         result = MBI()->delete_entities( tri1_delete_edge );
-        assert(MB_SUCCESS == result);        
+        assert(MB_SUCCESS == result);
         result = MBI()->delete_entities( &(*j), 1 );
         assert(MB_SUCCESS == result);
 	std::cout << "deleted edges=" << *j << " " << tri0_delete_edge.front()
@@ -382,17 +383,17 @@ namespace cleanup {
 	          
 	// delete degenerate tris                          
 	result = MBI()->delete_entities( &adj_tris[0], 2 );                 
-	assert(MB_SUCCESS == result); 
+	assert(MB_SUCCESS == result);
 	MBI()->list_entity( keep_endpt );
 
         // remove the edge from the range
         j = internal_edges.erase(*j) - 1; 
 	std::cout << "next iter=" << *j << std::endl;        
 
-        MBRange new_tris;
+        Range new_tris;
         result = MBI()->get_entities_by_type( *i, MBTRI, new_tris );
         assert(MB_SUCCESS == result);
-        MBRange new_skin_edges;
+        Range new_skin_edges;
         result = tool.find_skin( *i, new_tris, 1, new_skin_edges, false );
         assert(MB_SUCCESS == result);
         assert(skin_edges.size() == new_skin_edges.size());
@@ -411,7 +412,7 @@ namespace cleanup {
       result = MBI()->get_entities_by_type( 0, MBEDGE, edges );
       assert(MB_SUCCESS == result);
       result = MBI()->delete_entities( edges ); 
-      assert(MB_SUCCESS == result); 
+      assert(MB_SUCCESS == result);
    
     }
     return MB_SUCCESS;
@@ -420,22 +421,22 @@ namespace cleanup {
   // Lots of edges have been created but are no longer needed.
   // Delete edges that are not in curves. These should be the only edges
   // that remain. This incredibly speeds up the watertight_check tool (100x?).
-  MBErrorCode cleanup_edges( MBRange curve_meshsets ) {
-    MBErrorCode result;
-    MBRange edges, edges_to_keep;
-    for(MBRange::iterator i=curve_meshsets.begin(); i!=curve_meshsets.end(); i++) {
+  ErrorCode cleanup_edges( Range curve_meshsets ) {
+    ErrorCode result;
+    Range edges, edges_to_keep;
+    for(Range::iterator i=curve_meshsets.begin(); i!=curve_meshsets.end(); i++) {
       result = MBI()->get_entities_by_dimension( *i, 1, edges );
       assert(MB_SUCCESS == result);
       edges_to_keep.merge( edges );
     }
 
-    MBRange all_edges;
+    Range all_edges;
     result = MBI()->get_entities_by_dimension( 0, 1, all_edges );
     assert(MB_SUCCESS == result);
 
     // delete the edges that are not in curves.
-    //MBRange edges_to_delete = all_edges.subtract( edges_to_keep );
-    MBRange edges_to_delete = subtract( all_edges, edges_to_keep );
+    //Range edges_to_delete = all_edges.subtract( edges_to_keep );
+    Range edges_to_delete = subtract( all_edges, edges_to_keep );
     std::cout << "deleting " << edges_to_delete.size() << " unused edges" << std::endl;
     result = MBI()->delete_entities( edges_to_delete );
     assert(MB_SUCCESS == result);
