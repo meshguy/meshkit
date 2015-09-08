@@ -986,28 +986,59 @@ namespace MeshKit
     // extrude if this is a surface mesh
     if (set_DIM == 2 && extrude_flag == true) { // if surface geometry and extrude
         logfile << "Extruding surface mesh." << std::endl;
+        //get entities for extrusion
+        iBase_EntityHandle *ents = NULL;
+        int ents_alloc = 0, ents_size;
+        iMesh_getEntities(imesh->instance(), root_set, iBase_FACE, iMesh_ALL_TOPOLOGIES,
+                          &ents, &ents_alloc, &ents_size, &err);
+        ERRORR("Trouble getting face mesh.", err);
+
+        // add entities for extrusion to a set
+        iBase_EntitySetHandle set;
+        iMesh_createEntSet(imesh->instance(), false, &set, &err);
+        ERRORR("Trouble getting face mesh.", err);
+
+        iMesh_addEntArrToSet(imesh->instance(), ents, ents_size, set, &err);
+        ERRORR("Trouble getting face mesh.", err);
+
+        ModelEnt me(mk_core(), iBase_EntitySetHandle(0), /*igeom instance*/0,
+                    (moab::EntityHandle)set);
+        MEntVector selection;
+        selection.push_back(&me);
+
+        // This tag needs to be set to the newly created extrude sets
+        const char *tag_g1 = "GEOM_DIMENSION";
+        iBase_TagHandle gtag;
+        iMesh_getTagHandle(imesh->instance(), tag_g1, &gtag, &err, 14);
+        ERRORR("Trouble getting geom dimension set.", err);
+
+        // This tag needs to be set to the newly created extrude sets
+        const char *tag_m1 = "MATERIAL_SET";
+        iBase_TagHandle mtag;
+        iMesh_getTagHandle(imesh->instance(), tag_m1, &mtag, &err, 12);
+        ERRORR("Trouble getting material set.", err);
+
+        // This tag needs to be set to the newly created extrude sets
+        const char *tag_n1 = "NEUMANN_SET";
+        iBase_TagHandle ntag;
+        iMesh_getTagHandle(imesh->instance(), tag_n1, &ntag, &err, 11);
+        ERRORR("Trouble getting neumann set.", err);
+
 
         double v[] = { 0, 0, z_height };
         int steps = z_divisions;
-
-        // get the hexes
-        MEntVector vols;
-        mk_core()->get_entities_by_dimension(2, vols);
-        em = (ExtrudeMesh*) mk_core()->construct_meshop("ExtrudeMesh", vols);
+        em = (ExtrudeMesh*) mk_core()->construct_meshop("ExtrudeMesh", selection);
         em->set_transform(Extrude::Translate(v, steps));
         em->copy_faces(true);
 
-        //set the material sets as extrude sets to get new material sets with hexes
 
-        moab::Tag mattag;
-        mk_core()->moab_instance()->tag_get_handle( "MATERIAL_SET", 1, moab::MB_TYPE_INTEGER, mattag );
-        moab::Range matsets;
-        mk_core()->moab_instance()->get_entities_by_type_and_tag( 0, moab::MBENTITYSET, &mattag, 0, 1, matsets );
+        SimpleArray<iBase_EntitySetHandle> msets;
+        iMesh_getEntSetsByTagsRec(imesh->instance(), root_set, &mtag, NULL, 1, 0,
+                                  ARRAY_INOUT(msets), &err);
+        ERRORR("Trouble getting entity set.", err);
 
-        moab::Range::iterator set_it;
-        for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
-            moab::EntityHandle this_set = *set_it;
-            em->extrude_sets().add_set((iMesh::EntitySetHandle)this_set);
+        for (int i = 0; i < msets.size(); i++) {
+            em->extrude_sets().add_set((iMesh::EntitySetHandle)msets[i]);
           }
 
         // some entity tag types are always copy or expand
@@ -1017,17 +1048,65 @@ namespace MeshKit
         em->setup_this();
         em->execute_this();
 
+        iMesh_destroyEntSet(imesh->instance(), set, &err);
+        ERRORR("Error in destroying ent set of faces after extrusion is done.", err);
+
+        msets.clear();
+        iMesh_getEntSetsByTagsRec(imesh->instance(), root_set, &mtag, NULL, 1, 0,
+                                  ARRAY_INOUT(msets), &err);
+        ERRORR("Trouble getting entity set.", err);
         // now delete all the 2D material sets:
-        matsets.clear();
-        // doing this again, to get new material sets created by extrude
-        mk_core()->moab_instance()->get_entities_by_type_and_tag( 0, moab::MBENTITYSET, &mattag, 0, 1, matsets );
-        for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
-            moab::EntityHandle this_set = *set_it;
-            // get material sets with two dimension and delete
-            std::vector <moab::EntityHandle> set_ents;
-            mk_core()->moab_instance()->get_entities_by_dimension(this_set, 3, set_ents, true);
-            if(set_ents.size() == 0)
-              mk_core()->moab_instance()->delete_entities(&this_set, 1);
+        for (int i = 0; i < msets.size(); i++) {
+            int num =0;
+            iMesh_getNumOfType(imesh->instance(), msets[i], iBase_REGION, &num, &err);
+            ERRORR("Trouble getting num entities.", err);
+            if(num == 0){ // material sets with quads
+                iMesh_destroyEntSet(imesh->instance(), msets[i], &err);
+                ERRORR("Trouble destroying set.", err);
+              }
+          }
+
+
+        // Step 2: get all max. value of neumann sets, then, for newly created NS set a new value and GD =2 tag.
+
+        iBase_EntityHandle *ents1 = NULL;
+        int ents_alloc1 = 0, ents_size1 = 0;
+
+        SimpleArray<iBase_EntitySetHandle> nsets;
+        iMesh_getEntSetsByTagsRec(imesh->instance(), root_set, &ntag, NULL,
+                                  1, 0, ARRAY_INOUT(nsets), &err);
+        ERRORR("Trouble getting entity set.", err);
+
+        int max_nset_value = 0;
+        for (int i = 0; i < nsets.size(); i++) {
+            int nvalue;
+            iMesh_getEntSetIntData(imesh->instance(), nsets[i], ntag, &nvalue, &err);
+            ERRORR("Trouble getting entity set.", err);
+            if (nvalue > max_nset_value)
+              max_nset_value = nvalue;
+          }
+
+        for (int i = 0; i < nsets.size(); i++) {
+
+            iMesh_getEntities(imesh->instance(), nsets[i],
+                              iBase_FACE, iMesh_ALL_TOPOLOGIES,
+                              &ents1, &ents_alloc1, &ents_size1, &err);
+            ERRORR("Trouble getting face mesh.", err);
+
+            if(ents_size1 > 0) {
+                // set GEOM_DIMENSION tag = 2 and renumber the neumann set
+                const int gd = 2;
+                const int nvalue = max_nset_value + i;
+
+                iMesh_setEntSetIntData(imesh->instance(), nsets[i], ntag, nvalue, &err);
+                ERRORR("Trouble getting entity set.", err);
+
+                iMesh_setEntSetIntData(imesh->instance(),nsets[i], gtag, gd, &err);
+                ERRORR("Trouble getting entity set.", err);
+              }
+            ents_alloc1 = 0;
+            ents_size1 = 0;
+            *ents1 = NULL;
           }
       }
     return iBase_SUCCESS;
