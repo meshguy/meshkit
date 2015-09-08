@@ -474,7 +474,7 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
         // this node corresponds to one that should already exist on the edge
         interiorNodes[(k - 1)*size_i +i] = linkEdgeNodeList[k];
       }
-      else if (i > linkingEdgeNodeI)
+      else if (i > linkingEdgeNodeI && linkingEdgeNodeI >= 0)
       {
         pastLinkEdgeOffset = -1;
       }
