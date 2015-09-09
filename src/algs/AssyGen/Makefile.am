@@ -10,9 +10,8 @@ SUBDIRS =
 libAssyGen_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-
 libAssyGen_la_SOURCES = AssyGen.cpp \
-                        meshscript.cpp
+			meshscript.cpp
 
 # The list of header files which are to be installed
 nobase_libAssyGen_la_include_HEADERS = \
