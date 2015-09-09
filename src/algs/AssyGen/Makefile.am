@@ -10,7 +10,6 @@ SUBDIRS =
 libAssyGen_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-
 libAssyGen_la_SOURCES = AssyGen.cpp \
                         meshscript.cpp
 
