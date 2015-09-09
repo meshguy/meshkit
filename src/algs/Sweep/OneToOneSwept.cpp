@@ -206,10 +206,12 @@ void OneToOneSwept::execute_this()
     vector<vector<Vertex> > linkVertexList(numLayers - 1, vector<Vertex> (NodeList.size()));
     // this will compute the interior points distribution, in each layer
     ProjectInteriorLayers(bLayers, linkVertexList);
+std::cout << "Projected interior layers." << std::endl;
 
     CreateElements(linkVertexList);
+std::cout << "Created elements." << std::endl;
 
-    mk_core()->save_mesh("BeforeVolumeImprove.exo");
+    mk_core()->save_mesh("BeforeVolumeImprove.h5m");
 #if HAVE_MESQUITE
     //MeshImprove meshImpr(mk_core());
     //meshImpr.VolumeMeshImprove(volumeSet, iBase_REGION);
@@ -295,7 +297,7 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
   {
     std::cout << "Major problem: number of total nodes on boundary: " << nodesOnLateralSurfaces.size() << "\n";
     std::cout << " number of nodes in one layer on the boundary:" << bdyNodes.size() << "\n";
-    std::cout << " we expect bdyNodes.size()*(numLayers+1) == nodesOnLateralSurfaces.size()" << bdyNodes.size() * (numLayers + 1)
+    std::cout << " we expect bdyNodes.size()*(numLayers+1) == nodesOnLateralSurfaces.size(), but " << bdyNodes.size() * (numLayers + 1)
         << " != " << nodesOnLateralSurfaces.size() << "\n";
   }
   // start from this list of boundary nodes (on the source)
@@ -970,10 +972,14 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
   Vertex * v3 = FaceList[0].connect[2];
   // vertex 4 is on layer 1, above vertex 1
   int ind1 = v1->index;
-  Vertex & v4 = linkVertexList[0][ind1];// this is the node above vertex 1 in layer 1
+  Vertex * v4;
+  if (numLayers > 1)
+    v4 = &linkVertexList[0][ind1];
+  else
+    v4 = &TVertexList[ind1];
 
   Vector3D normal1 = (v2->xyz-v1->xyz)*(v3->xyz-v1->xyz);
-  double vol6= normal1 % (v4.xyz-v1->xyz);
+  double vol6= normal1 % (v4->xyz-v1->xyz);
   std::cout << "Orientation is ";
   int skip = 0;
   if (vol6 < 0)
@@ -987,51 +993,31 @@ int OneToOneSwept::CreateElements(vector<vector<Vertex> > &linkVertexList)
   vector<iBase_EntityHandle> connect(8);
   for (int m = 0; m < numLayers; m++)
   {
-    if (m == 0) // first layer, above source
+    for (unsigned int i = 0; i < FaceList.size(); i++)
     {
-      for (unsigned int i = 0; i < FaceList.size(); i++)
+      for (int k = 0; k < 4; k++)
       {
-        for (int k=0; k<4; k++)
-        {
-          connect[k+skip]=NodeList[(FaceList[i].connect[k])->index].gVertexHandle;
-          connect[(k+skip+4)%8] = linkVertexList[m][(FaceList[i].connect[k])->index].gVertexHandle;
-        }
-        m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
-        IBERRCHK(m_err, "Trouble create the hexahedral element.");
+        if (m == 0) // the first layer is the source layer
+          connect[k + skip] = NodeList
+              [(FaceList[i].connect[k])->index].gVertexHandle;
+        else // the first layer is an intermediate layer
+          connect[k + skip] = linkVertexList[m - 1]
+              [(FaceList[i].connect[k])->index].gVertexHandle;
+        if (m == (numLayers - 1)) // the second layer is the target layer
+          connect[(k + skip + 4) % 8] = TVertexList
+              [(FaceList[i].connect[k])->index].gVertexHandle;
+        else // the second layer is an intermediate layer
+          connect[(k + skip + 4) % 8] = linkVertexList[m]
+              [(FaceList[i].connect[k])->index].gVertexHandle;
       }
-      m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
-      IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
+      m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON,
+          &connect[0], 8, mVolumeHandle[i]);
+      IBERRCHK(m_err, "Trouble creating the hexahedral element.");
     }
-    else if (m == (numLayers - 1)) // the top layer, below target
-    {
-      for (unsigned int i = 0; i < FaceList.size(); i++)
-      {
-        for (int k=0; k<4; k++)
-        {
-          connect[k+skip]=linkVertexList[m-1][(FaceList[i].connect[k])->index].gVertexHandle;
-          connect[(k+skip+4)%8] = TVertexList[(FaceList[i].connect[k])->index].gVertexHandle;
-        }
-        m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
-        IBERRCHK(m_err, "Trouble create the hexahedral elements.");
-      }
-      m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
-      IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
-    }
-    else // intermediate layers, m is between 0 and num_layers-2
-    {
-      for (unsigned int i = 0; i < FaceList.size(); i++)
-      {
-        for (int k=0; k<4; k++)
-        {
-          connect[k+skip]=linkVertexList[m-1][(FaceList[i].connect[k])->index].gVertexHandle;
-          connect[(k+skip+4)%8] = linkVertexList[m][(FaceList[i].connect[k])->index].gVertexHandle;
-        }
-        m_err = mk_core()->imesh_instance()->createEnt(iMesh_HEXAHEDRON, &connect[0], 8, mVolumeHandle[i]);
-        IBERRCHK(m_err, "Trouble create the hexahedral elements.");
-      }
-      m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0], FaceList.size(), volumeSet);
-      IBERRCHK(m_err, "Trouble add an array of hexahedral elements to the entity set.");
-    }
+    m_err = mk_core()->imesh_instance()->addEntArrToSet(&mVolumeHandle[0],
+        FaceList.size(), volumeSet);
+    IBERRCHK(m_err,
+        "Trouble adding an array of hexahedral elements to the entity set.");
   }
   return 1;
 }
