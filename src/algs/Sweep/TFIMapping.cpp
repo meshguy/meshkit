@@ -427,16 +427,42 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
       size_ii, iBase_INTERLEAVED, &(pos_ii[0][0]));
   IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i");
 
+  // compute the number of layers to use based on the sizing function
+  unsigned int mesh_count = 0;
+  SizingFunction *surfSizing =
+      ent->mk_core()->sizing_function(ent->sizing_function_index());
+  if (surfSizing->intervals() > 0)
+  {
+    mesh_count = surfSizing->intervals();
+    if (ent->constrain_even() && mesh_count % 2)
+      ++mesh_count;
+  }
+  else if (surfSizing->size() > 0)
+  {
+    double estLinkSurfWidth =
+        (boundEdges[0]->measure() + boundEdges[1]->measure()) / 2.0;
+    // the 1 + epsilon factor gets the correct number of edges in a test case
+    // where the math would work if exact, but fails due to rounding error
+    double estLinkSurfLength = (1 + 1e-15) * ent->measure() / estLinkSurfWidth;
+    mesh_count = estLinkSurfLength / surfSizing->size();
+    if (!mesh_count)
+      ++mesh_count;
+    if (ent->constrain_even() && mesh_count % 2)
+      ++mesh_count;
+  }
+  else if (linkEdgeNodeList.empty())
+  {
+    throw Error(MK_INCOMPLETE_MESH_SPECIFICATION, "Sizing function for cylindrical linking surface with no link edge had neither positive size nor positive intervals.");
+  }
+
   // compute the interior nodes based on transforming the source and target
   // edges in position
   unsigned int numCreatedNodes = 0;
-  unsigned int mesh_count = 0;
   if (!linkEdgeNodeList.empty())
   {
-    mesh_count = linkEdgeNodeList.size() - 1;
-    if (((int)mesh_count) != ent->mk_core()->sizing_function(
-        ent->sizing_function_index())->intervals())
+    if (mesh_count != linkEdgeNodeList.size() - 1)
     {
+      mesh_count = linkEdgeNodeList.size() - 1;
       std::cout << "Warning: The number of nodes on the linking surface edge "
           << "does not match the number of intervals from the sizing "
           << "function on the surface.\n";
@@ -445,8 +471,6 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
   }
   else
   {
-    mesh_count = ent->mk_core()->sizing_function(
-        ent->sizing_function_index())->intervals();
     numCreatedNodes = size_i * (mesh_count - 1);
   }
 
