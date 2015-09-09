@@ -25,6 +25,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/PostBL \
                -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/algs/AssyGen \
+               -I$(top_srcdir)/src/algs/AssyMesher \
                -I$(top_srcdir)/src/algs/IntervalAssignment \
                -I$(top_srcdir)/src/extern/triangle \
 	       -I$(top_srcdir)/src/algs/make_watertight \
@@ -35,6 +36,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
 BROKEN_TESTS = test_ebmesh
 
 TESTS = test_edgemesher \
+        test_assymesher \
         test_tfimapping \
         test_onetooneswept \
         test_scdmesh \
@@ -119,6 +121,7 @@ test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslimmesher_SOURCES = test_qslimmesher.cpp
 test_assygen_SOURCES = test_assygen.cpp
+test_assymesher_SOURCES = test_assymesher.cpp
 test_postbl_SOURCES = test_postbl.cpp
 if HAVE_FBIGEOM
 test_fbgeom_SOURCES = test_fbgeom.cpp

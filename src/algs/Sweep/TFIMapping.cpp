@@ -13,6 +13,7 @@
 #include <iostream>
 #include <math.h>
 #include <map>
+#include <algorithm>
 
 const double EPS = 1.0e-6;
 
@@ -98,8 +99,15 @@ void TFIMapping::setup_this()
                 int indexS = oppEdges[j]->sizing_function_index();
                 if (indexS >= 0){
                     SizingFunction * sfe = mk_core()->sizing_function(indexS);
-                    if (sfe->intervals()>0 && !force)
-                        mesh_count = sfe->intervals();
+                    if (!force)
+                    {
+                        if (sfe->intervals() > 0)
+                            mesh_count = sfe->intervals();
+                        else if (sfe->size() > 0)
+                            mesh_count = oppEdges[j]->measure() / sfe->size();
+                        if (mesh_count % 2 && oppEdges[j]->constrain_even())
+                            ++mesh_count;
+                    }
                 }
                 edgesToMesh.push_back(oppEdges[j]);
             }
@@ -116,12 +124,29 @@ void TFIMapping::setup_this()
 
 		    for (unsigned int j = 0; j < edgesToMesh.size(); j++)
 		    {
-		      edgesToMesh[j]->mesh_intervals(mesh_count);
-		      edgesToMesh[j]->interval_firmness(HARD);
+                      int edgeMeshCount = 0;
+                      int edgeSfIndex =
+                          edgesToMesh[j]->sizing_function_index();
+                      if (edgeSfIndex >= 0)
+                      {
+                        SizingFunction* edgeSf =
+                            mk_core()->sizing_function(edgeSfIndex);
+                        edgeMeshCount = edgeSf->intervals();
+		      }
+                      if (mesh_count != edgeMeshCount)
+                      {
+                        edgesToMesh[j]->mesh_intervals(mesh_count);
+                      }
+                      if (force)
+                      {
+                        // the opposite edge is already meshed, so the number
+                        // of intervals is a hard constraint for this edge
+                        edgesToMesh[j]->interval_firmness(HARD);
+                      }
 		      edgesToMesh[j]->add_meshop(em);
 		    }
-		    mk_core()->insert_node(em, (MeshOp*) this);
-
+		    mk_core()->insert_node(em, (GraphNode*)this,
+                        mk_core()->root_node());
       	}
     }
 	else{
@@ -154,14 +179,25 @@ void TFIMapping::setup_this()
 		      if (indexS >= 0)
 		      {
 		        SizingFunction * sfe = mk_core()->sizing_function(indexS);
-		        if (sfe->intervals() > 0 && !force)// if a sizing function was set on an edge, use it, do not
-		          // use the mesh count from surface
-		          // still, a mesh count from opposing edge is very powerful
-		          mesh_count = sfe->intervals();
+                        if (!force)
+                        {
+                          // if a sizing function was set on an edge, use
+                          // that rather than a mesh count from the surface
+                          if (sfe->intervals() > 0)
+                            mesh_count = sfe->intervals();
+                          else if (sfe->size() > 0)
+                            mesh_count = oppEdges[j]->measure() /  sfe->size();
+                          if (mesh_count % 2 && oppEdges[j]->constrain_even())
+                            ++mesh_count;
+                        }
 		      }
 		      // push it to the list if it is not setup to another mesh op (edge mesher) already
 		      //if (oppEdges[j]->is_meshops_list_empty())// it will create an EdgeMesher later
-		      edgesToMesh.push_back(oppEdges[j]);
+                      if ((j == 0 || (oppEdges[j] != oppEdges[0])) &&
+                          oppEdges[j]->is_meshops_list_empty())
+                      {
+		        edgesToMesh.push_back(oppEdges[j]);
+                      }
 		    }
 		  }
 		  // decide on a mesh count now, if edgesToMesh.size()>0
@@ -178,16 +214,36 @@ void TFIMapping::setup_this()
 
 		    for (unsigned int j = 0; j < edgesToMesh.size(); j++)
 		    {
-		      edgesToMesh[j]->mesh_intervals(mesh_count);
-		      edgesToMesh[j]->interval_firmness(HARD);
+                      int edgeMeshCount = 0;
+                      int edgeSfIndex =
+                          edgesToMesh[j]->sizing_function_index();
+                      if (edgeSfIndex >= 0)
+                      {
+                        SizingFunction* edgeSf =
+                            mk_core()->sizing_function(edgeSfIndex);
+                        edgeMeshCount = edgeSf->intervals();
+		      }
+                      if (mesh_count != edgeMeshCount)
+                      {
+                        edgesToMesh[j]->mesh_intervals(mesh_count);
+                      }
+                      if (force)
+                      {
+                        // the opposite edge is already meshed, so the number
+                        // of intervals is a hard constraint for this edge
+                        edgesToMesh[j]->interval_firmness(HARD);
+                      }
 		      edgesToMesh[j]->add_meshop(em);
 		    }
-		    mk_core()->insert_node(em, (MeshOp*) this);
-
+		    mk_core()->insert_node(em, (GraphNode*)this,
+                        mk_core()->root_node());
 		  }
 		} // end loop over pair of opposite edges
 	}
   }// end loop over surfaces
+
+  ensure_facet_dependencies(false);
+
   mk_core()->print_graph("AfterTFISetup.eps");
 }
 
@@ -217,10 +273,12 @@ void TFIMapping::execute_this()
 	MEntVector boundEdges;
     std::vector<int> senses, group_sizes;
     me->ModelEnt::boundary(1, boundEdges, &senses, &group_sizes);
-    if (boundEdges.size() == 4)
+    set<ModelEnt*> distinctBoundEdges;
+    distinctBoundEdges.insert(boundEdges.begin(), boundEdges.end());
+    if (distinctBoundEdges.size() == 4)
     	SurfMapping(me);
     else
-		cylinderSurfMapping(me);
+	cylinderSurfMapping(me);
 
     //ok, we are done, commit to ME
     me->commit_mesh(mit->second, COMPLETE_MESH);
@@ -228,135 +286,281 @@ void TFIMapping::execute_this()
 
 }
 
-//generate the structured mesh on the cylinder-like linking surfaces.
 int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
 {
-	int irelPairIndex = ent->iRelPairIndex();
-    MEntVector boundEdges;
-    std::vector<int> senses, group_sizes;
-    ent->ModelEnt::boundary(1, boundEdges, &senses, &group_sizes);
-	//in this case, we only have boundEdges[0] and boundEdges[1]
-	std::vector<moab::EntityHandle> nList;
-	std::vector<iBase_EntityHandle> List_i, List_ii;
-	boundEdges[0]->get_mesh(0, nList, true);//include start and end corner
-	std::cout << "cylinder mapping\n";
-    unsigned int ix = 0;
-	int size_i = (int)nList.size()-1;
-	for (ix = 0; ix < nList.size(); ix++)
-		List_i.push_back((iBase_EntityHandle) nList[ix]);
-    //if sense is reverse for edge 0, reverse list
-	if (senses[0] == -1)
-		std::reverse(List_i.begin(), List_i.end());
-	nList.clear();
-	boundEdges[1]->get_mesh(0, nList, true);
-	int size_ii = nList.size() - 1;
-	for (ix = 0; ix < nList.size(); ix++)
-		List_ii.push_back((iBase_EntityHandle) nList[ix]);
-	if (senses[1] == 1)//we reverse it if this edge is "positive" in the loop
-		std::reverse(List_ii.begin(), List_ii.end());
+  int irelPairIndex = ent->iRelPairIndex();
 
-	if (size_i != size_ii)
-    	ECERRCHK(MK_FAILURE, "opposite edges have different mesh count, abort");
-	//ok, done with all the initalizations
-	
-	//get all the position vectors in 3D
-	std::vector<Vector3D> pos_i(size_i), pos_ii(size_ii);
-	iGeom::Error g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_i[0]), size_i, iBase_INTERLEAVED, &(pos_i[0][0]));
-	IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i");
-	g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_ii[0]), size_ii, iBase_INTERLEAVED, &(pos_ii[0][0]));
-	IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i");
-	
-	//compute the interior nodes based on transforming the top and bottom edges in position
-	int mesh_count = ent->mk_core()->sizing_function(ent->sizing_function_index())->intervals();
-	std::vector<iBase_EntityHandle> InteriorNodes(size_i * (mesh_count-1));
-
-	Vector3D c0, c1;
-	for (int k = 1; k < mesh_count; k++)//compute layer by layer
-	{
-		double interpolationFactor = 1.0-double(k)/double(mesh_count);
-		for (int i = 0; i < size_i; i++){
-			c0 = pos_i[i];
-			c1 = pos_ii[i];
-			Vector3D pts = c0*interpolationFactor + c1*(1.0-interpolationFactor);
-			Vector3D coords; 
-			g_err = ent->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
-			if (g_err){
-				g_err = ent->igeom_instance()->getEntClosestPt(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
-			}
-			IBERRCHK(g_err, "Trouble get the closest xyz coordinates on the linking surface.");
-			iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(coords[0], coords[1], coords[2], InteriorNodes[(k-1)*size_i+i]);
-			IBERRCHK(m_err, "Trouble create the interior node.");			
-		}
-	}
-
-	//finish creating the interior nodes
-	iBase_EntitySetHandle entityset;
-	iRel::Error r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(ent->geom_handle(), 0, entityset);
-	if (r_err){
-		//create the entityset
-		iMesh::Error m_err = mk_core()->imesh_instance()->createEntSet(true, entityset);
-		IBERRCHK(m_err, "Trouble create the entity set.");
-
-		r_err = mk_core()->irel_pair(irelPairIndex)->setEntSetRelation(ent->geom_handle(), entityset);
-		IBERRCHK(r_err, "Trouble create the association between the geometry and mesh entity set.");
-	}
-
-	iMesh::Error m_err = mk_core()->imesh_instance()->addEntArrToSet(&InteriorNodes[0], InteriorNodes.size(), entityset);
-	IBERRCHK(m_err, "Trouble add an array of entities to the mesh entity set.");
-
-	//copy nodes in a vector to create quads easier
-	std::vector<iBase_EntityHandle> Nodes((mesh_count+1)*size_i);
-	//create the int data for mesh nodes on the linking surface
-	iBase_TagHandle mesh_tag;
-	m_err = mk_core()->imesh_instance()->getTagHandle("MeshTFIMapping", mesh_tag);
-	if (m_err)
-	{
-		m_err = mk_core()->imesh_instance()->createTag("MeshTFIMapping", 1, iBase_INTEGER, mesh_tag);
-		IBERRCHK(m_err, "Trouble create the mesh_tag for the surface.");
-	}
-	int intdata = -1;
-	for (int i = 0; i < size_i; i++){
-		intdata++;
-		m_err = mk_core()->imesh_instance()->setIntData(List_i[i], mesh_tag, intdata);
-		IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
-
-		Nodes[i] = List_i[i];
-
-		m_err = mk_core()->imesh_instance()->setIntData(List_ii[i], mesh_tag, (intdata + mesh_count*size_i));
-		IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
-		Nodes[size_i*mesh_count+i] = List_ii[i];
-	}
-	for (int ii = 0; ii < int(InteriorNodes.size()); ii++){
-		intdata++;
-		m_err = mk_core()->imesh_instance()->setIntData(InteriorNodes[ii], mesh_tag, intdata);
-		IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
-		
-		Nodes[intdata] = InteriorNodes[ii];
-	}
-
-	//we will always create them in the positive orientation, because we already reversed the Lists with nodes
-	std::vector<iBase_EntityHandle> qNodes(4);//a generic quad
-	std::vector<iBase_EntityHandle> Quads(size_i*mesh_count);
-	for (int k = 0; k < mesh_count; k++){		
-		for (int i = 0; i < size_i; i++){
-			qNodes[0] = Nodes[ k*size_i + i ];
-			qNodes[1] = Nodes[ k*size_i + (i + 1)%size_i ];
-			qNodes[2] = Nodes[ (k+1)*size_i + (i + 1)%size_i ];
-			qNodes[3] = Nodes[ (k+1)*size_i + i ];
-			m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[k*size_i+i]);
-			IBERRCHK(m_err, "Trouble create the quadrilateral element.");
-		}
-	}
-	
-	//finish creating the quads
-	m_err = mk_core()->imesh_instance()->addEntArrToSet(&Quads[0], Quads.size(), entityset);
-	IBERRCHK(m_err, "Trouble add an array of quads to the mesh entity set.");
-	//set int data for quads
-	for (unsigned int i = 0; i < Quads.size(); i++)                               
-    {                                                                             
-       m_err = mk_core()->imesh_instance()->setIntData(Quads[i], mesh_tag, i);     
-       IBERRCHK(m_err, "Trouble set the int data for quadrilateral elements.");    
+  // determine whether there is an edge along the linking surface
+  MEntVector allBoundEdges;
+  std::vector<int> allSenses, group_sizes;
+  ent->ModelEnt::boundary(1, allBoundEdges, &allSenses, &group_sizes);
+  map<ModelEnt*, int> boundEdgeCount;
+  for (unsigned int i = 0; i < allBoundEdges.size(); ++i)
+  {
+    boundEdgeCount[allBoundEdges[i]] = 0;
+  }
+  for (unsigned int i = 0; i < allBoundEdges.size(); ++i)
+  {
+    ++boundEdgeCount[allBoundEdges[i]];
+  }
+  MEntVector boundEdges;
+  std::vector<int> boundEdgeSenses;
+  ModelEnt* linkSurfEdge = NULL;
+  for (unsigned int i = 0; i < allBoundEdges.size(); ++i)
+  {
+    if (boundEdgeCount[allBoundEdges[i]] == 1)
+    {
+      boundEdges.push_back(allBoundEdges[i]);
+      boundEdgeSenses.push_back(allSenses[i]);
     }
+    else
+    {
+      linkSurfEdge = allBoundEdges[i];
+    }
+  }
+
+  if (boundEdges.size() != 2)
+  {
+    ECERRCHK(MK_FAILURE, "Cylinder TFIMapping does not have exactly two distinct bounding edges");
+  }
+
+  std::cout << "TFIMapping on cylinder\n";
+
+  std::vector<moab::EntityHandle> nList;
+  std::vector<iBase_EntityHandle> List_i, List_ii;
+
+  // get nodes of bounding edge 0 into List_i
+  boundEdges[0]->get_mesh(0, nList, true);
+  unsigned int ix = 0;
+  int size_i = (int)nList.size()-1;
+  for (ix = 0; ix < nList.size(); ix++)
+  {
+    List_i.push_back((iBase_EntityHandle) nList[ix]);
+  }
+  // we reverse the first boundary edge if it is "negative" in the loop
+  if (boundEdgeSenses[0] == -1)
+  {
+    std::reverse(List_i.begin(), List_i.end());
+  }
+  nList.clear();
+
+  // get nodes of bounding edge 1 into List_ii
+  boundEdges[1]->get_mesh(0, nList, true);
+  int size_ii = nList.size() - 1;
+  for (ix = 0; ix < nList.size(); ix++)
+  {
+    List_ii.push_back((iBase_EntityHandle) nList[ix]);
+  }
+  // we reverse the second boundary edge if it is "positive" in the loop
+  if (boundEdgeSenses[1] == 1)
+  {
+    std::reverse(List_ii.begin(), List_ii.end());
+  }
+
+  if (size_i != size_ii)
+    ECERRCHK(MK_FAILURE, "Opposite edges have different mesh count, abort");
+
+  // get nodes that are on the linking surface edge, if any,
+  // and identify where they start on the source and target
+  int linkingEdgeNodeI = -1;
+  int linkingEdgeNodeII = -1;
+  int offset = 0;
+  std::vector<iBase_EntityHandle> linkEdgeNodeList;
+  if (linkSurfEdge != NULL)
+  {
+    std::vector<moab::EntityHandle> lseNodes;
+    linkSurfEdge->get_mesh(0, lseNodes, true);
+    for (ix = 0; ix < lseNodes.size(); ++ix)
+    {
+      linkEdgeNodeList.push_back((iBase_EntityHandle)lseNodes[ix]);
+    }
+    iBase_EntityHandle nodeOnI = linkEdgeNodeList[0];
+    iBase_EntityHandle nodeOnII = linkEdgeNodeList[linkEdgeNodeList.size() - 1];
+    for (ix = 0; ix < List_i.size(); ix++)
+    {
+      if (nodeOnI == List_i[ix])
+      {
+        linkingEdgeNodeI = (int)ix;
+      }
+      else if (nodeOnI == List_ii[ix])
+      {
+        linkingEdgeNodeII = (int)ix;
+      }
+      if (nodeOnII == List_i[ix])
+      {
+        linkingEdgeNodeI = (int)ix;
+      }
+      else if (nodeOnII == List_ii[ix])
+      {
+        linkingEdgeNodeII = (int)ix;
+      }
+      if (linkingEdgeNodeI != -1 && linkingEdgeNodeII != -1)
+      {
+        offset = linkingEdgeNodeII - linkingEdgeNodeI;
+        if (offset < 0)
+        {
+          offset += size_i;
+        }
+        break;
+      }
+    }
+    if (linkingEdgeNodeI == -1 || linkingEdgeNodeII == -1)
+    {
+      ECERRCHK(MK_FAILURE, "Could not find vertices of linking surface edge on source and target.");
+    }
+    if (nodeOnI != List_i[linkingEdgeNodeI])
+    {
+      std::reverse(linkEdgeNodeList.begin(), linkEdgeNodeList.end());
+      nodeOnI = linkEdgeNodeList[0];
+      nodeOnII = linkEdgeNodeList[linkEdgeNodeList.size() - 1];
+    }
+  }
+  // done with all the initalizations
+	
+  // get all the position vectors in 3D
+  std::vector<Vector3D> pos_i(size_i), pos_ii(size_ii);
+  iGeom::Error g_err =
+      mk_core()->imesh_instance()->getVtxArrCoords(&(List_i[0]),
+      size_i, iBase_INTERLEAVED, &(pos_i[0][0]));
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i");
+  g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_ii[0]),
+      size_ii, iBase_INTERLEAVED, &(pos_ii[0][0]));
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i");
+
+  // compute the interior nodes based on transforming the source and target
+  // edges in position
+  unsigned int numCreatedNodes = 0;
+  unsigned int mesh_count = 0;
+  if (!linkEdgeNodeList.empty())
+  {
+    mesh_count = linkEdgeNodeList.size() - 1;
+    if (((int)mesh_count) != ent->mk_core()->sizing_function(
+        ent->sizing_function_index())->intervals())
+    {
+      std::cout << "Warning: The number of nodes on the linking surface edge "
+          << "does not match the number of intervals from the sizing "
+          << "function on the surface.\n";
+    }
+    numCreatedNodes = (size_i - 1) * (mesh_count - 1);
+  }
+  else
+  {
+    mesh_count = ent->mk_core()->sizing_function(
+        ent->sizing_function_index())->intervals();
+    numCreatedNodes = size_i * (mesh_count - 1);
+  }
+
+  std::vector<iBase_EntityHandle> createdNodes(numCreatedNodes);
+  std::vector<iBase_EntityHandle> interiorNodes(size_i * (mesh_count-1));
+
+  Vector3D c0, c1;
+  for (unsigned int k = 1; k < mesh_count; k++) //compute layer by layer
+  {
+    double interpolationFactor = 1.0-double(k)/double(mesh_count);
+    for (int i = 0; i < size_i; i++){
+      c0 = pos_i[i];
+      c1 = pos_ii[(i + offset) % size_i];
+      Vector3D pts = c0*interpolationFactor + c1*(1.0-interpolationFactor);
+      Vector3D coords; 
+      g_err = ent->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
+      if (g_err)
+      {
+        g_err = ent->igeom_instance()->getEntClosestPt(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
+      }
+      IBERRCHK(g_err, "Trouble get the closest xyz coordinates on the linking surface.");
+      int pastLinkEdgeOffset = 0;
+      if (i == linkingEdgeNodeI)
+      {
+        // this node corresponds to one that should already exist on the edge
+        interiorNodes[(k - 1)*size_i +i] = linkEdgeNodeList[k];
+      }
+      else if (i > linkingEdgeNodeI && linkingEdgeNodeI >= 0)
+      {
+        pastLinkEdgeOffset = -1;
+      }
+      iMesh::Error m_err =
+          mk_core()->imesh_instance()->createVtx(coords[0], coords[1],
+          coords[2], interiorNodes[(k-1)*size_i+i]);
+      if (i != linkingEdgeNodeI)
+      {
+        createdNodes[(k - 1)*(size_i - 1) + i + pastLinkEdgeOffset] =
+            interiorNodes[(k - 1)*size_i + i];
+      }
+      IBERRCHK(m_err, "Trouble create the interior node.");			
+    }
+  }
+
+  //finish creating the interior nodes
+  iBase_EntitySetHandle entityset;
+  iRel::Error r_err = mk_core()->irel_pair(irelPairIndex)->getEntSetRelation(ent->geom_handle(), 0, entityset);
+  if (r_err){
+    //create the entityset
+    iMesh::Error m_err = mk_core()->imesh_instance()->createEntSet(true, entityset);
+    IBERRCHK(m_err, "Trouble create the entity set.");
+
+    r_err = mk_core()->irel_pair(irelPairIndex)->setEntSetRelation(ent->geom_handle(), entityset);
+    IBERRCHK(r_err, "Trouble create the association between the geometry and mesh entity set.");
+  }
+
+  iMesh::Error m_err = mk_core()->imesh_instance()->addEntArrToSet(&createdNodes[0], createdNodes.size(), entityset);
+  IBERRCHK(m_err, "Trouble add an array of entities to the mesh entity set.");
+
+  // copy nodes in a vector to create quads easier
+  std::vector<iBase_EntityHandle> Nodes((mesh_count+1)*size_i);
+  //create the int data for mesh nodes on the linking surface
+  iBase_TagHandle mesh_tag;
+  // TODO: Don't use a tag here, since multiple TFIMapping may occur at the
+  // same time
+  m_err = mk_core()->imesh_instance()->getTagHandle("MeshTFIMapping", mesh_tag);
+  if (m_err)
+  {
+    m_err = mk_core()->imesh_instance()->createTag("MeshTFIMapping", 1, iBase_INTEGER, mesh_tag);
+    IBERRCHK(m_err, "Trouble create the mesh_tag for the surface.");
+  }
+  int intdata = -1;
+  for (int i = 0; i < size_i; i++){
+    intdata++;
+    m_err = mk_core()->imesh_instance()->setIntData(List_i[i], mesh_tag, intdata);
+    IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+
+    Nodes[i] = List_i[i];
+
+    m_err = mk_core()->imesh_instance()->setIntData(List_ii[i], mesh_tag, (intdata + mesh_count*size_i));
+    IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+    Nodes[size_i*mesh_count+i] = List_ii[i];
+  }
+
+  for (int ii = 0; ii < int(interiorNodes.size()); ii++){
+    intdata++;
+    m_err = mk_core()->imesh_instance()->setIntData(interiorNodes[ii], mesh_tag, intdata);
+    IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
+
+    Nodes[intdata] = interiorNodes[ii];
+  }
+
+  //we will always create them in the positive orientation, because we already reversed the Lists with nodes
+  std::vector<iBase_EntityHandle> qNodes(4);//a generic quad
+  std::vector<iBase_EntityHandle> Quads(size_i*mesh_count);
+  for (unsigned int k = 0; k < mesh_count; k++){		
+    for (int i = 0; i < size_i; i++){
+      qNodes[0] = Nodes[ k*size_i + i ];
+      qNodes[1] = Nodes[ k*size_i + (i + 1)%size_i ];
+      qNodes[2] = Nodes[ (k+1)*size_i + (i + 1)%size_i ];
+      qNodes[3] = Nodes[ (k+1)*size_i + i ];
+      m_err = mk_core()->imesh_instance()->createEnt(iMesh_QUADRILATERAL, &qNodes[0], 4, Quads[k*size_i+i]);
+      IBERRCHK(m_err, "Trouble create the quadrilateral element.");
+    }
+  }
+
+  //finish creating the quads
+  m_err = mk_core()->imesh_instance()->addEntArrToSet(&Quads[0], Quads.size(), entityset);
+  IBERRCHK(m_err, "Trouble add an array of quads to the mesh entity set.");
+  //set int data for quads
+  for (unsigned int i = 0; i < Quads.size(); i++)                               
+  {                                                                             
+    m_err = mk_core()->imesh_instance()->setIntData(Quads[i], mesh_tag, i);     
+    IBERRCHK(m_err, "Trouble set the int data for quadrilateral elements.");    
+  }
 
   //Get the global id tag
   const char *tag = "GLOBAL_ID";
@@ -423,9 +627,9 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
   m_err = mk_core()->imesh_instance()->rmvArrTag(&List_ii[0], List_ii.size(), mesh_tag);
   IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
 
-  if (InteriorNodes.size() > 0)
+  if (interiorNodes.size() > 0)
   {
-    m_err = mk_core()->imesh_instance()->rmvArrTag(&InteriorNodes[0], InteriorNodes.size(), mesh_tag);
+    m_err = mk_core()->imesh_instance()->rmvArrTag(&interiorNodes[0], interiorNodes.size(), mesh_tag);
     IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
   }
 
@@ -518,13 +722,13 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   iGeom::Error g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_ii[0]), List_ii.size(), iBase_INTERLEAVED, &(pos_ii[0][0]));
   IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
   g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_i[0]), List_i.size(), iBase_INTERLEAVED, &(pos_i[0][0]));
-  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes i.");
   g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_j[0]), List_j.size(), iBase_INTERLEAVED, &(pos_j[0][0]));
-  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes j.");
   g_err = mk_core()->imesh_instance()->getVtxArrCoords(&(List_jj[0]), List_jj.size(), iBase_INTERLEAVED, &(pos_jj[0][0]));
-  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes ii.");
+  IBERRCHK(g_err, "Trouble get the xyz coordinates for nodes jj.");
   //calculate the interior nodes based on transforming the top and bottom edges in position
-  std::vector<iBase_EntityHandle> InteriorNodes((List_j.size() - 2) * (List_i.size() - 2));
+  std::vector<iBase_EntityHandle> interiorNodes((List_j.size() - 2) * (List_i.size() - 2));
   // reminder
   /*
      corner[2]     NodeList_ii ->   corner[3]
@@ -571,7 +775,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
       }
       IBERRCHK(g_err, "Trouble get the closest xyz coordinates on the linking surface.");
 
-      iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(coords[0], coords[1], coords[2], InteriorNodes[(j - 1)
+      iMesh::Error m_err = mk_core()->imesh_instance()->createVtx(coords[0], coords[1], coords[2], interiorNodes[(j - 1)
           * (size_i - 2) + i - 1]);
       IBERRCHK(m_err, "Trouble create the interior node.");
     }
@@ -590,7 +794,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
     IBERRCHK(r_err, "Trouble create the association between the geometry and mesh entity set.");
   }
 
-  iMesh::Error m_err = mk_core()->imesh_instance()->addEntArrToSet(&InteriorNodes[0], InteriorNodes.size(), entityset);
+  iMesh::Error m_err = mk_core()->imesh_instance()->addEntArrToSet(&interiorNodes[0], interiorNodes.size(), entityset);
   IBERRCHK(m_err, "Trouble add an array of entities to the mesh entity set.");
 
   // copy nodes in a vector to create the quads easier
@@ -635,16 +839,16 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
   }
 
   intdata = 2 * size_i + 2 * (size_j - 2) - 1;
-  // it is clear that (size_i-2 > 0 and size_j-2 > 0) iff (InteriorNodes.size()>0)
-  for (unsigned int ii = 0; ii < InteriorNodes.size(); ii++)
+  // it is clear that (size_i-2 > 0 and size_j-2 > 0) iff (interiorNodes.size()>0)
+  for (unsigned int ii = 0; ii < interiorNodes.size(); ii++)
   {
     intdata++;
-    m_err = mk_core()->imesh_instance()->setIntData(InteriorNodes[ii], mesh_tag, intdata);
+    m_err = mk_core()->imesh_instance()->setIntData(interiorNodes[ii], mesh_tag, intdata);
     IBERRCHK(m_err, "Trouble set the int data for mesh nodes.");
     int j = ii/(size_i-2) + 1;
     int i = (ii -(j-1)*(size_i-2)) + 1;
     // copy
-    Nodes[ j*size_i + i] = InteriorNodes[ii];
+    Nodes[ j*size_i + i] = interiorNodes[ii];
     // compute the row and column
   }
 
@@ -728,7 +932,7 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
     //mk_core()->save_mesh("AfterLaplace.vtk");
 
     //if there is the parametric space, let Winslow smooth inside the parametric space
-    SmoothWinslow(List_i, List_ii, List_j, List_jj, InteriorNodes, Quads, mesh_tag, ent);
+    SmoothWinslow(List_i, List_ii, List_j, List_jj, interiorNodes, Quads, mesh_tag, ent);
 
     mk_core()->save_mesh("AfterWinslow.vtk");
 #ifdef HAVE_MESQUITE
@@ -750,9 +954,9 @@ int TFIMapping::SurfMapping(ModelEnt *ent)
     m_err = mk_core()->imesh_instance()->rmvArrTag(&List_jj[0], List_jj.size() - 2, mesh_tag);
     IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
   }
-  if (InteriorNodes.size() > 0)
+  if (interiorNodes.size() > 0)
   {
-    m_err = mk_core()->imesh_instance()->rmvArrTag(&InteriorNodes[0], InteriorNodes.size(), mesh_tag);
+    m_err = mk_core()->imesh_instance()->rmvArrTag(&interiorNodes[0], interiorNodes.size(), mesh_tag);
     IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
   }
 
@@ -800,7 +1004,7 @@ void TFIMapping::computeTransformation(Vector3D & A, Vector3D & B, Vector3D & C,
 }
 //smooth the quadrilateral mesh on the linking surface
 void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vector<iBase_EntityHandle> &List_ii, std::vector<
-    iBase_EntityHandle> &List_j, std::vector<iBase_EntityHandle> &List_jj, std::vector<iBase_EntityHandle> &InteriorNodes,
+    iBase_EntityHandle> &List_j, std::vector<iBase_EntityHandle> &List_jj, std::vector<iBase_EntityHandle> &interiorNodes,
     std::vector<iBase_EntityHandle> &quads, iBase_TagHandle &taghandle, ModelEnt *ent)
 {
   std::vector<std::set<int> > AdjElements;
@@ -866,15 +1070,15 @@ void TFIMapping::SmoothWinslow(std::vector<iBase_EntityHandle> &List_i, std::vec
     }
   }
   //input the interior nodes
-  if (InteriorNodes.size() > 0)
+  if (interiorNodes.size() > 0)
   {
-    for (unsigned int i = 0; i < InteriorNodes.size(); i++)
+    for (unsigned int i = 0; i < interiorNodes.size(); i++)
     {
-      m_err = mk_core()->imesh_instance()->getVtxCoord(InteriorNodes[i],
+      m_err = mk_core()->imesh_instance()->getVtxCoord(interiorNodes[i],
           coords[2 * List_i.size() + 2 * (List_j.size() - 2) + i][0], coords[2 * List_i.size() + 2 * (List_j.size() - 2) + i][1],
           coords[2 * List_i.size() + 2 * (List_j.size() - 2) + i][2]);
       IBERRCHK(m_err, "Trouble get the vertex coordinates.");
-      nodes[2 * List_i.size() + 2 * (List_j.size() - 2) + i] = InteriorNodes[i];
+      nodes[2 * List_i.size() + 2 * (List_j.size() - 2) + i] = interiorNodes[i];
       isBnd[2 * List_i.size() + 2 * (List_j.size() - 2) + i] = false;
     }
   }

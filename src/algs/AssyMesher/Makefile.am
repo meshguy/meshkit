@@ -2,20 +2,18 @@
 AUTOMAKE_OPTIONS = foreign
 
 # Things to build
-noinst_LTLIBRARIES = libAssyGen.la
+noinst_LTLIBRARIES = libAssyMesher.la
          
 SUBDIRS = 
 
 # The directory in which to install headers
-libAssyGen_la_includedir = $(includedir)
+libAssyMesher_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
-libAssyGen_la_SOURCES = AssyGen.cpp \
-			meshscript.cpp
-
+libAssyMesher_la_SOURCES = AssyMesher.cpp
 # The list of header files which are to be installed
-nobase_libAssyGen_la_include_HEADERS = \
-        meshkit/AssyGen.hpp
+nobase_libAssyMesher_la_include_HEADERS = \
+        meshkit/AssyMesher.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
@@ -23,7 +21,8 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir)/src/utils \
               -I$(top_srcdir) \
               -I$(top_builddir) \
-              -I$(top_srcdir)/src/lemon
+              -I$(top_srcdir)/src/lemon \
+              -I$(top_srcdir)/src/algs/Sweep
 
 if HAVE_MOAB
 AM_CPPFLAGS += -DMOAB

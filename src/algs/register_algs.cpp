@@ -16,6 +16,7 @@
 #include "meshkit/QuadMesh.hpp"
 #endif
 #include "meshkit/AssyGen.hpp"
+#include "meshkit/AssyMesher.hpp"
 #include "meshkit/CoreGen.hpp"
 #include "meshkit/PostBL.hpp"
 #include "meshkit/MeshOpTemplate.hpp"
@@ -69,6 +70,7 @@ REGISTER_MESH_OP(QslimMesher);
 REGISTER_MESH_OP(QuadMesher);
 #endif
 REGISTER_MESH_OP(AssyGen);
+REGISTER_MESH_OP(AssyMesher);
 REGISTER_MESH_OP(CoreGen);
 REGISTER_MESH_OP(PostBL);
 REGISTER_MESH_OP(MeshOpTemplate);

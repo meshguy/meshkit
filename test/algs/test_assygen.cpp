@@ -40,31 +40,31 @@ void test_assygen_default(int argc, char **argv)
   ag->setup_this();
   ag->execute_this();
 
-  // now populate model ents to get the geometry created
-  mk->populate_model_ents(0, -1, -1);
+//  // now populate model ents to get the geometry created
+//  mk->populate_model_ents(0, -1, -1);
 
-  MEntVector vols;
-  mk->get_entities_by_dimension(3, vols);
+//  MEntVector vols;
+//  mk->get_entities_by_dimension(3, vols);
 
-  CopyGeom *cg = (CopyGeom*) mk->construct_meshop("CopyGeom", vols);
-  cg->set_name("copy_move_geom");
+//  CopyGeom *cg = (CopyGeom*) mk->construct_meshop("CopyGeom", vols);
+//  cg->set_name("copy_move_geom");
 
-  // set the location
-  Vector<3> dx; dx[0] = 23.5; dx[1] = 0; dx[2] = 0;
-  cg->set_location(dx);
-  cg->setup_this();
-  cg->execute_this();
+//  // set the location
+//  Vector<3> dx; dx[0] = 23.5; dx[1] = 0; dx[2] = 0;
+//  cg->set_location(dx);
+//  cg->setup_this();
+//  cg->execute_this();
 
-  // merge and imprint the o/p geometry
-  std::vector<iBase_EntityHandle> entities_out;
-  mk->igeom_instance()->getEntities(0, iBase_REGION, entities_out);
-  double dTol = 1.0e-2;
-  mk->igeom_instance()->mergeEnts(&entities_out[0],entities_out.size(), dTol);
+//  // merge and imprint the o/p geometry
+//  std::vector<iBase_EntityHandle> entities_out;
+//  mk->igeom_instance()->getEntities(0, iBase_REGION, entities_out);
+//  double dTol = 1.0e-2;
+//  mk->igeom_instance()->mergeEnts(&entities_out[0],entities_out.size(), dTol);
 
-  //  mk->save_geometry("t.sat");
-  // TODO: mesh using camal and parallel mesher
+//  //  mk->save_geometry("t.sat");
+//  // TODO: mesh using camal and parallel mesher
 
-  delete cg;
+//  delete cg;
   delete ag;
 }
 

@@ -100,6 +100,8 @@ void OneToOneSwept::setup_this()
       }
       else if (sf->size() > 0)
       {
+        // FIXME: This calculation is bogus if size means edge lengths.
+        // This should divide by the measurement of the source surface.
         int intervals = me->measure() / sf->size();
         if (!intervals)
           intervals++;
@@ -165,10 +167,11 @@ void OneToOneSwept::setup_this()
     // now create a TFI mapping
     // this will trigger edge meshers for linking edges, and for target surface edges
     TFIMapping *tm = (TFIMapping*) mk_core()->construct_meshop("TFIMapping", linkingSurfaces);
-    for (unsigned int i = 0; i < linkingSurfaces.size(); i++)
-    {
-      linkingSurfaces[i]->sizing_function_index(sf->core_index());
-    }
+    // For now, do not assign any sizing function at all
+//    for (unsigned int i = 0; i < linkingSurfaces.size(); i++)
+//    {
+//      linkingSurfaces[i]->sizing_function_index(sf->core_index());
+//    }
     mk_core()->insert_node(tm, (MeshOp*) this);
   }
 
@@ -185,9 +188,7 @@ void OneToOneSwept::execute_this()
   for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
   {
     ModelEnt *me = mit -> first;
-    if (me->get_meshed_state() >= COMPLETE_MESH)
-      continue;
-    numLayers = me->mesh_intervals();// maybe it will be decided later?
+    // maybe it will be decided later?
     //case 1: if numLayers = 1, then it is not necessary to create any vertices for linking surface, All the vertices have been created by source surface and target surface
     // bLayers will contain nodes in order, layer by layer
     std::vector<moab::EntityHandle> bLayers;
@@ -208,7 +209,7 @@ void OneToOneSwept::execute_this()
 
     CreateElements(linkVertexList);
 
-    mk_core()->save_mesh("BeforeVolumeImprove.h5m");
+    mk_core()->save_mesh("BeforeVolumeImprove.exo");
 #if HAVE_MESQUITE
     //MeshImprove meshImpr(mk_core());
     //meshImpr.VolumeMeshImprove(volumeSet, iBase_REGION);
@@ -234,16 +235,24 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
   IBERRCHK(g_err, "Trouble get the int data for target surface.");
 
   iBase_TagHandle taghandle = 0;
-  iMesh::Error m_err = mk_core()->imesh_instance()->createTag("source", 1, iBase_INTEGER, taghandle);
-  IBERRCHK(m_err, "Trouble create the tag handle in the mesh instance.");
-
-  MEntVector surfs;
-  me->get_adjacencies(2, surfs);// all surfaces adjacent to the volume
+  iMesh::Error m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
+  if (m_err)
+  {
+    m_err = mk_core()->imesh_instance()->createTag("source",
+        1, iBase_INTEGER, taghandle);
+    IBERRCHK(m_err,
+        "Trouble creating the source tag handle in the mesh instance.");
+  }
+  // TODO: If the tag exists, we could verify that the tag is the proper one.
+  // Probably the tag should be put in a namespace, and perhaps it should
+  //   be deleted when we are finished with it.
 
   moab::Range quadsOnLateralSurfaces;
-
   ModelEnt * sME = NULL;
-  me->get_adjacencies(2, surfs);// all surfaces adjacent to the volume
+
+  MEntVector surfs;
+  me->get_adjacencies(2, surfs); // all surfaces adjacent to the volume
+
   for (unsigned int i = 0; i < surfs.size(); i++)
   {
     int index_id_link;
@@ -279,6 +288,9 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
   std::cout << "Nodes on lateral surfaces: " << nodesOnLateralSurfaces.size() << "\n";
   std::cout << "Quads on lateral surfaces: " << quadsOnLateralSurfaces.size() << "\n";
 
+  numLayers = 0;
+  if (!bdyNodes.empty())
+    numLayers = nodesOnLateralSurfaces.size() / bdyNodes.size() - 1;
   if (bdyNodes.size() * (numLayers + 1) != nodesOnLateralSurfaces.size())
   {
     std::cout << "Major problem: number of total nodes on boundary: " << nodesOnLateralSurfaces.size() << "\n";
@@ -357,16 +369,8 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
 
   std::copy(bdyNodes.begin(), bdyNodes.end(), std::back_inserter(layers));
 
-  int deft = -1; // not set; 0 mean layer 1; maybe; we should maybe not use it?
-  rval = mb->tag_get_handle("mark", 1, moab::MB_TYPE_INTEGER, markTag, moab::MB_TAG_CREAT | moab::MB_TAG_DENSE, &deft);
-  MBERRCHK(rval, mb);
-
-  int val = 0;// layer level ; we will use this to verify the layers of boundary nodes
-  for (i = 0; i < sizeBLayer; i++)
-  {
-    rval = mb->tag_set_data(markTag, &(bdyNodes[i]), 1, &val);
-    MBERRCHK(rval, mb);
-  }
+  // mark all of the boundary nodes
+  markedMoabEnts.insert(bdyNodes.begin(), bdyNodes.end());
 
   for (int layer = 1; layer <= numLayers; layer++) // layer with index 0 is at the bottom/source
   {
@@ -386,21 +390,16 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
        */
       rval = NodeAbove(node1, node2, quadsOnLateralSurfaces, node3, node4);
       MBERRCHK(rval, mb);
-      // check the mark tag!
-      rval = mb->tag_get_data(markTag, &node3, 1, &val);
-      MBERRCHK(rval, mb);
-      if (val != -1)
+      // check that node3 and node4 are not yet marked
+      if (markedMoabEnts.find(node3) != markedMoabEnts.end())
         MBERRCHK(moab::MB_FAILURE, mb);
-      rval = mb->tag_get_data(markTag, &node4, 1, &val);
-      MBERRCHK(rval, mb);
-      if (val != -1)
+      if (markedMoabEnts.find(node4) != markedMoabEnts.end())
         MBERRCHK(moab::MB_FAILURE, mb);
       layers.push_back(node3);//start of a new layer
       layers.push_back(node4);//node above node 2
-      rval = mb->tag_set_data(markTag, &node3, 1, &layer);// layer level>0
-      MBERRCHK(rval, mb);
-      rval = mb->tag_set_data(markTag, &node4, 1, &layer);// layer level>0
-      MBERRCHK(rval, mb);
+      // mark node3 and node4
+      markedMoabEnts.insert(node3);
+      markedMoabEnts.insert(node4);
       // we have at least 2 nodes in every loop, otherwise we are in deep trouble
       //start
       int currentIndex = start_index + 2;
@@ -411,13 +410,10 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
         node3 = node4;
         rval = FourthNodeInQuad(node1, node2, node3, quadsOnLateralSurfaces, node4);
         MBERRCHK(rval, mb);
-        rval = mb->tag_get_data(markTag, &node4, 1, &val);
-        MBERRCHK(rval, mb);
-        if (val != -1)
+        if (markedMoabEnts.find(node4) != markedMoabEnts.end())
           MBERRCHK(moab::MB_FAILURE, mb);
         layers.push_back(node4);
-        rval = mb->tag_set_data(markTag, &node4, 1, &layer);// layer level>0
-        MBERRCHK(rval, mb);
+        markedMoabEnts.insert(node4);
         currentIndex++;
       }
     }// end group
@@ -444,15 +440,14 @@ moab::ErrorCode OneToOneSwept::NodeAbove(moab::EntityHandle node1, moab::EntityH
   moab::Range adj_entities;
   moab::ErrorCode rval = mb->get_adjacencies(nds, 2, 2, false, adj_entities);
   MBERRCHK(rval, mb);
-  std::vector<int> tagVals(adj_entities.size());
-  rval = mb->tag_get_data(markTag, adj_entities, &(tagVals[0]));
-  MBERRCHK(rval, mb);
   // default is -1
   moab::EntityHandle nextQuad = 0;// null
-  for (unsigned int i = 0; i < tagVals.size(); i++)
+  for (unsigned int i = 0; i < adj_entities.size(); i++)
   {
-    if ((tagVals[i] == -1) && (latQuads.find(adj_entities[i]) != latQuads.end()))
+    if ((markedMoabEnts.find(adj_entities[i]) == markedMoabEnts.end()) &&
+        (latQuads.find(adj_entities[i]) != latQuads.end()))
     {
+      // the quadrilateral is not marked but is on the lateral/linking surface
       nextQuad = adj_entities[i];
       break;
     }
@@ -483,10 +478,8 @@ moab::ErrorCode OneToOneSwept::NodeAbove(moab::EntityHandle node1, moab::EntityH
     MBERRCHK(moab::MB_FAILURE, mb);// something is really wrong
   node4 = conn4[(index1 + 2) % 4];
 
-  // mark the quad to not use it again
-  int val = 0; // maybe it should be the layer
-  rval = mb->tag_set_data(markTag, &nextQuad, 1, &val);
-  MBERRCHK(rval, mb);
+  // mark the quad to be sure not to use it again
+  markedMoabEnts.insert(nextQuad);
 
   return moab::MB_SUCCESS;
 }
@@ -501,16 +494,13 @@ moab::ErrorCode OneToOneSwept::FourthNodeInQuad(moab::EntityHandle node1, moab::
   moab::ErrorCode rval = mb->get_adjacencies(nds, 3, 2, false, adj_entities);
   MBERRCHK(rval, mb);
 
-  std::vector<int> tagVals(adj_entities.size());
-  rval = mb->tag_get_data(markTag, adj_entities, &(tagVals[0]));
-
-  MBERRCHK(rval, mb);
-  // default is -1
   moab::EntityHandle nextQuad = 0;// null
-  for (unsigned int i = 0; i < tagVals.size(); i++)
+  for (unsigned int i = 0; i < adj_entities.size(); i++)
   {
-    if ((tagVals[i] == -1) && (latQuads.find(adj_entities[i]) != latQuads.end()))
+    if ((markedMoabEnts.find(adj_entities[i]) == markedMoabEnts.end()) &&
+        (latQuads.find(adj_entities[i]) != latQuads.end()))
     {
+      // the quadrilateral is not marked but is on the lateral/linking surface
       nextQuad = adj_entities[i];
       break;
     }
@@ -537,10 +527,8 @@ moab::ErrorCode OneToOneSwept::FourthNodeInQuad(moab::EntityHandle node1, moab::
   if (0 == node4)
     MBERRCHK(moab::MB_FAILURE, mb);
 
-  // mark the quad to not use it again
-  int val = 0; // maybe it should be the layer
-  rval = mb->tag_set_data(markTag, &nextQuad, 1, &val);
-  MBERRCHK(rval, mb);
+  // mark the quad to be sure not to use it again
+  markedMoabEnts.insert(nextQuad);
 
   return moab::MB_SUCCESS;
 
@@ -645,9 +633,19 @@ int OneToOneSwept::TargetSurfProjection(std::vector<moab::EntityHandle> & bLayer
     TVertexList[i].onBoundary = false;
   }
 
-  iBase_TagHandle taghandle_tar = 0;
-  m_err = mk_core()->imesh_instance()->createTag("TargetMesh", 1, iBase_INTEGER, taghandle_tar);
-  IBERRCHK(m_err, "Trouble create the taghandle for the target mesh.");
+  iBase_TagHandle taghandle_tar = 0; 
+  m_err = mk_core()->imesh_instance()->getTagHandle("TargetMesh",
+      taghandle_tar);
+  if (m_err)
+  {
+    m_err = mk_core()->imesh_instance()->createTag("TargetMesh",
+        1, iBase_INTEGER, taghandle_tar);
+    IBERRCHK(m_err,
+        "Trouble create the target mesh tag handle in the mesh instance.");
+  }
+  // TODO: If the tag exists, we could verify that the tag is the proper one.
+  // Probably the tag should be put in a namespace, and perhaps it should
+  //   be deleted when we are finished with it.
 
   iBase_TagHandle taghandle = 0;
   m_err = mk_core()->imesh_instance()->getTagHandle("source", taghandle);
