@@ -100,6 +100,8 @@ void OneToOneSwept::setup_this()
       }
       else if (sf->size() > 0)
       {
+        // FIXME: This calculation is bogus if size means edge lengths.
+        // This should divide by the measurement of the source surface.
         int intervals = me->measure() / sf->size();
         if (!intervals)
           intervals++;
@@ -165,10 +167,11 @@ void OneToOneSwept::setup_this()
     // now create a TFI mapping
     // this will trigger edge meshers for linking edges, and for target surface edges
     TFIMapping *tm = (TFIMapping*) mk_core()->construct_meshop("TFIMapping", linkingSurfaces);
-    for (unsigned int i = 0; i < linkingSurfaces.size(); i++)
-    {
-      linkingSurfaces[i]->sizing_function_index(sf->core_index());
-    }
+    // For now, do not assign any sizing function at all
+//    for (unsigned int i = 0; i < linkingSurfaces.size(); i++)
+//    {
+//      linkingSurfaces[i]->sizing_function_index(sf->core_index());
+//    }
     mk_core()->insert_node(tm, (MeshOp*) this);
   }
 
@@ -185,9 +188,7 @@ void OneToOneSwept::execute_this()
   for (MEntSelection::iterator mit = mentSelection.begin(); mit != mentSelection.end(); mit++)
   {
     ModelEnt *me = mit -> first;
-    if (me->get_meshed_state() >= COMPLETE_MESH)
-      continue;
-    numLayers = me->mesh_intervals();// maybe it will be decided later?
+    // maybe it will be decided later?
     //case 1: if numLayers = 1, then it is not necessary to create any vertices for linking surface, All the vertices have been created by source surface and target surface
     // bLayers will contain nodes in order, layer by layer
     std::vector<moab::EntityHandle> bLayers;
@@ -208,7 +209,7 @@ void OneToOneSwept::execute_this()
 
     CreateElements(linkVertexList);
 
-    mk_core()->save_mesh("BeforeVolumeImprove.h5m");
+    mk_core()->save_mesh("BeforeVolumeImprove.exo");
 #if HAVE_MESQUITE
     //MeshImprove meshImpr(mk_core());
     //meshImpr.VolumeMeshImprove(volumeSet, iBase_REGION);
@@ -287,6 +288,9 @@ void OneToOneSwept::BuildLateralBoundaryLayers(ModelEnt * me, std::vector<moab::
   std::cout << "Nodes on lateral surfaces: " << nodesOnLateralSurfaces.size() << "\n";
   std::cout << "Quads on lateral surfaces: " << quadsOnLateralSurfaces.size() << "\n";
 
+  numLayers = 0;
+  if (!bdyNodes.empty())
+    numLayers = nodesOnLateralSurfaces.size() / bdyNodes.size() - 1;
   if (bdyNodes.size() * (numLayers + 1) != nodesOnLateralSurfaces.size())
   {
     std::cout << "Major problem: number of total nodes on boundary: " << nodesOnLateralSurfaces.size() << "\n";

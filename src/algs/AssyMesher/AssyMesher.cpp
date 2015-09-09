@@ -230,6 +230,13 @@ void AssyMesher::setup_this()
             // sizing function set on it
             meBottomSurf->sizing_function_index(radialSizeIndex);
           }
+          MEntVector edgeMEsVec;
+          std::vector<int> senses;
+          meBottomSurf->boundary(1, edgeMEsVec, &senses);
+          for (size_t emei = 0; emei < edgeMEsVec.size(); ++emei)
+          {
+            edgeMEsVec[emei]->constrain_even(true);
+          }
         }
       }
 
