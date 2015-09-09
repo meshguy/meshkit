@@ -50,16 +50,10 @@ bool CopyMesh::add_modelent(ModelEnt *model_ent)
 
 void CopyMesh::setup_this()
 {
-    std::cout<< "Setting-up CopyMesh MeshOp" << std::endl;
-
 }
 
 void CopyMesh::execute_this()
 {
-    std::cout<< "Executing CopyMesh MeshOp" << std::endl;
-
-    //std::vector<iMesh::EntityHandle> orig_ents(mentSelection.size());
-
     iBase_EntitySetHandle t = NULL;
     for (MEntSelection::iterator mit = mentSelection.begin();
          mit != mentSelection.end(); mit++) {
