@@ -1,5 +1,5 @@
-2200 0 4 0           
-14 Cubit  (iGeom) 17 ACIS 22.0.2 Linux 24 Mon Mar 23 02:42:20 2015 
+2100 0 4 0           
+14 Cubit  (iGeom) 17 ACIS 21.0.1 Linux 24 Thu Sep 10 12:49:31 2015 
 1 9.9999999999999995e-07 1e-10 
 body $4 -1 -1 $-1 $5 $-1 $6 T -11.75 -11.75 -2 11.75 11.75 2 #
 body $7 -1 -1 $-1 $8 $-1 $9 T -4.2000000000000002 2.2999999999999998 -2 0.20000000000000018 6.7000000000000002 2 #
@@ -32,10 +32,10 @@ shell $-1 -1 -1 $-1 $-1 $-1 $39 $-1 $14 T -9 -9 -2 9 9 2 #
 simple-snl-attrib $-1 -1 $-1 $16 $0 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @11 ENTITY_NAME @9 mat_block 0 0 #
 simple-snl-attrib $-1 -1 $-1 $17 $5 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 6 -2147483648 -1 #
 face $40 -1 -1 $-1 $41 $42 $18 $-1 $43 forward single T -9 -9 -2 9 -9 2 F #
-simple-snl-attrib $-1 -1 $-1 $19 $1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @11 ENTITY_NAME @13 pwr_rf_r_01@B 0 0 #
+simple-snl-attrib $-1 -1 $-1 $19 $1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @7 _xp1_@A @13 pwr_rf_r_01@B 0 0 #
 simple-snl-attrib $-1 -1 $-1 $20 $8 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 8 -2147483648 -1 #
 face $44 -1 -1 $-1 $45 $46 $21 $-1 $47 forward single T -4.2000000000000002 2.2999999999999998 -2 0.20000000000000018 6.7000000000000002 2 F #
-simple-snl-attrib $-1 -1 $-1 $22 $2 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @11 ENTITY_NAME @13 pwr_rf_r_01@C 0 0 #
+simple-snl-attrib $-1 -1 $-1 $22 $2 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @7 _xp2_@A @13 pwr_rf_r_01@C 0 0 #
 simple-snl-attrib $-1 -1 $-1 $23 $11 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 9 -2147483648 -1 #
 face $48 -1 -1 $-1 $49 $50 $24 $-1 $51 forward single T -0.20000000000000018 -3.7000000000000002 -2 4.2000000000000002 0.70000000000000018 2 F #
 simple-snl-attrib $-1 -1 $-1 $25 $3 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 2 @11 ENTITY_NAME @13 mat_coolant@A 0 0 #
@@ -84,7 +84,7 @@ loop $-1 -1 -1 $-1 $116 $117 $53 T -0.20000000000000018 -3.7000000000000002 -2 4
 cone-surface $-1 -1 -1 $-1 2 -1.5 0 0 0 1 2.2000000000000002 0 0 1 I I 0 1 2.2000000000000002 forward I I I I #
 loop $-1 -1 -1 $-1 $-1 $118 $39 T -4.2000000000000002 2.2999999999999998 2 0.20000000000000018 6.7000000000000002 2 unknown #
 coedge $-1 -1 -1 $-1 $82 $82 $119 $120 reversed $54 $-1 #
-simple-snl-attrib $-1 -1 $-1 $56 $30 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @19 mat_coolant_side1@B @15 mat_block_side1 0 0 #
+simple-snl-attrib $-1 -1 $-1 $56 $30 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @15 mat_block_side1 @19 mat_coolant_side1@B 0 0 #
 simple-snl-attrib $-1 -1 $121 $57 $41 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 38 -2147483648 -1 #
 integer_attrib-name_attrib-gen-attrib $-1 -1 $122 $-1 $58 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 39 #
 face $123 -1 -1 $-1 $124 $125 $18 $-1 $126 forward single T 9 -9 -2 9 9 2 F #
@@ -122,7 +122,7 @@ coedge $-1 -1 -1 $-1 $117 $117 $164 $165 reversed $79 $-1 #
 coedge $-1 -1 -1 $-1 $118 $118 $166 $167 reversed $81 $-1 #
 coedge $-1 -1 -1 $-1 $119 $119 $82 $120 forward $168 $-1 #
 edge $169 -1 -1 $-1 $170 0 $170 6.2831853071795862 $119 $171 forward @7 unknown T -4.2000000000000002 2.2999999999999998 -2 0.20000000000000018 6.7000000000000002 -2 #
-simple-snl-attrib $-1 -1 $-1 $84 $41 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @19 mat_coolant_side2@B @15 mat_block_side2 0 0 #
+simple-snl-attrib $-1 -1 $-1 $84 $41 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @15 mat_block_side2 @19 mat_coolant_side2@B 0 0 #
 simple-snl-attrib $-1 -1 $172 $85 $58 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 39 -2147483648 -1 #
 integer_attrib-name_attrib-gen-attrib $-1 -1 $173 $-1 $86 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 40 #
 face $174 -1 -1 $-1 $175 $176 $18 $-1 $177 forward single T -11.75 -11.75 2 11.75 11.75 2 F #
@@ -173,7 +173,7 @@ loop $-1 -1 -1 $-1 $-1 $119 $113 T -4.2000000000000002 2.2999999999999998 -2 0.2
 integer_attrib-name_attrib-gen-attrib $-1 -1 $241 $-1 $120 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 101 #
 vertex $242 -1 -1 $-1 $120 $243 #
 ellipse-curve $-1 -1 -1 $-1 -2 4.5 -2 0 0 1 2.2000000000000002 0 0 1 I I #
-simple-snl-attrib $-1 -1 $-1 $122 $58 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @19 mat_coolant_side3@B @15 mat_block_side3 0 0 #
+simple-snl-attrib $-1 -1 $-1 $122 $58 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @15 mat_block_side3 @19 mat_coolant_side3@B 0 0 #
 simple-snl-attrib $-1 -1 $244 $123 $86 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 40 -2147483648 -1 #
 integer_attrib-name_attrib-gen-attrib $-1 -1 $245 $-1 $124 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 41 #
 face $246 -1 -1 $-1 $247 $197 $18 $-1 $248 reversed single T -11.75 -11.75 -2 11.75 11.75 -2 F #
@@ -245,7 +245,7 @@ ellipse-curve $-1 -1 -1 $-1 -2 4.5 2 -0 -0 -1 2.2000000000000002 0 0 1 I I #
 simple-snl-attrib $-1 -1 $-1 $169 $120 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 101 -2147483648 -1 #
 integer_attrib-name_attrib-gen-attrib $-1 -1 $322 $-1 $170 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 73 #
 point $-1 -1 -1 $-1 0.20000000000000018 4.5 -2 #
-simple-snl-attrib $-1 -1 $-1 $173 $86 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @19 mat_coolant_side4@B @15 mat_block_side4 0 0 #
+simple-snl-attrib $-1 -1 $-1 $173 $86 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 3 @11 ENTITY_NAME @15 mat_block_side4 @19 mat_coolant_side4@B 0 0 #
 simple-snl-attrib $-1 -1 $323 $174 $124 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 1 1 @17 NEW_SIMPLE_ATTRIB 1 @9 ENTITY_ID 0 3 41 -2147483648 -1 #
 integer_attrib-name_attrib-gen-attrib $-1 -1 $324 $-1 $175 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 @8 CUBIT_ID 42 #
 face $325 -1 -1 $-1 $326 $327 $18 $-1 $328 reversed single T -11.75 -11.75 -2 11.75 -11.75 2 F #
