@@ -25,7 +25,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/PostBL \
                -I$(top_srcdir)/src/algs/CoreGen \
                -I$(top_srcdir)/src/algs/AssyGen \
-               -I$(top_srcdir)/src/algs/AssyMesher \
                -I$(top_srcdir)/src/algs/IntervalAssignment \
                -I$(top_srcdir)/src/extern/triangle \
 	       -I$(top_srcdir)/src/algs/make_watertight \
@@ -49,6 +48,11 @@ TESTS = test_edgemesher \
 	test_solidmesher \
 	test_solidmesher_senses
 
+if HAVE_CAMAL_PAVER
+AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AssyMesher
+TESTS += test_assymesher
+BROKEN_TESTS += test_assymesher
+endif
 
 if HAVE_QUADMESHER
 AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
@@ -120,7 +124,6 @@ test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslimmesher_SOURCES = test_qslimmesher.cpp
 test_assygen_SOURCES = test_assygen.cpp
-test_assymesher_SOURCES = test_assymesher.cpp
 test_postbl_SOURCES = test_postbl.cpp
 if HAVE_FBIGEOM
 test_fbgeom_SOURCES = test_fbgeom.cpp
@@ -135,7 +138,9 @@ endif
 if ENABLE_intassign
 test_intassign_SOURCES = test_intassign.cpp
 endif
-
+if HAVE_CAMAL
+test_assymesher_SOURCES = test_assymesher.cpp
+endif
 # Utility target: build but don't run tests
 build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
