@@ -138,7 +138,9 @@ endif
 if ENABLE_intassign
 test_intassign_SOURCES = test_intassign.cpp
 endif
-
+if HAVE_CAMAL
+test_assymesher_SOURCES = test_assymesher.cpp
+endif
 # Utility target: build but don't run tests
 build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
