@@ -182,20 +182,12 @@ AC_ARG_WITH(igeom,
 [IGEOM_DIR=$withval; SF="$SF --with-igeom=$withval"],
 [IGEOM_DIR="$ITAPS_DIR"; IGEOM_OKAY_IF_MISSING=yes])
 
-AC_ARG_WITH(fbigeom,
-[AC_HELP_STRING([--with-fbigeom=DIR],[Directory containing FBiGeom implementation])],
-[FBIGEOM_DIR=$withval; SF="$SF --with-fbigeom=$withval"],
-[FBIGEOM_DIR="$ITAPS_DIR"; FBIGEOM_OKAY_IF_MISSING=yes])
-
+FBIGEOM_OKAY_IF_MISSING=yes
+IREL_OKAY_IF_MISSING=yes
 AC_ARG_WITH(imesh,
 [AC_HELP_STRING([--with-imesh=DIR],[Directory containing iMesh implementation])],
-[IMESH_DIR=$withval; SF="$SF --with-imesh=$withval"],
-[IMESH_DIR="$ITAPS_DIR"; IMESH_OKAY_IF_MISSING=yes])
-
-AC_ARG_WITH(irel,
-[AC_HELP_STRING([--with-irel=DIR],[Directory containing iRel implementation])],
-[IREL_DIR=$withval; SF="$SF --with-irel=$withval"],
-[IREL_DIR="$ITAPS_DIR"; IREL_OKAY_IF_MISSING=yes])
+[IMESH_DIR=$withval; FBIGEOM_DIR=$withval; IREL_DIR=$withval; SF="$SF --with-imesh=$withval"],
+[IMESH_DIR="$ITAPS_DIR"; FBIGEOM_DIR="$ITAPS_DIR"; IREL_DIR="$ITAPS_DIR"; IMESH_OKAY_IF_MISSING=yes])
 
 DISTCHECK_CONFIGURE_FLAGS="$SF"
 
@@ -261,8 +253,8 @@ AM_CONDITIONAL( HAVE_$2, [test "xyes" == "x$HAVE_$2"] )
 ])
 
 CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may fail] )
-CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
+CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabled] )
 
 
