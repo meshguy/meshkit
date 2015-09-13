@@ -1,5 +1,5 @@
-#ifndef MESHKIT_TETGEN_TET_MESHER_HPP
-#define MESHKIT_TETGEN_TET_MESHER_HPP
+#ifndef TGTETMESHER_H_
+#define TGTETMESHER_H_
 
 #include "meshkit/iGeom.hpp"
 #include <set>
@@ -11,8 +11,7 @@
  */
 
 #include "meshkit/MeshScheme.hpp"
-
-class CMLTetMesher;
+class TGTetMesher;
 
 namespace MeshKit
 {
