@@ -174,7 +174,7 @@ SF="$DISTCHECK_CONFIGURE_FLAGS"
 
 AC_ARG_WITH(itaps,
 [AC_HELP_STRING([--with-itaps=DIR], 
-                [specify same dir for --with-imesh, --with-igeom, --with-fbigeom, --with-irel])],
+                [specify same dir for --with-imesh, --with-igeom, --with-mesquite, --with-fbigeom, --with-irel])],
 [ITAPS_DIR="$withval"; SF="$SF --with-itaps=$withval"],[ITAPS_DIR=])
 
 AC_ARG_WITH(igeom,
@@ -184,10 +184,12 @@ AC_ARG_WITH(igeom,
 
 FBIGEOM_OKAY_IF_MISSING=yes
 IREL_OKAY_IF_MISSING=yes
+MESQUITE_OKAY_IF_MISSING=yes
+
 AC_ARG_WITH(imesh,
 [AC_HELP_STRING([--with-imesh=DIR],[Directory containing iMesh implementation])],
-[IMESH_DIR=$withval; FBIGEOM_DIR=$withval; IREL_DIR=$withval; SF="$SF --with-imesh=$withval"],
-[IMESH_DIR="$ITAPS_DIR"; FBIGEOM_DIR="$ITAPS_DIR"; IREL_DIR="$ITAPS_DIR"; IMESH_OKAY_IF_MISSING=yes])
+[IMESH_DIR=$withval; WITH_MESQUITE=$withval; FBIGEOM_DIR=$withval; IREL_DIR=$withval; SF="$SF --with-imesh=$withval"],
+[IMESH_DIR="$ITAPS_DIR"; WITH_MESQUITE="$ITAPS_DIR"; FBIGEOM_DIR="$ITAPS_DIR"; IREL_DIR="$ITAPS_DIR"; IMESH_OKAY_IF_MISSING=yes])
 
 DISTCHECK_CONFIGURE_FLAGS="$SF"
 
@@ -924,15 +926,7 @@ fi
 #                           Mesquite
 ################################################################################
 
-AC_ARG_WITH([mesquite],
-            [AC_HELP_STRING([--with-mesquite@<:@=DIR@:>@], [Specify where to find Mesquite library])
-AC_HELP_STRING([--without-mesquite], [Configure w/out support for Mesquite library])],
-            [WITH_MESQUITE="$withval"
-             DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-mesquite=\"${withval}\""],
-            [WITH_MESQUITE=])
-
-
-# define function that tries to find a no-arg constructor for a 
+# define function that tries to find a no-arg constructor for a
 # mesquite object in specified lib.  Arguments are 1) class name, 2) library name,
 # 3) actions if success and 4) actions if not found.
 AC_DEFUN([MESQUITE_LINK_DESTRUCTOR],[
@@ -970,52 +964,52 @@ if test "x$WITH_MESQUITE" != "xno"; then
       MESQUITE_CPPFLAGS=-I$WITH_MESQUITE/include
     fi
   fi
-  
+
   old_LIBS="$LIBS"
   old_LDFLAGS="$LD_FLAGS"
   old_CPPFLAGS="$CPPFLAGS"
   LDFLAGS="$LDFLAGS $MESQUITE_LDFLAGS"
   CPPFLAGS="$CPPFLAGS $MESQUITE_CPPFLAGS"
-  
+
   AC_MSG_CHECKING([for Mesquite.hpp])
   AC_CHECK_HEADER([Mesquite.hpp], ,[HAVE_MESQUITE=no])
-  
+
   if test $HAVE_MESQUITE = yes; then
     MESQUITE_LINK_DESTRUCTOR([PatchData],[mesquite],[LIBS="-lmesquite $LIBS"
                             MESQUITE_LIBS="-lmesquite"],[HAVE_MESQUITE=no])
   fi
   if test $HAVE_MESQUITE = yes; then
-    
+
     MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[mesquite],[MESQUITE_HAS_IMESH=yes],
-      [MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[msqimesh], 
-        [MESQUITE_HAS_IMESH=yes 
+      [MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[msqimesh],
+        [MESQUITE_HAS_IMESH=yes
          MESQUITE_LIBS="-lmsqimesh $MESQUITE_LIBS"
          LIBS="-lmsqimesh $LIBS"],[MESQUITE_HAS_IMESH=no])])
     MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[mesquite],[MESQUITE_HAS_IGEOM=yes],
-      [MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[msqigeom], 
-        [MESQUITE_HAS_IGEOM=yes 
+      [MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[msqigeom],
+        [MESQUITE_HAS_IGEOM=yes
          MESQUITE_LIBS="-lmsqigeom $MESQUITE_LIBS"
          LIBS="-lmsqigeom $LIBS"],[MESQUITE_HAS_IGEOM=no])])
     MESQUITE_LINK_DESTRUCTOR([MsqIRel],[mesquite],[MESQUITE_HAS_IREL=yes],
-      [MESQUITE_LINK_DESTRUCTOR([MsqIRel],[msqirel], 
-        [MESQUITE_HAS_IREL=yes 
+      [MESQUITE_LINK_DESTRUCTOR([MsqIRel],[msqirel],
+        [MESQUITE_HAS_IREL=yes
          MESQUITE_LIBS="-lmsqirel $MESQUITE_LIBS"
          LIBS="-lmsqirel $LIBS"],[MESQUITE_HAS_IREL=no])])
-  
+
   fi
-  
+
   LIBS="$old_LIBS"
   CPPFLAGS="$old_CPPFLAGS"
   LDFLAGS="$old_LDFLAGS"
   AC_LANG_POP([C++])
-  
+
   if test "xyes" = "x$HAVE_MESQUITE"; then
     if test "xno" = "x$MESQUITE_HAS_IMESH"; then
       AC_MSG_WARN([Mesquite library does not have iMesh support])
       HAVE_MESQUITE=no
     fi
   fi
-  
+
   if test "xno" = "x$HAVE_MESQUITE"; then
     if test "x" != "x$WITH_MESQUITE"; then
       AC_MSG_ERROR([Mesquite not found or not usable])
