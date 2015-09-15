@@ -17,7 +17,9 @@
 #ifdef HAVE_TRIANGLE
 #  include "meshkit/TriangleMesher.hpp"
 #endif
-
+#ifdef HAVE_TETGEN
+#  include "meshkit/TGTetMesher.hpp"
+#endif
 
 
 namespace MeshKit {
@@ -52,6 +54,10 @@ extern int register_extern_mesh_ops() { return 1; }
 #ifdef HAVE_NETGEN
   REGISTER_MESH_OP(NGTetMesher);
 #endif    
+
+#ifdef HAVE_TETGEN
+  REGISTER_MESH_OP(TGTetMesher);
+#endif
 
 #ifdef HAVE_MESQUITE
   REGISTER_MESH_OP(MesquiteOpt);

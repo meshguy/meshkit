@@ -12,6 +12,10 @@ if HAVE_TRIANGLE
 AM_LDFLAGS += $(TRIANGLE_LIBS)
 endif
 
+if HAVE_TETGEN
+AM_LDFLAGS +=$(TETGEN_LIBS)
+endif
+
 AM_CPPFLAGS += -DDATADIR=$(DATADIR)
 
 AM_CPPFLAGS += -I$(top_srcdir)/test \
@@ -27,7 +31,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/algs/AssyGen \
                -I$(top_srcdir)/src/algs/IntervalAssignment \
                -I$(top_srcdir)/src/extern/triangle \
-	       -I$(top_srcdir)/src/algs/make_watertight \
+                -I$(top_srcdir)/src/extern/tetgen \
+     	       -I$(top_srcdir)/src/algs/make_watertight \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils
 
