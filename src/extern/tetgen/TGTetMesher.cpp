@@ -6,9 +6,10 @@
 #include "moab/Range.hpp"
 #include "meshkit/RegisterMeshOp.hpp"
 
-namespace tetgen {
+//namespace tetgen {
   #include "tetgen.h"
-}
+//}
+
 
 
 #include <vector>
@@ -72,9 +73,9 @@ void TGTetMesher::setup_this()
 
 void TGTetMesher::execute_this()
 {
-  tetgen::tetgenio in, out;
-  tetgen::tetgenio::facet *f;
-  tetgen::tetgenio::polygon *p;
+  tetgenio in, out;
+  tetgenio::facet *f;
+  tetgenio::polygon *p;
   in.firstnumber = 0;
 
   for (MEntSelection::iterator sit = mentSelection.begin(); sit != mentSelection.end(); sit++) {
@@ -107,13 +108,13 @@ void TGTetMesher::execute_this()
      unsigned int numtris = bdy.size();
 
      in.numberoffacets = numtris;
-     in.facetlist = new tetgen::tetgenio::facet[numtris];
+     in.facetlist = new tetgenio::facet[numtris];
      in.facetmarkerlist = NULL;
 
     for (unsigned int i = 0; i < numtris; i++){
         f = &in.facetlist[i];
         f->numberofpolygons = 1;
-        f->polygonlist = new tetgen::tetgenio::polygon[1];
+        f->polygonlist = new tetgenio::polygon[1];
         f->numberofholes = 0;
         f->holelist = NULL;
         p = &f->polygonlist[0];
@@ -125,7 +126,7 @@ void TGTetMesher::execute_this()
       }
 
     // CALL TETGEN
-    tetgen::tetrahedralize(tet_switch, &in, &out);
+    tetrahedralize(tet_switch, &in, &out);
 
    // TODO: Bring back mesh to MeshKit database
     }
