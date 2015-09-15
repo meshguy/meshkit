@@ -24,6 +24,12 @@ AM_CPPFLAGS += -I$(srcdir)/netgen $(NETGEN_CPPFLAGS) -DHAVE_NETGEN
 LIBS += $(NETGEN_LIBS)
 endif
 
+if HAVE_TETGEN
+SUBDIRS += tetgen
+LIBADD += tetgen/libMeshKittetgen.la
+AM_CPPFLAGS += -I$(srcdir)/tetgen $(TETGEN_CPPFLAGS) -DHAVE_TETGEN
+LIBS += $(TETGEN_LIBS)
+endif
 
 if HAVE_TRIANGLE
 SUBDIRS += triangle

@@ -12,6 +12,13 @@ SUBDIRS += netgen
 endif
 endif
 
+# CAMAL dependency should go once we have another trimesher.
+if HAVE_TETGEN
+if HAVE_CAMAL
+SUBDIRS += tetgen
+endif
+endif
+
 if HAVE_MESQUITE
 SUBDIRS += mesquite
 endif
