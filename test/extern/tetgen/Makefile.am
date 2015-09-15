@@ -30,7 +30,7 @@ endif
 test_tgtetmesher_SOURCES = test_tgtetmesher.cpp
 test_tgtetmesher_DEPENDENCIES = \
 	$(LDADD)
-TESTS += test_tgtetmesher
+#TESTS += test_tgtetmesher
 
 # Utility target: build but don't run tests
 build-check:
