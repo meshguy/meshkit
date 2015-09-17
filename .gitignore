@@ -18,6 +18,7 @@ configure
 *.la
 *.creator*
 *.includes
+*.brep
 *.files
 *.config
 *.lo
