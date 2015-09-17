@@ -32,7 +32,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils
 
 #BROKEN_TESTS = test_jaalquad test_assygen edmond_matching hamiltonian mreport qualestm SimpleTri2Quad test_quadmeshcleanup
-BROKEN_TESTS = test_ebmesh test_assymesher
+BROKEN_TESTS = test_ebmesh
 
 TESTS = test_edgemesher \
         test_tfimapping \
@@ -75,7 +75,7 @@ TESTS += \
         test_mbvolop
 # some of these tests require CAMAL and FBiGeom, too
 if HAVE_CAMAL_PAVER
-TESTS += test_volice test_assymesher
+TESTS += test_volice 
 if HAVE_TRIANGLE
 TESTS += test_setpnt2quad
 endif
@@ -138,7 +138,7 @@ endif
 if ENABLE_intassign
 test_intassign_SOURCES = test_intassign.cpp
 endif
-if HAVE_CAMAL
+if HAVE_CAMAL_PAVER
 test_assymesher_SOURCES = test_assymesher.cpp
 endif
 # Utility target: build but don't run tests
