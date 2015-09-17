@@ -78,7 +78,7 @@ bool CParser::ReadNextLine (std::ifstream& FileInput, int& nLineNum,
       if ((szInputString.substr(0,nCLen) != szComment)&& (bWhSpc ==false)){	   
 	szInputString = szInp;
 	GetTokens(szInputString, " ", tokens);
-	for(int i=0; i< (int)tokens.size(); i++){
+	for(unsigned int i=0; i< tokens.size(); i++){
 	  std::string temptoken = tokens[i];
 	  if (temptoken == "&")
 	    flag1 = 1;
@@ -93,7 +93,7 @@ bool CParser::ReadNextLine (std::ifstream& FileInput, int& nLineNum,
 	// check if line is continued &
 	while(flag1 ==1 && tokenfound == 1){	
 	  GetTokens(szTempString, " ", tokens);
-	  for(int i=1; i<=(int)tokens.size(); i++){
+	  for(unsigned int i=1; i<=tokens.size(); i++){
 	    std::string temptoken = tokens[i-1];
 	    if (temptoken == "&"){
 	      tokenfound = 1;
@@ -187,11 +187,11 @@ void CParser:: FilterComment (std::string& input,  const std::string& szComment)
 // ----------------------------------------------------------------------------
 {
   // remove comment from the line obtained
-  int i;
+  unsigned int i;
   std::vector<std::string> tokens;
   std::string tempInput;
   GetTokens(input, " ", tokens);
-  for(i=0; i<(int)tokens.size(); i++){
+  for(i=0; i<tokens.size(); i++){
     std::string temptoken = tokens[i];
     if(temptoken == szComment){
       break;
@@ -219,11 +219,11 @@ void CParser:: RemoveToken (std::string& input)
 // ----------------------------------------------------------------------------
 {
   // remove comment from the line obtained
-  int i;
+  unsigned int i;
   std::vector<std::string> tokens;
   std::string tempInput;
   GetTokens(input, " ", tokens);
-  for(i=0; i<(int)tokens.size(); i++){
+  for(i=0; i<tokens.size(); i++){
     std::string temptoken = tokens[i];
     if(temptoken == "&"){
       break;
@@ -251,11 +251,11 @@ bool CParser:: EatWhiteSpace (std::string& input)
 // ----------------------------------------------------------------------------
 {
   // remove comment from the line obtained
-  int i;
+  unsigned int i;
   std::vector<std::string> tokens;
   std::string tempInput;
   GetTokens(input, " ", tokens);
-  for(i=0; i<(int)tokens.size(); i++){
+  for(i=0; i<tokens.size(); i++){
     std::string temptoken = tokens[i];
     if(temptoken != " " && temptoken !="!"){
       return false;
