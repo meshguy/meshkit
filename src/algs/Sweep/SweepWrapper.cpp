@@ -146,7 +146,8 @@ void SweepWrapper::run_wrapper( Mesh* mesh,
   MSQ_ERRRTN(err);
   
     // smooth mesh
-  q.run_common( mesh, pmesh, domain, settings, err ); 
+  MeshDomainAssoc mesh_and_domain(mesh, domain);
+  q.run_common( &mesh_and_domain, pmesh, settings, err );
   MSQ_ERRRTN(err);
 }
 
