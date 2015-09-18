@@ -350,10 +350,12 @@ void MesquiteOpt::execute_this()
               "Cannot optimize surface meshes.");
 #else
           MsqIGeom msqgeom( igeom->instance(), ent->geom_handle() );
-          smoother->run_instructions( &msqmesh, &msqgeom, err );
+          MeshDomainAssoc mesh_and_domain = MeshDomainAssoc(&msqmesh, &msqgeom);
+          smoother->run_instructions( &mesh_and_domain, err );
 #endif
         }
         else {
+          MeshDomainAssoc mesh_and_domain = MeshDomainAssoc(&msqmesh,0);
           smoother->run_instructions( &msqmesh, err );
         }
         MSQERRCHK(err);
@@ -386,7 +388,8 @@ void MesquiteOpt::execute_this()
         FreeSmoothDomain msqgeom( mk_core(), ents );
         MsqIMesh msqmesh( imesh->instance(), set, dim, err, &fixedTag );
         MSQERRCHK(err);
-        smoother->run_instructions( &msqmesh, &msqgeom, err );
+        MeshDomainAssoc mesh_and_domain = MeshDomainAssoc(&msqmesh, &msqgeom);
+        smoother->run_instructions( &mesh_and_domain, err );
         MSQERRCHK(err);
       }
       catch (...) {
