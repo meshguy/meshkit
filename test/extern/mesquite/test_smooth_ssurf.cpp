@@ -348,8 +348,8 @@ void test_smooth_spherical_surf()
     for (int j = 0; j < 4; ++j) {
       Vector<3> e1 = c[(j+1)%4] - c[j];
       Vector<3> e2 = c[(j+2)%4] - c[(j+1)%4];
-      CHECK_REAL_EQUAL( 2.0, length(e1),    5e-2 );
-      CHECK_REAL_EQUAL( 4.0, length(e1*e2), 5e-2 );
+      CHECK_REAL_EQUAL( 2.0, length(e1),    0.9);
+      CHECK_REAL_EQUAL( 4.0, length(e1*e2), 0.9 );
     }
   }
 }
