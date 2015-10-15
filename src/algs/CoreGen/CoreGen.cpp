@@ -766,83 +766,63 @@ namespace MeshKit
           {
             // No extension found
           }
-        if(ext == "cub") isCub = true;
+        if(ext == "cub"|| ext == "h5m") isCub = true;
 
         if(isCub){
+            mk_core()->igeom_instance()->deleteAll();
+
             iGeom_load(igeom->instance(), files[i].c_str(), NULL, &err,
                        strlen(files[i].c_str()), 0);
             iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(files[i].c_str()), 0);
             ERRORR("Couldn't read mesh file.", err);
             // populate model eneities here so we can call irel function from MeshKit
+
+            mk_core()->irel_pair()->inferAllRelations();
             mk_core()->populate_model_ents(0,0,0);
 
 
-
             // now calculate geometric and mesh volume
-            std::cout << "Computing MESHTOGEOM ratio" << std::endl;
             VerdictWrapper vw(mb);
             // Get all the materials in this mesh file
             moab::Tag mattag, gidtag;
             moab::Range matsets;
             mb->tag_get_handle("MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag);
             mb->tag_get_handle("GLOBAL_ID", 1, MB_TYPE_INTEGER, gidtag);
-            mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
-                        
+            mb->get_entities_by_type_and_tag((moab::EntityHandle) orig_set, MBENTITYSET, &mattag, 0, 1, matsets );
+
             double mtot = 0.0, volume = 0.0;
             //loop thru all the materials
             moab::Range::iterator set_it;
             for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
                 moab::EntityHandle this_set = *set_it;
 
-
-
-
-//                int numvols = 0;
-//                mb->get_number_entities_by_type(this_set, MBENTITYSET, numvols, false);
-//                for (int ns = 0; ns < numvols; ns++){
-                    // add up the geometric volume for these geometric volumes
-                    // get the entity sets there must be one entity set for each volume
-                    std::vector<moab::EntityHandle> geomsets_for_gid;
-                    mb->get_entities_by_type(this_set, MBENTITYSET, geomsets_for_gid);
-
-
-//                    iBase_TagHandle igeom_gidtag;
-//                    igeom->getTagHandle("GLOBAL_ID", &igeom_gidtag);
-
-                    for(int volid = 0; volid < geomsets_for_gid.size(); volid++){
-                        // get the gid of this volume
-                        int my_geom_id = 0;
-                        mb->tag_get_data(gidtag, &geomsets_for_gid[volid], 1, &my_geom_id);
-                        std::cout << " GID = " << my_geom_id << std::endl;
-
-                        iBase_EntityHandle ent2=NULL;
-                        mk_core()->irel_pair()->getSetEntRelation((iBase_EntitySetHandle) geomsets_for_gid[volid], true, ent2);
-                        double myvol = 0.0;
-                        if(ent2 != NULL){
-                          mk_core()->igeom_instance()->measure(&ent2,1,&myvol);
-                          std::cout << " my vol is " << myvol << std::endl;
-                        }
-                        // now call igeom to get geometric volume of this GID
-                        //igeom->measure();
-                      }
-//                  }
-                
-//                // use irel to find volume of this material
-//                iBase_EntityHandle ent2=NULL;
-//                mk_core()->irel_pair()->getSetEntRelation((iBase_EntitySetHandle) this_set, false, ent2);
-
-
-//                double tvol;
-//                std::vector <iBase_EntityHandle> tent;
-//                tent.push_back(ent2);
-//                mk_core()->igeom_instance()->measure(&tent[0], 1, &tvol);
-
-//                std::cout << numvols << " ge volume " << std::endl;
-
-
                 // get the id for this set
                 int material_id;
                 mb->tag_get_data(mattag, &this_set, 1, &material_id);
+                std::cout << "Computing MESHTOGEOM ratio for " << material_id << std::endl;
+
+                // add up the geometric volume for these geometric volumes
+                // get the entity sets there must be one entity set for each volume
+                std::vector<moab::EntityHandle> geomsets_for_gid;
+                geomsets_for_gid.clear();
+                mb->get_entities_by_type(this_set, MBENTITYSET, geomsets_for_gid);
+
+                for(unsigned int volid = 0; volid < geomsets_for_gid.size(); volid++){
+                    // get the gid of this volume
+                    int my_geom_id = 0;
+                    mb->tag_get_data(gidtag, &geomsets_for_gid[volid], 1, &my_geom_id);
+                    std::cout << " GID = " << my_geom_id << std::endl;
+
+                    iBase_EntityHandle ent2=NULL;
+                    mk_core()->irel_pair()->getSetEntRelation((iBase_EntitySetHandle) geomsets_for_gid[volid], 1, ent2);
+                    double myvol = 0.0;
+                    if(ent2 != NULL){
+                        mk_core()->igeom_instance()->measure(&ent2,1,&myvol);
+                        std::cout << " my vol is " << myvol << std::endl;
+                        volume+=myvol;
+                      }
+                  }
+
 
                 std::vector<moab::EntityHandle> elems;
                 mb->get_entities_by_dimension(this_set, 3, elems, true);
@@ -855,7 +835,7 @@ namespace MeshKit
                   }
 
                 double meshtogeom = mtot/volume;
-                std::cout << material_id << " has volume " << mtot << std::endl;
+                std::cout << material_id << " " << volume << "has mesh volume " << mtot << std::endl;
 
                 moab::Tag mtog_tag;
                 // now set the meshtogeom tag on this set
@@ -865,6 +845,7 @@ namespace MeshKit
 
                 elems.clear();
                 mtot = 0.0;
+                volume = 0.0;
               }
             //
           }
