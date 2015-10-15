@@ -806,8 +806,8 @@ namespace MeshKit
                     mb->get_entities_by_type(this_set, MBENTITYSET, geomsets_for_gid);
 
 
-                    iBase_TagHandle igeom_gidtag;
-                    igeom->getTagHandle("GLOBAL_ID", &igeom_gidtag);
+//                    iBase_TagHandle igeom_gidtag;
+//                    igeom->getTagHandle("GLOBAL_ID", &igeom_gidtag);
 
                     for(int volid = 0; volid < geomsets_for_gid.size(); volid++){
                         // get the gid of this volume
@@ -815,6 +815,13 @@ namespace MeshKit
                         mb->tag_get_data(gidtag, &geomsets_for_gid[volid], 1, &my_geom_id);
                         std::cout << " GID = " << my_geom_id << std::endl;
 
+                        iBase_EntityHandle ent2=NULL;
+                        mk_core()->irel_pair()->getSetEntRelation((iBase_EntitySetHandle) geomsets_for_gid[volid], true, ent2);
+                        double myvol = 0.0;
+                        if(ent2 != NULL){
+                          mk_core()->igeom_instance()->measure(&ent2,1,&myvol);
+                          std::cout << " my vol is " << myvol << std::endl;
+                        }
                         // now call igeom to get geometric volume of this GID
                         //igeom->measure();
                       }
