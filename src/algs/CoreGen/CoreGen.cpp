@@ -1,4 +1,6 @@
 #include "meshkit/CoreGen.hpp"
+#include "moab/VerdictWrapper.hpp"
+
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
 namespace MeshKit
@@ -747,15 +749,123 @@ namespace MeshKit
     // create cm instances for each mesh file
     cm.resize(files.size());
     iBase_EntitySetHandle orig_set;
-
+    bool isCub = false;
     // loop reading all mesh files
     for (unsigned int i = 0; i < files.size(); i++) {
         iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
         ERRORR("Couldn't create file set.", err);
         logfile << "Loading File: " << files[i].c_str() << std::endl;
-        iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(files[i].c_str()), 0);
-        ERRORR("Couldn't read mesh file.", err);
-        mk_core()->populate_model_ents(0,0,0);
+        std::string ext;
+        std::string::size_type idx;
+        idx = files[i].rfind('.');
+        if(idx != std::string::npos)
+          {
+            ext = files[i].substr(idx+1);
+          }
+        else
+          {
+            // No extension found
+          }
+        if(ext == "cub") isCub = true;
+
+        if(isCub){
+            iGeom_load(igeom->instance(), files[i].c_str(), NULL, &err,
+                       strlen(files[i].c_str()), 0);
+            iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(files[i].c_str()), 0);
+            ERRORR("Couldn't read mesh file.", err);
+            // populate model eneities here so we can call irel function from MeshKit
+            mk_core()->populate_model_ents(0,0,0);
+
+
+
+            // now calculate geometric and mesh volume
+            std::cout << "Computing MESHTOGEOM ratio" << std::endl;
+            VerdictWrapper vw(mb);
+            // Get all the materials in this mesh file
+            moab::Tag mattag, gidtag;
+            moab::Range matsets;
+            mb->tag_get_handle("MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag);
+            mb->tag_get_handle("GLOBAL_ID", 1, MB_TYPE_INTEGER, gidtag);
+            mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+                        
+            double mtot = 0.0, volume = 0.0;
+            //loop thru all the materials
+            moab::Range::iterator set_it;
+            for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+                moab::EntityHandle this_set = *set_it;
+
+
+
+
+//                int numvols = 0;
+//                mb->get_number_entities_by_type(this_set, MBENTITYSET, numvols, false);
+//                for (int ns = 0; ns < numvols; ns++){
+                    // add up the geometric volume for these geometric volumes
+                    // get the entity sets there must be one entity set for each volume
+                    std::vector<moab::EntityHandle> geomsets_for_gid;
+                    mb->get_entities_by_type(this_set, MBENTITYSET, geomsets_for_gid);
+
+
+                    iBase_TagHandle igeom_gidtag;
+                    igeom->getTagHandle("GLOBAL_ID", &igeom_gidtag);
+
+                    for(int volid = 0; volid < geomsets_for_gid.size(); volid++){
+                        // get the gid of this volume
+                        int my_geom_id = 0;
+                        mb->tag_get_data(gidtag, &geomsets_for_gid[volid], 1, &my_geom_id);
+                        std::cout << " GID = " << my_geom_id << std::endl;
+
+                        // now call igeom to get geometric volume of this GID
+                        //igeom->measure();
+                      }
+//                  }
+                
+//                // use irel to find volume of this material
+//                iBase_EntityHandle ent2=NULL;
+//                mk_core()->irel_pair()->getSetEntRelation((iBase_EntitySetHandle) this_set, false, ent2);
+
+
+//                double tvol;
+//                std::vector <iBase_EntityHandle> tent;
+//                tent.push_back(ent2);
+//                mk_core()->igeom_instance()->measure(&tent[0], 1, &tvol);
+
+//                std::cout << numvols << " ge volume " << std::endl;
+
+
+                // get the id for this set
+                int material_id;
+                mb->tag_get_data(mattag, &this_set, 1, &material_id);
+
+                std::vector<moab::EntityHandle> elems;
+                mb->get_entities_by_dimension(this_set, 3, elems, true);
+                // get all the elements in this material
+                double mvol_temp = 0.0;
+                for(unsigned int i=0; i<elems.size();i++){
+                    mvol_temp = 0.0;
+                    vw.quality_measure(elems[i], moab::MB_VOLUME, mvol_temp);
+                    mtot+=mvol_temp;
+                  }
+
+                double meshtogeom = mtot/volume;
+                std::cout << material_id << " has volume " << mtot << std::endl;
+
+                moab::Tag mtog_tag;
+                // now set the meshtogeom tag on this set
+                mb->tag_get_handle( "MESHTOGEOM", 1, MB_TYPE_DOUBLE,
+                                    mtog_tag, MB_TAG_SPARSE|MB_TAG_CREAT );
+                mb->tag_set_data(mtog_tag, &(*set_it), 1, &meshtogeom);
+
+                elems.clear();
+                mtot = 0.0;
+              }
+            //
+          }
+        else{
+            iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(files[i].c_str()), 0);
+            ERRORR("Couldn't read mesh file.", err);
+            mk_core()->populate_model_ents(0,0,0);
+          }
         ModelEnt *me;
         me = NULL;
         me = new ModelEnt(mk_core(), iBase_EntitySetHandle(0), /*igeom instance*/0, (moab::EntityHandle)orig_set, 0);
