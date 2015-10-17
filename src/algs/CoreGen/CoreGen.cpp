@@ -31,6 +31,7 @@ namespace MeshKit
     PII = acos(-1.0);
     comment = "!";
     MAXCHARS = 2000;
+    compute_meshtogeom = false;
     extrude_flag = false;
     mem_tflag = false;
     global_ids = true;
@@ -695,9 +696,14 @@ namespace MeshKit
                     iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
                     ERRORR("Couldn't create file set.", err);
 
-                    // load this file
-                    iMesh_load(imesh->instance(), orig_set, files[rank_load[temp_index]].c_str(), NULL, &err, strlen(files[rank_load[temp_index]].c_str()), 0);
-                    ERRORR("Couldn't read mesh file.", err);
+                    if(!compute_meshtogeom){
+                        // load this file
+                        iMesh_load(imesh->instance(), orig_set, files[rank_load[temp_index]].c_str(), NULL, &err, strlen(files[rank_load[temp_index]].c_str()), 0);
+                        ERRORR("Couldn't read mesh file.", err);
+                      }
+                    else{
+                        load_and_compute_meshtogeom(orig_set, files[rank_load[temp_index]]);
+                      }
                     logfile << "Loaded mesh file " << rank_load[temp_index] << " in processor: " << nrank << std::endl;
 
                     ModelEnt *me;
@@ -717,9 +723,14 @@ namespace MeshKit
                 iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
                 ERRORR("Couldn't create file set.", err);
 
-                // load this file
-                iMesh_load(imesh->instance(), orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
-                ERRORR("Couldn't read mesh file.", err);
+                if(!compute_meshtogeom){
+                    // load this file
+                    iMesh_load(imesh->instance(), orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
+                    ERRORR("Couldn't read mesh file.", err);
+                  }
+                else{
+                    load_and_compute_meshtogeom(orig_set, files[temp_index]);
+                  }\
                 logfile << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
 
                 ModelEnt *me;
@@ -749,110 +760,18 @@ namespace MeshKit
     // create cm instances for each mesh file
     cm.resize(files.size());
     iBase_EntitySetHandle orig_set;
-    bool isCub = false;
     // loop reading all mesh files
     for (unsigned int i = 0; i < files.size(); i++) {
         iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
         ERRORR("Couldn't create file set.", err);
         logfile << "Loading File: " << files[i].c_str() << std::endl;
-        std::string ext;
-        std::string::size_type idx;
-        idx = files[i].rfind('.');
-        if(idx != std::string::npos)
-          {
-            ext = files[i].substr(idx+1);
-          }
-        else
-          {
-            // No extension found
-          }
-        if(ext == "cub"|| ext == "h5m") isCub = true;
-
-        if(isCub){
-            mk_core()->igeom_instance()->deleteAll();
-
-            iGeom_load(igeom->instance(), files[i].c_str(), NULL, &err,
-                       strlen(files[i].c_str()), 0);
+        if(!compute_meshtogeom){
             iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(files[i].c_str()), 0);
             ERRORR("Couldn't read mesh file.", err);
-            // populate model eneities here so we can call irel function from MeshKit
-
-            mk_core()->irel_pair()->inferAllRelations();
             mk_core()->populate_model_ents(0,0,0);
-
-
-            // now calculate geometric and mesh volume
-            VerdictWrapper vw(mb);
-            // Get all the materials in this mesh file
-            moab::Tag mattag, gidtag;
-            moab::Range matsets;
-            mb->tag_get_handle("MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag);
-            mb->tag_get_handle("GLOBAL_ID", 1, MB_TYPE_INTEGER, gidtag);
-            mb->get_entities_by_type_and_tag((moab::EntityHandle) orig_set, MBENTITYSET, &mattag, 0, 1, matsets );
-
-            double mtot = 0.0, volume = 0.0;
-            //loop thru all the materials
-            moab::Range::iterator set_it;
-            for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
-                moab::EntityHandle this_set = *set_it;
-
-                // get the id for this set
-                int material_id;
-                mb->tag_get_data(mattag, &this_set, 1, &material_id);
-                std::cout << "Computing MESHTOGEOM ratio for " << material_id << std::endl;
-
-                // add up the geometric volume for these geometric volumes
-                // get the entity sets there must be one entity set for each volume
-                std::vector<moab::EntityHandle> geomsets_for_gid;
-                geomsets_for_gid.clear();
-                mb->get_entities_by_type(this_set, MBENTITYSET, geomsets_for_gid);
-
-                for(unsigned int volid = 0; volid < geomsets_for_gid.size(); volid++){
-                    // get the gid of this volume
-                    int my_geom_id = 0;
-                    mb->tag_get_data(gidtag, &geomsets_for_gid[volid], 1, &my_geom_id);
-                    std::cout << " GID = " << my_geom_id << std::endl;
-
-                    iBase_EntityHandle ent2=NULL;
-                    mk_core()->irel_pair()->getSetEntRelation((iBase_EntitySetHandle) geomsets_for_gid[volid], 1, ent2);
-                    double myvol = 0.0;
-                    if(ent2 != NULL){
-                        mk_core()->igeom_instance()->measure(&ent2,1,&myvol);
-                        std::cout << " my vol is " << myvol << std::endl;
-                        volume+=myvol;
-                      }
-                  }
-
-
-                std::vector<moab::EntityHandle> elems;
-                mb->get_entities_by_dimension(this_set, 3, elems, true);
-                // get all the elements in this material
-                double mvol_temp = 0.0;
-                for(unsigned int i=0; i<elems.size();i++){
-                    mvol_temp = 0.0;
-                    vw.quality_measure(elems[i], moab::MB_VOLUME, mvol_temp);
-                    mtot+=mvol_temp;
-                  }
-
-                double meshtogeom = mtot/volume;
-                std::cout << material_id << " " << volume << "has mesh volume " << mtot << std::endl;
-
-                moab::Tag mtog_tag;
-                // now set the meshtogeom tag on this set
-                mb->tag_get_handle( "MESHTOGEOM", 1, MB_TYPE_DOUBLE,
-                                    mtog_tag, MB_TAG_SPARSE|MB_TAG_CREAT );
-                mb->tag_set_data(mtog_tag, &(*set_it), 1, &meshtogeom);
-
-                elems.clear();
-                mtot = 0.0;
-                volume = 0.0;
-              }
-            //
           }
         else{
-            iMesh_load(imesh->instance(), orig_set, files[i].c_str(), NULL, &err, strlen(files[i].c_str()), 0);
-            ERRORR("Couldn't read mesh file.", err);
-            mk_core()->populate_model_ents(0,0,0);
+            load_and_compute_meshtogeom(orig_set, files[i]);
           }
         ModelEnt *me;
         me = NULL;
@@ -878,6 +797,110 @@ namespace MeshKit
       }
     logfile << "Loaded mesh files." << std::endl;
 
+    return iBase_SUCCESS;
+  }
+
+  int CoreGen::load_and_compute_meshtogeom(iBase_EntitySetHandle orig_set, std::string filename)
+  // ---------------------------------------------------------------------------
+  // Function: loads all the meshes and initializes copymesh and merge mesh objects
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
+    bool isCub = false;
+    std::string ext;
+    std::string::size_type idx;
+    idx = filename.rfind('.');
+    if(idx != std::string::npos)
+      {
+        ext = filename.substr(idx+1);
+      }
+    else
+      {
+        // No extension found
+      }
+    if(ext == "cub"|| ext == "h5m") isCub = true;
+
+    if(isCub){
+        mk_core()->igeom_instance()->deleteAll();
+
+        iGeom_load(igeom->instance(), filename.c_str(), NULL, &err,
+                   strlen(filename.c_str()), 0);
+        iMesh_load(imesh->instance(), orig_set, filename.c_str(), NULL, &err, strlen(filename.c_str()), 0);
+        ERRORR("Couldn't read mesh file.", err);
+        // populate model eneities here so we can call irel function from MeshKit
+
+        mk_core()->irel_pair()->inferAllRelations();
+        mk_core()->populate_model_ents(0,0,0);
+
+
+        // now calculate geometric and mesh volume
+        VerdictWrapper vw(mb);
+        // Get all the materials in this mesh file
+        moab::Tag mattag, gidtag;
+        moab::Range matsets;
+        mb->tag_get_handle("MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag);
+        mb->tag_get_handle("GLOBAL_ID", 1, MB_TYPE_INTEGER, gidtag);
+        mb->get_entities_by_type_and_tag((moab::EntityHandle) orig_set, MBENTITYSET, &mattag, 0, 1, matsets );
+
+        double mtot = 0.0, volume = 0.0;
+        //loop thru all the materials
+        moab::Range::iterator set_it;
+        for (set_it = matsets.begin(); set_it != matsets.end(); set_it++)  {
+            moab::EntityHandle this_set = *set_it;
+
+            // get the id for this set
+            int material_id;
+            mb->tag_get_data(mattag, &this_set, 1, &material_id);
+            // add up the geometric volume for these geometric volumes
+            // get the entity sets there must be one entity set for each volume
+            std::vector<moab::EntityHandle> geomsets_for_gid;
+            geomsets_for_gid.clear();
+            mb->get_entities_by_type(this_set, MBENTITYSET, geomsets_for_gid);
+
+            for(unsigned int volid = 0; volid < geomsets_for_gid.size(); volid++){
+                // get the gid of this volume
+                int my_geom_id = 0;
+                mb->tag_get_data(gidtag, &geomsets_for_gid[volid], 1, &my_geom_id);
+                iBase_EntityHandle ent2=NULL;
+                mk_core()->irel_pair()->getSetEntRelation((iBase_EntitySetHandle) geomsets_for_gid[volid], 1, ent2);
+                double myvol = 0.0;
+                if(ent2 != NULL){
+                    mk_core()->igeom_instance()->measure(&ent2,1,&myvol);
+                    volume+=myvol;
+                  }
+              }
+            if(volume == 0){
+                logfile << "Trying to compute MESHTOGEOM, but volume obtained is zero." << std::endl;
+                logfile << "Geometry engine must match file type. Aborting." << std::endl;
+                exit(0);
+              }
+
+            std::vector<moab::EntityHandle> elems;
+            mb->get_entities_by_dimension(this_set, 3, elems, true);
+            // get all the elements in this material
+            double mvol_temp = 0.0;
+            for(unsigned int i=0; i<elems.size();i++){
+                mvol_temp = 0.0;
+                vw.quality_measure(elems[i], moab::MB_VOLUME, mvol_temp);
+                mtot+=mvol_temp;
+              }
+
+            double meshtogeom = mtot/volume;
+            meshtogeom_file << material_id << " "<<  meshtogeom << std::endl;
+
+            moab::Tag mtog_tag;
+            // now set the meshtogeom tag on this set
+            mb->tag_get_handle( "MESHTOGEOM", 1, MB_TYPE_DOUBLE,
+                                mtog_tag, MB_TAG_SPARSE|MB_TAG_CREAT );
+            mb->tag_set_data(mtog_tag, &(*set_it), 1, &meshtogeom);
+
+            elems.clear();
+            mtot = 0.0;
+            volume = 0.0;
+          }
+        //
+      }
     return iBase_SUCCESS;
   }
 
@@ -1551,6 +1574,7 @@ namespace MeshKit
             ifile = iname + ".inp";
             outfile = iname + ".h5m";
             mfile = iname + ".makefile";
+            meshtogeomfile = "meshtogeom." + iname;
             infofile = iname + "_info.csv";
             minfofile = iname + "_mesh_info.csv";
             logfilename = iname + ".log";
@@ -1568,6 +1592,7 @@ namespace MeshKit
                           ifile = iname + ".inp";
                           outfile = iname + ".h5m";
                           mfile = iname + ".makefile";
+                          meshtogeomfile = "meshtogeom." + iname;
                           infofile = iname + "_info.csv";
                           minfofile = iname + "_mesh_info.csv";
                           logfilename = iname + ".log";
@@ -1579,6 +1604,7 @@ namespace MeshKit
                           ifile = iname + ".inp";
                           outfile = iname + ".h5m";
                           mfile = iname + ".makefile";
+                          meshtogeomfile = "meshtogeom." + iname;
                           infofile = iname + "_info.csv";
                           minfofile = iname + "_mesh_info.csv";
                           logfilename = iname + ".log";
@@ -1614,6 +1640,7 @@ namespace MeshKit
             std::string temp = CTEST_FILE_NAME;
             outfile = temp + ".h5m";
             mfile = temp + ".makefile";
+            meshtogeomfile = "meshtogeom." + temp;
             infofile = temp + "_info.csv";
             minfofile = temp + "_mesh_info.csv";
             logfilename = temp + ".log";
@@ -1674,6 +1701,20 @@ namespace MeshKit
 
     err = read_inputs_phase2(argc, argv);
     ERRORR("Failed to read inputs in phase2.", 1);
+
+    // open meshtogeomfile
+    if(compute_meshtogeom){
+        do {
+            meshtogeom_file.open(meshtogeomfile.c_str(), std::ios::out);
+            if (!meshtogeom_file) {
+                if (nrank == 0) {
+                    logfile << "Unable to open makefile for writing" << std::endl;
+                  }
+                meshtogeom_file.clear();
+              } else
+              bDone = true; // file opened successfully
+            logfile << "Created meshtogeom file: " << meshtogeomfile << std::endl;
+          } while (!bDone);      }
 
     // open info file
     if(strcmp(info.c_str(),"on") == 0 && nrank == 0){
@@ -2098,7 +2139,10 @@ namespace MeshKit
             if(z_divisions < 0 || formatString.fail())
               IOErrorHandler (INVALIDINPUT);
           }
-
+        // if keyword MESHTOGEOM is specified set tags on material sets and write a meshtogeom.txt file with #material id and #meshtogeom ratio
+        if (input_string.substr(0, 10) == "meshtogeom") {
+            compute_meshtogeom = true;
+          }
         // OutputFileName
         if (input_string.substr(0, 14) == "outputfilename") {
             std::istringstream formatString(input_string);

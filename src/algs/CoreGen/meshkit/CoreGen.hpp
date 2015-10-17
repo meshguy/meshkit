@@ -147,8 +147,10 @@ namespace MeshKit {
     int move_verts(iBase_EntitySetHandle set, const double *dx);
     int move_geoms(iBase_EntitySetHandle set, const double *dx);
     int create_neumannset();
+    int load_and_compute_meshtogeom(iBase_EntitySetHandle set, std::string filenam);
 
     bool extrude_flag;
+    bool compute_meshtogeom;
     std::vector <int> bsameas;
     bool mem_tflag;
     std::string prob_type, savefiles, info, minfo, same_as, reloading_mf;
@@ -202,8 +204,8 @@ namespace MeshKit {
 
     // file related
     std::ifstream file_input;    // File Input
-    std::ofstream make_file, info_file, minfo_file;    // File Output
-    std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc, infofile, minfofile, logfilename;
+    std::ofstream make_file, meshtogeom_file, info_file, minfo_file;    // File Output
+    std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc, meshtogeomfile, infofile, minfofile, logfilename;
     int linenumber;
     std::string card,geom_type, meshfile, mf_alias, temp_alias;
     std::vector<std::string> assm_alias;
