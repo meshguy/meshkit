@@ -1,9 +1,10 @@
 Geometry Volume		   		! 'Geometry' card defines if the meshes are volume or surface
+MESHTOGEOM
 ProblemType Mesh
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
 Assemblies 1 10 10			! 'Assemblies' card defines the number of assembly mesh files and pitch
-c.h5m c
+c.cub c
 Lattice 2 2 
 C C &
 C C 

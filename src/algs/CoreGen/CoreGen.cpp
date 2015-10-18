@@ -819,7 +819,7 @@ namespace MeshKit
       {
         // No extension found
       }
-    if(ext == "cub"|| ext == "h5m") isCub = true;
+    if(ext == "cub") isCub = true;
 
     if(isCub){
         mk_core()->igeom_instance()->deleteAll();
@@ -888,7 +888,7 @@ namespace MeshKit
 
             double meshtogeom = mtot/volume;
             meshtogeom_file << material_id << " "<<  meshtogeom << std::endl;
-
+            logfile << material_id << " " << meshtogeom << std::endl;
             moab::Tag mtog_tag;
             // now set the meshtogeom tag on this set
             mb->tag_get_handle( "MESHTOGEOM", 1, MB_TYPE_DOUBLE,
@@ -901,6 +901,11 @@ namespace MeshKit
           }
         //
       }
+    else{
+        logfile << "Trying to load a file that doesn't have geometry: Aborting" << std::endl;
+        logfile << "Try loading a .cub file." << std::endl;
+        exit(0);
+    }
     return iBase_SUCCESS;
   }
 
@@ -1704,18 +1709,9 @@ namespace MeshKit
 
     // open meshtogeomfile
     if(compute_meshtogeom){
-        do {
-            meshtogeom_file.open(meshtogeomfile.c_str(), std::ios::out);
-            if (!meshtogeom_file) {
-                if (nrank == 0) {
-                    logfile << "Unable to open makefile for writing" << std::endl;
-                  }
-                meshtogeom_file.clear();
-              } else
-              bDone = true; // file opened successfully
-            logfile << "Created meshtogeom file: " << meshtogeomfile << std::endl;
-          } while (!bDone);      }
-
+        meshtogeom_file.coss.open(meshtogeomfile.c_str(), std::ios::out);
+        logfile << "Created meshtogeom file: " << meshtogeomfile << std::endl;
+    }
     // open info file
     if(strcmp(info.c_str(),"on") == 0 && nrank == 0){
         do {
