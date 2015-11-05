@@ -236,7 +236,7 @@ namespace MeshKit
     if(rank == 0)
       logfile << "Executing in CoreGen meshop.." << std::endl;
 
-    if(run_flag != 0){
+    if(run_flag != 0 && prob_type != "geometry"){
         for (unsigned int i = 0; i < assys.size(); i++) {
             cm[i]->execute_called(true);
           }
@@ -505,7 +505,7 @@ namespace MeshKit
     // Input:    none
     // Output:   none
     // ---------------------------------------------------------------------------
-    double dTol = 1e-3;
+/*    double dTol = 1e-3;
 
     // getting all entities for merge and imprint
     SimpleArray<iBase_EntityHandle> entities_merge, entities_imprint;
@@ -526,7 +526,7 @@ namespace MeshKit
     // ERRORR("Trouble writing output geometry.", err);
     // export
     logfile << "Saving geometry file: " <<  outfile << std::endl;
-
+*/
     iGeom_save(igeom->instance(), outfile.c_str(), NULL, &err,
                strlen(outfile.c_str()), 0);
     ERRORR("Trouble writing output geometry.", err);
@@ -924,6 +924,7 @@ namespace MeshKit
     iGeom_createEntSet(igeom->instance(), 0, &temp_set1, &err);
     ERRORR( "Problem creating entity set.",err );
 
+    MEntVector vols_old;
     // loop reading all igeom->instance() files
     for (unsigned int i = 0; i < files.size(); i++) {
         iGeom_createEntSet(igeom->instance(), 0, &orig_set, &err);
@@ -935,6 +936,7 @@ namespace MeshKit
         iGeom_load(igeom->instance(), files[i].c_str(), NULL, &err,
                    strlen(files[i].c_str()), 0);
         ERRORR("Couldn't read geometry file.", err);
+        mk_core()->populate_model_ents(0,-1,-1);
 
         iBase_EntityHandle *entities = NULL;
         int entities_ehsize = 0, entities_ehallocated = 0;
@@ -953,7 +955,18 @@ namespace MeshKit
         ERRORR( "Unable to subtract entity sets.", err );
 
         MEntVector vols;
-        cg[i] = (CopyGeom*) mk_core()->construct_meshop("CopyGeom", vols);
+        ModelEnt *me;
+        me = NULL;
+        me = new ModelEnt(mk_core(), iGeom::EntitySetHandle(orig_set),/*igeom instance*/0);
+    //    vols.clear();
+  //      vols.push_back(me);
+        mk_core()->get_entities_by_dimension(3, vols);
+        // do vols - vols_old
+        MEntVector vols1;// = vols - vols_old;
+        
+          std::set_difference(vols.begin(), vols.end(), vols_old.begin(), vols_old.end(), std::inserter(vols1, vols1.begin()));
+
+        cg[i] = (CopyGeom*) mk_core()->construct_meshop("CopyGeom", vols1);
         cg[i]->set_name("copy_move_geom");
 
         assys.push_back(orig_set);
@@ -962,6 +975,7 @@ namespace MeshKit
 
         // store this set for subtraction with next entity set
         temp_set1 = temp_set;
+        vols_old = vols;
       }
     logfile << "\n--Loaded geometry files.\n" << std::endl;
 
@@ -1903,47 +1917,56 @@ namespace MeshKit
             if(formatString.fail())
               IOErrorHandler (INVALIDINPUT);
 
+            if(geom_type.substr(0,3) == "hex"){ // for all hex type assemblies read the pitch and mesh files names
+                bool reading_assemblies = false;
+                do{
+                    if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                            MAXCHARS, comment))
+                      ERRORR("Reading input file failed",1);
+                    std::istringstream formatString(input_string);
+                    if (input_string.substr(0, 10) == "assemblies"){
+                        formatString >> card >> nassys >> pitch;
+                        if(nassys < 0 || formatString.fail())
+                          IOErrorHandler (INVALIDINPUT);
+
+                        // reading file and alias names
+                        if(!parse_assembly_names(parse, argc, argv))
+                          ERRORR("error parsing names of assemblies",1);
+                        reading_assemblies = true;
+                      }
+                  } while (reading_assemblies == false) ;
+              }
+            // read lattice info for all assemblies, also assemblies for rect assemblies.
             if (geom_type == "hexvertex" && symm == 6) {
 
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(nassys < 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                  }
-
-                // reading file and alias names
-                if(!parse_assembly_names(parse, argc, argv))
-                  ERRORR("error parsing names of assemblies",1);
-
                 // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                    if (nrings % 2 == 0)
-                      tot_assys = (nrings * (nrings)) / 2;
-                    else
-                      tot_assys = ((nrings * (nrings - 1)) / 2)
-                          + (nrings + 1) / 2;
-                  }
+                bool reading_lattice = false;
+                do{
+                    if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                            MAXCHARS, comment))
+                      ERRORR("Reading input file failed",1);
+                    std::istringstream formatString1(input_string);
+                    if (input_string.substr(0,7) == "lattice"){
+                        reading_lattice = true;
+                        formatString1 >> card >> nrings;
+                        if(nrings < 0 || formatString1.fail())
+                          IOErrorHandler (INVALIDINPUT);
+                        if (nrings % 2 == 0)
+                          tot_assys = (nrings * (nrings)) / 2;
+                        else
+                          tot_assys = ((nrings * (nrings - 1)) / 2)
+                              + (nrings + 1) / 2;
+                      }
+                  } while (reading_lattice == false) ;
 
                 // now reading the arrangement
                 if (!parse.ReadNextLine(file_input, linenumber, input_string,
                                         MAXCHARS, comment))
                   ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
+                std::istringstream formatString2(input_string);
                 for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
+                    formatString2 >> temp_alias;
+                    if(formatString2.fail())
                       IOErrorHandler (INVALIDINPUT);
                     core_alias.push_back(temp_alias);
                   }
@@ -1951,162 +1974,148 @@ namespace MeshKit
 
             else if (geom_type == "rectangular" && symm == 1) {
 
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitchx >> pitchy;
-                    if(nassys < 0 || pitchx < 0 || pitchy< 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                  }
+                std::istringstream formatString(input_string);
+                formatString >> card >> geom_type;
+                if(formatString.fail())
+                  IOErrorHandler (INVALIDINPUT);
 
-                // reading file and alias names
-                if(!parse_assembly_names(parse, argc, argv))
-                  ERRORR("error parsing names of assemblies",1);
+                    bool reading_assemblies = false;
+                    do{
+                        if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                                MAXCHARS, comment))
+                          ERRORR("Reading input file failed",1);
+                        std::istringstream formatString(input_string);
+                        if (input_string.substr(0, 10) == "assemblies"){
+                            formatString >> card >> nassys >> pitchx >> pitchy;
+                            if(nassys < 0 || pitchx < 0 || pitchy< 0 || formatString.fail())
+                              IOErrorHandler (INVALIDINPUT);
 
-                // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nringsx >> nringsy;
-                    if(formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                    tot_assys = nringsx * nringsy;
-                  }
+                            // reading file and alias names
+                            if(!parse_assembly_names(parse, argc, argv))
+                              ERRORR("error parsing names of assemblies",1);
+                            reading_assemblies = true;
+                          }
+                      } while (reading_assemblies == false) ;
+
+                    // reading lattice
+                    bool reading_lattice = false;
+                    do{
+                        if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                                MAXCHARS, comment))
+                          ERRORR("Reading input file failed",1);
+                        std::istringstream formatString1(input_string);
+                        if (input_string.substr(0,7) == "lattice"){
+                            reading_lattice = true;
+                            formatString >> card >> nringsx >> nringsy;
+                            if(nrings < 0 || formatString1.fail())
+                              IOErrorHandler (INVALIDINPUT);
+                            tot_assys = nringsx * nringsy;
+                          }
+                      } while (reading_lattice == false) ;
 
                 // now reading the arrangement
                 if (!parse.ReadNextLine(file_input, linenumber, input_string,
                                         MAXCHARS, comment))
                   ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
+                std::istringstream formatString2(input_string);
                 for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
+                    formatString2 >> temp_alias;
+                    if(formatString2.fail())
                       IOErrorHandler (INVALIDINPUT);
                     core_alias.push_back(temp_alias);
                   }
               }
 
             else if (geom_type == "hexflat" && symm == 6) {
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                  }
-
-                // reading file and alias names
-                if(!parse_assembly_names(parse, argc, argv))
-                  ERRORR("error parsing names of assemblies",1);
 
                 // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                    tot_assys = (nrings * (nrings + 1)) / 2;
-                  }
+                bool reading_lattice = false;
+                do{
+                    if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                            MAXCHARS, comment))
+                      ERRORR("Reading input file failed",1);
+                    std::istringstream formatString1(input_string);
+                    if (input_string.substr(0,7) == "lattice"){
+                        reading_lattice = true;
+                        formatString1 >> card >> nrings;
+                        if(nrings < 0 || formatString1.fail())
+                          IOErrorHandler (INVALIDINPUT);
+                        tot_assys = (nrings * (nrings + 1)) / 2;
+                      }
+                  } while (reading_lattice == false) ;
+
 
                 // now reading the arrangement
                 if (!parse.ReadNextLine(file_input, linenumber, input_string,
                                         MAXCHARS, comment))
                   ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
+                std::istringstream formatString2(input_string);
                 for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
+                    formatString2 >> temp_alias;
+                    if(formatString2.fail())
                       IOErrorHandler (INVALIDINPUT);
                     core_alias.push_back(temp_alias);
                   }
-              } else if (geom_type == "hexflat" && symm == 1) {
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(nassys < 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                  }
+              }
 
-                if(!parse_assembly_names(parse, argc, argv))
-                  ERRORR("error parsing names of assemblies",1);
-
+            else if (geom_type == "hexflat" && symm == 1) {
                 // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                    tot_assys = 3 * (nrings * (nrings - 1)) + 1;
-                  }
+                bool reading_lattice = false;
+                do{
+                    if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                            MAXCHARS, comment))
+                      ERRORR("Reading input file failed",1);
+                    std::istringstream formatString1(input_string);
+                    if (input_string.substr(0,7) == "lattice"){
+                        reading_lattice = true;
+                        formatString1 >> card >> nrings;
+                        if(nrings < 0 || formatString1.fail())
+                          IOErrorHandler (INVALIDINPUT);
+                        tot_assys = 3 * (nrings * (nrings - 1)) + 1;
+                      }
+                  } while (reading_lattice == false) ;
 
                 // now reading the arrangement
                 if (!parse.ReadNextLine(file_input, linenumber, input_string,
                                         MAXCHARS, comment))
                   ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
+                std::istringstream formatString2(input_string);
                 for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
+                    formatString2 >> temp_alias;
+                    if(formatString2.fail())
                       IOErrorHandler (INVALIDINPUT);
                     core_alias.push_back(temp_alias);
                   }
-              } else if (geom_type == "hexflat" && symm == 12) {
+              }
 
-                // reading pitch info
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 10) == "assemblies") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nassys >> pitch;
-                    if(nassys < 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                  }
-
-                if(!parse_assembly_names(parse, argc, argv))
-                  ERRORR("error parsing names of assemblies",1);
-
+            else if (geom_type == "hexflat" && symm == 12) {
                 // reading lattice
-                if (!parse.ReadNextLine(file_input, linenumber, input_string,
-                                        MAXCHARS, comment))
-                  ERRORR("Reading input file failed",1);
-                if (input_string.substr(0, 7) == "lattice") {
-                    std::istringstream formatString(input_string);
-                    formatString >> card >> nrings;
-                    if(nrings < 0 || formatString.fail())
-                      IOErrorHandler (INVALIDINPUT);
-                    if (nrings % 2 == 0)
-                      tot_assys = (nrings * (nrings + 2)) / 4;
-                    else
-                      tot_assys = ((nrings + 1) * (nrings + 1)) / 4;
-                  }
+                bool reading_lattice = false;
+                do{
+                    if (!parse.ReadNextLine(file_input, linenumber, input_string,
+                                            MAXCHARS, comment))
+                      ERRORR("Reading input file failed",1);
+                    std::istringstream formatString1(input_string);
+                    if (input_string.substr(0,7) == "lattice"){
+                        reading_lattice = true;
+                        formatString1 >> card >> nrings;
+                        if(nrings < 0 || formatString.fail())
+                          IOErrorHandler (INVALIDINPUT);
+                        if (nrings % 2 == 0)
+                          tot_assys = (nrings * (nrings + 2)) / 4;
+                        else
+                          tot_assys = ((nrings + 1) * (nrings + 1)) / 4;
+                      }
+                  } while (reading_lattice == false) ;
 
                 // now reading the arrangement
                 if (!parse.ReadNextLine(file_input, linenumber, input_string,
                                         MAXCHARS, comment))
                   ERRORR("Reading input file failed",1);
-                std::istringstream formatString(input_string);
+                std::istringstream formatString2(input_string);
                 for (int i = 1; i <= tot_assys; i++) {
-                    formatString >> temp_alias;
-                    if(formatString.fail())
+                    formatString2 >> temp_alias;
+                    if(formatString2.fail())
                       IOErrorHandler (INVALIDINPUT);
                     core_alias.push_back(temp_alias);
                   }
