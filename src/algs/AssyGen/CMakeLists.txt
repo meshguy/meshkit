@@ -1,12 +1,9 @@
 set(AssyGen_srcs
-  AssyGen.cpp
-  cylinder.cpp
-  pincell.cpp)
+  meshscript.cpp
+  AssyGen.cpp )
 
 set(AssyGen_headers
-  meshkit/AssyGen.hpp
-  meshkit/cylinder.hpp
-  meshkit/pincell.hpp)
+  meshkit/AssyGen.hpp)
 
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 

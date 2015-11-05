@@ -1,5 +1,6 @@
 add_subdirectory(Qslim)
 add_subdirectory(AssyGen)
+add_subdirectory(AssyMesher)
 add_subdirectory(CoreGen)
 add_subdirectory(Sweep)
 add_subdirectory(PostBL)
@@ -90,6 +91,7 @@ target_link_libraries(MeshKitalgs
   MeshKitcore
   Qslim
   AssyGen
+  AssyMesher
   CoreGen
   Sweep
   PostBL

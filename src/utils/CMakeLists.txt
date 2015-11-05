@@ -1,8 +1,10 @@
 set(MeshKitutils_srcs
   iMesh.cpp
   clock.cpp
+  cylinder.cpp
   mstream.cpp
-  parser.cpp)
+  parser.cpp
+  pincell.cpp)
 
 set(MeshKitutils_headers
   meshkit/iBase.hpp
@@ -14,7 +16,9 @@ set(MeshKitutils_headers
   meshkit/RegisterMeshOp.hpp
   meshkit/SimpleArray.hpp
   meshkit/parser.hpp
+  meshkit/pincell.hpp
   meshkit/clock.hpp
+  meshkit/cylinder.hpp
   meshkit/vectortemplate.hpp
   meshkit/matrixtemplate.hpp
   meshkit/mstream.hpp

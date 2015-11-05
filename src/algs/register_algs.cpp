@@ -95,7 +95,7 @@ REGISTER_MESH_OP(ParRecvSurfMesh);
 
 #ifdef HAVE_INTASSIGN
 REGISTER_MESH_OP(IAInterface);
-#endif    
+#endif
 
 REGISTER_MESH_OP(CurveFacetMeshReader);
 REGISTER_MESH_OP(SurfaceFacetMeshReader);
