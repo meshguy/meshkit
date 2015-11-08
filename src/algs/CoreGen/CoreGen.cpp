@@ -1974,11 +1974,6 @@ namespace MeshKit
 
             else if (geom_type == "rectangular" && symm == 1) {
 
-                std::istringstream formatString(input_string);
-                formatString >> card >> geom_type;
-                if(formatString.fail())
-                  IOErrorHandler (INVALIDINPUT);
-
                     bool reading_assemblies = false;
                     do{
                         if (!parse.ReadNextLine(file_input, linenumber, input_string,
@@ -2006,7 +2001,7 @@ namespace MeshKit
                         std::istringstream formatString1(input_string);
                         if (input_string.substr(0,7) == "lattice"){
                             reading_lattice = true;
-                            formatString >> card >> nringsx >> nringsy;
+                            formatString1 >> card >> nringsx >> nringsy;
                             if(nrings < 0 || formatString1.fail())
                               IOErrorHandler (INVALIDINPUT);
                             tot_assys = nringsx * nringsy;
