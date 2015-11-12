@@ -51,6 +51,8 @@ namespace MeshKit
     linenumber = 0;
     info = "off";
     minfo = "off";
+    nringsx = 0;
+    nringsy = 0;
 
     // initialize more memory/time related variables
     ctload = 0, ctcopymove = 0, ctmerge = 0, ctextrude = 0, ctns = 0, ctgid = 0, ctsave = 0;
@@ -955,16 +957,10 @@ namespace MeshKit
         ERRORR( "Unable to subtract entity sets.", err );
 
         MEntVector vols;
-        ModelEnt *me;
-        me = NULL;
-        me = new ModelEnt(mk_core(), iGeom::EntitySetHandle(orig_set),/*igeom instance*/0);
-    //    vols.clear();
-  //      vols.push_back(me);
         mk_core()->get_entities_by_dimension(3, vols);
-        // do vols - vols_old
         MEntVector vols1;// = vols - vols_old;
         
-          std::set_difference(vols.begin(), vols.end(), vols_old.begin(), vols_old.end(), std::inserter(vols1, vols1.begin()));
+        std::set_difference(vols.begin(), vols.end(), vols_old.begin(), vols_old.end(), std::inserter(vols1, vols1.begin()));
 
         cg[i] = (CopyGeom*) mk_core()->construct_meshop("CopyGeom", vols1);
         cg[i]->set_name("copy_move_geom");
@@ -2002,7 +1998,7 @@ namespace MeshKit
                         if (input_string.substr(0,7) == "lattice"){
                             reading_lattice = true;
                             formatString1 >> card >> nringsx >> nringsy;
-                            if(nrings < 0 || formatString1.fail())
+                            if(nringsx <= 0 || nringsy <= 0 || formatString1.fail())
                               IOErrorHandler (INVALIDINPUT);
                             tot_assys = nringsx * nringsy;
                           }
