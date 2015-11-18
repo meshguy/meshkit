@@ -980,21 +980,35 @@ if test "x$WITH_MESQUITE" != "xno"; then
   fi
   if test $HAVE_MESQUITE = yes; then
 
-    MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[mesquite],[MESQUITE_HAS_IMESH=yes],
-      [MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[msqimesh],
-        [MESQUITE_HAS_IMESH=yes
-         MESQUITE_LIBS="-lmsqimesh $MESQUITE_LIBS"
-         LIBS="-lmsqimesh $LIBS"],[MESQUITE_HAS_IMESH=no])])
-    MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[mesquite],[MESQUITE_HAS_IGEOM=yes],
-      [MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[msqigeom],
-        [MESQUITE_HAS_IGEOM=yes
-         MESQUITE_LIBS="-lmsqigeom $MESQUITE_LIBS"
-         LIBS="-lmsqigeom $LIBS"],[MESQUITE_HAS_IGEOM=no])])
-    MESQUITE_LINK_DESTRUCTOR([MsqIRel],[mesquite],[MESQUITE_HAS_IREL=yes],
-      [MESQUITE_LINK_DESTRUCTOR([MsqIRel],[msqirel],
-        [MESQUITE_HAS_IREL=yes
-         MESQUITE_LIBS="-lmsqirel $MESQUITE_LIBS"
-         LIBS="-lmsqirel $LIBS"],[MESQUITE_HAS_IREL=no])])
+    AC_CHECK_LIB([msqitaps],[MsqIMesh],[HAVE_MOAB_MESQUITE=yes],[HAVE_MOAB_MESQUITE=no])
+
+    if test "$HAVE_MOAB_MESQUITE" != "no"; then
+
+      MESQUITE_HAS_IMESH=$HAVE_MOAB_MESQUITE
+      MESQUITE_HAS_IGEOM=$HAVE_IGEOM
+      MESQUITE_HAS_IREL=$HAVE_IREL
+      MESQUITE_LIBS="-lmsqitaps $MESQUITE_LIBS"
+      LIBS="-lmsqitaps $LIBS"
+
+    else
+
+      MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[mesquite],[MESQUITE_HAS_IMESH=yes],
+        [MESQUITE_LINK_DESTRUCTOR([MsqIMesh],[msqimesh],
+          [MESQUITE_HAS_IMESH=yes
+          MESQUITE_LIBS="-lmsqimesh $MESQUITE_LIBS"
+          LIBS="-lmsqimesh $LIBS"],[MESQUITE_HAS_IMESH=no])])
+      MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[mesquite],[MESQUITE_HAS_IGEOM=yes],
+        [MESQUITE_LINK_DESTRUCTOR([MsqIGeom],[msqigeom],
+          [MESQUITE_HAS_IGEOM=yes
+          MESQUITE_LIBS="-lmsqigeom $MESQUITE_LIBS"
+          LIBS="-lmsqigeom $LIBS"],[MESQUITE_HAS_IGEOM=no])])
+      MESQUITE_LINK_DESTRUCTOR([MsqIRel],[mesquite],[MESQUITE_HAS_IREL=yes],
+        [MESQUITE_LINK_DESTRUCTOR([MsqIRel],[msqirel],
+          [MESQUITE_HAS_IREL=yes
+          MESQUITE_LIBS="-lmsqirel $MESQUITE_LIBS"
+          LIBS="-lmsqirel $LIBS"],[MESQUITE_HAS_IREL=no])])
+
+    fi
 
   fi
 
