@@ -27,9 +27,8 @@ AM_CPPFLAGS += -DMOAB
 endif
 
 # Tests and such
-test_tgtetmesher_SOURCES = test_tgtetmesher.cpp
-test_tgtetmesher_DEPENDENCIES = \
-	$(LDADD)
+#test_tgtetmesher_SOURCES = test_tgtetmesher.cpp
+#test_tgtetmesher_DEPENDENCIES = $(LDADD)
 #TESTS += test_tgtetmesher
 
 # Utility target: build but don't run tests
