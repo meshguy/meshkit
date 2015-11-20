@@ -19,12 +19,10 @@ FATHOM_CHECK_COMPILERS
 AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
 LIBS="-lm"
 
-#AM_PROG_AR
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_DISABLE_SHARED
-AC_PROG_LIBTOOL
-FATHOM_COMPILER_FLAGS
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 m4_ifdef([AM_SILENT_RULES],[
 if test "x$DEBUG" = "xyes"; then
   AM_SILENT_RULES(yes)
@@ -32,7 +30,6 @@ else
   AM_SILENT_RULES(no)
 fi
 ])
-
 AC_CHECK_PROG([ZCAT],[gunzip],[gunzip -c],[])
 AC_CHECK_PROG([ZCAT],[gzip],[gzip -cd],[])
 AC_CHECK_PROG([ZCAT],[zcat],[zcat],[])
@@ -41,6 +38,10 @@ if test "x" = "x$ZCAT"; then
 fi
 AC_SUBST([ZCAT])
 AM_CONDITIONAL([HAVE_ZCAT],[test "x" = "x$ZCAT"])
+AC_PROG_LIBTOOL
+
+# Check for compiler flags
+FATHOM_COMPILER_FLAGS
 
 dnl This doesn't appear to be defined anywhere. - j.kraftcheck 2010-8-13
 dnl MK_TEMPLATE_SPECIALIZATION
