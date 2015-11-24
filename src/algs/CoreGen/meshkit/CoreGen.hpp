@@ -204,14 +204,14 @@ namespace MeshKit {
 
     // file related
     std::ifstream file_input;    // File Input
-    std::ofstream make_file, meshtogeom_file, info_file, minfo_file;    // File Output
+    std::ofstream make_file, info_file, minfo_file;    // File Output
     std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc, meshtogeomfile, infofile, minfofile, logfilename;
     int linenumber;
     std::string card,geom_type, meshfile, mf_alias, temp_alias;
     std::vector<std::string> assm_alias;
     std::vector<int> all_ms_starts, all_ns_starts;
 
-    mstream logfile;
+    mstream logfile, meshtogeom_file;
 
     // parsing related
     std::string input_string;
