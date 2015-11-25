@@ -109,16 +109,11 @@ if (CGM_FOUND)
   endif ()
 endif ()
 
-find_package(Lasso)
-if (Lasso_FOUND)
-  add_definitions(-DHAVE_iRel)
-endif ()
-
 include(CMakeDependentOption)
 cmake_dependent_option(ENABLE_UTILS "Enable utilities" ON
   "CGM_FOUND;MOAB_FOUND;MOAB_HAS_IMESH" OFF)
 cmake_dependent_option(ENABLE_ALGS "Enable algorithms" ON
-  "ENABLE_UTILS;Lasso_FOUND" OFF)
+  "ENABLE_UTILS;TARGET iRel" OFF)
 option(ENABLE_QUADMESHER "Enable quadmesher"  OFF)
 option(ENABLE_RGG "Enable rgg"                ON)
 option(ENABLE_SRC "Enable src"                ON)
