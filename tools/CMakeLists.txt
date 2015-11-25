@@ -1,6 +1,7 @@
 project(tools)
 
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
+add_definitions("-DDATADIR=${meshkit_SOURCE_DIR}/data")
 add_definitions(-DMOAB)
 
 include_directories(${CGM_INCLUDE_DIRS})
