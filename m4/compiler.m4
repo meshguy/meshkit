@@ -428,7 +428,7 @@ case "$cxx_compiler:$host_cpu" in
     FATHOM_CXX_64BIT=-xarch=generic64
     ;;
   Clang:*)
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS -stdlib=libstdc++"
+    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS"
     FATHOM_CXX_32BIT=-m32
     FATHOM_CXX_64BIT=-m64
     ;;
