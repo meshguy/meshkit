@@ -51,6 +51,8 @@ TESTS = test_edgemesher \
 if HAVE_CAMAL_PAVER
 AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AssyMesher
 TESTS += test_assymesher
+test_assymesher_SOURCES = test_assymesher.cpp
+test_assymesher_LDADD = $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
 BROKEN_TESTS += test_assymesher
 endif
 
@@ -76,6 +78,8 @@ TESTS += \
 # some of these tests require CAMAL and FBiGeom, too
 if HAVE_CAMAL_PAVER
 TESTS += test_volice 
+test_volice_SOURCES = test_volice.cpp
+test_volice_LDADD =  $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
 if HAVE_TRIANGLE
 TESTS += test_setpnt2quad
 endif
@@ -132,14 +136,10 @@ test_mbsplitop_SOURCES = test_mbsplitop.cpp
 if HAVE_TRIANGLE
 test_setpnt2quad_SOURCES = test_setpnt2quad.cpp
 endif
-test_volice_SOURCES = test_volice.cpp
 test_mbvolop_SOURCES = test_mbvolop.cpp
 endif
 if ENABLE_intassign
 test_intassign_SOURCES = test_intassign.cpp
-endif
-if HAVE_CAMAL_PAVER
-test_assymesher_SOURCES = test_assymesher.cpp
 endif
 # Utility target: build but don't run tests
 build-check:
