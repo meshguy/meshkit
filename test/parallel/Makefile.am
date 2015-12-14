@@ -22,11 +22,12 @@ TESTS = test_coregen
 
 if HAVE_CAMAL
 TESTS += test_parallelmesher
+test_parallelmesher_SOURCES = test_parallelmesher.cpp
+test_parallelmesher_LDADD = $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
 endif
 
 check_PROGRAMS = $(TESTS)
 
-test_parallelmesher_SOURCES = test_parallelmesher.cpp
 test_coregen_SOURCES = test_coregen.cpp
 
 
