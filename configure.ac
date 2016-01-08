@@ -15,8 +15,10 @@ dnl However, there is a call to AC_FC_WRAPPERS below, so presumably
 dnl we should be checking for FC. - j.kraftcheck 2010-8-13
 EXTRA_GNU_FLAGS="-pipe -Wall"
 AM_CXXFLAGS=-std=c++0x
-FATHOM_CHECK_COMPILERS
-AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
+FATHOM_CHECK_COMPILERS([yes],[yes],[no])
+# AM_CONDITIONAL(PARALLEL,[test "x$WITH_MPI" != "xno"])
+AM_CONDITIONAL(PARALLEL,[test "x$enablempi" != "xno"])
+AC_SUBST(enablempi)
 LIBS="-lm"
 
 AC_PROG_LN_S
@@ -41,7 +43,7 @@ AM_CONDITIONAL([HAVE_ZCAT],[test "x" = "x$ZCAT"])
 AC_PROG_LIBTOOL
 
 # Check for compiler flags
-FATHOM_COMPILER_FLAGS
+FATHOM_COMPILER_FLAGS([yes],[yes],[no])
 
 dnl This doesn't appear to be defined anywhere. - j.kraftcheck 2010-8-13
 dnl MK_TEMPLATE_SPECIALIZATION
@@ -142,29 +144,36 @@ fi
 AC_SUBST([DOXYGEN])
 AM_CONDITIONAL([ENABLE_DOXYGEN],[test "x$ENABLE_DOXYGEN" != "xno"])
 
-
 ################################################################################
 #                              MPI OPTIONS
 ################################################################################
 
-if test "x$WITH_MPI" != "xno"; then
-  DEFINES="$DEFINES -DUSE_MPI"
-  AC_CHECK_HEADER([mpi.h],[],[AC_MSG_ERROR([mpi.h not found or not working])])
-  AC_MSG_CHECKING([If -DMPICH_IGNORE_CXX_SEEK is necessary])
-  AC_LANG_PUSH([C++])
-  AC_PREPROC_IFELSE([AC_LANG_PROGRAM( [[#include <stdio.h>
-     #include <mpi.h>]],[])],
-    [AC_MSG_RESULT([no])],
-    [save_CPPFLAGS="$CPPFLAGS"
-     CPPFLAGS="$CPPFLAGS -DMPICH_IGNORE_CXX_SEEK"
-     AC_PREPROC_IFELSE([AC_LANG_PROGRAM( [[#include <stdio.h>
-         #include <mpi.h>]],[])],
-         [AC_MSG_RESULT([yes]); AM_CPPFLAGS="$AM_CPPLFLAGS -DMPICH_IGNORE_CXX_SEEK" ],
-         [AC_MSG_ERROR([mpi.h is not usable])]),
-     CPPFLAGS="$save_CPPFLAGS"])
-  AC_LANG_POP([C++])
+FATHOM_CHECK_MPI
+FATHOM_CONFIG_MPI_EXEC
+if (test "xno" != "x$enablempi"); then
+  AC_DEFINE([HAVE_MPI],[1],[Define if configured with support for parallel computations.])
 fi
-AM_CONDITIONAL(USE_MPI, [test "xno" != "x$WITH_MPI"])
+AM_CONDITIONAL(HAVE_MPI, [test "xno" != "x$enablempi"])
+# Used to generate moab_mpi.h
+if test "xyes" = "x$MPI_CXX_HELP_NEEDED"; then
+  AC_DEFINE( [MPI_CXX_CONFLICT], [1], 
+    [MPICH_IGNORE_CXX_SEEK is not sufficient to avoid conflicts] )
+  AC_DEFINE_UNQUOTED([SEEK_SET],[$SEEK_SET],["Value of C SEEK_SET"])
+  AC_DEFINE_UNQUOTED([SEEK_CUR],[$SEEK_CUR],["Value of C SEEK_CUR"])
+  AC_DEFINE_UNQUOTED([SEEK_END],[$SEEK_END],["Value of C SEEK_END"])
+fi
+FATHOM_CHECK_MPITYPE
+
+if (test "$MPIFAMILY" == "OPENMPI" && test "x$ENABLE_FORTRAN" != "xno"); then
+  FCLIBS="$FCLIBS -lmpi_cxx"
+fi
+
+if test "xyes" = "x$enablempi"; then
+  FATHOM_CHECK_MPE
+  AC_SUBST([WITH_MPE])
+  AC_SUBST([MPE_LIBS])
+  test "xyes" != "x$WITH_MPE" || AM_CPPFLAGS="$AM_CPPFLAGS -DUSE_MPE"
+fi
 
 ################################################################################
 #                           ITAPS interfaces
