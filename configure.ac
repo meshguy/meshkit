@@ -152,6 +152,7 @@ FATHOM_CHECK_MPI
 FATHOM_CONFIG_MPI_EXEC
 if (test "xno" != "x$enablempi"); then
   AC_DEFINE([HAVE_MPI],[1],[Define if configured with support for parallel computations.])
+  AM_CPPFLAGS="$AM_CPPFLAGS -DUSE_MPI"
 fi
 AM_CONDITIONAL(HAVE_MPI, [test "xno" != "x$enablempi"])
 # Used to generate moab_mpi.h
