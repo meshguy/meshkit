@@ -190,7 +190,7 @@ namespace MeshKit {
     int UNITCELL_DUCT, ASSY_TYPES ;
     int nrings, nringsx, nringsy, pack_type, symm;
     double pitch, pitchx, pitchy;
-    bool global_ids, back_mesh;
+    bool global_ids, back_mesh, have_hex27;
     std::string outfile, mesh_info;
     int nassys; // the number of mesh files
     int tot_assys; // total no. of assms forming core
@@ -207,7 +207,7 @@ namespace MeshKit {
     std::ofstream make_file, info_file, minfo_file;    // File Output
     std::string iname, ifile, mfile, geometry, back_meshfile, geom_engine, nsLoc, meshtogeomfile, infofile, minfofile, logfilename;
     int linenumber;
-    std::string card,geom_type, meshfile, mf_alias, temp_alias;
+    std::string card,geom_type, meshfile, mf_alias, temp_alias, etype;
     std::vector<std::string> assm_alias;
     std::vector<int> all_ms_starts, all_ns_starts;
 
@@ -215,7 +215,7 @@ namespace MeshKit {
 
     // parsing related
     std::string input_string;
-    std::string comment ;
+    std::string comment;
     int MAXCHARS ;
 
     // merge related

@@ -43,6 +43,7 @@ namespace MeshKit
     nsb_flag = false;
     nss_flag = false;
     nssall_flag = false;
+    have_hex27 = false;
     nst_Id = 9997;
     nsb_Id = 9998;
     prob_type = "mesh";
@@ -84,17 +85,17 @@ namespace MeshKit
         if (prob_type == "mesh") {
             if (procs == 1) {
                 err = load_meshes();
-                if(err !=0) {std::cout << "load meshes failed!" << std::endl; exit(1);}
+                if(err !=0) {logfile << "load meshes failed!" << std::endl; exit(1);}
               }
             else {
 #ifdef USE_MPI
                 err = load_meshes_parallel(rank, procs);
-                if(err !=0) {std::cout << "failed to load meshes in parallel!" << std::endl; exit(1);}
+                if(err !=0) {logfile << "failed to load meshes in parallel!" << std::endl; exit(1);}
 
                 if(procs > (int) files.size()){
                     // if there are more procs than files distribute the copy/move work on each proc
                     err = distribute_mesh(rank, procs);
-                    if(err !=0) {std::cout << "distribute meshes failed!" << std::endl; exit(1);}
+                    if(err !=0) {logfile << "distribute meshes failed!" << std::endl; exit(1);}
                   }
                 //Get a pcomm object
                 pc = new moab::ParallelComm(mk_core()->moab_instance(), MPI::COMM_WORLD, &err);
@@ -119,7 +120,7 @@ namespace MeshKit
         /*********************************************/
         else if (prob_type == "geometry" && procs == 1) {
             err = load_geometries();
-            if(err !=0) {std::cout << "load geometry failed!" << std::endl; exit(1);}
+            if(err !=0) {logfile << "load geometry failed!" << std::endl; exit(1);}
           }
         else if(prob_type == "geometry" && procs > 1){
             logfile << " Parallel mode not supported for problem-type: Geometry " << std::endl;
@@ -207,7 +208,7 @@ namespace MeshKit
                 if (extrude_flag == true) {
                     CClock ld_em;
                     err = extrude();
-                    if(err !=0) {std::cout << "extrusion failed!" << std::endl; exit(1);}
+                    if(err !=0) {logfile << "extrusion failed!" << std::endl; exit(1);}
 
                     mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem4);
                     ld_t = ld_em.DiffTime();
@@ -266,7 +267,7 @@ namespace MeshKit
             || nst_flag == true) && procs == 1){
             CClock ld_ns;
             err = create_neumannset();
-            if(err !=0) {std::cout << "create NeumannSet failed!" << std::endl; exit(1);}
+            if(err !=0) {logfile << "create NeumannSet failed!" << std::endl; exit(1);}
 
             mk_core()->moab_instance()->estimated_memory_use(0, 0, 0, &mem6);
             ld_tns = ld_ns.DiffTime();
@@ -287,17 +288,17 @@ namespace MeshKit
         CClock ld_sv;
         if (procs == 1) {
             err = save_mesh();
-            if(err !=0) {std::cout << "save mesh failed!" << std::endl; exit(1);}
+            if(err !=0) {logfile << "save mesh failed!" << std::endl; exit(1);}
           } else {
             if(savefiles != "one" && (savefiles == "multiple" || savefiles == "both")){
                 err = save_mesh(rank); // uncomment to save the meshes with each proc
-                if(err !=0) {std::cout << "save mesh failed!" << std::endl; exit(1);}
+                if(err !=0) {logfile << "save mesh failed!" << std::endl; exit(1);}
               }
             if(savefiles != "multiple"){
 #ifdef USE_MPI
                 double write_time = MPI_Wtime();
                 err = save_mesh_parallel(rank, procs);
-                if(err !=0) {std::cout << "save parallel mesh failed!" << std::endl; exit(1);}
+                if(err !=0) {logfile << "save parallel mesh failed!" << std::endl; exit(1);}
                 write_time = MPI_Wtime() - write_time;
                 if (rank == 0)
                   logfile << "Parallel write time = " << write_time/60.0 << " mins" << std::endl;
@@ -322,7 +323,7 @@ namespace MeshKit
     /*********************************************/
     else if (prob_type == "geometry") {
         err = save_geometry();
-        if(err !=0) {std::cout << "save geometry failed!" << std::endl; exit(1);}
+        if(err !=0) {logfile << "save geometry failed!" << std::endl; exit(1);}
       }
 
     /*********************************************/
@@ -442,6 +443,16 @@ namespace MeshKit
         logfile << "Saving mesh file in parallel. " << std::endl;
       }
 
+    if(have_hex27 == true){
+        moab::Range entities;
+        moab::EntityHandle meshset;
+        mb->get_entities_by_type(0, MBHEX, entities);
+
+        mb->create_meshset(MESHSET_SET, meshset);
+        mb->add_entities(meshset, entities);
+        mb->convert_entities(meshset, true, true, true);
+      }
+
     moab::Tag mattag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
     moab::Range matsets;
@@ -471,6 +482,15 @@ namespace MeshKit
   }
 
   int CoreGen::save_mesh(int nrank) {
+    if(have_hex27 == true){
+        moab::Range entities;
+        moab::EntityHandle meshset;
+        mb->get_entities_by_type(0, MBHEX, entities);
+
+        mb->create_meshset(MESHSET_SET, meshset);
+        mb->add_entities(meshset, entities);
+        mb->convert_entities(meshset, true, true, true);
+      }
     // export proc- nrank mesh
     std::ostringstream os;
     std::string fname;
@@ -491,10 +511,18 @@ namespace MeshKit
     // Output:   none
     // ---------------------------------------------------------------------------
     // export
-    logfile << "Saving mesh file." << std::endl;
-    iMesh_save(imesh->instance(), root_set, outfile.c_str(), NULL, &err, strlen(
-                 outfile.c_str()), 0);
-    ERRORR("Trouble writing output mesh.", err);
+    bool have_hex27 = true;
+    if(have_hex27 == true){
+        moab::Range entities;
+        moab::EntityHandle meshset;
+        mb->get_entities_by_type(0, MBHEX, entities);
+
+        mb->create_meshset(MESHSET_SET, meshset);
+        mb->add_entities(meshset, entities);
+        mb->convert_entities(meshset, true, true, true);
+      }
+
+    mb->write_mesh(outfile.c_str());
     logfile << "Saved mesh file: " << outfile.c_str() << std::endl;
 
     return iBase_SUCCESS;
@@ -990,7 +1018,7 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    std::cout << "Swapping MS and NS ids for " << number << std::endl;
+    logfile << "Swapping MS and NS ids for " << number << std::endl;
     // get all the material sets in this assembly
     moab::Tag mattag, neutag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
@@ -1255,7 +1283,7 @@ namespace MeshKit
     // Output:   none
     // ---------------------------------------------------------------------------
     if (nss_flag == true || nsb_flag == true || nst_flag == true || nssall_flag == true) {
-        std::cout << "Creating NeumannSet." << std::endl;
+        logfile << "Creating NeumannSet." << std::endl;
 
         if (extrude_flag == true)
           set_DIM = 3;
@@ -1811,7 +1839,17 @@ namespace MeshKit
             if((symm !=1 && symm !=6 && symm !=12) || formatString.fail())
               IOErrorHandler (INVALIDINPUT);
           }
-
+        // element type
+        if (input_string.substr(0, 11) == "elementtype") {
+            std::istringstream formatString(input_string);
+            formatString >> card >> etype;
+            if(etype == "hex27")
+                have_hex27 = true;
+            else if (etype == "hex8")
+                have_hex27 = false;
+            else
+              IOErrorHandler (INVALIDINPUT);
+          }
         // merge tolerance
         if (input_string.substr(0, 14) == "mergetolerance") {
             std::istringstream formatString(input_string);
@@ -1872,7 +1910,7 @@ namespace MeshKit
                 ++num_nsside;
                 nss_flag = true;
               } else {
-                std::cout << "Invalid Neumann set specification" << std::endl;
+                logfile << "Invalid Neumann set specification" << std::endl;
               }
           }
 

@@ -253,7 +253,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         dx_orig(move_index + 1, 3) = dx_move[2];
 
                         move_verts(assys[move_index], dx_move);
-                        std::cout << "Moved Assembly: " << assm_index  << " dX = " << dx_move[0] << " dY = "
+                        logfile << "Moved Assembly: " << assm_index  << " dX = " << dx_move[0] << " dY = "
                                   << dx_move[1] << " in proc with rank " << nrank << std::endl;
                         if(strcmp(info.c_str(),"on") == 0)
                             info_file << assm_index << " \t" << k  << " \t" << dx_move[0] << " \t" << dx_move[1]  << " \t" << dx_move[2]  << " \t" << nrank << std::endl;
@@ -304,7 +304,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         //	    cm[move_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx),
                         //				 &new_ents, &new_ents_alloc, &new_ents_size, false);
 
-                        std::cout << "Copy/moved A: " << assm_index
+                        logfile << "Copy/moved A: " << assm_index
                                   <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
                         if(strcmp(info.c_str(),"on") == 0)
                             info_file << assm_index << " " << k  << "  " << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
@@ -359,7 +359,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         //	    cm[0]->copy(orig_ents, orig_ents_size, copy::Translate(dx),
                         //			&new_ents, &new_ents_alloc, &new_ents_size, false);
                         cm[0]->set_transform(Copy::Translate(dx));
-                        std::cout << "Copy/moved Assm: " << assm_index << " dX = " << dx[0] << " dY = "
+                        logfile << "Copy/moved Assm: " << assm_index << " dX = " << dx[0] << " dY = "
                                   << dx[1]  << " rank " << nrank << std::endl;
                         if(strcmp(info.c_str(),"on") == 0)
                             info_file << assm_index << " \t" << i  << " \t" << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
@@ -374,7 +374,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         dx_orig[1] = y_coord[assm_index];
                         dx_orig[2] = 0;
                         move_verts(assys[0], dx_orig);
-                        std::cout << "Moved Assm: " << assm_index << " dX = " << dx_orig[0] << " dY = "
+                        logfile << "Moved Assm: " << assm_index << " dX = " << dx_orig[0] << " dY = "
                                   << dx_orig[1] << " rank " << nrank << std::endl;
                         if(strcmp(info.c_str(),"on") == 0)
                             info_file << assm_index << " \t" << i  << " \t" << dx_orig[0] << " \t" << dx_orig[1]  << " \t" << dx_orig[2]  << " \t" << nrank << std::endl;
@@ -432,7 +432,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                     dx_orig(move_index + 1, 3) = dx_move[2];
 
                     move_geoms(assys[move_index], dx_move);
-                    std::cout << "Moved Assembly: " << assm_index  << " dX = " << dx_move[0] << " dY = "
+                    logfile << "Moved Assembly: " << assm_index  << " dX = " << dx_move[0] << " dY = "
                               << dx_move[1] << " in proc with rank " << nrank << std::endl;
                     flags[move_index]=1;
                 }
@@ -455,7 +455,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                     //			       &new_ents, &new_ents_alloc, &new_ents_size, false);
                     cg[move_index]->set_location(dx);
                     cg[move_index]->execute_this();
-                    std::cout << "Copy/moved A: " << assm_index
+                    logfile << "Copy/moved A: " << assm_index
                               <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
 //                    free(new_ents);
 //                    free(orig_ents);
