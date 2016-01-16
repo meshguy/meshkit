@@ -113,7 +113,7 @@ namespace MeshKit
     std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
               << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
 
-    std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
+    std::cout << "## Total CPU time used := " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
               << " seconds" << std::endl;
   }
 
@@ -1217,8 +1217,12 @@ namespace MeshKit
                 //ERRORR("Error in CreateOuterCovering", err);
 
                 // subtract pins before save
-                if(m_nDuct > 0)
+                if(m_nDuct > 0){
                   Subtract_Pins();
+                clock_t s_subtract = clock();
+                std::cout << "## Subract Pins CPU time used := " << (double) (clock() - s_subtract)/CLOCKS_PER_SEC
+                          << " seconds" << std::endl;
+                }
                 if(m_nPlanar ==1){
                     Create2DSurf();
                     //ERRORR("Error in Create2DSurf", err);
@@ -1418,13 +1422,28 @@ namespace MeshKit
 
 
             if ( m_nJouFlag == 0){
+                clock_t s_imerge = clock();
                 // impring merge before saving
-            //    Imprint_Merge();
+                Imprint_Merge(true, false);
+                // compute the elapsed time
 
+
+                clock_t s_save= clock();
                 // save .sat file
                 iGeom_save(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
+                std::cout << "## Saving CPU time used := " << (double) (clock() - s_save)/CLOCKS_PER_SEC
+                          << " seconds" << std::endl;
                 ////CHECK("Save to file failed.");
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
+                // Reloading file to check load times
+                bool if_loadagain = false;
+                if (if_loadagain == true){
+                    clock_t s_load= clock();
+                    iGeom_load(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err,
+                               strlen(m_szGeomFile.c_str()), 0);
+                    std::cout << "## Load again CPU time used := " << (double) (clock() - s_load)/CLOCKS_PER_SEC
+                              << " seconds" << std::endl;
+                  }
               }
             break;
           }
@@ -2380,7 +2399,7 @@ namespace MeshKit
 
   }
 
-  void AssyGen::Imprint_Merge()
+  void AssyGen::Imprint_Merge(bool if_merge, bool if_imprint)
   // ---------------------------------------------------------------------------
   // Function: Imprint and Merge
   // Input:    none
@@ -2392,21 +2411,28 @@ namespace MeshKit
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
     //CHECK( "ERROR : getRootSet failed!" );
 
-    //  now imprint
-    std::cout << "\n\nImprinting...." << std::endl;
-    iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
-    ////CHECK("Imprint failed.");
-    std::cout << "\n--------------------------------------------------"<<std::endl;
+    if(if_imprint ==  true){
+      //  now imprint
+      std::cout << "\n\nImprinting...." << std::endl;
+      clock_t s_imprint = clock();
+      iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
+      std::cout << "## Imprint CPU time used := " << (double) (clock() - s_imprint)/CLOCKS_PER_SEC
+                << " seconds" << std::endl;
+      std::cout << "\n--------------------------------------------------"<<std::endl;
+    }
 
-    // merge tolerance
-    double dTol = 1e-4;
-    // now  merge
-    std::cout << "\n\nMerging...." << std::endl;
-    iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
-    ////CHECK("Merge failed.");
-    std::cout <<"merging finished."<< std::endl;
-    std::cout << "\n--------------------------------------------------"<<std::endl;
-
+    if(if_merge == true){
+        // merge tolerance
+        double dTol = 1e-4;
+        // now  merge
+        std::cout << "\n\nMerging...." << std::endl;
+        clock_t s_merge = clock();
+        iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
+        std::cout << "## Merge CPU time used := " << (double) (clock() - s_merge)/CLOCKS_PER_SEC
+                  << " seconds" << std::endl;
+        std::cout <<"merging finished."<< std::endl;
+        std::cout << "\n--------------------------------------------------"<<std::endl;
+      }
   }
 
   void AssyGen::Create2DSurf ()

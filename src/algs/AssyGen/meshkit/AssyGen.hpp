@@ -4,7 +4,7 @@
 // Brief: AssyGen class definition:
 //        Creates reactor assembly geometry (ACIS or OCC format) and cubit mesh script as specified in a user defined input
 //         class, AssyGen
-//---------------------------------------------------------------------------// 
+//---------------------------------------------------------------------------//
 
 #ifndef MESHKIT_ASSYGEN_HPP
 #define MESHKIT_ASSYGEN_HPP
@@ -133,7 +133,7 @@ namespace MeshKit {
      *  material name from input file, surface entity, name tag
      */
     void Name_Faces( const std::string sMatName, const iBase_EntityHandle body,
-		     iBase_TagHandle this_tag);
+                     iBase_TagHandle this_tag);
 
     /** \brief Move the assembly to the center
      *  direction
@@ -161,19 +161,19 @@ namespace MeshKit {
     void Create_HexAssm( std::string &);
 
     /** \brief Create cartesian or rectangular assembly
-     *  data from input file 
+     *  data from input file
      */
     void Create_CartAssm( std::string &);
 
     /** \brief Create outermost ducts
-     *  data from input file 
+     *  data from input file
      */
     void CreateOuterCovering();
 
     /** \brief Merge and impring the geometry creaed
      *  geometry created
      */
-    void Imprint_Merge ();
+    void Imprint_Merge (bool, bool);
 
     /** \brief Subtract the pins from innermost duct
      *  geometry entities
@@ -194,15 +194,15 @@ namespace MeshKit {
      *  i and location
      */
     void CreatePinCell_Intersect( int i, double dX,
-				  double dY, double dZ);
+                                  double dY, double dZ);
 
     /** \brief Create pincell i
      *  i and location
      */
     void CreatePinCell( int i, double dX,
-			double dY, double dZ);  
+                        double dY, double dZ);
 
-    /** \brief Write cubit journal file 
+    /** \brief Write cubit journal file
      *  information read from text based input file
      */
     void CreateCubitJournal();
@@ -219,10 +219,10 @@ namespace MeshKit {
 
     // number of sides in the geometry
     int m_nSides;
-  
+
     // file Input
     std::ifstream m_FileInput, m_FileCommon;
-    
+
     // journal file Output
     std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
 
@@ -230,28 +230,28 @@ namespace MeshKit {
     std::string m_szSmooth, m_szAssmInfo, m_szLogFile, m_szCommonFile, m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;
 
     // matrix for holding pincell arrangement
-    CMatrix<std::string> m_Assembly; 
+    CMatrix<std::string> m_Assembly;
 
     // matrix for holding verts coordinates used in tet-meshing
-    CMatrix<double> m_dMTopSurfCoords; 
+    CMatrix<double> m_dMTopSurfCoords;
 
-    // vector for duct specification 
+    // vector for duct specification
     CMatrix<double> m_dMAssmPitch, m_dMAssmPitchX, m_dMAssmPitchY, m_dMXYAssm, m_dMZAssm;
-  
+
     // vector for material names
     CVector<std::string> m_szAssmMat, m_szAssmMatAlias;
-    CMatrix<std::string> m_szMMAlias;  
+    CMatrix<std::string> m_szMMAlias;
 
     // vector holding a pincell
-    CVector<CPincell> m_Pincell; 
+    CVector<CPincell> m_Pincell;
 
     CVector<double> m_dAxialSize, m_dBLMatBias;
 
     // string for geomtype, engine, meshtype
     std::string m_szEngine;
-    std::string m_szGeomType;       
+    std::string m_szGeomType;
     std::string m_szMeshType;
-    std::string m_szSideset; 
+    std::string m_szSideset;
     std::vector<std::string> m_szDuctMats;
     // integers for vectors sizes, err etc
     int m_nAssemblyMat, m_nDimensions, m_nPincells , m_nAssmVol, m_nPin, m_nPinX, m_nPinY, err, m_nLineNumber, m_nPlanar,
@@ -259,13 +259,13 @@ namespace MeshKit {
 
     // doubles for pincell pitch, pi and mesh sizes resp.
     double m_dPitch, pi, m_dRadialSize, m_dTetMeshSize, m_dMergeTol, m_dZstart, m_dZend;
- 
+
     // igeom related
     SimpleArray<iBase_EntityHandle> assms, in_pins;
     //iGeom_Instance geom;
     iBase_EntitySetHandle root_set;
 
- 
+
     // error handlers
     void IOErrorHandler (ErrorStates) const;
     friend class CPincell;
