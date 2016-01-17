@@ -1422,11 +1422,8 @@ namespace MeshKit
 
 
             if ( m_nJouFlag == 0){
-                clock_t s_imerge = clock();
                 // impring merge before saving
                 Imprint_Merge(true, false);
-                // compute the elapsed time
-
 
                 clock_t s_save= clock();
                 // save .sat file
