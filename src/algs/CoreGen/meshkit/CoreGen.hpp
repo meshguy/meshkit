@@ -147,11 +147,12 @@ namespace MeshKit {
     int move_verts(iBase_EntitySetHandle set, const double *dx);
     int move_geoms(iBase_EntitySetHandle set, const double *dx);
     int create_neumannset();
+    int refine_coremodel();
     int load_and_compute_meshtogeom(iBase_EntitySetHandle set, std::string filenam);
 
-    bool extrude_flag;
+    bool extrude_flag, umr_flag;
     bool compute_meshtogeom;
-    std::vector <int> bsameas;
+    std::vector <int> bsameas, deg;
     bool mem_tflag;
     std::string prob_type, savefiles, info, minfo, same_as, reloading_mf;
     std::vector<std::string> files, all_meshfiles, mk_files;
@@ -166,7 +167,7 @@ namespace MeshKit {
     bool nst_flag, nsb_flag, nss_flag, nssall_flag;
     std::vector<std::string> core_alias;
     std::vector<double> nsx, nsy, nsc;
-    int num_nsside, ms_startid, ns_startid;
+    int num_nsside, ms_startid, ns_startid, nDegree;
 
   private:
     //! iGeom Impl for calling geometry creation/manipulation operations

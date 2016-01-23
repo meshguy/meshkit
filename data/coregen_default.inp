@@ -1,14 +1,15 @@
 Geometry Volume		   		! 'Geometry' card defines if the meshes are volume or surface
 MESHTOGEOM
+UMR 2 2 2
 ProblemType Mesh
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
 Assemblies 1 10 10			! 'Assemblies' card defines the number of assembly mesh files and pitch
 c.cub c
-Lattice 2 2 
+Lattice 2 2
 C C &
-C C 
-OutputFileName coregen_d.h5m                !  cgd.h5m is the desired o/p file name 
+C C
+OutputFileName coregen_d.h5m                !  cgd.h5m is the desired o/p file name
 ElementType hex8
 end					! 'END' card is a MUST; Marks the end of file for the file reader
 
