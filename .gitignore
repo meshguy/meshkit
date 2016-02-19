@@ -86,6 +86,8 @@ test/algs/assygen_default.jou
 test/algs/assygen_default.stp
 test/algs/assygen_default.template.jou
 test/algs/ebmesh_out.vtk
+test/algs/test_facetmeshreader
+test/algs/test_facetmeshreader_senses
 test/algs/input.vtk
 test/algs/intassign.exo
 test/algs/mesquite.gpt
@@ -110,6 +112,8 @@ test/algs/test_solidmesher_senses
 test/algs/test_tfimapping
 test/algs/alllocal.off
 test/algs/test_make_watertight
+test/algs/AdvFront/freeZone
+test/algs/AdvFront/planeProj
 test/core/graph.eps
 test/core/list_meshops
 test/core/test_graph
