@@ -511,7 +511,6 @@ namespace MeshKit
     // Output:   none
     // ---------------------------------------------------------------------------
     // export
-    bool have_hex27 = true;
     if(have_hex27 == true){
         moab::Range entities;
         moab::EntityHandle meshset;
@@ -992,7 +991,7 @@ namespace MeshKit
         MEntVector vols;
         mk_core()->get_entities_by_dimension(3, vols);
         MEntVector vols1;// = vols - vols_old;
-        
+
         std::set_difference(vols.begin(), vols.end(), vols_old.begin(), vols_old.end(), std::inserter(vols1, vols1.begin()));
 
         cg[i] = (CopyGeom*) mk_core()->construct_meshop("CopyGeom", vols1);
