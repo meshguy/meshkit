@@ -9,7 +9,6 @@
 
 #include "meshkit/CoreGen.hpp"
 using namespace MeshKit;
-#include <string.h>
 int CoreGen::copymove(const int nrank, const int numprocs)
 // ---------------------------------------------------------------------------
 // Function: copy/move the assemblies based on the geometrytype and symmetry - Assume 1 meshfile in each instance
@@ -184,17 +183,12 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
 {
     if(prob_type == "mesh"){
         // get the copy/expand sets
-//        int num_etags = 3, num_ctags = 1;
-//        const char     *etag_names[] = { "MATERIAL_SET", "DIRICHLET_SET", "NEUMANN_SET" };
-//        const char *etag_vals[] = { NULL, NULL, NULL };
         const char *ctag_names[] = { "GEOM_DIMENSION" };
         const char *ctag_vals[] = { (const char*) &set_DIM };
 
         int flag = 1;
         int assm_index = -1;
         double dx_orig[3], dx[3];
-//        iBase_EntityHandle *new_ents;
-//        int new_ents_alloc, new_ents_size;
 
         if(numprocs <= (int) files.size()){
             // no distribution of task for copy/move; each file loaded only once
@@ -214,13 +208,7 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                 cm[i]->copy_sets().add_tag("GEOM_DIMENSION");
 
                 cm[i]->update_sets();
-                //	err = get_expand_sets(cm[i], assys[i], etag_names, etag_vals, num_etags);
-                //	//	ERRORR("Failed to add expand lists.", iBase_FAILURE);
-                //	err = get_copy_sets(cm[i], assys[i], ctag_names, ctag_vals, num_ctags);
-                //	//ERRORR("Failed to add expand lists.", iBase_FAILURE);
-                //	err = extend_expand_sets(cm[i]);
-                //	//	ERRORR("Failed to extend expand lists.", iBase_FAILURE);
-            }
+              }
             for (int k=0; k< tot_assys; k++){
                 err = find_assm(k, assm_index);
                 if(assm_index >= 0){
@@ -265,53 +253,15 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                         dx[0] =  x_coord[k] - dx_orig(move_index+1, 1);
                         dx[1] =  y_coord[k] - dx_orig(move_index+1, 2);
                         dx[2] =  0.0;
-
-//                        int orig_ents_alloc = 0, orig_ents_size;
-//                        iBase_EntityHandle *orig_ents = NULL;
-//                        new_ents = NULL;
-//                        new_ents_alloc = 0;
                         cm[move_index]->set_transform(Copy::Translate(dx));
-                        //  mk_core()->insert_node(cm[move_index], (MeshOp*) this);
-                        //cm[move_index]->execute_this();
-
-                        //                        if(run_count[move_index] == 0){
-                        //                            ModelEnt me(mk_core(), iBase_EntitySetHandle(0), /*igeom instance*/0, (moab::EntityHandle)assys[move_index]);
-                        //                            MEntVector assm_set;
-                        //                            assm_set.clear();
-                        //                            assm_set.push_back(&me);
-                        //                            assm_set[0]->add_meshop(cm[move_index]);
-                        //                            cm[move_index]->add_modelent(&me);
-                        //                            // }
-                        //                            cm[move_index]->execute_this();
-                        //                            assm_set[0]->remove_meshop(cm[move_index]);
-                        //                            mk_core()->insert_node(cm[move_index], (MeshOp*) this);
-
-
                         cm[move_index]->execute_this();
-                        //                                                    if (run_count[move_index] < 1) {
-                        //                                                        cm[move_index]->execute_this();
-                        //                                                    }
-                        //                                                    else {
-                        //                                                        mk_core()->insert_node(cm[move_index], (MeshOp*) this);
-                        //                                                    }
                         ++run_count[move_index];
-
-                        //     cm[move_index]->
-                        //	    iMesh_getEntities(impl, assys[move_index], iBase_ALL_TYPES,iMesh_ALL_TOPOLOGIES,
-                        //			      &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
-                        //	    ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
-
-                        //	    cm[move_index]->copy(orig_ents,orig_ents_size, copy::Translate(dx),
-                        //				 &new_ents, &new_ents_alloc, &new_ents_size, false);
 
                         logfile << "Copy/moved A: " << assm_index
                                   <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
                         if(strcmp(info.c_str(),"on") == 0)
                             info_file << assm_index << " " << k  << "  " << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
-                        //	    free(new_ents);
-                        //	    free(orig_ents);
                         cm[move_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
-                        //	    cm[move_index]->tag_copied_sets(ctag_names, ctag_vals, 1);
                     }
 
                 }
@@ -331,44 +281,18 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
 
                     cm[j]->update_sets();
 
-                    //	  err = get_expand_sets(cm[j], assys[j], etag_names, etag_vals, num_etags);
-                    //	  ERRORR("Failed to add expand lists.", iBase_FAILURE);
-                    //	  err = get_copy_sets(cm[j], assys[j], ctag_names, ctag_vals, num_ctags);
-                    //	  ERRORR("Failed to add expand lists.", iBase_FAILURE);
-                    //	  err = extend_expand_sets(cm[j]);
-                    //	  ERRORR("Failed to extend expand lists.", iBase_FAILURE);
-
                     if(flag == 0){
                         dx[0] = x_coord[assm_index] - dx_orig[0];
                         dx[1] = y_coord[assm_index] - dx_orig[1];
                         dx[2] = 0.0;
 
-//                        new_ents = NULL;
-//                        new_ents_alloc = 0;
-//                        new_ents_size = 0;
-
-//                        int orig_ents_alloc = 0, orig_ents_size;
-//                        iBase_EntityHandle *orig_ents = NULL;
-
-
-                        /*	    iMesh_getEntities(impl, assys[0], iBase_ALL_TYPES,
-                  iMesh_ALL_TOPOLOGIES, &orig_ents, &orig_ents_alloc,
-                  &orig_ents_size, &err);
-/*///	    ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
-
-                        //	    cm[0]->copy(orig_ents, orig_ents_size, copy::Translate(dx),
-                        //			&new_ents, &new_ents_alloc, &new_ents_size, false);
                         cm[0]->set_transform(Copy::Translate(dx));
+                        cm[0]->execute_this();
                         logfile << "Copy/moved Assm: " << assm_index << " dX = " << dx[0] << " dY = "
                                   << dx[1]  << " rank " << nrank << std::endl;
                         if(strcmp(info.c_str(),"on") == 0)
                             info_file << assm_index << " \t" << i  << " \t" << dx[0] << " \t" << dx[1]  << " \t" << dx[2]  << " \t" << nrank << std::endl;
-
-                        //	    cm[0]->tag_copied_sets(ctag_names, ctag_vals, 1);
-
-//                        free(new_ents);
-//                        free(orig_ents);
-                    } else {
+                      } else {
                         flag = 0;
                         dx_orig[0] = x_coord[assm_index];
                         dx_orig[1] = y_coord[assm_index];
@@ -386,9 +310,6 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
     }
     else{ // prob type is geometry
         int assm_index = -1;
-//        iBase_EntityHandle *new_ents;
-//        int new_ents_alloc, new_ents_size;
-
         // no distribution of task for copy/move; each file loaded only once
         int flags[assys.size()], move_index = -1;
         double dx[3] = { 0.0, 0.0, 0.0 };
@@ -442,24 +363,10 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
                     dx[1] =  y_coord[k] - dx_orig(move_index+1, 2);
                     dx[2] =  0.0;
 
-//                    int orig_ents_alloc = 0, orig_ents_size;
-//                    iBase_EntityHandle *orig_ents = NULL;
-//                    new_ents = NULL;
-//                    new_ents_alloc = 0;
-
-                    //	  iGeom_getEntities(geom, assys[move_index], iBase_ALL_TYPES,
-                    //			    &orig_ents, &orig_ents_alloc, &orig_ents_size, &err);
-                    //	  ERRORR("Failed to get any entities from original set.", iBase_FAILURE);
-
-                    //	  cg[move_index]->copy(orig_ents,orig_ents_size, dx,
-                    //			       &new_ents, &new_ents_alloc, &new_ents_size, false);
                     cg[move_index]->set_location(dx);
                     cg[move_index]->execute_this();
                     logfile << "Copy/moved A: " << assm_index
                               <<" dX = " <<dx[0]<< " dY = " << dx[1] << " rank " << nrank << std::endl;
-//                    free(new_ents);
-//                    free(orig_ents);
-
                 }
 
             }
