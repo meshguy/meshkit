@@ -1217,7 +1217,8 @@ namespace MeshKit
                 //ERRORR("Error in CreateOuterCovering", err);
 
                 // subtract pins before save
-                Subtract_Pins();
+                if(m_nDuct > 0)
+                  Subtract_Pins();
                 if(m_nPlanar ==1){
                     Create2DSurf();
                     //ERRORR("Error in Create2DSurf", err);
@@ -1250,7 +1251,7 @@ namespace MeshKit
             std::cout <<"--------------------------------------------------"<<std::endl;
 
           }
-        // ceter the assembly
+        // center the assembly
         if (szInputString.substr(0,6) == "center" && m_nJouFlag == 0){
 
             char rDir = 'q';
@@ -1330,18 +1331,24 @@ namespace MeshKit
         if (szInputString.substr(0,13) == "axialmeshsize"){
             std::istringstream szFormatString (szInputString);
             szFormatString >> card;
-            m_dAxialSize.SetSize(m_nDuct);
-            int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
-                                                  std::istream_iterator<std::string>());
-            std::istringstream szFormatStringAgain (szInputString);
-            szFormatStringAgain >> card;
-            for (int p = 1; p <= m_nDuct; p++){
-                if(p <= num_ams_specified)
-                  szFormatStringAgain >> m_dAxialSize(p);
-                else
-                  m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
-                if(m_dAxialSize(p) < 0)
-                  IOErrorHandler(ENEGATIVE);
+            if(m_nDuct > 0){
+              m_dAxialSize.SetSize(m_nDuct);
+              int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
+                                                    std::istream_iterator<std::string>());
+              std::istringstream szFormatStringAgain (szInputString);
+              szFormatStringAgain >> card;
+              for (int p = 1; p <= m_nDuct; p++){
+                  if(p <= num_ams_specified)
+                    szFormatStringAgain >> m_dAxialSize(p);
+                  else
+                    m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
+                  if(m_dAxialSize(p) < 0)
+                    IOErrorHandler(ENEGATIVE);
+                }
+              }
+            else{
+                m_dAxialSize.SetSize(1);
+                szFormatString >> m_dAxialSize(1);
               }
             std::cout <<"--------------------------------------------------"<<std::endl;
 
@@ -1661,14 +1668,16 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    double dTol = 1e-4, ttol = 0.0;
+    double dTol = 1e-4, ttol = 1e-2;
+    if(m_dMAssmPitch.GetRows()!=0 && m_dMAssmPitch.GetColumns()!=0){
     if(m_szGeomType == "hexagonal")
       ttol = m_dMAssmPitch(1, 1);
     else if (m_szGeomType == "rectangular")
       ttol = m_dMAssmPitchX(1,1);
+      }
     // set tolerance for surface identification
     if (ttol != 0){
-        dTol=ttol*1.0e-4;
+        dTol=ttol*1.0e-2;
       }
     double dZTemp = 0.0;
     int flag = 0, locTemp = 0;
