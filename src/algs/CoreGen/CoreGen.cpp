@@ -600,13 +600,13 @@ namespace MeshKit
                   }
               }
             if(nrank == 0){
-                std::cout << " assm_meshfiles" << std::endl;
+                logfile << " assm_meshfiles" << std::endl;
                 for(int p=0; p<nassys; p++){
-                    std::cout << assm_meshfiles[p] << " : " << p << std::endl;
+                    logfile << assm_meshfiles[p] << " : " << p << std::endl;
                   }
-                std::cout << " load per assm" << std::endl;
+                logfile << " load per assm" << std::endl;
                 for(int p=0; p<nassys; p++){
-                    std::cout << load_per_assm[p] << " : " << p << std::endl;
+                    logfile << load_per_assm[p] << " : " << p << std::endl;
                   }
               }
             //distribute
@@ -628,7 +628,7 @@ namespace MeshKit
                         assm_load = i;
                       }
                     else if (assm_load == -1){
-                        std::cout << "No assemblies mesh files used in core" << std::endl;
+                        logfile << "No assemblies mesh files used in core" << std::endl;
                         exit(0);
                       }
                   }
@@ -637,7 +637,7 @@ namespace MeshKit
                  load_per_assm[assm_load] = (double)assm_meshfiles[assm_load]/(double)times_loaded[assm_load];
 
                  if(nrank == 0)
-                  std::cout << assm_load <<": - assembly has a Current Load: " << load_per_assm[assm_load] << std::endl;
+                  logfile << assm_load <<": - assembly has a Current Load: " << load_per_assm[assm_load] << std::endl;
                 int temp_rank = files.size()+ e;
                 rank_load[temp_rank] = assm_load;
                 e++;
@@ -645,12 +645,12 @@ namespace MeshKit
               }
           }
         else{
-            std::cout << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
+            logfile << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
           }
         if(nrank == 0){
-            std::cout << "Times loaded 1 " << std::endl;
+            logfile << "Times loaded 1 " << std::endl;
             for(int p=0; p<nassys; p++){
-                std::cout << times_loaded[p] << " : " << p << std::endl;
+                logfile << times_loaded[p] << " : " << p << std::endl;
               }
 
           }
@@ -687,30 +687,30 @@ namespace MeshKit
               }
           }
         if(nrank == 0){
-            std::cout << "Times loaded 1 After" << std::endl;
+            logfile << "Times loaded 1 After" << std::endl;
             for(int p=0; p<nassys; p++){
-                std::cout << times_loaded[p] << " : " << p << std::endl;
+                logfile << times_loaded[p] << " : " << p << std::endl;
               }
 
           }
         if(nrank == 0){
-            std::cout << "FINAL scheme 1 assm_meshfiles" << std::endl;
+            logfile << "FINAL scheme 1 assm_meshfiles" << std::endl;
             for(int p=0; p<nassys; p++){
-                std::cout << assm_meshfiles[p] << " : " << p << std::endl;
+                logfile << assm_meshfiles[p] << " : " << p << std::endl;
               }
-            std::cout << "FINAL scheme 1 load per assm" << std::endl;
+            logfile << "FINAL scheme 1 load per assm" << std::endl;
             for(int p=0; p<nassys; p++){
-                std::cout << load_per_assm[p] << " : " << p << std::endl;
+                logfile << load_per_assm[p] << " : " << p << std::endl;
               }
           }
         if(nrank == 0){
-            std::cout << " copy/move task distribution " << std::endl;
+            logfile << " copy/move task distribution " << std::endl;
             for(int i =0; i< numprocs; i++){
-                std::cout << "rank: " << i <<  " positions : ";
+                logfile << "rank: " << i <<  " positions : ";
                 for(int j=0; j< (int) position_core[i].size(); j++){
-                    std::cout << (int) position_core[i][j] << " ";
+                    logfile << (int) position_core[i][j] << " ";
                   }
-                std::cout << "\n" << std::endl;
+                logfile << "\n" << std::endl;
               }
           }
       }
@@ -737,7 +737,7 @@ namespace MeshKit
     // load this file
     iMesh_load(imesh->instance(), orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
     ERRORR("Couldn't read mesh file.", err);
-    std::cout << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
+    logfile << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
 
     if(bsameas[temp_index] == 0 && temp_index < nassys){
         if(all_ms_starts[temp_index] != -1 && all_ns_starts[temp_index] !=-1){
