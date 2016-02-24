@@ -113,11 +113,11 @@ namespace MeshKit
             tload = clock();
             ctload = (double) (tload - sTime)/(60*CLOCKS_PER_SEC);
 
-            if (mem_tflag == true && procs == 1) {
+            if (mem_tflag == true && rank == 0) {
                 logfile << "\n" << " Clock time taken to load mesh files = " << ld_tload
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctload << " mins" << std::endl;
-                logfile << " Memory used: " << mem1/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem1/1e6 << " Mb\n For rank 0" << std::endl;
               }
           }
 
@@ -144,11 +144,11 @@ namespace MeshKit
             tcopymove = clock();
             ctcopymove = (double) (tcopymove - tload)/(60*CLOCKS_PER_SEC);
 
-            if (mem_tflag == true && (strcmp(prob_type.c_str(), "mesh") == 0) && procs == 1) {
+            if (mem_tflag == true && (strcmp(prob_type.c_str(), "mesh") == 0) && rank == 0) {
                 logfile << "\n" << " Clock time taken to copy/move mesh files = " << ld_tcopymove
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctcopymove << " mins" << std::endl;
-                logfile << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem2/1e6 << " Mb\nFor rank 0"" << std::endl;
               }
           }
 
@@ -198,11 +198,11 @@ namespace MeshKit
             tmerge = clock();
             ctmerge = (double) (tmerge - tcopymove)/(60*CLOCKS_PER_SEC);
 
-            if (mem_tflag == true && procs == 1 ) {
+            if (mem_tflag == true && rank == 0 ) {
                 logfile << "\n" << " Clock time taken to merge nodes = " << ld_tmerge
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctmerge << " mins" << std::endl;
-                logfile << " Memory used: " << mem3/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem3/1e6 << " Mb\nFor rank 0"" << std::endl;
               }
 #ifdef USE_MPI
             MPI::COMM_WORLD.Barrier();
@@ -221,11 +221,11 @@ namespace MeshKit
                     textrude = clock();
                     ctextrude = (double) (textrude - tmerge)/(60*CLOCKS_PER_SEC);
 
-                    if (mem_tflag == true && procs == 1) {
+                    if (mem_tflag == true && rank == 0) {
                         logfile << "\n" << " Clock time taken to extrude = " << ld_t
                                 << " seconds" << std::endl;
                         logfile << " CPU time = " << ctextrude << " mins" << std::endl;
-                        logfile << " Memory used: " << mem4/1e6 << " Mb\n"
+                        logfile << " Memory used: " << mem4/1e6 << " Mb\nFor rank 0""
                                 << std::endl;
                       }
                   }
@@ -260,11 +260,11 @@ namespace MeshKit
         tgid = clock();
         ctgid = (double) (tgid-tmerge)/(60*CLOCKS_PER_SEC);
 
-        if (mem_tflag == true && procs == 1) {
+        if (mem_tflag == true && rank == 0) {
             logfile << "\n" << " Clock time taken to assign gids = " << ld_tgid
                     << " seconds" << std::endl;
             logfile << " CPU time = " << ctgid << " mins" << std::endl;
-            logfile << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
+            logfile << " Memory used: " << mem5/1e6 << " Mb\nFor rank 0"" << std::endl;
           }
         /*********************************************/
         // create neumann sets on the core model
@@ -279,11 +279,11 @@ namespace MeshKit
             ld_tns = ld_ns.DiffTime();
             tns = clock();
             ctns = (double) (tns-tgid)/(60*CLOCKS_PER_SEC);
-            if (mem_tflag == true && procs == 1) {
+            if (mem_tflag == true && rank == 0) {
                 logfile << "\n" << " Clock time taken to create neumann sets = " << ld_tns
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctns << " mins" << std::endl;
-                logfile << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem6/1e6 << " Mb\nFor rank 0"" << std::endl;
               }
           }
       }
@@ -317,11 +317,11 @@ namespace MeshKit
         tsave = clock();
         ctsave = (double) (tsave - tgid)/(60*CLOCKS_PER_SEC);
 
-        if (mem_tflag == true && procs == 1 ) {
+        if (mem_tflag == true && rank == 0 ) {
             logfile << "\n" << " Clock time taken to save = " << ld_tsave << " seconds"
                     << std::endl;
             logfile << " CPU time = " << ctsave << " mins" << std::endl;
-            logfile << " Memory used: " << mem7/1e6 << " Mb\n" << std::endl;
+            logfile << " Memory used: " << mem7/1e6 << " Mb\nFor rank 0"" << std::endl;
           }
       }
     /*********************************************/
