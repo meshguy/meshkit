@@ -117,7 +117,7 @@ namespace MeshKit
                 logfile << "\n" << " Clock time taken to load mesh files = " << ld_tload
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctload << " mins" << std::endl;
-                logfile << " Memory used: " << mem1/1e6 << " Mb\n For rank 0" << std::endl;
+                logfile << " Memory used: " << mem1/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
           }
 
@@ -148,7 +148,7 @@ namespace MeshKit
                 logfile << "\n" << " Clock time taken to copy/move mesh files = " << ld_tcopymove
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctcopymove << " mins" << std::endl;
-                logfile << " Memory used: " << mem2/1e6 << " Mb\nFor rank 0" << std::endl;
+                logfile << " Memory used: " << mem2/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
           }
 
@@ -202,7 +202,7 @@ namespace MeshKit
                 logfile << "\n" << " Clock time taken to merge nodes = " << ld_tmerge
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctmerge << " mins" << std::endl;
-                logfile << " Memory used: " << mem3/1e6 << " Mb\nFor rank 0" << std::endl;
+                logfile << " Memory used: " << mem3/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
 #ifdef USE_MPI
             MPI::COMM_WORLD.Barrier();
@@ -225,7 +225,7 @@ namespace MeshKit
                         logfile << "\n" << " Clock time taken to extrude = " << ld_t
                                 << " seconds" << std::endl;
                         logfile << " CPU time = " << ctextrude << " mins" << std::endl;
-                        logfile << " Memory used: " << mem4/1e6 << " Mb\nFor rank 0"
+                        logfile << " Memory used: " << mem4/1e6 << " Mb\n For rank 0\n"
                                 << std::endl;
                       }
                   }
@@ -264,7 +264,7 @@ namespace MeshKit
             logfile << "\n" << " Clock time taken to assign gids = " << ld_tgid
                     << " seconds" << std::endl;
             logfile << " CPU time = " << ctgid << " mins" << std::endl;
-            logfile << " Memory used: " << mem5/1e6 << " Mb\nFor rank 0" << std::endl;
+            logfile << " Memory used: " << mem5/1e6 << " Mb\n For rank 0\n" << std::endl;
           }
         /*********************************************/
         // create neumann sets on the core model
@@ -283,7 +283,7 @@ namespace MeshKit
                 logfile << "\n" << " Clock time taken to create neumann sets = " << ld_tns
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctns << " mins" << std::endl;
-                logfile << " Memory used: " << mem6/1e6 << " Mb\nFor rank 0" << std::endl;
+                logfile << " Memory used: " << mem6/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
           }
       }
@@ -321,7 +321,7 @@ namespace MeshKit
             logfile << "\n" << " Clock time taken to save = " << ld_tsave << " seconds"
                     << std::endl;
             logfile << " CPU time = " << ctsave << " mins" << std::endl;
-            logfile << " Memory used: " << mem7/1e6 << " Mb\nFor rank 0" << std::endl;
+            logfile << " Memory used: " << mem7/1e6 << " Mb\n For rank 0\n" << std::endl;
           }
       }
     /*********************************************/
@@ -430,7 +430,8 @@ namespace MeshKit
 #endif
         if(procs == 1)
           logfile << "Maximum memory used: " << mem7 <<  " Mb" << std::endl;
-        logfile << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"  << std::endl;
+          logfile << "Total processors used =  " << procs << std::endl;
+          logfile << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"  << std::endl;
 
       }
   }
