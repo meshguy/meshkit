@@ -443,6 +443,19 @@ namespace MeshKit
   // Output:   none
   // -------------------------------------------------------------------------------------------
   {
+    moab::Range entities;
+    moab::EntityHandle meshset;
+    mb->get_entities_by_type(0, MBHEX, entities);
+
+    mb->create_meshset(MESHSET_SET, meshset);
+    mb->add_entities(meshset, entities);
+
+    moab::Tag pp_tag;
+
+    mb->tag_get_handle( "PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, pp_tag, MB_TAG_SPARSE|MB_TAG_CREAT);
+    logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
+    mb->tag_set_data(pp_tag, &meshset, 1, &nrank);
+
 
 #ifdef USE_MPI
     // write file
@@ -489,7 +502,28 @@ namespace MeshKit
   }
 
   int CoreGen::save_mesh(int nrank) {
-    if(have_hex27 == true){
+    // ---------------------------------------------------------------------------
+    // Function: save mesh serially from each rank
+    // Input:    none
+    // Output:   none
+    // ---------------------------------------------------------------------------
+
+      // set parallel partition tag
+    moab::Range entities;
+    moab::EntityHandle meshset;
+    mb->get_entities_by_type(0, MBHEX, entities);
+
+    mb->create_meshset(MESHSET_SET, meshset);
+    mb->add_entities(meshset, entities);
+
+    moab::Tag pp_tag;
+
+    mb->tag_get_handle( "PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, pp_tag, MB_TAG_SPARSE|MB_TAG_CREAT);
+    logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
+    mb->tag_set_data(pp_tag, &meshset, 1, &nrank);
+
+    
+      if(have_hex27 == true){
         moab::Range entities;
         moab::EntityHandle meshset;
         mb->get_entities_by_type(0, MBHEX, entities);
