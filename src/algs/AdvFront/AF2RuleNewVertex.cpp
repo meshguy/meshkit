@@ -1,6 +1,6 @@
 #include "meshkit/AF2RuleNewVertex.hpp"
 
-AF2RuleNewVertex::AF2RuleNewVertex(MeshKit::Vector<2> const & rfrncPoint,
+AF2RuleNewVertex::AF2RuleNewVertex(AF2Point2D const & rfrncPoint,
         const AF2PointTransform* const & pntTrnsfrm)
 {
   referencePoint = rfrncPoint;
@@ -40,7 +40,7 @@ AF2RuleNewVertex& AF2RuleNewVertex::operator=(
   return *this;
 }
 
-MeshKit::Vector<2> AF2RuleNewVertex::getLocation(
+AF2Point2D AF2RuleNewVertex::getLocation(
     AF2VertexBinding & vertexBinding) const
 {
   return pointTransform->transformPoint(referencePoint, vertexBinding);

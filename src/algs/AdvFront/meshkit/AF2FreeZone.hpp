@@ -20,7 +20,7 @@
 #include <list>
 
 // MeshKit
-#include "meshkit/Matrix.hpp"
+#include "meshkit/AF2Point2D.hpp"
 
 class AF2FreeZone
 {
@@ -28,7 +28,7 @@ class AF2FreeZone
 
     // the vertices on the convex hull of the free zone,
     // in counterclockwise order
-    std::list<MeshKit::Vector<2> > vertices;
+    std::list<AF2Point2D> vertices;
 
     // the bounding box of the free zone
     double minX;
@@ -44,7 +44,7 @@ class AF2FreeZone
     /**
      * \brief Constructor
      */
-    AF2FreeZone(std::list<MeshKit::Vector<2> > const& bndryPoints);
+    AF2FreeZone(std::list<AF2Point2D> const& bndryPoints);
 
     /**
      * \brief Check whether the free zone contains (or nearly contains)
@@ -54,7 +54,7 @@ class AF2FreeZone
      * \return true if the free zone contains the point or nearly
      *   contains the point, false otherwise
      */
-    bool nearContains(MeshKit::Vector<2> const & testPnt) const;
+    bool nearContains(AF2Point2D const & testPnt) const;
 
     /**
      * \brief Check whether the free zone intersects (or nearly intersects)
@@ -65,8 +65,8 @@ class AF2FreeZone
      * \return true if the free zone intersects or nearly intersects the
      *   line segment, false otherwise
      */
-    bool nearIntersects(MeshKit::Vector<2> const & startPoint,
-        MeshKit::Vector<2> const & endPoint) const;
+    bool nearIntersects(AF2Point2D const & startPoint,
+        AF2Point2D const & endPoint) const;
 
     /**
      * \brief Verify that the free zone is convex, and that the

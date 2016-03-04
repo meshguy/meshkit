@@ -17,7 +17,8 @@ libMeshKitutils_la_SOURCES = \
         mstream.cpp \
         parser.cpp \
         pincell.cpp \
-        cylinder.cpp
+        cylinder.cpp \
+        Point2D.cpp
 
 
 # The list of header files which are to be installed
@@ -38,7 +39,8 @@ nobase_libMeshKitutils_la_include_HEADERS = \
         meshkit/ReadPolyLine.hpp \
         meshkit/pincell.hpp \
         meshkit/cylinder.hpp \
-        meshkit/array_qm.hpp
+        meshkit/array_qm.hpp \
+        meshkit/Point2D.hpp
 
 if HAVE_FBIGEOM
 nobase_libMeshKitutils_la_include_HEADERS += \

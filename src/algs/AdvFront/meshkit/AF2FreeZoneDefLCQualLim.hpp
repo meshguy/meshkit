@@ -26,16 +26,16 @@
 
 // MeshKit
 #include "meshkit/AF2FreeZoneDef.hpp"
+#include "meshkit/AF2Point2D.hpp"
 #include "meshkit/AF2PointTransform.hpp"
-#include "meshkit/Matrix.hpp"
 
 class AF2FreeZoneDefLCQualLim : public AF2FreeZoneDef
 {
   private:
 
     int numPoints;
-    MeshKit::Vector<2>* prefBndryPoints;
-    MeshKit::Vector<2>* limBndryPoints;
+    AF2Point2D* prefBndryPoints;
+    AF2Point2D* limBndryPoints;
     const AF2PointTransform** prefPointTransforms;
     const AF2PointTransform** limPointTransforms;
 
@@ -76,9 +76,9 @@ class AF2FreeZoneDefLCQualLim : public AF2FreeZoneDef
      *   appropriate to the actual vertex binding
      */
     AF2FreeZoneDefLCQualLim(
-        std::list<MeshKit::Vector<2> > const & preferBndryPnts,
+        std::list<AF2Point2D> const & preferBndryPnts,
         std::list<const AF2PointTransform*> const & preferPntTrnsfrms,
-        std::list<MeshKit::Vector<2> > const & limitBndryPnts,
+        std::list<AF2Point2D> const & limitBndryPnts,
         std::list<const AF2PointTransform*> const & limitPntTrnsfrms);
 
     ~AF2FreeZoneDefLCQualLim();

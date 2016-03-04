@@ -1,7 +1,7 @@
 #include "meshkit/AF2PointTransformNone.hpp"
 
-MeshKit::Vector<2> AF2PointTransformNone::transformPoint(
-    MeshKit::Vector<2> const & point, AF2VertexBinding & vBinding) const
+AF2Point2D AF2PointTransformNone::transformPoint(
+    AF2Point2D const & point, AF2VertexBinding & vBinding) const
 {
   return point;
 }

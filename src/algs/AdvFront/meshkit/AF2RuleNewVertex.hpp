@@ -12,6 +12,7 @@
 #define AF2RULENEWVERTEX_HPP
 
 // MeshKit
+#include "meshkit/AF2Point2D.hpp"
 #include "meshkit/AF2PointTransform.hpp"
 #include "meshkit/AF2VertexBinding.hpp"
 
@@ -19,13 +20,18 @@ class AF2RuleNewVertex
 {
   private:
 
-    MeshKit::Vector<2> referencePoint;
+    AF2Point2D referencePoint;
     const AF2PointTransform* pointTransform;
 
   public:
 
     /**
      * \brief Constructor
+     *
+     * Construct an AF2RuleNewVertex from a reference point location
+     * and a pointer to a point transform.  The point transform is
+     * cloned, so the calling context retains ownership of the point
+     * transform and is responsible for deleting it.
      *
      * \param rfrncPoint the reference location of the new vertex,
      *   i.e., the location that the new vertex will have if the
@@ -34,7 +40,7 @@ class AF2RuleNewVertex
      *   the point from its reference location to an actual location
      *   based on the vertex binding
      */
-    AF2RuleNewVertex(MeshKit::Vector<2> const & rfrncPoint,
+    AF2RuleNewVertex(AF2Point2D const & rfrncPoint,
         const AF2PointTransform* const & pntTrnsfrm);
 
     /**
@@ -60,7 +66,7 @@ class AF2RuleNewVertex
      * to update internal caches stored in the object, but will not
      * modify the coordinates that reference vertices are bound to.
      */
-    MeshKit::Vector<2> getLocation(AF2VertexBinding & vertexBinding) const;
+    AF2Point2D getLocation(AF2VertexBinding & vertexBinding) const;
 };
 
 #endif

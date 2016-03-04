@@ -10,14 +10,15 @@
  * (4) detection of intersection with a line segment.
  */
 
+// C++
 #include <iostream>
 #include <list>
 
+// MeshKit
 #include "meshkit/AF2FreeZone.hpp"
-#include "meshkit/Matrix.hpp"
+#include "meshkit/AF2Point2D.hpp"
 
-using namespace MeshKit;
-
+// MeshKit test utilities
 #include "TestUtil.hpp"
 
 AF2FreeZone makeSquareFreeZone();
@@ -71,17 +72,15 @@ int main(int argc, char **argv)
 
 AF2FreeZone makeSquareFreeZone()
 {
-  std::list<Vector<2> > squareBndryPnts;
-  Vector<2> myPoint;
-  myPoint[0] = 0;
-  myPoint[1] = 0;
-  squareBndryPnts.push_back(myPoint);
-  myPoint[0] = 1;
-  squareBndryPnts.push_back(myPoint);
-  myPoint[1] = 1;
-  squareBndryPnts.push_back(myPoint);
-  myPoint[0] = 0;
-  squareBndryPnts.push_back(myPoint);
+  std::list<AF2Point2D> squareBndryPnts;
+  AF2Point2D alpha(0, 0);
+  AF2Point2D bravo(1, 0);
+  AF2Point2D charlie(1, 1);
+  AF2Point2D delta(0, 1);
+  squareBndryPnts.push_back(alpha);
+  squareBndryPnts.push_back(bravo);
+  squareBndryPnts.push_back(charlie);
+  squareBndryPnts.push_back(delta);
 
   AF2FreeZone squareFreeZone(squareBndryPnts);
   return squareFreeZone;
@@ -91,21 +90,17 @@ AF2FreeZone makePentagonFreeZone()
 {
   // make a free zone in roughtly the shape of a regular pentagon
   // first two points at (0, 0) and (1e-14, 0)
-  std::list<Vector<2> > pentBndryPnts;
-  Vector<2> myPoint;
-  myPoint[0] = 0;
-  myPoint[1] = 0;
-  pentBndryPnts.push_back(myPoint);
-  myPoint[0] = 1e-14;
-  pentBndryPnts.push_back(myPoint);
-  myPoint[0] = 1.39735982487e-14;
-  myPoint[1] = 1.1091842589e-14;
-  pentBndryPnts.push_back(myPoint);
-  myPoint[0] = 0.5e-14;
-  myPoint[1] = 1.74370722192e-14;
-  pentBndryPnts.push_back(myPoint);
-  myPoint[0] = -0.39735982487e-14;
-  myPoint[1] = 1.1091842589e-14;
+  std::list<AF2Point2D> pentBndryPnts;
+  AF2Point2D alpha(0, 0);
+  AF2Point2D bravo(1e-14, 0);
+  AF2Point2D charlie(1.39735982487e-14, 1.1091842589e-14);
+  AF2Point2D delta(0.5e-14, 1.74370722192e-14);
+  AF2Point2D echo(-0.39735982487e-14, 1.1091842589e-14);
+  pentBndryPnts.push_back(alpha);
+  pentBndryPnts.push_back(bravo);
+  pentBndryPnts.push_back(charlie);
+  pentBndryPnts.push_back(delta);
+  pentBndryPnts.push_back(echo);
 
   AF2FreeZone pentFreeZone(pentBndryPnts);
   return pentFreeZone;
@@ -113,20 +108,15 @@ AF2FreeZone makePentagonFreeZone()
 
 AF2FreeZone makeDiamondFreeZone()
 {
-  std::list<Vector<2> > diamondBndryPnts;
-  Vector<2> myPoint;
-  myPoint[0] = 0;
-  myPoint[1] = 0;
-  diamondBndryPnts.push_back(myPoint);
-  myPoint[0] = 0.5e40;
-  myPoint[1] = 0.5e40;
-  diamondBndryPnts.push_back(myPoint);
-  myPoint[0] = 0;
-  myPoint[1] = 1e40;
-  diamondBndryPnts.push_back(myPoint);
-  myPoint[0] = -0.5e40;
-  myPoint[1] = 0.5e40;
-  diamondBndryPnts.push_back(myPoint);
+  std::list<AF2Point2D> diamondBndryPnts;
+  AF2Point2D alpha(0, 0);
+  AF2Point2D bravo(0.5e40, 0.5e40);
+  AF2Point2D charlie(0, 1e40);
+  AF2Point2D delta(-0.5e-40, 0.5e40);
+  diamondBndryPnts.push_back(alpha);
+  diamondBndryPnts.push_back(bravo);
+  diamondBndryPnts.push_back(charlie);
+  diamondBndryPnts.push_back(delta);
 
   AF2FreeZone diamondFreeZone(diamondBndryPnts);
   return diamondFreeZone;
@@ -148,17 +138,15 @@ void testPentagonConvex()
 
 void testClockwiseSquare()
 {
-  std::list<Vector<2> > squareBndryPnts;
-  Vector<2> myPoint;
-  myPoint[0] = 0;
-  myPoint[1] = 0;
-  squareBndryPnts.push_back(myPoint);
-  myPoint[1] = 1;
-  squareBndryPnts.push_back(myPoint);
-  myPoint[0] = 1;
-  squareBndryPnts.push_back(myPoint);
-  myPoint[1] = 0;
-  squareBndryPnts.push_back(myPoint);
+  std::list<AF2Point2D> squareBndryPnts;
+  AF2Point2D alpha(0, 0);
+  AF2Point2D bravo(0, 1);
+  AF2Point2D charlie(1, 1);
+  AF2Point2D delta(1, 0);
+  squareBndryPnts.push_back(alpha);
+  squareBndryPnts.push_back(bravo);
+  squareBndryPnts.push_back(charlie);
+  squareBndryPnts.push_back(delta);
 
   AF2FreeZone clockwiseSquareFreeZone(squareBndryPnts);
   CHECK(!clockwiseSquareFreeZone.isConvex());
@@ -169,20 +157,17 @@ void testClockwiseSquare()
 
 void testLocalNonConvex()
 {
-  std::list<Vector<2> > nonConvexBndryPnts;
-  Vector<2> myPoint;
-  myPoint[0] = 0;
-  myPoint[1] = 0;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 1;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 0.9999;
-  myPoint[1] = 0.5;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[1] = 1;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 0;
-  nonConvexBndryPnts.push_back(myPoint);
+  std::list<AF2Point2D> nonConvexBndryPnts;
+  AF2Point2D alpha(0, 0);
+  AF2Point2D bravo(1, 0);
+  AF2Point2D charlie(0.9999, 0.5);
+  AF2Point2D delta(0.9999, 1);
+  AF2Point2D echo(0, 1);
+  nonConvexBndryPnts.push_back(alpha);
+  nonConvexBndryPnts.push_back(bravo);
+  nonConvexBndryPnts.push_back(charlie);
+  nonConvexBndryPnts.push_back(delta);
+  nonConvexBndryPnts.push_back(echo);
 
   AF2FreeZone nonConvexFreeZone(nonConvexBndryPnts);
   CHECK(!nonConvexFreeZone.isConvex());
@@ -199,28 +184,21 @@ void testLocalNonConvex()
  */
 void testGlobalNonConvex()
 {
-  std::list<Vector<2> > nonConvexBndryPnts;
-  Vector<2> myPoint;
-  myPoint[0] = 0;
-  myPoint[1] = 0;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 1;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 0.5;
-  myPoint[1] = 1;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = -0.125;
-  myPoint[1] = 0.25;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 0.375;
-  myPoint[1] = -0.25;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 0.875;
-  myPoint[1] = 0.75;
-  nonConvexBndryPnts.push_back(myPoint);
-  myPoint[0] = 0;
-  myPoint[1] = 1;
-  nonConvexBndryPnts.push_back(myPoint);
+  std::list<AF2Point2D> nonConvexBndryPnts;
+  AF2Point2D alpha(0, 0);
+  AF2Point2D bravo(1, 0);
+  AF2Point2D charlie(0.5, 1);
+  AF2Point2D delta(-0.125, 0.25);
+  AF2Point2D echo(0.375, -0.25);
+  AF2Point2D foxtrot(0.875, 0.75);
+  AF2Point2D golf(0, 1);
+  nonConvexBndryPnts.push_back(alpha);
+  nonConvexBndryPnts.push_back(bravo);
+  nonConvexBndryPnts.push_back(charlie);
+  nonConvexBndryPnts.push_back(delta);
+  nonConvexBndryPnts.push_back(echo);
+  nonConvexBndryPnts.push_back(foxtrot);
+  nonConvexBndryPnts.push_back(golf);
 
   AF2FreeZone nonConvexFreeZone(nonConvexBndryPnts);
   CHECK(!nonConvexFreeZone.isConvex());
@@ -233,68 +211,54 @@ void testGlobalNonConvex()
 void testSquareContains()
 {
   AF2FreeZone squareFreeZone = makeSquareFreeZone();
-  Vector<2> myPoint;
-  myPoint[0] = 0.75;
-  myPoint[1] = 0.875;
+  AF2Point2D myPoint(0.75, 0.875);
   CHECK(squareFreeZone.nearContains(myPoint));
-  std::cout << "PASS: The square free zone contains (0.75, 0.875)."
-      << std::endl;
+  std::cout << "PASS: The square free zone contains " << myPoint
+      << "." << std::endl;
 }
 
 void testSquareNotContains()
 {
   AF2FreeZone squareFreeZone = makeSquareFreeZone();
-  Vector<2> myPoint;
-  myPoint[0] = 0;
-  myPoint[1] = 1.0625;
+  AF2Point2D myPoint(0, 1.0625);
   CHECK(!squareFreeZone.nearContains(myPoint));
-  std::cout << "PASS: The square free zone does not contain (0, 1.0625)."
-      << std::endl;
+  std::cout << "PASS: The square free zone does not contain " << myPoint
+      << "." << std::endl;
 }
 
 void testDiamondNearContains()
 {
   AF2FreeZone diamondFreeZone = makeDiamondFreeZone();
-  Vector<2> myPoint;
-  myPoint[0] = 0.25e40;
-  myPoint[1] = 0.249999999999999e40;
+  AF2Point2D myPoint(0.25e40, 0.249999999999999e40);
   CHECK(diamondFreeZone.nearContains(myPoint));
   std::cout << "PASS: The diamond free zone nearly contains\n"
-      << "(0.25e40, 0.249999999999999e40)." << std::endl;
+      << "  (0.25e40, 0.249999999999999e40)." << std::endl;
 }
 
 void testPentagonContains()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> myPoint;
-  myPoint[0] = 0.625e-14;
-  myPoint[1] = 1.25e-14;
+  AF2Point2D myPoint(0.625e-14, 1.25e-14);
   CHECK(pentFreeZone.nearContains(myPoint));
-  std::cout << "PASS: The pentagon free zone contains (0.625e-14, 1.25e-14)."
-      << std::endl;
+  std::cout << "PASS: The pentagon free zone contains " << myPoint
+      << "." << std::endl;
 }
 
 void testPentagonNotContains()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> myPoint;
-  myPoint[0] = 1.25e-14;
-  myPoint[1] = 0.125e-14;
+  AF2Point2D myPoint(1.25e-14, 0.125e-14);
   CHECK(!pentFreeZone.nearContains(myPoint));
   std::cout
-      << "PASS: The pentagon free zone does not contain (1.25e-14, 0.125e-14)."
-      << std::endl;
+      << "PASS: The pentagon free zone does not contain " << myPoint
+      << "." << std::endl;
 }
 
 void testSquareIntersect()
 {
   AF2FreeZone squareFreeZone = makeSquareFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = 1.2499999;
-  startEdge[1] = 0.75;
-  Vector<2> endEdge;
-  endEdge[0] = 0.75;
-  endEdge[1] = 1.25;
+  AF2Point2D startEdge(1.2499999, 0.75);
+  AF2Point2D endEdge(0.75, 1.25);
   CHECK(squareFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The square free zone intersects an edge from\n"
       << "  (1.2499999, 0.75) to (0.75, 1.25)" << std::endl;
@@ -303,12 +267,8 @@ void testSquareIntersect()
 void testSquareNotIntersect()
 {
   AF2FreeZone squareFreeZone = makeSquareFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = 1.2500001;
-  startEdge[1] = 0.75;
-  Vector<2> endEdge;
-  endEdge[0] = 0.75;
-  endEdge[1] = 1.25;
+  AF2Point2D startEdge(1.2500001, 0.75);
+  AF2Point2D endEdge(0.75, 1.25);
   CHECK(!squareFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The square free zone does not intersect an edge from\n"
       << "  (1.2500001, 0.75) to (0.75, 1.25)" << std::endl;
@@ -317,12 +277,8 @@ void testSquareNotIntersect()
 void testPentagonIntersect()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = 1.0e-14;
-  startEdge[1] = 1.75e-14;
-  Vector<2> endEdge;
-  endEdge[0] = 0.5e-14;
-  endEdge[1] = 1.7437e-14;
+  AF2Point2D startEdge(1.0e-14, 1.75e-14);
+  AF2Point2D endEdge(0.5e-14, 1.7437e-14);
   CHECK(pentFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The pentagon free zone intersects an edge from\n"
       << "  (1.0e-14, 1.75e-14) to (0.5e-14, 1.7437e-14)" << std::endl;
@@ -331,18 +287,14 @@ void testPentagonIntersect()
 void testPentagonNearIntersect()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = 1.0e-14;
-  startEdge[1] = 1.75e-14;
-  Vector<2> endEdge;
+  AF2Point2D startEdge(1.0e-14, 1.75e-14);
+  AF2Point2D endEdge(0.500010213437881e-14, 1.7437e-14);
   // As of 02/17/2016, computations in the code suggested that the
   // actual change from intersection to non-intersection is between
   // 0.5000102134378802e-14 and 0.5000102134378803e-14, but the
   // rounding error involved means this might be just noise.
   // Values between 0.50001021343788022e-14 and 0.50001021343788029e-14
   // inclusive produced a result of 0, i.e., on the boundary of intersection.
-  endEdge[0] = 0.500010213437881e-14;
-  endEdge[1] = 1.7437e-14;
   CHECK(pentFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The pentagon free zone nearly intersects an edge from\n"
       << "  (1.0e-14, 1.75e-14) to (0.500010213437881e-14, 1.7437e-14)"
@@ -352,26 +304,19 @@ void testPentagonNearIntersect()
 void testPentagonNotIntersectBB()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = -1.0e-30;
-  startEdge[1] = 1.0e-14;
-  Vector<2> endEdge;
-  endEdge[0] = -1.0e-30;
-  endEdge[1] = -1.0e-14;
+  AF2Point2D startEdge(-0.39735982488e-14, 1.0-14);
+  AF2Point2D endEdge(-0.39735982488e-14, -1.0e-14);
   CHECK(!pentFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The pentagon free zone does not intersect an edge from\n"
-      << "  (-1.0e-30, 1.0e-14) to (-1.0e-30, -1.0e-14)" << std::endl;
+      << "  (-0.39735982488e-14, 1.0e-14) to "
+      << "(-0.39735982488e-14, -1.0e-14)" << std::endl;
 }
 
 void testPentagonNotIntersectCW()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = 1.0e-14;
-  startEdge[1] = 1.75e-14;
-  Vector<2> endEdge;
-  endEdge[0] = 0.50002e-14;
-  endEdge[1] = 1.7437e-14;
+  AF2Point2D startEdge(1.0e-14, 1.75e-14);
+  AF2Point2D endEdge(0.50002e-14, 1.7437e-14);
   CHECK(!pentFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The pentagon free zone does not intersect an edge from\n"
       << "  (1.0e-14, 1.75e-14) to (0.50002e-14, 1.7437e-14)" << std::endl;
@@ -380,12 +325,8 @@ void testPentagonNotIntersectCW()
 void testPentagonNotIntersectZoneCW()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = 1.3e-14;
-  startEdge[1] = 1.3e-14;
-  Vector<2> endEdge;
-  endEdge[0] = 1.5e-14;
-  endEdge[1] = 0.95e-14;
+  AF2Point2D startEdge(1.3e-14, 1.3e-14);
+  AF2Point2D endEdge(1.5e-14, 0.95e-14);
   CHECK(!pentFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The pentagon free zone does not intersect an edge from\n"
       << "  (1.3e-14, 1.3e-14) to (1.5e-14, 0.95e-14)" << std::endl;
@@ -394,12 +335,8 @@ void testPentagonNotIntersectZoneCW()
 void testPentagonNotIntersectZoneCCW()
 {
   AF2FreeZone pentFreeZone = makePentagonFreeZone();
-  Vector<2> startEdge;
-  startEdge[0] = 1.5e-14;
-  startEdge[1] = 0.95e-14;
-  Vector<2> endEdge;
-  endEdge[0] = 1.3e-14;
-  endEdge[1] = 1.3e-14;
+  AF2Point2D startEdge(1.5e-14, 0.95e-14);
+  AF2Point2D endEdge(1.3e-14, 1.3e-14);
   CHECK(!pentFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The pentagon free zone does not intersect an edge from\n"
       << "  (1.5e-14, 0.95e-14) to (1.3e-14, 1.3e-14)" << std::endl;

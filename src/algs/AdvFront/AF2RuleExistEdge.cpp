@@ -13,21 +13,21 @@ AF2RuleExistEdge::AF2RuleExistEdge(const AF2RuleExistVertex* firstVtx,
   c = coeffCharlie;
 }
 
-const AF2RuleExistVertex* AF2RuleExistEdge::getFirstVertex() const
+const AF2RuleExistVertex* AF2RuleExistEdge::getStart() const
 {
   return firstVertexPtr;
 }
 
-const AF2RuleExistVertex* AF2RuleExistEdge::getSecondVertex() const
+const AF2RuleExistVertex* AF2RuleExistEdge::getEnd() const
 {
   return secondVertexPtr;
 }
 
-bool AF2RuleExistEdge::isMatching(double matchFirstX, double matchFirstY,
-    double matchSecondX, double matchSecondY, double maxDeviation) const
+bool AF2RuleExistEdge::isMatching(AF2Point2D const & startPnt,
+    AF2Point2D const & endPnt, double maxDeviation) const
 {
-  double matchDiffX = matchSecondX - matchFirstX;
-  double matchDiffY = matchSecondY - matchFirstY;
+  double matchDiffX = endPnt.getX() - startPnt.getX();
+  double matchDiffY = endPnt.getY() - startPnt.getY();
   double dx = matchDiffX - vecDiffX;
   double dy = matchDiffY - vecDiffY;
   double deviation = a*dx*dx + b*dx*dy + c*dy*dy;

@@ -7,8 +7,8 @@
 #define AF2POINTTRANSFORM_HPP
 
 // MeshKit
+#include "meshkit/AF2Point2D.hpp"
 #include "meshkit/AF2VertexBinding.hpp"
-#include "meshkit/Matrix.hpp"
 
 class AF2PointTransform
 {
@@ -21,20 +21,22 @@ class AF2PointTransform
      * a vertex binding that assigns actual coordinates to the reference
      * AF2RuleExistingVertex vertices of a rule, transform the point
      * from its reference location to a location that is appropriate
-     * to the vertex vinding.
+     * to the vertex binding.
      *
      * This method assumed that the vertex binding is complete, i.e.,
      * that every reference AF2RuleExistingVertex on the AF2VertexBinding
      * has been assigned actual coordinates.  The method is allowed to
      * modify the vertex binding to improve computational efficiency by
-     * updating interal caches in the AF2VertexBinding, but is guaranteed
+     * updating internal caches in the AF2VertexBinding, but is guaranteed
      * not to change the coordinates that reference vertices are bound to.
      *
      * \param point the coordinates of some 2-dimensional point
      * \param vBinding a binding of reference vertices to points with actual
      *   coordinates
+     * \return a 2-dimensional point transformed from point based on the
+     *   vertex binding
      */
-    virtual MeshKit::Vector<2> transformPoint(MeshKit::Vector<2> const & point,
+    virtual AF2Point2D transformPoint(AF2Point2D const & point,
         AF2VertexBinding & vBinding) const = 0;
 
     /**

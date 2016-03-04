@@ -21,10 +21,10 @@ double AF2RuleExistVertex::getY() const
 }
 
 bool AF2RuleExistVertex::isMatching(
-    double matchX, double matchY, double maxDeviation) const
+    AF2Point2D const& matchPoint, double maxDeviation) const
 {
-  double dx = matchX - x;
-  double dy = matchY - y;
+  double dx = matchPoint.getX() - x;
+  double dy = matchPoint.getY() - y;
   double deviation = a*dx*dx + b*dx*dy + c*dy*dy;
   return (deviation < maxDeviation);
 }

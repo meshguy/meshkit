@@ -1,12 +1,19 @@
 /*
  * AF2RuleExistVertex.hpp
  *
- * A specification of a vertex that must exist in order for a rule to
- * be applied.  A vertex with exact coordinates will not exist in general,
- * but a vertex within some neighborhood of given coordinates may be found.
+ * A specification of a vertex that must exist in order for a
+ * rule to be applied.
+ *
+ * In general, a point having coordinates that exactly match the
+ * reference coordinates will not exist, but a point within some
+ * neighborhood of the ideal coordinates is still considered a
+ * matching * vertex.
  */
 #ifndef AF2RULEEXISTVERTEX_HPP
 #define AF2RULEEXISTVERTEX_HPP
+
+// MeshKit
+#include "meshkit/AF2Point2D.hpp"
 
 class AF2RuleExistVertex
 {
@@ -20,21 +27,22 @@ class AF2RuleExistVertex
     /**
      * \brief Constructor
      *
-     * A constructor that defines the ideal coordinates along with
+     * A constructor that defines the reference coordinates along with
      * quadratic coefficients to use in checking whether a vertex
      * is an acceptable match for this vertex.
      *
      * \param refXCoord the x-coordinate of the ideal matching vertex
      * \param refYCoord the y-coordinate of the ideal matching vertex
      * \param coeffAlpha the coefficient of dx*dx to use when measuring
-     *   deviation from the ideal coordinates
+     *   deviation from the reference coordinates
      * \param coeffBravo the coefficient of dx*dy to use when measuring
-     *   deviation from the ideal coordinates
+     *   deviation from the reference coordinates
      * \param coeffCharlie the coefficient of dy*dy to use when measuring
-     *   deviation from the ideal coordinates
+     *   deviation from the reference coordinates
      */
     AF2RuleExistVertex(double refXCoord, double refYCoord,
-        double coeffAlpha, double coeffBravo, double coeffCharlie);
+        double coeffAlpha = 1.0, double coeffBravo = 0.0,
+        double coeffCharlie = 1.0);
 
     /**
      * \brief Get the ideal x-coordinate
@@ -49,17 +57,15 @@ class AF2RuleExistVertex
     /**
      * \brief Check whether a vertex is a match for this ideal vertex
      * 
-     * \param matchX the x-coordinate of the vertex that is to be checked
-     *   as a potential match for the ideal vertex
-     * \param matchY the y-coordinate of the vertex that is to be checked
-     *   as a potential match for the ideal vertex
+     * \param matchPoint the point that is to be checked as a potential
+     *   match for the ideal vertex
      * \param maxDeviation the maximum deviation from the reference
      *   coordinates (when measured with the quadratic coefficients)
      *   that is allowed to match this vertex
-     * \return true if a vertex at the specified coordinates is within
+     * \return true if the coordinates of the specified point are within
      *   the specified deviation of the ideal vertex, false otherwise
      */
-    bool isMatching(double matchX, double matchY, double maxDeviation) const;
+    bool isMatching(AF2Point2D const & matchPoint, double maxDeviation) const;
 };
 
 #endif

@@ -2,7 +2,7 @@
 #include "meshkit/Error.hpp"
 
 AF2FreeZoneDefSimple::AF2FreeZoneDefSimple(
-        std::list<MeshKit::Vector<2> > const & rfrncBndryPnts,
+        std::list<AF2Point2D> const & rfrncBndryPnts,
         std::list<const AF2PointTransform*> const & bndryPntTrnsfrms)
 {
   // confirm that the lists are the same size
@@ -14,10 +14,10 @@ AF2FreeZoneDefSimple::AF2FreeZoneDefSimple(
   }
 
   numPoints = rfrncBndryPnts.size();
-  bndryPoints = new MeshKit::Vector<2>[numPoints];
+  bndryPoints = new AF2Point2D[numPoints];
   pointTransforms = new const AF2PointTransform*[numPoints];
   int pIndx = 0;
-  for (std::list<MeshKit::Vector<2> >::const_iterator itr =
+  for (std::list<AF2Point2D>::const_iterator itr =
       rfrncBndryPnts.begin(); itr != rfrncBndryPnts.end(); ++itr)
   {
     bndryPoints[pIndx] = *itr;
@@ -46,7 +46,7 @@ AF2FreeZoneDefSimple::~AF2FreeZoneDefSimple()
 AF2FreeZoneDefSimple::AF2FreeZoneDefSimple(const AF2FreeZoneDefSimple & toCopy)
 {
   numPoints = toCopy.numPoints;
-  bndryPoints = new MeshKit::Vector<2>[numPoints];
+  bndryPoints = new AF2Point2D[numPoints];
   pointTransforms = new const AF2PointTransform*[numPoints];
   for (int pIndx = 0; pIndx < numPoints; ++pIndx)
   {
@@ -60,7 +60,7 @@ AF2FreeZoneDefSimple& AF2FreeZoneDefSimple::operator=(
 {
   // copy constructor functionality,
   // but to other parts of memory, not yet to this
-  MeshKit::Vector<2>* otherBndryPoints = new MeshKit::Vector<2>[numPoints];
+  AF2Point2D* otherBndryPoints = new AF2Point2D[numPoints];
   const AF2PointTransform** otherPointTransforms =
       new const AF2PointTransform*[numPoints];
   for (int pIndx = 0; pIndx < numPoints; ++pIndx)
@@ -96,7 +96,7 @@ AF2FreeZoneDefSimple* AF2FreeZoneDefSimple::clone() const
 AF2FreeZone* AF2FreeZoneDefSimple::makeFreeZone(
     AF2VertexBinding & vertexBinding, int qualityClass) const
 {
-  std::list<MeshKit::Vector<2> > freeZoneBndry;
+  std::list<AF2Point2D> freeZoneBndry;
   for (int pIndx = 0; pIndx < numPoints; ++pIndx)
   {
     freeZoneBndry.push_back(pointTransforms[pIndx]->transformPoint(

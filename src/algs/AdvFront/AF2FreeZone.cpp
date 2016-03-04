@@ -2,26 +2,35 @@
 
 #include <algorithm>
 
-// temporary
-#include <iostream>
-
 AF2FreeZone::AF2FreeZone(
-    std::list<MeshKit::Vector<2> > const& bndryPoints) :
+    std::list<AF2Point2D> const & bndryPoints) :
     vertices(bndryPoints.begin(), bndryPoints.end())
 {
-  typedef std::list<MeshKit::Vector<2> >::const_iterator ItrType;
+  typedef std::list<AF2Point2D>::const_iterator ItrType;
 
   // determine the bounding box
   minX = 0;
   maxX = 0;
   minY = 0;
   maxY = 0;
+  bool isFirst = true;
   for (ItrType itr = vertices.begin(); itr != vertices.end(); ++itr)
   {
-    minX = std::min(minX, (*itr)[0]);
-    maxX = std::max(maxX, (*itr)[0]);
-    minY = std::min(minY, (*itr)[1]);
-    maxY = std::max(maxY, (*itr)[1]);
+    if (isFirst)
+    {
+      minX = itr->getX();
+      maxX = itr->getX();
+      minY = itr->getY();
+      maxY = itr->getY();
+      isFirst = false;
+    }
+    else
+    {
+      minX = std::min(minX, itr->getX());
+      maxX = std::max(maxX, itr->getX());
+      minY = std::min(minY, itr->getY());
+      maxY = std::max(maxY, itr->getY());
+    }
   }
 
   // determine the scale
@@ -32,20 +41,21 @@ AF2FreeZone::AF2FreeZone(
   scale = std::max(scale, fabs(minY));
 }
 
-bool AF2FreeZone::nearContains(MeshKit::Vector<2> const & testPnt) const
+bool AF2FreeZone::nearContains(AF2Point2D const & testPnt) const
 {
   // Remark: This method could execute faster if the class precomputed
   // and stored the coefficients needed for the comparisons.  That is
   // how netgen version 5.2 did it.
   // The test point x-coefficient would be -rayYDiff.
   // The test point y-coefficient would be rayXDiff.
-  // The constant would be ( -rayXDiff * (*itr)[1] ) + ( rayYDiff * (*itr)[0] )
+  // The constant would be ( -rayXDiff * itr->getY() ) + . . .
+  //     ( rayYDiff * itr->getX() )
 
-  typedef std::list<MeshKit::Vector<2> >::const_iterator ItrType;
+  typedef std::list<AF2Point2D>::const_iterator ItrType;
 
   // check whether the test point lies outside of the free zone bounding box
-  if (testPnt[0] < minX || testPnt[0] > maxX ||
-      testPnt[1] < minY || testPnt[1] > maxY)
+  if (testPnt.getX() < minX || testPnt.getX() > maxX ||
+      testPnt.getY() < minY || testPnt.getY() > maxY)
   {
     return false;
   }
@@ -64,13 +74,13 @@ bool AF2FreeZone::nearContains(MeshKit::Vector<2> const & testPnt) const
     }
 
     // calculate the ray direction
-    double rayXDiff = (*next)[0] - (*itr)[0];
-    double rayYDiff = (*next)[1] - (*itr)[1];
+    double rayXDiff = next->getX() - itr->getX();
+    double rayYDiff = next->getY() - itr->getY();
 
     // test whether the test point is clockwise from the ray from the
     // current point to the next point
-    double testXDiff = (testPnt[0] - (*itr)[0]);
-    double testYDiff = (testPnt[1] - (*itr)[1]);
+    double testXDiff = (testPnt.getX() - itr->getX());
+    double testYDiff = (testPnt.getY() - itr->getY());
     if (testYDiff*rayXDiff - rayYDiff*testXDiff < -1.0e-14*scale*scale)
     {
       // if this condition is true (test would be < 0 in perfect arithmetic,
@@ -84,23 +94,24 @@ bool AF2FreeZone::nearContains(MeshKit::Vector<2> const & testPnt) const
   return true;
 }
 
-bool AF2FreeZone::nearIntersects(MeshKit::Vector<2> const & startPoint,
-    MeshKit::Vector<2> const & endPoint) const
+bool AF2FreeZone::nearIntersects(AF2Point2D const & startPoint,
+    AF2Point2D const & endPoint) const
 {
   // Remark: This method could execute faster if the class precomputed
   // and stored the coefficients needed for the comparisons.  That is
   // how netgen version 5.2 did it.
   // The edge endpoints x-coefficient would be -rayYDiff.
   // The edge endpoints y-coefficient would be rayXDiff.
-  // The constant would be ( -rayXDiff * (*itr)[1] ) + ( rayYDiff * (*itr)[0] )
+  // The constant would be ( -rayXDiff * itr->getY() ) + . . .
+  //     ( rayYDiff * itr->getX() )
 
-  typedef std::list<MeshKit::Vector<2> >::const_iterator ItrType;
+  typedef std::list<AF2Point2D>::const_iterator ItrType;
 
   // check whether both endpoints lie outside of the free zone bounding box
-  if ((startPoint[0] < minX && endPoint[0] < minX) ||
-      (startPoint[0] > maxX && endPoint[0] > maxX) ||
-      (startPoint[1] < minY && endPoint[1] < minY) ||
-      (startPoint[1] > maxY && endPoint[1] > maxY))
+  if ((startPoint.getX() < minX && endPoint.getX() < minX) ||
+      (startPoint.getX() > maxX && endPoint.getX() > maxX) ||
+      (startPoint.getY() < minY && endPoint.getY() < minY) ||
+      (startPoint.getY() > maxY && endPoint.getY() > maxY))
   {
     return false;
   }
@@ -119,15 +130,15 @@ bool AF2FreeZone::nearIntersects(MeshKit::Vector<2> const & startPoint,
     }
 
     // calculate the ray direction
-    double rayXDiff = (*next)[0] - (*itr)[0];
-    double rayYDiff = (*next)[1] - (*itr)[1];
+    double rayXDiff = next->getX() - itr->getX();
+    double rayYDiff = next->getY() - itr->getY();
 
     // test whether the start point and end point are both clockwise from
     // the ray from the current point to the next point
-    double startXDiff = (startPoint[0] - (*itr)[0]);
-    double startYDiff = (startPoint[1] - (*itr)[1]);
-    double endXDiff = (endPoint[0] - (*itr)[0]);
-    double endYDiff = (endPoint[1] - (*itr)[1]);
+    double startXDiff = (startPoint.getX() - itr->getX());
+    double startYDiff = (startPoint.getY() - itr->getY());
+    double endXDiff = (endPoint.getX() - itr->getX());
+    double endYDiff = (endPoint.getY() - itr->getY());
     if ((startYDiff*rayXDiff - rayYDiff*startXDiff < -1.0e-14*scale*scale) &&
         (endYDiff*rayXDiff - rayYDiff*endXDiff < -1.0e-14*scale*scale))
     {
@@ -144,16 +155,16 @@ bool AF2FreeZone::nearIntersects(MeshKit::Vector<2> const & startPoint,
   bool allCW = true;
   bool allCCW = true;
   // First calculate the x and y difference of the test line segment
-  double testSegXDiff = (endPoint[0] - startPoint[0]);
-  double testSegYDiff = (endPoint[1] - startPoint[1]);
+  double testSegXDiff = (endPoint.getX() - startPoint.getX());
+  double testSegYDiff = (endPoint.getY() - startPoint.getY());
   for (ItrType itr = vertices.begin();
       itr != vertices.end() && (allCW || allCCW); ++itr)
   {
 
     // calculate the difference from the start point to the
     // free zone vertex
-    double fzvXDiff = (*itr)[0] - startPoint[0];
-    double fzvYDiff = (*itr)[1] - startPoint[1];
+    double fzvXDiff = itr->getX() - startPoint.getX();
+    double fzvYDiff = itr->getY() - startPoint.getY();
 
     // test whether the free zone vertex is clockwise from (right of)
     // the test line segment
@@ -183,7 +194,7 @@ bool AF2FreeZone::nearIntersects(MeshKit::Vector<2> const & startPoint,
 
 bool AF2FreeZone::isConvex() const
 {
-  typedef std::list<MeshKit::Vector<2> >::const_iterator ItrType;
+  typedef std::list<AF2Point2D>::const_iterator ItrType;
 
   for (ItrType itr = vertices.begin(); itr != vertices.end(); ++itr)
   {
@@ -197,8 +208,8 @@ bool AF2FreeZone::isConvex() const
     }
 
     // calculate the ray direction
-    double rayXDiff = (*next)[0] - (*itr)[0];
-    double rayYDiff = (*next)[1] - (*itr)[1];
+    double rayXDiff = next->getX() - itr->getX();
+    double rayYDiff = next->getY() - itr->getY();
 
     // test whether all other points are counterclockwise
     for (ItrType testPnt = vertices.begin();
@@ -212,8 +223,8 @@ bool AF2FreeZone::isConvex() const
 
       // test that the test point is counterclockwise from the ray from the
       // current point to the next point
-      double testXDiff = ((*testPnt)[0] - (*itr)[0]);
-      double testYDiff = ((*testPnt)[1] - (*itr)[1]);
+      double testXDiff = (testPnt->getX() - itr->getX());
+      double testYDiff = (testPnt->getY() - itr->getY());
       if (testYDiff*rayXDiff - rayYDiff*testXDiff < -1.0e-14*scale*scale)
       {
         // if this condition is true (test would be < 0 in perfect arithmetic),

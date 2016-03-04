@@ -16,15 +16,15 @@
 
 // MeshKit
 #include "meshkit/AF2FreeZoneDef.hpp"
+#include "meshkit/AF2Point2D.hpp"
 #include "meshkit/AF2PointTransform.hpp"
-#include "meshkit/Matrix.hpp"
 
 class AF2FreeZoneDefSimple : public AF2FreeZoneDef
 {
   private:
 
     int numPoints;
-    MeshKit::Vector<2>* bndryPoints;
+    AF2Point2D* bndryPoints;
     const AF2PointTransform** pointTransforms;
 
   public:
@@ -53,7 +53,7 @@ class AF2FreeZoneDefSimple : public AF2FreeZoneDef
      * \param bndryPntTrnsfrms the list of point transformations
      */
     AF2FreeZoneDefSimple(
-        std::list<MeshKit::Vector<2> > const & rfrncBndryPnts,
+        std::list<AF2Point2D> const & rfrncBndryPnts,
         std::list<const AF2PointTransform*> const & bndryPntTrnsfrms);
 
     ~AF2FreeZoneDefSimple();

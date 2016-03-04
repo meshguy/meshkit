@@ -14,12 +14,13 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AdvFront \
                -I$(top_srcdir)/test
 
 
-TESTS = freeZone planeProj
+TESTS = freeZone planeProj triRule
 
 check_PROGRAMS = $(TESTS)
 
 freeZone_SOURCES = freeZone.cpp
 planeProj_SOURCES = planeProj.cpp
+triRule_SOURCES = triRule.cpp
 
 # Utility target: build but don't run tests
 build-check:

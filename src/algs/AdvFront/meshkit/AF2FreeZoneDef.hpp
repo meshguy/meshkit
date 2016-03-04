@@ -21,7 +21,7 @@ class AF2FreeZoneDef
     /**
      * \brief Virtual destructor
      */
-    virtual ~AF2FreeZoneDef() = 0;
+//    virtual ~AF2FreeZoneDef() = 0;
 
     /**
      * \brief Make and return an independent copy of yourself.
@@ -45,6 +45,14 @@ class AF2FreeZoneDef
      * The method is allowed to modify the AF2VertexBinding in order
      * to update internal caches stored in the object, but will not
      * modify the coordinates that reference vertices are bound to.
+     *
+     * \param vertexBinding a binding of a rule's existing vertices to
+     *   actual points that will be used to build a free zone relative
+     *   to the actual points
+     * \param qualityClass an integer strictly greater than zero
+     *   designating the quality class of the free zone this method
+     *   will make.  Lower numbers are higher quality and may produce
+     *   larger free zones, depending on the implementation.
      */
     virtual AF2FreeZone* makeFreeZone(
         AF2VertexBinding & vertexBinding, int qualityClass) const = 0;

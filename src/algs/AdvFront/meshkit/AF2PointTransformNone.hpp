@@ -14,7 +14,7 @@
 // MeshKit
 #include "meshkit/AF2PointTransform.hpp"
 
-class AF2PointTransformNone : AF2PointTransform
+class AF2PointTransformNone : public AF2PointTransform
 {
   public:
 
@@ -30,8 +30,9 @@ class AF2PointTransformNone : AF2PointTransform
      * \param point the coordinates of some 2-dimensional point
      * \param vBinding a binding of reference vertices to points with actual
      *   coordinates
+     * \return a copy of point
      */
-    virtual MeshKit::Vector<2> transformPoint(MeshKit::Vector<2> const & point,
+    virtual AF2Point2D transformPoint(AF2Point2D const & point,
         AF2VertexBinding & vBinding) const;
 
     /**
