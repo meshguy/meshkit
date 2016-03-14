@@ -26,7 +26,7 @@ namespace MeshKit
     m_nLineNumber = 0;
     root_set= NULL;
     szComment = "!";
-    MAXCHARS = 1500;
+    MAXCHARS = 10000;
     MAXLINES = 1000;
     pi = M_PI;
     m_nTotalPincells = 0;
@@ -2565,16 +2565,19 @@ namespace MeshKit
 
         for(int n=1;n<=nCells; n++){
             // get cylinder locations
-            m_Pincell(i).GetCylZPos(n, dVCylZPos);
-            nDuctIndex = -1;
-            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
-            // get the index for cp_inpins based on Z-heights
-            for (int dd = 1; dd <= m_nDuct; dd++){
-                if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
-                  nDuctIndex = dd;
-                if (nDuctIndex != -1)
-                  break;
+            if(nCyl > 0){
+              m_Pincell(i).GetCylZPos(n, dVCylZPos);
+              nDuctIndex = -1;
+
+              // get the index for cp_inpins based on Z-heights
+              for (int dd = 1; dd <= m_nDuct; dd++){
+                  if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                    nDuctIndex = dd;
+                  if (nDuctIndex != -1)
+                   break;
+                }
               }
+            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
             if(m_szGeomType =="hexagonal"){
 
                 m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
