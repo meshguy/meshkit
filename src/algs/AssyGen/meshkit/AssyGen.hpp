@@ -298,7 +298,7 @@ namespace MeshKit {
     std::string pin_name;
     int m_nHblock;
     bool m_bCreateMatFiles;
-    bool save_exodus;
+    bool save_exodus, m_bmerge, m_bimprint;
     bool have_common;
     int com_run_count;
     int m_nBLAssemblyMat;

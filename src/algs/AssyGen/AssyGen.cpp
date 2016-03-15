@@ -52,6 +52,8 @@ namespace MeshKit
     m_nPincells = 0;
     m_bCreateMatFiles = false;
     m_nSuperBlocks = 0;
+    m_bmerge = false;
+    m_bimprint = false;
     save_exodus = false;
     have_common = true;
     com_run_count = 0;
@@ -607,6 +609,16 @@ namespace MeshKit
             szFormatString >> card >> m_szInfo;
             std::cout <<"--------------------------------------------------"<<std::endl;
           }
+        // merge
+        if (szInputString.substr(0,7) == "imprint"){
+            m_bimprint = true;
+            std::cout <<"--------------------------------------------------"<<std::endl;
+          }
+        // imprint 
+        if (szInputString.substr(0,5) == "merge"){
+            m_bmerge = true;
+            std::cout <<"--------------------------------------------------"<<std::endl;
+          } 
         // info flag
         if (szInputString.substr(0,6) == "smooth"){
             std::istringstream szFormatString (szInputString);
@@ -1423,7 +1435,7 @@ namespace MeshKit
 
             if ( m_nJouFlag == 0){
                 // impring merge before saving
-                Imprint_Merge(true, false);
+                Imprint_Merge(m_bimprint, m_bmerge);
 
                 clock_t s_save= clock();
                 // save .sat file
