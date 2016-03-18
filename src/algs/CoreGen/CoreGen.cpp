@@ -444,7 +444,7 @@ namespace MeshKit
   // -------------------------------------------------------------------------------------------
   {
     moab::Range entities;
-    moab::EntityHandle meshset;
+    moab::EntityHandle meshset = NULL;
     mb->get_entities_by_type(0, MBHEX, entities);
 
     mb->create_meshset(MESHSET_SET, meshset);
@@ -471,8 +471,7 @@ namespace MeshKit
         mb->create_meshset(MESHSET_SET, meshset);
         mb->add_entities(meshset, entities);
         mb->convert_entities(meshset, true, true, true);
-      }
-
+      }	
     moab::Tag mattag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
     moab::Range matsets;
@@ -486,7 +485,10 @@ namespace MeshKit
     pc->resolve_shared_sets( nssets, nstag );
 
     //  int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
-    int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
+    moab::EntityHandle meshset1 = NULL;
+    mb->add_entities(meshset1, matsets);
+    mb->add_entities(meshset1, nssets);
+    int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME", &meshset1, 1);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
         std::string foo = ""; mb->get_last_error(foo);
