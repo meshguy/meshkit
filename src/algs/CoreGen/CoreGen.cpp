@@ -471,7 +471,7 @@ namespace MeshKit
         mb->create_meshset(MESHSET_SET, meshset);
         mb->add_entities(meshset, entities);
         mb->convert_entities(meshset, true, true, true);
-      }	
+      }
     moab::Tag mattag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
     moab::Range matsets;
@@ -485,10 +485,18 @@ namespace MeshKit
     pc->resolve_shared_sets( nssets, nstag );
 
     //  int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
-    moab::EntityHandle meshset1 = NULL;
-    mb->add_entities(meshset1, matsets);
-    mb->add_entities(meshset1, nssets);
-    int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME", &meshset1, 1);
+    //moab::EntityHandle meshset1 ;
+
+    //mb->create_meshset(MESHSET_SET, meshset1);
+    moab::Range out_sets;
+    out_sets.merge(matsets);
+    out_sets.merge(nssets);
+    out_sets.insert(meshset);
+    // mb->add_entities(meshset1, matsets);
+   // mb->add_entities(meshset1, &meshset, 1);
+
+    //mb->add_entities(meshset1, nssets);
+    int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;DEBUG_IO=2;", out_sets);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
         std::string foo = ""; mb->get_last_error(foo);
@@ -524,7 +532,7 @@ namespace MeshKit
     logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
     mb->tag_set_data(pp_tag, &meshset, 1, &nrank);
 
-    
+
       if(have_hex27 == true){
         moab::Range entities;
         moab::EntityHandle meshset;
