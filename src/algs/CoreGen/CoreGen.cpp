@@ -443,26 +443,105 @@ namespace MeshKit
   // Output:   none
   // -------------------------------------------------------------------------------------------
   {
+    // handle sets before saving - delete all unnessary sets - this would save a lot of save time
+    moab::Range all_sets;
+    mb->get_entities_by_type(0, MBENTITYSET, all_sets);
+
+    moab::Tag mattag;
+    mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+    moab::Range matsets, this_mat_ents;
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+    moab::Range::iterator m_it;
+    moab::EntityHandle old_mat_set, new_mat_set;
+
+    for(m_it = matsets.begin(); m_it != matsets.end(); m_it++){
+        this_mat_ents.clear();
+        old_mat_set = *m_it;
+        mb->get_entities_by_dimension(old_mat_set, set_DIM, this_mat_ents, true);
+        int material_id;
+        mb->tag_get_data(mattag, &old_mat_set, 1, &material_id);
+        // create a new material set, fill with ents (directly) and set id tag
+        mb->create_meshset(MESHSET_SET, new_mat_set);
+        mb->add_entities(new_mat_set, this_mat_ents);
+        mb->tag_set_data(mattag, &new_mat_set, 1, &material_id);
+        mb->delete_entities(&old_mat_set, 1);
+      }
+
+    // resolve shared sets to create only on MATERIAL_SET
+    matsets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+    pc->resolve_shared_sets( matsets, mattag );
+
+
+    moab::Tag nstag;
+    mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
+    moab::Range nssets, this_neu_ents;
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+    moab::Range::iterator n_it;
+    moab::EntityHandle old_neu_set, new_neu_set;
+
+    for(n_it = nssets.begin(); n_it != nssets.end(); n_it++){
+        this_neu_ents.clear();
+        old_neu_set = *n_it;
+        mb->get_entities_by_dimension(old_neu_set, (set_DIM-1), this_neu_ents, true);
+        int neumann_id;
+        mb->tag_get_data(nstag, &old_mat_set, 1, &neumann_id);
+        // create a new neumann set, fill with ents (directly) and set id tag
+        mb->create_meshset(MESHSET_SET, new_neu_set);
+        mb->add_entities(new_neu_set, this_neu_ents);
+        mb->tag_set_data(nstag, &new_neu_set, 1, &neumann_id);
+        mb->delete_entities(&old_neu_set, 1);
+      }
+
+    // resolve
+    nssets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+    pc->resolve_shared_sets( nssets, nstag );
+
+
+    moab::Tag drtag;
+    mb->tag_get_handle( "DIRICHLET_SET", 1, MB_TYPE_INTEGER, drtag );
+    moab::Range drsets, this_dir_ents;
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &drtag, 0, 1, drsets );
+    moab::Range::iterator d_it;
+    moab::EntityHandle old_dir_set, new_dir_set;
+
+    for(d_it = drsets.begin(); d_it != drsets.end(); d_it++){
+        this_dir_ents.clear();
+        old_dir_set = *n_it;
+        mb->get_entities_by_dimension(old_dir_set, 0, this_dir_ents, true);
+        int dirichlet_id;
+        mb->tag_get_data(drtag, &old_dir_set, 1, &dirichlet_id);
+        // create a new neumann set, fill with ents (directly) and set id tag
+        mb->create_meshset(MESHSET_SET, new_dir_set);
+        mb->add_entities(new_dir_set, this_dir_ents);
+        mb->tag_set_data(drtag, &new_dir_set, 1, &dirichlet_id);
+        mb->delete_entities(&old_dir_set, 1);
+      }
+
+    // resolve
+    drsets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, drsets );
+    pc->resolve_shared_sets( drsets, drtag );
+
+    // Done with deleting recursive sets now create pp tags and save
+    if (nrank == 0) {
+        logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
+        logfile << "Saving mesh file in parallel. " << std::endl;
+    }
     moab::Range entities;
-    moab::EntityHandle meshset = NULL;
+    moab::EntityHandle meshsetp;
     mb->get_entities_by_type(0, MBHEX, entities);
 
-    mb->create_meshset(MESHSET_SET, meshset);
-    mb->add_entities(meshset, entities);
+    mb->create_meshset(MESHSET_SET, meshsetp);
+    mb->add_entities(meshsetp, entities);
 
     moab::Tag pp_tag;
 
     mb->tag_get_handle( "PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, pp_tag, MB_TAG_SPARSE|MB_TAG_CREAT);
-    logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
-    mb->tag_set_data(pp_tag, &meshset, 1, &nrank);
+    mb->tag_set_data(pp_tag, &meshsetp, 1, &nrank);
 
-
-#ifdef USE_MPI
-    // write file
-    if (nrank == 0) {
-        logfile << "Saving mesh file in parallel. " << std::endl;
-      }
-
+    // flag specified in input file
     if(have_hex27 == true){
         moab::Range entities;
         moab::EntityHandle meshset;
@@ -470,33 +549,17 @@ namespace MeshKit
 
         mb->create_meshset(MESHSET_SET, meshset);
         mb->add_entities(meshset, entities);
+        // Add nodes along mid- edge, face and region
         mb->convert_entities(meshset, true, true, true);
       }
-    moab::Tag mattag;
-    mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
-    moab::Range matsets;
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
-    pc->resolve_shared_sets( matsets, mattag );
 
-    moab::Tag nstag;
-    mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
-    moab::Range nssets;
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
-    pc->resolve_shared_sets( nssets, nstag );
-
-    //  int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
-    //moab::EntityHandle meshset1 ;
-
-    //mb->create_meshset(MESHSET_SET, meshset1);
     moab::Range out_sets;
     out_sets.merge(matsets);
     out_sets.merge(nssets);
-    out_sets.insert(meshset);
-    // mb->add_entities(meshset1, matsets);
-   // mb->add_entities(meshset1, &meshset, 1);
+    out_sets.merge(drsets);
+    out_sets.insert(meshsetp);
 
-    //mb->add_entities(meshset1, nssets);
-    int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;DEBUG_IO=2;", out_sets);
+    moab::ErrorCode rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;"/*DEBUG_IO=2;"*/, out_sets);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
         std::string foo = ""; mb->get_last_error(foo);
@@ -506,9 +569,7 @@ namespace MeshKit
     if (nrank == 0) {
         logfile << "Done saving mesh file: " << outfile << std::endl;
       }
-#endif
     return iBase_SUCCESS;
-
   }
 
   int CoreGen::save_mesh(int nrank) {
