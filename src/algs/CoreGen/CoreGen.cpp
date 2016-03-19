@@ -444,9 +444,6 @@ namespace MeshKit
   // -------------------------------------------------------------------------------------------
   {
     // handle sets before saving - delete all unnessary sets - this would save a lot of save time
-    moab::Range all_sets;
-    mb->get_entities_by_type(0, MBENTITYSET, all_sets);
-
     moab::Tag mattag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
     moab::Range matsets, this_mat_ents;
@@ -524,6 +521,24 @@ namespace MeshKit
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, drsets );
     pc->resolve_shared_sets( drsets, drtag );
 
+    // Deleting GEOM_DIMENSION tags
+    moab::Range all_sets;
+    moab::EntityHandle curr_set;
+    mb->get_entities_by_type(0, MBENTITYSET, all_sets);
+    moab::Range::iterator all_it;
+
+    moab::Tag gdtag;
+    mb->tag_get_handle( "GEOM_DIMENSION", 1, MB_TYPE_INTEGER, gdtag );
+
+    for(all_it = all_sets.begin(); all_it != all_sets.end(); all_it++){
+        curr_set = *all_it;
+        int temp_gid = -1;
+            mb->tag_get_data(gdtag, &curr_set, 1, &temp_gid);
+            if(temp_gid != -1){
+                mb->delete_entities(&curr_set, 1);
+            }
+      }
+
     // Done with deleting recursive sets now create pp tags and save
     if (nrank == 0) {
         logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
@@ -546,20 +561,19 @@ namespace MeshKit
         moab::Range entities;
         moab::EntityHandle meshset;
         mb->get_entities_by_type(0, MBHEX, entities);
-
         mb->create_meshset(MESHSET_SET, meshset);
         mb->add_entities(meshset, entities);
         // Add nodes along mid- edge, face and region
         mb->convert_entities(meshset, true, true, true);
       }
-
+/*
     moab::Range out_sets;
     out_sets.merge(matsets);
     out_sets.merge(nssets);
     out_sets.merge(drsets);
     out_sets.insert(meshsetp);
-
-    moab::ErrorCode rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;"/*DEBUG_IO=2;"*/, out_sets);
+*/
+    moab::ErrorCode rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;"/*DEBUG_IO=2;", out_sets*/);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
         std::string foo = ""; mb->get_last_error(foo);
