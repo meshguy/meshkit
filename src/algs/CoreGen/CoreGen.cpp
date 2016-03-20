@@ -464,12 +464,6 @@ namespace MeshKit
         mb->delete_entities(&old_mat_set, 1);
       }
 
-    // resolve shared sets to create only on MATERIAL_SET
-    matsets.clear();
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
-    pc->resolve_shared_sets( matsets, mattag );
-
-
     moab::Tag nstag;
     mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
     moab::Range nssets, this_neu_ents;
@@ -489,11 +483,6 @@ namespace MeshKit
         mb->tag_set_data(nstag, &new_neu_set, 1, &neumann_id);
         mb->delete_entities(&old_neu_set, 1);
       }
-
-    // resolve
-    nssets.clear();
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
-    pc->resolve_shared_sets( nssets, nstag );
 
 
     moab::Tag drtag;
@@ -516,28 +505,39 @@ namespace MeshKit
         mb->delete_entities(&old_dir_set, 1);
       }
 
-    // resolve
-    drsets.clear();
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, drsets );
-    pc->resolve_shared_sets( drsets, drtag );
 
-    // Deleting GEOM_DIMENSION tags
+    // Deleting GEOM_DIMENSION tags and others?
     moab::Range all_sets;
     moab::EntityHandle curr_set;
     mb->get_entities_by_type(0, MBENTITYSET, all_sets);
     moab::Range::iterator all_it;
-
     moab::Tag gdtag;
     mb->tag_get_handle( "GEOM_DIMENSION", 1, MB_TYPE_INTEGER, gdtag );
 
     for(all_it = all_sets.begin(); all_it != all_sets.end(); all_it++){
         curr_set = *all_it;
         int temp_gid = -1;
-            mb->tag_get_data(gdtag, &curr_set, 1, &temp_gid);
-            if(temp_gid != -1){
-                mb->delete_entities(&curr_set, 1);
-            }
+        mb->tag_get_data(gdtag, &curr_set, 1, &temp_gid);
+        if(temp_gid != -1){
+            mb->delete_entities(&curr_set, 1);
+          }
       }
+
+    // resolve shared sets to create only on MATERIAL_SET
+    matsets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+    pc->resolve_shared_sets( matsets, mattag );
+
+    // resolve
+    nssets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+    pc->resolve_shared_sets( nssets, nstag );
+
+
+    // resolve
+    drsets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, drsets );
+    pc->resolve_shared_sets( drsets, drtag );
 
     // Done with deleting recursive sets now create pp tags and save
     if (nrank == 0) {
@@ -573,6 +573,9 @@ namespace MeshKit
     out_sets.merge(drsets);
     out_sets.insert(meshsetp);
 */
+
+    MPI::COMM_WORLD.Barrier();
+
     moab::ErrorCode rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;"/*DEBUG_IO=2;", out_sets*/);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
