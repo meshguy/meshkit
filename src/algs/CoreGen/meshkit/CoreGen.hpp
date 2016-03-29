@@ -141,7 +141,9 @@ namespace MeshKit {
     int set_copymove_coords();
     int save_mesh();
     int save_mesh(int rank);
+#ifdef USE_MPI
     int save_mesh_parallel(const int nrank, const int numprocs);
+#endif
     int save_geometry();
     int shift_mn_ids(iBase_EntitySetHandle orig_set, int index);
     int extrude();
