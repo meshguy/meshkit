@@ -126,6 +126,7 @@ namespace MeshKit {
     int prepareIO (int argc, char *argv[], int nrank, int numprocs, std::string  TestDir);
     int parse_assembly_names(CParser parse, int argc, char *argv[]);
     int load_meshes();
+    int load_meshes_more_procs(const int, int);
     int load_meshes_parallel(const int, int);
     int distribute_mesh(const int,  int);
     int load_geometries();

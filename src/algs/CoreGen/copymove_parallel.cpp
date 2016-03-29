@@ -51,15 +51,27 @@ int CoreGen::set_copymove_coords()
         }
     }
     if (!strcmp(geom_type.c_str(), "rectangular") && symm == 1) {
-        for (int n1 = 0; n1 < nringsx; n1++) {
-            for (int n2 = 0; n2 < nringsy; n2++) {
-                err = find_assm(i, assm_index);
-                y_coord[i] = -n1 * pitchy;
-                x_coord[i] = n2 * pitchx;
+        double dx = 0.0, dy = 0.0;
+        int i = 0;
+        for (int m = 1; m <= nringsy; m++) {
+            for (int n = 1; n <= nringsx; n++) {
+                if (n==1){
+                    dx = 0;
+                    if(m==1)
+                      dy = 0;
+                  }
+                else{
+                    dx+= pitchx;
+                  }
+                if (m > 1 && n==1){
+                    dy+= pitchy;
+                  }
+                y_coord[i] = -dy;
+                x_coord[i] = dx;
                 i++;
-            }
-        }
-    }
+              }
+          }
+      }
     if (!strcmp(geom_type.c_str(), "hexflat") && symm == 1) {
         int t, width = 2 * nrings - 1;
         for (int n1 = 1; n1 <= width; n1++) {

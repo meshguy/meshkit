@@ -89,13 +89,19 @@ namespace MeshKit
               }
             else {
 #ifdef USE_MPI
-                err = load_meshes_parallel(rank, procs);
-                if(err !=0) {logfile << "failed to load meshes in parallel!" << std::endl; exit(1);}
-
-                if(procs > (int) files.size()){
+                if(procs < (int) files.size()){
+                    err = load_meshes_parallel(rank, procs);
+                    if(err !=0) {logfile << "failed to load meshes in parallel!" << std::endl; exit(1);}
+                  }
+                else{
                     // if there are more procs than files distribute the copy/move work on each proc
                     err = distribute_mesh(rank, procs);
                     if(err !=0) {logfile << "distribute meshes failed!" << std::endl; exit(1);}
+
+                    MPI::COMM_WORLD.Barrier();
+
+                    err = load_meshes_more_procs(rank, procs);
+                    if(err !=0) {logfile << "load m meshes failed!" << std::endl; exit(1);}
                   }
                 //Get a pcomm object
                 pc = new moab::ParallelComm(mk_core()->moab_instance(), MPI::COMM_WORLD, &err);
@@ -107,11 +113,11 @@ namespace MeshKit
             tload = clock();
             ctload = (double) (tload - sTime)/(60*CLOCKS_PER_SEC);
 
-            if (mem_tflag == true && procs == 1) {
+            if (mem_tflag == true && rank == 0) {
                 logfile << "\n" << " Clock time taken to load mesh files = " << ld_tload
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctload << " mins" << std::endl;
-                logfile << " Memory used: " << mem1/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem1/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
           }
 
@@ -138,11 +144,11 @@ namespace MeshKit
             tcopymove = clock();
             ctcopymove = (double) (tcopymove - tload)/(60*CLOCKS_PER_SEC);
 
-            if (mem_tflag == true && (strcmp(prob_type.c_str(), "mesh") == 0) && procs == 1) {
+            if (mem_tflag == true && (strcmp(prob_type.c_str(), "mesh") == 0) && rank == 0) {
                 logfile << "\n" << " Clock time taken to copy/move mesh files = " << ld_tcopymove
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctcopymove << " mins" << std::endl;
-                logfile << " Memory used: " << mem2/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem2/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
           }
 
@@ -192,11 +198,11 @@ namespace MeshKit
             tmerge = clock();
             ctmerge = (double) (tmerge - tcopymove)/(60*CLOCKS_PER_SEC);
 
-            if (mem_tflag == true && procs == 1 ) {
+            if (mem_tflag == true && rank == 0 ) {
                 logfile << "\n" << " Clock time taken to merge nodes = " << ld_tmerge
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctmerge << " mins" << std::endl;
-                logfile << " Memory used: " << mem3/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem3/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
 #ifdef USE_MPI
             MPI::COMM_WORLD.Barrier();
@@ -215,11 +221,11 @@ namespace MeshKit
                     textrude = clock();
                     ctextrude = (double) (textrude - tmerge)/(60*CLOCKS_PER_SEC);
 
-                    if (mem_tflag == true && procs == 1) {
+                    if (mem_tflag == true && rank == 0) {
                         logfile << "\n" << " Clock time taken to extrude = " << ld_t
                                 << " seconds" << std::endl;
                         logfile << " CPU time = " << ctextrude << " mins" << std::endl;
-                        logfile << " Memory used: " << mem4/1e6 << " Mb\n"
+                        logfile << " Memory used: " << mem4/1e6 << " Mb\n For rank 0\n"
                                 << std::endl;
                       }
                   }
@@ -254,11 +260,11 @@ namespace MeshKit
         tgid = clock();
         ctgid = (double) (tgid-tmerge)/(60*CLOCKS_PER_SEC);
 
-        if (mem_tflag == true && procs == 1) {
+        if (mem_tflag == true && rank == 0) {
             logfile << "\n" << " Clock time taken to assign gids = " << ld_tgid
                     << " seconds" << std::endl;
             logfile << " CPU time = " << ctgid << " mins" << std::endl;
-            logfile << " Memory used: " << mem5/1e6 << " Mb\n" << std::endl;
+            logfile << " Memory used: " << mem5/1e6 << " Mb\n For rank 0\n" << std::endl;
           }
         /*********************************************/
         // create neumann sets on the core model
@@ -273,11 +279,11 @@ namespace MeshKit
             ld_tns = ld_ns.DiffTime();
             tns = clock();
             ctns = (double) (tns-tgid)/(60*CLOCKS_PER_SEC);
-            if (mem_tflag == true && procs == 1) {
+            if (mem_tflag == true && rank == 0) {
                 logfile << "\n" << " Clock time taken to create neumann sets = " << ld_tns
                         << " seconds" << std::endl;
                 logfile << " CPU time = " << ctns << " mins" << std::endl;
-                logfile << " Memory used: " << mem6/1e6 << " Mb\n" << std::endl;
+                logfile << " Memory used: " << mem6/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
           }
       }
@@ -311,11 +317,11 @@ namespace MeshKit
         tsave = clock();
         ctsave = (double) (tsave - tgid)/(60*CLOCKS_PER_SEC);
 
-        if (mem_tflag == true && procs == 1 ) {
+        if (mem_tflag == true && rank == 0 ) {
             logfile << "\n" << " Clock time taken to save = " << ld_tsave << " seconds"
                     << std::endl;
             logfile << " CPU time = " << ctsave << " mins" << std::endl;
-            logfile << " Memory used: " << mem7/1e6 << " Mb\n" << std::endl;
+            logfile << " Memory used: " << mem7/1e6 << " Mb\n For rank 0\n" << std::endl;
           }
       }
     /*********************************************/
@@ -424,7 +430,8 @@ namespace MeshKit
 #endif
         if(procs == 1)
           logfile << "Maximum memory used: " << mem7 <<  " Mb" << std::endl;
-        logfile << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"  << std::endl;
+          logfile << "Total processors used =  " << procs << std::endl;
+          logfile << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"  << std::endl;
 
       }
   }
@@ -436,37 +443,180 @@ namespace MeshKit
   // Output:   none
   // -------------------------------------------------------------------------------------------
   {
-
-#ifdef USE_MPI
-    // write file
+    // start saving mesh in parallel
     if (nrank == 0) {
-        logfile << "Saving mesh file in parallel. " << std::endl;
+        logfile << "Saving mesh file in parallel, starting to cleanup sets " << std::endl;
+    }
+  
+   // handle sets before saving - delete all unnessary sets - this would save a lot of save time
+    moab::Tag mattag;
+    mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
+    moab::Range matsets, this_mat_ents;
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+    moab::Range::iterator m_it;
+    moab::EntityHandle old_mat_set, new_mat_set;
+
+    for(m_it = matsets.begin(); m_it != matsets.end(); m_it++){
+        this_mat_ents.clear();
+        old_mat_set = *m_it;
+        mb->get_entities_by_dimension(old_mat_set, set_DIM, this_mat_ents, true);
+        int material_id;
+        mb->tag_get_data(mattag, &old_mat_set, 1, &material_id);
+        // create a new material set, fill with ents (directly) and set id tag
+        mb->create_meshset(MESHSET_SET, new_mat_set);
+        mb->add_entities(new_mat_set, this_mat_ents);
+        mb->tag_set_data(mattag, &new_mat_set, 1, &material_id);
+        mb->delete_entities(&old_mat_set, 1);
       }
 
+    if (nrank == 0) {
+        logfile << "Done dealing with material sets " << std::endl;
+    }
+
+    moab::Tag nstag;
+    mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
+    moab::Range nssets, this_neu_ents;
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+    moab::Range::iterator n_it;
+    moab::EntityHandle old_neu_set, new_neu_set;
+
+    for(n_it = nssets.begin(); n_it != nssets.end(); n_it++){
+        this_neu_ents.clear();
+        old_neu_set = *n_it;
+        mb->get_entities_by_dimension(old_neu_set, (set_DIM-1), this_neu_ents, true);
+        int neumann_id;
+        mb->tag_get_data(nstag, &old_mat_set, 1, &neumann_id);
+        // create a new neumann set, fill with ents (directly) and set id tag
+        mb->create_meshset(MESHSET_SET, new_neu_set);
+        mb->add_entities(new_neu_set, this_neu_ents);
+        mb->tag_set_data(nstag, &new_neu_set, 1, &neumann_id);
+        mb->delete_entities(&old_neu_set, 1);
+      }
+
+
+    moab::Tag drtag;
+    mb->tag_get_handle( "DIRICHLET_SET", 1, MB_TYPE_INTEGER, drtag );
+    moab::Range drsets, this_dir_ents;
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &drtag, 0, 1, drsets );
+    moab::Range::iterator d_it;
+    moab::EntityHandle old_dir_set, new_dir_set;
+
+    for(d_it = drsets.begin(); d_it != drsets.end(); d_it++){
+        this_dir_ents.clear();
+        old_dir_set = *n_it;
+        mb->get_entities_by_dimension(old_dir_set, 0, this_dir_ents, true);
+        int dirichlet_id;
+        mb->tag_get_data(drtag, &old_dir_set, 1, &dirichlet_id);
+        // create a new neumann set, fill with ents (directly) and set id tag
+        mb->create_meshset(MESHSET_SET, new_dir_set);
+        mb->add_entities(new_dir_set, this_dir_ents);
+        mb->tag_set_data(drtag, &new_dir_set, 1, &dirichlet_id);
+        mb->delete_entities(&old_dir_set, 1);
+      }
+
+
+    if (nrank == 0) {
+        logfile << "Done dealing with all ms ns and ds" << std::endl;
+    }
+
+
+    // Deleting GEOM_DIMENSION tags and others?
+    moab::Range all_sets;
+    moab::EntityHandle curr_set;
+    mb->get_entities_by_type(0, MBENTITYSET, all_sets);
+    moab::Range::iterator all_it;
+    moab::Tag gdtag;
+    mb->tag_get_handle( "GEOM_DIMENSION", 1, MB_TYPE_INTEGER, gdtag );
+
+    for(all_it = all_sets.begin(); all_it != all_sets.end(); all_it++){
+        curr_set = *all_it;
+        int temp_gid = -1;
+        mb->tag_get_data(gdtag, &curr_set, 1, &temp_gid);
+        if(temp_gid != -1){
+            mb->delete_entities(&curr_set, 1);
+          }
+      }
+
+    MPI::COMM_WORLD.Barrier();
+ 
+    if (nrank == 0) {
+        logfile << "Done deleting gd sets, now starting to resolve shared ents " << std::endl;
+    }
+
+ 
+    // resolve shared sets to create only on MATERIAL_SET
+    matsets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
+    if(matsets.size() > 0)
+	pc->resolve_shared_sets( matsets, mattag );
+
+     if (nrank == 0) {
+        logfile << matsets.size() << "Done resolving material ents " << std::endl;
+    }
+
+    /*// resolve
+    nssets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
+     if(nssets.size() > 0)
+	pc->resolve_shared_sets( nssets, nstag );
+*/
+    // resolve
+    drsets.clear();
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &drtag, 0, 1, drsets );
+     if(drsets.size() > 0)
+	pc->resolve_shared_sets( drsets, drtag );
+
+    // need this barrier before setting pp tag
+//	MPI::COMM_WORLD.Barrier();
+ 
+
+    // Done with deleting recursive sets now create pp tags and save
+    if (nrank == 0) {
+        logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
+        logfile << "Saving mesh file in parallel. " << std::endl;
+    }
+    moab::Range entities;
+    moab::EntityHandle meshsetp;
+    mb->get_entities_by_type(0, MBHEX, entities);
+
+    mb->create_meshset(MESHSET_SET, meshsetp);
+    mb->add_entities(meshsetp, entities);
+
+    moab::Tag pp_tag;
+
+    mb->tag_get_handle( "PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, pp_tag, MB_TAG_SPARSE|MB_TAG_CREAT);
+    mb->tag_set_data(pp_tag, &meshsetp, 1, &nrank);
+
+ 
+   //MPI::COMM_WORLD.Barrier();
+ 
+
+   // flag specified in input file
     if(have_hex27 == true){
         moab::Range entities;
         moab::EntityHandle meshset;
         mb->get_entities_by_type(0, MBHEX, entities);
-
         mb->create_meshset(MESHSET_SET, meshset);
         mb->add_entities(meshset, entities);
+        // Add nodes along mid- edge, face and region
         mb->convert_entities(meshset, true, true, true);
       }
+/*
+    moab::Range out_sets;
+    out_sets.merge(matsets);
+    out_sets.merge(nssets);
+    out_sets.merge(drsets);
+    out_sets.insert(meshsetp);
+*/
 
-    moab::Tag mattag;
-    mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
-    moab::Range matsets;
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
-    pc->resolve_shared_sets( matsets, mattag );
-
-    moab::Tag nstag;
-    mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
-    moab::Range nssets;
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
-    pc->resolve_shared_sets( nssets, nstag );
-
-    //  int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;DEBUG_IO=5");
-    int rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART");
+    MPI::COMM_WORLD.Barrier();
+    if (nrank == 0) {
+        logfile << "Before saving mesh file in parallel. " << std::endl;
+    }
+ 
+    MPI::COMM_WORLD.Barrier();
+  
+    moab::ErrorCode rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;"/*DEBUG_IO=2;", out_sets*/);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
         std::string foo = ""; mb->get_last_error(foo);
@@ -476,13 +626,32 @@ namespace MeshKit
     if (nrank == 0) {
         logfile << "Done saving mesh file: " << outfile << std::endl;
       }
-#endif
     return iBase_SUCCESS;
-
   }
 
   int CoreGen::save_mesh(int nrank) {
-    if(have_hex27 == true){
+    // ---------------------------------------------------------------------------
+    // Function: save mesh serially from each rank
+    // Input:    none
+    // Output:   none
+    // ---------------------------------------------------------------------------
+
+      // set parallel partition tag
+    moab::Range entities;
+    moab::EntityHandle meshset;
+    mb->get_entities_by_type(0, MBHEX, entities);
+
+    mb->create_meshset(MESHSET_SET, meshset);
+    mb->add_entities(meshset, entities);
+
+    moab::Tag pp_tag;
+
+    mb->tag_get_handle( "PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, pp_tag, MB_TAG_SPARSE|MB_TAG_CREAT);
+    logfile << "setting PARALLEL_PARTITION  tag" << std::endl;
+    mb->tag_set_data(pp_tag, &meshset, 1, &nrank);
+
+
+      if(have_hex27 == true){
         moab::Range entities;
         moab::EntityHandle meshset;
         mb->get_entities_by_type(0, MBHEX, entities);
@@ -576,34 +745,49 @@ namespace MeshKit
         if(numprocs > (int) core_alias.size()){
             numprocs =  core_alias.size() + nback;
           }
-#ifdef USE_MPI
-        std::vector<int> rank_load;
+
         rank_load.resize(numprocs);
         int extra_procs = numprocs - files.size();
         if(numprocs >= (int) files.size() && numprocs <= (tot_assys + nback)){
             // again fill assm_meshfiles
-            for(int p=0; p<nassys; p++)
-              assm_meshfiles[p]=0;
+            for(int p=0; p<nassys; p++){
+                assm_meshfiles[p]=0;
+                load_per_assm[p]=0;
+              }
             for(int p=0; p<tot_assys; p++){
                 for(int q=0; q<nassys; q++){
                     if(strcmp(core_alias[p].c_str(), assm_alias[q].c_str()) ==0) {
                         assm_meshfiles[q]+=1;
+                        load_per_assm[q]+=1;
                       }
+                  }
+              }
+            if(nrank == 0){
+                logfile << " assm_meshfiles" << std::endl;
+                for(int p=0; p<nassys; p++){
+                    logfile << assm_meshfiles[p] << " : " << p << std::endl;
+                  }
+                logfile << " load per assm" << std::endl;
+                for(int p=0; p<nassys; p++){
+                    logfile << load_per_assm[p] << " : " << p << std::endl;
                   }
               }
             //distribute
             for(int i=0; i<  (int)files.size(); i++){
                 rank_load[i] = i;
+                if(i< nassys)
+                  times_loaded[i]+=1;
               }
 
-            int temp = 0;
+            double temp = 0;
             int assm_load = - 1;
             int e= 0;
             // compute the rank, mf vector for extra procs
             while(e < extra_procs){
                 for(int i = 0; i < nassys; i++){
-                    if (assm_meshfiles[i] > temp){
-                        temp = assm_meshfiles[i];
+                    if (load_per_assm[i] > temp ){
+                    //if (load_per_assm[i] > temp){
+                        temp = load_per_assm[i];
                         assm_load = i;
                       }
                     else if (assm_load == -1){
@@ -611,7 +795,12 @@ namespace MeshKit
                         exit(0);
                       }
                   }
-                assm_meshfiles[assm_load]-=1;
+                //assm_meshfiles[assm_load]-=1;
+                times_loaded[assm_load]+=1;
+                 load_per_assm[assm_load] = (double)assm_meshfiles[assm_load]/(double)times_loaded[assm_load];
+
+                 if(nrank == 0)
+                  logfile << assm_load <<": - assembly has a Current Load: " << load_per_assm[assm_load] << std::endl;
                 int temp_rank = files.size()+ e;
                 rank_load[temp_rank] = assm_load;
                 e++;
@@ -621,14 +810,20 @@ namespace MeshKit
         else{
             logfile << "Warning: #procs <= #assys in core, some processor will be idle" << std::endl;
           }
+        if(nrank == 0){
+            logfile << "Times loaded 1 " << std::endl;
+            for(int p=0; p<nassys; p++){
+                logfile << times_loaded[p] << " : " << p << std::endl;
+              }
 
-        std::vector<int> times_loaded(nassys);
+          }
+       // times_loaded.resize(nassys);
         std::vector<std::vector<int> > meshfiles_rank (files.size());
         for(int i=0; i < (int) files.size(); i++){
             for(int j=0; j < (int) rank_load.size(); j++){
                 if(rank_load[j]==i){
                     meshfiles_rank[i].push_back(j);
-                    times_loaded[i]+=1;
+                    // already done above times_loaded[i]+=1;
                   }
               }
           }
@@ -654,7 +849,23 @@ namespace MeshKit
                 position_core[i].push_back(-2);
               }
           }
+        if(nrank == 0){
+            logfile << "Times loaded 1 After" << std::endl;
+            for(int p=0; p<nassys; p++){
+                logfile << times_loaded[p] << " : " << p << std::endl;
+              }
 
+          }
+        if(nrank == 0){
+            logfile << "FINAL scheme 1 assm_meshfiles" << std::endl;
+            for(int p=0; p<nassys; p++){
+                logfile << assm_meshfiles[p] << " : " << p << std::endl;
+              }
+            logfile << "FINAL scheme 1 load per assm" << std::endl;
+            for(int p=0; p<nassys; p++){
+                logfile << load_per_assm[p] << " : " << p << std::endl;
+              }
+          }
         if(nrank == 0){
             logfile << " copy/move task distribution " << std::endl;
             for(int i =0; i< numprocs; i++){
@@ -665,10 +876,57 @@ namespace MeshKit
                 logfile << "\n" << std::endl;
               }
           }
-#endif
       }
     return 0;
   }
+
+
+  int CoreGen::load_meshes_more_procs(const int nrank, int numprocs)
+  // ---------------------------------------------------------------------------
+  // Function: loads all the meshes and initializes copymesh object
+  // Input:    none
+  // Output:   none
+  // ---------------------------------------------------------------------------
+  {
+    iMesh_getRootSet(imesh->instance(), &root_set, &err);
+    ERRORR("Couldn't get the root set", err);
+
+    int temp_index = rank_load[nrank];
+
+    iBase_EntitySetHandle orig_set;
+    iMesh_createEntSet(imesh->instance(), 0, &orig_set, &err);
+    ERRORR("Couldn't create file set.", err);
+
+    // load this file
+    iMesh_load(imesh->instance(), orig_set, files[temp_index].c_str(), NULL, &err, strlen(files[temp_index].c_str()), 0);
+    ERRORR("Couldn't read mesh file.", err);
+    logfile << "Loaded mesh file " << temp_index << " in processor: " << nrank << std::endl;
+
+    if(bsameas[temp_index] == 0 && temp_index < nassys){
+        if(all_ms_starts[temp_index] != -1 && all_ns_starts[temp_index] !=-1){
+            if(!shift_mn_ids(orig_set, temp_index))
+              ERRORR("Couldn't shift material and neumann set id's.", 1);
+          }
+      }
+
+    assys.push_back(orig_set);
+    assys_index.push_back(temp_index);
+
+    // create cm instances for each mesh file
+    cm.resize(assys.size());
+    for (unsigned int i = 0; i < assys.size(); i++) {
+        ModelEnt *me;
+        me = NULL;
+        me = new ModelEnt(mk_core(), iBase_EntitySetHandle(0), /*igeom instance*/0, (moab::EntityHandle)orig_set, 0);
+        MEntVector assm_set;
+        assm_set.push_back(me);
+        cm[i] = (CopyMesh*) mk_core()->construct_meshop("CopyMesh", assm_set);
+        cm[i]->set_name("copy_move_mesh");
+      }
+    return iBase_SUCCESS;
+  }
+
+
 
   int CoreGen::load_meshes_parallel(const int nrank, int numprocs)
   // ---------------------------------------------------------------------------
