@@ -26,7 +26,7 @@ namespace MeshKit
     m_nLineNumber = 0;
     root_set= NULL;
     szComment = "!";
-    MAXCHARS = 1500;
+    MAXCHARS = 10000;
     MAXLINES = 1000;
     pi = M_PI;
     m_nTotalPincells = 0;
@@ -52,6 +52,8 @@ namespace MeshKit
     m_nPincells = 0;
     m_bCreateMatFiles = false;
     m_nSuperBlocks = 0;
+    m_bmerge = false;
+    m_bimprint = false;
     save_exodus = false;
     have_common = true;
     com_run_count = 0;
@@ -113,7 +115,7 @@ namespace MeshKit
     std::cout << "Elapsed wall clock time: " << Timer.DiffTime ()
               << " seconds or " << (Timer.DiffTime ())/60.0 << " mins\n";
 
-    std::cout << "Total CPU time used: " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
+    std::cout << "## Total CPU time used := " << (double) (clock() - sTime)/CLOCKS_PER_SEC \
               << " seconds" << std::endl;
   }
 
@@ -607,6 +609,16 @@ namespace MeshKit
             szFormatString >> card >> m_szInfo;
             std::cout <<"--------------------------------------------------"<<std::endl;
           }
+        // merge
+        if (szInputString.substr(0,7) == "imprint"){
+            m_bimprint = true;
+            std::cout <<"--------------------------------------------------"<<std::endl;
+          }
+        // imprint 
+        if (szInputString.substr(0,5) == "merge"){
+            m_bmerge = true;
+            std::cout <<"--------------------------------------------------"<<std::endl;
+          } 
         // info flag
         if (szInputString.substr(0,6) == "smooth"){
             std::istringstream szFormatString (szInputString);
@@ -1217,8 +1229,12 @@ namespace MeshKit
                 //ERRORR("Error in CreateOuterCovering", err);
 
                 // subtract pins before save
-                if(m_nDuct > 0)
+                if(m_nDuct > 0){
                   Subtract_Pins();
+                clock_t s_subtract = clock();
+                std::cout << "## Subract Pins CPU time used := " << (double) (clock() - s_subtract)/CLOCKS_PER_SEC
+                          << " seconds" << std::endl;
+                }
                 if(m_nPlanar ==1){
                     Create2DSurf();
                     //ERRORR("Error in Create2DSurf", err);
@@ -1419,12 +1435,24 @@ namespace MeshKit
 
             if ( m_nJouFlag == 0){
                 // impring merge before saving
-            //    Imprint_Merge();
+                Imprint_Merge(m_bimprint, m_bmerge);
 
+                clock_t s_save= clock();
                 // save .sat file
                 iGeom_save(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
+                std::cout << "## Saving CPU time used := " << (double) (clock() - s_save)/CLOCKS_PER_SEC
+                          << " seconds" << std::endl;
                 ////CHECK("Save to file failed.");
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
+                // Reloading file to check load times
+                bool if_loadagain = false;
+                if (if_loadagain == true){
+                    clock_t s_load= clock();
+                    iGeom_load(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err,
+                               strlen(m_szGeomFile.c_str()), 0);
+                    std::cout << "## Load again CPU time used := " << (double) (clock() - s_load)/CLOCKS_PER_SEC
+                              << " seconds" << std::endl;
+                  }
               }
             break;
           }
@@ -2380,7 +2408,7 @@ namespace MeshKit
 
   }
 
-  void AssyGen::Imprint_Merge()
+  void AssyGen::Imprint_Merge(bool if_merge, bool if_imprint)
   // ---------------------------------------------------------------------------
   // Function: Imprint and Merge
   // Input:    none
@@ -2392,21 +2420,28 @@ namespace MeshKit
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
     //CHECK( "ERROR : getRootSet failed!" );
 
-    //  now imprint
-    std::cout << "\n\nImprinting...." << std::endl;
-    iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
-    ////CHECK("Imprint failed.");
-    std::cout << "\n--------------------------------------------------"<<std::endl;
+    if(if_imprint ==  true){
+      //  now imprint
+      std::cout << "\n\nImprinting...." << std::endl;
+      clock_t s_imprint = clock();
+      iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
+      std::cout << "## Imprint CPU time used := " << (double) (clock() - s_imprint)/CLOCKS_PER_SEC
+                << " seconds" << std::endl;
+      std::cout << "\n--------------------------------------------------"<<std::endl;
+    }
 
-    // merge tolerance
-    double dTol = 1e-4;
-    // now  merge
-    std::cout << "\n\nMerging...." << std::endl;
-    iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
-    ////CHECK("Merge failed.");
-    std::cout <<"merging finished."<< std::endl;
-    std::cout << "\n--------------------------------------------------"<<std::endl;
-
+    if(if_merge == true){
+        // merge tolerance
+        double dTol = 1e-4;
+        // now  merge
+        std::cout << "\n\nMerging...." << std::endl;
+        clock_t s_merge = clock();
+        iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
+        std::cout << "## Merge CPU time used := " << (double) (clock() - s_merge)/CLOCKS_PER_SEC
+                  << " seconds" << std::endl;
+        std::cout <<"merging finished."<< std::endl;
+        std::cout << "\n--------------------------------------------------"<<std::endl;
+      }
   }
 
   void AssyGen::Create2DSurf ()
@@ -2542,16 +2577,19 @@ namespace MeshKit
 
         for(int n=1;n<=nCells; n++){
             // get cylinder locations
-            m_Pincell(i).GetCylZPos(n, dVCylZPos);
-            nDuctIndex = -1;
-            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
-            // get the index for cp_inpins based on Z-heights
-            for (int dd = 1; dd <= m_nDuct; dd++){
-                if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
-                  nDuctIndex = dd;
-                if (nDuctIndex != -1)
-                  break;
+            if(nCyl > 0){
+              m_Pincell(i).GetCylZPos(n, dVCylZPos);
+              nDuctIndex = -1;
+
+              // get the index for cp_inpins based on Z-heights
+              for (int dd = 1; dd <= m_nDuct; dd++){
+                  if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
+                    nDuctIndex = dd;
+                  if (nDuctIndex != -1)
+                   break;
+                }
               }
+            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
             if(m_szGeomType =="hexagonal"){
 
                 m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
