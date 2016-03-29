@@ -443,7 +443,12 @@ namespace MeshKit
   // Output:   none
   // -------------------------------------------------------------------------------------------
   {
-    // handle sets before saving - delete all unnessary sets - this would save a lot of save time
+    // start saving mesh in parallel
+    if (nrank == 0) {
+        logfile << "Saving mesh file in parallel, starting to cleanup sets " << std::endl;
+    }
+  
+   // handle sets before saving - delete all unnessary sets - this would save a lot of save time
     moab::Tag mattag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
     moab::Range matsets, this_mat_ents;
@@ -463,6 +468,10 @@ namespace MeshKit
         mb->tag_set_data(mattag, &new_mat_set, 1, &material_id);
         mb->delete_entities(&old_mat_set, 1);
       }
+
+    if (nrank == 0) {
+        logfile << "Done dealing with material sets " << std::endl;
+    }
 
     moab::Tag nstag;
     mb->tag_get_handle( "NEUMANN_SET", 1, MB_TYPE_INTEGER, nstag );
@@ -506,6 +515,11 @@ namespace MeshKit
       }
 
 
+    if (nrank == 0) {
+        logfile << "Done dealing with all ms ns and ds" << std::endl;
+    }
+
+
     // Deleting GEOM_DIMENSION tags and others?
     moab::Range all_sets;
     moab::EntityHandle curr_set;
@@ -523,21 +537,38 @@ namespace MeshKit
           }
       }
 
+    MPI::COMM_WORLD.Barrier();
+ 
+    if (nrank == 0) {
+        logfile << "Done deleting gd sets, now starting to resolve shared ents " << std::endl;
+    }
+
+ 
     // resolve shared sets to create only on MATERIAL_SET
     matsets.clear();
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
-    pc->resolve_shared_sets( matsets, mattag );
+    if(matsets.size() > 0)
+	pc->resolve_shared_sets( matsets, mattag );
 
-    // resolve
+     if (nrank == 0) {
+        logfile << matsets.size() << "Done resolving material ents " << std::endl;
+    }
+
+    /*// resolve
     nssets.clear();
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
-    pc->resolve_shared_sets( nssets, nstag );
-
-
+     if(nssets.size() > 0)
+	pc->resolve_shared_sets( nssets, nstag );
+*/
     // resolve
     drsets.clear();
-    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, drsets );
-    pc->resolve_shared_sets( drsets, drtag );
+    mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &drtag, 0, 1, drsets );
+     if(drsets.size() > 0)
+	pc->resolve_shared_sets( drsets, drtag );
+
+    // need this barrier before setting pp tag
+//	MPI::COMM_WORLD.Barrier();
+ 
 
     // Done with deleting recursive sets now create pp tags and save
     if (nrank == 0) {
@@ -556,7 +587,11 @@ namespace MeshKit
     mb->tag_get_handle( "PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, pp_tag, MB_TAG_SPARSE|MB_TAG_CREAT);
     mb->tag_set_data(pp_tag, &meshsetp, 1, &nrank);
 
-    // flag specified in input file
+ 
+   //MPI::COMM_WORLD.Barrier();
+ 
+
+   // flag specified in input file
     if(have_hex27 == true){
         moab::Range entities;
         moab::EntityHandle meshset;
@@ -575,7 +610,12 @@ namespace MeshKit
 */
 
     MPI::COMM_WORLD.Barrier();
-
+    if (nrank == 0) {
+        logfile << "Before saving mesh file in parallel. " << std::endl;
+    }
+ 
+    MPI::COMM_WORLD.Barrier();
+  
     moab::ErrorCode rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;"/*DEBUG_IO=2;", out_sets*/);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
