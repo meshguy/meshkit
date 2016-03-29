@@ -1,6 +1,6 @@
 Geometry Volume		   		! 'Geometry' card defines if the meshes are volume or surface
-MESHTOGEOM
-UMR 2 2 2
+!MESHTOGEOM
+!UMR 2 2 2
 ProblemType Mesh
 Symmetry 1                              ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType Rectangular		! 'GeometryType' card can take values Hexagonal Cartesian and Default
