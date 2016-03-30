@@ -68,9 +68,6 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
   else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE) {
     proxy = MKCore::meshop_proxy("ParExchangeMesh");
   }
-  else if (type == POST_RECV) {
-    proxy = MKCore::meshop_proxy("ParPostRecv");
-  }
   else if (type == SEND_POST_SURF_MESH) {
     proxy = MKCore::meshop_proxy("ParSendPostSurfMesh");
   }
