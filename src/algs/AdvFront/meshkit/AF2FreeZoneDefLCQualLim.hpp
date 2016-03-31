@@ -111,7 +111,7 @@ class AF2FreeZoneDefLCQualLim : public AF2FreeZoneDef
      * coordinates that will be used for the free zone boundary point.
      */
     AF2FreeZone* makeFreeZone(
-        AF2VertexBinding & vertexBinding, int qualityClass) const;
+        AF2Binding const & vertexBinding, int qualityClass) const;
 };
 
 #endif

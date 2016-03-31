@@ -33,7 +33,7 @@ class AF2PointTransformNone : public AF2PointTransform
      * \return a copy of point
      */
     virtual AF2Point2D transformPoint(AF2Point2D const & point,
-        AF2VertexBinding & vBinding) const;
+        AF2Binding const & vBinding) const;
 
     /**
      * \brief Makes and returns an independent copy of this

@@ -39,6 +39,18 @@ class AF2FreeZone
     // approximate scale of the coordinates that define the free zone
     double scale;
 
+    /**
+     * \brief Check whether two points are equal or nearly equal
+     *
+     * Near equality is measured relative to the scale of the free zone.
+     *
+     * \param pointAlpha one of the two points to test
+     * \param pointBravo the other of the two points to test
+     * \return true if the points are equal or nearly equal, false otherwise
+     */
+    bool nearEqual(AF2Point2D const & pointAlpha,
+        AF2Point2D const & pointBravo) const;
+
   public:
 
     /**
@@ -51,10 +63,14 @@ class AF2FreeZone
      * a specified point
      *
      * \param point the point to check
+     * \param containsBndry if false, the method treats query points that
+     *   are nearly equal to a free zone boundary point as not contained,
+     *   even if they are actually mathematically on or in the free zone
      * \return true if the free zone contains the point or nearly
      *   contains the point, false otherwise
      */
-    bool nearContains(AF2Point2D const & testPnt) const;
+    bool nearContains(AF2Point2D const & testPnt,
+        bool const & containsBndry = false) const;
 
     /**
      * \brief Check whether the free zone intersects (or nearly intersects)
@@ -62,11 +78,23 @@ class AF2FreeZone
      *
      * \param startPoint one endpoint of the line segment
      * \param endPoint the other endpoint of the line segment
+     * \param containsBndry if false, the method treats query line segments
+     *   that are nearly equal to free zone boundary line segments as not
+     *   intersecting, even if they actually mathematically do intersect
+     *   the free zone or lie on its boundary.  This applies only if the
+     *   query line segment is nearly equal to the full boundary line
+     *   segment, i.e., if each endpoint of the query line segment
+     *   is nearly equal to one of a pair of consective free zone
+     *   boundary points.  Also, if false, a query line segment
+     *   that has one endpoint that is nearly equal to a free
+     *   zone boundary point will be treated as nonintersecting if
+     *   the only intersection or near intersection is in the
+     *   neighborhood of that free zone boundary point.
      * \return true if the free zone intersects or nearly intersects the
      *   line segment, false otherwise
      */
     bool nearIntersects(AF2Point2D const & startPoint,
-        AF2Point2D const & endPoint) const;
+        AF2Point2D const & endPoint, bool const & containsBndry = false) const;
 
     /**
      * \brief Verify that the free zone is convex, and that the

@@ -84,7 +84,7 @@ class AF2FreeZoneDefSimple : public AF2FreeZoneDef
      * into this method.  The quality class is ignored in this implementation.
      */
     AF2FreeZone* makeFreeZone(
-        AF2VertexBinding & vertexBinding, int qualityClass) const;
+        AF2Binding const & vertexBinding, int qualityClass) const;
 };
 
 #endif

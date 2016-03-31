@@ -14,7 +14,7 @@
 // MeshKit
 #include "meshkit/AF2Point2D.hpp"
 #include "meshkit/AF2PointTransform.hpp"
-#include "meshkit/AF2VertexBinding.hpp"
+#include "meshkit/AF2Binding.hpp"
 
 class AF2RuleNewVertex
 {
@@ -61,12 +61,8 @@ class AF2RuleNewVertex
     /**
      * \brief Return the coordinates at which the new vertex should
      * be placed based on the vertex binding.
-     *
-     * The method is allowed to modify the AF2VertexBinding in order
-     * to update internal caches stored in the object, but will not
-     * modify the coordinates that reference vertices are bound to.
      */
-    AF2Point2D getLocation(AF2VertexBinding & vertexBinding) const;
+    AF2Point2D getLocation(AF2Binding const & vertexBinding) const;
 };
 
 #endif

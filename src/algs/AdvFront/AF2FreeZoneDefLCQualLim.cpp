@@ -138,7 +138,7 @@ AF2FreeZoneDefLCQualLim* AF2FreeZoneDefLCQualLim::clone() const
 }
 
 AF2FreeZone* AF2FreeZoneDefLCQualLim::makeFreeZone(
-    AF2VertexBinding & vertexBinding, int qualityClass) const
+    AF2Binding const & vertexBinding, int qualityClass) const
 {
   // Check that the quality class is greater than zero
   if (qualityClass <= 0)

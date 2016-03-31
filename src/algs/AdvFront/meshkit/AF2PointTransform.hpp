@@ -1,6 +1,8 @@
 /*
  * AF2PointTransform.hpp
  *
+ * An AF2PointTransform is an object that is able to modify the coordinates
+ * of a reference point based on an AF2Binding.
  */
 
 #ifndef AF2POINTTRANSFORM_HPP
@@ -8,36 +10,33 @@
 
 // MeshKit
 #include "meshkit/AF2Point2D.hpp"
-#include "meshkit/AF2VertexBinding.hpp"
+#include "meshkit/AF2Binding.hpp"
 
 class AF2PointTransform
 {
   public:
 
     /**
-     * \brief Transform a point based on an AF2VertexBinding
+     * \brief Transform a point based on an AF2Binding
      *
      * Given (the reference coordinates of) a 2-dimensional point and
-     * a vertex binding that assigns actual coordinates to the reference
-     * AF2RuleExistingVertex vertices of a rule, transform the point
-     * from its reference location to a location that is appropriate
-     * to the vertex binding.
+     * a binding that assigns actual coordinates (AF2Point2D points) to
+     * the reference AF2RuleExistingVertex vertices of a rule, transform
+     * the point from its reference location to a location that is
+     * appropriate to the binding.
      *
-     * This method assumed that the vertex binding is complete, i.e.,
-     * that every reference AF2RuleExistingVertex on the AF2VertexBinding
-     * has been assigned actual coordinates.  The method is allowed to
-     * modify the vertex binding to improve computational efficiency by
-     * updating internal caches in the AF2VertexBinding, but is guaranteed
-     * not to change the coordinates that reference vertices are bound to.
+     * This method assumes that the binding is complete, i.e.,
+     * that every reference AF2RuleExistingVertex on the AF2Binding
+     * has been assigned an AF2Point2D.
      *
      * \param point the coordinates of some 2-dimensional point
      * \param vBinding a binding of reference vertices to points with actual
      *   coordinates
-     * \return a 2-dimensional point transformed from point based on the
-     *   vertex binding
+     * \return a 2-dimensional point transformed from the value of the first
+     *   argument based on the binding
      */
     virtual AF2Point2D transformPoint(AF2Point2D const & point,
-        AF2VertexBinding & vBinding) const = 0;
+        AF2Binding const & vBinding) const = 0;
 
     /**
      * \brief Make and return an independent copy of yourself.

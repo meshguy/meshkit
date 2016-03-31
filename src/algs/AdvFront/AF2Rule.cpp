@@ -1,4 +1,5 @@
 // C++
+#include <set>
 #include <stack>
 
 // MeshKit
@@ -76,10 +77,12 @@ AF2Rule::AF2Rule(std::list<const AF2RuleExistVertex*> const & ruleVertices,
   aF2RuleCopyListToArray(ruleNewVertices, newVertices);
   aF2RuleCopyListToArray(ruleNewEdges, newEdges);
   aF2RuleCopyListToArray(ruleNewFaces, newFaces);
+  checkExEndpointsAndFindIsolatedVertices();
 }
 
 AF2Rule::~AF2Rule()
 {
+  delete[] exIsoVertices;
   aF2RuleDeepDeletePtrArray(newFaces, numNewFaces);
   aF2RuleDeepDeletePtrArray(newEdges, numNewEdges);
   aF2RuleDeepDeletePtrArray(newVertices, numNewVertices);
@@ -107,6 +110,50 @@ AF2Rule& AF2Rule::operator=(const AF2Rule & rhs)
   throw notImpl;
 }
 
+void AF2Rule::checkExEndpointsAndFindIsolatedVertices()
+{
+  std::set<const AF2RuleExistVertex*> endPoints;
+  for (unsigned int exEdgeIndx = 0; exEdgeIndx < numExEdges; ++exEdgeIndx)
+  {
+    endPoints.insert(exEdges[exEdgeIndx]->getStart());
+    endPoints.insert(exEdges[exEdgeIndx]->getEnd());
+  }
+
+  std::list<const AF2RuleExistVertex*> isoVertList;
+  std::set<const AF2RuleExistVertex*> allVertSet;
+  for (unsigned int exVtxIndx = 0; exVtxIndx < numExVertices; ++exVtxIndx)
+  {
+    allVertSet.insert(exVertices[exVtxIndx]);
+    std::set<const AF2RuleExistVertex*>::iterator endPntItr =
+        endPoints.find(exVertices[exVtxIndx]);
+    if (endPntItr == endPoints.end())
+    {
+      // the vertex is an isolated vertex rather than an endpoint of an edge
+      isoVertList.push_back(exVertices[exVtxIndx]);
+    }
+    else
+    {
+      endPoints.erase(endPntItr);
+    }
+  }
+
+  if (!endPoints.empty())
+  {
+    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    badArg.set_string("The endpoints of the rule's existing edges are not all existing vertices.");
+    throw badArg;
+  }
+
+  if (allVertSet.size() != numExVertices)
+  {
+    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    badArg.set_string("There is a duplicate existing vertex.");
+    throw badArg;
+  }
+
+  aF2RuleCopyListToArray(isoVertList, exIsoVertices);
+}
+
 std::map<const AF2RuleExistEdge*, std::list<AF2Edge2D*>*>*
     AF2Rule::findPotentialEdgeMatches(AF2Neighborhood const & ngbhd,
     int matchQuality) const
@@ -129,6 +176,31 @@ std::map<const AF2RuleExistEdge*, std::list<AF2Edge2D*>*>*
       }
     }
     (*matchMap)[ruleEdge] = possMatches;
+  }
+
+  return matchMap;
+}
+
+std::map<const AF2RuleExistVertex*, std::list<AF2Point2D*>*>*
+    AF2Rule::findPotentialVertexMatches(AF2Neighborhood const & ngbhd,
+    int matchQuality) const
+{
+  const std::list<AF2Point2D*>* ngbhdPoints = ngbhd.getPoints2D();
+  std::map<const AF2RuleExistVertex*, std::list<AF2Point2D*>*>* matchMap =
+      new std::map<const AF2RuleExistVertex*, std::list<AF2Point2D*>*>();
+  for (unsigned indx = 0; indx < numExIsoVertices; ++indx)
+  {
+    const AF2RuleExistVertex* ruleVertex = exIsoVertices[indx];
+    std::list<AF2Point2D*>* possMatches = new std::list<AF2Point2D*>();
+    for (std::list<AF2Point2D*>::const_iterator ngbPointItr =
+        ngbhdPoints->begin(); ngbPointItr != ngbhdPoints->end(); ++ngbPointItr)
+    {
+      if (isMatchingVertex(**ngbPointItr, *ruleVertex, matchQuality))
+      {
+        possMatches->push_back(*ngbPointItr);
+      }
+    }
+    (*matchMap)[ruleVertex] = possMatches;
   }
 
   return matchMap;
@@ -159,8 +231,11 @@ void AF2Rule::applyRule(AF2Neighborhood const & ngbhd, int matchQuality) const
 {
   std::map<const AF2RuleExistEdge*, std::list<AF2Edge2D*>*>* matchingEdgesMap =
     findPotentialEdgeMatches(ngbhd, matchQuality);
+  std::map<const AF2RuleExistVertex*, std::list<AF2Point2D*>*>*
+      matchingVerticesMap = findPotentialVertexMatches(ngbhd, matchQuality);
 
-  // TODO: Check that there is at least one potential match for each edge?
+  // TODO: Check that there is at least one potential match for each edge
+  // TODO: and at least one potential match for each isolated vertex?
 
   AF2Binding binding;
 
@@ -177,8 +252,9 @@ void AF2Rule::applyRule(AF2Neighborhood const & ngbhd, int matchQuality) const
       if (edgeToMatchIndx == numExEdges)
       {
         // all edges have been matched
-        // TODO: Match free vertices, check free zone, and,
-        // if successful, record and assess
+        // stage two matches any isolated vertices and proceeds
+        // to stages three and four
+        applyRuleStageTwo(ngbhd, matchQuality, matchingVerticesMap, binding);
       }
       else
       {
@@ -221,8 +297,120 @@ void AF2Rule::applyRule(AF2Neighborhood const & ngbhd, int matchQuality) const
         edgeMatchItrStack.push(++itr);
 
         // break out of this loop and proceed to bind other edges or vertices
+        // or check the free zone and finish applying the rule
         break;
       }
     }
+  }
+}
+
+void AF2Rule::applyRuleStageTwo(AF2Neighborhood const & ngbhd,
+    int matchQuality,
+    std::map<const AF2RuleExistVertex*, std::list<AF2Point2D*>*>* const &
+    matchingVerticesMap, AF2Binding & binding) const
+{
+  // Note: At this point it would be possible to filter the lists
+  // of vertices that are potential matches, removing any potential
+  // matches that are already bound as endpoints of edges, but it's
+  // not clear that the performance improvement, if any, would offset
+  // the additional memory for storing the filtered list and the
+  // additional computation.
+
+  std::stack<std::list<AF2Point2D*>::const_iterator> vertexMatchItrStack;
+  unsigned int vertexToMatchIndx = 0;
+  --vertexToMatchIndx;
+  bool  consistentMatch = true;
+  const AF2RuleExistVertex* vertexToMatch = NULL;
+  while (true)
+  {
+    if (consistentMatch)
+    {
+      ++vertexToMatchIndx;
+      if (vertexToMatchIndx == numExIsoVertices)
+      {
+        // all edges and all vertices have been matched
+        applyRuleStageThree(ngbhd, matchQuality, binding);
+      }
+      else
+      {
+        // not all isolated vertices have been matched yet, so set up to
+        // attempt to match the next vertex given the current binding
+        vertexToMatch = exIsoVertices[vertexToMatchIndx];
+        vertexMatchItrStack.push(
+            (*matchingVerticesMap)[vertexToMatch]->begin());
+      }
+    }
+    else
+    {
+      --vertexToMatchIndx;
+      if (vertexToMatchIndx < 0)
+      {
+        // all isolated vertices have explored all possible matches
+        break;
+      }
+      vertexToMatch = exIsoVertices[vertexToMatchIndx];
+      // release the vertex binding from the last time vertexToMatch was bound
+      binding.release(vertexToMatch);
+    }
+
+    consistentMatch = false;
+    for (std::list<AF2Point2D*>::const_iterator itr =
+        vertexMatchItrStack.top();
+        itr != (*matchingVerticesMap)[vertexToMatch]->end(); ++itr)
+    {
+      // pop off the top element of the stack (returns void)
+      vertexMatchItrStack.pop();
+      // check consistency
+      consistentMatch = true;
+      if (!binding.isConsistent(vertexToMatch, *itr))
+      {
+        consistentMatch = false;
+      }
+      else
+      {
+        // bind the vertex and store the next position of the iterator
+        // on the iterator stack for later examination
+        binding.bind(vertexToMatch, *itr);
+        vertexMatchItrStack.push(++itr);
+
+        // break out of this loop and proceed to bind other vertices
+        // or check the free zone and finish applying the rule
+        break;
+      }
+    }
+  }
+}
+
+void AF2Rule::applyRuleStageThree(AF2Neighborhood const & ngbhd,
+    int matchQuality, AF2Binding const & binding) const
+{
+  bool emptyFreeZone = true;
+
+  AF2FreeZone* freeZone = freeZoneDef->makeFreeZone(binding, matchQuality);
+  if (!freeZone->isConvex())
+  {
+    emptyFreeZone = false;
+  }
+
+  const std::list<AF2Point2D*>* ngbhdPoints = ngbhd.getPoints2D();
+  for (std::list<AF2Point2D*>::const_iterator itr = ngbhdPoints->begin();
+      emptyFreeZone && itr != ngbhdPoints->end(); ++itr)
+  {
+    emptyFreeZone = !freeZone->nearContains(**itr);
+  }
+
+  const std::list<AF2Edge2D*>* ngbhdEdges = ngbhd.getEdges2D();
+  for (std::list<AF2Edge2D*>::const_iterator itr = ngbhdEdges->begin();
+      emptyFreeZone && itr != ngbhdEdges->end(); ++itr)
+  {
+    emptyFreeZone = !freeZone->nearIntersects(
+        *((*itr)->getStart()), *((*itr)->getEnd()));
+  }
+
+  delete freeZone;
+
+  if (emptyFreeZone)
+  {
+    // TODO: This binding is an acceptable rule application -- evaluate it
   }
 }

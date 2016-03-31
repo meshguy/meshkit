@@ -8,6 +8,12 @@
  * (2) verification of convexity,
  * (3) detection of point containment, and
  * (4) detection of intersection with a line segment.
+ *
+ * With the detection of point containment and detection of
+ * intersection, the free zone has the capability to not detect
+ * a containment or intersection in cases where the query point
+ * or line segment is approximately equal to some portion of
+ * the boundary.
  */
 
 // C++
@@ -30,18 +36,29 @@ void testClockwiseSquare();
 void testLocalNonConvex();
 void testGlobalNonConvex();
 void testSquareContains();
+void testSquareContainsVertex();
 void testSquareNotContains();
 void testPentagonContains();
 void testPentagonNotContains();
+void testPentagonNotContainsVertex();
 void testDiamondNearContains();
+void testDiamondNotContainsVertex();
 void testSquareIntersect();
 void testSquareNotIntersect();
+void testSquareNotIntersectSegment();
+void testSquareIntersectOutwardRay();
 void testPentagonIntersect();
 void testPentagonNearIntersect();
 void testPentagonNotIntersectBB();
 void testPentagonNotIntersectCW();
 void testPentagonNotIntersectZoneCW();
 void testPentagonNotIntersectZoneCCW();
+void testPentagonIntersectSegment();
+void testPentagonNotIntersectOutwardRay();
+void testPentagonIntersectInwardRay();
+void testDiamondNotIntersectSegment();
+void testDiamondNotIntersectOutwardRay();
+void testDiamondIntersectInwardRay();
 
 int main(int argc, char **argv)
 {
@@ -54,18 +71,29 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(testLocalNonConvex);
   num_fail += RUN_TEST(testGlobalNonConvex);
   num_fail += RUN_TEST(testSquareContains);
+  num_fail += RUN_TEST(testSquareContainsVertex);
   num_fail += RUN_TEST(testSquareNotContains);
   num_fail += RUN_TEST(testPentagonContains);
   num_fail += RUN_TEST(testPentagonNotContains);
+  num_fail += RUN_TEST(testPentagonNotContainsVertex);
   num_fail += RUN_TEST(testDiamondNearContains);
+  num_fail += RUN_TEST(testDiamondNotContainsVertex);
   num_fail += RUN_TEST(testSquareIntersect);
   num_fail += RUN_TEST(testSquareNotIntersect);
+  num_fail += RUN_TEST(testSquareNotIntersectSegment);
+  num_fail += RUN_TEST(testSquareIntersectOutwardRay);
   num_fail += RUN_TEST(testPentagonIntersect);
   num_fail += RUN_TEST(testPentagonNearIntersect);
   num_fail += RUN_TEST(testPentagonNotIntersectBB);
   num_fail += RUN_TEST(testPentagonNotIntersectCW);
   num_fail += RUN_TEST(testPentagonNotIntersectZoneCW);
   num_fail += RUN_TEST(testPentagonNotIntersectZoneCCW);
+  num_fail += RUN_TEST(testPentagonIntersectSegment);
+  num_fail += RUN_TEST(testPentagonNotIntersectOutwardRay);
+  num_fail += RUN_TEST(testPentagonIntersectInwardRay);
+  num_fail += RUN_TEST(testDiamondNotIntersectSegment);
+  num_fail += RUN_TEST(testDiamondNotIntersectOutwardRay);
+  num_fail += RUN_TEST(testDiamondIntersectInwardRay);
 
   return num_fail;
 }
@@ -217,6 +245,16 @@ void testSquareContains()
       << "." << std::endl;
 }
 
+void testSquareContainsVertex()
+{
+  AF2FreeZone squareFreeZone = makeSquareFreeZone();
+  AF2Point2D myPoint(1, 0);
+  CHECK(squareFreeZone.nearContains(myPoint, true));
+  std::cout << "PASS: The square free zone contains " << myPoint
+      << "\n  when passed an argument to contain boundary points."
+      << std::endl;
+}
+
 void testSquareNotContains()
 {
   AF2FreeZone squareFreeZone = makeSquareFreeZone();
@@ -233,6 +271,16 @@ void testDiamondNearContains()
   CHECK(diamondFreeZone.nearContains(myPoint));
   std::cout << "PASS: The diamond free zone nearly contains\n"
       << "  (0.25e40, 0.249999999999999e40)." << std::endl;
+}
+
+void testDiamondNotContainsVertex()
+{
+  AF2FreeZone diamondFreeZone = makeDiamondFreeZone();
+  AF2Point2D myPoint(0.0, 9.9999999999999e39);
+  CHECK(!diamondFreeZone.nearContains(myPoint));
+  std::cout << "PASS: The diamond free zone says it does not contain\n"
+      << "  (0, 9.9999999999999e39) because it is near a boundary vertex"
+      << std::endl;
 }
 
 void testPentagonContains()
@@ -254,6 +302,17 @@ void testPentagonNotContains()
       << "." << std::endl;
 }
 
+void testPentagonNotContainsVertex()
+{
+  AF2FreeZone pentFreeZone = makePentagonFreeZone();
+  AF2Point2D myPoint(1.39735982487e-14, 1.1091842589e-14);
+  CHECK(!pentFreeZone.nearContains(myPoint));
+  std::cout
+      << "PASS: The pentagon free zone says it does not contain\n"
+      << "  (1.39735982487e-14, 1.1091842589e-14)\n"
+      << "  because it is a boundary vertex" << std::endl;
+}
+
 void testSquareIntersect()
 {
   AF2FreeZone squareFreeZone = makeSquareFreeZone();
@@ -272,6 +331,28 @@ void testSquareNotIntersect()
   CHECK(!squareFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The square free zone does not intersect an edge from\n"
       << "  (1.2500001, 0.75) to (0.75, 1.25)" << std::endl;
+}
+
+void testSquareNotIntersectSegment()
+{
+  AF2FreeZone squareFreeZone = makeSquareFreeZone();
+  AF2Point2D startEdge(1, 1);
+  AF2Point2D endEdge(0, 1);
+  CHECK(!squareFreeZone.nearIntersects(startEdge, endEdge));
+  std::cout << "PASS: The square free zone says it does not intersect "
+      << "an edge from\n  (1, 1) to (0, 1) because it is a boundary segment"
+      << std::endl;
+}
+
+void testSquareIntersectOutwardRay()
+{
+  AF2FreeZone squareFreeZone = makeSquareFreeZone();
+  AF2Point2D startEdge(1, 1);
+  AF2Point2D endEdge(1.5, 1.5);
+  CHECK(squareFreeZone.nearIntersects(startEdge, endEdge, true));
+  std::cout << "PASS: The square free zone intersects an edge from\n"
+      << "  (1, 1) to (1.5, 1.5) when passed an argument to contain its "
+      << "boundary" << std::endl;
 }
 
 void testPentagonIntersect()
@@ -340,4 +421,76 @@ void testPentagonNotIntersectZoneCCW()
   CHECK(!pentFreeZone.nearIntersects(startEdge, endEdge));
   std::cout << "PASS: The pentagon free zone does not intersect an edge from\n"
       << "  (1.5e-14, 0.95e-14) to (1.3e-14, 1.3e-14)" << std::endl;
+}
+
+void testPentagonIntersectSegment()
+{
+  AF2FreeZone pentFreeZone = makePentagonFreeZone();
+  AF2Point2D startEdge(1.39735982487e-14, 1.1091842589e-14);
+  AF2Point2D endEdge(0.5e-14, 1.74370722192e-14);
+  CHECK(pentFreeZone.nearIntersects(startEdge, endEdge, true));
+  std::cout << "PASS: The pentagon free zone intersects an edge from\n"
+      << "  (1.39735982487e-14, 1.1091842589e-14) to"
+      << " (0.5e-14, 1.74370722192e-14)\n"
+      << "  when passed an argument to contain boundary segments."
+      << std::endl;
+}
+
+void testPentagonNotIntersectOutwardRay()
+{
+  AF2FreeZone pentFreeZone = makePentagonFreeZone();
+  AF2Point2D startEdge(5.0e-15, 1.74370722192e-14);
+  AF2Point2D endEdge(7.0e-15, 3.0e-14);
+  CHECK(!pentFreeZone.nearIntersects(startEdge, endEdge));
+  std::cout << "PASS: The pentagon free zone says it does not intersect "
+      << "an edge from\n"
+      << "  (5.0e-15, 1.74370722192e-14) to (7.0e-15, 3.0e-14)\n"
+      << "  because the only intersection is near an endpoint that is\n"
+      << "  near a boundary point."
+      << std::endl;
+}
+
+void testPentagonIntersectInwardRay()
+{
+  AF2FreeZone pentFreeZone = makePentagonFreeZone();
+  AF2Point2D startEdge(5.0e-15, 1.74370722192e-14);
+  AF2Point2D endEdge(6.0e-15, 1.1e-14);
+  CHECK(pentFreeZone.nearIntersects(startEdge, endEdge));
+  std::cout << "PASS: The pentagon free zone intersects an edge from\n"
+      << "  (5.0e-15, 1.74370722192e-14) to (6.0e-15, 1.1e-14)."
+      << std::endl;
+}
+
+void testDiamondNotIntersectSegment()
+{
+  AF2FreeZone diamondFreeZone = makeDiamondFreeZone();
+  AF2Point2D startEdge(0.0, 9.9999999999999e39);
+  AF2Point2D endEdge(5.0e39, 5.0e39);
+  CHECK(!diamondFreeZone.nearIntersects(startEdge, endEdge));
+  std::cout << "PASS: The diamond free zone says it does not intersect\n"
+      << "  an edge from (0.0, 9.9999999999999e39) to (5.0e39, 5.0e39)\n"
+      << "  because it is approximately equal to a boundary edge." << std::endl;
+}
+
+void testDiamondNotIntersectOutwardRay()
+{
+  AF2FreeZone diamondFreeZone = makeDiamondFreeZone();
+  AF2Point2D startEdge(-1.0e39, 1.4e40);
+  AF2Point2D endEdge(0.0, 9.9999999999999e39);
+  CHECK(!diamondFreeZone.nearIntersects(startEdge, endEdge));
+  std::cout << "PASS: The diamond free zone says it does not intersect "
+      << "an edge from\n  " << startEdge
+      << " to (0.0, 9.9999999999999e39)\n"
+      << "  because the only intersection is near an endpoint that is\n"
+      << "  near a boundary point." << std::endl;
+}
+
+void testDiamondIntersectInwardRay()
+{
+  AF2FreeZone diamondFreeZone = makeDiamondFreeZone();
+  AF2Point2D startEdge(-1.0e39, 6.1e39);
+  AF2Point2D endEdge(0.0, 9.9999999999999e39);
+  CHECK(diamondFreeZone.nearIntersects(startEdge, endEdge));
+  std::cout << "PASS: The diamond free zone intersects an edge from\n"
+      << startEdge << " to (0.0, 9.9999999999999e39)\n" << std::endl;
 }

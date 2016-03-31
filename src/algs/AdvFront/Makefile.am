@@ -24,8 +24,7 @@ libAdvFront_la_SOURCES = \
 	AF2RuleExistVertex.cpp \
 	AF2RuleNewEdge.cpp \
 	AF2RuleNewTriangle.cpp \
-	AF2RuleNewVertex.cpp \
-	AF2VertexBinding.cpp
+	AF2RuleNewVertex.cpp
 
 # The list of header files which are to be installed
 nobase_libAdvFront_la_include_HEADERS = \
@@ -47,8 +46,7 @@ nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2RuleNewEdge.hpp \
 	meshkit/AF2RuleNewFace.hpp \
 	meshkit/AF2RuleNewTriangle.hpp \
-	meshkit/AF2RuleNewVertex.hpp \
-	meshkit/AF2VertexBinding.hpp
+	meshkit/AF2RuleNewVertex.hpp
 
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \

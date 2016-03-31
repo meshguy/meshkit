@@ -12,16 +12,11 @@
 
 // MeshKit
 #include "meshkit/AF2FreeZone.hpp"
-#include "meshkit/AF2VertexBinding.hpp"
+#include "meshkit/AF2Binding.hpp"
 
 class AF2FreeZoneDef
 {
   public:
-
-    /**
-     * \brief Virtual destructor
-     */
-//    virtual ~AF2FreeZoneDef() = 0;
 
     /**
      * \brief Make and return an independent copy of yourself.
@@ -35,16 +30,11 @@ class AF2FreeZoneDef
     virtual AF2FreeZoneDef* clone() const = 0;
 
     /**
-     * \brief Create an AF2FreeZone based on a vertex binding and
-     * quality class.
+     * \brief Create an AF2FreeZone based on a binding and a quality class.
      *
      * This method allocates the AF2FreeZone and returns a pointer to it.
      * It is the responsibility of the calling context to make sure that
      * the AF2FreeZone is deleted when it is no longer needed.
-     *
-     * The method is allowed to modify the AF2VertexBinding in order
-     * to update internal caches stored in the object, but will not
-     * modify the coordinates that reference vertices are bound to.
      *
      * \param vertexBinding a binding of a rule's existing vertices to
      *   actual points that will be used to build a free zone relative
@@ -55,7 +45,7 @@ class AF2FreeZoneDef
      *   larger free zones, depending on the implementation.
      */
     virtual AF2FreeZone* makeFreeZone(
-        AF2VertexBinding & vertexBinding, int qualityClass) const = 0;
+        AF2Binding const & vertexBinding, int qualityClass) const = 0;
 };
 
 #endif

@@ -41,7 +41,7 @@ AF2RuleNewVertex& AF2RuleNewVertex::operator=(
 }
 
 AF2Point2D AF2RuleNewVertex::getLocation(
-    AF2VertexBinding & vertexBinding) const
+    AF2Binding const & vertexBinding) const
 {
   return pointTransform->transformPoint(referencePoint, vertexBinding);
 }
