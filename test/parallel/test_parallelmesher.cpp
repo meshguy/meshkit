@@ -157,6 +157,12 @@ int load_and_mesh(const char *geom_filename,
   mk->construct_meshop("ParallelMesher", vols);
   mk->setup_and_execute();
   double t3 = MPI_Wtime();
+  
+    unsigned long long mem1 = 0, max_mem1 = 0;
+    mk->moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
+    MPI::COMM_WORLD.Reduce( &mem1, &max_mem1, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
+    if (rank == 0)
+        std::cout << "Max. Memory used: " << max_mem1/1e6 << " Mb\n" << std::endl;
 
   if (mesh_filename != NULL) {
     std::string out_name;
