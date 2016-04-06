@@ -435,7 +435,7 @@ namespace MeshKit
 
       }
   }
-
+#ifdef USE_MPI
   int CoreGen::save_mesh_parallel(const int nrank, const int numprocs)
   // -------------------------------------------------------------------------------------------
   // Function: resolve shared entitie and save mesh file in parallel (hdf5 only)
@@ -628,7 +628,7 @@ namespace MeshKit
       }
     return iBase_SUCCESS;
   }
-
+#endif
   int CoreGen::save_mesh(int nrank) {
     // ---------------------------------------------------------------------------
     // Function: save mesh serially from each rank
