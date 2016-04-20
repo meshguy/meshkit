@@ -1,0 +1,13 @@
+Building 1 B1
+X 10 Y 10 Z 60
+Building 2 B2 
+X 4 Y 4 Z 25
+Building 3 B3 
+X 3 Y 3 Z 10
+UrbanLayout Rectangular
+Grid 2 8
+Pitch X 10 Y 10 
+B1 B2 B3 B1 B1 B3 B2 B1 &
+B1 B2 B3 B2 B1 B3 B2 B3 
+BoundingBox X 80 Y 20 Z 80
+NumSections X 7 Y 1
