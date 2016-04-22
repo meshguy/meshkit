@@ -11,6 +11,8 @@
 #include <iostream>
 
 #include "meshkit/AF2PlaneProjection.hpp"
+#include "meshkit/AF2Point2D.hpp"
+#include "meshkit/AF2Point3D.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/Matrix.hpp"
@@ -75,63 +77,61 @@ bool testPlaneProj()
   xDir[1] = 0.7071067811865476;
   xDir[2] = 0.0;
   AF2PlaneProjection planeProj(this_surf->igeom_instance(),
-      this_surf->geom_handle(), origin, normal, xDir);
+      this_surf->geom_handle(), origin, normal, xDir, 1.0);
   std::cout << "Created plane passing through (2.8, 2.8, 0) "
       << "normal to (1, 1, 0)." << std::endl;
   std::cout << "The y-coordinate in the plane is in the direction of "
       << "the z-axis." << std::endl;
 
 
-  MeshKit::Vector<3> testPnt;
-  testPnt[0] = 2.8059735404411; // (sqrt(2)/2) * (3 + cos(asin(0.25)))
-  testPnt[1] = 2.8059735404411;
-  testPnt[2] = 0.25;
-  MeshKit::Vector<2> planePnt;
-  planeProj.transformFromSurface(testPnt, planePnt);
-  std::cout << "Transform (" << testPnt[0] << ", " << testPnt[1] << ", "
-      << testPnt[2] << ") from surface to plane." << std::endl;
-  std::cout << "Coordinates in plane: (" << planePnt[0] << ", "
-      << planePnt[1] << ")" << std::endl;
-  if ((fabs(planePnt[0] - 0.0) + fabs(planePnt[1] - 0.25)) > 1e-12)
+  // 2.8059735404411 is (sqrt(2)/2) * (3 + cos(asin(0.25)))
+  AF2Point3D testPnt(2.8059735404411, 2.8059735404411, 0.25);
+  AF2Point2D* planePnt = planeProj.transformFromSurface(testPnt);
+  std::cout << "Transform (" << testPnt.getX() << ", " << testPnt.getY() << ", "
+      << testPnt.getZ() << ") from surface to plane." << std::endl;
+  std::cout << "Coordinates in plane: (" << planePnt->getX() << ", "
+      << planePnt->getY() << ")" << std::endl;
+  if ((fabs(planePnt->getX() - 0.0) + fabs(planePnt->getY() - 0.25)) > 1e-12)
   {
     std::cout << "FAIL: The coordinates in the plane should be (0, 0.25)."
         << std::endl;
     ++failCount;
   }
+  delete planePnt;
 
-  MeshKit::Vector<2> planeTestPnt;
-  planeTestPnt[0] = 0;
-  planeTestPnt[1] = 0.1539268506556547; // sin(acos(2.82 * sqrt(2) - 3))
-  MeshKit::Vector<3> surfacePnt;
-  planeProj.transformToSurface(planeTestPnt, surfacePnt);
-  std::cout << "Transform (" << planeTestPnt[0] << ", " << planeTestPnt[1]
-      << ") from plane to surface." << std::endl;
-  std::cout << "Coordinates on surface: (" << surfacePnt[0] << ", "
-      << surfacePnt[1] << ", " << surfacePnt[2] << ")" << std::endl;
-  if ((fabs(surfacePnt[0] - 2.82) + fabs(surfacePnt[1] - 2.82) +
-      fabs(surfacePnt[2] - 0.15392685065547)) > 1e-12)
+  // 0.1539268506556547 is sin(acos(2.82 * sqrt(2) - 3))
+  AF2Point2D planeTestPntA(0, 0.1539268506556547);
+  AF2Point3D* surfacePnt = planeProj.transformToSurface(planeTestPntA);
+  std::cout << "Transform (" << planeTestPntA.getX() << ", "
+      << planeTestPntA.getY() << ") from plane to surface." << std::endl;
+  std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
+      << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
+  if ((fabs(surfacePnt->getX() - 2.82) + fabs(surfacePnt->getY() - 2.82) +
+      fabs(surfacePnt->getZ() - 0.15392685065547)) > 1e-12)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (2.82, 2.82, 0.15392685065547)."
         << std::endl;
     ++failCount;
   }
+  delete surfacePnt;
 
-  planeTestPnt[0] = 0;
-  planeTestPnt[1] = 0.574682269122808; // sin(acos(2.7 * sqrt(2) - 3))
-  planeProj.transformToSurface(planeTestPnt, surfacePnt);
-  std::cout << "Transform (" << planeTestPnt[0] << ", " << planeTestPnt[1]
-      << ") from plane to surface." << std::endl;
-  std::cout << "Coordinates on surface: (" << surfacePnt[0] << ", "
-      << surfacePnt[1] << ", " << surfacePnt[2] << ")" << std::endl;
-  if ((fabs(surfacePnt[0] - 2.7) + fabs(surfacePnt[1] - 2.7) +
-      fabs(surfacePnt[2] - 0.574682269122808)) > 1e-12)
+  // 0.574682269122808 is sin(acos(2.7 * sqrt(2) - 3))
+  AF2Point2D planeTestPntB(0, 0.574682269122808);
+  surfacePnt = planeProj.transformToSurface(planeTestPntB);
+  std::cout << "Transform (" << planeTestPntB.getX() << ", "
+      << planeTestPntB.getY() << ") from plane to surface." << std::endl;
+  std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
+      << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
+  if ((fabs(surfacePnt->getX() - 2.7) + fabs(surfacePnt->getY() - 2.7) +
+      fabs(surfacePnt->getZ() - 0.574682269122808)) > 1e-12)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (2.7, 2.7, 0.574682269122808)."
         << std::endl;
     ++failCount;
   }
+  delete surfacePnt;
 
 
   // create a plane projection (with a normal that does not agree with the
@@ -147,7 +147,7 @@ bool testPlaneProj()
   xDir[1] = 0.0;
   xDir[2] = 0.7071067811865476;
   AF2PlaneProjection wackyProj(this_surf->igeom_instance(),
-      this_surf->geom_handle(), origin, normal, xDir);
+      this_surf->geom_handle(), origin, normal, xDir, 1.0);
   std::cout << "Created plane passing through (3.5, 0, 0) "
       << "normal to (-1, 0, 1)." << std::endl;
   std::cout << "The y-coordinate in the plane is in the direction of "
@@ -161,16 +161,15 @@ bool testPlaneProj()
   // 3-dimensional pooint on the plane, computing z-coordinate there as
   // z + (0.45 - z)/2.  Thus 2-dimensional planar coordinates are as
   // follows, with the first coordinat as 3-d z-coord divided by sqrt(2)/2
-  planeTestPnt[0] = 0.53625047660234298437463798744018;
-  planeTestPnt[1] = 0.1;
-  wackyProj.transformToSurface(planeTestPnt, surfacePnt);
-  std::cout << "Transform (" << planeTestPnt[0] << ", " << planeTestPnt[1]
-      << ") from plane to surface." << std::endl;
-  std::cout << "Coordinates on surface: (" << surfacePnt[0] << ", "
-      << surfacePnt[1] << ", " << surfacePnt[2] << ")" << std::endl;
+  AF2Point2D planeTestPntC(0.53625047660234298437463798744018, 0.1);
+  surfacePnt = wackyProj.transformToSurface(planeTestPntC);
+  std::cout << "Transform (" << planeTestPntC.getX() << ", "
+      << planeTestPntC.getY() << ") from plane to surface." << std::endl;
+  std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
+      << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
   // expect ~ (3.95, 0.1, 0.3083726968400695)
-  if ((fabs(surfacePnt[0] - 3.95) + fabs(surfacePnt[1] - 0.1) +
-      fabs(surfacePnt[2] - 0.3083726968400695)) > 1e-12)
+  if ((fabs(surfacePnt->getX() - 3.95) + fabs(surfacePnt->getY() - 0.1) +
+      fabs(surfacePnt->getZ() - 0.3083726968400695)) > 1e-12)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (3.95, 0.1, 0.3083726968400695)."
@@ -179,25 +178,27 @@ bool testPlaneProj()
   }
   // The line also intersects the surface near (3.30723, 0.1, 0.951148),
   // but that point is farther away from the plane than the expected result.
+  delete surfacePnt;
 
 
   // Perform a similar test with the plane origin at x = 2.6
   origin[0] = 2.6;
   AF2PlaneProjection wackyProjShift01(this_surf->igeom_instance(),
-      this_surf->geom_handle(), origin, normal, xDir);
+      this_surf->geom_handle(), origin, normal, xDir, 1.0);
   std::cout << "Created plane passing through (2.6, 0, 0) "
       << "normal to (-1, 0, 1)." << std::endl;
   std::cout << "The y-coordinate in the plane is in the direction of "
       << "the y-axis." << std::endl;
 
-  planeTestPnt[0] = 1.17264657967023277;
-  wackyProjShift01.transformToSurface(planeTestPnt, surfacePnt);
-  std::cout << "Transform (" << planeTestPnt[0] << ", " << planeTestPnt[1]
-      << ") from plane to surface." << std::endl;
-  std::cout << "Coordinates on surface: (" << surfacePnt[0] << ", "
-      << surfacePnt[1] << ", " << surfacePnt[2] << ")" << std::endl;
-  if ((fabs(surfacePnt[0] - 3.3072251285719) + fabs(surfacePnt[1] - 0.1) +
-      fabs(surfacePnt[2] - 0.9511475682682)) > 1e-12)
+  AF2Point2D planeTestPntD(1.17264657967023277, 0.1);
+  surfacePnt = wackyProjShift01.transformToSurface(planeTestPntD);
+  std::cout << "Transform (" << planeTestPntD.getX() << ", "
+      << planeTestPntD.getY() << ") from plane to surface." << std::endl;
+  std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
+      << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
+  if ((fabs(surfacePnt->getX() - 3.3072251285719) +
+      fabs(surfacePnt->getY() - 0.1) +
+      fabs(surfacePnt->getZ() - 0.9511475682682)) > 1e-12)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (3.30722512857195, 0.1, 0.9511475682682)."
@@ -206,25 +207,27 @@ bool testPlaneProj()
   }
   // The line also intersects the surface near (3.95, 0.1, 0.3083726968400695)
   // but that point is farther away from the plane than the expected result.
+  delete surfacePnt;
 
 
   // Perform a similar test with the plane origin at x = 2.1
   origin[0] = 2.1;
   AF2PlaneProjection wackyProjShift02(this_surf->igeom_instance(),
-      this_surf->geom_handle(), origin, normal, xDir);
+      this_surf->geom_handle(), origin, normal, xDir, 1.0);
   std::cout << "Created plane passing through (2.1, 0, 0) "
       << "normal to (-1, 0, 1)." << std::endl;
   std::cout << "The y-coordinate in the plane is in the direction of "
       << "the y-axis." << std::endl;
 
-  planeTestPnt[0] = 1.5261999702635065;
-  wackyProjShift02.transformToSurface(planeTestPnt, surfacePnt);
-  std::cout << "Transform (" << planeTestPnt[0] << ", " << planeTestPnt[1]
-      << ") from plane to surface." << std::endl;
-  std::cout << "Coordinates on surface: (" << surfacePnt[0] << ", "
-      << surfacePnt[1] << ", " << surfacePnt[2] << ")" << std::endl;
-  if ((fabs(surfacePnt[0] - 3.3072251285719) + fabs(surfacePnt[1] - 0.1) +
-      fabs(surfacePnt[2] - 0.9511475682682)) > 1e-12)
+  AF2Point2D planeTestPntE(1.5261999702635065, 0.1);
+  surfacePnt = wackyProjShift02.transformToSurface(planeTestPntE);
+  std::cout << "Transform (" << planeTestPntE.getX() << ", "
+      << planeTestPntE.getY() << ") from plane to surface." << std::endl;
+  std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
+      << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
+  if ((fabs(surfacePnt->getX() - 3.3072251285719) +
+      fabs(surfacePnt->getY() - 0.1) +
+      fabs(surfacePnt->getZ() - 0.9511475682682)) > 1e-12)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (3.30722512857195, 0.1, 0.9511475682682)."
@@ -234,6 +237,7 @@ bool testPlaneProj()
   // The line also intersects the surface near (3.95, 0.1, 0.3083726968400695)
   // but that point is farther away from the plane than the expected result.
   // Both points are in the negative normal direction from the plane.
+  delete surfacePnt;
 
   delete mk;
 

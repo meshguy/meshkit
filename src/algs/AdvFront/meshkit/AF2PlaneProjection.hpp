@@ -6,20 +6,20 @@
  * some origin point from the 3-dimensional point and removing the
  * component that is in the direction normal to the plane.  In other words,
  * the transformation projects the 3-dimensional point onto a plane.
+ * After the projection, the point is scaled in the plane.
  * 
- * The inverse works by firing a ray from the plane in the direction
- * normal to the plane and finding the intersection of the ray with
- * the surface.
- *
- * NOTE: In the future this could include scaling in the x-direction,
- * but at the moment it does not support that.
+ * The inverse works by first reversing the scaling, and then firing a
+ * ray from the plane in the direction normal to the plane and finding
+ * the intersection of the ray with the surface.
  */
 
 #ifndef AF2PLANEPROJECTION_HPP
 #define AF2PLANEPROJECTION_HPP
 
+// MeshKit
 #include "meshkit/iGeom.hpp"
 #include "meshkit/AF2LocalTransform.hpp"
+#include "meshkit/Matrix.hpp"
 
 class AF2PlaneProjection : public AF2LocalTransform
 {
@@ -31,6 +31,7 @@ class AF2PlaneProjection : public AF2LocalTransform
     MeshKit::Vector<3> pNormal;
     MeshKit::Vector<3> pXDir;
     MeshKit::Vector<3> pYDir;
+    double scale;
 
   public:
 
@@ -56,6 +57,15 @@ class AF2PlaneProjection : public AF2LocalTransform
      * to the plane will be the standard right-handed cross product of the
      * (normaliezed) x-direction vector and the y-direction.
      *
+     * After projecting three-dimensional points into the plane, the
+     * coordinates will be multiplied by the inverse of the scaling factor.
+     * When used for the advancing front algorithm implementation, the
+     * scale should be given as the approximate distance between two
+     * adjacent points on the front near the baseline edge, since this
+     * will produce points that are nearly unit distance apart after
+     * the transformation is applied and the advancing front rules are
+     * defined relative to a unit length baseline edge.
+     *
      * \param iGeomPtrArg a pointer to an iGeom instance
      * \param srfcHandle a handle to a 2-dimensional surface embedded in
      *   3-dimensional space that is a valid handle to access the surface
@@ -67,18 +77,19 @@ class AF2PlaneProjection : public AF2LocalTransform
      * \param planeXDir a direction vector (parallel to the plane onto which
      *   this transformation will project points) that defines the direction
      *   that will be the first coordinate of the 2-dimensional space
+     * \param scaleFactor a positive scaling factor that approximates
+     *   the distance between adjacent points on the advancing front
      */
     AF2PlaneProjection(iGeom* iGeomPtrArg,
         iGeom::EntityHandle srfcHandle,
         MeshKit::Vector<3> const & planeOrigin,
         MeshKit::Vector<3> const & planeNormal,
-        MeshKit::Vector<3> const & planeXDir);
+        MeshKit::Vector<3> const & planeXDir,
+        double scaleFactor);
 
-    void transformFromSurface(MeshKit::Vector<3> const & srfcPnt,
-        MeshKit::Vector<2> & planePnt) const;
+    AF2Point2D* transformFromSurface(AF2Point3D const & srfcPnt) const;
 
-    void transformToSurface(MeshKit::Vector<2> const & planePnt,
-        MeshKit::Vector<3> & srfcPnt) const;
+    AF2Point3D* transformToSurface(AF2Point2D const & planePnt) const;
 };
 
 #endif

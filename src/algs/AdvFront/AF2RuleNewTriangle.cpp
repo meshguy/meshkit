@@ -1,27 +1,29 @@
 #include "meshkit/AF2RuleNewTriangle.hpp"
 
-// C++
-#include <stdexcept>
+// MeshKit
+#include "meshkit/Error.hpp"
 
 AF2RuleNewTriangle::AF2RuleNewTriangle(
-    int firstIndex, int secondIndex, int thirdIndex)
+    unsigned int firstIndex, unsigned int secondIndex, unsigned int thirdIndex)
 {
   triVtxIndices[0] = firstIndex;
   triVtxIndices[1] = secondIndex;
   triVtxIndices[2] = thirdIndex;
 }
 
-int AF2RuleNewTriangle::getNumVertices() const
+unsigned int AF2RuleNewTriangle::getNumVertices() const
 {
-  return 3;
+  return 3u;
 }
 
-int AF2RuleNewTriangle::getVertexIndex(int vtxNum) const
+unsigned int AF2RuleNewTriangle::getVertexIndex(unsigned int vtxNum) const
 {
-  if (vtxNum < 0 || vtxNum > 2)
+  if (vtxNum > 2)
   {
-    throw std::range_error(
-        "AF2RuleNewTriangle vertex number must be between 0 and 2 inclusive.");
+    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    badArg.set_string(
+        "AF2RuleNewTriangle vertex number must not be greater than 2.");
+    throw badArg;
   }
   return triVtxIndices[vtxNum];
 }

@@ -13,7 +13,7 @@ class AF2RuleNewTriangle : public AF2RuleNewFace
 {
   private:
 
-    int triVtxIndices[3];
+    unsigned int triVtxIndices[3];
 
   public:
 
@@ -33,11 +33,12 @@ class AF2RuleNewTriangle : public AF2RuleNewFace
      *   the firstIndex traversing the vertices counterclockwise
      * \param thirdIndex the index of the remaining vertex of the element
      */
-    AF2RuleNewTriangle(int firstIndex, int secondIndex, int thirdIndex);
+    AF2RuleNewTriangle(unsigned int firstIndex,
+        unsigned int secondIndex, unsigned int thirdIndex);
 
-    int getNumVertices() const;
+    unsigned int getNumVertices() const;
 
-    int getVertexIndex(int vtxNum) const;
+    unsigned int getVertexIndex(unsigned int vtxNum) const;
 };
 
 #endif

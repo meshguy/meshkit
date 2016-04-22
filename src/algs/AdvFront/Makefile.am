@@ -13,13 +13,17 @@ libAdvFront_la_includedir = $(includedir)
 libAdvFront_la_SOURCES = \
 	AF2Binding.cpp \
 	AF2Edge2D.cpp \
+	AF2Edge3D.cpp \
 	AF2FreeZone.cpp \
 	AF2FreeZoneDefLCQualLim.cpp \
 	AF2FreeZoneDefSimple.cpp \
 	AF2Neighborhood.cpp \
 	AF2PlaneProjection.cpp \
+	AF2Point3D.cpp \
 	AF2PointTransformNone.cpp \
+        AF2Polygon2D.cpp \
 	AF2Rule.cpp \
+        AF2RuleApplication.cpp \
 	AF2RuleExistEdge.cpp \
 	AF2RuleExistVertex.cpp \
 	AF2RuleNewEdge.cpp \
@@ -30,6 +34,7 @@ libAdvFront_la_SOURCES = \
 nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2Binding.hpp \
 	meshkit/AF2Edge2D.hpp \
+	meshkit/AF2Edge3D.hpp \
 	meshkit/AF2FreeZone.hpp \
 	meshkit/AF2FreeZoneDef.hpp \
 	meshkit/AF2FreeZoneDefLCQualLim.hpp \
@@ -38,9 +43,13 @@ nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2Neighborhood.hpp \
 	meshkit/AF2PlaneProjection.hpp \
 	meshkit/AF2Point2D.hpp \
+	meshkit/AF2Point3D.hpp \
 	meshkit/AF2PointTransform.hpp \
 	meshkit/AF2PointTransformNone.hpp \
+        meshkit/AF2Polygon2D.hpp \
 	meshkit/AF2Rule.hpp \
+        meshkit/AF2RuleApplication.hpp \
+        meshkit/AF2RuleAppVisitor.hpp \
 	meshkit/AF2RuleExistEdge.hpp \
 	meshkit/AF2RuleExistVertex.hpp \
 	meshkit/AF2RuleNewEdge.hpp \

@@ -17,7 +17,7 @@ class AF2RuleNewFace
      *
      * \return the number of vertices that the element would have
      */
-    virtual int getNumVertices() const = 0;
+    virtual unsigned int getNumVertices() const = 0;
 
     /**
      * \brief Get the index of one of the vertices of the element
@@ -34,7 +34,7 @@ class AF2RuleNewFace
      * \return the index in the list of the rule vertices of
      *   vertex number vtxNum of the element
      */
-    virtual int getVertexIndex(int vtxNum) const = 0;
+    virtual unsigned int getVertexIndex(unsigned int vtxNum) const = 0;
 };
 
 #endif

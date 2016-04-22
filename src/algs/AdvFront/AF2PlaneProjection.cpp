@@ -18,7 +18,8 @@ AF2PlaneProjection::AF2PlaneProjection(iGeom* iGeomPtrArg,
     iGeom::EntityHandle srfcHandle,
     MeshKit::Vector<3> const & planeOrigin,
     MeshKit::Vector<3> const & planeNormal,
-    MeshKit::Vector<3> const & planeXDir) :
+    MeshKit::Vector<3> const & planeXDir,
+    double scaleFactor) :
     iGeomPtr(iGeomPtrArg),
     surface(srfcHandle),
     pOrigin(planeOrigin),
@@ -75,28 +76,46 @@ AF2PlaneProjection::AF2PlaneProjection(iGeom* iGeomPtrArg,
   // compute the y-direction vector
   MeshKit::VecUtil::cross((double*)pNormal.data(), (double*)pXDir.data(),
       (double*)pYDir.data());
+
+  if (scaleFactor <= 0.0)
+  {
+    throw MeshKit::Error(MeshKit::MK_BAD_INPUT,
+        "Scale factor is not positive.");
+  }
+  scale = 1.0 / scaleFactor;
 }
 
-void AF2PlaneProjection::transformFromSurface(
-    MeshKit::Vector<3> const & srfcPnt, MeshKit::Vector<2> & planePnt) const
+AF2Point2D* AF2PlaneProjection::transformFromSurface(
+    AF2Point3D const & srfcPnt) const
 {
-  MeshKit::Vector<3> diffVec = srfcPnt - pOrigin;
-  MeshKit::Vector<3> normalCmpnnt(pNormal);
-  normalCmpnnt *= MeshKit::VecUtil::dot((double*)diffVec.data(),
-      (double*)pNormal.data());
-  MeshKit::Vector<3> planeVec(diffVec);
-  planeVec -= normalCmpnnt;
-  planePnt[0] = MeshKit::VecUtil::dot((double*)planeVec.data(),
-      (double*)pXDir.data());
-  planePnt[1] = MeshKit::VecUtil::dot((double*)planeVec.data(),
-      (double*)pYDir.data());
+  double diffX = srfcPnt.getX() - pOrigin[0];
+  double diffY = srfcPnt.getY() - pOrigin[1];
+  double diffZ = srfcPnt.getZ() - pOrigin[2];
+
+  double diffDotNormal = diffX * pNormal[0] +
+      diffY * pNormal[1] + diffZ * pNormal[2];
+  double normalCmpX = diffDotNormal * pNormal[0];
+  double normalCmpY = diffDotNormal * pNormal[1];
+  double normalCmpZ = diffDotNormal * pNormal[2];
+
+  double planarCmpX = diffX - normalCmpX;
+  double planarCmpY = diffY - normalCmpY;
+  double planarCmpZ = diffZ - normalCmpZ;
+
+  double planePntX = scale * (planarCmpX * pXDir[0] +
+      planarCmpY * pXDir[1] + planarCmpZ * pXDir[2]);
+  double planePntY = scale * (planarCmpX * pYDir[0] +
+      planarCmpY * pYDir[1] + planarCmpZ * pYDir[2]);
+
+  return new AF2Point2D(planePntX, planePntY);
 }
 
-void AF2PlaneProjection::transformToSurface(
-    MeshKit::Vector<2> const & planePnt, MeshKit::Vector<3> & srfcPnt) const
+AF2Point3D* AF2PlaneProjection::transformToSurface(
+    AF2Point2D const & planePnt) const
 {
   MeshKit::Vector<3> rayOrigin(pOrigin);
-  rayOrigin += planePnt[0] * pXDir + planePnt[1] * pYDir;
+  rayOrigin += (planePnt.getX() / scale) * pXDir +
+      (planePnt.getY() / scale) * pYDir;
   CubitVector cvRayOrigin(rayOrigin[0], rayOrigin[1], rayOrigin[2]);
   CubitVector cvRayDir(pNormal[0], pNormal[1], pNormal[2]);
   CubitVector cvPointOnSrfc;
@@ -148,7 +167,6 @@ void AF2PlaneProjection::transformToSurface(
     }
   }
 
-  srfcPnt[0] = closestPointOnSrfc.x();
-  srfcPnt[1] = closestPointOnSrfc.y();
-  srfcPnt[2] = closestPointOnSrfc.z();
+  return new AF2Point3D(closestPointOnSrfc.x(),
+      closestPointOnSrfc.y(), closestPointOnSrfc.z());
 }

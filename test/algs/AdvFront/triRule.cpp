@@ -7,19 +7,54 @@
 
 // C++
 #include <iostream>
+#include <vector>
 
 // MeshKit
 #include "meshkit/AF2FreeZoneDefLCQualLim.hpp"
+#include "meshkit/AF2Edge3D.hpp"
+#include "meshkit/AF2Neighborhood.hpp"
+#include "meshkit/AF2PlaneProjection.hpp"
 #include "meshkit/AF2Point2D.hpp"
+#include "meshkit/AF2Point3D.hpp"
 #include "meshkit/AF2PointTransformNone.hpp"
 #include "meshkit/AF2Rule.hpp"
+#include "meshkit/AF2RuleAppVisitor.hpp"
 #include "meshkit/AF2RuleNewTriangle.hpp"
+#include "meshkit/MKCore.hpp"
+#include "meshkit/ModelEnt.hpp"
+#include "meshkit/Matrix.hpp"
 
 // MeshKit testing
 #include "TestUtil.hpp"
 
+// define the geometry file extension depending on the geometry model
+#if HAVE_OCC
+#define FILE_EXT "stp"
+#else
+#define FILE_EXT "sat"
+#endif
+
 AF2Rule* makeFreeTriangleRule();
 void testFreeTriangleRule();
+
+class TestVisitor : public AF2RuleAppVisitor
+{
+  private:
+    int count;
+  public:
+    TestVisitor() {
+      count = 0;
+    }
+
+    void visit(AF2RuleApplication const & ruleApp)
+    {
+      ++count;
+      std::cout << "Visit #" << count << std::endl;
+      std::cout << "  Number of new faces: " << ruleApp.getNumNewFaces()
+          << "\n  Number of new points: " << ruleApp.getNumNewPoints() 
+          << std::endl;
+    }
+};
 
 int main(int argc, char **argv)
 {
@@ -42,10 +77,9 @@ AF2Rule* makeFreeTriangleRule()
   exVertices.push_back(baseVertexPtr);
 
   // existing edge
-  std::list<const AF2RuleExistEdge*> exEdges;
-  AF2RuleExistEdge* exEdgePtr =
+  AF2RuleExistEdge* baseEdgePtr =
       new AF2RuleExistEdge(originVertexPtr, baseVertexPtr);
-  exEdges.push_back(exEdgePtr);
+  std::list<const AF2RuleExistEdge*> exEdges;
 
   // free zone definition
   // free zone definition lists
@@ -121,21 +155,18 @@ AF2Rule* makeFreeTriangleRule()
 
   // new edges
   std::list<const AF2RuleNewEdge*> newEdges;
-  // TODO: Change constructor to use vertex pointers
   AF2RuleNewEdge* newEdgePtr = new AF2RuleNewEdge(0, 2);
   newEdges.push_back(newEdgePtr);
-  // TODO: Change constructor to use vertex pointers
   newEdgePtr = new AF2RuleNewEdge(2, 1);
   newEdges.push_back(newEdgePtr);
 
   // new face
   std::list<const AF2RuleNewFace*> newFaces;
-  // TODO: Change constructor to use vertex pointers
   AF2RuleNewFace* newFacePtr = new AF2RuleNewTriangle(0, 1, 2);
   newFaces.push_back(newFacePtr);
 
-  AF2Rule* rulePtr = new AF2Rule(exVertices, exEdges, freeZoneDef,
-      newVertices, newEdges, newFaces);
+  AF2Rule* rulePtr = new AF2Rule(exVertices, baseEdgePtr, exEdges,
+      freeZoneDef, newVertices, newEdges, newFaces);
 
   return rulePtr;
 }
@@ -143,6 +174,83 @@ AF2Rule* makeFreeTriangleRule()
 void testFreeTriangleRule()
 {
   AF2Rule* freeTriRule = makeFreeTriangleRule();
+
   CHECK(freeTriRule != NULL);
+
+  MeshKit::MKCore* mk = new MeshKit::MKCore();
+
+  // load a square in plane z = 0.5 with -1.0 <= x <= 0 and -0.5 <= y <= 0.5
+  std::string file_name = TestDir + "/squaresurf." + FILE_EXT;
+  mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
+
+  MeshKit::MEntVector surfs;
+  mk->get_entities_by_dimension(2, surfs);
+  MeshKit::ModelEnt* square = (*surfs.begin());
+
+  MeshKit::Vector<3> origin;
+  origin[0] = -0.75;
+  origin[1] = -0.5;
+  origin[2] = 0.0;
+  MeshKit::Vector<3> normal;
+  normal[0] = 0.0;
+  normal[1] = 0.0;
+  normal[2] = 1.0;
+  MeshKit::Vector<3> xDir;
+  xDir[0] = 0.25;
+  xDir[1] = 0.0;
+  xDir[2] = 0.0;
+  AF2PlaneProjection* xyPlaneProj =
+      new AF2PlaneProjection(square->igeom_instance(),
+      square->geom_handle(), origin, normal, xDir, 0.25);
+
+  std::vector<const AF2Point3D*> pointsVector;
+  pointsVector.push_back(new AF2Point3D(-1.0, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(-0.75, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(-0.5, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(-0.25, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(0.0, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(-1.0, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(-1.0, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(-1.0, 0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(0.0, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(0.0, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0.0, 0.25, 0.5));
+
+  std::list<const AF2Point3D*> points;
+  const AF2Edge3D* baselineEdge;
+  std::list<const AF2Edge3D*> edges;
+
+  for (unsigned int pi = 0; pi < pointsVector.size(); ++pi)
+  {
+    points.push_back(pointsVector[pi]);
+  }
+
+  baselineEdge = new AF2Edge3D(pointsVector[1], pointsVector[2]);
+
+  edges.push_back(new AF2Edge3D(pointsVector[0], pointsVector[1]));
+  edges.push_back(new AF2Edge3D(pointsVector[2], pointsVector[3]));
+  edges.push_back(new AF2Edge3D(pointsVector[3], pointsVector[4]));
+  edges.push_back(new AF2Edge3D(pointsVector[5], pointsVector[0]));
+  edges.push_back(new AF2Edge3D(pointsVector[6], pointsVector[5]));
+  edges.push_back(new AF2Edge3D(pointsVector[7], pointsVector[6]));
+  edges.push_back(new AF2Edge3D(pointsVector[4], pointsVector[8]));
+  edges.push_back(new AF2Edge3D(pointsVector[8], pointsVector[9]));
+  edges.push_back(new AF2Edge3D(pointsVector[9], pointsVector[10]));
+
+  AF2Neighborhood ngbhd(points, baselineEdge, edges, xyPlaneProj);
+  TestVisitor visitor;
+  freeTriRule->applyRule(ngbhd, 1, visitor);
+
+  for (std::list<const AF2Edge3D*>::iterator itr = edges.begin();
+      itr != edges.end(); ++itr)
+  {
+    delete *itr;
+  }
+  delete baselineEdge;
+  for (unsigned int pi = 0; pi < pointsVector.size(); ++pi)
+  {
+    delete pointsVector[pi];
+  }
+  // projection deleted by neighborhood
   delete freeTriRule;
 }
