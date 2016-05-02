@@ -1,10 +1,6 @@
 #include "meshkit/AF2Binding.hpp"
 #include "meshkit/Error.hpp"
 
-typedef std::map<const AF2RuleExistVertex*,
-    AF2Binding::VtxBindRec>::iterator VertexBindMapItr;
-typedef std::map<const AF2RuleExistVertex*,
-    AF2Binding::VtxBindRec>::const_iterator VertexBindMapConstItr;
 typedef std::map<const AF2RuleExistEdge*,
     const AF2Edge2D*>::iterator EdgeBindMapItr;
 typedef std::map<const AF2RuleExistEdge*,
@@ -72,6 +68,8 @@ void AF2Binding::bind(
 void AF2Binding::bind(const AF2RuleExistVertex* ruleVertexPtr,
     const AF2Point2D* ngbhdVertexPtr, bool isExplicit)
 {
+  typedef std::map<const AF2RuleExistVertex*,
+      AF2Binding::VtxBindRec>::iterator VertexBindMapItr;
   VertexBindMapItr itr = vertexBindMap.find(ruleVertexPtr);
   if (itr == vertexBindMap.end())
   {
@@ -125,6 +123,8 @@ void AF2Binding::bind(const AF2RuleExistVertex* ruleVertexPtr,
 const AF2Point2D* AF2Binding::getBoundValue(
     const AF2RuleExistVertex* ruleVertexPtr) const
 {
+  typedef std::map<const AF2RuleExistVertex*,
+      AF2Binding::VtxBindRec>::const_iterator VertexBindMapConstItr;
   VertexBindMapConstItr itr = vertexBindMap.find(ruleVertexPtr);
   if (itr == vertexBindMap.end())
   {
@@ -177,6 +177,8 @@ bool AF2Binding::isConsistent(
 bool AF2Binding::isConsistent(const AF2RuleExistVertex* ruleVertexPtr,
     const AF2Point2D* ngbhdVertexPtr) const
 {
+  typedef std::map<const AF2RuleExistVertex*,
+      AF2Binding::VtxBindRec>::const_iterator VertexBindMapConstItr;
   VertexBindMapConstItr itr = vertexBindMap.find(ruleVertexPtr);
   if (itr == vertexBindMap.end())
   {
@@ -234,6 +236,8 @@ void AF2Binding::release(const AF2RuleExistVertex* ruleVertexPtr)
 void AF2Binding::release(
     const AF2RuleExistVertex* ruleVertexPtr, bool isExplicit)
 {
+  typedef std::map<const AF2RuleExistVertex*,
+      AF2Binding::VtxBindRec>::iterator VertexBindMapItr;
   VertexBindMapItr itr = vertexBindMap.find(ruleVertexPtr);
   if (itr == vertexBindMap.end())
   {
