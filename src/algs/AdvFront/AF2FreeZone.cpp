@@ -1,7 +1,7 @@
 #include "meshkit/AF2FreeZone.hpp"
 
 #include <algorithm>
-
+#include <math.h>
 AF2FreeZone::AF2FreeZone(
     std::list<AF2Point2D> const & bndryPoints) :
     vertices(bndryPoints.begin(), bndryPoints.end())
