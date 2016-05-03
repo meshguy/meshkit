@@ -55,7 +55,7 @@ class AF2PlaneProjection : public AF2LocalTransform
      * The y-direction of the transformation will be defined such that
      * the right hand rule is followed.  In other words, the normal vector
      * to the plane will be the standard right-handed cross product of the
-     * (normaliezed) x-direction vector and the y-direction.
+     * (normalized) x-direction vector and the y-direction.
      *
      * After projecting three-dimensional points into the plane, the
      * coordinates will be multiplied by the inverse of the scaling factor.
