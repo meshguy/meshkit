@@ -265,7 +265,7 @@ AM_CONDITIONAL( HAVE_$2, [test "xyes" == "x$HAVE_$2"] )
 
 CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
-CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail1] )
+CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [irel is required. Use --enable-irel during MOAB configuration] )
 
 
