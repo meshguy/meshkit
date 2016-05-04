@@ -91,6 +91,7 @@ AF2Rule::~AF2Rule()
   aF2RuleDeepDeletePtrArray(newVertices, numNewVertices);
   aF2RuleDeepDeletePtrArray(exEdges, numExEdges);
   aF2RuleDeepDeletePtrArray(exVertices, numExVertices);
+  delete freeZoneDef;
 }
 
 AF2Rule::AF2Rule(const AF2Rule & toCopy) :
@@ -485,6 +486,6 @@ void AF2Rule::applyRuleStageThree(AF2Neighborhood const & ngbhd,
     {
       delete newPointsArray[nvi];
     }
-    delete newPointsArray;
+    delete[] newPointsArray;
   }
 }
