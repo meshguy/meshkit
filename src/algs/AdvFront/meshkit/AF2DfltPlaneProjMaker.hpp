@@ -1,7 +1,7 @@
 /*
- * AF2PlaneProjMakerDef.hpp
+ * AF2DfltPlaneProjMaker.hpp
  *
- * An AF2PlaneProjMakerDef is an object that implements the default
+ * An AF2DfltPlaneProjMaker is an object that implements the default
  * method for making an AF2PlaneProjection.
  *
  * The method depends on having access to the geometric surface.  It uses the
@@ -11,14 +11,14 @@
  * endpoints of the baseline edge, after any component in the x-direction
  * is removed, is used as the normal to the plane.
  */
-#ifndef AF2PLANEPROJMAKERDEF_HPP
-#define AF2PLANEPROJMAKERDEF_HPP
+#ifndef AF2DFLTPLANEPROJMAKER_HPP
+#define AF2DFLTPLANEPROJMAKER_HPP
 
 // MeshKit
 #include "meshkit/iGeom.hpp"
 #include "meshkit/AF2LocalTransformMaker.hpp"
 
-class AF2PlaneProjMakerDef : public AF2LocalTransformMaker
+class AF2DfltPlaneProjMaker: public AF2LocalTransformMaker
 {
   private:
 
@@ -38,7 +38,7 @@ class AF2PlaneProjMakerDef : public AF2LocalTransformMaker
      * \param surf a handle to a surface geometry representation within the
      *   iGeom instance
      */
-     AF2PlaneProjMakerDef(iGeom* iGeomPtrArg, iGeom::EntityHandle surf);
+     AF2DfltPlaneProjMaker(iGeom* iGeomPtrArg, iGeom::EntityHandle surf);
 
     /**
      * \brief Make an AF2PlaneProjection

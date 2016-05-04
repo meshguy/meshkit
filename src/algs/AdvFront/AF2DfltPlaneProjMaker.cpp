@@ -1,4 +1,4 @@
-#include "meshkit/AF2PlaneProjMakerDef.hpp"
+#include "meshkit/AF2DfltPlaneProjMaker.hpp"
 
 // C++
 #include <cmath>
@@ -7,14 +7,14 @@
 #include "meshkit/Matrix.hpp"
 #include "meshkit/AF2PlaneProjection.hpp"
 
-AF2PlaneProjMakerDef::AF2PlaneProjMakerDef(
+AF2DfltPlaneProjMaker::AF2DfltPlaneProjMaker(
     iGeom* iGeomPtrArg, iGeom::EntityHandle surf) :
     iGeomPtr(iGeomPtrArg), surface(surf)
 {
   // do nothing beyond constructing the members as above
 }
 
-AF2LocalTransform* AF2PlaneProjMakerDef::makeLocalTransform(
+AF2LocalTransform* AF2DfltPlaneProjMaker::makeLocalTransform(
     const std::list<AF2Point3D*> & ngbhdPoints,
     const AF2Edge3D* const & baselineEdge,
     const std::list<const AF2Edge3D*> & otherNgbhdEdges) const

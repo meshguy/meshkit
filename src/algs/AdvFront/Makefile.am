@@ -12,6 +12,7 @@ libAdvFront_la_includedir = $(includedir)
 # The list of source files, and any header files that do not need to be installed
 libAdvFront_la_SOURCES = \
 	AF2Binding.cpp \
+	AF2DfltPlaneProjMaker.cpp \
 	AF2Edge2D.cpp \
 	AF2Edge3D.cpp \
 	AF2FreeZone.cpp \
@@ -20,7 +21,6 @@ libAdvFront_la_SOURCES = \
 	AF2Front.cpp \
 	AF2Neighborhood.cpp \
 	AF2PlaneProjection.cpp \
-	AF2PlaneProjMakerDef.cpp \
 	AF2Point3D.cpp \
 	AF2PointTransformNone.cpp \
         AF2Polygon2D.cpp \
@@ -35,6 +35,7 @@ libAdvFront_la_SOURCES = \
 # The list of header files which are to be installed
 nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2Binding.hpp \
+	meshkit/AF2DfltPlaneProjMaker.hpp \
 	meshkit/AF2Edge2D.hpp \
 	meshkit/AF2Edge3D.hpp \
 	meshkit/AF2FreeZone.hpp \
@@ -46,7 +47,6 @@ nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2LocalTransformMaker.hpp \
 	meshkit/AF2Neighborhood.hpp \
 	meshkit/AF2PlaneProjection.hpp \
-	meshkit/AF2PlaneProjMakerDef.hpp \
 	meshkit/AF2Point2D.hpp \
 	meshkit/AF2Point3D.hpp \
 	meshkit/AF2PointTransform.hpp \

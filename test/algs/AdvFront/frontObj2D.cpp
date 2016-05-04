@@ -3,7 +3,7 @@
  *
  * Test AF2Front, i.e., the object that manages the points and edges
  * that are on the advancing front of the two-dimensional advancing
- * front algorithm, and AF2PlaneProjMakerDef, the object that implements
+ * front algorithm, and AF2DfltPlaneProjMaker, the object that implements
  * the default method of creating AF2PlaneProjection local transforms.
  */
 
@@ -14,7 +14,7 @@
 
 // MeshKit
 #include "meshkit/AF2Front.hpp"
-#include "meshkit/AF2PlaneProjMakerDef.hpp"
+#include "meshkit/AF2DfltPlaneProjMaker.hpp"
 #include "meshkit/Error.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
@@ -91,7 +91,7 @@ AF2LocalTransformMaker* makeTransformBuilder()
     square = *surfs.begin();
   }
 
-  return new AF2PlaneProjMakerDef(
+  return new AF2DfltPlaneProjMaker(
       square->igeom_instance(), square->geom_handle());
 }
 
