@@ -17,8 +17,10 @@ libAdvFront_la_SOURCES = \
 	AF2FreeZone.cpp \
 	AF2FreeZoneDefLCQualLim.cpp \
 	AF2FreeZoneDefSimple.cpp \
+	AF2Front.cpp \
 	AF2Neighborhood.cpp \
 	AF2PlaneProjection.cpp \
+	AF2PlaneProjMakerDef.cpp \
 	AF2Point3D.cpp \
 	AF2PointTransformNone.cpp \
         AF2Polygon2D.cpp \
@@ -39,9 +41,12 @@ nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2FreeZoneDef.hpp \
 	meshkit/AF2FreeZoneDefLCQualLim.hpp \
 	meshkit/AF2FreeZoneDefSimple.hpp \
+	meshkit/AF2Front.hpp \
 	meshkit/AF2LocalTransform.hpp \
+	meshkit/AF2LocalTransformMaker.hpp \
 	meshkit/AF2Neighborhood.hpp \
 	meshkit/AF2PlaneProjection.hpp \
+	meshkit/AF2PlaneProjMakerDef.hpp \
 	meshkit/AF2Point2D.hpp \
 	meshkit/AF2Point3D.hpp \
 	meshkit/AF2PointTransform.hpp \

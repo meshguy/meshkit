@@ -36,8 +36,8 @@ class AF2Neighborhood
     std::list<const AF2Point2D*> points2D;
     const AF2Edge2D* baseEdge2D;
     std::list<const AF2Edge2D*> edges2D;
-    std::map<const AF2Point3D*, const AF2Point2D*> map3DTo2D;
-    std::map<const AF2Point2D*, const AF2Point3D*> map2DTo3D;
+    std::map<AF2Point3D*, const AF2Point2D*> map3DTo2D;
+    std::map<const AF2Point2D*, AF2Point3D*> map2DTo3D;
 
   public:
 
@@ -76,7 +76,7 @@ class AF2Neighborhood
      *   neighborhood points and edges and an appropriate
      *   two-dimensional coordinate space
      */
-    AF2Neighborhood(const std::list<const AF2Point3D*> & points,
+    AF2Neighborhood(const std::list<AF2Point3D*> & points,
         const AF2Edge3D* baselineEdge,
         const std::list<const AF2Edge3D*> & otherEdges,
         const AF2LocalTransform* localTransformArg);
@@ -106,6 +106,25 @@ class AF2Neighborhood
     const AF2Edge2D* getBaselineEdge2D() const;
 
     /**
+     * \brief Get the three-dimensional point (if any) in the neighborhood
+     *   that corresponds to the specified two-dimensional point
+     *
+     * If the two-dimensional point is a point in the neighborhood, then
+     * this method will return a pointer to the three-dimensional point
+     * in the neighborhood that generated the two-dimensional point.
+     * If the two-dimensional point is not a point in the neighborhood, then
+     * there will not be a corresponding three-dimensional point in the
+     * neighborhood, and this method will return a NULL pointer.
+     *
+     * \param ngbhdPoint2D a two-dimensional point that may or may not be
+     *   from the neighborhood
+     * \return a three-dimensional point corresponding to the two-dimensional
+     *   point, if there is one, or NULL
+     */
+    AF2Point3D* getCorrespondingPoint(
+        const AF2Point2D* const & ngbhdPoint2D) const;
+
+    /**
      * \brief Get all of the two-dimesional edges in the neighborhood
      *
      * Get the edges of the neighborhood as they have been transformed
@@ -121,6 +140,27 @@ class AF2Neighborhood
      * into the two-dimensional coordinate system of the neighborhood.
      */
     const std::list<const AF2Point2D*>* getPoints2D() const;
+
+    /**
+     * \brief Transform the specified two-dimensional point into a
+     *   three-dimensional point using this neighborhood's local transform
+     *
+     * Without regard for whether the two-dimensional point is in this
+     * neighborhood, this method applies the local transformation to the
+     * two-dimensional point to construct a three-dimensional point.  The
+     * three-dimensional point returned from this method is allocated
+     * using the new operator.  It belongs to the calling context and
+     * it is the responsibility of that context to call delete.
+     *
+     * A new point is allocated each time this method is called regardless
+     * of whether the two-dimensional point has been passed to this
+     * method previously.
+     *
+     * \param point2D a two-dimensional point
+     * \return the local transformation of the two-dimensional point into
+     *   a three-dimensional point
+     */
+    AF2Point3D* transformPoint(const AF2Point2D* const & point2D) const;
 };
 
 #endif

@@ -3,15 +3,14 @@
 // MeshKit
 #include "meshkit/Error.hpp"
 
-AF2Neighborhood::AF2Neighborhood(const std::list<const AF2Point3D*> & points,
+AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
     const AF2Edge3D* baselineEdge,
     const std::list<const AF2Edge3D*> & otherEdges,
     const AF2LocalTransform* localTransformArg)
 {
-  typedef std::list<const AF2Point3D*>::const_iterator ConstPoint3DItr;
+  typedef std::list<AF2Point3D*>::const_iterator ConstPoint3DItr;
   typedef std::list<const AF2Edge3D*>::const_iterator ConstEdge3DItr;
-  typedef std::map<const AF2Point3D*, const AF2Point2D*>::const_iterator
-      MapItr;
+  typedef std::map<AF2Point3D*, const AF2Point2D*>::const_iterator MapItr;
 
   localTransform = localTransformArg;
 
@@ -94,6 +93,17 @@ const AF2Edge2D* AF2Neighborhood::getBaselineEdge2D() const
   return baseEdge2D;
 }
 
+AF2Point3D* AF2Neighborhood::getCorrespondingPoint(
+    const AF2Point2D* const & ngbhdPoint2D) const
+{
+  typedef std::map<const AF2Point2D*, AF2Point3D*>::const_iterator MapItr;
+  MapItr ngbhdPntItr = map2DTo3D.find(ngbhdPoint2D);
+  if (ngbhdPntItr == map2DTo3D.end())
+  {
+    return NULL;
+  }
+  return ngbhdPntItr->second;
+}
 
 const std::list<const AF2Edge2D*>* AF2Neighborhood::getEdges2D() const
 {
@@ -103,4 +113,10 @@ const std::list<const AF2Edge2D*>* AF2Neighborhood::getEdges2D() const
 const std::list<const AF2Point2D*>* AF2Neighborhood::getPoints2D() const
 {
   return &points2D;
+}
+
+AF2Point3D* AF2Neighborhood::transformPoint(
+    const AF2Point2D* const & point2D) const
+{
+  return localTransform->transformToSurface(*point2D);
 }

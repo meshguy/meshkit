@@ -203,7 +203,7 @@ void testFreeTriangleRule()
       new AF2PlaneProjection(square->igeom_instance(),
       square->geom_handle(), origin, normal, xDir, 0.25);
 
-  std::vector<const AF2Point3D*> pointsVector;
+  std::vector<AF2Point3D*> pointsVector;
   pointsVector.push_back(new AF2Point3D(-1.0, -0.5, 0.5));
   pointsVector.push_back(new AF2Point3D(-0.75, -0.5, 0.5));
   pointsVector.push_back(new AF2Point3D(-0.5, -0.5, 0.5));
@@ -216,7 +216,7 @@ void testFreeTriangleRule()
   pointsVector.push_back(new AF2Point3D(0.0, 0.0, 0.5));
   pointsVector.push_back(new AF2Point3D(0.0, 0.25, 0.5));
 
-  std::list<const AF2Point3D*> points;
+  std::list<AF2Point3D*> points;
   const AF2Edge3D* baselineEdge;
   std::list<const AF2Edge3D*> edges;
 

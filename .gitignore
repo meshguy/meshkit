@@ -113,6 +113,7 @@ test/algs/test_tfimapping
 test/algs/alllocal.off
 test/algs/test_make_watertight
 test/algs/AdvFront/freeZone
+test/algs/AdvFront/frontObj2D
 test/algs/AdvFront/planeProj
 test/algs/AdvFront/ruleAppObj2D
 test/algs/AdvFront/triRule

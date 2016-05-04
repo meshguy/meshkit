@@ -1,17 +1,42 @@
 #include "meshkit/AF2Edge3D.hpp"
 
-AF2Edge3D::AF2Edge3D(const AF2Point3D* start, const AF2Point3D* end) :
-    startPnt(start), endPnt(end)
+// C++
+#include <cstddef>
+
+// MeshKit
+#include "meshkit/AF2Front.hpp"
+
+AF2Edge3D::AF2Edge3D(AF2Point3D* start, AF2Point3D* end) :
+    startPnt(start), endPnt(end), qualityLevel(1u)
 {
   // no work to do beyond the member initializers
 }
 
-const AF2Point3D* AF2Edge3D::getStart() const
+void AF2Edge3D::decreaseQuality()
+{
+  ++qualityLevel;
+  if (observer != NULL)
+  {
+    observer->qualityDecreased(this);
+  }
+}
+
+AF2Point3D* AF2Edge3D::getStart() const
 {
   return startPnt;
 }
 
-const AF2Point3D* AF2Edge3D::getEnd() const
+AF2Point3D* AF2Edge3D::getEnd() const
 {
   return endPnt;
+}
+
+unsigned int AF2Edge3D::getQualityLevel() const
+{
+  return qualityLevel;
+}
+
+void AF2Edge3D::setObserver(QualityDecreaseObserver* observerArg)
+{
+  observer = observerArg;
 }
