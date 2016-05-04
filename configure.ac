@@ -194,7 +194,7 @@ AC_ARG_WITH(igeom,
 [IGEOM_DIR="$ITAPS_DIR"; IGEOM_OKAY_IF_MISSING=yes])
 
 FBIGEOM_OKAY_IF_MISSING=yes
-IREL_OKAY_IF_MISSING=yes
+IREL_OKAY_IF_MISSING=no
 AC_ARG_WITH(imesh,
 [AC_HELP_STRING([--with-imesh=DIR],[Directory containing iMesh implementation])],
 [IMESH_DIR=$withval; FBIGEOM_DIR=$withval; IREL_DIR=$withval; SF="$SF --with-imesh=$withval"],
@@ -258,15 +258,15 @@ if test "xyes" = "x$HAVE_$2"; then
 elif test "xyes" = "x$warn"; then
   AC_MSG_WARN([$itaps_pfx not found: $5])
 else
-  AC_MSG_ERROR([$itaps_pfx not found])
+  AC_MSG_ERROR([$itaps_pfx not found: $5])
 fi
 AM_CONDITIONAL( HAVE_$2, [test "xyes" == "x$HAVE_$2"] )
 ])
 
 CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
-CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
-CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [camel disabled] )
+CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail1] )
+CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [irel is required. Use --enable-irel during MOAB configuration] )
 
 
 ################################################################################
@@ -420,7 +420,7 @@ if test "xyes" != "x$HAVE_IREL"; then
       CAMAL_VAL=no
       ;;
     *)
-      AC_MSG_ERROR([Camal cannot be enabled w/out iRel])
+      AC_MSG_ERROR([Camal cannot be enabled w/out iRel, Use --enable-irel during MOAB configuration])
       ;;
   esac
 fi
