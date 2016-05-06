@@ -151,7 +151,7 @@ void AF2Front::advanceFront(std::list<AF2Edge3D*> edgeList)
     // after this update, but this agrees with how NetGen did the update.
     // It would be possible to cascade the distance to boundary updates
     // and ensure globally accuracy, but that might affect a lot of points.
-    unsigned int maxDist = 1 + std::max(
+    unsigned int maxDist = 1 + std::min(
         (*itr)->getStart()->getDistanceToBoundary(),
         (*itr)->getEnd()->getDistanceToBoundary());
     (*itr)->getStart()->limitDistanceToBoundary(maxDist);

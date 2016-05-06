@@ -107,6 +107,7 @@ void initHex(AF2Front* front, AF2Point3D** & pointsAry, AF2Edge3D** & edgesAry)
 
   for (int pi = 0; pi < 6; ++pi)
   {
+    pointsAry[pi]->limitDistanceToBoundary(0u);
     front->addPoint(pointsAry[pi]);
   }
 
@@ -164,6 +165,7 @@ void testSelectEmpty()
   CHECK(exceptionThrown);
 
   AF2Point3D* aPoint = new AF2Point3D(-0.5, 0.0, 0.5);
+  aPoint->limitDistanceToBoundary(0);
   emptyFront->addPoint(aPoint);
   std::cout << "Added a point to the advancing front, but no edges."
       << std::endl;
@@ -444,6 +446,7 @@ void testSelectHourglass()
 
   for (unsigned int pi = 0; pi < numPoints; ++pi)
   {
+    pointsAry[pi]->limitDistanceToBoundary(0u);
     frontObj->addPoint(pointsAry[pi]);
   }
 
@@ -565,6 +568,7 @@ void testAdvanceInvalidQuality()
 
   for (int pi = 0; pi < 6; ++pi)
   {
+    pointsAry[pi]->limitDistanceToBoundary(0u);
     frontObj->addPoint(pointsAry[pi]);
   }
 
@@ -641,6 +645,9 @@ void testAdvanceFront()
   CHECK_EQUAL(sizeSeven, ngbhd->getEdges2D()->size());
   std::cout << "Good: After advance, the selected neighborhood has 7 edges."
       << std::endl;
+  CHECK_EQUAL(1u, addedPoint->getDistanceToBoundary());
+  std::cout << "Good: After advance, the distance from the added point\n"
+      << "  to the boundary is 1." << std::endl;
 
   delete ngbhd;
   delete frontObj;
@@ -667,6 +674,7 @@ void testAdvanceHangingEdge()
 
   for (int pi = 0; pi < 7; ++pi)
   {
+    pointsAry[pi]->limitDistanceToBoundary(0u);
     frontObj->addPoint(pointsAry[pi]);
   }
 
