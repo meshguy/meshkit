@@ -7,7 +7,7 @@
 #include "meshkit/AF2Front.hpp"
 
 AF2Edge3D::AF2Edge3D(AF2Point3D* start, AF2Point3D* end) :
-    startPnt(start), endPnt(end), qualityLevel(1u)
+    startPnt(start), endPnt(end), qualityLevel(1u), observer(NULL)
 {
   // no work to do beyond the member initializers
 }
