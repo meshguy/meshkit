@@ -94,7 +94,7 @@ AF2FreeZoneDefSimple* AF2FreeZoneDefSimple::clone() const
 }
 
 AF2FreeZone* AF2FreeZoneDefSimple::makeFreeZone(
-    AF2Binding const & vertexBinding, int qualityClass) const
+    AF2Binding const & vertexBinding, unsigned int qualityClass) const
 {
   std::list<AF2Point2D> freeZoneBndry;
   for (int pIndx = 0; pIndx < numPoints; ++pIndx)

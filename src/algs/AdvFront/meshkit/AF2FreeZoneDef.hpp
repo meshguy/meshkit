@@ -45,7 +45,7 @@ class AF2FreeZoneDef
      *   larger free zones, depending on the implementation.
      */
     virtual AF2FreeZone* makeFreeZone(
-        AF2Binding const & vertexBinding, int qualityClass) const = 0;
+        AF2Binding const & vertexBinding, unsigned int qualityClass) const = 0;
 };
 
 #endif

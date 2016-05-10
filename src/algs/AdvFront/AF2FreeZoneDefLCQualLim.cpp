@@ -138,10 +138,10 @@ AF2FreeZoneDefLCQualLim* AF2FreeZoneDefLCQualLim::clone() const
 }
 
 AF2FreeZone* AF2FreeZoneDefLCQualLim::makeFreeZone(
-    AF2Binding const & vertexBinding, int qualityClass) const
+    AF2Binding const & vertexBinding, unsigned int qualityClass) const
 {
   // Check that the quality class is greater than zero
-  if (qualityClass <= 0)
+  if (qualityClass == 0)
   {
     MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
     badArg.set_string("The quality class is not greater than zero.");

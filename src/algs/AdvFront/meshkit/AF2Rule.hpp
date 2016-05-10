@@ -79,7 +79,7 @@ class AF2Rule
      *   of those edges
      */
     void applyRuleStageTwo(AF2Neighborhood const & ngbhd,
-        int matchQuality, AF2RuleAppVisitor & visitor,
+        unsigned int matchQuality, AF2RuleAppVisitor & visitor,
         std::map<const AF2RuleExistVertex*,
         std::list<const AF2Point2D*>*>* const & matchingVerticesMap,
         AF2Binding & binding) const;
@@ -105,7 +105,7 @@ class AF2Rule
      *   the neighborhood
      */
     void applyRuleStageThree(AF2Neighborhood const & ngbhd,
-        int matchQuality, AF2RuleAppVisitor & visitor,
+        unsigned int matchQuality, AF2RuleAppVisitor & visitor,
         AF2Binding const & binding) const;
 
     /**
@@ -117,7 +117,7 @@ class AF2Rule
      */
     std::map<const AF2RuleExistEdge*, std::list<const AF2Edge2D*>*>*
         findPotentialEdgeMatches(AF2Neighborhood const & ngbhd,
-        int matchQuality) const;
+        unsigned int matchQuality) const;
 
     /**
      * \brief Find which of the vertices in a given neighborhood are potential
@@ -129,7 +129,7 @@ class AF2Rule
      */
     std::map<const AF2RuleExistVertex*, std::list<const AF2Point2D*>*>*
         findPotentialVertexMatches(AF2Neighborhood const & ngbhd,
-        int matchQuality) const;
+        unsigned int matchQuality) const;
 
     /**
      * \brief Check that the endpoints of the rule's existing edges
@@ -162,7 +162,7 @@ class AF2Rule
      *   of quality; false otherwise
      */
     bool isMatchingEdge(AF2Edge2D const & edge,
-        AF2RuleExistEdge const & ruleEdge, int matchQuality) const;
+        AF2RuleExistEdge const & ruleEdge, unsigned int matchQuality) const;
 
     /**
      * \brief Check whether a specified AF2Point2D is a match for
@@ -181,7 +181,7 @@ class AF2Rule
      *   of quality; false otherwise
      */
     bool isMatchingVertex(AF2Point2D const & point,
-        AF2RuleExistVertex const & ruleVertex, int matchQuality) const;
+        AF2RuleExistVertex const & ruleVertex, unsigned int matchQuality) const;
 
   public:
 
@@ -275,7 +275,7 @@ class AF2Rule
      *   of any possible applications of this rule within the
      *   neighborhood that meet the specified level of quality
      */
-    void applyRule(AF2Neighborhood const & ngbhd, int matchQuality,
+    void applyRule(AF2Neighborhood const & ngbhd, unsigned int matchQuality,
         AF2RuleAppVisitor & visitor) const;
 };
 

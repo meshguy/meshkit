@@ -166,7 +166,7 @@ void AF2Rule::checkExEndpointsAndFindIsolatedVertices()
 
 std::map<const AF2RuleExistEdge*, std::list<const AF2Edge2D*>*>*
     AF2Rule::findPotentialEdgeMatches(AF2Neighborhood const & ngbhd,
-    int matchQuality) const
+    unsigned int matchQuality) const
 {
   // define a map to hold the potential match information
   std::map<const AF2RuleExistEdge*, std::list<const AF2Edge2D*>*>* matchMap =
@@ -204,7 +204,7 @@ std::map<const AF2RuleExistEdge*, std::list<const AF2Edge2D*>*>*
 
 std::map<const AF2RuleExistVertex*, std::list<const AF2Point2D*>*>*
     AF2Rule::findPotentialVertexMatches(AF2Neighborhood const & ngbhd,
-    int matchQuality) const
+    unsigned int matchQuality) const
 {
   const std::list<const AF2Point2D*>* ngbhdPoints = ngbhd.getPoints2D();
   std::map<const AF2RuleExistVertex*,
@@ -230,7 +230,7 @@ std::map<const AF2RuleExistVertex*, std::list<const AF2Point2D*>*>*
 }
 
 bool AF2Rule::isMatchingEdge(AF2Edge2D const & edge,
-    AF2RuleExistEdge const & ruleEdge, int matchQuality) const
+    AF2RuleExistEdge const & ruleEdge, unsigned int matchQuality) const
 {
   if (!isMatchingVertex(*(edge.getStart()), *(ruleEdge.getStart()),
       matchQuality) || !isMatchingVertex(*(edge.getEnd()),
@@ -244,14 +244,14 @@ bool AF2Rule::isMatchingEdge(AF2Edge2D const & edge,
 }
 
 bool AF2Rule::isMatchingVertex(AF2Point2D const & point,
-    AF2RuleExistVertex const & ruleVertex, int matchQuality) const
+    AF2RuleExistVertex const & ruleVertex, unsigned int matchQuality) const
 {
   double matchTol = 0.5 + 0.3 * matchQuality;
   return ruleVertex.isMatching(point, matchTol);
 }
 
 void AF2Rule::applyRule(AF2Neighborhood const & ngbhd,
-    int matchQuality, AF2RuleAppVisitor & visitor) const
+    unsigned int matchQuality, AF2RuleAppVisitor & visitor) const
 {
   std::map<const AF2RuleExistEdge*, std::list<const AF2Edge2D*>*>*
     matchingEdgesMap = findPotentialEdgeMatches(ngbhd, matchQuality);
@@ -328,7 +328,7 @@ void AF2Rule::applyRule(AF2Neighborhood const & ngbhd,
 }
 
 void AF2Rule::applyRuleStageTwo(AF2Neighborhood const & ngbhd,
-    int matchQuality, AF2RuleAppVisitor & visitor,
+    unsigned int matchQuality, AF2RuleAppVisitor & visitor,
     std::map<const AF2RuleExistVertex*, std::list<const AF2Point2D*>*>* const &
     matchingVerticesMap, AF2Binding & binding) const
 {
@@ -409,7 +409,7 @@ void AF2Rule::applyRuleStageTwo(AF2Neighborhood const & ngbhd,
 }
 
 void AF2Rule::applyRuleStageThree(AF2Neighborhood const & ngbhd,
-    int matchQuality, AF2RuleAppVisitor & visitor,
+    unsigned int matchQuality, AF2RuleAppVisitor & visitor,
     AF2Binding const & binding) const
 {
   bool emptyFreeZone = true;
