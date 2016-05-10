@@ -34,6 +34,7 @@ class AF2Neighborhood
 
     const AF2LocalTransform* localTransform;
     std::list<const AF2Point2D*> points2D;
+    AF2Edge3D* baseEdge3D;
     const AF2Edge2D* baseEdge2D;
     std::list<const AF2Edge2D*> edges2D;
     std::map<AF2Point3D*, const AF2Point2D*> map3DTo2D;
@@ -77,7 +78,7 @@ class AF2Neighborhood
      *   two-dimensional coordinate space
      */
     AF2Neighborhood(const std::list<AF2Point3D*> & points,
-        const AF2Edge3D* baselineEdge,
+        AF2Edge3D* baselineEdge,
         const std::list<const AF2Edge3D*> & otherEdges,
         const AF2LocalTransform* localTransformArg);
 
@@ -104,6 +105,14 @@ class AF2Neighborhood
      * of the neighborhood.
      */
     const AF2Edge2D* getBaselineEdge2D() const;
+
+    /**
+     * \brief Get the three-dimensional baseline edge
+     *
+     * Get the baseline edge of the neighborhood as it was passed
+     * into the constructor.
+     */
+    AF2Edge3D* getBaselineEdge3D() const;
 
     /**
      * \brief Get the three-dimensional point (if any) in the neighborhood

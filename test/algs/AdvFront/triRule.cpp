@@ -217,7 +217,7 @@ void testFreeTriangleRule()
   pointsVector.push_back(new AF2Point3D(0.0, 0.25, 0.5));
 
   std::list<AF2Point3D*> points;
-  const AF2Edge3D* baselineEdge;
+  AF2Edge3D* baselineEdge;
   std::list<const AF2Edge3D*> edges;
 
   for (unsigned int pi = 0; pi < pointsVector.size(); ++pi)

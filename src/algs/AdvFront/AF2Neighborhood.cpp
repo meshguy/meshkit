@@ -4,7 +4,7 @@
 #include "meshkit/Error.hpp"
 
 AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
-    const AF2Edge3D* baselineEdge,
+    AF2Edge3D* baselineEdge,
     const std::list<const AF2Edge3D*> & otherEdges,
     const AF2LocalTransform* localTransformArg)
 {
@@ -12,6 +12,7 @@ AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
   typedef std::list<const AF2Edge3D*>::const_iterator ConstEdge3DItr;
   typedef std::map<AF2Point3D*, const AF2Point2D*>::const_iterator MapItr;
 
+  baseEdge3D = baselineEdge;
   localTransform = localTransformArg;
 
   for (ConstPoint3DItr itr = points.begin(); itr != points.end(); ++itr)
@@ -91,6 +92,11 @@ AF2Neighborhood& AF2Neighborhood::operator=(const AF2Neighborhood & rhs)
 const AF2Edge2D* AF2Neighborhood::getBaselineEdge2D() const
 {
   return baseEdge2D;
+}
+
+AF2Edge3D* AF2Neighborhood::getBaselineEdge3D() const
+{
+  return baseEdge3D;
 }
 
 AF2Point3D* AF2Neighborhood::getCorrespondingPoint(
