@@ -1,10 +1,11 @@
+#include "meshkit/AF2Rule.hpp"
+
 // C++
 #include <set>
 #include <stack>
 
 // MeshKit
 #include "meshkit/AF2Binding.hpp"
-#include "meshkit/AF2Rule.hpp"
 #include "meshkit/AF2RuleApplication.hpp"
 #include "meshkit/Error.hpp"
 
@@ -161,6 +162,7 @@ void AF2Rule::checkExEndpointsAndFindIsolatedVertices()
     throw badArg;
   }
 
+  numExIsoVertices = isoVertList.size();
   aF2RuleCopyListToArray(isoVertList, exIsoVertices);
 }
 
@@ -277,6 +279,9 @@ void AF2Rule::applyRule(AF2Neighborhood const & ngbhd,
         // to stages three and four
         applyRuleStageTwo(ngbhd, matchQuality, visitor,
             matchingVerticesMap, binding);
+        // now mark the match as inconsistent, so that the edge binding
+        // for the final edge is released and the search continues
+        consistentMatch = false;
       }
       else
       {
@@ -286,7 +291,8 @@ void AF2Rule::applyRule(AF2Neighborhood const & ngbhd,
         edgeMatchItrStack.push((*matchingEdgesMap)[edgeToMatch]->begin());
       }
     }
-    else
+
+    if (!consistentMatch)
     {
       if (edgeToMatchIndx == 0)
       {
@@ -300,12 +306,10 @@ void AF2Rule::applyRule(AF2Neighborhood const & ngbhd,
     }
 
     consistentMatch = false;
-    for (std::list<const AF2Edge2D*>::const_iterator itr =
-        edgeMatchItrStack.top();
-        itr != (*matchingEdgesMap)[edgeToMatch]->end(); ++itr)
+    std::list<const AF2Edge2D*>::const_iterator itr = edgeMatchItrStack.top();
+    edgeMatchItrStack.pop();
+    for (; itr != (*matchingEdgesMap)[edgeToMatch]->end(); ++itr)
     {
-      // pop off the top element of the stack (returns void)
-      edgeMatchItrStack.pop();
       // check consistency
       consistentMatch = true;
       if (!binding.isConsistent(edgeToMatch, *itr))
@@ -353,10 +357,10 @@ void AF2Rule::applyRuleStageTwo(AF2Neighborhood const & ngbhd,
       {
         // all edges and all vertices have been matched
         applyRuleStageThree(ngbhd, matchQuality, visitor, binding);
-        if (numExIsoVertices == 0)
-        {
-          break;
-        }
+        // now mark the match as inconsistent, so that the vertex binding
+        // for the final vertex is released and the search continues
+        // or (if there were no vertices to match) the search is terminated
+        consistentMatch = false;
       }
       else
       {
@@ -367,7 +371,8 @@ void AF2Rule::applyRuleStageTwo(AF2Neighborhood const & ngbhd,
             (*matchingVerticesMap)[vertexToMatch]->begin());
       }
     }
-    else
+
+    if (!consistentMatch)
     {
       if (vertexToMatchIndx == 0)
       {
@@ -381,12 +386,11 @@ void AF2Rule::applyRuleStageTwo(AF2Neighborhood const & ngbhd,
     }
 
     consistentMatch = false;
-    for (std::list<const AF2Point2D*>::const_iterator itr =
+    std::list<const AF2Point2D*>::const_iterator itr =
         vertexMatchItrStack.top();
-        itr != (*matchingVerticesMap)[vertexToMatch]->end(); ++itr)
+    vertexMatchItrStack.pop();
+    for (; itr != (*matchingVerticesMap)[vertexToMatch]->end(); ++itr)
     {
-      // pop off the top element of the stack (returns void)
-      vertexMatchItrStack.pop();
       // check consistency
       consistentMatch = true;
       if (!binding.isConsistent(vertexToMatch, *itr))
