@@ -11,8 +11,11 @@ libAdvFront_la_includedir = $(includedir)
 
 # The list of source files, and any header files that do not need to be installed
 libAdvFront_la_SOURCES = \
+	AF2Algorithm.cpp \
+	AF2AlgorithmResult.cpp \
 	AF2Binding.cpp \
 	AF2DfltPlaneProjMaker.cpp \
+	AF2DfltRuleAppVisitor.cpp \
 	AF2Edge2D.cpp \
 	AF2Edge3D.cpp \
 	AF2FreeZone.cpp \
@@ -24,6 +27,7 @@ libAdvFront_la_SOURCES = \
 	AF2Point3D.cpp \
 	AF2PointTransformNone.cpp \
         AF2Polygon2D.cpp \
+        AF2Polygon3D.cpp \
 	AF2Rule.cpp \
         AF2RuleApplication.cpp \
 	AF2RuleExistEdge.cpp \
@@ -34,8 +38,11 @@ libAdvFront_la_SOURCES = \
 
 # The list of header files which are to be installed
 nobase_libAdvFront_la_include_HEADERS = \
+	meshkit/AF2Algorithm.hpp \
+	meshkit/AF2AlgorithmResult.hpp \
 	meshkit/AF2Binding.hpp \
 	meshkit/AF2DfltPlaneProjMaker.hpp \
+	meshkit/AF2DfltRuleAppVisitor.hpp \
 	meshkit/AF2Edge2D.hpp \
 	meshkit/AF2Edge3D.hpp \
 	meshkit/AF2FreeZone.hpp \
@@ -52,6 +59,7 @@ nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2PointTransform.hpp \
 	meshkit/AF2PointTransformNone.hpp \
         meshkit/AF2Polygon2D.hpp \
+        meshkit/AF2Polygon3D.hpp \
 	meshkit/AF2Rule.hpp \
         meshkit/AF2RuleApplication.hpp \
         meshkit/AF2RuleAppVisitor.hpp \

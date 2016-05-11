@@ -14,10 +14,11 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AdvFront \
                -I$(top_srcdir)/test
 
 
-TESTS = freeZone ruleAppObj2D triRule planeProj frontObj2D
+TESTS = freeZone ruleAppObj2D triRule planeProj frontObj2D basicAlg2D
 
 check_PROGRAMS = $(TESTS)
 
+basicAlg2D_SOURCES = basicAlg2D.cpp
 freeZone_SOURCES = freeZone.cpp
 frontObj2D_SOURCES = frontObj2D.cpp
 planeProj_SOURCES = planeProj.cpp
