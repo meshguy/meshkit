@@ -241,14 +241,14 @@ bool AF2Rule::isMatchingEdge(AF2Edge2D const & edge,
     return false;
   }
 
-  double matchTol = 0.5 + 0.3 * matchQuality;
+  double matchTol = 0.15+ 0.1 * matchQuality;
   return ruleEdge.isMatching(*(edge.getStart()), *(edge.getEnd()), matchTol);
 }
 
 bool AF2Rule::isMatchingVertex(AF2Point2D const & point,
     AF2RuleExistVertex const & ruleVertex, unsigned int matchQuality) const
 {
-  double matchTol = 0.5 + 0.3 * matchQuality;
+  double matchTol = 0.15 + 0.1 * matchQuality;
   return ruleVertex.isMatching(point, matchTol);
 }
 
