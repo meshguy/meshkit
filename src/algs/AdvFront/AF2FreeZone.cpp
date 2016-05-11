@@ -195,15 +195,19 @@ bool AF2FreeZone::nearIntersects(AF2Point2D const & startPoint,
         {
           testSegLength = 1.0;
         }
+        // The offset amount affects which segment directions are acceptable
+        // near the borderline.  A factor of 2.0e-10 usually allows the
+        // clockwise test to pass if the test segment makes an angle of more
+        // than 1.0e-3 radians (in the appropriate direction) with the ray.
         if (offsetStart)
         {
-          startXOffset = 8.0e-14 * scale * testSegXDiff / testSegLength;
-          startYOffset = 8.0e-14 * scale * testSegYDiff / testSegLength;
+          startXOffset = 2.0e-10 * scale * testSegXDiff / testSegLength;
+          startYOffset = 2.0e-10 * scale * testSegYDiff / testSegLength;
         }
         if (offsetEnd)
         {
-          endXOffset = -8.0e-14 * scale * testSegXDiff / testSegLength;
-          endYOffset = -8.0e-14 * scale * testSegYDiff / testSegLength;
+          endXOffset = -2.0e-10 * scale * testSegXDiff / testSegLength;
+          endYOffset = -2.0e-10 * scale * testSegYDiff / testSegLength;
         }
       }
     }

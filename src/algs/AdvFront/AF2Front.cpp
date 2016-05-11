@@ -4,9 +4,6 @@
 #include <algorithm>
 #include <cmath>
 
-// temporary for debugging
-#include <iostream>
-
 // MeshKit
 #include "meshkit/Error.hpp"
 #include "meshkit/AF2LocalTransform.hpp"

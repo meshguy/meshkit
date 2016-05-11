@@ -34,10 +34,11 @@
 // There are problems with a tag left behind in iGeom.
 // Thus this instance is shared across tests.
 MeshKit::MKCore* mk = NULL;
-// This variable is at global scope because (1) calling deleteAll on
+// These variables are at global scope because (1) calling deleteAll on
 // the MKCore geometry instance appears to cause memory inconsistencies
 // with later use of the geometry instance and (2) it is more efficient
 // to load the geometry model only once
+MeshKit::MEntVector surfs;
 MeshKit::ModelEnt* square = NULL;
 
 AF2LocalTransformMaker* makeTransformBuilder();
@@ -86,7 +87,6 @@ AF2LocalTransformMaker* makeTransformBuilder()
     std::string file_name = TestDir + "/squaresurf." + FILE_EXT;
     mk->load_geometry_mesh(file_name.c_str(), file_name.c_str());
 
-    MeshKit::MEntVector surfs;
     mk->get_entities_by_dimension(2, surfs);
     square = *surfs.begin();
   }

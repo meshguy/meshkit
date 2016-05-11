@@ -59,6 +59,7 @@ void testPentagonIntersectInwardRay();
 void testDiamondNotIntersectSegment();
 void testDiamondNotIntersectOutwardRay();
 void testDiamondIntersectInwardRay();
+void testRegressionAlpha();
 
 int main(int argc, char **argv)
 {
@@ -94,6 +95,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(testDiamondNotIntersectSegment);
   num_fail += RUN_TEST(testDiamondNotIntersectOutwardRay);
   num_fail += RUN_TEST(testDiamondIntersectInwardRay);
+  num_fail += RUN_TEST(testRegressionAlpha);
 
   return num_fail;
 }
@@ -140,7 +142,7 @@ AF2FreeZone makeDiamondFreeZone()
   AF2Point2D alpha(0, 0);
   AF2Point2D bravo(0.5e40, 0.5e40);
   AF2Point2D charlie(0, 1e40);
-  AF2Point2D delta(-0.5e-40, 0.5e40);
+  AF2Point2D delta(-0.5e40, 0.5e40);
   diamondBndryPnts.push_back(alpha);
   diamondBndryPnts.push_back(bravo);
   diamondBndryPnts.push_back(charlie);
@@ -491,6 +493,40 @@ void testDiamondIntersectInwardRay()
   AF2Point2D startEdge(-1.0e39, 6.1e39);
   AF2Point2D endEdge(0.0, 9.9999999999999e39);
   CHECK(diamondFreeZone.nearIntersects(startEdge, endEdge));
-  std::cout << "PASS: The diamond free zone intersects an edge from\n"
+  std::cout << "PASS: The diamond free zone intersects an edge from\n  "
       << startEdge << " to (0.0, 9.9999999999999e39)\n" << std::endl;
+}
+
+/**
+ * A problem showed up that the near intersection method was likely
+ * to incorrectly report an intersection when one endpoint of the test
+ * edge coincided with a vertex of the free zone, the test edge lay outside
+ * the free zone, and the angle between the test edge and the free zone
+ * boundary edge was somewhat small.  Intersections were sometimes reported
+ * for angles as large as 0.2 radians or 11 degrees.
+ *
+ * This test checks that an intersection is not reported when the angle
+ * is more than 0.005 radians or 0.3 degrees.
+ */
+void testRegressionAlpha()
+{
+  std::list<AF2Point2D> bndryPnts;
+  AF2Point2D alpha(0, 0);
+  AF2Point2D bravo(1.0, 0);
+  AF2Point2D charlie(1.4, 0.7);
+  AF2Point2D delta(0.5, sqrt(3.0)/2.0);
+  AF2Point2D echo(-0.4, 0.7);
+  bndryPnts.push_back(alpha);
+  bndryPnts.push_back(bravo);
+  bndryPnts.push_back(charlie);
+  bndryPnts.push_back(delta);
+  bndryPnts.push_back(echo);
+
+  AF2FreeZone freeZone(bndryPnts);
+
+  AF2Point2D startEdge(1.0, 0);
+  AF2Point2D endEdge(1.5, sqrt(3.0)/2.0);
+  CHECK(!freeZone.nearIntersects(startEdge, endEdge));
+  std::cout << "PASS: The free zone does not intersects an edge from\n  "
+      << startEdge << " to (1.5, sqrt(3.0)/2.0)\n" << std::endl;
 }
