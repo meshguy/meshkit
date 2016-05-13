@@ -4,7 +4,25 @@
  * \brief An AF2Algorithm provides the capability to execute
  * a two-dimensional advancing front algorithm.
  *
- * // TODO: Complete the documentation
+ * An AF2Algorithm is an object that executes a two-dimensional advancing
+ * front algorithm.  It is constructed with a list of rules.  When the
+ * execute method is called, AF2Algorithm enters a loop attempting to
+ * advance the front until the front is empty, which means the algorithm
+ * has completed successfully, or failure termination criteria have
+ * been satisfied.  In the loop, the algorithm selects a baseline edge
+ * on the current advancing front.  The neighborhood surrounding that
+ * edge is transformed to a two-dimensional coordinate space, and
+ * the algorithm attempts to apply each of the rules to that baseline
+ * edge in the two-dimensional coordinate space.  If a rule can be
+ * applied, the best rule is chosen and the front is advanced.  If no
+ * rule can be applied, the baseline edge has its quality decreased
+ * so that the next time, if any, that the same baseline edge is chosen,
+ * there will be more flexibility in what constitutes a successful
+ * application of a rule.
+ *
+ * The execute method returns an AF2Algorithm result that is either
+ * successful or unsuccessful.  If it is successful, it contains lists
+ * of all points and faces that are part of the result mesh.
  */
 #ifndef AF2ALGORITHM_HPP
 #define AF2ALGORITHM_HPP
@@ -64,9 +82,16 @@ class AF2Algorithm
     /**
      * \brief Constructor
      *
-     * // TODO:
+     * Construct an AF2Algorithm from a list of AF2Rule.
      *
-     * \param // TODO:
+     * This object does not take ownership of the AF2Rule rules that
+     * are passed to the constructor.  It is the responsibility of the
+     * context to ensure that the AF2Rule pointers remain valid as long
+     * as this AF2Algorithm may be executed and to delete the AF2Rule
+     * objects after that.
+     *
+     * \param ruleListArg a list of rules to apply when attempting to
+     *   advance the front
      */
     AF2Algorithm(const std::list<const AF2Rule*> & ruleListArg);
 
@@ -94,7 +119,21 @@ class AF2Algorithm
     /**
      * \brief Execute the advancing front algorithm
      *
-     * TODO: Complete the documentation
+     * See the documentation at the class level for a description of
+     * how the algorithm works.
+     *
+     * The arguments to this algorithm specify the initial boundary of
+     * the advancing front algorithm and how to transform between a three-
+     * dimensional coordinate space and a local two-dimensional coordinate
+     * space.  The AF2LocalTransformMaker handles any surface
+     * geometry that is involved in these transformations.
+     *
+     * This method may be called multiple times and may be called from
+     * multiple threads simultaneously as long as this object is not
+     * deleted by any of the threads and the arguments to the method
+     * are independent, i.e., the AF2LocalTransformMaker objects passed
+     * to the different executions do not have shared state that might
+     * be modified during execution.
      *
      * \param transformMaker An AF2LocalTransforMaker that encapsulates
      *   surface geometry information and is responsible for making local
