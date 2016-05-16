@@ -24,6 +24,7 @@ libAdvFront_la_SOURCES = \
 	AF2Front.cpp \
 	AF2Neighborhood.cpp \
 	AF2PlaneProjection.cpp \
+	AF2PntTrnsfrmLnrV.cpp \
 	AF2Point3D.cpp \
 	AF2PointTransformNone.cpp \
         AF2Polygon2D.cpp \
@@ -54,6 +55,7 @@ nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2LocalTransformMaker.hpp \
 	meshkit/AF2Neighborhood.hpp \
 	meshkit/AF2PlaneProjection.hpp \
+	meshkit/AF2PntTrnsfrmLnrV.hpp \
 	meshkit/AF2Point2D.hpp \
 	meshkit/AF2Point3D.hpp \
 	meshkit/AF2PointTransform.hpp \

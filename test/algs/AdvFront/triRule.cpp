@@ -18,6 +18,7 @@
 #include "meshkit/AF2Point2D.hpp"
 #include "meshkit/AF2Point3D.hpp"
 #include "meshkit/AF2PointTransformNone.hpp"
+#include "meshkit/AF2PntTrnsfrmLnrV.hpp"
 #include "meshkit/AF2Rule.hpp"
 #include "meshkit/AF2RuleAppVisitor.hpp"
 #include "meshkit/AF2RuleNewTriangle.hpp"
@@ -46,6 +47,7 @@ class TestVisitor : public AF2RuleAppVisitor
 {
   private:
     int count;
+    double firstX;
   public:
     TestVisitor() {
       count = 0;
@@ -58,6 +60,14 @@ class TestVisitor : public AF2RuleAppVisitor
       std::cout << "  Number of new faces: " << ruleApp.getNumNewFaces()
           << "\n  Number of new points: " << ruleApp.getNumNewPoints() 
           << std::endl;
+      if (ruleApp.getNumNewPoints() > 0)
+      {
+        firstX = ruleApp.getNewPoint(0u)->getX();
+      }
+    }
+
+    double getFirstX() const {
+      return firstX;
     }
 };
 
@@ -190,8 +200,16 @@ AF2Rule* makeFreeTriangleRule()
 
   // second element free zone definition lists
   AF2Point2D bravo(1, 0);
-  // TODO: Replace this with the appropriate transform +1.0*x_{1}
-  AF2PointTransform* bravoTransform = new AF2PointTransformNone();
+  std::list<const AF2RuleExistVertex*> trnsfrmVertices;
+  trnsfrmVertices.push_back(baseVertexPtr);
+  std::list<double> xCoeff;
+  xCoeff.push_back(1.0);
+  xCoeff.push_back(0.0);
+  std::list<double> yCoeff;
+  yCoeff.push_back(0.0);
+  yCoeff.push_back(0.0);
+  AF2PointTransform* bravoTransform =
+      new AF2PntTrnsfrmLnrV(trnsfrmVertices, xCoeff, yCoeff);
   prefPnts.push_back(bravo);
   prefPntTransforms.push_back(bravoTransform);
   limitPnts.push_back(bravo);
@@ -199,8 +217,16 @@ AF2Rule* makeFreeTriangleRule()
 
   // third element free zone definition lists
   AF2Point2D charliePref(1.5, 0.7);
-  // TODO: Replace this with the appropriate transform +0.5*x_{1}
-  AF2PointTransform* charlieTransform = new AF2PointTransformNone();
+  trnsfrmVertices.clear();
+  trnsfrmVertices.push_back(baseVertexPtr);
+  xCoeff.clear();
+  xCoeff.push_back(0.5);
+  xCoeff.push_back(0.0);
+  yCoeff.clear();;
+  yCoeff.push_back(0.0);
+  yCoeff.push_back(0.0);
+  AF2PointTransform* charlieTransform =
+      new AF2PntTrnsfrmLnrV(trnsfrmVertices, xCoeff, yCoeff);
   AF2Point2D charlieLimit(0.5, 0.866);
   prefPnts.push_back(charliePref);
   prefPntTransforms.push_back(charlieTransform);
@@ -209,8 +235,16 @@ AF2Rule* makeFreeTriangleRule()
 
   // fourth element free zone definition lists
   AF2Point2D deltaPref(0.5, 1.5);
-  // TODO: Replace this with the appropriate transform 0.5*x_{1}
-  AF2PointTransform* deltaTransform = new AF2PointTransformNone();
+  trnsfrmVertices.clear();
+  trnsfrmVertices.push_back(baseVertexPtr);
+  xCoeff.clear();
+  xCoeff.push_back(0.5);
+  xCoeff.push_back(0.0);
+  yCoeff.clear();;
+  yCoeff.push_back(0.0);
+  yCoeff.push_back(0.0);
+  AF2PointTransform* deltaTransform =
+      new AF2PntTrnsfrmLnrV(trnsfrmVertices, xCoeff, yCoeff);
   AF2Point2D deltaLimit(0.5, 0.866);
   prefPnts.push_back(deltaPref);
   prefPntTransforms.push_back(deltaTransform);
@@ -219,8 +253,16 @@ AF2Rule* makeFreeTriangleRule()
 
   // fifth and final element free zone definition lists
   AF2Point2D echoPref(-0.5, 0.7);
-  // TODO: Replace this with the appropriate transform 0.5*x_{1}
-  AF2PointTransform* echoTransform = new AF2PointTransformNone();
+  trnsfrmVertices.clear();
+  trnsfrmVertices.push_back(baseVertexPtr);
+  xCoeff.clear();
+  xCoeff.push_back(0.5);
+  xCoeff.push_back(0.0);
+  yCoeff.clear();;
+  yCoeff.push_back(0.0);
+  yCoeff.push_back(0.0);
+  AF2PointTransform* echoTransform =
+      new AF2PntTrnsfrmLnrV(trnsfrmVertices, xCoeff, yCoeff);
   AF2Point2D echoLimit(0.5, 0.866);
   prefPnts.push_back(echoPref);
   prefPntTransforms.push_back(echoTransform);
@@ -238,8 +280,16 @@ AF2Rule* makeFreeTriangleRule()
   // new vertex
   std::list<const AF2RuleNewVertex*> newVertices;
   AF2Point2D newVertexLoc(0.5, 0.866);
-  // TODO: Replace this with the appropriate transform +0.5*x_{1}
-  AF2PointTransform* newVertexTransform = new AF2PointTransformNone();
+  trnsfrmVertices.clear();
+  trnsfrmVertices.push_back(baseVertexPtr);
+  xCoeff.clear();
+  xCoeff.push_back(0.5);
+  xCoeff.push_back(0.0);
+  yCoeff.clear();;
+  yCoeff.push_back(0.0);
+  yCoeff.push_back(0.0);
+  AF2PointTransform* newVertexTransform =
+      new AF2PntTrnsfrmLnrV(trnsfrmVertices, xCoeff, yCoeff);
   AF2RuleNewVertex* newVertexPtr =
       new AF2RuleNewVertex(newVertexLoc, newVertexTransform);
   delete newVertexTransform;
@@ -362,7 +412,7 @@ void testFreeTriangleRule()
   xDir[2] = 0.0;
   AF2PlaneProjection* xyPlaneProj =
       new AF2PlaneProjection(square->igeom_instance(),
-      square->geom_handle(), origin, normal, xDir, 0.25);
+      square->geom_handle(), origin, normal, xDir, 0.21875);
 
   std::vector<AF2Point3D*> pointsVector;
   pointsVector.push_back(new AF2Point3D(-1.0, -0.5, 0.5));
@@ -401,6 +451,11 @@ void testFreeTriangleRule()
   AF2Neighborhood ngbhd(points, baselineEdge, edges, xyPlaneProj);
   TestVisitor visitor;
   freeTriRule->applyRule(ngbhd, 1u, visitor);
+  // The exact answer should be 8/14 because the position
+  // of the match for x_{1} should be 8/7
+  CHECK_REAL_EQUAL(8.0/14.0, visitor.getFirstX(), 1e-14);
+  std::cout << "Good: The new point is located at about 8.0/14.0 in the\n"
+      << "  scaled two-dimensional coordinate system." << std::endl;
 
   for (std::list<const AF2Edge3D*>::iterator itr = edges.begin();
       itr != edges.end(); ++itr)
