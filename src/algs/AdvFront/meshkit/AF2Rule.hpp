@@ -16,6 +16,11 @@
  * points or intersect any of its edges, or the algorithm will not apply
  * the pattern.
  *
+ * There is also a maximum quality defined on the rule.  If the baseline
+ * edge is currently of higher quality than the specified maximum quality,
+ * i.e., if the quality level number is smaller than the defined maximum
+ * quality level number, then the rule may not be applied.
+ *
  * If the pattern can be successfully applied, then applying the pattern
  * involves adding the new vertices, new edges, and new faces of the pattern
  * to the mesh.  Since there may be several different ways to apply
@@ -31,6 +36,7 @@
 // C++
 #include <list>
 #include <map>
+#include <string>
 
 // MeshKit
 #include "meshkit/AF2Edge2D.hpp"
@@ -48,6 +54,8 @@ class AF2Rule
 {
   private:
 
+    const std::string ruleName;
+    const unsigned int maxQualityLevel;
     const unsigned int numExVertices, numExEdges;
     const AF2FreeZoneDef* const freeZoneDef;
     const unsigned int numNewVertices, numNewEdges, numNewFaces;
@@ -194,7 +202,8 @@ class AF2Rule
      * this object must not delete the objects that it passes to
      * this constructor.
      *
-     * The constructor requires a list of the rule's existing vertices,
+     * In addition to a name for the rule and a maximum quality level,
+     * the constructor requires a list of the rule's existing vertices,
      * existing edges, free zone definition, new vertices, new edges,
      * and new faces.  These objects may reference each other.  For example,
      * the existing edges reference existing vertices as their endpoints.
@@ -209,6 +218,10 @@ class AF2Rule
      * existing vertices.  The baseline edge may not be listed among
      * the rule's other existing edges.
      *
+     * \param ruleNameArg a string identifier for the rule
+     * \param maxQuality an unsigned int specifying the maximum baseline
+     *   edge quality for which this rule may be applied, i.e., the
+     *   smallest quality level number for which this rule may be applied
      * \param ruleVertices the rule's existing vertices, i.e., the vertices
      *   that must match some vertex in the local neighborhood in order for
      *   the rule to be applied
@@ -229,7 +242,8 @@ class AF2Rule
      * \param ruleNewFaces new face elements, such as triangles or
      *   quadrilaterals, that will be created if the rule is applied
      */
-    AF2Rule(std::list<const AF2RuleExistVertex*> const & ruleVertices,
+    AF2Rule(std::string const & ruleNameArg, unsigned int maxQuality,
+        std::list<const AF2RuleExistVertex*> const & ruleVertices,
         const AF2RuleExistEdge* baselineEdge,
         std::list<const AF2RuleExistEdge*> const & otherRuleEdges,
         const AF2FreeZoneDef* freeZoneDef,
@@ -277,6 +291,13 @@ class AF2Rule
      */
     void applyRule(AF2Neighborhood const & ngbhd, unsigned int matchQuality,
         AF2RuleAppVisitor & visitor) const;
+
+    /**
+     * \brief Get the name of this rule
+     *
+     * \return this rule's name
+     */
+    std::string getName() const;
 };
 
 #endif

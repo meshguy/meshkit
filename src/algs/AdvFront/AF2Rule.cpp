@@ -49,13 +49,16 @@ void aF2RuleDeepDeletePtrArray(T** & anArrayOfPtr, int arraySize)
   delete[] anArrayOfPtr;
 }
 
-AF2Rule::AF2Rule(std::list<const AF2RuleExistVertex*> const & ruleVertices,
+AF2Rule::AF2Rule(std::string const & ruleNameArg, unsigned int maxQuality,
+    std::list<const AF2RuleExistVertex*> const & ruleVertices,
     const AF2RuleExistEdge* baselineEdge,
     std::list<const AF2RuleExistEdge*> const & otherRuleEdges,
     const AF2FreeZoneDef* freeZoneDef,
     std::list<const AF2RuleNewVertex*> const & ruleNewVertices,
     std::list<const AF2RuleNewEdge*> const & ruleNewEdges,
     std::list<const AF2RuleNewFace*> const & ruleNewFaces) :
+    ruleName(ruleNameArg),
+    maxQualityLevel(maxQuality),
     numExVertices(ruleVertices.size()),
     numExEdges(1u + otherRuleEdges.size()),
     freeZoneDef(freeZoneDef),
@@ -96,6 +99,8 @@ AF2Rule::~AF2Rule()
 }
 
 AF2Rule::AF2Rule(const AF2Rule & toCopy) :
+    ruleName(toCopy.ruleName),
+    maxQualityLevel(toCopy.maxQualityLevel),
     numExVertices(toCopy.numExVertices),
     numExEdges(toCopy.numExEdges),
     freeZoneDef(toCopy.freeZoneDef->clone()),
@@ -164,6 +169,11 @@ void AF2Rule::checkExEndpointsAndFindIsolatedVertices()
 
   numExIsoVertices = isoVertList.size();
   aF2RuleCopyListToArray(isoVertList, exIsoVertices);
+}
+
+std::string AF2Rule::getName() const
+{
+  return ruleName;
 }
 
 std::map<const AF2RuleExistEdge*, std::list<const AF2Edge2D*>*>*
@@ -255,6 +265,11 @@ bool AF2Rule::isMatchingVertex(AF2Point2D const & point,
 void AF2Rule::applyRule(AF2Neighborhood const & ngbhd,
     unsigned int matchQuality, AF2RuleAppVisitor & visitor) const
 {
+  if (matchQuality < maxQualityLevel)
+  {
+    return;
+  }
+
   std::map<const AF2RuleExistEdge*, std::list<const AF2Edge2D*>*>*
     matchingEdgesMap = findPotentialEdgeMatches(ngbhd, matchQuality);
   std::map<const AF2RuleExistVertex*, std::list<const AF2Point2D*>*>*

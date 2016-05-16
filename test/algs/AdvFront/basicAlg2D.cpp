@@ -132,8 +132,8 @@ AF2Rule* makeFillTriangleRule()
   AF2RuleNewFace* newFacePtr = new AF2RuleNewTriangle(0, 1, 2);
   newFaces.push_back(newFacePtr);
 
-  AF2Rule* rulePtr = new AF2Rule(exVertices, baseEdgePtr, exEdges,
-      freeZoneDef, newVertices, newEdges, newFaces);
+  AF2Rule* rulePtr = new AF2Rule("Fill Triangle", 1u, exVertices,
+      baseEdgePtr, exEdges, freeZoneDef, newVertices, newEdges, newFaces);
 
   return rulePtr;
 }
@@ -198,8 +198,8 @@ AF2Rule* makeCloseTriangleRule()
   AF2RuleNewFace* newFacePtr = new AF2RuleNewTriangle(0, 1, 2);
   newFaces.push_back(newFacePtr);
 
-  AF2Rule* rulePtr = new AF2Rule(exVertices, baseEdgePtr, exEdges,
-      freeZoneDef, newVertices, newEdges, newFaces);
+  AF2Rule* rulePtr = new AF2Rule("Close Triangle", 1u, exVertices,
+      baseEdgePtr, exEdges, freeZoneDef, newVertices, newEdges, newFaces);
 
   return rulePtr;
 }
@@ -279,8 +279,8 @@ AF2Rule* makeConnectToVertexRule()
   AF2RuleNewFace* newFacePtr = new AF2RuleNewTriangle(0, 1, 2);
   newFaces.push_back(newFacePtr);
 
-  AF2Rule* rulePtr = new AF2Rule(exVertices, baseEdgePtr, exEdges,
-      freeZoneDef, newVertices, newEdges, newFaces);
+  AF2Rule* rulePtr = new AF2Rule("Connect To Vertex", 1u, exVertices,
+      baseEdgePtr, exEdges, freeZoneDef, newVertices, newEdges, newFaces);
 
   return rulePtr;
 }
@@ -363,8 +363,8 @@ AF2Rule* makeAddPeakVertexRule()
   AF2RuleNewFace* newFacePtr = new AF2RuleNewTriangle(0, 1, 2);
   newFaces.push_back(newFacePtr);
 
-  AF2Rule* rulePtr = new AF2Rule(exVertices, baseEdgePtr, exEdges,
-      freeZoneDef, newVertices, newEdges, newFaces);
+  AF2Rule* rulePtr = new AF2Rule("Add Peak Vertex", 1u, exVertices,
+      baseEdgePtr, exEdges, freeZoneDef, newVertices, newEdges, newFaces);
 
   return rulePtr;
 }
