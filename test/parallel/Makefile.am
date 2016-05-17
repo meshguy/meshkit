@@ -18,17 +18,23 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
 
 BROKEN_TESTS = test_coregen
 
-TESTS = test_coregen
+TESTS = 
+if HAVE_OCC_GEOMETRY_ENGINE
+ TESTS +=test_coregen
+ test_coregen_SOURCES = test_coregen.cpp
+endif
 
 if HAVE_CAMAL
+if HAVE_OCC_GEOMETRY_ENGINE
 TESTS += test_parallelmesher
 test_parallelmesher_SOURCES = test_parallelmesher.cpp
 test_parallelmesher_LDADD = $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
 endif
+endif
 
 check_PROGRAMS = $(TESTS)
 
-test_coregen_SOURCES = test_coregen.cpp
+
 
 
 # Utility target: build but don't run tests
