@@ -179,7 +179,7 @@ void edgemesh_brick()
     moab::ErrorCode rval = mk->moab_instance()->get_coords(&mloops[0], mloops.size(), &coords[0]);
     MBERRCHK(rval, mk->moab_instance());
 
-#ifndef HAVE_FACET
+
       // compute the cross product vector and compare it to the surface normal
     Vector<3> p0(&coords[0]), p1(&coords[3]), p2(&coords[6]), p3;
     p0 -= p1;
@@ -188,7 +188,7 @@ void edgemesh_brick()
     (*vit)->evaluate(coords[0], coords[1], coords[2], NULL, p3.data());
     double dot = inner_product(p3, p1);
     CHECK_REAL_EQUAL(1.0, dot, 1.0e-6);
-#endif
+
   }
   
   mk->clear_graph();
