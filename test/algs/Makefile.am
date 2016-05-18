@@ -121,7 +121,7 @@ test_facetmeshreader_senses_SOURCES = test_facetmeshreader_senses.cpp
 test_tfimapping_SOURCES = test_tfimapping.cpp
 test_onetooneswept_SOURCES = test_onetooneswept.cpp
 
-BROKEN_TESTS += test_ebmesh
+TESTS += test_ebmesh
 test_ebmesh_SOURCES = test_ebmesh.cpp
 # test_ebmesh_LDADD = -lcubit_geom $(LDADD)
 test_copymesh_SOURCES = test_copymesh.cpp
@@ -137,7 +137,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AssyMesher
 TESTS += test_assymesher
 test_assymesher_SOURCES = test_assymesher.cpp
 test_assymesher_LDADD = $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
-BROKEN_TESTS += test_assymesher
 endif
 
 # endif for HAVE_OCC_GEOMETRY_ENGINE
