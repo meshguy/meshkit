@@ -251,14 +251,16 @@ bool AF2Rule::isMatchingEdge(AF2Edge2D const & edge,
     return false;
   }
 
-  double matchTol = 0.15+ 0.1 * matchQuality;
+  double matchTol = 0.25 + 0.15 * matchQuality;
+  matchTol *= matchTol;
   return ruleEdge.isMatching(*(edge.getStart()), *(edge.getEnd()), matchTol);
 }
 
 bool AF2Rule::isMatchingVertex(AF2Point2D const & point,
     AF2RuleExistVertex const & ruleVertex, unsigned int matchQuality) const
 {
-  double matchTol = 0.15 + 0.1 * matchQuality;
+  double matchTol = 0.25 + 0.15 * matchQuality;
+  matchTol *= matchTol;
   return ruleVertex.isMatching(point, matchTol);
 }
 

@@ -22,6 +22,7 @@
 #include "meshkit/AF2RuleNewTriangle.hpp"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/ModelEnt.hpp"
+#include "meshkit/SizingFunction.hpp"
 
 // MeshKit testing
 #include "TestUtil.hpp"
@@ -33,10 +34,11 @@
 #define FILE_EXT "sat"
 #endif
 
-// This variable is at global scope because (1) calling deleteAll on
+// These variables are at global scope because (1) calling deleteAll on
 // the MKCore geometry instance appears to cause memory inconsistencies
 // with later use of the geometry instance and (2) it is more efficient
 // to load the geometry model only once
+MeshKit::MKCore* mk = NULL;
 MeshKit::ModelEnt* square = NULL;
 
 AF2Rule* makeAddPeakVertexRule();
@@ -55,7 +57,7 @@ int main(int argc, char **argv)
   // instance cannot be easily constructed after another MKCore
   // instance is deleted; there are problems with a tag left behind in
   // iGeom.
-  MeshKit::MKCore* mk = new MeshKit::MKCore();
+  mk = new MeshKit::MKCore();
 
   // load a square in plane z = 0.5 with -1.0 <= x <= 0 and -0.5 <= y <= 0.5
   std::string file_name = TestDir + "/squaresurf." + FILE_EXT;
@@ -679,8 +681,9 @@ void testAlgorithmSucceedAddPoint()
 
 void testAlgorithmDefaultRulesSquare()
 {
+  MeshKit::SizingFunction szFunc(mk, -1, 0.1);
   AF2LocalTransformMaker* transformMaker = new AF2DfltPlaneProjMaker(
-      square->igeom_instance(), square->geom_handle());
+      square->igeom_instance(), square->geom_handle(), &szFunc);
 
   AF2DfltTriangleRules defaultTriRules;
   AF2Algorithm alg(defaultTriRules.getRules());

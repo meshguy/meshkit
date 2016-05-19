@@ -77,4 +77,5 @@ nobase_libAdvFront_la_include_HEADERS = \
 # Boilerplate stuff that doesn't depend on what the targets are
 AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(srcdir)/../../core \
+              -I$(srcdir)/../../lemon \
               -I$(srcdir)/../../utils

@@ -57,7 +57,7 @@ AF2AlgorithmResult* AF2Algorithm::execute(
   initFront(front, allPoints, coords, numPoints, edges, numEdges);
 
   // while the front is not empty and there is still progress
-  while (!front.isEmpty() && front.getMaximumQuality() < 25u)
+  while (!front.isEmpty() && front.getMaximumQuality() < 50u)
   {
     // select a neighborhood on the advancing front
     AF2Neighborhood* ngbhd = front.selectNeighborhood(transformMaker);

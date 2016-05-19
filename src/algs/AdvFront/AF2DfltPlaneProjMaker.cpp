@@ -7,9 +7,9 @@
 #include "meshkit/Matrix.hpp"
 #include "meshkit/AF2PlaneProjection.hpp"
 
-AF2DfltPlaneProjMaker::AF2DfltPlaneProjMaker(
-    iGeom* iGeomPtrArg, iGeom::EntityHandle surf) :
-    iGeomPtr(iGeomPtrArg), surface(surf)
+AF2DfltPlaneProjMaker::AF2DfltPlaneProjMaker(iGeom* iGeomPtrArg,
+    iGeom::EntityHandle surf, MeshKit::SizingFunction* sizingArg) :
+    iGeomPtr(iGeomPtrArg), surface(surf), sizing(sizingArg)
 {
   // do nothing beyond constructing the members as above
 }
@@ -69,11 +69,28 @@ AF2LocalTransform* AF2DfltPlaneProjMaker::makeLocalTransform(
   planeNormal /= std::sqrt(planeNormal[0] * planeNormal[0] +
       planeNormal[1] * planeNormal[1] + planeNormal[2] * planeNormal[2]);
 
-  // TODO: Support using a sizing function here instead of
-  // passing sizing that matches the scale of the baseline edge
-  // In NetGen, the scale is the smaller of the global h set by the user
-  // and the value of the sizing function at the 3-dimensional midpoint
-  // of the baseline edge.
+  double planeSize = scale;
+  if (sizing != NULL)
+  {
+    MeshKit::Vector<3> baselineMidpoint =
+        planeOrigin + (scale / 2.0) *planeXDir;
+    planeSize = sizing->size(baselineMidpoint.data());
+    if (planeSize < scale/1073741824.0) // 2^30 == 1073741824
+    {
+      // in particular, this catches the case where the size
+      // is not actually defined in the sizing function
+      planeSize = scale;
+    }
+    else if (planeSize < scale / 4.0)
+    {
+      planeSize = scale / 4.0;
+    }
+    else if (planeSize > 4.0 * scale)
+    {
+      planeSize = 4.0 * scale;
+    }
+  }
+
   return new AF2PlaneProjection(iGeomPtr, surface, planeOrigin,
-      planeNormal, planeXDir, scale);
+      planeNormal, planeXDir, planeSize);
 }
