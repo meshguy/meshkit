@@ -1,7 +1,8 @@
 /**
  * \file basicAlg2D.cpp \test
  *
- * \brief Test the AF2Algorithm with two basic rules
+ * \brief Test the AF2Algorithm with four basic rules and with the default
+ *   triangle rules
  *
  */
 
@@ -13,6 +14,7 @@
 // MeshKit
 #include "meshkit/AF2Algorithm.hpp"
 #include "meshkit/AF2DfltPlaneProjMaker.hpp"
+#include "meshkit/AF2DfltTriangleRules.hpp"
 #include "meshkit/AF2FreeZoneDefSimple.hpp"
 #include "meshkit/AF2Point2D.hpp"
 #include "meshkit/AF2PointTransformNone.hpp"
@@ -45,6 +47,7 @@ void testAlgorithmFail();
 void testAlgorithmSucceed();
 void testAlgorithmSucceedIsoPoint();
 void testAlgorithmSucceedAddPoint();
+void testAlgorithmDefaultRulesSquare();
 
 int main(int argc, char **argv)
 {
@@ -67,6 +70,7 @@ int main(int argc, char **argv)
   num_fail += RUN_TEST(testAlgorithmSucceed);
   num_fail += RUN_TEST(testAlgorithmSucceedIsoPoint);
   num_fail += RUN_TEST(testAlgorithmSucceedAddPoint);
+  num_fail += RUN_TEST(testAlgorithmDefaultRulesSquare);
 
   delete mk;
 
@@ -671,4 +675,65 @@ void testAlgorithmSucceedAddPoint()
 
   std::cout << "PASS: The algorithm appears to run properly on a hexagon\n"
       << "  when it can add a central vertex." << std::endl;
+}
+
+void testAlgorithmDefaultRulesSquare()
+{
+  AF2LocalTransformMaker* transformMaker = new AF2DfltPlaneProjMaker(
+      square->igeom_instance(), square->geom_handle());
+
+  AF2DfltTriangleRules defaultTriRules;
+  AF2Algorithm alg(defaultTriRules.getRules());
+
+  // coordinates along the boundary of the 1.0 x 1.0 square, spacing
+  //   coordinates to be distance 0.1 between each consecutive pair
+  std::vector<double> coordinates;
+  for (int i = 0; i < 10; ++i)
+  {
+    coordinates.push_back(-1.0 + 0.1 * i);
+    coordinates.push_back(-0.5);
+    coordinates.push_back(0.5);
+  }
+  for (int i = 0; i < 10; ++i)
+  {
+    coordinates.push_back(0.0);
+    coordinates.push_back(-0.5 + 0.1 * i);
+    coordinates.push_back(0.5);
+  }
+  for (int i = 0; i < 10; ++i)
+  {
+    coordinates.push_back(0.0 - 0.1 * i);
+    coordinates.push_back(0.5);
+    coordinates.push_back(0.5);
+  }
+  for (int i = 0; i < 10; ++i)
+  {
+    coordinates.push_back(-1.0);
+    coordinates.push_back(0.5 - 0.1 * i);
+    coordinates.push_back(0.5);
+  }
+
+  // add edges
+  std::vector<unsigned int> edges;
+  for (unsigned int i = 0u; i < 39u; ++i)
+  {
+    edges.push_back(i);
+    edges.push_back(i + 1u);
+  }
+  edges.push_back(39u);
+  edges.push_back(0u);
+
+  unsigned int numPoints = coordinates.size() / 3;
+  unsigned int numEdges = edges.size() / 2;
+  AF2AlgorithmResult* result = alg.execute(
+      transformMaker, &(coordinates[0]), numPoints, &(edges[0]), numEdges);
+
+  CHECK(result->isSuccessful());
+  std::cout << "Good: Algorithm result is successful." << std::endl;
+
+  delete result;
+  delete transformMaker;
+
+  std::cout << "PASS: The algorithm successfully meshes a square with\n"
+      << "  the default triangle rules." << std::endl;
 }
