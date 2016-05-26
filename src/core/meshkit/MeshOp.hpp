@@ -70,14 +70,14 @@ public:
      */
   void setup_boundary();
 
-    /** \brief Ensure that this MeshOp depends on any MeshOp assigned to a face of this MeshOp's selected entities
+    /** \brief Ensure that this MeshOp depends on any MeshOp assigned to a facet of this MeshOp's selected entities
      *
      * For each entity selected for this MeshOp, checks that this MeshOp
-     * has a dependence on any MeshOp assigned to a face of the entity.
-     * If no such dependence can be found inserts a direct dependency arc
-     * from this MeshOpt to the MeshOp on the face.
+     * has a dependence on any MeshOp assigned to a facet of the entity.
+     * If no such dependence can be found, inserts a direct dependency arc
+     * from this MeshOp to the MeshOp on the facet.
      *
-     * \param recurse_to_faces if true (default value), this method is called on each MeshOp that is assigned to one or more faces of entities that this MeshOp is assigned to
+     * \param recurse_to_facets if true (default value), this method is called on each MeshOp that is assigned to one or more facets of entities that this MeshOp is assigned to
      */
   void ensure_facet_dependencies(bool recurse_to_facets = true);
 
