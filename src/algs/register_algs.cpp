@@ -12,6 +12,7 @@
 #include "meshkit/SCDMesh.hpp"
 #include "meshkit/VertexMesher.hpp"
 #include "meshkit/QslimMesher.hpp"
+#include "meshkit/AF2DfltTriangleMeshOp.hpp"
 #ifdef HAVE_QUADMESHER
 #include "meshkit/QuadMesh.hpp"
 #endif
@@ -54,6 +55,7 @@ extern int register_algs_mesh_ops() { return 1; }
 
 REGISTER_MESH_OP(VertexMesher);
 REGISTER_MESH_OP(EdgeMesher);
+REGISTER_MESH_OP(AF2DfltTriangleMeshOp);
 REGISTER_MESH_OP(OneToOneSwept);
 REGISTER_MESH_OP(TFIMapping);
 #ifdef HAVE_LPSOLVER

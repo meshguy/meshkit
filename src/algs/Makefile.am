@@ -95,6 +95,7 @@ AM_CPPFLAGS += $(DEFINES) \
               -I$(top_srcdir)/utils \
               -I$(srcdir)/../lemon \
               -I$(srcdir)/Sweep \
+              -I$(srcdir)/AdvFront \
               -I$(srcdir)/AssyGen \
               -I$(srcdir)/AssyMesher \
 	      -I$(srcdir)/CoreGen \

@@ -20,7 +20,7 @@ unsigned int AF2Point3D::getDistanceToBoundary() const
   return distToBndry;
 }
 
-iBase_EntityHandle AF2Point3D::getVertexHandle() const
+moab::EntityHandle AF2Point3D::getVertexHandle() const
 {
   if (!committed)
   {
@@ -59,7 +59,7 @@ void AF2Point3D::limitDistanceToBoundary(unsigned int upperBound)
   }
 }
 
-void AF2Point3D::setCommittedHandle(iBase_EntityHandle & vertexHandleArg)
+void AF2Point3D::setCommittedHandle(const moab::EntityHandle & vertexHandleArg)
 {
   vertexHandle = vertexHandleArg;
   committed = true;

@@ -17,6 +17,7 @@ libAdvFront_la_SOURCES = \
 	AF2DfltPlaneProjMaker.cpp \
 	AF2DfltRuleAppVisitor.cpp \
 	AF2DfltTriangleRules.cpp \
+	AF2DfltTriangleMeshOp.cpp \
 	AF2Edge2D.cpp \
 	AF2Edge3D.cpp \
 	AF2FreeZone.cpp \
@@ -46,6 +47,7 @@ nobase_libAdvFront_la_include_HEADERS = \
 	meshkit/AF2DfltPlaneProjMaker.hpp \
 	meshkit/AF2DfltRuleAppVisitor.hpp \
 	meshkit/AF2DfltTriangleRules.hpp \
+	meshkit/AF2DfltTriangleMeshOp.hpp \
 	meshkit/AF2Edge2D.hpp \
 	meshkit/AF2Edge3D.hpp \
 	meshkit/AF2FreeZone.hpp \

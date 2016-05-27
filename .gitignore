@@ -119,6 +119,7 @@ test/algs/AdvFront/frontObj2D
 test/algs/AdvFront/planeProj
 test/algs/AdvFront/pntTrnsfrmLnr2D
 test/algs/AdvFront/ruleAppObj2D
+test/algs/AdvFront/triMeshOp
 test/algs/AdvFront/triRule
 test/core/graph.eps
 test/core/list_meshops

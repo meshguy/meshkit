@@ -9,7 +9,8 @@
 #ifndef AF2POINT_3D_HPP
 #define AF2POINT_3D_HPP
 
-#include <iGeom.h>
+// MOAB
+#include "moab/Types.hpp"
 
 class AF2Point3D
 {
@@ -18,7 +19,7 @@ class AF2Point3D
     double x, y, z;
     unsigned int distToBndry;
     bool committed;
-    iBase_EntityHandle vertexHandle;
+    moab::EntityHandle vertexHandle;
 
   public:
 
@@ -37,7 +38,7 @@ class AF2Point3D
      * \brief Get this points current distance to the boundary
      *   based on the advancement of the advancing front.
      */
-     unsigned int getDistanceToBoundary() const;
+    unsigned int getDistanceToBoundary() const;
 
     /**
      * \brief Get the value of the handle to the vertex in the mesh.
@@ -46,7 +47,7 @@ class AF2Point3D
      * Users can check whether the point has been committed using the
      * isCommitted() method.
      */
-    iBase_EntityHandle getVertexHandle() const;
+    moab::EntityHandle getVertexHandle() const;
 
     /**
      * \brief Get the value of the x coordinate.
@@ -83,7 +84,7 @@ class AF2Point3D
      * already been called, then the point is already noted as committed
      * to the mesh, and calling the method again will throw an exception.
      */
-    void setCommittedHandle(iBase_EntityHandle & vertexHandleArg);
+    void setCommittedHandle(const moab::EntityHandle & vertexHandleArg);
 };
 
 #endif

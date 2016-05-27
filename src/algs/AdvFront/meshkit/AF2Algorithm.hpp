@@ -31,6 +31,9 @@
 #include <list>
 #include <map>
 
+// MOAB
+#include "moab/Types.hpp"
+
 // MeshKit
 #include "meshkit/AF2AlgorithmResult.hpp"
 #include "meshkit/AF2LocalTransformMaker.hpp"
@@ -53,7 +56,8 @@ class AF2Algorithm
      */
     void initFront(AF2Front & front, std::list<AF2Point3D*> & pntList,
         const double* coords, unsigned int numPoints,
-        const unsigned int* edges, unsigned int numEdges) const;
+        const unsigned int* edges, unsigned int numEdges,
+        const moab::EntityHandle* vertexHandles) const;
 
     /**
      * \brief Process a new face that is being added to the advancing front
@@ -167,11 +171,18 @@ class AF2Algorithm
      * \param numEdges The number of half-edges that are defined in
      *   the array of edges.  The array of edges must have 2*numEdges
      *   unsigned integer values (or more).
+     * \param vertexHandles If provided (i.e., if not null), this must
+     *   be an array of numPoints (or more) MOAB vertex handles.  The first
+     *   numPoint of the handles are supposed to be in the same order as
+     *   the coordinate array.  If the result is successful, each point that
+     *   was part of the input will have its vertex handle set to the
+     *   handle specified in this input
      */
     AF2AlgorithmResult* execute(
         const AF2LocalTransformMaker* const & transformMaker,
         const double* coords, unsigned int numPoints,
-        const unsigned int* edges, unsigned int numEdges) const;
+        const unsigned int* edges, unsigned int numEdges,
+        const moab::EntityHandle* vertexHandles = NULL) const;
 };
 
 #endif

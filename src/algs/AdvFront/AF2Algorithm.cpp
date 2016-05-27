@@ -45,7 +45,8 @@ AF2Algorithm& AF2Algorithm::operator=(const AF2Algorithm & rhs)
 AF2AlgorithmResult* AF2Algorithm::execute(
     const AF2LocalTransformMaker* const & transformMaker,
     const double* coords, unsigned int numPoints,
-    const unsigned int* edges, unsigned int numEdges) const
+    const unsigned int* edges, unsigned int numEdges,
+    const moab::EntityHandle* vertexHandles) const
 {
   typedef std::list<const AF2Rule*>::const_iterator RuleConstItr;
 
@@ -54,7 +55,8 @@ AF2AlgorithmResult* AF2Algorithm::execute(
   AF2Front front;
 
   // initialize the front
-  initFront(front, allPoints, coords, numPoints, edges, numEdges);
+  initFront(front, allPoints,
+      coords, numPoints, edges, numEdges, vertexHandles);
 
   // while the front is not empty and there is still progress
   while (!front.isEmpty() && front.getMaximumQuality() < 50u)
@@ -113,7 +115,8 @@ AF2AlgorithmResult* AF2Algorithm::execute(
 
 void AF2Algorithm::initFront(AF2Front & front, std::list<AF2Point3D*> & pntList,
     const double* coords, unsigned int numPoints,
-    const unsigned int* edges, unsigned int numEdges) const
+    const unsigned int* edges, unsigned int numEdges,
+    const moab::EntityHandle* vertexHandles) const
 {
   // make the point objects and add them to the front
   std::vector<AF2Point3D*> pntVector;
@@ -122,6 +125,10 @@ void AF2Algorithm::initFront(AF2Front & front, std::list<AF2Point3D*> & pntList,
   {
     AF2Point3D* point =
         new AF2Point3D(coords[3*pi], coords[3*pi + 1], coords[3*pi + 2]);
+    if (vertexHandles != NULL)
+    {
+      point->setCommittedHandle(vertexHandles[pi]);
+    }
     pntVector.push_back(point);
     pntList.push_back(point);
     front.addPoint(point);
