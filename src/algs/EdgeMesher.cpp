@@ -65,7 +65,10 @@ void EdgeMesher::setup_this()
     SizingFunction *sf = mk_core()->sizing_function(me->sizing_function_index());
     if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT &&
         mk_core()->sizing_function(0))
+    {
       sf = mk_core()->sizing_function(0);
+      me->sizing_function_index(0);
+    }
     
     if (!sf && me -> mesh_intervals() < 0 && me -> interval_firmness() == DEFAULT)
     {
