@@ -15,8 +15,10 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils \
                $(MESQUITE_DEFINES) \
                $(MESQUITE_CPPFLAGS)
+if HAVE_OCC_GEOMETRY_ENGINE
 TESTS = test_mesquiteopt
 check_PROGRAMS = $(TESTS)
+endif
 test_mesquiteopt_SOURCES = test_mesquiteopt.cpp
 test_mesquiteopt_LDADD = ../../../src/libMeshKit.la
 
