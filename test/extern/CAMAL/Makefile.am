@@ -26,10 +26,12 @@ endif
 
 # Tests and such
 if HAVE_CAMAL_TRIADV
+if HAVE_OCC_GEOMETRY_ENGINE
 test_camaltriadvance_SOURCES = test_camaltriadvance.cpp
 test_camaltriadvance_DEPENDENCIES = \
 	$(LDADD)
 TESTS += test_camaltriadvance
+endif
 endif
 
 if HAVE_CAMAL_PAVER
@@ -37,6 +39,7 @@ test_camalpaver_SOURCES = test_camalpaver.cpp
 test_camalpaver_DEPENDENCIES = \
 	$(LDADD)
 TESTS += test_camalpaver
+
 if HAVE_FBIGEOM
 test_camalmbgeom_SOURCES = test_camalmbgeom.cpp
 test_camalmbgeom_DEPENDENCIES = $(LDADD)
@@ -45,15 +48,16 @@ test_camalmbgeomvar_DEPENDENCIES = $(LDADD)
 test_camalmb2_SOURCES= test_camalmb2.cpp
 test_camalmb2_DEPENDENCIES = $(LDADD)
 TESTS += test_camalmbgeom test_camalmbgeomvar test_camalmb2
-# test_camalmb2 is broken for the time being
 endif
 endif
 
 if HAVE_CAMAL_TET
+if HAVE_OCC_GEOMETRY_ENGINE
 test_camaltetmesher_SOURCES = test_camaltetmesher.cpp
 test_camaltetmesher_DEPENDENCIES = \
 	$(LDADD)
 TESTS += test_camaltetmesher
+endif
 endif
 
 # Utility target: build but don't run tests

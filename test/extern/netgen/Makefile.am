@@ -26,11 +26,12 @@ AM_CPPFLAGS += -DMOAB
 endif
 
 # Tests and such
+if HAVE_OCC_GEOMETRY_ENGINE
 test_ngtetmesher_SOURCES = test_ngtetmesher.cpp
 test_ngtetmesher_DEPENDENCIES = \
 	$(LDADD)
 TESTS += test_ngtetmesher
-
+endif
 # Utility target: build but don't run tests
 build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check

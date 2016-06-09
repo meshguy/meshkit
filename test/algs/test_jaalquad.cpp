@@ -13,10 +13,12 @@
 #include "meshkit/SizingFunction.hpp"
 
 #include "TestUtil.hpp"
-#ifdef HAVE_ACIS
-#define TEST_QUADFACE "quadface.sat"
+#if defined(HAVE_ACIS)
+    #define TEST_QUADFACE "quadface.sat"
 #elif defined(HAVE_OCC)
-#define TEST_QUADFACE "quadface.stp"
+    #define TEST_QUADFACE "quadface.stp"
+#else
+    #define TEST_QUADFACE "squaresurf.facet"
 #endif
 
 using namespace MeshKit;
@@ -39,7 +41,9 @@ int main( int argc, char* argv[] )
             std::cerr << "Invalid option: \"" << argv[i] << '"' << std::endl;
     }
     int result = 0;
+#if defined(HAVE_ACIS) || defined(HAVE_OCC)
     result += RUN_TEST( test_simple_tri_to_quad );
+#endif
     result += RUN_TEST( load_file );
     return result;
 }

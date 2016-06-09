@@ -17,9 +17,11 @@
 #include <stdio.h>
 #include <iostream>
 #ifdef HAVE_ACIS
-#define INTASSIGN_TEST_FILE "quadface.sat"
+    #define INTASSIGN_TEST_FILE "quadface.sat"
 #elif defined(HAVE_OCC)
-#define INTASSIGN_TEST_FILE "quadface.stp"
+    #define INTASSIGN_TEST_FILE "quadface.stp"
+#else
+    #define INTASSIGN_TEST_FILE "squaresurf.facet"
 #endif
 
 MeshKit::MKCore *mk;

@@ -282,6 +282,7 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
 {
   // set and open input output files
   bool bDone = false;
+#define EXTENSION ""
 #ifdef HAVE_ACIS
 #define EXTENSION ".sat";
 #endif
