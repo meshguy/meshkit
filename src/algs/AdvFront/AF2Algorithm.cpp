@@ -42,6 +42,8 @@ AF2Algorithm& AF2Algorithm::operator=(const AF2Algorithm & rhs)
   throw notImpl;
 }
 
+bool debugStep = false;
+
 AF2AlgorithmResult* AF2Algorithm::execute(
     const AF2LocalTransformMaker* const & transformMaker,
     const double* coords, unsigned int numPoints,
@@ -60,6 +62,7 @@ AF2AlgorithmResult* AF2Algorithm::execute(
       coords, numPoints, edges, numEdges, vertexHandles);
 
   // while the front is not empty and there is still progress
+  int step =0;
   while (!front.isEmpty() && front.getMaximumQuality() < 50u)
   {
     // select a neighborhood on the advancing front
@@ -99,6 +102,11 @@ AF2AlgorithmResult* AF2Algorithm::execute(
       {
         processNewFace(bestRuleApp->getNewFace(nfi),
             ngbhd, newPointsMap, allFaces, front);
+      }
+      if (debugStep)
+      {
+        output_intermediate_result(allPoints, allFaces, step);
+        step++;
       }
     }
   }
@@ -242,4 +250,66 @@ void AF2Algorithm::release(std::list<AF2Point3D*> & allPoints,
   {
     delete (*itr);
   }
+}
+
+#include "moab/Core.hpp"
+#include "moab/ReadUtilIface.hpp"
+void AF2Algorithm::output_intermediate_result (std::list<AF2Point3D*> & allPoints,
+        std::list<const AF2Polygon3D*> & allFaces, int step) const
+{
+  moab::Core mb;
+  int num_nodes = (int) allPoints.size();
+  std::vector<double> newPointCoords;
+  typedef std::list<AF2Point3D*>::const_iterator ConstPointItr;
+  for (ConstPointItr pItr = allPoints.begin();
+      pItr != allPoints.end(); ++pItr)
+  {
+    newPointCoords.push_back((*pItr)->getX());
+    newPointCoords.push_back((*pItr)->getY());
+    newPointCoords.push_back((*pItr)->getZ());
+  }
+  // Commit the new points to MOAB
+  moab::Range newPointsRange;
+  mb.create_vertices(
+      &newPointCoords[0], num_nodes, newPointsRange);
+  // Set the MOAB handles for the now-committed vertices
+  ConstPointItr np3dItr = allPoints.begin();
+  for (moab::Range::const_iterator nphItr = newPointsRange.begin();
+      nphItr != newPointsRange.end(); ++nphItr)
+  {
+
+    (*np3dItr)->setTmpVHandle(*nphItr);
+    ++np3dItr;
+  }
+
+  int numTriangles = allFaces.size();
+
+  // pre-allocate connectivity memory to store the triangles
+  moab::ReadUtilIface* readInterface;
+  moab::ErrorCode moabRet;
+  moabRet = mb.query_interface(readInterface);
+
+  moab::EntityHandle firstHandle;
+  moab::EntityHandle* triConnectAry;
+  moabRet = readInterface->get_element_connect(
+      numTriangles, 3, moab::MBTRI, 0, firstHandle, triConnectAry);
+
+  unsigned int caIndex = 0u;
+  typedef std::list<const AF2Polygon3D*>::const_iterator ConstTriangleItr;
+  for (ConstTriangleItr tItr = allFaces.begin();
+      tItr != allFaces.end(); ++tItr)
+  {
+    for (unsigned int vi = 0; vi < 3; ++vi)
+    {
+      triConnectAry[caIndex + vi] = (*tItr)->getVertex(vi)->getTmpVHandle();
+    }
+    caIndex += 3;
+  }
+
+  std::stringstream tempStep;
+  tempStep<<"Step0_"<<step<<  ".vtk";
+  moabRet = mb.write_file(tempStep.str().c_str());
+
+
+  return;
 }

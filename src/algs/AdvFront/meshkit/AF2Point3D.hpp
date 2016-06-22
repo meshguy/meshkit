@@ -21,6 +21,7 @@ class AF2Point3D
     unsigned int distToBndry;
     bool committed;
     moab::EntityHandle vertexHandle;
+    moab::EntityHandle dbgHandle; // this should be used only to output intermediate mesh
 
   public:
 
@@ -58,6 +59,10 @@ class AF2Point3D
      */
     unsigned long getLocalId() const;
 
+    /** for intermediate output, use another handle
+     */
+    moab::EntityHandle getTmpVHandle() const { return dbgHandle;};
+    void setTmpVHandle (moab::EntityHandle vhandle) { dbgHandle = vhandle;};
     /**
      * \brief Get the value of the x coordinate.
      */

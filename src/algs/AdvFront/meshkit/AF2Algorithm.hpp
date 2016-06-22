@@ -82,6 +82,9 @@ class AF2Algorithm
     void release(std::list<AF2Point3D*> & allPoints,
         std::list<const AF2Polygon3D*> & allFaces) const;
 
+    void output_intermediate_result (std::list<AF2Point3D*> & allPoints,
+        std::list<const AF2Polygon3D*> & allFaces, int step) const;
+
   public:
 
     /**
