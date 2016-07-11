@@ -1296,7 +1296,7 @@ namespace MeshKit
     std::cout<<"Starting hierarchy generation"<<std::endl;
 
     uref.generate_mesh_hierarchy(num_levels, &deg[0], lsets);
-
+    uref.update_special_tags(num_levels, lsets[num_levels]);
     std::cout<<"Finished hierarchy generation in "<<uref.timeall.tm_total<<"  secs"<<std::endl;
 
     std::cout<<"Time taken for refinement "<<uref.timeall.tm_refine<<"  secs"<<std::endl;
