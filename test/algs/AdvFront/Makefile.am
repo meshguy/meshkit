@@ -14,7 +14,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AdvFront \
                -I$(top_srcdir)/test
 
 
-TESTS = pntTrnsfrmLnr2D freeZone ruleAppObj2D planeProj triRule dfltTriRules frontObj2D basicAlg2D triMeshOp
+TESTS = pntTrnsfrmLnr2D freeZone ruleAppObj2D planeProj triRule dfltTriRules frontObj2D basicAlg2D triMeshOp driverAF
 
 check_PROGRAMS = $(TESTS)
 
@@ -27,6 +27,7 @@ planeProj_SOURCES = planeProj.cpp
 ruleAppObj2D_SOURCES = ruleAppObj2D.cpp
 triMeshOp_SOURCES = triMeshOp.cpp
 triRule_SOURCES = triRule.cpp
+driverAF_SOURCES = driverAF.cpp
 
 # Utility target: build but don't run tests
 build-check:
