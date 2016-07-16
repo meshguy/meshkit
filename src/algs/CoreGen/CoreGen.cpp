@@ -284,7 +284,9 @@ namespace MeshKit
               }
           }
         if(umr_flag == true){
+#ifdef USE_MPI
             err = refine_coremodel();
+#endif
           }
       }
     if (prob_type == "mesh") {
