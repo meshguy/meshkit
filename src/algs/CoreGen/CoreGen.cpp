@@ -1286,7 +1286,7 @@ namespace MeshKit
 
   int CoreGen::refine_coremodel(){
 
-
+#ifdef USE_MPI
     std::cout<<"REFINEMENT BLOCK"<<std::endl;
     /*********************************************/
     // refine the mesh
@@ -1316,6 +1316,7 @@ namespace MeshKit
 
         std::cout<<"Mesh size for level "<<l+1<<"  :: nverts = "<<ents[0].size()<<", nedges = "<<ents[1].size()<<", nfaces = "<<ents[2].size()<<", ncells = "<<ents[3].size()<<std::endl;
       }
+#endif
     return 0;
   }
 
