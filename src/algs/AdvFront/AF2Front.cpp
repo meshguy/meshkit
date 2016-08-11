@@ -230,7 +230,7 @@ AF2Neighborhood* AF2Front::selectNeighborhood(
           (*edgeItr)->getEnd()->getDistanceToBoundary();
       if (metricVal < minMetricVal)
       {
-        metricVal = minMetricVal;
+        minMetricVal = metricVal;
         baselineEdge = *edgeItr;
       }
     }
