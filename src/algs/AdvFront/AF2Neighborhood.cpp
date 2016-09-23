@@ -122,7 +122,7 @@ const std::list<const AF2Point2D*>* AF2Neighborhood::getPoints2D() const
 }
 
 AF2Point3D* AF2Neighborhood::transformPoint(
-    const AF2Point2D* const & point2D) const
+    const AF2Point2D* const & point2D, unsigned long const & pntId) const
 {
-  return localTransform->transformToSurface(*point2D);
+  return localTransform->transformToSurface(*point2D, pntId);
 }

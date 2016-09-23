@@ -166,10 +166,12 @@ class AF2Neighborhood
      * method previously.
      *
      * \param point2D a two-dimensional point
+     * \param pntId an identifier to assign to the new three-dimensional point
      * \return the local transformation of the two-dimensional point into
      *   a three-dimensional point
      */
-    AF2Point3D* transformPoint(const AF2Point2D* const & point2D) const;
+    AF2Point3D* transformPoint(const AF2Point2D* const & point2D,
+        unsigned long const & pntId) const;
 };
 
 #endif

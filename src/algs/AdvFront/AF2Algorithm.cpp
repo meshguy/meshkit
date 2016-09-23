@@ -50,12 +50,13 @@ AF2AlgorithmResult* AF2Algorithm::execute(
 {
   typedef std::list<const AF2Rule*>::const_iterator RuleConstItr;
 
+  unsigned long int nextPointId = 0ul;
   std::list<AF2Point3D*> allPoints;
   std::list<const AF2Polygon3D*> allFaces;
   AF2Front front;
 
   // initialize the front
-  initFront(front, allPoints,
+  initFront(front, allPoints, nextPointId,
       coords, numPoints, edges, numEdges, vertexHandles);
 
   // while the front is not empty and there is still progress
@@ -89,7 +90,7 @@ AF2AlgorithmResult* AF2Algorithm::execute(
       std::map<const AF2Point2D*, AF2Point3D*> newPointsMap;
       for (unsigned int npi = 0; npi < bestRuleApp->getNumNewPoints(); ++npi)
       {
-        processNewPoint(bestRuleApp->getNewPoint(npi),
+        processNewPoint(bestRuleApp->getNewPoint(npi), nextPointId,
             ngbhd, newPointsMap, allPoints, front);
       }
 
@@ -114,6 +115,7 @@ AF2AlgorithmResult* AF2Algorithm::execute(
 }
 
 void AF2Algorithm::initFront(AF2Front & front, std::list<AF2Point3D*> & pntList,
+    unsigned long & pntId,
     const double* coords, unsigned int numPoints,
     const unsigned int* edges, unsigned int numEdges,
     const moab::EntityHandle* vertexHandles) const
@@ -123,8 +125,9 @@ void AF2Algorithm::initFront(AF2Front & front, std::list<AF2Point3D*> & pntList,
   pntVector.reserve(numPoints);
   for (unsigned int pi = 0; pi < numPoints; ++pi)
   {
-    AF2Point3D* point =
-        new AF2Point3D(coords[3*pi], coords[3*pi + 1], coords[3*pi + 2]);
+    AF2Point3D* point = new AF2Point3D(pntId,
+        coords[3*pi], coords[3*pi + 1], coords[3*pi + 2]);
+    ++pntId;
     if (vertexHandles != NULL)
     {
       point->setCommittedHandle(vertexHandles[pi]);
@@ -212,11 +215,13 @@ void AF2Algorithm::processNewFace(const AF2Polygon2D* newFace2D,
 }
 
 void AF2Algorithm::processNewPoint(const AF2Point2D* newPoint2D,
+    unsigned long & pntId,
     AF2Neighborhood* & ngbhd,
     std::map<const AF2Point2D*, AF2Point3D*> & newPointsMap,
     std::list<AF2Point3D*> & allPoints, AF2Front & front) const
 {
-  AF2Point3D* newPoint3D = ngbhd->transformPoint(newPoint2D);
+  AF2Point3D* newPoint3D = ngbhd->transformPoint(newPoint2D, pntId);
+  ++pntId;
   newPointsMap[newPoint2D] = newPoint3D;
   allPoints.push_back(newPoint3D);
   front.addPoint(newPoint3D);

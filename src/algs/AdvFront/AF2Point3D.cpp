@@ -6,8 +6,10 @@
 // MeshKit
 #include "meshkit/Error.hpp"
 
-AF2Point3D::AF2Point3D(double xVal, double yVal, double zVal)
+AF2Point3D::AF2Point3D(unsigned long pntId,
+    double xVal, double yVal, double zVal)
 {
+  localId = pntId;
   x = xVal;
   y = yVal;
   z = zVal;
@@ -18,6 +20,11 @@ AF2Point3D::AF2Point3D(double xVal, double yVal, double zVal)
 unsigned int AF2Point3D::getDistanceToBoundary() const
 {
   return distToBndry;
+}
+
+unsigned long AF2Point3D::getLocalId() const
+{
+  return localId;
 }
 
 moab::EntityHandle AF2Point3D::getVertexHandle() const

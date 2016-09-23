@@ -184,15 +184,15 @@ void test180DegreeRuleQ1()
   CHECK(rule180DegreeQ1 != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3123, 0.0876, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.1877, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5627, 0.0876, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.3123, 0.0876, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.4375, 0.1877, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.5627, 0.0876, 0.5));
+  pointsVector.push_back(new AF2Point3D(8, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -228,7 +228,7 @@ void test180DegreeRuleQ1()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3752, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(9, -0.3752, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ1->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -237,7 +237,7 @@ void test180DegreeRuleQ1()
       << "  has a point at (-0.3752, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.3127, 0.0874, 0.5);
+  AF2Point3D failPointBravo(10, -0.3127, 0.0874, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ1->applyRule(failNgbhdBravo, 1u, failVisitor);
@@ -246,7 +246,7 @@ void test180DegreeRuleQ1()
       << "  has a point at (-0.3127, 0.0874, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.4375, 0.1873, 0.5);
+  AF2Point3D failPointCharlie(11, -0.4375, 0.1873, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -256,7 +256,7 @@ void test180DegreeRuleQ1()
       << "  has a point at (-0.4375, 0.1873, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.5623, 0.0874, 0.5);
+  AF2Point3D failPointDelta(12, -0.5623, 0.0874, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -266,7 +266,7 @@ void test180DegreeRuleQ1()
       << "  has a point at (-0.5623, 0.0874, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointEcho(-0.4998, 0.0001, 0.5);
+  AF2Point3D failPointEcho(13, -0.4998, 0.0001, 0.5);
   points.push_back(&failPointEcho);
   AF2Neighborhood failNgbhdEcho(points,
       baselineEdge, edges, makePlaneProj());
@@ -300,14 +300,14 @@ void test180DegreeRuleQ5()
   CHECK(rule180DegreeQ5 != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4248, 0.0676, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4502, 0.0676, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.4248, 0.0676, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.4502, 0.0676, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -342,7 +342,7 @@ void test180DegreeRuleQ5()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3752, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(8, -0.3752, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ5->applyRule(failNgbhdAlpha, 5u, failVisitor);
@@ -351,7 +351,7 @@ void test180DegreeRuleQ5()
       << "  has a point at (-0.3752, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.4252, 0.0674, 0.5);
+  AF2Point3D failPointBravo(9, -0.4252, 0.0674, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ5->applyRule(failNgbhdBravo, 5u, failVisitor);
@@ -360,7 +360,7 @@ void test180DegreeRuleQ5()
       << "  has a point at (-0.4252, 0.0674, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.4498, 0.0674, 0.5);
+  AF2Point3D failPointCharlie(10, -0.4498, 0.0674, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -370,7 +370,7 @@ void test180DegreeRuleQ5()
       << "  has a point at (-0.4498, 0.0674, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.4998, 0.0001, 0.5);
+  AF2Point3D failPointDelta(11, -0.4998, 0.0001, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -404,14 +404,14 @@ void test180DegreeRuleQ10()
   CHECK(rule180DegreeQ10 != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.43105, 0.0401, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.44395, 0.0401, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.43105, 0.0401, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.44395, 0.0401, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -446,7 +446,7 @@ void test180DegreeRuleQ10()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3752, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(8, -0.3752, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ10->applyRule(failNgbhdAlpha, 10u, failVisitor);
@@ -455,7 +455,7 @@ void test180DegreeRuleQ10()
       << "  has a point at (-0.3752, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.43145, 0.0399, 0.5);
+  AF2Point3D failPointBravo(9, -0.43145, 0.0399, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ10->applyRule(failNgbhdBravo, 10u, failVisitor);
@@ -464,7 +464,7 @@ void test180DegreeRuleQ10()
       << "  has a point at (-0.43145, 0.0399, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.44355, 0.0399, 0.5);
+  AF2Point3D failPointCharlie(10, -0.44355, 0.0399, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -474,7 +474,7 @@ void test180DegreeRuleQ10()
       << "  has a point at (-0.44355, 0.0399, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.4998, 0.0001, 0.5);
+  AF2Point3D failPointDelta(11, -0.4998, 0.0001, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -508,14 +508,14 @@ void test180DegreeRuleQ20()
   CHECK(rule180DegreeQ20 != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.434175, 0.013225, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.440825, 0.013225, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.434175, 0.013225, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.440825, 0.013225, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -550,7 +550,7 @@ void test180DegreeRuleQ20()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3756, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(8, -0.3756, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ20->applyRule(failNgbhdAlpha, 20u, failVisitor);
@@ -559,7 +559,7 @@ void test180DegreeRuleQ20()
       << "  has a point at (-0.3756, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.434575, 0.013025, 0.5);
+  AF2Point3D failPointBravo(9, -0.434575, 0.013025, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule180DegreeQ20->applyRule(failNgbhdBravo, 20u, failVisitor);
@@ -568,7 +568,7 @@ void test180DegreeRuleQ20()
       << "  has a point at (-0.434575, 0.013025, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.440425, 0.013025, 0.5);
+  AF2Point3D failPointCharlie(10, -0.440425, 0.013025, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -578,7 +578,7 @@ void test180DegreeRuleQ20()
       << "  has a point at (-0.440425, 0.013025, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.4994, 0.0001, 0.5);
+  AF2Point3D failPointDelta(11, -0.4994, 0.0001, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -612,14 +612,14 @@ void test60DegreeAngleRightRule()
   CHECK(rule60DegreeRight != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3125, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.10845, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.515725, 0.0812875, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.4375, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.3125, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.4375, 0.10845, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.515725, 0.0812875, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -653,7 +653,7 @@ void test60DegreeAngleRightRule()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.4375, 0.10805, 0.5);
+  AF2Point3D failPointAlpha(8, -0.4375, 0.10805, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule60DegreeRight->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -662,7 +662,7 @@ void test60DegreeAngleRightRule()
       << "  has a point at (-0.4375, 0.10805, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.515525, 0.0810875, 0.5);
+  AF2Point3D failPointBravo(9, -0.515525, 0.0810875, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule60DegreeRight->applyRule(failNgbhdBravo, 1u, failVisitor);
@@ -671,7 +671,7 @@ void test60DegreeAngleRightRule()
       << "  has a point at (-0.515525, 0.0810875, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.4998, 0.0001, 0.5);
+  AF2Point3D failPointCharlie(10, -0.4998, 0.0001, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -705,14 +705,14 @@ void test60DegreeAngleLeftRule()
   CHECK(rule60DegreeLeft != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.5625, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.359275, 0.0812875, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.10845, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.5625, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.4375, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.359275, 0.0812875, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.4375, 0.10845, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -746,7 +746,7 @@ void test60DegreeAngleLeftRule()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3752, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(8, -0.3752, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule60DegreeLeft->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -755,7 +755,7 @@ void test60DegreeAngleLeftRule()
       << "  has a point at (-0.3752, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.359475, 0.0810875, 0.5);
+  AF2Point3D failPointBravo(9, -0.359475, 0.0810875, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule60DegreeLeft->applyRule(failNgbhdBravo, 1u, failVisitor);
@@ -764,7 +764,7 @@ void test60DegreeAngleLeftRule()
       << "  has a point at (-0.359475, 0.0810875, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.4375, 0.10805, 0.5);
+  AF2Point3D failPointCharlie(10, -0.4375, 0.10805, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -798,16 +798,16 @@ void test120DegreeAngleRightRule()
   CHECK(rule120DegreeRight != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3125, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.1875, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3124, 0.10835, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.2167, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.2167, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5626, 0.10835, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.3125, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.1875, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.3124, 0.10835, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.375, 0.2167, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.5, 0.2167, 0.5));
+  pointsVector.push_back(new AF2Point3D(8, -0.5626, 0.10835, 0.5));
+  pointsVector.push_back(new AF2Point3D(9, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -846,7 +846,7 @@ void test120DegreeAngleRightRule()
   std::cout << "Good: There are two new faces" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3126, 0.10815, 0.5);
+  AF2Point3D failPointAlpha(10, -0.3126, 0.10815, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule120DegreeRight->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -855,7 +855,7 @@ void test120DegreeAngleRightRule()
       << "  has a point at (-0.3126, 0.10815, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.375, 0.2163, 0.5);
+  AF2Point3D failPointBravo(11, -0.375, 0.2163, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule120DegreeRight->applyRule(failNgbhdBravo, 1u, failVisitor);
@@ -864,7 +864,7 @@ void test120DegreeAngleRightRule()
       << "  has a point at (-0.375, 0.2163, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.5, 0.2163, 0.5);
+  AF2Point3D failPointCharlie(12, -0.5, 0.2163, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -874,7 +874,7 @@ void test120DegreeAngleRightRule()
       << "  has a point at (-0.5, 0.2163, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.5624, 0.10815, 0.5);
+  AF2Point3D failPointDelta(13, -0.5624, 0.10815, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -884,7 +884,7 @@ void test120DegreeAngleRightRule()
       << "  has a point at (-0.5624, 0.10815, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointEcho(-0.4998, 0.0001, 0.5);
+  AF2Point3D failPointEcho(14, -0.4998, 0.0001, 0.5);
   points.push_back(&failPointEcho);
   AF2Neighborhood failNgbhdEcho(points,
       baselineEdge, edges, makePlaneProj());
@@ -919,16 +919,16 @@ void test120DegreeAngleLeftRule()
   CHECK(rule120DegreeLeft != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.6875, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5625, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3124, 0.10835, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.2167, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.2167, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5626, 0.10835, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.6875, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5625, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.3124, 0.10835, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.375, 0.2167, 0.5));
+  pointsVector.push_back(new AF2Point3D(8, -0.5, 0.2167, 0.5));
+  pointsVector.push_back(new AF2Point3D(9, -0.5626, 0.10835, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -967,7 +967,7 @@ void test120DegreeAngleLeftRule()
   std::cout << "Good: There are two new faces" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3752, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(10, -0.3752, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule120DegreeLeft->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -976,7 +976,7 @@ void test120DegreeAngleLeftRule()
       << "  has a point at (-0.3752, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.3126, 0.10815, 0.5);
+  AF2Point3D failPointBravo(11, -0.3126, 0.10815, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule120DegreeLeft->applyRule(failNgbhdBravo, 1u, failVisitor);
@@ -985,7 +985,7 @@ void test120DegreeAngleLeftRule()
       << "  has a point at (-0.3126, 0.10815, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.375, 0.2163, 0.5);
+  AF2Point3D failPointCharlie(12, -0.375, 0.2163, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -995,7 +995,7 @@ void test120DegreeAngleLeftRule()
       << "  has a point at (-0.375, 0.2163, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.5, 0.2163, 0.5);
+  AF2Point3D failPointDelta(13, -0.5, 0.2163, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -1005,7 +1005,7 @@ void test120DegreeAngleLeftRule()
       << "  has a point at (-0.5, 0.2163, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointEcho(-0.5624, 0.10815, 0.5);
+  AF2Point3D failPointEcho(14, -0.5624, 0.10815, 0.5);
   points.push_back(&failPointEcho);
   AF2Neighborhood failNgbhdEcho(points,
       baselineEdge, edges, makePlaneProj());
@@ -1040,16 +1040,16 @@ void test120DegreeAngleBothRule()
   CHECK(rule120DegreeBoth != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.6875, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5625, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3125, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.1875, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3124, 0.10835, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.162575, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.162575, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5626, 0.10835, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.6875, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5625, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.3125, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.1875, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.3124, 0.10835, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.375, 0.162575, 0.5));
+  pointsVector.push_back(new AF2Point3D(8, -0.5, 0.162575, 0.5));
+  pointsVector.push_back(new AF2Point3D(9, -0.5626, 0.10835, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -1088,7 +1088,7 @@ void test120DegreeAngleBothRule()
   std::cout << "Good: There are three new faces" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3126, 0.10815, 0.5);
+  AF2Point3D failPointAlpha(10, -0.3126, 0.10815, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   rule120DegreeBoth->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -1097,7 +1097,7 @@ void test120DegreeAngleBothRule()
       << "  has a point at (-0.3126, 0.10815, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.375, 0.162175, 0.5);
+  AF2Point3D failPointBravo(11, -0.375, 0.162175, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   rule120DegreeBoth->applyRule(failNgbhdBravo, 1u, failVisitor);
@@ -1106,7 +1106,7 @@ void test120DegreeAngleBothRule()
       << "  has a point at (-0.375, 0.162175, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.5, 0.162175, 0.5);
+  AF2Point3D failPointCharlie(12, -0.5, 0.162175, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -1116,7 +1116,7 @@ void test120DegreeAngleBothRule()
       << "  has a point at (-0.5, 0.162175, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.5624, 0.10815, 0.5);
+  AF2Point3D failPointDelta(13, -0.5624, 0.10815, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -1150,9 +1150,9 @@ void testFillTriangleRule()
   CHECK(fillTriangleRule != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.4375, 0.10825, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -1182,7 +1182,7 @@ void testFillTriangleRule()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.4375, 0.10815, 0.5);
+  AF2Point3D failPointAlpha(3, -0.4375, 0.10815, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   fillTriangleRule->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -1215,16 +1215,16 @@ void testConnectVertexRule()
   CHECK(connectVertexRule != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3499, 0.086725, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.4375, 0.10845, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5251, 0.086725, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.4375, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.3499, 0.086725, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.4375, 0.10845, 0.5));
+  pointsVector.push_back(new AF2Point3D(8, -0.5251, 0.086725, 0.5));
+  pointsVector.push_back(new AF2Point3D(9, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -1259,7 +1259,7 @@ void testConnectVertexRule()
   std::cout << "Good: There is one new face" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3752, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(10, -0.3752, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   connectVertexRule->applyRule(failNgbhdAlpha, 1u, failVisitor);
@@ -1268,7 +1268,7 @@ void testConnectVertexRule()
       << "  has a point at (-0.3752, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.3501, 0.086525, 0.5);
+  AF2Point3D failPointBravo(11, -0.3501, 0.086525, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   connectVertexRule->applyRule(failNgbhdBravo, 1u, failVisitor);
@@ -1277,7 +1277,7 @@ void testConnectVertexRule()
       << "  has a point at (-0.3501, 0.086525, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.5249, 0.086525, 0.5);
+  AF2Point3D failPointCharlie(12, -0.5249, 0.086525, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -1287,7 +1287,7 @@ void testConnectVertexRule()
       << "  has a point at (-0.5249, 0.086525, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.4998, 0.0001, 0.5);
+  AF2Point3D failPointDelta(13, -0.4998, 0.0001, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -1300,8 +1300,8 @@ void testConnectVertexRule()
   // This vertex of the free zone cannot be tested by adding a point at
   //   (-0.4375, 0.10805) because the rule will just choose the vertex at
   //   (-0.4375, 0.10805) as the one it should connect to
-  pointsVector.push_back(new AF2Point3D(-0.125, 0.10805, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.875, 0.10805, 0.5));
+  pointsVector.push_back(new AF2Point3D(14, -0.125, 0.10805, 0.5));
+  pointsVector.push_back(new AF2Point3D(15, -0.875, 0.10805, 0.5));
   points.push_back(pointsVector[10]);
   points.push_back(pointsVector[11]);
   edges.push_back(new AF2Edge3D(pointsVector[10], pointsVector[11]));
@@ -1337,18 +1337,18 @@ void testConnectEdgeRule()
   CHECK(connectEdgeRule != NULL);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.625, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, 0.2165, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, 0.2165, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3123, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.3748, 0.2165, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.2165, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5627, 0.10825, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5002, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.625, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.375, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.25, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.375, 0.2165, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.5, 0.2165, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -0.3748, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -0.3123, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(8, -0.3748, 0.2165, 0.5));
+  pointsVector.push_back(new AF2Point3D(9, -0.5002, 0.2165, 0.5));
+  pointsVector.push_back(new AF2Point3D(10, -0.5627, 0.10825, 0.5));
+  pointsVector.push_back(new AF2Point3D(11, -0.5002, 0.0, 0.5));
 
   std::list<AF2Point3D*> points;
 
@@ -1387,7 +1387,7 @@ void testConnectEdgeRule()
   std::cout << "Good: There are two new faces" << std::endl;
 
   SaveLastVisitor failVisitor;
-  AF2Point3D failPointAlpha(-0.3752, 0.0001, 0.5);
+  AF2Point3D failPointAlpha(12, -0.3752, 0.0001, 0.5);
   points.push_back(&failPointAlpha);
   AF2Neighborhood failNgbhdAlpha(points, baselineEdge, edges, makePlaneProj());
   connectEdgeRule->applyRule(failNgbhdAlpha, 3u, failVisitor);
@@ -1396,7 +1396,7 @@ void testConnectEdgeRule()
       << "  has a point at (-0.3752, 0.0001, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointBravo(-0.3127, 0.10825, 0.5);
+  AF2Point3D failPointBravo(13, -0.3127, 0.10825, 0.5);
   points.push_back(&failPointBravo);
   AF2Neighborhood failNgbhdBravo(points, baselineEdge, edges, makePlaneProj());
   connectEdgeRule->applyRule(failNgbhdBravo, 3u, failVisitor);
@@ -1405,7 +1405,7 @@ void testConnectEdgeRule()
       << "  has a point at (-0.3127, 0.10825, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointCharlie(-0.3752, 0.2164, 0.5);
+  AF2Point3D failPointCharlie(14, -0.3752, 0.2164, 0.5);
   points.push_back(&failPointCharlie);
   AF2Neighborhood failNgbhdCharlie(points,
       baselineEdge, edges, makePlaneProj());
@@ -1415,7 +1415,7 @@ void testConnectEdgeRule()
       << "  has a point at (-0.3752, 0.2164, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointDelta(-0.4998, 0.2164, 0.5);
+  AF2Point3D failPointDelta(15, -0.4998, 0.2164, 0.5);
   points.push_back(&failPointDelta);
   AF2Neighborhood failNgbhdDelta(points,
       baselineEdge, edges, makePlaneProj());
@@ -1425,7 +1425,7 @@ void testConnectEdgeRule()
       << "  has a point at (-0.4998, 0.2164, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointEcho(-0.5623, 0.10825, 0.5);
+  AF2Point3D failPointEcho(16, -0.5623, 0.10825, 0.5);
   points.push_back(&failPointEcho);
   AF2Neighborhood failNgbhdEcho(points,
       baselineEdge, edges, makePlaneProj());
@@ -1435,7 +1435,7 @@ void testConnectEdgeRule()
       << "  has a point at (-0.5623, 0.10825, 0.5)" << std::endl;
   points.pop_back();
 
-  AF2Point3D failPointFoxtrot(-0.4998, 0.0001, 0.5);
+  AF2Point3D failPointFoxtrot(17, -0.4998, 0.0001, 0.5);
   points.push_back(&failPointFoxtrot);
   AF2Neighborhood failNgbhdFoxtrot(points,
       baselineEdge, edges, makePlaneProj());

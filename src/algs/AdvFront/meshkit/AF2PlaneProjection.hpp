@@ -89,7 +89,8 @@ class AF2PlaneProjection : public AF2LocalTransform
 
     AF2Point2D* transformFromSurface(AF2Point3D const & srfcPnt) const;
 
-    AF2Point3D* transformToSurface(AF2Point2D const & planePnt) const;
+    AF2Point3D* transformToSurface(AF2Point2D const & planePnt,
+        unsigned long const & pntId) const;
 };
 
 #endif

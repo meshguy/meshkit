@@ -16,6 +16,7 @@ class AF2Point3D
 {
   private:
 
+    unsigned long localId;
     double x, y, z;
     unsigned int distToBndry;
     bool committed;
@@ -28,11 +29,13 @@ class AF2Point3D
      *
      * Construct a point at the specified coordinates.
      *
+     * \param pntId a number that uniquely identifies this point within
+     *   the (local) context of a single execution of the AF2Algorithm
      * \param xVal the x coordinate of the point
      * \param yVal the y coordinate of the point
      * \param zVal the z coordinate of the point
      */
-    AF2Point3D(double xVal, double yVal, double zVal);
+    AF2Point3D(unsigned long pntId, double xVal, double yVal, double zVal);
 
     /**
      * \brief Get this points current distance to the boundary
@@ -48,6 +51,12 @@ class AF2Point3D
      * isCommitted() method.
      */
     moab::EntityHandle getVertexHandle() const;
+
+    /**
+     * \brief Get the number that uniquely identifies this point within
+     *   the context of the current execution of the AF2Algorithm
+     */
+    unsigned long getLocalId() const;
 
     /**
      * \brief Get the value of the x coordinate.

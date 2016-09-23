@@ -85,7 +85,7 @@ bool testPlaneProj()
 
 
   // 2.8059735404411 is (sqrt(2)/2) * (3 + cos(asin(0.25)))
-  AF2Point3D testPnt(2.8059735404411, 2.8059735404411, 0.25);
+  AF2Point3D testPnt(0, 2.8059735404411, 2.8059735404411, 0.25);
   AF2Point2D* planePnt = planeProj.transformFromSurface(testPnt);
   std::cout << "Transform (" << testPnt.getX() << ", " << testPnt.getY() << ", "
       << testPnt.getZ() << ") from surface to plane." << std::endl;
@@ -101,7 +101,7 @@ bool testPlaneProj()
 
   // 0.1539268506556547 is sin(acos(2.82 * sqrt(2) - 3))
   AF2Point2D planeTestPntA(0, 0.1539268506556547);
-  AF2Point3D* surfacePnt = planeProj.transformToSurface(planeTestPntA);
+  AF2Point3D* surfacePnt = planeProj.transformToSurface(planeTestPntA, 1);
   std::cout << "Transform (" << planeTestPntA.getX() << ", "
       << planeTestPntA.getY() << ") from plane to surface." << std::endl;
   std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
@@ -118,7 +118,7 @@ bool testPlaneProj()
 
   // 0.574682269122808 is sin(acos(2.7 * sqrt(2) - 3))
   AF2Point2D planeTestPntB(0, 0.574682269122808);
-  surfacePnt = planeProj.transformToSurface(planeTestPntB);
+  surfacePnt = planeProj.transformToSurface(planeTestPntB, 2);
   std::cout << "Transform (" << planeTestPntB.getX() << ", "
       << planeTestPntB.getY() << ") from plane to surface." << std::endl;
   std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
@@ -162,7 +162,7 @@ bool testPlaneProj()
   // z + (0.45 - z)/2.  Thus 2-dimensional planar coordinates are as
   // follows, with the first coordinat as 3-d z-coord divided by sqrt(2)/2
   AF2Point2D planeTestPntC(0.53625047660234298437463798744018, 0.1);
-  surfacePnt = wackyProj.transformToSurface(planeTestPntC);
+  surfacePnt = wackyProj.transformToSurface(planeTestPntC, 3);
   std::cout << "Transform (" << planeTestPntC.getX() << ", "
       << planeTestPntC.getY() << ") from plane to surface." << std::endl;
   std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
@@ -191,7 +191,7 @@ bool testPlaneProj()
       << "the y-axis." << std::endl;
 
   AF2Point2D planeTestPntD(1.17264657967023277, 0.1);
-  surfacePnt = wackyProjShift01.transformToSurface(planeTestPntD);
+  surfacePnt = wackyProjShift01.transformToSurface(planeTestPntD, 4);
   std::cout << "Transform (" << planeTestPntD.getX() << ", "
       << planeTestPntD.getY() << ") from plane to surface." << std::endl;
   std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
@@ -220,7 +220,7 @@ bool testPlaneProj()
       << "the y-axis." << std::endl;
 
   AF2Point2D planeTestPntE(1.5261999702635065, 0.1);
-  surfacePnt = wackyProjShift02.transformToSurface(planeTestPntE);
+  surfacePnt = wackyProjShift02.transformToSurface(planeTestPntE, 5);
   std::cout << "Transform (" << planeTestPntE.getX() << ", "
       << planeTestPntE.getY() << ") from plane to surface." << std::endl;
   std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "

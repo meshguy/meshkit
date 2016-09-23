@@ -11,16 +11,16 @@
 bool EndPointLess::operator()(const AF2Edge3D* const & oneEdge,
     const AF2Edge3D* const & otherEdge) const
 {
-  if (oneEdge->getStart() < otherEdge->getStart())
+  if (oneEdge->getStart()->getLocalId() < otherEdge->getStart()->getLocalId())
   {
     return true;
   }
-  if (oneEdge->getStart() > otherEdge->getStart())
+  if (oneEdge->getStart()->getLocalId() > otherEdge->getStart()->getLocalId())
   {
     return false;
   }
-  // otherwise the start endpoints are equual
-  if (oneEdge->getEnd() < otherEdge->getEnd())
+  // otherwise the start endpoints are equal
+  if (oneEdge->getEnd()->getLocalId() < otherEdge->getEnd()->getLocalId())
   {
     return true;
   }

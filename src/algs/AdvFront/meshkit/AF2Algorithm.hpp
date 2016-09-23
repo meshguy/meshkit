@@ -55,6 +55,7 @@ class AF2Algorithm
      * \brief Initialize the advancing front
      */
     void initFront(AF2Front & front, std::list<AF2Point3D*> & pntList,
+        unsigned long & pntId,
         const double* coords, unsigned int numPoints,
         const unsigned int* edges, unsigned int numEdges,
         const moab::EntityHandle* vertexHandles) const;
@@ -71,7 +72,7 @@ class AF2Algorithm
      * \brief Process a new point that is being added to the advancing front
      */
     void processNewPoint(const AF2Point2D* newPoint2D,
-        AF2Neighborhood* & ngbhd,
+        unsigned long & pntId, AF2Neighborhood* & ngbhd,
         std::map<const AF2Point2D*, AF2Point3D*> & newPointsMap,
         std::list<AF2Point3D*> & allPoints, AF2Front & front) const;
 

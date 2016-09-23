@@ -567,17 +567,17 @@ void testFreeTriangleRule()
       square->geom_handle(), origin, normal, xDir, 0.21875);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-1.0, -0.5, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.75, -0.5, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, -0.5, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.25, -0.5, 0.5));
-  pointsVector.push_back(new AF2Point3D(0.0, -0.5, 0.5));
-  pointsVector.push_back(new AF2Point3D(-1.0, -0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(-1.0, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(-1.0, 0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(0.0, -0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(0.0, 0.0, 0.5));
-  pointsVector.push_back(new AF2Point3D(0.0, 0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -1.0, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.75, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.5, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.25, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, 0.0, -0.5, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -1.0, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(6, -1.0, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(7, -1.0, 0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(8, 0.0, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(9, 0.0, 0.0, 0.5));
+  pointsVector.push_back(new AF2Point3D(10, 0.0, 0.25, 0.5));
 
   std::list<AF2Point3D*> points;
   AF2Edge3D* baselineEdge;
@@ -664,9 +664,9 @@ void testFillTriangleRule()
       square->geom_handle(), origin, normal, xDir, 0.25);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.75, -0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, -0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.625, -0.05, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.75, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.625, -0.05, 0.5));
 
   std::list<AF2Point3D*> points;
   AF2Edge3D* baselineEdge;
@@ -723,12 +723,12 @@ void testMultiPointTriangleRule()
       square->geom_handle(), origin, normal, xDir, 0.25);
 
   std::vector<AF2Point3D*> pointsVector;
-  pointsVector.push_back(new AF2Point3D(-0.75, -0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5, -0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.5625, -0.05, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.8125, -0.05, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.875, -0.25, 0.5));
-  pointsVector.push_back(new AF2Point3D(-0.375, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(0, -0.75, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(1, -0.5, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(2, -0.5625, -0.05, 0.5));
+  pointsVector.push_back(new AF2Point3D(3, -0.8125, -0.05, 0.5));
+  pointsVector.push_back(new AF2Point3D(4, -0.875, -0.25, 0.5));
+  pointsVector.push_back(new AF2Point3D(5, -0.375, -0.25, 0.5));
 
   std::list<AF2Point3D*> points;
   AF2Edge3D* baselineEdge;

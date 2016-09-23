@@ -111,7 +111,7 @@ AF2Point2D* AF2PlaneProjection::transformFromSurface(
 }
 
 AF2Point3D* AF2PlaneProjection::transformToSurface(
-    AF2Point2D const & planePnt) const
+    AF2Point2D const & planePnt, unsigned long const & pntId) const
 {
   MeshKit::Vector<3> rayOrigin(pOrigin);
   rayOrigin += (planePnt.getX() / scale) * pXDir +
@@ -167,6 +167,6 @@ AF2Point3D* AF2PlaneProjection::transformToSurface(
     }
   }
 
-  return new AF2Point3D(closestPointOnSrfc.x(),
+  return new AF2Point3D(pntId, closestPointOnSrfc.x(),
       closestPointOnSrfc.y(), closestPointOnSrfc.z());
 }

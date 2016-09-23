@@ -43,10 +43,13 @@ class AF2LocalTransform
      * of the calling context to deallocate it with a call to delete.
      *
      * \param planePnt the input 2-dimensional point
+     * \param pntId the local point identifier that should be assigned
+     *   to the new three-dimensional point
      * \return a 3-dimensional point on the surface
      */
     virtual AF2Point3D* transformToSurface(
-        AF2Point2D const & planePnt) const = 0;
+        AF2Point2D const & planePnt,
+        unsigned long const & pntId) const = 0;
 };
 
 #endif

@@ -98,12 +98,12 @@ AF2LocalTransformMaker* makeTransformBuilder()
 void initHex(AF2Front* front, AF2Point3D** & pointsAry, AF2Edge3D** & edgesAry)
 {
   pointsAry = new AF2Point3D*[6];
-  pointsAry[0] = new AF2Point3D(-0.625, -0.25, 0.5);
-  pointsAry[1] = new AF2Point3D(-0.375, -0.25, 0.5);
-  pointsAry[2] = new AF2Point3D(-0.25, 0.0, 0.5);
-  pointsAry[3] = new AF2Point3D(-0.375, 0.25, 0.5);
-  pointsAry[4] = new AF2Point3D(-0.625, 0.25, 0.5);
-  pointsAry[5] = new AF2Point3D(-0.75, 0.0, 0.5);
+  pointsAry[0] = new AF2Point3D(0, -0.625, -0.25, 0.5);
+  pointsAry[1] = new AF2Point3D(1, -0.375, -0.25, 0.5);
+  pointsAry[2] = new AF2Point3D(2, -0.25, 0.0, 0.5);
+  pointsAry[3] = new AF2Point3D(3, -0.375, 0.25, 0.5);
+  pointsAry[4] = new AF2Point3D(4, -0.625, 0.25, 0.5);
+  pointsAry[5] = new AF2Point3D(5, -0.75, 0.0, 0.5);
 
   for (int pi = 0; pi < 6; ++pi)
   {
@@ -164,7 +164,7 @@ void testSelectEmpty()
   }
   CHECK(exceptionThrown);
 
-  AF2Point3D* aPoint = new AF2Point3D(-0.5, 0.0, 0.5);
+  AF2Point3D* aPoint = new AF2Point3D(0, -0.5, 0.0, 0.5);
   aPoint->limitDistanceToBoundary(0);
   emptyFront->addPoint(aPoint);
   std::cout << "Added a point to the advancing front, but no edges."
@@ -343,7 +343,7 @@ void testSelectIsolatedPoint()
   initHex(frontObj, pointsAry, edgesAry);
 
   // add an isolated point
-  AF2Point3D* isoPoint = new AF2Point3D(-0.5, 0.0625, 0.5);
+  AF2Point3D* isoPoint = new AF2Point3D(6, -0.5, 0.0625, 0.5);
   frontObj->addPoint(isoPoint);
 
   // decrease quality on all but one of the edges
@@ -389,60 +389,60 @@ void testSelectHourglass()
 
   unsigned int numPoints = 54u;
   pointsAry = new AF2Point3D*[numPoints];
-  pointsAry[0] = new AF2Point3D(-0.501, -0.0005, 0.5);
-  pointsAry[1] = new AF2Point3D(-0.499, -0.0005, 0.5);
-  pointsAry[2] = new AF2Point3D(-0.497, -0.0006, 0.5);
-  pointsAry[3] = new AF2Point3D(-0.495, -0.0008, 0.5);
-  pointsAry[4] = new AF2Point3D(-0.493, -0.0011, 0.5);
-  pointsAry[5] = new AF2Point3D(-0.491, -0.0015, 0.5);
-  pointsAry[6] = new AF2Point3D(-0.489, -0.0020, 0.5);
-  pointsAry[7] = new AF2Point3D(-0.487, -0.0024, 0.5);
-  pointsAry[8] = new AF2Point3D(-0.485, -0.0027, 0.5);
-  pointsAry[9] = new AF2Point3D(-0.483, -0.0029, 0.5);
-  pointsAry[10] = new AF2Point3D(-0.481, -0.0030, 0.5);
-  pointsAry[11] = new AF2Point3D(-0.479, -0.0030, 0.5);
-  pointsAry[12] = new AF2Point3D(-0.479, -0.0020, 0.5);
-  pointsAry[13] = new AF2Point3D(-0.479, -0.0010, 0.5);
-  pointsAry[14] = new AF2Point3D(-0.479, 0.0, 0.5);
-  pointsAry[15] = new AF2Point3D(-0.479, 0.0010, 0.5);
-  pointsAry[16] = new AF2Point3D(-0.479, 0.0020, 0.5);
-  pointsAry[17] = new AF2Point3D(-0.479, 0.0030, 0.5);
-  pointsAry[18] = new AF2Point3D(-0.481, 0.0030, 0.5);
-  pointsAry[19] = new AF2Point3D(-0.483, 0.0029, 0.5);
-  pointsAry[20] = new AF2Point3D(-0.485, 0.0027, 0.5);
-  pointsAry[21] = new AF2Point3D(-0.487, 0.0024, 0.5);
-  pointsAry[22] = new AF2Point3D(-0.489, 0.0020, 0.5);
-  pointsAry[23] = new AF2Point3D(-0.491, 0.0015, 0.5);
-  pointsAry[24] = new AF2Point3D(-0.493, 0.0011, 0.5);
-  pointsAry[25] = new AF2Point3D(-0.495, 0.0008, 0.5);
-  pointsAry[26] = new AF2Point3D(-0.497, 0.0006, 0.5);
-  pointsAry[27] = new AF2Point3D(-0.499, 0.0005, 0.5);
-  pointsAry[28] = new AF2Point3D(-0.501, 0.0005, 0.5);
-  pointsAry[29] = new AF2Point3D(-0.503, 0.0006, 0.5);
-  pointsAry[30] = new AF2Point3D(-0.505, 0.0008, 0.5);
-  pointsAry[31] = new AF2Point3D(-0.507, 0.0011, 0.5);
-  pointsAry[32] = new AF2Point3D(-0.509, 0.0015, 0.5);
-  pointsAry[33] = new AF2Point3D(-0.511, 0.0020, 0.5);
-  pointsAry[34] = new AF2Point3D(-0.513, 0.0024, 0.5);
-  pointsAry[35] = new AF2Point3D(-0.515, 0.0027, 0.5);
-  pointsAry[36] = new AF2Point3D(-0.517, 0.0029, 0.5);
-  pointsAry[37] = new AF2Point3D(-0.519, 0.0030, 0.5);
-  pointsAry[38] = new AF2Point3D(-0.521, 0.0030, 0.5);
-  pointsAry[39] = new AF2Point3D(-0.521, 0.0020, 0.5);
-  pointsAry[40] = new AF2Point3D(-0.521, 0.0010, 0.5);
-  pointsAry[41] = new AF2Point3D(-0.521, 0.0, 0.5);
-  pointsAry[42] = new AF2Point3D(-0.521, -0.0010, 0.5);
-  pointsAry[43] = new AF2Point3D(-0.521, -0.0020, 0.5);
-  pointsAry[44] = new AF2Point3D(-0.521, -0.0030, 0.5);
-  pointsAry[45] = new AF2Point3D(-0.519, -0.0030, 0.5);
-  pointsAry[46] = new AF2Point3D(-0.517, -0.0029, 0.5);
-  pointsAry[47] = new AF2Point3D(-0.515, -0.0027, 0.5);
-  pointsAry[48] = new AF2Point3D(-0.513, -0.0024, 0.5);
-  pointsAry[49] = new AF2Point3D(-0.511, -0.0020, 0.5);
-  pointsAry[50] = new AF2Point3D(-0.509, -0.0015, 0.5);
-  pointsAry[51] = new AF2Point3D(-0.507, -0.0011, 0.5);
-  pointsAry[52] = new AF2Point3D(-0.505, -0.0008, 0.5);
-  pointsAry[53] = new AF2Point3D(-0.503, -0.0006, 0.5);
+  pointsAry[0] = new AF2Point3D(0, -0.501, -0.0005, 0.5);
+  pointsAry[1] = new AF2Point3D(1, -0.499, -0.0005, 0.5);
+  pointsAry[2] = new AF2Point3D(2, -0.497, -0.0006, 0.5);
+  pointsAry[3] = new AF2Point3D(3, -0.495, -0.0008, 0.5);
+  pointsAry[4] = new AF2Point3D(4, -0.493, -0.0011, 0.5);
+  pointsAry[5] = new AF2Point3D(5, -0.491, -0.0015, 0.5);
+  pointsAry[6] = new AF2Point3D(6, -0.489, -0.0020, 0.5);
+  pointsAry[7] = new AF2Point3D(7, -0.487, -0.0024, 0.5);
+  pointsAry[8] = new AF2Point3D(8, -0.485, -0.0027, 0.5);
+  pointsAry[9] = new AF2Point3D(9, -0.483, -0.0029, 0.5);
+  pointsAry[10] = new AF2Point3D(10, -0.481, -0.0030, 0.5);
+  pointsAry[11] = new AF2Point3D(11, -0.479, -0.0030, 0.5);
+  pointsAry[12] = new AF2Point3D(12, -0.479, -0.0020, 0.5);
+  pointsAry[13] = new AF2Point3D(13, -0.479, -0.0010, 0.5);
+  pointsAry[14] = new AF2Point3D(14, -0.479, 0.0, 0.5);
+  pointsAry[15] = new AF2Point3D(15, -0.479, 0.0010, 0.5);
+  pointsAry[16] = new AF2Point3D(16, -0.479, 0.0020, 0.5);
+  pointsAry[17] = new AF2Point3D(17, -0.479, 0.0030, 0.5);
+  pointsAry[18] = new AF2Point3D(18, -0.481, 0.0030, 0.5);
+  pointsAry[19] = new AF2Point3D(19, -0.483, 0.0029, 0.5);
+  pointsAry[20] = new AF2Point3D(20, -0.485, 0.0027, 0.5);
+  pointsAry[21] = new AF2Point3D(21, -0.487, 0.0024, 0.5);
+  pointsAry[22] = new AF2Point3D(22, -0.489, 0.0020, 0.5);
+  pointsAry[23] = new AF2Point3D(23, -0.491, 0.0015, 0.5);
+  pointsAry[24] = new AF2Point3D(24, -0.493, 0.0011, 0.5);
+  pointsAry[25] = new AF2Point3D(25, -0.495, 0.0008, 0.5);
+  pointsAry[26] = new AF2Point3D(26, -0.497, 0.0006, 0.5);
+  pointsAry[27] = new AF2Point3D(27, -0.499, 0.0005, 0.5);
+  pointsAry[28] = new AF2Point3D(28, -0.501, 0.0005, 0.5);
+  pointsAry[29] = new AF2Point3D(29, -0.503, 0.0006, 0.5);
+  pointsAry[30] = new AF2Point3D(30, -0.505, 0.0008, 0.5);
+  pointsAry[31] = new AF2Point3D(31, -0.507, 0.0011, 0.5);
+  pointsAry[32] = new AF2Point3D(32, -0.509, 0.0015, 0.5);
+  pointsAry[33] = new AF2Point3D(33, -0.511, 0.0020, 0.5);
+  pointsAry[34] = new AF2Point3D(34, -0.513, 0.0024, 0.5);
+  pointsAry[35] = new AF2Point3D(35, -0.515, 0.0027, 0.5);
+  pointsAry[36] = new AF2Point3D(36, -0.517, 0.0029, 0.5);
+  pointsAry[37] = new AF2Point3D(37, -0.519, 0.0030, 0.5);
+  pointsAry[38] = new AF2Point3D(38, -0.521, 0.0030, 0.5);
+  pointsAry[39] = new AF2Point3D(39, -0.521, 0.0020, 0.5);
+  pointsAry[40] = new AF2Point3D(40, -0.521, 0.0010, 0.5);
+  pointsAry[41] = new AF2Point3D(41, -0.521, 0.0, 0.5);
+  pointsAry[42] = new AF2Point3D(42, -0.521, -0.0010, 0.5);
+  pointsAry[43] = new AF2Point3D(43, -0.521, -0.0020, 0.5);
+  pointsAry[44] = new AF2Point3D(44, -0.521, -0.0030, 0.5);
+  pointsAry[45] = new AF2Point3D(45, -0.519, -0.0030, 0.5);
+  pointsAry[46] = new AF2Point3D(46, -0.517, -0.0029, 0.5);
+  pointsAry[47] = new AF2Point3D(47, -0.515, -0.0027, 0.5);
+  pointsAry[48] = new AF2Point3D(48, -0.513, -0.0024, 0.5);
+  pointsAry[49] = new AF2Point3D(49, -0.511, -0.0020, 0.5);
+  pointsAry[50] = new AF2Point3D(50, -0.509, -0.0015, 0.5);
+  pointsAry[51] = new AF2Point3D(51, -0.507, -0.0011, 0.5);
+  pointsAry[52] = new AF2Point3D(52, -0.505, -0.0008, 0.5);
+  pointsAry[53] = new AF2Point3D(53, -0.503, -0.0006, 0.5);
 
   for (unsigned int pi = 0; pi < numPoints; ++pi)
   {
@@ -500,12 +500,12 @@ void testSelectHourglass()
 void testAdvanceMissingPoints()
 {
   AF2Point3D** pointsAry = new AF2Point3D*[6];
-  pointsAry[0] = new AF2Point3D(-0.625, -0.25, 0.5);
-  pointsAry[1] = new AF2Point3D(-0.375, -0.25, 0.5);
-  pointsAry[2] = new AF2Point3D(-0.25, 0.0, 0.5);
-  pointsAry[3] = new AF2Point3D(-0.375, 0.25, 0.5);
-  pointsAry[4] = new AF2Point3D(-0.625, 0.25, 0.5);
-  pointsAry[5] = new AF2Point3D(-0.75, 0.0, 0.5);
+  pointsAry[0] = new AF2Point3D(0, -0.625, -0.25, 0.5);
+  pointsAry[1] = new AF2Point3D(1, -0.375, -0.25, 0.5);
+  pointsAry[2] = new AF2Point3D(2, -0.25, 0.0, 0.5);
+  pointsAry[3] = new AF2Point3D(3, -0.375, 0.25, 0.5);
+  pointsAry[4] = new AF2Point3D(4, -0.625, 0.25, 0.5);
+  pointsAry[5] = new AF2Point3D(5, -0.75, 0.0, 0.5);
 
   // do not add the points to the front before attempting to 
   // advance the front and add the edges
@@ -559,12 +559,12 @@ void testAdvanceInvalidQuality()
   AF2Front* frontObj = new AF2Front();
 
   AF2Point3D** pointsAry = new AF2Point3D*[6];
-  pointsAry[0] = new AF2Point3D(-0.625, -0.25, 0.5);
-  pointsAry[1] = new AF2Point3D(-0.375, -0.25, 0.5);
-  pointsAry[2] = new AF2Point3D(-0.25, 0.0, 0.5);
-  pointsAry[3] = new AF2Point3D(-0.375, 0.25, 0.5);
-  pointsAry[4] = new AF2Point3D(-0.625, 0.25, 0.5);
-  pointsAry[5] = new AF2Point3D(-0.75, 0.0, 0.5);
+  pointsAry[0] = new AF2Point3D(0, -0.625, -0.25, 0.5);
+  pointsAry[1] = new AF2Point3D(1, -0.375, -0.25, 0.5);
+  pointsAry[2] = new AF2Point3D(2, -0.25, 0.0, 0.5);
+  pointsAry[3] = new AF2Point3D(3, -0.375, 0.25, 0.5);
+  pointsAry[4] = new AF2Point3D(4, -0.625, 0.25, 0.5);
+  pointsAry[5] = new AF2Point3D(5, -0.75, 0.0, 0.5);
 
   for (int pi = 0; pi < 6; ++pi)
   {
@@ -626,7 +626,7 @@ void testAdvanceFront()
   AF2Edge3D** edgesAry = NULL;
   initHex(frontObj, pointsAry, edgesAry);
 
-  AF2Point3D* addedPoint = new AF2Point3D(-0.5, 0.0625, 0.5);
+  AF2Point3D* addedPoint = new AF2Point3D(6, -0.5, 0.0625, 0.5);
   frontObj->addPoint(addedPoint);
 
   std::list<AF2Edge3D*> addedEdges;
@@ -664,13 +664,13 @@ void testAdvanceHangingEdge()
   AF2Front* frontObj = new AF2Front();
 
   AF2Point3D** pointsAry = new AF2Point3D*[7];
-  pointsAry[0] = new AF2Point3D(-0.625, -0.25, 0.5);
-  pointsAry[1] = new AF2Point3D(-0.375, -0.25, 0.5);
-  pointsAry[2] = new AF2Point3D(-0.25, 0.0, 0.5);
-  pointsAry[3] = new AF2Point3D(-0.375, 0.25, 0.5);
-  pointsAry[4] = new AF2Point3D(-0.625, 0.25, 0.5);
-  pointsAry[5] = new AF2Point3D(-0.75, 0.0, 0.5);
-  pointsAry[6] = new AF2Point3D(-0.5, 0.0625, 0.5);
+  pointsAry[0] = new AF2Point3D(0, -0.625, -0.25, 0.5);
+  pointsAry[1] = new AF2Point3D(1, -0.375, -0.25, 0.5);
+  pointsAry[2] = new AF2Point3D(2, -0.25, 0.0, 0.5);
+  pointsAry[3] = new AF2Point3D(3, -0.375, 0.25, 0.5);
+  pointsAry[4] = new AF2Point3D(4, -0.625, 0.25, 0.5);
+  pointsAry[5] = new AF2Point3D(5, -0.75, 0.0, 0.5);
+  pointsAry[6] = new AF2Point3D(6, -0.5, 0.0625, 0.5);
 
   for (int pi = 0; pi < 7; ++pi)
   {
@@ -743,7 +743,7 @@ void testCompletedAdvance()
   initHex(frontObj, pointsAry, edgesAry);
 
   // add a point near the center of the hexagon
-  AF2Point3D* addedPoint = new AF2Point3D(-0.5, 0.0625, 0.5);
+  AF2Point3D* addedPoint = new AF2Point3D(6, -0.5, 0.0625, 0.5);
   frontObj->addPoint(addedPoint);
 
   // fill in triangles with the added point one at a time
