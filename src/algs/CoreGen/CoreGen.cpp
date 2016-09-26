@@ -1,5 +1,6 @@
 #include "meshkit/CoreGen.hpp"
 #include "moab/VerdictWrapper.hpp"
+#include "moab/NestedRefine.hpp"
 
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
 #define ERRORR(a,b) {if (iBase_SUCCESS != err) {std::cerr << a << std::endl; return b;}}
@@ -44,6 +45,7 @@ namespace MeshKit
     nss_flag = false;
     nssall_flag = false;
     have_hex27 = false;
+    umr_flag = false;
     nst_Id = 9997;
     nsb_Id = 9998;
     prob_type = "mesh";
@@ -54,6 +56,7 @@ namespace MeshKit
     minfo = "off";
     nringsx = 0;
     nringsy = 0;
+    nDegree = 0;
 
     // initialize more memory/time related variables
     ctload = 0, ctcopymove = 0, ctmerge = 0, ctextrude = 0, ctns = 0, ctgid = 0, ctsave = 0;
@@ -285,6 +288,11 @@ namespace MeshKit
                 logfile << " CPU time = " << ctns << " mins" << std::endl;
                 logfile << " Memory used: " << mem6/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
+          }
+        if(umr_flag == true){
+#ifdef USE_MPI
+            err = refine_coremodel();
+#endif
           }
       }
     if (prob_type == "mesh") {
@@ -1160,7 +1168,7 @@ namespace MeshKit
             if(volume == 0){
                 logfile << "Trying to compute MESHTOGEOM, but volume obtained is zero." << std::endl;
                 logfile << "Geometry engine must match file type. Aborting." << std::endl;
-                exit(0);
+                // exit(0); don't abort, continue to run. MESHTOGEOM won't be computed rest should still work.
               }
 
             std::vector<moab::EntityHandle> elems;
@@ -1191,7 +1199,7 @@ namespace MeshKit
     else{
         logfile << "Trying to load a file that doesn't have geometry: Aborting" << std::endl;
         logfile << "Try loading a .cub file." << std::endl;
-        exit(0);
+       // exit(0); don't abort, continue to run. MESHTOGEOM won't be computed rest should still work.
     }
     return iBase_SUCCESS;
   }
@@ -1531,6 +1539,42 @@ namespace MeshKit
           }
       }
     return iBase_SUCCESS;
+  }
+
+  int CoreGen::refine_coremodel(){
+
+#ifdef USE_MPI
+    std::cout<<"REFINEMENT BLOCK"<<std::endl;
+    /*********************************************/
+    // refine the mesh
+    /*********************************************/
+    int num_levels = deg.size();
+    moab::NestedRefine uref(dynamic_cast<Core*>(mb), pc, 0);
+    std::vector<moab::EntityHandle> lsets;
+
+    std::cout<<"Starting hierarchy generation"<<std::endl;
+
+    uref.generate_mesh_hierarchy(num_levels, &deg[0], lsets);
+    uref.update_special_tags(num_levels, lsets[num_levels]);
+    std::cout<<"Finished hierarchy generation in "<<uref.timeall.tm_total<<"  secs"<<std::endl;
+
+    std::cout<<"Time taken for refinement "<<uref.timeall.tm_refine<<"  secs"<<std::endl;
+    std::cout<<"Time taken for resolving shared interface "<<uref.timeall.tm_resolve<<"  secs"<<std::endl;
+
+    moab::Range all_ents, ents[4];
+    for (int l=0; l<num_levels; l++)
+      {
+        all_ents.clear();
+        ents[0].clear(); ents[1].clear(); ents[2].clear(); ents[3].clear();
+        mb->get_entities_by_handle(lsets[l+1], all_ents); //MB_CHK_ERR(error);
+
+        for (int k=0; k<4; k++)
+          ents[k] = all_ents.subset_by_dimension(k);
+
+        std::cout<<"Mesh size for level "<<l+1<<"  :: nverts = "<<ents[0].size()<<", nedges = "<<ents[1].size()<<", nfaces = "<<ents[2].size()<<", ncells = "<<ents[3].size()<<std::endl;
+      }
+#endif
+    return 0;
   }
 
   int CoreGen::create_neumannset() {
@@ -2106,6 +2150,19 @@ namespace MeshKit
                 have_hex27 = false;
             else
               IOErrorHandler (INVALIDINPUT);
+          }
+        // UMR parameters
+        if (input_string.substr(0, 3) == "umr") {
+            umr_flag = true;
+            int temp_deg = 0;
+            std::istringstream formatString(input_string);
+            formatString >> card >> nDegree;
+            for(int i=1; i<=nDegree;i++){
+                formatString >> temp_deg;
+                deg.push_back(temp_deg);
+              }
+            if(formatString.fail())
+                IOErrorHandler (INVALIDINPUT);
           }
         // merge tolerance
         if (input_string.substr(0, 14) == "mergetolerance") {
