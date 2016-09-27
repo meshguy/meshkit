@@ -80,8 +80,9 @@ void AF2DfltTriangleMeshOp::execute_this()
   AF2DfltTriangleRules defaultRules;
   AF2Algorithm algorithm(defaultRules.getRules());
 
+  int num_faces=0;
   for (MEntSelection::iterator selIt = mentSelection.begin();
-      selIt != mentSelection.end(); ++selIt)
+      selIt != mentSelection.end(); ++selIt, num_faces++)
   {
     // extract the model entity from the map iterator
     ModelEnt* modelEnt = selIt->first;
@@ -93,7 +94,13 @@ void AF2DfltTriangleMeshOp::execute_this()
 
     // get the moab instance for convenience
     moab::Interface* moabInstance = mk_core()->moab_instance();
-
+    bool debugFlag1 = false;
+    if(debugFlag1)
+    {
+      std::stringstream tempStep;
+      tempStep<<"InterMesh_"<<num_faces<<  ".h5m";
+      moabInstance->write_file(tempStep.str().c_str());
+    }
     // query the boundary to find mesh edges
     // Note: the senses returned by this method should be either FORWARD
     //   or REVERSE, not BOTH . . .
@@ -240,6 +247,7 @@ void AF2DfltTriangleMeshOp::execute_this()
 
     delete meshResult;
 
+    std::cout << " for surface " << num_faces << " generate " << numTriangles << " triangles \n";
     // Insert the new entities into the entity range
     selIt->second.insert(firstHandle, firstHandle + numTriangles - 1);
 
