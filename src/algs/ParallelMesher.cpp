@@ -68,9 +68,6 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
   else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE) {
     proxy = MKCore::meshop_proxy("ParExchangeMesh");
   }
-  else if (type == POST_RECV) {
-    proxy = MKCore::meshop_proxy("ParPostRecv");
-  }
   else if (type == SEND_POST_SURF_MESH) {
     proxy = MKCore::meshop_proxy("ParSendPostSurfMesh");
   }
@@ -254,6 +251,36 @@ void ParallelMesher::add_parallel_mesh_op(PARALLEL_OP_TYPE type, bool after)
 
 void ParallelMesher::execute_this()
 {
+  // create parallel partition, with the rank
+
+  moab::Interface * mb =  mk_core()->moab_instance();
+  moab::Tag ptag =m_mpcomm-> partition_tag(); // usually PARALLEL_PARTITION tag
+  // collect all entities of dim 3, and put them in a new set
+  MEntSet vols=m_sEntity[MESH_VOLUME];
+  moab::EntityHandle pset;
+  moab::ErrorCode rval = mb->create_meshset(moab::MESHSET_SET, pset); MB_CHK_ERR_RET(rval);
+  rval = mb->tag_set_data(ptag, &pset, 1, &m_rank);  MB_CHK_ERR_RET(rval);
+  for ( MEntSet::iterator viter = vols.begin(); viter!=vols.end(); viter++)
+  {
+    ModelEnt * me = *viter;
+    moab::Range ents;
+    moab::EntityHandle mEntSet = me->mesh_handle();
+    rval = mb->get_entities_by_dimension(mEntSet, 3, ents);  MB_CHK_ERR_RET(rval);
+    rval = mb->add_entities(pset, ents);
+  }
+
+  // also, do some cleanup, remove the interface sets from database, they are not needed anymore
+  // (except if you want to do ghosting?)
+  /*moab::Range intf_sets = m_mpcomm->interface_sets();
+  rval = mb->delete_entities(intf_sets); MB_CHK_ERR_RET(rval);*/
+  // delete geometry sets?
+  moab::Tag geom_tag;
+  rval = mb->tag_get_handle(GEOM_DIMENSION_TAG_NAME, 1, moab::MB_TYPE_INTEGER, geom_tag);MB_CHK_ERR_RET(rval);
+  Range geom_sets;
+  rval = mb->get_entities_by_type_and_tag(0, moab::MBENTITYSET, &geom_tag, NULL, 1, geom_sets);MB_CHK_ERR_RET(rval);
+  rval = mb->delete_entities(geom_sets); MB_CHK_ERR_RET(rval);
+  return;
+
 }
 
 void ParallelMesher::print_mesh()
