@@ -35,13 +35,13 @@ int main( int argc, char *argv[] )
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
- 
+
   // Check command line arg
   std::string geom_filename;
   const char *mesh_filename = NULL;
   int send_method = 1; // read and delete
   int part_method = 0; // round_robin
-  double mesh_size = 0.1;
+  double mesh_size = 0.5;
   int mesh_interval = -1;
   bool force_intervals = false;
   std::string options;
@@ -152,15 +152,15 @@ int load_and_mesh(const char *geom_filename,
   SizingFunction esize(mk, n_interval, interval_size);
   unsigned int i_sf = esize.core_index();
   for (size_t i = 0; i < vols.size(); i++) vols[i]->sizing_function_index(i_sf);
-  
+
   // do parallel mesh
   mk->construct_meshop("ParallelMesher", vols);
   mk->setup_and_execute();
   double t3 = MPI_Wtime();
-  
+
     unsigned long long mem1 = 0, max_mem1 = 0;
     mk->moab_instance()->estimated_memory_use(0, 0, 0, &mem1);
-    MPI::COMM_WORLD.Reduce( &mem1, &max_mem1, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
+    MPI_Reduce( &mem1, &max_mem1, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0, MPI_COMM_WORLD);
     if (rank == 0)
         std::cout << "Max. Memory used: " << max_mem1/1e6 << " Mb\n" << std::endl;
 
@@ -191,9 +191,9 @@ int load_and_mesh(const char *geom_filename,
               << " secs, Meshing_time=" << t3 - t2
               << " secs, Total_time=" << t5 - t1 << std::endl;
   }
-  
+
   mk->clear_graph();
   MPI_Finalize();
-  
+
   return 0;
 }
