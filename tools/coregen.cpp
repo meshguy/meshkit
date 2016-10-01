@@ -42,9 +42,9 @@ void test_coregen_default(int argc, char **argv)
 #ifdef HAVE_PARALLEL_MOAB
     //Initialize MPI
 #ifdef HAVE_PARALLEL_MOAB
-    MPI::Init(argc, argv);
-    nprocs = MPI::COMM_WORLD.Get_size();
-    nrank = MPI::COMM_WORLD.Get_rank();
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &nrank);
 #endif
 #endif
     MKCore *mk;
@@ -61,8 +61,8 @@ void test_coregen_default(int argc, char **argv)
     mk->setup_and_execute();
 #ifdef HAVE_PARALLEL_MOAB
 #ifdef HAVE_PARALLEL_MOAB
-    MPI::COMM_WORLD.Barrier();
-    MPI::Finalize();
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
 #endif
 #endif
 }

@@ -17,7 +17,7 @@
 
 const bool debug_parallelmesher = false;
 
-namespace MeshKit 
+namespace MeshKit
 {
 // static registration of this mesh scheme
 moab::EntityType ParallelMesher_tps[] = {moab::MBVERTEX, moab::MBTRI, moab::MBTET, moab::MBMAXTYPE};
@@ -59,11 +59,11 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
   }
   else if (type == MESH_INTER_SURF || type == MESH_NINTER_SURF) {
     //mk_core()->meshop_by_mesh_type(moab::MBTRI, proxies);
-    proxy = MKCore::meshop_proxy("CAMALTriAdvance");
+    proxy = MKCore::meshop_proxy("AF2DfltTriangleMeshOp");
   }
   else if (type == MESH_VOLUME) {
     //mk_core()->meshop_by_mesh_type(moab::MBTET, proxies);
-    proxy = MKCore::meshop_proxy("CAMALTetMesher");
+    proxy = MKCore::meshop_proxy("NGTetMesher");
   }
   else if (type == EXCHANGE_VERTEX || type == EXCHANGE_EDGE) {
     proxy = MKCore::meshop_proxy("ParExchangeMesh");
@@ -76,7 +76,7 @@ MeshOp *ParallelMesher::get_mesher(PARALLEL_OP_TYPE type)
   }
 
   if (proxy == NULL) throw Error(MK_FAILURE, "Couldn't find a MeshOp capable of producing the given mesh type.");
-  
+
   return mk_core()->construct_meshop(proxy);
 }
 
@@ -116,7 +116,7 @@ void ParallelMesher::setup_this()
     for (int i = 2; i > -1; i--) {
       children.clear();
       me_vol->get_adjacencies(i, children);
-      
+
       for (MEntVector::iterator cit = children.begin(); cit != children.end(); cit++) {
         RefEntity* child = reinterpret_cast< RefEntity* > ((*cit)->geom_handle());
         TDParallel *td_par_child = (TDParallel *) child->get_TD(&TDParallel::is_parallel);
@@ -236,7 +236,7 @@ void ParallelMesher::add_parallel_mesh_op(PARALLEL_OP_TYPE type, bool after)
         }
       }
     }
-    
+
     if (!found) { // if no specified meshop
       // add this entity to it, and if first, make sure it's added upstream
       mesher->add_modelent(*iter);
@@ -319,7 +319,7 @@ void ParallelMesher::print_mesh()
             std::cout << connect[j] << " ";
           }
         }
-        
+
         std::cout << ", shared_info=";
         for (int ii = 0; ii < num_ps; ii++) {
           std::cout << tmp_procs[ii] << ":" << tmp_hs[ii] << ", ";
@@ -327,6 +327,6 @@ void ParallelMesher::print_mesh()
         std::cout << std::endl;
       }
     }
-  }    
+  }
 }
 } // namespace MeshKit

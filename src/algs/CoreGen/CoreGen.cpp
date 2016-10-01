@@ -101,13 +101,13 @@ namespace MeshKit
                     err = distribute_mesh(rank, procs);
                     if(err !=0) {logfile << "distribute meshes failed!" << std::endl; exit(1);}
 
-                    MPI::COMM_WORLD.Barrier();
+                    MPI_Barrier(MPI_COMM_WORLD);
 
                     err = load_meshes_more_procs(rank, procs);
                     if(err !=0) {logfile << "load m meshes failed!" << std::endl; exit(1);}
                   }
                 //Get a pcomm object
-                pc = new moab::ParallelComm(mk_core()->moab_instance(), MPI::COMM_WORLD, &err);
+                pc = new moab::ParallelComm(mk_core()->moab_instance(), MPI_COMM_WORLD, &err);
 #endif
               }
 
@@ -208,7 +208,7 @@ namespace MeshKit
                 logfile << " Memory used: " << mem3/1e6 << " Mb\n For rank 0\n" << std::endl;
               }
 #ifdef USE_MPI
-            MPI::COMM_WORLD.Barrier();
+            MPI_Barrier(MPI_COMM_WORLD);
 #endif
             /*********************************************/
             // extrude
@@ -236,7 +236,7 @@ namespace MeshKit
             if(extrude_flag == true)
               em->setup_called(true);
 #ifdef USE_MPI
-            MPI::COMM_WORLD.Barrier();
+            MPI_Barrier(MPI_COMM_WORLD);
 #endif
           }
       }
@@ -351,7 +351,7 @@ namespace MeshKit
 
 #ifdef USE_MPI
     unsigned long max_mem7 = 1.0;
-    MPI::COMM_WORLD.Reduce( &mem7, &max_mem7, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
+    MPI_Reduce( &mem7, &max_mem7, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0, MPI_COMM_WORLD);
 #endif
 
 #ifdef USE_MPI
@@ -359,24 +359,24 @@ namespace MeshKit
 
         unsigned long max_mem1 = 1.0, max_mem2 = 1.0, max_mem3 = 1.0, max_mem5 = 1.0;
 
-        MPI::COMM_WORLD.Reduce( &mem1, &max_mem1, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &mem2, &max_mem2, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &mem3, &max_mem3, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &mem5, &max_mem5, 1, MPI::UNSIGNED_LONG, MPI::MAX, 0);
+        MPI_Reduce( &mem1, &max_mem1, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &mem2, &max_mem2, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &mem3, &max_mem3, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &mem5, &max_mem5, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0, MPI_COMM_WORLD);
 
         double max_ctload = -1.0, max_ctcopymove = -1.0, max_ctgid = -1.0, max_ctsave = -1.0, max_ctmerge = -1.0;
-        MPI::COMM_WORLD.Reduce( &ctload, &max_ctload, 1, MPI::DOUBLE, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ctcopymove, &max_ctcopymove, 1, MPI::DOUBLE, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ctmerge, &max_ctmerge, 1, MPI::DOUBLE, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ctgid, &max_ctgid, 1, MPI::DOUBLE, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ctsave, &max_ctsave, 1, MPI::DOUBLE, MPI::MAX, 0);
+        MPI_Reduce( &ctload, &max_ctload, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ctcopymove, &max_ctcopymove, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ctmerge, &max_ctmerge, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ctgid, &max_ctgid, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ctsave, &max_ctsave, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
         int max_tload = -1.0, max_tcopymove = -1.0, max_tgid = -1.0, max_tsave = -1.0, max_tmerge = -1.0;
-        MPI::COMM_WORLD.Reduce( &ld_tload, &max_tload, 1, MPI::INT, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ld_tcopymove, &max_tcopymove, 1, MPI::INT, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ld_tmerge, &max_tmerge, 1, MPI::INT, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ld_tgid, &max_tgid, 1, MPI::INT, MPI::MAX, 0);
-        MPI::COMM_WORLD.Reduce( &ld_tsave, &max_tsave, 1, MPI::INT, MPI::MAX, 0);
+        MPI_Reduce( &ld_tload, &max_tload, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ld_tcopymove, &max_tcopymove, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ld_tmerge, &max_tmerge, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ld_tgid, &max_tgid, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce( &ld_tsave, &max_tsave, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 
         if(rank == 0 && procs > 1){
             logfile << "\nMAXIMUM TIME TAKEN OVER ALL PROCS\nCLOCK TIME:-";
@@ -455,7 +455,7 @@ namespace MeshKit
     if (nrank == 0) {
         logfile << "Saving mesh file in parallel, starting to cleanup sets " << std::endl;
     }
-  
+
    // handle sets before saving - delete all unnessary sets - this would save a lot of save time
     moab::Tag mattag;
     mb->tag_get_handle( "MATERIAL_SET", 1, MB_TYPE_INTEGER, mattag );
@@ -545,18 +545,18 @@ namespace MeshKit
           }
       }
 
-    MPI::COMM_WORLD.Barrier();
- 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     if (nrank == 0) {
         logfile << "Done deleting gd sets, now starting to resolve shared ents " << std::endl;
     }
 
- 
+
     // resolve shared sets to create only on MATERIAL_SET
     matsets.clear();
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &mattag, 0, 1, matsets );
     if(matsets.size() > 0)
-	pc->resolve_shared_sets( matsets, mattag );
+        pc->resolve_shared_sets( matsets, mattag );
 
      if (nrank == 0) {
         logfile << matsets.size() << "Done resolving material ents " << std::endl;
@@ -566,17 +566,17 @@ namespace MeshKit
     nssets.clear();
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &nstag, 0, 1, nssets );
      if(nssets.size() > 0)
-	pc->resolve_shared_sets( nssets, nstag );
+        pc->resolve_shared_sets( nssets, nstag );
 */
     // resolve
     drsets.clear();
     mb->get_entities_by_type_and_tag( 0, MBENTITYSET, &drtag, 0, 1, drsets );
      if(drsets.size() > 0)
-	pc->resolve_shared_sets( drsets, drtag );
+        pc->resolve_shared_sets( drsets, drtag );
 
     // need this barrier before setting pp tag
-//	MPI::COMM_WORLD.Barrier();
- 
+//	MPI_Barrier(MPI_COMM_WORLD);
+
 
     // Done with deleting recursive sets now create pp tags and save
     if (nrank == 0) {
@@ -595,9 +595,9 @@ namespace MeshKit
     mb->tag_get_handle( "PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, pp_tag, MB_TAG_SPARSE|MB_TAG_CREAT);
     mb->tag_set_data(pp_tag, &meshsetp, 1, &nrank);
 
- 
-   //MPI::COMM_WORLD.Barrier();
- 
+
+   //MPI_Barrier(MPI_COMM_WORLD);
+
 
    // flag specified in input file
     if(have_hex27 == true){
@@ -617,13 +617,13 @@ namespace MeshKit
     out_sets.insert(meshsetp);
 */
 
-    MPI::COMM_WORLD.Barrier();
+    MPI_Barrier(MPI_COMM_WORLD);
     if (nrank == 0) {
         logfile << "Before saving mesh file in parallel. " << std::endl;
     }
- 
-    MPI::COMM_WORLD.Barrier();
-  
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
     moab::ErrorCode rval = mb->write_file(outfile.c_str() , 0,"PARALLEL=WRITE_PART;CPUTIME;"/*DEBUG_IO=2;", out_sets*/);
     if(rval != moab::MB_SUCCESS) {
         std::cerr<<"Writing output file failed Code:";
