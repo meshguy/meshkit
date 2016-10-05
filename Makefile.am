@@ -2,7 +2,7 @@
 # Don't require GNU-standard files (Changelog, README, etc.)
 AUTOMAKE_OPTIONS = foreign
 # Don't loose the autoconf include path
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I config
 
 # Subdirectories to build
 SUBDIRS = . python

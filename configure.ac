@@ -1,12 +1,17 @@
 ################################################################################
 #                           Standard Stuff
 ################################################################################
-AC_INIT(MESHKIT, 1.4.2pre)
-AC_CANONICAL_SYSTEM
-AC_CONFIG_MACRO_DIR([m4])
+AC_INIT([MESHKIT],[1.4.2pre],[meshkit-dev@mcs.anl.gov],[meshkit],[http://sigma.mcs.anl.gov])
+AC_CONFIG_MACRO_DIR([config])
+AC_CONFIG_AUX_DIR([config])
+AC_CANONICAL_TARGET
 m4_ifdef([AM_SILENT_RULES],
- [AM_INIT_AUTOMAKE([-Wall color-tests parallel-tests subdir-objects])],
- [AM_INIT_AUTOMAKE([-Wall])])
+          [m4_define([mk_am_oldtests], [[color-tests] [parallel-tests]])],
+          [m4_define([mk_am_oldtests], [])])
+AM_INIT_AUTOMAKE([subdir-objects] mk_am_oldtests)
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+AC_CHECK_PROG( [SED], [sed], [sed], [true] )
 
 dnl Original MK_CHECK_COMPILERS did not look for Fortran.  We
 dnl ask FATHOM_CHECK_COMPILERS to also skip the check for FC:
@@ -63,8 +68,6 @@ AC_CHECK_FUNC([vsnprintf],[AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_VSNPRINTF"])
 # is larger that 2GB.
 AM_CPPFLAGS="$AM_CPPFLAGS -D_FILE_OFFSET_BITS=64"
 
-
-
 ################################################################################
 #                              Version Stuff
 ################################################################################
@@ -106,8 +109,6 @@ AC_LANG_POP([C++])
 
 # Need this here, 'cuz MKVersion.h is needed for a later check
 AC_CONFIG_HEADERS([MKVersion.h])
-
-AC_OUTPUT
 
 #################################################################################
 #                             Doxygen Documentation
@@ -180,7 +181,6 @@ fi
 #                           ITAPS interfaces
 ################################################################################
 
-
 SF="$DISTCHECK_CONFIGURE_FLAGS"
 
 AC_ARG_WITH(itaps,
@@ -216,8 +216,10 @@ DISTCHECK_CONFIGURE_FLAGS="$SF"
 #   adds Ixxxx_DIR to base dir for implementation (needed by Python)
 AC_DEFUN([CHECK_ITAPS_DEFS],[
 itaps_pfx="$1"
+itaps_type=m4_tolower($2)
 itaps_dir="$3"
-warn="$4"
+component_name="$4"
+warn="$5"
 case "x$itaps_dir" in
   xno|x)
     HAVE_$2=no
@@ -232,15 +234,25 @@ case "x$itaps_dir" in
     HAVE_$2=yes
     AC_CHECK_FILE([$itaps_dir/lib/${itaps_pfx}-Defs.inc],
      [$2_CONFIG_OPTIONS="$itaps_dir/lib/${itaps_pfx}-Defs.inc"],
-     [AC_CHECK_FILE([$itaps_dir/${itaps_pfx}-Defs.inc],
-       [$2_CONFIG_OPTIONS="$itaps_dir/${itaps_pfx}-Defs.inc"],
-       [HAVE_$2=no])])
+     [AC_CHECK_FILE([$itaps_dir/itaps/${itaps_pfx}-Defs.inc],
+       [$2_CONFIG_OPTIONS="$itaps_dir/itaps/${itaps_pfx}-Defs.inc"],
+       [AC_CHECK_FILE([$itaps_dir/itaps/$itaps_type/${itaps_pfx}-Defs.inc],
+       [$2_CONFIG_OPTIONS="$itaps_dir/itaps/${itaps_type}/${itaps_pfx}-Defs.inc"],
+       [HAVE_$2=no]) ])])
+
+    AC_CHECK_FILE([$itaps_dir/lib/${component_name}.make],
+     [$2_BASE_CONFIG_OPTIONS="$itaps_dir/lib/${component_name}.make"; m4_toupper(USING_DEV_$4)=yes],
+     [AC_CHECK_FILE([$itaps_dir/${component_name}.make],
+       [$2_BASE_CONFIG_OPTIONS="$itaps_dir/${component_name}.make"; m4_toupper(USING_DEV_$4)=yes],
+       [m4_toupper(USING_DEV_$4)=no])])
     ;;
 esac
 
 if test "xyes" = "x$HAVE_$2"; then
-  FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_INCLUDES],[$2_INCLUDES="$make_val"],
-                      [AC_MSG_ERROR([$2_INCLUDES not found in $2_CONFIG_OPTIONS])])
+  FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_CPPFLAGS],[$2_CPPFLAGS="$make_val"],
+                      [AC_MSG_ERROR([$2_CPPFLAGS not found in $2_CONFIG_OPTIONS])])
+  FATHOM_MAKE_INC_VAR([${$2_BASE_CONFIG_OPTIONS}],[m4_toupper($4)_INCLUDES],[$2_CPPFLAGS="${$2_CPPFLAGS} $make_val"],
+                      [AC_MSG_ERROR([m4_toupper($4)_INCLUDES not found in $2_BASE_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LDFLAGS],[$2_LDFLAGS="$make_val"],
                       [AC_MSG_ERROR([$2_LDFLAGS not found in $2_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LIBS],[$2_LIBS="$make_val"],
@@ -252,22 +264,24 @@ if test "xyes" = "x$HAVE_$2"; then
 fi
 
 if test "xyes" = "x$HAVE_$2"; then 
-  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2 ${$2_DEFINES} ${$2_INCLUDES}"
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_$2 ${$2_CPPFLAGS}"
   AM_LDFLAGS="$AM_LDFLAGS ${$2_LDFLAGS}"
   LIBS="${$2_LIBS} $LIBS"
 elif test "xyes" = "x$warn"; then
-  AC_MSG_WARN([$itaps_pfx not found: $5])
+  AC_MSG_WARN([$itaps_pfx not found: $6])
 else
-  AC_MSG_ERROR([$itaps_pfx not found: $5])
+  AC_MSG_ERROR([$itaps_pfx not found: $6])
 fi
 AM_CONDITIONAL( HAVE_$2, [test "xyes" == "x$HAVE_$2"] )
 ])
 
-CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, $IGEOM_OKAY_IF_MISSING, [build may fail] )
-CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, $IMESH_OKAY_IF_MISSING, [build may fail] )
-CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
-CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  $IREL_OKAY_IF_MISSING, [irel is required. Use --enable-irel during MOAB configuration] )
+CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, cgm, $IGEOM_OKAY_IF_MISSING, [build may fail] )
+CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, moab, $IMESH_OKAY_IF_MISSING, [build may fail] )
+CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, moab, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
+CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  moab, $IREL_OKAY_IF_MISSING, [irel is required. Use --enable-irel during MOAB configuration] )
 
+AM_CONDITIONAL( USING_CGM_DEV, [test "xyes" == "x$USING_DEV_CGM"] )
+AM_CONDITIONAL( USING_MOAB_DEV, [test "xyes" == "x$USING_DEV_MOAB"] )
 
 ################################################################################
 #                           MOAB
@@ -284,7 +298,7 @@ if test "xyes" = "x$HAVE_MOAB"; then
   AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_MOAB"
 fi
 
-CPPFLAGS="$CPPFLAGS -I$IMESH_DIR/include"
+CPPFLAGS="$CPPFLAGS $IMESH_CPPFLAGS"
 AC_CHECK_HEADER([moab/ParallelComm.hpp], [HAVE_PARALLEL_MOAB=yes], [HAVE_PARALLEL_MOAB=no])
 AM_CONDITIONAL(HAVE_PARALLEL_MOAB, [test "x$HAVE_PARALLEL_MOAB" = "xyes"])
 AC_SUBST([HAVE_PARALLEL_MOAB])
@@ -317,7 +331,7 @@ if test "xyes" = "x$HAVE_CGM"; then
   CPPFLAGS="$CPPFLAGS -I$IGEOM_DIR/include"
 fi
 
-CGM_GEOMETRY_ENGINE=`grep PRIMARY_GEOMETRY_ENGINE $IGEOM_DIR/lib/iGeom-Defs.inc | sed -e "s/PRIMARY_GEOMETRY_ENGINE = //g"`
+CGM_GEOMETRY_ENGINE=`grep PRIMARY_GEOMETRY_ENGINE $IGEOM_CONFIG_OPTIONS | sed -e "s/PRIMARY_GEOMETRY_ENGINE = //g"`
 AM_CONDITIONAL(HAVE_FACET_GEOMETRY_ENGINE, [test "x$CGM_GEOMETRY_ENGINE" == "xFACETS"])
 AM_CONDITIONAL(HAVE_OCC_GEOMETRY_ENGINE, [test "x$CGM_GEOMETRY_ENGINE" == "xOCC"])
 
@@ -377,9 +391,8 @@ MK_OPTIONAL_TOOL([intassign], [no])
 ################################################################################
 #                           QuadMesher
 ################################################################################
-if test "x${ENABLE_quadmesher}" != "xno"; then
-  AC_MSG_CHECKING([quadmesher is enabled])
-fi
+AC_MSG_CHECKING([quadmesher is enabled])
+AC_MSG_RESULT([${ENABLE_quadmesher}])
 # make the conditional quadmesher
 AM_CONDITIONAL(HAVE_QUADMESHER, [test "x$ENABLE_quadmesher" = "xyes"])
 
@@ -854,60 +867,66 @@ if test "x${ENABLE_intassign}" != "xno"; then
     AC_MSG_RESULT([yes])
   else
     AC_MSG_RESULT([no])
+    ENABLE_intassign=no
+    AM_CONDITIONAL([ENABLE_intassign],[test "x${ENABLE_intassign}" != "xno"])
+    AC_MSG_WARN([Disabling intassign since IPOPT is not provided])
   fi
   
-   # if IPOPT support is enabled
-  AC_MSG_CHECKING([if IPOPT support available])
-  HAVE_IPOPT=no
-  if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
-    HAVE_IPOPT=yes
-  
-      # if a path is specified, update LIBS and INCLUDES accordingly
-    if test "xyes" != "x$IPOPT_ARG" && test "x" != "x$IPOPT_ARG"; then
-      if test -d "$IPOPT_ARG/lib/coin"; then
-        IPOPT_LDFLAGS="-L$IPOPT_ARG/lib/coin"
-      elif test -d "$IPOPT_ARG/lib"; then
-        IPOPT_LDFLAGS="-L$IPOPT_ARG/lib"
-      elif test -d "$IPOPT_ARG"; then
-        IPOPT_LDFLAGS="-L$IPOPT_ARG"
-      else
-        AC_MSG_ERROR("$IPOPT_ARG is not a directory.")
+  if test "x${ENABLE_intassign}" != "xno"; then
+    # if IPOPT support is enabled
+    AC_MSG_CHECKING([if IPOPT support available])
+    HAVE_IPOPT=no
+    if test "x" != "x$IPOPT_ARG" && test "xno" != "x$IPOPT_ARG"; then
+      HAVE_IPOPT=yes
+    
+        # if a path is specified, update LIBS and INCLUDES accordingly
+      if test "xyes" != "x$IPOPT_ARG" && test "x" != "x$IPOPT_ARG"; then
+        if test -d "$IPOPT_ARG/lib/coin"; then
+          IPOPT_LDFLAGS="-L$IPOPT_ARG/lib/coin"
+        elif test -d "$IPOPT_ARG/lib"; then
+          IPOPT_LDFLAGS="-L$IPOPT_ARG/lib"
+        elif test -d "$IPOPT_ARG"; then
+          IPOPT_LDFLAGS="-L$IPOPT_ARG"
+        else
+          AC_MSG_ERROR("$IPOPT_ARG is not a directory.")
+        fi
+        if test -d "$IPOPT_ARG/include/coin"; then
+          IPOPT_CPPFLAGS="-I$IPOPT_ARG/include/coin"
+        elif test -d "$IPOPT_ARG/include"; then
+          IPOPT_CPPFLAGS="-I$IPOPT_ARG/include"
+        elif test -d "$IPOPT_ARG"; then
+          IPOPT_CPPFLAGS="-I$IPOPT_ARG"
+        fi
+
+        old_LIBS="$LIBS"
+        old_LDFLAGS="$LDFLAGS"
+        old_CPPFLAGS="$CPPFLAGS"
+        LDFLAGS="$LDFLAGS $IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"
+        CPPFLAGS="$CPPFLAGS $IPOPT_CPPFLAGS"
+        AC_LANG_PUSH([C++])
+
+        AC_LINK_IFELSE(
+          [AC_LANG_PROGRAM([#include "MKVersion.h"
+                            #include "IpTNLP.hpp"],
+              [])],
+          [IPOPT_LIBS="$IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"] [HAVE_IPOPT=yes],
+          [AC_MSG_WARN([libipopt is not installed.])] )
+
+        AC_LANG_POP([C++])
+        LIBS="$old_LIBS"
+        LDFLAGS="$old_LDFLAGS"
+        CPPFLAGS="$old_CPPFLAGS"
+
       fi
-      if test -d "$IPOPT_ARG/include/coin"; then
-        IPOPT_CPPFLAGS="-I$IPOPT_ARG/include/coin"
-      elif test -d "$IPOPT_ARG/include"; then
-        IPOPT_CPPFLAGS="-I$IPOPT_ARG/include"
-      elif test -d "$IPOPT_ARG"; then
-        IPOPT_CPPFLAGS="-I$IPOPT_ARG"
-      fi
-
-      old_LIBS="$LIBS"
-      old_LDFLAGS="$LDFLAGS"
-      old_CPPFLAGS="$CPPFLAGS"
-      LDFLAGS="$LDFLAGS $IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"
-      CPPFLAGS="$CPPFLAGS $IPOPT_CPPFLAGS"
-      AC_LANG_PUSH([C++])
-
-      AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM([#include "MKVersion.h"
-                          #include "IpTNLP.hpp"],
-            [])],
-        [IPOPT_LIBS="$IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"] [HAVE_IPOPT=yes],
-        [AC_MSG_WARN([libipopt is not installed.])] )
-
-      AC_LANG_POP([C++])
-      LIBS="$old_LIBS"
-      LDFLAGS="$old_LDFLAGS"
-      CPPFLAGS="$old_CPPFLAGS"
 
     fi
     
-  fi
+    if test "x$HAVE_IPOPT" = "xyes"; then
+      AC_MSG_RESULT([yes])
+    else
+      AC_MSG_ERROR([no])
+    fi
 
-  if test "x$HAVE_IPOPT" = "xyes"; then
-    AC_MSG_RESULT([yes])
-  else
-    AC_MSG_ERROR([no])
   fi
 
 fi
@@ -1169,8 +1188,6 @@ else
         fi
     fi
 
-    
-
     LDFLAGS="$LDFLAGS $ARMADILLO_LDFLAGS -larmadillo"
     CPPFLAGS="$CPPFLAGS $ARMADILLO_CPPFLAGS"
     
@@ -1205,7 +1222,6 @@ AC_SUBST([ARMADILLO_LIBS])
 AC_SUBST([HAVE_ARMADILLO])
 
 AM_CONDITIONAL(HAVE_ARMADILLO, [test "x$HAVE_ARMADILLO" = "xyes"])
-
 
 ################################################################################
 #                          OpenBlas
@@ -1253,8 +1269,6 @@ else
             OPENBLAS_LDFLAGS="-L$OPENBLAS_DIR"
         fi
     fi
-
-
 
     LDFLAGS="$LDFLAGS $OPENBLAS_LDFLAGS -lopenblas"
     CPPFLAGS="$CPPFLAGS $OPENBLAS_CPPFLAGS"
@@ -1338,7 +1352,7 @@ AC_CONFIG_FILES([Makefile
                  src/algs/Sweep/Makefile
                  src/algs/AssyGen/Makefile
                  src/algs/AssyMesher/Makefile
-		 src/algs/CoreGen/Makefile
+                 src/algs/CoreGen/Makefile
                  src/algs/PostBL/Makefile
                  src/algs/Qslim/Makefile
                  src/algs/make_watertight/Makefile
