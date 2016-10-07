@@ -224,10 +224,11 @@ namespace MeshKit {
     std::ifstream m_FileInput, m_FileCommon;
 
     // journal file Output
-    std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo;
+    std::ofstream m_FileOutput, m_SchemesFile, m_AssmInfo, m_PyCubGeomFile;
 
     // string for file names
-    std::string m_szSmooth, m_szAssmInfo, m_szLogFile, m_szCommonFile, m_szFile, m_szInFile, m_szGeomFile,m_szJouFile, m_szSchFile;
+    std::string m_szSmooth, m_szAssmInfo, m_szLogFile, m_szCommonFile, m_szFile, m_szInFile,
+    m_szGeomFile, m_szGeomFile1, m_szJouFile, m_szSchFile, m_szPyCubGeom;
 
     // matrix for holding pincell arrangement
     CMatrix<std::string> m_Assembly;
