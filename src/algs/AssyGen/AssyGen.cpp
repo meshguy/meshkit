@@ -2093,11 +2093,11 @@ namespace MeshKit
                 iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
                                   dSide, dSide,
                                   &assm, &err);
-                ////CHECK("Prism creation failed.");
+                m_PyCubGeomFile << "assm = cubit.prism(" << dHeight << ", 6, " << dSide << ", " << dSide << ")" << std::endl;
 
                 // rotate the prism to match the pins
                 iGeom_rotateEnt (igeomImpl->instance(), assm, 30, 0, 0, 1, &err);
-                ////CHECK("Rotation failed failed.");
+                m_PyCubGeomFile << "cubit.cmd('rotate body {0} angle 30 about z'.format(assm.id()) )" << std::endl;
 
                 if(0 != m_Pincell.GetSize()){
                     m_Pincell(1).GetPitch(dP, dH);
@@ -2112,8 +2112,9 @@ namespace MeshKit
 
                 // position the prism
                 iGeom_moveEnt(igeomImpl->instance(), assm, dX,dY,dZ, &err);
-                ////CHECK("Move failed failed.");
-
+                m_PyCubGeomFile << "vector = [" << dX << ", " << dY << ", " << dZ << "]" << std::endl;
+                m_PyCubGeomFile << "cubit.move(assm, vector)" << std::endl;
+                m_PyCubGeomFile << "assms[:]=[]\nassms.append(assm)" << std::endl;
                 // populate the coverings array
                 assms[(nTemp-1)*m_nDimensions + n -1]=assm;
               }
@@ -2373,13 +2374,16 @@ namespace MeshKit
               continue;
             // put all the in pins in a matrix of size duct for subtraction with ducts
             std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
+            m_PyCubGeomFile << "pin_copy[:]=[]" << std::endl;
             for (int i=0; i< (int) cp_inpins[k-1].size();i++){
                 iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &pin_copy[i], &err);
-                ////CHECK("Couldn't copy inner duct wall prism.");
+               // m_PyCubGeomFile << "cubit.copy_body(cp_inpins[" << k-1 << "][" << i << "]" << std::endl;
+                //m_PyCubGeomFile << "pin_copy.append(tmp_vol)" << std::endl;
               }
 
             iBase_EntityHandle tmp_vol = NULL;
             tmp_vol = assms[(k-1)*m_nDimensions];
+            m_PyCubGeomFile << "tmp_vol = assms[" << k << "]" << std::endl;
 
             // subtract the innermost hex from the pins
             std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
@@ -2391,10 +2395,11 @@ namespace MeshKit
             if( cp_inpins[k-1].size() > 1){
 
                 iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
-                //CHECK( "uniteEnts failed!" );
+                m_PyCubGeomFile << "unite = cubit.unite(cp_inpins[" << k-1 << "], true)" << std::endl;
 
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,unite, &tmp_new1, &err);
-                ////CHECK("Couldn't subtract pins from block.");
+                m_PyCubGeomFile << "tmp_new1 = cubit.subtract(tmp_vol, unite)" << std::endl;
+                m_PyCubGeomFile << "tmp_vol = tmp_new1" << std::endl;
 
                 tmp_vol = tmp_new1;
                 unite = NULL;
@@ -2627,7 +2632,7 @@ namespace MeshKit
                     iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
                                       dSide, dSide,
                                       &cell, &err);
-                    m_PyCubGeomFile << "cell = cubit.prism(' " << dHeight << ", 6, " << dSide << ", " << dSide << " ')" << std::endl;
+                    m_PyCubGeomFile << "cell = cubit.prism( " << dHeight << ", 6, " << dSide << ", " << dSide << " ')" << std::endl;
                   }
               }
             // if rectangular geometry
@@ -2638,7 +2643,7 @@ namespace MeshKit
                 if(nCells >0){
                     // create brick
                     iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
-                    m_PyCubGeomFile << "cell = cubit.brick(' " << PX << ", " << PY << ", " << dHeight << " ')" << std::endl;
+                    m_PyCubGeomFile << "cell = cubit.brick( " << PX << ", " << PY << ", " << dHeight << " ')" << std::endl;
                   }
               }
 
@@ -2860,11 +2865,13 @@ namespace MeshKit
                       break;
                   }
 
+                m_PyCubGeomFile << "cyls = [] \ncp_in = []" << std::endl;
+                m_PyCubGeomFile << "sub1 = [] \nsub2 = []" << std::endl;
+
                 for (int m=1; m<=nRadii; m++){
                     if (nType == 0){
                         iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
                                              &cyl, &err);
-                        m_PyCubGeomFile << "cyls = [] \ncp_in = []" << std::endl;
                         m_PyCubGeomFile << "cyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ")" << std::endl;
                       }
                     else{
@@ -2878,10 +2885,10 @@ namespace MeshKit
                     dCylMoveY = dVCylXYPos(2)+dY;
                     dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 
-                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
+                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX, dCylMoveY, dZMove, &err);
                     m_PyCubGeomFile << "vector = [" << dCylMoveX << ", " << dCylMoveY << ", " << dZMove << "]" << std::endl;
                     m_PyCubGeomFile << "cubit.move( cyl, vector)" << std::endl;
-                    m_PyCubGeomFile << "cyls[" << m-1 << "] = cyl" << std::endl;
+                    m_PyCubGeomFile << "cyls.append(cyl)" << std::endl;
                     cyls[m-1] = cyl;
                   }
 
@@ -2899,7 +2906,7 @@ namespace MeshKit
 
                 iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
                               sMatName.c_str(), 10, &err);
-                m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
+                m_PyCubGeomFile  << "lid =cyls[0].id()" << std::endl;
                 m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
 
@@ -2922,7 +2929,9 @@ namespace MeshKit
 
                     //subtract tmp vol from the outer most
                     iGeom_subtractEnts(igeomImpl->instance(), cyls[b-1], tmp_vol, &tmp_new, &err);
-                    m_PyCubGeomFile << "tmp_new = cubit.subtract(cyls[" << b-1 << "], tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "sub1.append(cyls[" << b-1 << "])\nsub2.append(tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "tmp_new = cubit.subtract(sub2, sub1)" << std::endl;
+                    m_PyCubGeomFile << "sub1[:] = []\nsub2[:] = []" << std::endl;
 
                     // now search for the full name of the abbreviated Cell Mat
                     for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -2938,7 +2947,7 @@ namespace MeshKit
                     // set the name of the annulus
                     iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                   sMatName.c_str(),sMatName.size(), &err);
-                    m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
+                    m_PyCubGeomFile  << "lid = tmp_new[0].id()" << std::endl;
                     m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << sMatName <<  "\" )" << std::endl;
                     if(strcmp(m_szInfo.c_str(),"on") == 0){
                         iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
@@ -2959,7 +2968,7 @@ namespace MeshKit
             if(nDuctIndex > 0){
                 for (int count = 0; count < (int) cp_in.size(); count++){
                     cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
-                    m_PyCubGeomFile << "cp_inpins[" << nDuctIndex-1 << "].append(cp_in[" << count << "])" << std::endl;
+                    m_PyCubGeomFile << "cp_inpins.append(cp_in[" << count << "])" << std::endl;
 
                   }
               }
