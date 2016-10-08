@@ -30,13 +30,6 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_DISABLE_SHARED
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
-m4_ifdef([AM_SILENT_RULES],[
-if test "x$DEBUG" = "xyes"; then
-  AM_SILENT_RULES(yes)
-else
-  AM_SILENT_RULES(no)
-fi
-])
 AC_CHECK_PROG([ZCAT],[gunzip],[gunzip -c],[])
 AC_CHECK_PROG([ZCAT],[gzip],[gzip -cd],[])
 AC_CHECK_PROG([ZCAT],[zcat],[zcat],[])
