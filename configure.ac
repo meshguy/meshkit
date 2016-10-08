@@ -13,6 +13,8 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CHECK_PROG( [SED], [sed], [sed], [true] )
 
+INITIALIZE_EXTERNAL_PACKAGES
+
 dnl Original MK_CHECK_COMPILERS did not look for Fortran.  We
 dnl ask FATHOM_CHECK_COMPILERS to also skip the check for FC:
 dnl FATHOM_CHECK_COMPILERS([yes],[yes],[no])
@@ -613,21 +615,21 @@ fi
 ################################################################################
 AC_ARG_WITH(tetgen, 
 [AC_HELP_STRING([--with-tetgen=DIR], [Specify location of TetGen library.])],
-[TETGEN_VAL=$withval
+[TETGEN_DIR=$withval
  DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-tetgen=\"${withval}\""
- ], [TETGEN_VAL=no])
+ ], [TETGEN_DIR=no])
  
 TETGEN_CPPFLAGS=
 TETGEN_LDFLAGS=
 TETGEN_LIBS=
 
 # Check for TETGEN headers and libraries
-if test "xno" = "x$TETGEN_VAL"; then
+if test "xno" = "x$TETGEN_DIR"; then
   HAVE_TETGEN=no
 else
-  TETGEN_DIR="$TETGEN_VAL"
+  TETGEN_DIR="$TETGEN_DIR"
 
-  if test "x" = "x$TETGEN_VAL"; then
+  if test "x" = "x$TETGEN_DIR"; then
     TETGEN_DIR=yes
   fi
 
@@ -673,7 +675,7 @@ fi
 if test "x$HAVE_TETGEN" = "xyes"; then
   AC_MSG_RESULT([TetGen is found.])
   DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/tetgen test/extern/tetgen"
-elif test "x$TETGEN_VAL" != "xno"; then
+elif test "x$TETGEN_DIR" != "xno"; then
   AC_MSG_ERROR([TetGen not found or not usable.])
 fi
 
@@ -688,23 +690,28 @@ AM_CONDITIONAL(HAVE_TETGEN, [test "x$HAVE_TETGEN" = "xyes"])
 ################################################################################
 #                           NetGen
 ################################################################################
+
+# Supported Netgen versions: 6.0, 5.3
+# Arguments: 1) Default Version Number, 2) Download by default ?
+AUSCM_CONFIGURE_DOWNLOAD_NETGEN([5.3],[no])
+
 AC_ARG_WITH(netgen, 
 [AC_HELP_STRING([--with-netgen=DIR], [Specify location of Netgen library.])],
-[NETGEN_VAL=$withval
+[NETGEN_DIR=$withval
  DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-netgen=\"${withval}\""
- ], [NETGEN_VAL=no])
+ ], [NETGEN_DIR=no])
  
 NETGEN_CPPFLAGS=
 NETGEN_LDFLAGS=
 NETGEN_LIBS=
 
 # Check for NETGEN headers and libraries
-if test "xno" = "x$NETGEN_VAL"; then
+if test "xno" = "x$NETGEN_DIR"; then
   HAVE_NETGEN=no
 else
-  NETGEN_DIR="$NETGEN_VAL"
+  NETGEN_DIR="$NETGEN_DIR"
 
-  if test "x" = "x$NETGEN_VAL"; then
+  if test "x" = "x$NETGEN_DIR"; then
     NETGEN_DIR=yes
   fi
 
@@ -751,7 +758,7 @@ fi
 if test "x$HAVE_NETGEN" = "xyes"; then
   AC_MSG_RESULT([Netgen is found.])
   DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/netgen test/extern/netgen"
-elif test "x$NETGEN_VAL" != "xno"; then
+elif test "x$NETGEN_DIR" != "xno"; then
   AC_MSG_ERROR([Netgen not found or not usable.])
 fi
 
@@ -767,21 +774,21 @@ AM_CONDITIONAL(HAVE_NETGEN, [test "x$HAVE_NETGEN" = "xyes"])
 ################################################################################
 AC_ARG_WITH(triangle, 
 [AC_HELP_STRING([--with-triangle=DIR], [Specify location of Triangle library.])],
-[TRIANGLE_VAL=$withval
+[TRIANGLE_DIR=$withval
  DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-triangle=\"${withval}\""
- ], [TRIANGLE_VAL=no])
+ ], [TRIANGLE_DIR=no])
 
 TRIANGLE_CPPFLAGS=
 TRIANGLE_LDFLAGS=
 TRIANGLE_LIBS=
 
 # Check for TRIANGLE headers and libraries
-if test "xno" = "x$TRIANGLE_VAL"; then
+if test "xno" = "x$TRIANGLE_DIR"; then
   HAVE_TRIANGLE=no
 else
-  TRIANGLE_DIR="$TRIANGLE_VAL"
+  TRIANGLE_DIR="$TRIANGLE_DIR"
 
-  if test "x" = "x$TRIANGLE_VAL"; then
+  if test "x" = "x$TRIANGLE_DIR"; then
     TRIANGLE_DIR=yes
   fi
 
@@ -832,7 +839,7 @@ if test "x$HAVE_TRIANGLE" = "xyes"; then
   AC_MSG_RESULT([Triangle is found.])
   DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/triangle test/extern/triangle"
 
-elif test "x$TRIANGLE_VAL" != "xno"; then
+elif test "x$TRIANGLE_DIR" != "xno"; then
   AC_MSG_ERROR([Triangle not found or not usable.])
 fi
 
