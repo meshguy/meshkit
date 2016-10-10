@@ -2688,6 +2688,8 @@ namespace MeshKit
             if(m_szGeomType =="rectangular"){
 
                 m_Pincell(i).GetPitch(PX, PY, PZ);
+                m_PyCubGeomFile << "cells = []" << std::endl;
+                m_PyCubGeomFile << "sub1 = [] \nsub2 = []" << std::endl;
 
                 if(nCells >0){
                     // create brick
@@ -2700,11 +2702,10 @@ namespace MeshKit
             if(nCells > 0){
                 // position the brick in assembly
                 iGeom_moveEnt(igeomImpl->instance(), cell, dX, dY, dZMove, &err);
-                m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
                 m_PyCubGeomFile << "vector = [" << dX << ", " << dY << ", " << dZMove << "]" << std::endl;
                 m_PyCubGeomFile << "cubit.move( cell, vector)" << std::endl;
 
-                m_PyCubGeomFile << "cells[" << n-1 << "] = cell" << std::endl;
+                m_PyCubGeomFile << "cells.append(cell)" << std::endl;
                 cells[n-1]=cell;
 
                 //search for the full name of the abbreviated Cell Mat and set name
@@ -2716,7 +2717,7 @@ namespace MeshKit
                 std::cout << "created: " << sMatName << std::endl;
                 iGeom_setData(igeomImpl->instance(), cell, this_tag,
                               sMatName.c_str(), sMatName.size(), &err);
-
+                m_PyCubGeomFile  << "lid = cells[0].id()" << std::endl;
                 m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
                                    if(strcmp(m_szInfo.c_str(),"on") == 0){
@@ -2754,13 +2755,13 @@ namespace MeshKit
                     if (nType == 0){
                         iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
                                              &cyl, &err);
-                        m_PyCubGeomFile << "cyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << ", " << dVCylRadii(m) << ")" << std::endl;
                         std::cout << m << ": Creating cylinder with radii " << dVCylRadii(m) << std::endl;
                       }
                     else{
                         iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
                                          &cyl, &err);
-                        m_PyCubGeomFile << "cyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m) << ")" << std::endl;
                       }
                     // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
                     dCylMoveX = dVCylXYPos(1)+dX;
@@ -2768,12 +2769,14 @@ namespace MeshKit
                     dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
 
                     iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
-                    m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
+                    m_PyCubGeomFile << "cyls.append(cyl)" << std::endl;
+
                     m_PyCubGeomFile << "vector = [" << dCylMoveX << ", " << dCylMoveY << ", " << dZMove << "]" << std::endl;
-                    m_PyCubGeomFile << "cubit.move(cell, vector)" << std::endl;
-                    m_PyCubGeomFile << "cyls[" << m-1 << "] = cyl" << std::endl;
+                    m_PyCubGeomFile << "cubit.move(cyl, vector)" << std::endl;
                     cyls[m-1] = cyl;
                   }
+
+                m_PyCubGeomFile << "sub1[:] = []\nsub2[:] = []" << std::endl;
 
                 if(nCells > 0){
                     // copy cyl before subtract
@@ -2782,7 +2785,9 @@ namespace MeshKit
 
                     // subtract outer most cyl from brick
                     iGeom_subtractEnts(igeomImpl->instance(), cells[n-1], tmp_vol, &tmp_new, &err);
-                    m_PyCubGeomFile << "tmp_new = cubit.subtract(cells[" << n-1 << "], tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "sub1.append(cells[" << n-1 << "])\nsub2.append(tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "sub1[:] = []\nsub2[:] = []" << std::endl;
+
                     m_PyCubGeomFile << "cells[n-1] = tmp_new \ncell = tmp_new" << std::endl;
 
                     // copy the new into the cyl array
@@ -2799,17 +2804,18 @@ namespace MeshKit
                       }
                   }
                 tmp_vol1=cyls[0]; //inner most cyl
-
                 cp_in.push_back(tmp_vol1);
+                m_PyCubGeomFile << "tmpvol1 = cyls[0]\ncp_in.append(tmp_vol1)" << std::endl;
+
                 iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
                               sMatName.c_str(), 10, &err);
-                m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
+                m_PyCubGeomFile  << "lid = tmp_vol1.id()" << std::endl;
                 m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
                  if(strcmp(m_szInfo.c_str(),"on") == 0){
                     iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
                                   pin_name.c_str(), pin_name.size(), &err);
-                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
+                    std::cout << "Naming pin body :" <<  pin_name << std::endl;
                   }
 
                 Name_Faces(sMatName, tmp_vol1, this_tag);
@@ -2822,8 +2828,11 @@ namespace MeshKit
                     m_PyCubGeomFile << "tmp_vol = cubit.copy_body(cyls[" << b-2 << "])" << std::endl;
 
                     //subtract tmp vol from the outer most
+
                     iGeom_subtractEnts(igeomImpl->instance(), cyls[b-1], tmp_vol, &tmp_new, &err);
-                    m_PyCubGeomFile << "tmp_new = cubit.subtract(cyls[" << b-1 << "], tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "sub1.append(cyls[" << b-1 << "])\nsub2.append(tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "tmp_new = cubit.subtract(sub2, sub1)" << std::endl;
+                    m_PyCubGeomFile << "sub1[:] = []\nsub2[:] = []" << std::endl;
 
                     // now search for the full name of the abbreviated Cell Mat
                     //    int tag_no;
@@ -2836,10 +2845,11 @@ namespace MeshKit
                     std::cout << "created: " << sMatName << std::endl;
                     cp_in.push_back(tmp_new);
                     m_PyCubGeomFile << "cp_in.append(tmp_new[0])" << std::endl;
+
                     // set the name of the annulus
                     iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                   sMatName.c_str(),sMatName.size(), &err);
-                    m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
+                    m_PyCubGeomFile  << "lid = tmp_new[0].id()" << std::endl;
                     m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
                     if(strcmp(m_szInfo.c_str(),"on") == 0){
@@ -2859,6 +2869,7 @@ namespace MeshKit
                   }
               }
             if(nDuctIndex > 0){
+                m_PyCubGeomFile << "cp_inpins.append([])" << std::endl;
                 for (int count = 0; count < (int) cp_in.size(); count++){
                     cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
                     m_PyCubGeomFile << "cp_inpins[" << nDuctIndex-1 << "].append(cp_in[" << count << "])" << std::endl;
@@ -2926,7 +2937,7 @@ namespace MeshKit
                     else{
                         iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m - 1), dVCylRadii(2*m - 1), dVCylRadii(2*m),
                                          &cyl, &err);
-                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m) << ")" << std::endl;
                       }
 
                     // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
