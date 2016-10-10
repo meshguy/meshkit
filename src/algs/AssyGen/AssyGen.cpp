@@ -293,6 +293,31 @@ namespace MeshKit
     m_PyCubGeomFile << "## This python script is created by the RGG AssyGen program in MeshKit ##\n";
     m_PyCubGeomFile << "# Here the RGG AssyGen program creates the assembly geometry and mesh\n#" << std::endl;
     m_PyCubGeomFile << "\nimport cubit" << std::endl;
+
+
+    // write the name faces python function here
+    m_PyCubGeomFile << "def name_faces(name, body):\n"
+                       "    vector_locs = cubit.get_bounding_box(\"volume\", body.id())\n"
+                       "    topno = vector_locs[7] - 1e-2\n"
+                       "    botno = vector_locs[6] + 1e-2\n"
+                       "    cubit.cmd('group \"g1\" equals surf in vol {0} '.format(body.id()))\n"
+                       "    cubit.cmd('group \"g2\" equals surf  in g1 with z_coord  < {0} and z_coord > {1}'.format(topno,botno))\n"
+                       "    cubit.cmd('group  \"g3\" subtract g2 from g1')\n"
+                       "    cubit.cmd('group \"gtop\" equals surf in g3 with z_coord > {0}'.format(topno) )\n"
+                       "    cubit.cmd('group \"gbot\" equals surf in g3 with z_coord < {0}'.format(botno) )\n"
+                       "    g2id = cubit.get_id_from_name(\"g2\")\n"
+                       "    ssurfs = cubit.get_group_surfaces(g2id)\n"
+                       "    side_surfs = len(ssurfs)\n"
+                       "    for i in range(0,side_surfs):\n"
+                       "      sname = name + \"_side\" + str(i+1)\n"
+                       "      cubit.cmd('surf {0} name \"{1}\"'.format( ssurfs[i] , sname )  )\n"
+                       "    top_surf = name + \"_top\"\n"
+                       "    bot_surf = name + \"_bot\"\n"
+                       "    cubit.cmd('surf in gtop name \"{0}\"'.format(top_surf) )\n"
+                       "    cubit.cmd('surf in gbot name \"{0}\"'.format(bot_surf) )\n"
+                       "    cubit.cmd('delete group g1 g2 g3 gtop gbot')\n" << std::endl;
+
+
     m_PyCubGeomFile << "\ncubit.cmd('reset')" << std::endl;
 
 
@@ -308,7 +333,8 @@ namespace MeshKit
 
 #elif defined(HAVE_OCC)
     //  OCC ENGINE
-    m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
+    // Use sat file always as step isn't supported
+    m_FileOutput << "import '" << m_szGeomFile1 <<"'" << std::endl;
 #endif
 
     m_FileOutput << "#" << std::endl;
@@ -1124,6 +1150,8 @@ namespace MeshKit
                     m_dMAssmPitch.SetSize(m_nDuct, m_nDimensions); m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
 
                     assms.resize(m_nDimensions*m_nDuct); // setup while reading the problem size
+                    // Declaration for python script
+                    m_PyCubGeomFile << "assms = range(" << m_nDimensions*m_nDuct << ")\ncp_inpins  = []\n" << std::endl;
                   }
 
                 for (int i=1; i<=m_nDimensions; i++){
@@ -1465,9 +1493,13 @@ namespace MeshKit
                 std::cout << "## Saving CPU time used := " << (double) (clock() - s_save)/CLOCKS_PER_SEC
                           << " seconds" << std::endl;
 
-                m_PyCubGeomFile << "cubit.cmd('save as \"" <<m_szGeomFile1 << "\" over')" << std::endl;
+                m_PyCubGeomFile << "cubit.cmd('export acis \"" <<m_szGeomFile1 << "\" over')" << std::endl;
 
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
+//                // Now run the journal file from the python script
+//                m_PyCubGeomFile << "infile = open(\""<< m_szJouFile << "\", \"r\")" << std::endl;
+//                m_PyCubGeomFile << "for line in infile:\n  cubit.cmd(line)" << std::endl;
+
                 // Reloading file to check load times
                 bool if_loadagain = false;
                 if (if_loadagain == true){
@@ -2093,7 +2125,7 @@ namespace MeshKit
                 iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
                                   dSide, dSide,
                                   &assm, &err);
-                m_PyCubGeomFile << "assm = cubit.prism(" << dHeight << ", 6, " << dSide << ", " << dSide << ")" << std::endl;
+                m_PyCubGeomFile << "##\nassm = cubit.prism(" << dHeight << ", 6, " << dSide << ", " << dSide << ")" << std::endl;
 
                 // rotate the prism to match the pins
                 iGeom_rotateEnt (igeomImpl->instance(), assm, 30, 0, 0, 1, &err);
@@ -2114,9 +2146,11 @@ namespace MeshKit
                 iGeom_moveEnt(igeomImpl->instance(), assm, dX,dY,dZ, &err);
                 m_PyCubGeomFile << "vector = [" << dX << ", " << dY << ", " << dZ << "]" << std::endl;
                 m_PyCubGeomFile << "cubit.move(assm, vector)" << std::endl;
-                m_PyCubGeomFile << "assms[:]=[]\nassms.append(assm)" << std::endl;
+
                 // populate the coverings array
+                int loc = (nTemp-1)*m_nDimensions + n -1;
                 assms[(nTemp-1)*m_nDimensions + n -1]=assm;
+                m_PyCubGeomFile << "assms.insert(" << loc << ", assm)" << std::endl;
               }
           }
       }
@@ -2282,7 +2316,9 @@ namespace MeshKit
             ////CHECK("setData failed");
 
             Name_Faces(sMatName, tmp_vol, this_tag);
-            //ERRORR("Error in function Name_Faces", err);
+            m_PyCubGeomFile << "lid = assms[" << (nTemp1 - 1)*m_nDimensions << "].id()" << std::endl;
+            m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
+            m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", assms[" << (nTemp1 - 1)*m_nDimensions << "])" << std::endl;
           }
 
         int count =0;//index for edge names
@@ -2296,6 +2332,10 @@ namespace MeshKit
             //CHECK( "ERROR : getEntAdj failed!" );
 
             // get the top corner edges of the outer most covering
+            //m_PyCubGeomFile << "lid=assms<<["<< nTemp*m_nDimensions-1 << "].id()" << std::endl;
+            m_PyCubGeomFile << "cubit.cmd('group \"g1\" equals curve in vol {0} '.format(assms[" << nTemp*m_nDimensions-1 << "].id()))" << std::endl;
+            m_PyCubGeomFile << "cubit.cmd('group \"g2\" equals curve with z_max<> z_min in g1')\ncubit.cmd('group  \"g3\" subtract g2 from g1')" << std::endl;
+            m_PyCubGeomFile << "cubit.cmd('curve in g3 name \"side_edge\"')" << std::endl;
             std::ostringstream os;
             for (int i = 0; i < edges.size(); ++i){
                 iGeom_getEntBoundBox(igeomImpl->instance(), edges[i],&xmin,&ymin,&zmin,
@@ -2331,11 +2371,16 @@ namespace MeshKit
                     ++nCount;
                     // copy cyl before subtract
                     iGeom_copyEnt(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-2], &tmp_vol, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
+                    m_PyCubGeomFile << "tmp_vol = cubit.copy_body(assms[" << (nTemp-1)*m_nDimensions + n-2 << "])" << std::endl;
 
                     // subtract outer most cyl from brick
+                    m_PyCubGeomFile << "\nsub1.append(tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "\nsub2.append(assms[" << (nTemp-1)*m_nDimensions + n-1 <<"])" << std::endl;
+
                     iGeom_subtractEnts(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-1], tmp_vol, &tmp_new, &err);
-                    ////CHECK("Subtract of inner from outer failed.");
+
+                    m_PyCubGeomFile << "tmp_new = cubit.subtract(sub1, sub2)" << std::endl;
+                    m_PyCubGeomFile << "assms[" << (nTemp-1)*m_nDimensions + n-1 << "] = tmp_new[0]\n\nsub1[:]=[]\nsub2[:]=[]"   << std::endl;
 
                     assms[(nTemp-1)*m_nDimensions + n-1]=tmp_new;
 
@@ -2349,7 +2394,9 @@ namespace MeshKit
 
                     iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                   sMatName.c_str(), sMatName.size(), &err);
-                    ////CHECK("setData failed");
+                    m_PyCubGeomFile << "lid = tmp_new[0].id()" << std::endl;
+                    m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
+                    m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new[0]) " << std::endl;
                     Name_Faces(sMatName, tmp_new, this_tag);
                   }
               }
@@ -2374,11 +2421,12 @@ namespace MeshKit
               continue;
             // put all the in pins in a matrix of size duct for subtraction with ducts
             std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
-            m_PyCubGeomFile << "pin_copy[:]=[]" << std::endl;
+            m_PyCubGeomFile << "pin_copy=[]\n\nsub1=[]\nsub2=[]\n" << std::endl;
             for (int i=0; i< (int) cp_inpins[k-1].size();i++){
                 iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &pin_copy[i], &err);
-               // m_PyCubGeomFile << "cubit.copy_body(cp_inpins[" << k-1 << "][" << i << "]" << std::endl;
-                //m_PyCubGeomFile << "pin_copy.append(tmp_vol)" << std::endl;
+                m_PyCubGeomFile << "tmp_vol = cubit.copy_body(cp_inpins[" << k-1 << "][" << i << "])" << std::endl;
+                m_PyCubGeomFile << "pin_copy.append(tmp_vol)" << std::endl;
+                m_PyCubGeomFile << "\nsub2.append(cp_inpins[" << k-1 << "]["<< i << "])" << std::endl;
               }
 
             iBase_EntityHandle tmp_vol = NULL;
@@ -2394,11 +2442,11 @@ namespace MeshKit
             // if there are more than one pins
             if( cp_inpins[k-1].size() > 1){
 
-                iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
-                m_PyCubGeomFile << "unite = cubit.unite(cp_inpins[" << k-1 << "], true)" << std::endl;
-
+               iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
+                //m_PyCubGeomFile << "##\nunitepins = cubit.unite(cp_inpins[" << k-1 <<"][0])" << std::endl;
+                m_PyCubGeomFile << "\nsub1.append(assms[" << (k-1)*m_nDimensions <<"])" << std::endl;
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,unite, &tmp_new1, &err);
-                m_PyCubGeomFile << "tmp_new1 = cubit.subtract(tmp_vol, unite)" << std::endl;
+                m_PyCubGeomFile << "tmp_new1 = cubit.subtract(sub2, sub1)" << std::endl;
                 m_PyCubGeomFile << "tmp_vol = tmp_new1" << std::endl;
 
                 tmp_vol = tmp_new1;
@@ -2407,7 +2455,8 @@ namespace MeshKit
               }
             else{ // only one pin in in_pins
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
-                ////CHECK("Couldn't subtract pins from block.");
+                m_PyCubGeomFile << "\nsub1.append(assms[" << (k-1)*m_nDimensions <<"])" << std::endl;
+                m_PyCubGeomFile << "tmp_new1 = cubit.subtract(sub2, sub1)" << std::endl;
               }
             //#endif
             // This block was needed for OCE below 0.13 or OCC 6.6
@@ -2668,12 +2717,12 @@ namespace MeshKit
                 iGeom_setData(igeomImpl->instance(), cell, this_tag,
                               sMatName.c_str(), sMatName.size(), &err);
 
-                m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << sMatName <<  "\" )" << std::endl;
+                m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
                                    if(strcmp(m_szInfo.c_str(),"on") == 0){
                     iGeom_setData(igeomImpl->instance(), cell, this_tag,
                                   pin_name.c_str(), pin_name.size(), &err);
-                    m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << pin_name <<  "\" )" << std::endl;
+                    m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << pin_name <<  "\" )" << std::endl;
                     std::cout << "Naming pin body :" <<  pin_name << std::endl;
                   }
 
@@ -2741,7 +2790,7 @@ namespace MeshKit
 
                   }
                 cp_in.push_back(tmp_new);
-                m_PyCubGeomFile << "cp_in.append(tmp_new)" << std::endl;
+                m_PyCubGeomFile << "cp_in.append(tmp_new[0])" << std::endl;
 
                 //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
                 for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
@@ -2755,7 +2804,7 @@ namespace MeshKit
                 iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
                               sMatName.c_str(), 10, &err);
                 m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
-                m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << sMatName <<  "\" )" << std::endl;
+                m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
                  if(strcmp(m_szInfo.c_str(),"on") == 0){
                     iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
@@ -2786,19 +2835,19 @@ namespace MeshKit
                       }
                     std::cout << "created: " << sMatName << std::endl;
                     cp_in.push_back(tmp_new);
-                    m_PyCubGeomFile << "cp_in.append(tmp_new)" << std::endl;
+                    m_PyCubGeomFile << "cp_in.append(tmp_new[0])" << std::endl;
                     // set the name of the annulus
                     iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                   sMatName.c_str(),sMatName.size(), &err);
                     m_PyCubGeomFile  << "lid = cubit.get_last_id(\"volume\")" << std::endl;
-                    m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << sMatName <<  "\" )" << std::endl;
+                    m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
                     if(strcmp(m_szInfo.c_str(),"on") == 0){
                         iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                       pin_name.c_str(), pin_name.size(), &err);
                         std::cout << "Naming pin body :" <<  pin_name<< std::endl;
 
-                        m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << pin_name <<  "\" )" << std::endl;
+                        m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << pin_name <<  "\" )" << std::endl;
                       }
                     Name_Faces(sMatName, tmp_new, this_tag);
                     m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new1) " << std::endl;
@@ -2872,12 +2921,12 @@ namespace MeshKit
                     if (nType == 0){
                         iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
                                              &cyl, &err);
-                        m_PyCubGeomFile << "cyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ")" << std::endl;
                       }
                     else{
                         iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m - 1), dVCylRadii(2*m - 1), dVCylRadii(2*m),
                                          &cyl, &err);
-                        m_PyCubGeomFile << "cyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(2*m-1) << ", " << dVCylRadii(m) << ")" << std::endl;
                       }
 
                     // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
@@ -2907,13 +2956,13 @@ namespace MeshKit
                 iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
                               sMatName.c_str(), 10, &err);
                 m_PyCubGeomFile  << "lid =cyls[0].id()" << std::endl;
-                m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << sMatName <<  "\" )" << std::endl;
+                m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
 
 
                 if(strcmp(m_szInfo.c_str(),"on") == 0){
                     iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
                                   pin_name.c_str(), pin_name.size(), &err);
-                    m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << pin_name <<  "\" )" << std::endl;
+                    m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << pin_name <<  "\" )" << std::endl;
 
                     std::cout << "Naming pin body :" <<  pin_name<< std::endl;
                   }
@@ -2925,7 +2974,7 @@ namespace MeshKit
                 for (int b=nRadii; b>1; b--){
 
                     iGeom_copyEnt(igeomImpl->instance(), cyls[b-2], &tmp_vol, &err);
-                    m_PyCubGeomFile << "tmp_vol = cubit.copy_body(cyls[" << b-2 << "])" << std::endl;
+                    m_PyCubGeomFile << "# SUBTRACTING ANNULUS ##\ntmp_vol = cubit.copy_body(cyls[" << b-2 << "])" << std::endl;
 
                     //subtract tmp vol from the outer most
                     iGeom_subtractEnts(igeomImpl->instance(), cyls[b-1], tmp_vol, &tmp_new, &err);
@@ -2942,23 +2991,23 @@ namespace MeshKit
                     std::cout <<"created: " << sMatName << std::endl;
 
                     cp_in.push_back(tmp_new);
-                    m_PyCubGeomFile << "cp_in.append(tmp_new)" << std::endl;
+                    m_PyCubGeomFile << "cp_in.append(tmp_new[0])" << std::endl;
 
                     // set the name of the annulus
                     iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                   sMatName.c_str(),sMatName.size(), &err);
                     m_PyCubGeomFile  << "lid = tmp_new[0].id()" << std::endl;
-                    m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << sMatName <<  "\" )" << std::endl;
+                    m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
                     if(strcmp(m_szInfo.c_str(),"on") == 0){
                         iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                       pin_name.c_str(), pin_name.size(), &err);
-                        m_PyCubGeomFile << "cubit.set_entity_name(\"volume\", lid, \""  << pin_name <<  "\" )" << std::endl;
+                        m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << pin_name <<  "\" )" << std::endl;
 
                         std::cout << "Naming pin body :" <<  pin_name<< std::endl;
                       }
 
                     Name_Faces(sMatName, tmp_new, this_tag);
-                    m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new) " << std::endl;
+                    m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new[0]) " << std::endl;
                     m_PyCubGeomFile << "cyls[" << b-1 << "] = tmp_new" << std::endl;
 
                     // copy the new into the cyl array
@@ -2966,9 +3015,10 @@ namespace MeshKit
                   }
               }
             if(nDuctIndex > 0){
+                m_PyCubGeomFile << "cp_inpins.append([])" << std::endl;
                 for (int count = 0; count < (int) cp_in.size(); count++){
                     cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
-                    m_PyCubGeomFile << "cp_inpins.append(cp_in[" << count << "])" << std::endl;
+                    m_PyCubGeomFile << "cp_inpins["<< nDuctIndex -1 << "].append(cp_in[" << count << "])" << std::endl;
 
                   }
               }
