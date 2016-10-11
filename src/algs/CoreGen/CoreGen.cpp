@@ -2016,6 +2016,8 @@ namespace MeshKit
                         << std::endl;
                 logfile << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/coregen-input-file-keyword-definitions/"
                         << std::endl;
+                logfile << "ERROR - Invalid INPUT FILE specified. Hint: input file name must be specified without extension" << std::endl;
+
               }
             file_input.clear();
             exit(1);
