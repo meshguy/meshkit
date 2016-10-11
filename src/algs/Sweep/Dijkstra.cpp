@@ -6,11 +6,6 @@
 #include <math.h>
 #include <map>
 
-
-
-
-
-
 namespace MeshKit
 {
 
@@ -80,7 +75,7 @@ void Dijkstra::getSurfList(vector<vector<vector<int> > > &l, int src_size, int t
 	std::cout << std::endl;
 		
 
-	for (int i = dist_array.size() - 1; i >= 0; i--){
+	for (size_t i = dist_array.size() - 1; i >= 0; i--){
 		std::vector<double>::iterator it;
 		it = std::find(bak_dist_array.begin(), bak_dist_array.end(), dist_array[i]);
 		int index = std::distance(bak_dist_array.begin(), it);

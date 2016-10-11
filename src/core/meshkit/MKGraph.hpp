@@ -29,8 +29,8 @@ public:
      */
   MKGraph();
   
-    //! destructor
-  ~MKGraph();
+    //! virtual destructor
+  virtual ~MKGraph();
 
     //! clear GraphNode's/MeshOp's in graph
   void clear_graph();

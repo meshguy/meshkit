@@ -35,4 +35,5 @@ bool operator!=(const Point2D & onePnt, const Point2D & otherPnt)
 std::ostream& operator<<(std::ostream& outStream, const Point2D & point)
 {
   outStream << "(" << point.getX() << ", " << point.getY() << ")";
+  return outStream;
 }
