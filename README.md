@@ -21,7 +21,7 @@ MeshKit requires the following libraries to be installed before configuration:
 
   - CGM: a library for representation, query and modification of geometric models; see [CGM build instructions] for details on obtaining and building CGM.
   - MOAB: a library for representing structured and unstructured mesh; see [MOAB build instructions] for details on obtaining and building MOAB.
-  - Lasso: a library for recovering and querying relations between mesh and geometry; see [Lasso build instructions] for details on obtaining and building Lasso.
+  - Lasso: a library for recovering and querying relations between mesh and geometry; Lasso is a part of MOAB and must be built by using --enable-rel option during MOAB installation.
   - Autotools: this is a set of Linux utilities for configuring software packages. Autotools can be found in most Linux package managers, and usually consists of the Autoconf and Automake packages.
 
 In addition, if a parallel version of MeshKit is desired, the user must have the Message Passing Interface (MPI) available on their computer; binary versions of MPI can be found in most Linux package managers.
@@ -34,11 +34,10 @@ Autotools-based configuration process. The following steps should be used to con
 
   - Unpack the source tarball into a directory referred to below as <MK_DIR> and change directory into that location.
   - Execute ‘autoreconf –fi’. This executes a series of tools in the autotools suite, storing some generated files in the ‘config’ subdirectory.
-  - Execute ‘./configure’ with appropriate options. Three configure options are required, specifying the locations of CGM (--with-igeom=<location>), MOAB (--with-imesh=<location>) and LASSO (--with-irel=<location>).
+  - Execute ‘./configure’ with appropriate options. Two configure options are "required", specify the locations of CGM (--with-igeom=<location>) and MOAB (--with-imesh=<location>) installation folders.
 
-Other useful configure options are the installation location (--prefix=<location>) and specifying debug or optimized builds (--enable-debug, --enable-optimized, respectively). 
 
-For a complete list of options, execute the command ‘./configure –help’. 
+For a complete list of configure options (Triangle, NetGen, TetGen, CAMAL, IPOPT etc.), execute the command ‘./configure –help’. 
 After a successful configuration, a set of Makefile’s are generated in the proper subdirectories.
 
   - To complete the build of MeshKit, execute ‘make’.
@@ -57,10 +56,8 @@ Once the MeshKit library has been built, it is ready for inclusion into user-dev
 The ‘examples’ subdirectory in the MeshKit source installation contains an example
 makefile showing how these make variables can be used to compile and link MeshKit-based applications.
 
-**Note: Automatic CMake-based build that builds MeshKit, MOAB, CGM, Lasso, OCE, FTGL, HDF5 can be found in folder <MeshKit>/trunk/doc/SuperBuild
 
 [Doxygen page]: http://ftp.mcs.anl.gov/pub/fathom/meshkit-docs/examples.html
 [online]: http://sigma.mcs.anl.gov/meshkit-library/
 [CGM build instructions]: http://sigma.mcs.anl.gov/cgm/building-cgm/
 [MOAB build instructions]: http://sigma.mcs.anl.gov/moab/building-moab/
-[Lasso build instructions]: http://sigma.mcs.anl.gov/lasso/building-lasso/
