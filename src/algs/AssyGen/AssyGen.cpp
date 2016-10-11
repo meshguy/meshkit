@@ -1201,6 +1201,8 @@ namespace MeshKit
                     m_dMAssmPitchY.SetSize(m_nDuct, m_nDimensions);
                     m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
                     assms.resize(m_nDimensions*m_nDuct);
+                    // Declaration for python script
+                    m_PyCubGeomFile << "assms = range(" << m_nDimensions*m_nDuct << ")\ncp_inpins  = []\n" << std::endl;
                   }
                 for (int i=1; i<=m_nDimensions; i++){
                     szFormatString >> m_dMAssmPitchX(m_nDuctNum, i) >> m_dMAssmPitchY(m_nDuctNum, i);
@@ -2260,18 +2262,19 @@ namespace MeshKit
                 dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
                 iGeom_createBrick(igeomImpl->instance(), m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight,
                                   &assm, &err);
-                ////CHECK("Prism creation failed.");
+                m_PyCubGeomFile << "assm = cubit.brick( " << m_dMAssmPitchX(nTemp, n) << ", " << m_dMAssmPitchY(nTemp, n) << ", " << dHeight << ")" << std::endl;
 
                 // position the outer block to match the pins
-                dX = m_dMAssmPitchX(nTemp, n)/4.0;
-                dY =  m_dMAssmPitchY(nTemp, n)/4.0;
                 dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
                 std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
                 iGeom_moveEnt(igeomImpl->instance(), assm, dMoveX,dMoveY,dZ, &err);
-                ////CHECK("Move failed failed.");
+                m_PyCubGeomFile << "vector = [" << dMoveX << ", " << dMoveY << ", " << dZ << "]" << std::endl;
+                m_PyCubGeomFile << "cubit.move(assm, vector)" << std::endl;
 
                 // populate the outer covering array squares
                 assms[nCount]=assm;
+                m_PyCubGeomFile << "assms.insert(" << nCount << ", assm)" << std::endl;
+
               }
           }
       }
@@ -2692,7 +2695,7 @@ namespace MeshKit
                 if(nCells >0){
                     // create brick
                     iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
-                    m_PyCubGeomFile << "cell = cubit.brick( " << PX << ", " << PY << ", " << dHeight << " ')" << std::endl;
+                    m_PyCubGeomFile << "cell = cubit.brick( " << PX << ", " << PY << ", " << dHeight << ")" << std::endl;
                   }
               }
 
@@ -3114,7 +3117,7 @@ namespace MeshKit
                 if(nCells >0){
                     // create brick
                     iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
-                    m_PyCubGeomFile << "cell = cubit.brick(' " << PX << ", " << PY << ", " << dHeight << " ')" << std::endl;                  }
+                    m_PyCubGeomFile << "cell = cubit.brick(' " << PX << ", " << PY << ", " << dHeight << ")" << std::endl;                  }
               }
 
             dZMove = (dVStartZ(n)+dVEndZ(n))/2.0;
