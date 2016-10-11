@@ -78,7 +78,7 @@ namespace MeshKit
                     iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
                                       dSide, dSide,
                                       &cell, &err);
-                    m_PyCubGeomFile << "cell = cubit.prism( " << dHeight << ", 6, " << dSide << ", " << dSide << " ')" << std::endl;
+                    m_PyCubGeomFile << "cell = cubit.prism( " << dHeight << ", 6, " << dSide << ", " << dSide << ")" << std::endl;
                   }
               }
             // if rectangular geometry
@@ -91,7 +91,7 @@ namespace MeshKit
                 if(nCells >0){
                     // create brick
                     iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
-                    m_PyCubGeomFile << "cell = cubit.brick( " << PX << ", " << PY << ", " << dHeight << " ')" << std::endl;
+                    m_PyCubGeomFile << "cell = cubit.brick( " << PX << ", " << PY << ", " << dHeight << ")" << std::endl;
                   }
               }
 
@@ -914,5 +914,5 @@ namespace MeshKit
       }
 
   }
-	
+
 }
