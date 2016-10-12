@@ -1949,46 +1949,47 @@ namespace MeshKit
       }
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
-    // loop and section/delete entities
+    m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;    
+    m_PyCubGeomFile << "reverse = \"" << szReverse << "\"\ndOffset = " << dOffset << std::endl;
+    // loop and section/delete entities    
     for(int i=0; i < all.size(); i++){
         //get the bounding box to decide
         iGeom_getEntBoundBox(igeomImpl->instance(),all[i],&xmin,&ymin,&zmin,
                              &xmax,&ymax,&zmax, &err);
-        ////CHECK("Failed get bound box");
+
         if(xmin > dOffset && yzplane ==1 && nReverse ==1){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
+            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         if(ymin > dOffset && xzplane == 1 && nReverse ==1){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
+            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         if(xmax < dOffset && yzplane ==1 && nReverse ==0){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
+            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         if(ymax < dOffset && xzplane == 1 && nReverse ==0){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
+            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         else{
             if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset, nReverse,&sec,&err);
-                ////CHECK("Failed to section ent");
+                //m_PyCubGeomFile << "cubit.cmd('section vol {0} with xplane offset {1} {2}'.format(vol[" << i << "], dOffset, reverse))" << std::endl;
               }
             if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset,nReverse,&sec,&err);
-                ////CHECK("Failed to section ent");
+                //m_PyCubGeomFile << "cubit.cmd('section vol {0}  with yplane offset {1} {2}'.format(vol[" << i << "], dOffset, reverse))" << std::endl;
               }
           }
       }
 
-      m_PyCubGeomFile << "reserve = " << szReverse << "\ndOffset = " << dOffset << std::endl;
+      
       if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
         m_PyCubGeomFile << "cubit.cmd('section vol all with xplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
       }
@@ -2018,7 +2019,7 @@ namespace MeshKit
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
 
-    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle 30 about {0}'.format(cDir))" << std::endl;
+    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle " << dAngle << " about {0}'.format(cDir))" << std::endl;
 
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
@@ -2319,6 +2320,7 @@ namespace MeshKit
     std::string sMatName = "";
     std::string sMatName0 = "";
     std::string sMatName1 = "";
+    m_PyCubGeomFile << "sub1 = []\nsub2=[]" << std::endl;
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
     iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
