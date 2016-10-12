@@ -1,5 +1,5 @@
 SUBDIRS = .
-MOSTLYCLEANFILES = coregen_d.h5m  CoreGen_default.log CoreGen_default.makefile cgd.h5m coregen_default.log coregen_default.makefile meshtogeom.coregen_default
+MOSTLYCLEANFILES = coregen_d.h5m  CoreGen_default.log CoreGen_default.makefile cgd.h5m coregen_default.log coregen_default.makefile meshtogeom.coregen_default test.out
 LDADD = $(top_builddir)/src/libMeshKit.la
 
 DATADIR = $(top_srcdir)/data
