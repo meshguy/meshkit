@@ -1902,12 +1902,27 @@ namespace MeshKit
 
     for(int i=0; i<all.size(); i++){
         iGeom_moveEnt(igeomImpl->instance(),all[i],-xcenter,-ycenter,-zcenter,&err);
-        ////CHECK("Failed to move entities");
-     //   m_PyCubGeomFile << "cubit.cmd('group 'gall_vol' vol all')"; << std::endl;
-     //   m_PyCubGeomFile << cubit.cmd('group 'gall_vol' vol all')"; << std::endl;
       }
-      m_PyCubGeomFile << "cubit.cmd('move vol all x "<< xcenter <<  " y " << ycenter << " z " << zcenter << " ')" <<  std::endl;
+      // OCC bounding box computation is buggy, better to compute bounding box in python and supply to the script.
+      m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
+      m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
 
+    if( rDir =='x'){
+        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+      }
+    else if( rDir =='y'){
+        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
+      }
+    else if ( rDir =='z'){
+        m_PyCubGeomFile << "zcenter = (vl[6]+vl[7])/2.0" << std::endl;
+      }
+    else{
+        // assume that it is centered along x and y and not z direction
+        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
+      }
+
+      m_PyCubGeomFile << "cubit.cmd('move vol all x -{0} y -{1} z -{2}'.format(xcenter, ycenter, zcenter) )" <<  std::endl;
   }
 
   void AssyGen::Section_Assm (char &cDir, double &dOffset, const std::string szReverse)
@@ -1973,6 +1988,14 @@ namespace MeshKit
           }
       }
 
+      m_PyCubGeomFile << "reserve = " << szReverse << "\ndOffset = " << dOffset << std::endl;
+      if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
+        m_PyCubGeomFile << "cubit.cmd('section vol all with xplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
+      }
+      if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
+        m_PyCubGeomFile << "cubit.cmd('section vol all with yplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
+      }
+
   }
 
   void AssyGen::Rotate_Assm (char &cDir, double &dAngle)
@@ -1994,13 +2017,14 @@ namespace MeshKit
       }
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
+
+    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle 30 about {0}'.format(cDir))" << std::endl;
+
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
         //get the bounding box to decide
         iGeom_rotateEnt(igeomImpl->instance(),all[i],dAngle,
                         dX, dY, dZ, &err);
-        ////CHECK("Failed rotate entities");
       }
 
   }
@@ -2014,13 +2038,14 @@ namespace MeshKit
   {
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
+
+    m_PyCubGeomFile << "cubit.cmd('move vol all x " << dX << " y " << dY << " dZ " << dZ << "')" << std::endl;        
+
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
         //get the bounding box to decide
         iGeom_moveEnt(igeomImpl->instance(),all[i],
                       dX, dY, dZ, &err);
-        ////CHECK("Failed move entities");
       }
 
   }
