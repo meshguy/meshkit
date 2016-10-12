@@ -2714,6 +2714,7 @@ namespace MeshKit
         make_file << "\t" << "${ASSYGEN} " << f_no_ext[i] << "\n" << std::endl;
       }
 
+    make_file << "make clean :" << "\n\trm *.sat *.cub *.py *.jou" << std::endl;  
     make_file.close();
     logfile << "Created makefile: " << mfile << std::endl;
     return 0;
