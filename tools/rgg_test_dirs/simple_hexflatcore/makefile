@@ -4,41 +4,45 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit -nographics -batch
+CUBIT = cubit -nographics
 
 COREGEN = ../../coregen
 
 ASSYGEN = ../../assygen
 
-MESH_FILES = fuel.cub  control.cub  outer_covering.cub
+MESH_FILES = fuel.cub  control.cub    
 
-GEOM_FILES = fuel.sat  control.sat  
+GEOM_FILES = fuel.sat  control.sat    
 
-JOU_FILES = fuel.jou  control.jou  cylinderical_covering.jou
+JOU_FILES = fuel.jou  control.jou    
 
-INJOU_FILES = fuel.template.jou  control.template.jou  
+PYTHON_FILES = fuel.py  control.py   
 
-ASSYGEN_FILES = fuel.inp  control.inp  
+INJOU_FILES = fuel.template.jou  control.template.jou   
 
+ASSYGEN_FILES = fuel.inp  control.inp    
 
-
-simple_hexflatcore.exo : ${MESH_FILES} simple_hexflatcore.inp
+shfc.h5m : ${MESH_FILES} simple_hexflatcore.inp
 	${COREGEN} simple_hexflatcore
 fuel.cub : fuel.sat  fuel.jou  fuel.template.jou
-	${CUBIT} fuel.jou
+	${CUBIT} -batch fuel.jou
 
-fuel.sat fuel.jou fuel.template.jou : fuel.inp
+fuel.sat : fuel.py
+	${CUBIT} -batch fuel.py
+
+fuel.py fuel.jou fuel.template.jou : fuel.inp
 	${ASSYGEN} fuel
 
 control.cub : control.sat  control.jou  control.template.jou
-	${CUBIT} control.jou
+	${CUBIT} -batch control.jou
 
-control.sat control.jou control.template.jou : control.inp
+control.sat : control.py
+	${CUBIT} -batch control.py
+
+control.py control.jou control.template.jou : control.inp
 	${ASSYGEN} control
 
 outer_covering.cub : 
 	${CUBIT} cylinderical_covering.jou
 
-clean:
-	rm *.sat *.cub
 
