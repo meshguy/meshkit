@@ -1,9 +1,9 @@
-SUBDIRS = AdvFront 
+SUBDIRS = AdvFront
 MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vtk BeforeHex.vtk \
 BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk \
 SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default_info.csv assygen_default.sat assygen_default.template.jou graph.eps \
 intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m \
-btree.dot out_quadcleanup.vtk alllocal.off orig.vtk assygen_default.log test_assymesher.log assygen_detault.py
+btree.dot out_quadcleanup.vtk alllocal.off orig.vtk assygen_default.log test_assymesher.log assygen_default.py
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
@@ -32,8 +32,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/utils
 
 #BROKEN_TESTS = test_jaalquad test_assygen edmond_matching hamiltonian mreport qualestm SimpleTri2Quad test_quadmeshcleanup
-BROKEN_TESTS = 
-TESTS = 
+BROKEN_TESTS =
+TESTS =
 
 if HAVE_QUADMESHER
 AM_CPPFLAGS += -I$(top_srcdir)/src/algs/QuadMesher
@@ -67,7 +67,7 @@ test_mbvolop_SOURCES = test_mbvolop.cpp
 # some of these tests require CAMAL and FBiGeom, too
 if HAVE_CAMAL_PAVER
 # test_volice is broken
-#TESTS += test_volice 
+#TESTS += test_volice
 #test_volice_SOURCES = test_volice.cpp
 #test_volice_LDADD =  $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
 if HAVE_TRIANGLE
@@ -87,7 +87,7 @@ check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
 # these tests should be launched for facet engine too
 
-TESTS += test_edgemesher 
+TESTS += test_edgemesher
 test_edgemesher_SOURCES = test_edgemesher.cpp
 
 if HAVE_OCC_GEOMETRY_ENGINE
@@ -141,10 +141,10 @@ test_assymesher_LDADD = $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
 endif
 
 # endif for HAVE_OCC_GEOMETRY_ENGINE
-endif  
+endif
 
 # Utility target: build but don't run tests
 build-check:
-	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
+        $(MAKE) 'TESTS_ENVIRONMENT=: ' check
 
 
