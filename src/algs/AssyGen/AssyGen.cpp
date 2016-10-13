@@ -132,164 +132,240 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   {
     std::cout << '\n';
-     std::cout << "\t\t---------------------------------------------------------" << '\n';
-     std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
-     std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
-     std::cout << "\t\t---------------------------------------------------------" << '\n';
-     std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
-     // set and open input output files
-     bool bDone = false;
-     do{
-         if (2 == argc) {
-             m_szFile = argv[1];
-             m_szInFile=m_szFile+".inp";
-             m_szJouFile = m_szFile+".jou";
-             m_szSchFile = m_szFile+".template.jou";
-             m_szAssmInfo = m_szFile + "_info.csv";
-             m_szLogFile = m_szFile + ".log";
-             m_szCommonFile = "common.inp";
-           }
-         else if (3 == argc) {
-             int i=1;// will loop through arguments, and process them
-             for (i=1; i<argc-1 ; i++) {
-                 if (argv[i][0]=='-') {
-                     switch (argv[i][1])
-                       {
-                       case 'j':
-                         {
-                           m_nJouFlag = 1;
-                           std::cout << "Creating journal file only.\n Geometry file must exist in the same directory." << std::endl;
-                           m_szFile = argv[2];
-                           m_szInFile=m_szFile+".inp";
-                           m_szJouFile = m_szFile+".jou";
-                           m_szSchFile = m_szFile+".template.jou";
-                           m_szAssmInfo = m_szFile + "_info.csv";
-                           m_szLogFile = m_szFile + ".log";
-                           m_szCommonFile = "common.inp";
-                           break;
-                         }
-                       case 'h':
-                         {
-                           std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-                           std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
-                           std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;
-                           std::cout << "        -j create journal file only" << std::endl;
-                           std::cout << "        -h print help" << std::endl;
+    std::cout << "\t\t---------------------------------------------------------" << '\n';
+    std::cout << "\t\tProgram to Generate Nuclear Reactor Assembly Geometries      " << '\n';
+    std::cout << "\t\t\t\tArgonne National Laboratory" << '\n';
+    std::cout << "\t\t---------------------------------------------------------" << '\n';
+    std::cout << "\nsee http://press3.mcs.anl.gov/sigma/meshkit-library/rgg/ for details.\n"<< std::endl;
+    // set and open input output files
+    bool bDone = false;
+    do{
+        if (2 == argc) {
+            m_szFile = argv[1];
+            m_szInFile=m_szFile+".inp";
+            m_szJouFile = m_szFile+".jou";
+            m_szSchFile = m_szFile+".template.jou";
+            m_szAssmInfo = m_szFile + "_info.csv";
+            m_szLogFile = m_szFile + ".scrŒeenlog";
+            m_szPyCubGeom = m_szFile + ".py";
+            m_szCommonFile = "common.inp";
+          }
+        else if (3 == argc) {
+            int i=1;// will loop through arguments, and process them
+            for (i=1; i<argc-1 ; i++) {
+                if (argv[i][0]=='-') {
+                    switch (argv[i][1])
+                      {
+                      case 'j':
+                        {
+                          m_nJouFlag = 1;
+                          std::cout << "Creating journal file only.\n Geometry file must exist in the same directory." << std::endl;
+                          m_szFile = argv[2];
+                          m_szInFile=m_szFile+".inp";
+                          m_szJouFile = m_szFile+".jou";
+                          m_szSchFile = m_szFile+".template.jou";
+                          m_szAssmInfo = m_szFile + "_info.csv";
+                          m_szLogFile = m_szFile + ".screenlog";
+                          m_szPyCubGeom = m_szFile + ".py";
+                          m_szCommonFile = "common.inp";
+                          break;
+                        }
+                      case 'h':
+                        {
+                          std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
+                          std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
+                          std::cout << "Usage: assygen [-j -h] <input file name without extension>"<< std::endl;
+                          std::cout << "        -j create journal file only" << std::endl;
+                          std::cout << "        -h print help" << std::endl;
 
-                           exit(0);
-                           break;
-                         }
-                       }
-                   }
-               }
-           }
-         else if (1 == argc){
-             std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
-             std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
-             std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;
-             std::cout << "        -t print timing and memory usage info in each step" << std::endl;
-             std::cout << "        -j create journal file only" << std::endl;
-             std::cout << "        -h print help" << std::endl;
+                          exit(0);
+                          break;
+                        }
+                      }
+                  }
+              }
+          }
+        else if (1 == argc){
+            std::cout << "\nInstruction on writing assygen input file can also be found at: " << std::endl;
+            std::cout << "        http://press3.mcs.anl.gov/sigma/meshkit/rgg/assygen-input-file-keyword-definitions/" << std::endl;
+            std::cout << "Usage: assygen [-t -j -h] <input file name without extension>"<< std::endl;
+            std::cout << "        -t print timing and memory usage info in each step" << std::endl;
+            std::cout << "        -j create journal file only" << std::endl;
+            std::cout << "        -h print help" << std::endl;
 
-             m_szInFile = TestDir + "/" + (char *)DEFAULT_TEST_FILE;
-             m_szGeomFile = (char *)TEST_FILE_NAME;
-             m_szJouFile = (char *)TEST_FILE_NAME;
-             m_szFile =  (char *)TEST_FILE_NAME;
-             m_szInFile+=".inp";
-             m_szJouFile+=".jou";
-             m_szSchFile = m_szFile+".template.jou";
-             m_szAssmInfo = m_szFile + "_info.csv";
-             m_szLogFile = m_szFile + ".log";
-             m_szCommonFile = TestDir + "/" + "common.inp";
+            m_szInFile = TestDir + "/" + (char *)DEFAULT_TEST_FILE;
+            m_szGeomFile = (char *)TEST_FILE_NAME;
+            m_szJouFile = (char *)TEST_FILE_NAME;
+            m_szFile =  (char *)TEST_FILE_NAME;
+            m_szInFile+=".inp";
+            m_szJouFile+=".jou";
+            m_szSchFile = m_szFile+".template.jou";
+            m_szAssmInfo = m_szFile + "_info.csv";
+            m_szLogFile = m_szFile + ".screenlog";
+            m_szPyCubGeom = m_szFile + ".py";
+            m_szCommonFile = TestDir + "/" + "common.inp";
 
-             std::cout <<"Default case input file is located here <MeshKit/data> "<< std::endl;
-           }
-         // open the file
-         m_FileInput.open (m_szInFile.c_str(), std::ios::in);
-         if (!m_FileInput){
-             std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
-             m_FileInput.clear ();
-             exit(1);
-           }
-         else
-           bDone = true; // file opened successfully
+            std::cout <<"Default case input file is located here <MeshKit/data> "<< std::endl;
+          }
+        // open the file
+        m_FileInput.open (m_szInFile.c_str(), std::ios::in);
+        if (!m_FileInput){
+            std::cout << "Usage: assygen <input filename WITHOUT EXTENSION>"<< std::endl;
+            m_FileInput.clear ();
+            exit(1);
+          }
+        else
+          bDone = true; // file opened successfully
 
-         // open common.inp file, if not found do nothing.
-         m_FileCommon.open (m_szCommonFile.c_str(), std::ios::in);
-         if (!m_FileCommon){
-             have_common = false;
-             std::cout << "common.inp file not specified." << std::endl;
-             m_FileCommon.clear ();
-           }
-         else {
-             have_common = true;
-           }
-         std::cout << " opened file " << m_szCommonFile << " have common is "
- << have_common << std::endl;
-       } while (!bDone);
-     std::cout << "\nEntered input file name: " <<  m_szInFile <<std::endl;
+        // open common.inp file, if not found do nothing.
+        m_FileCommon.open (m_szCommonFile.c_str(), std::ios::in);
+        if (!m_FileCommon){
+            have_common = false;
+            std::cout << "common.inp file not specified." << std::endl;
+            m_FileCommon.clear ();
+          }
+        else {
+            have_common = true;
+          }
+        std::cout << " opened file " << m_szCommonFile << " have common is "
+                  << have_common << std::endl;
+      } while (!bDone);
+    std::cout << "\nEntered input file name: " <<  m_szInFile <<std::endl;
 
-     // open the file
-     do{
-         m_FileOutput.open (m_szJouFile.c_str(), std::ios::out);
-         if (!m_FileOutput){
-             std::cout << "Unable to open o/p file: " << m_szJouFile << std::endl;
-             m_FileOutput.clear ();
-             exit(1);
-           }
-         else
-           bDone = true; // file opened successfully
-       } while (!bDone);
+    // open the file
+    do{
+        m_FileOutput.open (m_szJouFile.c_str(), std::ios::out);
+        if (!m_FileOutput){
+            std::cout << "Unable to open o/p file: " << m_szJouFile << std::endl;
+            m_FileOutput.clear ();
+            exit(1);
+          }
+        else
+          bDone = true; // file opened successfully
+      } while (!bDone);
 
-     // open the template journal file for writing
-     do{
-         m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out);
-         if (!m_SchemesFile){
-             std::cout << "Unable to open o/p file: " << m_szSchFile << std::endl;
-             m_SchemesFile.clear ();
-             exit(1);
-           }
-         else
-           bDone = true; // file opened successfully
-       } while (!bDone);
+    // open the template journal file for writing
+    do{
+        m_SchemesFile.open (m_szSchFile.c_str(), std::ios::out);
+        if (!m_SchemesFile){
+            std::cout << "Unable to open o/p file: " << m_szSchFile << std::endl;
+            m_SchemesFile.clear ();
+            exit(1);
+          }
+        else
+          bDone = true; // file opened successfully
+      } while (!bDone);
 
-     std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
-             << std::endl;
+    do{
+        m_PyCubGeomFile.open (m_szPyCubGeom.c_str(), std::ios::out);
+        if (!m_PyCubGeomFile){
+            std::cout << "Unable to open o/p file: " << m_szPyCubGeom << std::endl;
+            m_PyCubGeomFile.clear ();
+            exit(1);
+          }
+        else
+          bDone = true; // file opened successfully
+      } while (!bDone);
+
+    std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
+            << std::endl;
 
 
-     //ACIS ENGINE
-   #ifdef HAVE_ACIS
-     //  if(m_szEngine == "acis"){
-     m_szGeomFile = m_szFile+".sat";
-     //  }
-   #elif defined(HAVE_OCC)
-     //  OCC ENGINE
-     //  if (m_szEngine == "occ"){
-     m_szGeomFile = m_szFile+".brep";
-     //  }o
-   #endif
-     std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
+    //ACIS ENGINE
+#ifdef HAVE_ACIS
+    //  if(m_szEngine == "acis"){
+    m_szGeomFile = m_szFile+".sat";
+    //  }
+#elif defined(HAVE_OCC)
+    //  OCC ENGINE
+    //  if (m_szEngine == "occ"){
+    m_szGeomFile = m_szFile+".brep";
+    m_szGeomFile1 = m_szFile+".sat";
+    //  }o
+#endif
+    std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
-     // writing schemes .jou file ends, now write the main journal file.
-     // stuff common to both surface and volume
-     m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
-     m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
-     m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
-     m_FileOutput << "#" << std::endl;
-     m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
-     m_FileOutput << "Timer Start" << std::endl;
-     // import the geometry file
-     m_FileOutput << "# Import geometry file " << std::endl;
-     //ACIS ENGINE
-   #ifdef HAVE_ACIS
-     m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
+    // writing schemes .jou file ends, now write the main journal file.
+    // stuff common to both surface and volume
+    m_FileOutput << "## This file is created by rgg program in MeshKit ##\n";
+    m_FileOutput << "#User needs to specify mesh interval and schemes in this file\n#" << std::endl;
 
-   #elif defined(HAVE_OCC)
-     //  OCC ENGINE
-     m_FileOutput << "import step '" << m_szGeomFile <<"'" << std::endl;
-   #endif
+    m_PyCubGeomFile << "## This python script is created by the RGG AssyGen program in MeshKit ##\n";
+    m_PyCubGeomFile << "# Here the RGG AssyGen program creates the assembly geometry and mesh\n#" << std::endl;
+    m_PyCubGeomFile << "\nimport cubit" << std::endl;
 
-     m_FileOutput << "#" << std::endl;
+
+    // write the name faces python function here
+    m_PyCubGeomFile << "def name_faces(name, body):\n"
+                       "    vector_locs = cubit.get_bounding_box(\"volume\", body.id())\n"
+                       "    topno = vector_locs[7] - 1e-2\n"
+                       "    botno = vector_locs[6] + 1e-2\n"
+                       "    cubit.cmd('group \"g1\" equals surf in vol {0} '.format(body.id()))\n"
+                       "    cubit.cmd('group \"g2\" equals surf  in g1 with z_coord  < {0} and z_coord > {1}'.format(topno,botno))\n"
+                       "    cubit.cmd('group  \"g3\" subtract g2 from g1')\n"
+                       "    cubit.cmd('group \"gtop\" equals surf in g3 with z_coord > {0}'.format(topno) )\n"
+                       "    cubit.cmd('group \"gbot\" equals surf in g3 with z_coord < {0}'.format(botno) )\n"
+                       "    g2id = cubit.get_id_from_name(\"g2\")\n"
+                       "    ssurfs = cubit.get_group_surfaces(g2id)\n"
+                       "    side_surfs = len(ssurfs)\n"
+                       "    for i in range(0,side_surfs):\n"
+                       "      sname = name + \"_side\" + str(i+1)\n"
+                       "      cubit.cmd('surf {0} name \"{1}\"'.format( ssurfs[i] , sname )  )\n"
+                       "    top_surf = name + \"_top\"\n"
+                       "    bot_surf = name + \"_bot\"\n"
+                       "    cubit.cmd('surf in gtop name \"{0}\"'.format(top_surf) )\n"
+                       "    cubit.cmd('surf in gbot name \"{0}\"'.format(bot_surf) )\n"
+                       "    cubit.cmd('delete group g1 g2 g3 gtop gbot')\n" << std::endl;
+
+
+    // write the name faces python function here
+    m_PyCubGeomFile << "\n\ndef section_assm(cDir, dOffset, szReverse):\n"
+                       "    vol = cubit.get_entities(\"volume\")\n"
+                       "    for i in range(len(vol)):\n"
+                       "      vl = cubit.get_bounding_box(\"volume\", vol[i])\n"
+                       "      xmin = vl[0]\n"
+                       "      xmax = vl[1]\n"
+                       "      ymin = vl[3]\n"
+                       "      ymax = vl[4]\n"
+                       "      print xmin, xmax, ymin, ymax\n"
+                       "      if(xmin > dOffset and cDir == \"x\" and szReverse == \"reverse\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      if(ymin > dOffset and cDir == \"y\" and szReverse == \"reverse\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      if(xmax < dOffset and cDir == \"x\" and szReverse == \"\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      if(ymax < dOffset and cDir == \"y\" and szReverse == \"\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      else:\n"
+                       "        if (ymax > dOffset and cDir == \"y\" and ymin < dOffset):\n"
+                       "          cubit.cmd('section vol {0} with yplane offset {1} {2}'.format(vol[i], dOffset, szReverse))\n"
+                       "        if (xmax > dOffset and cDir == \"x\" and xmin < dOffset):\n"
+                       "          cubit.cmd('section vol {0} with xplane offset {1} {2}'.format(vol[i], dOffset, szReverse))\n" << std::endl;
+
+    m_PyCubGeomFile << "\ncubit.cmd('reset')" << std::endl;
+
+
+    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
+    m_FileOutput << "#" << std::endl;
+    m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
+    m_FileOutput << "Timer Start" << std::endl;
+    // import the geometry file
+    m_FileOutput << "# Import geometry file " << std::endl;
+    //ACIS ENGINE
+#ifdef HAVE_ACIS
+    m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
+
+#elif defined(HAVE_OCC)
+    //  OCC ENGINE
+    // Use sat file always as step isn't supported
+    m_FileOutput << "import '" << m_szGeomFile1 <<"'" << std::endl;
+#endif
+
+    m_FileOutput << "#" << std::endl;
 
   }
 
@@ -614,11 +690,11 @@ namespace MeshKit
             m_bimprint = true;
             std::cout <<"--------------------------------------------------"<<std::endl;
           }
-        // imprint 
+        // imprint
         if (szInputString.substr(0,5) == "merge"){
             m_bmerge = true;
             std::cout <<"--------------------------------------------------"<<std::endl;
-          } 
+          }
         // info flag
         if (szInputString.substr(0,6) == "smooth"){
             std::istringstream szFormatString (szInputString);
@@ -1102,6 +1178,8 @@ namespace MeshKit
                     m_dMAssmPitch.SetSize(m_nDuct, m_nDimensions); m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
 
                     assms.resize(m_nDimensions*m_nDuct); // setup while reading the problem size
+                    // Declaration for python script
+                    m_PyCubGeomFile << "assms = range(" << m_nDimensions*m_nDuct << ")\ncp_inpins  = []\n" << std::endl;
                   }
 
                 for (int i=1; i<=m_nDimensions; i++){
@@ -1151,6 +1229,8 @@ namespace MeshKit
                     m_dMAssmPitchY.SetSize(m_nDuct, m_nDimensions);
                     m_szMMAlias.SetSize(m_nDuct, m_nDimensions);
                     assms.resize(m_nDimensions*m_nDuct);
+                    // Declaration for python script
+                    m_PyCubGeomFile << "assms = range(" << m_nDimensions*m_nDuct << ")\ncp_inpins  = []\n" << std::endl;
                   }
                 for (int i=1; i<=m_nDimensions; i++){
                     szFormatString >> m_dMAssmPitchX(m_nDuctNum, i) >> m_dMAssmPitchY(m_nDuctNum, i);
@@ -1230,11 +1310,11 @@ namespace MeshKit
 
                 // subtract pins before save
                 if(m_nDuct > 0){
-                  Subtract_Pins();
-                clock_t s_subtract = clock();
-                std::cout << "## Subract Pins CPU time used := " << (double) (clock() - s_subtract)/CLOCKS_PER_SEC
-                          << " seconds" << std::endl;
-                }
+                    Subtract_Pins();
+                    clock_t s_subtract = clock();
+                    std::cout << "## Subract Pins CPU time used := " << (double) (clock() - s_subtract)/CLOCKS_PER_SEC
+                              << " seconds" << std::endl;
+                  }
                 if(m_nPlanar ==1){
                     Create2DSurf();
                     //ERRORR("Error in Create2DSurf", err);
@@ -1251,6 +1331,7 @@ namespace MeshKit
             std::istringstream szFormatString (szInputString);
             szFormatString >> card >> cDir >> dOffset >> szReverse;
             Section_Assm(cDir, dOffset, szReverse);
+            m_PyCubGeomFile << "section_assm(\"" << cDir << "\", " << dOffset << ", \"" << szReverse << "\")" << std::endl;
             //ERRORR("Error in Section_Assm", err);
             std::cout <<"--------------------------------------------------"<<std::endl;
 
@@ -1348,19 +1429,19 @@ namespace MeshKit
             std::istringstream szFormatString (szInputString);
             szFormatString >> card;
             if(m_nDuct > 0){
-              m_dAxialSize.SetSize(m_nDuct);
-              int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
-                                                    std::istream_iterator<std::string>());
-              std::istringstream szFormatStringAgain (szInputString);
-              szFormatStringAgain >> card;
-              for (int p = 1; p <= m_nDuct; p++){
-                  if(p <= num_ams_specified)
-                    szFormatStringAgain >> m_dAxialSize(p);
-                  else
-                    m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
-                  if(m_dAxialSize(p) < 0)
-                    IOErrorHandler(ENEGATIVE);
-                }
+                m_dAxialSize.SetSize(m_nDuct);
+                int num_ams_specified = std::distance(std::istream_iterator<std::string>(szFormatString),
+                                                      std::istream_iterator<std::string>());
+                std::istringstream szFormatStringAgain (szInputString);
+                szFormatStringAgain >> card;
+                for (int p = 1; p <= m_nDuct; p++){
+                    if(p <= num_ams_specified)
+                      szFormatStringAgain >> m_dAxialSize(p);
+                    else
+                      m_dAxialSize(p) = m_dAxialSize(num_ams_specified);
+                    if(m_dAxialSize(p) < 0)
+                      IOErrorHandler(ENEGATIVE);
+                  }
               }
             else{
                 m_dAxialSize.SetSize(1);
@@ -1442,8 +1523,14 @@ namespace MeshKit
                 iGeom_save(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
                 std::cout << "## Saving CPU time used := " << (double) (clock() - s_save)/CLOCKS_PER_SEC
                           << " seconds" << std::endl;
-                ////CHECK("Save to file failed.");
+
+                m_PyCubGeomFile << "cubit.cmd('export acis \"" <<m_szGeomFile1 << "\" over')" << std::endl;
+
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
+                //                // Now run the journal file from the python script
+                //                m_PyCubGeomFile << "infile = open(\""<< m_szJouFile << "\", \"r\")" << std::endl;
+                //                m_PyCubGeomFile << "for line in infile:\n  cubit.cmd(line)" << std::endl;
+
                 // Reloading file to check load times
                 bool if_loadagain = false;
                 if (if_loadagain == true){
@@ -1698,10 +1785,10 @@ namespace MeshKit
   {
     double dTol = 1e-4, ttol = 1e-2;
     if(m_dMAssmPitch.GetRows()!=0 && m_dMAssmPitch.GetColumns()!=0){
-    if(m_szGeomType == "hexagonal")
-      ttol = m_dMAssmPitch(1, 1);
-    else if (m_szGeomType == "rectangular")
-      ttol = m_dMAssmPitchX(1,1);
+        if(m_szGeomType == "hexagonal")
+          ttol = m_dMAssmPitch(1, 1);
+        else if (m_szGeomType == "rectangular")
+          ttol = m_dMAssmPitchX(1,1);
       }
     // set tolerance for surface identification
     if (ttol != 0){
@@ -1844,9 +1931,27 @@ namespace MeshKit
 
     for(int i=0; i<all.size(); i++){
         iGeom_moveEnt(igeomImpl->instance(),all[i],-xcenter,-ycenter,-zcenter,&err);
-        ////CHECK("Failed to move entities");
+      }
+    // OCC bounding box computation is buggy, better to compute bounding box in python and supply to the script.
+    m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
+    m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
+
+    if( rDir =='x'){
+        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+      }
+    else if( rDir =='y'){
+        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
+      }
+    else if ( rDir =='z'){
+        m_PyCubGeomFile << "zcenter = (vl[6]+vl[7])/2.0" << std::endl;
+      }
+    else{
+        // assume that it is centered along x and y and not z direction
+        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
       }
 
+    m_PyCubGeomFile << "cubit.cmd('move vol all x {0} y {1} z {2}'.format(-xcenter, -ycenter, -zcenter) )" <<  std::endl;
   }
 
   void AssyGen::Section_Assm (char &cDir, double &dOffset, const std::string szReverse)
@@ -1873,44 +1978,71 @@ namespace MeshKit
       }
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
+
     // loop and section/delete entities
     for(int i=0; i < all.size(); i++){
         //get the bounding box to decide
         iGeom_getEntBoundBox(igeomImpl->instance(),all[i],&xmin,&ymin,&zmin,
                              &xmax,&ymax,&zmax, &err);
-        ////CHECK("Failed get bound box");
+
         if(xmin > dOffset && yzplane ==1 && nReverse ==1){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
             continue;
           }
         if(ymin > dOffset && xzplane == 1 && nReverse ==1){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
             continue;
           }
         if(xmax < dOffset && yzplane ==1 && nReverse ==0){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
             continue;
           }
         if(ymax < dOffset && xzplane == 1 && nReverse ==0){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            ////CHECK("Failed delete entities");
             continue;
           }
         else{
             if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset, nReverse,&sec,&err);
-                ////CHECK("Failed to section ent");
               }
             if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset,nReverse,&sec,&err);
-                ////CHECK("Failed to section ent");
               }
           }
       }
+
+
+//    m_PyCubGeomFile << "reverse = \"" << szReverse << "\"\ndOffset = " << dOffset << std::endl;
+
+//    m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
+//    m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
+
+
+
+//    if( rDir =='x'){
+//        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+//      }
+//    else if( rDir =='y'){
+//        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
+//      }
+//    else if ( rDir =='z'){
+//        m_PyCubGeomFile << "zcenter = (vl[6]+vl[7])/2.0" << std::endl;
+//        m_PyCubGeomFile << "cubit.cmd('delete vol {0}'.format(vol[" << i << "]))" << std::endl;
+
+//      }
+//    else{
+//        // assume that it is centered along x and y and not z direction
+//        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+//        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
+//      }
+
+
+//    if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
+//        m_PyCubGeomFile << "cubit.cmd('section vol all with yplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
+//      }
+//    if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
+//        m_PyCubGeomFile << "cubit.cmd('section vol all with xplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
+//      }
 
   }
 
@@ -1933,13 +2065,14 @@ namespace MeshKit
       }
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
+
+    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle " << dAngle << " about {0}'.format(cDir))" << std::endl;
+
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
         //get the bounding box to decide
         iGeom_rotateEnt(igeomImpl->instance(),all[i],dAngle,
                         dX, dY, dZ, &err);
-        ////CHECK("Failed rotate entities");
       }
 
   }
@@ -1953,13 +2086,14 @@ namespace MeshKit
   {
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
+
+    m_PyCubGeomFile << "cubit.cmd('move vol all x " << dX << " y " << dY << " dZ " << dZ << "')" << std::endl;
+
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
         //get the bounding box to decide
         iGeom_moveEnt(igeomImpl->instance(),all[i],
                       dX, dY, dZ, &err);
-        ////CHECK("Failed move entities");
       }
 
   }
@@ -1992,62 +2126,62 @@ namespace MeshKit
     if (m_nJouFlag == 1)
       return;
 
-      for(int m=1; m<=nWidth; m++){
-          if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                   MAXCHARS, szComment))
-            IOErrorHandler (INVALIDINPUT);
-          if(m>m_nPin)
-            t = 2*m_nPin - m;
-          else
-            t = m;
-          std::istringstream szFormatString1 (szInputString);
+    for(int m=1; m<=nWidth; m++){
+        if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                 MAXCHARS, szComment))
+          IOErrorHandler (INVALIDINPUT);
+        if(m>m_nPin)
+          t = 2*m_nPin - m;
+        else
+          t = m;
+        std::istringstream szFormatString1 (szInputString);
 
-          for(int n=1; n<=(m_nPin + t - 1); n++){
-              ++total_pincells;
-              nTempPin = -1;
-              szFormatString1 >> m_Assembly(m,n);
-              if(szFormatString1.fail())
-                IOErrorHandler (INVALIDINPUT);
-              // if dummy pincell skip and continue
-              if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-                  continue;
-                }
-              // find that pincell
-              ++m_nTotalPincells;
-              for(int b=1; b<=m_nPincells; b++){
-                  m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-                  if(m_Assembly(m,n) == szVolAlias)
-                    nTempPin = b;
-                }
-               if(nTempPin == -1){
-                   std::cout << "Unknown pincell, pincell " << m_Assembly(m,n) << " not declared" << std::endl;
-                   exit(1);
-                 }
+        for(int n=1; n<=(m_nPin + t - 1); n++){
+            ++total_pincells;
+            nTempPin = -1;
+            szFormatString1 >> m_Assembly(m,n);
+            if(szFormatString1.fail())
+              IOErrorHandler (INVALIDINPUT);
+            // if dummy pincell skip and continue
+            if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+                continue;
+              }
+            // find that pincell
+            ++m_nTotalPincells;
+            for(int b=1; b<=m_nPincells; b++){
+                m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+                if(m_Assembly(m,n) == szVolAlias)
+                  nTempPin = b;
+              }
+            if(nTempPin == -1){
+                std::cout << "Unknown pincell, pincell " << m_Assembly(m,n) << " not declared" << std::endl;
+                exit(1);
+              }
 
-              // now compute the location and create it
-              ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
-              //ERRORR("Error in function ComputePinCentroid", err);
+            // now compute the location and create it
+            ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+            //ERRORR("Error in function ComputePinCentroid", err);
 
-              // now create the pincell in the location found
-              std::cout << "\n--------------------------------------------------"<<std::endl;
-              std::cout << " m = " << m <<" n = " << n << std::endl;
-              std::cout << "creating pin: " << nTempPin;
-              std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
+            // now create the pincell in the location found
+            std::cout << "\n--------------------------------------------------"<<std::endl;
+            std::cout << " m = " << m <<" n = " << n << std::endl;
+            std::cout << "creating pin: " << nTempPin;
+            std::cout << " at X Y Z " << dX << " " << dY << " " << dZ << std::endl;
 
-              if(strcmp(m_szInfo.c_str(),"on") == 0)
-                m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+            if(strcmp(m_szInfo.c_str(),"on") == 0)
+              m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
 
-              m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
-              if(nIFlag){
-                  CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
-                  //ERRORR("Error in function CreatePinCell_Intersect", err);
-                }
-              else{
-                  CreatePinCell(nTempPin, dX, -dY, dZ);
-                  //ERRORR("Error in function CreatePinCell", err);
-                }
-            }
-        }
+            m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
+            if(nIFlag){
+                CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
+                //ERRORR("Error in function CreatePinCell_Intersect", err);
+              }
+            else{
+                CreatePinCell(nTempPin, dX, -dY, dZ);
+                //ERRORR("Error in function CreatePinCell", err);
+              }
+          }
+      }
 
     // get all the entities (in pins)defined so far, in an entity set - for subtraction later
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
@@ -2066,11 +2200,11 @@ namespace MeshKit
                 iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
                                   dSide, dSide,
                                   &assm, &err);
-                ////CHECK("Prism creation failed.");
+                m_PyCubGeomFile << "##\nassm = cubit.prism(" << dHeight << ", 6, " << dSide << ", " << dSide << ")" << std::endl;
 
                 // rotate the prism to match the pins
                 iGeom_rotateEnt (igeomImpl->instance(), assm, 30, 0, 0, 1, &err);
-                ////CHECK("Rotation failed failed.");
+                m_PyCubGeomFile << "cubit.cmd('rotate body {0} angle 30 about z'.format(assm.id()) )" << std::endl;
 
                 if(0 != m_Pincell.GetSize()){
                     m_Pincell(1).GetPitch(dP, dH);
@@ -2085,10 +2219,13 @@ namespace MeshKit
 
                 // position the prism
                 iGeom_moveEnt(igeomImpl->instance(), assm, dX,dY,dZ, &err);
-                ////CHECK("Move failed failed.");
+                m_PyCubGeomFile << "vector = [" << dX << ", " << dY << ", " << dZ << "]" << std::endl;
+                m_PyCubGeomFile << "cubit.move(assm, vector)" << std::endl;
 
                 // populate the coverings array
+                int loc = (nTemp-1)*m_nDimensions + n -1;
                 assms[(nTemp-1)*m_nDimensions + n -1]=assm;
+                m_PyCubGeomFile << "assms.insert(" << loc << ", assm)" << std::endl;
               }
           }
       }
@@ -2117,69 +2254,69 @@ namespace MeshKit
     if (m_nJouFlag == 1)
       return;
 
-      //read the next line to get assembly info &store assembly info
-      if(0 != m_Pincell.GetSize()){
-          for(int m=1; m<=m_nPinY; m++){
-              if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
-                                       MAXCHARS, szComment))
-                IOErrorHandler (INVALIDINPUT);
-              std::istringstream szFormatString1 (szInputString);
+    //read the next line to get assembly info &store assembly info
+    if(0 != m_Pincell.GetSize()){
+        for(int m=1; m<=m_nPinY; m++){
+            if (!Parse.ReadNextLine (m_FileInput, m_nLineNumber, szInputString,
+                                     MAXCHARS, szComment))
+              IOErrorHandler (INVALIDINPUT);
+            std::istringstream szFormatString1 (szInputString);
 
-              //store the line read in Assembly array and create / position the pin in the core
-              for(int n=1; n<=m_nPinX; n++){
-                  szFormatString1 >> m_Assembly(m,n);
-                  if(szFormatString1.fail())
-                    IOErrorHandler (INVALIDINPUT);
+            //store the line read in Assembly array and create / position the pin in the core
+            for(int n=1; n<=m_nPinX; n++){
+                szFormatString1 >> m_Assembly(m,n);
+                if(szFormatString1.fail())
+                  IOErrorHandler (INVALIDINPUT);
 
 
-                  // loop thro' all pins to get the type of pin
-                  for(int b=1; b<=m_nPincells; b++){
-                      m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
-                      if(m_Assembly(m,n) == szVolAlias)
-                        nTempPin = b;
-                    }
+                // loop thro' all pins to get the type of pin
+                for(int b=1; b<=m_nPincells; b++){
+                    m_Pincell(b).GetLineOne(szVolId, szVolAlias, nInputLines);
+                    if(m_Assembly(m,n) == szVolAlias)
+                      nTempPin = b;
+                  }
 
-                  //now compute the location where the pin needs to be placed
-                  ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
-                  //ERRORR("Error in function ComputePinCentroid", err);
+                //now compute the location where the pin needs to be placed
+                ComputePinCentroid(nTempPin, m_Assembly, m, n, dX, dY, dZ);
+                //ERRORR("Error in function ComputePinCentroid", err);
 
-                  // if dummy pincell skip and continue
-                  if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
-                      m_Pincell(1).GetPitch(dPX, dPY, dPZ);
-                      // dMoveX and dMoveY are stored for positioning the outer squares later
-                      if(m == m_nPinY && n ==m_nPinX){
-                          dMoveX = dX/2.0;
-                          dMoveY = -dY/2.0;
-                        }
-                      continue;
-                    }
-                  ++m_nTotalPincells;
-                  // now create the pincell in the location found
-                  std::cout << "\n--------------------------------------------------"<<std::endl;
-                  std::cout << " m = " << m <<" n = " << n << std::endl;
-                  std::cout << "creating pin: " << nTempPin;
-                  std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
+                // if dummy pincell skip and continue
+                if((m_Assembly(m,n)=="x")||(m_Assembly(m,n)=="xx")){
+                    m_Pincell(1).GetPitch(dPX, dPY, dPZ);
+                    // dMoveX and dMoveY are stored for positioning the outer squares later
+                    if(m == m_nPinY && n ==m_nPinX){
+                        dMoveX = dX/2.0;
+                        dMoveY = -dY/2.0;
+                      }
+                    continue;
+                  }
+                ++m_nTotalPincells;
+                // now create the pincell in the location found
+                std::cout << "\n--------------------------------------------------"<<std::endl;
+                std::cout << " m = " << m <<" n = " << n << std::endl;
+                std::cout << "creating pin: " << nTempPin;
+                std::cout << " at X Y Z " << dX << " " << -dY << " " << dZ << std::endl;
 
-                  if(strcmp(m_szInfo.c_str(),"on") == 0)
-                    m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
+                if(strcmp(m_szInfo.c_str(),"on") == 0)
+                  m_AssmInfo << nTempPin  << " \t" << m << " \t" << n << " \t" << dX << " \t" << dY << " \t" << dZ << std::endl;
 
-                  m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
-                  if(nIFlag){
-                      CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
-                      //ERRORR("Error in function CreatePinCell_Intersect", err);
-                    }
-                  else{
-                      CreatePinCell(nTempPin, dX, -dY, dZ);
-                      //ERRORR("Error in function CreatePinCell", err);
-                    }
-                  // dMoveX and dMoveY are stored for positioning the outer squares later
-                  if(m == m_nPinY && n ==m_nPinX){
-                      dMoveX = dX/2.0;
-                      dMoveY = -dY/2.0;
-                    }
-                }
-            }
-        }
+                m_Pincell(nTempPin).GetIntersectFlag(nIFlag);
+                if(nIFlag){
+                    CreatePinCell_Intersect(nTempPin, dX, -dY, dZ);
+                    //ERRORR("Error in function CreatePinCell_Intersect", err);
+                  }
+                else{
+                    CreatePinCell(nTempPin, dX, -dY, dZ);
+                    //ERRORR("Error in function CreatePinCell", err);
+                  }
+                // dMoveX and dMoveY are stored for positioning the outer squares later
+                if(m == m_nPinY && n ==m_nPinX){
+                    dMoveX = dX/2.0;
+                    dMoveY = -dY/2.0;
+                  }
+              }
+          }
+      }
     std::cout << "\n--------------------------------------------------"<<std::endl;
 
     // get all the entities (in pins)defined so far, in an entity set - for subtraction later
@@ -2198,18 +2335,19 @@ namespace MeshKit
                 dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
                 iGeom_createBrick(igeomImpl->instance(), m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight,
                                   &assm, &err);
-                ////CHECK("Prism creation failed.");
+                m_PyCubGeomFile << "assm = cubit.brick( " << m_dMAssmPitchX(nTemp, n) << ", " << m_dMAssmPitchY(nTemp, n) << ", " << dHeight << ")" << std::endl;
 
                 // position the outer block to match the pins
-                dX = m_dMAssmPitchX(nTemp, n)/4.0;
-                dY =  m_dMAssmPitchY(nTemp, n)/4.0;
                 dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
                 std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
                 iGeom_moveEnt(igeomImpl->instance(), assm, dMoveX,dMoveY,dZ, &err);
-                ////CHECK("Move failed failed.");
+                m_PyCubGeomFile << "vector = [" << dMoveX << ", " << dMoveY << ", " << dZ << "]" << std::endl;
+                m_PyCubGeomFile << "cubit.move(assm, vector)" << std::endl;
 
                 // populate the outer covering array squares
                 assms[nCount]=assm;
+                m_PyCubGeomFile << "assms.insert(" << nCount << ", assm)" << std::endl;
+
               }
           }
       }
@@ -2229,6 +2367,7 @@ namespace MeshKit
     std::string sMatName = "";
     std::string sMatName0 = "";
     std::string sMatName1 = "";
+    m_PyCubGeomFile << "sub1 = []\nsub2=[]" << std::endl;
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
     iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
@@ -2254,7 +2393,9 @@ namespace MeshKit
             ////CHECK("setData failed");
 
             Name_Faces(sMatName, tmp_vol, this_tag);
-            //ERRORR("Error in function Name_Faces", err);
+            m_PyCubGeomFile << "lid = assms[" << (nTemp1 - 1)*m_nDimensions << "].id()" << std::endl;
+            m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
+            m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", assms[" << (nTemp1 - 1)*m_nDimensions << "])" << std::endl;
           }
 
         int count =0;//index for edge names
@@ -2268,6 +2409,10 @@ namespace MeshKit
             //CHECK( "ERROR : getEntAdj failed!" );
 
             // get the top corner edges of the outer most covering
+            //m_PyCubGeomFile << "lid=assms<<["<< nTemp*m_nDimensions-1 << "].id()" << std::endl;
+            m_PyCubGeomFile << "cubit.cmd('group \"g1\" equals curve in vol {0} '.format(assms[" << nTemp*m_nDimensions-1 << "].id()))" << std::endl;
+            m_PyCubGeomFile << "cubit.cmd('group \"g2\" equals curve with z_max<> z_min in g1')\ncubit.cmd('group  \"g3\" subtract g2 from g1')" << std::endl;
+            m_PyCubGeomFile << "cubit.cmd('curve in g3 name \"side_edge\"')" << std::endl;
             std::ostringstream os;
             for (int i = 0; i < edges.size(); ++i){
                 iGeom_getEntBoundBox(igeomImpl->instance(), edges[i],&xmin,&ymin,&zmin,
@@ -2303,11 +2448,16 @@ namespace MeshKit
                     ++nCount;
                     // copy cyl before subtract
                     iGeom_copyEnt(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-2], &tmp_vol, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
+                    m_PyCubGeomFile << "tmp_vol = cubit.copy_body(assms[" << (nTemp-1)*m_nDimensions + n-2 << "])" << std::endl;
 
                     // subtract outer most cyl from brick
+                    m_PyCubGeomFile << "\nsub1.append(tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "\nsub2.append(assms[" << (nTemp-1)*m_nDimensions + n-1 <<"])" << std::endl;
+
                     iGeom_subtractEnts(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-1], tmp_vol, &tmp_new, &err);
-                    ////CHECK("Subtract of inner from outer failed.");
+
+                    m_PyCubGeomFile << "tmp_new = cubit.subtract(sub1, sub2)" << std::endl;
+                    m_PyCubGeomFile << "assms[" << (nTemp-1)*m_nDimensions + n-1 << "] = tmp_new[0]\n\nsub1[:]=[]\nsub2[:]=[]"   << std::endl;
 
                     assms[(nTemp-1)*m_nDimensions + n-1]=tmp_new;
 
@@ -2321,7 +2471,9 @@ namespace MeshKit
 
                     iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                   sMatName.c_str(), sMatName.size(), &err);
-                    ////CHECK("setData failed");
+                    m_PyCubGeomFile << "lid = tmp_new[0].id()" << std::endl;
+                    m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
+                    m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new[0]) " << std::endl;
                     Name_Faces(sMatName, tmp_new, this_tag);
                   }
               }
@@ -2346,28 +2498,33 @@ namespace MeshKit
               continue;
             // put all the in pins in a matrix of size duct for subtraction with ducts
             std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
+            m_PyCubGeomFile << "pin_copy=[]\n\nsub1=[]\nsub2=[]\n" << std::endl;
             for (int i=0; i< (int) cp_inpins[k-1].size();i++){
                 iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &pin_copy[i], &err);
-                ////CHECK("Couldn't copy inner duct wall prism.");
+                m_PyCubGeomFile << "tmp_vol = cubit.copy_body(cp_inpins[" << k-1 << "][" << i << "])" << std::endl;
+                m_PyCubGeomFile << "pin_copy.append(tmp_vol)" << std::endl;
+                m_PyCubGeomFile << "\nsub2.append(cp_inpins[" << k-1 << "]["<< i << "])" << std::endl;
               }
 
             iBase_EntityHandle tmp_vol = NULL;
             tmp_vol = assms[(k-1)*m_nDimensions];
+            m_PyCubGeomFile << "tmp_vol = assms[" << k << "]" << std::endl;
 
             // subtract the innermost hex from the pins
             std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
-//#if HAVE_ACIS
+            //#if HAVE_ACIS
             iBase_EntityHandle unite= NULL, tmp_new1;
 
             // if there are more than one pins
             if( cp_inpins[k-1].size() > 1){
 
                 iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
-                //CHECK( "uniteEnts failed!" );
-
+                //m_PyCubGeomFile << "##\nunitepins = cubit.unite(cp_inpins[" << k-1 <<"][0])" << std::endl;
+                m_PyCubGeomFile << "\nsub1.append(assms[" << (k-1)*m_nDimensions <<"])" << std::endl;
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,unite, &tmp_new1, &err);
-                ////CHECK("Couldn't subtract pins from block.");
+                m_PyCubGeomFile << "tmp_new1 = cubit.subtract(sub2, sub1)" << std::endl;
+                m_PyCubGeomFile << "tmp_vol = tmp_new1" << std::endl;
 
                 tmp_vol = tmp_new1;
                 unite = NULL;
@@ -2375,29 +2532,30 @@ namespace MeshKit
               }
             else{ // only one pin in in_pins
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
-                ////CHECK("Couldn't subtract pins from block.");
+                m_PyCubGeomFile << "\nsub1.append(assms[" << (k-1)*m_nDimensions <<"])" << std::endl;
+                m_PyCubGeomFile << "tmp_new1 = cubit.subtract(sub2, sub1)" << std::endl;
               }
-//#endif
+            //#endif
             // This block was needed for OCE below 0.13 or OCC 6.6
-//#if HAVE_OCC
-//            iBase_EntityHandle tmp_new1 = NULL;
-//            // if there are more than one pins
-//            if( cp_inpins[k-1].size() > 1){
-//                std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
-//                for (int i=0; i< (int)cp_inpins[k-1].size(); i++){
-//                    // iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &unite, &err);
-//                    iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
-//                    ////CHECK("Couldn't subtract pins from block.");
-//                    tmp_vol = tmp_new1;
-//                    tmp_new1=NULL;
-//                  }
+            //#if HAVE_OCC
+            //            iBase_EntityHandle tmp_new1 = NULL;
+            //            // if there are more than one pins
+            //            if( cp_inpins[k-1].size() > 1){
+            //                std::cout << "Subtraction is slower in OCC, since each pin is subtracted one by one" << std::endl;
+            //                for (int i=0; i< (int)cp_inpins[k-1].size(); i++){
+            //                    // iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &unite, &err);
+            //                    iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,cp_inpins[k-1][i], &tmp_new1, &err);
+            //                    ////CHECK("Couldn't subtract pins from block.");
+            //                    tmp_vol = tmp_new1;
+            //                    tmp_new1=NULL;
+            //                  }
 
-//              }
-//            else{ // only one pin in in_pins
-//                iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
-//                ////CHECK("Couldn't subtract pins from block.");
-//              }
-//#endif
+            //              }
+            //            else{ // only one pin in in_pins
+            //                iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
+            //                ////CHECK("Couldn't subtract pins from block.");
+            //              }
+            //#endif
 
           }
         std::cout << "\n--------------------------------------------------"<<std::endl;
@@ -2421,14 +2579,14 @@ namespace MeshKit
     //CHECK( "ERROR : getRootSet failed!" );
 
     if(if_imprint ==  true){
-      //  now imprint
-      std::cout << "\n\nImprinting...." << std::endl;
-      clock_t s_imprint = clock();
-      iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
-      std::cout << "## Imprint CPU time used := " << (double) (clock() - s_imprint)/CLOCKS_PER_SEC
-                << " seconds" << std::endl;
-      std::cout << "\n--------------------------------------------------"<<std::endl;
-    }
+        //  now imprint
+        std::cout << "\n\nImprinting...." << std::endl;
+        clock_t s_imprint = clock();
+        iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
+        std::cout << "## Imprint CPU time used := " << (double) (clock() - s_imprint)/CLOCKS_PER_SEC
+                  << " seconds" << std::endl;
+        std::cout << "\n--------------------------------------------------"<<std::endl;
+      }
 
     if(if_merge == true){
         // merge tolerance
@@ -2522,808 +2680,6 @@ namespace MeshKit
     std::cout << "--------------------------------------------------"<<std::endl;
 
     free(offset);
-
-  }
-
-
-  void AssyGen::CreatePinCell(int i, double dX, double dY, double dZ)
-  //---------------------------------------------------------------------------
-  //Function: Create pincell i in location dX dY and dZ
-  //Input:    none
-  //Output:   none
-  //---------------------------------------------------------------------------
-  {
-    int nRadii=0, nCyl=0, nCells = 0;
-    double dCylMoveX = 0.0, dCylMoveY = 0.0, dHeightTotal = 0.0;
-    double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
-    CVector<double> dVCylZPos(2), dVCylXYPos(2), dVStartZ, dVEndZ;;
-    CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
-    iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
-    std::vector<iBase_EntityHandle> cp_in;
-    // name tag handle
-    iBase_TagHandle this_tag= NULL;
-    char* tag_name = (char*)"NAME";
-
-    std::string sMatName = "";
-    std::string sMatName1 = "";
-    int nDuctIndex = -1;
-
-    if(strcmp(m_szInfo.c_str(),"on") == 0){
-        std::ostringstream os;
-        pin_name = "_xp";
-        os << (m_nTotalPincells + m_nStartpinid - 1);
-        os << "_";
-        std::string pid = os.str(); //retrieve as a string
-        pin_name+=pid;
-      }
-
-    // get tag handle for 'NAME' tag, already created as iGeom instance is created
-    iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
-    ////CHECK("getTagHandle failed");
-
-    // get cell material
-    m_Pincell(i).GetCellMatSize(nCells);
-    SimpleArray<iBase_EntityHandle> cells(nCells);
-
-    // branch when cells are present
-    if(nCells > 0){
-        dVStartZ.SetSize(nCells);
-        dVEndZ.SetSize(nCells);
-        szVCellMat.SetSize(nCells);
-        m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
-
-        // get cylinder data
-        m_Pincell(i).GetNumCyl(nCyl);
-
-        for(int n=1;n<=nCells; n++){
-            // get cylinder locations
-            if(nCyl > 0){
-              m_Pincell(i).GetCylZPos(n, dVCylZPos);
-              nDuctIndex = -1;
-
-              // get the index for cp_inpins based on Z-heights
-              for (int dd = 1; dd <= m_nDuct; dd++){
-                  if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
-                    nDuctIndex = dd;
-                  if (nDuctIndex != -1)
-                   break;
-                }
-              }
-            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
-            if(m_szGeomType =="hexagonal"){
-
-                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-                double dSide = dP/(sqrt(3));
-
-                if(nCells >0){
-                    // create prism
-                    iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
-                                      dSide, dSide,
-                                      &cell, &err);
-                    ////CHECK("Prism creation failed.");
-                  }
-              }
-            // if rectangular geometry
-            if(m_szGeomType =="rectangular"){
-
-                m_Pincell(i).GetPitch(PX, PY, PZ);
-
-                if(nCells >0){
-                    // create brick
-                    iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
-                    ////CHECK("Couldn't create pincell.");
-                  }
-              }
-
-            dZMove = (dVStartZ(n)+dVEndZ(n))/2.0;
-            if(nCells > 0){
-                // position the brick in assembly
-                iGeom_moveEnt(igeomImpl->instance(), cell, dX, dY, dZMove, &err);
-                ////CHECK("Couldn't move cell.");
-                cells[n-1]=cell;
-
-                //search for the full name of the abbreviated Cell Mat and set name
-                for(int p=1;p<= m_szAssmMatAlias.GetSize();p++){
-                    if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                        sMatName = m_szAssmMat(p);
-                      }
-                  }
-                std::cout << "created: " << sMatName << std::endl;
-                iGeom_setData(igeomImpl->instance(), cell, this_tag,
-                              sMatName.c_str(), sMatName.size(), &err);
-                ////CHECK("setData failed");
-
-                if(strcmp(m_szInfo.c_str(),"on") == 0){
-                    iGeom_setData(igeomImpl->instance(), cell, this_tag,
-                                  pin_name.c_str(), pin_name.size(), &err);
-                    std::cout << "Naming pin body :" <<  pin_name << std::endl;
-                  }
-
-
-                Name_Faces(sMatName, cell, this_tag);
-                ////CHECK("Name_Faces failed");
-              }
-            // loop and create cylinders
-            if(nCyl > 0){
-                m_Pincell(i).GetCylSizes(n, nRadii);
-                SimpleArray<iBase_EntityHandle> cyls(nRadii);
-
-                //declare variables
-                CVector<double> dVCylRadii(2*nRadii);
-                CVector<std::string> szVMat(nRadii);
-                CVector<std::string> szVCylMat(nRadii);
-                int nType = 0;
-                //get values
-                m_Pincell(i).GetCylRadii(n, dVCylRadii);
-                m_Pincell(i).GetCylPos(n, dVCylXYPos);
-                m_Pincell(i).GetCylMat(n, szVCylMat);
-                m_Pincell(i).GetCylZPos(n, dVCylZPos);
-                m_Pincell(i).GetCellType(n, nType);
-
-                dHeight = dVCylZPos(2)-dVCylZPos(1);
-
-                for (int m=1; m<=nRadii; m++){
-
-                    if (nType == 0){
-                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
-                                             &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                        std::cout << m << ": Creating cylinder with radii " << dVCylRadii(m) << std::endl;
-                      }
-                    else{
-                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
-                                         &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                      }
-                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-                    dCylMoveX = dVCylXYPos(1)+dX;
-                    dCylMoveY = dVCylXYPos(2)+dY;
-                    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
-
-                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
-                    ////CHECK("Couldn't move cyl.");
-                    cyls[m-1] = cyl;
-                  }
-
-                if(nCells > 0){
-                    // copy cyl before subtract
-                    iGeom_copyEnt(igeomImpl->instance(), cyls[nRadii-1], &tmp_vol, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
-
-                    // subtract outer most cyl from brick
-                    iGeom_subtractEnts(igeomImpl->instance(), cells[n-1], tmp_vol, &tmp_new, &err);
-                    ////CHECK("Subtract of inner from outer failed.");
-
-                    // copy the new into the cyl array
-                    cells[n-1] = tmp_new; cell = tmp_new;
-
-                  }
-                cp_in.push_back(tmp_new);
-
-                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                        sMatName = m_szAssmMat(p);
-                      }
-                  }
-                tmp_vol1=cyls[0]; //inner most cyl
-
-                cp_in.push_back(tmp_vol1);
-                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                              sMatName.c_str(), 10, &err);
-                ////CHECK("setData failed");
-                if(strcmp(m_szInfo.c_str(),"on") == 0){
-                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                                  pin_name.c_str(), pin_name.size(), &err);
-                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                  }
-
-                Name_Faces(sMatName, tmp_vol1, this_tag);
-                //ERRORR("Error in function Name_Faces", err);
-
-                // other cyl annulus after substraction
-                for (int b=nRadii; b>1; b--){
-
-                    iGeom_copyEnt(igeomImpl->instance(), cyls[b-2], &tmp_vol, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
-
-                    //subtract tmp vol from the outer most
-                    iGeom_subtractEnts(igeomImpl->instance(), cyls[b-1], tmp_vol, &tmp_new, &err);
-                    ////CHECK("Subtract of inner from outer failed.");
-
-                    // now search for the full name of the abbreviated Cell Mat
-                    //    int tag_no;
-                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                            //        tag_no = p;
-                            sMatName =  m_szAssmMat(p);
-                          }
-                      }
-                    std::cout << "created: " << sMatName << std::endl;
-                    cp_in.push_back(tmp_new);
-                    // set the name of the annulus
-                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                  sMatName.c_str(),sMatName.size(), &err);
-                    ////CHECK("setData failed");
-
-                    if(strcmp(m_szInfo.c_str(),"on") == 0){
-                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                      pin_name.c_str(), pin_name.size(), &err);
-                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                      }
-                    Name_Faces(sMatName, tmp_new, this_tag);
-                    //ERRORR("Error in function Name_Faces", err);
-
-                    // copy the new into the cyl array
-                    cyls[b-1] = tmp_new;
-                    tmp_vol=NULL;
-                  }
-              }
-            if(nDuctIndex > 0){
-                for (int count = 0; count < (int) cp_in.size(); count++)
-                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
-              }
-            cp_in.clear();
-          }
-      }
-    // this branch of the routine is responsible for creating cylinders with '0' cells
-    if(nCells == 0){
-
-        // get cylinder data
-        m_Pincell(i).GetNumCyl(nCyl);
-        nCells = nCyl;
-
-        for(int n=1;n<=nCells; n++){
-            nDuctIndex = -1;
-            if(m_szGeomType =="hexagonal"){
-
-                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-              }
-            // if rectangular geometry
-            if(m_szGeomType =="rectangular"){
-
-                m_Pincell(i).GetPitch(PX, PY, PZ);
-              }
-
-            // loop and create cylinders
-            if(nCyl > 0){
-                m_Pincell(i).GetCylSizes(n, nRadii);
-                SimpleArray<iBase_EntityHandle> cyls(nRadii);
-
-                //declare variables
-                CVector<double> dVCylRadii(2*nRadii);
-                CVector<std::string> szVMat(nRadii);
-                CVector<std::string> szVCylMat(nRadii);
-                int nType = 0;
-                //get values
-                m_Pincell(i).GetCylRadii(n, dVCylRadii);
-                m_Pincell(i).GetCylPos(n, dVCylXYPos);
-                m_Pincell(i).GetCylMat(n, szVCylMat);
-                m_Pincell(i).GetCylZPos(n, dVCylZPos);
-                m_Pincell(i).GetCellType(n, nType);
-
-                dHeight = dVCylZPos(2)-dVCylZPos(1);
-
-                // get the index for cp_inpins based on Z-heights
-                for (int dd = 1; dd <= m_nDuct; dd++){
-                    if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
-                      nDuctIndex = dd;
-                    if (nDuctIndex != -1)
-                      break;
-                  }
-
-                for (int m=1; m<=nRadii; m++){
-                    if (nType == 0){
-                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
-                                             &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                      }
-                    else{
-                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m - 1), dVCylRadii(2*m - 1), dVCylRadii(2*m),
-                                         &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                      }
-
-                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-                    dCylMoveX = dVCylXYPos(1)+dX;
-                    dCylMoveY = dVCylXYPos(2)+dY;
-                    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
-
-                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
-                    ////CHECK("Couldn't move cyl.");
-                    cyls[m-1] = cyl;
-                  }
-
-                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                        sMatName = m_szAssmMat(p);
-                      }
-                  }
-                std::cout << "created: " << sMatName << std::endl;
-                tmp_vol1=cyls[0]; //inner most cyl
-
-                cp_in.push_back(tmp_vol1);
-
-                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                              sMatName.c_str(), 10, &err);
-                ////CHECK("setData failed");
-
-                if(strcmp(m_szInfo.c_str(),"on") == 0){
-                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                                  pin_name.c_str(), pin_name.size(), &err);
-                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                  }
-
-                Name_Faces(sMatName, tmp_vol1, this_tag);
-                //ERRORR("Error in function Name_Faces", err);
-
-                // other cyl annulus after substraction
-                for (int b=nRadii; b>1; b--){
-
-                    iGeom_copyEnt(igeomImpl->instance(), cyls[b-2], &tmp_vol, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
-
-                    //subtract tmp vol from the outer most
-                    iGeom_subtractEnts(igeomImpl->instance(), cyls[b-1], tmp_vol, &tmp_new, &err);
-                    ////CHECK("Subtract of inner from outer failed.");
-
-                    // now search for the full name of the abbreviated Cell Mat
-                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                            sMatName =  m_szAssmMat(p);
-                          }
-                      }
-                    std::cout <<"created: " << sMatName << std::endl;
-
-                    cp_in.push_back(tmp_new);
-
-                    // set the name of the annulus
-                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                  sMatName.c_str(),sMatName.size(), &err);
-                    ////CHECK("setData failed");
-
-                    if(strcmp(m_szInfo.c_str(),"on") == 0){
-                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                      pin_name.c_str(), pin_name.size(), &err);
-                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                      }
-
-                    Name_Faces(sMatName, tmp_new, this_tag);
-                    //ERRORR("Error in function Name_Faces", err);
-
-                    // copy the new into the cyl array
-                    cyls[b-1] = tmp_new;
-                  }
-              }
-            if(nDuctIndex > 0){
-                for (int count = 0; count < (int) cp_in.size(); count++)
-                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
-              }
-            cp_in.clear();
-          }
-      }
-
-  }
-
-
-  void AssyGen::CreatePinCell_Intersect(int i, double dX, double dY, double dZ)
-  //---------------------------------------------------------------------------
-  //Function: Create pincell i in location dX dY and dZ
-  //Input:    none
-  //Output:   none
-  //---------------------------------------------------------------------------
-  {
-    int nRadii=0, nCyl=0, nCells = 0;
-    double dCylMoveX = 0.0, dCylMoveY = 0.0, dHeightTotal = 0.0;
-    double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
-    CVector<double> dVCylZPos(2), dVCylXYPos(2), dVEndZ, dVStartZ;
-    CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
-    iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol1= NULL, tmp_new= NULL, cell_copy = NULL, intersec = NULL;
-    std::vector<iBase_EntityHandle> cp_in;
-
-    // name tag handle
-    iBase_TagHandle this_tag= NULL;
-    char* tag_name = (char*)"NAME";
-
-    std::string sMatName = "";
-    std::string sMatName0 = "";
-    std::string sMatName1 = "";
-    int nDuctIndex = -1;
-
-    if(strcmp(m_szInfo.c_str(),"on") == 0){
-        std::ostringstream os;
-        pin_name = "_xp";
-        os << (m_nTotalPincells + m_nStartpinid - 1);
-        os << "_";
-        std::string pid = os.str(); //retrieve as a string
-        pin_name+=pid;
-      }
-
-    // get tag handle for 'NAME' tag, already created as iGeom instance is created
-    iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
-    ////CHECK("getTagHandle failed");
-
-    // get cell material
-    m_Pincell(i).GetCellMatSize(nCells);
-    m_Pincell(i).GetNumCyl(nCyl);
-    SimpleArray<iBase_EntityHandle> cells(nCells);
-
-    // branch when cells are present
-    if(nCells > 0){
-        dVStartZ.SetSize(nCells);
-        dVEndZ.SetSize(nCells);
-        szVCellMat.SetSize(nCells);
-        m_Pincell(i).GetCellMat(dVStartZ, dVEndZ, szVCellMat);
-
-        // get cylinder data
-        m_Pincell(i).GetNumCyl(nCyl);
-
-        for(int n=1;n<=nCells; n++){
-
-            dHeight = fabs(dVEndZ(n) - dVStartZ(n));
-            // get the index for cp_inpins based on Z-heights
-            for (int dd = 1; dd <= m_nDuct; dd++){
-                if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
-                  nDuctIndex = dd;
-                if (nDuctIndex != -1)
-                  break;
-              }
-            if(m_szGeomType =="hexagonal"){
-
-                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-
-                double dSide = dP/(sqrt(3));
-
-                if(nCells >0){
-                    // create prism
-                    iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
-                                      dSide, dSide,
-                                      &cell, &err);
-                    ////CHECK("Prism creation failed.");
-                  }
-              }
-            // if rectangular geometry
-            if(m_szGeomType =="rectangular"){
-
-                m_Pincell(i).GetPitch(PX, PY, PZ);
-
-                if(nCells >0){
-                    // create brick
-                    iGeom_createBrick( igeomImpl->instance(),PX,PY,dHeight,&cell,&err );
-                    ////CHECK("Couldn't create pincell.");
-                  }
-              }
-
-            dZMove = (dVStartZ(n)+dVEndZ(n))/2.0;
-
-            if(nCells > 0){
-                // position the brick in assembly
-                iGeom_moveEnt(igeomImpl->instance(), cell, dX, dY, dZMove, &err);
-                ////CHECK("Couldn't move cell.");
-                cells[n-1]=cell;
-              }
-            // loop and create cylinders
-            if(nCyl > 0){
-                m_Pincell(i).GetCylSizes(n, nRadii);
-                SimpleArray<iBase_EntityHandle> cyls(nRadii);
-                SimpleArray<iBase_EntityHandle> cell_copys(nRadii);
-                SimpleArray<iBase_EntityHandle> intersec_main(nRadii);
-                iBase_EntityHandle  tmp_intersec;
-                //declare variables
-                CVector<double> dVCylRadii(2*nRadii);
-                CVector<std::string> szVMat(nRadii);
-                CVector<std::string> szVCylMat(nRadii);
-                int nType = 0;
-                //get values
-                m_Pincell(i).GetCylRadii(n, dVCylRadii);
-                m_Pincell(i).GetCylPos(n, dVCylXYPos);
-                m_Pincell(i).GetCylMat(n, szVCylMat);
-                m_Pincell(i).GetCylZPos(n, dVCylZPos);
-                m_Pincell(i).GetCellType(n, nType);
-
-                dHeight = dVCylZPos(2)-dVCylZPos(1);
-
-                for (int m=1; m<=nRadii; m++){
-                    if (nType == 0){
-                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
-                                             &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                      }
-                    else{
-                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
-                                         &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                      }
-
-                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-                    dCylMoveX = dVCylXYPos(1)+dX;
-                    dCylMoveY = dVCylXYPos(2)+dY;
-                    dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
-
-                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
-                    ////CHECK("Couldn't move cyl.");
-                    cyls[m-1] = cyl;
-
-
-                    //copy cell nRadii  times for intersection with cylinders
-                    iGeom_copyEnt(igeomImpl->instance(), cells[n-1], &cell_copy, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
-                    cell_copys[m-1] = cell_copy;
-
-                    iGeom_intersectEnts(igeomImpl->instance(), cell_copys[m-1], cyls[m-1],&intersec,&err);
-                    ////CHECK("intersection failed");
-                    intersec_main[m-1] = intersec;
-                    intersec = NULL;
-                  }
-
-                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-                tmp_vol1=intersec_main[0];
-                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                        sMatName = m_szAssmMat(p);
-                      }
-                  }
-
-                cp_in.push_back(tmp_vol1);
-
-                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                              sMatName.c_str(), 10, &err);
-                ////CHECK("setData failed");
-
-                if(strcmp(m_szInfo.c_str(),"on") == 0){
-                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                                  pin_name.c_str(), pin_name.size(), &err);
-                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                  }
-                Name_Faces(sMatName, tmp_vol1, this_tag);
-                //ERRORR("Error in function Name_Faces", err);
-
-                // copy the outermost cyl
-                iGeom_copyEnt(igeomImpl->instance(), intersec_main[nRadii-1], &tmp_intersec, &err);
-                ////CHECK("Couldn't copy inner duct wall prism.");
-
-                // subtract the outermost cyl from the cell
-                iGeom_subtractEnts(igeomImpl->instance(), cells[n-1], tmp_intersec, &tmp_new, &err);
-                ////CHECK("Subtract of inner from outer failed.");
-                // now search for the full name of the abbreviated Cell Mat
-                //  int tag_no;
-                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                    if(strcmp (szVCellMat(n).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                        //      tag_no = p;
-                        sMatName =  m_szAssmMat(p);
-                      }
-                  }
-                std::cout << "created: " << sMatName << std::endl;
-
-                cp_in.push_back(tmp_new);
-
-                // set the name of the annulus
-                iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                              sMatName.c_str(),sMatName.size(), &err);
-                ////CHECK("setData failed");
-
-                iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                              pin_name.c_str(), pin_name.size(), &err);
-                std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-
-                Name_Faces(sMatName, tmp_new, this_tag);
-                //ERRORR("Error in function Name_Faces", err);
-
-                for (int b=nRadii; b>1; b--){
-
-                    iGeom_copyEnt(igeomImpl->instance(), intersec_main[b-2], &tmp_intersec, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
-                    //subtract tmp vol from the outer most
-                    iGeom_subtractEnts(igeomImpl->instance(), intersec_main[b-1], tmp_intersec, &tmp_new, &err);
-                    ////CHECK("Subtract of inner from outer failed.");
-
-                    // now search for the full name of the abbreviated Cell Mat
-                    //    int tag_no;
-                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                            //        tag_no = p;
-                            sMatName =  m_szAssmMat(p);
-                          }
-                      }
-                    std::cout << "created: " << sMatName << std::endl;
-
-                    cp_in.push_back(tmp_new);
-
-                    // set the name of the annulus
-                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                  sMatName.c_str(),sMatName.size(), &err);
-                    ////CHECK("setData failed");
-
-                    if(strcmp(m_szInfo.c_str(),"on") == 0){
-                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                      pin_name.c_str(), pin_name.size(), &err);
-                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                      }
-                    Name_Faces(sMatName, tmp_new, this_tag);
-                    //ERRORR("Error in function Name_Faces", err);
-
-                    // copy the new into the cyl array
-                    cyls[b-1] = tmp_new;
-
-                  }
-              }
-            if(nDuctIndex > 0){
-                for (int count = 0; count < (int) cp_in.size(); count++)
-                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
-              }
-            cp_in.clear();
-          }
-      }
-    // this branch of the routine is responsible for creating cylinders with '0' cells
-    if(nCells == 0){
-
-        // get cylinder data
-        m_Pincell(i).GetNumCyl(nCyl);
-        nCells = nCyl;
-        cells.resize(nCells);
-
-        for(int n=1;n<=nCells; n++){
-
-            // get some cylinder parameters to create the cell material for intersection
-            m_Pincell(i).GetCylZPos(n, dVCylZPos);
-            dHeight = dVCylZPos(2)-dVCylZPos(1);
-            dZMove = (dVCylZPos(1)+dVCylZPos(2))/2.0;
-
-            if(m_szGeomType =="hexagonal"){
-
-                m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-                double dSide = dP/(sqrt(3));
-
-                iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
-                                  dSide, dSide,
-                                  &cell, &err);
-                ////CHECK("Prism creation failed.");
-
-              }
-            // if rectangular geometry
-            if(m_szGeomType =="rectangular"){
-
-                m_Pincell(i).GetPitch(PX, PY, PZ);
-                // create brick
-                iGeom_createBrick( igeomImpl->instance(),PX,PY,PZ, &cell,&err );
-                ////CHECK("Couldn't create pincell.");
-              }
-
-            iGeom_moveEnt(igeomImpl->instance(), cell, dX, dY, dZMove, &err);
-            ////CHECK("Couldn't move cell.");
-
-            cells[n-1]=cell;
-            // loop and create cylinders
-            if(nCyl > 0){
-                m_Pincell(i).GetCylSizes(n, nRadii);
-
-                //declare variables
-                SimpleArray<iBase_EntityHandle> cyls(nRadii), cell_copys(nRadii), intersec_main(nRadii), intersec_copy(nRadii);
-                iBase_EntityHandle  tmp_intersec;
-                CVector<double> dVCylRadii(2*nRadii);
-                CVector<std::string> szVMat(nRadii), szVCylMat(nRadii);
-                int nType = 0;
-                //get values
-                m_Pincell(i).GetCylRadii(n, dVCylRadii);
-                m_Pincell(i).GetCylPos(n, dVCylXYPos);
-                m_Pincell(i).GetCylMat(n, szVCylMat);
-                m_Pincell(i).GetCellType(n, nType);
-
-
-                // get the index for cp_inpins based on Z-heights
-                for (int dd = 1; dd <= m_nDuct; dd++){
-                    if((m_dMZAssm(dd, 2)) >= (dVCylZPos(2)) && (m_dMZAssm(dd, 1)) >= (dVCylZPos(1)))
-                      nDuctIndex = dd;
-                    if (nDuctIndex != -1)
-                      break;
-                  }
-
-                for (int m=1; m<=nRadii; m++){
-                    if (nType == 0){
-                        iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
-                                             &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                      }
-                    else{
-                        iGeom_createCone(igeomImpl->instance(), dHeight, dVCylRadii(2*m-1), dVCylRadii(2*m-1), dVCylRadii(2*m),
-                                         &cyl, &err);
-                        ////CHECK("Couldn't create fuel rod.");
-                      }
-
-                    // move their centers and also move to the assembly location  ! Modify if cyl is outside brick
-                    dCylMoveX = dVCylXYPos(1)+dX;
-                    dCylMoveY = dVCylXYPos(2)+dY;
-
-                    iGeom_moveEnt(igeomImpl->instance(), cyl, dCylMoveX,dCylMoveY,dZMove, &err);
-                    ////CHECK("Couldn't move cyl.");
-                    cyls[m-1] = cyl;
-
-                    //copy cell nRadii  times for intersection with cylinders
-                    iGeom_copyEnt(igeomImpl->instance(), cells[n-1], &cell_copy, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
-                    //    cell_copys[m-1] = cell_copy;
-
-                    iGeom_intersectEnts(igeomImpl->instance(), cell_copy, cyls[m-1],&intersec,&err);
-                    ////CHECK("intersection failed");
-                    intersec_main[m-1] = intersec;
-                    intersec = NULL;
-                  }
-
-                //set tag on inner most cylinder, search for the full name of the abbreviated Cell Mat
-                tmp_vol1=intersec_main[0];
-                for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                    if(strcmp (szVCylMat(1).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                        sMatName = m_szAssmMat(p);
-                      }
-                  }
-
-                cp_in.push_back(tmp_vol1);
-
-                iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                              sMatName.c_str(), 10, &err);
-                ////CHECK("setData failed");
-
-                if(strcmp(m_szInfo.c_str(),"on") == 0){
-                    iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
-                                  pin_name.c_str(), pin_name.size(), &err);
-                    std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                  }
-
-                Name_Faces(sMatName, tmp_vol1, this_tag);
-                //ERRORR("Error in function Name_Faces", err);
-
-                // delete the cell as this is the case when no. cell material is specified
-                iGeom_deleteEnt(igeomImpl->instance(), cells[n-1], &err);
-                ////CHECK("Entity deletion failed");
-
-
-                // other cyl annulus after substraction
-                for (int b=nRadii; b>1; b--){
-
-                    iGeom_copyEnt(igeomImpl->instance(), intersec_main[b-2], &tmp_intersec, &err);
-                    ////CHECK("Couldn't copy inner duct wall prism.");
-                    //subtract tmp vol from the outer most
-                    iGeom_subtractEnts(igeomImpl->instance(), intersec_main[b-1], tmp_intersec, &tmp_new, &err);
-                    ////CHECK("Subtract of inner from outer failed.");
-
-                    // now search for the full name of the abbreviated Cell Mat
-                    //    int tag_no;
-                    for(int p=1;p<=m_szAssmMatAlias.GetSize();p++){
-                        if(strcmp (szVCylMat(b).c_str(), m_szAssmMatAlias(p).c_str()) == 0){
-                            //        tag_no = p;
-                            sMatName =  m_szAssmMat(p);
-                          }
-                      }
-                    std::cout << "created: " << sMatName << std::endl;
-
-                    cp_in.push_back(tmp_new);
-
-                    // set the name of the annulus
-                    iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                  sMatName.c_str(),sMatName.size(), &err);
-                    ////CHECK("setData failed");
-                    if(strcmp(m_szInfo.c_str(),"on") == 0){
-                        iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
-                                      pin_name.c_str(), pin_name.size(), &err);
-                        std::cout << "Naming pin body :" <<  pin_name<< std::endl;
-                      }
-
-                    Name_Faces(sMatName, tmp_new, this_tag);
-                    //ERRORR("Error in function Name_Faces", err);
-
-                    // copy the new into the cyl array
-                    cyls[b-1] = tmp_new;
-
-                  }
-              }
-            if(nDuctIndex > 0){
-                for (int count = 0; count < (int) cp_in.size(); count++)
-                  cp_inpins[nDuctIndex-1].push_back(cp_in[count]);
-              }
-            cp_in.clear();
-          }
-      }
 
   }
 }

@@ -4,30 +4,43 @@
 ## Check your coregen, assygen and cubit location
 ##
 
-CUBIT = cubit -nographics
+CUBIT = cubit
 
 COREGEN = ../../coregen
 
 ASSYGEN = ../../assygen
 
-MESH_FILES = s2.cub  s1.cub
-GEOM_FILES = s2.sat  s1.sat 
-JOU_FILES = s2.jou s1.jou  
-INJOU_FILES = s2.template.jou s1.template.jou  
-ASSYGEN_FILES = s2.inp  s1.inp
+MESH_FILES = s2.cub  s1.cub  
+
+GEOM_FILES = s2.sat  s1.sat  
+
+JOU_FILES = s2.jou  s1.jou  
+
+PYTHON_FILES = s2.py  s1.py  
+
+INJOU_FILES = s2.template.jou  s1.template.jou  
+
+ASSYGEN_FILES = s2.inp  s1.inp  
 
 simple_rectcore.h5m : ${MESH_FILES} simple_rectcore.inp
 	${COREGEN} simple_rectcore
+s2.cub : s2.sat  s2.jou  s2.template.jou
+	${CUBIT} -batch s2.jou
+
+s2.sat : s2.py
+	${CUBIT} -batch s2.py
+
+s2.py s2.jou s2.template.jou : s2.inp
+	${ASSYGEN} s2
 
 s1.cub : s1.sat  s1.jou  s1.template.jou
 	${CUBIT} -batch s1.jou
 
-s1.sat s1.jou s1.template.jou : s1.inp
+s1.sat : s1.py
+	${CUBIT} -batch s1.py
+
+s1.py s1.jou s1.template.jou : s1.inp
 	${ASSYGEN} s1
 
-s2.cub : s2.sat  s2.jou  s2.template.jou
-	${CUBIT} -batch s2.jou
-
-s2.sat s2.jou s2.template.jou : s2.inp
-	${ASSYGEN} s2
-
+make clean :
+	rm *.sat *.cub *.py *.jou
