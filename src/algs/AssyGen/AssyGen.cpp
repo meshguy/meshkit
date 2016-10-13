@@ -318,6 +318,34 @@ namespace MeshKit
                        "    cubit.cmd('delete group g1 g2 g3 gtop gbot')\n" << std::endl;
 
 
+    // write the name faces python function here
+    m_PyCubGeomFile << "\n\ndef section_assm(cDir, dOffset, szReverse):\n"
+                       "    vol = cubit.get_entities(\"volume\")\n"
+                       "    for i in range(len(vol)):\n"
+                       "      vl = cubit.get_bounding_box(\"volume\", vol[i])\n"
+                       "      xmin = vl[0]\n"
+                       "      xmax = vl[1]\n"
+                       "      ymin = vl[3]\n"
+                       "      ymax = vl[4]\n"
+                       "      print xmin, xmax, ymin, ymax\n"
+                       "      if(xmin > dOffset and cDir == \"x\" and szReverse == \"reverse\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      if(ymin > dOffset and cDir == \"y\" and szReverse == \"reverse\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      if(xmax < dOffset and cDir == \"x\" and szReverse == \"\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      if(ymax < dOffset and cDir == \"y\" and szReverse == \"\"):\n"
+                       "        cubit.cmd('delete vol {0}'.format(vol[i]) )\n"
+                       "        continue\n"
+                       "      else:\n"
+                       "        if (ymax > dOffset and cDir == \"y\" and ymin < dOffset):\n"
+                       "          cubit.cmd('section vol {0} with yplane offset {1} {2}'.format(vol[i], dOffset, szReverse))\n"
+                       "        if (xmax > dOffset and cDir == \"x\" and xmin < dOffset):\n"
+                       "          cubit.cmd('section vol {0} with xplane offset {1} {2}'.format(vol[i], dOffset, szReverse))\n" << std::endl;
+
     m_PyCubGeomFile << "\ncubit.cmd('reset')" << std::endl;
 
 
@@ -1303,6 +1331,7 @@ namespace MeshKit
             std::istringstream szFormatString (szInputString);
             szFormatString >> card >> cDir >> dOffset >> szReverse;
             Section_Assm(cDir, dOffset, szReverse);
+            m_PyCubGeomFile << "section_assm(\"" << cDir << "\", " << dOffset << ", \"" << szReverse << "\")" << std::endl;
             //ERRORR("Error in Section_Assm", err);
             std::cout <<"--------------------------------------------------"<<std::endl;
 
@@ -1498,9 +1527,9 @@ namespace MeshKit
                 m_PyCubGeomFile << "cubit.cmd('export acis \"" <<m_szGeomFile1 << "\" over')" << std::endl;
 
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
-//                // Now run the journal file from the python script
-//                m_PyCubGeomFile << "infile = open(\""<< m_szJouFile << "\", \"r\")" << std::endl;
-//                m_PyCubGeomFile << "for line in infile:\n  cubit.cmd(line)" << std::endl;
+                //                // Now run the journal file from the python script
+                //                m_PyCubGeomFile << "infile = open(\""<< m_szJouFile << "\", \"r\")" << std::endl;
+                //                m_PyCubGeomFile << "for line in infile:\n  cubit.cmd(line)" << std::endl;
 
                 // Reloading file to check load times
                 bool if_loadagain = false;
@@ -1903,9 +1932,9 @@ namespace MeshKit
     for(int i=0; i<all.size(); i++){
         iGeom_moveEnt(igeomImpl->instance(),all[i],-xcenter,-ycenter,-zcenter,&err);
       }
-      // OCC bounding box computation is buggy, better to compute bounding box in python and supply to the script.
-      m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
-      m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
+    // OCC bounding box computation is buggy, better to compute bounding box in python and supply to the script.
+    m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
+    m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
 
     if( rDir =='x'){
         m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
@@ -1922,7 +1951,7 @@ namespace MeshKit
         m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
       }
 
-      m_PyCubGeomFile << "cubit.cmd('move vol all x -{0} y -{1} z -{2}'.format(xcenter, ycenter, zcenter) )" <<  std::endl;
+    m_PyCubGeomFile << "cubit.cmd('move vol all x {0} y {1} z {2}'.format(-xcenter, -ycenter, -zcenter) )" <<  std::endl;
   }
 
   void AssyGen::Section_Assm (char &cDir, double &dOffset, const std::string szReverse)
@@ -1949,9 +1978,8 @@ namespace MeshKit
       }
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;    
-    m_PyCubGeomFile << "reverse = \"" << szReverse << "\"\ndOffset = " << dOffset << std::endl;
-    // loop and section/delete entities    
+
+    // loop and section/delete entities
     for(int i=0; i < all.size(); i++){
         //get the bounding box to decide
         iGeom_getEntBoundBox(igeomImpl->instance(),all[i],&xmin,&ymin,&zmin,
@@ -1959,43 +1987,62 @@ namespace MeshKit
 
         if(xmin > dOffset && yzplane ==1 && nReverse ==1){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         if(ymin > dOffset && xzplane == 1 && nReverse ==1){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         if(xmax < dOffset && yzplane ==1 && nReverse ==0){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         if(ymax < dOffset && xzplane == 1 && nReverse ==0){
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-            m_PyCubGeomFile << "cubit.cmd('delete vol " << i << "')" << std::endl;
             continue;
           }
         else{
             if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset, nReverse,&sec,&err);
-                //m_PyCubGeomFile << "cubit.cmd('section vol {0} with xplane offset {1} {2}'.format(vol[" << i << "], dOffset, reverse))" << std::endl;
               }
             if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset,nReverse,&sec,&err);
-                //m_PyCubGeomFile << "cubit.cmd('section vol {0}  with yplane offset {1} {2}'.format(vol[" << i << "], dOffset, reverse))" << std::endl;
               }
           }
       }
 
-      
-      if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
-        m_PyCubGeomFile << "cubit.cmd('section vol all with xplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
-      }
-      if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
-        m_PyCubGeomFile << "cubit.cmd('section vol all with yplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
-      }
+
+//    m_PyCubGeomFile << "reverse = \"" << szReverse << "\"\ndOffset = " << dOffset << std::endl;
+
+//    m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
+//    m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
+
+
+
+//    if( rDir =='x'){
+//        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+//      }
+//    else if( rDir =='y'){
+//        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
+//      }
+//    else if ( rDir =='z'){
+//        m_PyCubGeomFile << "zcenter = (vl[6]+vl[7])/2.0" << std::endl;
+//        m_PyCubGeomFile << "cubit.cmd('delete vol {0}'.format(vol[" << i << "]))" << std::endl;
+
+//      }
+//    else{
+//        // assume that it is centered along x and y and not z direction
+//        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
+//        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
+//      }
+
+
+//    if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
+//        m_PyCubGeomFile << "cubit.cmd('section vol all with yplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
+//      }
+//    if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
+//        m_PyCubGeomFile << "cubit.cmd('section vol all with xplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
+//      }
 
   }
 
@@ -2040,7 +2087,7 @@ namespace MeshKit
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
 
-    m_PyCubGeomFile << "cubit.cmd('move vol all x " << dX << " y " << dY << " dZ " << dZ << "')" << std::endl;        
+    m_PyCubGeomFile << "cubit.cmd('move vol all x " << dX << " y " << dY << " dZ " << dZ << "')" << std::endl;
 
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
@@ -2472,7 +2519,7 @@ namespace MeshKit
             // if there are more than one pins
             if( cp_inpins[k-1].size() > 1){
 
-               iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
+                iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
                 //m_PyCubGeomFile << "##\nunitepins = cubit.unite(cp_inpins[" << k-1 <<"][0])" << std::endl;
                 m_PyCubGeomFile << "\nsub1.append(assms[" << (k-1)*m_nDimensions <<"])" << std::endl;
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,unite, &tmp_new1, &err);
