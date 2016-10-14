@@ -24,9 +24,8 @@
 #include "TestUtil.hpp"
 
 // define the geometry file extension depending on the geometry model
-#ifdef HAVE_ACIS
-std::string geomExt = ".sat";
-#elif HAVE_OCC
+
+#if HAVE_OCC
 std::string geomExt = ".stp";
 #else
 std::string geomExt = ".facet";
@@ -83,13 +82,13 @@ int main(int argc, char **argv)
   }
   num_fail += RUN_TEST(testSquare);
   num_fail += RUN_TEST(testSquareVarSize);
+  num_fail += RUN_TEST(testPieceOfTorus);
 #ifdef HAVE_FACET
   num_fail += RUN_TEST(testBrick);
 #else
   num_fail += RUN_TEST(testHoleySurf);
   num_fail += RUN_TEST(testSingleHoleSurf);
   num_fail += RUN_TEST(testSingleHoleSurfImprinted);
-  num_fail += RUN_TEST(testPieceOfTorus);
   num_fail += RUN_TEST(testSphere);
 #endif
   delete mk;

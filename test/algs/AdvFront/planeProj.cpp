@@ -23,8 +23,10 @@ using namespace MeshKit;
 
 #if HAVE_OCC
 #define FILE_EXT "stp"
+double epsError = 1.e-12;
 #else
-#define FILE_EXT "sat"
+#define FILE_EXT "facet"
+double epsError = 1.e-3;
 #endif
 
 MKCore *mk = NULL;
@@ -91,7 +93,7 @@ bool testPlaneProj()
       << testPnt.getZ() << ") from surface to plane." << std::endl;
   std::cout << "Coordinates in plane: (" << planePnt->getX() << ", "
       << planePnt->getY() << ")" << std::endl;
-  if ((fabs(planePnt->getX() - 0.0) + fabs(planePnt->getY() - 0.25)) > 1e-12)
+  if ((fabs(planePnt->getX() - 0.0) + fabs(planePnt->getY() - 0.25)) > epsError)
   {
     std::cout << "FAIL: The coordinates in the plane should be (0, 0.25)."
         << std::endl;
@@ -107,7 +109,7 @@ bool testPlaneProj()
   std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
       << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
   if ((fabs(surfacePnt->getX() - 2.82) + fabs(surfacePnt->getY() - 2.82) +
-      fabs(surfacePnt->getZ() - 0.15392685065547)) > 1e-12)
+      fabs(surfacePnt->getZ() - 0.15392685065547)) > epsError)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (2.82, 2.82, 0.15392685065547)."
@@ -124,7 +126,7 @@ bool testPlaneProj()
   std::cout << "Coordinates on surface: (" << surfacePnt->getX() << ", "
       << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
   if ((fabs(surfacePnt->getX() - 2.7) + fabs(surfacePnt->getY() - 2.7) +
-      fabs(surfacePnt->getZ() - 0.574682269122808)) > 1e-12)
+      fabs(surfacePnt->getZ() - 0.574682269122808)) > epsError)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (2.7, 2.7, 0.574682269122808)."
@@ -169,7 +171,7 @@ bool testPlaneProj()
       << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
   // expect ~ (3.95, 0.1, 0.3083726968400695)
   if ((fabs(surfacePnt->getX() - 3.95) + fabs(surfacePnt->getY() - 0.1) +
-      fabs(surfacePnt->getZ() - 0.3083726968400695)) > 1e-12)
+      fabs(surfacePnt->getZ() - 0.3083726968400695)) > epsError)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (3.95, 0.1, 0.3083726968400695)."
@@ -198,7 +200,7 @@ bool testPlaneProj()
       << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
   if ((fabs(surfacePnt->getX() - 3.3072251285719) +
       fabs(surfacePnt->getY() - 0.1) +
-      fabs(surfacePnt->getZ() - 0.9511475682682)) > 1e-12)
+      fabs(surfacePnt->getZ() - 0.9511475682682)) > epsError)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (3.30722512857195, 0.1, 0.9511475682682)."
@@ -227,7 +229,7 @@ bool testPlaneProj()
       << surfacePnt->getY() << ", " << surfacePnt->getZ() << ")" << std::endl;
   if ((fabs(surfacePnt->getX() - 3.3072251285719) +
       fabs(surfacePnt->getY() - 0.1) +
-      fabs(surfacePnt->getZ() - 0.9511475682682)) > 1e-12)
+      fabs(surfacePnt->getZ() - 0.9511475682682)) > epsError)
   {
     std::cout << "FAIL: The coordinates on the surface should be\n"
         << "  (3.30722512857195, 0.1, 0.9511475682682)."

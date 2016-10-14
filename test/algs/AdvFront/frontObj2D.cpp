@@ -26,7 +26,7 @@
 #if HAVE_OCC
 #define FILE_EXT "stp"
 #else
-#define FILE_EXT "sat"
+#define FILE_EXT "facet"
 #endif
 
 // This variable is at global scope because a new MKCore instance cannot

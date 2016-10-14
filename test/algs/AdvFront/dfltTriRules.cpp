@@ -37,7 +37,7 @@
 #if HAVE_OCC
 #define FILE_EXT "stp"
 #else
-#define FILE_EXT "sat"
+#define FILE_EXT "facet"
 #endif
 
 const AF2Rule* findRule(

@@ -31,7 +31,7 @@
 #if HAVE_OCC
 #define FILE_EXT "stp"
 #else
-#define FILE_EXT "sat"
+#define FILE_EXT "facet"
 #endif
 
 // These variables are at global scope because (1) calling deleteAll on
