@@ -28,6 +28,9 @@
 std::string geomExt = ".sat";
 #elif HAVE_OCC
 std::string geomExt = ".stp";
+#else
+std::string geomExt = ".facet";
+#define HAVE_FACET
 #endif
 
 using namespace MeshKit;
@@ -43,6 +46,8 @@ void testSingleHoleSurfImprinted();
 void testSquareVarSize();
 void testPieceOfTorus();
 void testSphere();
+void testBrick();
+
 
 // This variable is at global scope because calling deleteAll on
 // the MKCore geometry instance appears to cause memory inconsistencies
@@ -76,15 +81,17 @@ int main(int argc, char **argv)
     std::cout << "Requested meshes saved with file extension "
         << meshExt << std::endl;
   }
-
   num_fail += RUN_TEST(testSquare);
+  num_fail += RUN_TEST(testSquareVarSize);
+#ifdef HAVE_FACET
+  num_fail += RUN_TEST(testBrick);
+#else
   num_fail += RUN_TEST(testHoleySurf);
   num_fail += RUN_TEST(testSingleHoleSurf);
   num_fail += RUN_TEST(testSingleHoleSurfImprinted);
-  num_fail += RUN_TEST(testSquareVarSize);
   num_fail += RUN_TEST(testPieceOfTorus);
   num_fail += RUN_TEST(testSphere);
-
+#endif
   delete mk;
 
   return num_fail;
@@ -278,4 +285,48 @@ void testSphere()
 
   // delete the triangles from the mesh
   mk->moab_instance()->delete_entities(tris);
+}
+
+void testBrick()
+{
+  MEntVector surfs = constructMeshOp("brick");
+
+    // Set the size to 1.0 on all surfaces of the sphere,
+    // but don't pass the sizing down to the child edges to test
+    // whether the setup method will do that
+    SizingFunction esize(mk, -1, 0.2);
+    for (unsigned int si = 0u; si < surfs.size(); ++si)
+    {
+      surfs[si]->sizing_function_index(esize.core_index(), false);
+    }
+
+    // setup and execute the MeshOp to mesh the surface
+    mk->setup_and_execute();
+
+    // report the number of triangles
+    moab::Range tris;
+    moab::ErrorCode rval =
+        mk->moab_instance()->get_entities_by_dimension(0, 2, tris);
+    CHECK_EQUAL(moab::MB_SUCCESS, rval);
+    std::cout << tris.size() << " tris generated." << std::endl;
+
+    // save the mesh if directed to do so
+    if (saveMesh) {
+      std::string outfile = std::string("brick") + meshExt;
+      moab::EntityHandle* outputSets = new moab::EntityHandle[surfs.size()];
+      for (unsigned int si = 0u; si < surfs.size(); ++si)
+      {
+        outputSets[si] = surfs[si]->mesh_handle();
+      }
+      rval = mk->moab_instance()->write_file(outfile.c_str(), NULL, NULL,
+          outputSets, surfs.size());
+      MBERRCHK(rval, mk->moab_instance());
+      delete[] outputSets;
+    }
+
+    // remove the MeshOp and the rest of the graph
+    mk->clear_graph();
+
+    // delete the triangles from the mesh
+    mk->moab_instance()->delete_entities(tris);
 }

@@ -13,8 +13,13 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AdvFront \
                -I$(top_srcdir)/src/utils \
                -I$(top_srcdir)/test
 
+TESTS = pntTrnsfrmLnr2D freeZone ruleAppObj2D triMeshOp
+if HAVE_OCC_GEOMETRY_ENGINE
+ TESTS +=  planeProj triRule dfltTriRules frontObj2D basicAlg2D 
+else
+ 
+endif
 
-TESTS = pntTrnsfrmLnr2D freeZone ruleAppObj2D planeProj triRule dfltTriRules frontObj2D basicAlg2D triMeshOp
 
 check_PROGRAMS = $(TESTS)
 
