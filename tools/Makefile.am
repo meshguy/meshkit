@@ -9,11 +9,15 @@ LDADD = $(top_builddir)/src/libMeshKit.la
 
 DATADIR = $(top_srcdir)/data
 if HAVE_TRIANGLE
-AM_LDFLAGS += $(TRIANGLE_LIBS)
+LDADD += $(TRIANGLE_LIBS)
 endif
 
 if HAVE_TETGEN
-AM_LDFLAGS +=$(TETGEN_LIBS)
+LDADD +=$(TETGEN_LIBS)
+endif
+
+if ENABLE_intassign
+LDADD +=$(IPOPT_LIBS)
 endif
 
 AM_CPPFLAGS += -DDATADIR=$(DATADIR)
