@@ -899,8 +899,7 @@ if test "x${ENABLE_intassign}" != "xno"; then
         AC_LANG_PUSH([C++])
 
         AC_LINK_IFELSE(
-          [AC_LANG_PROGRAM([#include "MKVersion.h"
-                            #include "IpTNLP.hpp"],
+          [AC_LANG_PROGRAM([#include "IpTNLP.hpp"],
               [])],
           [IPOPT_LIBS="$IPOPT_LDFLAGS -lipopt -llapack -lblas -lm -ldl"] [HAVE_IPOPT=yes],
           [AC_MSG_WARN([libipopt is not installed.])] )
