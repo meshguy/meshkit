@@ -31,7 +31,7 @@ ModelEnt::ModelEnt(MKCore *mk,
     iGeom::Error err = igeom_instance()->setData(geom_ent, mkCore->igeom_model_tag(igeomIndex), &dum_this);
     IBERRCHK(err, "Failed to set iGeom ModelEnt tag.");
   }
-  
+
   if (!mesh_ent && geom_ent && -1 != meshIndex && -1 != irelIndex) {
       // get a corresponding mesh set handle, if any; create one if missing and have a meshIndex
     iBase_EntitySetHandle h;
@@ -47,11 +47,11 @@ ModelEnt::ModelEnt(MKCore *mk,
     assert(iGeomEnt || iGeomSet);
     create_mesh_set();
   }
-  
+
     // if there's a mesh entity, set it to point here too
   if (moabEntSet && -1 != meshIndex) {
     ModelEnt *dum_this = this;
-    moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_model_tag(meshIndex), 
+    moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_model_tag(meshIndex),
                                                                           &moabEntSet, 1, &dum_this);
     IBERRCHK(err, "Failed to set moab ModelEnt tag.");
   }
@@ -74,12 +74,12 @@ ModelEnt::ModelEnt(MKCore *mk,
     // mark the geometry entity with this modelEnt
   if (-1 != igeomIndex && geom_ent) {
     ModelEnt *dum_this = this;
-    iGeom::Error err = igeom_instance()->setEntSetData(geom_ent, 
+    iGeom::Error err = igeom_instance()->setEntSetData(geom_ent,
     mkCore->igeom_model_tag(igeomIndex),
     &dum_this);
     IBERRCHK(err, "Failed to set iGeom ModelSet tag.");
   }
-  
+
   if (!mesh_ent && geom_ent && -1 != meshIndex && -1 != irelIndex) {
       // get a corresponding mesh set handle, if any; create one if missing and have a meshIndex
     iBase_EntitySetHandle h;
@@ -95,17 +95,17 @@ ModelEnt::ModelEnt(MKCore *mk,
     assert(iGeomEnt || iGeomSet);
     create_mesh_set();
   }
-  
+
     // if there's a mesh entity, set it to point here too
   if (moabEntSet && -1 != meshIndex) {
     ModelEnt *dum_this = this;
-    moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_model_tag(meshIndex), 
+    moab::ErrorCode err = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_model_tag(meshIndex),
                                                                          &moabEntSet, 1, &dum_this);
     IBERRCHK(err, "Failed to set moab ModelEnt tag.");
   }
 }
-    
-ModelEnt::~ModelEnt() 
+
+ModelEnt::~ModelEnt()
 {
   // if we delete the Model Entity, remove the tag on the gent that
   // was pointing to it (or set it to NULL)
@@ -137,33 +137,33 @@ void ModelEnt::sizing_function_index(int ind, bool children_too)
   if (children_too && dimension() > 1) {
     MEntVector childrn;
     get_adjacencies(dimension()-1, childrn);
-    for (MEntVector::iterator vit = childrn.begin(); vit != childrn.end(); vit++) 
+    for (MEntVector::iterator vit = childrn.begin(); vit != childrn.end(); vit++)
       (*vit)->sizing_function_index(ind, children_too);
   }
 }
-    
+
 void ModelEnt::create_mesh_set(int ordered_flag)
 {
-  if (moabEntSet) 
+  if (moabEntSet)
     throw Error(MK_FAILURE, "Tried to create meshset for an entity that already had one.");
 
-  else if (!iGeomEnt && !iGeomSet) 
+  else if (!iGeomEnt && !iGeomSet)
     throw Error(MK_FAILURE, "Tried to create ModelEnt missing a geometry entity or set.");
-  
+
   moab::EntitySetProperty ordered = moab::MESHSET_SET;
 
     // need type for later
   iBase_EntityType this_tp = iBase_ALL_TYPES;
   iGeom::Error err;
   if (-1 > ordered_flag || 1 < ordered_flag) throw Error(MK_FAILURE, "Invalid value for ordered flag.");
-  else if (-1 == ordered && iGeomSet) ordered = moab::MESHSET_ORDERED;
+  else if (iGeomSet) ordered = moab::MESHSET_ORDERED;
   else if (-1 == ordered_flag && iGeomEnt) {
     err = igeom_instance()->getEntType(iGeomEnt, this_tp);
     IBERRCHK(err, "Trouble getting entity type.");
-    if (iBase_EDGE == this_tp) 
+    if (iBase_EDGE == this_tp)
       ordered = moab::MESHSET_ORDERED;
   }
-  
+
     // create the set
   moab::ErrorCode rval = mkCore->moab_instance(meshIndex)->create_meshset(ordered, moabEntSet);
   MBERRCHK(rval, mkCore->moab_instance());
@@ -179,7 +179,7 @@ void ModelEnt::create_mesh_set(int ordered_flag)
     rval = mkCore->moab_instance(meshIndex)->tag_set_data(mkCore->moab_global_id_tag(), &moabEntSet, 1, &id_from_geometry);
     MBERRCHK(rval, mkCore->moab_instance());
   }
-  
+
     // tag it with this ModelEnt
   ModelEnt *this_ptr = this;
   rval = mkCore->moab_instance()->tag_set_data(mkCore->moab_model_tag(), &moabEntSet, 1, &this_ptr);
@@ -205,15 +205,15 @@ void ModelEnt::create_mesh_set(int ordered_flag)
 
   if (iGeomEnt) init_parents_children();
   else if (iGeomSet) init_group_contents();
-  
+
     // now do senses wrt lower-dimensional entities, which should be initialized by now
   if (iGeomEnt)
     set_downward_senses();
 }
 
-void ModelEnt::init_parents_children() 
+void ModelEnt::init_parents_children()
 {
-    // get parents and children, and link to corresponding sets; don't do this for any missing mesh sets, 
+    // get parents and children, and link to corresponding sets; don't do this for any missing mesh sets,
     // will get done when those sets get created
   assert(iGeomEnt);
   std::vector<iGeom::EntityHandle> geom_adjs;
@@ -240,7 +240,7 @@ void ModelEnt::init_parents_children()
       }
     }
   }
-  
+
   if (this_tp > iBase_VERTEX) {
     geom_adjs.clear();
     err = igeom_instance()->getEntAdj(iGeomEnt, (iBase_EntityType)(this_tp-1), geom_adjs);
@@ -256,11 +256,11 @@ void ModelEnt::init_parents_children()
   }
 }
 
-void ModelEnt::init_group_contents() 
+void ModelEnt::init_group_contents()
 {
     // should only be calling this function if we have a geometry set and a mesh index
   assert(-1 != meshIndex && iGeomSet);
-  
+
     // get the geometry entities in this group and add the corresponding mesh entity sets
   std::vector<iGeom::EntityHandle> geom_adjs;
   std::vector<iGeom::EntityHandle>::iterator vit;
@@ -301,19 +301,19 @@ void ModelEnt::init_group_contents()
     }
   }
 }
-  
-void ModelEnt::set_downward_senses() 
+
+void ModelEnt::set_downward_senses()
 {
     // should have both mesh and geometry
   assert(iGeomEnt && moabEntSet && igeomIndex != -1 && meshIndex != -1);
 
     // skip if vertex or edge
   if (dimension() <= 1) return;
-  
+
   int dim = dimension();
   iGeom::Error err;
   MEntVector adjs;
-  get_adjacencies(dim-1, adjs);    
+  get_adjacencies(dim-1, adjs);
 
   std::vector<int> senses;
   int dum_sense;
@@ -335,7 +335,7 @@ void ModelEnt::set_downward_senses()
  * \param mesh_ents Mesh entities being assigned to this model entity
  * \param mstate The meshed state after this mesh is added
  */
-void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate) 
+void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate)
 {
   std::vector<moab::EntityHandle> ent_vec;
   std::copy(mesh_ents.begin(), mesh_ents.end(), std::back_inserter(ent_vec));
@@ -350,18 +350,18 @@ void ModelEnt::commit_mesh(moab::Range &mesh_ents, MeshedState mstate)
  */
 void ModelEnt::commit_mesh(moab::EntityHandle *mesh_ents,
                            int num_ents,
-                           MeshedState mstate) 
+                           MeshedState mstate)
 {
   assert(-1 != meshIndex);
-  
+
     // add them to the set
   moab::ErrorCode rval = mkCore->moab_instance(meshIndex)->add_entities(moabEntSet, mesh_ents, num_ents);
   MBERRCHK(rval, mkCore->moab_instance(meshIndex));
-  
+
   meshedState = mstate;
 }
-  
-void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const 
+
+void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const
 {
   std::vector<iGeom::EntityHandle> gents;
   // this call assumes that we have geometry. Is that always true?
@@ -378,8 +378,8 @@ void ModelEnt::get_adjacencies(int dim, MEntVector &adjs) const
                                              &adjs[0]);
   IBERRCHK(err, "Trouble getting ModelEnts for geom adjacencies.");
 }
-      
-int ModelEnt::dimension() const 
+
+int ModelEnt::dimension() const
 {
   if (iGeomEnt) {
     iBase_EntityType tp;
@@ -395,7 +395,7 @@ int ModelEnt::dimension() const
   }
   else throw Error(MK_BAD_INPUT, "Couldn't get dimension for this ModelEnt.");
 }
-  
+
 double ModelEnt::measure() const
 {
   double meas;
@@ -403,13 +403,13 @@ double ModelEnt::measure() const
   IBERRCHK(err, "Couldn't get geom entity measure.");
   return meas;
 }
-    
+
 double ModelEnt::measure_discrete() const
 {
   return measure();
 }
 
-void ModelEnt::evaluate(double x, double y, double z, 
+void ModelEnt::evaluate(double x, double y, double z,
                         double *close,
                         double *direction,
                         double *curvature1,
@@ -440,7 +440,7 @@ void ModelEnt::evaluate(double x, double y, double z,
     if (!close) close = cls;
     if (!direction) direction = dir;
     if (!curvature1) curvature1 = curve1;
-    if (1 == dimension()) 
+    if (1 == dimension())
       err = igeom_instance()->getEgEvalXYZ(geom_handle(), x, y, z,
           close[0], close[1], close[2],
           direction[0], direction[1], direction[2],
@@ -470,12 +470,12 @@ int ModelEnt::id() const
       if (iBase_SUCCESS == err) return gid;
     }
   }
-  
+
   if (mesh_handle()) {
     moab::Tag gid_tag;
 
-    moab::ErrorCode err = mk_core()->moab_instance()->tag_get_handle("GLOBAL_ID", 
-                                                                     1, moab::MB_TYPE_INTEGER, 
+    moab::ErrorCode err = mk_core()->moab_instance()->tag_get_handle("GLOBAL_ID",
+                                                                     1, moab::MB_TYPE_INTEGER,
                                                                      gid_tag, moab::MB_TAG_SPARSE);
     if (moab::MB_SUCCESS == err) {
       int gid;
@@ -484,7 +484,7 @@ int ModelEnt::id() const
       if (moab::MB_SUCCESS == err) return gid;
     }
   }
-  
+
   return -1;
 }
 
@@ -492,7 +492,7 @@ void ModelEnt::get_mesh(int dim,
                         std::vector<moab::EntityHandle> &ments,
                         bool bdy_too)
 {
-  if (dim > dimension()) throw Error(MK_BAD_INPUT, "Called get_mesh for dimension %d on a %d-dimensional entity.", 
+  if (dim > dimension()) throw Error(MK_BAD_INPUT, "Called get_mesh for dimension %d on a %d-dimensional entity.",
                                      dim, dimension());
 
   if (!bdy_too || dim == dimension()) {
@@ -521,21 +521,21 @@ void ModelEnt::get_mesh(int dim,
     std::vector<moab::EntityHandle> tmp_ments;
     moab::ErrorCode rval = mk_core()->moab_instance()->get_entities_by_dimension(moabEntSet, dimension(), tmp_ments);
     MBERRCHK(rval, mkCore->moab_instance());
-    rval = mk_core()->moab_instance()->get_adjacencies(&tmp_ments[0], tmp_ments.size(), dim, false, ments, 
+    rval = mk_core()->moab_instance()->get_adjacencies(&tmp_ments[0], tmp_ments.size(), dim, false, ments,
                                                        moab::Interface::UNION);
     MBERRCHK(rval, mkCore->moab_instance());
   }
 }
-    
+
 void ModelEnt::boundary(int dim,
                         std::vector<moab::EntityHandle> &bdy,
                         std::vector<int> *senses,
-                        std::vector<int> *group_sizes) 
+                        std::vector<int> *group_sizes)
 {
   MEntVector me_loop;
   std::vector<int> me_senses, me_group_sizes;
   boundary(dim, me_loop, &me_senses, &me_group_sizes);
-  
+
   MEntVector::iterator vit = me_loop.begin();
   std::vector<int>::iterator sense_it = me_senses.begin(), grpsize_it = me_group_sizes.begin();
   int gents_ctr = 0, first_ment = 0;
@@ -545,7 +545,7 @@ void ModelEnt::boundary(int dim,
   for (vit = me_loop.begin(); vit != me_loop.end(); vit++, sense_it++) {
     std::vector<moab::EntityHandle> tmp_ments;
     (*vit)->get_mesh(dim, tmp_ments, true);
-    if (*sense_it == SENSE_REVERSE) 
+    if (*sense_it == SENSE_REVERSE)
       std::reverse(tmp_ments.begin(), tmp_ments.end());
     if (2 == dimension() && 0 == dim)
         // assembling vertices on loops; don't do last, since that'll be the first of the
@@ -567,9 +567,9 @@ void ModelEnt::boundary(int dim,
       } // block at end of a given loop
     } // block updating group size
   } // over loop
-  
+
 }
-    
+
 void ModelEnt::boundary(int dim,
                         MEntVector &entities,
                         std::vector<int> *senses,
@@ -582,7 +582,7 @@ void ModelEnt::boundary(int dim,
     // shouldn't be calling this function if we're a vertex
   if (this_dim == iBase_VERTEX) throw Error(MK_BAD_INPUT, "Shouldn't call this for a vertex.");
   else if (dim >= this_dim) throw Error(MK_BAD_INPUT, "Calling for boundary entities of equal or greater dimension.");;
-  
+
     // get (d-1)-adj ents & senses
   MEntVector tmp_ents;
   get_adjacencies(this_dim-1, tmp_ents);
@@ -628,35 +628,35 @@ void ModelEnt::boundary(int dim,
     }
     return; // we need to get out, we treated a dim 1 entity
   }
-  
+
     // get adjacent entities into a sorted, mutable list
   MEntVector b_ents = tmp_ents;
   MEntSet dbl_curves, sgl_curves;
-  
+
   std::sort(b_ents.begin(), b_ents.end());
 
   while (!b_ents.empty()) {
       // get 1st in group
-    
+
     MEntVector group_stack, this_group;
     group_stack.push_back(b_ents.front());
-    
+
     int current_senses_size = 0;
     if (senses)
       current_senses_size= senses->size();
       // while there are still entities on the stack
     while (!group_stack.empty()) {
-      
+
         // pop one off & get its sense
       ModelEnt *this_entity = group_stack.back(); group_stack.pop_back();
-      
+
       int this_sense;
-      iGeom::Error err = 
+      iGeom::Error err =
           igeom_instance()->getSense(this_entity->geom_handle(), geom_handle(), this_sense);
       IBERRCHK(err,"Error getting geometry sense");
 
         // if we already have this one, continue
-      if ((0 != this_sense && 
+      if ((0 != this_sense &&
            std::find(this_group.begin(), this_group.end(), this_entity) != this_group.end()) ||
           std::find(dbl_curves.begin(), dbl_curves.end(), this_entity) != dbl_curves.end())
         continue;
@@ -684,9 +684,9 @@ void ModelEnt::boundary(int dim,
         }
 
       }
-      
+
         // only remove from the list of candidates if it's not dual-sensed
-      if (0 != this_sense) 
+      if (0 != this_sense)
         b_ents.erase(std::remove(b_ents.begin(), b_ents.end(), this_entity), b_ents.end());
 
         // if it's double-sensed and this is the first time we're seeing it, find the right sense
@@ -720,7 +720,7 @@ void ModelEnt::boundary(int dim,
           }
         }
       }
-          
+
         // it's in the group; put on group & remove from untreated ones
       this_group.push_back(this_entity);
       if (senses) senses->push_back(this_sense);
@@ -755,17 +755,17 @@ void ModelEnt::boundary(int dim,
         if (NULL == next_ent) return;
         group_stack.push_back(next_ent);
       }
-      else if (!tmp_adjs.empty()) 
+      else if (!tmp_adjs.empty())
         std::copy(tmp_adjs.begin(), tmp_adjs.end(), std::back_inserter(group_stack));
     }
-    
+
     // put group in group list
     std::copy(this_group.begin(), this_group.end(), std::back_inserter(entities));
     if (group_sizes) group_sizes->push_back(this_group.size());
   }
 }
 
-ModelEnt *ModelEnt::shared_entity(ModelEnt *ent2, int to_dim) 
+ModelEnt *ModelEnt::shared_entity(ModelEnt *ent2, int to_dim)
 {
     // find the shared entity between the two entities of the prescribed dimension
   MEntVector from_ents(2), to_ents;
@@ -779,7 +779,7 @@ ModelEnt *ModelEnt::shared_entity(ModelEnt *ent2, int to_dim)
   }
 
   if (to_ents.size() > 1) throw Error(MK_MULTIPLE_FOUND, "Multiple shared entities found.");
-  
+
   return to_ents[0];
 }
 
@@ -787,7 +787,7 @@ void ModelEnt::get_adjs_bool(MEntVector &from_ents,
                              int to_dim,
                              MEntVector &to_ents,
                              BooleanType op_type,
-                             bool only_to_ents) 
+                             bool only_to_ents)
 {
   if (from_ents.empty()) {
     to_ents.clear();
@@ -817,25 +817,25 @@ void ModelEnt::get_adjs_bool(MEntVector &from_ents,
     else {
       std::copy(bridges.begin(), bridges.end(), std::back_inserter(result_ents));
     }
-    
+
     to_ents = result_ents;
   }
-  
+
   if (op_type == UNION)
     std::sort(to_ents.begin(), to_ents.end());
-  
+
   to_ents.erase(std::unique(to_ents.begin(), to_ents.end()), to_ents.end());
 }
 
-ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge, 
-                                 int this_sense, 
-                                 MEntVector &tmp_adjs) 
+ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge,
+                                 int this_sense,
+                                 MEntVector &tmp_adjs)
 {
     // given this_entity, a d-1 entity bounding gentity, and optional "next"
     // entities in tmp_adjs, find the next one based on windings around the shared
     // vertex
-  
-    // first, get the shared vertex 
+
+    // first, get the shared vertex
   MEntVector verts;
   this_edge->get_adjacencies(0, verts);
 
@@ -858,7 +858,7 @@ ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge,
   double normal[3];
   igeom_instance()->getEntNrmlXYZ(geom_handle(), v2[0], v2[1], v2[2],
                                           normal[0], normal[1], normal[2]);
-  
+
     // now loop over candidates, finding magnitude of swept angle
   ModelEnt *other = NULL;
   double angle = VecUtil::TWO_PI;
@@ -883,7 +883,7 @@ ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge,
     VecUtil::normalize(v23);
 
     VecUtil::cross(normal, v23, v1);
-    
+
     VecUtil::cross(v1, normal, v3);
 
     double x = VecUtil::dot(v21, v3);
@@ -900,11 +900,11 @@ ModelEnt *ModelEnt::next_winding(ModelEnt *this_edge,
       angle = this_angle;
     }
   }
-  
+
   return other;
 }
 
-void ModelEnt::boundary(int dim, 
+void ModelEnt::boundary(int dim,
                         moab::Range &ents) const
 {
   throw Error(MK_NOT_IMPLEMENTED, "Not implemented yet.");
@@ -916,20 +916,20 @@ void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
                                           std::vector<int> &ents_as_ids,
                                           std::vector<double> &coords,
                                           moab::Range *verts_range,
-                                          int start_index) 
+                                          int start_index)
 {
     // if we need to, make a tag
   moab::ErrorCode rval;
   bool i_created_tag = false;
   if (0 == tagh) {
-    //rval = mk_core()->moab_instance()->tag_create("__ModelEntidtag", sizeof(int), moab::MB_TAG_DENSE, 
+    //rval = mk_core()->moab_instance()->tag_create("__ModelEntidtag", sizeof(int), moab::MB_TAG_DENSE,
     //                                              moab::MB_TYPE_INTEGER, tagh, NULL);
-    rval = mk_core()->moab_instance()->tag_get_handle("__ModelEntidtag", 1, moab::MB_TYPE_INTEGER, tagh, 
+    rval = mk_core()->moab_instance()->tag_get_handle("__ModelEntidtag", 1, moab::MB_TYPE_INTEGER, tagh,
                                                       moab::MB_TAG_DENSE|moab::MB_TAG_CREAT);
     MBERRCHK(rval, mkCore->moab_instance());
     i_created_tag = true;
   }
-  
+
     // put entities into range, after clearing it
   moab::Range tmp_range, ents_range;
   if (!verts_range) verts_range = &tmp_range;
@@ -951,8 +951,8 @@ void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
     // resize index array, to max number of connectivity entries
   int max_numconnect = moab::CN::VerticesPerEntity(mkCore->moab_instance()->type_from_handle(*(ents_range.rbegin())));
   ents_as_ids.resize(ents.size()*max_numconnect);
-  
-    // temporarily store ids in ents_as_ids array, and set id tag 
+
+    // temporarily store ids in ents_as_ids array, and set id tag
   assert(ents_as_ids.size() >= verts_range->size());
   for (unsigned int i = 0; i < verts_range->size(); i++) ents_as_ids[i] = i+start_index;
   rval = mk_core()->moab_instance()->tag_set_data(tagh, *verts_range, &ents_as_ids[0]);
@@ -998,7 +998,7 @@ void ModelEnt::get_indexed_connect_coords(std::vector<moab::EntityHandle> &ents,
   }
 }
 
-iGeom::EntityHandle ModelEnt::geom_handle(moab::EntityHandle ment) const 
+iGeom::EntityHandle ModelEnt::geom_handle(moab::EntityHandle ment) const
 {
   // use iRel to get this information or use model entity tag
   iBase_EntityHandle gent = 0;
@@ -1021,19 +1021,19 @@ iGeom::EntityHandle ModelEnt::geom_handle(moab::EntityHandle ment) const
   }
 }
 
-iGeom *ModelEnt::igeom_instance() const 
+iGeom *ModelEnt::igeom_instance() const
 {
   if (-1 == igeomIndex) throw Error(MK_FAILURE, "No geometry instance associated with this ModelEnt.");
   return mkCore->igeom_instance(igeomIndex);
 }
 
-moab::Interface *ModelEnt::moab_instance() const 
+moab::Interface *ModelEnt::moab_instance() const
 {
   if (-1 == meshIndex) throw Error(MK_FAILURE, "No moab instance associated with this ModelEnt.");
   return mkCore->moab_instance(meshIndex);
 }
 
-moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const 
+moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const
 {
     // use iRel to get this information or use model entity tag
   moab::EntityHandle ment = 0;
@@ -1063,7 +1063,7 @@ moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntityHandle gent) const
 
 }
 
-moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntitySetHandle gent) const 
+moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntitySetHandle gent) const
 {
     // use iRel to get this information or use model entity tag
   moab::EntityHandle ment = 0;
@@ -1097,15 +1097,15 @@ moab::EntityHandle ModelEnt::mesh_handle(iGeom::EntitySetHandle gent) const
      * Returns -1 if no size set on this entity.  If intervals are set, returns computed size.
      * \return Interval size for this ModelEnt.
      */
-double ModelEnt::mesh_interval_size() const 
+double ModelEnt::mesh_interval_size() const
 {
   if (-1 != sizing_function_index() && mk_core()->sizing_function(sizing_function_index()) &&
       -1 != mk_core()->sizing_function(sizing_function_index())->size())
     return mk_core()->sizing_function(sizing_function_index())->size();
-  
+
   else if (1 == dimension() && -1 != mesh_intervals() && 0 != mesh_intervals())
     return measure() / mesh_intervals();
-    
+
   else return -1;
 }
 

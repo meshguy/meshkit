@@ -1,5 +1,5 @@
-#ifndef MESHKIT_ITAPS_FBGEOM_HPP
-#define MESHKIT_ITAPS_FBGEOM_HPP
+#ifndef MESHKIT_ITAPS_FBIGEOM_HPP
+#define MESHKIT_ITAPS_FBIGEOM_HPP
 
 /** \file FBiGeom.hpp
  */
@@ -29,9 +29,9 @@ class FBiGeom : public iGeom {
 	protected:
 		FBiGeom_Instance mInstance;
 	public:
-        virtual inline iRel::IfaceType iface_type() const {
-            return iRel::FBIGEOM_IFACE;
-        }
+	virtual inline iRel::IfaceType iface_type() const {
+	    return iRel::FBIGEOM_IFACE;
+	}
 
 		typedef iBase_EntitySetHandle EntitySetHandle;
 		typedef iBase_EntityHandle EntityHandle;
@@ -341,10 +341,12 @@ class FBiGeom : public iGeom {
 				double z);
 		virtual inline Error rotateEnt(EntityHandle entity, double angle,
 				double axis_x, double axis_y, double axis_z);
-		virtual inline Error reflectEnt(EntityHandle entity, double norm_x,
-				double norm_y, double norm_z);
-		virtual inline Error scaleEnt(EntityHandle entity, double x_factor,
-				double y_factor, double z_factor);
+		virtual inline Error reflectEnt(EntityHandle entity, double x,
+						double y, double z, double norm_x,
+						double norm_y, double norm_z);
+		virtual inline Error scaleEnt(EntityHandle entity, double x,
+					      double y, double z, double x_factor,
+					      double y_factor, double z_factor);
 
 		virtual inline Error uniteEnts(const EntityHandle* entities,
 				int entities_size, EntityHandle& result_entity);
@@ -505,7 +507,7 @@ class FBiGeom : public iGeom {
 		virtual inline Error getData(EntityHandle entity_handle, TagHandle tag_handle,
 				void* tag_value_out) const;
 		virtual inline Error getFacets(EntityHandle entity_handle, double dist_tolerance,
-        std::vector<double> &point, std::vector<int> &facets) const;
+	std::vector<double> &point, std::vector<int> &facets) const;
 		virtual inline Error getIntData(EntityHandle entity_handle, TagHandle tag_handle,
 				int& value_out) const;
 		virtual inline Error getDblData(EntityHandle entity_handle, TagHandle tag_handle,
@@ -943,7 +945,7 @@ inline FBiGeom::Error FBiGeom::getEntClosestPtTrimmed(EntityHandle entity, doubl
 {
     int err=0;
     FBiGeom_getEntClosestPtTrimmed(mInstance, entity, near_x, near_y, near_z, &on_x, &on_y, &on_z, &err);
-    return (Error) err;    
+    return (Error) err;
 }
 
 inline FBiGeom::Error FBiGeom::getArrClosestPt(const EntityHandle* handles,
@@ -1767,19 +1769,21 @@ inline FBiGeom::Error FBiGeom::rotateEnt(EntityHandle entity, double angle,
      return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::reflectEnt(EntityHandle entity, double norm_x,
-                                      double norm_y, double norm_z)
+inline FBiGeom::Error FBiGeom::reflectEnt(EntityHandle entity, double x,
+                                          double y, double z, double norm_x,
+                                          double norm_y, double norm_z)
 {
      int err;
-     FBiGeom_reflectEnt(mInstance, entity, norm_x, norm_y, norm_z, &err);
+     FBiGeom_reflectEnt(mInstance, entity, x, y, z, norm_x, norm_y, norm_z, &err);
      return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::scaleEnt(EntityHandle entity, double x_factor,
-                                    double y_factor, double z_factor)
+inline FBiGeom::Error FBiGeom::scaleEnt(EntityHandle entity, double x,
+                                        double y, double z, double x_factor,
+                                        double y_factor, double z_factor)
 {
      int err;
-     FBiGeom_scaleEnt(mInstance, entity, x_factor, y_factor, z_factor, &err);
+     FBiGeom_scaleEnt(mInstance, entity, x, y, z, x_factor, y_factor, z_factor, &err);
      return (Error) err;
 }
 
@@ -2381,7 +2385,7 @@ FBiGeom::getIntArrData( const EntityHandle* entity_handles,
 }
 
 FBiGeom::Error FBiGeom::getFacets(EntityHandle entity_handle, double dist_tolerance,
-				  std::vector<double> &point, std::vector<int> &facets) const
+                                  std::vector<double> &point, std::vector<int> &facets) const
 {
      int err=1; //, alloc_f = std::numeric_limits<int>::max(),
                         //alloc_p = std::numeric_limits<double>::max(), size_f, size_p;

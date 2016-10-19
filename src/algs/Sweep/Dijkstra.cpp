@@ -13,7 +13,7 @@ namespace MeshKit
 //---------------------------------------------------------------------------//
 // construction function for Dijkstra class
 Dijkstra::Dijkstra(vector<vector<double> > t)
-{	
+{
 	dist.insert(dist.begin(), t.begin(), t.end());
 }
 
@@ -29,7 +29,7 @@ void Dijkstra::getResults(vector<vector<double> > &d)
 
 void Dijkstra::getTopMostSurf()
 {
-	
+
 	for (unsigned int i = 0; i < order_dist.size(); i++){
 		bool is_negative = true;
 		for (unsigned int j = 0; j < order_dist[i].size(); j++)
@@ -45,12 +45,12 @@ void Dijkstra::getSurfList(vector<vector<vector<int> > > &l, int src_size, int t
 {
 	std::cout << "====================\n";
 	for (unsigned int i = 0; i < order_dist.size(); i++){
-		
+
 		for (unsigned int j = 0; j < order_dist[i].size(); j++)
 			std::cout << order_dist[i][j] << "\t";
 		std::cout << std::endl;
 	}
-	
+
 	std::cout << "====================\n";
 
 	std::vector<double> dist_array;
@@ -73,9 +73,9 @@ void Dijkstra::getSurfList(vector<vector<vector<int> > > &l, int src_size, int t
 	for (unsigned int i = 0; i < dist_array.size(); i++)
 		std::cout << dist_array[i] << "\t";
 	std::cout << std::endl;
-		
 
-	for (size_t i = dist_array.size() - 1; i >= 0; i--){
+
+	for (int i = dist_array.size() - 1; i >= 0; i--){
 		std::vector<double>::iterator it;
 		it = std::find(bak_dist_array.begin(), bak_dist_array.end(), dist_array[i]);
 		int index = std::distance(bak_dist_array.begin(), it);
@@ -97,7 +97,7 @@ void Dijkstra::getSurfList(vector<vector<vector<int> > > &l, int src_size, int t
 			}
 
 		}
-		previous_dist = dist_array[i];			
+		previous_dist = dist_array[i];
 		bak_dist_array[index] = 1.0e10;
 	}
 
@@ -115,7 +115,7 @@ void Dijkstra::addSurfToList(int layer_index, int value, int src_size, vector<ve
 	if (value < src_size){
 		datalist[surf_index].push_back(value);
 		datalist[surf_index].push_back(0);
-	}			
+	}
 	else{
 		datalist[surf_index].push_back(value-src_size);
 		datalist[surf_index].push_back(1);
@@ -131,35 +131,35 @@ void Dijkstra::algs(int s, vector<double> &f_list)
 	vector<bool> sptSet(dist.size(), false);
 	//the distance from the source to the source is defined to be zero.
 	d[s] = 0.0;
-	/* 
-	This loop corresponds to sending out the explorers walking the paths, 
+	/*
+	This loop corresponds to sending out the explorers walking the paths,
 	where the step of picking "the vertex, v, with the shortest path to s"
 	corresponds to an explorer arriving at an unexplored vertex.
 	*/
 	int V = (int)dist.size();
 	// Find shortest path for all vertices
 	for (int count = 0; count < V-1; count++){
-		//pick the minimum distance vertex from the set of vertices not yet 
+		//pick the minimum distance vertex from the set of vertices not yet
 		//processed. u is always equal to s in the first iteration
 		int u = minDistance(d, sptSet);
 		//Mark the picked vertex as processed.
 		sptSet[u] = true;
 		//Update d value of the adjacent vertices of the picked vertex
 		for (int v = 0; v < V; v++){
-			//update d[v] only if is not in sptSet, there is an edge from u to 
-			//v, and total weight of apth from s to v through u is smaller than 
+			//update d[v] only if is not in sptSet, there is an edge from u to
+			//v, and total weight of apth from s to v through u is smaller than
 			//current value of d[v]
 			if (!sptSet[v] && dist[u][v] && d[u] != 1.0e10 && d[u]+dist[u][v]<d[v])
 				d[v] = d[u]+dist[u][v];
 		}
 	}
-	
+
 	//pass results to the list
 	for (unsigned int i = 0; i < d.size(); i++)
-		f_list.push_back(d[i]);		
-	
+		f_list.push_back(d[i]);
+
 }
-//A utility function to find the vertex with minimum distance value, from the 
+//A utility function to find the vertex with minimum distance value, from the
 //set of vertices not yet included in shortest path tree
 int Dijkstra::minDistance(vector<double> d, vector<bool> sptSet)
 {
