@@ -21,8 +21,7 @@
  *
  * For complete documentation of these functions, see the FBiGeom header in the
  * MOAB source
- * (http://trac.mcs.anl.gov/projects/ITAPS/browser/MOAB/trunk/itaps/igeom/FBiGeom.h
- * for now).
+ * [http://ftp.mcs.anl.gov/pub/fathom/moab-docs/FBiGeom_8h.html FBiGeom]
  */
 
 class FBiGeom : public iGeom {

@@ -23,7 +23,7 @@
  * implementation of those functions call into the standard iGeom C functions newGeom and dtor.
  *
  * For complete documentation of these functions, see the iGeom header in the CGM source
- * (http://trac.mcs.anl.gov/projects/ITAPS/browser/cgm/trunk/itaps/iGeom.h for now).
+ * [http://ftp.mcs.anl.gov/pub/fathom/cgm-docs/iGeom_8h.html iGeom]
  */
 
 class iGeom {

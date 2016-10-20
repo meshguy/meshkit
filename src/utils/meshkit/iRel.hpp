@@ -27,8 +27,7 @@ typedef void* iBase_Instance;
  * implementation of those functions call into the standard %iRel C functions newRel and dtor.
  *
  * For complete documentation of these functions, see the 
- * [http://trac.mcs.anl.gov/projects/ITAPS/browser/Lasso/trunk/iRel.h iRel header] in the Lasso source
- * (for now).
+ * [http://ftp.mcs.anl.gov/pub/fathom/moab-docs/iRel_8h.html iRel header] 
  */
 class iRel {
 public:
