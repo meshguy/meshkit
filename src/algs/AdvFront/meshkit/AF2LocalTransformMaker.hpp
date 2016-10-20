@@ -44,6 +44,9 @@ class AF2LocalTransformMaker
         const std::list<AF2Point3D*> & ngbhdPoints,
         const AF2Edge3D* const & baselineEdge,
         const std::list<const AF2Edge3D*> & otherNgbhdEdges) const = 0;
+  
+    virtual ~AF2LocalTransformMaker() {}
+  
 };
 
 #endif
