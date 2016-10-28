@@ -20,6 +20,8 @@ class AF2LocalTransform
 
   public:
 
+    virtual ~AF2LocalTransform() {}
+
     /**
      * \brief Transform from a 3-dimensional point on the surface to a
      * point in a 2-dimensional space.

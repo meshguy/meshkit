@@ -63,8 +63,8 @@ public:
          iRel *irel = NULL,
          bool construct_missing_ifaces = true);
   
-    //! destructor
-  ~MKCore();
+    //! virtual destructor
+  virtual ~MKCore();
 
     /**@}*/
 

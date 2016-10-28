@@ -11,6 +11,8 @@ class AF2RuleNewFace
 {
   public:
 
+    virtual ~AF2RuleNewFace() {}
+
     /**
      * \brief Get the number of vertices that the element this rule would
      * create would have.

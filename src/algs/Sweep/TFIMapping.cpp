@@ -15,7 +15,6 @@
 #include <map>
 #include <algorithm>
 
-const double EPS = 1.0e-6;
 
 namespace MeshKit {
 
@@ -43,7 +42,7 @@ TFIMapping::~TFIMapping()
 }
 
 //---------------------------------------------------------------------------//
-// setup function: 
+// setup function:
 void TFIMapping::setup_this()
 {
 
@@ -112,44 +111,44 @@ void TFIMapping::setup_this()
                 edgesToMesh.push_back(oppEdges[j]);
             }
         }
-		if (edgesToMesh.size() > 0)
-      	{
-		    EdgeMesher * em = (EdgeMesher*) me->mk_core()->construct_meshop("EdgeMesher", edgesToMesh);
-		    if (mesh_count < 0)
-		    {
-		      std::cout << "mesh count not set properly on opposite edges, set it to 10\n";
-		      mesh_count = 10; // 4 is a nice number, used in the default edge mesher;
-		      // but I like 10 more
-		    }
+                if (edgesToMesh.size() > 0)
+        {
+                    EdgeMesher * em = (EdgeMesher*) me->mk_core()->construct_meshop("EdgeMesher", edgesToMesh);
+                    if (mesh_count < 0)
+                    {
+                      std::cout << "mesh count not set properly on opposite edges, set it to 10\n";
+                      mesh_count = 10; // 4 is a nice number, used in the default edge mesher;
+                      // but I like 10 more
+                    }
 
 		    for (unsigned int j = 0; j < edgesToMesh.size(); j++)
 		    {
-                      int edgeMeshCount = 0;
-                      int edgeSfIndex =
-                          edgesToMesh[j]->sizing_function_index();
-                      if (edgeSfIndex >= 0)
-                      {
-                        SizingFunction* edgeSf =
-                            mk_core()->sizing_function(edgeSfIndex);
-                        edgeMeshCount = edgeSf->intervals();
+		      int edgeMeshCount = 0;
+		      int edgeSfIndex =
+			  edgesToMesh[j]->sizing_function_index();
+		      if (edgeSfIndex >= 0)
+		      {
+			SizingFunction* edgeSf =
+			    mk_core()->sizing_function(edgeSfIndex);
+			edgeMeshCount = edgeSf->intervals();
 		      }
-                      if (mesh_count != edgeMeshCount)
-                      {
-                        edgesToMesh[j]->mesh_intervals(mesh_count);
-                      }
-                      if (force)
-                      {
-                        // the opposite edge is already meshed, so the number
-                        // of intervals is a hard constraint for this edge
-                        edgesToMesh[j]->interval_firmness(HARD);
-                      }
+		      if (mesh_count != edgeMeshCount)
+		      {
+			edgesToMesh[j]->mesh_intervals(mesh_count);
+		      }
+		      if (force)
+		      {
+			// the opposite edge is already meshed, so the number
+			// of intervals is a hard constraint for this edge
+			edgesToMesh[j]->interval_firmness(HARD);
+		      }
 		      edgesToMesh[j]->add_meshop(em);
 		    }
 		    mk_core()->insert_node(em, (GraphNode*)this,
-                        mk_core()->root_node());
-      	}
+			mk_core()->root_node());
+	}
     }
-	else{
+        else{
 
 		// mesh edge 0 and 2 together, and 1 and 3 together (same mesh count)
 		// look at all settings, to decide proper mesh count
@@ -178,26 +177,26 @@ void TFIMapping::setup_this()
 		      int indexS = oppEdges[j]->sizing_function_index();
 		      if (indexS >= 0)
 		      {
-		        SizingFunction * sfe = mk_core()->sizing_function(indexS);
-                        if (!force)
-                        {
-                          // if a sizing function was set on an edge, use
-                          // that rather than a mesh count from the surface
-                          if (sfe->intervals() > 0)
-                            mesh_count = sfe->intervals();
-                          else if (sfe->size() > 0)
-                            mesh_count = oppEdges[j]->measure() /  sfe->size();
-                          if (mesh_count % 2 && oppEdges[j]->constrain_even())
-                            ++mesh_count;
-                        }
+			SizingFunction * sfe = mk_core()->sizing_function(indexS);
+			if (!force)
+			{
+			  // if a sizing function was set on an edge, use
+			  // that rather than a mesh count from the surface
+			  if (sfe->intervals() > 0)
+			    mesh_count = sfe->intervals();
+			  else if (sfe->size() > 0)
+			    mesh_count = oppEdges[j]->measure() /  sfe->size();
+			  if (mesh_count % 2 && oppEdges[j]->constrain_even())
+			    ++mesh_count;
+			}
 		      }
 		      // push it to the list if it is not setup to another mesh op (edge mesher) already
 		      //if (oppEdges[j]->is_meshops_list_empty())// it will create an EdgeMesher later
-                      if ((j == 0 || (oppEdges[j] != oppEdges[0])) &&
-                          oppEdges[j]->is_meshops_list_empty())
-                      {
-		        edgesToMesh.push_back(oppEdges[j]);
-                      }
+		      if ((j == 0 || (oppEdges[j] != oppEdges[0])) &&
+			  oppEdges[j]->is_meshops_list_empty())
+		      {
+			edgesToMesh.push_back(oppEdges[j]);
+		      }
 		    }
 		  }
 		  // decide on a mesh count now, if edgesToMesh.size()>0
@@ -214,29 +213,29 @@ void TFIMapping::setup_this()
 
 		    for (unsigned int j = 0; j < edgesToMesh.size(); j++)
 		    {
-                      int edgeMeshCount = 0;
-                      int edgeSfIndex =
-                          edgesToMesh[j]->sizing_function_index();
-                      if (edgeSfIndex >= 0)
-                      {
-                        SizingFunction* edgeSf =
-                            mk_core()->sizing_function(edgeSfIndex);
-                        edgeMeshCount = edgeSf->intervals();
+		      int edgeMeshCount = 0;
+		      int edgeSfIndex =
+			  edgesToMesh[j]->sizing_function_index();
+		      if (edgeSfIndex >= 0)
+		      {
+			SizingFunction* edgeSf =
+			    mk_core()->sizing_function(edgeSfIndex);
+			edgeMeshCount = edgeSf->intervals();
 		      }
-                      if (mesh_count != edgeMeshCount)
-                      {
-                        edgesToMesh[j]->mesh_intervals(mesh_count);
-                      }
-                      if (force)
-                      {
-                        // the opposite edge is already meshed, so the number
-                        // of intervals is a hard constraint for this edge
-                        edgesToMesh[j]->interval_firmness(HARD);
-                      }
+		      if (mesh_count != edgeMeshCount)
+		      {
+			edgesToMesh[j]->mesh_intervals(mesh_count);
+		      }
+		      if (force)
+		      {
+			// the opposite edge is already meshed, so the number
+			// of intervals is a hard constraint for this edge
+			edgesToMesh[j]->interval_firmness(HARD);
+		      }
 		      edgesToMesh[j]->add_meshop(em);
 		    }
 		    mk_core()->insert_node(em, (GraphNode*)this,
-                        mk_core()->root_node());
+			mk_core()->root_node());
 		  }
 		} // end loop over pair of opposite edges
 	}
@@ -258,27 +257,27 @@ void TFIMapping::execute_this()
     ModelEnt *me = mit -> first;
     //first check whether the surface is meshed or not
     if (me->get_meshed_state() >= COMPLETE_MESH){
-		
+
 #ifdef HAVE_MESQUITE
-	iBase_EntitySetHandle entityset;
+        iBase_EntitySetHandle entityset;
     iRel::Error r_err = mk_core()->irel_pair(me->iRelPairIndex())->getEntSetRelation(me->geom_handle(), 0, entityset);
-	IBERRCHK(r_err, "Trouble get the entityset w.r.t a surface!");
+        IBERRCHK(r_err, "Trouble get the entityset w.r.t a surface!");
     MeshImprove shapesmooth(mk_core(), false, false, true, false, mk_core()->igeom_instance(me->iGeomIndex()));
     shapesmooth.SurfMeshImprove(me->geom_handle(), entityset, iBase_FACE);
-#endif     
-	
+#endif
+
 	 continue;
 	}
-	
-	MEntVector boundEdges;
+
+        MEntVector boundEdges;
     std::vector<int> senses, group_sizes;
     me->ModelEnt::boundary(1, boundEdges, &senses, &group_sizes);
     set<ModelEnt*> distinctBoundEdges;
     distinctBoundEdges.insert(boundEdges.begin(), boundEdges.end());
     if (distinctBoundEdges.size() == 4)
-    	SurfMapping(me);
+        SurfMapping(me);
     else
-	cylinderSurfMapping(me);
+        cylinderSurfMapping(me);
 
     //ok, we are done, commit to ME
     me->commit_mesh(mit->second, COMPLETE_MESH);
@@ -416,7 +415,7 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
     }
   }
   // done with all the initalizations
-	
+
   // get all the position vectors in 3D
   std::vector<Vector3D> pos_i(size_i), pos_ii(size_ii);
   iGeom::Error g_err =
@@ -485,7 +484,7 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
       c0 = pos_i[i];
       c1 = pos_ii[(i + offset) % size_i];
       Vector3D pts = c0*interpolationFactor + c1*(1.0-interpolationFactor);
-      Vector3D coords; 
+      Vector3D coords;
       g_err = ent->igeom_instance()->getEntClosestPtTrimmed(ent->geom_handle(), pts[0], pts[1], pts[2], coords[0], coords[1], coords[2]);
       if (g_err)
       {
@@ -510,7 +509,7 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
         createdNodes[(k - 1)*(size_i - 1) + i + pastLinkEdgeOffset] =
             interiorNodes[(k - 1)*size_i + i];
       }
-      IBERRCHK(m_err, "Trouble create the interior node.");			
+      IBERRCHK(m_err, "Trouble create the interior node.");
     }
   }
 
@@ -565,7 +564,7 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
   //we will always create them in the positive orientation, because we already reversed the Lists with nodes
   std::vector<iBase_EntityHandle> qNodes(4);//a generic quad
   std::vector<iBase_EntityHandle> Quads(size_i*mesh_count);
-  for (unsigned int k = 0; k < mesh_count; k++){		
+  for (unsigned int k = 0; k < mesh_count; k++){
     for (int i = 0; i < size_i; i++){
       qNodes[0] = Nodes[ k*size_i + i ];
       qNodes[1] = Nodes[ k*size_i + (i + 1)%size_i ];
@@ -580,10 +579,10 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
   m_err = mk_core()->imesh_instance()->addEntArrToSet(&Quads[0], Quads.size(), entityset);
   IBERRCHK(m_err, "Trouble add an array of quads to the mesh entity set.");
   //set int data for quads
-  for (unsigned int i = 0; i < Quads.size(); i++)                               
-  {                                                                             
-    m_err = mk_core()->imesh_instance()->setIntData(Quads[i], mesh_tag, i);     
-    IBERRCHK(m_err, "Trouble set the int data for quadrilateral elements.");    
+  for (unsigned int i = 0; i < Quads.size(); i++)
+  {
+    m_err = mk_core()->imesh_instance()->setIntData(Quads[i], mesh_tag, i);
+    IBERRCHK(m_err, "Trouble set the int data for quadrilateral elements.");
   }
 
   //Get the global id tag
@@ -591,7 +590,7 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
   iBase_TagHandle mesh_id_tag;
   m_err = mk_core()->imesh_instance()->getTagHandle(tag, mesh_id_tag);
   IBERRCHK(m_err, "Trouble get the mesh_id_tag for 'GLOBAL_ID'.");
-	
+
   std::vector<iBase_EntityHandle> m_Nodes, m_Edges, m_Quads;
 
   //set the int data for Global ID tag
@@ -657,7 +656,7 @@ int TFIMapping::cylinderSurfMapping(ModelEnt *ent)
     IBERRCHK(m_err, "Trouble remove the tag values from an array of entities.");
   }
 
-  return 1; 
+  return 1;
 }
 
 /***********************************************************************************/

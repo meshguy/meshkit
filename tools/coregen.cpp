@@ -26,46 +26,35 @@
 #endif
 using namespace MeshKit;
 
-
 void test_coregen_default(int argc, char **argv);
 
 int main(int argc, char *argv[])
 {
-    test_coregen_default(argc, argv);
-    return 0;
+  // serial process
+  int nrank = 0, nprocs =1;
+#ifdef HAVE_PARALLEL_MOAB
+  //Initialize MPI
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &nrank);
+#endif
+
+  MKCore *mk = new MKCore();
+  // create a model entity vector for construting coregen meshop, note that NO model entities are required.
+  MEntVector nullMEntVec;
+
+  // construct the meshop and set name
+  CoreGen *cg = (CoreGen*) mk->construct_meshop("CoreGen", nullMEntVec);
+  cg->set_name("coregen");
+
+  // setup input/output files for creating the 'Reactor Core' model
+  cg->prepareIO(argc, argv, nrank, nprocs, TestDir);
+  mk->setup_and_execute();
+
+#ifdef HAVE_PARALLEL_MOAB
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
+#endif
+  return 0;
 }
-
-void test_coregen_default(int argc, char **argv)
-{
-    // serial process
-    int nrank = 0, nprocs =1;
-#ifdef HAVE_PARALLEL_MOAB
-    //Initialize MPI
-#ifdef HAVE_PARALLEL_MOAB
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &nrank);
-#endif
-#endif
-    MKCore *mk;
-    mk = new MKCore();
-    // create a model entity vector for construting coregen meshop, note that NO model entities are required.
-    MEntVector nullMEntVec;
-
-    // construct the meshop and set name
-    CoreGen *cg = (CoreGen*) mk->construct_meshop("CoreGen", nullMEntVec);
-    cg->set_name("coregen");
-
-    // setup input/output files for creating the 'Reactor Core' model
-    cg->prepareIO(argc, argv, nrank, nprocs, TestDir);
-    mk->setup_and_execute();
-#ifdef HAVE_PARALLEL_MOAB
-#ifdef HAVE_PARALLEL_MOAB
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Finalize();
-#endif
-#endif
-}
-
-
 

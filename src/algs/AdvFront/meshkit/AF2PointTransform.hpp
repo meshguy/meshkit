@@ -16,6 +16,8 @@ class AF2PointTransform
 {
   public:
 
+    virtual ~AF2PointTransform() {}
+
     /**
      * \brief Transform a point based on an AF2Binding
      *

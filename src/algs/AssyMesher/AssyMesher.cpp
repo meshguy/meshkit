@@ -172,7 +172,7 @@ void AssyMesher::setup_this()
       // (2) set sizes on vertical faces and bottom face as needed
       std::vector<iGeom::EntityHandle> regionSurfs;
       igeom->getEntAdj(adjRegionHandle, iBase_FACE, regionSurfs);
-      size_t topFaceIndex, bottomFaceIndex;
+      size_t topFaceIndex=0, bottomFaceIndex=0;
       for (size_t rfi = 0; rfi < regionSurfs.size(); ++rfi)
       {
         iGeom::EntityHandle regionFaceHandle = regionSurfs[rfi];
@@ -282,12 +282,14 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
 {
   // set and open input output files
   bool bDone = false;
-#define EXTENSION ""
 #ifdef HAVE_ACIS
 #define EXTENSION ".sat";
-#endif
+#else
 #ifdef HAVE_OCC
 #define EXTENSION ".brep";
+#else
+#define EXTENSION ""
+#endif
 #endif
   do{
       if (2 == argc) {

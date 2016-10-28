@@ -23,16 +23,16 @@
  * implementation of those functions call into the standard iGeom C functions newGeom and dtor.
  *
  * For complete documentation of these functions, see the iGeom header in the CGM source
- * (http://trac.mcs.anl.gov/projects/ITAPS/browser/cgm/trunk/itaps/iGeom.h for now).
+ * [http://ftp.mcs.anl.gov/pub/fathom/cgm-docs/iGeom_8h.html iGeom]
  */
 
 class iGeom {
 	protected:
 		iGeom_Instance mInstance;
 	public:
-        virtual inline iRel::IfaceType iface_type() const {
-            return iRel::IGEOM_IFACE;
-        }
+	virtual inline iRel::IfaceType iface_type() const {
+	    return iRel::IGEOM_IFACE;
+	}
 
 		typedef iBase_EntitySetHandle EntitySetHandle;
 		typedef iBase_EntityHandle EntityHandle;
@@ -344,19 +344,13 @@ class iGeom {
 				double z);
 		virtual inline Error rotateEnt(EntityHandle entity, double angle,
 				double axis_x, double axis_y, double axis_z);
-#if IBASE_VERSION_GE(1,4,1)
 		virtual inline Error reflectEnt(EntityHandle entity, double x,
-                                double y, double z, double norm_x,
-                                double norm_y, double norm_z);
-		virtual inline Error scaleEnt(EntityHandle entity, double x,
-                                double y, double z, double x_factor,
-				double y_factor, double z_factor);
-#else
-		virtual inline Error reflectEnt(EntityHandle entity, double norm_x,
+				double y, double z, double norm_x,
 				double norm_y, double norm_z);
-		virtual inline Error scaleEnt(EntityHandle entity, double x_factor,
+		virtual inline Error scaleEnt(EntityHandle entity, double x,
+				double y, double z, double x_factor,
 				double y_factor, double z_factor);
-#endif
+
 		virtual inline Error uniteEnts(const EntityHandle* entities,
 				int entities_size, EntityHandle& result_entity);
 		virtual inline Error subtractEnts(EntityHandle blank, EntityHandle tool,
@@ -516,7 +510,7 @@ class iGeom {
 		virtual inline Error getData(EntityHandle entity_handle, TagHandle tag_handle,
 				void* tag_value_out) const;
 		virtual inline Error getFacets(EntityHandle entity_handle, double dist_tolerance,
-                                                   std::vector<double> &point, std::vector<int> &facets) const;
+						   std::vector<double> &point, std::vector<int> &facets) const;
 		virtual inline Error getIntData(EntityHandle entity_handle, TagHandle tag_handle,
 				int& value_out) const;
 		virtual inline Error getDblData(EntityHandle entity_handle, TagHandle tag_handle,
@@ -954,7 +948,7 @@ inline iGeom::Error iGeom::getEntClosestPtTrimmed(EntityHandle entity, double ne
 {
     int err;
     iGeom_getEntClosestPtTrimmed(mInstance, entity, near_x, near_y, near_z, &on_x, &on_y, &on_z, &err);
-    return (Error) err;    
+    return (Error) err;
 }
 
 inline iGeom::Error iGeom::getArrClosestPt(const EntityHandle* handles,
@@ -1786,7 +1780,6 @@ inline iGeom::Error iGeom::rotateEnt(EntityHandle entity, double angle,
      iGeom_rotateEnt(mInstance, entity, angle, axis_x, axis_y, axis_z, &err);
      return (Error) err;
 }
-#if IBASE_VERSION_GE(1,4,1)
 inline iGeom::Error iGeom::reflectEnt(EntityHandle entity, double x,
                                       double y, double z, double norm_x,
                                       double norm_y, double norm_z)
@@ -1804,23 +1797,7 @@ inline iGeom::Error iGeom::scaleEnt(EntityHandle entity, double x,
      iGeom_scaleEnt(mInstance, entity, x, y, z, x_factor, y_factor, z_factor, &err);
      return (Error) err;
 }
-#else
-inline iGeom::Error iGeom::reflectEnt(EntityHandle entity, double norm_x,
-                                      double norm_y, double norm_z)
-{
-     int err;
-     iGeom_reflectEnt(mInstance, entity, norm_x, norm_y, norm_z, &err);
-     return (Error) err;
-}
 
-inline iGeom::Error iGeom::scaleEnt(EntityHandle entity, double x_factor,
-                                    double y_factor, double z_factor)
-{
-     int err;
-     iGeom_scaleEnt(mInstance, entity, x_factor, y_factor, z_factor, &err);
-     return (Error) err;
-}
-#endif
 inline iGeom::Error iGeom::uniteEnts(const EntityHandle* entities,
                                      int entities_size, EntityHandle& result_entity)
 {
@@ -2423,16 +2400,16 @@ iGeom::Error iGeom::getFacets(EntityHandle entity_handle, double dist_tolerance,
 {
   // try getting results using whatever space input vector has allocated
   bool already_allocd = false;
-  int err, points_size = 0, points_alloc = points.capacity(), 
+  int err, points_size = 0, points_alloc = points.capacity(),
     facets_size = 0, facets_alloc = facets.capacity();
   if (points_alloc && !facets_alloc) points_alloc = 0;
   else if (!points_alloc && facets_alloc) facets_alloc = 0;
   if (points_alloc && facets_alloc) already_allocd = true;
   double *points_ptr = (points_alloc ? &points[0] : NULL);
   int *facets_ptr = (facets_alloc ? &facets[0] : NULL);
-  iGeom_getFacets(mInstance, entity_handle, dist_tolerance, 
-		  &points_ptr, &points_alloc, &points_size, 
-		  &facets_ptr, &facets_alloc, &facets_size, &err);
+  iGeom_getFacets(mInstance, entity_handle, dist_tolerance,
+                  &points_ptr, &points_alloc, &points_size,
+                  &facets_ptr, &facets_alloc, &facets_size, &err);
 
   if (iBase_SUCCESS == err && already_allocd) {
     points.resize(points_size);
@@ -2443,9 +2420,9 @@ iGeom::Error iGeom::getFacets(EntityHandle entity_handle, double dist_tolerance,
   // if input vector was too small, try again requesting allocation
     points_alloc = 0; points_ptr = NULL;
     facets_alloc = 0; facets_ptr = NULL;
-    iGeom_getFacets(mInstance, entity_handle, dist_tolerance, 
-		    &points_ptr, &points_alloc, &points_size, 
-		    &facets_ptr, &facets_alloc, &facets_size, &err);
+    iGeom_getFacets(mInstance, entity_handle, dist_tolerance,
+                    &points_ptr, &points_alloc, &points_size,
+                    &facets_ptr, &facets_alloc, &facets_size, &err);
   }
 
   if (iBase_SUCCESS == err) {

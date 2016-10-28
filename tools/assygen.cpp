@@ -12,20 +12,10 @@
 
 using namespace MeshKit;
 
-MKCore *mk;
-
-void test_assygen_default(int argc, char **argv);
-
 int main(int argc, char *argv[])
 {
-  mk = new MKCore();
-  test_assygen_default(argc, argv);
-  delete mk;
-  return 0;
-}
+  MKCore *mk = new MKCore();
 
-void test_assygen_default(int argc, char **argv)
-{
   // create a model entity vector for construting assygen meshop, note that NO model entities are required for assygen meshop.
   MEntVector volso;
 
@@ -37,7 +27,8 @@ void test_assygen_default(int argc, char **argv)
   ag->PrepareIO(argc, argv, TestDir);
   ag->setup_this();
   ag->execute_this();
+
+  delete mk;
+  return 0;
 }
-
-
 

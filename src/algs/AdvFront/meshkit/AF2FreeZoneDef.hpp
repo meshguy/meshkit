@@ -18,6 +18,8 @@ class AF2FreeZoneDef
 {
   public:
 
+    virtual ~AF2FreeZoneDef() {}
+
     /**
      * \brief Make and return an independent copy of yourself.
      *

@@ -1,5 +1,5 @@
-#ifndef MESHKIT_ITAPS_FBGEOM_HPP
-#define MESHKIT_ITAPS_FBGEOM_HPP
+#ifndef MESHKIT_ITAPS_FBIGEOM_HPP
+#define MESHKIT_ITAPS_FBIGEOM_HPP
 
 /** \file FBiGeom.hpp
  */
@@ -21,17 +21,16 @@
  *
  * For complete documentation of these functions, see the FBiGeom header in the
  * MOAB source
- * (http://trac.mcs.anl.gov/projects/ITAPS/browser/MOAB/trunk/itaps/igeom/FBiGeom.h
- * for now).
+ * [http://ftp.mcs.anl.gov/pub/fathom/moab-docs/FBiGeom_8h.html FBiGeom]
  */
 
 class FBiGeom : public iGeom {
 	protected:
 		FBiGeom_Instance mInstance;
 	public:
-        virtual inline iRel::IfaceType iface_type() const {
-            return iRel::FBIGEOM_IFACE;
-        }
+	virtual inline iRel::IfaceType iface_type() const {
+	    return iRel::FBIGEOM_IFACE;
+	}
 
 		typedef iBase_EntitySetHandle EntitySetHandle;
 		typedef iBase_EntityHandle EntityHandle;
@@ -341,10 +340,12 @@ class FBiGeom : public iGeom {
 				double z);
 		virtual inline Error rotateEnt(EntityHandle entity, double angle,
 				double axis_x, double axis_y, double axis_z);
-		virtual inline Error reflectEnt(EntityHandle entity, double norm_x,
-				double norm_y, double norm_z);
-		virtual inline Error scaleEnt(EntityHandle entity, double x_factor,
-				double y_factor, double z_factor);
+		virtual inline Error reflectEnt(EntityHandle entity, double x,
+						double y, double z, double norm_x,
+						double norm_y, double norm_z);
+		virtual inline Error scaleEnt(EntityHandle entity, double x,
+					      double y, double z, double x_factor,
+					      double y_factor, double z_factor);
 
 		virtual inline Error uniteEnts(const EntityHandle* entities,
 				int entities_size, EntityHandle& result_entity);
@@ -505,7 +506,7 @@ class FBiGeom : public iGeom {
 		virtual inline Error getData(EntityHandle entity_handle, TagHandle tag_handle,
 				void* tag_value_out) const;
 		virtual inline Error getFacets(EntityHandle entity_handle, double dist_tolerance,
-        std::vector<double> &point, std::vector<int> &facets) const;
+	std::vector<double> &point, std::vector<int> &facets) const;
 		virtual inline Error getIntData(EntityHandle entity_handle, TagHandle tag_handle,
 				int& value_out) const;
 		virtual inline Error getDblData(EntityHandle entity_handle, TagHandle tag_handle,
@@ -520,17 +521,17 @@ class FBiGeom : public iGeom {
 		/** \class EntArrIter FBiGeom.hpp "FBiGeom.hpp"
 		 * \brief Class for iterating over %FBiGeom entity arrays.
 		 */
-		class EntArrIter {
+		class FBEntArrIter {
 			private:
 				friend class FBiGeom;
 				iBase_EntityArrIterator mHandle;
 				FBiGeom_Instance mInstance;
 				int mSize;
 			public:
-				EntArrIter() :
+				FBEntArrIter() :
 					mHandle(0), mInstance(0), mSize(0) {
 					}
-				inline ~EntArrIter();
+				inline ~FBEntArrIter();
 				inline Error getNext(EntityHandle* entity_handles_out, int& size_out,
 						bool& has_more_data_out);
 				inline Error reset();
@@ -539,25 +540,25 @@ class FBiGeom : public iGeom {
 		/** \class EntIter FBiGeom.hpp "FBiGeom.hpp"
 		 * \brief Class for iterating over %FBiGeom entities.
 		 */
-		class EntIter {
+		class FBEntIter {
 			private:
 				friend class FBiGeom;
 				iBase_EntityIterator mHandle;
 				FBiGeom_Instance mInstance;
 			public:
-				EntIter() :
+				FBEntIter() :
 					mHandle(0), mInstance(0) {
 					}
-				inline ~EntIter();
+				inline ~FBEntIter();
 				inline Error getNext(EntityHandle& entity_handle_out,
 						bool& has_more_data_out);
 				inline Error reset();
 		};
 
-		virtual inline Error initEntIter(EntitySetHandle set,
-				EntityType requested_type, EntIter& iter);
-		virtual inline Error initEntArrIter(EntitySetHandle set,
-				EntityType requested_type, int requested_array_size, EntArrIter& iter);
+		virtual inline Error initFBEntIter(EntitySetHandle set,
+				EntityType requested_type, FBEntIter& iter);
+		virtual inline Error initFBEntArrIter(EntitySetHandle set,
+				EntityType requested_type, int requested_array_size, FBEntArrIter& iter);
 	private:
 		bool FBiGeomInstanceOwner;
 
@@ -689,8 +690,8 @@ inline FBiGeom::Error FBiGeom::deleteEnt(EntityHandle handle)
 //                    adj_entity_handles, &offset[0] );
 //}
 
-inline FBiGeom::Error FBiGeom::initEntIter(EntitySetHandle set,
-		EntityType requested_type, FBiGeom::EntIter& iter)
+inline FBiGeom::Error FBiGeom::initFBEntIter(EntitySetHandle set,
+		EntityType requested_type, FBiGeom::FBEntIter& iter)
 {
 	int err;
 	iter.mInstance = mInstance;
@@ -698,9 +699,9 @@ inline FBiGeom::Error FBiGeom::initEntIter(EntitySetHandle set,
 	return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::initEntArrIter(EntitySetHandle set,
+inline FBiGeom::Error FBiGeom::initFBEntArrIter(EntitySetHandle set,
 		EntityType requested_type, int requested_array_size,
-		FBiGeom::EntArrIter& iter)
+		FBiGeom::FBEntArrIter& iter)
 {
 	int err;
 	iter.mInstance = mInstance;
@@ -710,7 +711,7 @@ inline FBiGeom::Error FBiGeom::initEntArrIter(EntitySetHandle set,
 	return (Error) err;
 }
 
-inline FBiGeom::EntArrIter::~EntArrIter()
+inline FBiGeom::FBEntArrIter::~FBEntArrIter()
 {
 	int err;
 	if (mHandle != 0) {
@@ -719,7 +720,7 @@ inline FBiGeom::EntArrIter::~EntArrIter()
 	}
 }
 
-inline FBiGeom::EntIter::~EntIter()
+inline FBiGeom::FBEntIter::~FBEntIter()
 {
 	int err;
 	if (mHandle != 0) {
@@ -728,7 +729,7 @@ inline FBiGeom::EntIter::~EntIter()
 	}
 }
 
-inline FBiGeom::Error FBiGeom::EntArrIter::getNext(EntityHandle* entity_handles,
+inline FBiGeom::Error FBiGeom::FBEntArrIter::getNext(EntityHandle* entity_handles,
 		int& size_out, bool& has_more_data_out)
 {
 	int err, alloc = mSize, has_data;
@@ -738,7 +739,7 @@ inline FBiGeom::Error FBiGeom::EntArrIter::getNext(EntityHandle* entity_handles,
 	return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::EntIter::getNext(EntityHandle& handle_out,
+inline FBiGeom::Error FBiGeom::FBEntIter::getNext(EntityHandle& handle_out,
 		bool& has_more_data_out)
 {
 	int err, has_data;
@@ -747,14 +748,14 @@ inline FBiGeom::Error FBiGeom::EntIter::getNext(EntityHandle& handle_out,
 	return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::EntArrIter::reset()
+inline FBiGeom::Error FBiGeom::FBEntArrIter::reset()
 {
 	int err;
 	FBiGeom_resetEntArrIter(mInstance, mHandle, &err);
 	return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::EntIter::reset()
+inline FBiGeom::Error FBiGeom::FBEntIter::reset()
 {
 	int err;
 	FBiGeom_resetEntIter(mInstance, mHandle, &err);
@@ -943,7 +944,7 @@ inline FBiGeom::Error FBiGeom::getEntClosestPtTrimmed(EntityHandle entity, doubl
 {
     int err=0;
     FBiGeom_getEntClosestPtTrimmed(mInstance, entity, near_x, near_y, near_z, &on_x, &on_y, &on_z, &err);
-    return (Error) err;    
+    return (Error) err;
 }
 
 inline FBiGeom::Error FBiGeom::getArrClosestPt(const EntityHandle* handles,
@@ -1767,19 +1768,21 @@ inline FBiGeom::Error FBiGeom::rotateEnt(EntityHandle entity, double angle,
      return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::reflectEnt(EntityHandle entity, double norm_x,
-                                      double norm_y, double norm_z)
+inline FBiGeom::Error FBiGeom::reflectEnt(EntityHandle entity, double x,
+                                          double y, double z, double norm_x,
+                                          double norm_y, double norm_z)
 {
      int err;
-     FBiGeom_reflectEnt(mInstance, entity, norm_x, norm_y, norm_z, &err);
+     FBiGeom_reflectEnt(mInstance, entity, x, y, z, norm_x, norm_y, norm_z, &err);
      return (Error) err;
 }
 
-inline FBiGeom::Error FBiGeom::scaleEnt(EntityHandle entity, double x_factor,
-                                    double y_factor, double z_factor)
+inline FBiGeom::Error FBiGeom::scaleEnt(EntityHandle entity, double x,
+                                        double y, double z, double x_factor,
+                                        double y_factor, double z_factor)
 {
      int err;
-     FBiGeom_scaleEnt(mInstance, entity, x_factor, y_factor, z_factor, &err);
+     FBiGeom_scaleEnt(mInstance, entity, x, y, z, x_factor, y_factor, z_factor, &err);
      return (Error) err;
 }
 
@@ -2381,7 +2384,7 @@ FBiGeom::getIntArrData( const EntityHandle* entity_handles,
 }
 
 FBiGeom::Error FBiGeom::getFacets(EntityHandle entity_handle, double dist_tolerance,
-				  std::vector<double> &point, std::vector<int> &facets) const
+                                  std::vector<double> &point, std::vector<int> &facets) const
 {
      int err=1; //, alloc_f = std::numeric_limits<int>::max(),
                         //alloc_p = std::numeric_limits<double>::max(), size_f, size_p;

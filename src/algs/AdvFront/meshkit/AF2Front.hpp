@@ -84,7 +84,7 @@ class AF2Front : QualityDecreaseObserver
      * Deletes any remaining edges that this front owns due to calls to
      * advanceFront.
      */
-    ~AF2Front();
+    virtual ~AF2Front();
 
     /**
      * \brief Copy constructor (throws exception)
