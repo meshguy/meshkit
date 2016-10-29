@@ -21,6 +21,8 @@ if HAVE_NETGEN
 SUBDIRS += netgen
 LIBADD += netgen/libMeshKitnetgen.la
 AM_CPPFLAGS += -I$(srcdir)/netgen $(NETGEN_CPPFLAGS) -DHAVE_NETGEN
+#for making native triangle mesher available here
+AM_CPPFLAGS += -I$(srcdir)/../../algs/AdvFront
 LIBS += $(NETGEN_LIBS)
 endif
 
