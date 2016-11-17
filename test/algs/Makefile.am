@@ -3,7 +3,7 @@ MOSTLYCLEANFILES = 5bout.h5m AfterOneSetup.eps AfterTFISetup.eps AfterWinslow.vt
 BeforeVolumeImprove.h5m InitialMapping.vtk OneToOneSwept.h5m SCDmesh.h5m SCDmesh1.vtk SCDmesh2.vtk \
 SCDmesh3.vtk TFIMapping.vtk assygen_default.jou assygen_default.brep assygen_default_info.csv assygen_default.sat assygen_default.template.jou graph.eps \
 intassign.h5m mesquite.gpt test.h5m volumesIce.h5m OneToOneSwept.vtk test_postbl.inp.log 5bout.exo ebmesh_out.vtk input.vtk assygen_default.stp cyl_mod.h5m \
-btree.dot out_quadcleanup.vtk alllocal.off orig.vtk assygen_default.log test_assymesher.log assygen_default.py
+btree.dot out_quadcleanup.vtk alllocal.off orig.vtk assygen_default.log test_assymesher.log assygen_default.py brickedges.h5m
 
 LDADD = $(top_builddir)/src/libMeshKit.la
 
@@ -87,8 +87,12 @@ check_PROGRAMS = $(TESTS) $(BROKEN_TESTS)
 
 # these tests should be launched for facet engine too
 
-TESTS += test_edgemesher
+TESTS += test_edgemesher \
+         test_assygen \
+         test_postbl
 test_edgemesher_SOURCES = test_edgemesher.cpp
+test_assygen_SOURCES = test_assygen.cpp
+test_postbl_SOURCES = test_postbl.cpp
 
 if HAVE_OCC_GEOMETRY_ENGINE
 
@@ -104,8 +108,6 @@ TESTS += test_tfimapping \
         test_meshoptemplate \
         test_extrudemesh \
         test_qslimmesher \
-        test_assygen \
-        test_postbl \
         test_facetmeshreader \
         test_facetmeshreader_senses
 
@@ -130,8 +132,6 @@ test_copygeom_SOURCES = test_copygeom.cpp
 test_extrudemesh_SOURCES = test_extrudemesh.cpp
 test_scdmesh_SOURCES = test_scdmesh.cpp
 test_qslimmesher_SOURCES = test_qslimmesher.cpp
-test_assygen_SOURCES = test_assygen.cpp
-test_postbl_SOURCES = test_postbl.cpp
 
 if HAVE_CAMAL_PAVER
 AM_CPPFLAGS += -I$(top_srcdir)/src/algs/AssyMesher
