@@ -271,6 +271,8 @@ namespace MeshKit
     std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
             << std::endl;
 
+// filename to be saved with cubit journal file
+    m_szGeomFile1 = m_szFile+".sat";
 
     //ACIS ENGINE
 #ifdef HAVE_ACIS
@@ -281,8 +283,7 @@ namespace MeshKit
     //  OCC ENGINE
     //  if (m_szEngine == "occ"){
     m_szGeomFile = m_szFile+".brep";
-    m_szGeomFile1 = m_szFile+".sat";
-    //  }o
+    //  }
 #endif
     std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
@@ -350,22 +351,14 @@ namespace MeshKit
     m_PyCubGeomFile << "\ncubit.cmd('reset')" << std::endl;
 
 
-    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
     m_FileOutput << "#" << std::endl;
     m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
     m_FileOutput << "Timer Start" << std::endl;
     // import the geometry file
     m_FileOutput << "# Import geometry file " << std::endl;
-    //ACIS ENGINE
-#ifdef HAVE_ACIS
-    m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
-
-#elif defined(HAVE_OCC)
-    //  OCC ENGINE
     // Use sat file always as step isn't supported
     m_FileOutput << "import '" << m_szGeomFile1 <<"'" << std::endl;
-#endif
-
+    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
     m_FileOutput << "#" << std::endl;
 
   }

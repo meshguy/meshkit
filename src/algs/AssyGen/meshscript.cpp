@@ -36,23 +36,32 @@ void AssyGen::CreateCubitJournal()
 
   // if creating only journal file load the geometry file to compute bounding box for automatic size specification
   if(m_nJouFlag == 1){
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
       iGeom_load(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
-      ////CHECK("Failed to load geometry.");
+#endif
     }
 
   // get the max and min coordinates of the geometry
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
   double x1, y1, z1, x2, y2, z2;
   iGeom_getBoundBox( igeomImpl->instance(), &x1, &y1, &z1, &x2, &y2, &z2, &err );
-  //CHECK( "Problems getting bouding box." );
+#endif
 
   int nSideset=m_nNeumannSetId;
+
+  m_SchemesFile << "group \"gall\" add vol all\n#{gtempid = Id(\"group\")}\n" << std::endl;
+  m_SchemesFile << "#{Zmax = BBox_ZMax(\"group\", gtempid)}" << std::endl;
+  m_SchemesFile << "#{Zmin = BBox_ZMin(\"group\", gtempid)}" << std::endl;
+
   std::string szGrp, szBlock, szSurfTop, szSurfBot, szSize, szSurfSide;
   double dHeight = 0.0, dMid = 0.0;
   int nTemp = 1;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
   if(m_nDimensions > 0){
       dHeight= fabs(z2 - z1);
       dMid = z2 - dHeight/2.0;
     }
+#endif
 
   // writing to template.jou
   m_SchemesFile << "## This file is created by rgg program in MeshKit ##\n";
@@ -77,9 +86,8 @@ void AssyGen::CreateCubitJournal()
         }
     }
   if( m_nPlanar ==0){
-      m_SchemesFile << "#{Z_HEIGHT = " << dHeight << "}" << std::endl;
-      m_SchemesFile << "#{Z_MID = " << dMid << "}" << std::endl;
-
+      m_SchemesFile << "#{Z_HEIGHT = Zmax - Zmin}" << std::endl;
+      m_SchemesFile << "#{Z_MID = (Zmax + Zmin)/2.0}" << std::endl;
     }
   m_SchemesFile << "##Set Mesh Sizes" << std::endl;
 
@@ -336,13 +344,13 @@ void AssyGen::CreateCubitJournal()
               m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
               m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
               m_FileOutput << "#{endif}"  << std::endl;
-              m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+              m_FileOutput << "mesh surface with z_coord = {Zmax}" << std::endl;
             }
           else if (m_nBLAssemblyMat != 0){ // mesh by spefifying boundary layers or mesh partially
               m_FileOutput << "group 'tmpgrp' equals surface name '_top'" << std::endl;
               m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
               m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
-              m_FileOutput << "group 'tmpgrp3' equals surface in tmpgrp2 with z_coord = " << z2 << std::endl;
+              m_FileOutput << "group 'tmpgrp3' equals surface in tmpgrp2 with z_coord = {Zmax}" << std::endl;
 
               m_FileOutput << "surface in tmpgrp3  size {"  << szSize <<"}" << std::endl;
               m_FileOutput << "surface in tmpgrp3 scheme {" << "PAVE" << "}"  << std::endl;
@@ -353,7 +361,7 @@ void AssyGen::CreateCubitJournal()
               m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
               m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
               m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
-              m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
+              m_FileOutput << "mesh surface with z_coord = {Zmax}" << std::endl;
             }
         }
       // This part is for mesh top surfaces only when boundary layer surfaces are specified
@@ -370,7 +378,7 @@ void AssyGen::CreateCubitJournal()
               if (duct){                 //We want to use this part with pair node only for ducts and not cylinderical pins so check if this material is duct or not
                   if (m_edgeInterval != 99)
                     m_FileOutput << "curve in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces interval {TOP_EDGE_INTERVAL}"<< std::endl;
-                  m_FileOutput << "mesh vertex in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+                  m_FileOutput << "mesh vertex in surf in " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = {Z_max}" << std::endl;
                   m_FileOutput << "#{corner1 = Id('node')} " << std::endl;
                   m_FileOutput << "group 'gcurves' equals curve in surface in " << m_szBLAssmMat(ll) << "_hole_surfaces'" << std::endl;
                   m_FileOutput << "#{_cntr=0} " << "\n" <<
@@ -409,11 +417,11 @@ void AssyGen::CreateCubitJournal()
                                << m_nBLMatIntervals(ll) << " bias " << m_dBLMatBias(ll) << std::endl;
                 }
 
-              m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = " << z2 << std::endl;
+              m_FileOutput << "mesh surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces with z_coord = {Z_max}" << std::endl;
               if(strcmp(m_szSmooth.c_str(),"on") == 0)
                 m_FileOutput << "smooth surf in group " << m_szBLAssmMat(ll) << "_hole_surfaces" << std::endl;
             }
-          m_FileOutput << "mesh surf in innerduct with z_coord = " << z2 << std::endl;
+          m_FileOutput << "mesh surf in innerduct with z_coord = {Z_max}" << std::endl;
         }
 
       if(m_nPlanar == 0){ // volumes only
@@ -654,7 +662,7 @@ void AssyGen::CreateCubitJournal()
                   for (int u=1; u<=6;u++){
                       m_FileOutput << "group 'tmpgrp" << u <<"' equals surf with name '" << szSurfSide << u << "'" << std::endl;
                     }
-                  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp1 tmpgrp2 tmpgrp3 tmpgrp4 tmpgrp5 tmpgrp6'" << std::endl;
+                  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp1 tmpgrp2 tmpgrp3 tmpgrp4 tmpgrp5 tmpgrp6" << std::endl;
                   m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "1_ss\"" << std::endl;
                   ++nSideset;
                 }
@@ -662,7 +670,7 @@ void AssyGen::CreateCubitJournal()
                   for (int u=7; u<=12;u++){
                       m_FileOutput << "group 'tmpgrp" << u <<"' equals surf with name '" << szSurfSide << "_" << u << "'" << std::endl;
                     }
-                  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp7 tmpgrp8 tmpgrp9 tmpgrp10 tmpgrp11 tmpgrp12'" << std::endl;
+                  m_FileOutput << "sideset " << nSideset << " surface in tmpgrp7 tmpgrp8 tmpgrp9 tmpgrp10 tmpgrp11 tmpgrp12" << std::endl;
                   m_FileOutput << "sideset " << nSideset << " name \"" << szSurfSide << "2_ss\"" << std::endl;
                 }
               if(m_szGeomType == "rectangular"){
