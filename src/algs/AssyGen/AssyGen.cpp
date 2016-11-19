@@ -1906,7 +1906,7 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    double xmin, xmax, ymin, ymax, zmin, zmax, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;
+        double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0, zmin = 0.0, zmax = 0.0, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;    
     // position the assembly such that origin is at the center before sa
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getBoundBox(igeomImpl->instance(),&xmin,&ymin,&zmin,
@@ -1968,7 +1968,8 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    double xmin, xmax, ymin, ymax, zmin, zmax, yzplane = 0.0, xzplane = 0.0;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)    
+    double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0, zmin = 0.0, zmax = 0.0, yzplane = 0.0, xzplane = 0.0;
     iBase_EntityHandle sec = NULL;
     int nReverse = 0;
     // check if reverse side is needed
@@ -1984,54 +1985,39 @@ namespace MeshKit
         xzplane = 1.0;
       }
     SimpleArray<iBase_EntityHandle> all;
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-#endif
     // loop and section/delete entities
     for(int i=0; i < all.size(); i++){
         //get the bounding box to decide
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_getEntBoundBox(igeomImpl->instance(),all[i],&xmin,&ymin,&zmin,
                              &xmax,&ymax,&zmax, &err);
-#endif
 
         if(xmin > dOffset && yzplane ==1 && nReverse ==1){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-#endif
             continue;
           }
         if(ymin > dOffset && xzplane == 1 && nReverse ==1){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-#endif
             continue;
           }
         if(xmax < dOffset && yzplane ==1 && nReverse ==0){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-#endif
             continue;
           }
         if(ymax < dOffset && xzplane == 1 && nReverse ==0){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_deleteEnt(igeomImpl->instance(),all[i],&err);
-#endif
             continue;
           }
         else{
             if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset, nReverse,&sec,&err);
-#endif
               }
             if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_sectionEnt(igeomImpl->instance(), all[i],yzplane,xzplane,0, dOffset,nReverse,&sec,&err);
-#endif
               }
           }
       }
+#endif    
   }
 
   void AssyGen::Rotate_Assm (char &cDir, double &dAngle)
@@ -2366,9 +2352,8 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    iBase_TagHandle this_tag;
-    char* tag_name =(char *)"NAME";
+    double zmin = 0.0, zmax = 0.0;
+    iBase_TagHandle this_tag = NULL;
     std::string sMatName = "";
     std::string sMatName0 = "";
     std::string sMatName1 = "";
@@ -2376,6 +2361,7 @@ namespace MeshKit
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
+    char* tag_name =(char *)"NAME";    
     iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
 #endif
     iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
@@ -2422,6 +2408,7 @@ namespace MeshKit
             std::ostringstream os;
             for (int i = 0; i < edges.size(); ++i){
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
+                double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0;
                 iGeom_getEntBoundBox(igeomImpl->instance(), edges[i],&xmin,&ymin,&zmin,
                                      &xmax,&ymax,&zmax, &err);
 #endif
@@ -2527,7 +2514,7 @@ namespace MeshKit
             std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
             //#if HAVE_ACIS
-            iBase_EntityHandle unite= NULL, tmp_new1;
+            iBase_EntityHandle unite= NULL, tmp_new1 = NULL;
 
             // if there are more than one pins
             if( cp_inpins[k-1].size() > 1){
@@ -2610,11 +2597,11 @@ namespace MeshKit
 
     if(if_merge == true){
         // merge tolerance
-        double dTol = 1e-4;
         // now  merge
         std::cout << "\n\nMerging...." << std::endl;
         clock_t s_merge = clock();
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
+        double dTol = 1e-4;        
         iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
 #endif
         std::cout << "## Merge CPU time used := " << (double) (clock() - s_merge)/CLOCKS_PER_SEC
@@ -2631,15 +2618,15 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)    
     std::cout << "Creating surface; 2D assembly specified..." << std::endl;
     SimpleArray<iBase_EntityHandle>  all_geom;
     SimpleArray<iBase_EntityHandle> surfs;
-    int *offset = NULL, offset_alloc = 0, offset_size;
     int t=0;
     SimpleArray<double> max_corn, min_corn;
 
     // get all the entities in the model (delete after making a copy of top surface)
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
+    int *offset = NULL, offset_alloc = 0, offset_size = -1;    
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
 
     // get all the surfaces in the model
@@ -2650,7 +2637,6 @@ namespace MeshKit
                           ARRAY_INOUT( min_corn ),
                           ARRAY_INOUT( max_corn ),
                           &err );
-#endif
 
     // find the number of surfaces 't' for array allocation
     int nTemp = 1;
@@ -2678,32 +2664,26 @@ namespace MeshKit
 
     // make a copy of max_surfs
     for(int i = 0; i < max_surfs.size(); ++i){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_copyEnt(igeomImpl->instance(), max_surfs[i], &new_surfs[i], &err);
-#endif
       }
 
     // delete all the old ents
     for(int i=0; i<all_geom.size(); i++){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_deleteEnt(igeomImpl->instance(), all_geom[i], &err);
-#endif
       }
     // position the final assembly at the center
     // get the assembly on z=0 plane
+
     double zcenter = m_dMZAssm(nTemp, 2)/2.0;//move up
     SimpleArray<iBase_EntityHandle> all;
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-#endif
 
     for(int i=0; i<all.size(); i++){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_moveEnt(igeomImpl->instance(),all[i],0,0,-zcenter,&err);
-#endif
       }
-    std::cout << "--------------------------------------------------"<<std::endl;
-
     free(offset);
+#endif
+    std::cout << "-----Done creating 2D surface-----"<<std::endl;
+    
   }
 }

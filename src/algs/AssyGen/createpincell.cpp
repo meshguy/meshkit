@@ -20,7 +20,6 @@ namespace MeshKit
     std::vector<iBase_EntityHandle> cp_in;
     // name tag handle
     iBase_TagHandle this_tag= NULL;
-    char* tag_name = (char*)"NAME";
 
     std::string sMatName = "";
     std::string sMatName1 = "";
@@ -37,6 +36,7 @@ namespace MeshKit
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
+    char* tag_name = (char*)"NAME";    
     iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
 #endif
 
@@ -500,8 +500,6 @@ namespace MeshKit
 
     // name tag handle
     iBase_TagHandle this_tag= NULL;
-    char* tag_name = (char*)"NAME";
-
     std::string sMatName = "";
     std::string sMatName0 = "";
     std::string sMatName1 = "";
@@ -518,6 +516,7 @@ namespace MeshKit
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
+    char* tag_name = (char*)"NAME";    
     iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
 #endif
 
@@ -594,7 +593,8 @@ namespace MeshKit
                 SimpleArray<iBase_EntityHandle> cyls(nRadii);
                 SimpleArray<iBase_EntityHandle> cell_copys(nRadii);
                 SimpleArray<iBase_EntityHandle> intersec_main(nRadii);
-                iBase_EntityHandle  tmp_intersec;
+                iBase_EntityHandle  tmp_intersec = NULL;
+                (void) tmp_intersec;
                 //declare variables
                 CVector<double> dVCylRadii(2*nRadii);
                 CVector<std::string> szVMat(nRadii);
@@ -809,8 +809,8 @@ namespace MeshKit
             if(m_szGeomType =="hexagonal"){
 
                 m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
-                double dSide = dP/(sqrt(3));
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
+                double dSide = dP/(sqrt(3));                
                 iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
                                   dSide, dSide,
                                   &cell, &err);
@@ -841,7 +841,8 @@ namespace MeshKit
 
                 //declare variables
                 SimpleArray<iBase_EntityHandle> cyls(nRadii), cell_copys(nRadii), intersec_main(nRadii), intersec_copy(nRadii);
-                iBase_EntityHandle  tmp_intersec;
+                iBase_EntityHandle  tmp_intersec = NULL;
+                (void) tmp_intersec;
                 CVector<double> dVCylRadii(2*nRadii);
                 CVector<std::string> szVMat(nRadii), szVCylMat(nRadii);
                 int nType = 0;
