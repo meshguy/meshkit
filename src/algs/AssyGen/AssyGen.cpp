@@ -1906,12 +1906,11 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-        double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0, zmin = 0.0, zmax = 0.0, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;    
-    // position the assembly such that origin is at the center before sa
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
+    double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0, zmin = 0.0, zmax = 0.0, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;
+    // position the assembly such that origin is at the center before sa
     iGeom_getBoundBox(igeomImpl->instance(),&xmin,&ymin,&zmin,
                       &xmax,&ymax,&zmax, &err);
-#endif
     // moving all geom entities to center
 
 
@@ -1931,14 +1930,12 @@ namespace MeshKit
       }
 
     SimpleArray<iBase_EntityHandle> all;
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-#endif
     for(int i=0; i<all.size(); i++){
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_moveEnt(igeomImpl->instance(),all[i],-xcenter,-ycenter,-zcenter,&err);
-#endif
       }
+#endif
+
     // OCC bounding box computation is buggy, better to compute bounding box in python and supply to the script.
     m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
     m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
@@ -2027,6 +2024,9 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
+    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle " << dAngle << " about {0}'.format(cDir))" << std::endl;
+
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     double dX = 0.0, dY=0.0, dZ=0.0;
     if( cDir =='x'){
         dX = 1.0;
@@ -2038,20 +2038,15 @@ namespace MeshKit
         dZ = 1.0;
       }
     SimpleArray<iBase_EntityHandle> all;
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-#endif
-    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle " << dAngle << " about {0}'.format(cDir))" << std::endl;
 
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
         //get the bounding box to decide
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_rotateEnt(igeomImpl->instance(),all[i],dAngle,
                         dX, dY, dZ, &err);
-#endif
       }
-
+#endif
   }
 
   void AssyGen::Move_Assm (double &dX,double &dY, double &dZ)
@@ -2507,6 +2502,7 @@ namespace MeshKit
               }
 
             iBase_EntityHandle tmp_vol = NULL;
+            (void) tmp_vol;
             tmp_vol = assms[(k-1)*m_nDimensions];
             m_PyCubGeomFile << "tmp_vol = assms[" << k << "]" << std::endl;
 
@@ -2515,6 +2511,7 @@ namespace MeshKit
 
             //#if HAVE_ACIS
             iBase_EntityHandle unite= NULL, tmp_new1 = NULL;
+            (void) unite;
 
             // if there are more than one pins
             if( cp_inpins[k-1].size() > 1){
