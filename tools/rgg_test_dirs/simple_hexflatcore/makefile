@@ -16,11 +16,11 @@ MESH_FILES = control.cub  fuel.cub  outer_cylinder.cub
 
 GEOM_FILES = control.sat  fuel.sat  
 
-JOU_FILES = control.jou  fuel.jou  outer_cylinder.jou  
+JOU_FILES = control.jou  fuel.jou  cylinderical_covering.jou  
 
 PYTHON_FILES = control.py  fuel.py  
 
-INJOU_FILES = control.template.jou  fuel.template.jou  outer_cylinder.template.jou  
+INJOU_FILES = control.template.jou  fuel.template.jou   
 
 ASSYGEN_FILES = control.inp  fuel.inp    
 
@@ -44,8 +44,8 @@ fuel.sat : fuel.py
 fuel.py fuel.jou fuel.template.jou : fuel.inp
 	${ASSYGEN} fuel
 
-outer_cylinder.cub : outer_cylinder.jou
-	${CUBIT} -batch outer_cylinder.jou
+outer_cylinder.cub : cylinderical_covering.jou
+	${CUBIT} -batch cylinderical_covering.jou
 
 
 make clean :
