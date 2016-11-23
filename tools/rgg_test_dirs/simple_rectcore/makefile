@@ -3,12 +3,14 @@
 ##
 ## Check your coregen, assygen and cubit location
 ##
+include ../../common.mk
 
-CUBIT = cubit
 
-COREGEN = ../../coregen
+CUBIT = cubit -nographics
 
-ASSYGEN = ../../assygen
+COREGEN = $(MESHKIT_DIR)/bin/coregen
+
+ASSYGEN = $(MESHKIT_DIR)/bin/assygen
 
 MESH_FILES = s2.cub  s1.cub  
 

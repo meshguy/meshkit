@@ -3,12 +3,14 @@
 ##
 ## Check your coregen, assygen and cubit location
 ##
+include ../../common.mk
 
-CUBIT = cubit -nographics -batch
 
-COREGEN = ../../coregen
+CUBIT = cubit -nographics
 
-ASSYGEN = ../../assygen
+COREGEN = $(MESHKIT_DIR)/bin/coregen
+
+ASSYGEN = $(MESHKIT_DIR)/bin/assygen
 
 MESH_FILES = a1.cub  a2.cub  a3.cub  a4.cub  
 
@@ -16,33 +18,49 @@ GEOM_FILES = a1.sat  a2.sat  a3.sat  a4.sat
 
 JOU_FILES = a1.jou  a2.jou  a3.jou  a4.jou  
 
+PYTHON_FILES = a1.py  a2.py  a3.py  a4.py  
+
 INJOU_FILES = a1.template.jou  a2.template.jou  a3.template.jou  a4.template.jou  
 
 ASSYGEN_FILES = a1.inp  a2.inp  a3.inp  a4.inp  
 
-sixth_hexflat.h5m : ${MESH_FILES} sixth_hexflatcore.inp
+sixth_hexflatcore.h5m : ${MESH_FILES} sixth_hexflatcore.inp
 	${COREGEN} sixth_hexflatcore
 a1.cub : a1.sat  a1.jou  a1.template.jou
-	${CUBIT} a1.jou
+	${CUBIT} -batch a1.jou
 
-a1.sat a1.jou a1.template.jou : a1.inp
+a1.sat : a1.py
+	${CUBIT} -batch a1.py
+
+a1.py a1.jou a1.template.jou : a1.inp
 	${ASSYGEN} a1
 
 a2.cub : a2.sat  a2.jou  a2.template.jou
-	${CUBIT} a2.jou
+	${CUBIT} -batch a2.jou
 
-a2.sat a2.jou a2.template.jou : a2.inp
+a2.sat : a2.py
+	${CUBIT} -batch a2.py
+
+a2.py a2.jou a2.template.jou : a2.inp
 	${ASSYGEN} a2
 
 a3.cub : a3.sat  a3.jou  a3.template.jou
-	${CUBIT} a3.jou
+	${CUBIT} -batch a3.jou
 
-a3.sat a3.jou a3.template.jou : a3.inp
+a3.sat : a3.py
+	${CUBIT} -batch a3.py
+
+a3.py a3.jou a3.template.jou : a3.inp
 	${ASSYGEN} a3
 
 a4.cub : a4.sat  a4.jou  a4.template.jou
-	${CUBIT} a4.jou
+	${CUBIT} -batch a4.jou
 
-a4.sat a4.jou a4.template.jou : a4.inp
+a4.sat : a4.py
+	${CUBIT} -batch a4.py
+
+a4.py a4.jou a4.template.jou : a4.inp
 	${ASSYGEN} a4
 
+make clean :
+	rm *.sat *.cub *.py *.jou

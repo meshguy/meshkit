@@ -36,6 +36,9 @@ EXTRA_DIST = MKDefines.h data
 cfgdir = $(libdir)
 cfg_DATA = meshkit.make
 
+toolsdir = $(prefix)/examples/
+tools_DATA = common.mk
+
 # By default, meshkit.make will define these to $(srcdir).  We
 # want to override that during the INSTALL of the file so
 # that the correct values are set (e.g. if someone does 
@@ -44,3 +47,8 @@ cfg_DATA = meshkit.make
 install-data-hook:
 	echo "MESHKIT_LIBS=-L${libdir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
 	echo "MESHKIT_INCLUDES=-I${includedir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
+	mkdir -p $(prefix)/examples/rgg/
+	cp -r $(top_srcdir)/tools/rgg_test_dirs/* $(prefix)/examples/rgg/
+	mkdir -p $(prefix)/examples/postbl/
+	cp -r $(top_srcdir)/test/algs/postbl_examples/* $(prefix)/examples/postbl/
+	

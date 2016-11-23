@@ -15,8 +15,9 @@ namespace MeshKit
     double dCylMoveX = 0.0, dCylMoveY = 0.0, dHeightTotal = 0.0;
     double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
     CVector<double> dVCylZPos(2), dVCylXYPos(2), dVStartZ, dVEndZ;;
-    CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
+    CVector<std::string> szVCellMat;
     iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol= NULL,tmp_vol1= NULL, tmp_new= NULL;
+    (void) tmp_vol;
     std::vector<iBase_EntityHandle> cp_in;
     // name tag handle
     iBase_TagHandle this_tag= NULL;
@@ -494,7 +495,7 @@ namespace MeshKit
     double dCylMoveX = 0.0, dCylMoveY = 0.0, dHeightTotal = 0.0;
     double dHeight =0.0,dZMove = 0.0, PX = 0.0,PY = 0.0,PZ = 0.0, dP=0.0;
     CVector<double> dVCylZPos(2), dVCylXYPos(2), dVEndZ, dVStartZ;
-    CVector<std::string> szVMatName, szVMatAlias, szVCellMat;
+    CVector<std::string> szVCellMat;
     iBase_EntityHandle cell = NULL, cyl= NULL, tmp_vol1= NULL, tmp_new= NULL, cell_copy = NULL, intersec = NULL;
     std::vector<iBase_EntityHandle> cp_in;
 

@@ -147,7 +147,7 @@ namespace MeshKit
             m_szJouFile = m_szFile+".jou";
             m_szSchFile = m_szFile+".template.jou";
             m_szAssmInfo = m_szFile + "_info.csv";
-            m_szLogFile = m_szFile + ".scrŒeenlog";
+            m_szLogFile = m_szFile + ".screenlog";
             m_szPyCubGeom = m_szFile + ".py";
             m_szCommonFile = "common.inp";
           }
