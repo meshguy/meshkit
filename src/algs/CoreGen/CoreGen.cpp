@@ -2627,9 +2627,11 @@ namespace MeshKit
     make_file << "## Check your coregen, assygen and cubit location"
               << std::endl;
     make_file << "##" << std::endl;
-    make_file << "\nCUBIT = cubit\n" << std::endl;
-    make_file << "COREGEN = ../../coregen\n" << std::endl;
-    make_file << "ASSYGEN = ../../assygen\n" << std::endl;
+    make_file << "include ../../common.mk\n" << std::endl;
+    
+    make_file << "\nCUBIT = cubit -nographics\n" << std::endl;
+    make_file << "COREGEN = $(MESHKIT_DIR)/bin/coregen\n" << std::endl;
+    make_file << "ASSYGEN = $(MESHKIT_DIR)/bin/assygen\n" << std::endl;
 
     // remove the ./ if run from the current working TestDirectory
     make_file << "MESH_FILES = ";

@@ -1371,6 +1371,7 @@ AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  doc/meshkit.dox
                  tools/Makefile
+                 common.mk
                  ])
 
 AC_OUTPUT

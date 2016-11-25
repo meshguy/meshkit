@@ -3,36 +3,64 @@
 ##
 ## Check your coregen, assygen and cubit location
 ##
+include ../../common.mk
 
-CUBIT = cubit -nographics -batch
 
-COREGEN = ../../coregen
+CUBIT = cubit -nographics
 
-ASSYGEN = ../../assygen
+COREGEN = $(MESHKIT_DIR)/bin/coregen
 
-MESH_FILES = assm_mesh.cub  assm_mesh22.cub   
+ASSYGEN = $(MESHKIT_DIR)/bin/assygen
 
-GEOM_FILES = assm_mesh.sat  assm_mesh22.sat 
+MESH_FILES = assm_mesh.cub  assm_mesh22.cub  assm_mesh.cub  assm_mesh22.cub  
 
-JOU_FILES = assm_mesh.jou  assm_mesh22.jou  
+GEOM_FILES = assm_mesh.sat  assm_mesh22.sat  assm_mesh.sat  assm_mesh22.sat  
 
-INJOU_FILES = assm_mesh.template.jou  assm_mesh22.template.jou   
+JOU_FILES = assm_mesh.jou  assm_mesh22.jou  assm_mesh.jou  assm_mesh22.jou  
 
-ASSYGEN_FILES = assm_mesh.inp  assm_mesh22.inp  
+PYTHON_FILES = assm_mesh.py  assm_mesh22.py  assm_mesh.py  assm_mesh22.py  
+
+INJOU_FILES = assm_mesh.template.jou  assm_mesh22.template.jou  assm_mesh.template.jou  assm_mesh22.template.jou  
+
+ASSYGEN_FILES = assm_mesh.inp  assm_mesh22.inp  assm_mesh.inp  assm_mesh22.inp  
 
 sc.h5m : ${MESH_FILES} shifting_core.inp
 	${COREGEN} shifting_core
 assm_mesh.cub : assm_mesh.sat  assm_mesh.jou  assm_mesh.template.jou
 	${CUBIT} -batch assm_mesh.jou
 
-assm_mesh.sat assm_mesh.jou assm_mesh.template.jou : assm_mesh.inp
+assm_mesh.sat : assm_mesh.py
+	${CUBIT} -batch assm_mesh.py
+
+assm_mesh.py assm_mesh.jou assm_mesh.template.jou : assm_mesh.inp
 	${ASSYGEN} assm_mesh
 
 assm_mesh22.cub : assm_mesh22.sat  assm_mesh22.jou  assm_mesh22.template.jou
 	${CUBIT} -batch assm_mesh22.jou
 
-assm_mesh22.sat assm_mesh22.jou assm_mesh22.template.jou : assm_mesh22.inp
+assm_mesh22.sat : assm_mesh22.py
+	${CUBIT} -batch assm_mesh22.py
+
+assm_mesh22.py assm_mesh22.jou assm_mesh22.template.jou : assm_mesh22.inp
 	${ASSYGEN} assm_mesh22
 
+assm_mesh.cub : assm_mesh.sat  assm_mesh.jou  assm_mesh.template.jou
+	${CUBIT} -batch assm_mesh.jou
 
+assm_mesh.sat : assm_mesh.py
+	${CUBIT} -batch assm_mesh.py
 
+assm_mesh.py assm_mesh.jou assm_mesh.template.jou : assm_mesh.inp
+	${ASSYGEN} assm_mesh
+
+assm_mesh22.cub : assm_mesh22.sat  assm_mesh22.jou  assm_mesh22.template.jou
+	${CUBIT} -batch assm_mesh22.jou
+
+assm_mesh22.sat : assm_mesh22.py
+	${CUBIT} -batch assm_mesh22.py
+
+assm_mesh22.py assm_mesh22.jou assm_mesh22.template.jou : assm_mesh22.inp
+	${ASSYGEN} assm_mesh22
+
+make clean :
+	rm *.sat *.cub *.py *.jou

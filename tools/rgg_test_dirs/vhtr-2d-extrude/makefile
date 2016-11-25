@@ -3,18 +3,22 @@
 ##
 ## Check your coregen, assygen and cubit location
 ##
+include ../../common.mk
 
-CUBIT = cubit -nographics -batch
 
-COREGEN = ../../coregen
+CUBIT = cubit -nographics
 
-ASSYGEN = ../../assygen
+COREGEN = $(MESHKIT_DIR)/bin/coregen
+
+ASSYGEN = $(MESHKIT_DIR)/bin/assygen
 
 MESH_FILES = 0.cub  1.cub  2.cub  3.cub  4.cub  5.cub  6.cub  7.cub  8.cub  9.cub  10.cub  11.cub  
 
 GEOM_FILES = 0.sat  1.sat  2.sat  3.sat  4.sat  5.sat  6.sat  7.sat  8.sat  9.sat  10.sat  11.sat  
 
 JOU_FILES = 0.jou  1.jou  2.jou  3.jou  4.jou  5.jou  6.jou  7.jou  8.jou  9.jou  10.jou  11.jou  
+
+PYTHON_FILES = 0.py  1.py  2.py  3.py  4.py  5.py  6.py  7.py  8.py  9.py  10.py  11.py  
 
 INJOU_FILES = 0.template.jou  1.template.jou  2.template.jou  3.template.jou  4.template.jou  5.template.jou  6.template.jou  7.template.jou  8.template.jou  9.template.jou  10.template.jou  11.template.jou  
 
@@ -25,72 +29,110 @@ extruded_vhtr_assmebly.h5m : ${MESH_FILES} vhtr-hexvertex.inp
 0.cub : 0.sat  0.jou  0.template.jou
 	${CUBIT} -batch 0.jou
 
-0.sat 0.jou 0.template.jou : 0.inp
+0.sat : 0.py
+	${CUBIT} -batch 0.py
+
+0.py 0.jou 0.template.jou : 0.inp
 	${ASSYGEN} 0
 
 1.cub : 1.sat  1.jou  1.template.jou
 	${CUBIT} -batch 1.jou
 
-1.sat 1.jou 1.template.jou : 1.inp
+1.sat : 1.py
+	${CUBIT} -batch 1.py
+
+1.py 1.jou 1.template.jou : 1.inp
 	${ASSYGEN} 1
 
 2.cub : 2.sat  2.jou  2.template.jou
 	${CUBIT} -batch 2.jou
 
-2.sat 2.jou 2.template.jou : 2.inp
+2.sat : 2.py
+	${CUBIT} -batch 2.py
+
+2.py 2.jou 2.template.jou : 2.inp
 	${ASSYGEN} 2
 
 3.cub : 3.sat  3.jou  3.template.jou
 	${CUBIT} -batch 3.jou
 
-3.sat 3.jou 3.template.jou : 3.inp
+3.sat : 3.py
+	${CUBIT} -batch 3.py
+
+3.py 3.jou 3.template.jou : 3.inp
 	${ASSYGEN} 3
 
 4.cub : 4.sat  4.jou  4.template.jou
 	${CUBIT} -batch 4.jou
 
-4.sat 4.jou 4.template.jou : 4.inp
+4.sat : 4.py
+	${CUBIT} -batch 4.py
+
+4.py 4.jou 4.template.jou : 4.inp
 	${ASSYGEN} 4
 
 5.cub : 5.sat  5.jou  5.template.jou
 	${CUBIT} -batch 5.jou
 
-5.sat 5.jou 5.template.jou : 5.inp
+5.sat : 5.py
+	${CUBIT} -batch 5.py
+
+5.py 5.jou 5.template.jou : 5.inp
 	${ASSYGEN} 5
 
 6.cub : 6.sat  6.jou  6.template.jou
 	${CUBIT} -batch 6.jou
 
-6.sat 6.jou 6.template.jou : 6.inp
+6.sat : 6.py
+	${CUBIT} -batch 6.py
+
+6.py 6.jou 6.template.jou : 6.inp
 	${ASSYGEN} 6
 
 7.cub : 7.sat  7.jou  7.template.jou
 	${CUBIT} -batch 7.jou
 
-7.sat 7.jou 7.template.jou : 7.inp
+7.sat : 7.py
+	${CUBIT} -batch 7.py
+
+7.py 7.jou 7.template.jou : 7.inp
 	${ASSYGEN} 7
 
 8.cub : 8.sat  8.jou  8.template.jou
 	${CUBIT} -batch 8.jou
 
-8.sat 8.jou 8.template.jou : 8.inp
+8.sat : 8.py
+	${CUBIT} -batch 8.py
+
+8.py 8.jou 8.template.jou : 8.inp
 	${ASSYGEN} 8
 
 9.cub : 9.sat  9.jou  9.template.jou
 	${CUBIT} -batch 9.jou
 
-9.sat 9.jou 9.template.jou : 9.inp
+9.sat : 9.py
+	${CUBIT} -batch 9.py
+
+9.py 9.jou 9.template.jou : 9.inp
 	${ASSYGEN} 9
 
 10.cub : 10.sat  10.jou  10.template.jou
 	${CUBIT} -batch 10.jou
 
-10.sat 10.jou 10.template.jou : 10.inp
+10.sat : 10.py
+	${CUBIT} -batch 10.py
+
+10.py 10.jou 10.template.jou : 10.inp
 	${ASSYGEN} 10
 
 11.cub : 11.sat  11.jou  11.template.jou
 	${CUBIT} -batch 11.jou
 
-11.sat 11.jou 11.template.jou : 11.inp
+11.sat : 11.py
+	${CUBIT} -batch 11.py
+
+11.py 11.jou 11.template.jou : 11.inp
 	${ASSYGEN} 11
 
+make clean :
+	rm *.sat *.cub *.py *.jou

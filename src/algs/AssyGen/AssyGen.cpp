@@ -64,7 +64,9 @@ namespace MeshKit
 
   AssyGen::~AssyGen()
   {
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_dtor(igeomImpl->instance(), &err);
+#endif
     //CHECK( "Interface destruction didn't work properly." );
     // close the input and output files
     m_FileInput.close ();
@@ -82,7 +84,6 @@ namespace MeshKit
 
   void AssyGen::setup_this()
   {
-
     // start the timer
     CClock Timer;
     clock_t sTime = clock();
@@ -146,7 +147,7 @@ namespace MeshKit
             m_szJouFile = m_szFile+".jou";
             m_szSchFile = m_szFile+".template.jou";
             m_szAssmInfo = m_szFile + "_info.csv";
-            m_szLogFile = m_szFile + ".scrŒeenlog";
+            m_szLogFile = m_szFile + ".screenlog";
             m_szPyCubGeom = m_szFile + ".py";
             m_szCommonFile = "common.inp";
           }
@@ -270,6 +271,8 @@ namespace MeshKit
     std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
             << std::endl;
 
+// filename to be saved with cubit journal file
+    m_szGeomFile1 = m_szFile+".sat";
 
     //ACIS ENGINE
 #ifdef HAVE_ACIS
@@ -280,8 +283,7 @@ namespace MeshKit
     //  OCC ENGINE
     //  if (m_szEngine == "occ"){
     m_szGeomFile = m_szFile+".brep";
-    m_szGeomFile1 = m_szFile+".sat";
-    //  }o
+    //  }
 #endif
     std::cout << "\no/p geometry file name: " <<  m_szGeomFile <<std::endl;
 
@@ -349,22 +351,14 @@ namespace MeshKit
     m_PyCubGeomFile << "\ncubit.cmd('reset')" << std::endl;
 
 
-    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
     m_FileOutput << "#" << std::endl;
     m_FileOutput << "set logging on file '" << m_szLogFile << "'" <<std::endl;
     m_FileOutput << "Timer Start" << std::endl;
     // import the geometry file
     m_FileOutput << "# Import geometry file " << std::endl;
-    //ACIS ENGINE
-#ifdef HAVE_ACIS
-    m_FileOutput << "import '" << m_szGeomFile <<"'" << std::endl;
-
-#elif defined(HAVE_OCC)
-    //  OCC ENGINE
     // Use sat file always as step isn't supported
     m_FileOutput << "import '" << m_szGeomFile1 <<"'" << std::endl;
-#endif
-
+    m_FileOutput << "{include(\"" << m_szSchFile << "\")}" <<std::endl;
     m_FileOutput << "#" << std::endl;
 
   }
@@ -1520,7 +1514,10 @@ namespace MeshKit
 
                 clock_t s_save= clock();
                 // save .sat file
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_save(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err, m_szGeomFile.length() , 0);
+#endif
+
                 std::cout << "## Saving CPU time used := " << (double) (clock() - s_save)/CLOCKS_PER_SEC
                           << " seconds" << std::endl;
 
@@ -1535,8 +1532,10 @@ namespace MeshKit
                 bool if_loadagain = false;
                 if (if_loadagain == true){
                     clock_t s_load= clock();
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                     iGeom_load(igeomImpl->instance(), m_szGeomFile.c_str(), NULL, &err,
                                strlen(m_szGeomFile.c_str()), 0);
+#endif
                     std::cout << "## Load again CPU time used := " << (double) (clock() - s_load)/CLOCKS_PER_SEC
                               << " seconds" << std::endl;
                   }
@@ -1803,15 +1802,18 @@ namespace MeshKit
     std::string sMatName0=sMatName+"_top";
     std::string sMatName1=sMatName+"_bot";
     std::string sSideName;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntAdj( igeomImpl->instance(), body, iBase_FACE, ARRAY_INOUT(surfs), &err );
-    //CHECK( "Problems getting max surf for rotation." );
+#endif
 
     SimpleArray<double> max_corn, min_corn;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getArrBoundBox( igeomImpl->instance(), ARRAY_IN(surfs), iBase_INTERLEAVED,
                           ARRAY_INOUT( min_corn ),
                           ARRAY_INOUT( max_corn ),
                           &err );
-    //CHECK( "Problems getting max surf for rotation." );
+#endif
+
     for (int i = 0; i < surfs.size(); ++i){
         // first find the max z-coordinate
         if( (fabs(min_corn[3*i+2]-max_corn[3*i+2])) < dTol ) {
@@ -1835,18 +1837,20 @@ namespace MeshKit
           }
         // see if max or min set name
         if(max_surf !=0){
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_setData(igeomImpl->instance(), max_surf, this_tag,
                           sMatName0.c_str(), sMatName0.size(), &err);
-            ////CHECK("setData failed");
+#endif
 
             std::cout << sMatName0 << ",  ";
             max_surf = NULL;
 
           }
         if(min_surf !=0){
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_setData(igeomImpl->instance(), min_surf, this_tag,
                           sMatName1.c_str(), sMatName1.size(), &err);
-            ////CHECK("setData failed");
+#endif
             std::cout << sMatName1 << ",  ";
             min_surf = NULL;
 
@@ -1877,9 +1881,10 @@ namespace MeshKit
                   os << sSideName << "_" << nSide;
               }
             sSideName = os.str();
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_setData(igeomImpl->instance(), side_surf, this_tag,
                           sSideName.c_str(), sMatName1.size(), &err);
-            ////CHECK("setData failed");
+#endif
             std::cout << sSideName << ",  " ;
             sSideName = "";
             os.str("");
@@ -1901,12 +1906,11 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    double xmin, xmax, ymin, ymax, zmin, zmax, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
+    double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0, zmin = 0.0, zmax = 0.0, xcenter = 0.0, ycenter = 0.0, zcenter = 0.0;
     // position the assembly such that origin is at the center before sa
     iGeom_getBoundBox(igeomImpl->instance(),&xmin,&ymin,&zmin,
                       &xmax,&ymax,&zmax, &err);
-    ////CHECK("Failed getting bounding box");
-
     // moving all geom entities to center
 
 
@@ -1927,11 +1931,11 @@ namespace MeshKit
 
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
-
     for(int i=0; i<all.size(); i++){
         iGeom_moveEnt(igeomImpl->instance(),all[i],-xcenter,-ycenter,-zcenter,&err);
       }
+#endif
+
     // OCC bounding box computation is buggy, better to compute bounding box in python and supply to the script.
     m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
     m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
@@ -1961,7 +1965,8 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    double xmin, xmax, ymin, ymax, zmin, zmax, yzplane = 0.0, xzplane = 0.0;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)    
+    double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0, zmin = 0.0, zmax = 0.0, yzplane = 0.0, xzplane = 0.0;
     iBase_EntityHandle sec = NULL;
     int nReverse = 0;
     // check if reverse side is needed
@@ -1978,7 +1983,6 @@ namespace MeshKit
       }
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-
     // loop and section/delete entities
     for(int i=0; i < all.size(); i++){
         //get the bounding box to decide
@@ -2010,40 +2014,7 @@ namespace MeshKit
               }
           }
       }
-
-
-//    m_PyCubGeomFile << "reverse = \"" << szReverse << "\"\ndOffset = " << dOffset << std::endl;
-
-//    m_PyCubGeomFile << "vol = cubit.get_entities(\"volume\")" << std::endl;
-//    m_PyCubGeomFile << "vl = cubit.get_total_bounding_box(\"volume\", vol)\nzcenter = 0.0" << std::endl;
-
-
-
-//    if( rDir =='x'){
-//        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
-//      }
-//    else if( rDir =='y'){
-//        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
-//      }
-//    else if ( rDir =='z'){
-//        m_PyCubGeomFile << "zcenter = (vl[6]+vl[7])/2.0" << std::endl;
-//        m_PyCubGeomFile << "cubit.cmd('delete vol {0}'.format(vol[" << i << "]))" << std::endl;
-
-//      }
-//    else{
-//        // assume that it is centered along x and y and not z direction
-//        m_PyCubGeomFile << "xcenter = (vl[0]+vl[1])/2.0" << std::endl;
-//        m_PyCubGeomFile << "ycenter = (vl[3]+vl[4])/2.0" << std::endl;
-//      }
-
-
-//    if(xzplane ==1 && ymax >dOffset && ymin < dOffset){
-//        m_PyCubGeomFile << "cubit.cmd('section vol all with yplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
-//      }
-//    if(yzplane ==1 && xmax >dOffset && xmin < dOffset){
-//        m_PyCubGeomFile << "cubit.cmd('section vol all with xplane offset {0} {1}'.format(dOffset, reverse))" << std::endl;
-//      }
-
+#endif    
   }
 
   void AssyGen::Rotate_Assm (char &cDir, double &dAngle)
@@ -2053,6 +2024,9 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
+    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle " << dAngle << " about {0}'.format(cDir))" << std::endl;
+
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     double dX = 0.0, dY=0.0, dZ=0.0;
     if( cDir =='x'){
         dX = 1.0;
@@ -2066,15 +2040,13 @@ namespace MeshKit
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
 
-    m_PyCubGeomFile << "cDir = '" << cDir << "'" << "\ncubit.cmd('rotate vol all angle " << dAngle << " about {0}'.format(cDir))" << std::endl;
-
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
         //get the bounding box to decide
         iGeom_rotateEnt(igeomImpl->instance(),all[i],dAngle,
                         dX, dY, dZ, &err);
       }
-
+#endif
   }
 
   void AssyGen::Move_Assm (double &dX,double &dY, double &dZ)
@@ -2085,15 +2057,18 @@ namespace MeshKit
   // ---------------------------------------------------------------------------
   {
     SimpleArray<iBase_EntityHandle> all;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-
+#endif
     m_PyCubGeomFile << "cubit.cmd('move vol all x " << dX << " y " << dY << " dZ " << dZ << "')" << std::endl;
 
     // loop and rotate all entities
     for(int i=0; i<all.size(); i++){
         //get the bounding box to decide
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_moveEnt(igeomImpl->instance(),all[i],
                       dX, dY, dZ, &err);
+#endif
       }
 
   }
@@ -2184,8 +2159,9 @@ namespace MeshKit
       }
 
     // get all the entities (in pins)defined so far, in an entity set - for subtraction later
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(in_pins),&err );
-    //CHECK( "ERROR : getRootSet failed!" );
+#endif
     std::cout << "Expected pin definitions: " << total_pincells << "\n\nCreating surrounding outer hexes .." << std::endl;
 
     for (int nTemp = 1; nTemp <= m_nDuct; nTemp ++){
@@ -2197,13 +2173,17 @@ namespace MeshKit
                 dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
 
                 // creating coverings
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_createPrism(igeomImpl->instance(), dHeight, 6,
                                   dSide, dSide,
                                   &assm, &err);
+#endif
                 m_PyCubGeomFile << "##\nassm = cubit.prism(" << dHeight << ", 6, " << dSide << ", " << dSide << ")" << std::endl;
 
                 // rotate the prism to match the pins
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_rotateEnt (igeomImpl->instance(), assm, 30, 0, 0, 1, &err);
+#endif
                 m_PyCubGeomFile << "cubit.cmd('rotate body {0} angle 30 about z'.format(assm.id()) )" << std::endl;
 
                 if(0 != m_Pincell.GetSize()){
@@ -2218,7 +2198,9 @@ namespace MeshKit
                 dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
 
                 // position the prism
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_moveEnt(igeomImpl->instance(), assm, dX,dY,dZ, &err);
+#endif
                 m_PyCubGeomFile << "vector = [" << dX << ", " << dY << ", " << dZ << "]" << std::endl;
                 m_PyCubGeomFile << "cubit.move(assm, vector)" << std::endl;
 
@@ -2333,14 +2315,18 @@ namespace MeshKit
             for(int n=1;n<=m_nDimensions; n++){
                 ++nCount;
                 dHeight = m_dMZAssm(nTemp, 2) - m_dMZAssm(nTemp, 1);
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_createBrick(igeomImpl->instance(), m_dMAssmPitchX(nTemp, n),  m_dMAssmPitchY(nTemp, n), dHeight,
                                   &assm, &err);
+#endif
                 m_PyCubGeomFile << "assm = cubit.brick( " << m_dMAssmPitchX(nTemp, n) << ", " << m_dMAssmPitchY(nTemp, n) << ", " << dHeight << ")" << std::endl;
 
                 // position the outer block to match the pins
                 dZ = (m_dMZAssm(nTemp, 2) + m_dMZAssm(nTemp, 1))/2.0;
                 std::cout << "Move " <<   dMoveX << " " << dMoveY <<std::endl;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_moveEnt(igeomImpl->instance(), assm, dMoveX,dMoveY,dZ, &err);
+#endif
                 m_PyCubGeomFile << "vector = [" << dMoveX << ", " << dMoveY << ", " << dZ << "]" << std::endl;
                 m_PyCubGeomFile << "cubit.move(assm, vector)" << std::endl;
 
@@ -2361,17 +2347,18 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    iBase_TagHandle this_tag;
-    char* tag_name =(char *)"NAME";
+    double zmin = 0.0, zmax = 0.0;
+    iBase_TagHandle this_tag = NULL;
     std::string sMatName = "";
     std::string sMatName0 = "";
     std::string sMatName1 = "";
     m_PyCubGeomFile << "sub1 = []\nsub2=[]" << std::endl;
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
+    char* tag_name =(char *)"NAME";    
     iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
-    ////CHECK("getTagHandle failed");
+#endif
     iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
 
     // name the innermost outer covering common for both rectangular and hexagonal assembliees
@@ -2388,10 +2375,10 @@ namespace MeshKit
             std::cout << "\ncreated innermost block: " << sMatName << std::endl;
 
             tmp_vol = assms[(nTemp1 - 1)*m_nDimensions];
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_setData(igeomImpl->instance(), tmp_vol, this_tag,
                           sMatName.c_str(), sMatName.size(), &err);
-            ////CHECK("setData failed");
-
+#endif
             Name_Faces(sMatName, tmp_vol, this_tag);
             m_PyCubGeomFile << "lid = assms[" << (nTemp1 - 1)*m_nDimensions << "].id()" << std::endl;
             m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
@@ -2404,10 +2391,10 @@ namespace MeshKit
             std::cout << "Naming outermost block edges" << std::endl;
             SimpleArray<iBase_EntityHandle> edges;
 
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
             iGeom_getEntAdj( igeomImpl->instance(), assms[nTemp*m_nDimensions-1] , iBase_EDGE,ARRAY_INOUT(edges),
                 &err );
-            //CHECK( "ERROR : getEntAdj failed!" );
-
+#endif
             // get the top corner edges of the outer most covering
             //m_PyCubGeomFile << "lid=assms<<["<< nTemp*m_nDimensions-1 << "].id()" << std::endl;
             m_PyCubGeomFile << "cubit.cmd('group \"g1\" equals curve in vol {0} '.format(assms[" << nTemp*m_nDimensions-1 << "].id()))" << std::endl;
@@ -2415,9 +2402,11 @@ namespace MeshKit
             m_PyCubGeomFile << "cubit.cmd('curve in g3 name \"side_edge\"')" << std::endl;
             std::ostringstream os;
             for (int i = 0; i < edges.size(); ++i){
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
+                double xmin = 0.0, xmax = 0.0, ymin = 0.0, ymax = 0.0;
                 iGeom_getEntBoundBox(igeomImpl->instance(), edges[i],&xmin,&ymin,&zmin,
                                      &xmax,&ymax,&zmax, &err);
-                ////CHECK("getEntBoundBox failed.");
+#endif
                 double dTol = 1e-5; // tolerance for comparing coordinates
 
                 if(fabs(zmax - m_dMZAssm(nTemp, 2)) <  dTol){
@@ -2429,9 +2418,10 @@ namespace MeshKit
                         os << sMatName << count;
                         sMatName=os.str();
                         tmp_vol=edges[i];
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                         iGeom_setData(igeomImpl->instance(), tmp_vol, this_tag,
                                       sMatName.c_str(), sMatName.size(), &err);
-                        ////CHECK("setData failed");
+#endif
                         std::cout << "created: " << sMatName << std::endl;
                         os.str("");
                         sMatName="";
@@ -2447,15 +2437,17 @@ namespace MeshKit
                 if(n>1){
                     ++nCount;
                     // copy cyl before subtract
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                     iGeom_copyEnt(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-2], &tmp_vol, &err);
+#endif
                     m_PyCubGeomFile << "tmp_vol = cubit.copy_body(assms[" << (nTemp-1)*m_nDimensions + n-2 << "])" << std::endl;
 
                     // subtract outer most cyl from brick
                     m_PyCubGeomFile << "\nsub1.append(tmp_vol)" << std::endl;
                     m_PyCubGeomFile << "\nsub2.append(assms[" << (nTemp-1)*m_nDimensions + n-1 <<"])" << std::endl;
-
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                     iGeom_subtractEnts(igeomImpl->instance(), assms[(nTemp-1)*m_nDimensions + n-1], tmp_vol, &tmp_new, &err);
-
+#endif
                     m_PyCubGeomFile << "tmp_new = cubit.subtract(sub1, sub2)" << std::endl;
                     m_PyCubGeomFile << "assms[" << (nTemp-1)*m_nDimensions + n-1 << "] = tmp_new[0]\n\nsub1[:]=[]\nsub2[:]=[]"   << std::endl;
 
@@ -2468,9 +2460,10 @@ namespace MeshKit
                           }
                       }
                     std::cout << "created: " << sMatName << std::endl;
-
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                     iGeom_setData(igeomImpl->instance(), tmp_new, this_tag,
                                   sMatName.c_str(), sMatName.size(), &err);
+#endif
                     m_PyCubGeomFile << "lid = tmp_new[0].id()" << std::endl;
                     m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
                     m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new[0]) " << std::endl;
@@ -2500,13 +2493,16 @@ namespace MeshKit
             std::vector <iBase_EntityHandle> pin_copy( cp_inpins[k-1].size(), NULL);
             m_PyCubGeomFile << "pin_copy=[]\n\nsub1=[]\nsub2=[]\n" << std::endl;
             for (int i=0; i< (int) cp_inpins[k-1].size();i++){
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_copyEnt(igeomImpl->instance(), cp_inpins[k-1][i], &pin_copy[i], &err);
+#endif
                 m_PyCubGeomFile << "tmp_vol = cubit.copy_body(cp_inpins[" << k-1 << "][" << i << "])" << std::endl;
                 m_PyCubGeomFile << "pin_copy.append(tmp_vol)" << std::endl;
                 m_PyCubGeomFile << "\nsub2.append(cp_inpins[" << k-1 << "]["<< i << "])" << std::endl;
               }
 
             iBase_EntityHandle tmp_vol = NULL;
+            (void) tmp_vol;
             tmp_vol = assms[(k-1)*m_nDimensions];
             m_PyCubGeomFile << "tmp_vol = assms[" << k << "]" << std::endl;
 
@@ -2514,15 +2510,18 @@ namespace MeshKit
             std::cout << "Duct no.: " << k << " subtracting " <<  cp_inpins[k-1].size() << " pins from the duct .. " << std::endl;
 
             //#if HAVE_ACIS
-            iBase_EntityHandle unite= NULL, tmp_new1;
+            iBase_EntityHandle unite= NULL, tmp_new1 = NULL;
+            (void) unite;
 
             // if there are more than one pins
             if( cp_inpins[k-1].size() > 1){
-
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_uniteEnts(igeomImpl->instance(), &cp_inpins[k-1][0], cp_inpins[k-1].size(), &unite, &err);
-                //m_PyCubGeomFile << "##\nunitepins = cubit.unite(cp_inpins[" << k-1 <<"][0])" << std::endl;
+#endif
                 m_PyCubGeomFile << "\nsub1.append(assms[" << (k-1)*m_nDimensions <<"])" << std::endl;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol,unite, &tmp_new1, &err);
+#endif
                 m_PyCubGeomFile << "tmp_new1 = cubit.subtract(sub2, sub1)" << std::endl;
                 m_PyCubGeomFile << "tmp_vol = tmp_new1" << std::endl;
 
@@ -2531,7 +2530,9 @@ namespace MeshKit
                 tmp_new1=NULL;
               }
             else{ // only one pin in in_pins
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_subtractEnts(igeomImpl->instance(), tmp_vol, cp_inpins[k-1][0], &tmp_new1, &err);
+#endif
                 m_PyCubGeomFile << "\nsub1.append(assms[" << (k-1)*m_nDimensions <<"])" << std::endl;
                 m_PyCubGeomFile << "tmp_new1 = cubit.subtract(sub2, sub1)" << std::endl;
               }
@@ -2575,14 +2576,17 @@ namespace MeshKit
   {
     // getting all entities for merge and imprint
     SimpleArray<iBase_EntityHandle> entities;
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION, ARRAY_INOUT(entities),&err );
-    //CHECK( "ERROR : getRootSet failed!" );
+#endif
 
     if(if_imprint ==  true){
         //  now imprint
         std::cout << "\n\nImprinting...." << std::endl;
         clock_t s_imprint = clock();
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
         iGeom_imprintEnts(igeomImpl->instance(), ARRAY_IN(entities),&err);
+#endif
         std::cout << "## Imprint CPU time used := " << (double) (clock() - s_imprint)/CLOCKS_PER_SEC
                   << " seconds" << std::endl;
         std::cout << "\n--------------------------------------------------"<<std::endl;
@@ -2590,11 +2594,13 @@ namespace MeshKit
 
     if(if_merge == true){
         // merge tolerance
-        double dTol = 1e-4;
         // now  merge
         std::cout << "\n\nMerging...." << std::endl;
         clock_t s_merge = clock();
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
+        double dTol = 1e-4;        
         iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
+#endif
         std::cout << "## Merge CPU time used := " << (double) (clock() - s_merge)/CLOCKS_PER_SEC
                   << " seconds" << std::endl;
         std::cout <<"merging finished."<< std::endl;
@@ -2609,27 +2615,25 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)    
+    std::cout << "Creating surface; 2D assembly specified..." << std::endl;
     SimpleArray<iBase_EntityHandle>  all_geom;
     SimpleArray<iBase_EntityHandle> surfs;
-    int *offset = NULL, offset_alloc = 0, offset_size;
     int t=0;
-    std::cout << "Creating surface; 2D assembly specified..." << std::endl;
+    SimpleArray<double> max_corn, min_corn;
 
     // get all the entities in the model (delete after making a copy of top surface)
+    int *offset = NULL, offset_alloc = 0, offset_size = -1;    
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
-    //CHECK( "ERROR : Failed to get all geom" );
 
     // get all the surfaces in the model
     iGeom_getArrAdj( igeomImpl->instance(), ARRAY_IN(all_geom) , iBase_FACE, ARRAY_INOUT(surfs),
                      &offset, &offset_alloc, &offset_size, &err );
-    //CHECK( "ERROR : getArrAdj failed!" );
 
-    SimpleArray<double> max_corn, min_corn;
     iGeom_getArrBoundBox( igeomImpl->instance(), ARRAY_IN(surfs), iBase_INTERLEAVED,
                           ARRAY_INOUT( min_corn ),
                           ARRAY_INOUT( max_corn ),
                           &err );
-    //CHECK( "Problems getting max surf for rotation." );
 
     // find the number of surfaces 't' for array allocation
     int nTemp = 1;
@@ -2658,28 +2662,25 @@ namespace MeshKit
     // make a copy of max_surfs
     for(int i = 0; i < max_surfs.size(); ++i){
         iGeom_copyEnt(igeomImpl->instance(), max_surfs[i], &new_surfs[i], &err);
-        //CHECK( "Problems creating surface." );
       }
 
     // delete all the old ents
     for(int i=0; i<all_geom.size(); i++){
         iGeom_deleteEnt(igeomImpl->instance(), all_geom[i], &err);
-        //CHECK( "Problems deleting cyls." );
       }
     // position the final assembly at the center
     // get the assembly on z=0 plane
+
     double zcenter = m_dMZAssm(nTemp, 2)/2.0;//move up
     SimpleArray<iBase_EntityHandle> all;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all),&err );
-    ////CHECK("Failed to get all entities");
 
     for(int i=0; i<all.size(); i++){
         iGeom_moveEnt(igeomImpl->instance(),all[i],0,0,-zcenter,&err);
-        ////CHECK("Failed to move entities");
       }
-    std::cout << "--------------------------------------------------"<<std::endl;
-
     free(offset);
-
+#endif
+    std::cout << "-----Done creating 2D surface-----"<<std::endl;
+    
   }
 }

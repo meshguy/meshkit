@@ -81,7 +81,7 @@ void Dijkstra::getSurfList(vector<vector<vector<int> > > &l, int src_size, int t
 		int index = std::distance(bak_dist_array.begin(), it);
 		surf_list.push_back(index);
 		//l.push_back(index);
-		if (i==(dist_array.size()-1)){
+		if (i==( (int)dist_array.size()-1)){
 			layer_index++;
 			l.resize(layer_index+1);
 			addSurfToList(layer_index, index, src_size, l[layer_index]);
