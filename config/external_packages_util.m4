@@ -566,6 +566,7 @@ AC_DEFUN([AUSCM_CONFIGURE_DOWNLOAD_NETGEN],[
     # The default Netgen installation is under libraries
     NETGEN_DIR="$netgen_install_dir"
     enablenetgen=yes
+    HAVE_NETGEN=yes
   fi  # if (test "$downloadnetgen" != no)
 ])
 

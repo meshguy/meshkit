@@ -693,14 +693,15 @@ AM_CONDITIONAL(HAVE_TETGEN, [test "x$HAVE_TETGEN" = "xyes"])
 
 # Supported Netgen versions: 6.0, 5.3
 # Arguments: 1) Default Version Number, 2) Download by default ?
-AUSCM_CONFIGURE_DOWNLOAD_NETGEN([5.3],[no])
 
 AC_ARG_WITH(netgen, 
 [AC_HELP_STRING([--with-netgen=DIR], [Specify location of Netgen library.])],
 [NETGEN_DIR=$withval
  DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-netgen=\"${withval}\""
  ], [NETGEN_DIR=no])
- 
+
+AUSCM_CONFIGURE_DOWNLOAD_NETGEN([5.3],[no])
+
 NETGEN_CPPFLAGS=
 NETGEN_LDFLAGS=
 NETGEN_LIBS=
