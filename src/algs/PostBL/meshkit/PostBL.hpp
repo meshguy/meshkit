@@ -39,6 +39,8 @@
 #include "moab/AdaptiveKDTree.hpp"
 #include "moab/Matrix3.hpp"
 #include "moab/VerdictWrapper.hpp"
+#include "moab/ReadUtilIface.hpp"
+
 
 /*!
  * \class PostBL
@@ -152,6 +154,18 @@ namespace MeshKit {
      *  \param	o/p edge length
      */
     void find_min_edge_length (moab::Range, moab::EntityHandle, moab::Range, double &e_len);
+    
+    /** \brief push the bulk mesh after creating the normals
+     */
+    int push_bulk_mesh(VerdictWrapper vw);
+    
+    /** \brief compute the normal for each node of the boundary layer specified
+     */
+    int compute_normals();
+    
+    /** \brief create boundary layer elements after pushing the bulk mesh
+     */
+    int create_bl_elements(VerdictWrapper vw);
 
   private:
     //! iGeom Impl for calling geometry creation/manipulation operations
@@ -162,7 +176,20 @@ namespace MeshKit {
 
     //! MOAB Impl for calling mesh creation/manipulation operations
     moab::Interface *mb;
-
+    moab::Tag GDTag, GIDTag, NTag, MTag, STag, FTag, MNTag, MatIDTag, BLNodeIDTag;
+    std::vector<moab::EntityHandle> old_hex, new_vert, conn, qconn, tri_conn, tet_conn;
+    std::vector<moab::EntityHandle> adj_qconn, 
+            old_hex_conn, adj_hex_nodes1;
+    moab::CartVect surf_normal;
+    moab::Range quads, nodes,edges, fixmat_ents;
+    double coords_new_quad[3];
+    double coords_old_quad[3];    
+    moab::EntityHandle hex, hex1, hex2;
+    moab::Range::iterator mset_it, set_it;
+    moab::EntityHandle mthis_set, geom_set;
+    moab::Range sets, n_sets, m_sets;
+    
+    
     // ! parser related
     bool debug, hybrid, check_bl_edge_length;
     // !! file Input
@@ -171,10 +198,12 @@ namespace MeshKit {
     std::string szInputString;
     std::string szComment;
     int MAXCHARS, m_nLineNumber;
+    // all_bl is the vector storing the number of materials a particular boundary layer node is attached to
+    std::vector<int> blmaterial_id, all_bl;
     
     // ! variables to parse
     std::string m_InputFile, m_MeshFile, m_OutFile, m_LogName, m_MeshType;
-    int m_SurfId, m_NeumannSet, m_Material, m_HConn;
+    int m_SurfId, m_NeumannSet, m_Material, m_HConn, hex27;
     double m_Thickness, m_MinEdgeLength;
     int m_Intervals, m_JacCalls, tri_sch, fixmat;
     double m_Bias, m_JLo, m_JHi;
