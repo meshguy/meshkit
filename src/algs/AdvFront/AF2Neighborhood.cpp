@@ -3,6 +3,9 @@
 // MeshKit
 #include "meshkit/Error.hpp"
 
+// C++
+#include <set>
+
 AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
     AF2Edge3D* baselineEdge,
     const std::list<const AF2Edge3D*> & otherEdges,
@@ -12,13 +15,24 @@ AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
   typedef std::list<const AF2Edge3D*>::const_iterator ConstEdge3DItr;
   typedef std::map<AF2Point3D*, const AF2Point2D*>::const_iterator MapItr;
 
+  std::set<AF2Point3D*> illegalPoints;
+
   baseEdge3D = baselineEdge;
   localTransform = localTransformArg;
 
   for (ConstPoint3DItr itr = points.begin(); itr != points.end(); ++itr)
   {
-    const AF2Point2D* point2D = localTransform->transformFromSurface(**itr);
-    points2D.push_back(point2D);
+    bool legal = true;
+    AF2Point2D* point2D = localTransform->transformFromSurface(**itr, legal);
+    if (legal)
+    {
+      points2D.push_back(point2D);
+      map2DTo3D[point2D] = *itr;
+    }
+    else
+    {
+      illegalPoints.insert(*itr);
+    }
     map3DTo2D[*itr] = point2D;
     map2DTo3D[point2D] = *itr;
   }
@@ -52,6 +66,14 @@ AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
       badArg.set_string(
           "An edge endpoint is not listed in the neighborhood points.");
       throw badArg;
+    }
+    if ((illegalPoints.find((*itr)->getStart()) != illegalPoints.end()) ||
+        (illegalPoints.find((*itr)->getEnd()) != illegalPoints.end()))
+    {
+      // Don't create an edge if its endpoints are illegal
+      // TODO: Decide whether there is something better to do if one endpoint
+      // is legal and the other is not legal
+      continue;
     }
     const AF2Edge2D* edge2D =
         new AF2Edge2D(startItr->second, endItr->second);

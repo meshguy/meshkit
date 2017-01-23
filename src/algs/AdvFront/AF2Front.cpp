@@ -252,8 +252,8 @@ AF2Neighborhood* AF2Front::selectNeighborhood(
   double yDiff = baseEnd->getY() - baseStart->getY();
   double zDiff = baseEnd->getZ() - baseStart->getZ();
   double sqLen = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff;
-  double ngbhdSize = 4.0 * (3u + baselineEdge->getQualityLevel()) *
-      (3u + baselineEdge->getQualityLevel()) * sqLen;
+  unsigned int qLevelFactor = std::min(baselineEdge->getQualityLevel(), 7u);
+  double ngbhdSize = 4.0 * (3u + qLevelFactor) * (3u + qLevelFactor) * sqLen;
 
   // create lists to hold the points and (other) edges in the neighborhood
   std::list<AF2Point3D*> ngbhdPoints;

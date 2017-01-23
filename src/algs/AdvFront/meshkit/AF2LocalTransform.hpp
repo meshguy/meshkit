@@ -31,10 +31,18 @@ class AF2LocalTransform
      * of the calling context to deallocate it with a call to delete.
      *
      * \param srfcPnt the input 3-dimensional point on the surface
+     * \param legal an editable flag that the AF2LocalTransform may set
+     *     to false to indicate that the 3-dimensional point does not
+     *     lie in the local patch of the surface for which this transform
+     *     provides a bijection, so the 2-dimensional point returned by
+     *     the method should not be used except, possibly, as an endpoint
+     *     of an edge if the other endpoint of the edge is legal
+     *
+     *
      * \return a 2-dimensional point
      */
     virtual AF2Point2D* transformFromSurface(
-        AF2Point3D const & srfcPnt) const = 0;
+        AF2Point3D const & srfcPnt, bool & legal) const = 0;
 
     /**
      * \brief Transform from a point in the 2-dimensional space of this
