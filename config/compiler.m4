@@ -31,6 +31,19 @@ AC_DEFUN([FATHOM_CHECK_CXX_WORKS], [
 ])
 
 
+AC_DEFUN([FATHOM_CHECK_MPI_ENABLED], [
+  AC_AFTER([$0], [AC_PROG_CC])dnl
+  AC_REQUIRE([AC_PROG_CC])dnl
+  AC_LANG_PUSH([C])
+  AC_MSG_CHECKING([if $CC works with MPI])
+  AC_COMPILE_IFELSE(
+   [AC_LANG_PROGRAM( [#include <mpi.h>]
+   [int i=MPI_SUCCESS;] )],
+   [AC_MSG_RESULT([yes]); $1=yes],
+    [AC_MSG_RESULT([no]); $1=no])
+  AC_LANG_POP([C])
+])
+
 ########## Helper function for FATHOM_CHECK_COMPILERS #############
 # args: compiler variable, compiler list, path
 AC_DEFUN([FATHOM_SET_MPI_COMPILER], [
@@ -109,37 +122,39 @@ if test "xno" != "x$enablempi"; then
   F77_LIST="mpixlf77 mpif77"
   DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --with-mpi=\"${WITH_MPI}\""
 
-else
-  
-  CC_LIST="$CC gcc icc clang"
-  CXX_LIST="$CXX g++ icpc clang++"
-  FC_LIST="$FC gfortran ifort g77 f77 nag xlf"
-  F77_LIST="$F77 $FC_LIST"
-
 fi
+
+CC_LIST="$CC $CC_LIST gcc icc clang"
+CXX_LIST="$CXX $CXX_LIST g++ icpc clang++"
+FC_LIST="$FC $FC_LIST gfortran ifort pgf90 nag xlf"
+F77_LIST="$F77 $F77_LIST gfortran ifort pgf77 nag xlf g77 f77"
 
 COMPILERPATHS=""
 if test "xno" != "x$enablempi"; then
   COMPILERPATHS="${WITH_MPI}/bin"
 fi
 
-  # C support
-  FATHOM_SET_MPI_COMPILER([CC],  [$CC_LIST], [$COMPILERPATHS])
-  AC_PROG_CC
-  AC_PROG_CPP
+FATHOM_SET_MPI_COMPILER([CC],  [$CC_LIST], [$COMPILERPATHS])
+FATHOM_SET_MPI_COMPILER([CXX],[$CXX_LIST],[$COMPILERPATHS])
 
-  # C++ support
-  FATHOM_SET_MPI_COMPILER([CXX],[$CXX_LIST],[$COMPILERPATHS])
-  AC_PROG_CXX
-  AC_PROG_CXXCPP
+# FATHOM_CHECK_MPI_ENABLED([compiler_supports_mpi])
+# AC_SUBST(compiler_supports_mpi)
 
-  # Fortran support
-  if (test "x$CHECK_FC" != "xno"); then
-    FATHOM_SET_MPI_COMPILER([FC],  [$FC_LIST],[$COMPILERPATHS])
-    FATHOM_SET_MPI_COMPILER([F77],[$F77_LIST],[$COMPILERPATHS])
-    AC_PROG_FC
-    AC_PROG_F77
-  fi
+# C support
+AC_PROG_CC
+AC_PROG_CPP
+
+# C++ support
+AC_PROG_CXX
+AC_PROG_CXXCPP
+
+# Fortran support
+if (test "x$CHECK_FC" != "xno"); then
+  FATHOM_SET_MPI_COMPILER([F77],[$F77_LIST],[$COMPILERPATHS])
+  AC_PROG_F77
+  FATHOM_SET_MPI_COMPILER([FC],  [$FC_LIST],[$COMPILERPATHS])
+  AC_PROG_FC
+fi
 
 ]) # FATHOM_CHECK_COMPILERS
 
@@ -164,6 +179,61 @@ test "xno" = "x$CHECK_CC" || CHECK_CC=yes
 test "xno" = "x$CHECK_CXX" || CHECK_CXX=yes 
 test "xno" = "x$CHECK_FC" || CHECK_FC=yes 
 
+# Check for debug flags
+AC_ARG_ENABLE( debug, AS_HELP_STRING([--enable-debug],[Debug symbols (-g)]),
+               [enable_debug=$enableval], [enable_debug="no"] )
+AC_ARG_ENABLE( optimize, AS_HELP_STRING([--enable-optimize],[Compile optimized (-O2)]),
+               [enable_optimize=$enableval; enable_cxx_optimize=$enableval; enable_cc_optimize=$enableval; enable_fc_optimize=$enableval;],
+               [enable_optimize=""; enable_cxx_optimize="no"; enable_cc_optimize="no"; enable_fc_optimize="no";	]
+             )
+
+EXTRA_PGI_ONLY_FCFLAGS="-Mfree"
+if (test "x$enable_debug" != "xno"); then # debug flags
+# GNU
+EXTRA_GNU_CXXFLAGS="-Wall -Wno-long-long -pipe -pedantic -Wshadow -Wunused-parameter -Wpointer-arith -Wformat -Wformat-security -Wextra -Wno-variadic-macros -Wno-unknown-pragmas"
+EXTRA_GNU_FCFLAGS="-pipe -pedantic -ffree-line-length-0"
+# CLANG
+EXTRA_CLANG_CXXFLAGS="$EXTRA_GNU_CXXFLAGS"
+EXTRA_CLANG_FCFLAGS="$EXTRA_GNU_FCFLAGS"
+# Intel
+EXTRA_INTEL_CXXFLAGS="-pipe -C"
+EXTRA_INTEL_FCFLAGS="-C"
+# PGI
+EXTRA_PGI_CXXFLAGS="-traceback --diag_suppress 236 --diag_suppress=unrecognized_gcc_pragma -C"
+EXTRA_PGI_FCFLAGS="-traceback -Mbounds -Ktrap=inv,divz,ovf"
+# XLC
+EXTRA_BG_CXXFLAGS="-qarch=qp -qpic=large -qdebug=except"
+EXTRA_BG_FCFLAGS="-qarch=qp -qpic=large -qdebug=except"
+fi
+
+if (test "x$enable_cxx_optimize" != "xno"); then  # optimization flags
+#GNU
+EXTRA_GNU_CXXFLAGS="$EXTRA_GNU_CXXFLAGS -fprefetch-loop-arrays -finline-functions -march=native"
+EXTRA_GNU_FCFLAGS="$EXTRA_GNU_FCFLAGS -ffree-line-length-0 -finline-functions"
+#CLANG
+EXTRA_CLANG_CXXFLAGS="$EXTRA_CLANG_CXXFLAGS -march=native"
+EXTRA_CLANG_FCFLAGS="$EXTRA_CLANG_FCFLAGS -ffree-line-length-0 -finline-functions"
+# Intel
+EXTRA_INTEL_CXXFLAGS="$EXTRA_INTEL_CXXFLAGS -xHost -ip -no-prec-div" # -fast
+EXTRA_INTEL_FCFLAGS="$EXTRA_INTEL_FCFLAGS -xHost -ip -no-prec-div" # -fast
+# PGI
+EXTRA_PGI_CXXFLAGS="$EXTRA_PGI_CXXFLAGS -fast"
+EXTRA_PGI_FCFLAGS="$EXTRA_PGI_FCFLAGS -fast"
+# XLC
+EXTRA_BG_CXXFLAGS="$EXTRA_BG_CXXFLAGS -qarch=qp -qtune=auto -qpic=large -qenablevmx"
+EXTRA_BG_FCFLAGS="$EXTRA_BG_FCFLAGS -qarch=qp -qtune=auto -qpic=large -qenablevmx"
+fi
+
+if (test "x$GXX" = "xyes"); then # G++ specific flags
+  if (test "x$enable_debug" != "xno"); then
+    EXTRA_GNU_ONLY_CXXFLAGS="$EXTRA_GNU_CXXFLAGS"
+    EXTRA_GNU_ONLY_FCFLAGS="$EXTRA_GNU_FCFLAGS"
+  else
+    EXTRA_GNU_ONLY_CXXFLAGS="$EXTRA_GNU_CXXFLAGS -ftree-vectorize"
+    EXTRA_GNU_ONLY_FCFLAGS="$EXTRA_GNU_FCFLAGS -ftree-vectorize"
+  fi
+fi
+
 # this is just a test comment
 if test "xno" != "x$CHECK_CC"; then
   FATHOM_CC_FLAGS
@@ -181,25 +251,11 @@ FCFLAGS="$USER_FCFLAGS $FATHOM_FC_SPECIAL"
 FLIBS=""
 FCLIBS=""
 
-# On IBM/AIX, the check for OBJEXT fails for the mpcc compiler.
-# (Comment out this hack, it should be fixed correctly now)
-#if test "x$OBJEXT" = "x"; then
-#  OBJEXT=o
-#fi
-
-  # Check for debug flags
-AC_ARG_ENABLE( debug, AS_HELP_STRING([--enable-debug],[Debug symbols (-g)]),
-               [enable_debug=$enableval], [enable_debug=] )
-AC_ARG_ENABLE( optimize, AS_HELP_STRING([--enable-optimize],[Compile optimized (-O2)]),
-               [enable_cxx_optimize=$enableval; enable_cc_optimize=$enableval; enable_fc_optimize=$enableval;],
-               [enable_cxx_optimize=""; enable_cc_optimize=""; enable_fc_optimize="";	]
-             )
-
 # Do enable_optimize by default, unless user has specified
 # custom CXXFLAGS or CFLAGS
 DEBUG=no
-if test "x$enable_debug" = "x"; then
-  if test "x$enable_cxx_optimize" = "x"; then
+if (test "x$enable_debug" != "xyes"); then
+  if (test "x$enable_optimize" == "x"); then
     enable_cxx_optimize=yes
     enable_cc_optimize=yes
     enable_fc_optimize=yes
@@ -217,42 +273,39 @@ if test "xyes" = "x$enable_debug"; then
     FFLAGS="$FFLAGS -g"
   fi
   # Add -fstack-protector-all option for g++ in debug mode
-  if test "x$GXX" = "xyes"; then
+  if (test "x$cxx_compiler" = "xGNU"); then
     CXXFLAGS="$CXXFLAGS -fstack-protector-all"
-    LDFLAGS="$LDFLAGS -fstack-protector-all"
-  fi
-  # Add -fstack-protector-all option for gcc in debug mode
-  if test "x$GXX" = "xyes"; then
     CFLAGS="$CFLAGS -fstack-protector-all"
-  fi
-  if (test "x$CHECK_FC" != "xno"); then
-    FCFLAGS="$FCFLAGS -fstack-protector-all"
-    FFLAGS="$FFLAGS -fstack-protector-all"
+    LDFLAGS="$LDFLAGS -fstack-protector-all"
+    if (test "x$CHECK_FC" != "xno"); then
+      FCFLAGS="$FCFLAGS -fstack-protector-all"
+      FFLAGS="$FFLAGS -fstack-protector-all"
+    fi
   fi
   DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --enable-debug=yes"
 else
   DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --enable-debug=no"
 fi
-if test "xyes" = "x$enable_cxx_optimize"; then
+if (test "xno" != "x$enable_cxx_optimize"); then
   CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG"
   DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --enable-optimize=yes"
 else
   DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --enable-optimize=no"
 fi
-if test "xyes" = "x$enable_cc_optimize"; then
+if (test "xno" != "x$enable_cc_optimize"); then
   CFLAGS="$CFLAGS -O2 -DNDEBUG"
 fi
 if (test "x$ENABLE_FORTRAN" != "xno"); then
-  if test "xyes" = "x$enable_fc_optimize"; then
+  if (test "xno" != "x$enable_fc_optimize"); then
     FCFLAGS="$FCFLAGS -O2"
   fi
-  if test "xyes" = "x$enable_f77_optimize"; then
+  if (test "xno" != "x$enable_f77_optimize"); then
     FFLAGS="$FFLAGS -O2"
   fi
 fi
 
-  # Check for 32/64 bit.
-  # This requires FATHOM_CXX_FLAGS and FATHOM_CC_FLAGS to have been called first
+# Check for 32/64 bit.
+# This requires FATHOM_CXX_FLAGS and FATHOM_CC_FLAGS to have been called first
 AC_ARG_ENABLE(32bit, AS_HELP_STRING([--enable-32bit],[Force 32-bit objects]),
 [
   if (test "xyes" != "x$enableval" && test "xno" != "x$enableval"); then
@@ -299,20 +352,37 @@ fi
 # Distcheck flags for 32-bit and 64-bit builds
 DISTCHECK_CONFIGURE_FLAGS="$DISTCHECK_CONFIGURE_FLAGS --enable-32bit=$enable_32bit --enable-64bit=$enable_64bit"
 
+# Check if platform is BlueGene
+AC_MSG_CHECKING([if platform is IBM BlueGene])
+FATHOM_TRY_COMPILER_DEFINE([__bg__],
+  [MB_DEFS="$MB_DEFS -DBLUEGENE"
+   MB_BLUEGENE_CONF=yes],
+  [MB_BLUEGENE_CONF=no])
+AC_MSG_RESULT([$MB_BLUEGENE_CONF])
+
+# Special overrides flags for BG/Q
+if (test "x$enable_static" != "xno" && test "x$MB_BLUEGENE_CONF" != "xno" && test "x$GXX" != "xyes"); then
+  LDFLAGS="$LDFLAGS -qnostaticlink=libgcc"
+fi
+
 # Check if we are using new Darwin kernels with Clang -- needs libc++ instead of libstdc++
 if (test "x$ENABLE_FORTRAN" != "xno" && test "x$CHECK_FC" != "xno"); then
 
-  AC_LANG_PUSH([Fortran 77])
-  FAC_FC_WRAPPERS
-  AC_F77_MAIN
-  AC_LANG_POP([Fortran 77])
-
   # check how to link against C++ runtime for fortran programs correctly
-  AC_LANG_PUSH([Fortran])
-  FAC_FC_WRAPPERS
+  AC_F77_MAIN
   AC_FC_MAIN
+  FAC_FC_WRAPPERS
   fcxxlinkage=no
-  if (test "$cc_compiler" == "Intel"); then
+
+  # Check if we are on IBM ANL BG/Q system
+  # Default location on Vesta/Mira: /soft/compilers/ibmcmp-feb2015/vacpp/bg/12.1/bglib64/libibmc++.a
+  # Other location for stdc++ libraries: /bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux/lib/libstdc++.a
+  case "`hostname`" in
+    *vesta*)  LIBS="$LIBS /soft/compilers/ibmcmp-feb2015/vacpp/bg/12.1/bglib64/libibmc++.a"; fcxxlinkage=yes ;;
+    *mira*)  LIBS="$LIBS /soft/compilers/ibmcmp-feb2015/vacpp/bg/12.1/bglib64/libibmc++.a"; fcxxlinkage=yes ;;
+  esac
+
+  if (test "$cxx_compiler" == "Intel"); then
     my_save_ldflags="$LDFLAGS"
     LDFLAGS="$LDFLAGS -cxxlib"
     AC_MSG_CHECKING([whether $FC supports -cxxlib])
@@ -322,6 +392,26 @@ if (test "x$ENABLE_FORTRAN" != "xno" && test "x$CHECK_FC" != "xno"); then
         [AC_MSG_RESULT([no])]
     )
     LDFLAGS="$my_save_ldflags"
+  elif (test "$cxx_compiler" == "PortlandGroup"); then
+    my_save_ldflags="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -pgc++libs -lstd -lC"
+    AC_MSG_CHECKING([whether $FC supports -pgc++libs -lstd -lC])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
+        [AC_MSG_RESULT([yes])]
+        [fcxxlinkage=yes; FLIBS="$FLIBS -pgc++libs -lstd -lC"; FCLIBS="$FCLIBS -pgc++libs -lstd -lC"],
+        [AC_MSG_RESULT([no])]
+    )
+    LDFLAGS="$my_save_ldflags"
+    if (test "$fcxxlinkage" != "yes"); then
+      LDFLAGS="$LDFLAGS -pgcpplibs -lstd -lC"
+      AC_MSG_CHECKING([whether $FC supports -pgcpplibs -lstd -lC])
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
+          [AC_MSG_RESULT([yes])]
+          [fcxxlinkage=yes; FLIBS="$FLIBS -pgcpplibs -lstd -lC"; FCLIBS="$FCLIBS -pgcpplibs -lstd -lC"],
+          [AC_MSG_RESULT([no])]
+      )
+      LDFLAGS="$my_save_ldflags"
+    fi
   else
 
     if (test "$fcxxlinkage" != "yes"); then
@@ -334,7 +424,7 @@ if (test "x$ENABLE_FORTRAN" != "xno" && test "x$CHECK_FC" != "xno"); then
         AC_MSG_CHECKING([whether $FC supports -stdlib=libc++])
         AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
             [AC_MSG_RESULT([yes])]
-            [fcxxlinkage=yes; FFLAGS="$FFLAGS -lc++"; FCFLAGS="$FCFLAGS -lc++"; FLIBS="$FLIBS -lc++"; FCLIBS="$FCLIBS -lc++"],
+            [fcxxlinkage=yes; FLIBS="$FLIBS -lc++"; FCLIBS="$FCLIBS -lc++"],
             [AC_MSG_RESULT([no])]
         )
         LDFLAGS="$my_save_ldflags"
@@ -342,13 +432,13 @@ if (test "x$ENABLE_FORTRAN" != "xno" && test "x$CHECK_FC" != "xno"); then
 
       # GNU and other non-intel compilers will use the standard -lstdc++ linkage
       # This case also includes the Ubuntu+Clang combination as mentioned before
-      if (test "$cc_compiler" != "Clang" || test "$fcxxlinkage" != "yes"); then
+      if (test "$cxx_compiler" != "Clang" || test "$fcxxlinkage" != "yes"); then
         my_save_ldflags="$LDFLAGS"
         LDFLAGS="$LDFLAGS -lstdc++"
         AC_MSG_CHECKING([whether $FC supports -stdlib=libstdc++])
         AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
             [AC_MSG_RESULT([yes])]
-            [fcxxlinkage=yes; FFLAGS="$FFLAGS -lstdc++"; FCFLAGS="$FCFLAGS -lstdc++"; FLIBS="$FLIBS -lstdc++"; FCLIBS="$FCLIBS -lstdc++"],
+            [fcxxlinkage=yes; FLIBS="$FLIBS -lstdc++"; FCLIBS="$FCLIBS -lstdc++"],
             [AC_MSG_RESULT([no])]
         )
         LDFLAGS="$my_save_ldflags"
@@ -357,7 +447,9 @@ if (test "x$ENABLE_FORTRAN" != "xno" && test "x$CHECK_FC" != "xno"); then
 
   fi
 
-  AC_LANG_POP([Fortran])
+  if (test "$fcxxlinkage" != "yes"); then
+    AC_MSG_WARN([Unrecognized C++ linkage for C/Fortran programs])
+  fi
 
 fi
 
@@ -433,7 +525,7 @@ AC_CACHE_CHECK([for Fortran name-mangling scheme],
 [mv conftest.$ac_objext cfortran_test.$ac_objext
 
   ac_save_LIBS=$LIBS
-  LIBS="cfortran_test.$ac_objext $LIBS $[]_AC_LANG_PREFIX[]LIBS"
+  LIBS="cfortran_test.$ac_objext $LIBS $[]_AC_LANG_PREFIX[]LIBS $ac_cv_fc_libs"
 
   AC_LANG_PUSH(C)dnl
   ac_success=no
@@ -499,7 +591,9 @@ AC_CACHE_CHECK([for Fortran name-mangling scheme],
 # underscores, respectively, so that they match the name mangling
 # scheme used by the Fortran compiler.
 AC_DEFUN([FAC_FC_WRAPPERS],
-[_AC_FORTRAN_ASSERT()dnl
+[
+AC_LANG_PUSH([Fortran])
+_AC_FORTRAN_ASSERT()dnl
 FAC_FC_NAME_MANGLING
 AH_TEMPLATE(_AC_FC[_FUNC],
     [Define to a macro mangling the given C identifier (in lower and upper
@@ -535,6 +629,7 @@ case $ac_cv_[]_AC_LANG_ABBREV[]_mangling in
           AC_MSG_WARN([unknown Fortran name-mangling scheme])
           ;;
 esac
+AC_LANG_POP([Fortran])
 ])# FAC_FC_WRAPPERS
 
 #######################################################################################
@@ -555,6 +650,7 @@ if test x$GXX = xyes; then
   # Intel and Clang claims to be GCC, check for it here
   FATHOM_TRY_COMPILER_DEFINE([__INTEL_COMPILER],[cxx_compiler=Intel])
   FATHOM_TRY_COMPILER_DEFINE([__clang__],[cxx_compiler=Clang])
+  FATHOM_TRY_COMPILER_DEFINE([__PGI],[cxx_compiler=PortlandGroup])
 # Search for other compiler types
 # For efficiency, limit checks to relevant OSs
 else
@@ -610,41 +706,42 @@ case "$cxx_compiler:$host_cpu" in
   GNU:sparc*)
     FATHOM_CXX_32BIT=-m32
     FATHOM_CXX_64BIT=-m64
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CXX_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
     ;;
   GNU:powerpc*)
     FATHOM_CXX_32BIT=-m32
     FATHOM_CXX_64BIT=-m64
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CXX_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
     ;;
   GNU:i?86|GNU:x86_64)
     FATHOM_CXX_32BIT=-m32
     FATHOM_CXX_64BIT=-m64
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CXX_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
     ;;
   GNU:mips*)
     FATHOM_CXX_32BIT="-mips32 -mabi=32"
     FATHOM_CXX_64BIT="-mips64 -mabi=64"
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CXX_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
     ;;
   GNU:*)
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CXX_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
     ;;
   Intel:*)
     FATHOM_CXX_32BIT=-m32
     FATHOM_CXX_64BIT=-m64
-    FATHOM_CXX_SPECIAL="$EXTRA_INTEL_FLAGS -wd981 -wd279 -wd1418 -wd383 -wd1572 -wd2259"
+    FATHOM_CXX_SPECIAL="$EXTRA_INTEL_CXXFLAGS -wd981 -wd279 -wd1418 -wd383 -wd1572 -wd2259"
     ;;
   VisualAge:*)
     FATHOM_CXX_32BIT=-q32
     FATHOM_CXX_64BIT=-q64
-    FATHOM_CXX_SPECIAL="-qrtti=all"
-    AR="ar -X 32_64"
+    FATHOM_CXX_SPECIAL="$EXTRA_BG_CXXFLAGS -qminimaltoc -qmaxmem=-1 -qlanglvl=variadictemplates"
+    AR="ar"
     NM="nm -B -X 32_64"
     ;;
   VisualAge8:*)
     FATHOM_CXX_32BIT=-q32
     FATHOM_CXX_64BIT=-q64
+    FATHOM_CXX_SPECIAL="$EXTRA_BG_CXXFLAGS -qminimaltoc -qmaxmem=-1 -qlanglvl=variadictemplates"
     NM="nm -B -X 32_64"
     ;;
   MIPSpro:mips)
@@ -659,8 +756,11 @@ case "$cxx_compiler:$host_cpu" in
     FATHOM_CXX_32BIT=-xarch=generic
     FATHOM_CXX_64BIT=-xarch=generic64
     ;;
+  PortlandGroup:*)
+    FATHOM_CXX_SPECIAL="$EXTRA_PGI_CXXFLAGS"
+    ;;
   Clang:*)
-    FATHOM_CXX_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CXX_SPECIAL="$EXTRA_CLANG_CXXFLAGS"
     FATHOM_CXX_32BIT=-m32
     FATHOM_CXX_64BIT=-m64
     ;;
@@ -702,6 +802,7 @@ if test x$GCC = xyes; then
   # Intel claims to be GCC, check for it here
   FATHOM_TRY_COMPILER_DEFINE([__INTEL_COMPILER],[cc_compiler=Intel])
   FATHOM_TRY_COMPILER_DEFINE([__clang__],[cc_compiler=Clang])
+  FATHOM_TRY_COMPILER_DEFINE([__PGI],[cc_compiler=PortlandGroup])
 # Search for other compiler types
 # For efficiency, limit checks to relevant OSs
 else
@@ -755,51 +856,67 @@ case "$cc_compiler:$host_cpu" in
   GNU:sparc*)
     FATHOM_CC_32BIT=-m32
     FATHOM_CC_64BIT=-m64
-    FATHOM_CC_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CC_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
+    FATHOM_FC_SPECIAL="$EXTRA_GNU_ONLY_FCFLAGS"
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
     ;;
   GNU:powerpc*)
     FATHOM_CC_32BIT=-m32
     FATHOM_CC_64BIT=-m64
-    FATHOM_CC_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CC_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
+    FATHOM_FC_SPECIAL="$EXTRA_GNU_ONLY_FCFLAGS"
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
     ;;
   GNU:i?86|GNU:x86_64)
     FATHOM_CC_32BIT=-m32
     FATHOM_CC_64BIT=-m64
-    FATHOM_CC_SPECIAL="$EXTRA_GNU_FLAGS"
-    ;;
-  Intel:*)
-    FATHOM_CC_32BIT=-m32
-    FATHOM_CC_64BIT=-m64
-    FATHOM_CC_SPECIAL="$EXTRA_INTEL_FLAGS -wd981 -wd279 -wd1418 -wd383 -wd1572"
+    FATHOM_CC_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
+    FATHOM_FC_SPECIAL="$EXTRA_GNU_ONLY_FCFLAGS"
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
     ;;
   GNU:mips*)
     FATHOM_CC_32BIT="-mips32 -mabi=32"
     FATHOM_CC_64BIT="-mips64 -mabi=64"
-    FATHOM_CC_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CC_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
+    FATHOM_FC_SPECIAL="$EXTRA_GNU_ONLY_FCFLAGS"
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
     ;;
   GNU:*)
-    FATHOM_CC_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CC_SPECIAL="$EXTRA_GNU_ONLY_CXXFLAGS"
+    FATHOM_FC_SPECIAL="$EXTRA_GNU_ONLY_FCFLAGS"
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
+    ;;
+  Intel:*)
+    FATHOM_CC_32BIT=-m32
+    FATHOM_CC_64BIT=-m64
+    FATHOM_CC_SPECIAL="$EXTRA_INTEL_CXXFLAGS -wd981 -wd279 -wd1418 -wd383 -wd1572"
+    FATHOM_FC_SPECIAL="$EXTRA_INTEL_FCFLAGS"
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
     ;;
   VisualAge:*)
     case "$target_vendor" in
       bgp)
         FATHOM_CC_32BIT=-q32
-	FATHOM_CC_64BIT=-q64
-	AR="ar"
-	NM="nm -B"
+        FATHOM_CC_64BIT=-q64
+        AR="ar"
+        NM="nm -B"
         ;;
       bgq)
         FATHOM_CC_32BIT=-q32
         FATHOM_CC_64BIT=-q64
-	FATHOM_CC_SPECIAL=-qarch=qp
-	FATHOM_CXX_SPECIAL="-qarch=qp -qpic=large -qmaxmem=-1"
+        FATHOM_CC_SPECIAL="$EXTRA_BG_CXXFLAGS -qmaxmem=-1 -qminimaltoc"
+        FATHOM_FC_SPECIAL="$EXTRA_BG_FCFLAGS -qnoescape -WF,-C! -qddim -qalias=intptr"
+        FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
         AR="ar"
         NM="nm -B"
         ;;
       *)
         FATHOM_CC_32BIT=-q32
         FATHOM_CC_64BIT=-q64
-        AR="ar -X 32_64"
+        FATHOM_CC_SPECIAL="$EXTRA_BG_CXXFLAGS -qmaxmem=-1 -qminimaltoc"
+        FATHOM_FC_SPECIAL="$EXTRA_BG_FCFLAGS -qnoescape -WF,-C! -qddim -qalias=intptr"
+        FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
+        AR="ar"
         NM="nm -B -X 32_64"
         ;;
     esac
@@ -808,12 +925,23 @@ case "$cc_compiler:$host_cpu" in
     FATHOM_CC_32BIT=-n32
     FATHOM_CC_64BIT=-64
     FATHOM_CC_SPECIAL=-LANG:std
+    FATHOM_FC_SPECIAL=-LANG:std
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
     ;;
   MIPSpro:*)
     FATHOM_CC_SPECIAL=-LANG:std
+    FATHOM_FC_SPECIAL=-LANG:std
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
+    ;;
+  PortlandGroup:*)
+    FATHOM_CC_SPECIAL="-traceback -C"
+    FATHOM_FC_SPECIAL="$EXTRA_PGI_FCFLAGS $EXTRA_PGI_ONLY_FCFLAGS"
+    FATHOM_F77_SPECIAL="$EXTRA_PGI_FCFLAGS"
     ;;
   Clang:*)
-    FATHOM_CC_SPECIAL="$EXTRA_GNU_FLAGS"
+    FATHOM_CC_SPECIAL="$EXTRA_CLANG_CXXFLAGS"
+    FATHOM_FC_SPECIAL="$EXTRA_CLANG_FCFLAGS"
+    FATHOM_F77_SPECIAL="$FATHOM_FC_SPECIAL"
     FATHOM_CC_32BIT=-m32
     FATHOM_CC_64BIT=-m64
     ;;
@@ -829,6 +957,7 @@ case "$cc_compiler:$host_cpu" in
     ;;
 esac
 AC_MSG_RESULT([$cc_compiler:$host_cpu])
+
 ]) # end FATHOM_CC_FLAGS
 
 
