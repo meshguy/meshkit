@@ -377,10 +377,20 @@ AC_HELP_STRING([--disable-tools],[Disable all tools by default])],
   # Individual tools
 MK_OPTIONAL_TOOL([algs],   [yes])
 MK_OPTIONAL_TOOL([quadmesher],   [no])
+MK_OPTIONAL_TOOL([rgg16],   [no])
 MK_OPTIONAL_TOOL([src],    [yes])
 MK_OPTIONAL_TOOL([python], [no])
 MK_OPTIONAL_TOOL([intassign], [no])
-
+################################################################################
+#                           RGG16 mesh script change
+################################################################################
+AC_MSG_CHECKING([RGG16 is enabled])
+AC_MSG_RESULT([${ENABLE_RGG16}])
+# make the conditional rgg16
+AM_CONDITIONAL(HAVE_RGG16, [test "x$ENABLE_rgg16" = "xyes"])
+if test "xyes" = "x$ENABLE_rgg16"; then
+  AM_CPPFLAGS="$AM_CPPFLAGS -DHAVE_RGG16"
+fi
 ################################################################################
 #                           QuadMesher
 ################################################################################
