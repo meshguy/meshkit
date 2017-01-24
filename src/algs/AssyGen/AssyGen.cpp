@@ -903,8 +903,13 @@ namespace MeshKit
                     if (m > 2 && m_szMeshScheme == "hole"){
                         // find material name for this alias
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                            if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                            if(szVCylMat(m) == m_szAssmMatAlias(ll)){
+#ifdef HAVE_RGG16
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;                            
+#endif
+                              }
                           }
                       }
                   }
@@ -1030,8 +1035,13 @@ namespace MeshKit
                         // find material name for this alias
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
                             //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0)
-                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                            if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0){
+#ifdef HAVE_RGG16
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;                            
+#endif
+                              }
                           }
                       }
                   }
@@ -1081,8 +1091,13 @@ namespace MeshKit
                     if (m > 2 && m_szMeshScheme == "hole"){
                         // find material name for this alias
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                            if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                            if(szVCylMat(m) == m_szAssmMatAlias(ll)){
+#ifdef HAVE_RGG16
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;                            
+#endif
+                              }
                           }
                       }
                   }
@@ -1192,8 +1207,13 @@ namespace MeshKit
                         // find material name for this alias
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
                             //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
-                              m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                            if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0){
+#ifdef HAVE_RGG16
+                                m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
+                                m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+#endif
+                              }
                           }
                       }
                     // setting stuff for hole scheme determination for meshing
@@ -1202,7 +1222,11 @@ namespace MeshKit
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
                             //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
                             if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
+#ifdef HAVE_RGG16                              
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
                               m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+#endif
                           }
                       }
                   }
@@ -1242,8 +1266,13 @@ namespace MeshKit
                         // find material name for this alias
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
                             //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
-                              m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                            if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0){
+#ifdef HAVE_RGG16
+                                m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
+                                m_FileOutput << "group 'innerduct' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+#endif
+                              }
                           }
                       }
                     // setting stuff for hole scheme determination for meshing
@@ -1251,8 +1280,13 @@ namespace MeshKit
                         // find material name for this alias
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
                             //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                            if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0)
-                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                            if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0){
+#ifdef HAVE_RGG16
+                              m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
+                            m_FileOutput << "group 'hole_surfaces' add surface name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;                            
+#endif
+                              }
                           }
                       }
                   }

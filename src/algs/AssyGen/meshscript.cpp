@@ -10,6 +10,11 @@ void AssyGen::CreateCubitJournal()
 //Output:   none
 //---------------------------------------------------------------------------
 {
+#ifdef HAVE_RGG16
+  m_FileOutput << "#RGG16 enabled for AssyGen" << std::endl;
+#else
+  m_FileOutput << "#<15.1 version enabled for AssyGen" << std::endl;
+#endif
   if(m_szMeshScheme == "hole")
     m_FileOutput << "surf in group hole_surfaces scheme hole" << std::endl;
 
@@ -152,10 +157,18 @@ void AssyGen::CreateCubitJournal()
           szGrp = "g_"+ m_szAssmMat(p);
           m_szAssmMat(p);
           if(m_nPlanar ==1){
-              m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"*\"" << std::endl;
+#else
+              m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;              
+#endif
             }
           else{
-              m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+#ifdef HAVE_RGG16              
+              m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"*\"" << std::endl;
+#else
+              m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;              
+#endif
             }
         }
       for(int p = 1; p <=  (m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
@@ -285,7 +298,11 @@ void AssyGen::CreateCubitJournal()
               szSize =  m_szAssmMat(p) + "_size";
               szSurfBot = m_szAssmMat(p) + "_bot";
               szSize =  m_szAssmMat(p) + "_surf_size";
-              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfBot  << "\"" << std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfBot  << "*\"" << std::endl;
+#else
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfBot  << "\"" << std::endl;              
+#endif
               m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
             }
           m_FileOutput << "#" << std::endl;
@@ -299,7 +316,11 @@ void AssyGen::CreateCubitJournal()
           szGrp = "g_"+ m_szAssmMat(p);
           szSize =  m_szAssmMat(p) + "_surf_size";
           if(m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
-              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "*\"" << std::endl;
+#else
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;              
+#endif
               m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
               m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
               m_FileOutput << "#{If(nIntersect==0)}" << std::endl;
@@ -308,13 +329,21 @@ void AssyGen::CreateCubitJournal()
               m_FileOutput << "#{endif}"  << std::endl;
             }
           else{
-              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "*\"" << std::endl;
+#else
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;              
+#endif
               m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
               m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
             }
 
           if (p==1 && m_edgeInterval != 99){
-              m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge'"<< std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge*'"<< std::endl;
+#else
+              m_FileOutput << "group 'edges" <<"' equals curve with name 'side_edge'"<< std::endl;              
+#endif
               m_FileOutput << "curve in edges interval {TOP_EDGE_INTERVAL}" << std::endl;
             }
 
@@ -342,7 +371,11 @@ void AssyGen::CreateCubitJournal()
           m_FileOutput << "#Meshing top surface" << std::endl;
           //m_FileOutput << "mesh surface with z_coord = " << z2 << std::endl;
           if(m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
-              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "*\"" << std::endl;
+#else
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;              
+#endif
               m_FileOutput << "group 'remove_hole' intersect group tmpgrp with group hole_surfaces" << std::endl;
               m_FileOutput << "#{nIntersect=NumInGrp('remove_hole')}" << std::endl;
               m_FileOutput << "#{If(nIntersect==0)}" << std::endl;
@@ -352,7 +385,11 @@ void AssyGen::CreateCubitJournal()
               m_FileOutput << "mesh surface with z_coord = {Zmax}" << std::endl;
             }
           else if (m_nBLAssemblyMat != 0){ // mesh by spefifying boundary layers or mesh partially
-              m_FileOutput << "group 'tmpgrp' equals surface name '_top'" << std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group 'tmpgrp' equals surface name '*_top*'" << std::endl;
+#else
+              m_FileOutput << "group 'tmpgrp' equals surface name '_top'" << std::endl;              
+#endif
               m_FileOutput << "group 'tmpgrp1' subtract innerduct from tmpgrp" << std::endl;
               m_FileOutput << "group 'tmpgrp2' subtract bl_surfaces from tmpgrp1" << std::endl;
               m_FileOutput << "group 'tmpgrp3' equals surface in tmpgrp2 with z_coord = {Zmax}" << std::endl;
@@ -363,7 +400,11 @@ void AssyGen::CreateCubitJournal()
 
             }
           else {
-              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;
+#ifdef HAVE_RGG16
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "*\"" << std::endl;
+#else
+              m_FileOutput << "group 'tmpgrp' equals surface name \""  << szSurfTop  << "\"" << std::endl;              
+#endif
               m_FileOutput << "surface in tmpgrp  size {"  << szSize <<"}" << std::endl;
               m_FileOutput << "surface in tmpgrp scheme {" << "PAVE" << "}"  << std::endl;
               m_FileOutput << "mesh surface with z_coord = {Zmax}" << std::endl;
@@ -621,14 +662,22 @@ void AssyGen::CreateCubitJournal()
           ++nSideset;
           szSurfTop = m_szAssmMat(p)+"_top";
           // Avoid creation if empty sideset
-          m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+#ifdef HAVE_RGG16
+          m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "*' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
+#else
+          m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;          
+#endif
           m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
           m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
         }
       m_FileOutput << "#" << std::endl;
       for(int p=1;p<=m_nBLAssemblyMat;p++){
           ++nSideset;
-          szSurfTop = m_szBLAssmMat(p)+"_top";
+#ifdef HAVE_RGG16
+          szSurfTop = m_szBLAssmMat(p)+"_top*";
+#else
+          szSurfTop = m_szBLAssmMat(p)+"_top";          
+#endif
           // Avoid creation if empty sideset
           m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << std::endl;
           m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
@@ -643,7 +692,11 @@ void AssyGen::CreateCubitJournal()
           // now create bot and side sideset
           m_FileOutput << "#Creating bot/side surface sidesets" << std::endl;
           for(int p=1;p<=(m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
-              szSurfTop = m_szAssmMat(p)+"_bot";
+#ifdef HAVE_RGG16
+              szSurfTop = m_szAssmMat(p)+"_bot*";
+#else
+              szSurfTop = m_szAssmMat(p)+"_bot";              
+#endif
               m_FileOutput << "#" << std::endl;
               ++nSideset;
               m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << "' in vol in block " << m_nMaterialSetId + p -1 << std::endl;
@@ -652,8 +705,11 @@ void AssyGen::CreateCubitJournal()
             }
           for(int p=1;p<=m_nBLAssemblyMat;p++){
               ++nSideset;
-              szSurfTop = m_szBLAssmMat(p)+"_bot";
-              // Avoid creation if empty sideset
+#ifdef HAVE_RGG16
+              szSurfTop = m_szAssmMat(p)+"_bot*";
+#else
+              szSurfTop = m_szAssmMat(p)+"_bot";              
+#endif              // Avoid creation if empty sideset
               m_FileOutput << "group 'tmpgrp' equals surface with name '" << szSurfTop << std::endl;
               m_FileOutput << "sideset " << nSideset << " surface in tmpgrp " << std::endl;
               m_FileOutput << "sideset " << nSideset << " name \"" << szSurfTop << "_ss\"" << std::endl;
@@ -717,11 +773,18 @@ void AssyGen::CreateCubitJournal()
               szGrp = "g_"+ m_szAssmMat(p);
               m_szAssmMat(p);
               if(m_nPlanar ==1){
-                  m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+#ifdef HAVE_RGG16
+                  m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"*\"" << std::endl;
+#else
+                  m_FileOutput << "group \"" << szGrp << "\" add surface name \"" << m_szAssmMat(p) <<"\"" << std::endl;                  
+#endif
                 }
               else{
-
-                  m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;
+#ifdef HAVE_RGG16
+                  m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"*\"" << std::endl;
+#else
+                  m_FileOutput << "group \"" << szGrp << "\" add body name \"" << m_szAssmMat(p) <<"\"" << std::endl;                  
+#endif
                 }
             }
           for(int p = 1; p <=  (m_szAssmMatAlias.GetSize() - m_nBLAssemblyMat);p++){
