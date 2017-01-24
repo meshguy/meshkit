@@ -34,7 +34,6 @@ AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
       illegalPoints.insert(*itr);
     }
     map3DTo2D[*itr] = point2D;
-    map2DTo3D[point2D] = *itr;
   }
 
   MapItr baseStartItr = map3DTo2D.find(baselineEdge->getStart());
