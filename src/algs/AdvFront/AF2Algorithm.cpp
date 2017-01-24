@@ -3,12 +3,16 @@
 // C++
 #include <cstddef>
 #include <vector>
+#include <map>
 
 // MeshKit
 #include "meshkit/AF2DfltRuleAppVisitor.hpp"
 #include "meshkit/AF2Edge3D.hpp"
 #include "meshkit/AF2RuleApplication.hpp"
 #include "meshkit/Error.hpp"
+
+// for debugging
+#include <iostream>
 
 AF2Algorithm::AF2Algorithm(const std::list<const AF2Rule*> & ruleListArg) :
     ruleList(ruleListArg)
@@ -46,9 +50,13 @@ AF2AlgorithmResult* AF2Algorithm::execute(
     const AF2LocalTransformMaker* const & transformMaker,
     const double* coords, unsigned int numPoints,
     const unsigned int* edges, unsigned int numEdges,
-    const moab::EntityHandle* vertexHandles) const
+    const moab::EntityHandle* vertexHandles, int debug) const
 {
   typedef std::list<const AF2Rule*>::const_iterator RuleConstItr;
+
+  // these are used for debugging
+  static int face=0;
+  face++;
 
   unsigned long int nextPointId = 0ul;
   std::list<AF2Point3D*> allPoints;
@@ -58,7 +66,11 @@ AF2AlgorithmResult* AF2Algorithm::execute(
   // initialize the front
   initFront(front, allPoints, nextPointId,
       coords, numPoints, edges, numEdges, vertexHandles);
-
+  if (debug>1)
+  {
+    std::cout<<" On surface " << face << " initial front " << allPoints.size() << " points and " << numEdges << " edges.\n";
+  }
+  int step = 0;
   // while the front is not empty and there is still progress
   while (!front.isEmpty() && front.getMaximumQuality() < 50u)
   {
@@ -100,12 +112,22 @@ AF2AlgorithmResult* AF2Algorithm::execute(
         processNewFace(bestRuleApp->getNewFace(nfi),
             ngbhd, newPointsMap, allFaces, front);
       }
+      // at a successful application, dump the content if we want to
+      step++;
+      if (debug>2)
+      {
+        output_intermediate_result(allPoints, allFaces, face, step);
+      }
     }
   }
 
   if (front.isEmpty())
   {
     // the advancing front algorithm successfully completed
+    if (debug>0)
+    {
+      std::cout<<" On surface " << face << " generated " << allPoints.size() << " points and " << allFaces.size() << " triangles\n";
+    }
     return new AF2AlgorithmResult(allPoints, allFaces);
   }
 
@@ -243,3 +265,67 @@ void AF2Algorithm::release(std::list<AF2Point3D*> & allPoints,
     delete (*itr);
   }
 }
+
+#include "moab/Core.hpp"
+#include "moab/ReadUtilIface.hpp"
+void AF2Algorithm::output_intermediate_result (std::list<AF2Point3D*> & allPoints,
+        std::list<const AF2Polygon3D*> & allFaces,int face,  int step) const
+{
+  moab::Core mb;
+  int num_nodes = (int) allPoints.size();
+  std::vector<double> newPointCoords;
+  typedef std::list<AF2Point3D*>::const_iterator ConstPointItr;
+  for (ConstPointItr pItr = allPoints.begin();
+      pItr != allPoints.end(); ++pItr)
+  {
+    newPointCoords.push_back((*pItr)->getX());
+    newPointCoords.push_back((*pItr)->getY());
+    newPointCoords.push_back((*pItr)->getZ());
+  }
+  // Commit the new points to MOAB
+  moab::Range newPointsRange;
+  mb.create_vertices(
+      &newPointCoords[0], num_nodes, newPointsRange);
+  // Set the map between local ID and moab handle
+  std::map<long, moab::EntityHandle> idToHandle;
+  ConstPointItr np3dItr = allPoints.begin();
+  for (moab::Range::const_iterator nphItr = newPointsRange.begin();
+      nphItr != newPointsRange.end(); ++nphItr)
+  {
+
+    long localID = (*np3dItr)->getLocalId();
+    idToHandle[localID]=*nphItr;
+    ++np3dItr;
+  }
+
+  int numTriangles = allFaces.size();
+
+  // pre-allocate connectivity memory to store the triangles
+  moab::ReadUtilIface* readInterface;
+  mb.query_interface(readInterface);
+
+  moab::EntityHandle firstHandle;
+  moab::EntityHandle* triConnectAry;
+  readInterface->get_element_connect(
+      numTriangles, 3, moab::MBTRI, 0, firstHandle, triConnectAry);
+
+  unsigned int caIndex = 0u;
+  typedef std::list<const AF2Polygon3D*>::const_iterator ConstTriangleItr;
+  for (ConstTriangleItr tItr = allFaces.begin();
+      tItr != allFaces.end(); ++tItr)
+  {
+    for (unsigned int vi = 0; vi < 3; ++vi)
+    {
+      triConnectAry[caIndex + vi] = idToHandle[(*tItr)->getVertex(vi)->getLocalId()];
+    }
+    caIndex += 3;
+  }
+
+  std::stringstream tempStep;
+  tempStep<<"Face_"<< face << "_Step" <<step<<  ".vtk";
+  mb.write_file(tempStep.str().c_str());
+
+
+  return;
+}
+

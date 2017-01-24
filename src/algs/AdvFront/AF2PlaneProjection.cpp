@@ -126,10 +126,7 @@ AF2Point2D* AF2PlaneProjection::transformFromSurface(
     if (nrmlDot < 0.0009765625) // 1.0/1024 == 0.0009765625)
       legal= false;
   }
-  /*if (legal && (fabs(diffDotNormal) > maxDistanceFromPlane))
-  {
-    maxDistanceFromPlane = fabs(diffDotNormal);
-  }*/
+
   return new AF2Point2D(planePntX, planePntY);
 }
 
