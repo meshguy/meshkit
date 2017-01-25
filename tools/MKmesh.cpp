@@ -1,10 +1,10 @@
 /*
- * test_AF2meshop.cpp
+ * MKmesh.cpp
  *
- *  create a test/tool for meshop, to run different input files with various sizes
+ *  create a tool for meshop, to run different input files with various sizes
  *
  *  example of use
- *  test_AF2meshop <input_geo_file> <out_mesh> <size> <dbg_level>
+ *  MKmesh <input_geo_file> AF2DfltTriangleMeshOp <size> <out_mesh>  <dbg_level>
  */
 
 // C++
@@ -21,8 +21,6 @@
 
 // MeshKit testing
 #include "TestUtil.hpp"
-
-// define the geometry file extension depending on the geometry model
 
 
 using namespace MeshKit;
