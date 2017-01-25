@@ -14,7 +14,7 @@
 
 // MeshKit
 #include "meshkit/MKCore.hpp"
-#include "meshkit/AF2DfltTriangleMeshOp.hpp"
+#include "meshkit/MeshOp.hpp"
 #include "meshkit/SizingFunction.hpp"
 #include "meshkit/SizingFunctionVar.hpp"
 #include "meshkit/ModelEnt.hpp"
@@ -24,12 +24,6 @@
 
 // define the geometry file extension depending on the geometry model
 
-#if HAVE_OCC
-std::string geomExt = ".stp";
-#else
-std::string geomExt = ".facet";
-#define HAVE_FACET
-#endif
 
 using namespace MeshKit;
 
@@ -41,50 +35,53 @@ int main(int argc, char **argv)
   // iGeom.
   MKCore * mk = new MeshKit::MKCore();
 
-  std::string file_name = TestDir + "/" + "squaresurf" + geomExt;
+  std::string file_name, meshop, out_mesh;
+  double size = 1.0;
+  int debug=0;
 
-
-  if (argc > 1)
+  if (argc < 5)
+  {
+    std::cout <<" usage: " << argv[0] << " <geo_file> <mesh_op> <size> <out_file> [debug_level] \n ";
+    return 1;
+  }
+  if (argc >= 5)
   {
     file_name = argv[1];
+    meshop = argv[2];
+    size = atof(argv[3]);
+    out_mesh = argv[4];
   }
+
+  if (argc>=6)
+  {
+    debug = atoi(argv[5]);
+  }
+
   mk->load_geometry(file_name.c_str());
   // get the surfaces
-  MEntVector surfs;
-  mk->get_entities_by_dimension(2, surfs);
+  int dim_primary_dim=2; // could change for tet mesher, for example
+  // this tool will work only for surf meshers ...
+  MEntVector primary_ents;
+  mk->get_entities_by_dimension(dim_primary_dim, primary_ents);
 
   // Construct the AF2DfltTriangleMeshOp on the surfaces
-  MeshOp * AFM = mk->construct_meshop("AF2DfltTriangleMeshOp", surfs);
-  std::string out_file = "";
-  if (argc > 2)
-  {
-    out_file = argv[2];
-  }
-  double size = 5.;
-  if (argc > 3)
-  {
-    size = atof(argv[3]);
-  }
+  MeshOp * meshOp = mk->construct_meshop(meshop.c_str(), primary_ents);
+
   SizingFunction* sfPtr = new SizingFunction(mk, -1, size);
-  for (unsigned int si = 0u; si < surfs.size(); ++si)
+  for (unsigned int si = 0u; si < primary_ents.size(); ++si)
   {
-    surfs[si]->sizing_function_index(sfPtr->core_index());
+    primary_ents[si]->sizing_function_index(sfPtr->core_index());
   }
-  if (argc>4 ) // enable debugging
-  {
-    int debugLevel=0;
-    debugLevel = atoi(argv[4]);
-    AFM->set_debug_verbosity(debugLevel);
-  }
+
+  meshOp->set_debug_verbosity(debug);
+
   mk->setup_and_execute();
 
   delete sfPtr;
 
-  if (out_file.length()>1)
-  {
-    // save output
-     mk->moab_instance()->write_file(out_file.c_str());
-  }
+  // save output
+  mk->moab_instance()->write_file(out_mesh.c_str());
+
   delete mk;
   return 0;
 }

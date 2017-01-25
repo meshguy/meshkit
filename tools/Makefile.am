@@ -51,6 +51,8 @@ coregen_SOURCES = coregen.cpp
 
 assygen_SOURCES = assygen.cpp
 
+MKmesh_SOURCES = MKmesh.cpp
+
 # Utility target: build but don't run tests
 build-check:
 	$(MAKE) 'TESTS_ENVIRONMENT=: ' check
@@ -58,6 +60,6 @@ build-check:
 bin_PROGRAMS =
 
 
-bin_PROGRAMS += assygen coregen postbl
+bin_PROGRAMS += assygen coregen postbl MKmesh
 
 
