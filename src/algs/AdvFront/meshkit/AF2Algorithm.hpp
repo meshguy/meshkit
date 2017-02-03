@@ -82,6 +82,13 @@ class AF2Algorithm
     void release(std::list<AF2Point3D*> & allPoints,
         std::list<const AF2Polygon3D*> & allFaces) const;
 
+    /**
+     * \brief  Dump a vtk file at each step, for debugging purposes
+     *        (use with care...)
+     */
+    void output_intermediate_result (std::list<AF2Point3D*> & allPoints,
+            std::list<const AF2Polygon3D*> & allFaces,int face,  int step) const;
+
   public:
 
     /**
@@ -178,12 +185,17 @@ class AF2Algorithm
      *   the coordinate array.  If the result is successful, each point that
      *   was part of the input will have its vertex handle set to the
      *   handle specified in this input
+     * \param debug; controls the debug level
+     *      0 no debug
+     *      1 some info for each surface meshed; dump edge mesh before AF2
+     *      2 info about initial front too
+     *      3 dump a vtk file for each step, for each surface
      */
     AF2AlgorithmResult* execute(
         const AF2LocalTransformMaker* const & transformMaker,
         const double* coords, unsigned int numPoints,
         const unsigned int* edges, unsigned int numEdges,
-        const moab::EntityHandle* vertexHandles = NULL) const;
+        const moab::EntityHandle* vertexHandles = NULL, int debug = 0) const;
 };
 
 #endif

@@ -86,7 +86,7 @@ AF2PlaneProjection::AF2PlaneProjection(iGeom* iGeomPtrArg,
 }
 
 AF2Point2D* AF2PlaneProjection::transformFromSurface(
-    AF2Point3D const & srfcPnt) const
+    AF2Point3D const & srfcPnt, bool & legal) const
 {
   double diffX = srfcPnt.getX() - pOrigin[0];
   double diffY = srfcPnt.getY() - pOrigin[1];
@@ -107,6 +107,26 @@ AF2Point2D* AF2PlaneProjection::transformFromSurface(
   double planePntY = scale * (planarCmpX * pYDir[0] +
       planarCmpY * pYDir[1] + planarCmpZ * pYDir[2]);
 
+  // compute normal at the surface point; if too different orientation, we should not
+  // consider the point legal
+  // maybe we should keep the normal to the points on the front available always, we repeat this too much
+  double normalX, normalY, normalZ;
+  iGeomPtr->getEntNrmlXYZ(surface, srfcPnt.getX(), srfcPnt.getY(),
+      srfcPnt.getZ(), normalX, normalY, normalZ);
+  // normalize?
+  double sqrN= sqrt(normalX*normalX + normalY*normalY + normalZ*normalZ);
+  if (sqrN<=1.e-12)
+    legal= false;
+  else
+  {
+    normalX/=sqrN; normalY/=sqrN; normalZ/=sqrN;
+    double nrmlDot = normalX * pNormal[0] +
+        normalY * pNormal[1] + normalZ * pNormal[2];
+
+    if (nrmlDot < 0.0009765625) // 1.0/1024 == 0.0009765625)
+      legal= false;
+  }
+
   return new AF2Point2D(planePntX, planePntY);
 }
 
@@ -116,6 +136,16 @@ AF2Point3D* AF2PlaneProjection::transformToSurface(
   MeshKit::Vector<3> rayOrigin(pOrigin);
   rayOrigin += (planePnt.getX() / scale) * pXDir +
       (planePnt.getY() / scale) * pYDir;
+ /* // we are looking for the point on the surface, within some distance away
+  // from our plane;
+  const double MYTOL = 1.e-7;
+  // maxDistanceFromPlane is a good measure of how far is the surface from the projection plane
+  double alfa = 1000*MYTOL + 3.0*maxDistanceFromPlane;
+  if (alfa >2.0)
+   alfa =2.0; // do not go overboard
+  if (alfa < 0.5)
+     alfa = 0.5;*/
+
   CubitVector cvRayOrigin(rayOrigin[0], rayOrigin[1], rayOrigin[2]);
   CubitVector cvRayDir(pNormal[0], pNormal[1], pNormal[2]);
   CubitVector cvPointOnSrfc;

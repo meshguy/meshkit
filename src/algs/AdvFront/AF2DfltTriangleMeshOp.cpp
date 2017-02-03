@@ -80,6 +80,15 @@ void AF2DfltTriangleMeshOp::execute_this()
   AF2DfltTriangleRules defaultRules;
   AF2Algorithm algorithm(defaultRules.getRules());
 
+  int debug = get_debug_verbosity(); // will call MeshOp to get the debug verbosity level
+
+  // if some debug level, dump out the mesh so far
+  if (debug>0)
+  {
+    // get the moab instance for convenience
+    moab::Interface* moabInstance = mk_core()->moab_instance();
+    moabInstance->write_file("meshBeforeAF2.vtk");
+  }
   for (MEntSelection::iterator selIt = mentSelection.begin();
       selIt != mentSelection.end(); ++selIt)
   {
@@ -165,8 +174,9 @@ void AF2DfltTriangleMeshOp::execute_this()
     // construct the local transform maker and run the algorithm
     AF2DfltPlaneProjMaker localTransformMaker(
         modelEnt->igeom_instance(), modelEnt->geom_handle(), sizing);
+
     AF2AlgorithmResult* meshResult = algorithm.execute(&localTransformMaker,
-        &coords[0], numVertices, &inputEdges[0], numEdges, &bndryVertsVec[0]);
+        &coords[0], numVertices, &inputEdges[0], numEdges, &bndryVertsVec[0], debug);
 
     // throw failure if the algorithm did not succeed
     if (!meshResult->isSuccessful())

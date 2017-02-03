@@ -87,7 +87,7 @@ class AF2PlaneProjection : public AF2LocalTransform
         MeshKit::Vector<3> const & planeXDir,
         double scaleFactor);
 
-    AF2Point2D* transformFromSurface(AF2Point3D const & srfcPnt) const;
+    AF2Point2D* transformFromSurface(AF2Point3D const & srfcPnt, bool & legal) const;
 
     AF2Point3D* transformToSurface(AF2Point2D const & planePnt,
         unsigned long const & pntId) const;

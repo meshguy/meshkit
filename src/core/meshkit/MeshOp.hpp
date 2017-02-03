@@ -111,10 +111,19 @@ public:
    */
   void create_model_ents_from_previous_ops();
 
+  /**
+   * brief  get debugging level
+   */
+  int get_debug_verbosity() { return debugLevel;} ;
+  /**
+   * brief  set debugging level; usually during / before setup phase, so execute will have it
+   */
+  void set_debug_verbosity(int debug) { debugLevel = debug;} ;
+
 protected:
     //! MEntSelection that stores what this operation generated or otherwise worked on
   MEntSelection mentSelection;
-  
+  int debugLevel;
 private:
 
 };

@@ -29,10 +29,9 @@ NGTetMesher::~NGTetMesher()
 MeshOp *NGTetMesher::get_tri_mesher() 
 {
   std::vector<MeshOpProxy *> proxies;
-    mk_core()->meshop_by_mesh_type(moab::MBTRI, proxies);
-   if (proxies.empty()) throw Error(MK_FAILURE, "Couldn't find a MeshOp capable of producing triangles.");
-//  return mk_core()->construct_meshop(*proxies.begin());
-  return mk_core()->construct_meshop("CAMALTriAdvance");
+  mk_core()->meshop_by_mesh_type(moab::MBTRI, proxies);
+  if (proxies.empty()) throw Error(MK_FAILURE, "Couldn't find a MeshOp capable of producing triangles.");
+  return mk_core()->construct_meshop("AF2DfltTriangleMeshOp");
 }
 
 void NGTetMesher::setup_this()

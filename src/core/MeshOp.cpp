@@ -14,11 +14,13 @@ namespace MeshKit
 MeshOp::MeshOp(const MeshOp &mesh_op) 
         : GraphNode(mesh_op)
 {
+  debugLevel=0;
 }
   
 MeshOp::MeshOp(MKCore *mkcore, const MEntVector &me_vec) 
         : GraphNode(mkcore)
 {
+  debugLevel=0;
   if (!me_vec.empty()) {
     for (MEntVector::const_iterator vit = me_vec.begin(); vit != me_vec.end(); vit++)
       mentSelection[*vit];
