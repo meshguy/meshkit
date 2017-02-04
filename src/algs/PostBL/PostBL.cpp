@@ -37,9 +37,6 @@ namespace MeshKit
     err = 0;
     fixmat = -1;
     hex27 = 0;
-    hex = NULL;
-    hex1 = NULL;
-    hex2 = NULL;
   }
   
   PostBL::~PostBL()
