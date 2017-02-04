@@ -21,6 +21,7 @@ RadialMeshSize 0.3
 AxialMeshSize 20.0
 Rotate Z 30
 Center
+CreateSideset NO
 MaterialSet_StartId 100
 NeumannSet_StartId 100
 END ! This is a must

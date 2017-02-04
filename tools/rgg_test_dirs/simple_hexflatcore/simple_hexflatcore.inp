@@ -8,13 +8,13 @@ Geometry Volume				 ! 'Geometry' card defines if the meshes are volume or surfac
 Symmetry 1 				 ! 'Symmetry' card defines the desired symmetry in the model
 GeometryType HexFlat			 ! 'GeometryType' card can take values Hexagonal Rectangular
 Assemblies 2 10.0			 ! 'Assemblies' card defines the number of assembly mesh files and their pitch
-control.cub  FF				 ! Meshfile name followed by alias 
-fuel.cub  C1
+control.cub  C1				 ! Meshfile name followed by alias 
+fuel.cub  FF
 Lattice 3				 ! 'Lattice' card defines arrangement of assemblies in core
 !
     C1  C1  C1          &
   C1  FF  FF  C1        &
-C1  FF  FF  FF  C1      &
+C1  FF  C1  FF  C1      &
   C1  FF  FF  C1        &
     C1  C1  C1  
 !
@@ -22,6 +22,7 @@ Background outer_cylinder.cub		 ! Background mesh file
 NeumannSet Top  97                       ! 'NeumannSet' card followed by 'location of NeumannSet'  'Id of NeumannSet'
 NeumannSet Bot  98                       !  Values 'top', 'bot' and 'side' are acceptable for second parameter. 
 NeumannSet SideAll 99
+MergeTolerance 1e-4
 OutputFileName s.h5m
 END		 			 ! 'END' card is a MUST marks the end of file for the file reader
 

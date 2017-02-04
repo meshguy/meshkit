@@ -6,7 +6,7 @@
 include ../../common.mk
 
 
-CUBIT = cubit -nographics
+CUBIT = trelis -nographics
 
 COREGEN = $(MESHKIT_DIR)/bin/coregen
 
@@ -49,4 +49,4 @@ outer_cylinder.cub : cylinderical_covering.jou
 
 
 make clean :
-	rm *.sat *.cub *.py *.jou
+	rm *.sat *.cub *.py 

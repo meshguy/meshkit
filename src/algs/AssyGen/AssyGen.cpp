@@ -271,7 +271,7 @@ namespace MeshKit
     std::cout<<"\no/p Cubit journal file name: "<< m_szJouFile
             << std::endl;
 
-// filename to be saved with cubit journal file
+    // filename to be saved with cubit journal file
     m_szGeomFile1 = m_szFile+".sat";
 
     //ACIS ENGINE
@@ -849,14 +849,20 @@ namespace MeshKit
                     szFormatString >> szVCylMat(m);
                     if(strcmp (szVCylMat(m).c_str(), "") == 0 || szFormatString.fail())
                       IOErrorHandler(EALIAS);
-                    //                  // setting stuff for hole scheme determination for meshing
-                    //                  if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
-                    //                      // find material name for this alias
-                    //                      for (int ll=1; ll<= m_nAssemblyMat; ll++){
-                    //                          if(szVCylMat(m) == m_szAssmMatAlias(ll))
-                    //                            m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
-                    //                        }
-                    //                    }
+                    // setting stuff for hole scheme determination for meshing
+                    if (m > 1 && m_szMeshScheme == "hole" && m_nBLAssemblyMat == 0){
+                        // find material name for this alias
+                        for (int ll=1; ll<= m_nAssemblyMat; ll++){
+                            if(szVCylMat(m) == m_szAssmMatAlias(ll)){
+
+#ifdef HAVE_RGG16
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+#else
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+#endif
+                              }
+                          }
+                      }
                     m_Pincell(i).SetCylMat(nCyl, szVCylMat);
                   }
               }
@@ -905,9 +911,9 @@ namespace MeshKit
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
                             if(szVCylMat(m) == m_szAssmMatAlias(ll)){
 #ifdef HAVE_RGG16
-                              m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
 #else
-                            m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
 #endif
                               }
                           }
@@ -1037,9 +1043,9 @@ namespace MeshKit
                             //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
                             if(strcmp (m_szAssmMatAlias(ll).c_str(), szVCylMat(m).c_str()) == 0){
 #ifdef HAVE_RGG16
-                              m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
 #else
-                            m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
 #endif
                               }
                           }
@@ -1093,9 +1099,9 @@ namespace MeshKit
                         for (int ll=1; ll<= m_nAssemblyMat; ll++){
                             if(szVCylMat(m) == m_szAssmMatAlias(ll)){
 #ifdef HAVE_RGG16
-                              m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
 #else
-                            m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
 #endif
                               }
                           }
@@ -1282,9 +1288,9 @@ namespace MeshKit
                             //   if(szVCylMat(m) == m_szAssmMatAlias(ll))
                             if(strcmp (m_szAssmMatAlias(ll).c_str(),  m_szMMAlias(m_nDuctNum, i).c_str()) == 0){
 #ifdef HAVE_RGG16
-                              m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top*'" << std::endl;
 #else
-                            m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
+                                m_FileOutput << "group 'hole_surfaces' add surface with name '"<< m_szAssmMat(ll)  << "_top'" << std::endl;
 #endif
                               }
                           }
@@ -2396,7 +2402,7 @@ namespace MeshKit
 
     // get tag handle for 'NAME' tag, already created as iGeom instance is created
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
-    char* tag_name =(char *)"NAME";    
+    char* tag_name =(char *)"NAME";
     iGeom_getTagHandle(igeomImpl->instance(), tag_name, &this_tag, &err, 4);
 #endif
     iBase_EntityHandle tmp_vol= NULL, tmp_new= NULL;
@@ -2421,6 +2427,8 @@ namespace MeshKit
 #endif
             Name_Faces(sMatName, tmp_vol, this_tag);
             m_PyCubGeomFile << "lid = assms[" << (nTemp1 - 1)*m_nDimensions << "].id()" << std::endl;
+            if (sMatName == "")
+              IOErrorHandler(EALIAS);
             m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
             m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", assms[" << (nTemp1 - 1)*m_nDimensions << "])" << std::endl;
           }
@@ -2511,6 +2519,8 @@ namespace MeshKit
                                   sMatName.c_str(), sMatName.size(), &err);
 #endif
                     m_PyCubGeomFile << "lid = tmp_new[0].id()" << std::endl;
+                    if (sMatName == "")
+                      IOErrorHandler(EALIAS);
                     m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << sMatName <<  "\" )" << std::endl;
                     m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new[0]) " << std::endl;
                     Name_Faces(sMatName, tmp_new, this_tag);
@@ -2644,7 +2654,7 @@ namespace MeshKit
         std::cout << "\n\nMerging...." << std::endl;
         clock_t s_merge = clock();
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
-        double dTol = 1e-4;        
+        double dTol = 1e-4;
         iGeom_mergeEnts(igeomImpl->instance(), ARRAY_IN(entities), dTol, &err);
 #endif
         std::cout << "## Merge CPU time used := " << (double) (clock() - s_merge)/CLOCKS_PER_SEC
@@ -2669,7 +2679,7 @@ namespace MeshKit
     SimpleArray<double> max_corn, min_corn;
 
     // get all the entities in the model (delete after making a copy of top surface)
-    int *offset = NULL, offset_alloc = 0, offset_size = -1;    
+    int *offset = NULL, offset_alloc = 0, offset_size = -1;
     iGeom_getEntities( igeomImpl->instance(), root_set, iBase_REGION,ARRAY_INOUT(all_geom),&err );
 
     // get all the surfaces in the model

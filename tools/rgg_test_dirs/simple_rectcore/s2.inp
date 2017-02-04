@@ -4,20 +4,19 @@
 !
 GeometryType Rectangular
 !
-Materials 2  Coolant_2 C1 Coolant344 C3
+Materials 2  Covering2 CV Coolant344 C3 
 !
-Duct 2 0.0 0.0 0 10.0 2.0 2.0 5.0 5.0  C3 C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Duct 2 0.0 0.0 0 10.0 2.0 2.0 5.0 5.0  CV C3 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
 Pincells 0
 Assembly 1 1
 XX
 Center
-RadialMeshSize 2.0
-EdgeInterval 8
+EdgeInterval 10
 RadialMeshSize 0.5
+AxialMeshSize 2.0
 MaterialSet_StartId 100
 NeumannSet_StartId 100
-HBlock 5 0 10.0
 END     ! This is a must                  
                                                                                          
 

@@ -2629,7 +2629,7 @@ namespace MeshKit
     make_file << "##" << std::endl;
     make_file << "include ../../common.mk\n" << std::endl;
     
-    make_file << "\nCUBIT = cubit -nographics\n" << std::endl;
+    make_file << "\nCUBIT = trelis -nographics\n" << std::endl;
     make_file << "COREGEN = $(MESHKIT_DIR)/bin/coregen\n" << std::endl;
     make_file << "ASSYGEN = $(MESHKIT_DIR)/bin/assygen\n" << std::endl;
 

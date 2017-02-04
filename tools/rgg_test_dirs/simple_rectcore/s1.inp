@@ -4,25 +4,27 @@
 !
 GeometryType Rectangular
 !
-Materials 2 Mat1 M1 Coolant_1 C1
+Materials 4 Mat1 M1 Coolant_1 C1 OuterDuct O  Fluid2  C2
+!BLMaterials 1 Fluid2 0.1 4 
 !
-Duct 2 0.0 0.0 0 10.0 3.0 3.0 5.0 5.0  M1 C1 !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
+Duct 2 0.0 0.0 0 10.0 3.0 3.0 5.0 5.0  M1 O !2 outer squares at 0.0 0.0 height 0.0 to 124.0 x1 y1 x2 y2 material1 material2 
 !
 Pincells 1 
 !
 ! Standard fuel cell (1)
 PWR_FC_01 FC 1
-Cylinder 1 0.0 0.0  0.0 10.0   0.7  C1
+Cylinder 2 0.0 0.0  0.0 10.0  0.5 0.7  C1   C2
 !
 Assembly 1 1
 FC 
 Center
-EdgeInterval 8
-RadialMeshSize 0.5
+Smooth On
+!MeshScheme Hole
+EdgeInterval 10
+RadialMeshSize 0.2
 AxialMeshSize 2.0
 MaterialSet_StartId 1
 NeumannSet_StartId 1
-HBlock 5 0 10.0
 END     ! This is a must                  
                                                                                          
 

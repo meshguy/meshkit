@@ -59,11 +59,12 @@ surface with z_coord > {Z_MID -.1*Z_HEIGHT} and z_coord < {Z_MID + .1*Z_HEIGHT} 
 unite vol all
 ## the intervals can be parametrized based on radius and the radial mesh size in the assembly files.
 curve with z_coord > {ht - tol} and length < {pitch} and length > {pitch/2.0} interval 14
-curve with z_coord > {ht - tol} and length < {pitch/2/.0} interval 7
+curve with z_coord > {ht - tol} and length < {pitch/2.0} interval 7
+curve with z_coord < {ht - tol} and z_coord > {tol}  interval 5
 curve with z_coord > {ht - tol} and length > {pitch} interval 240
 mesh vol all
 block 9999 vol all
-sideset 9997 surface 31
-sideset 9998 surface 32
-sideset 9999 surface 15
+#sideset 9997 surface 31
+#sideset 9998 surface 32
+#sideset 9999 surface 15
 save as 'outer_cylinder.cub' over
