@@ -1349,10 +1349,6 @@ namespace MeshKit
                     std::cout << "## Subract Pins CPU time used := " << (double) (clock() - s_subtract)/CLOCKS_PER_SEC
                               << " seconds" << std::endl;
                   }
-                if(m_nPlanar ==1){
-                    Create2DSurf();
-                    //ERRORR("Error in Create2DSurf", err);
-                  }
               }
           }
 
@@ -1546,8 +1542,10 @@ namespace MeshKit
               }
           }
         if (szInputString.substr(0,3) == "end" || m_nLineNumber == MAXLINES){
-
-
+            // if this is a surface only case, delete all the volume entities create so far
+            if(m_nPlanar ==1){
+                Create2DSurf();
+              }
             if ( m_nJouFlag == 0){
                 // impring merge before saving
                 Imprint_Merge(m_bimprint, m_bmerge);
@@ -2671,7 +2669,11 @@ namespace MeshKit
   // Output:   none
   // ---------------------------------------------------------------------------
   {
-#if defined (HAVE_ACIS) || defined (HAVE_OCC)    
+    m_PyCubGeomFile << "#keep top surface delete the rest" << std::endl;
+    m_PyCubGeomFile << "cubit.cmd('surf with z_coord == {0} copy'.format(vl[7]) )" << std::endl;
+    m_PyCubGeomFile << "cubit.cmd('delete vol with z_coord < {0}'.format(vl[7]) )" << std::endl;
+
+#if defined (HAVE_ACIS) || defined (HAVE_OCC)
     std::cout << "Creating surface; 2D assembly specified..." << std::endl;
     SimpleArray<iBase_EntityHandle>  all_geom;
     SimpleArray<iBase_EntityHandle> surfs;
