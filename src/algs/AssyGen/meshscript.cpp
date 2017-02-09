@@ -210,8 +210,12 @@ namespace MeshKit
         m_FileOutput << "# putting pins in seperate blocks " << std::endl;
         m_FileOutput << "#" << std::endl;
         for (int i=0; i<m_nTotalPincells; i++){
-            m_FileOutput << "group 'g"<< i+m_nStartpinid << "' add body with name '_xp" << i+m_nStartpinid << "_'" << std::endl;
-
+            m_FileOutput << "#You might have to use:\n#set duplicate block elements on\n#This is required for creating blocks with pin materials only" << std::endl;
+#ifdef HAVE_RGG16
+            m_FileOutput << "group 'g"<< i+m_nStartpinid << "' add body with name '*_xp" << i+m_nStartpinid << "_*'" << std::endl;
+#else
+            m_FileOutput << "group 'g"<< i+m_nStartpinid << "' add body with name '_xp" << i+m_nStartpinid << "_'" << std::endl;            
+#endif
             m_FileOutput << "#{nbody" << i+1 << " =NumInGrp('g" <<i+m_nStartpinid << "')}" << std::endl;
             m_FileOutput << "#{Ifndef(nbody" << i+1 << ")}" << "\n" << "#{else}" << std::endl;
             m_FileOutput << "block " << temp+i << " body in group g" << i+m_nStartpinid << std::endl;
@@ -513,8 +517,13 @@ namespace MeshKit
         m_FileOutput << "# groupings for creating vertex groups"<< std::endl;
         for (int p=1; p<=m_nDuct; p++){
             for(int q=1;q<=m_nSides; q++){
+#ifdef HAVE_RGG16
                 m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge"
-                             << (m_nSides*(p-1) + q ) << "@'" << std::endl;
+                             << (m_nSides*(p-1) + q ) << "*'" << std::endl;
+#else
+                m_FileOutput << "group 'edge" << (m_nSides*(p-1) + q ) <<"' equals curve with name 'side_edge"
+                             << (m_nSides*(p-1) + q ) << "@'" << std::endl;                
+#endif
 
                 m_FileOutput << "group 'vt" <<  (m_nSides*(p-1) + q )  <<"' equals vertex with z_max == z_min in curve in edge"
                              <<  (m_nSides*(p-1) + q ) << std::endl;
@@ -583,9 +592,13 @@ namespace MeshKit
         // get all the split surfaces in individual groups
         for (int p=1; p<=m_nDuct; p++){
             for(int q=1;q<=m_nSides; q++){
-
+#ifdef HAVE_RGG16
+                m_FileOutput << "group 'sname" << (m_nSides*(p-1) + q ) <<  "' equals surface with name 'side_surface"
+                             <<  (m_nSides*(p-1) + q ) << "*'"<< std::endl;
+#else
                 m_FileOutput << "group 'sname" << (m_nSides*(p-1) + q ) <<  "' equals surface with name 'side_surface"
                              <<  (m_nSides*(p-1) + q ) << "'"<< std::endl;
+#endif
                 m_FileOutput << "group 'svert" << (m_nSides*(p-1) + q ) <<  "' equals surface in vert in v"
                              <<  (m_nSides*(p-1) + q ) << std::endl;
                 m_FileOutput << "group 'ssplit" << (m_nSides*(p-1) + q ) <<  "' intersect group sname" <<  (m_nSides*(p-1) + q )
@@ -640,6 +653,21 @@ namespace MeshKit
         for (int p=1; p<=m_nDuct; p++){
             for(int q=1;q<=m_nSides; q++){
                 if(q != m_nSides){
+#ifdef HAVE_RGG16
+                    m_FileOutput << "copy mesh surface in ssplit" <<  (m_nSides*(p-1) + 1)
+                                 << " onto surface in ssplit" << (m_nSides*(p-1) + q + 1 )
+                                 << " source curve in group c" << (m_nSides*(p-1) + 1)
+                                 << " source vertex in group v" << (m_nSides*(p-1) + 1)                                   
+                                 << " target curve in group c" <<  (m_nSides*(p-1) + q + 1) 
+                                 << " target vertex in group v" <<  (m_nSides*(p-1) + q + 1) << " " <<  std::endl;
+
+                    m_FileOutput << "copy mesh surface in ssplit_" << (m_nSides*(p-1) + 1 )
+                                 << " onto surface in ssplit_" << (m_nSides*(p-1) + q +1 )
+                                 << " source curve in group c" << (m_nSides*p)
+                                 << " source vertex in group v" << (m_nSides*p)
+                                 << " target curve in group c" <<  (m_nSides*(p-1) + q) 
+                                 << " target vertex in group v" <<  (m_nSides*(p-1) + q) << " " << std::endl;
+#else
                     m_FileOutput << "copy mesh surface in ssplit" <<  (m_nSides*(p-1) + 1)
                                  << " onto surface in ssplit" << (m_nSides*(p-1) + q + 1 )
                                  << " source vertex in group v" << (m_nSides*(p-1) + 1)
@@ -648,7 +676,8 @@ namespace MeshKit
                     m_FileOutput << "copy mesh surface in ssplit_" << (m_nSides*(p-1) + 1 )
                                  << " onto surface in ssplit_" << (m_nSides*(p-1) + q +1 )
                                  << " source vertex in group v" << (m_nSides*p)
-                                 << " target vertex in group v" <<  (m_nSides*(p-1) + q) << " nosmoothing" << std::endl;
+                                 << " target vertex in group v" <<  (m_nSides*(p-1) + q) << " nosmoothing" << std::endl;          
+#endif
 
                   }
                 else{
