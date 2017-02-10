@@ -6,7 +6,7 @@
 include ../../common.mk
 
 
-CUBIT = cubit -nographics
+CUBIT = trelis -nographics
 
 COREGEN = $(MESHKIT_DIR)/bin/coregen
 

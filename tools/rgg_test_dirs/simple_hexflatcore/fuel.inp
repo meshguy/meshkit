@@ -22,6 +22,7 @@ EdgeInterval 14
 RadialMeshSize 0.3
 AxialMeshSize 20.0
 Rotate Z -30
+CreateSideset NO
 Center
 END
 
