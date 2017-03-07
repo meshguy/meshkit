@@ -85,6 +85,19 @@ int main(int argc, char **argv)
 
   // populate the model with model entities
   mk->populate_model_ents();
+  iGeom::TagHandle nameTag;
+  geom->getTagHandle("NAME", nameTag);
+  for (int dim = 3; dim >= 0; dim--) {
+    MEntVector ents;
+    mk->get_entities_by_dimension(dim, ents);
+    for (unsigned int si = 0u; si < ents.size(); ++si) {
+      ModelEnt * me = ents[si];
+      iGeom::EntityHandle geo_h = me->geom_handle();
+      char * name_ent;
+      geom->getData(geo_h, nameTag, name_ent);
+      std::cout <<" dim: " << dim << " index: " << si << "  name:" << name_ent << "\n";
+    }
+  }
   // get the surfaces
   int dim_primary_dim=2; // could change for tet mesher, for example
   // this tool will work only for surf meshers (now)
