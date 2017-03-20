@@ -70,6 +70,9 @@ namespace MeshKit
                   }
               }
             dHeight = fabs(dVEndZ(n) - dVStartZ(n));
+            m_PyCubGeomFile << "cells = []\ncyls = []\ncp_in = []" << std::endl;
+            m_PyCubGeomFile << "sub1 = [] \nsub2 = []" << std::endl;
+            
             if(m_szGeomType =="hexagonal"){
 
                 m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
@@ -89,8 +92,6 @@ namespace MeshKit
             if(m_szGeomType =="rectangular"){
 
                 m_Pincell(i).GetPitch(PX, PY, PZ);
-                m_PyCubGeomFile << "cells = []\ncyls = []\ncp_in = []" << std::endl;
-                m_PyCubGeomFile << "sub1 = [] \nsub2 = []" << std::endl;
 
                 if(nCells >0){
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)

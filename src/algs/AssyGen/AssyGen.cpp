@@ -1559,7 +1559,7 @@ namespace MeshKit
                 std::cout << "## Saving CPU time used := " << (double) (clock() - s_save)/CLOCKS_PER_SEC
                           << " seconds" << std::endl;
 
-                m_PyCubGeomFile << "cubit.cmd('export acis \"" <<m_szGeomFile1 << "\" over')" << std::endl;
+                m_PyCubGeomFile << "cubit.cmd('export acis \"" <<m_szGeomFile1 << "\" over')\nexit()" << std::endl;
 
                 std::cout << "Normal Termination.\n"<< "Geometry file: " << m_szGeomFile << " saved." << std::endl;
                 //                // Now run the journal file from the python script
