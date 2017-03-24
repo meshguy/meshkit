@@ -70,6 +70,9 @@ namespace MeshKit
                   }
               }
             dHeight = fabs(dVEndZ(n) - dVStartZ(n));
+            m_PyCubGeomFile << "cells = []\ncyls = []\ncp_in = []" << std::endl;
+            m_PyCubGeomFile << "sub1 = [] \nsub2 = []" << std::endl;
+            
             if(m_szGeomType =="hexagonal"){
 
                 m_Pincell(i).GetPitch(dP, dHeightTotal); // this dHeight is not used in creation
@@ -89,8 +92,6 @@ namespace MeshKit
             if(m_szGeomType =="rectangular"){
 
                 m_Pincell(i).GetPitch(PX, PY, PZ);
-                m_PyCubGeomFile << "cells = []" << std::endl;
-                m_PyCubGeomFile << "sub1 = [] \nsub2 = []" << std::endl;
 
                 if(nCells >0){
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
@@ -166,7 +167,7 @@ namespace MeshKit
                         iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
                                              &cyl, &err);
 #endif
-                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ")" << std::endl;
                         std::cout << m << ": Creating cylinder with radii " << dVCylRadii(m) << std::endl;
                       }
                     else{
@@ -204,9 +205,10 @@ namespace MeshKit
                     iGeom_subtractEnts(igeomImpl->instance(), cells[n-1], tmp_vol, &tmp_new, &err);
 #endif
                     m_PyCubGeomFile << "sub1.append(cells[" << n-1 << "])\nsub2.append(tmp_vol)" << std::endl;
+                    m_PyCubGeomFile << "tmp_new = cubit.subtract(sub2, sub1)" << std::endl;
                     m_PyCubGeomFile << "sub1[:] = []\nsub2[:] = []" << std::endl;
 
-                    m_PyCubGeomFile << "cells[n-1] = tmp_new \ncell = tmp_new" << std::endl;
+                    m_PyCubGeomFile << "cells.append(tmp_new[0]) \ncell = tmp_new[0]" << std::endl;
 
                     // copy the new into the cyl array
                     cells[n-1] = tmp_new; cell = tmp_new;
@@ -223,7 +225,7 @@ namespace MeshKit
                   }
                 tmp_vol1=cyls[0]; //inner most cyl
                 cp_in.push_back(tmp_vol1);
-                m_PyCubGeomFile << "tmpvol1 = cyls[0]\ncp_in.append(tmp_vol1)" << std::endl;
+                m_PyCubGeomFile << "tmp_vol1 = cyls[0]\ncp_in.append(tmp_vol1)" << std::endl;
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
                 iGeom_setData(igeomImpl->instance(), tmp_vol1, this_tag,
                               sMatName.c_str(), 10, &err);
@@ -287,7 +289,7 @@ namespace MeshKit
                         m_PyCubGeomFile << "cubit.set_entity_name(\"body\", lid, \""  << pin_name <<  "\" )" << std::endl;
                       }
                     Name_Faces(sMatName, tmp_new, this_tag);
-                    m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new1) " << std::endl;
+                    m_PyCubGeomFile << "name_faces(\"" << sMatName << "\", tmp_new[0]) " << std::endl;
                     m_PyCubGeomFile << "cyls[" << b-1 << "] = tmp_new" << std::endl;
 
                     // copy the new into the cyl array
@@ -535,7 +537,7 @@ namespace MeshKit
 
         // get cylinder data
         m_Pincell(i).GetNumCyl(nCyl);
-        m_PyCubGeomFile << "cells = []" << std::endl;
+        m_PyCubGeomFile << "cells = []\ncyls = []\ncp_in = []" << std::endl;
 
         for(int n=1;n<=nCells; n++){
 
@@ -619,7 +621,7 @@ namespace MeshKit
                         iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
                                              &cyl, &err);
 #endif
-                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ")" << std::endl;
                       }
                     else{
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
@@ -868,7 +870,7 @@ namespace MeshKit
                         iGeom_createCylinder(igeomImpl->instance(), dHeight, dVCylRadii(m), dVCylRadii(m),
                                              &cyl, &err);
 #endif
-                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << ", " << dVCylRadii(m) << ")" << std::endl;
+                        m_PyCubGeomFile << "#\n#\ncyl = cubit.cylinder(" << dHeight << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ", " << dVCylRadii(m) << ")" << std::endl;
                       }
                     else{
 #if defined (HAVE_ACIS) || defined (HAVE_OCC)
