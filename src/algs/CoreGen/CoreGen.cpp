@@ -1,5 +1,5 @@
 #include "meshkit/CoreGen.hpp"
-#include "moab/VerdictWrapper.hpp"
+#include "moab/verdict/VerdictWrapper.hpp"
 #include "moab/NestedRefine.hpp"
 
 #define ERROR(a) {if (iBase_SUCCESS != err) std::cerr << a << std::endl;}
