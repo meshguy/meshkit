@@ -38,7 +38,7 @@
 #include "moab/Skinner.hpp"
 #include "moab/AdaptiveKDTree.hpp"
 #include "moab/Matrix3.hpp"
-#include "moab/VerdictWrapper.hpp"
+#include "moab/verdict/VerdictWrapper.hpp"
 #include "moab/ReadUtilIface.hpp"
 
 
