@@ -8,7 +8,7 @@
 #include "meshkit/SurfaceFacetMeshReader.hpp"
 #include "meshkit/CurveFacetMeshReader.hpp"
 #include "meshkit/ModelEnt.hpp"
-#include "moab/TagConventions.hpp"
+#include "MBTagConventions.hpp"
 #include "moab/GeomTopoTool.hpp"
 #include "moab/Types.hpp"
 

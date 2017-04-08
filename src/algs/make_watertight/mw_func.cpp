@@ -1083,7 +1083,7 @@ ErrorCode prepare_surfaces(Range &surface_sets,
 // separate this part from prepare surfaces into make_mesh_watertight??
 
 
-        MBEntityHandle *skin_loop_sets = new MBEntityHandle[skin.size()];
+        EntityHandle *skin_loop_sets = new EntityHandle[skin.size()];
         result = seal_surface_loops ( *i , skin_loop_sets , skin,  curve_sets, normal_tag, orig_curve_tag, FACET_TOL, surf_id, debug);
         if(gen::error(MB_SUCCESS!=result,"could not seal the surface loops")) {
           delete [] skin_loop_sets;
@@ -1093,7 +1093,7 @@ ErrorCode prepare_surfaces(Range &surface_sets,
     
         // Remove the sets of skin loops
         result = MBI()->delete_entities( &skin_loop_sets[0], skin.size() );
-        if(gen::error(MB_SUCCESS!=result,"failed to zip: deleting skin_loop_sets failed"))
+        if(gen::error(MB_SUCCESS!=result,"failed to zip: deleting skin_loop_sets failed")){
           delete [] skin_loop_sets;
           return result;
         }
