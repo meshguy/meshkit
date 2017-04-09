@@ -1,7 +1,7 @@
 #ifndef MESHKIT_CD_SETS_HPP
 #define MESHKIT_CD_SETS_HPP
 
-#include "meshkitalgs_export.h"
+#include "meshkitalgs_export.hpp"
 
 #include <set>
 #include <string>

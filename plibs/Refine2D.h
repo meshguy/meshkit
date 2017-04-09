@@ -1,7 +1,7 @@
 #ifndef REFINE_H
 #define REFINE_H
 
-#include "meshkitalgs_export.h"
+#include "meshkit/meshkitalgs_export.h"
 
 #include <assert.h>
 #include <math.h>
