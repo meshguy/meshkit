@@ -1246,7 +1246,7 @@ done
 AC_SUBST([DISTCHECK_CONFIGURE_FLAGS])
 
 AC_ARG_VAR([FC], [FORTRAN compiler command])
-AC_OUTPUT_COMMANDS( [if test -f src/algs/meshkitalgs_export.h; then true; else echo "#define MESHKITALGS_EXPORT" > src/algs/meshkitalgs_export.h; fi] )
+#AC_OUTPUT_COMMANDS( [if test -f src/algs/meshkitalgs_export.h; then true; else echo "#define MESHKITALGS_EXPORT" > src/algs/meshkitalgs_export.h; fi] )
 AC_CONFIG_FILES([Makefile 
                  meshkit.make 
                  testdir.h
