@@ -25,6 +25,6 @@ mstream& operator<< (mstream& st, T val)
   st.coss << val;
   std::cout << val;
   return st;
-};
+}
 
 #endif

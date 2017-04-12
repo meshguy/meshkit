@@ -62,7 +62,6 @@ void AssyMesher::setup_this()
   mk_core()->populate_model_ents();
 
   // create a set with the names of materials as std::string
-  std::set<std::string> allMtrlsSet;
   for (int mtrlIndx = 1; mtrlIndx <= m_nAssemblyMat; ++mtrlIndx)
   {
     allMtrlsSet.insert(m_szAssmMat(mtrlIndx));
@@ -1086,6 +1085,73 @@ std::vector<iGeom::EntityHandle>* AssyMesher::selectByMaterialsAndNameSuffix(
   delete[] entName;
 
   return selectedEnts;
+}
+
+void AssyMesher::createMaterialNeumannSets(std::set <std::string> mat_names)
+{
+
+
+  iRel::PairHandle * pair;
+  mk_core()->irel_instance()->createPair (
+              mk_core()->igeom_instance()->instance(), iRel::ENTITY, iRel::IGEOM_IFACE, iRel::ACTIVE,
+              mk_core()->imesh_instance()->instance(), iRel::SET, iRel::IMESH_IFACE, iRel::ACTIVE, pair);
+
+  int ixrel = mk_core()->add_irel_pair(pair);
+
+
+  moab::Tag geomTag, matTag, neuTag;
+  mb->tag_get_handle( "MATERIAL_SET",  matTag );
+  mb->tag_get_handle( "NEUMANN_SET",  neuTag );
+
+  geomTag = mk_core()->moab_geom_dim_tag();
+  moab::Range geom_sets[2];
+  int ss = 0;
+  for(unsigned dim=2; dim<4; dim++) {
+      void *val[] = {&dim};
+      mb->get_entities_by_type_and_tag(0,
+          moab::MBENTITYSET, &geomTag, val, 1, geom_sets[ss], moab::Interface::UNION);
+      int n_id = 1, m_id = 1;
+      for(moab::Range::iterator i=geom_sets[ss].begin(); i!=geom_sets[ss].end(); i++)
+        {
+          if (dim == 2){
+              //pair->
+              //              mb->tag_set_data(neuTag, (iBase_EntitySetHandle)*i, 1, &n_id);
+//              n_id+1;
+          }
+//          else{
+//              mb->tag_set_data(matTag, &i, 1, &m_id);
+//              m_id+1;
+//            }
+        }
+      ss++;
+    }
+//    // get the name tag
+//    iGeom::TagHandle nameTag;
+//    moab::Tag geomTag;
+//    int tagSize;
+//    igeom->getTagHandle("NAME", nameTag);
+
+
+//    moab::Range vol_sets, surf_sets;
+//    int dim = 3;
+//    void *val[] = {&dim};
+//    mb->get_entities_by_type_and_tag(0,
+//        moab::MBENTITYSET, &geomTag, val, 1, vol_sets, moab::Interface::UNION);
+//   dim = 2;
+//   void *val2[] = {&dim};
+//    mb->get_entities_by_type_and_tag(0,
+//        moab::MBENTITYSET, &geomTag, val2, 1, surf_sets, moab::Interface::UNION);
+
+
+    //MBERRCHK(rval, mk_core()->moab_instance());
+
+
+
+//    igeom->getTagSizeBytes(nameTag, tagSize);
+
+
+
+
 }
 
 } // namespace MeshKit
