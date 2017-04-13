@@ -52,8 +52,8 @@ namespace MeshKit
     m_nPincells = 0;
     m_bCreateMatFiles = false;
     m_nSuperBlocks = 0;
-    m_bmerge = false;
-    m_bimprint = false;
+    m_bmerge = true;
+    m_bimprint = true;
     save_exodus = false;
     have_common = true;
     com_run_count = 0;

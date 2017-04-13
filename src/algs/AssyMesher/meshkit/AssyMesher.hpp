@@ -167,7 +167,9 @@ private:
       std::vector<iGeom::EntityHandle> const &geoEntVec,
       std::set<std::string> const &matFilter, const char* suffix) const;
 
-   void createMaterialNeumannSets(std::set <std::string> mat_names);
+  // void createMaterialNeumannSets(std::set <std::string> mat_names);
+   void createMaterialNeumannSets();
+
 
 };
 

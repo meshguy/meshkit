@@ -257,6 +257,7 @@ void AssyMesher::setup_this()
 void AssyMesher::execute_this()
 {
   std::cout << "Execute : start meshing the assembly" << std::endl;
+  createMaterialNeumannSets();
 //  Start doing the steps in .jou file: /MeshKit/rgg/io.cpp:routine:CreateCubitJournal()
 //  AssyMesher
 //  1. Find surfaces with names <pin_material>_top and set radial mesh size, also set mesh scheme to CAMALTriMesher or GRUMMP trimesher
@@ -1087,10 +1088,9 @@ std::vector<iGeom::EntityHandle>* AssyMesher::selectByMaterialsAndNameSuffix(
   return selectedEnts;
 }
 
-void AssyMesher::createMaterialNeumannSets(std::set <std::string> mat_names)
+//void AssyMesher::createMaterialNeumannSets(std::set <std::string> mat_names)
+void AssyMesher::createMaterialNeumannSets()
 {
-
-
   iRel::PairHandle * pair;
   mk_core()->irel_instance()->createPair (
               mk_core()->igeom_instance()->instance(), iRel::ENTITY, iRel::IGEOM_IFACE, iRel::ACTIVE,
@@ -1105,25 +1105,32 @@ void AssyMesher::createMaterialNeumannSets(std::set <std::string> mat_names)
 
   geomTag = mk_core()->moab_geom_dim_tag();
   moab::Range geom_sets[2];
+  moab::EntityHandle jj; // meshset
   int ss = 0;
-  for(unsigned dim=2; dim<4; dim++) {
-      void *val[] = {&dim};
-      mb->get_entities_by_type_and_tag(0,
-          moab::MBENTITYSET, &geomTag, val, 1, geom_sets[ss], moab::Interface::UNION);
-      int n_id = 1, m_id = 1;
-      for(moab::Range::iterator i=geom_sets[ss].begin(); i!=geom_sets[ss].end(); i++)
-        {
-          if (dim == 2){
-              //pair->
-              //              mb->tag_set_data(neuTag, (iBase_EntitySetHandle)*i, 1, &n_id);
-//              n_id+1;
-          }
-//          else{
-//              mb->tag_set_data(matTag, &i, 1, &m_id);
-//              m_id+1;
-//            }
+
+  bool name_all_vol_surfs = true;
+  // TODO: Name by material names in AssyGen input file
+  if(name_all_vol_surfs){
+      for(unsigned dim=2; dim<4; dim++) {
+          void *val[] = {&dim};
+          mb->get_entities_by_type_and_tag(0,
+                                           moab::MBENTITYSET, &geomTag, val, 1, geom_sets[ss], moab::Interface::UNION);
+          int n_id = 1, m_id = 1;
+          for(moab::Range::iterator i=geom_sets[ss].begin(); i!=geom_sets[ss].end(); i++)
+            {
+              mb->create_meshset(moab::MESHSET_SET,jj);
+              mb->add_entities(jj, &(*i), 1);
+              if (dim == 2){
+                  mb->tag_set_data(neuTag, &jj, 1, (void*)&n_id);
+                  n_id+=1;
+                }
+              else{
+                  mb->tag_set_data(matTag, &jj, 1, (void*)&m_id);
+                  m_id+=1;;
+                }
+            }
+          ss++;
         }
-      ss++;
     }
 //    // get the name tag
 //    iGeom::TagHandle nameTag;
