@@ -1047,7 +1047,7 @@ if test "x$WITH_MESQUITE" != "xno"; then
   
   if test "xno" = "x$HAVE_MESQUITE"; then
     if test "x" != "x$WITH_MESQUITE"; then
-      AC_MSG_ERROR([Mesquite not found or not usable])
+      AC_MSG_WARN([Mesquite not found or not usable])
     fi
   else
     DOXYGEN_SRC_PATH="$DOXYGEN_SRC_PATH src/extern/mesquite test/extern/mesquite"
