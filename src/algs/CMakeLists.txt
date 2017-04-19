@@ -1,9 +1,12 @@
+include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+
 add_subdirectory(Qslim)
 add_subdirectory(AssyGen)
 add_subdirectory(AssyMesher)
 add_subdirectory(CoreGen)
 add_subdirectory(Sweep)
 add_subdirectory(PostBL)
+add_subdirectory(AdvFront)
 
 set(extra_links)
 if (ENABLE_QUADMESHER)
@@ -95,6 +98,7 @@ target_link_libraries(MeshKitalgs
   CoreGen
   Sweep
   PostBL
+  AdvFront
   ${extra_links})
 target_include_directories(MeshKitalgs
   PUBLIC
