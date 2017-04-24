@@ -69,12 +69,21 @@ if (MOAB_FOUND)
   add_definitions(-DMOAB)
 endif ()
 
-add_library(AdvFront STATIC
+add_library(AdvFront 
   ${AdvFront_srcs}
   ${AdvFront_headers})
-target_link_libraries(AdvFront
-  MeshKitcore)
-target_include_directories(AdvFront
-  PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
 
+link_libraries(AdvFront
+  MeshKitcore)
+
+include_directories(AdvFront
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "AdvFront"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

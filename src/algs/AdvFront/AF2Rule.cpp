@@ -8,7 +8,7 @@
 #include "meshkit/AF2Binding.hpp"
 #include "meshkit/AF2RuleApplication.hpp"
 #include "meshkit/Error.hpp"
-
+using namespace MeshKit;
 /**
  * A template method for allocating an array to hold the contents of a list
  * of pointers and copying the pointers from the list to the array.
@@ -24,7 +24,7 @@ void aF2RuleCopyListToArray(std::list<T*> const & aListOfPtr,
   {
     if (*itr == NULL)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MK_BAD_INPUT);
       badArg.set_string(
           "AF2Rule constructor arguments may not contain any null pointers.");
       throw badArg;
@@ -68,13 +68,13 @@ AF2Rule::AF2Rule(std::string const & ruleNameArg, unsigned int maxQuality,
 {
   if (baselineEdge == NULL)
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(ErrorCode::MK_BAD_INPUT);
     badArg.set_string("The baseline edge may not be null.");
     throw badArg;
   }
   if (numExVertices < 2)
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(ErrorCode::MK_BAD_INPUT);
     badArg.set_string("AF2Rule must define at least two existing vertices.");
     throw badArg;
   }
@@ -108,14 +108,14 @@ AF2Rule::AF2Rule(const AF2Rule & toCopy) :
     numNewEdges(toCopy.numNewEdges),
     numNewFaces(toCopy.numNewFaces)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(ErrorCode::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Rule copy construction is not supported.");
   throw notImpl;
 }
 
 AF2Rule& AF2Rule::operator=(const AF2Rule & rhs)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(ErrorCode::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Rule assignment operator is not supported.");
   throw notImpl;
 }
@@ -127,7 +127,7 @@ void AF2Rule::checkExEndpointsAndFindIsolatedVertices()
   {
     if (exEdgeIndx > 0 && exEdges[exEdgeIndx] == exEdges[0])
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(ErrorCode::MK_BAD_INPUT);
       badArg.set_string("The baseline edge may not be listed in the rule's other existing edges.");
       throw badArg;
     }
@@ -155,14 +155,14 @@ void AF2Rule::checkExEndpointsAndFindIsolatedVertices()
 
   if (!endPoints.empty())
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(ErrorCode::MK_BAD_INPUT);
     badArg.set_string("The endpoints of the rule's existing edges are not all existing vertices.");
     throw badArg;
   }
 
   if (allVertSet.size() != numExVertices)
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(ErrorCode::MK_BAD_INPUT);
     badArg.set_string("There is a duplicate existing vertex.");
     throw badArg;
   }

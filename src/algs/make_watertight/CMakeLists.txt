@@ -21,7 +21,7 @@ endif ()
 
 include_directories(${MOAB_INCLUDE_DIRS})
 
-add_library(MakeWatertight STATIC
+add_library(MakeWatertight
   ${MakeWatertight_srcs}
   ${MakeWatertight_headers})
 target_link_libraries(MakeWatertight
@@ -31,16 +31,20 @@ add_definitions(-DTEST)
 
 add_executable(make_watertight
   make_watertight.cpp)
-target_link_libraries(make_watertight
+
+link_libraries(make_watertight
   MakeWatertight)
 
 add_executable(check_watertight
   check_watertight.cpp)
-target_link_libraries(check_watertight
+
+link_libraries(check_watertight
   MakeWatertight)
 
 install(
-  TARGETS     make_watertight
-              check_watertight
-  DESTINATION bin
-  COMPONENT   runtime)
+  TARGETS   "make_watertight make_watertight check_watertight"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

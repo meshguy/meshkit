@@ -26,11 +26,20 @@ set(Qslim_headers
 
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_library(Qslim STATIC
+add_library(Qslim
   ${Qslim_srcs}
   ${Qslim_headers})
+
 target_link_libraries(Qslim
   MeshKitcore)
-target_include_directories(Qslim
-  PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "Qslim"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

@@ -9,11 +9,22 @@ if (MOAB_FOUND)
   add_definitions(-DMOAB)
 endif ()
 
-add_library(PostBL STATIC
+add_library(PostBL
   ${PostBL_srcs}
   ${PostBL_headers})
-target_link_libraries(PostBL
+
+link_libraries(PostBL
   MeshKitcore)
-target_include_directories(PostBL
+
+include_directories(PostBL
   PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "PostBL"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)
+

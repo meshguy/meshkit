@@ -34,15 +34,24 @@ if (MOAB_FOUND)
   add_definitions(-DMOAB)
 endif ()
 
-add_library(MeshKitutils STATIC
+add_library(MeshKitutils 
   ${MeshKitutils_srcs}
   ${MeshKitutils_headers})
-target_link_libraries(MeshKitutils
+
+link_libraries(MeshKitutils
   MeshKitcore)
-target_include_directories(MeshKitutils
+
+include_directories(MeshKitutils
   PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}"
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CGM_INCLUDE_DIRS}
     ${MOAB_INCLUDE_DIRS}
     ${Lasso_INCLUDE_DIRS})
 
+install(
+  TARGETS   "MeshKitutils"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

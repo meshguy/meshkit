@@ -85,11 +85,13 @@ if (ENABLE_PARALLEL AND MOAB_HAS_PARALLEL AND CGM_HAS_PARALLEL)
     meshkit/ParRecvSurfMesh.hpp)
 endif ()
 
-add_library(MeshKitalgs STATIC
+add_library(MeshKitalgs
   ${MeshKitalgs_srcs}
   ${MeshKitalgs_headers})
+
 include(GenerateExportHeader)
 generate_export_header(MeshKitalgs)
+
 target_link_libraries(MeshKitalgs
   MeshKitcore
   Qslim
@@ -100,7 +102,15 @@ target_link_libraries(MeshKitalgs
   PostBL
   AdvFront
   ${extra_links})
-target_include_directories(MeshKitalgs
-  PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_BINARY_DIR}")
+
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR})
+
+install(
+  TARGETS   "MeshKitalgs"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

@@ -10,11 +10,21 @@ if (MOAB_FOUND)
   add_definitions(-DMOAB)
 endif ()
 
-add_library(AssyMesher STATIC
+add_library(AssyMesher
   ${AssyMesher_srcs}
   ${AssyMesher_headers})
-target_link_libraries(AssyMesher
+
+link_libraries(AssyMesher
   MeshKitcore)
-target_include_directories(AssyMesher
+
+include_directories(AssyMesher
   PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "AssyMesher"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

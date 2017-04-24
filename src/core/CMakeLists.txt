@@ -29,17 +29,27 @@ set(MeshKitcore_headers
   meshkit/VecUtil.hpp
   meshkit/Matrix.hpp)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+    ${IGEOM_INCLUDE_DIR}
+    ${IGEOM_INCLUDE_DIR}/cgm)
 
-add_library(MeshKitcore STATIC
+add_library(MeshKitcore
   ${MeshKitcore_srcs}
   ${MeshKitcore_headers})
-target_link_libraries(MeshKitcore
+link_libraries(MeshKitcore
   MeshKitalgs
   MeshKitextern
   MeshKitutils
   iGeom
-  emon)
-target_include_directories(MeshKitcore
-  PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+  lemon)
+
+install(
+  TARGETS   "MeshKitcore"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)
+
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR})

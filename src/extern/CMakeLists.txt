@@ -25,8 +25,17 @@ if (MESQUITE_FOUND)
     MeshKitmesquite)
 endif ()
 
-add_library(MeshKitextern STATIC
+add_library(MeshKitextern 
   register_extern.cpp)
-target_link_libraries(MeshKitextern
+
+link_libraries(MeshKitextern
   MeshKitutils
   ${extra_links})
+
+install(
+  TARGETS   "MeshKitextern"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

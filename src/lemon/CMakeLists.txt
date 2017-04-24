@@ -103,9 +103,16 @@ set(lemon_headers
   lemon/concepts/maps.h
   lemon/concepts/path.h)
 
-add_library(emon STATIC
+add_library(lemon
   ${lemon_srcs}
   ${lemon_headers})
-target_include_directories(emon
-  PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "lemon"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

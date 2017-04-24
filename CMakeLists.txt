@@ -145,7 +145,19 @@ if (CGM_FOUND)
 endif ()
 
 
-find_package(MOAB REQUIRED)
+find_file(MOAB_CMAKE_CFG MOABConfig.cmake
+    HINTS ${MOAB_DIR} ${MOAB_DIR}/lib/cmake/MOAB
+)
+
+include (${MOAB_CMAKE_CFG})
+#find_package(MOAB REQUIRED)
+if (MOAB_FOUND)
+    # Output details about CGM configuration
+    message("Found MOAB: ${MOAB_DIR}")
+    message("---   MOAB configuration ::")
+    message("        Include Directory       : ${MOAB_INCLUDE_DIRS}")
+    message("        Library Directory       : ${MOAB_LIBRARIES}")    
+endif(MOAB_FOUND)
 add_definitions(-DHAVE_MOAB)
 if (ENABLE_FBIGEOM)
   add_definitions(-DENABLE_FBiGeom)
@@ -191,8 +203,8 @@ if (ENABLE_INTASSIGN)
 endif ()
 
 include_directories(
-  "${CMAKE_CURRENT_BINARY_DIR}"
-  "${CMAKE_CURRENT_SOURCE_DIR}")
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR})
 
 #add_subdirectory(test)
 #add_subdirectory(doc)
@@ -202,20 +214,23 @@ get_property(meshkit_targets GLOBAL
   PROPERTY meshkit_export_targets)
 
 export(
-  TARGETS ${meshkit_targets}
-  FILE    "${CMAKE_CURRENT_BINARY_DIR}/MeshKitTargets.cmake")
-
-if (WIN32)
-  set(cmakedir cmake)
-else ()
-  set(cmakedir lib/cmake/MeshKit)
-endif ()
+      TARGETS ${meshkit_targets}
+      FILE    "${CMAKE_CURRENT_BINARY_DIR}/MeshKitTargets.cmake")
+    
+    if (WIN32)
+      set(cmakedir cmake)
+    else ()
+      set(cmakedir lib/cmake/MeshKit)
+    endif ()
+    
 
 install(
-  EXPORT      meshkit
-  DESTINATION "${cmakedir}"
-  FILE        MeshKitTargets.cmake
-  COMPONENT   development)
+    EXPORT      meshkit
+    DESTINATION "${cmakedir}"
+    FILE        MeshKitTargets.cmake
+    COMPONENT   development)
+  #EXPORT      MESHKITTargets
+  #DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MOAB/)
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/MeshKitConfig.cmake.in"

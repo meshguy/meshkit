@@ -11,11 +11,21 @@ if (MOAB_FOUND)
   add_definitions(-DMOAB)
 endif ()
 
-add_library(AssyGen STATIC
+add_library(AssyGen
   ${AssyGen_srcs}
   ${AssyGen_headers})
-target_link_libraries(AssyGen
+
+link_libraries(AssyGen
   MeshKitcore)
-target_include_directories(AssyGen
+
+include_directories(AssyGen
   PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "AssyGen"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

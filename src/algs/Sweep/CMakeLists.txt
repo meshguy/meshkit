@@ -70,13 +70,23 @@ endif ()
 
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_library(Sweep STATIC
+add_library(Sweep 
   ${Sweep_srcs}
   ${Sweep_headers})
-target_link_libraries(Sweep
+
+link_libraries(Sweep
   MeshKitalgs
   MeshKitcore
   iRel)
-target_include_directories(Sweep
+
+include_directories(Sweep
   PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "Sweep"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

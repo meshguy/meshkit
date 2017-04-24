@@ -13,12 +13,20 @@ if (MOAB_FOUND)
     iMesh)
 endif ()
 
-add_library(CoreGen STATIC
+add_library(CoreGen 
   ${CoreGen_srcs}
   ${CoreGen_headers})
-target_link_libraries(CoreGen
+link_libraries(CoreGen
   MeshKitcore
   ${extra_libs})
-target_include_directories(CoreGen
+include_directories(CoreGen
   PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}")
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(
+  TARGETS   "CoreGen"
+  EXPORT    meshkit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

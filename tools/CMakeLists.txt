@@ -4,8 +4,8 @@ add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 add_definitions("-DDATADIR=${meshkit_SOURCE_DIR}/data")
 add_definitions(-DMOAB)
 
-include_directories(${CGM_INCLUDE_DIRS})
-include_directories(${MOAB_INCLUDE_DIRS})
+include_directories(${CGM_INCLUDES})
+include_directories(${MOAB_INCLUDES})
 include_directories(${CMAKE_SOURCE_DIR}/test)
 
 if (MOAB_FOUND)

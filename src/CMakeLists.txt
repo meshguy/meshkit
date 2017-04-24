@@ -16,7 +16,7 @@ target_link_libraries(MeshKit
   PRIVATE
     MeshKitcore
     MeshKitalgs
-    emon
+    lemon
     MeshKitutils
     MeshKitextern)
 
