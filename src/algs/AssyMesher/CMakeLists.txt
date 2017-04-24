@@ -17,7 +17,7 @@ add_library(AssyMesher
 link_libraries(AssyMesher
   MeshKitcore)
 
-include_directories(AssyMesher
+include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR})
 

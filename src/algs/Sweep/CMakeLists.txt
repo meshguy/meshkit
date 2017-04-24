@@ -79,7 +79,7 @@ link_libraries(Sweep
   MeshKitcore
   iRel)
 
-include_directories(Sweep
+include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -16,7 +16,7 @@ add_library(PostBL
 link_libraries(PostBL
   MeshKitcore)
 
-include_directories(PostBL
+include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR})
 

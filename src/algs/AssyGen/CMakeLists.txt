@@ -18,7 +18,7 @@ add_library(AssyGen
 link_libraries(AssyGen
   MeshKitcore)
 
-include_directories(AssyGen
+include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR})
 

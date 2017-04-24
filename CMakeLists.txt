@@ -189,17 +189,17 @@ endif ()
 
 if (ENABLE_QUADMESHER)
   add_subdirectory(quadmesher)
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/quadmesher")
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/quadmesher)
 endif ()
 
 if (ENABLE_SRC)
   add_subdirectory(src)
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 endif ()
 
 if (ENABLE_INTASSIGN)
   find_package(ipopt)
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/algs/IntervalAssignment")
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/algs/IntervalAssignment)
 endif ()
 
 include_directories(

@@ -76,7 +76,7 @@ add_library(AdvFront
 link_libraries(AdvFront
   MeshKitcore)
 
-include_directories(AdvFront
+include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR})
 

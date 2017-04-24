@@ -1,3 +1,5 @@
+include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(MeshKitcore_srcs
@@ -36,6 +38,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 add_library(MeshKitcore
   ${MeshKitcore_srcs}
   ${MeshKitcore_headers})
+
 link_libraries(MeshKitcore
   MeshKitalgs
   MeshKitextern
@@ -51,5 +54,4 @@ install(
   ARCHIVE   DESTINATION lib
   COMPONENT Runtime)
 
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR})
+

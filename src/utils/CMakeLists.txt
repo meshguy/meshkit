@@ -1,3 +1,5 @@
+include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+
 set(MeshKitutils_srcs
   iMesh.cpp
   clock.cpp
@@ -41,7 +43,7 @@ add_library(MeshKitutils
 link_libraries(MeshKitutils
   MeshKitcore)
 
-include_directories(MeshKitutils
+include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CGM_INCLUDE_DIRS}

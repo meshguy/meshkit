@@ -1,3 +1,5 @@
+include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+
 set(CoreGen_srcs
   CoreGen.cpp
   copymove_parallel.cpp)
@@ -19,7 +21,7 @@ add_library(CoreGen
 link_libraries(CoreGen
   MeshKitcore
   ${extra_libs})
-include_directories(CoreGen
+include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR})
 
