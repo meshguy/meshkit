@@ -1,4 +1,4 @@
-include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS}  ${CGM_INCLUDES} )
 set(AdvFront_srcs
   	AF2Algorithm.cpp 
 	AF2AlgorithmResult.cpp 
@@ -68,6 +68,11 @@ add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 if (MOAB_FOUND)
   add_definitions(-DMOAB)
 endif ()
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/lemon)
 
 add_library(AdvFront 
   ${AdvFront_srcs}

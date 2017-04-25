@@ -1,4 +1,4 @@
-include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${CGM_INCLUDES} )
 
 set(MeshKitutils_srcs
   iMesh.cpp
@@ -44,11 +44,8 @@ link_libraries(MeshKitutils
   MeshKitcore)
 
 include_directories(
-  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CGM_INCLUDE_DIRS}
-    ${MOAB_INCLUDE_DIRS}
-    ${Lasso_INCLUDE_DIRS})
+)
 
 install(
   TARGETS   "MeshKitutils"

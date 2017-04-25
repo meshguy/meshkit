@@ -24,7 +24,8 @@ include_directories(${MOAB_INCLUDE_DIRS})
 add_library(MakeWatertight
   ${MakeWatertight_srcs}
   ${MakeWatertight_headers})
-target_link_libraries(MakeWatertight
+
+link_libraries(MakeWatertight
   MOAB)
 
 add_definitions(-DTEST)

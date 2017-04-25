@@ -14,12 +14,14 @@ endif ()
 
 add_executable(postbl
   postbl.cpp)
-target_link_libraries(postbl
+
+link_libraries(postbl
   MeshKitcore)
 
 add_executable(assygen
   assygen.cpp)
-target_link_libraries(assygen
+
+link_libraries(assygen
   MeshKitalgs
   MeshKitcore
   iGeom
@@ -28,7 +30,8 @@ target_link_libraries(assygen
 
 add_executable(coregen
   coregen.cpp)
-target_link_libraries(coregen
+
+link_libraries(coregen
   MeshKitalgs
   MeshKitcore
   iGeom

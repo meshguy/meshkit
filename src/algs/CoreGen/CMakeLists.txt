@@ -1,4 +1,5 @@
-include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS}  ${CGM_INCLUDES} )
+
 
 set(CoreGen_srcs
   CoreGen.cpp

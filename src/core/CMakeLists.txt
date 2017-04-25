@@ -1,4 +1,4 @@
-include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS} ${CGM_INCLUDES} )
 
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -32,6 +32,9 @@ set(MeshKitcore_headers
   meshkit/Matrix.hpp)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/lemon
+    ${CMAKE_SOURCE_DIR}/src/algs    
     ${IGEOM_INCLUDE_DIR}
     ${IGEOM_INCLUDE_DIR}/cgm)
 

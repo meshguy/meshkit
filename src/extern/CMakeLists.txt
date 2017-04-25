@@ -1,4 +1,5 @@
-include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS}  ${CGM_INCLUDES} )
+
 set(extra_links)
 if (ENABLE_CAMAL)
   add_subdirectory(CAMAL) # TODO: write CMake

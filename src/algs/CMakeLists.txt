@@ -1,4 +1,5 @@
-include_directories( ${MOAB_INCLUDES} ${CGM_INCLUDES} )
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS}  ${CGM_INCLUDES} )
+
 
 add_subdirectory(Qslim)
 add_subdirectory(AssyGen)
@@ -92,7 +93,7 @@ add_library(MeshKitalgs
 include(GenerateExportHeader)
 generate_export_header(MeshKitalgs)
 
-target_link_libraries(MeshKitalgs
+link_libraries(MeshKitalgs
   MeshKitcore
   Qslim
   AssyGen
@@ -105,7 +106,13 @@ target_link_libraries(MeshKitalgs
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR})
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/lemon 
+    ${CMAKE_SOURCE_DIR}/src/algs/Sweep    
+    ${CMAKE_SOURCE_DIR}/src/algs/Qslim    
+    )
 
 install(
   TARGETS   "MeshKitalgs"

@@ -30,7 +30,7 @@ add_library(Qslim
   ${Qslim_srcs}
   ${Qslim_headers})
 
-target_link_libraries(Qslim
+link_libraries(Qslim
   MeshKitcore)
 
 include_directories(
