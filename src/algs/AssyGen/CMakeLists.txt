@@ -20,7 +20,12 @@ link_libraries(AssyGen
 
 include_directories(
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR})
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/lemon
+    
+    )
 
 install(
   TARGETS   "AssyGen"

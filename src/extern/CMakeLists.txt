@@ -33,6 +33,14 @@ link_libraries(MeshKitextern
   MeshKitutils
   ${extra_links})
 
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/lemon    
+    )
+
 install(
   TARGETS   "MeshKitextern"
   EXPORT    meshkit

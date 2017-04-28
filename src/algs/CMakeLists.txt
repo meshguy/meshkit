@@ -111,7 +111,12 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/core
     ${CMAKE_SOURCE_DIR}/src/lemon 
     ${CMAKE_SOURCE_DIR}/src/algs/Sweep    
-    ${CMAKE_SOURCE_DIR}/src/algs/Qslim    
+    ${CMAKE_SOURCE_DIR}/src/algs/Qslim  
+    ${CMAKE_SOURCE_DIR}/src/algs/AdvFront    
+    ${CMAKE_SOURCE_DIR}/src/algs/AssyGen       
+    ${CMAKE_SOURCE_DIR}/src/algs/AssyMesher
+    ${CMAKE_SOURCE_DIR}/src/algs/CoreGen
+    ${CMAKE_SOURCE_DIR}/src/algs/PostBL    
     )
 
 install(

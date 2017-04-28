@@ -81,7 +81,12 @@ link_libraries(Sweep
 
 include_directories(
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR})
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/core    
+    ${CMAKE_SOURCE_DIR}/src/lemon
+    ${CMAKE_SOURCE_DIR}/src/algs
+    )
 
 install(
   TARGETS   "Sweep"

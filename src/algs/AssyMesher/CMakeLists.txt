@@ -19,7 +19,13 @@ link_libraries(AssyMesher
 
 include_directories(
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR})
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/lemon
+    ${CMAKE_SOURCE_DIR}/src/algs/Sweep
+    
+    )
 
 install(
   TARGETS   "AssyMesher"

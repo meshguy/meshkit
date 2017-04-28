@@ -1,4 +1,4 @@
-include_directories( ${MOAB_PACKAGE_INCLUDES} ${CGM_INCLUDES} )
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS}  ${CGM_INCLUDES} )
 
 set(MeshKitutils_srcs
   iMesh.cpp
