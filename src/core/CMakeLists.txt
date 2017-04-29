@@ -39,7 +39,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
     ${IGEOM_INCLUDE_DIR}/cgm)
 
 add_library(MeshKitcore
-  ${MeshKitcore_srcs}
+  OBJECT ${MeshKitcore_srcs}
   ${MeshKitcore_headers})
 
 link_libraries(MeshKitcore
@@ -49,12 +49,12 @@ link_libraries(MeshKitcore
   iGeom
   lemon)
 
-install(
-  TARGETS   "MeshKitcore"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "MeshKitcore"
+#  EXPORT    meshkit
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)
 
 

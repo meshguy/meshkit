@@ -104,15 +104,15 @@ set(lemon_headers
   lemon/concepts/path.h)
 
 add_library(lemon
-  ${lemon_srcs}
+  OBJECT ${lemon_srcs}
   ${lemon_headers})
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR})
 
-install(
-  TARGETS   "lemon"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "lemon"
+#  EXPORT    meshkit
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)

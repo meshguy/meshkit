@@ -12,7 +12,7 @@ if (MOAB_FOUND)
 endif ()
 
 add_library(AssyGen
-  ${AssyGen_srcs}
+  OBJECT ${AssyGen_srcs}
   ${AssyGen_headers})
 
 link_libraries(AssyGen
@@ -27,10 +27,10 @@ include_directories(
     
     )
 
-install(
-  TARGETS   "AssyGen"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "AssyGen"
+#  EXPORT    meshkit
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)

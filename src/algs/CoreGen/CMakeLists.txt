@@ -17,7 +17,7 @@ if (MOAB_FOUND)
 endif ()
 
 add_library(CoreGen 
-  ${CoreGen_srcs}
+  OBJECT ${CoreGen_srcs}
   ${CoreGen_headers})
 link_libraries(CoreGen
   MeshKitcore
@@ -32,10 +32,10 @@ include_directories(
     
     )
 
-install(
-  TARGETS   "CoreGen"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "CoreGen"
+#  EXPORT    meshkit
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)

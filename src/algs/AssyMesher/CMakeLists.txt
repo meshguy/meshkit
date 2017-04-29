@@ -11,7 +11,7 @@ if (MOAB_FOUND)
 endif ()
 
 add_library(AssyMesher
-  ${AssyMesher_srcs}
+  OBJECT ${AssyMesher_srcs}
   ${AssyMesher_headers})
 
 link_libraries(AssyMesher
@@ -27,10 +27,10 @@ include_directories(
     
     )
 
-install(
-  TARGETS   "AssyMesher"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "AssyMesher"
+#  EXPORT    MeshKitalgs
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)

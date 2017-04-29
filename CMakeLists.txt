@@ -225,7 +225,7 @@ export(
     
 
 install(
-    EXPORT      meshkit
+    EXPORT      MeshKitTargets
     DESTINATION "${cmakedir}"
     FILE        MeshKitTargets.cmake
     COMPONENT   development)

@@ -37,7 +37,7 @@ if (MOAB_FOUND)
 endif ()
 
 add_library(MeshKitutils 
-  ${MeshKitutils_srcs}
+  OBJECT ${MeshKitutils_srcs}
   ${MeshKitutils_headers})
 
 link_libraries(MeshKitutils
@@ -47,10 +47,10 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-install(
-  TARGETS   "MeshKitutils"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "MeshKitutils"
+#  EXPORT    meshkit
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)

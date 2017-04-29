@@ -87,8 +87,17 @@ if (ENABLE_PARALLEL AND MOAB_HAS_PARALLEL AND CGM_HAS_PARALLEL)
 endif ()
 
 add_library(MeshKitalgs
-  ${MeshKitalgs_srcs}
-  ${MeshKitalgs_headers})
+  OBJECT ${MeshKitalgs_srcs}
+  ${MeshKitalgs_headers}
+    $<TARGET_OBJECTS:AssyMesher>
+      $<TARGET_OBJECTS:CoreGen>
+          $<TARGET_OBJECTS:Qslim>
+              $<TARGET_OBJECTS:PostBL>
+                  $<TARGET_OBJECTS:Sweep>
+                  $<TARGET_OBJECTS:AssyGen>
+                  $<TARGET_OBJECTS:AdvFront>
+                  
+                  )
 
 include(GenerateExportHeader)
 generate_export_header(MeshKitalgs)
@@ -119,10 +128,10 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/algs/PostBL    
     )
 
-install(
-  TARGETS   "MeshKitalgs"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "MeshKitalgs"
+#  EXPORT    meshkit
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)

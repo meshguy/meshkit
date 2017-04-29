@@ -71,7 +71,7 @@ endif ()
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_library(Sweep 
-  ${Sweep_srcs}
+  OBJECT ${Sweep_srcs}
   ${Sweep_headers})
 
 link_libraries(Sweep
@@ -88,10 +88,10 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/algs
     )
 
-install(
-  TARGETS   "Sweep"
-  EXPORT    meshkit
-  RUNTIME   DESTINATION bin
-  LIBRARY   DESTINATION lib
-  ARCHIVE   DESTINATION lib
-  COMPONENT Runtime)
+#install(
+#  TARGETS   "Sweep"
+#  EXPORT    meshkit
+#  RUNTIME   DESTINATION bin
+#  LIBRARY   DESTINATION lib
+#  ARCHIVE   DESTINATION lib
+#  COMPONENT Runtime)
