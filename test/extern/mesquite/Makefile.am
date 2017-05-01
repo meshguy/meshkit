@@ -13,8 +13,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/test \
                -I$(top_srcdir)/src/extern/mesquite \
                -I$(top_srcdir)/src/lemon -I$(top_srcdir) \
                -I$(top_srcdir)/utils \
-               $(MESQUITE_DEFINES) \
-               $(MESQUITE_CPPFLAGS)
+               $(MOAB_DEFINES) \
+               $(MOAB_CPPFLAGS)
 
 if HAVE_OCC_GEOMETRY_ENGINE
 TESTS = test_mesquiteopt
