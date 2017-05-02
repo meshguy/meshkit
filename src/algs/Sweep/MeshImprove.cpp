@@ -1,3 +1,5 @@
+
+#include "MKVersion.h"
 #include "meshkit/MeshImprove.hpp"
 #include <iostream>
 #include <math.h>
@@ -27,7 +29,7 @@
 #ifdef HAVE_FBIGEOM
 #include "meshkit/MsqFBiGeom.hpp"
 #endif
-using namespace Mesquite;
+using namespace MESQUITE_NS;
 
 namespace MeshKit {
 

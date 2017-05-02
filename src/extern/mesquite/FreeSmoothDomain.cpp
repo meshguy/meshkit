@@ -7,7 +7,7 @@
 namespace MeshKit {
 
 using namespace moab;
-using namespace Mesquite;
+using namespace MESQUITE_NS;
 
 FreeSmoothDomain::FreeSmoothDomain( MKCore* core, const MEntVector& entities )
   : MsqCommonIGeom(core->igeom_instance()->instance()),

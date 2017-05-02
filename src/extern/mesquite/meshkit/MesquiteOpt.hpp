@@ -1,6 +1,7 @@
 #ifndef MESHKIT_MESQUITE_OPT_HPP
 #define MESHKIT_MESQUITE_OPT_HPP
 
+#include "MKVersion.h"
 #include "IQInterface.hpp"
 #include "meshkit/MeshOp.hpp"
 #include "iBase.h"
@@ -24,7 +25,7 @@ class MesquiteOpt : public MeshOp
     static const char* name();
     
     /**\brief specify mesquite optimization algorithm to execute */
-    void set_mesquite_op( Mesquite::IQInterface* msq_algo ) { msqAlgo = msq_algo; }
+    void set_mesquite_op( MESQUITE_NS::IQInterface* msq_algo ) { msqAlgo = msq_algo; }
     
     /**\brief Get handle of tag used to designate vertices as fixed */
     iBase_TagHandle get_fixed_tag();
@@ -135,7 +136,7 @@ class MesquiteOpt : public MeshOp
     
   private:
    
-    Mesquite::IQInterface* msqAlgo;
+    MESQUITE_NS::IQInterface* msqAlgo;
     bool fixedBoundary;
     bool haveFixedTag;
     bool createdByteTag;

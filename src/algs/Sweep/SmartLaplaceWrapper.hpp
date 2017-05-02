@@ -33,6 +33,7 @@
 #ifndef MSQ_SMARTLAPLACE_WRAPPER_HPP
 #define MSQ_SMARTLAPLACE_WRAPPER_HPP
 
+#include "MKVersion.h"
 #include "Wrapper.hpp"
 
 namespace MESQUITE_NS {
