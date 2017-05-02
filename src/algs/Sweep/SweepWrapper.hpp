@@ -5,7 +5,8 @@
 #ifndef MSQ_SWEEP_WRAPPER_HPP
 #define MSQ_SWEEP_WRAPPER_HPP
 
-#include <Wrapper.hpp>
+#include "MKVersion.h"
+#include <moab/mesquite/Wrapper.hpp>
 #include <string>
 
 namespace MESQUITE_NS {
