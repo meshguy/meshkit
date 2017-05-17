@@ -51,7 +51,7 @@ install-data-hook:
 	cp -r $(top_srcdir)/test/algs/postbl_examples/* $(prefix)/examples/postbl/
 	cp $(top_builddir)/common.mk $(prefix)/examples/
 	
-#uninstall-local:
+uninstall-local:
 	chmod -R +rw $(prefix)/examples/
 	rm -rf $(prefix)/examples/
 	
