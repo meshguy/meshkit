@@ -27,7 +27,7 @@ AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir) $(DEFINES)
 # check_PROGRAMS =
 # TESTS = $(check_PROGRAMS)
 
-EXTRA_DIST = MKDefines.h data tools/rgg_test_dirs test/algs/postbl_examples
+EXTRA_DIST = MKDefines.h data tools/rgg_test_dirs test/algs/postbl_examples example
 
 # Automake doesn't seem to have a directory defined for
 # platform-dependent data (or include) files. So put 
@@ -44,16 +44,19 @@ cfg_DATA = meshkit.make
 install-data-hook:
 	echo "MESHKIT_LIBS=-L${libdir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
 	echo "MESHKIT_INCLUDES=-I${includedir}" >> $(DESTDIR)$(cfgdir)/meshkit.make
-	chmod +rw $(prefix)	
-	mkdir -p $(prefix)/examples/rgg/
-	cp -r $(top_srcdir)/tools/rgg_test_dirs/* $(prefix)/examples/rgg/
-	mkdir -p $(prefix)/examples/postbl/
-	cp -r $(top_srcdir)/test/algs/postbl_examples/* $(prefix)/examples/postbl/
-	cp $(top_builddir)/common.mk $(prefix)/examples/
+	mkdir -p $(DESTDIR)$(datadir)
+	chmod +rw $(DESTDIR)$(datadir)	
+	mkdir -p $(DESTDIR)$(datadir)/examples/rgg/
+	cp -r $(top_srcdir)/tools/rgg_test_dirs/* $(DESTDIR)$(datadir)/examples/rgg/
+	mkdir -p $(DESTDIR)$(datadir)/examples/postbl/
+	cp -r $(top_srcdir)/test/algs/postbl_examples/* $(DESTDIR)$(datadir)/examples/postbl/
+	cp $(top_builddir)/common.mk $(DESTDIR)$(datadir)/examples/
+	mkdir -p $(DESTDIR)$(datadir)/examples/code
+	cp $(top_srcdir)/example/* $(DESTDIR)$(datadir)/examples/code
 	
 uninstall-local:
-	chmod -R +rw $(prefix)/examples/
-	rm -rf $(prefix)/examples/
+	chmod -R +rw $(DESTDIR)$(datadir)/examples/
+	rm -rf $(DESTDIR)$(datadir)/examples/
 	
 	
 	
