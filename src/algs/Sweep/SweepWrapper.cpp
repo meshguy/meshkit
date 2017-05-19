@@ -4,31 +4,31 @@
  *  
  */
 
-#include "Mesquite.hpp"
+#include "moab/mesquite/Mesquite.hpp"
 #include "SweepWrapper.hpp"
 
-#include "InstructionQueue.hpp"
-#include "PMeanPTemplate.hpp"
-#include "TrustRegion.hpp"
-#include "QualityAssessor.hpp"
-#include "RefMeshTargetCalculator.hpp"
-#include "ReferenceMesh.hpp"
-#include "TagVertexMesh.hpp"
-#include "TQualityMetric.hpp"
-#include "ConjugateGradient.hpp"
-#include "SteepestDescent.hpp"
-#include "QuasiNewton.hpp"
-#include "NonSmoothDescent.hpp"
+#include "moab/mesquite/InstructionQueue.hpp"
+#include "moab/mesquite/PMeanPTemplate.hpp"
+#include "moab/mesquite/TrustRegion.hpp"
+#include "moab/mesquite/QualityAssessor.hpp"
+#include "moab/mesquite/RefMeshTargetCalculator.hpp"
+#include "moab/mesquite/ReferenceMesh.hpp"
+#include "moab/mesquite/TagVertexMesh.hpp"
+#include "moab/mesquite/TQualityMetric.hpp"
+#include "moab/mesquite/ConjugateGradient.hpp"
+#include "moab/mesquite/SteepestDescent.hpp"
+#include "moab/mesquite/QuasiNewton.hpp"
+#include "moab/mesquite/NonSmoothDescent.hpp"
 
 
 //#include "TRel2DShape.hpp"
 //#include "TRel3DShape.hpp"
 
-#include "TShapeNB1.hpp"
+#include "moab/mesquite/TShapeNB1.hpp"
 
-#include "MsqError.hpp"
+#include "moab/mesquite/MsqError.hpp"
 
-#include "MsqMatrix.hpp"
+#include "moab/mesquite/MsqMatrix.hpp"
 
 namespace MESQUITE_NS {
 

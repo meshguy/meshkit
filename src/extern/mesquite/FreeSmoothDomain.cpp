@@ -2,7 +2,7 @@
 #include "meshkit/MKCore.hpp"
 #include "moab/Interface.hpp"
 #include "meshkit/FreeSmoothDomain.hpp"
-#include "MsqError.hpp"
+#include "moab/mesquite/MsqError.hpp"
 
 namespace MeshKit {
 

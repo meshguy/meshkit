@@ -3,14 +3,14 @@
 #include "meshkit/iMesh.hpp"
 #include "moab/Skinner.hpp"
 #include "MsqIMesh.hpp"
-#include "QualityAssessor.hpp"
-#include "MsqError.hpp"
+#include "moab/mesquite/QualityAssessor.hpp"
+#include "moab/mesquite/MsqError.hpp"
 #ifdef HAVE_CGM
 # include "MsqIGeom.hpp"
 #endif
 #include "meshkit/FreeSmoothDomain.hpp"
 
-#include "ShapeImprover.hpp"
+#include "moab/mesquite/ShapeImprover.hpp"
 typedef MESQUITE_NS::ShapeImprover DefaultAlgorithm;
 
     
