@@ -2,7 +2,7 @@
 #define MESHKIT_MESQUITE_OPT_HPP
 
 #include "MKVersion.h"
-#include "IQInterface.hpp"
+#include "moab/mesquite/IQInterface.hpp"
 #include "meshkit/MeshOp.hpp"
 #include "iBase.h"
 

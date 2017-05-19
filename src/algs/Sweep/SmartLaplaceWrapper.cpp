@@ -31,12 +31,12 @@
  */
 
 #include "SmartLaplaceWrapper.hpp"
-#include "IdealWeightInverseMeanRatio.hpp" 
-#include "SmartLaplacianSmoother.hpp"
-#include "QualityAssessor.hpp"
-#include "InstructionQueue.hpp"
-#include "TerminationCriterion.hpp"
-#include "MsqError.hpp"
+#include "moab/mesquite/IdealWeightInverseMeanRatio.hpp" 
+#include "moab/mesquite/SmartLaplacianSmoother.hpp"
+#include "moab/mesquite/QualityAssessor.hpp"
+#include "moab/mesquite/InstructionQueue.hpp"
+#include "moab/mesquite/TerminationCriterion.hpp"
+#include "moab/mesquite/MsqError.hpp"
 
 namespace MESQUITE_NS {
 

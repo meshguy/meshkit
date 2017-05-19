@@ -6,26 +6,26 @@
 #include <map>
 
 //#include "SweepWrapper.hpp"
-#include "UntangleWrapper.hpp"
-#include "ShapeImprover.hpp"
-#include "SmartLaplacianSmoother.hpp"
+#include "moab/mesquite/UntangleWrapper.hpp"
+#include "moab/mesquite/ShapeImprover.hpp"
+#include "moab/mesquite/SmartLaplacianSmoother.hpp"
 #include "SweepWrapper.hpp"
 #include "SmartLaplaceWrapper.hpp"
-#include "ShapeImprovementWrapper.hpp"
+#include "moab/mesquite/ShapeImprovementWrapper.hpp"
 
-#include "IdealWeightInverseMeanRatio.hpp"
-#include "QualityAssessor.hpp"
-#include "InstructionQueue.hpp"
-#include "TerminationCriterion.hpp"
+#include "moab/mesquite/IdealWeightInverseMeanRatio.hpp"
+#include "moab/mesquite/QualityAssessor.hpp"
+#include "moab/mesquite/InstructionQueue.hpp"
+#include "moab/mesquite/TerminationCriterion.hpp"
 
-#include "LaplaceWrapper.hpp"
-#include "SizeAdaptShapeWrapper.hpp"
-#include "PaverMinEdgeLengthWrapper.hpp"
-#include "DeformingDomainWrapper.hpp"
-#include <MsqError.hpp>
-#include <ShapeImprovementWrapper.hpp>
-#include <MsqIMesh.hpp>
-#include <MsqIGeom.hpp>
+#include "moab/mesquite/LaplaceWrapper.hpp"
+#include "moab/mesquite/SizeAdaptShapeWrapper.hpp"
+#include "moab/mesquite/PaverMinEdgeLengthWrapper.hpp"
+#include "moab/mesquite/DeformingDomainWrapper.hpp"
+#include <moab/mesquite/MsqError.hpp>
+#include <moab/mesquite/ShapeImprovementWrapper.hpp>
+#include "MsqIMesh.hpp"
+#include "MsqIGeom.hpp"
 #ifdef HAVE_FBIGEOM
 #include "meshkit/MsqFBiGeom.hpp"
 #endif
