@@ -2,11 +2,11 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/iMesh.hpp"
 #include "moab/Skinner.hpp"
-#include "MsqIMesh.hpp"
+#include "moab/mesquite/MsqIMesh.hpp"
 #include "moab/mesquite/QualityAssessor.hpp"
 #include "moab/mesquite/MsqError.hpp"
 #ifdef HAVE_CGM
-# include "MsqIGeom.hpp"
+# include "moab/mesquite/MsqIGeom.hpp"
 #endif
 #include "meshkit/FreeSmoothDomain.hpp"
 

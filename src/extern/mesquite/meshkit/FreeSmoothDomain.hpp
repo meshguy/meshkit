@@ -6,7 +6,7 @@
  */
 
 #include "MKVersion.h"
-#include "MsqIGeom.hpp"
+#include "moab/mesquite/MsqIGeom.hpp"
 #include "meshkit/Types.hpp"
 #include "moab/Types.hpp"
 

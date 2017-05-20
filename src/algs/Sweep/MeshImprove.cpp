@@ -24,8 +24,8 @@
 #include "moab/mesquite/DeformingDomainWrapper.hpp"
 #include <moab/mesquite/MsqError.hpp>
 #include <moab/mesquite/ShapeImprovementWrapper.hpp>
-#include "MsqIMesh.hpp"
-#include "MsqIGeom.hpp"
+#include "moab/mesquite/MsqIMesh.hpp"
+#include "moab/mesquite/MsqIGeom.hpp"
 #ifdef HAVE_FBIGEOM
 #include "meshkit/MsqFBiGeom.hpp"
 #endif
