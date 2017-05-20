@@ -20,16 +20,17 @@ endif ()
 
 # AssyGen
 if ( MESHKIT_BUILD_ASSYGEN )
-    add_executable(assygen
-      assygen.cpp)
     
-    target_link_libraries(assygen
+    link_libraries(
       MeshKit
       iGeom
       iMesh
       MOAB
       iRel)
-    
+  
+  add_executable(assygen
+    assygen.cpp)
+
     include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}

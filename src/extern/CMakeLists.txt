@@ -27,11 +27,10 @@ if (MESQUITE_FOUND)
 endif ()
 
 add_library(MeshKitextern 
-  OBJECT register_extern.cpp)
+  STATIC register_extern.cpp)
 
-link_libraries(MeshKitextern
-  OBJECT MeshKitutils
-  ${extra_links})
+link_libraries(MeshKitutils
+    ${extra_links})
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -41,10 +40,10 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/lemon    
     )
 
-#install(
-#  TARGETS   "MeshKitextern"
-#  EXPORT    meshkit
-#  RUNTIME   DESTINATION bin
-#  LIBRARY   DESTINATION lib
-#  ARCHIVE   DESTINATION lib
-#  COMPONENT Runtime)
+install(
+  TARGETS   MeshKitextern
+  EXPORT    MeshKit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

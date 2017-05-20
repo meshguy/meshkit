@@ -1,8 +1,8 @@
-add_subdirectory(core)
-add_subdirectory(algs)
+add_subdirectory(extern)
 add_subdirectory(utils)
 add_subdirectory(lemon)
-add_subdirectory(extern)
+add_subdirectory(algs)
+add_subdirectory(core)
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp.in" "")
 configure_file(
@@ -13,30 +13,62 @@ configure_file(
 #add_library(MeshKit
 #  "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp") # Force C++ language.
 
-link_libraries(MeshKit
-#  PRIVATE
-    MeshKitcore
-    MeshKitalgs
+link_libraries(
+    MeshKitalgs   
+    MeshKitextern    
+    MeshKitutils        
+    MeshKitcore    
     lemon
-    MeshKitutils
-    MeshKitextern)
+    )
 
 add_library(MeshKit
-     $<TARGET_OBJECTS:MeshKitcore>
-      $<TARGET_OBJECTS:MeshKitalgs>
-      $<TARGET_OBJECTS:MeshKitutils>
-      $<TARGET_OBJECTS:lemon>
-      $<TARGET_OBJECTS:MeshKitextern>
-      )
+    ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp
+#     MeshKitcore
+#      MeshKitalgs
+#      MeshKitutils
+#      lemon
+#      MeshKitextern
+)
 
 install(
   TARGETS  MeshKit
-  EXPORT   MeshKitTargets
+  EXPORT   MeshKit
   RUNTIME  DESTINATION bin
   LIBRARY  DESTINATION lib
   ARCHIVE  DESTINATION lib
   COMPONENT runtime)
 
-set_property(GLOBAL APPEND
-  PROPERTY meshkit_export_targets
-  MeshKit)
+#set_property(GLOBAL APPEND
+#  PROPERTY meshkit_export_targets
+#  MeshKit)
+
+get_property(meshkit_targets GLOBAL
+  PROPERTY meshkit_export_targets)
+
+export(
+      TARGETS ${meshkit_targets}
+      FILE    "${CMAKE_BINARY_DIR}/MeshKitTargets.cmake")
+    
+    if (WIN32)
+      set(cmakedir cmake)
+    else ()
+      set(cmakedir lib/cmake/MeshKit)
+    endif ()
+
+
+install(
+    EXPORT      MeshKit
+    DESTINATION "${cmakedir}"
+    FILE        MeshKitTargets.cmake
+    COMPONENT   development)
+  #EXPORT      MESHKITTargets
+  #DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MOAB/)
+
+configure_file(
+  "${CMAKE_SOURCE_DIR}/MeshKitConfig.cmake.in"
+  "${CMAKE_BINARY_DIR}/MeshKitConfig.cmake"
+  @ONLY)
+install(
+  FILES       "${CMAKE_BINARY_DIR}/MeshKitConfig.cmake"
+  DESTINATION "${cmakedir}"
+  COMPONENT   development)

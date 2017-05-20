@@ -1,3 +1,5 @@
+project(Meshkitcore)
+
 include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS} ${CGM_INCLUDES} )
 
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
@@ -39,22 +41,22 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
     ${IGEOM_INCLUDE_DIR}/cgm)
 
 add_library(MeshKitcore
-  OBJECT ${MeshKitcore_srcs}
-  ${MeshKitcore_headers})
+  STATIC ${MeshKitcore_srcs}
+)
 
-link_libraries(MeshKitcore
+link_libraries(
   MeshKitalgs
   MeshKitextern
   MeshKitutils
   iGeom
   lemon)
 
-#install(
-#  TARGETS   "MeshKitcore"
-#  EXPORT    meshkit
-#  RUNTIME   DESTINATION bin
-#  LIBRARY   DESTINATION lib
-#  ARCHIVE   DESTINATION lib
-#  COMPONENT Runtime)
+install(
+  TARGETS   MeshKitcore
+  EXPORT    MeshKit
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)
 
 
