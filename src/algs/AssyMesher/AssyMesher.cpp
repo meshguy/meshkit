@@ -1113,7 +1113,7 @@ void AssyMesher::createMaterialNeumannSets(std::set <std::string> const &matFilt
       mb->create_meshset(moab::MESHSET_SET,jj);
 
       mb->tag_set_data(matTag, &jj, 1, (void*)&matId);
-      mb->tag_set_data(nameTag, &jj, 1, (void*)matName.c_str());
+//      mb->tag_set_data(nameTag, &jj, 1, (void*)matName.c_str());
 //TODO:
 //      if(matName == volumeName){
 //          // Add the set to this material set
