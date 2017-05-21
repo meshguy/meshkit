@@ -71,7 +71,7 @@ namespace MeshKit
     // This does not work?
     //igeomImpl->setEntSetData(seth,mattag, (char*)(&matid));
     // Meshing this with test_ngtetmesher does NOT produce an material set
-    bool save = true;
+    bool save = false;
     if (save == true)
       igeomImpl->save("mp.brep");
 
