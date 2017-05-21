@@ -999,7 +999,7 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
   if (m_bUseGeom) { // geometry input
     rVal = m_hObbTree->ray_intersect_sets(temp_intersects, m_vhInterSurf,
                                           m_vhInterFacet, m_hTreeRoot, tol,
-                                          -1, startPnt, rayDir[dir], &rayLength);
+                                          startPnt, rayDir[dir], &rayLength);
   }
   else { // facet input
     std::vector<moab::EntityHandle> dum_facets_out;
@@ -1636,7 +1636,7 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
     if (m_bUseGeom) {
       rVal = m_hObbTree->ray_intersect_sets(temp_intersects, m_vhInterSurf,
                                             m_vhInterFacet, m_hTreeRoot, tol,
-                                            -1, startPnt, ray.array(), &rayLength);
+                                            startPnt, ray.array(), &rayLength);
     }
     else { // facet input
       std::vector<moab::EntityHandle> dum_facets_out;
