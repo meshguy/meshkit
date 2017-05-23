@@ -45,7 +45,7 @@ AF2DfltTriangleRules::~AF2DfltTriangleRules()
 
 AF2DfltTriangleRules::AF2DfltTriangleRules(const AF2DfltTriangleRules & toCopy)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string(
       "AF2DfltTriangleRules copy constructor is not supported.");
   throw notImpl;
@@ -53,7 +53,7 @@ AF2DfltTriangleRules::AF2DfltTriangleRules(const AF2DfltTriangleRules & toCopy)
 
 AF2DfltTriangleRules& AF2DfltTriangleRules::operator=(const AF2DfltTriangleRules & rhs)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string(
       "AF2DfltTriangleRules assignment operator is not supported.");
   throw notImpl;

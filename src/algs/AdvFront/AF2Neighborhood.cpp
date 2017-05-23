@@ -40,7 +40,7 @@ AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
   MapItr baseEndItr = map3DTo2D.find(baselineEdge->getEnd());
   if (baseStartItr == map3DTo2D.end() || baseEndItr == map3DTo2D.end())
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string(
         "A baseline edge endpoint is not listed in the neighborhood points.");
     throw badArg;
@@ -61,7 +61,7 @@ AF2Neighborhood::AF2Neighborhood(const std::list<AF2Point3D*> & points,
     MapItr endItr = map3DTo2D.find((*itr)->getEnd());
     if (startItr == map3DTo2D.end() || endItr == map3DTo2D.end())
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string(
           "An edge endpoint is not listed in the neighborhood points.");
       throw badArg;
@@ -98,14 +98,14 @@ AF2Neighborhood::~AF2Neighborhood()
 
 AF2Neighborhood::AF2Neighborhood(const AF2Neighborhood & toCopy)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Neighborhood copy construction is not supported.");
   throw notImpl;
 }
 
 AF2Neighborhood& AF2Neighborhood::operator=(const AF2Neighborhood & rhs)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Neighborhood assignment operator is not supported.");
   throw notImpl;
 }

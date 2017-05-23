@@ -13,7 +13,7 @@ AF2FreeZoneDefLCQualLim::AF2FreeZoneDefLCQualLim(
       (preferBndryPnts.size() != limitBndryPnts.size()) ||
       (preferBndryPnts.size() != limitPntTrnsfrms.size()))
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string(
         "The lists passed to the constructor are not all the same size");
     throw badArg;
@@ -143,7 +143,7 @@ AF2FreeZone* AF2FreeZoneDefLCQualLim::makeFreeZone(
   // Check that the quality class is greater than zero
   if (qualityClass == 0)
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string("The quality class is not greater than zero.");
     throw badArg;
   }

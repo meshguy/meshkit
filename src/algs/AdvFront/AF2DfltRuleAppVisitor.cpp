@@ -77,7 +77,7 @@ void AF2DfltRuleAppVisitor::visit(AF2RuleApplication const & ruleApp)
     // verify that the face is a triangle
     if (facePtr->getNumVertices() != 3u)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string(
           "AF2DfltRuleAppVisitor can visit only triangular faces.");
       throw badArg;

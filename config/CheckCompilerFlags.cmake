@@ -31,7 +31,6 @@ if ( CMAKE_COMPILER_IS_GNUCXX OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang") )
   FORCE_ADD_FLAGS(CMAKE_C_FLAGS "${MESHKIT_CXX_FLAGS}")
   FORCE_ADD_FLAGS(CMAKE_Fortran_FLAGS "${MESHKIT_CXX_FLAGS}")
   ENABLE_IF_SUPPORTED(MESHKIT_CXX_FLAGS "-fpermissive")
-  ENABLE_IF_SUPPORTED(MESHKIT_CXX_FLAGS "-Wno-ignored-attributes")
   ENABLE_IF_SUPPORTED(MESHKIT_CXX_FLAGS "-Wno-variadic-macros")
   ENABLE_IF_SUPPORTED(MESHKIT_CXX_FLAGS "-Wno-deprecated-declarations")
   # Need to enable or check for this only if user asks for C++11 support

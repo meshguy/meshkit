@@ -8,7 +8,7 @@ AF2FreeZoneDefSimple::AF2FreeZoneDefSimple(
   // confirm that the lists are the same size
   if (rfrncBndryPnts.size() != bndryPntTrnsfrms.size())
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string("The lists of reference points and point transforms are not the same size");
     throw badArg;
   }

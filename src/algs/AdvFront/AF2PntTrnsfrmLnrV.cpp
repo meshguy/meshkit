@@ -20,7 +20,7 @@ AF2PntTrnsfrmLnrV::AF2PntTrnsfrmLnrV(
     errStringStream << "The list of x coefficients (size "
         << xDiffCoeff.size() << ") is not twice as long as the list of "
         << "vertices (size " << vertices.size() << ").";
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string(errStringStream.str().c_str());
     throw badArg;
   }
@@ -30,7 +30,7 @@ AF2PntTrnsfrmLnrV::AF2PntTrnsfrmLnrV(
     errStringStream << "The list of y coefficients (size "
         << yDiffCoeff.size() << ") is not twice as long as the list of "
         << "vertices (size " << vertices.size() << ").";
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string(errStringStream.str().c_str());
     throw badArg;
   }
@@ -47,7 +47,7 @@ AF2PntTrnsfrmLnrV::AF2PntTrnsfrmLnrV(
     errStringStream << "The vector of x coefficients (size "
         << xDiffCoeff.size() << ") is not twice as long as the vector of "
         << "vertices (size " << vertices.size() << ").";
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string(errStringStream.str().c_str());
     throw badArg;
   }
@@ -57,7 +57,7 @@ AF2PntTrnsfrmLnrV::AF2PntTrnsfrmLnrV(
     errStringStream << "The vector of y coefficients (size "
         << yDiffCoeff.size() << ") is not twice as long as the vector of "
         << "vertices (size " << vertices.size() << ").";
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string(errStringStream.str().c_str());
     throw badArg;
   }
@@ -79,7 +79,7 @@ AF2Point2D AF2PntTrnsfrmLnrV::transformPoint(AF2Point2D const & point,
     const AF2Point2D* boundVal = vBinding.getBoundValue(refVertex);
     if (boundVal == NULL)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string("The binding does not have a bound value for all reference vertices.");
       throw badArg;
     }

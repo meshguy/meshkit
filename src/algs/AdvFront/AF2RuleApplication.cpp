@@ -16,7 +16,7 @@ AF2RuleApplication::AF2RuleApplication(
   {
     if (*itr == NULL)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string("newPointsList may not contain a null pointer in AF2RuleApplication.");
       throw badArg;
     }
@@ -28,7 +28,7 @@ AF2RuleApplication::AF2RuleApplication(
   {
     if (*itr == NULL)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string(
           "newFacesList may not contain a null pointer in AF2RuleApplication.");
       throw badArg;
@@ -151,7 +151,7 @@ const AF2Polygon2D* AF2RuleApplication::getNewFace(
 {
   if (newFaceIndex >= numNewFaces)
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string("newFaceIndex is out of range");
     throw badArg;
   }
@@ -168,7 +168,7 @@ const AF2Point2D* AF2RuleApplication::getNewPoint(
 {
   if (newPointIndex >= numNewPoints)
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string("newPointIndex is out of range");
     throw badArg;
   }
