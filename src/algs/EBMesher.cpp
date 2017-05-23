@@ -998,16 +998,19 @@ bool EBMesher::fire_ray(int& nIntersect, double startPnt[3],
   m_mhOverlappedSurf.clear();
   std::vector<double> temp_intersects;
   moab::ErrorCode rVal;
+  moab::OrientedBoxTreeTool::TrvStats stats;
   if (m_bUseGeom) { // geometry input
     rVal = m_hObbTree->ray_intersect_sets(temp_intersects, m_vhInterSurf,
                                           m_vhInterFacet, m_hTreeRoot, tol,
-                                          startPnt, rayDir[dir], &rayLength);
+                                          startPnt, rayDir[dir], &rayLength,
+                                          &stats);
   }
   else { // facet input
     std::vector<moab::EntityHandle> dum_facets_out;
     rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, dum_facets_out,
                                                m_hTreeRoot, tol,
-                                               startPnt, rayDir[dir], &rayLength);
+                                               startPnt, rayDir[dir], &rayLength,
+                                               &stats);
   }
   
   nIntersect = temp_intersects.size();
@@ -1635,16 +1638,19 @@ bool EBMesher::move_ray(int& nIntersect, double* startPnt, double* endPnt,
     m_vhInterFacet.clear();
     
     std::vector<double> temp_intersects;
+    moab::OrientedBoxTreeTool::TrvStats stats;
     if (m_bUseGeom) {
       rVal = m_hObbTree->ray_intersect_sets(temp_intersects, m_vhInterSurf,
                                             m_vhInterFacet, m_hTreeRoot, tol,
-                                            startPnt, ray.array(), &rayLength);
+                                            startPnt, ray.array(), &rayLength,
+                                            &stats);
     }
     else { // facet input
       std::vector<moab::EntityHandle> dum_facets_out;
       rVal = m_hObbTree->ray_intersect_triangles(temp_intersects, dum_facets_out,
                                                  m_hTreeRoot, tol,
-                                                 startPnt, ray.array(), &rayLength);
+                                                 startPnt, ray.array(), &rayLength,
+                                                 &stats);
       m_vhInterSurf.resize(temp_intersects.size());
     }
 
