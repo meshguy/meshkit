@@ -6,6 +6,7 @@ set(MeshKitutils_srcs
   cylinder.cpp
   mstream.cpp
   parser.cpp
+  Point2D.cpp
   pincell.cpp)
 
 set(MeshKitutils_headers
@@ -24,6 +25,7 @@ set(MeshKitutils_headers
   meshkit/vectortemplate.hpp
   meshkit/matrixtemplate.hpp
   meshkit/mstream.hpp
+  meshkit/Point2D.hpp
   meshkit/ReadPolyLine.hpp)
 
 if (MOAB_HAS_FBIGEOM)

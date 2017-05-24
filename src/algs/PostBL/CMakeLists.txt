@@ -1,4 +1,7 @@
 set(PostBL_srcs
+  createblelements.cpp
+  pushbmesh.cpp
+  computenormals.cpp
   PostBL.cpp)
 
 set(PostBL_headers
