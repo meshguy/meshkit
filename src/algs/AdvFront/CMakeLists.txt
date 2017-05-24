@@ -75,7 +75,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/src/lemon)
 
 add_library(AdvFront 
-  OBJECT ${AdvFront_srcs}
+  ${AdvFront_srcs}
   ${AdvFront_headers})
 
 link_libraries(AdvFront
@@ -85,10 +85,10 @@ include_directories(
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR})
 
-#install(
-#  TARGETS   "AdvFront"
-#  EXPORT    meshkit
-#  RUNTIME   DESTINATION bin
-#  LIBRARY   DESTINATION lib
-#  ARCHIVE   DESTINATION lib
-#  COMPONENT Runtime)
+install(
+  TARGETS   AdvFront
+  EXPORT    MeshKitAlgs
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

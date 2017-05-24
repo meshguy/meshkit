@@ -86,13 +86,13 @@ if (ENABLE_PARALLEL AND MOAB_HAS_PARALLEL AND CGM_HAS_PARALLEL)
     meshkit/ParRecvSurfMesh.hpp)
 endif ()
 
-add_library(MeshKitalgs
-  STATIC ${MeshKitalgs_srcs}
+add_library(MeshKitAlgs
+  ${MeshKitalgs_srcs}
   ${MeshKitalgs_headers}
 )
 
 include(GenerateExportHeader)
-generate_export_header(MeshKitalgs)
+generate_export_header(MeshKitAlgs)
 
 link_libraries(
   MeshKitcore
@@ -121,7 +121,7 @@ include_directories(
     )
 
 install(
-  TARGETS   MeshKitalgs
+  TARGETS   MeshKitAlgs
   EXPORT    MeshKit
   RUNTIME   DESTINATION bin
   LIBRARY   DESTINATION lib

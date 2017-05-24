@@ -1,5 +1,6 @@
 set(AssyGen_srcs
   meshscript.cpp
+  createpincell.cpp
   AssyGen.cpp )
 
 set(AssyGen_headers
@@ -12,7 +13,7 @@ if (MOAB_FOUND)
 endif ()
 
 add_library(AssyGen
-  OBJECT ${AssyGen_srcs}
+  ${AssyGen_srcs}
   ${AssyGen_headers})
 
 link_libraries(AssyGen
@@ -24,13 +25,12 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/utils
     ${CMAKE_SOURCE_DIR}/src/core
     ${CMAKE_SOURCE_DIR}/src/lemon
-    
-    )
+)
 
-#install(
-#  TARGETS   "AssyGen"
-#  EXPORT    meshkit
-#  RUNTIME   DESTINATION bin
-#  LIBRARY   DESTINATION lib
-#  ARCHIVE   DESTINATION lib
-#  COMPONENT Runtime)
+install(
+  TARGETS   AssyGen
+  EXPORT    MeshKitAlgs
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

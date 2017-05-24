@@ -27,7 +27,7 @@ set(Qslim_headers
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_library(Qslim
-  OBJECT ${Qslim_srcs}
+  ${Qslim_srcs}
   ${Qslim_headers})
 
 link_libraries(Qslim
@@ -40,10 +40,10 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/lemon
     )
 
-#install(
-#  TARGETS   "Qslim"
-#  EXPORT    meshkit
-#  RUNTIME   DESTINATION bin
-#  LIBRARY   DESTINATION lib
-#  ARCHIVE   DESTINATION lib
-#  COMPONENT Runtime)
+install(
+  TARGETS   Qslim
+  EXPORT    MeshKitAlgs
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

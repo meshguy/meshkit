@@ -17,7 +17,7 @@ if (MOAB_FOUND)
 endif ()
 
 add_library(CoreGen 
-  OBJECT ${CoreGen_srcs}
+  ${CoreGen_srcs}
   ${CoreGen_headers})
 link_libraries(CoreGen
   MeshKitcore
@@ -29,13 +29,13 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/core
     ${CMAKE_SOURCE_DIR}/src/lemon
     ${CMAKE_SOURCE_DIR}/src/algs
-    
-    )
+)
 
-#install(
-#  TARGETS   "CoreGen"
-#  EXPORT    meshkit
-#  RUNTIME   DESTINATION bin
-#  LIBRARY   DESTINATION lib
-#  ARCHIVE   DESTINATION lib
-#  COMPONENT Runtime)
+install(
+  TARGETS   CoreGen
+  EXPORT    MeshKitAlgs
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime
+)

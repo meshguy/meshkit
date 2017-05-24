@@ -10,7 +10,7 @@ if (MOAB_FOUND)
 endif ()
 
 add_library(PostBL
-  OBJECT ${PostBL_srcs}
+  ${PostBL_srcs}
   ${PostBL_headers})
 
 link_libraries(PostBL
@@ -24,11 +24,11 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/lemon    
     )
 
-#install(
-#  TARGETS   "PostBL"
-#  EXPORT    meshkit
-#  RUNTIME   DESTINATION bin
-#  LIBRARY   DESTINATION lib
-#  ARCHIVE   DESTINATION lib
-#  COMPONENT Runtime)
+install(
+  TARGETS   PostBL
+  EXPORT    MeshKitAlgs
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)
 

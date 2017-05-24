@@ -8,7 +8,6 @@ option ( MESHKIT_BUILD_POSTBL      "Build the MKmesh tool?"           ON )
 
 add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
 add_definitions("-DDATADIR=${meshkit_SOURCE_DIR}/data")
-add_definitions(-DMOAB)
 
 include_directories(${CGM_INCLUDES})
 include_directories(${MOAB_INCLUDE_DIRSS} {MOAB_PACKAGE_INCLUDES} )
@@ -18,15 +17,17 @@ if (MOAB_FOUND)
   add_definitions(-DMOAB)
 endif ()
 
+link_libraries(MeshKitcore CoreGen AssyGen AssyMesher Sweep PostBL Qslim AdvFront MeshKitAlgs MeshKitextern MeshKitutils lemon)
+
 # AssyGen
 if ( MESHKIT_BUILD_ASSYGEN )
     
     link_libraries(
-      MeshKit
       iGeom
-      iMesh
       MOAB
-      iRel)
+      iMesh
+      iRel
+    )
   
   add_executable(assygen
     assygen.cpp)

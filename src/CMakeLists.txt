@@ -13,14 +13,6 @@ configure_file(
 #add_library(MeshKit
 #  "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp") # Force C++ language.
 
-link_libraries(
-    MeshKitalgs   
-    MeshKitextern    
-    MeshKitutils        
-    MeshKitcore    
-    lemon
-    )
-
 add_library(MeshKit
     ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp
 #     MeshKitcore
@@ -29,6 +21,16 @@ add_library(MeshKit
 #      lemon
 #      MeshKitextern
 )
+
+target_link_libraries(MeshKit
+  PUBLIC
+  MeshKitAlgs   
+  MeshKitextern    
+  MeshKitutils        
+  MeshKitcore    
+  lemon
+)
+
 
 install(
   TARGETS  MeshKit

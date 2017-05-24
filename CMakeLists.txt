@@ -145,6 +145,7 @@ if (CGM_FOUND)
 endif ()
 
 
+set (MOAB_DIR "" CACHE PATH "Path to search for MOAB header and library files")
 find_file(MOAB_CMAKE_CFG MOABConfig.cmake
     HINTS ${MOAB_DIR} ${MOAB_DIR}/lib/cmake/MOAB
 )
@@ -156,7 +157,8 @@ if (MOAB_FOUND)
     message("Found MOAB: ${MOAB_DIR}")
     message("---   MOAB configuration ::")
     message("        Include Directory       : ${MOAB_INCLUDE_DIRS}")
-    message("        Library Directory       : ${MOAB_LIBRARIES}")    
+    message("        Library Directory       : ${IREL_LIBRARIES}")
+    set(MESHKIT_DEPLIBS ${IREL_LIBRARIES})
 endif(MOAB_FOUND)
 add_definitions(-DHAVE_MOAB)
 if (ENABLE_FBIGEOM)
@@ -173,11 +175,11 @@ cmake_dependent_option(ENABLE_UTILS "Enable utilities" ON
   "CGM_FOUND;MOAB_FOUND;MOAB_HAS_IMESH" OFF)
 cmake_dependent_option(ENABLE_ALGS "Enable algorithms" ON
   "ENABLE_UTILS;TARGET iRel" OFF)
+
 option(ENABLE_QUADMESHER "Enable quadmesher"  OFF)
-option(ENABLE_RGG "Enable rgg"                ON)
-option(ENABLE_SRC "Enable src"                ON)
-option(ENABLE_PYTHON "Enable intassign"       OFF)
-option(ENABLE_INTASSIGN "Enable intassign"    OFF)
+option(ENABLE_RGG        "Enable RGG tool"     ON)
+option(ENABLE_PYTHON     "Enable intassign"   OFF)
+option(ENABLE_INTASSIGN  "Enable intassign"   OFF)
 
 if (ENABLE_QUADMESHER)
   add_definitions(-DHAVE_QUADMESHER)
@@ -192,10 +194,8 @@ if (ENABLE_QUADMESHER)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/quadmesher)
 endif ()
 
-if (ENABLE_SRC)
-  add_subdirectory(src)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-endif ()
+add_subdirectory(src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if (ENABLE_INTASSIGN)
   find_package(ipopt)
@@ -209,3 +209,4 @@ include_directories(
 #add_subdirectory(test)
 #add_subdirectory(doc)
 add_subdirectory(tools)
+
