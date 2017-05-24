@@ -13,6 +13,8 @@
 #include "moab/mesquite/MeshInterface.hpp"
 #include "meshkit/FBiGeom.hpp"
 #include "Vector3D.hpp"
+#include "MKVersion.h"
+
 
 using namespace MESQUITE_NS;
 
