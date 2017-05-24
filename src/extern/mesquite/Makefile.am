@@ -36,8 +36,5 @@ AM_CPPFLAGS += $(DEFINES) -DSRCDIR=$(srcdir) \
               -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/utils \
               -I$(top_srcdir)/src/extern/mesquite \
               -I$(top_srcdir)/src/lemon 
-#              $(MESQUITE_DEFINES) \
-#              $(MESQUITE_CPPFLAGS) 
 
-#AM_LDFLAGS += $(MESQUITE_LDFLAGS)
 
