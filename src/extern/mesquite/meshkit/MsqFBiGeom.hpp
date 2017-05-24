@@ -12,7 +12,7 @@
 #include "moab/mesquite/Mesquite.hpp"
 #include "moab/mesquite/MeshInterface.hpp"
 #include "meshkit/FBiGeom.hpp"
-#include "Vector3D.hpp"
+#include "moab/mesquite/Vector3D.hpp"
 #include "MKVersion.h"
 
 
