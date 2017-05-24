@@ -28,9 +28,10 @@ include(GNUInstallDirs)
 #Add our Cmake directory to the module search path
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/config ${CMAKE_MODULE_PATH})
 
-option(ENABLE_MPI "Enable MPI support"      OFF)
-option(ENABLE_DEBUG "Enable debug support"  OFF)
+option(ENABLE_MPI "Enable MPI support"           OFF)
+option(ENABLE_DEBUG "Enable debug support"       OFF)
 option(BUILD_SHARED_LIBS "Build shard libraries" OFF)
+option(ENABLE_TESTING "Enable Testing"           ON )
 
 find_program(decompress_program
   NAMES gunzip gzip zcat
@@ -208,5 +209,12 @@ include_directories(
 
 #add_subdirectory(doc)
 add_subdirectory(tools)
-#add_subdirectory(test)
+################################################################################
+# Testing Related Settings
+################################################################################
+#turn on ctest if we want testing
+if ( ENABLE_TESTING )
+  enable_testing()
+  add_subdirectory( test )
+endif()
 
