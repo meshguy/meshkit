@@ -3,7 +3,7 @@
 
 #ifdef HAVE_MESQUITE
 #include "Mesquite_all_headers.hpp"
-using namespace Mesquite;
+using namespace MESQUITE_NS;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
