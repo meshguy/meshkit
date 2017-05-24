@@ -14,7 +14,7 @@
 #include "meshkit/FBiGeom.hpp"
 #include "Vector3D.hpp"
 
-using namespace Mesquite;
+using namespace MESQUITE_NS;
 
 namespace MeshKit
 {
@@ -40,7 +40,7 @@ public:
   void vertex_normal_at( Mesh::VertexHandle entity_handle,
       Vector3D& coordinate ) const;
 
-  void element_normal_at( Mesquite::Mesh::ElementHandle entity_handle,
+  void element_normal_at( MBMesquite::Mesh::ElementHandle entity_handle,
       Vector3D& coordinate ) const;
   
   void vertex_normal_at( const Mesh::VertexHandle* handles,
