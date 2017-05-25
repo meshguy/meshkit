@@ -9,12 +9,14 @@
 #ifndef MSQ_FBIGEOM_HPP
 #define MSQ_FBIGEOM_HPP
 
-#include "Mesquite.hpp"
-#include "MeshInterface.hpp"
+#include "moab/mesquite/Mesquite.hpp"
+#include "moab/mesquite/MeshInterface.hpp"
 #include "meshkit/FBiGeom.hpp"
-#include "Vector3D.hpp"
+#include "moab/mesquite/Vector3D.hpp"
+#include "MKVersion.h"
 
-using namespace Mesquite;
+
+using namespace MESQUITE_NS;
 
 namespace MeshKit
 {
@@ -40,7 +42,7 @@ public:
   void vertex_normal_at( Mesh::VertexHandle entity_handle,
       Vector3D& coordinate ) const;
 
-  void element_normal_at( Mesquite::Mesh::ElementHandle entity_handle,
+  void element_normal_at( Mesh::ElementHandle entity_handle,
       Vector3D& coordinate ) const;
   
   void vertex_normal_at( const Mesh::VertexHandle* handles,

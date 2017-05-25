@@ -2,22 +2,16 @@
 #include "meshkit/ModelEnt.hpp"
 #include "meshkit/iMesh.hpp"
 #include "moab/Skinner.hpp"
-#include "MsqIMesh.hpp"
-#include "QualityAssessor.hpp"
-#include "MsqError.hpp"
-#ifdef MSQIGEOM
-# include "MsqIGeom.hpp"
+#include "moab/mesquite/MsqIMesh.hpp"
+#include "moab/mesquite/QualityAssessor.hpp"
+#include "moab/mesquite/MsqError.hpp"
+#ifdef HAVE_CGM
+# include "moab/mesquite/MsqIGeom.hpp"
 #endif
 #include "meshkit/FreeSmoothDomain.hpp"
 
-#include "mesquite_version.h"
-#if MSQ_VERSION_MAJOR > 2 || (MSQ_VERSION_MAJOR == 2 && MSQ_VERSION_MINOR > 1)
-#include "ShapeImprover.hpp"
-typedef Mesquite::ShapeImprover DefaultAlgorithm;
-#else
-#include "ShapeImprovementWrapper.hpp"
-typedef Mesquite::ShapeImprovementWrapper DefaultAlgorithm;
-#endif
+#include "moab/mesquite/ShapeImprover.hpp"
+typedef MESQUITE_NS::ShapeImprover DefaultAlgorithm;
 
     
 #define MSQERRCHK(err)                                 \
@@ -29,7 +23,7 @@ typedef Mesquite::ShapeImprovementWrapper DefaultAlgorithm;
   } while(false)
 
 
-using namespace Mesquite;
+using namespace MESQUITE_NS;
 
 namespace MeshKit { 
 
@@ -112,7 +106,7 @@ void MesquiteOpt::create_byte_tag()
         // We do it here only so we can make it a dense tag.
     moab::Tag t;
     unsigned char zero = 0;
-    mk_core()->moab_instance()->tag_get_handle( Mesquite::VERTEX_BYTE_TAG_NAME,
+    mk_core()->moab_instance()->tag_get_handle( MESQUITE_NS::VERTEX_BYTE_TAG_NAME,
                                             1,
                                             moab::MB_TYPE_INTEGER,
                                             t,
@@ -129,7 +123,7 @@ void MesquiteOpt::smooth_with_fixed_boundary()
 
 void MesquiteOpt::smooth_with_free_boundary()
 {
-#ifndef MSQIGEOM
+#ifndef HAVE_CGM
   throw Error(MK_NOT_IMPLEMENTED,"Cannot do free smooth w/out Mesquite iRel support");
 #else
   fixedBoundary = false;
@@ -344,16 +338,18 @@ void MesquiteOpt::execute_this()
         MSQERRCHK(err);
         
         if (ent->dimension() == 2 && ent->geom_handle()) {
-#ifndef MSQIGEOM
+#ifndef HAVE_CGM
           throw Error(MK_BAD_GEOMETRIC_EVALUATION,
               "Mesquite not configured with iGeom support.  "
               "Cannot optimize surface meshes.");
 #else
           MsqIGeom msqgeom( igeom->instance(), ent->geom_handle() );
-          smoother->run_instructions( &msqmesh, &msqgeom, err );
+          MeshDomainAssoc mesh_and_domain(&msqmesh, &msqgeom);
+          smoother->run_instructions( &mesh_and_domain, err );
 #endif
         }
         else {
+          MeshDomainAssoc mesh_and_domain(&msqmesh,0);
           smoother->run_instructions( &msqmesh, err );
         }
         MSQERRCHK(err);
@@ -386,7 +382,8 @@ void MesquiteOpt::execute_this()
         FreeSmoothDomain msqgeom( mk_core(), ents );
         MsqIMesh msqmesh( imesh->instance(), set, dim, err, &fixedTag );
         MSQERRCHK(err);
-        smoother->run_instructions( &msqmesh, &msqgeom, err );
+        MeshDomainAssoc mesh_and_domain(&msqmesh, &msqgeom);
+        smoother->run_instructions( &mesh_and_domain, err );
         MSQERRCHK(err);
       }
       catch (...) {

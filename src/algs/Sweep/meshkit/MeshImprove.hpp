@@ -10,6 +10,7 @@
 #include <string.h>
 #include <limits.h>
 
+#include "MKVersion.h"
 #include "meshkit/MKCore.hpp"
 #include "meshkit/iMesh.hpp"
 #include "meshkit/MeshOp.hpp"
@@ -24,7 +25,6 @@
 //#include <MsqIGeom.hpp>
 
 using namespace std;
-//using namespace Mesquite;
 
 namespace MeshKit {
 

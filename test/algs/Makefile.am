@@ -67,9 +67,9 @@ test_mbvolop_SOURCES = test_mbvolop.cpp
 # some of these tests require CAMAL and FBiGeom, too
 if HAVE_CAMAL_PAVER
 # test_volice is broken
-#TESTS += test_volice
-#test_volice_SOURCES = test_volice.cpp
-#test_volice_LDADD =  $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
+TESTS += test_volice
+test_volice_SOURCES = test_volice.cpp
+test_volice_LDADD =  $(CAMAL_LDFLAGS) $(CAMAL_LIBS) $(LDADD)
 if HAVE_TRIANGLE
 TESTS += test_setpnt2quad
 test_setpnt2quad_SOURCES = test_setpnt2quad.cpp

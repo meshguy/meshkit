@@ -1,33 +1,35 @@
+
+#include "MKVersion.h"
 #include "meshkit/MeshImprove.hpp"
 #include <iostream>
 #include <math.h>
 #include <map>
 
 //#include "SweepWrapper.hpp"
-#include "UntangleWrapper.hpp"
-#include "ShapeImprover.hpp"
-#include "SmartLaplacianSmoother.hpp"
+#include "moab/mesquite/UntangleWrapper.hpp"
+#include "moab/mesquite/ShapeImprover.hpp"
+#include "moab/mesquite/SmartLaplacianSmoother.hpp"
 #include "SweepWrapper.hpp"
 #include "SmartLaplaceWrapper.hpp"
-#include "ShapeImprovementWrapper.hpp"
+#include "moab/mesquite/ShapeImprovementWrapper.hpp"
 
-#include "IdealWeightInverseMeanRatio.hpp"
-#include "QualityAssessor.hpp"
-#include "InstructionQueue.hpp"
-#include "TerminationCriterion.hpp"
+#include "moab/mesquite/IdealWeightInverseMeanRatio.hpp"
+#include "moab/mesquite/QualityAssessor.hpp"
+#include "moab/mesquite/InstructionQueue.hpp"
+#include "moab/mesquite/TerminationCriterion.hpp"
 
-#include "LaplaceWrapper.hpp"
-#include "SizeAdaptShapeWrapper.hpp"
-#include "PaverMinEdgeLengthWrapper.hpp"
-#include "DeformingDomainWrapper.hpp"
-#include <MsqError.hpp>
-#include <ShapeImprovementWrapper.hpp>
-#include <MsqIMesh.hpp>
-#include <MsqIGeom.hpp>
+#include "moab/mesquite/LaplaceWrapper.hpp"
+#include "moab/mesquite/SizeAdaptShapeWrapper.hpp"
+#include "moab/mesquite/PaverMinEdgeLengthWrapper.hpp"
+#include "moab/mesquite/DeformingDomainWrapper.hpp"
+#include <moab/mesquite/MsqError.hpp>
+#include <moab/mesquite/ShapeImprovementWrapper.hpp>
+#include "moab/mesquite/MsqIMesh.hpp"
+#include "moab/mesquite/MsqIGeom.hpp"
 #ifdef HAVE_FBIGEOM
 #include "meshkit/MsqFBiGeom.hpp"
 #endif
-using namespace Mesquite;
+using namespace MESQUITE_NS;
 
 namespace MeshKit {
 
@@ -119,14 +121,16 @@ void MeshImprove::SurfMeshImprove(iBase_EntityHandle surface,
       if (this->igeom_inst->isFBiGeom())
       {
         MsqFBiGeom fbgeom_adapter((FBiGeom *)igeom_inst, surface);
-        smoother.run_instructions(&mesh_adapter, &fbgeom_adapter, mError);
+        MeshDomainAssoc mesh_and_domain(&mesh_adapter, &fbgeom_adapter);
+        smoother.run_instructions(&mesh_and_domain, mError);
         cout << "Mesquite error in fb surface mesh smoothing=" << mError << endl;
       }
       else
       {
 #endif
       MsqIGeom geom_adapter(mk_core->igeom_instance()->instance(), surface);
-      smoother.run_instructions(&mesh_adapter, &geom_adapter, mError);
+      MeshDomainAssoc mesh_and_domain(&mesh_adapter, &geom_adapter);
+      smoother.run_instructions(&mesh_and_domain, mError);
       cout << "Mesquite error in surface mesh smoothing=" << mError << endl;
 #ifdef HAVE_FBIGEOM
     }
@@ -147,14 +151,16 @@ void MeshImprove::SurfMeshImprove(iBase_EntityHandle surface,
       if (this->igeom_inst->isFBiGeom())
       {
         MsqFBiGeom fbgeom_adapter((FBiGeom *)igeom_inst, surface);
-        sl_smooth.run_instructions(&mesh_adapter, &fbgeom_adapter, mError);
+        MeshDomainAssoc mesh_and_domain(&mesh_adapter, &fbgeom_adapter);
+        sl_smooth.run_instructions(&mesh_and_domain, mError);
         cout << "Mesquite error in fb smart Laplacian surface mesh smoothing with the geometry domain=" << mError << endl;
       }
       else
       {
 #endif
       MsqIGeom geom_adapter(mk_core->igeom_instance()->instance(), surface);
-      sl_smooth.run_instructions(&mesh_adapter, &geom_adapter, mError);
+      MeshDomainAssoc mesh_and_domain(&mesh_adapter, &geom_adapter);
+      sl_smooth.run_instructions(&mesh_and_domain, mError);
       cout
           << "Mesquite error in the smart Laplacian surface mesh smoothing with the geometry domain="
           << mError << endl;
@@ -162,7 +168,8 @@ void MeshImprove::SurfMeshImprove(iBase_EntityHandle surface,
     }
 #endif
     } else {
-      sl_smooth.run_instructions(&mesh_adapter, mError);
+      MeshDomainAssoc mesh_and_domain(&mesh_adapter, 0);
+      sl_smooth.run_instructions(&mesh_and_domain, mError);
       cout
           << "Mesquite error in the smart Laplacian surface mesh smoothing without the geometry domain="
           << mError << endl;
@@ -181,21 +188,24 @@ void MeshImprove::SurfMeshImprove(iBase_EntityHandle surface,
       if (this->igeom_inst->isFBiGeom())
       {
         MsqFBiGeom fbgeom_adapter((FBiGeom *)igeom_inst, surface);
-        smoother1.run_instructions(&mesh_adapter, &fbgeom_adapter, mError);
+        MeshDomainAssoc mesh_and_domain(&mesh_adapter, &fbgeom_adapter);
+        smoother1.run_instructions(&mesh_and_domain, mError);
         cout << "Mesquite error in ShapeImprover fb surface mesh smoothing=" << mError << endl;
       }
       else
       {
 #endif
       MsqIGeom geom_adapter(mk_core->igeom_instance()->instance(), surface);
-      smoother1.run_instructions(&mesh_adapter, &geom_adapter, mError);
+      MeshDomainAssoc mesh_and_domain(&mesh_adapter, &geom_adapter);
+      smoother1.run_instructions(&mesh_and_domain, mError);
       cout << "Mesquite error in the ShapeImprover surface mesh smoothing="
           << mError << endl;
 #ifdef HAVE_FBIGEOM
     }
 #endif
     } else {
-      smoother1.run_instructions(&mesh_adapter, mError);
+      MeshDomainAssoc mesh_and_domain(&mesh_adapter, 0);
+      smoother1.run_instructions(&mesh_and_domain, mError);
       cout << "Mesquite error in the ShapeImprover surface mesh smoothing="
           << mError << endl;
     }
@@ -210,14 +220,16 @@ void MeshImprove::SurfMeshImprove(iBase_EntityHandle surface,
       if (this->igeom_inst->isFBiGeom())
       {
         MsqFBiGeom fbgeom_adapter((FBiGeom *)igeom_inst, surface);
-        Smooth_SizeAdapt.run_instructions(&mesh_adapter, &fbgeom_adapter, mError);
+        MeshDomainAssoc mesh_and_domain(&mesh_adapter, &fbgeom_adapter);
+        Smooth_SizeAdapt.run_instructions(&mesh_and_domain, mError);
         cout << "Mesquite error in SizeAdaptShape fb surface mesh smoothing=" << mError << endl;
       }
       else
       {
 #endif
       MsqIGeom geom_adapter(mk_core->igeom_instance()->instance(), surface);
-      Smooth_SizeAdapt.run_instructions(&mesh_adapter, &geom_adapter, mError);
+      MeshDomainAssoc mesh_and_domain(&mesh_adapter, &geom_adapter);
+      Smooth_SizeAdapt.run_instructions(&mesh_and_domain, mError);
       cout << "Mesquite error in the SizeAdaptShape surface mesh smoothing="
           << mError << endl;
 #ifdef HAVE_FBIGEOM

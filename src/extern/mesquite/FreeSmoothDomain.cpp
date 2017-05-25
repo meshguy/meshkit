@@ -2,12 +2,12 @@
 #include "meshkit/MKCore.hpp"
 #include "moab/Interface.hpp"
 #include "meshkit/FreeSmoothDomain.hpp"
-#include "MsqError.hpp"
+#include "moab/mesquite/MsqError.hpp"
 
 namespace MeshKit {
 
 using namespace moab;
-using namespace Mesquite;
+using namespace MESQUITE_NS;
 
 FreeSmoothDomain::FreeSmoothDomain( MKCore* core, const MEntVector& entities )
   : MsqCommonIGeom(core->igeom_instance()->instance()),

@@ -26,7 +26,6 @@
 using namespace arma;
 
 using namespace std;
-//using namespace Mesquite;
 
 namespace MeshKit {
 

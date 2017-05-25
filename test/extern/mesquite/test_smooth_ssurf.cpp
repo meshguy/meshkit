@@ -14,11 +14,7 @@
 
 using namespace MeshKit;
 
-void test_fixed_smooth_surf();
-void test_free_smooth_surf();
 void test_smooth_spherical_surf();
-//void test_fixed_smooth_vol();
-//void test_free_smooth_vol();
 
 ModelEnt* create_surface_mesh( moab::EntityHandle vertices[4][4] );
 //ModelEnt* create_volume_mesh( moab::EntityHandle vertices[4][4][4] );
@@ -44,10 +40,7 @@ int main(int argc, char* argv[])
   core = &my_core;
 
   int result = 0;
-  result += RUN_TEST( test_fixed_smooth_surf );
-  result += RUN_TEST( test_free_smooth_surf );
-  //result += RUN_TEST( test_fixed_smooth_vol );
-  //result += RUN_TEST( test_free_smooth_vol );
+  result += RUN_TEST( test_smooth_spherical_surf );
  
   return result;
 }
@@ -269,129 +262,96 @@ void check_surf_coords( Vector<3> coords[4][4], moab::EntityHandle verts[4][4], 
   }
 }
 
-void test_fixed_smooth_surf()
+void test_smooth_spherical_surf()
 {
-    //get a mesh
-  moab::EntityHandle vertices[4][4];
-  ModelEnt* surf = create_surface_mesh( vertices );
-  moab::EntityHandle surf_set = surf->mesh_handle();
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_fixed_smooth_surf-init.vtk", "VTK", 0, &surf_set, 1 );
+    // create sphere
+  const double rad = std::sqrt(3.0);
+  iGeom* geom = core->igeom_instance();
+  iBase_EntityHandle vol_handle;
+  iGeom::Error err = geom->createSphere( rad, vol_handle );
+  CHECK_EQUAL( iBase_SUCCESS, err );
+  ModelEnt* vol = get_model_ent( vol_handle );
   
-    // get all coordinates
+    // check expected topology and get surface pointer
+  MEntVector list;
+  vol->get_adjacencies( 2, list );
+  CHECK_EQUAL( (size_t)1, list.size() );
+  ModelEnt* surf = list.front();
+  //list.clear();
+  //surf->get_adjacencies( 1, list );
+  //CHECK( list.empty() );
+  
+    // define quad faces of a single hex circumscribed by the sphere
+  const double xp = 0.5;
+  const double yp = std::sqrt( 2 - xp * xp );
+  const double coords[][3] = { { -1, -1, -1 },
+                               {  1, -1, -1 },
+                               { xp, yp, -1 }, // perturb one vertex
+                               { -1,  1, -1 },
+                               { -1, -1,  1 },
+                               {  1, -1,  1 },
+                               {  1,  1,  1 },
+                               { -1,  1,  1 } };
+  const int conn[][4] = { { 0, 1, 5, 4 },
+                          { 1, 2, 6, 5 },
+                          { 2, 3, 7, 6 },
+                          { 3, 0, 4, 7 },
+                          { 3, 2, 1, 0 },
+                          { 4, 5, 6, 7 } };
+  
+    // create mesh entities
   moab::ErrorCode rval;
-  Vector<3> coords[4][4];
-  rval = core->moab_instance()->get_coords( &vertices[0][0], 4*4, coords[0][0].data() );
-  CHECK_EQUAL( moab::MB_SUCCESS, rval );
-  
-    // run smoother on optimal mesh
-  MEntVector v;
-  v.push_back(surf);
-  MesquiteOpt op( core, v );
+  moab::EntityHandle mesh[8+6], *verts=mesh, *quads=verts+8;
+  for (int i = 0; i < 8; ++i) {
+    rval = core->moab_instance()->create_vertex( coords[i], verts[i] );
+    CHECK_EQUAL( moab::MB_SUCCESS, rval );
+  }
+  for (int i = 0; i < 6; ++i) {
+    moab::EntityHandle mconn[4];
+    for (int j = 0; j < 4; ++j)
+      mconn[j] = verts[conn[i][j]];
+    rval = core->moab_instance()->create_element( moab::MBQUAD, mconn, 4, quads[i] );
+    CHECK_EQUAL( moab::MB_SUCCESS, rval );
+  }
+  surf->commit_mesh( mesh, 8+6, COMPLETE_MESH );
+  moab::EntityHandle set = surf->mesh_handle();
+  if (write_vtk)
+    core->moab_instance()->write_file( "test_smooth_spherical_surf-init.vtk", "VTK", 0, &set, 1 );
+
+  list.clear();
+  list.push_back(surf);
+  MesquiteOpt op( core, list );
   op.print_quality(verbose);
   op.smooth_with_fixed_boundary();
   if (verbose)
-    std::cout << std::endl << "Fixed smooth of optimal surface mesh" << std::endl << std::endl;
+    std::cout << std::endl << "Fixed smooth of mesh of spherical surface" << std::endl << std::endl;
   op.setup_this();
   op.execute_this();
   if (write_vtk)
-    core->moab_instance()->write_file( "test_fixed_smooth_surf-opt.vtk", "VTK", 0, &surf_set, 1 );
-  
-    // verify that vertices did not move
-  check_surf_coords( coords, vertices, 1e-1 );
-  
-    // perturb interior vertices
-  Vector<3> new_coord;
-  const double f = 1.3;
-  Vector<3> mean = 0.25*(coords[1][1]+coords[2][1]+coords[1][2]+coords[2][2]);
-  for (int i = 1; i < 3; ++i) { 
-    for (int j = 1; j < 3; ++j) {
-      new_coord = f*coords[i][j] + (1-f)*mean;
-      rval = core->moab_instance()->set_coords( &vertices[i][j], 1, new_coord.data() );
-      CHECK_EQUAL( moab::MB_SUCCESS, rval );
+    core->moab_instance()->write_file( "test_smooth_spherical_surf-opt.vtk", "VTK", 0, &set, 1 );
+
+    // check that all vertices lie on sphere
+  for (int i = 0; i < 8; ++i) {
+    Vector<3> c;
+    rval = core->moab_instance()->get_coords( &verts[i], 1, c.data() );
+    CHECK_REAL_EQUAL( rad, length(c), 1e-3 );
+  }
+
+    // check that all quad faces are squares
+  for (int i = 0; i < 6; ++i) {
+    Vector<3> c[4];
+    moab::EntityHandle mconn[4];
+    for (int j = 0; j < 4; ++j)
+      mconn[j] = verts[conn[i][j]];
+    rval = core->moab_instance()->get_coords( mconn, 4, c[0].data() );
+    CHECK_EQUAL( moab::MB_SUCCESS, rval );
+    for (int j = 0; j < 4; ++j) {
+      Vector<3> e1 = c[(j+1)%4] - c[j];
+      Vector<3> e2 = c[(j+2)%4] - c[(j+1)%4];
+      CHECK_REAL_EQUAL( 2.0, length(e1),    0.9);
+      CHECK_REAL_EQUAL( 4.0, length(e1*e2), 0.9 );
     }
   }
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_fixed_smooth_surf-perturb.vtk", "VTK", 0, &surf_set, 1 );
-  
-    // run smoother and verify that coords at optimal positions
-  if (verbose)
-    std::cout << std::endl << "Fixed smooth of sub-optimal surface mesh" << std::endl << std::endl;
-  op.setup_this();
-  op.execute_this();
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_fixed_smooth_surf-smooth.vtk", "VTK", 0, &surf_set, 1 );
-  check_surf_coords( coords, vertices, 1e-1 );
-  
-    // perturb an edge vertex and verify that it did not move
-  Vector<3> mid_coord = 0.5*(coords[1][0] + coords[2][0]);
-  rval = core->moab_instance()->set_coords( &vertices[1][0], 1, mid_coord.data() );
-  CHECK_EQUAL( moab::MB_SUCCESS, rval );
-  if (verbose)
-    std::cout << std::endl << "Fixed smooth of surface with sub-optimal edge mesh" << std::endl << std::endl;
-  op.setup_this();
-  op.execute_this();
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_fixed_smooth_surf-fixed.vtk", "VTK", 0, &surf_set, 1 );
-  rval = core->moab_instance()->get_coords( &vertices[1][0], 1, new_coord.data() );
-  CHECK_REAL_EQUAL( 0.0, length(new_coord - mid_coord), 1e-6 );
 }
 
-void test_free_smooth_surf()
-{
-    //get a mesh
-  moab::EntityHandle vertices[4][4];
-  ModelEnt* surf = create_surface_mesh( vertices );
-  moab::EntityHandle surf_set = surf->mesh_handle();
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_free_smooth_surf-init.vtk", "VTK", 0, &surf_set, 1 );
-  
-    // get all coordinates
-  moab::ErrorCode rval;
-  Vector<3> coords[4][4];
-  rval = core->moab_instance()->get_coords( &vertices[0][0], 4*4, coords[0][0].data() );
-  CHECK_EQUAL( moab::MB_SUCCESS, rval );
-  
-    // run smoother on optimal mesh
-  MEntVector v;
-  v.push_back(surf);
-  MesquiteOpt op( core, v );
-  op.smooth_with_free_boundary();
-  op.print_quality(verbose);
-  if (verbose)
-    std::cout << std::endl << "Free smooth of optimal surface mesh" << std::endl << std::endl;
-  op.setup_this();
-  op.execute_this();
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_free_smooth_surf-opt.vtk", "VTK", 0, &surf_set, 1 );
-  
-    // verify that vertices did not move
-    check_surf_coords( coords, vertices, 1e-1 );
-  
-    // perturb interior vertices
-  Vector<3> new_coord;
-  const double f = 1.3;
-  Vector<3> mean = 0.25*(coords[1][1]+coords[2][1]+coords[1][2]+coords[2][2]);
-  for (int i = 1; i < 3; ++i) { 
-    for (int j = 1; j < 3; ++j) {
-      new_coord = f*coords[i][j] + (1-f)*mean;
-      rval = core->moab_instance()->set_coords( &vertices[i][j], 1, new_coord.data() );
-      CHECK_EQUAL( moab::MB_SUCCESS, rval );
-    }
-  }
-    // perturb edge vertices
-  Vector<3> mid_coord = 0.5*(coords[1][0] + coords[2][0]);
-  rval = core->moab_instance()->set_coords( &vertices[1][0], 1, mid_coord.data() );
-  CHECK_EQUAL( moab::MB_SUCCESS, rval );
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_free_smooth_surf-perturb.vtk", "VTK", 0, &surf_set, 1 );
-  
-    // run smoother and verify that coords at optimal positions
-  if (verbose)
-    std::cout << std::endl << "Free smooth of sub-optimal surface mesh" << std::endl << std::endl;
-  op.setup_this();
-  op.execute_this();
-  if (write_vtk)
-    core->moab_instance()->write_file( "test_free_smooth_surf-smooth.vtk", "VTK", 0, &surf_set, 1 );
-  check_surf_coords( coords, vertices, 1e-1 );
-}
+
