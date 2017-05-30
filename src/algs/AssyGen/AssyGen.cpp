@@ -3,6 +3,10 @@ AssyGen Tool: Reactor Geometry Generator
 Argonne National Laboratory
 *********************************************/
 
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+#endif
+
 #include "meshkit/AssyGen.hpp"
 
 namespace MeshKit

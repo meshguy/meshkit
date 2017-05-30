@@ -285,14 +285,11 @@ void AssyMesher::PrepareIO (int argc, char *argv[], std::string  TestDir)
 {
   // set and open input output files
   bool bDone = false;
-#ifdef HAVE_ACIS
-#define EXTENSION ".sat";
-#else
 #ifdef HAVE_OCC
+//switch to else to protect from having define twice
 #define EXTENSION ".brep";
 #else
 #define EXTENSION ""
-#endif
 #endif
   do{
       if (2 == argc) {

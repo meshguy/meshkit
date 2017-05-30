@@ -39,7 +39,7 @@ AF2AlgorithmResult::~AF2AlgorithmResult()
 
 AF2AlgorithmResult::AF2AlgorithmResult(const AF2AlgorithmResult & toCopy)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2AlgorithmResult copy construction is not supported.");
   throw notImpl;
 }
@@ -47,7 +47,7 @@ AF2AlgorithmResult::AF2AlgorithmResult(const AF2AlgorithmResult & toCopy)
 AF2AlgorithmResult& AF2AlgorithmResult::operator=(
     const AF2AlgorithmResult & rhs)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string(
       "AF2AlgorithmResult assignment operator is not supported.");
   throw notImpl;

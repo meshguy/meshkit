@@ -106,7 +106,7 @@ using std::iostream;
 #endif
 
 // some Windows versions define min/max macros! 
-#if defined(WIN32)
+#if defined(_WIN32)
 #undef min
 #undef max
 #endif

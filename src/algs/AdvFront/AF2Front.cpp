@@ -42,14 +42,14 @@ AF2Front::~AF2Front()
 
 AF2Front::AF2Front(const AF2Front & toCopy)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Front copy construction is not supported.");
   throw notImpl;
 }
 
 AF2Front& AF2Front::operator=(const AF2Front & rhs)
 {
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Front assignment operator is not supported.");
   throw notImpl;
 }
@@ -69,7 +69,7 @@ void AF2Front::addPoint(AF2Point3D* pointPtr)
 {
   if (points.find(pointPtr) != points.end())
   {
-    MeshKit::Error duplicate(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error duplicate(MeshKit::MK_BAD_INPUT);
     duplicate.set_string("The point is already on the advancing front.");
     throw duplicate;
   }
@@ -90,14 +90,14 @@ void AF2Front::advanceFront(std::list<AF2Edge3D*> edgeList)
     PointCountItr endPntItr = points.find((*itr)->getEnd());
     if (startPntItr == points.end() || endPntItr == points.end())
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string(
           "One or both endpoints of an edge are not on the advancing front.");
       throw badArg;
     }
     if ((*itr)->getQualityLevel() != 1u)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string(
           "Edges added to the advancing front must have quality level 1.");
       throw badArg;
@@ -239,7 +239,7 @@ AF2Neighborhood* AF2Front::selectNeighborhood(
   // throw an exception if no baseline edge was found
   if (baselineEdge == NULL)
   {
-    MeshKit::Error fail(MeshKit::ErrorCode::MK_FAILURE);
+    MeshKit::Error fail(MeshKit::MK_FAILURE);
     fail.set_string("The advancing front has no edges.");
     throw fail;
   }

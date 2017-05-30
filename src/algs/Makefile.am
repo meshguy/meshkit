@@ -77,7 +77,8 @@ nobase_libMeshKitalgs_la_include_HEADERS = \
 	meshkit/ExtrudeMesh.hpp \
 	meshkit/CESets.hpp \
 	meshkit/TransformBase.hpp \
-        meshkit/Transform.hpp
+        meshkit/Transform.hpp \
+        meshkit/meshkitalgs_export.hpp
 if HAVE_FBIGEOM
 nobase_libMeshKitalgs_la_include_HEADERS += \
 	meshkit/MBGeomOp.hpp \

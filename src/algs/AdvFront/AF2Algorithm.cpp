@@ -31,7 +31,7 @@ AF2Algorithm::AF2Algorithm(const AF2Algorithm & toCopy)
   // Note: the default implementation would work at this point, but
   //   might not in the future, and there shouldn't be much need to
   //   copy this.
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Algorithm copy construction is not supported.");
   throw notImpl;
 }
@@ -41,7 +41,7 @@ AF2Algorithm& AF2Algorithm::operator=(const AF2Algorithm & rhs)
   // Note: the default implementation would work at this point, but
   //   might not in the future, and there shouldn't be much need to
   //   assign this.
-  MeshKit::Error notImpl(MeshKit::ErrorCode::MK_NOT_IMPLEMENTED);
+  MeshKit::Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string("AF2Algorithm assignment operator is not supported.");
   throw notImpl;
 }
@@ -165,7 +165,7 @@ void AF2Algorithm::initFront(AF2Front & front, std::list<AF2Point3D*> & pntList,
   {
     if (edges[2*ei] >= numPoints || edges[2*ei + 1] >= numPoints)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string("An edge index exceeds the number of points.");
       throw badArg;
     }

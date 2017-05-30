@@ -1,6 +1,8 @@
 #ifndef MESHKIT_CD_SETS_HPP
 #define MESHKIT_CD_SETS_HPP
 
+#include "meshkitalgs_export.hpp"
+
 #include <set>
 #include <string>
 #include <vector>
@@ -12,7 +14,7 @@
 
 namespace MeshKit {
 
-class CESets
+class MESHKITALGS_EXPORT CESets
 {
 public:
   struct tag_data
@@ -81,7 +83,7 @@ private:
 
 /**\brief Set the target sets for expand sets to be themselves
  */
-void link_expand_sets(const CESets &ce_sets, iMesh::TagHandle local_tag);
+void MESHKITALGS_EXPORT link_expand_sets(const CESets &ce_sets, iMesh::TagHandle local_tag);
 
 /**\brief Add newly-created entities/sets to a collection of sets
  *
@@ -92,7 +94,7 @@ void link_expand_sets(const CESets &ce_sets, iMesh::TagHandle local_tag);
  * \param cesets a collection of source sets
  * \param local_tag the tag relating source and target entities/sets
  */
-void process_ce_sets(iMesh *mesh,
+void MESHKITALGS_EXPORT process_ce_sets(iMesh *mesh,
                      const std::set<iMesh::EntitySetHandle> &cesets,
                      iMesh::TagHandle local_tag);
 
@@ -108,7 +110,7 @@ void process_ce_sets(iMesh *mesh,
  * \param tag_val if non-NULL, only set |tag| on the destination if the source's
  *                tag matches this value
  */
-void tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
+void MESHKITALGS_EXPORT tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
                    const std::set<iMesh::EntitySetHandle> &copySets,
                    iMesh::TagHandle tag, const char *tag_val);
 
@@ -122,7 +124,7 @@ void tag_copy_sets(iMesh *mesh, iMesh::TagHandle copyTag,
  * \param local_tag the local tag relating copied sets with their originals
  * \param copy_tag the copy tag to receive local_tag's data
  */
-void tag_copy_sets(const CESets &ce_sets, iMesh::TagHandle local_tag,
+void MESHKITALGS_EXPORT tag_copy_sets(const CESets &ce_sets, iMesh::TagHandle local_tag,
                    iMesh::TagHandle copy_tag);
 
 } // namespace MeshKit

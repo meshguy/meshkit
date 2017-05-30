@@ -13,7 +13,7 @@ AF2Polygon3D::AF2Polygon3D(
   {
     if (*itr == NULL)
     {
-      MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+      MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
       badArg.set_string(
           "polygonVertices may not contain a null pointer in AF2Polygon3D.");
       throw badArg;
@@ -79,7 +79,7 @@ const AF2Point3D* AF2Polygon3D::getVertex(unsigned int vtxNum) const
 {
   if (vtxNum >= numVertices)
   {
-    MeshKit::Error badArg(MeshKit::ErrorCode::MK_BAD_INPUT);
+    MeshKit::Error badArg(MeshKit::MK_BAD_INPUT);
     badArg.set_string("The vertex index is too large.");
     throw badArg;
   }

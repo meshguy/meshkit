@@ -1,0 +1,41 @@
+include_directories( ${MOAB_PACKAGE_INCLUDES} ${MOAB_INCLUDE_DIRS}  ${CGM_INCLUDES} )
+
+
+set(CoreGen_srcs
+  CoreGen.cpp
+  copymove_parallel.cpp)
+
+set(CoreGen_headers
+  meshkit/CoreGen.hpp)
+
+set(extra_libs)
+add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
+if (MOAB_FOUND)
+  add_definitions(-DMOAB)
+  list(APPEND extra_libs
+    iMesh)
+endif ()
+
+add_library(CoreGen 
+  ${CoreGen_srcs}
+  ${CoreGen_headers})
+link_libraries(CoreGen
+  MeshKitcore
+  ${extra_libs})
+include_directories(
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/lemon
+    ${CMAKE_SOURCE_DIR}/src/algs
+)
+
+install(
+  TARGETS   CoreGen
+  EXPORT    MeshKitAlgs
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime
+)

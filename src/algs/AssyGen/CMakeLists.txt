@@ -1,0 +1,36 @@
+set(AssyGen_srcs
+  meshscript.cpp
+  createpincell.cpp
+  AssyGen.cpp )
+
+set(AssyGen_headers
+  meshkit/AssyGen.hpp)
+
+add_definitions("-DSRCDIR=${CMAKE_CURRENT_SOURCE_DIR}")
+
+if (MOAB_FOUND)
+  add_definitions(-DMOAB)
+endif ()
+
+add_library(AssyGen
+  ${AssyGen_srcs}
+  ${AssyGen_headers})
+
+link_libraries(AssyGen
+  MeshKitcore)
+
+include_directories(
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/utils
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/lemon
+)
+
+install(
+  TARGETS   AssyGen
+  EXPORT    MeshKitAlgs
+  RUNTIME   DESTINATION bin
+  LIBRARY   DESTINATION lib
+  ARCHIVE   DESTINATION lib
+  COMPONENT Runtime)

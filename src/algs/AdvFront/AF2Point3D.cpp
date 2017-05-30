@@ -31,7 +31,7 @@ moab::EntityHandle AF2Point3D::getVertexHandle() const
 {
   if (!committed)
   {
-    MeshKit::Error badState(MeshKit::ErrorCode::MK_FAILURE);
+    MeshKit::Error badState(MeshKit::MK_FAILURE);
     badState.set_string("The point has not been committed to the mesh yet.");
     throw badState;
   }

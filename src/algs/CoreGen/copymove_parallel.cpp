@@ -388,7 +388,8 @@ int CoreGen::copymove_all(const int nrank, const int numprocs)
 
             }
         }
-        delete[] flags;
+        delete [] flags;
+
     }
     return iBase_SUCCESS;
 }

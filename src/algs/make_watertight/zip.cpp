@@ -4,22 +4,22 @@
 #include "moab/OrientedBoxTreeTool.hpp"
 using namespace moab;
 namespace zip {
+  struct triangles {
+    EntityHandle before_tri;
+    const EntityHandle *before;
+    CartVect     before_norm;
+    EntityHandle after0[3];
+    EntityHandle after1[3];
+    CartVect     after0_norm;
+    CartVect     after1_norm;
+    EntityHandle surf_set;
+  };
+
   ErrorCode t_joint( Tag normal_tag,
                        const EntityHandle vert0,
                        const EntityHandle vert1,
                        const EntityHandle vert2,
                        bool debug ) {
-    struct triangles {
-      EntityHandle before_tri;
-      const EntityHandle *before;
-      CartVect     before_norm;
-      EntityHandle after0[3];
-      EntityHandle after1[3];
-      CartVect     after0_norm;
-      CartVect     after1_norm;
-      EntityHandle surf_set;
-    };   
-
     // Get all of the old information before changing anything. 
     // This is important because once the
     // new connectivity is set stuff becomes stale.

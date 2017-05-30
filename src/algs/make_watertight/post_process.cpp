@@ -27,7 +27,7 @@
 #include <ctime>
 #include <vector>
 #include "moab/Core.hpp"
-#include "TagConventions.hpp"
+#include "MBTagConventions.hpp"
 #include "moab/Range.hpp"
 #include "moab/Skinner.hpp"
 

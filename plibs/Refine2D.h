@@ -1,6 +1,8 @@
 #ifndef REFINE_H
 #define REFINE_H
 
+#include "meshkit/meshkitalgs_export.h"
+
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -81,7 +83,7 @@ enum RefineObjective {REFINE_AREA, REFINE_ASPECT_RATIO, REFINE_CURVATURE};
 ///////////////////////////////////////////////////////////////////////////////
 
 //! \brief 2D Mesh Refinement class.
-class MeshRefine2D
+class MESHKITALGS_EXPORT MeshRefine2D
 {
  public:
 
@@ -144,7 +146,7 @@ class MeshRefine2D
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Sqrt3Refine2D : public MeshRefine2D
+class MESHKITALGS_EXPORT Sqrt3Refine2D : public MeshRefine2D
 {
   public:
    int execute();
@@ -154,7 +156,7 @@ class Sqrt3Refine2D : public MeshRefine2D
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class CentroidRefine2D : public MeshRefine2D
+class MESHKITALGS_EXPORT CentroidRefine2D : public MeshRefine2D
 {
  public:
 
@@ -170,7 +172,7 @@ class CentroidRefine2D : public MeshRefine2D
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class ConsistencyRefine2D : public MeshRefine2D
+class MESHKITALGS_EXPORT ConsistencyRefine2D : public MeshRefine2D
 {
    public:
      ~ConsistencyRefine2D() {}
@@ -202,7 +204,7 @@ class ConsistencyRefine2D : public MeshRefine2D
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class LongestEdgeRefine2D : public MeshRefine2D 
+class MESHKITALGS_EXPORT LongestEdgeRefine2D : public MeshRefine2D 
 {
  public:
   LongestEdgeRefine2D()
@@ -226,7 +228,7 @@ class LongestEdgeRefine2D : public MeshRefine2D
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Refine2D14 : public MeshRefine2D 
+class MESHKITALGS_EXPORT Refine2D14 : public MeshRefine2D 
 {
  public:
 
@@ -255,7 +257,7 @@ struct DelaunayRefinement2D : public MeshRefine2D
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct ObtuseRefine2D : public MeshRefine2D
+struct MESHKITALGS_EXPORT ObtuseRefine2D : public MeshRefine2D
 {
    ObtuseRefine2D( ) { cutoffAngle = 90.0;}
 
@@ -272,7 +274,7 @@ struct ObtuseRefine2D : public MeshRefine2D
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct GradeRefine2D : public MeshRefine2D
+struct MESHKITALGS_EXPORT GradeRefine2D : public MeshRefine2D
 {
    int  initialize();
    int  finalize();

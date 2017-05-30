@@ -12,6 +12,7 @@
 #include "moab/Core.hpp"
 #include "moab/Range.hpp"
 #include "moab/AdaptiveKDTree.hpp" // for merging verts
+#include "moab/EntityHandle.hpp"
 #include "moab/CartVect.hpp"
 
 // SENSE CONVENTIONS
@@ -179,7 +180,7 @@ moab::ErrorCode find_closest_vert( const moab::EntityHandle reference_vert,
   // skin edges are a vector of two vertex handles
     // Hold edges in an array of handles.
   struct edge {
-    moab::EntityHandle edge, v0, v1;
+    moab::EntityHandle e, v0, v1;
   };
   int compare_edge(const void *a, const void *b);
   moab::ErrorCode find_skin( moab::Range tris, const int dim,                     

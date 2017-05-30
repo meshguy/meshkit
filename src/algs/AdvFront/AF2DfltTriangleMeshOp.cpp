@@ -69,7 +69,7 @@ AF2DfltTriangleMeshOp::AF2DfltTriangleMeshOp(
 AF2DfltTriangleMeshOp& AF2DfltTriangleMeshOp::operator=(
     const AF2DfltTriangleMeshOp& rhs)
 {
-  Error notImpl(ErrorCode::MK_NOT_IMPLEMENTED);
+  Error notImpl(MeshKit::MK_NOT_IMPLEMENTED);
   notImpl.set_string(
       "AF2DfltTriangleMeshOp assignment operator is not supported.");
   throw notImpl;
@@ -144,7 +144,7 @@ void AF2DfltTriangleMeshOp::execute_this()
     // check that there is reasonable data to initialize the front
     if (numEdges <= 0)
     {
-      Error failErr(ErrorCode::MK_FAILURE);
+      Error failErr(MeshKit::MK_FAILURE);
       failErr.set_string("There are no boundary mesh edges to use to initialize the advancing front in AF2DfltTriangleMeshOp.");
       throw failErr;
     }
@@ -152,7 +152,7 @@ void AF2DfltTriangleMeshOp::execute_this()
     // since the coordinates of the first vertex may be used to check sizing
     if (numVertices <= 0)
     {
-      Error failErr(ErrorCode::MK_FAILURE);
+      Error failErr(MeshKit::MK_FAILURE);
       failErr.set_string(
           "No boundary vertices found in AF2DfltTriangleMeshOp.");
       throw failErr;
@@ -182,7 +182,7 @@ void AF2DfltTriangleMeshOp::execute_this()
     if (!meshResult->isSuccessful())
     {
       delete meshResult;
-      Error failErr(ErrorCode::MK_FAILURE);
+      Error failErr(MeshKit::MK_FAILURE);
       failErr.set_string("AF2DfltTriangleMeshOp failed.");
       throw failErr;
     }
@@ -277,7 +277,7 @@ void AF2DfltTriangleMeshOp::setup_this()
     // check that the dimension of the selected model entity is two
     if (modelEnt->dimension() != 2)
     {
-      Error dimErr(ErrorCode::MK_WRONG_DIMENSION);
+      Error dimErr(MeshKit::MK_WRONG_DIMENSION);
       dimErr.set_string("Found a selected entity of dimension not equal to 2 in AF2DfltTriangleMeshOp.");
       throw dimErr;
     }

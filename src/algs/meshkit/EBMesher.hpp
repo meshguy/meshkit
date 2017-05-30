@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <map>
-#include <sys/resource.h>
 
 #include "meshkit/Types.hpp"
 #include "meshkit/Error.hpp"

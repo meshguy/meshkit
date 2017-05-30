@@ -146,7 +146,7 @@ namespace arc {
         return rval;
     
       // store the edges
-      my_edges[j].edge = *i;
+      my_edges[j].e    = *i;
       my_edges[j].v0   = endpts[0];
       my_edges[j].v1   = endpts[1];
 
@@ -168,12 +168,12 @@ namespace arc {
     for(unsigned i=1; i<n_orig_edges; ++i) {
       // delete edge if a match exists
       if(my_edges[j].v0==my_edges[i].v0 && my_edges[j].v1==my_edges[i].v1) {
-        duplicate_edges.insert( my_edges[j].edge );
+        duplicate_edges.insert( my_edges[j].e );
         // find any remaining matches
         while( my_edges[j].v0==my_edges[i].v0 && 
                my_edges[j].v1==my_edges[i].v1 &&
                i<n_orig_edges) {
-          duplicate_edges.insert( my_edges[i].edge );
+          duplicate_edges.insert( my_edges[i].e );
           ++i;
         }
         // delete the matches
@@ -276,7 +276,7 @@ namespace arc {
     
       // store the edges
       gen::edge temp;
-      temp.edge = *i;
+      temp.e    = *i;
       temp.v0   = endpts[0];
       temp.v1   = endpts[1];
       my_edges.insert( std::pair<EntityHandle,gen::edge>(temp.v0,temp) );
