@@ -1,17 +1,39 @@
+Version 1.5.0 (SIGMA v2.0)
+============================
+
+Fixes:
+------
+  1) Mesquite support via MOAB. If MOAB is built with --enable-mesquite option, MeshKit enables Mesquite support
+  2) MeshKit must be built with MOAB built with --enable-rel option
+  3) Remove .sat/ACIS files creation and any linking or directly calling CUBIT API routines
+  4) Fix OBB tree calling function signature changes etc. to be fully compatible with MOAB and CGM.
+
+Enhancements:
+-------------
+  1) Added parallel triangle advancing front algorithm
+  2) AssyGen created geometry is meshed and prepared to be simulation ready using the AssyMesher algorithm
+  3) New MKmesh tool for invoking any available meshing algorithm on a geometry
+  4) Support for facet based geometry for several algorithms
+  5) CMake based build system with test and tools
+  6) RGG support for Trelis using configure option --enable-rgg16 option
+  7) Autodownload NetGen option
+  8) Support for fully open-source NetGen tetrahedral meshes, uses MeshKit-AdvFront triangle meshing underneath
+  9) All test examples for RGG and PostBL available as a part of installation
+
 Version 1.4.1 (SIGMA v1.2.1)
 ============================
 
 Fixes:
 ------
-1) Bug in rectangular assembly orientation in AssyGen and CoreGen. The orientation is as it is described in the input file, instead of being  mirrored.
-2) Linking issues on OSX.
+  1) Bug in rectangular assembly orientation in AssyGen and CoreGen. The orientation is as it is described in the input file, instead of being  mirrored.
+  2) Linking issues on OSX.
 
 Enhancements:
 -------------
-1) Added timing to AssyGen for CGM boolean operations.
-2) Improved CoreGen parallel save time, (deleting GEOM_DIMENSION tag before parallel save). Also , saving only Material and Neumann sets in the final mesh.3. Added PARALLEL_PARTITION tag to the final mesh created by parallel CoreGen.
-3) Added support for HEX27 element creation in CoreGen. User may specify HEX8 or HEX27 in the input file.
-4)  CoreGen keyword 'MESHTOGEOM' supported for CUBIT mesh files. A new tool mbmeshtogeom in MOAB can be used to compute MESHTOGEOM ratio on an already existing mesh file.
+  1) Added timing to AssyGen for CGM boolean operations.
+  2) Improved CoreGen parallel save time, (deleting GEOM_DIMENSION tag before parallel save). Also , saving only Material and Neumann sets in the final mesh.3. Added PARALLEL_PARTITION tag to the final mesh created by parallel CoreGen.
+  3) Added support for HEX27 element creation in CoreGen. User may specify HEX8 or HEX27 in the input file.
+  4)  CoreGen keyword 'MESHTOGEOM' supported for CUBIT mesh files. A new tool mbmeshtogeom in MOAB can be used to compute MESHTOGEOM ratio on an already existing mesh file.
 
 Version 1.4  (SIGMA v1.2)
 =========================

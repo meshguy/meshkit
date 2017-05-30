@@ -29,8 +29,10 @@ In addition, if a parallel version of MeshKit is desired, the user must have the
 ### 2.2 Download, Configure, Build, Install
 
 MeshKit source code is maintained in a world-readable git repository, located at
-https://bitbucket.org/fathomteam/meshkit.git. By default, MeshKit uses a GNU
-Autotools-based configuration process. The following steps should be used to configure, build, and install MeshKit:
+https://bitbucket.org/fathomteam/meshkit.git. By default, MeshKit uses a GNU Autotools-based configuration process (Linux/OSX). 
+CMake-based configuration is available for Linux/MacOS have been tested for a few configurations^^(see sample CMake commandline arguments below).
+
+The following steps should be used to configure, build, and install MeshKit:
 
   - Unpack the source tarball into a directory referred to below as <MK_DIR> and change directory into that location.
   - Execute ‘autoreconf –fi’. This executes a series of tools in the autotools suite, storing some generated files in the ‘config’ subdirectory.
@@ -61,3 +63,7 @@ makefile showing how these make variables can be used to compile and link MeshKi
 [online]: http://sigma.mcs.anl.gov/meshkit-library/
 [CGM build instructions]: http://sigma.mcs.anl.gov/cgm/building-cgm/
 [MOAB build instructions]: http://sigma.mcs.anl.gov/moab/building-moab/
+
+CMake build sample configuration:
+cmake ~/source/meshkit/  -DCMAKE_INSTALL_PREFIX=/homes/jain/install/cmk_meshkit -DMOAB_DIR=/homes/jain/install/cmk_moab -DCGM_DIR=/homes/jain/install/cmk_cgm -DENABLE_MPI=ON -DMPI_HOME=/homes/fathom/3rdparty/mpich/3.1/gnu -DBUILD_SHARED_LIBS=OFF
+
