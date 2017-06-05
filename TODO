@@ -1,0 +1,9 @@
+TODO:
+1) Add parallel quad mesh generation algorithm
+2) Optimize and simplify parallel tet meshing algorithm
+3) Support external dependencies with CMake based build
+4) AssyMesher Material/Neumann set/tag creation based of reactor part names specified in the input file
+5) Improve triangle AdvFront algorithm (integrate and test hard geometries) and also test performace on GPU's etc.
+6) Use IntervalMatching algorithms for create a hex meshing algorithm using the component algorithms
+7) Add python bindings using Cython
+

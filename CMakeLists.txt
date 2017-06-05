@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 2.8.12 )
 SET(PACKAGE_NAME "MeshKit")
-SET(PACKAGE_VERSION "1.4.2pre")
+SET(PACKAGE_VERSION "1.5")
 
 if (NOT WIN32)
   #This all breaks on windows.
