@@ -1,4 +1,4 @@
-Version 1.5.0 (SIGMA v2.0)
+Version 1.5.0 (SIGMA v1.3)
 ============================
 
 Fixes:
@@ -33,7 +33,7 @@ Enhancements:
   1) Added timing to AssyGen for CGM boolean operations.
   2) Improved CoreGen parallel save time, (deleting GEOM_DIMENSION tag before parallel save). Also , saving only Material and Neumann sets in the final mesh.3. Added PARALLEL_PARTITION tag to the final mesh created by parallel CoreGen.
   3) Added support for HEX27 element creation in CoreGen. User may specify HEX8 or HEX27 in the input file.
-  4)  CoreGen keyword 'MESHTOGEOM' supported for CUBIT mesh files. A new tool mbmeshtogeom in MOAB can be used to compute MESHTOGEOM ratio on an already existing mesh file.
+  4) CoreGen keyword 'MESHTOGEOM' supported for CUBIT mesh files. A new tool mbmeshtogeom in MOAB can be used to compute MESHTOGEOM ratio on an already existing mesh file.
 
 Version 1.4  (SIGMA v1.2)
 =========================
@@ -137,7 +137,7 @@ LASSO https://git.mcs.anl.gov/repos/ITAPS/Lasso/trunk Rev: 6103
 
 TRIANGLE: Triangle provides a 2D triangle mesh generation algorithm.
 
-CAMAL/CUBIT 5.1.0: Sandia National Labâ€™s proprietary CAMAL library provides access to tetrahedral, tri-advance and paving algorithms.
+CAMAL/CUBIT 5.1.0: Sandia National Lab’s proprietary CAMAL library provides access to tetrahedral, tri-advance and paving algorithms.
 
 NetGen 4.9.13: An open source automatic tetrahedral mesh generation library.
 
