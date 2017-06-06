@@ -1,24 +1,26 @@
-Version 1.5.0 (SIGMA v1.3)
-============================
+#Version 1.5.0:
+## Features
+  * *PR #77 Mesquite support via MOAB. If MOAB is built with --enable-mesquite option, MeshKit enables Mesquite support
+  * *PR #57 #77 MeshKit must be built with MOAB built with --enable-rel option
+  * *PR #58 Remove .sat/ACIS files creation and any linking or directly calling CUBIT API routines
 
-Fixes:
-------
-  1) Mesquite support via MOAB. If MOAB is built with --enable-mesquite option, MeshKit enables Mesquite support
-  2) MeshKit must be built with MOAB built with --enable-rel option
-  3) Remove .sat/ACIS files creation and any linking or directly calling CUBIT API routines
-  4) Fix OBB tree calling function signature changes etc. to be fully compatible with MOAB and CGM.
+## Features
+  * *PR #59, #60, #66, #71  Added parallel triangle advancing front algorithm
+  * *PR #79 AssyGen created geometry is meshed and prepared to be simulation ready using the AssyMesher algorithm
+  * *PR #71 New MKmesh tool for invoking any available meshing algorithm on a geometry
+  * *PR #66, #68 Support for facet based geometry for several algorithms
+  * *PR #81 CMake based build system with test and tools
+  * *PR #72 RGG support for Trelis using configure option --enable-rgg16 option
+  * *PR #63 Autodownload NetGen option
+  * *PR #71 Support for fully open-source NetGen tetrahedral meshes, uses MeshKit-AdvFront triangle meshing underneath
+  * *PR #78 All test examples for RGG and PostBL available as a part of installation
 
-Enhancements:
--------------
-  1) Added parallel triangle advancing front algorithm
-  2) AssyGen created geometry is meshed and prepared to be simulation ready using the AssyMesher algorithm
-  3) New MKmesh tool for invoking any available meshing algorithm on a geometry
-  4) Support for facet based geometry for several algorithms
-  5) CMake based build system with test and tools
-  6) RGG support for Trelis using configure option --enable-rgg16 option
-  7) Autodownload NetGen option
-  8) Support for fully open-source NetGen tetrahedral meshes, uses MeshKit-AdvFront triangle meshing underneath
-  9) All test examples for RGG and PostBL available as a part of installation
+## Fixes
+  * *PR #71 Fixes to AdvFront: removing from the 2d front projection the points that came from too far , or were having their normal in a wrong direction
+  * *PR #80 Fix OBB tree calling function signature changes etc. to be fully compatible with MOAB and CGM.
+  * *PR #74 CellMaterial keyword fixes in AssyGen 
+  * *PR #70 PostBL cleanup and Hex27 save option
+  * *PR #69 #73 Parallel mesher and examples fixes
 
 Version 1.4.1 (SIGMA v1.2.1)
 ============================
