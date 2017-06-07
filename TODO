@@ -1,0 +1,23 @@
+MESHKIT TODO LIST
+
+## New Algorithms
+1. Add parallel quad mesh generation algorithm
+2. Adaptive mesh generation (AHF from MOAB)
+3. Hex mesh generation using Jaal or tet-to-hex
+
+## Enhancements
+1. Improve triangle AdvFront algorithm (integrate and test hard geometries) and also test performace on GPU's etc.
+2. Optimize and simplify parallel tet meshing algorithm
+3. AssyMesher Material/Neumann set/tag creation based of reactor part names specified in the input file
+4. Utilize MBMesquite in AdvFront algorithm
+5. Structured mesh generation examples
+6. Mesh generation (refinement) for climate and earth systems models
+
+## Configuration
+1. Add python bindings using Cython
+2. Support external dependencies with CMake based build
+3. Create and distribute package installers for Mac (Homebrew), Windows (CMake) and Ubuntu(apt-get)
+
+## Integration
+1. Use IntervalMatching algorithms for create a hex meshing algorithm using the component algorithms
+2. Kitware CMB integration and open-source RGG GUI

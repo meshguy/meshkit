@@ -1,17 +1,41 @@
+#Version 1.5.0:
+## Features
+  * *PR #77 Mesquite support via MOAB. If MOAB is built with --enable-mesquite option, MeshKit enables Mesquite support
+  * *PR #57 #77 MeshKit must be built with MOAB built with --enable-rel option
+  * *PR #58 Remove .sat/ACIS files creation and any linking or directly calling CUBIT API routines
+
+## Features
+  * *PR #59, #60, #66, #71  Added parallel triangle advancing front algorithm
+  * *PR #79 AssyGen created geometry is meshed and prepared to be simulation ready using the AssyMesher algorithm
+  * *PR #71 New MKmesh tool for invoking any available meshing algorithm on a geometry
+  * *PR #66, #68 Support for facet based geometry for several algorithms
+  * *PR #81 CMake based build system with test and tools
+  * *PR #72 RGG support for Trelis using configure option --enable-rgg16 option
+  * *PR #63 Autodownload NetGen option
+  * *PR #71 Support for fully open-source NetGen tetrahedral meshes, uses MeshKit-AdvFront triangle meshing underneath
+  * *PR #78 All test examples for RGG and PostBL available as a part of installation
+
+## Fixes
+  * *PR #71 Fixes to AdvFront: removing from the 2d front projection the points that came from too far , or were having their normal in a wrong direction
+  * *PR #80 Fix OBB tree calling function signature changes etc. to be fully compatible with MOAB and CGM.
+  * *PR #74 CellMaterial keyword fixes in AssyGen 
+  * *PR #70 PostBL cleanup and Hex27 save option
+  * *PR #69 #73 Parallel mesher and examples fixes
+
 Version 1.4.1 (SIGMA v1.2.1)
 ============================
 
 Fixes:
 ------
-1) Bug in rectangular assembly orientation in AssyGen and CoreGen. The orientation is as it is described in the input file, instead of being  mirrored.
-2) Linking issues on OSX.
+  1) Bug in rectangular assembly orientation in AssyGen and CoreGen. The orientation is as it is described in the input file, instead of being  mirrored.
+  2) Linking issues on OSX.
 
 Enhancements:
 -------------
-1) Added timing to AssyGen for CGM boolean operations.
-2) Improved CoreGen parallel save time, (deleting GEOM_DIMENSION tag before parallel save). Also , saving only Material and Neumann sets in the final mesh.3. Added PARALLEL_PARTITION tag to the final mesh created by parallel CoreGen.
-3) Added support for HEX27 element creation in CoreGen. User may specify HEX8 or HEX27 in the input file.
-4)  CoreGen keyword 'MESHTOGEOM' supported for CUBIT mesh files. A new tool mbmeshtogeom in MOAB can be used to compute MESHTOGEOM ratio on an already existing mesh file.
+  1) Added timing to AssyGen for CGM boolean operations.
+  2) Improved CoreGen parallel save time, (deleting GEOM_DIMENSION tag before parallel save). Also , saving only Material and Neumann sets in the final mesh.3. Added PARALLEL_PARTITION tag to the final mesh created by parallel CoreGen.
+  3) Added support for HEX27 element creation in CoreGen. User may specify HEX8 or HEX27 in the input file.
+  4) CoreGen keyword 'MESHTOGEOM' supported for CUBIT mesh files. A new tool mbmeshtogeom in MOAB can be used to compute MESHTOGEOM ratio on an already existing mesh file.
 
 Version 1.4  (SIGMA v1.2)
 =========================
@@ -115,7 +139,7 @@ LASSO https://git.mcs.anl.gov/repos/ITAPS/Lasso/trunk Rev: 6103
 
 TRIANGLE: Triangle provides a 2D triangle mesh generation algorithm.
 
-CAMAL/CUBIT 5.1.0: Sandia National Labâ€™s proprietary CAMAL library provides access to tetrahedral, tri-advance and paving algorithms.
+CAMAL/CUBIT 5.1.0: Sandia National Lab’s proprietary CAMAL library provides access to tetrahedral, tri-advance and paving algorithms.
 
 NetGen 4.9.13: An open source automatic tetrahedral mesh generation library.
 
