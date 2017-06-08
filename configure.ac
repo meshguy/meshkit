@@ -253,6 +253,8 @@ if test "xyes" = "x$HAVE_$2"; then
                       [AC_MSG_ERROR([m4_toupper($4)_INCLUDES not found in $2_BASE_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LDFLAGS],[$2_LDFLAGS="$make_val"],
                       [AC_MSG_ERROR([$2_LDFLAGS not found in $2_CONFIG_OPTIONS])])
+  FATHOM_MAKE_INC_VAR([${$2_BASE_CONFIG_OPTIONS}],[m4_toupper($4)_EXT_LIBS],[$2_EXT_LIBS="${$2_EXT_LIBS} $make_val"],
+                      [AC_MSG_ERROR([m4_toupper($4)_EXT_LIBS not found in $2_BASE_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LIBS],[$2_LIBS="$make_val"],
                       [AC_MSG_ERROR([$2_LIBS not found in $2_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_DEFINES],[$2_DEFINES="$make_val"],
@@ -751,8 +753,9 @@ else
   old_LIBS="$LIBS"
   old_LDFLAGS="$LDFLAGS"
   old_CPPFLAGS="$CPPFLAGS"
-  LDFLAGS="$LDFLAGS $NETGEN_LDFLAGS -lnglib"
+  LDFLAGS="$LDFLAGS $NETGEN_LDFLAGS"
   CPPFLAGS="$CPPFLAGS $NETGEN_CPPFLAGS"
+  LIBS="-lnglib $CGM_EXT_LIBS"
   AC_LANG_PUSH([C++])
 
   AC_LINK_IFELSE(
