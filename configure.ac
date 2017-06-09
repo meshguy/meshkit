@@ -239,9 +239,9 @@ case "x$itaps_dir" in
        [HAVE_$2=no]) ])])
 
     AC_CHECK_FILE([$itaps_dir/lib/${component_name}.make],
-     [$2_BASE_CONFIG_OPTIONS="$itaps_dir/lib/${component_name}.make"; m4_toupper(USING_DEV_$4)=yes],
+     [m4_toupper($4)_BASE_CONFIG_OPTIONS="$itaps_dir/lib/${component_name}.make"; m4_toupper(USING_DEV_$4)=yes],
      [AC_CHECK_FILE([$itaps_dir/${component_name}.make],
-       [$2_BASE_CONFIG_OPTIONS="$itaps_dir/${component_name}.make"; m4_toupper(USING_DEV_$4)=yes],
+       [m4_toupper($4)_BASE_CONFIG_OPTIONS="$itaps_dir/${component_name}.make"; m4_toupper(USING_DEV_$4)=yes],
        [m4_toupper(USING_DEV_$4)=no])])
     ;;
 esac
@@ -249,12 +249,10 @@ esac
 if test "xyes" = "x$HAVE_$2"; then
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_CPPFLAGS],[$2_CPPFLAGS="$make_val"],
                       [AC_MSG_ERROR([$2_CPPFLAGS not found in $2_CONFIG_OPTIONS])])
-  FATHOM_MAKE_INC_VAR([${$2_BASE_CONFIG_OPTIONS}],[m4_toupper($4)_INCLUDES],[$2_CPPFLAGS="${$2_CPPFLAGS} $make_val"],
-                      [AC_MSG_ERROR([m4_toupper($4)_INCLUDES not found in $2_BASE_CONFIG_OPTIONS])])
+  FATHOM_MAKE_INC_VAR([${m4_toupper($4)_BASE_CONFIG_OPTIONS}],[m4_toupper($4)_INCLUDES],[$2_CPPFLAGS="${$2_CPPFLAGS} $make_val"],
+                      [AC_MSG_ERROR([m4_toupper($4)_INCLUDES not found in m4_toupper($4)_BASE_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LDFLAGS],[$2_LDFLAGS="$make_val"],
                       [AC_MSG_ERROR([$2_LDFLAGS not found in $2_CONFIG_OPTIONS])])
-  FATHOM_MAKE_INC_VAR([${$2_BASE_CONFIG_OPTIONS}],[m4_toupper($4)_EXT_LIBS],[$2_EXT_LIBS="${$2_EXT_LIBS} $make_val"],
-                      [AC_MSG_ERROR([m4_toupper($4)_EXT_LIBS not found in $2_BASE_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_LIBS],[$2_LIBS="$make_val"],
                       [AC_MSG_ERROR([$2_LIBS not found in $2_CONFIG_OPTIONS])])
   FATHOM_MAKE_INC_VAR([${$2_CONFIG_OPTIONS}],[$2_DEFINES],[$2_DEFINES="$make_val"],
@@ -279,6 +277,10 @@ CHECK_ITAPS_DEFS( iGeom, IGEOM, $IGEOM_DIR, cgm, $IGEOM_OKAY_IF_MISSING, [build 
 CHECK_ITAPS_DEFS( iMesh, IMESH, $IMESH_DIR, moab, $IMESH_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( FBiGeom, FBIGEOM, $FBIGEOM_DIR, moab, $FBIGEOM_OKAY_IF_MISSING, [build may fail] )
 CHECK_ITAPS_DEFS( iRel,  IREL,  $IREL_DIR,  moab, $IREL_OKAY_IF_MISSING, [irel is required. Use --enable-irel during MOAB configuration] )
+FATHOM_MAKE_INC_VAR([${CGM_BASE_CONFIG_OPTIONS}],[CGM_EXT_LIBS],[CGM_EXT_LIBS="$make_val"],
+                    [AC_MSG_ERROR([CGM_EXT_LIBS not found in CGM_BASE_CONFIG_OPTIONS])])
+FATHOM_MAKE_INC_VAR([${MOAB_BASE_CONFIG_OPTIONS}],[MOAB_EXT_LIBS],[MOAB_EXT_LIBS="$make_val"],
+                    [AC_MSG_ERROR([MOAB_EXT_LIBS not found in MOAB_BASE_CONFIG_OPTIONS])])
 
 AM_CONDITIONAL( USING_CGM_DEV, [test "xyes" == "x$USING_DEV_CGM"] )
 AM_CONDITIONAL( USING_MOAB_DEV, [test "xyes" == "x$USING_DEV_MOAB"] )
@@ -753,7 +755,7 @@ else
   old_LIBS="$LIBS"
   old_LDFLAGS="$LDFLAGS"
   old_CPPFLAGS="$CPPFLAGS"
-  LDFLAGS="$LDFLAGS $NETGEN_LDFLAGS"
+  LDFLAGS="$LDFLAGS $NETGEN_LDFLAGS $IGEOM_LDFLAGS"
   CPPFLAGS="$CPPFLAGS $NETGEN_CPPFLAGS"
   LIBS="-lnglib $CGM_EXT_LIBS"
   AC_LANG_PUSH([C++])
