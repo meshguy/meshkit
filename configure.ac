@@ -1,7 +1,7 @@
 ################################################################################
 #                           Standard Stuff
 ################################################################################
-AC_INIT([MESHKIT],[1.5],[meshkit-dev@mcs.anl.gov],[meshkit],[http://sigma.mcs.anl.gov])
+AC_INIT([MESHKIT],[1.5.1],[meshkit-dev@mcs.anl.gov],[meshkit],[http://sigma.mcs.anl.gov])
 AC_CONFIG_MACRO_DIR([config])
 AC_CONFIG_AUX_DIR([config])
 AC_CANONICAL_TARGET
